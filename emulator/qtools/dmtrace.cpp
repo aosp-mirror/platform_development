@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <inttypes.h>
 #include <string.h>
+#include <unistd.h>
 #include "dmtrace.h"
 
 static const short kVersion = 2;
