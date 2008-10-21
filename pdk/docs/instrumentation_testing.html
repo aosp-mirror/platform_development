@@ -1,0 +1,381 @@
+
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+<title>Android - Instrumentation Testing</title>
+<script src="http://www.google.com/uds/api?file=uds.js&amp;v=1.0&amp;key=internal-codesite" type="text/javascript"></script>
+<script src="http://code.google.com/js/jquery.js" type="text/javascript"></script>
+<script type="text/javascript">var _tocPath_ = 'http://code.google.com/android/_toc.ezt';</script>
+<script src="http://code.google.com/js/codesite.pack.01312008.js" type="text/javascript"></script>
+<link href="http://code.google.com/css/codesite.pack.01312008.css" type="text/css" rel="stylesheet">
+</link>
+
+<!--[if IE]><link rel="stylesheet" type="text/css" href="/css/iehacks.css" /><![endif]-->
+<script src="http://code.google.com/android/assets/search_autocomplete.js"></script>
+<link rel="stylesheet" type="text/css" href="http://code.google.com/css/semantic_headers.css" />
+<link rel="stylesheet" type="text/css" href="http://code.google.com/android/assets/style.css" />
+<script>
+    jQuery(document).ready(function() {
+            jQuery("pre").addClass("prettyprint");
+        });
+    </script>
+<style type="text/css">
+<!--
+h1,h2,h3 {
+	color: #000000;
+}
+-->
+</style>
+</head>
+<body class="gc-documentation">
+<div id="gc-container">
+<a name="top"></a>
+<div id="skipto"> </div>
+<div id="langpref">
+  <!--<a class="dropdown" href="/">English</a> <span>|</span> <a href="/more/">Site Directory</a> -->
+</div>
+<div id="gc-header">
+  <div id="logo"><a href="http://code.google.com/android/index.html"><img src="http://code.google.com/android/images/logo_android.gif" alt="Android"/></a></div>
+  <div id="search" style="inline">
+    <div id="searchForm" class="searchForm" style="height: 44px;">
+      <!--previously form was here-->
+    </div>
+    <!-- end searchForm -->
+    <noscript>
+    <style type="text/css">
+      .searchForm {
+        display : none !important;
+      }
+      .searchForm2 {
+        display : inline !important;
+      }
+      </style>
+    </noscript>
+    <div id="searchForm2" class="searchForm2" style="display:none">
+      <form id="searchbox_001456098540849067467:6whlsytkdqg" action="http://www.google.com/cse">
+        <input type="hidden" name="cx" value="001456098540849067467:6whlsytkdqg" />
+        <input type="hidden" name="cof" value="FORID:0" />
+        <input type="text" name="q" maxlength="2048" size="41" autocomplete="off" title="Google Code Search"/>
+        <input type="submit" name="sa" value="Search" title="Search"/>
+        <br/>
+        <div class="greytext">e.g. "ajax apis" or "open source"</div>
+      </form>
+    </div>
+    <!-- end searchForm2 -->
+  </div>
+  <!-- end search -->
+</div>
+<!-- end gc-header -->
+<div id="searchControl" class="search-control"></div>
+<!--[if IE]><iframe id="backiFrame" name="backiFrame" src='/dummy.html' style="display:none"></iframe><![endif]-->
+<div id="codesiteContent">
+<a name="gc-topnav-anchor"></a>
+<div id="gc-topnav">
+  <h1>Android Platform Development Kit</h1>
+  <ul class="gc-topnav-tabs">
+    <li id="sdk_link"> <a href="http://code.google.com/android/index.html" title="Android Software Development Kit">SDK</a> </li>
+    <li id="docs_link"> <a href="index.html" title="Official Android documentation">Docs</a> </li>
+    <li id="faq_link"> <a href="http://code.google.com/android/kb/index.html" title="Answers to frequently asked questions about Android">FAQ</a> </li>
+    <li> <a href="http://android-developers.blogspot.com/" title="Official Android blog">Blog</a> </li>
+    <li> <a href="http://code.google.com/android/groups.html" title="Android developer forum">Group</a> </li>
+    <li> <a href="http://code.google.com/android/terms.html" title="Android terms of service">Terms</a> </li>
+    <li> <a href="mailto:android-pdk-feedback@google.com?subject=PDK%20Feedback&body=(filed%20from:%20instrumentation_testing.html%20v0.3%20-%209%20June%202008)%0D%0A%0D%0ASUMMARY:%0D%0A%0D%0A%0D%0A%0D%0ASTEPS%20TO%20REPRODUCE:%0D%0A%0D%0A%0D%0A%0D%0AADDITIONAL%20NOTES:">Report a Problem</a> </li>
+  </ul>
+</div>
+<!-- end gc-topnav -->
+<div class="g-section g-tpl-180">
+<a name="gc-toc"></a>
+<div class="g-unit g-first" id="gc-toc">
+  <ul>
+    <li>
+      <h1><a href="index.html">Documentation</a></h1>
+      <ul>
+        <li> <strong>Introduction</strong>
+          <ul>
+            <li><a href="system_requirements.html">Device Requirements</a></li>            
+          </ul>
+        </li>
+        <li> <strong>Dev Environment Setup</strong>
+          <ul>
+            <li><a href="source_setup_guide.html">Host System Setup</a></li>
+            <li><a href="getting_source_code.html">Getting Source Code</a></li>
+            <li> <a href="intro_source_code.html">Source Code Overview</a></li>			
+            <li><a href="build_system.html">Build System</a></li>
+          </ul>
+        </li>
+        <li> <strong>Basic Bring up</strong>
+          <ul>
+            <li><a href="build_new_device.html">Building New Device</a></li>
+            <li><a href="bring_up.html">Bring up</a></li>
+            <li><a href="keymaps_keyboard_input.html">Keymaps and Keyboard</a></li>
+            <li><a href="display_drivers.html">Display Drivers</a></li>
+          </ul>
+        </li>
+        <li> <strong>Multimedia</strong>
+          <ul>
+            <li><a href="audio_sub_system.html">Audio Subsystem</a></li>
+          </ul>
+        </li>
+        <li> <strong>Power Management</strong>
+          <ul>
+            <li><a href="power_management.html">Power Management</a></li>
+          </ul>
+        </li>
+        <li> <strong>Telephony</strong>
+          <ul>
+            <li><a href="telephony.html">Radio Interface Layer</a></li>
+          </ul>
+        </li>
+        <li> <strong>Testing</strong>
+          <ul>
+            <li><a href="instrumentation_framework.html">Instrumentation Framework</a></li>
+            <li><a href="instrumentation_testing.html">Instrumentation Testing</a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+<a name="gc-pagecontent"></a>
+<div class="g-unit" id="gc-pagecontent">
+<div id="jd-content">
+<div class="jd-descr">
+
+
+<a name="androidTitleInstrumentationTesting"></a><h1>Instrumentation Testing</h1>
+
+
+
+<a name="toc"/>
+<div style="padding:10px">
+<a href="#androidInstrumentationTestingIntro">Introduction</a><br/>
+<a href="#androidInstrumentationTestingClasses">Classes</a><br/>
+<a href="#androidInstrumentationTestingRunning">Running Tests</a><br/><div style="padding-left:40px">
+
+<a href="#androidInstrumentationTestingRunningAll">All Tests</a><br/>
+<a href="#androidInstrumentationTestingRunningSingleTestCase">A Single Test Case</a><br/>
+<a href="#androidInstrumentationTestingRunningSingleTest">A Single Test</a><br/></div>
+<a href="#androidInstrumentationTestingCreating">Creating Tests</a><br/><div style="padding-left:40px">
+
+<a href="#androidInstrumentationTestingCreatingTestRunner">New Instrumentation TestRunner</a><br/>
+<a href="#androidInstrumentationTestingCreatingTestCase">New InstrumentationTestCase</a><br/></div>
+<a href="#androidInstrumentationAliases">Aliases for Running Framework Instrumentation Tests</a><br/></div></font></div>
+
+<a name="androidInstrumentationTestingIntro"></a><h2>Introduction</h2>
+
+<p>Sometimes you may want to manually interact with your applications to verify that a particular feature or behavior is working properly; why not automate this verification with a JUnit TestCase that can instrument applications?</p>
+<p>Instrumentation testing allows you to verify a particular feature or behavior with an automated JUnit TestCase. You can launch activities and providers within an application, send key events, and make assertions about various UI elements.</p>
+
+
+<a name="androidInstrumentationTestingClasses"></a><h2>Classes</h2>
+
+<p> The following classes help glue together <code>Instrumentation</code> with JUnit testing. </p>
+<table>
+  <tr>
+    <th scope="col">Class</th>
+    <th scope="col">Description</th></tr>
+  <tr>
+    <td valign="top"><code>InstrumentationTestCase</code></td>
+    <td valign="top">
+	<p>This extends the standard JUnit <code>TestCase</code> and offers access to an <code>Instrumentation</code> class. Write tests inside your instrumentation class any way you see fit. For example, your test might launch activities and send key events. For this to work properly, the instrumentation needs to be injected into the test case.</p>
+	</td>
+  </tr>
+  <tr>
+    <td valign="top"><code>InstrumentationTestRunner</code></td>
+    <td valign="top">The instrumentation test runner is an instrumentation that runs instrumentation test cases and injects itself into each test case. Instrumentation test cases need to be grouped together with an instrumentation test runner with the appropriate target package.</td>
+  </tr>
+  <tr>
+    <td valign="top"><code>InstrumentationTestSuite</code></td>
+    <td valign="top">The instrumentation test suite is a simple extension of the standard JUnit <code>TestSuite</code> that keeps a member <code>Instrumentation</code> variable on hand to inject into each <code>TestCase</code> before running them.  It is used by <code>InstrumentationTestRunner</code>.</td>
+  </tr>
+</table>
+<p> Three additional base classes extend <code>InstrumentationTestCase</code> to allow you to test <code>Activity</code> and <code>Provider</code> classes:</p>
+<table>
+  <tr>
+    <th scope="col">Class</th>
+    <th scope="col">Description</th>
+  </tr>
+  <tr>
+    <td valign="top"><code>ActivityTestCase</code></td>
+    <td valign="top"><p>This class can be used to write tests for a specific activity.  An activity is launched in its <code>setUp()</code> method and finished with <code>tearDown</code>.  If you write a test case that extends <code>ActivityTestCase</code>, you can write tests that access the activity using <code>getActivity()</code> and assume it has been set up properly.</p></td>
+  </tr>
+  <tr>
+    <td valign="top"><code>SingleLaunchActivityTestCase</code></td>
+    <td valign="top">This class is similar to <code>ActivityTestCase</code> except that the activity is launched once per class instead of every time the test case calls setup. </td>
+  </tr>
+  <tr>
+    <td valign="top"><code>ProviderTestCase</code></td>
+    <td valign="top">This class is similar to <code>ActivityTestCase</code> except that it will setup, tear down, and provide access to the <code>Provider</code> of your choice.</td>
+  </tr>
+</table>
+
+
+<a name="androidInstrumentationTestingRunning"></a><h2>Running Tests</h2>
+
+<p> To run your tests, use the <code>am instrument</code> command with your <code>InstrumentationTestRunner</code> as its argument. Results are printed as a result of the instrumentation. For example, the following snippet displays the output after running the framework tests with one test failing (note the unusual syntax caused by how instrumentations are run via <code>am</code>):</p>
+<pre class="prettify">
+$ adb shell am instrument -w com.google.android.frameworktest/.tests.FrameworkInstrumentationTestRunner
+INSTRUMENTATION_RESULT: test results:=.......F.......
+Time: 6.837
+There was 1 failure:
+1) testSetUpConditions(com.google.android.frameworktest.tests.focus.RequestFocusTest)junit.framework.AssertionFailedError: requestFocus() should work from onCreate.
+        at com.google.android.frameworktest.tests.focus.RequestFocusTest.testSetUpConditions(RequestFocusTest.java:66)
+        at java.lang.reflect.Method.invokeNative(Native Method)
+        at android.test.InstrumentationTestSuite.runTest(InstrumentationTestSuite.java:73)
+        at android.test.InstrumentationTestSuite.runTest(InstrumentationTestSuite.java:73)
+        at android.test.InstrumentationTestRunner.onStart(InstrumentationTestRunner.java:151)
+        at android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:1088)
+
+FAILURES!!!
+Tests run: 14,  Failures: 1,  Errors: 0
+
+&lt;RETURN&gt; to continue
+
+INSTRUMENTATION_CODE: -1
+$ 
+</pre>
+
+
+<a name="androidInstrumentationTestingRunningAll"></a><h3>All Tests</h3>
+
+<pre class="prettify">
+$ adb shell am instrument -w MyInstrumentationTestRunner
+</pre>
+
+
+<a name="androidInstrumentationTestingRunningSingleTestCase"></a><h3>A Single Test Case</h3>
+
+<pre class="prettify">
+$ adb shell am instrument \
+     -e class MyInstrumentationTestCase \
+     -w MyInstrumentationTestRunner
+</pre>
+
+
+<a name="androidInstrumentationTestingRunningSingleTest"></a><h3>A Single Test</h3>
+
+<pre class="prettify">
+$ adb shell am instrument \
+     -e class MyInstrumentationTestCase#myTestMethod \
+     -w MyInstrumentationTestRunner
+</pre>
+
+
+<a name="androidInstrumentationTestingCreating"></a><h2>Creating Tests</h2>
+
+
+
+<a name="androidInstrumentationTestingCreatingTestRunner"></a><h3>New Instrumentation TestRunner</h3>
+
+<p>Create a class that derives from this class. You must override two abstract methods; one that returns the class loader of the target package, and another that defines all of the tests within the package. For example, the snippet below displays the test runner for the framework tests.</p>
+<pre class="prettify">
+public class FrameworkInstrumentationTestRunner extends InstrumentationTestRunner {
+
+    @Override
+    public TestSuite getAllTests() {
+        InstrumentationTestSuite suite = new InstrumentationTestSuite(this);
+
+        suite.addTestSuite(FocusAfterRemovalTest.class);
+        suite.addTestSuite(RequestFocusTest.class);
+        suite.addTestSuite(RequestRectangleVisibleTest.class);
+        return suite;
+    }
+
+    @Override
+    public ClassLoader getLoader() {
+        return FrameworkInstrumentationTestRunner.class.getClassLoader();
+    }
+}
+</pre>
+<p> Next, in an appropriate <code>AndroidManifest.xml</code>, define the instrumentation for the derived class with the appropriate <code>android:targetPackage</code> set.  For example, the snippet below defines the instrumentation runner for the framework tests.</p>
+<pre class="prettify">
+&lt;uses-permission android:name="android.permission.RUN_INSTRUMENTATION" /&gt;
+
+&lt;instrumentation android:name="android.tests.FrameworkInstrumentationTestRunner"
+                 android:targetPackage="com.google.android.frameworktest"
+                 android:label="framework instrumentation test runner" /&gt;
+</pre>		
+
+
+<a name="androidInstrumentationTestingCreatingTestCase"></a><h3>New InstrumentationTestCase</h3>
+
+<p> To create a new test case, write a class that extends <code>InstrumentationTestCase</code> in the same application as your test runner.  The following snippet illustrates an example <code>ActivityTestCase</code> that tests an activity named <code>MyActivity</code>.</p>
+<pre class="prettify">
+public class ButtonPressTest extends ActivityTestCase&lt;MyActivity&gt; {
+
+    Button mLeftButton;
+
+    public ButtonPressTest() {
+        super("com.example", MyActivity.class);
+    }
+
+    @Override
+    public void setUp() throws Exception {
+      super.setUp();
+      mLeftButton = (Button) getActivity().findViewById(R.id.leftButton);
+    }
+
+    public void testFocusMovesToRight() throws Exception {
+        assertTrue(mLeftButton.hasFocus());
+        getInstrumentation().sendCharacterSync(KeyEvent.KEYCODE_DPAD_RIGHT);
+
+        Button rightButton = (Button) getActivity().findViewById(R.id.rightButton);
+        assertTrue(rightButton.hasFocus());
+    }
+
+    // could have several more tests...
+}
+</pre>
+
+
+<a name="androidInstrumentationAliases"></a><h2>Aliases for Running Framework Instrumentation Tests</h2>
+
+<pre class="prettify">
+# compiles and installs FrameworkTests
+alias deploytests="(cd tests/FrameworkTests/ && mm) && adb install out/target/product/dream/system/app/FrameworkTest.apk"
+
+# runs all of FrameworkTests unit tests
+alias runtests="adb shell am instrument -w com.google.android.frameworktest/.tests.FrameworkInstrumentationTestRunner"
+
+# runtest TEST: runs a single unit test, for instance runtest view.VisibilityTest
+# -- for convenience, you don't have to type the com.google.android.frameworktest.tests.
+function runtest {
+    adb shell am instrument -e class com.google.android.frameworktest.tests.$1 -w com.google.android.frameworktest/.tests.FrameworkInstrumentationTestRunner
+}
+
+# debugtest TEST: runs a single unit test in debug mode, for instance runtest view.VisibilityTest
+function debugtest {
+    adb shell am instrument -e debug true -e class com.google.android.frameworktest.tests.$1 -w com.google.android.frameworktest/.tests.FrameworkInstrumentationTestRunner
+}
+</pre>
+
+
+<p><span class="lh2"><a name="androidFooter"></a></span>
+
+        </div>
+      </div>
+      <!-- end gc-pagecontent -->
+    </div>
+    <!-- end gooey wrapper -->
+  </div>
+  <!-- end codesearchresults -->
+  <div id="gc-footer" dir="ltr">
+    <div class="text"> &copy;2008 Google<!-- - <a href="/">Code Home</a> - <a href="http://www.google.com/accounts/TOS">Site Terms of Service</a> - <a href="http://www.google.com/privacy.html">Privacy Policy</a> - <a href="/more">Site Directory</a> --></div>
+  </div>
+  <!-- end gc-footer -->
+</div>
+<!-- end gc-containter -->
+<script src="http://www.google-analytics.com/ga.js" type="text/javascript">
+</script>
+<script type="text/javascript">
+  try {
+    var pageTracker = _gat._getTracker("UA-18071-1");
+    pageTracker._setAllowAnchor(true);
+    pageTracker._initData();
+    pageTracker._trackPageview(); 
+  } catch(e) {}
+</script>
+<div id="jd-build-id"> v0.3 - 9 June 2008</div>
+</div></div></div></body>
+</html>
+

@@ -1,0 +1,775 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright (C) 2007 The Android Open Source Project
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+  
+          http://www.apache.org/licenses/LICENSE-2.0
+  
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
+
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <string name="activity_sample_code">API Demos</string>
+
+    <!-- =============================== -->
+    <!--  app/activity examples strings  -->
+    <!-- =============================== -->
+
+    <string name="tabs_1_tab_1">tab1</string>
+    <string name="tabs_1_tab_2">tab2</string>
+    <string name="tabs_1_tab_3">tab3</string>
+
+    <string name="activity_hello_world">App/Activity/<b>Hello <i>World</i></b></string>
+    <string name="hello_world"><b>Hello, <i>World!</i></b></string>
+
+    <string name="activity_dialog">App/Activity/Dialog</string>
+    <string name="dialog_activity_text">Example of how you can use the
+            Theme.Dialog theme to make an activity that looks like a
+            dialog.</string>
+
+    <string name="activity_custom_dialog">App/Activity/Custom Dialog</string>
+    <string name="custom_dialog_activity_text">Example of how you can use a
+            custom Theme.Dialog theme to make an activity that looks like a
+            customized dialog, here with an ugly frame.</string>
+
+    <string name="activity_translucent">App/Activity/Translucent</string>
+    <string name="translucent_background">Example of how you can make an
+            activity have a translucent background, compositing over
+            whatever is behind it.</string>
+
+    <string name="activity_translucent_blur">App/Activity/Translucent Blur</string>
+    
+    <string name="activity_save_restore">App/Activity/Save &amp; Restore State</string>
+    <string name="save_restore_msg">Demonstration of saving and restoring activity state in onSaveInstanceState() and onCreate().</string>
+    <string name="saves_state">This text field saves its state:</string>
+    <string name="no_saves_state">This text field does not save its state:</string>
+    <string name="initial_text">Initial text.</string>
+
+    <string name="activity_persistent">App/Activity/Persistent State</string>
+    <string name="persistent_msg">Demonstration of persistent activity state with getPreferences(0).edit() and getPreferences(0).</string>
+
+    <string name="activity_receive_result">App/Activity/Receive Result</string>
+    <string name="pick_result">Pick a result to send, or BACK to cancel.</string>
+    <string name="corky">Corky</string>
+    <string name="violet">Violet</string>
+
+    <string name="activity_forwarding">App/Activity/Forwarding</string>
+    <string name="forwarding">Press the button to go forward to the next activity.  This activity will stop, so you will no longer see it when going back.</string>
+    <string name="go">Go</string>
+    <string name="forward_target">Press back button and notice we don\'t see the previous activity.</string>
+
+    <string name="activity_redirect">App/Activity/Redirection</string>
+    <string name="redirect_enter">Press the button to start the example.  The next activity will conditionally redirect to another activity to collect data from the user.</string>
+    <string name="redirect_main">You now see the main activity running normally because the user text has been set to:</string>
+    <string name="clear_text">Clear and Exit</string>
+    <string name="new_text">New Text</string>
+    <string name="redirect_getter">Enter the text that will be used by the main activity.  Press back to cancel.</string>
+    <string name="apply">Apply</string>
+
+    <string name="activity_menu">App/Activity/Menu</string>
+    <string name="open_menu">Open menu</string>
+    <string name="close_menu">Close menu</string>
+    <string name="toggle_scenery">Toggle scenery</string>
+    <string name="toggle_dogs">Toggle dogs</string>
+    <string name="long_click_for_context_menu">Long click for context menu</string>
+
+    <string name="local_service_started">Local service has started</string>
+    <string name="local_service_stopped">Local service has stopped</string>
+    <string name="local_service_label">Sample Local Service</string>
+
+    <string name="activity_local_service_controller">App/Service/Local Service Controller</string>
+    <string name="local_service_controller">This demonstrates how you can implement persistent services that
+        may be started and stopped as desired.</string>
+    <string name="start_service">Start Service</string>
+    <string name="stop_service">Stop Service</string>
+
+    <string name="activity_local_service_binding">App/Service/Local Service Binding</string>
+    <string name="local_service_binding">This demonstrates how you can connect with a persistent
+        service.  Notice how it automatically starts for you, and play around with the
+        interaction between this and Local Service Controller.</string>
+    <string name="bind_service">Bind Service</string>
+    <string name="unbind_service">Unbind Service</string>
+    <string name="local_service_connected">Connected to local service</string>
+    <string name="local_service_disconnected">Disconnected from local service</string>
+
+    <string name="remote_service_started">Remote service has started</string>
+    <string name="remote_service_stopped">Remote service has stopped</string>
+    <string name="remote_service_label">Sample Remote Service</string>
+
+    <string name="activity_remote_service_controller">App/Service/Remote Service Controller</string>
+    <string name="remote_service_controller">This demonstrates how you can implement persistent services
+        running in a separate process that may be started and stopped as desired.</string>
+
+    <string name="activity_remote_service_binding">App/Service/Remote Service Binding</string>
+    <string name="remote_service_binding">This demonstrates how you can connect with a persistent
+        service running in another process.  Use the kill button to see what happens when
+        the process crashes.</string>
+    <string name="kill_process">Kill Process</string>
+    <string name="remote_service_connected">Connected to remote service</string>
+    <string name="remote_service_disconnected">Disconnected from remote service</string>
+    <string name="remote_call_failed">Failure calling remote service</string>
+
+    <string name="service_arguments_started">"Started with arguments: "</string>
+    <string name="service_arguments_stopped">Finished arguments, 
+        stopping.</string>
+    <string name="service_start_arguments_label">Sample Service Start Arguments
+    </string>
+
+    <string name="activity_service_start_arguments_controller">App/Service/Service 
+        Start Arguments Controller
+    </string>
+    <string name="service_start_arguments_controller">This demonstrates how 
+        service can be started with arguments, and run until all arguments are 
+        processed.
+    </string>
+    <string name="start1_service">Start with \"One\"</string>
+    <string name="start2_service">Start with \"Two\"</string>
+    <string name="start3_service">Start with \"Three\"</string>
+
+    <string name="one_shot_received">The one-shot alarm has gone off</string>
+    <string name="repeating_received">The repeating alarm has gone off</string>
+
+    <string name="activity_alarm_controller">App/Alarm/Alarm Controller</string>
+    <string name="alarm_controller">This demonstrates how to schedule and handle
+        one-shot and repeating alarms.</string>
+    <string name="one_shot_alarm">One Shot Alarm</string>
+    <string name="start_repeating_alarm">Start Repeating Alarm</string>
+    <string name="stop_repeating_alarm">Stop Repeating Alarm</string>
+    <string name="one_shot_scheduled">One-shot alarm will go off in 30 seconds based on
+        the real time clock.  Try changing the current time before then!</string>
+    <string name="repeating_scheduled">Repeating alarm will go off in 15 seconds and
+        every 15 seconds after based on the elapsed realtime clock</string>
+    <string name="repeating_unscheduled">Repeating alarm has been unscheduled</string>
+
+    <string name="alarm_service_started">The alarm service has started running</string>
+    <string name="alarm_service_finished">The alarm service has finished running</string>
+    <string name="alarm_service_label">Sample Alarm Service</string>
+
+    <string name="activity_alarm_service">App/Alarm/Alarm Service</string>
+    <string name="alarm_service">This demonstrates how to schedule a repeating
+        alarm that will initiate a long-lived operation through a service.</string>
+    <string name="start_alarm_service">Start Alarm Service</string>
+    <string name="stop_alarm_service">Stop Alarm Service</string>
+    <string name="alarm_service_scheduled">Alarm service will run now, and then every
+        30 seconds for 15 seconds</string>
+    <string name="alarm_service_unscheduled">Alarm service has been unscheduled</string>
+
+    <string name="activity_local_sample">App/Instrumentation/Local Sample</string>
+    <string name="local_sample">This demonstrates an Instrumentation that runs against
+        one of our own classes.  Note that this activity will be killed as
+        a side-effect of starting instrumentation on its own application.</string>
+
+    <string name="activity_contacts_filter">App/Instrumentation/Contacts Filter</string>
+    <string name="contacts_filter">This demonstrates an Instrumentation package that
+        launches the contacts list and simulates user events to filter it.</string>
+
+    <string name="pick_image_label">App/Activity/PickImage</string>
+    <string name="pick_image">Pick Image</string>
+
+    <string name="short_notification_text">Short notification</string>
+    <string name="long_notification_text">This is a long notification.  See, you might need a second more to read it.</string>
+    <string name="status_bar_notification_title">Sample Notification</string>
+
+    <string name="notifying_service_controller">This service will update a status bar notification
+                  every 5 seconds for a minute</string>
+        
+    <string name="activity_custom_title">App/Activity/Custom Title</string>
+    <string name="custom_title_left">Left is best</string>
+    <string name="custom_title_right">Right is always right</string>
+    <string name="custom_title_left_button">Change Left</string>
+    <string name="custom_title_right_button">Change Right</string>
+
+    <string name="menu_from_xml_title">App/Menu/Inflate from XML</string>
+    <string name="menu_from_xml_instructions_press_menu">Select a menu resource and press the menu key.</string>
+    <string name="menu_from_xml_instructions_go_back">If you want to choose another menu resource, go back and re-run this activity.</string>
+
+    <!-- ============================== -->
+    <!--  app/content examples strings  -->
+    <!-- ============================== -->
+
+    <string name="activity_styled_text">Content/Resources/<i>Styled</i> <b>Text</b></string>
+    <string name="styled_text_rsrc">Initialized from a resource:</string>
+    <string name="styled_text">Plain, <b>bold</b>, <i>italic</i>, <b><i>bold-italic</i></b></string>
+    <string name="styled_text_prog">Assigned programmatically:</string>
+
+    <string name="activity_read_asset">Content/Assets/Read Asset</string>
+    
+    <string name="activity_themes">Content/Resources/Themes</string>
+    <string name="activity_resources">Content/Resources/Resources</string>
+
+    <!-- =================================== -->
+    <!--  app/notification examples strings  -->
+    <!-- =================================== -->
+
+    <string name="short_notification">Short notification.</string>
+    <string name="long_notification">Long notification.</string>
+    <string name="short_top_notification">Short top.</string>
+    <string name="short_bottom_notification">Short bottom.</string>
+    <string name="short_center_notification">Short center.</string>
+    <string name="short_left_notification">Short left.</string>
+    <string name="short_right_notification">Short right.</string>
+    <string name="custom_notification">Custom Notification:</string>
+    <string name="custom_notification_button">With a Button</string>
+    
+    <string name="status_bar_notifications_icons_only">Icons only</string>
+    <string name="status_bar_notifications_icons_and_marquee">Icons and marquee</string>
+    <string name="status_bar_notifications_remote_views">Use remote views in balloon</string>
+    <string name="status_bar_notifications_defaults">Use default values where applicable</string>
+    <string name="status_bar_notifications_happy">:-)</string>
+    <string name="status_bar_notifications_ok">:-|</string> 
+    <string name="status_bar_notifications_sad">:-(</string>   
+    <string name="status_bar_notifications_happy_message">I am happy</string>
+    <string name="status_bar_notifications_ok_message">I am ok</string>
+    <string name="status_bar_notifications_sad_message">I am sad</string>  
+    <string name="status_bar_notifications_clear">Clear notification</string>
+    <string name="status_bar_notifications_mood_title">Mood ring</string>
+    <string name="status_bar_notifications_default_sound">Sound</string>
+    <string name="status_bar_notifications_default_vibrate">Vibrate</string>
+    <string name="status_bar_notifications_default_all">All</string>
+      
+    <!-- ============================== -->
+    <!--  app/dialog examples strings  -->
+    <!-- ============================== -->
+
+    <string name="activity_alert_dialog">App/Dialog</string>
+    <string name="alert_dialog_two_buttons">OK Cancel dialog with a message</string>
+    <string name="alert_dialog_two_buttons2">OK Cancel dialog with a long message</string>
+    <string name="alert_dialog_select_button">List dialog</string>
+    <string name="alert_dialog_single_choice">Single choice list</string>
+    <string name="alert_dialog_multi_choice">Repeat alarm</string>
+    <string name="alert_dialog_progress_button">Progress dialog</string>
+    <string name="alert_dialog_text_entry">Text Entry dialog</string>
+    <string name="alert_dialog_username">Name:</string>
+    <string name="alert_dialog_password">Password:</string>
+    <string name="alert_dialog_two_buttons_title">
+        Lorem ipsum dolor sit aie consectetur adipiscing\nPlloaso mako nuto
+        siwuf cakso dodtos anr koop.
+    </string>    
+    <string name="alert_dialog_two_buttons_msg">Header title</string>
+    <string name="alert_dialog_two_buttons2_msg">
+        Plloaso mako nuto siwuf cakso dodtos anr koop a
+        cupy uf cak vux noaw yerw phuno. Whag schengos, uf efed, quiel
+        ba mada su otrenzr.\n\nSwipontgwook proudgs hus yag su ba dagarmidad. 
+        Plasa maku noga wipont trenzsa schengos ent kaap zux comy.\n\nWipont trenz 
+        kipg naar mixent phona. Cak pwico siructiun
+        ruous nust apoply tyu cak Uhex sisulutiun munityuw uw dseg
+    </string>
+    <string name="alert_dialog_ok">OK</string>
+    <string name="alert_dialog_hide">Hide</string>
+    <string name="alert_dialog_something">Something</string>
+    <string name="alert_dialog_cancel">Cancel</string>
+    <string name="alert_dialog_progress_text1">34<xliff:g id="percent">%</xliff:g></string>
+    <string name="alert_dialog_progress_text2">145/305 KB</string>
+    
+    <string name="select_dialog">Header title</string>
+    <string name="select_dialog_show">List dialog</string>
+      
+    <!-- ============================== -->
+    <!--  app/menu examples strings     -->
+    <!-- ============================== -->
+
+    <string name="last_most_often">Last most often</string>
+    <string name="middle_most_often">Middle most often</string>
+    <string name="first_most_often">First most often</string>
+    <string name="last_least_often">Last least often</string>
+    <string name="middle_least_often">Middle least often</string>
+    <string name="first_least_often">First least often</string>
+    <string name="item_1">Item 1</string>
+    <string name="item_2">Item 2</string>
+    <string name="item_3">Item 3</string>
+    <string name="browser_visibility">Browser visibility</string>
+    <string name="browser_refresh">Refresh</string>
+    <string name="browser_bookmark">Bookmark</string>
+    <string name="email_visibility">Email visibility</string>
+    <string name="email_reply">Reply</string>
+    <string name="email_forward">Forward</string>
+    <string name="jump">Jump</string>
+    <string name="dive">Dive</string>
+
+    <!-- ============================== -->
+    <!--  app/menu examples strings     -->
+    <!-- ============================== -->
+    
+    <string name="preferences_from_xml">App/Preferences/1. Preferences from XML</string>
+    <string name="launching_preferences">App/Preferences/2. Launching preferences</string>
+    <string name="preference_dependencies">App/Preferences/3. Preference dependencies</string>
+    <string name="default_values">App/Preferences/4. Default values</string>
+    <string name="preferences_from_code">App/Preferences/5. Preferences from code</string>
+    <string name="advanced_preferences">App/Preferences/6. Advanced preferences</string>
+
+    <string name="launch_preference_activity">Launch PreferenceActivity</string>
+    <string name="counter_value_is">The counter value is</string>
+    
+    <string name="inline_preferences">In-line preferences</string>
+    <string name="dialog_based_preferences">Dialog-based preferences</string>
+    <string name="launch_preferences">Launch preferences</string>
+    <string name="preference_attributes">Preference attributes</string>
+
+    <string name="title_toggle_preference">Toggle preference</string>
+    <string name="summary_toggle_preference">This is a toggle button</string>
+
+    <string name="title_checkbox_preference">Checkbox preference</string>
+    <string name="summary_checkbox_preference">This is a checkbox</string>
+    
+    <string name="title_yesno_preference">Yes or no preference</string>
+    <string name="summary_yesno_preference">An example that uses a yes/no dialog</string>
+    <string name="dialog_title_yesno_preference">Do you like bananas?</string>
+
+    <string name="title_edittext_preference">Edit text preference</string>
+    <string name="summary_edittext_preference">An example that uses an edit text dialog</string>
+    <string name="dialog_title_edittext_preference">Enter your favorite animal</string>
+
+    <string name="title_list_preference">List preference</string>
+    <string name="summary_list_preference">An example that uses a list dialog</string>
+    <string name="dialog_title_list_preference">Choose one</string>
+
+    <string name="title_screen_preference">Screen preference</string>
+    <string name="summary_screen_preference">Shows another screen of preferences</string>
+
+    <string name="title_next_screen_toggle_preference">Toggle preference</string>
+    <string name="summary_next_screen_toggle_preference">Preference that is on the next screen but same hierarchy</string>
+
+    <string name="title_intent_preference">Intent preference</string>
+    <string name="summary_intent_preference">Launches an Activity from an Intent</string>
+
+    <string name="title_my_preference">My preference</string>
+    <string name="summary_my_preference">This is a custom counter preference</string>
+
+    <string name="title_advanced_toggle_preference">Haunted preference</string>
+    <string name="summary_on_advanced_toggle_preference">I'm on! :)</string>
+    <string name="summary_off_advanced_toggle_preference">I'm off! :(</string>
+
+    <string name="title_parent_preference">Parent toggle</string>
+    <string name="summary_parent_preference">This is visually a parent</string>
+    <string name="title_child_preference">Child toggle</string>
+    <string name="summary_child_preference">This is visually a child</string>
+    
+    <string name="example_preference_dependency">Example preference dependency</string>
+    <string name="title_wifi">WiFi</string>
+    <string name="title_wifi_settings">WiFi settings</string>
+
+    <string name="default_value_list_preference">beta</string>
+    <string name="default_value_edittext_preference">Default value</string>
+
+    <!-- ============================== -->
+    <!--  app/search examples strings  -->
+    <!-- ============================== -->
+
+    <string name="search_invoke">App/Search/Invoke Search</string>
+    <string name="msg_search">This activity shows a few different ways to invoke search, and inserts context-specific data for use by the search activity.</string>
+    <string name="search_sect_invocation">Ways to invoke search</string>
+    <string name="label_onsearchrequested">onSearchRequested()</string>
+    <string name="search_sect_options">Optional search parameters</string>
+    <string name="label_search_query_prefill">"Prefill query: "</string>
+    <string name="label_search_query_appdata">"App Data: "</string>
+
+    <string name="search_query_results">App/Search/Query Search Results</string>
+    <string name="msg_search_results">This activity accepts query strings via the ACTION_SEARCH intent.  In a full implementation, you would use the query string to select results from your data source, and present a list of those results to the user.</string>
+    <string name="label_search_query">"Query String: "</string>
+    <string name="label_search_appdata">"Query App Data: "</string>
+    <string name="label_search_deliveredby">"Activity Method: "</string>
+    
+    <string name="search_label">Search Demo</string>
+    <string name="search_hint">Search Demo Hint</string>
+    
+    <!-- ================================ -->
+    <!--  app/shortcuts examples strings  -->
+    <!-- ================================ -->
+
+    <string name="shortcuts">App/Launcher Shortcuts</string>
+    <string name="sample_shortcuts">ApiDemos</string>
+    <string name="shortcut_name">Sample</string>
+    
+    <string name="msg_launcher_shortcuts">This activity creates shortcuts for the launcher (home screen), and receives intents from those shortcuts.  To try it, return to the launcher and long-press to create a shortcut.</string>
+    <string name="label_intent">Intent:</string>
+    
+    <!-- ============================ -->
+    <!--  graphics examples strings  -->
+    <!-- ============================ -->
+
+    <string name="hide_me">Hide Me!</string>
+    
+    <!-- ============================ -->
+    <!--  media examples strings  -->
+    <!-- ============================ -->
+
+    <string name="local_video">Play Video from Local File</string>
+    <string name="stream_video">Play Streaming Video</string>
+    <string name="local_audio">Play Audio from Local File</string>
+    <string name="res_audio">Play Audio from Resources</string>
+
+    <!-- ============================ -->
+    <!--  views examples strings  -->
+    <!-- ============================ -->
+
+    <string name="linear_layout_8_vertical">Vertical</string>
+    <string name="linear_layout_8_horizontal">Horizontal</string>
+    <string name="linear_layout_8_top">Top</string>
+    <string name="linear_layout_8_middle">Middle</string>
+    <string name="linear_layout_8_bottom">Bottom</string>
+    <string name="linear_layout_8_left">Left</string>
+    <string name="linear_layout_8_center">Center</string>
+    <string name="linear_layout_8_right">Right</string>
+    <string name="linear_layout_10_from">From:</string>
+    <string name="linear_layout_10_to">To:</string>
+    <string name="list_7_nothing">Nothing\u2026</string>
+    <string name="radio_group_snack">Snack</string>
+    <string name="radio_group_selection">"You have selected: "</string>
+    <string name="radio_group_none">(none)</string>
+    <string name="table_layout_7_quit">Quit</string>
+    <string name="table_layout_7_ctrlq">Ctrl-Q</string>
+    <string name="table_layout_8_quit">Quit</string>
+    <string name="table_layout_8_ctrlq">Ctrl-Q</string>
+    
+    <string name="seekbar_tracking_on">Tracking on</string>
+    <string name="seekbar_tracking_off">Tracking off</string>
+    <string name="seekbar_from_touch">from touch</string>
+    
+    <string name="ratingbar_rating">Rating:</string>
+    
+    <!-- ============================== -->
+    <!--  GoogleLogin examples strings  -->
+    <!-- ============================== -->
+    <string name="googlelogin_err">Use a better username and password, please.</string>
+
+
+    <!-- ================================== -->
+    <!--  initial strings for layout files  -->
+    <!-- ================================== -->
+    <string name="animation_1_instructions">Please enter your password:</string>
+    <string name="animation_2_text_1">Freedom</string>
+    <string name="animation_2_text_2">is nothing else but</string>
+    <string name="animation_2_text_3">a chance to be better.</string>
+    <string name="animation_2_text_4">— Albert Camus</string>
+    <string name="animation_2_instructions">Select an animation:</string>
+    <string name="autocomplete_1_instructions">Type in the text field for auto-completion.</string>
+    <string name="autocomplete_1_country">Country:</string>
+    <string name="autocomplete_1_focus">Give me Focus</string>
+    <string name="autocomplete_2_country">Country:</string>
+    <string name="autocomplete_2_focus">Give me Focus</string>
+    <string name="autocomplete_3_button_1">Scroll</string>
+    <string name="autocomplete_3_button_2">Down</string>
+    <string name="autocomplete_3_button_3">To</string>
+    <string name="autocomplete_3_button_4">See</string>
+    <string name="autocomplete_3_button_5">Auto</string>
+    <string name="autocomplete_3_button_6">Complete</string>
+    <string name="autocomplete_3_button_7">Text</string>
+    <string name="autocomplete_3_button_8">View</string>
+    <string name="autocomplete_3_button">Button</string>
+    <string name="autocomplete_3_country">Country:</string>
+    <string name="autocomplete_4_instructions">Type in the text field for auto-completion.</string>
+    <string name="autocomplete_4_name">Name:</string>
+    <string name="autocomplete_4_message">You must have contacts in your address book. Typing * will show all of your contacts.</string>
+    <string name="autocomplete_5_instructions">Type in the text field for auto-completion.</string>
+    <string name="autocomplete_5_hint">Typing * will show all of your contacts.</string>
+    <string name="autocomplete_5_name">Name:</string>
+    <string name="autocomplete_6_to">To:</string>
+    <string name="autocomplete_6_to_hint">To</string>
+    <string name="autocomplete_6_subject">Subject:</string>
+    <string name="autocomplete_7_instructions">Type in the text field for auto-completion by words.</string>
+    <string name="autocomplete_7_country">Country:</string>
+    <string name="autocomplete_7_focus">Give me Focus</string>
+    <string name="baseline_1_label">Label:</string>
+    <string name="baseline_1_button">Button</string>
+    <string name="baseline_1_bigger">Bigger</string>
+    <string name="baseline_2_label">Label:</string>
+    <string name="baseline_2_button">Button</string>
+    <string name="baseline_2_bigger">Bigger</string>
+    <string name="baseline_3_label">Label:</string>
+    <string name="baseline_3_button">Button</string>
+    <string name="baseline_3_bigger">Bigger</string>
+    <string name="baseline_3_explanation">This example shows that baseline alignment has no effect when the layout gravity is set to center_vertical.</string>
+    <string name="baseline_4_label">Label:</string>
+    <string name="baseline_4_button">Button</string>
+    <string name="baseline_4_bigger">Bigger</string>
+    <string name="baseline_4_label_2">Label Again</string>
+    <string name="baseline_4_label_3">Label Me</string>
+    <string name="baseline_6_multi_line">This is a\nmulti-line field.</string>
+    <string name="baseline_6_baseline">Baseline Aligned</string>
+    <string name="baseline_7_fat">Big and bold</string>
+    <string name="baseline_7_lean">Slim and slick.</string>
+    <string name="baseline_nested_1_label">label</string>
+    <string name="controls_1_save">Save</string>
+    <string name="controls_1_checkbox_1">Checkbox 1</string>
+    <string name="controls_1_checkbox_2">Checkbox 2</string>
+    <string name="controls_1_radiobutton_1">RadioButton 1</string>
+    <string name="controls_1_radiobutton_2">RadioButton 2</string>
+    <string name="controls_1_star">Star</string>
+    <string name="focus_1_message">Service not running</string>
+    <string name="focus_1_placeholder">placeholder</string>
+    <string name="focus_2_left">left</string>
+    <string name="focus_2_jump">jump over me from L to R</string>
+    <string name="focus_2_right">right</string>
+    <string name="focus_3_left">left</string>
+    <string name="focus_3_right">right</string>
+    <string name="focus_3_top">top</string>
+    <string name="focus_3_bottom">bottom</string>
+    <string name="gallery_2_text">Testing</string>
+    <string name="googlelogin_login">Login</string>
+    <string name="googlelogin_bad_login">Bad Login</string>
+    <string name="googlelogin_clear">Clear Credentials</string>
+    <string name="googlelogin_user">Username:</string>
+    <string name="layout_animation_name">Name:</string>
+    <string name="layout_animation_lastname">Last Name:</string>
+    <string name="layout_animation_phone">Phone:</string>
+    <string name="layout_animation_address">Address:</string>
+    <string name="linear_layout_1_top">This is the top view.</string>
+    <string name="linear_layout_1_middle">This is the middle view. It has more text in it than either the top view or the bottom view.</string>
+    <string name="linear_layout_1_bottom">This is the bottom view.</string>
+    <string name="linear_layout_2_top">This is the top view.</string>
+    <string name="linear_layout_2_middle">This is the middle view. It has more text in it than either the top view or the bottom view.</string>
+    <string name="linear_layout_2_bottom">This is the bottom view.</string>
+    <string name="linear_layout_3_top">This is the top view.</string>
+    <string name="linear_layout_3_middle">This is the middle view. It has more text in it than either the top view or the bottom view.</string>
+    <string name="linear_layout_3_bottom">This is the bottom view.</string>
+    <string name="linear_layout_5_instructions">Type Here:</string>
+    <string name="linear_layout_5_cancel">Cancel</string>
+    <string name="linear_layout_5_ok">OK</string>
+    <string name="linear_layout_6_one">One</string>
+    <string name="linear_layout_6_two">Two</string>
+    <string name="linear_layout_6_three">This is the third one</string>
+    <string name="linear_layout_6_four">Four</string>
+    <string name="linear_layout_7_small">Not much text</string>
+    <string name="linear_layout_7_big">A lot more text than any of the other columns. This column should set the height of the linear layout.</string>
+    <string name="linear_layout_7_wrap">wrap_content</string>
+    <string name="linear_layout_8_a">A</string>
+    <string name="linear_layout_8_b">B</string>
+    <string name="linear_layout_8_c">C</string>
+    <string name="linear_layout_9_button">Button</string>
+    <string name="link_text">This is some text.  In this text are some things that are actionable.  For instance, you can click on http://www.google.com and it will launch the web browser.  You can click on google.com too.  And, if you click on (415) 555-1212 it should dial the phone.</string>
+    <string name="list_8_new_photo">New photo</string>
+    <string name="list_8_clear_photos">Clear photos</string>
+    <string name="list_8_no_photos">No photos</string> 
+    <string name="progressbar_1_plus">+</string>
+    <string name="progressbar_1_minus">-</string>
+    <string name="progressbar_1_default_progress">Default progress:</string>
+    <string name="progressbar_1_secondary_progress">Secondary progress:</string>
+    <string name="progressbar_3_progress">Show Progress</string>
+    <string name="progressbar_3_indeterminate">Show Indeterminate</string>
+    <string name="progressbar_3_indeterminate_no_title">Show Indeterminate No Title</string>
+    <string name="progressbar_4_toggle">Toggle Indeterminate</string>
+    <string name="radio_group_1_breakfast">Breakfast</string>
+    <string name="radio_group_1_lunch">Lunch</string>
+    <string name="radio_group_1_dinner">Dinner</string>
+    <string name="radio_group_1_all">All of them</string>
+    <string name="radio_group_1_selection">You have selected: (none)</string>
+    <string name="radio_group_1_clear">Clear</string>
+    <string name="receive_result_instructions">Press the button to get an activity result, which will be displayed here:</string>
+    <string name="receive_result_result">Get Result</string>
+    <string name="relative_layout_1_top">Top</string>
+    <string name="relative_layout_1_bottom">Bottom</string>
+    <string name="relative_layout_1_center">center_vertical</string>
+    <string name="relative_layout_2_instructions">Type here:</string>
+    <string name="relative_layout_2_ok">Ok</string>
+    <string name="relative_layout_2_cancel">Cancel</string>
+    <string name="scroll_view_1_text_1">Text View 1</string>
+    <string name="scroll_view_1_button_1">Button 1</string>
+    <string name="scroll_view_1_text_2">Text View 2</string>
+    <string name="scroll_view_1_button_2">Button 2</string>
+    <string name="scroll_view_1_text_3">Text View 3</string>
+    <string name="scroll_view_1_button_3">Button 3</string>
+    <string name="scroll_view_1_text_4">Text View 4</string>
+    <string name="scroll_view_1_button_4">Button 4</string>
+    <string name="scroll_view_1_text_5">Text View 5</string>
+    <string name="scroll_view_1_button_5">Button 5</string>
+    <string name="scroll_view_1_text_6">Text View 6</string>
+    <string name="scroll_view_1_button_6">Button 6</string>
+    <string name="scroll_view_2_text_1">Text View 1</string>
+    <string name="scroll_view_2_button_1">Button 1</string>
+    <string name="scrollbar_1_text">Lorem ipsum dolor sit amet.</string>
+    <string name="scrollbar_2_text">Lorem ipsum dolor sit amet.</string>
+    <string name="scrollbar_3_text">
+ The Android platform is a software stack for mobile devices including an 
+ operating system, middleware and key applications. Developers can create 
+ applications for the platform using the Android SDK. Applications are written 
+ using the Java programming language and run on Dalvik, a custom virtual 
+ machine designed for embedded use which runs on top of a Linux kernel.
+
+ If you want to know how to develop applications for Android, you're in the 
+ right place. This site provides a variety of documentation that will help you 
+ learn about Android and develop mobile applications for the platform.
+
+ An early look at the the Android SDK is also available. It includes sample 
+ projects with source code, development tools, an emulator, and of course all 
+ the libraries you'll need to build an Android application. What would it take 
+ to build a better mobile phone?
+    </string>
+    <string name="spinner_1_color">Color:</string>
+    <string name="spinner_1_planet">Planet:</string>
+    <string name="spinner_1_color_prompt">Choose a color</string>
+    <string name="spinner_1_planet_prompt">Choose a planet</string>
+    <string name="table_layout_1_star">*</string>
+    <string name="table_layout_1_triple_star">***</string>
+    <string name="table_layout_1_open">Open\u2026</string>
+    <string name="table_layout_1_open_shortcut">Ctrl-O</string>
+    <string name="table_layout_1_save">Save As\u2026</string>
+    <string name="table_layout_1_save_shortcut">(Save Document)</string>
+    <string name="table_layout_1_quit">Quit Application</string>
+    <string name="table_layout_1_quit_shortcut">Ctrl-Shift-Q</string>
+    <string name="table_layout_2_path_1">~/path/to/file/to/open</string>
+    <string name="table_layout_2_path_2">~/.profile</string>
+    <string name="table_layout_2_open">Open</string>
+    <string name="table_layout_2_save">Save</string>
+    <string name="table_layout_2_save_all">Save All</string>
+    <string name="table_layout_3_star">*</string>
+    <string name="table_layout_3_triple_star">***</string>
+    <string name="table_layout_3_open">Open\u2026</string>
+    <string name="table_layout_3_open_shortcut">Ctrl-O</string>
+    <string name="table_layout_3_save">Save As\u2026</string>
+    <string name="table_layout_3_save_shortcut">(Save Document)</string>
+    <string name="table_layout_3_too_long">Too Long</string>
+    <string name="table_layout_3_quit">Quit Application</string>
+    <string name="table_layout_3_quit_shortcut">Ctrl-Shift-Q</string>
+    <string name="table_layout_4_open">Open\u2026</string>
+    <string name="table_layout_4_open_shortcut">Ctrl-O</string>
+    <string name="table_layout_4_save">Save As\u2026</string>
+    <string name="table_layout_4_save_shortcut">Ctrl-Shift-S</string>
+    <string name="table_layout_5_open">Open\u2026</string>
+    <string name="table_layout_5_open_shortcut">Ctrl-O</string>
+    <string name="table_layout_5_save">Save\u2026</string>
+    <string name="table_layout_5_save_shortcut">Ctrl-S</string>
+    <string name="table_layout_5_save_as">Save As\u2026</string>
+    <string name="table_layout_5_save_as_shortcut">Ctrl-Shift-S</string>
+    <string name="table_layout_5_import">Import\u2026</string>
+    <string name="table_layout_5_export">Export\u2026</string>
+    <string name="table_layout_5_export_shortcut">Ctrl-E</string>
+    <string name="table_layout_5_quit">Quit\u2026</string>
+    <string name="table_layout_6_x">X</string>
+    <string name="table_layout_6_open">Open\u2026</string>
+    <string name="table_layout_6_open_shortcut">Ctrl-O</string>
+    <string name="table_layout_6_save">Save\u2026</string>
+    <string name="table_layout_6_save_shortcut">Ctrl-S</string>
+    <string name="table_layout_6_save_as">Save As\u2026</string>
+    <string name="table_layout_6_save_as_shortcut">Ctrl-Shift-S</string>
+    <string name="table_layout_6_import">Import\u2026</string>
+    <string name="table_layout_6_export">Export\u2026</string>
+    <string name="table_layout_6_export_shortcut">Ctrl-E</string>
+    <string name="table_layout_6_quit">Quit\u2026</string>
+    <string name="table_layout_7_x">X</string>
+    <string name="table_layout_7_open">Open\u2026</string>
+    <string name="table_layout_7_open_shortcut">Ctrl-O</string>
+    <string name="table_layout_7_save">Save\u2026</string>
+    <string name="table_layout_7_save_shortcut">Ctrl-S</string>
+    <string name="table_layout_7_save_as">Save As\u2026</string>
+    <string name="table_layout_7_save_as_shortcut">Ctrl-Shift-S</string>
+    <string name="table_layout_7_import">Import\u2026</string>
+    <string name="table_layout_7_export">Export\u2026</string>
+    <string name="table_layout_7_export_shortcut">Ctrl-E</string>
+    <string name="table_layout_7_toggle_checkmarks">Toggle Checkmarks</string>
+    <string name="table_layout_7_toggle_shortcuts">Toggle Shortcuts</string>
+    <string name="table_layout_8_x">X</string>
+    <string name="table_layout_8_open">Open\u2026</string>
+    <string name="table_layout_8_open_shortcut">Ctrl-O</string>
+    <string name="table_layout_8_save">Save\u2026</string>
+    <string name="table_layout_8_save_shortcut">Ctrl-S</string>
+    <string name="table_layout_8_save_as">Save As\u2026</string>
+    <string name="table_layout_8_save_as_shortcut">Ctrl-Shift-S</string>
+    <string name="table_layout_8_import">Import\u2026</string>
+    <string name="table_layout_8_export">Export\u2026</string>
+    <string name="table_layout_8_export_shortcut">Ctrl-E</string>
+    <string name="table_layout_8_toggle_stretch">Toggle Stretch</string>
+    <string name="table_layout_9_open">Open\u2026</string>
+    <string name="table_layout_9_open_shortcut">Ctrl-O</string>
+    <string name="table_layout_9_save">Save\u2026</string>
+    <string name="table_layout_9_save_shortcut">Ctrl-S</string>
+    <string name="table_layout_9_save_as">Save As\u2026</string>
+    <string name="table_layout_9_save_as_shortcut">Ctrl-Shift-S</string>
+    <string name="table_layout_9_save_all">Save All And Do A Lot Of Stuff Just To Be Too Long For This Screen Because It Is A Test After All</string>
+    <string name="table_layout_9_save_all_shortcut">Ctrl-E</string>
+    <string name="table_layout_9_import">Import\u2026</string>
+    <string name="table_layout_9_export">Export\u2026</string>
+    <string name="table_layout_9_export_shortcut">Ctrl-E</string>
+    <string name="table_layout_9_toggle_shrink">Toggle Shrink</string>
+    <string name="table_layout_10_user">User</string>
+    <string name="table_layout_10_password">Password</string>
+    <string name="table_layout_10_cancel">Cancel</string>
+    <string name="table_layout_10_login">Login</string>
+    <string name="table_layout_12_a">A</string>
+    <string name="table_layout_12_b">BB</string>
+    <string name="table_layout_12_c">CCCC</string>
+    <string name="table_layout_12_d">D</string>
+    <string name="table_layout_12_e">E</string>
+    <string name="table_layout_12_f">F</string>
+    <string name="table_layout_12_g">G</string>
+    <string name="table_layout_12_h">H</string>
+    <string name="visibility_1_view_1">View A</string>
+    <string name="visibility_1_view_2">View B</string>
+    <string name="visibility_1_view_3">View C</string>
+    <string name="visibility_1_vis">Vis</string>
+    <string name="visibility_1_invis">Invis</string>
+    <string name="visibility_1_gone">Gone</string>
+
+
+    <string name="google_login_username_text"></string>
+
+    <string name="incoming_message_notify_text">Show Notification</string>
+
+    <string name="incoming_message_info_message_text">this is the text of a previous message.\nkthx. meet u for dinner. cul8r</string>
+
+    <string name="incoming_message_view_message_text">this is the text of a previous message.\nkthx. meet u for dinner. cul8r</string>
+    <string name="imcoming_message_view_message2_text">Did you notice that the status bar icon disappeared?</string>
+    <string name="imcoming_message_ticker_text">New text message: <xliff:g id="text">%0$s</xliff:g></string>
+
+    <string name="log_text_box_1_do_nothing_text">Do nothing</string>
+    <string name="log_text_box_1_add_text">Add</string>
+
+    <string name="notify_with_text_long_notify_text">Show Long Notification</string>
+    <string name="notify_with_text_short_notify_text">Show Short Notification</string>
+
+    <string name="table_layout_10_password_text"></string>
+    <string name="table_layout_10_username_text"></string>
+
+    <string name="text_switcher_1_next_text">Next</string>
+
+    <string name="date_widgets_example_dateDisplay_text"></string>
+    <string name="date_widgets_example_pickTime_text">change the time</string>
+    <string name="date_widgets_example_pickDate_text">change the date</string>
+    
+    <string name="buttons_1_normal">Normal</string>
+    <string name="buttons_1_right">Right</string>
+    <string name="buttons_1_small">Small</string>
+    <string name="buttons_1_small_right">S R</string>
+    <string name="buttons_1_small_left">S L</string>
+    <string name="buttons_1_small_up">S U</string>
+    <string name="buttons_1_small_down">S D</string>
+    <string name="buttons_1_toggle">Toggle</string>
+    
+    <string name="expandable_list_sample_action">Sample action</string>
+
+    <string name="chronometer_start">Start</string>
+    <string name="chronometer_stop">Stop</string>
+    <string name="chronometer_reset">Reset</string>
+    <string name="chronometer_set_format">Set format string</string>
+    <string name="chronometer_clear_format">Clear format string</string>
+    <string name="chronometer_initial_format">Initial format: <xliff:g id="initial-format">%s</xliff:g></string>
+
+    <!-- ============================ -->
+    <!--  vibrator examples strings  -->
+    <!-- ============================ -->
+
+    <string name="vibrate">Vibrate</string>
+    
+    
+    <string name="image_view_large_normal">Large image at normal size</string>
+    <string name="image_view_large_at_most">Large image scaled to at most 50x50</string>
+    <string name="image_view_large_at_most_padded">Large image scaled to at most 70x70 with padding</string>
+    <string name="image_view_large_exactly_padded">Large image scaled to exactly 70x70 with padding</string>
+    <string name="image_view_small_normal">Small image at normal size</string>
+    <string name="image_view_small_at_most">Small image scaled to at most 50x50</string>
+    <string name="image_view_small_at_most_padded">Small image scaled to at most 70x70 with padding</string>
+    <string name="image_view_small_exactly_padded">Small image scaled to exactly 70x70 with padding</string>
+    
+    <!-- Shouldn't be localized -->
+    <string name="textColorPrimary">textColorPrimary</string>
+    <string name="textColorSecondary">textColorSecondary</string>
+    <string name="textColorTertiary">textColorTertiary</string>
+    <string name="listSeparatorTextViewStyle">listSeparatorTextViewStyle</string>
+
+</resources>
+

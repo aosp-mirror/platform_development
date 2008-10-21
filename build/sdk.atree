@@ -1,0 +1,159 @@
+#
+# Copyright (C) 2007 The Android Open Source Project
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+#
+# These are the files that comprise that SDK
+#
+
+# host tools from out/host/$(HOST_OS)-$(HOST_ARCH)/
+bin/aapt tools/aapt
+bin/aidl tools/aidl
+bin/adb tools/adb
+bin/sqlite3 tools/sqlite3
+bin/dmtracedump tools/dmtracedump
+bin/mksdcard tools/mksdcard
+
+# other tools
+development/tools/scripts/add-accounts-sdk tools/add-accounts.py
+
+# the uper-jar file that apps link against
+out/target/common/obj/PACKAGING/android_jar_intermediates/android.jar android.jar
+
+sdk/sdk-build.prop tools/lib/build.prop
+development/tools/scripts/plugin.prop tools/lib/plugin.prop
+
+# the aidl precompiled include
+obj/framework.aidl tools/lib/framework.aidl
+
+# sdk scripts
+development/tools/scripts/AndroidManifest.template tools/lib/AndroidManifest.template
+development/tools/scripts/AndroidManifest.alias.template tools/lib/AndroidManifest.alias.template
+development/tools/scripts/build.template tools/lib/build.template
+development/tools/scripts/build.alias.template tools/lib/build.alias.template
+development/tools/scripts/default.properties.template tools/lib/default.properties.template
+development/tools/scripts/iml.template tools/lib/iml.template
+development/tools/scripts/ipr.template tools/lib/ipr.template
+development/tools/scripts/iws.template tools/lib/iws.template
+development/tools/scripts/java_file.template tools/lib/java_file.template
+development/tools/scripts/layout.template tools/lib/layout.template
+development/tools/scripts/strings.template tools/lib/strings.template
+development/tools/scripts/alias.template tools/lib/alias.template
+
+# emacs support
+development/tools/scripts/android.el tools/lib/android.el
+
+# samples
+development/samples/HelloActivity
+development/samples/Home
+development/samples/LunarLander
+development/samples/NotePad
+development/samples/ApiDemos
+development/samples/SkeletonApp
+development/samples/Snake
+
+# dx
+bin/dx tools/dx
+bin/dexdump tools/dexdump
+framework/dx.jar tools/lib/dx.jar
+
+#androidprefs
+framework/androidprefs.jar tools/lib/androidprefs.jar
+
+#jarutils
+framework/jarutils.jar tools/lib/jarutils.jar
+
+#apkbuilder
+bin/apkbuilder tools/apkbuilder
+framework/apkbuilder.jar tools/lib/apkbuilder.jar
+
+# sdkstats service
+framework/sdkstats.jar tools/lib/sdkstats.jar
+
+# jfreechart. needed by ddms.
+framework/jcommon-1.0.12.jar tools/lib/jcommon-1.0.12.jar
+framework/jfreechart-1.0.9.jar tools/lib/jfreechart-1.0.9.jar
+framework/jfreechart-1.0.9-swt.jar tools/lib/jfreechart-1.0.9-swt.jar
+
+# ddms
+bin/ddms tools/ddms
+framework/ddms.jar tools/lib/ddms.jar
+framework/ddmlib.jar tools/lib/ddmlib.jar
+framework/ddmuilib.jar tools/lib/ddmuilib.jar
+
+# hierarchyviewer
+bin/hierarchyviewer tools/hierarchyviewer
+framework/hierarchyviewer.jar tools/lib/hierarchyviewer.jar
+framework/org-netbeans-api-visual.jar tools/lib/org-netbeans-api-visual.jar
+framework/org-openide-util.jar tools/lib/org-openide-util.jar
+framework/swing-worker-1.1.jar tools/lib/swing-worker-1.1.jar
+
+# draw9patch
+bin/draw9patch tools/draw9patch
+framework/draw9patch.jar tools/lib/draw9patch.jar
+framework/swing-worker-1.1.jar tools/lib/swing-worker-1.1.jar
+
+# traceview
+bin/traceview tools/traceview
+framework/traceview.jar tools/lib/traceview.jar
+
+# activitycreator
+bin/activitycreator tools/activitycreator
+framework/activitycreator.jar tools/lib/activitycreator.jar
+
+# emulator
+bin/emulator tools/emulator
+system.img tools/lib/images/system.img
+ramdisk.img tools/lib/images/ramdisk.img
+userdata.img tools/lib/images/userdata.img
+userdata.img tools/lib/images/userdata.img
+development/emulator/prebuilt/android-arm/kernel-qemu tools/lib/images/kernel-qemu
+
+# emulator skins
+development/emulator/skins/HVGA   tools/lib/images/skins/HVGA
+development/emulator/skins/HVGA-L tools/lib/images/skins/HVGA-L
+development/emulator/skins/HVGA-P tools/lib/images/skins/HVGA-P
+development/emulator/skins/QVGA-L tools/lib/images/skins/QVGA-L
+development/emulator/skins/QVGA-P tools/lib/images/skins/QVGA-P
+
+# NOTICE files are copied by config/Makefile
+
+# the readme
+development/docs/SDK_RELEASE_NOTES RELEASE_NOTES.txt
+
+# the docs
+docs/framework docs
+frameworks/base/docs/docs-redirect.html documentation.html
+frameworks/base/docs/docs-samples-redirect.html docs/samples/index.html
+
+# tools support
+docs/activity_actions.txt tools/lib/activity_actions.txt
+docs/broadcast_actions.txt tools/lib/broadcast_actions.txt
+docs/service_actions.txt tools/lib/service_actions.txt
+docs/categories.txt tools/lib/categories.txt
+docs/widgets.txt tools/lib/widgets.txt
+framework/layoutlib.jar tools/lib/layoutlib.jar
+frameworks/base/core/res tools/lib/res/default
+frameworks/base/data/fonts/fonts.xml tools/lib/fonts/default/fonts.xml
+frameworks/base/data/fonts/DroidSans.ttf tools/lib/fonts/default/DroidSans.ttf
+frameworks/base/data/fonts/DroidSans-Bold.ttf tools/lib/fonts/default/DroidSans-Bold.ttf
+frameworks/base/data/fonts/DroidSansFallback.ttf tools/lib/fonts/default/DroidSansFallback.ttf
+frameworks/base/data/fonts/DroidSansMono.ttf tools/lib/fonts/default/DroidSansMono.ttf
+frameworks/base/data/fonts/DroidSerif-Bold.ttf tools/lib/fonts/default/DroidSerif-Bold.ttf
+frameworks/base/data/fonts/DroidSerif-BoldItalic.ttf tools/lib/fonts/default/DroidSerif-BoldItalic.ttf
+frameworks/base/data/fonts/DroidSerif-Italic.ttf tools/lib/fonts/default/DroidSerif-Italic.ttf
+frameworks/base/data/fonts/DroidSerif-Regular.ttf tools/lib/fonts/default/DroidSerif-Regular.ttf
+
+

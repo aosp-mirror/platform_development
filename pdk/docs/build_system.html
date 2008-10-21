@@ -1,0 +1,428 @@
+
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+<title>Android - Build System</title>
+<script src="http://www.google.com/uds/api?file=uds.js&amp;v=1.0&amp;key=internal-codesite" type="text/javascript"></script>
+<script src="http://code.google.com/js/jquery.js" type="text/javascript"></script>
+<script type="text/javascript">var _tocPath_ = 'http://code.google.com/android/_toc.ezt';</script>
+<script src="http://code.google.com/js/codesite.pack.01312008.js" type="text/javascript"></script>
+<link href="http://code.google.com/css/codesite.pack.01312008.css" type="text/css" rel="stylesheet">
+</link>
+
+<!--[if IE]><link rel="stylesheet" type="text/css" href="/css/iehacks.css" /><![endif]-->
+<script src="http://code.google.com/android/assets/search_autocomplete.js"></script>
+<link rel="stylesheet" type="text/css" href="http://code.google.com/css/semantic_headers.css" />
+<link rel="stylesheet" type="text/css" href="http://code.google.com/android/assets/style.css" />
+<script>
+    jQuery(document).ready(function() {
+            jQuery("pre").addClass("prettyprint");
+        });
+    </script>
+<style type="text/css">
+<!--
+h1,h2,h3 {
+	color: #000000;
+}
+-->
+</style>
+</head>
+<body class="gc-documentation">
+<div id="gc-container">
+<a name="top"></a>
+<div id="skipto"> </div>
+<div id="langpref">
+  <!--<a class="dropdown" href="/">English</a> <span>|</span> <a href="/more/">Site Directory</a> -->
+</div>
+<div id="gc-header">
+  <div id="logo"><a href="http://code.google.com/android/index.html"><img src="http://code.google.com/android/images/logo_android.gif" alt="Android"/></a></div>
+  <div id="search" style="inline">
+    <div id="searchForm" class="searchForm" style="height: 44px;">
+      <!--previously form was here-->
+    </div>
+    <!-- end searchForm -->
+    <noscript>
+    <style type="text/css">
+      .searchForm {
+        display : none !important;
+      }
+      .searchForm2 {
+        display : inline !important;
+      }
+      </style>
+    </noscript>
+    <div id="searchForm2" class="searchForm2" style="display:none">
+      <form id="searchbox_001456098540849067467:6whlsytkdqg" action="http://www.google.com/cse">
+        <input type="hidden" name="cx" value="001456098540849067467:6whlsytkdqg" />
+        <input type="hidden" name="cof" value="FORID:0" />
+        <input type="text" name="q" maxlength="2048" size="41" autocomplete="off" title="Google Code Search"/>
+        <input type="submit" name="sa" value="Search" title="Search"/>
+        <br/>
+        <div class="greytext">e.g. "ajax apis" or "open source"</div>
+      </form>
+    </div>
+    <!-- end searchForm2 -->
+  </div>
+  <!-- end search -->
+</div>
+<!-- end gc-header -->
+<div id="searchControl" class="search-control"></div>
+<!--[if IE]><iframe id="backiFrame" name="backiFrame" src='/dummy.html' style="display:none"></iframe><![endif]-->
+<div id="codesiteContent">
+<a name="gc-topnav-anchor"></a>
+<div id="gc-topnav">
+  <h1>Android Platform Development Kit</h1>
+  <ul class="gc-topnav-tabs">
+    <li id="sdk_link"> <a href="http://code.google.com/android/index.html" title="Android Software Development Kit">SDK</a> </li>
+    <li id="docs_link"> <a href="index.html" title="Official Android documentation">Docs</a> </li>
+    <li id="faq_link"> <a href="http://code.google.com/android/kb/index.html" title="Answers to frequently asked questions about Android">FAQ</a> </li>
+    <li> <a href="http://android-developers.blogspot.com/" title="Official Android blog">Blog</a> </li>
+    <li> <a href="http://code.google.com/android/groups.html" title="Android developer forum">Group</a> </li>
+    <li> <a href="http://code.google.com/android/terms.html" title="Android terms of service">Terms</a> </li>
+    <li> <a href="mailto:android-pdk-feedback@google.com?subject=PDK%20Feedback&body=(filed%20from:%20build_system.html%20v0.3%20-%209%20June%202008)%0D%0A%0D%0ASUMMARY:%0D%0A%0D%0A%0D%0A%0D%0ASTEPS%20TO%20REPRODUCE:%0D%0A%0D%0A%0D%0A%0D%0AADDITIONAL%20NOTES:">Report a Problem</a> </li>
+  </ul>
+</div>
+<!-- end gc-topnav -->
+<div class="g-section g-tpl-180">
+<a name="gc-toc"></a>
+<div class="g-unit g-first" id="gc-toc">
+  <ul>
+    <li>
+      <h1><a href="index.html">Documentation</a></h1>
+      <ul>
+        <li> <strong>Introduction</strong>
+          <ul>
+            <li><a href="system_requirements.html">Device Requirements</a></li>            
+          </ul>
+        </li>
+        <li> <strong>Dev Environment Setup</strong>
+          <ul>
+            <li><a href="source_setup_guide.html">Host System Setup</a></li>
+            <li><a href="getting_source_code.html">Getting Source Code</a></li>
+            <li> <a href="intro_source_code.html">Source Code Overview</a></li>			
+            <li><a href="build_system.html">Build System</a></li>
+          </ul>
+        </li>
+        <li> <strong>Basic Bring up</strong>
+          <ul>
+            <li><a href="build_new_device.html">Building New Device</a></li>
+            <li><a href="bring_up.html">Bring up</a></li>
+            <li><a href="keymaps_keyboard_input.html">Keymaps and Keyboard</a></li>
+            <li><a href="display_drivers.html">Display Drivers</a></li>
+          </ul>
+        </li>
+        <li> <strong>Multimedia</strong>
+          <ul>
+            <li><a href="audio_sub_system.html">Audio Subsystem</a></li>
+          </ul>
+        </li>
+        <li> <strong>Power Management</strong>
+          <ul>
+            <li><a href="power_management.html">Power Management</a></li>
+          </ul>
+        </li>
+        <li> <strong>Telephony</strong>
+          <ul>
+            <li><a href="telephony.html">Radio Interface Layer</a></li>
+          </ul>
+        </li>
+        <li> <strong>Testing</strong>
+          <ul>
+            <li><a href="instrumentation_framework.html">Instrumentation Framework</a></li>
+            <li><a href="instrumentation_testing.html">Instrumentation Testing</a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+<a name="gc-pagecontent"></a>
+<div class="g-unit" id="gc-pagecontent">
+<div id="jd-content">
+<div class="jd-descr">
+
+
+<a name="androidBuildSystemTitle"></a><h1>Android Build System</h1>
+
+
+
+<a name="toc"/>
+<div style="padding:10px">
+<a href="#androidBuildSystemIntroduction">Introduction</a><br/>
+<a href="#androidBuildSystemUnderstanding">Understanding Android's Build System</a><br/><div style="padding-left:40px">
+
+<a href="#androidBuildSystemOverview">Understanding the makefile</a><br/>
+<a href="#androidBuildSystemLayers">Layers</a><br/>
+<a href="#androidBuildSystemProductDefFiles">Product Definition Files</a><br/></div>
+<a href="#androidSourceSetupBuildingCodeBase">Building the Android Platform</a><br/><div style="padding-left:40px">
+
+<a href="#androidSourceSetupBuildingDeviceCodeBase">Device Code</a><br/>
+<a href="#androidBuildingCleaning">Cleaning Up</a><br/>
+<a href="#androidBuildingSpeeding">Speeding Up Rebuilds</a><br/>
+<a href="#androidBuildingTroubleshooting">Troubleshooting</a><br/></div>
+<a href="#androidSourceSetupBuildingKernel">Building the Android Kernel</a><br/><div style="padding-left:40px">
+
+<a href="#androidSourceSetupBuildingKernelCheckingBranch">Checking Out a Branch</a><br/>
+<a href="#androidSourceSetupBuildingKernelBranchLocation">Verifying Location</a><br/>
+<a href="#androidSourceSetupBuildingKernelBuild">Building the Kernel</a><br/></div></div></font></div>
+
+<a name="androidBuildSystemIntroduction"></a><h2>Introduction</h2>
+
+<p>Android uses a custom build system to generate tools, binaries, and documentation. This document provides an overview of Android's build system and instructions for doing a simple build. </p>
+<p>Android's build system is make based and requires a recent version of GNU Make (note that Android uses advanced features of GNU Make that may not yet appear on the GNU Make web site). Before continuing, check your version of make by running <code>% make -v</code>. If you don't have version 3.80 or greater, you need to <a href="http://www.gnu.org/software/make/">upgrade your version of make</a>. </p>
+
+
+<a name="androidBuildSystemUnderstanding"></a><h2>Understanding Android's Build System</h2>
+
+
+
+<a name="androidBuildSystemOverview"></a><h3>Understanding the makefile</h3>
+
+<p>A makefile defines how to build a particular application. Makefiles typically include all of the following elements:</p>
+<ol>
+  <li>Name: Give your build a name (<code>LOCAL_MODULE := &lt;build_name&gt;</code>).</li>
+  <li>Local Variables: Clear local variables with CLEAR_VARS  (<code>include $(CLEAR_VARS)</code>).</li>
+  <li>Files: Determine which files your application depends upon (<code>LOCAL_SRC_FILES := main.c</code>).</li>
+  <li>Tags: Define tags, as necessary (<code>LOCAL_MODULE_TAGS := eng development</code>).</li>
+  <li>Libraries: Define whether your application links with other libraries (<code>LOCAL_SHARED_LIBRARIES := cutils</code>).</li>
+  <li>Template file: Include a template file to define underlining make tools for a particular target (<code>include $(BUILD_EXECUTABLE)</code>).</li>
+</ol>
+
+<p>The following snippet illustrates a typical makefile.</p>
+<pre class="prettyprint">
+LOCAL_PATH := $(my-dir)
+include $(CLEAR_VARS)
+LOCAL_MODULE := &lt;buil_name&gt;
+LOCAL_SRC_FILES := main.c
+LOCAL_MODULE_TAGS := eng development
+LOCAL_SHARED_LIBRARIES := cutils
+include $(BUILD_EXECUTABLE)
+(HOST_)EXECUTABLE, (HOST_)JAVA_LIBRARY, (HOST_)PREBUILT, (HOST_)SHARED_LIBRARY,
+  (HOST_)STATIC_LIBRARY, PACKAGE, JAVADOC, RAW_EXECUTABLE, RAW_STATIC_LIBRARY,
+  COPY_HEADERS, KEY_CHAR_MAP
+</pre>
+<p>The snippet above includes artificial line breaks to maintain a print-friendly document.</p>
+
+
+<a name="androidBuildSystemLayers"></a><h3>Layers</h3>
+
+<p>The build hierarchy includes the abstraction layers described in the table below.</p>
+
+<p>Each layer relates to the one above it in a one-to-many relationship. For example, an arch can have more than one board and each board can have more than one device. You may define an element in a given layer as a specialization of an element in the same layer, thus eliminating copying and simplifying maintenance.</p>
+ 
+<table border=1 cellpadding=2 cellspacing=0>
+ <tbody><tr>
+  <th scope="col">Layer</th>
+  <th  scope="col">Example</th>
+  <th  scope="col">Description</th>
+ </tr>
+  <tr>
+    <td valign="top">Product</td>
+    <td valign="top">myProduct, myProduct_eu, myProduct_eu_fr, j2, sdk</td>
+    <td valign="top">The product layer defines a complete specification of a shipping product, defining which modules to build and how to configure them. You might offer a device in several different versions based on locale, for example, or on features such as a camera. </td>
+  </tr>
+  <tr>
+    <td valign="top">Device</td>
+    <td valign="top">myDevice, myDevice_eu, myDevice_eu_lite</td>
+    <td valign="top">The device layer represents the physical layer of plastic on the device. For example, North American devices probably include QWERTY keyboards whereas devices sold in France probably include AZERTY keyboards. Peripherals typically connect to the device layer. </td>
+  </tr>
+  <tr>
+    <td valign="top">Board</td>
+    <td valign="top">sardine, trout, goldfish </td>
+    <td valign="top">The board layer represents the bare schematics of a product. You may still connect peripherals to the board layer. </td>
+  </tr>
+  <tr>
+    <td valign="top">Arch</td>
+    <td valign="top">arm (arm5te) (arm6), x86, 68k </td>
+    <td valign="top">The arch layer describes the processor running on your board. </td>
+  </tr>
+</table>
+
+
+<a name="androidBuildSystemProductDefFiles"></a><h3>Product Definition Files</h3>
+
+<p>Product-specific variables are defined in product definition files. A product definition file can inherit from other product definition files, thus reducing the need to copy and simplifying maintenance.</p>
+<p>Variables maintained in a product definition files include:</p>
+<p><ul>
+<li><code>PRODUCT_DEVICE</code></LI>
+<LI><code>LOCALES</code></LI>
+<LI><code>BRANDING_PARTNER</code></LI>
+<LI><code>PROPERTY_OVERRIDES</code></LI>
+</UL>
+</P>
+<p>The snippet below illustrates a typical product definition file.</p>
+<PRE class="prettyprint">
+//device/target/product/core.mk
+PRODUCT_PACKAGES := Home SettingsProvider ...
+//device/target/product/generic.mk
+PRODUCT_PACKAGES := Calendar Camera SyncProvider ...
+$(call inherit-product, target/product/core.mk)
+PRODUCT_NAME := generic
+//device/partner/google/products/core.mk
+PRODUCT_PACKAGES := Maps GoogleAppsProvider ...
+$(call inherit-product, target/product/core.mk)
+//device/partner/google/products/generic.mk
+PRODUCT_PACKAGES := Gmail GmailProvider ...
+$(call inherit-product, partner/google/products/core.mk)
+$(call inherit-product, target/product/generic.mk)
+PRODUCT_NAME := google_generic
+
+</pre>
+
+
+<a name="androidSourceSetupBuildingCodeBase"></a><h2>Building the Android Platform</h2>
+
+<p>This section describes how to build the default version of Android. Once you are comfortable with a generic build, then you can begin to modify Android for your own target device.</p>
+
+
+<a name="androidSourceSetupBuildingDeviceCodeBase"></a><h3>Device Code</h3>
+
+<p>Of the two options below, the first tends to yield more consistent results.</p>
+
+
+<a name="androidSourceSetupBuildingDeviceCodeBaseOption2"></a><h4>Option 1</h4>
+
+<p>Create a local version of buildspec.mk. The easiest way to do so is to change to your device directory and execute the following:</p>
+<pre class="prettyprint">% cp buildspec.mk.default buildspec.mk ; chmod u=rw buildspec.mk</pre>
+<p>The default <code>buildspec.mk</code>. file is written so that all options appear commented. In order to establish a personal configuration environment, edit <code>buildspec.mk</code> as desired.</p>
+<p>Once you have established your configuration environment, you can build the device code base by executing make in order to build the Android binaries. This may take a long time the first time you issue this command. On a dual-core machine, consider using '-j2' (or even '-j4') to speed up the build.</p>
+<pre class="prettyprint">% make -j2</pre>
+
+
+<a name="androidSourceSetupBuildingDeviceCodeBaseOption1"></a><h4>Option 2</h4>
+
+<p>To do a generic build of android, source <code>//device/envsetup.sh</code>, which contains necessary variable and function definitions, as described below.</p>
+<pre class="prettyprint">
+% cd $TOP
+
+% . envsetup.sh
+
+% partner_setup generic
+   //select generic as the product
+
+% make -j4 PRODUCT-generic-user
+</pre>
+<p>You can also replace user with eng for a debug engineering build:</p>
+
+<pre class="prettyprint">
+% make -j4 PRODUCT-generic-eng
+</pre>
+
+
+<a name="androidBuildingCleaning"></a><h3>Cleaning Up</h3>
+
+<p>Execute <code>% m clean</code> to clean up the binaries you just created. You can also execute <code>% m clobber</code> to get rid of the binaries of all combos. <code>% m clobber</code> is equivalent to removing the <code>//device/out/</code> directory where all generated files are stored.</p>
+
+
+<a name="androidBuildingSpeeding"></a><h3>Speeding Up Rebuilds</h3>
+
+<p> The binaries of each combo are stored as distinct sub-directories of <code>//device/out/</code>, making it possible to quickly switch between combos without having to recompile all sources each time. </p>
+<p> However, performing a clean rebuild is necessary if the build system doesn't catch changes to environment variables or makefiles. If this happens often, you should define the <code>USE_CCACHE</code> environment variable as shown below: </p>
+<pre class="prettyprint">
+% export USE_CCACHE=1
+</pre>
+<p>Doing so will force the build system to use the ccache compiler cache tool, which reduces recompiling all sources.</p>
+
+<p><code>ccache</code> binaries are provided in <code>//device/prebuilt/...</code> and don't need to get installed on your system.</p>
+
+
+<a name="androidBuildingTroubleshooting"></a><h3>Troubleshooting</h3>
+
+<p>The following error is likely caused by running an outdated version of Java.</p>
+<pre class="prettyprint">
+device Dex: core  UNEXPECTED TOP-LEVEL ERROR:
+java.lang.NoSuchMethodError: method java.util.Arrays.hashCode with
+signature ([Ljava.lang.Object;)I was not found.
+  at com.google.util.FixedSizeList.hashCode(FixedSizeList.java:66)
+  at com.google.rop.code.Rop.hashCode(Rop.java:245)
+  at java.util.HashMap.hash(libgcj.so.7)
+[...]
+</pre>
+<p><code>dx</code> is a Java program that uses facilities first made available in Java version 1.5. Check your version of Java by executing <code>% java -version</code> in the shell you use to build. You should see something like:</p>
+<pre class="prettyprint">
+java version "1.5.0_07"
+Java(TM) 2 Runtime Environment, Standard Edition (build 1.5.0_07-164)
+Java HotSpot(TM) Client VM (build 1.5.0_07-87, mixed mode, sharing)
+</pre>
+<p>If you do have Java 1.5 or later and your receive this error, verify that you have properly updated your <code>PATH</code> variable.</p>
+
+
+<a name="androidSourceSetupBuildingKernel"></a><h2>Building the Android Kernel</h2>
+
+<p>This section describes how to build Android's default kernel. Once you are comfortable with a generic build, then you can begin to modify Android drivers for your own target device.</p>
+
+
+<p>To build the kernel base, switch to the device directory (<code>/home/joe/android/device</code>) in order to establish variables and run:
+<pre class="prettyprint">
+% . envsetup.sh
+% partner_setup generic
+</pre>
+<p>Then switch to the kernel directory <code>/home/joe/android/kernel</code>.
+
+
+<a name="androidSourceSetupBuildingKernelCheckingBranch"></a><h3>Checking Out a Branch</h3>
+
+<p>The default branch is always <code>android</code>. To check out a different branch, execute the following:</p>
+
+<pre class="prettyprint">
+% git checkout --track -b android-mydevice origin/android-mydevice
+  //Branch android-mydevice set up to track remote branch
+% refs/remotes/origin/android-mydevice.
+  //Switched to a new branch "android-mydevice"
+</pre>
+
+<p>To simplify code management, give your local branch the same name as the remote branch it is tracking (as illustrated in the snippet above). Switch between branches by executing <code>% git checkout &lt;branchname&gt;</code>.</p>
+
+
+<a name="androidSourceSetupBuildingKernelBranchLocation"></a><h3>Verifying Location</h3>
+
+<p>Find out which branches exist (both locally and remotely) and which one is active (marked with an asterisk) by executing the following:</p>
+<pre class="prettyprint">
+% git branch -a
+  android
+* android-mydevice
+  origin/HEAD
+  origin/android
+  origin/android-mydevice
+  origin/android-mychipset
+</pre>
+<p>To only see local branches, omit the <code>-a</code> flag.</p> 
+
+
+<a name="androidSourceSetupBuildingKernelBuild"></a><h3>Building the Kernel</h3>
+
+<p>To build the kernel, execute:</p>
+<pre class="prettyprint">
+% make -j4
+</pre>
+
+
+<p><span class="lh2"><a name="androidFooter"></a></span>
+
+        </div>
+      </div>
+      <!-- end gc-pagecontent -->
+    </div>
+    <!-- end gooey wrapper -->
+  </div>
+  <!-- end codesearchresults -->
+  <div id="gc-footer" dir="ltr">
+    <div class="text"> &copy;2008 Google<!-- - <a href="/">Code Home</a> - <a href="http://www.google.com/accounts/TOS">Site Terms of Service</a> - <a href="http://www.google.com/privacy.html">Privacy Policy</a> - <a href="/more">Site Directory</a> --></div>
+  </div>
+  <!-- end gc-footer -->
+</div>
+<!-- end gc-containter -->
+<script src="http://www.google-analytics.com/ga.js" type="text/javascript">
+</script>
+<script type="text/javascript">
+  try {
+    var pageTracker = _gat._getTracker("UA-18071-1");
+    pageTracker._setAllowAnchor(true);
+    pageTracker._initData();
+    pageTracker._trackPageview(); 
+  } catch(e) {}
+</script>
+<div id="jd-build-id"> v0.3 - 9 June 2008</div>
+</div></div></div></body>
+</html>
+

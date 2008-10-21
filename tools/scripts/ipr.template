@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4" relativePaths="false">
+  <component name="AntConfiguration">
+    <defaultAnt bundledAnt="true" />
+    <buildFile url="file://$PROJECT_DIR$/build.xml">
+      <additionalClassPath />
+      <antReference projectDefault="true" />
+      <customJdkName value="" />
+      <maximumHeapSize value="128" />
+      <properties />
+    </buildFile>
+  </component>
+  <component name="BuildJarProjectSettings">
+    <option name="BUILD_JARS_ON_MAKE" value="false" />
+  </component>
+  <component name="CodeStyleProjectProfileManger">
+    <option name="PROJECT_PROFILE" />
+    <option name="USE_PROJECT_LEVEL_SETTINGS" value="false" />
+  </component>
+  <component name="CodeStyleSettingsManager">
+    <option name="PER_PROJECT_SETTINGS" />
+    <option name="USE_PER_PROJECT_SETTINGS" value="false" />
+  </component>
+  <component name="CompilerConfiguration">
+    <option name="DEFAULT_COMPILER" value="Javac" />
+    <option name="DEPLOY_AFTER_MAKE" value="0" />
+    <resourceExtensions>
+      <entry name=".+\.(properties|xml|html|dtd|tld)" />
+      <entry name=".+\.(gif|png|jpeg|jpg)" />
+    </resourceExtensions>
+    <wildcardResourcePatterns>
+      <entry name="?*.properties" />
+      <entry name="?*.xml" />
+      <entry name="?*.gif" />
+      <entry name="?*.png" />
+      <entry name="?*.jpeg" />
+      <entry name="?*.jpg" />
+      <entry name="?*.html" />
+      <entry name="?*.dtd" />
+      <entry name="?*.tld" />
+    </wildcardResourcePatterns>
+  </component>
+  <component name="DataSourceManagerImpl" />
+  <component name="DependenciesAnalyzeManager">
+    <option name="myForwardDirection" value="false" />
+  </component>
+  <component name="DependencyValidationManager" />
+  <component name="EclipseCompilerSettings">
+    <option name="DEBUGGING_INFO" value="true" />
+    <option name="GENERATE_NO_WARNINGS" value="true" />
+    <option name="DEPRECATION" value="false" />
+    <option name="ADDITIONAL_OPTIONS_STRING" value="" />
+    <option name="MAXIMUM_HEAP_SIZE" value="128" />
+  </component>
+  <component name="EclipseEmbeddedCompilerSettings">
+    <option name="DEBUGGING_INFO" value="true" />
+    <option name="GENERATE_NO_WARNINGS" value="true" />
+    <option name="DEPRECATION" value="false" />
+    <option name="ADDITIONAL_OPTIONS_STRING" value="" />
+    <option name="MAXIMUM_HEAP_SIZE" value="128" />
+  </component>
+  <component name="EntryPointsManager">
+    <entry_points />
+  </component>
+  <component name="ExportToHTMLSettings">
+    <option name="PRINT_LINE_NUMBERS" value="false" />
+    <option name="OPEN_IN_BROWSER" value="false" />
+    <option name="OUTPUT_DIRECTORY" />
+  </component>
+  <component name="GUI Designer component loader factory" />
+  <component name="IdProvider" IDEtalkID="F6EC4D80E2C03FEF19EDD201903A6DFE" />
+  <component name="InspectionProjectProfileManager">
+    <option name="PROJECT_PROFILE" value="Project Default" />
+    <option name="USE_PROJECT_LEVEL_SETTINGS" value="false" />
+    <scopes />
+    <profiles>
+      <profile version="1.0" is_locked="false">
+        <option name="myName" value="Project Default" />
+        <option name="myLocal" value="false" />
+        <used_levels>
+          <error>
+            <option name="myName" value="ERROR" />
+            <option name="myVal" value="400" />
+          </error>
+          <warning>
+            <option name="myName" value="WARNING" />
+            <option name="myVal" value="300" />
+          </warning>
+          <information>
+            <option name="myName" value="INFO" />
+            <option name="myVal" value="200" />
+          </information>
+          <server>
+            <option name="myName" value="SERVER PROBLEM" />
+            <option name="myVal" value="100" />
+          </server>
+        </used_levels>
+        <inspection_tool class="ClassReferencesSubclass" level="WARNING" enabled="true" />
+        <inspection_tool class="MissingOverrideAnnotation" level="WARNING" enabled="true" />
+        <inspection_tool class="Finalize" level="WARNING" enabled="true" />
+        <inspection_tool class="UnusedImport" level="WARNING" enabled="true" />
+        <inspection_tool class="StaticInheritance" level="WARNING" enabled="true" />
+        <inspection_tool class="RedundantMethodOverride" level="WARNING" enabled="true" />
+        <inspection_tool class="AbstractMethodCallInConstructor" level="WARNING" enabled="true" />
+        <inspection_tool class="RawUseOfParameterizedType" level="WARNING" enabled="true">
+          <option name="ignoreObjectConstruction" value="true" />
+          <option name="ignoreTypeCasts" value="false" />
+        </inspection_tool>
+        <inspection_tool class="SystemGC" level="WARNING" enabled="true" />
+        <inspection_tool class="ConstantNamingConvention" level="WARNING" enabled="true">
+          <option name="m_regex" value="[A-Z_\d]*" />
+          <option name="m_minLength" value="5" />
+          <option name="m_maxLength" value="32" />
+        </inspection_tool>
+        <inspection_tool class="EnumeratedConstantNamingConvention" level="WARNING" enabled="true">
+          <option name="m_regex" value="[A-Z][A-Za-z\d]*" />
+          <option name="m_minLength" value="5" />
+          <option name="m_maxLength" value="32" />
+        </inspection_tool>
+        <inspection_tool class="DivideByZero" level="WARNING" enabled="true" />
+        <inspection_tool class="CloneCallsConstructors" level="WARNING" enabled="true" />
+        <inspection_tool class="CloneDeclaresCloneNotSupported" level="WARNING" enabled="false" />
+        <inspection_tool class="CloneInNonCloneableClass" level="WARNING" enabled="true" />
+        <inspection_tool class="UtilityClassWithoutPrivateConstructor" level="WARNING" enabled="true">
+          <option name="ignoreClassesWithOnlyMain" value="false" />
+        </inspection_tool>
+        <inspection_tool class="UtilityClassWithPublicConstructor" level="WARNING" enabled="true" />
+        <inspection_tool class="ConditionalExpressionWithIdenticalBranches" level="WARNING" enabled="true" />
+        <inspection_tool class="CanBeFinal" level="WARNING" enabled="false">
+          <option name="REPORT_CLASSES" value="false" />
+          <option name="REPORT_METHODS" value="false" />
+          <option name="REPORT_FIELDS" value="true" />
+        </inspection_tool>
+        <inspection_tool class="ThisEscapedInConstructor" level="WARNING" enabled="true" />
+        <inspection_tool class="NonThreadSafeLazyInitialization" level="WARNING" enabled="true" />
+        <inspection_tool class="FieldMayBeStatic" level="WARNING" enabled="true" />
+        <inspection_tool class="InnerClassMayBeStatic" level="WARNING" enabled="true" />
+        <inspection_tool class="MethodMayBeStatic" level="WARNING" enabled="true">
+          <option name="m_onlyPrivateOrFinal" value="false" />
+          <option name="m_ignoreEmptyMethods" value="true" />
+        </inspection_tool>
+        <inspection_tool class="ComponentRegistrationProblems" level="ERROR" enabled="false">
+          <option name="CHECK_PLUGIN_XML" value="true" />
+          <option name="CHECK_JAVA_CODE" value="true" />
+          <option name="CHECK_ACTIONS" value="true" />
+        </inspection_tool>
+        <inspection_tool class="ComponentNotRegistered" level="WARNING" enabled="false">
+          <option name="CHECK_ACTIONS" value="true" />
+          <option name="IGNORE_NON_PUBLIC" value="true" />
+        </inspection_tool>
+        <inspection_tool class="BusyWait" level="WARNING" enabled="true" />
+        <inspection_tool class="UnconditionalWait" level="WARNING" enabled="true" />
+        <inspection_tool class="WaitNotInLoop" level="WARNING" enabled="true" />
+      </profile>
+    </profiles>
+  </component>
+  <component name="JavacSettings">
+    <option name="DEBUGGING_INFO" value="true" />
+    <option name="GENERATE_NO_WARNINGS" value="false" />
+    <option name="DEPRECATION" value="true" />
+    <option name="ADDITIONAL_OPTIONS_STRING" value="" />
+    <option name="MAXIMUM_HEAP_SIZE" value="128" />
+  </component>
+  <component name="JavadocGenerationManager">
+    <option name="OUTPUT_DIRECTORY" />
+    <option name="OPTION_SCOPE" value="protected" />
+    <option name="OPTION_HIERARCHY" value="true" />
+    <option name="OPTION_NAVIGATOR" value="true" />
+    <option name="OPTION_INDEX" value="true" />
+    <option name="OPTION_SEPARATE_INDEX" value="true" />
+    <option name="OPTION_DOCUMENT_TAG_USE" value="false" />
+    <option name="OPTION_DOCUMENT_TAG_AUTHOR" value="false" />
+    <option name="OPTION_DOCUMENT_TAG_VERSION" value="false" />
+    <option name="OPTION_DOCUMENT_TAG_DEPRECATED" value="true" />
+    <option name="OPTION_DEPRECATED_LIST" value="true" />
+    <option name="OTHER_OPTIONS" value="" />
+    <option name="HEAP_SIZE" />
+    <option name="LOCALE" />
+    <option name="OPEN_IN_BROWSER" value="true" />
+  </component>
+  <component name="JikesSettings">
+    <option name="JIKES_PATH" value="" />
+    <option name="DEBUGGING_INFO" value="true" />
+    <option name="DEPRECATION" value="true" />
+    <option name="GENERATE_NO_WARNINGS" value="false" />
+    <option name="IS_EMACS_ERRORS_MODE" value="true" />
+    <option name="ADDITIONAL_OPTIONS_STRING" value="" />
+  </component>
+  <component name="LogConsolePreferences">
+    <option name="FILTER_ERRORS" value="false" />
+    <option name="FILTER_WARNINGS" value="false" />
+    <option name="FILTER_INFO" value="true" />
+    <option name="CUSTOM_FILTER" />
+  </component>
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/ACTIVITY_NAME.iml" filepath="$PROJECT_DIR$/ACTIVITY_NAME.iml" />
+    </modules>
+  </component>
+  <component name="ProjectRootManager" version="2" assert-keyword="true" jdk-15="true" project-jdk-name="1.5" project-jdk-type="JavaSDK">
+    <output url="file://$PROJECT_DIR$/bin" />
+  </component>
+  <component name="ProjectRunConfigurationManager" />
+  <component name="RmicSettings">
+    <option name="IS_EANABLED" value="false" />
+    <option name="DEBUGGING_INFO" value="true" />
+    <option name="GENERATE_NO_WARNINGS" value="false" />
+    <option name="GENERATE_IIOP_STUBS" value="false" />
+    <option name="ADDITIONAL_OPTIONS_STRING" value="" />
+  </component>
+  <component name="StarteamVcsAdapter" />
+  <component name="XSLT-Support.FileAssociationsManager" />
+  <component name="com.intellij.jsf.UserDefinedFacesConfigs">
+    <option name="USER_DEFINED_CONFIGS">
+      <value>
+        <list size="0" />
+      </value>
+    </option>
+  </component>
+  <component name="libraryTable">
+    <library name="android">
+      <CLASSES>
+        <root url="jar://ANDROID_SDK_FOLDER/android.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="file://ANDROID_SDK_FOLDER/docs/reference" />
+      </JAVADOC>
+      <SOURCES />
+    </library>
+  </component>
+  <UsedPathMacros />
+</project>

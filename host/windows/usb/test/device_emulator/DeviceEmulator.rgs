@@ -1,0 +1,12 @@
+HKCR
+{
+    NoRemove AppID
+    {
+        '%APPID%' = s 'DeviceEmulator'
+        'DeviceEmulator.EXE'
+        {
+            val AppID = s '%APPID%'
+        }
+    }
+}
+

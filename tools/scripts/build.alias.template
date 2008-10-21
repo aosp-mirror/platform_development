@@ -1,0 +1,62 @@
+<?xml version="1.0" ?>
+<project name="ACTIVITY_NAME" default="package">
+
+    <!-- The build.properties file can be created by you and is never touched
+         by activitycreator. If you want to manually set properties, this is
+         the best place to set them. -->
+    <property file="build.properties"/>
+
+    <!-- The default.properties file is created and updated by activitycreator.
+         It will set any properties not already defined by build.properties. -->
+    <property file="default.properties"/>
+
+    <!-- ************************************************************************************* -->
+    <!-- No user servicable parts below. -->
+
+    <!-- Input directories -->
+    <property name="resource-dir" value="res" />
+
+    <!-- The final package file to generate -->
+    <property name="out-package" value="${ant.project.name}.apk" />
+
+    <!-- Tools -->
+    <condition property="aapt" value="${android-tools}/aapt.exe" else="${android-tools}/aapt" >
+        <os family="windows"/>
+    </condition>
+    <condition property="adb" value="${android-tools}/adb.exe" else="${android-tools}/adb" >
+        <os family="windows"/>
+    </condition>
+    <property name="android-jar" value="${sdk-folder}/android.jar" />
+
+    <!-- Rules -->
+
+    <!-- Packages the manifest and the resource files -->
+    <target name="package-res">
+        <echo>Packaging resources...</echo>
+        <exec executable="${aapt}" failonerror="true">
+            <arg value="package" />
+            <arg value="-f" />
+            <arg value="-M" />
+            <arg value="AndroidManifest.xml" />
+            <arg value="-S" />
+            <arg value="${resource-dir}" />
+            <arg value="-I" />
+            <arg value="${android-jar}" />
+            <arg value="-F" />
+            <arg value="${out-package}" />
+        </exec>
+    </target>
+
+    <!-- Create the package file for this project from the sources. -->
+    <target name="package" depends="package-res" />
+
+    <!-- Create the package and install package on the default emulator -->
+    <target name="install" depends="package">
+        <echo>Sending package to default emulator...</echo>
+        <exec executable="${adb}" failonerror="true">
+            <arg value="install" />
+            <arg value="${out-package}" />
+        </exec>
+    </target>
+
+</project>

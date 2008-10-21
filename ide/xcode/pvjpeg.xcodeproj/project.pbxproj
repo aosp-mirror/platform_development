@@ -1,0 +1,261 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 44;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		007ECA0E0DA67F7B0086775A /* jpgdec_bitstream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 007ECA010DA67F7B0086775A /* jpgdec_bitstream.cpp */; };
+		007ECA0F0DA67F7B0086775A /* jpgdec_cint.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 007ECA020DA67F7B0086775A /* jpgdec_cint.cpp */; };
+		007ECA100DA67F7B0086775A /* jpgdec_colorconv.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 007ECA030DA67F7B0086775A /* jpgdec_colorconv.cpp */; };
+		007ECA110DA67F7B0086775A /* jpgdec_ct.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 007ECA040DA67F7B0086775A /* jpgdec_ct.cpp */; };
+		007ECA120DA67F7B0086775A /* jpgdec_decoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 007ECA050DA67F7B0086775A /* jpgdec_decoder.cpp */; };
+		007ECA130DA67F7B0086775A /* jpgdec_header.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 007ECA060DA67F7B0086775A /* jpgdec_header.cpp */; };
+		007ECA140DA67F7B0086775A /* jpgdec_huffman.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 007ECA070DA67F7B0086775A /* jpgdec_huffman.cpp */; };
+		007ECA150DA67F7B0086775A /* jpgdec_idctp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 007ECA080DA67F7B0086775A /* jpgdec_idctp.cpp */; };
+		007ECA160DA67F7B0086775A /* jpgdec_idcts.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 007ECA090DA67F7B0086775A /* jpgdec_idcts.cpp */; };
+		007ECA170DA67F7B0086775A /* jpgdec_scan.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 007ECA0A0DA67F7B0086775A /* jpgdec_scan.cpp */; };
+		007ECA180DA67F7B0086775A /* jpgdec_table.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 007ECA0B0DA67F7B0086775A /* jpgdec_table.cpp */; };
+		007ECA190DA67F7B0086775A /* jpgdec_utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 007ECA0C0DA67F7B0086775A /* jpgdec_utils.cpp */; };
+		007ECA1A0DA67F7B0086775A /* pvjpgdecoder_factory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 007ECA0D0DA67F7B0086775A /* pvjpgdecoder_factory.cpp */; };
+		007ECA500DA683160086775A /* SkImageDecoder_libpvjpeg.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 007ECA4F0DA683160086775A /* SkImageDecoder_libpvjpeg.cpp */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		007ECA010DA67F7B0086775A /* jpgdec_bitstream.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = jpgdec_bitstream.cpp; path = ../../extlibs/pv/codecs_v2/image/jpeg/dec/src/jpgdec_bitstream.cpp; sourceTree = SOURCE_ROOT; };
+		007ECA020DA67F7B0086775A /* jpgdec_cint.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = jpgdec_cint.cpp; path = ../../extlibs/pv/codecs_v2/image/jpeg/dec/src/jpgdec_cint.cpp; sourceTree = SOURCE_ROOT; };
+		007ECA030DA67F7B0086775A /* jpgdec_colorconv.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = jpgdec_colorconv.cpp; path = ../../extlibs/pv/codecs_v2/image/jpeg/dec/src/jpgdec_colorconv.cpp; sourceTree = SOURCE_ROOT; };
+		007ECA040DA67F7B0086775A /* jpgdec_ct.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = jpgdec_ct.cpp; path = ../../extlibs/pv/codecs_v2/image/jpeg/dec/src/jpgdec_ct.cpp; sourceTree = SOURCE_ROOT; };
+		007ECA050DA67F7B0086775A /* jpgdec_decoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = jpgdec_decoder.cpp; path = ../../extlibs/pv/codecs_v2/image/jpeg/dec/src/jpgdec_decoder.cpp; sourceTree = SOURCE_ROOT; };
+		007ECA060DA67F7B0086775A /* jpgdec_header.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = jpgdec_header.cpp; path = ../../extlibs/pv/codecs_v2/image/jpeg/dec/src/jpgdec_header.cpp; sourceTree = SOURCE_ROOT; };
+		007ECA070DA67F7B0086775A /* jpgdec_huffman.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = jpgdec_huffman.cpp; path = ../../extlibs/pv/codecs_v2/image/jpeg/dec/src/jpgdec_huffman.cpp; sourceTree = SOURCE_ROOT; };
+		007ECA080DA67F7B0086775A /* jpgdec_idctp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = jpgdec_idctp.cpp; path = ../../extlibs/pv/codecs_v2/image/jpeg/dec/src/jpgdec_idctp.cpp; sourceTree = SOURCE_ROOT; };
+		007ECA090DA67F7B0086775A /* jpgdec_idcts.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = jpgdec_idcts.cpp; path = ../../extlibs/pv/codecs_v2/image/jpeg/dec/src/jpgdec_idcts.cpp; sourceTree = SOURCE_ROOT; };
+		007ECA0A0DA67F7B0086775A /* jpgdec_scan.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = jpgdec_scan.cpp; path = ../../extlibs/pv/codecs_v2/image/jpeg/dec/src/jpgdec_scan.cpp; sourceTree = SOURCE_ROOT; };
+		007ECA0B0DA67F7B0086775A /* jpgdec_table.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = jpgdec_table.cpp; path = ../../extlibs/pv/codecs_v2/image/jpeg/dec/src/jpgdec_table.cpp; sourceTree = SOURCE_ROOT; };
+		007ECA0C0DA67F7B0086775A /* jpgdec_utils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = jpgdec_utils.cpp; path = ../../extlibs/pv/codecs_v2/image/jpeg/dec/src/jpgdec_utils.cpp; sourceTree = SOURCE_ROOT; };
+		007ECA0D0DA67F7B0086775A /* pvjpgdecoder_factory.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = pvjpgdecoder_factory.cpp; path = ../../extlibs/pv/codecs_v2/image/jpeg/dec/src/pvjpgdecoder_factory.cpp; sourceTree = SOURCE_ROOT; };
+		007ECA4F0DA683160086775A /* SkImageDecoder_libpvjpeg.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SkImageDecoder_libpvjpeg.cpp; path = ../../libs/graphics/images/SkImageDecoder_libpvjpeg.cpp; sourceTree = SOURCE_ROOT; };
+		D2AAC046055464E500DB518D /* libpvjpeg.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libpvjpeg.a; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		D289987405E68DCB004EDB86 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		08FB7794FE84155DC02AAC07 /* pvjpeg */ = {
+			isa = PBXGroup;
+			children = (
+				007ECA4F0DA683160086775A /* SkImageDecoder_libpvjpeg.cpp */,
+				08FB7795FE84155DC02AAC07 /* Source */,
+				C6A0FF2B0290797F04C91782 /* Documentation */,
+				1AB674ADFE9D54B511CA2CBB /* Products */,
+			);
+			name = pvjpeg;
+			sourceTree = "<group>";
+		};
+		08FB7795FE84155DC02AAC07 /* Source */ = {
+			isa = PBXGroup;
+			children = (
+				007ECA010DA67F7B0086775A /* jpgdec_bitstream.cpp */,
+				007ECA020DA67F7B0086775A /* jpgdec_cint.cpp */,
+				007ECA030DA67F7B0086775A /* jpgdec_colorconv.cpp */,
+				007ECA040DA67F7B0086775A /* jpgdec_ct.cpp */,
+				007ECA050DA67F7B0086775A /* jpgdec_decoder.cpp */,
+				007ECA060DA67F7B0086775A /* jpgdec_header.cpp */,
+				007ECA070DA67F7B0086775A /* jpgdec_huffman.cpp */,
+				007ECA080DA67F7B0086775A /* jpgdec_idctp.cpp */,
+				007ECA090DA67F7B0086775A /* jpgdec_idcts.cpp */,
+				007ECA0A0DA67F7B0086775A /* jpgdec_scan.cpp */,
+				007ECA0B0DA67F7B0086775A /* jpgdec_table.cpp */,
+				007ECA0C0DA67F7B0086775A /* jpgdec_utils.cpp */,
+				007ECA0D0DA67F7B0086775A /* pvjpgdecoder_factory.cpp */,
+			);
+			name = Source;
+			sourceTree = "<group>";
+		};
+		1AB674ADFE9D54B511CA2CBB /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				D2AAC046055464E500DB518D /* libpvjpeg.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		C6A0FF2B0290797F04C91782 /* Documentation */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Documentation;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		D2AAC043055464E500DB518D /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		D2AAC045055464E500DB518D /* pvjpeg */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1DEB91EB08733DB70010E9CD /* Build configuration list for PBXNativeTarget "pvjpeg" */;
+			buildPhases = (
+				D2AAC043055464E500DB518D /* Headers */,
+				D2AAC044055464E500DB518D /* Sources */,
+				D289987405E68DCB004EDB86 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = pvjpeg;
+			productName = pvjpeg;
+			productReference = D2AAC046055464E500DB518D /* libpvjpeg.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		08FB7793FE84155DC02AAC07 /* Project object */ = {
+			isa = PBXProject;
+			buildConfigurationList = 1DEB91EF08733DB70010E9CD /* Build configuration list for PBXProject "pvjpeg" */;
+			compatibilityVersion = "Xcode 3.0";
+			hasScannedForEncodings = 1;
+			mainGroup = 08FB7794FE84155DC02AAC07 /* pvjpeg */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				D2AAC045055464E500DB518D /* pvjpeg */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		D2AAC044055464E500DB518D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				007ECA0E0DA67F7B0086775A /* jpgdec_bitstream.cpp in Sources */,
+				007ECA0F0DA67F7B0086775A /* jpgdec_cint.cpp in Sources */,
+				007ECA100DA67F7B0086775A /* jpgdec_colorconv.cpp in Sources */,
+				007ECA110DA67F7B0086775A /* jpgdec_ct.cpp in Sources */,
+				007ECA120DA67F7B0086775A /* jpgdec_decoder.cpp in Sources */,
+				007ECA130DA67F7B0086775A /* jpgdec_header.cpp in Sources */,
+				007ECA140DA67F7B0086775A /* jpgdec_huffman.cpp in Sources */,
+				007ECA150DA67F7B0086775A /* jpgdec_idctp.cpp in Sources */,
+				007ECA160DA67F7B0086775A /* jpgdec_idcts.cpp in Sources */,
+				007ECA170DA67F7B0086775A /* jpgdec_scan.cpp in Sources */,
+				007ECA180DA67F7B0086775A /* jpgdec_table.cpp in Sources */,
+				007ECA190DA67F7B0086775A /* jpgdec_utils.cpp in Sources */,
+				007ECA1A0DA67F7B0086775A /* pvjpgdecoder_factory.cpp in Sources */,
+				007ECA500DA683160086775A /* SkImageDecoder_libpvjpeg.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		1DEB91EC08733DB70010E9CD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				INSTALL_PATH = /usr/local/lib;
+				PRODUCT_NAME = pvjpeg;
+				ZERO_LINK = YES;
+			};
+			name = Debug;
+		};
+		1DEB91ED08733DB70010E9CD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_MODEL_TUNING = G5;
+				INSTALL_PATH = /usr/local/lib;
+				PRODUCT_NAME = pvjpeg;
+			};
+			name = Release;
+		};
+		1DEB91F008733DB70010E9CD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_ENABLE_CPP_EXCEPTIONS = NO;
+				GCC_ENABLE_CPP_RTTI = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = NO;
+				GCC_ENABLE_PASCAL_STRINGS = NO;
+				GCC_ENABLE_SYMBOL_SEPARATION = NO;
+				GCC_PREPROCESSOR_DEFINITIONS = "USE_PV_OSCL_LIB=0";
+				GCC_USE_GCC3_PFE_SUPPORT = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				PREBINDING = NO;
+				SDKROOT = "$(DEVELOPER_SDK_DIR)/MacOSX10.5.sdk";
+				USER_HEADER_SEARCH_PATHS = "../../extlibs/pv/** ../../include/corecg ../../include/graphics";
+			};
+			name = Debug;
+		};
+		1DEB91F108733DB70010E9CD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = (
+					ppc,
+					i386,
+				);
+				GCC_ENABLE_CPP_EXCEPTIONS = NO;
+				GCC_ENABLE_CPP_RTTI = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = NO;
+				GCC_ENABLE_PASCAL_STRINGS = NO;
+				GCC_ENABLE_SYMBOL_SEPARATION = NO;
+				GCC_PREPROCESSOR_DEFINITIONS = "USE_PV_OSCL_LIB=0";
+				GCC_USE_GCC3_PFE_SUPPORT = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				PREBINDING = NO;
+				SDKROOT = "$(DEVELOPER_SDK_DIR)/MacOSX10.5.sdk";
+				USER_HEADER_SEARCH_PATHS = "../../extlibs/pv/** ../../include/corecg ../../include/graphics";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1DEB91EB08733DB70010E9CD /* Build configuration list for PBXNativeTarget "pvjpeg" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1DEB91EC08733DB70010E9CD /* Debug */,
+				1DEB91ED08733DB70010E9CD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		1DEB91EF08733DB70010E9CD /* Build configuration list for PBXProject "pvjpeg" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1DEB91F008733DB70010E9CD /* Debug */,
+				1DEB91F108733DB70010E9CD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 08FB7793FE84155DC02AAC07 /* Project object */;
+}

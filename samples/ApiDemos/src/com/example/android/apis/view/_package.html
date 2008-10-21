@@ -1,0 +1,589 @@
+<html>
+<head>
+<link rel="stylesheet" type="text/css" href="assets/style.css" />
+<script type="text/javascript" src="http://www.corp.google.com/style/prettify.js"></script>
+<script src="http://www.corp.google.com/eng/techpubs/include/navbar.js" type="text/javascript"></script>
+
+
+
+</head>
+
+<body>
+
+<p>
+Examples of how to use the android.view and android.widget platform APIs.
+
+For information about view and widget objects, see the topic &quot;Designing
+the UI for an Android application&quot; in the SDK documentation.
+<ol>
+    <li>Layouts
+        <ol>
+            <li>RelativeLayout
+                <ol>
+                    <li>{@link com.android.samples.view.RelativeLayout1
+                        Example 1}</li>
+                    <li>{@link com.android.samples.view.RelativeLayout2
+                        Example 2}</li>
+                </ol>
+            </li>
+            <li>LinearLayout
+                <ol>
+                    <li>{@link com.android.samples.view.LinearLayout1
+                        Example 1}</li>
+                    <li>{@link com.android.samples.view.LinearLayout2 Example
+                        2}</li>
+                    <li>{@link com.android.samples.view.LinearLayout3 Example
+                        3}</li>
+                    <li>{@link com.android.samples.view.LinearLayout4 Example
+                        4}</li>
+                    <li>{@link com.android.samples.view.LinearLayout5 Example
+                        5}</li>
+                    <li>{@link com.android.samples.view.LinearLayout6 Example
+                        6}</li>
+                    <li>{@link com.android.samples.view.LinearLayout7 Example
+                        7}</li>
+                    <li>{@link com.android.samples.view.LinearLayout8 Example
+                        8}</li>
+                </ol>
+            </li>
+            <li>ScrollView
+                <ol>
+                    <li>{@link com.android.samples.view.ScrollView1
+                        Example 1} </li>
+                    <li>{@link com.android.samples.view.ScrollView2 Example
+                        2} </li>
+                </ol>
+            </li>
+            <li>TableLayout
+                <ol>
+                    <li>{@link com.android.samples.view.TableLayout1
+                        Example 1}</li>
+                    <li>{@link com.android.samples.view.TableLayout2 Example
+                        2}</li>
+                    <li>{@link com.android.samples.view.TableLayout3 Example
+                        3}</li>
+                    <li>{@link com.android.samples.view.TableLayout4 Example
+                        4}</li>
+                    <li>{@link com.android.samples.view.TableLayout5 Example
+                        5}</li>
+                    <li>{@link com.android.samples.view.TableLayout6 Example
+                        6}</li>
+                    <li>{@link com.android.samples.view.TableLayout7 Example
+                        7}</li>
+                    <li>{@link com.android.samples.view.TableLayout8 Example
+                        8}</li>
+                    <li>{@link com.android.samples.view.TableLayout9 Example
+                        9}</li>
+                    <li>{@link com.android.samples.view.TableLayout10 Example
+                        10}</li>
+                </ol>
+            </li>
+        </ol>
+    </li>
+    <li>Radio Group
+        <ol>
+            <li>{@link com.android.samples.view.RadioGroup1 Example 1}</li>
+        </ol>
+    </li>
+    <li>ScrollBars
+        <ol>
+            <li>{@link com.android.samples.view.ScrollBar1 Example 1}</li>
+            <li>{@link com.android.samples.view.ScrollBar2 Example 2}</li>
+        </ol>
+    </li>
+    <li>Visibility
+        <ol>
+            <li>{@link com.android.samples.view.Visibility1 Example 1}</li>
+        </ol>
+    </li>
+    <li>Lists
+        <ol>
+            <li>{@link com.android.samples.view.List1 Example 1} </li>
+            <li>{@link com.android.samples.view.List2 Example 2}</li>
+            <li>{@link com.android.samples.view.List3 Example 3}</li>
+            <li>{@link com.android.samples.view.List4 Example 4}</li>
+            <li>{@link com.android.samples.view.List5 Example 5}</li>
+            <li>{@link com.android.samples.view.List6 Example 6}</li>
+            <li>{@link com.android.samples.view.List7 Example 7}</li>
+        </ol>
+    </li>
+    <li>Custom
+        <ol>
+            <li>{@link com.android.samples.view.CustomView1 Example 1}</li>
+        </ol>
+    </li>
+    <li>Gallery
+        <ol>
+            <li>{@link com.android.samples.view.Gallery1 Example 1}</li>
+            <li>{@link com.android.samples.view.Gallery2 Example 2}</li>
+        </ol>
+    </li>
+    <li>Spinner
+        <ol>
+            <li>{@link com.android.samples.view.Spinner1 Example 1}</li>
+        </ol>
+    </li>
+    <li>Grid
+        <ol>
+            <li>{@link com.android.samples.view.Grid1 Example 1}</li>
+        </ol>
+    </li>
+    <li>ImageSwitcher
+        <ol>
+            <li>{@link com.android.samples.view.ImageSwitcher1 Example
+                1}</li>
+        </ol>
+    </li>
+    <li>Animation
+        <ol>
+            <li>{@link com.android.samples.view.Animation1 Example 1}</li>
+            <li>{@link com.android.samples.view.Animation2 Example 1}</li>
+        </ol>
+    </li>
+    <li>Controls
+        <ol>
+            <li>{@link com.android.samples.view.Controls1 Example 1}</li>
+        </ol>
+    </li>
+</ol>
+<p></p>
+
+<h3>LinearLayout Example 1: Stacking Views</h3>
+This example shows a simple use of a LinearLayout. The LinearLayout's height is set to
+<code>android:layout_height="wrap-content"</code>,
+as is the height of each child. Each text view is as tall as it needs
+to be, and the height of the LinearLayout itself is the sum of the height of its children.
+
+<h4>Demo</h4>
+Views/Layouts/LinearLayout/Example 1
+ 
+<h4>Source files</h4>
+<table class="LinkTable">
+        <tr>
+            <td class="LinkColumn"><a href="" onClick="findCode(this)">//device/samples/SampleCode/src/com/android/sdk/view/LinearLayout1.java</a></td>
+            <td class="DescrColumn">Loads the linear_layout_1 layout resource</td>
+        </tr>
+		<tr>
+            <td class="LinkColumn"><a href="" onClick="findCode(this)">//device/samples/SampleCode/assets/res/any/layout/linear_layout_1.xml</a></td>
+            <td class="DescrColumn">Defines the layout</td>
+        </tr>
+		<tr>
+            <td class="LinkColumn"><a href="" onClick="findCode(this)">//device/samples/SampleCode/AndroidManifest.xml</a></td>
+            <td class="DescrColumn">Defines the activity</td>
+        </tr>
+</table>
+
+
+
+
+<h3>LinearLayout Example 2: Stacking Views Again</h3>
+In this example, the LinearLayout's height is set
+to <code>android:layout_height="fill-parent"</code>, 
+so the LinearLayout fills the screen. Each text view is as tall as it needs
+to be, so the LinearLayout just stacks them from top to bottom.
+
+<h4>Demo</h4>
+Views/Layouts/LinearLayout/Example 2
+ 
+<h4>Source files</h4>
+<table class="LinkTable">
+        <tr>
+            <td class="LinkColumn"><a href="" onClick="findCode(this)">//device/samples/SampleCode/src/com/android/sdk/view/LinearLayout2.java</a></td>
+            <td class="DescrColumn">Loads the linear_layout_2 layout resource</td>
+        </tr>
+		<tr>
+            <td class="LinkColumn"><a href="" onClick="findCode(this)">//device/samples/SampleCode/assets/res/any/layout/linear_layout_2.xml</a></td>
+            <td class="DescrColumn">Defines the layout</td>
+        </tr>
+		<tr>
+            <td class="LinkColumn"><a href="" onClick="findCode(this)">//device/samples/SampleCode/AndroidManifest.xml</a></td>
+            <td class="DescrColumn">Defines the activity</td>
+        </tr>
+</table>
+
+
+
+
+<h3>LinearLayout Example 3: Distributing Extra Space</h3>
+In this example, the LinearLayout's height is set
+to "fill-parent", so the LinearLayout fills the screen. Each text view is as tall as it needs
+to be. However, the middle text view has set <code>android:layout_weight="1"</code>. This means that it
+will get all of the extra space left over after the LinearLayout has sized all of its children.
+
+<h4>Demo</h4>
+Views/Layouts/LinearLayout/Example 3
+ 
+<h4>Source files</h4>
+<table class="LinkTable">
+        <tr>
+            <td class="LinkColumn"><a href="" onClick="findCode(this)">//device/samples/SampleCode/src/com/android/sdk/view/LinearLayout3.java</a></td>
+            <td class="DescrColumn">Loads the linear_layout_3 layout resource</td>
+        </tr>
+		<tr>
+            <td class="LinkColumn"><a href="" onClick="findCode(this)">//device/samples/SampleCode/assets/res/any/layout/linear_layout_3.xml</a></td>
+            <td class="DescrColumn">Defines the layout</td>
+        </tr>
+		<tr>
+            <td class="LinkColumn"><a href="" onClick="findCode(this)">//device/samples/SampleCode/AndroidManifest.xml</a></td>
+            <td class="DescrColumn">Defines the activity</td>
+        </tr>
+</table>
+
+
+
+
+<h3>LinearLayout Example 4: Columns</h3>
+This time, the orientation of the LinearLayout is set to horizontal.
+Each of the four child text views has set <code>android:layout_weight="1"</code>
+and <code>android:layout_width="0"</code>.
+This means that each child is initially given a width of 0, and then all of the
+remaining space (the width of the screen) is divided equally among the four
+views.
+
+<h4>Demo</h4>
+Views/Layouts/LinearLayout/Example 4
+ 
+<h4>Source files</h4>
+<table class="LinkTable">
+        <tr>
+            <td class="LinkColumn"><a href="" onClick="findCode(this)">//device/samples/SampleCode/src/com/android/sdk/view/LinearLayout4.java</a></td>
+            <td class="DescrColumn">Loads the linear_layout_4 layout resource</td>
+        </tr>
+		<tr>
+            <td class="LinkColumn"><a href="" onClick="findCode(this)">//device/samples/SampleCode/assets/res/any/layout/linear_layout_4.xml</a></td>
+            <td class="DescrColumn">Defines the layout</td>
+        </tr>
+   		<tr>
+            <td class="LinkColumn"><a href="" onClick="findCode(this)">//device/samples/SampleCode/AndroidManifest.xml</a></td>
+            <td class="DescrColumn">Defines the activity</td>
+        </tr>
+</table>
+
+
+
+
+<h3>LinearLayout Example 5: A Simple Form</h3>
+This is a more complete example. It shows:
+<ul>
+	<li>Using nested LinearLayouts (a horizontal layout inside a vertical layout)
+	<li>Using padding on the outer layout
+	<li>Using the <code>layout_gravity</code> attribute to position the horizontal layout
+		on the right side of the screen
+	<li>Using a margin to put some space between buttons
+</ul>
+
+<h4>Demo</h4>
+Views/Layouts/LinearLayout/Example 5
+ 
+<h4>Source files</h4>
+<table class="LinkTable">
+        <tr>
+            <td class="LinkColumn"><a href="" onClick="findCode(this)">//device/samples/SampleCode/src/com/android/sdk/view/LinearLayout5.java</a></td>
+            <td class="DescrColumn">Loads the linear_layout_5 layout resource</td>
+        </tr>
+		<tr>
+            <td class="LinkColumn"><a href="" onClick="findCode(this)">//device/samples/SampleCode/assets/res/any/layout/linear_layout_5.xml</a></td>
+            <td class="DescrColumn">Defines the layout</td>
+        </tr>
+   		<tr>
+            <td class="LinkColumn"><a href="" onClick="findCode(this)">//device/samples/SampleCode/AndroidManifest.xml</a></td>
+            <td class="DescrColumn">Defines the activity</td>
+        </tr>
+</table>
+
+<h3>RelativeLayout Example 1: Stretching</h3>
+There are three views in this example. The first view (view1) is pinned to the top of the screen through the use of this
+attribute: <code>android:layout_alignParentTop="true"</code>. 
+The second view (view2) is pinned to the bottom of the screen: <code>android:layout_alignParentBottom="true"</code>.
+This demonstrates how views can be positioned relative to the RelativeLayout itself.
+
+<p>Views can also be positioned relative to each other as well. In this example, view3 is below view1 and above
+view2: <code>android:layout_above="view2" android:layout_below="view1"</code>. This has the effect of making 
+view3 stretch between view1 and view2.</p> 
+
+<p>Note that since view3 depends on the positions of both view1 and view2, it is defined after them in the layout
+file.</p> 
+
+<h4>Demo</h4>
+Views/Layouts/RelativeLayout/Example 1
+ 
+<h4>Source files</h4>
+<table class="LinkTable">
+        <tr>
+            <td class="LinkColumn"><a href="" onClick="findCode(this)">//device/samples/SampleCode/src/com/android/sdk/view/RelativeLayout1.java</a></td>
+            <td class="DescrColumn">Loads the relative_layout_1 layout resource</td>
+        </tr>
+		<tr>
+            <td class="LinkColumn"><a href="" onClick="findCode(this)">//device/samples/SampleCode/assets/res/any/layout/relative_layout_1.xml</a></td>
+            <td class="DescrColumn">Defines the layout</td>
+        </tr>
+		<tr>
+            <td class="LinkColumn"><a href="" onClick="findCode(this)">//device/samples/SampleCode/AndroidManifest.xml</a></td>
+            <td class="DescrColumn">Defines the activity</td>
+        </tr>
+</table>
+
+
+<h3>RelativeLayout Example 2: A Simple Form Revisited</h3>
+The form created in LinearLayout Example 5 is recreated using a RelativeLayout. This example demonstrates:
+
+<ul>
+	<li>Using padding on the outer layout
+	<li>Positioning views realtive to one another using the <code>android:layout_below</code> and 
+	<code>android:layout_below</code> and <code>android:layout_toLeft<code> attributes.
+	<li>Aligning the top edges of the buttons with the <code>android:layout_alignTop<code> attribute
+	<li>Right-aligning the OK button with <code>android:layout_alignParentRight</code>
+	<li>Using a margin to put some space between buttons
+</ul>
+
+<h4>Demo</h4>
+Views/Layouts/RelativeLayout/Example 2
+ 
+<h4>Source files</h4>
+<table class="LinkTable">
+        <tr>
+            <td class="LinkColumn"><a href="" onClick="findCode(this)">//device/samples/SampleCode/src/com/android/sdk/view/RelativeLayout2.java</a></td>
+            <td class="DescrColumn">Loads the relative_layout_2 layout resource</td>
+        </tr>
+		<tr>
+            <td class="LinkColumn"><a href="" onClick="findCode(this)">//device/samples/SampleCode/assets/res/any/layout/relative_layout_2.xml</a></td>
+            <td class="DescrColumn">Defines the layout</td>
+        </tr>
+		<tr>
+            <td class="LinkColumn"><a href="" onClick="findCode(this)">//device/samples/SampleCode/AndroidManifest.xml</a></td>
+            <td class="DescrColumn">Defines the activity</td>
+        </tr>
+</table>
+
+<h3>Scrolling Example 1</h3>
+All of the layout classes discussed above do not scroll. 
+They simply arrange their children within whatever space is made available to them.
+
+<p>The ScrollView is used to implement vertical scrolling. It does not display any
+content of its own. Instead, it assumes it has one child and pans up and down to keep
+the interesting area of its child in view.</p>
+
+<p>In this example, a ScrollView is used to wrap a LinearLayout. The LinearLayout
+in turn contains a stack of TextViews and Buttons. The ScrollView is as wide as 
+the screen (<code>android:layout_width="fill-parent"</code>) and tall enough to 
+wrap the LinearLayout (<code>android:layout_height="wrap-content"</code>). The 
+LinearLayout uses the same parameters, so it is also as wide as the screen and is as
+tall as the sum of the heigts of all of its children.</p>
+
+<h4>Demo</h4>
+Views/Layouts/ScrollView/Example 1
+ 
+<h4>Source files</h4>
+<table class="LinkTable">
+        <tr>
+            <td class="LinkColumn"><a href="" onClick="findCode(this)">//device/samples/SampleCode/src/com/android/sdk/view/ScrollView1.java</a></td>
+            <td class="DescrColumn">Loads the scroll_view_1 layout resource</td>
+        </tr>
+		<tr>
+            <td class="LinkColumn"><a href="" onClick="findCode(this)">//device/samples/SampleCode/assets/res/any/layout/scroll_view_1.xml</a></td>
+            <td class="DescrColumn">Defines the layout</td>
+        </tr>
+ 		<tr>
+            <td class="LinkColumn"><a href="" onClick="findCode(this)">//device/samples/SampleCode/AndroidManifest.xml</a></td>
+            <td class="DescrColumn">Defines the activity</td>
+        </tr>       
+</table>
+<h2><a name="Lists">Lists</a></h2>
+<h3>ListView Example 1: A "Hello World" List</h3>
+
+ListViews are used to display vertically scrolling list of information. Unlike the ScrollView, which pans up and 
+down through a set of views that have already been built, the ListView is "virtualized", meaning that views are 
+created only as necessary in order to display what is actually on the screen. ListViews can thus be used to 
+efficiently display very large sets of data. (In this example, the list displays over 600 kinds of cheese.) 
+
+<p>ListViews are highly customizable: you can change where the underlying data comes from, the internal
+representation of the data, and the Views that are used to display the data on the screen. All of this is 
+done with a ListAdapter class. The Android platform includes some ListAdapters that are ready to use, or 
+you can make your own to display custom information. (See ListView Example 4 and ListView Example 5.)</p>
+
+<p>This example uses an existing ListAdapter called ArrayListAdapter. This adapter uses generics to map
+an array of objects to TextViews. In this case we are using an array of Strings.</p>
+
+<p>Note that this example does not have a layout file. This is because the List1 class derives from 
+ListScreen, which will provide a default layout if your activity does not provide an override.</p>
+
+<h4>Demo</h4>
+Views/Lists/Example 1
+ 
+<h4>Source files</h4>
+<table class="LinkTable">
+        <tr>
+            <td class="LinkColumn"><a href="" onClick="findCode(this)">//device/samples/SampleCode/src/com/android/sdk/view/List1.java</a></td>
+            <td class="DescrColumn">Contains code for the List1 class</td>
+        </tr>
+		<tr>
+            <td class="LinkColumn"><a href="" onClick="findCode(this)">//device/samples/SampleCode/AndroidManifest.xml</a></td>
+            <td class="DescrColumn">Defines the activity</td>
+        </tr>
+</table>
+
+<h3>ListView Example 2: Displaying Data from a Cursor </h3>
+
+It is very common to display data from a database in a ListView. The easiest way to do this is to use a 
+SimpleCursorListAdapter. This is a class that will get data from a Cursor and display the data in 
+each row in Views defined in an XML template.
+
+<p>In this example, the SimpleCursorListAdapter is provided with a cursor that contains a list of all 
+people. Each row will be displayed using the Views defined in this XL file: 
+<a href="" onClick="findCode(this)">//device/apps/common/assets/res/any/layout/simple_list_item_1.xml</a>.
+</p>
+
+<p>When creating a SimpleCursorListAdapter, you also provide a mapping from column names in the 
+Cursor to view ids in the template file. In this case we are mapping the People.NAME column to the
+"text1" TextView.
+</p>
+
+<h4>Demo</h4>
+Views/Lists/Example 2
+ 
+<h4>Source files</h4>
+<table class="LinkTable">
+        <tr>
+            <td class="LinkColumn"><a href="" onClick="findCode(this)">//device/samples/SampleCode/src/com/android/sdk/view/List2.java</a></td>
+            <td class="DescrColumn">Contains code for the List2 class</td>
+        </tr>
+		<tr>
+            <td class="LinkColumn"><a href="" onClick="findCode(this)">//device/apps/common/assets/res/any/layout/simple_list_item_1.xml</a></td>
+            <td class="DescrColumn">Defines the XML template used for each row. 
+            (Note that this file is provided as part of the Android platform.)</td>
+        </tr>
+		<tr>
+            <td class="LinkColumn"><a href="" onClick="findCode(this)">//device/samples/SampleCode/AndroidManifest.xml</a></td>
+            <td class="DescrColumn">Defines the activity</td>
+        </tr>
+</table>
+
+
+<h3>ListView Example 3: Displaying Data from a Cursor, Fancier Version </h3>
+
+This example extends the idea presented in Example 2. Instead of just presenting a list of names, though,
+it shows two lines of information for the selected item (name and phone number). It shows just the name for unselected items. 
+
+<p>
+This example still uses a SimpleCursorListAdapter, but changes the following:</p>
+
+<ul>
+	<li>The Cursor now contains all phone numbers
+	<li>It uses a different template for each row: <a href="" onClick="findCode(this)">//device/apps/common/assets/res/any/layout/simple_list_item_2.xml</a>
+	<li>Since simple_list_item_2.xml contains two views, were mapping two columns 
+	<code>{ Phones.NAME, Phones.NUMBER }</code> to the two views 
+	<code>{ "text1", "text2"}</code>
+	<li>The simple_list_item_2.xml uses a TwoLineListItem view, which is a subclass of LinearLayout that knows to only show
+	the second item when it is selected.
+</ul>
+
+<h4>Demo</h4>
+Views/Lists/Example 3
+ 
+<h4>Source files</h4>
+<table class="LinkTable">
+        <tr>
+            <td class="LinkColumn"><a href="" onClick="findCode(this)">//device/samples/SampleCode/src/com/android/sdk/view/List3.java</a></td>
+            <td class="DescrColumn">Contains code for the List3 class</td>
+        </tr>
+		<tr>
+            <td class="LinkColumn"><a href="" onClick="findCode(this)">//device/apps/common/assets/res/any/layout/simple_list_item_2.xml</a></td>
+            <td class="DescrColumn">Defines the XML template used for each row. 
+            (Note that this file is provided as part of the Android platform.)</td>
+        </tr>
+		<tr>
+            <td class="LinkColumn"><a href="" onClick="findCode(this)">//device/samples/SampleCode/AndroidManifest.xml</a></td>
+            <td class="DescrColumn">Defines the activity</td>
+        </tr>
+</table>
+
+
+
+<h3>ListView Example 4: Writing a Custom ListAdapter </h3>
+
+The previous examples all used standard ListAdapters. It is also possible to write your own ListAdapters 
+to access data from custom sources.
+
+<p>
+This example introduces a SongListAdapter, which gets its data from an array of titles and an array of lyrics. 
+The SongListAdapter then produces a SongView which is capable of displaying this data.
+</p>  
+
+<p>
+This example also shows how the ListView handles scrolling large items.
+
+<h4>Demo</h4>
+Views/Lists/Example 4
+ 
+<h4>Source files</h4>
+<table class="LinkTable">
+        <tr>
+            <td class="LinkColumn"><a href="" onClick="findCode(this)">//device/samples/SampleCode/src/com/android/sdk/view/List4.java</a></td>
+            <td class="DescrColumn">Contains code for the List4 class, along with a custom ListAdapter and custom View to display the data.</td>
+        </tr>
+		<tr>
+            <td class="LinkColumn"><a href="" onClick="findCode(this)">//device/samples/SampleCode/AndroidManifest.xml</a></td>
+            <td class="DescrColumn">Defines the activity</td>
+        </tr>
+</table>
+
+
+
+<h3>ListView Example 5: List Separators </h3>
+
+ListView supports the concept of non-selectable "separators" between items. The ListView delegated to its ListAdapter the
+task of deciding whether a given position in the list is a separator or selectable data.
+
+<p><i>This example needs some cleanup.</i></p>
+
+<h4>Demo</h4>
+Views/Lists/Example 5
+ 
+<h4>Source files</h4>
+<table class="LinkTable">
+        <tr>
+            <td class="LinkColumn"><a href="" onClick="findCode(this)">//device/samples/SampleCode/src/com/android/sdk/view/List5.java</a></td>
+            <td class="DescrColumn">Contains code for the List5 class, along with a custom ListAdapter.</td>
+        </tr>
+		<tr>
+            <td class="LinkColumn"><a href="" onClick="findCode(this)">//device/samples/SampleCode/AndroidManifest.xml</a></td>
+            <td class="DescrColumn">Defines the activity</td>
+        </tr>
+</table>
+
+<h2><a name="Working">Working with Views</a></h2>
+
+<h3>Custom View Example 1: LabelView</h3>
+
+
+
+<p>
+Note: This example does not support multi-line or right-to-left text. It is sample code only
+and should not be used in place of the TextView.
+</p>
+
+
+<h4>Demo</h4>
+Views/Custom/Example 1
+ 
+<h4>Source files</h4>
+<table class="LinkTable">
+        <tr>
+            <td class="LinkColumn"><a href="" onClick="findCode(this)">//device/samples/SampleCode/src/com/android/sdk/view/CustomView1.java</a></td>
+            <td class="DescrColumn">Loads the custom_view_3 layout resource</td>
+        </tr>
+		<tr>
+            <td class="LinkColumn"><a href="" onClick="findCode(this)">//device/samples/SampleCode/src/com/android/sdk/view/LabelView.java</a></td>
+            <td class="DescrColumn">Implementation of the custom view</td>
+        </tr>
+		<tr>
+            <td class="LinkColumn"><a href="" onClick="findCode(this)">//device/samples/SampleCode/assets/res/any/layout/custom_view_1.xml</a></td>
+            <td class="DescrColumn">Defines a layout that uses LabelViews</td>
+        </tr>
+		<tr>
+            <td class="LinkColumn"><a href="" onClick="findCode(this)">//device/samples/SampleCode/AndroidManifest.xml</a></td>
+            <td class="DescrColumn">Defines the activity</td>
+        </tr>
+</table>
+</body>
+</html>

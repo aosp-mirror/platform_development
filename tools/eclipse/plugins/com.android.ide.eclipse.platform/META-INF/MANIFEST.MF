@@ -1,0 +1,15 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Android Platform Development Toolkit
+Bundle-SymbolicName: com.android.ide.eclipse.platform;singleton:=true
+Bundle-Version: 0.8.1.qualifier
+Bundle-ClassPath: .
+Bundle-Activator: com.android.ide.eclipse.platform.AndroidPlatformPlugin
+Bundle-Vendor: The Android Open Source Project
+Require-Bundle: org.eclipse.ui,
+ org.eclipse.core.runtime,
+ com.android.ide.eclipse.ddms,
+ com.android.ide.eclipse.common,
+ org.eclipse.core.resources,
+ org.eclipse.jdt.core
+Eclipse-LazyStart: true

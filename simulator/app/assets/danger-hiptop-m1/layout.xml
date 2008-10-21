@@ -1,0 +1,31 @@
+<?xml version="1.0" ?>
+<!-- Copyright 2005 The Android Open Source Project -->
+
+<device name="DangerM1">
+    <!-- title for menus -->
+    <title>Danger hiptop M1</title>
+
+    <display name="main" width="240" height="160" format="rgb565" refresh="30"/>
+
+	<keyboard qwerty="1" />
+	
+    <mode name="closed">
+        <!-- hiptop when closed -->
+        <view display="main" x="160" y="69" rotate="0">
+
+            <!-- surrounding device image and "patches", drawn in order -->
+            <image src="background.png" x="0" y="0"/>
+
+        </view>
+    </mode>
+
+    <mode name="open">
+        <!-- hiptop when flipped open -->
+        <view display="main" x="172" y="60" rotate="180">
+
+            <image src="background-open.png" x="0" y="0"/>
+        </view>
+    </mode>
+
+</device>
+

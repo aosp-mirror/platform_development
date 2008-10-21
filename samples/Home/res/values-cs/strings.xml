@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+  <string name="home_title">Domů</string>
+  <string name="menu_notifications">Oznámení</string>
+  <string name="menu_search">Hledat</string>
+  <string name="menu_wallpaper">Tapeta</string>
+  <string name="show_all_apps">Vše</string>
+  <string name="wallpaper_instructions">Klepnutím na obrázek nastavíte tapetu portrétu</string>
+</resources>

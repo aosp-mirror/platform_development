@@ -1,0 +1,7 @@
+        <activity android:name=".ACTIVITY_NAME"
+                  android:label="APPLICATION_NAME">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+INTENT_FILTERS
+            </intent-filter>
+        </activity>

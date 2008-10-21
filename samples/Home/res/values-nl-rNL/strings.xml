@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+  <string name="home_title">Start</string>
+  <string name="menu_notifications">Meldingen</string>
+  <string name="menu_search">Zoeken</string>
+  <string name="menu_wallpaper">Achtergrond</string>
+  <string name="show_all_apps">Alles</string>
+  <string name="wallpaper_instructions">Tik op afbeelding om portretachtergrond in te stellen</string>
+</resources>

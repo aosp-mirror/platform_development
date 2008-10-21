@@ -1,0 +1,851 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 42;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		FE49EAAC09FD5DB800D28411 /* SkDrawExtraPathEffect.h in Headers */ = {isa = PBXBuildFile; fileRef = FE49EAAB09FD5DB800D28411 /* SkDrawExtraPathEffect.h */; };
+		FE49EB4D09FE783600D28411 /* SkDisplayNumber.h in Headers */ = {isa = PBXBuildFile; fileRef = FE49EB4C09FE783600D28411 /* SkDisplayNumber.h */; };
+		FE49EB5109FE785E00D28411 /* SkDisplayNumber.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE49EB5009FE785E00D28411 /* SkDisplayNumber.cpp */; };
+		FE49EE0C09FFDB0300D28411 /* SkAnimateProperties.h in Headers */ = {isa = PBXBuildFile; fileRef = FE49EE0B09FFDB0300D28411 /* SkAnimateProperties.h */; };
+		FE51FB850A6FDCE500ABA91D /* SkDrawSaveLayer.h in Headers */ = {isa = PBXBuildFile; fileRef = FE51FB840A6FDCE400ABA91D /* SkDrawSaveLayer.h */; };
+		FE51FB8F0A6FE7DC00ABA91D /* SkDrawSaveLayer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE51FB8E0A6FE7DC00ABA91D /* SkDrawSaveLayer.cpp */; };
+		FE5F49840948A5390095980F /* SkAnimateBase.h in Headers */ = {isa = PBXBuildFile; fileRef = FE5F48F30948A5380095980F /* SkAnimateBase.h */; };
+		FE5F49850948A5390095980F /* SkAnimateActive.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5F48F60948A5380095980F /* SkAnimateActive.cpp */; };
+		FE5F49860948A5390095980F /* SkAnimateActive.h in Headers */ = {isa = PBXBuildFile; fileRef = FE5F48F70948A5380095980F /* SkAnimateActive.h */; };
+		FE5F49870948A5390095980F /* SkAnimateField.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5F48F80948A5380095980F /* SkAnimateField.cpp */; };
+		FE5F49880948A5390095980F /* SkAnimate.h in Headers */ = {isa = PBXBuildFile; fileRef = FE5F48F90948A5380095980F /* SkAnimate.h */; };
+		FE5F49890948A5390095980F /* SkAnimateMaker.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5F48FA0948A5380095980F /* SkAnimateMaker.cpp */; };
+		FE5F498A0948A5390095980F /* SkAnimateMaker.h in Headers */ = {isa = PBXBuildFile; fileRef = FE5F48FB0948A5380095980F /* SkAnimateMaker.h */; };
+		FE5F498B0948A5390095980F /* SkAnimateSet.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5F48FE0948A5380095980F /* SkAnimateSet.cpp */; };
+		FE5F498C0948A5390095980F /* SkAnimateSet.h in Headers */ = {isa = PBXBuildFile; fileRef = FE5F48FF0948A5380095980F /* SkAnimateSet.h */; };
+		FE5F498D0948A5390095980F /* SkAnimator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5F49000948A5380095980F /* SkAnimator.cpp */; };
+		FE5F498E0948A5390095980F /* SkAnimatorScript.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5F49010948A5380095980F /* SkAnimatorScript.cpp */; };
+		FE5F498F0948A5390095980F /* SkAnimatorScript.h in Headers */ = {isa = PBXBuildFile; fileRef = FE5F49020948A5380095980F /* SkAnimatorScript.h */; };
+		FE5F49900948A5390095980F /* SkBase64.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5F49030948A5380095980F /* SkBase64.cpp */; };
+		FE5F49910948A5390095980F /* SkBase64.h in Headers */ = {isa = PBXBuildFile; fileRef = FE5F49040948A5380095980F /* SkBase64.h */; };
+		FE5F49920948A5390095980F /* SkBoundable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5F49050948A5380095980F /* SkBoundable.cpp */; };
+		FE5F49930948A5390095980F /* SkBoundable.h in Headers */ = {isa = PBXBuildFile; fileRef = FE5F49060948A5380095980F /* SkBoundable.h */; };
+		FE5F49940948A5390095980F /* SkBuildCondensedInfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5F49070948A5380095980F /* SkBuildCondensedInfo.cpp */; };
+		FE5F49970948A5390095980F /* SkDisplayable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5F490A0948A5380095980F /* SkDisplayable.cpp */; };
+		FE5F49980948A5390095980F /* SkDisplayable.h in Headers */ = {isa = PBXBuildFile; fileRef = FE5F490B0948A5380095980F /* SkDisplayable.h */; };
+		FE5F49990948A5390095980F /* SkDisplayAdd.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5F490C0948A5380095980F /* SkDisplayAdd.cpp */; };
+		FE5F499A0948A5390095980F /* SkDisplayAdd.h in Headers */ = {isa = PBXBuildFile; fileRef = FE5F490D0948A5380095980F /* SkDisplayAdd.h */; };
+		FE5F499B0948A5390095980F /* SkDisplayApply.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5F490E0948A5380095980F /* SkDisplayApply.cpp */; };
+		FE5F499C0948A5390095980F /* SkDisplayApply.h in Headers */ = {isa = PBXBuildFile; fileRef = FE5F490F0948A5380095980F /* SkDisplayApply.h */; };
+		FE5F499D0948A5390095980F /* SkDisplayBounds.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5F49100948A5380095980F /* SkDisplayBounds.cpp */; };
+		FE5F499E0948A5390095980F /* SkDisplayBounds.h in Headers */ = {isa = PBXBuildFile; fileRef = FE5F49110948A5380095980F /* SkDisplayBounds.h */; };
+		FE5F499F0948A5390095980F /* SkDisplayEvent.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5F49120948A5380095980F /* SkDisplayEvent.cpp */; };
+		FE5F49A00948A5390095980F /* SkDisplayEvent.h in Headers */ = {isa = PBXBuildFile; fileRef = FE5F49130948A5380095980F /* SkDisplayEvent.h */; };
+		FE5F49A10948A5390095980F /* SkDisplayEvents.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5F49140948A5380095980F /* SkDisplayEvents.cpp */; };
+		FE5F49A20948A5390095980F /* SkDisplayEvents.h in Headers */ = {isa = PBXBuildFile; fileRef = FE5F49150948A5380095980F /* SkDisplayEvents.h */; };
+		FE5F49A30948A5390095980F /* SkDisplayInclude.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5F49160948A5380095980F /* SkDisplayInclude.cpp */; };
+		FE5F49A40948A5390095980F /* SkDisplayInclude.h in Headers */ = {isa = PBXBuildFile; fileRef = FE5F49170948A5380095980F /* SkDisplayInclude.h */; };
+		FE5F49A50948A5390095980F /* SkDisplayInput.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5F49180948A5380095980F /* SkDisplayInput.cpp */; };
+		FE5F49A60948A5390095980F /* SkDisplayInput.h in Headers */ = {isa = PBXBuildFile; fileRef = FE5F49190948A5380095980F /* SkDisplayInput.h */; };
+		FE5F49A70948A5390095980F /* SkDisplayList.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5F491A0948A5380095980F /* SkDisplayList.cpp */; };
+		FE5F49A80948A5390095980F /* SkDisplayList.h in Headers */ = {isa = PBXBuildFile; fileRef = FE5F491B0948A5380095980F /* SkDisplayList.h */; };
+		FE5F49A90948A5390095980F /* SkDisplayMath.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5F491C0948A5380095980F /* SkDisplayMath.cpp */; };
+		FE5F49AA0948A5390095980F /* SkDisplayMath.h in Headers */ = {isa = PBXBuildFile; fileRef = FE5F491D0948A5380095980F /* SkDisplayMath.h */; };
+		FE5F49AB0948A5390095980F /* SkDisplayMovie.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5F491E0948A5380095980F /* SkDisplayMovie.cpp */; };
+		FE5F49AC0948A5390095980F /* SkDisplayMovie.h in Headers */ = {isa = PBXBuildFile; fileRef = FE5F491F0948A5380095980F /* SkDisplayMovie.h */; };
+		FE5F49AD0948A5390095980F /* SkDisplayPost.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5F49200948A5380095980F /* SkDisplayPost.cpp */; };
+		FE5F49AE0948A5390095980F /* SkDisplayPost.h in Headers */ = {isa = PBXBuildFile; fileRef = FE5F49210948A5380095980F /* SkDisplayPost.h */; };
+		FE5F49AF0948A5390095980F /* SkDisplayRandom.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5F49220948A5380095980F /* SkDisplayRandom.cpp */; };
+		FE5F49B00948A5390095980F /* SkDisplayRandom.h in Headers */ = {isa = PBXBuildFile; fileRef = FE5F49230948A5380095980F /* SkDisplayRandom.h */; };
+		FE5F49B10948A5390095980F /* SkDisplayScreenplay.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5F49240948A5380095980F /* SkDisplayScreenplay.cpp */; };
+		FE5F49B20948A5390095980F /* SkDisplayScreenplay.h in Headers */ = {isa = PBXBuildFile; fileRef = FE5F49250948A5380095980F /* SkDisplayScreenplay.h */; };
+		FE5F49B30948A5390095980F /* SkDisplayType.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5F49260948A5380095980F /* SkDisplayType.cpp */; };
+		FE5F49B40948A5390095980F /* SkDisplayType.h in Headers */ = {isa = PBXBuildFile; fileRef = FE5F49270948A5380095980F /* SkDisplayType.h */; };
+		FE5F49B50948A5390095980F /* SkDisplayTypes.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5F49280948A5380095980F /* SkDisplayTypes.cpp */; };
+		FE5F49B60948A5390095980F /* SkDisplayTypes.h in Headers */ = {isa = PBXBuildFile; fileRef = FE5F49290948A5380095980F /* SkDisplayTypes.h */; };
+		FE5F49B70948A5390095980F /* SkDisplayXMLParser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5F492A0948A5380095980F /* SkDisplayXMLParser.cpp */; };
+		FE5F49B80948A5390095980F /* SkDisplayXMLParser.h in Headers */ = {isa = PBXBuildFile; fileRef = FE5F492B0948A5380095980F /* SkDisplayXMLParser.h */; };
+		FE5F49B90948A5390095980F /* SkDraw3D.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5F492C0948A5380095980F /* SkDraw3D.cpp */; };
+		FE5F49BA0948A5390095980F /* SkDraw3D.h in Headers */ = {isa = PBXBuildFile; fileRef = FE5F492D0948A5380095980F /* SkDraw3D.h */; };
+		FE5F49BB0948A5390095980F /* SkDrawable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5F492E0948A5380095980F /* SkDrawable.cpp */; };
+		FE5F49BC0948A5390095980F /* SkDrawable.h in Headers */ = {isa = PBXBuildFile; fileRef = FE5F492F0948A5380095980F /* SkDrawable.h */; };
+		FE5F49BD0948A5390095980F /* SkDrawBitmap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5F49300948A5380095980F /* SkDrawBitmap.cpp */; };
+		FE5F49BE0948A5390095980F /* SkDrawBitmap.h in Headers */ = {isa = PBXBuildFile; fileRef = FE5F49310948A5380095980F /* SkDrawBitmap.h */; };
+		FE5F49BF0948A5390095980F /* SkDrawBlur.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5F49320948A5380095980F /* SkDrawBlur.cpp */; };
+		FE5F49C00948A5390095980F /* SkDrawBlur.h in Headers */ = {isa = PBXBuildFile; fileRef = FE5F49330948A5380095980F /* SkDrawBlur.h */; };
+		FE5F49C10948A5390095980F /* SkDrawClip.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5F49340948A5380095980F /* SkDrawClip.cpp */; };
+		FE5F49C20948A5390095980F /* SkDrawClip.h in Headers */ = {isa = PBXBuildFile; fileRef = FE5F49350948A5380095980F /* SkDrawClip.h */; };
+		FE5F49C30948A5390095980F /* SkDrawColor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5F49360948A5380095980F /* SkDrawColor.cpp */; };
+		FE5F49C40948A5390095980F /* SkDrawColor.h in Headers */ = {isa = PBXBuildFile; fileRef = FE5F49370948A5380095980F /* SkDrawColor.h */; };
+		FE5F49C50948A5390095980F /* SkDrawDash.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5F49380948A5380095980F /* SkDrawDash.cpp */; };
+		FE5F49C60948A5390095980F /* SkDrawDash.h in Headers */ = {isa = PBXBuildFile; fileRef = FE5F49390948A5380095980F /* SkDrawDash.h */; };
+		FE5F49C70948A5390095980F /* SkDrawDiscrete.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5F493A0948A5380095980F /* SkDrawDiscrete.cpp */; };
+		FE5F49C80948A5390095980F /* SkDrawDiscrete.h in Headers */ = {isa = PBXBuildFile; fileRef = FE5F493B0948A5380095980F /* SkDrawDiscrete.h */; };
+		FE5F49C90948A5390095980F /* SkDrawEmboss.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5F493C0948A5380095980F /* SkDrawEmboss.cpp */; };
+		FE5F49CA0948A5390095980F /* SkDrawEmboss.h in Headers */ = {isa = PBXBuildFile; fileRef = FE5F493D0948A5380095980F /* SkDrawEmboss.h */; };
+		FE5F49CB0948A5390095980F /* SkDrawExtraPathEffect.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5F493E0948A5380095980F /* SkDrawExtraPathEffect.cpp */; };
+		FE5F49CC0948A5390095980F /* SkDrawFull.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5F493F0948A5380095980F /* SkDrawFull.cpp */; };
+		FE5F49CD0948A5390095980F /* SkDrawFull.h in Headers */ = {isa = PBXBuildFile; fileRef = FE5F49400948A5380095980F /* SkDrawFull.h */; };
+		FE5F49CE0948A5390095980F /* SkDrawGradient.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5F49410948A5380095980F /* SkDrawGradient.cpp */; };
+		FE5F49CF0948A5390095980F /* SkDrawGradient.h in Headers */ = {isa = PBXBuildFile; fileRef = FE5F49420948A5380095980F /* SkDrawGradient.h */; };
+		FE5F49D00948A5390095980F /* SkDrawGroup.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5F49430948A5380095980F /* SkDrawGroup.cpp */; };
+		FE5F49D10948A5390095980F /* SkDrawGroup.h in Headers */ = {isa = PBXBuildFile; fileRef = FE5F49440948A5380095980F /* SkDrawGroup.h */; };
+		FE5F49D20948A5390095980F /* SkDrawLine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5F49450948A5380095980F /* SkDrawLine.cpp */; };
+		FE5F49D30948A5390095980F /* SkDrawLine.h in Headers */ = {isa = PBXBuildFile; fileRef = FE5F49460948A5380095980F /* SkDrawLine.h */; };
+		FE5F49D40948A5390095980F /* SkDrawMatrix.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5F49470948A5380095980F /* SkDrawMatrix.cpp */; };
+		FE5F49D50948A5390095980F /* SkDrawMatrix.h in Headers */ = {isa = PBXBuildFile; fileRef = FE5F49480948A5380095980F /* SkDrawMatrix.h */; };
+		FE5F49D60948A5390095980F /* SkDrawOval.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5F49490948A5380095980F /* SkDrawOval.cpp */; };
+		FE5F49D70948A5390095980F /* SkDrawOval.h in Headers */ = {isa = PBXBuildFile; fileRef = FE5F494A0948A5380095980F /* SkDrawOval.h */; };
+		FE5F49D80948A5390095980F /* SkDrawPaint.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5F494B0948A5390095980F /* SkDrawPaint.cpp */; };
+		FE5F49D90948A5390095980F /* SkDrawPaint.h in Headers */ = {isa = PBXBuildFile; fileRef = FE5F494C0948A5390095980F /* SkDrawPaint.h */; };
+		FE5F49DA0948A5390095980F /* SkDrawPath.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5F494D0948A5390095980F /* SkDrawPath.cpp */; };
+		FE5F49DB0948A5390095980F /* SkDrawPath.h in Headers */ = {isa = PBXBuildFile; fileRef = FE5F494E0948A5390095980F /* SkDrawPath.h */; };
+		FE5F49DC0948A5390095980F /* SkDrawPoint.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5F494F0948A5390095980F /* SkDrawPoint.cpp */; };
+		FE5F49DD0948A5390095980F /* SkDrawPoint.h in Headers */ = {isa = PBXBuildFile; fileRef = FE5F49500948A5390095980F /* SkDrawPoint.h */; };
+		FE5F49DE0948A5390095980F /* SkDrawRectangle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5F49510948A5390095980F /* SkDrawRectangle.cpp */; };
+		FE5F49DF0948A5390095980F /* SkDrawRectangle.h in Headers */ = {isa = PBXBuildFile; fileRef = FE5F49520948A5390095980F /* SkDrawRectangle.h */; };
+		FE5F49E00948A5390095980F /* SkDrawShader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5F49530948A5390095980F /* SkDrawShader.cpp */; };
+		FE5F49E10948A5390095980F /* SkDrawShader.h in Headers */ = {isa = PBXBuildFile; fileRef = FE5F49540948A5390095980F /* SkDrawShader.h */; };
+		FE5F49E20948A5390095980F /* SkDrawText.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5F49550948A5390095980F /* SkDrawText.cpp */; };
+		FE5F49E30948A5390095980F /* SkDrawText.h in Headers */ = {isa = PBXBuildFile; fileRef = FE5F49560948A5390095980F /* SkDrawText.h */; };
+		FE5F49E40948A5390095980F /* SkDrawTextBox.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5F49570948A5390095980F /* SkDrawTextBox.cpp */; };
+		FE5F49E50948A5390095980F /* SkDrawTextBox.h in Headers */ = {isa = PBXBuildFile; fileRef = FE5F49580948A5390095980F /* SkDrawTextBox.h */; };
+		FE5F49E60948A5390095980F /* SkDrawTo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5F49590948A5390095980F /* SkDrawTo.cpp */; };
+		FE5F49E70948A5390095980F /* SkDrawTo.h in Headers */ = {isa = PBXBuildFile; fileRef = FE5F495A0948A5390095980F /* SkDrawTo.h */; };
+		FE5F49E80948A5390095980F /* SkDrawTransparentShader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5F495B0948A5390095980F /* SkDrawTransparentShader.cpp */; };
+		FE5F49E90948A5390095980F /* SkDrawTransparentShader.h in Headers */ = {isa = PBXBuildFile; fileRef = FE5F495C0948A5390095980F /* SkDrawTransparentShader.h */; };
+		FE5F49EA0948A5390095980F /* SkDump.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5F495D0948A5390095980F /* SkDump.cpp */; };
+		FE5F49EB0948A5390095980F /* SkDump.h in Headers */ = {isa = PBXBuildFile; fileRef = FE5F495E0948A5390095980F /* SkDump.h */; };
+		FE5F49EC0948A5390095980F /* SkExtras.h in Headers */ = {isa = PBXBuildFile; fileRef = FE5F49600948A5390095980F /* SkExtras.h */; };
+		FE5F49ED0948A5390095980F /* SkGetCondensedInfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5F49610948A5390095980F /* SkGetCondensedInfo.cpp */; };
+		FE5F49EE0948A5390095980F /* SkHitClear.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5F49620948A5390095980F /* SkHitClear.cpp */; };
+		FE5F49EF0948A5390095980F /* SkHitClear.h in Headers */ = {isa = PBXBuildFile; fileRef = FE5F49630948A5390095980F /* SkHitClear.h */; };
+		FE5F49F00948A5390095980F /* SkHitTest.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5F49640948A5390095980F /* SkHitTest.cpp */; };
+		FE5F49F10948A5390095980F /* SkHitTest.h in Headers */ = {isa = PBXBuildFile; fileRef = FE5F49650948A5390095980F /* SkHitTest.h */; };
+		FE5F49F20948A5390095980F /* SkIntArray.h in Headers */ = {isa = PBXBuildFile; fileRef = FE5F49660948A5390095980F /* SkIntArray.h */; };
+		FE5F49F40948A5390095980F /* SkMatrixParts.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5F49680948A5390095980F /* SkMatrixParts.cpp */; };
+		FE5F49F50948A5390095980F /* SkMatrixParts.h in Headers */ = {isa = PBXBuildFile; fileRef = FE5F49690948A5390095980F /* SkMatrixParts.h */; };
+		FE5F49F60948A5390095980F /* SkMemberInfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5F496A0948A5390095980F /* SkMemberInfo.cpp */; };
+		FE5F49F70948A5390095980F /* SkMemberInfo.h in Headers */ = {isa = PBXBuildFile; fileRef = FE5F496B0948A5390095980F /* SkMemberInfo.h */; };
+		FE5F49F80948A5390095980F /* SkOperand.h in Headers */ = {isa = PBXBuildFile; fileRef = FE5F496C0948A5390095980F /* SkOperand.h */; };
+		FE5F49F90948A5390095980F /* SkOperandInterpolator.h in Headers */ = {isa = PBXBuildFile; fileRef = FE5F496D0948A5390095980F /* SkOperandInterpolator.h */; };
+		FE5F49FA0948A5390095980F /* SkOperandIterpolator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5F496E0948A5390095980F /* SkOperandIterpolator.cpp */; };
+		FE5F49FB0948A5390095980F /* SkPaintParts.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5F496F0948A5390095980F /* SkPaintParts.cpp */; };
+		FE5F49FC0948A5390095980F /* SkPaintParts.h in Headers */ = {isa = PBXBuildFile; fileRef = FE5F49700948A5390095980F /* SkPaintParts.h */; };
+		FE5F49FD0948A5390095980F /* SkPathParts.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5F49710948A5390095980F /* SkPathParts.cpp */; };
+		FE5F49FE0948A5390095980F /* SkPathParts.h in Headers */ = {isa = PBXBuildFile; fileRef = FE5F49720948A5390095980F /* SkPathParts.h */; };
+		FE5F49FF0948A5390095980F /* SkPostParts.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5F49730948A5390095980F /* SkPostParts.cpp */; };
+		FE5F4A000948A5390095980F /* SkPostParts.h in Headers */ = {isa = PBXBuildFile; fileRef = FE5F49740948A5390095980F /* SkPostParts.h */; };
+		FE5F4A010948A5390095980F /* SkScript.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5F49750948A5390095980F /* SkScript.cpp */; };
+		FE5F4A020948A5390095980F /* SkScript.h in Headers */ = {isa = PBXBuildFile; fileRef = FE5F49760948A5390095980F /* SkScript.h */; };
+		FE5F4A030948A5390095980F /* SkSnapshot.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5F49770948A5390095980F /* SkSnapshot.cpp */; };
+		FE5F4A040948A5390095980F /* SkSnapshot.h in Headers */ = {isa = PBXBuildFile; fileRef = FE5F49780948A5390095980F /* SkSnapshot.h */; };
+		FE5F4A050948A5390095980F /* SkSVGPath.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5F49790948A5390095980F /* SkSVGPath.cpp */; };
+		FE5F4A060948A5390095980F /* SkTDArray_Experimental.h in Headers */ = {isa = PBXBuildFile; fileRef = FE5F497A0948A5390095980F /* SkTDArray_Experimental.h */; };
+		FE5F4A070948A5390095980F /* SkTextOnPath.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5F497B0948A5390095980F /* SkTextOnPath.cpp */; };
+		FE5F4A080948A5390095980F /* SkTextOnPath.h in Headers */ = {isa = PBXBuildFile; fileRef = FE5F497C0948A5390095980F /* SkTextOnPath.h */; };
+		FE5F4A090948A5390095980F /* SkTextToPath.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5F497D0948A5390095980F /* SkTextToPath.cpp */; };
+		FE5F4A0A0948A5390095980F /* SkTextToPath.h in Headers */ = {isa = PBXBuildFile; fileRef = FE5F497E0948A5390095980F /* SkTextToPath.h */; };
+		FE5F4A0B0948A5390095980F /* SkTime.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5F497F0948A5390095980F /* SkTime.cpp */; };
+		FE5F4A0C0948A5390095980F /* SkTypedArray.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5F49800948A5390095980F /* SkTypedArray.cpp */; };
+		FE5F4A0D0948A5390095980F /* SkTypedArray.h in Headers */ = {isa = PBXBuildFile; fileRef = FE5F49810948A5390095980F /* SkTypedArray.h */; };
+		FE5F4A0E0948A5390095980F /* SkXMLAnimatorWriter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE5F49820948A5390095980F /* SkXMLAnimatorWriter.cpp */; };
+		FE5F4A0F0948A5390095980F /* SkXMLAnimatorWriter.h in Headers */ = {isa = PBXBuildFile; fileRef = FE5F49830948A5390095980F /* SkXMLAnimatorWriter.h */; };
+		FE76553E09DFF6610088D6CA /* SkScriptTokenizer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE76553D09DFF6610088D6CA /* SkScriptTokenizer.cpp */; };
+		FECB4EF409DF3E3600D03FF8 /* SkAnimatorScript2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FECB4EEA09DF3E3600D03FF8 /* SkAnimatorScript2.cpp */; };
+		FECB4EF509DF3E3600D03FF8 /* SkAnimatorScript2.h in Headers */ = {isa = PBXBuildFile; fileRef = FECB4EEB09DF3E3600D03FF8 /* SkAnimatorScript2.h */; };
+		FECB4EF609DF3E3600D03FF8 /* SkOpArray.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FECB4EEC09DF3E3600D03FF8 /* SkOpArray.cpp */; };
+		FECB4EF709DF3E3600D03FF8 /* SkOpArray.h in Headers */ = {isa = PBXBuildFile; fileRef = FECB4EED09DF3E3600D03FF8 /* SkOpArray.h */; };
+		FECB4EF809DF3E3600D03FF8 /* SkOperand2.h in Headers */ = {isa = PBXBuildFile; fileRef = FECB4EEE09DF3E3600D03FF8 /* SkOperand2.h */; };
+		FECB4EF909DF3E3600D03FF8 /* SkScript2.h in Headers */ = {isa = PBXBuildFile; fileRef = FECB4EEF09DF3E3600D03FF8 /* SkScript2.h */; };
+		FECB4EFA09DF3E3600D03FF8 /* SkScriptCallBack.h in Headers */ = {isa = PBXBuildFile; fileRef = FECB4EF009DF3E3600D03FF8 /* SkScriptCallBack.h */; };
+		FECB4EFB09DF3E3600D03FF8 /* SkScriptDecompile.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FECB4EF109DF3E3600D03FF8 /* SkScriptDecompile.cpp */; };
+		FECB4EFC09DF3E3600D03FF8 /* SkScriptRuntime.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FECB4EF209DF3E3600D03FF8 /* SkScriptRuntime.cpp */; };
+		FECB4EFD09DF3E3600D03FF8 /* SkScriptRuntime.h in Headers */ = {isa = PBXBuildFile; fileRef = FECB4EF309DF3E3600D03FF8 /* SkScriptRuntime.h */; };
+		FEE7D79F094613A600B11B76 /* SkAnimateBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FEE7D79E094613A600B11B76 /* SkAnimateBase.cpp */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		D2AAC046055464E500DB518D /* libanimator.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libanimator.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		FE49EAAB09FD5DB800D28411 /* SkDrawExtraPathEffect.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkDrawExtraPathEffect.h; path = ../../include/graphics/SkDrawExtraPathEffect.h; sourceTree = SOURCE_ROOT; };
+		FE49EB4C09FE783600D28411 /* SkDisplayNumber.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkDisplayNumber.h; path = ../../libs/graphics/animator/SkDisplayNumber.h; sourceTree = SOURCE_ROOT; };
+		FE49EB5009FE785E00D28411 /* SkDisplayNumber.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkDisplayNumber.cpp; path = ../../libs/graphics/animator/SkDisplayNumber.cpp; sourceTree = SOURCE_ROOT; };
+		FE49EE0B09FFDB0300D28411 /* SkAnimateProperties.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkAnimateProperties.h; path = ../../libs/graphics/animator/SkAnimateProperties.h; sourceTree = SOURCE_ROOT; };
+		FE51FB840A6FDCE400ABA91D /* SkDrawSaveLayer.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkDrawSaveLayer.h; path = ../../libs/graphics/animator/SkDrawSaveLayer.h; sourceTree = SOURCE_ROOT; };
+		FE51FB8E0A6FE7DC00ABA91D /* SkDrawSaveLayer.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkDrawSaveLayer.cpp; path = ../../libs/graphics/animator/SkDrawSaveLayer.cpp; sourceTree = SOURCE_ROOT; };
+		FE5F48F30948A5380095980F /* SkAnimateBase.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkAnimateBase.h; path = ../../libs/graphics/animator/SkAnimateBase.h; sourceTree = SOURCE_ROOT; };
+		FE5F48F40948A5380095980F /* SkAnimate3DSchema.xsd */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text; name = SkAnimate3DSchema.xsd; path = ../../libs/graphics/animator/SkAnimate3DSchema.xsd; sourceTree = SOURCE_ROOT; };
+		FE5F48F50948A5380095980F /* SkAnimate3DSchema.xsx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.xml; name = SkAnimate3DSchema.xsx; path = ../../libs/graphics/animator/SkAnimate3DSchema.xsx; sourceTree = SOURCE_ROOT; };
+		FE5F48F60948A5380095980F /* SkAnimateActive.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkAnimateActive.cpp; path = ../../libs/graphics/animator/SkAnimateActive.cpp; sourceTree = SOURCE_ROOT; };
+		FE5F48F70948A5380095980F /* SkAnimateActive.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkAnimateActive.h; path = ../../libs/graphics/animator/SkAnimateActive.h; sourceTree = SOURCE_ROOT; };
+		FE5F48F80948A5380095980F /* SkAnimateField.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkAnimateField.cpp; path = ../../libs/graphics/animator/SkAnimateField.cpp; sourceTree = SOURCE_ROOT; };
+		FE5F48F90948A5380095980F /* SkAnimate.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkAnimate.h; path = ../../libs/graphics/animator/SkAnimate.h; sourceTree = SOURCE_ROOT; };
+		FE5F48FA0948A5380095980F /* SkAnimateMaker.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkAnimateMaker.cpp; path = ../../libs/graphics/animator/SkAnimateMaker.cpp; sourceTree = SOURCE_ROOT; };
+		FE5F48FB0948A5380095980F /* SkAnimateMaker.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkAnimateMaker.h; path = ../../libs/graphics/animator/SkAnimateMaker.h; sourceTree = SOURCE_ROOT; };
+		FE5F48FC0948A5380095980F /* SkAnimateSchema.xsd */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text; name = SkAnimateSchema.xsd; path = ../../libs/graphics/animator/SkAnimateSchema.xsd; sourceTree = SOURCE_ROOT; };
+		FE5F48FD0948A5380095980F /* SkAnimateSchema.xsx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.xml; name = SkAnimateSchema.xsx; path = ../../libs/graphics/animator/SkAnimateSchema.xsx; sourceTree = SOURCE_ROOT; };
+		FE5F48FE0948A5380095980F /* SkAnimateSet.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkAnimateSet.cpp; path = ../../libs/graphics/animator/SkAnimateSet.cpp; sourceTree = SOURCE_ROOT; };
+		FE5F48FF0948A5380095980F /* SkAnimateSet.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkAnimateSet.h; path = ../../libs/graphics/animator/SkAnimateSet.h; sourceTree = SOURCE_ROOT; };
+		FE5F49000948A5380095980F /* SkAnimator.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkAnimator.cpp; path = ../../libs/graphics/animator/SkAnimator.cpp; sourceTree = SOURCE_ROOT; };
+		FE5F49010948A5380095980F /* SkAnimatorScript.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkAnimatorScript.cpp; path = ../../libs/graphics/animator/SkAnimatorScript.cpp; sourceTree = SOURCE_ROOT; };
+		FE5F49020948A5380095980F /* SkAnimatorScript.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkAnimatorScript.h; path = ../../libs/graphics/animator/SkAnimatorScript.h; sourceTree = SOURCE_ROOT; };
+		FE5F49030948A5380095980F /* SkBase64.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkBase64.cpp; path = ../../libs/graphics/animator/SkBase64.cpp; sourceTree = SOURCE_ROOT; };
+		FE5F49040948A5380095980F /* SkBase64.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkBase64.h; path = ../../libs/graphics/animator/SkBase64.h; sourceTree = SOURCE_ROOT; };
+		FE5F49050948A5380095980F /* SkBoundable.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkBoundable.cpp; path = ../../libs/graphics/animator/SkBoundable.cpp; sourceTree = SOURCE_ROOT; };
+		FE5F49060948A5380095980F /* SkBoundable.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkBoundable.h; path = ../../libs/graphics/animator/SkBoundable.h; sourceTree = SOURCE_ROOT; };
+		FE5F49070948A5380095980F /* SkBuildCondensedInfo.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkBuildCondensedInfo.cpp; path = ../../libs/graphics/animator/SkBuildCondensedInfo.cpp; sourceTree = SOURCE_ROOT; };
+		FE5F490A0948A5380095980F /* SkDisplayable.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkDisplayable.cpp; path = ../../libs/graphics/animator/SkDisplayable.cpp; sourceTree = SOURCE_ROOT; };
+		FE5F490B0948A5380095980F /* SkDisplayable.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkDisplayable.h; path = ../../libs/graphics/animator/SkDisplayable.h; sourceTree = SOURCE_ROOT; };
+		FE5F490C0948A5380095980F /* SkDisplayAdd.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkDisplayAdd.cpp; path = ../../libs/graphics/animator/SkDisplayAdd.cpp; sourceTree = SOURCE_ROOT; };
+		FE5F490D0948A5380095980F /* SkDisplayAdd.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkDisplayAdd.h; path = ../../libs/graphics/animator/SkDisplayAdd.h; sourceTree = SOURCE_ROOT; };
+		FE5F490E0948A5380095980F /* SkDisplayApply.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkDisplayApply.cpp; path = ../../libs/graphics/animator/SkDisplayApply.cpp; sourceTree = SOURCE_ROOT; };
+		FE5F490F0948A5380095980F /* SkDisplayApply.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkDisplayApply.h; path = ../../libs/graphics/animator/SkDisplayApply.h; sourceTree = SOURCE_ROOT; };
+		FE5F49100948A5380095980F /* SkDisplayBounds.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkDisplayBounds.cpp; path = ../../libs/graphics/animator/SkDisplayBounds.cpp; sourceTree = SOURCE_ROOT; };
+		FE5F49110948A5380095980F /* SkDisplayBounds.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkDisplayBounds.h; path = ../../libs/graphics/animator/SkDisplayBounds.h; sourceTree = SOURCE_ROOT; };
+		FE5F49120948A5380095980F /* SkDisplayEvent.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkDisplayEvent.cpp; path = ../../libs/graphics/animator/SkDisplayEvent.cpp; sourceTree = SOURCE_ROOT; };
+		FE5F49130948A5380095980F /* SkDisplayEvent.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkDisplayEvent.h; path = ../../libs/graphics/animator/SkDisplayEvent.h; sourceTree = SOURCE_ROOT; };
+		FE5F49140948A5380095980F /* SkDisplayEvents.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkDisplayEvents.cpp; path = ../../libs/graphics/animator/SkDisplayEvents.cpp; sourceTree = SOURCE_ROOT; };
+		FE5F49150948A5380095980F /* SkDisplayEvents.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkDisplayEvents.h; path = ../../libs/graphics/animator/SkDisplayEvents.h; sourceTree = SOURCE_ROOT; };
+		FE5F49160948A5380095980F /* SkDisplayInclude.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkDisplayInclude.cpp; path = ../../libs/graphics/animator/SkDisplayInclude.cpp; sourceTree = SOURCE_ROOT; };
+		FE5F49170948A5380095980F /* SkDisplayInclude.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkDisplayInclude.h; path = ../../libs/graphics/animator/SkDisplayInclude.h; sourceTree = SOURCE_ROOT; };
+		FE5F49180948A5380095980F /* SkDisplayInput.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkDisplayInput.cpp; path = ../../libs/graphics/animator/SkDisplayInput.cpp; sourceTree = SOURCE_ROOT; };
+		FE5F49190948A5380095980F /* SkDisplayInput.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkDisplayInput.h; path = ../../libs/graphics/animator/SkDisplayInput.h; sourceTree = SOURCE_ROOT; };
+		FE5F491A0948A5380095980F /* SkDisplayList.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkDisplayList.cpp; path = ../../libs/graphics/animator/SkDisplayList.cpp; sourceTree = SOURCE_ROOT; };
+		FE5F491B0948A5380095980F /* SkDisplayList.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkDisplayList.h; path = ../../libs/graphics/animator/SkDisplayList.h; sourceTree = SOURCE_ROOT; };
+		FE5F491C0948A5380095980F /* SkDisplayMath.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkDisplayMath.cpp; path = ../../libs/graphics/animator/SkDisplayMath.cpp; sourceTree = SOURCE_ROOT; };
+		FE5F491D0948A5380095980F /* SkDisplayMath.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkDisplayMath.h; path = ../../libs/graphics/animator/SkDisplayMath.h; sourceTree = SOURCE_ROOT; };
+		FE5F491E0948A5380095980F /* SkDisplayMovie.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkDisplayMovie.cpp; path = ../../libs/graphics/animator/SkDisplayMovie.cpp; sourceTree = SOURCE_ROOT; };
+		FE5F491F0948A5380095980F /* SkDisplayMovie.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkDisplayMovie.h; path = ../../libs/graphics/animator/SkDisplayMovie.h; sourceTree = SOURCE_ROOT; };
+		FE5F49200948A5380095980F /* SkDisplayPost.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkDisplayPost.cpp; path = ../../libs/graphics/animator/SkDisplayPost.cpp; sourceTree = SOURCE_ROOT; };
+		FE5F49210948A5380095980F /* SkDisplayPost.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkDisplayPost.h; path = ../../libs/graphics/animator/SkDisplayPost.h; sourceTree = SOURCE_ROOT; };
+		FE5F49220948A5380095980F /* SkDisplayRandom.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkDisplayRandom.cpp; path = ../../libs/graphics/animator/SkDisplayRandom.cpp; sourceTree = SOURCE_ROOT; };
+		FE5F49230948A5380095980F /* SkDisplayRandom.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkDisplayRandom.h; path = ../../libs/graphics/animator/SkDisplayRandom.h; sourceTree = SOURCE_ROOT; };
+		FE5F49240948A5380095980F /* SkDisplayScreenplay.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkDisplayScreenplay.cpp; path = ../../libs/graphics/animator/SkDisplayScreenplay.cpp; sourceTree = SOURCE_ROOT; };
+		FE5F49250948A5380095980F /* SkDisplayScreenplay.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkDisplayScreenplay.h; path = ../../libs/graphics/animator/SkDisplayScreenplay.h; sourceTree = SOURCE_ROOT; };
+		FE5F49260948A5380095980F /* SkDisplayType.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkDisplayType.cpp; path = ../../libs/graphics/animator/SkDisplayType.cpp; sourceTree = SOURCE_ROOT; };
+		FE5F49270948A5380095980F /* SkDisplayType.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkDisplayType.h; path = ../../libs/graphics/animator/SkDisplayType.h; sourceTree = SOURCE_ROOT; };
+		FE5F49280948A5380095980F /* SkDisplayTypes.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkDisplayTypes.cpp; path = ../../libs/graphics/animator/SkDisplayTypes.cpp; sourceTree = SOURCE_ROOT; };
+		FE5F49290948A5380095980F /* SkDisplayTypes.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkDisplayTypes.h; path = ../../libs/graphics/animator/SkDisplayTypes.h; sourceTree = SOURCE_ROOT; };
+		FE5F492A0948A5380095980F /* SkDisplayXMLParser.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkDisplayXMLParser.cpp; path = ../../libs/graphics/animator/SkDisplayXMLParser.cpp; sourceTree = SOURCE_ROOT; };
+		FE5F492B0948A5380095980F /* SkDisplayXMLParser.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkDisplayXMLParser.h; path = ../../libs/graphics/animator/SkDisplayXMLParser.h; sourceTree = SOURCE_ROOT; };
+		FE5F492C0948A5380095980F /* SkDraw3D.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkDraw3D.cpp; path = ../../libs/graphics/animator/SkDraw3D.cpp; sourceTree = SOURCE_ROOT; };
+		FE5F492D0948A5380095980F /* SkDraw3D.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkDraw3D.h; path = ../../libs/graphics/animator/SkDraw3D.h; sourceTree = SOURCE_ROOT; };
+		FE5F492E0948A5380095980F /* SkDrawable.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkDrawable.cpp; path = ../../libs/graphics/animator/SkDrawable.cpp; sourceTree = SOURCE_ROOT; };
+		FE5F492F0948A5380095980F /* SkDrawable.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkDrawable.h; path = ../../libs/graphics/animator/SkDrawable.h; sourceTree = SOURCE_ROOT; };
+		FE5F49300948A5380095980F /* SkDrawBitmap.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkDrawBitmap.cpp; path = ../../libs/graphics/animator/SkDrawBitmap.cpp; sourceTree = SOURCE_ROOT; };
+		FE5F49310948A5380095980F /* SkDrawBitmap.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkDrawBitmap.h; path = ../../libs/graphics/animator/SkDrawBitmap.h; sourceTree = SOURCE_ROOT; };
+		FE5F49320948A5380095980F /* SkDrawBlur.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkDrawBlur.cpp; path = ../../libs/graphics/animator/SkDrawBlur.cpp; sourceTree = SOURCE_ROOT; };
+		FE5F49330948A5380095980F /* SkDrawBlur.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkDrawBlur.h; path = ../../libs/graphics/animator/SkDrawBlur.h; sourceTree = SOURCE_ROOT; };
+		FE5F49340948A5380095980F /* SkDrawClip.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkDrawClip.cpp; path = ../../libs/graphics/animator/SkDrawClip.cpp; sourceTree = SOURCE_ROOT; };
+		FE5F49350948A5380095980F /* SkDrawClip.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkDrawClip.h; path = ../../libs/graphics/animator/SkDrawClip.h; sourceTree = SOURCE_ROOT; };
+		FE5F49360948A5380095980F /* SkDrawColor.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkDrawColor.cpp; path = ../../libs/graphics/animator/SkDrawColor.cpp; sourceTree = SOURCE_ROOT; };
+		FE5F49370948A5380095980F /* SkDrawColor.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkDrawColor.h; path = ../../libs/graphics/animator/SkDrawColor.h; sourceTree = SOURCE_ROOT; };
+		FE5F49380948A5380095980F /* SkDrawDash.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkDrawDash.cpp; path = ../../libs/graphics/animator/SkDrawDash.cpp; sourceTree = SOURCE_ROOT; };
+		FE5F49390948A5380095980F /* SkDrawDash.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkDrawDash.h; path = ../../libs/graphics/animator/SkDrawDash.h; sourceTree = SOURCE_ROOT; };
+		FE5F493A0948A5380095980F /* SkDrawDiscrete.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkDrawDiscrete.cpp; path = ../../libs/graphics/animator/SkDrawDiscrete.cpp; sourceTree = SOURCE_ROOT; };
+		FE5F493B0948A5380095980F /* SkDrawDiscrete.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkDrawDiscrete.h; path = ../../libs/graphics/animator/SkDrawDiscrete.h; sourceTree = SOURCE_ROOT; };
+		FE5F493C0948A5380095980F /* SkDrawEmboss.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkDrawEmboss.cpp; path = ../../libs/graphics/animator/SkDrawEmboss.cpp; sourceTree = SOURCE_ROOT; };
+		FE5F493D0948A5380095980F /* SkDrawEmboss.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkDrawEmboss.h; path = ../../libs/graphics/animator/SkDrawEmboss.h; sourceTree = SOURCE_ROOT; };
+		FE5F493E0948A5380095980F /* SkDrawExtraPathEffect.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkDrawExtraPathEffect.cpp; path = ../../libs/graphics/animator/SkDrawExtraPathEffect.cpp; sourceTree = SOURCE_ROOT; };
+		FE5F493F0948A5380095980F /* SkDrawFull.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkDrawFull.cpp; path = ../../libs/graphics/animator/SkDrawFull.cpp; sourceTree = SOURCE_ROOT; };
+		FE5F49400948A5380095980F /* SkDrawFull.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkDrawFull.h; path = ../../libs/graphics/animator/SkDrawFull.h; sourceTree = SOURCE_ROOT; };
+		FE5F49410948A5380095980F /* SkDrawGradient.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkDrawGradient.cpp; path = ../../libs/graphics/animator/SkDrawGradient.cpp; sourceTree = SOURCE_ROOT; };
+		FE5F49420948A5380095980F /* SkDrawGradient.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkDrawGradient.h; path = ../../libs/graphics/animator/SkDrawGradient.h; sourceTree = SOURCE_ROOT; };
+		FE5F49430948A5380095980F /* SkDrawGroup.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkDrawGroup.cpp; path = ../../libs/graphics/animator/SkDrawGroup.cpp; sourceTree = SOURCE_ROOT; };
+		FE5F49440948A5380095980F /* SkDrawGroup.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkDrawGroup.h; path = ../../libs/graphics/animator/SkDrawGroup.h; sourceTree = SOURCE_ROOT; };
+		FE5F49450948A5380095980F /* SkDrawLine.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkDrawLine.cpp; path = ../../libs/graphics/animator/SkDrawLine.cpp; sourceTree = SOURCE_ROOT; };
+		FE5F49460948A5380095980F /* SkDrawLine.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkDrawLine.h; path = ../../libs/graphics/animator/SkDrawLine.h; sourceTree = SOURCE_ROOT; };
+		FE5F49470948A5380095980F /* SkDrawMatrix.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkDrawMatrix.cpp; path = ../../libs/graphics/animator/SkDrawMatrix.cpp; sourceTree = SOURCE_ROOT; };
+		FE5F49480948A5380095980F /* SkDrawMatrix.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkDrawMatrix.h; path = ../../libs/graphics/animator/SkDrawMatrix.h; sourceTree = SOURCE_ROOT; };
+		FE5F49490948A5380095980F /* SkDrawOval.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkDrawOval.cpp; path = ../../libs/graphics/animator/SkDrawOval.cpp; sourceTree = SOURCE_ROOT; };
+		FE5F494A0948A5380095980F /* SkDrawOval.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkDrawOval.h; path = ../../libs/graphics/animator/SkDrawOval.h; sourceTree = SOURCE_ROOT; };
+		FE5F494B0948A5390095980F /* SkDrawPaint.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkDrawPaint.cpp; path = ../../libs/graphics/animator/SkDrawPaint.cpp; sourceTree = SOURCE_ROOT; };
+		FE5F494C0948A5390095980F /* SkDrawPaint.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkDrawPaint.h; path = ../../libs/graphics/animator/SkDrawPaint.h; sourceTree = SOURCE_ROOT; };
+		FE5F494D0948A5390095980F /* SkDrawPath.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkDrawPath.cpp; path = ../../libs/graphics/animator/SkDrawPath.cpp; sourceTree = SOURCE_ROOT; };
+		FE5F494E0948A5390095980F /* SkDrawPath.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkDrawPath.h; path = ../../libs/graphics/animator/SkDrawPath.h; sourceTree = SOURCE_ROOT; };
+		FE5F494F0948A5390095980F /* SkDrawPoint.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkDrawPoint.cpp; path = ../../libs/graphics/animator/SkDrawPoint.cpp; sourceTree = SOURCE_ROOT; };
+		FE5F49500948A5390095980F /* SkDrawPoint.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkDrawPoint.h; path = ../../libs/graphics/animator/SkDrawPoint.h; sourceTree = SOURCE_ROOT; };
+		FE5F49510948A5390095980F /* SkDrawRectangle.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkDrawRectangle.cpp; path = ../../libs/graphics/animator/SkDrawRectangle.cpp; sourceTree = SOURCE_ROOT; };
+		FE5F49520948A5390095980F /* SkDrawRectangle.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkDrawRectangle.h; path = ../../libs/graphics/animator/SkDrawRectangle.h; sourceTree = SOURCE_ROOT; };
+		FE5F49530948A5390095980F /* SkDrawShader.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkDrawShader.cpp; path = ../../libs/graphics/animator/SkDrawShader.cpp; sourceTree = SOURCE_ROOT; };
+		FE5F49540948A5390095980F /* SkDrawShader.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkDrawShader.h; path = ../../libs/graphics/animator/SkDrawShader.h; sourceTree = SOURCE_ROOT; };
+		FE5F49550948A5390095980F /* SkDrawText.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkDrawText.cpp; path = ../../libs/graphics/animator/SkDrawText.cpp; sourceTree = SOURCE_ROOT; };
+		FE5F49560948A5390095980F /* SkDrawText.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkDrawText.h; path = ../../libs/graphics/animator/SkDrawText.h; sourceTree = SOURCE_ROOT; };
+		FE5F49570948A5390095980F /* SkDrawTextBox.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkDrawTextBox.cpp; path = ../../libs/graphics/animator/SkDrawTextBox.cpp; sourceTree = SOURCE_ROOT; };
+		FE5F49580948A5390095980F /* SkDrawTextBox.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkDrawTextBox.h; path = ../../libs/graphics/animator/SkDrawTextBox.h; sourceTree = SOURCE_ROOT; };
+		FE5F49590948A5390095980F /* SkDrawTo.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkDrawTo.cpp; path = ../../libs/graphics/animator/SkDrawTo.cpp; sourceTree = SOURCE_ROOT; };
+		FE5F495A0948A5390095980F /* SkDrawTo.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkDrawTo.h; path = ../../libs/graphics/animator/SkDrawTo.h; sourceTree = SOURCE_ROOT; };
+		FE5F495B0948A5390095980F /* SkDrawTransparentShader.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkDrawTransparentShader.cpp; path = ../../libs/graphics/animator/SkDrawTransparentShader.cpp; sourceTree = SOURCE_ROOT; };
+		FE5F495C0948A5390095980F /* SkDrawTransparentShader.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkDrawTransparentShader.h; path = ../../libs/graphics/animator/SkDrawTransparentShader.h; sourceTree = SOURCE_ROOT; };
+		FE5F495D0948A5390095980F /* SkDump.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkDump.cpp; path = ../../libs/graphics/animator/SkDump.cpp; sourceTree = SOURCE_ROOT; };
+		FE5F495E0948A5390095980F /* SkDump.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkDump.h; path = ../../libs/graphics/animator/SkDump.h; sourceTree = SOURCE_ROOT; };
+		FE5F495F0948A5390095980F /* SkExtraPathEffects.xsd */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text; name = SkExtraPathEffects.xsd; path = ../../libs/graphics/animator/SkExtraPathEffects.xsd; sourceTree = SOURCE_ROOT; };
+		FE5F49600948A5390095980F /* SkExtras.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkExtras.h; path = ../../libs/graphics/animator/SkExtras.h; sourceTree = SOURCE_ROOT; };
+		FE5F49610948A5390095980F /* SkGetCondensedInfo.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkGetCondensedInfo.cpp; path = ../../libs/graphics/animator/SkGetCondensedInfo.cpp; sourceTree = SOURCE_ROOT; };
+		FE5F49620948A5390095980F /* SkHitClear.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkHitClear.cpp; path = ../../libs/graphics/animator/SkHitClear.cpp; sourceTree = SOURCE_ROOT; };
+		FE5F49630948A5390095980F /* SkHitClear.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkHitClear.h; path = ../../libs/graphics/animator/SkHitClear.h; sourceTree = SOURCE_ROOT; };
+		FE5F49640948A5390095980F /* SkHitTest.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkHitTest.cpp; path = ../../libs/graphics/animator/SkHitTest.cpp; sourceTree = SOURCE_ROOT; };
+		FE5F49650948A5390095980F /* SkHitTest.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkHitTest.h; path = ../../libs/graphics/animator/SkHitTest.h; sourceTree = SOURCE_ROOT; };
+		FE5F49660948A5390095980F /* SkIntArray.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkIntArray.h; path = ../../libs/graphics/animator/SkIntArray.h; sourceTree = SOURCE_ROOT; };
+		FE5F49680948A5390095980F /* SkMatrixParts.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkMatrixParts.cpp; path = ../../libs/graphics/animator/SkMatrixParts.cpp; sourceTree = SOURCE_ROOT; };
+		FE5F49690948A5390095980F /* SkMatrixParts.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkMatrixParts.h; path = ../../libs/graphics/animator/SkMatrixParts.h; sourceTree = SOURCE_ROOT; };
+		FE5F496A0948A5390095980F /* SkMemberInfo.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkMemberInfo.cpp; path = ../../libs/graphics/animator/SkMemberInfo.cpp; sourceTree = SOURCE_ROOT; };
+		FE5F496B0948A5390095980F /* SkMemberInfo.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkMemberInfo.h; path = ../../libs/graphics/animator/SkMemberInfo.h; sourceTree = SOURCE_ROOT; };
+		FE5F496C0948A5390095980F /* SkOperand.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkOperand.h; path = ../../libs/graphics/animator/SkOperand.h; sourceTree = SOURCE_ROOT; };
+		FE5F496D0948A5390095980F /* SkOperandInterpolator.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkOperandInterpolator.h; path = ../../libs/graphics/animator/SkOperandInterpolator.h; sourceTree = SOURCE_ROOT; };
+		FE5F496E0948A5390095980F /* SkOperandIterpolator.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkOperandIterpolator.cpp; path = ../../libs/graphics/animator/SkOperandIterpolator.cpp; sourceTree = SOURCE_ROOT; };
+		FE5F496F0948A5390095980F /* SkPaintParts.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkPaintParts.cpp; path = ../../libs/graphics/animator/SkPaintParts.cpp; sourceTree = SOURCE_ROOT; };
+		FE5F49700948A5390095980F /* SkPaintParts.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkPaintParts.h; path = ../../libs/graphics/animator/SkPaintParts.h; sourceTree = SOURCE_ROOT; };
+		FE5F49710948A5390095980F /* SkPathParts.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkPathParts.cpp; path = ../../libs/graphics/animator/SkPathParts.cpp; sourceTree = SOURCE_ROOT; };
+		FE5F49720948A5390095980F /* SkPathParts.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkPathParts.h; path = ../../libs/graphics/animator/SkPathParts.h; sourceTree = SOURCE_ROOT; };
+		FE5F49730948A5390095980F /* SkPostParts.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkPostParts.cpp; path = ../../libs/graphics/animator/SkPostParts.cpp; sourceTree = SOURCE_ROOT; };
+		FE5F49740948A5390095980F /* SkPostParts.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkPostParts.h; path = ../../libs/graphics/animator/SkPostParts.h; sourceTree = SOURCE_ROOT; };
+		FE5F49750948A5390095980F /* SkScript.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkScript.cpp; path = ../../libs/graphics/animator/SkScript.cpp; sourceTree = SOURCE_ROOT; };
+		FE5F49760948A5390095980F /* SkScript.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkScript.h; path = ../../libs/graphics/animator/SkScript.h; sourceTree = SOURCE_ROOT; };
+		FE5F49770948A5390095980F /* SkSnapshot.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkSnapshot.cpp; path = ../../libs/graphics/animator/SkSnapshot.cpp; sourceTree = SOURCE_ROOT; };
+		FE5F49780948A5390095980F /* SkSnapshot.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkSnapshot.h; path = ../../libs/graphics/animator/SkSnapshot.h; sourceTree = SOURCE_ROOT; };
+		FE5F49790948A5390095980F /* SkSVGPath.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkSVGPath.cpp; path = ../../libs/graphics/animator/SkSVGPath.cpp; sourceTree = SOURCE_ROOT; };
+		FE5F497A0948A5390095980F /* SkTDArray_Experimental.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkTDArray_Experimental.h; path = ../../libs/graphics/animator/SkTDArray_Experimental.h; sourceTree = SOURCE_ROOT; };
+		FE5F497B0948A5390095980F /* SkTextOnPath.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkTextOnPath.cpp; path = ../../libs/graphics/animator/SkTextOnPath.cpp; sourceTree = SOURCE_ROOT; };
+		FE5F497C0948A5390095980F /* SkTextOnPath.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkTextOnPath.h; path = ../../libs/graphics/animator/SkTextOnPath.h; sourceTree = SOURCE_ROOT; };
+		FE5F497D0948A5390095980F /* SkTextToPath.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkTextToPath.cpp; path = ../../libs/graphics/animator/SkTextToPath.cpp; sourceTree = SOURCE_ROOT; };
+		FE5F497E0948A5390095980F /* SkTextToPath.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkTextToPath.h; path = ../../libs/graphics/animator/SkTextToPath.h; sourceTree = SOURCE_ROOT; };
+		FE5F497F0948A5390095980F /* SkTime.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkTime.cpp; path = ../../libs/graphics/animator/SkTime.cpp; sourceTree = SOURCE_ROOT; };
+		FE5F49800948A5390095980F /* SkTypedArray.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkTypedArray.cpp; path = ../../libs/graphics/animator/SkTypedArray.cpp; sourceTree = SOURCE_ROOT; };
+		FE5F49810948A5390095980F /* SkTypedArray.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkTypedArray.h; path = ../../libs/graphics/animator/SkTypedArray.h; sourceTree = SOURCE_ROOT; };
+		FE5F49820948A5390095980F /* SkXMLAnimatorWriter.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkXMLAnimatorWriter.cpp; path = ../../libs/graphics/animator/SkXMLAnimatorWriter.cpp; sourceTree = SOURCE_ROOT; };
+		FE5F49830948A5390095980F /* SkXMLAnimatorWriter.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkXMLAnimatorWriter.h; path = ../../libs/graphics/animator/SkXMLAnimatorWriter.h; sourceTree = SOURCE_ROOT; };
+		FE6C3DFA0A061B0D00602871 /* thingstodo.txt */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text; name = thingstodo.txt; path = ../../libs/graphics/animator/thingstodo.txt; sourceTree = SOURCE_ROOT; };
+		FE76553D09DFF6610088D6CA /* SkScriptTokenizer.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkScriptTokenizer.cpp; path = ../../libs/graphics/animator/SkScriptTokenizer.cpp; sourceTree = SOURCE_ROOT; };
+		FECB4EEA09DF3E3600D03FF8 /* SkAnimatorScript2.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkAnimatorScript2.cpp; path = ../../libs/graphics/animator/SkAnimatorScript2.cpp; sourceTree = SOURCE_ROOT; };
+		FECB4EEB09DF3E3600D03FF8 /* SkAnimatorScript2.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkAnimatorScript2.h; path = ../../libs/graphics/animator/SkAnimatorScript2.h; sourceTree = SOURCE_ROOT; };
+		FECB4EEC09DF3E3600D03FF8 /* SkOpArray.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkOpArray.cpp; path = ../../libs/graphics/animator/SkOpArray.cpp; sourceTree = SOURCE_ROOT; };
+		FECB4EED09DF3E3600D03FF8 /* SkOpArray.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkOpArray.h; path = ../../libs/graphics/animator/SkOpArray.h; sourceTree = SOURCE_ROOT; };
+		FECB4EEE09DF3E3600D03FF8 /* SkOperand2.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkOperand2.h; path = ../../libs/graphics/animator/SkOperand2.h; sourceTree = SOURCE_ROOT; };
+		FECB4EEF09DF3E3600D03FF8 /* SkScript2.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkScript2.h; path = ../../libs/graphics/animator/SkScript2.h; sourceTree = SOURCE_ROOT; };
+		FECB4EF009DF3E3600D03FF8 /* SkScriptCallBack.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkScriptCallBack.h; path = ../../libs/graphics/animator/SkScriptCallBack.h; sourceTree = SOURCE_ROOT; };
+		FECB4EF109DF3E3600D03FF8 /* SkScriptDecompile.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkScriptDecompile.cpp; path = ../../libs/graphics/animator/SkScriptDecompile.cpp; sourceTree = SOURCE_ROOT; };
+		FECB4EF209DF3E3600D03FF8 /* SkScriptRuntime.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkScriptRuntime.cpp; path = ../../libs/graphics/animator/SkScriptRuntime.cpp; sourceTree = SOURCE_ROOT; };
+		FECB4EF309DF3E3600D03FF8 /* SkScriptRuntime.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkScriptRuntime.h; path = ../../libs/graphics/animator/SkScriptRuntime.h; sourceTree = SOURCE_ROOT; };
+		FEE7D79E094613A600B11B76 /* SkAnimateBase.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkAnimateBase.cpp; path = ../../libs/graphics/animator/SkAnimateBase.cpp; sourceTree = SOURCE_ROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		D289987405E68DCB004EDB86 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		08FB7794FE84155DC02AAC07 /* animator */ = {
+			isa = PBXGroup;
+			children = (
+				08FB7795FE84155DC02AAC07 /* Source */,
+				C6A0FF2B0290797F04C91782 /* Documentation */,
+				1AB674ADFE9D54B511CA2CBB /* Products */,
+			);
+			name = animator;
+			sourceTree = "<group>";
+		};
+		08FB7795FE84155DC02AAC07 /* Source */ = {
+			isa = PBXGroup;
+			children = (
+				FE6C3DFA0A061B0D00602871 /* thingstodo.txt */,
+				FE76553D09DFF6610088D6CA /* SkScriptTokenizer.cpp */,
+				FECB4EEA09DF3E3600D03FF8 /* SkAnimatorScript2.cpp */,
+				FECB4EEB09DF3E3600D03FF8 /* SkAnimatorScript2.h */,
+				FECB4EEC09DF3E3600D03FF8 /* SkOpArray.cpp */,
+				FECB4EED09DF3E3600D03FF8 /* SkOpArray.h */,
+				FECB4EEE09DF3E3600D03FF8 /* SkOperand2.h */,
+				FECB4EEF09DF3E3600D03FF8 /* SkScript2.h */,
+				FECB4EF009DF3E3600D03FF8 /* SkScriptCallBack.h */,
+				FECB4EF109DF3E3600D03FF8 /* SkScriptDecompile.cpp */,
+				FECB4EF209DF3E3600D03FF8 /* SkScriptRuntime.cpp */,
+				FECB4EF309DF3E3600D03FF8 /* SkScriptRuntime.h */,
+				FEE7D79E094613A600B11B76 /* SkAnimateBase.cpp */,
+				FE5F48F30948A5380095980F /* SkAnimateBase.h */,
+				FE5F48F40948A5380095980F /* SkAnimate3DSchema.xsd */,
+				FE5F48F50948A5380095980F /* SkAnimate3DSchema.xsx */,
+				FE5F48F60948A5380095980F /* SkAnimateActive.cpp */,
+				FE5F48F70948A5380095980F /* SkAnimateActive.h */,
+				FE5F48F80948A5380095980F /* SkAnimateField.cpp */,
+				FE5F48F90948A5380095980F /* SkAnimate.h */,
+				FE5F48FA0948A5380095980F /* SkAnimateMaker.cpp */,
+				FE5F48FB0948A5380095980F /* SkAnimateMaker.h */,
+				FE49EAAB09FD5DB800D28411 /* SkDrawExtraPathEffect.h */,
+				FE5F48FC0948A5380095980F /* SkAnimateSchema.xsd */,
+				FE49EE0B09FFDB0300D28411 /* SkAnimateProperties.h */,
+				FE5F48FD0948A5380095980F /* SkAnimateSchema.xsx */,
+				FE5F48FE0948A5380095980F /* SkAnimateSet.cpp */,
+				FE5F48FF0948A5380095980F /* SkAnimateSet.h */,
+				FE5F49000948A5380095980F /* SkAnimator.cpp */,
+				FE5F49010948A5380095980F /* SkAnimatorScript.cpp */,
+				FE5F49020948A5380095980F /* SkAnimatorScript.h */,
+				FE5F49030948A5380095980F /* SkBase64.cpp */,
+				FE5F49040948A5380095980F /* SkBase64.h */,
+				FE5F49050948A5380095980F /* SkBoundable.cpp */,
+				FE5F49060948A5380095980F /* SkBoundable.h */,
+				FE5F49070948A5380095980F /* SkBuildCondensedInfo.cpp */,
+				FE5F490A0948A5380095980F /* SkDisplayable.cpp */,
+				FE5F490B0948A5380095980F /* SkDisplayable.h */,
+				FE5F490C0948A5380095980F /* SkDisplayAdd.cpp */,
+				FE5F490D0948A5380095980F /* SkDisplayAdd.h */,
+				FE5F490E0948A5380095980F /* SkDisplayApply.cpp */,
+				FE5F490F0948A5380095980F /* SkDisplayApply.h */,
+				FE5F49100948A5380095980F /* SkDisplayBounds.cpp */,
+				FE5F49110948A5380095980F /* SkDisplayBounds.h */,
+				FE5F49120948A5380095980F /* SkDisplayEvent.cpp */,
+				FE5F49130948A5380095980F /* SkDisplayEvent.h */,
+				FE5F49140948A5380095980F /* SkDisplayEvents.cpp */,
+				FE5F49150948A5380095980F /* SkDisplayEvents.h */,
+				FE5F49160948A5380095980F /* SkDisplayInclude.cpp */,
+				FE5F49170948A5380095980F /* SkDisplayInclude.h */,
+				FE5F49180948A5380095980F /* SkDisplayInput.cpp */,
+				FE5F49190948A5380095980F /* SkDisplayInput.h */,
+				FE5F491A0948A5380095980F /* SkDisplayList.cpp */,
+				FE5F491B0948A5380095980F /* SkDisplayList.h */,
+				FE5F491C0948A5380095980F /* SkDisplayMath.cpp */,
+				FE49EB5009FE785E00D28411 /* SkDisplayNumber.cpp */,
+				FE49EB4C09FE783600D28411 /* SkDisplayNumber.h */,
+				FE5F491D0948A5380095980F /* SkDisplayMath.h */,
+				FE5F491E0948A5380095980F /* SkDisplayMovie.cpp */,
+				FE5F491F0948A5380095980F /* SkDisplayMovie.h */,
+				FE5F49200948A5380095980F /* SkDisplayPost.cpp */,
+				FE5F49210948A5380095980F /* SkDisplayPost.h */,
+				FE5F49220948A5380095980F /* SkDisplayRandom.cpp */,
+				FE5F49230948A5380095980F /* SkDisplayRandom.h */,
+				FE5F49240948A5380095980F /* SkDisplayScreenplay.cpp */,
+				FE5F49250948A5380095980F /* SkDisplayScreenplay.h */,
+				FE5F49260948A5380095980F /* SkDisplayType.cpp */,
+				FE5F49270948A5380095980F /* SkDisplayType.h */,
+				FE5F49280948A5380095980F /* SkDisplayTypes.cpp */,
+				FE5F49290948A5380095980F /* SkDisplayTypes.h */,
+				FE5F492A0948A5380095980F /* SkDisplayXMLParser.cpp */,
+				FE5F492B0948A5380095980F /* SkDisplayXMLParser.h */,
+				FE5F492C0948A5380095980F /* SkDraw3D.cpp */,
+				FE5F492D0948A5380095980F /* SkDraw3D.h */,
+				FE5F492E0948A5380095980F /* SkDrawable.cpp */,
+				FE5F492F0948A5380095980F /* SkDrawable.h */,
+				FE5F49300948A5380095980F /* SkDrawBitmap.cpp */,
+				FE5F49310948A5380095980F /* SkDrawBitmap.h */,
+				FE5F49320948A5380095980F /* SkDrawBlur.cpp */,
+				FE5F49330948A5380095980F /* SkDrawBlur.h */,
+				FE5F49340948A5380095980F /* SkDrawClip.cpp */,
+				FE5F49350948A5380095980F /* SkDrawClip.h */,
+				FE5F49360948A5380095980F /* SkDrawColor.cpp */,
+				FE5F49370948A5380095980F /* SkDrawColor.h */,
+				FE5F49380948A5380095980F /* SkDrawDash.cpp */,
+				FE5F49390948A5380095980F /* SkDrawDash.h */,
+				FE5F493A0948A5380095980F /* SkDrawDiscrete.cpp */,
+				FE5F493B0948A5380095980F /* SkDrawDiscrete.h */,
+				FE5F493C0948A5380095980F /* SkDrawEmboss.cpp */,
+				FE5F493D0948A5380095980F /* SkDrawEmboss.h */,
+				FE5F493E0948A5380095980F /* SkDrawExtraPathEffect.cpp */,
+				FE5F493F0948A5380095980F /* SkDrawFull.cpp */,
+				FE5F49400948A5380095980F /* SkDrawFull.h */,
+				FE5F49410948A5380095980F /* SkDrawGradient.cpp */,
+				FE5F49420948A5380095980F /* SkDrawGradient.h */,
+				FE5F49430948A5380095980F /* SkDrawGroup.cpp */,
+				FE5F49440948A5380095980F /* SkDrawGroup.h */,
+				FE5F49450948A5380095980F /* SkDrawLine.cpp */,
+				FE5F49460948A5380095980F /* SkDrawLine.h */,
+				FE5F49470948A5380095980F /* SkDrawMatrix.cpp */,
+				FE5F49480948A5380095980F /* SkDrawMatrix.h */,
+				FE5F49490948A5380095980F /* SkDrawOval.cpp */,
+				FE5F494A0948A5380095980F /* SkDrawOval.h */,
+				FE5F494B0948A5390095980F /* SkDrawPaint.cpp */,
+				FE5F494C0948A5390095980F /* SkDrawPaint.h */,
+				FE5F494D0948A5390095980F /* SkDrawPath.cpp */,
+				FE5F494E0948A5390095980F /* SkDrawPath.h */,
+				FE5F494F0948A5390095980F /* SkDrawPoint.cpp */,
+				FE5F49500948A5390095980F /* SkDrawPoint.h */,
+				FE5F49510948A5390095980F /* SkDrawRectangle.cpp */,
+				FE5F49520948A5390095980F /* SkDrawRectangle.h */,
+				FE5F49530948A5390095980F /* SkDrawShader.cpp */,
+				FE5F49540948A5390095980F /* SkDrawShader.h */,
+				FE5F49550948A5390095980F /* SkDrawText.cpp */,
+				FE5F49560948A5390095980F /* SkDrawText.h */,
+				FE5F49570948A5390095980F /* SkDrawTextBox.cpp */,
+				FE5F49580948A5390095980F /* SkDrawTextBox.h */,
+				FE5F49590948A5390095980F /* SkDrawTo.cpp */,
+				FE51FB840A6FDCE400ABA91D /* SkDrawSaveLayer.h */,
+				FE51FB8E0A6FE7DC00ABA91D /* SkDrawSaveLayer.cpp */,
+				FE5F495A0948A5390095980F /* SkDrawTo.h */,
+				FE5F495B0948A5390095980F /* SkDrawTransparentShader.cpp */,
+				FE5F495C0948A5390095980F /* SkDrawTransparentShader.h */,
+				FE5F495D0948A5390095980F /* SkDump.cpp */,
+				FE5F495E0948A5390095980F /* SkDump.h */,
+				FE5F495F0948A5390095980F /* SkExtraPathEffects.xsd */,
+				FE5F49600948A5390095980F /* SkExtras.h */,
+				FE5F49610948A5390095980F /* SkGetCondensedInfo.cpp */,
+				FE5F49620948A5390095980F /* SkHitClear.cpp */,
+				FE5F49630948A5390095980F /* SkHitClear.h */,
+				FE5F49640948A5390095980F /* SkHitTest.cpp */,
+				FE5F49650948A5390095980F /* SkHitTest.h */,
+				FE5F49660948A5390095980F /* SkIntArray.h */,
+				FE5F49680948A5390095980F /* SkMatrixParts.cpp */,
+				FE5F49690948A5390095980F /* SkMatrixParts.h */,
+				FE5F496A0948A5390095980F /* SkMemberInfo.cpp */,
+				FE5F496B0948A5390095980F /* SkMemberInfo.h */,
+				FE5F496C0948A5390095980F /* SkOperand.h */,
+				FE5F496D0948A5390095980F /* SkOperandInterpolator.h */,
+				FE5F496E0948A5390095980F /* SkOperandIterpolator.cpp */,
+				FE5F496F0948A5390095980F /* SkPaintParts.cpp */,
+				FE5F49700948A5390095980F /* SkPaintParts.h */,
+				FE5F49710948A5390095980F /* SkPathParts.cpp */,
+				FE5F49720948A5390095980F /* SkPathParts.h */,
+				FE5F49730948A5390095980F /* SkPostParts.cpp */,
+				FE5F49740948A5390095980F /* SkPostParts.h */,
+				FE5F49750948A5390095980F /* SkScript.cpp */,
+				FE5F49760948A5390095980F /* SkScript.h */,
+				FE5F49770948A5390095980F /* SkSnapshot.cpp */,
+				FE5F49780948A5390095980F /* SkSnapshot.h */,
+				FE5F49790948A5390095980F /* SkSVGPath.cpp */,
+				FE5F497A0948A5390095980F /* SkTDArray_Experimental.h */,
+				FE5F497B0948A5390095980F /* SkTextOnPath.cpp */,
+				FE5F497C0948A5390095980F /* SkTextOnPath.h */,
+				FE5F497D0948A5390095980F /* SkTextToPath.cpp */,
+				FE5F497E0948A5390095980F /* SkTextToPath.h */,
+				FE5F497F0948A5390095980F /* SkTime.cpp */,
+				FE5F49800948A5390095980F /* SkTypedArray.cpp */,
+				FE5F49810948A5390095980F /* SkTypedArray.h */,
+				FE5F49820948A5390095980F /* SkXMLAnimatorWriter.cpp */,
+				FE5F49830948A5390095980F /* SkXMLAnimatorWriter.h */,
+			);
+			name = Source;
+			sourceTree = "<group>";
+		};
+		1AB674ADFE9D54B511CA2CBB /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				D2AAC046055464E500DB518D /* libanimator.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		C6A0FF2B0290797F04C91782 /* Documentation */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Documentation;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		D2AAC043055464E500DB518D /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FE5F49840948A5390095980F /* SkAnimateBase.h in Headers */,
+				FE5F49860948A5390095980F /* SkAnimateActive.h in Headers */,
+				FE5F49880948A5390095980F /* SkAnimate.h in Headers */,
+				FE5F498A0948A5390095980F /* SkAnimateMaker.h in Headers */,
+				FE5F498C0948A5390095980F /* SkAnimateSet.h in Headers */,
+				FE5F498F0948A5390095980F /* SkAnimatorScript.h in Headers */,
+				FE5F49910948A5390095980F /* SkBase64.h in Headers */,
+				FE5F49930948A5390095980F /* SkBoundable.h in Headers */,
+				FE5F49980948A5390095980F /* SkDisplayable.h in Headers */,
+				FE5F499A0948A5390095980F /* SkDisplayAdd.h in Headers */,
+				FE5F499C0948A5390095980F /* SkDisplayApply.h in Headers */,
+				FE5F499E0948A5390095980F /* SkDisplayBounds.h in Headers */,
+				FE5F49A00948A5390095980F /* SkDisplayEvent.h in Headers */,
+				FE5F49A20948A5390095980F /* SkDisplayEvents.h in Headers */,
+				FE5F49A40948A5390095980F /* SkDisplayInclude.h in Headers */,
+				FE5F49A60948A5390095980F /* SkDisplayInput.h in Headers */,
+				FE5F49A80948A5390095980F /* SkDisplayList.h in Headers */,
+				FE5F49AA0948A5390095980F /* SkDisplayMath.h in Headers */,
+				FE5F49AC0948A5390095980F /* SkDisplayMovie.h in Headers */,
+				FE5F49AE0948A5390095980F /* SkDisplayPost.h in Headers */,
+				FE5F49B00948A5390095980F /* SkDisplayRandom.h in Headers */,
+				FE5F49B20948A5390095980F /* SkDisplayScreenplay.h in Headers */,
+				FE5F49B40948A5390095980F /* SkDisplayType.h in Headers */,
+				FE5F49B60948A5390095980F /* SkDisplayTypes.h in Headers */,
+				FE5F49B80948A5390095980F /* SkDisplayXMLParser.h in Headers */,
+				FE5F49BA0948A5390095980F /* SkDraw3D.h in Headers */,
+				FE5F49BC0948A5390095980F /* SkDrawable.h in Headers */,
+				FE5F49BE0948A5390095980F /* SkDrawBitmap.h in Headers */,
+				FE5F49C00948A5390095980F /* SkDrawBlur.h in Headers */,
+				FE5F49C20948A5390095980F /* SkDrawClip.h in Headers */,
+				FE5F49C40948A5390095980F /* SkDrawColor.h in Headers */,
+				FE5F49C60948A5390095980F /* SkDrawDash.h in Headers */,
+				FE5F49C80948A5390095980F /* SkDrawDiscrete.h in Headers */,
+				FE5F49CA0948A5390095980F /* SkDrawEmboss.h in Headers */,
+				FE5F49CD0948A5390095980F /* SkDrawFull.h in Headers */,
+				FE5F49CF0948A5390095980F /* SkDrawGradient.h in Headers */,
+				FE5F49D10948A5390095980F /* SkDrawGroup.h in Headers */,
+				FE5F49D30948A5390095980F /* SkDrawLine.h in Headers */,
+				FE5F49D50948A5390095980F /* SkDrawMatrix.h in Headers */,
+				FE5F49D70948A5390095980F /* SkDrawOval.h in Headers */,
+				FE5F49D90948A5390095980F /* SkDrawPaint.h in Headers */,
+				FE5F49DB0948A5390095980F /* SkDrawPath.h in Headers */,
+				FE5F49DD0948A5390095980F /* SkDrawPoint.h in Headers */,
+				FE5F49DF0948A5390095980F /* SkDrawRectangle.h in Headers */,
+				FE5F49E10948A5390095980F /* SkDrawShader.h in Headers */,
+				FE5F49E30948A5390095980F /* SkDrawText.h in Headers */,
+				FE5F49E50948A5390095980F /* SkDrawTextBox.h in Headers */,
+				FE5F49E70948A5390095980F /* SkDrawTo.h in Headers */,
+				FE5F49E90948A5390095980F /* SkDrawTransparentShader.h in Headers */,
+				FE5F49EB0948A5390095980F /* SkDump.h in Headers */,
+				FE5F49EC0948A5390095980F /* SkExtras.h in Headers */,
+				FE5F49EF0948A5390095980F /* SkHitClear.h in Headers */,
+				FE5F49F10948A5390095980F /* SkHitTest.h in Headers */,
+				FE5F49F20948A5390095980F /* SkIntArray.h in Headers */,
+				FE5F49F50948A5390095980F /* SkMatrixParts.h in Headers */,
+				FE5F49F70948A5390095980F /* SkMemberInfo.h in Headers */,
+				FE5F49F80948A5390095980F /* SkOperand.h in Headers */,
+				FE5F49F90948A5390095980F /* SkOperandInterpolator.h in Headers */,
+				FE5F49FC0948A5390095980F /* SkPaintParts.h in Headers */,
+				FE5F49FE0948A5390095980F /* SkPathParts.h in Headers */,
+				FE5F4A000948A5390095980F /* SkPostParts.h in Headers */,
+				FE5F4A020948A5390095980F /* SkScript.h in Headers */,
+				FE5F4A040948A5390095980F /* SkSnapshot.h in Headers */,
+				FE5F4A060948A5390095980F /* SkTDArray_Experimental.h in Headers */,
+				FE5F4A080948A5390095980F /* SkTextOnPath.h in Headers */,
+				FE5F4A0A0948A5390095980F /* SkTextToPath.h in Headers */,
+				FE5F4A0D0948A5390095980F /* SkTypedArray.h in Headers */,
+				FE5F4A0F0948A5390095980F /* SkXMLAnimatorWriter.h in Headers */,
+				FECB4EF509DF3E3600D03FF8 /* SkAnimatorScript2.h in Headers */,
+				FECB4EF709DF3E3600D03FF8 /* SkOpArray.h in Headers */,
+				FECB4EF809DF3E3600D03FF8 /* SkOperand2.h in Headers */,
+				FECB4EF909DF3E3600D03FF8 /* SkScript2.h in Headers */,
+				FECB4EFA09DF3E3600D03FF8 /* SkScriptCallBack.h in Headers */,
+				FECB4EFD09DF3E3600D03FF8 /* SkScriptRuntime.h in Headers */,
+				FE49EAAC09FD5DB800D28411 /* SkDrawExtraPathEffect.h in Headers */,
+				FE49EB4D09FE783600D28411 /* SkDisplayNumber.h in Headers */,
+				FE49EE0C09FFDB0300D28411 /* SkAnimateProperties.h in Headers */,
+				FE51FB850A6FDCE500ABA91D /* SkDrawSaveLayer.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		D2AAC045055464E500DB518D /* animator */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1DEB91EB08733DB70010E9CD /* Build configuration list for PBXNativeTarget "animator" */;
+			buildPhases = (
+				D2AAC043055464E500DB518D /* Headers */,
+				D2AAC044055464E500DB518D /* Sources */,
+				D289987405E68DCB004EDB86 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = animator;
+			productName = animator;
+			productReference = D2AAC046055464E500DB518D /* libanimator.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		08FB7793FE84155DC02AAC07 /* Project object */ = {
+			isa = PBXProject;
+			buildConfigurationList = 1DEB91EF08733DB70010E9CD /* Build configuration list for PBXProject "animator" */;
+			hasScannedForEncodings = 1;
+			mainGroup = 08FB7794FE84155DC02AAC07 /* animator */;
+			projectDirPath = "";
+			targets = (
+				D2AAC045055464E500DB518D /* animator */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		D2AAC044055464E500DB518D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FEE7D79F094613A600B11B76 /* SkAnimateBase.cpp in Sources */,
+				FE5F49850948A5390095980F /* SkAnimateActive.cpp in Sources */,
+				FE5F49870948A5390095980F /* SkAnimateField.cpp in Sources */,
+				FE5F49890948A5390095980F /* SkAnimateMaker.cpp in Sources */,
+				FE5F498B0948A5390095980F /* SkAnimateSet.cpp in Sources */,
+				FE5F498D0948A5390095980F /* SkAnimator.cpp in Sources */,
+				FE5F498E0948A5390095980F /* SkAnimatorScript.cpp in Sources */,
+				FE5F49900948A5390095980F /* SkBase64.cpp in Sources */,
+				FE5F49920948A5390095980F /* SkBoundable.cpp in Sources */,
+				FE5F49940948A5390095980F /* SkBuildCondensedInfo.cpp in Sources */,
+				FE5F49970948A5390095980F /* SkDisplayable.cpp in Sources */,
+				FE5F49990948A5390095980F /* SkDisplayAdd.cpp in Sources */,
+				FE5F499B0948A5390095980F /* SkDisplayApply.cpp in Sources */,
+				FE5F499D0948A5390095980F /* SkDisplayBounds.cpp in Sources */,
+				FE5F499F0948A5390095980F /* SkDisplayEvent.cpp in Sources */,
+				FE5F49A10948A5390095980F /* SkDisplayEvents.cpp in Sources */,
+				FE5F49A30948A5390095980F /* SkDisplayInclude.cpp in Sources */,
+				FE5F49A50948A5390095980F /* SkDisplayInput.cpp in Sources */,
+				FE5F49A70948A5390095980F /* SkDisplayList.cpp in Sources */,
+				FE5F49A90948A5390095980F /* SkDisplayMath.cpp in Sources */,
+				FE5F49AB0948A5390095980F /* SkDisplayMovie.cpp in Sources */,
+				FE5F49AD0948A5390095980F /* SkDisplayPost.cpp in Sources */,
+				FE5F49AF0948A5390095980F /* SkDisplayRandom.cpp in Sources */,
+				FE5F49B10948A5390095980F /* SkDisplayScreenplay.cpp in Sources */,
+				FE5F49B30948A5390095980F /* SkDisplayType.cpp in Sources */,
+				FE5F49B50948A5390095980F /* SkDisplayTypes.cpp in Sources */,
+				FE5F49B70948A5390095980F /* SkDisplayXMLParser.cpp in Sources */,
+				FE5F49B90948A5390095980F /* SkDraw3D.cpp in Sources */,
+				FE5F49BB0948A5390095980F /* SkDrawable.cpp in Sources */,
+				FE5F49BD0948A5390095980F /* SkDrawBitmap.cpp in Sources */,
+				FE5F49BF0948A5390095980F /* SkDrawBlur.cpp in Sources */,
+				FE5F49C10948A5390095980F /* SkDrawClip.cpp in Sources */,
+				FE5F49C30948A5390095980F /* SkDrawColor.cpp in Sources */,
+				FE5F49C50948A5390095980F /* SkDrawDash.cpp in Sources */,
+				FE5F49C70948A5390095980F /* SkDrawDiscrete.cpp in Sources */,
+				FE5F49C90948A5390095980F /* SkDrawEmboss.cpp in Sources */,
+				FE5F49CB0948A5390095980F /* SkDrawExtraPathEffect.cpp in Sources */,
+				FE5F49CC0948A5390095980F /* SkDrawFull.cpp in Sources */,
+				FE5F49CE0948A5390095980F /* SkDrawGradient.cpp in Sources */,
+				FE5F49D00948A5390095980F /* SkDrawGroup.cpp in Sources */,
+				FE5F49D20948A5390095980F /* SkDrawLine.cpp in Sources */,
+				FE5F49D40948A5390095980F /* SkDrawMatrix.cpp in Sources */,
+				FE5F49D60948A5390095980F /* SkDrawOval.cpp in Sources */,
+				FE5F49D80948A5390095980F /* SkDrawPaint.cpp in Sources */,
+				FE5F49DA0948A5390095980F /* SkDrawPath.cpp in Sources */,
+				FE5F49DC0948A5390095980F /* SkDrawPoint.cpp in Sources */,
+				FE5F49DE0948A5390095980F /* SkDrawRectangle.cpp in Sources */,
+				FE5F49E00948A5390095980F /* SkDrawShader.cpp in Sources */,
+				FE5F49E20948A5390095980F /* SkDrawText.cpp in Sources */,
+				FE5F49E40948A5390095980F /* SkDrawTextBox.cpp in Sources */,
+				FE5F49E60948A5390095980F /* SkDrawTo.cpp in Sources */,
+				FE5F49E80948A5390095980F /* SkDrawTransparentShader.cpp in Sources */,
+				FE5F49EA0948A5390095980F /* SkDump.cpp in Sources */,
+				FE5F49ED0948A5390095980F /* SkGetCondensedInfo.cpp in Sources */,
+				FE5F49EE0948A5390095980F /* SkHitClear.cpp in Sources */,
+				FE5F49F00948A5390095980F /* SkHitTest.cpp in Sources */,
+				FE5F49F40948A5390095980F /* SkMatrixParts.cpp in Sources */,
+				FE5F49F60948A5390095980F /* SkMemberInfo.cpp in Sources */,
+				FE5F49FA0948A5390095980F /* SkOperandIterpolator.cpp in Sources */,
+				FE5F49FB0948A5390095980F /* SkPaintParts.cpp in Sources */,
+				FE5F49FD0948A5390095980F /* SkPathParts.cpp in Sources */,
+				FE5F49FF0948A5390095980F /* SkPostParts.cpp in Sources */,
+				FE5F4A010948A5390095980F /* SkScript.cpp in Sources */,
+				FE5F4A030948A5390095980F /* SkSnapshot.cpp in Sources */,
+				FE5F4A050948A5390095980F /* SkSVGPath.cpp in Sources */,
+				FE5F4A070948A5390095980F /* SkTextOnPath.cpp in Sources */,
+				FE5F4A090948A5390095980F /* SkTextToPath.cpp in Sources */,
+				FE5F4A0B0948A5390095980F /* SkTime.cpp in Sources */,
+				FE5F4A0C0948A5390095980F /* SkTypedArray.cpp in Sources */,
+				FE5F4A0E0948A5390095980F /* SkXMLAnimatorWriter.cpp in Sources */,
+				FECB4EF409DF3E3600D03FF8 /* SkAnimatorScript2.cpp in Sources */,
+				FECB4EF609DF3E3600D03FF8 /* SkOpArray.cpp in Sources */,
+				FECB4EFB09DF3E3600D03FF8 /* SkScriptDecompile.cpp in Sources */,
+				FECB4EFC09DF3E3600D03FF8 /* SkScriptRuntime.cpp in Sources */,
+				FE76553E09DFF6610088D6CA /* SkScriptTokenizer.cpp in Sources */,
+				FE49EB5109FE785E00D28411 /* SkDisplayNumber.cpp in Sources */,
+				FE51FB8F0A6FE7DC00ABA91D /* SkDrawSaveLayer.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		1DEB91EC08733DB70010E9CD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(NATIVE_ARCH)";
+				COPY_PHASE_STRIP = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				INSTALL_PATH = /usr/local/lib;
+				PRODUCT_NAME = animator;
+				ZERO_LINK = NO;
+			};
+			name = Debug;
+		};
+		1DEB91ED08733DB70010E9CD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(NATIVE_ARCH)";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_MODEL_TUNING = G5;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					SK_BUILD_FOR_MAC,
+					SK_RELEASE,
+				);
+				INSTALL_PATH = /usr/local/lib;
+				PRODUCT_NAME = animator;
+				ZERO_LINK = NO;
+			};
+			name = Release;
+		};
+		1DEB91F008733DB70010E9CD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+				GCC_CW_ASM_SYNTAX = NO;
+				GCC_ENABLE_CPP_RTTI = NO;
+				GCC_ENABLE_PASCAL_STRINGS = NO;
+				GCC_ENABLE_SYMBOL_SEPARATION = NO;
+				GCC_PREPROCESSOR_DEFINITIONS = SK_BUILD_FOR_MAC;
+				GCC_USE_GCC3_PFE_SUPPORT = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = "$(HEADER_SEARCH_PATHS)";
+				LINK_WITH_STANDARD_LIBRARIES = NO;
+				PREBINDING = NO;
+				PRECOMPS_INCLUDE_HEADERS_FROM_BUILT_PRODUCTS_DIR = NO;
+				SDKROOT = "";
+				SHARED_PRECOMPS_DIR = "";
+				STRIP_INSTALLED_PRODUCT = NO;
+				USER_HEADER_SEARCH_PATHS = "../../include/graphics ../../include/corecg";
+			};
+			name = Debug;
+		};
+		1DEB91F108733DB70010E9CD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+				GCC_CW_ASM_SYNTAX = NO;
+				GCC_ENABLE_CPP_RTTI = NO;
+				GCC_ENABLE_PASCAL_STRINGS = NO;
+				GCC_ENABLE_SYMBOL_SEPARATION = NO;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					SK_BUILD_FOR_MAC,
+					SK_RELEASE,
+				);
+				GCC_USE_GCC3_PFE_SUPPORT = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = "$(HEADER_SEARCH_PATHS)";
+				LINK_WITH_STANDARD_LIBRARIES = NO;
+				PREBINDING = NO;
+				PRECOMPS_INCLUDE_HEADERS_FROM_BUILT_PRODUCTS_DIR = NO;
+				SDKROOT = "";
+				SHARED_PRECOMPS_DIR = "";
+				STRIP_INSTALLED_PRODUCT = NO;
+				USER_HEADER_SEARCH_PATHS = "../../include/graphics ../../include/corecg";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1DEB91EB08733DB70010E9CD /* Build configuration list for PBXNativeTarget "animator" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1DEB91EC08733DB70010E9CD /* Debug */,
+				1DEB91ED08733DB70010E9CD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		1DEB91EF08733DB70010E9CD /* Build configuration list for PBXProject "animator" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1DEB91F008733DB70010E9CD /* Debug */,
+				1DEB91F108733DB70010E9CD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 08FB7793FE84155DC02AAC07 /* Project object */;
+}

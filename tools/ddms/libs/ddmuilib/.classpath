@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry excluding="Makefile|resources" kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/ddmlib"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/ANDROID_SWT"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/ANDROID_JFREECHART"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>

@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.2"?>
+<plugin>
+   <extension
+         point="org.eclipse.ui.editors">
+      <editor
+            class="com.android.ide.eclipse.editors.manifest.ManifestEditor"
+            default="true"
+            filenames="AndroidManifest.xml"
+            icon="icons/android.png"
+            id="com.android.ide.eclipse.editors.manifest.ManifestEditor"
+            name="Android Manifest Editor">
+      </editor>
+      <editor
+            class="com.android.ide.eclipse.editors.resources.ResourcesEditor"
+            default="false"
+            extensions="xml"
+            icon="icons/android.png"
+            id="com.android.ide.eclipse.editors.resources.ResourcesEditor"
+            name="Android Resource Editor">
+      </editor>
+      <editor
+            class="com.android.ide.eclipse.editors.layout.LayoutEditor"
+            default="false"
+            extensions="xml"
+            icon="icons/android.png"
+            id="com.android.ide.eclipse.editors.layout.LayoutEditor"
+            matchingStrategy="com.android.ide.eclipse.editors.layout.MatchingStrategy"
+            name="Android Layout Editor">
+      </editor>
+      <editor
+            class="com.android.ide.eclipse.editors.menu.MenuEditor"
+            default="false"
+            extensions="xml"
+            icon="icons/android.png"
+            id="com.android.ide.eclipse.editors.menu.MenuEditor"
+            name="Android Menu Editor">
+      </editor>
+      <editor
+            class="com.android.ide.eclipse.editors.xml.XmlEditor"
+            default="false"
+            extensions="xml"
+            icon="icons/android.png"
+            id="com.android.ide.eclipse.editors.xml.XmlEditor"
+            name="Android Xml Resources Editor">
+      </editor>
+   </extension>
+   <extension
+         point="org.eclipse.wst.sse.ui.editorConfiguration">
+      <sourceViewerConfiguration
+            class="com.android.ide.eclipse.editors.manifest.ManifestSourceViewerConfig"
+            target="com.android.ide.eclipse.editors.manifest.ManifestEditor">
+      </sourceViewerConfiguration>
+      <sourceViewerConfiguration
+            class="com.android.ide.eclipse.editors.resources.ResourcesSourceViewerConfig"
+            target="com.android.ide.eclipse.editors.resources.ResourcesEditor">
+      </sourceViewerConfiguration>
+      <sourceViewerConfiguration
+            class="com.android.ide.eclipse.editors.layout.LayoutSourceViewerConfig"
+            target="com.android.ide.eclipse.editors.layout.LayoutEditor">
+      </sourceViewerConfiguration>
+      <sourceViewerConfiguration
+            class="com.android.ide.eclipse.editors.menu.MenuSourceViewerConfig"
+            target="com.android.ide.eclipse.editors.menu.MenuEditor">
+      </sourceViewerConfiguration>
+      <sourceViewerConfiguration
+            class="com.android.ide.eclipse.editors.xml.XmlSourceViewerConfig"
+            target="com.android.ide.eclipse.editors.xml.XmlEditor">
+      </sourceViewerConfiguration>
+   </extension>
+   <extension
+         point="org.eclipse.ui.views">
+      <view
+            allowMultiple="false"
+            category="com.android.ide.eclipse.ddms.views.category"
+            class="com.android.ide.eclipse.editors.resources.explorer.ResourceExplorerView"
+            icon="icons/android.png"
+            id="com.android.ide.eclipse.editors.resources.explorer.ResourceExplorerView"
+            name="Resource Explorer">
+      </view>
+   </extension>
+   <extension
+         point="org.eclipse.ui.newWizards">
+      <wizard
+            canFinishEarly="false"
+            category="com.android.ide.eclipse.wizards.category"
+            class="com.android.ide.eclipse.editors.wizards.NewXmlFileWizard"
+            finalPerspective="org.eclipse.jdt.ui.JavaPerspective"
+            hasPages="true"
+            icon="icons/android.png"
+            id="com.android.ide.eclipse.editors.wizards.NewXmlFileWizard"
+            name="Android XML File"
+            preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective"
+            project="false">
+      </wizard>
+   </extension>
+   <extension
+         point="org.eclipse.ui.perspectiveExtensions">
+      <perspectiveExtension
+            targetID="org.eclipse.jdt.ui.JavaPerspective">
+         <newWizardShortcut
+               id="com.android.ide.eclipse.editors.wizards.NewXmlFileWizard">
+         </newWizardShortcut>
+      </perspectiveExtension>
+   </extension>
+
+</plugin>

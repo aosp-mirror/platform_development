@@ -1,0 +1,454 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 42;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		003A0F710E0BE7DF00136848 /* ftadvanc.c in Sources */ = {isa = PBXBuildFile; fileRef = 003A0F560E0BE7DF00136848 /* ftadvanc.c */; };
+		003A0F720E0BE7DF00136848 /* ftapi.c in Sources */ = {isa = PBXBuildFile; fileRef = 003A0F570E0BE7DF00136848 /* ftapi.c */; };
+		003A0F730E0BE7DF00136848 /* ftbase.c in Sources */ = {isa = PBXBuildFile; fileRef = 003A0F580E0BE7DF00136848 /* ftbase.c */; };
+		003A0F740E0BE7DF00136848 /* ftbbox.c in Sources */ = {isa = PBXBuildFile; fileRef = 003A0F590E0BE7DF00136848 /* ftbbox.c */; };
+		003A0F750E0BE7DF00136848 /* ftbitmap.c in Sources */ = {isa = PBXBuildFile; fileRef = 003A0F5A0E0BE7DF00136848 /* ftbitmap.c */; };
+		003A0F760E0BE7DF00136848 /* ftcalc.c in Sources */ = {isa = PBXBuildFile; fileRef = 003A0F5B0E0BE7DF00136848 /* ftcalc.c */; };
+		003A0F770E0BE7DF00136848 /* ftdbgmem.c in Sources */ = {isa = PBXBuildFile; fileRef = 003A0F5C0E0BE7DF00136848 /* ftdbgmem.c */; };
+		003A0F780E0BE7DF00136848 /* ftdebug.c in Sources */ = {isa = PBXBuildFile; fileRef = 003A0F5D0E0BE7DF00136848 /* ftdebug.c */; };
+		003A0F790E0BE7DF00136848 /* ftgasp.c in Sources */ = {isa = PBXBuildFile; fileRef = 003A0F5E0E0BE7DF00136848 /* ftgasp.c */; };
+		003A0F7A0E0BE7DF00136848 /* ftgloadr.c in Sources */ = {isa = PBXBuildFile; fileRef = 003A0F5F0E0BE7DF00136848 /* ftgloadr.c */; };
+		003A0F7B0E0BE7DF00136848 /* ftglyph.c in Sources */ = {isa = PBXBuildFile; fileRef = 003A0F600E0BE7DF00136848 /* ftglyph.c */; };
+		003A0F7C0E0BE7DF00136848 /* ftinit.c in Sources */ = {isa = PBXBuildFile; fileRef = 003A0F610E0BE7DF00136848 /* ftinit.c */; };
+		003A0F7D0E0BE7DF00136848 /* ftlcdfil.c in Sources */ = {isa = PBXBuildFile; fileRef = 003A0F620E0BE7DF00136848 /* ftlcdfil.c */; };
+		003A0F7E0E0BE7DF00136848 /* ftmm.c in Sources */ = {isa = PBXBuildFile; fileRef = 003A0F630E0BE7DF00136848 /* ftmm.c */; };
+		003A0F7F0E0BE7DF00136848 /* ftnames.c in Sources */ = {isa = PBXBuildFile; fileRef = 003A0F640E0BE7DF00136848 /* ftnames.c */; };
+		003A0F800E0BE7DF00136848 /* ftobjs.c in Sources */ = {isa = PBXBuildFile; fileRef = 003A0F650E0BE7DF00136848 /* ftobjs.c */; };
+		003A0F810E0BE7DF00136848 /* ftoutln.c in Sources */ = {isa = PBXBuildFile; fileRef = 003A0F660E0BE7DF00136848 /* ftoutln.c */; };
+		003A0F820E0BE7DF00136848 /* ftpatent.c in Sources */ = {isa = PBXBuildFile; fileRef = 003A0F670E0BE7DF00136848 /* ftpatent.c */; };
+		003A0F830E0BE7DF00136848 /* ftrfork.c in Sources */ = {isa = PBXBuildFile; fileRef = 003A0F680E0BE7DF00136848 /* ftrfork.c */; };
+		003A0F840E0BE7DF00136848 /* ftstream.c in Sources */ = {isa = PBXBuildFile; fileRef = 003A0F690E0BE7DF00136848 /* ftstream.c */; };
+		003A0F850E0BE7DF00136848 /* ftstroke.c in Sources */ = {isa = PBXBuildFile; fileRef = 003A0F6A0E0BE7DF00136848 /* ftstroke.c */; };
+		003A0F860E0BE7DF00136848 /* ftsynth.c in Sources */ = {isa = PBXBuildFile; fileRef = 003A0F6B0E0BE7DF00136848 /* ftsynth.c */; };
+		003A0F870E0BE7DF00136848 /* ftsystem.c in Sources */ = {isa = PBXBuildFile; fileRef = 003A0F6C0E0BE7DF00136848 /* ftsystem.c */; };
+		003A0F880E0BE7DF00136848 /* fttrigon.c in Sources */ = {isa = PBXBuildFile; fileRef = 003A0F6D0E0BE7DF00136848 /* fttrigon.c */; };
+		003A0F890E0BE7DF00136848 /* ftutil.c in Sources */ = {isa = PBXBuildFile; fileRef = 003A0F6E0E0BE7DF00136848 /* ftutil.c */; };
+		003A0F8A0E0BE7DF00136848 /* ftwinfnt.c in Sources */ = {isa = PBXBuildFile; fileRef = 003A0F6F0E0BE7DF00136848 /* ftwinfnt.c */; };
+		003A0F8B0E0BE7DF00136848 /* ftxf86.c in Sources */ = {isa = PBXBuildFile; fileRef = 003A0F700E0BE7DF00136848 /* ftxf86.c */; };
+		003A0F8D0E0BE80000136848 /* raster.c in Sources */ = {isa = PBXBuildFile; fileRef = 003A0F8C0E0BE80000136848 /* raster.c */; };
+		003A0F8F0E0BE81800136848 /* sfnt.c in Sources */ = {isa = PBXBuildFile; fileRef = 003A0F8E0E0BE81800136848 /* sfnt.c */; };
+		003A0F910E0BE83C00136848 /* smooth.c in Sources */ = {isa = PBXBuildFile; fileRef = 003A0F900E0BE83C00136848 /* smooth.c */; };
+		003A0F930E0BE85600136848 /* autofit.c in Sources */ = {isa = PBXBuildFile; fileRef = 003A0F920E0BE85600136848 /* autofit.c */; };
+		003A0F950E0BE86E00136848 /* truetype.c in Sources */ = {isa = PBXBuildFile; fileRef = 003A0F940E0BE86E00136848 /* truetype.c */; };
+		003A0F970E0BE88300136848 /* cff.c in Sources */ = {isa = PBXBuildFile; fileRef = 003A0F960E0BE88300136848 /* cff.c */; };
+		003A0F990E0BE89B00136848 /* psaux.c in Sources */ = {isa = PBXBuildFile; fileRef = 003A0F980E0BE89B00136848 /* psaux.c */; };
+		003A0F9B0E0BE8B400136848 /* psnames.c in Sources */ = {isa = PBXBuildFile; fileRef = 003A0F9A0E0BE8B400136848 /* psnames.c */; };
+		003A0FAB0E0BE8C700136848 /* pshinter.c in Sources */ = {isa = PBXBuildFile; fileRef = 003A0FA10E0BE8C700136848 /* pshinter.c */; };
+		FE6C75540944ED8500568256 /* SkFontHost_FreeType.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE6C75530944ED8500568256 /* SkFontHost_FreeType.cpp */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		003A0F560E0BE7DF00136848 /* ftadvanc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ftadvanc.c; path = "../../extlibs/freetype-2.3.6/src/base/ftadvanc.c"; sourceTree = SOURCE_ROOT; };
+		003A0F570E0BE7DF00136848 /* ftapi.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ftapi.c; path = "../../extlibs/freetype-2.3.6/src/base/ftapi.c"; sourceTree = SOURCE_ROOT; };
+		003A0F580E0BE7DF00136848 /* ftbase.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ftbase.c; path = "../../extlibs/freetype-2.3.6/src/base/ftbase.c"; sourceTree = SOURCE_ROOT; };
+		003A0F590E0BE7DF00136848 /* ftbbox.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ftbbox.c; path = "../../extlibs/freetype-2.3.6/src/base/ftbbox.c"; sourceTree = SOURCE_ROOT; };
+		003A0F5A0E0BE7DF00136848 /* ftbitmap.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ftbitmap.c; path = "../../extlibs/freetype-2.3.6/src/base/ftbitmap.c"; sourceTree = SOURCE_ROOT; };
+		003A0F5B0E0BE7DF00136848 /* ftcalc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ftcalc.c; path = "../../extlibs/freetype-2.3.6/src/base/ftcalc.c"; sourceTree = SOURCE_ROOT; };
+		003A0F5C0E0BE7DF00136848 /* ftdbgmem.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ftdbgmem.c; path = "../../extlibs/freetype-2.3.6/src/base/ftdbgmem.c"; sourceTree = SOURCE_ROOT; };
+		003A0F5D0E0BE7DF00136848 /* ftdebug.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ftdebug.c; path = "../../extlibs/freetype-2.3.6/src/base/ftdebug.c"; sourceTree = SOURCE_ROOT; };
+		003A0F5E0E0BE7DF00136848 /* ftgasp.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ftgasp.c; path = "../../extlibs/freetype-2.3.6/src/base/ftgasp.c"; sourceTree = SOURCE_ROOT; };
+		003A0F5F0E0BE7DF00136848 /* ftgloadr.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ftgloadr.c; path = "../../extlibs/freetype-2.3.6/src/base/ftgloadr.c"; sourceTree = SOURCE_ROOT; };
+		003A0F600E0BE7DF00136848 /* ftglyph.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ftglyph.c; path = "../../extlibs/freetype-2.3.6/src/base/ftglyph.c"; sourceTree = SOURCE_ROOT; };
+		003A0F610E0BE7DF00136848 /* ftinit.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ftinit.c; path = "../../extlibs/freetype-2.3.6/src/base/ftinit.c"; sourceTree = SOURCE_ROOT; };
+		003A0F620E0BE7DF00136848 /* ftlcdfil.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ftlcdfil.c; path = "../../extlibs/freetype-2.3.6/src/base/ftlcdfil.c"; sourceTree = SOURCE_ROOT; };
+		003A0F630E0BE7DF00136848 /* ftmm.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ftmm.c; path = "../../extlibs/freetype-2.3.6/src/base/ftmm.c"; sourceTree = SOURCE_ROOT; };
+		003A0F640E0BE7DF00136848 /* ftnames.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ftnames.c; path = "../../extlibs/freetype-2.3.6/src/base/ftnames.c"; sourceTree = SOURCE_ROOT; };
+		003A0F650E0BE7DF00136848 /* ftobjs.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ftobjs.c; path = "../../extlibs/freetype-2.3.6/src/base/ftobjs.c"; sourceTree = SOURCE_ROOT; };
+		003A0F660E0BE7DF00136848 /* ftoutln.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ftoutln.c; path = "../../extlibs/freetype-2.3.6/src/base/ftoutln.c"; sourceTree = SOURCE_ROOT; };
+		003A0F670E0BE7DF00136848 /* ftpatent.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ftpatent.c; path = "../../extlibs/freetype-2.3.6/src/base/ftpatent.c"; sourceTree = SOURCE_ROOT; };
+		003A0F680E0BE7DF00136848 /* ftrfork.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ftrfork.c; path = "../../extlibs/freetype-2.3.6/src/base/ftrfork.c"; sourceTree = SOURCE_ROOT; };
+		003A0F690E0BE7DF00136848 /* ftstream.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ftstream.c; path = "../../extlibs/freetype-2.3.6/src/base/ftstream.c"; sourceTree = SOURCE_ROOT; };
+		003A0F6A0E0BE7DF00136848 /* ftstroke.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ftstroke.c; path = "../../extlibs/freetype-2.3.6/src/base/ftstroke.c"; sourceTree = SOURCE_ROOT; };
+		003A0F6B0E0BE7DF00136848 /* ftsynth.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ftsynth.c; path = "../../extlibs/freetype-2.3.6/src/base/ftsynth.c"; sourceTree = SOURCE_ROOT; };
+		003A0F6C0E0BE7DF00136848 /* ftsystem.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ftsystem.c; path = "../../extlibs/freetype-2.3.6/src/base/ftsystem.c"; sourceTree = SOURCE_ROOT; };
+		003A0F6D0E0BE7DF00136848 /* fttrigon.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = fttrigon.c; path = "../../extlibs/freetype-2.3.6/src/base/fttrigon.c"; sourceTree = SOURCE_ROOT; };
+		003A0F6E0E0BE7DF00136848 /* ftutil.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ftutil.c; path = "../../extlibs/freetype-2.3.6/src/base/ftutil.c"; sourceTree = SOURCE_ROOT; };
+		003A0F6F0E0BE7DF00136848 /* ftwinfnt.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ftwinfnt.c; path = "../../extlibs/freetype-2.3.6/src/base/ftwinfnt.c"; sourceTree = SOURCE_ROOT; };
+		003A0F700E0BE7DF00136848 /* ftxf86.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ftxf86.c; path = "../../extlibs/freetype-2.3.6/src/base/ftxf86.c"; sourceTree = SOURCE_ROOT; };
+		003A0F8C0E0BE80000136848 /* raster.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = raster.c; path = "../../extlibs/freetype-2.3.6/src/raster/raster.c"; sourceTree = SOURCE_ROOT; };
+		003A0F8E0E0BE81800136848 /* sfnt.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = sfnt.c; path = "../../extlibs/freetype-2.3.6/src/sfnt/sfnt.c"; sourceTree = SOURCE_ROOT; };
+		003A0F900E0BE83C00136848 /* smooth.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = smooth.c; path = "../../extlibs/freetype-2.3.6/src/smooth/smooth.c"; sourceTree = SOURCE_ROOT; };
+		003A0F920E0BE85600136848 /* autofit.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = autofit.c; path = "../../extlibs/freetype-2.3.6/src/autofit/autofit.c"; sourceTree = SOURCE_ROOT; };
+		003A0F940E0BE86E00136848 /* truetype.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = truetype.c; path = "../../extlibs/freetype-2.3.6/src/truetype/truetype.c"; sourceTree = SOURCE_ROOT; };
+		003A0F960E0BE88300136848 /* cff.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = cff.c; path = "../../extlibs/freetype-2.3.6/src/cff/cff.c"; sourceTree = SOURCE_ROOT; };
+		003A0F980E0BE89B00136848 /* psaux.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = psaux.c; path = "../../extlibs/freetype-2.3.6/src/psaux/psaux.c"; sourceTree = SOURCE_ROOT; };
+		003A0F9A0E0BE8B400136848 /* psnames.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = psnames.c; path = "../../extlibs/freetype-2.3.6/src/psnames/psnames.c"; sourceTree = SOURCE_ROOT; };
+		003A0FA10E0BE8C700136848 /* pshinter.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pshinter.c; path = "../../extlibs/freetype-2.3.6/src/pshinter/pshinter.c"; sourceTree = "<group>"; };
+		D2AAC046055464E500DB518D /* libfreetype.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libfreetype.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		FE6C75530944ED8500568256 /* SkFontHost_FreeType.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkFontHost_FreeType.cpp; path = ../../libs/graphics/ports/SkFontHost_FreeType.cpp; sourceTree = SOURCE_ROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		D289987405E68DCB004EDB86 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		08FB7794FE84155DC02AAC07 /* freetype */ = {
+			isa = PBXGroup;
+			children = (
+				FE33C98F094E104700C4A640 /* base */,
+				FE33C990094E105100C4A640 /* raster */,
+				FE33C997094E109300C4A640 /* snft */,
+				FE33C998094E109D00C4A640 /* smooth */,
+				FE33C999094E10B000C4A640 /* autohint */,
+				FE33C99A094E10BD00C4A640 /* truetype */,
+				FE33C99B094E10C600C4A640 /* cff */,
+				FE33C99E094E10E100C4A640 /* psaux */,
+				FE33C99F094E10EB00C4A640 /* psnames */,
+				FE33C9A0094E10F400C4A640 /* pshinter */,
+				08FB7795FE84155DC02AAC07 /* Source */,
+				C6A0FF2B0290797F04C91782 /* Documentation */,
+				1AB674ADFE9D54B511CA2CBB /* Products */,
+			);
+			name = freetype;
+			sourceTree = "<group>";
+		};
+		08FB7795FE84155DC02AAC07 /* Source */ = {
+			isa = PBXGroup;
+			children = (
+				FE6C75530944ED8500568256 /* SkFontHost_FreeType.cpp */,
+			);
+			name = Source;
+			sourceTree = "<group>";
+		};
+		1AB674ADFE9D54B511CA2CBB /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				D2AAC046055464E500DB518D /* libfreetype.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		C6A0FF2B0290797F04C91782 /* Documentation */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Documentation;
+			sourceTree = "<group>";
+		};
+		FE33C98F094E104700C4A640 /* base */ = {
+			isa = PBXGroup;
+			children = (
+				003A0F560E0BE7DF00136848 /* ftadvanc.c */,
+				003A0F570E0BE7DF00136848 /* ftapi.c */,
+				003A0F580E0BE7DF00136848 /* ftbase.c */,
+				003A0F590E0BE7DF00136848 /* ftbbox.c */,
+				003A0F5A0E0BE7DF00136848 /* ftbitmap.c */,
+				003A0F5B0E0BE7DF00136848 /* ftcalc.c */,
+				003A0F5C0E0BE7DF00136848 /* ftdbgmem.c */,
+				003A0F5D0E0BE7DF00136848 /* ftdebug.c */,
+				003A0F5E0E0BE7DF00136848 /* ftgasp.c */,
+				003A0F5F0E0BE7DF00136848 /* ftgloadr.c */,
+				003A0F600E0BE7DF00136848 /* ftglyph.c */,
+				003A0F610E0BE7DF00136848 /* ftinit.c */,
+				003A0F620E0BE7DF00136848 /* ftlcdfil.c */,
+				003A0F630E0BE7DF00136848 /* ftmm.c */,
+				003A0F640E0BE7DF00136848 /* ftnames.c */,
+				003A0F650E0BE7DF00136848 /* ftobjs.c */,
+				003A0F660E0BE7DF00136848 /* ftoutln.c */,
+				003A0F670E0BE7DF00136848 /* ftpatent.c */,
+				003A0F680E0BE7DF00136848 /* ftrfork.c */,
+				003A0F690E0BE7DF00136848 /* ftstream.c */,
+				003A0F6A0E0BE7DF00136848 /* ftstroke.c */,
+				003A0F6B0E0BE7DF00136848 /* ftsynth.c */,
+				003A0F6C0E0BE7DF00136848 /* ftsystem.c */,
+				003A0F6D0E0BE7DF00136848 /* fttrigon.c */,
+				003A0F6E0E0BE7DF00136848 /* ftutil.c */,
+				003A0F6F0E0BE7DF00136848 /* ftwinfnt.c */,
+				003A0F700E0BE7DF00136848 /* ftxf86.c */,
+			);
+			name = base;
+			sourceTree = "<group>";
+		};
+		FE33C990094E105100C4A640 /* raster */ = {
+			isa = PBXGroup;
+			children = (
+				003A0F8C0E0BE80000136848 /* raster.c */,
+			);
+			name = raster;
+			sourceTree = "<group>";
+		};
+		FE33C997094E109300C4A640 /* snft */ = {
+			isa = PBXGroup;
+			children = (
+				003A0F8E0E0BE81800136848 /* sfnt.c */,
+			);
+			name = snft;
+			sourceTree = "<group>";
+		};
+		FE33C998094E109D00C4A640 /* smooth */ = {
+			isa = PBXGroup;
+			children = (
+				003A0F900E0BE83C00136848 /* smooth.c */,
+			);
+			name = smooth;
+			sourceTree = "<group>";
+		};
+		FE33C999094E10B000C4A640 /* autohint */ = {
+			isa = PBXGroup;
+			children = (
+				003A0F920E0BE85600136848 /* autofit.c */,
+			);
+			name = autohint;
+			sourceTree = "<group>";
+		};
+		FE33C99A094E10BD00C4A640 /* truetype */ = {
+			isa = PBXGroup;
+			children = (
+				003A0F940E0BE86E00136848 /* truetype.c */,
+			);
+			name = truetype;
+			sourceTree = "<group>";
+		};
+		FE33C99B094E10C600C4A640 /* cff */ = {
+			isa = PBXGroup;
+			children = (
+				003A0F960E0BE88300136848 /* cff.c */,
+			);
+			name = cff;
+			sourceTree = "<group>";
+		};
+		FE33C99E094E10E100C4A640 /* psaux */ = {
+			isa = PBXGroup;
+			children = (
+				003A0F980E0BE89B00136848 /* psaux.c */,
+			);
+			name = psaux;
+			sourceTree = "<group>";
+		};
+		FE33C99F094E10EB00C4A640 /* psnames */ = {
+			isa = PBXGroup;
+			children = (
+				003A0F9A0E0BE8B400136848 /* psnames.c */,
+			);
+			name = psnames;
+			sourceTree = "<group>";
+		};
+		FE33C9A0094E10F400C4A640 /* pshinter */ = {
+			isa = PBXGroup;
+			children = (
+				003A0FA10E0BE8C700136848 /* pshinter.c */,
+			);
+			name = pshinter;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		D2AAC043055464E500DB518D /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		D2AAC045055464E500DB518D /* freetype */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1DEB91EB08733DB70010E9CD /* Build configuration list for PBXNativeTarget "freetype" */;
+			buildPhases = (
+				D2AAC043055464E500DB518D /* Headers */,
+				D2AAC044055464E500DB518D /* Sources */,
+				D289987405E68DCB004EDB86 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = freetype;
+			productName = freetype;
+			productReference = D2AAC046055464E500DB518D /* libfreetype.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		08FB7793FE84155DC02AAC07 /* Project object */ = {
+			isa = PBXProject;
+			buildConfigurationList = 1DEB91EF08733DB70010E9CD /* Build configuration list for PBXProject "freetype2" */;
+			compatibilityVersion = "Xcode 2.4";
+			hasScannedForEncodings = 1;
+			mainGroup = 08FB7794FE84155DC02AAC07 /* freetype */;
+			projectDirPath = "";
+			projectRoot = ../..;
+			targets = (
+				D2AAC045055464E500DB518D /* freetype */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		D2AAC044055464E500DB518D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FE6C75540944ED8500568256 /* SkFontHost_FreeType.cpp in Sources */,
+				003A0F710E0BE7DF00136848 /* ftadvanc.c in Sources */,
+				003A0F720E0BE7DF00136848 /* ftapi.c in Sources */,
+				003A0F730E0BE7DF00136848 /* ftbase.c in Sources */,
+				003A0F740E0BE7DF00136848 /* ftbbox.c in Sources */,
+				003A0F750E0BE7DF00136848 /* ftbitmap.c in Sources */,
+				003A0F760E0BE7DF00136848 /* ftcalc.c in Sources */,
+				003A0F770E0BE7DF00136848 /* ftdbgmem.c in Sources */,
+				003A0F780E0BE7DF00136848 /* ftdebug.c in Sources */,
+				003A0F790E0BE7DF00136848 /* ftgasp.c in Sources */,
+				003A0F7A0E0BE7DF00136848 /* ftgloadr.c in Sources */,
+				003A0F7B0E0BE7DF00136848 /* ftglyph.c in Sources */,
+				003A0F7C0E0BE7DF00136848 /* ftinit.c in Sources */,
+				003A0F7D0E0BE7DF00136848 /* ftlcdfil.c in Sources */,
+				003A0F7E0E0BE7DF00136848 /* ftmm.c in Sources */,
+				003A0F7F0E0BE7DF00136848 /* ftnames.c in Sources */,
+				003A0F800E0BE7DF00136848 /* ftobjs.c in Sources */,
+				003A0F810E0BE7DF00136848 /* ftoutln.c in Sources */,
+				003A0F820E0BE7DF00136848 /* ftpatent.c in Sources */,
+				003A0F830E0BE7DF00136848 /* ftrfork.c in Sources */,
+				003A0F840E0BE7DF00136848 /* ftstream.c in Sources */,
+				003A0F850E0BE7DF00136848 /* ftstroke.c in Sources */,
+				003A0F860E0BE7DF00136848 /* ftsynth.c in Sources */,
+				003A0F870E0BE7DF00136848 /* ftsystem.c in Sources */,
+				003A0F880E0BE7DF00136848 /* fttrigon.c in Sources */,
+				003A0F890E0BE7DF00136848 /* ftutil.c in Sources */,
+				003A0F8A0E0BE7DF00136848 /* ftwinfnt.c in Sources */,
+				003A0F8B0E0BE7DF00136848 /* ftxf86.c in Sources */,
+				003A0F8D0E0BE80000136848 /* raster.c in Sources */,
+				003A0F8F0E0BE81800136848 /* sfnt.c in Sources */,
+				003A0F910E0BE83C00136848 /* smooth.c in Sources */,
+				003A0F930E0BE85600136848 /* autofit.c in Sources */,
+				003A0F950E0BE86E00136848 /* truetype.c in Sources */,
+				003A0F970E0BE88300136848 /* cff.c in Sources */,
+				003A0F990E0BE89B00136848 /* psaux.c in Sources */,
+				003A0F9B0E0BE8B400136848 /* psnames.c in Sources */,
+				003A0FAB0E0BE8C700136848 /* pshinter.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		1DEB91EC08733DB70010E9CD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(NATIVE_ARCH)";
+				COPY_PHASE_STRIP = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				INSTALL_PATH = /usr/local/lib;
+				PRODUCT_NAME = freetype;
+				ZERO_LINK = NO;
+			};
+			name = Debug;
+		};
+		1DEB91ED08733DB70010E9CD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(NATIVE_ARCH)";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_MODEL_TUNING = G5;
+				INSTALL_PATH = /usr/local/lib;
+				PRODUCT_NAME = freetype;
+				ZERO_LINK = NO;
+			};
+			name = Release;
+		};
+		1DEB91F008733DB70010E9CD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = YES;
+				COPY_PHASE_STRIP = NO;
+				GCC_CW_ASM_SYNTAX = NO;
+				GCC_ENABLE_CPP_RTTI = NO;
+				GCC_ENABLE_PASCAL_STRINGS = NO;
+				GCC_ENABLE_SYMBOL_SEPARATION = NO;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					TT_CONFIG_OPTION_BYTECODE_INTERPRETER,
+					FT2_BUILD_LIBRARY,
+					DARWIN_NO_CARBON,
+					SK_DEBUG,
+				);
+				GCC_USE_GCC3_PFE_SUPPORT = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = "$(HEADER_SEARCH_PATHS)";
+				LINK_WITH_STANDARD_LIBRARIES = NO;
+				PREBINDING = NO;
+				PRECOMPS_INCLUDE_HEADERS_FROM_BUILT_PRODUCTS_DIR = NO;
+				SDKROOT = "";
+				SHARED_PRECOMPS_DIR = "";
+				STRIP_INSTALLED_PRODUCT = NO;
+				USER_HEADER_SEARCH_PATHS = "../../extlibs/freetype-2.3.6/include ../../include/graphics ../../include/corecg";
+			};
+			name = Debug;
+		};
+		1DEB91F108733DB70010E9CD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = YES;
+				COPY_PHASE_STRIP = NO;
+				GCC_CW_ASM_SYNTAX = NO;
+				GCC_ENABLE_CPP_RTTI = NO;
+				GCC_ENABLE_PASCAL_STRINGS = NO;
+				GCC_ENABLE_SYMBOL_SEPARATION = NO;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					TT_CONFIG_OPTION_BYTECODE_INTERPRETER,
+					FT2_BUILD_LIBRARY,
+					DARWIN_NO_CARBON,
+					SK_RELEASE,
+				);
+				GCC_USE_GCC3_PFE_SUPPORT = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = "$(HEADER_SEARCH_PATHS)";
+				LINK_WITH_STANDARD_LIBRARIES = NO;
+				PREBINDING = NO;
+				PRECOMPS_INCLUDE_HEADERS_FROM_BUILT_PRODUCTS_DIR = NO;
+				SDKROOT = "";
+				SHARED_PRECOMPS_DIR = "";
+				STRIP_INSTALLED_PRODUCT = NO;
+				USER_HEADER_SEARCH_PATHS = "../../extlibs/freetype-2.3.6/include ../../include/graphics ../../include/corecg";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1DEB91EB08733DB70010E9CD /* Build configuration list for PBXNativeTarget "freetype" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1DEB91EC08733DB70010E9CD /* Debug */,
+				1DEB91ED08733DB70010E9CD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		1DEB91EF08733DB70010E9CD /* Build configuration list for PBXProject "freetype2" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1DEB91F008733DB70010E9CD /* Debug */,
+				1DEB91F108733DB70010E9CD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 08FB7793FE84155DC02AAC07 /* Project object */;
+}

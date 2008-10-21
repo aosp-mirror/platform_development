@@ -1,0 +1,252 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 42;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		00540DC209D04AD500307DCB /* SkTime_Unix.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 00540DC109D04AD500307DCB /* SkTime_Unix.cpp */; };
+		00E6E3520CCD19A900F102DB /* SkThread_pthread.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 00E6E3510CCD19A900F102DB /* SkThread_pthread.cpp */; };
+		00FC59C20D09F1ED0069A803 /* SkImageDecoder_libbmp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 00FC59C10D09F1ED0069A803 /* SkImageDecoder_libbmp.cpp */; };
+		FE33C956094E031400C4A640 /* SkBitmap_Mac.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE33C954094E031400C4A640 /* SkBitmap_Mac.cpp */; };
+		FE33C957094E031400C4A640 /* SkOSWindow_Mac.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE33C955094E031400C4A640 /* SkOSWindow_Mac.cpp */; };
+		FE33C959094E041D00C4A640 /* skia_mac.cp in Sources */ = {isa = PBXBuildFile; fileRef = FE33C958094E041D00C4A640 /* skia_mac.cp */; };
+		FE3487430952101C003F0C3F /* SkApplication.h in Headers */ = {isa = PBXBuildFile; fileRef = FE3487420952101C003F0C3F /* SkApplication.h */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		00540DC109D04AD500307DCB /* SkTime_Unix.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkTime_Unix.cpp; path = ../../libs/graphics/ports/SkTime_Unix.cpp; sourceTree = SOURCE_ROOT; };
+		00B502C909DB191900A01CD6 /* SkThread_none.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkThread_none.cpp; path = ../../libs/graphics/ports/SkThread_none.cpp; sourceTree = SOURCE_ROOT; };
+		00E6E3510CCD19A900F102DB /* SkThread_pthread.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkThread_pthread.cpp; path = ../../libs/graphics/ports/SkThread_pthread.cpp; sourceTree = SOURCE_ROOT; };
+		00FC59C10D09F1ED0069A803 /* SkImageDecoder_libbmp.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkImageDecoder_libbmp.cpp; path = ../../libs/graphics/images/SkImageDecoder_libbmp.cpp; sourceTree = SOURCE_ROOT; };
+		D2AAC046055464E500DB518D /* libports-mac.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libports-mac.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		FE33C954094E031400C4A640 /* SkBitmap_Mac.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkBitmap_Mac.cpp; path = ports/SkBitmap_Mac.cpp; sourceTree = "<group>"; };
+		FE33C955094E031400C4A640 /* SkOSWindow_Mac.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkOSWindow_Mac.cpp; path = ports/SkOSWindow_Mac.cpp; sourceTree = "<group>"; };
+		FE33C958094E041D00C4A640 /* skia_mac.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = skia_mac.cp; path = ports/skia_mac.cp; sourceTree = "<group>"; };
+		FE3487420952101C003F0C3F /* SkApplication.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SkApplication.h; path = ../../include/graphics/SkApplication.h; sourceTree = SOURCE_ROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		D289987405E68DCB004EDB86 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		08FB7794FE84155DC02AAC07 /* ports-mac */ = {
+			isa = PBXGroup;
+			children = (
+				08FB7795FE84155DC02AAC07 /* Source */,
+				C6A0FF2B0290797F04C91782 /* Documentation */,
+				1AB674ADFE9D54B511CA2CBB /* Products */,
+			);
+			name = "ports-mac";
+			sourceTree = "<group>";
+		};
+		08FB7795FE84155DC02AAC07 /* Source */ = {
+			isa = PBXGroup;
+			children = (
+				00FC59C10D09F1ED0069A803 /* SkImageDecoder_libbmp.cpp */,
+				00E6E3510CCD19A900F102DB /* SkThread_pthread.cpp */,
+				00B502C909DB191900A01CD6 /* SkThread_none.cpp */,
+				00540DC109D04AD500307DCB /* SkTime_Unix.cpp */,
+				FE3487420952101C003F0C3F /* SkApplication.h */,
+				FE33C958094E041D00C4A640 /* skia_mac.cp */,
+				FE33C954094E031400C4A640 /* SkBitmap_Mac.cpp */,
+				FE33C955094E031400C4A640 /* SkOSWindow_Mac.cpp */,
+			);
+			name = Source;
+			sourceTree = "<group>";
+		};
+		1AB674ADFE9D54B511CA2CBB /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				D2AAC046055464E500DB518D /* libports-mac.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		C6A0FF2B0290797F04C91782 /* Documentation */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Documentation;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		D2AAC043055464E500DB518D /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FE3487430952101C003F0C3F /* SkApplication.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		D2AAC045055464E500DB518D /* ports-mac */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1DEB91EB08733DB70010E9CD /* Build configuration list for PBXNativeTarget "ports-mac" */;
+			buildPhases = (
+				D2AAC043055464E500DB518D /* Headers */,
+				D2AAC044055464E500DB518D /* Sources */,
+				D289987405E68DCB004EDB86 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "ports-mac";
+			productName = "ports-mac";
+			productReference = D2AAC046055464E500DB518D /* libports-mac.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		08FB7793FE84155DC02AAC07 /* Project object */ = {
+			isa = PBXProject;
+			buildConfigurationList = 1DEB91EF08733DB70010E9CD /* Build configuration list for PBXProject "ports-mac" */;
+			hasScannedForEncodings = 1;
+			mainGroup = 08FB7794FE84155DC02AAC07 /* ports-mac */;
+			projectDirPath = "";
+			targets = (
+				D2AAC045055464E500DB518D /* ports-mac */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		D2AAC044055464E500DB518D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FE33C956094E031400C4A640 /* SkBitmap_Mac.cpp in Sources */,
+				FE33C957094E031400C4A640 /* SkOSWindow_Mac.cpp in Sources */,
+				FE33C959094E041D00C4A640 /* skia_mac.cp in Sources */,
+				00540DC209D04AD500307DCB /* SkTime_Unix.cpp in Sources */,
+				00E6E3520CCD19A900F102DB /* SkThread_pthread.cpp in Sources */,
+				00FC59C20D09F1ED0069A803 /* SkImageDecoder_libbmp.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		1DEB91EC08733DB70010E9CD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(NATIVE_ARCH)";
+				COPY_PHASE_STRIP = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = SK_BUILD_FOR_MAC;
+				INSTALL_PATH = /usr/local/lib;
+				PRODUCT_NAME = "ports-mac";
+				ZERO_LINK = NO;
+			};
+			name = Debug;
+		};
+		1DEB91ED08733DB70010E9CD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(NATIVE_ARCH)";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_MODEL_TUNING = G5;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					SK_BUILD_FOR_MAC,
+					SK_RELEASE,
+				);
+				INSTALL_PATH = /usr/local/lib;
+				PRODUCT_NAME = "ports-mac";
+				ZERO_LINK = NO;
+			};
+			name = Release;
+		};
+		1DEB91F008733DB70010E9CD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = NO;
+				GCC_CW_ASM_SYNTAX = NO;
+				GCC_ENABLE_CPP_RTTI = NO;
+				GCC_ENABLE_PASCAL_STRINGS = NO;
+				GCC_ENABLE_SYMBOL_SEPARATION = NO;
+				GCC_PREPROCESSOR_DEFINITIONS = SK_BUILD_FOR_MAC;
+				GCC_USE_GCC3_PFE_SUPPORT = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = "$(HEADER_SEARCH_PATHS)";
+				LINK_WITH_STANDARD_LIBRARIES = NO;
+				PREBINDING = NO;
+				PRECOMPS_INCLUDE_HEADERS_FROM_BUILT_PRODUCTS_DIR = NO;
+				SDKROOT = /Developer/SDKs/MacOSX10.4u.sdk;
+				SHARED_PRECOMPS_DIR = "";
+				STRIP_INSTALLED_PRODUCT = NO;
+				USER_HEADER_SEARCH_PATHS = "../../include/graphics ../../include/corecg";
+			};
+			name = Debug;
+		};
+		1DEB91F108733DB70010E9CD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = NO;
+				GCC_CW_ASM_SYNTAX = NO;
+				GCC_ENABLE_CPP_RTTI = NO;
+				GCC_ENABLE_PASCAL_STRINGS = NO;
+				GCC_ENABLE_SYMBOL_SEPARATION = NO;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					SK_BUILD_FOR_MAC,
+					SK_RELEASE,
+				);
+				GCC_USE_GCC3_PFE_SUPPORT = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = "$(HEADER_SEARCH_PATHS)";
+				LINK_WITH_STANDARD_LIBRARIES = NO;
+				PREBINDING = NO;
+				PRECOMPS_INCLUDE_HEADERS_FROM_BUILT_PRODUCTS_DIR = NO;
+				SDKROOT = /Developer/SDKs/MacOSX10.4u.sdk;
+				SHARED_PRECOMPS_DIR = "";
+				STRIP_INSTALLED_PRODUCT = NO;
+				USER_HEADER_SEARCH_PATHS = "../../include/graphics ../../include/corecg";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1DEB91EB08733DB70010E9CD /* Build configuration list for PBXNativeTarget "ports-mac" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1DEB91EC08733DB70010E9CD /* Debug */,
+				1DEB91ED08733DB70010E9CD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		1DEB91EF08733DB70010E9CD /* Build configuration list for PBXProject "ports-mac" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1DEB91F008733DB70010E9CD /* Debug */,
+				1DEB91F108733DB70010E9CD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 08FB7793FE84155DC02AAC07 /* Project object */;
+}

@@ -1,0 +1,49 @@
+#!/bin/sh
+
+if [ "$1" == "-h" ]
+then
+    cat <<- EOH
+		    Usage: $0 [-p] [folder]
+		      -p option prints out unused resources, otherwise a total count is printed
+		      folder option causes only that app folder to be scanned, default is to scan all folders onder apps/
+		EOH
+    exit
+fi
+
+showall=no
+if [ "$1" == "-p" ]
+then
+    showall=yes
+    shift
+fi
+
+apps=$1
+if [ "$apps" == "" ]
+then
+    apps=$ANDROID_BUILD_TOP/apps/*
+fi
+
+for app in $apps
+do
+    if [ -d $app/res ]
+    then
+        appname=$(basename $app)
+        rDotJava=$(find out/target/common/obj/APPS/${appname}_intermediates/ -name R.java)
+        for i in $(cat $rDotJava | grep "\w*=0x\d*" | sed 's/ *public static final int //' | sed 's/=0x.*//')
+        do
+            echo $i $(grep -Rw R\\..*\\.$i\\\|@style/$i\\\|@drawable/$i\\\|@color/$i\\\|@xml/$i\\\|@layout/$i\\\|@menu/$i\\\|@+id/$i\\\|@array/$i\\\|@string/$i $app | wc -l)
+        done | grep " 0$" | {
+            if [ "$showall" == "yes" ]
+            then
+                echo $app
+                cat
+            else
+                count=$(wc -l)
+                if [ "$count" != "0" ]
+                then
+                    echo $app: $count unused resources
+                fi
+            fi
+        }
+    fi
+done

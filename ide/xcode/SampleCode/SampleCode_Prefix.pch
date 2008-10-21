@@ -1,0 +1,5 @@
+//
+// Prefix header for all source files of the 'SampleCode' target in the 'SampleCode' project.
+//
+
+#include <Carbon/Carbon.h>

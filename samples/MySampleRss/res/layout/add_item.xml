@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright (C) 2007 The Android Open Source Project
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+  
+          http://www.apache.org/licenses/LICENSE-2.0
+  
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_height="fill_parent"
+                android:layout_width="fill_parent">
+                
+                <TextView android:id="@+id/title_label"
+                          android:layout_height="wrap_content"
+                          android:layout_width="wrap_content"
+                          android:layout_alignParentTop="true"
+                          android:layout_alignParentLeft="true"
+                          android:text="@string/add_item_title"/>
+                <EditText android:id="@+id/title_textbox"
+                          android:layout_height="wrap_content"
+                          android:layout_width="fill_parent"
+                          android:layout_toRightOf="@id/title_label"/>
+                <EditText android:id="@+id/url_textbox"
+                          android:layout_height="wrap_content"
+                          android:layout_width="fill_parent"
+                          android:layout_below="@id/title_textbox"
+                          android:layout_alignLeft="@id/title_textbox"/>
+                          
+                <!-- Note that we declare url_label *after* url_textbox in this file
+                because it references url_textbox, and a resource file is
+                evaluated sequentially. -->                           
+                <TextView android:id="@+id/url_label"
+                          android:layout_height="wrap_content"
+                          android:layout_width="wrap_content"
+                          android:layout_toRightOf="url_textbox"
+                          android:layout_alignTop="@id/url_textbox"
+                          android:text="@string/add_item_url"/>
+                <Button android:id="@+id/submit"
+                        android:layout_height="wrap_content"
+                        android:layout_width="wrap_content"
+                        android:layout_alignParentRight="true"
+                        android:layout_alignParentBottom="true"
+                        android:text="@string/submit"/>            
+                <Button android:id="@+id/cancel"
+                        android:layout_height="wrap_content"
+                        android:layout_width="wrap_content"
+                        android:layout_toLeftOf="@id/submit"
+                        android:layout_alignTop="@id/submit"
+                        android:text="@string/cancel"/>                         
+</RelativeLayout>
+                

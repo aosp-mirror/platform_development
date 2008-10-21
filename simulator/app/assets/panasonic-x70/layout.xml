@@ -1,0 +1,50 @@
+<?xml version="1.0" ?>
+<!-- Copyright 2005 The Android Open Source Project -->
+
+<device name="PanasonicX70">
+    <!-- title for menus -->
+    <title>Panasonic X70</title>
+
+    <display name="main" width="176" height="220" format="rgb565" refresh="30"/>
+
+	<mode name="default">
+		<!-- primary display characteristics -->
+		<view display="main" x="39" y="43" rotate="0">
+
+			<!-- surrounding device image and "patches", drawn in order -->
+			<!-- (phone image is optional) -->
+			<image src="background.png" x="0" y="0"/>
+
+			<button keyCode="soft-left"     src="soft-left.png"     x="45" y="324"/>
+			<button keyCode="soft-right"    src="soft-right.png"    x="146" y="324"/>
+			<button keyCode="home"          src="home.png"          x="21" y="345"/>
+			<button keyCode="back"          src="back.png"          x="180" y="347"/>
+			<button keyCode="dpad-up"       src="arrow-up.png"      x="88" y="348"/>
+			<button keyCode="dpad-down"     src="arrow-down.png"    x="95" y="414"/>
+            <button keyCode="dpad-left"/>
+            <button keyCode="dpad-right"/>
+			<button keyCode="dpad-center"   src="select.png"        x="101" y="377"/>
+
+            <button keyCode="1"/>
+            <button keyCode="2"/>
+            <button keyCode="3"/>
+            <button keyCode="4"/>
+            <button keyCode="5"/>
+            <button keyCode="6"/>
+            <button keyCode="7"/>
+            <button keyCode="8"/>
+            <button keyCode="9"/>
+            <button keyCode="0"/>
+            <button keyCode="star"/>
+            <button keyCode="pound"/>
+
+			<button keyCode="volume-up"/>
+			<button keyCode="volume-down"/>
+			<button keyCode="power"/>
+			<button keyCode="clear"/>
+
+		</view>
+	</mode>
+
+</device>
+

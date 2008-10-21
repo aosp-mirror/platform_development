@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+  <string name="appTitle">Seguridad</string>
+  <string name="error">En estos momentos, la acción no es compatible.</string>
+  <string name="title">Acción no compatible</string>
+</resources>

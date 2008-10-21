@@ -1,0 +1,15 @@
+LIBRARY AdbWinApi.dll
+EXPORTS
+AdbEnumInterfaces
+AdbNextInterface
+AdbCreateInterfaceByName
+AdbOpenDefaultBulkReadEndpoint
+AdbOpenDefaultBulkWriteEndpoint
+AdbCloseHandle
+AdbGetInterfaceName
+AdbWriteEndpointSync
+AdbReadEndpointSync
+AdbGetSerialNumber
+AdbGetUsbInterfaceDescriptor
+AdbGetUsbDeviceDescriptor
+AdbGetEndpointInformation

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<site>
+   <description url="https://android.corp.google.com/adt/">
+      Update Site for Android Development Toolkit
+   </description>
+   <feature url="features/com.android.ide.eclipse.adt_0.8.1.qualifier.jar" id="com.android.ide.eclipse.adt" version="0.8.1.qualifier">
+      <category name="developer"/>
+   </feature>
+   <feature url="features/com.android.ide.eclipse.editors_0.8.1.qualifier.jar" id="com.android.ide.eclipse.editors" version="0.8.1.qualifier">
+      <category name="developer"/>
+      <category name="platform"/>
+   </feature>
+   <feature url="features/com.android.ide.eclipse.platform_0.8.1.qualifier.jar" id="com.android.ide.eclipse.platform" version="0.8.1.qualifier">
+      <category name="platform"/>
+   </feature>
+   <feature url="features/com.android.ide.eclipse.tests_0.8.1.qualifier.jar" id="com.android.ide.eclipse.tests" version="0.8.1.qualifier">
+      <category name="test"/>
+   </feature>
+   <category-def name="developer" label="Application Developer Tools">
+      <description>
+         Features that add Android support to Eclipse for application developers.
+      </description>
+   </category-def>
+   <category-def name="platform" label="Platform Developer Tools">
+      <description>
+         Features that add Android support to Eclipse for platform developers.
+      </description>
+   </category-def>
+   <category-def name="test" label="Plugin Developer Tests">
+      <description>
+         Tests for the other Android plugins
+      </description>
+   </category-def>
+</site>

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module relativePaths="true" type="JAVA_MODULE" version="4">
+  <component name="NewModuleRootManager" inherit-compiler-output="true">
+    <exclude-output />
+    <content url="file://$MODULE_DIR$/../../../device/dalvik/libcore">
+      <sourceFolder url="file://$MODULE_DIR$/../../../device/dalvik/libcore/android/src/main/java" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/../../../device/dalvik/libcore/annotation/src/main/java" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/../../../device/dalvik/libcore/apache-commons-logging/src/main/java" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/../../../device/dalvik/libcore/apache-commons/src/main/java" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/../../../device/dalvik/libcore/archive/src/main/java" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/../../../device/dalvik/libcore/auth/src/main/java" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/../../../device/dalvik/libcore/awt/src/main/java" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/../../../device/dalvik/libcore/beans/src/main/java" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/../../../device/dalvik/libcore/concurrent/src/main/java" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/../../../device/dalvik/libcore/crypto/src/main/java" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/../../../device/dalvik/libcore/instrument/src/main/java" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/../../../device/dalvik/libcore/json/src/main/java" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/../../../device/dalvik/libcore/junit/src/main/java" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/../../../device/dalvik/libcore/kxml2/src/main/java" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/../../../device/dalvik/libcore/luni-kernel/src/main/java" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/../../../device/dalvik/libcore/luni/src/main/java" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/../../../device/dalvik/libcore/math/src/main/java" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/../../../device/dalvik/libcore/nio/src/main/java" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/../../../device/dalvik/libcore/nio_char/src/main/java" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/../../../device/dalvik/libcore/security-kernel/src/main/java" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/../../../device/dalvik/libcore/security/src/main/java" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/../../../device/dalvik/libcore/suncompat/src/main/java" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/../../../device/dalvik/libcore/text/src/main/java" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/../../../device/dalvik/libcore/x-net/src/main/java" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/../../../device/dalvik/libcore/xmlpull/src/main/java" isTestSource="false" />
+    </content>
+    <content url="file://$MODULE_DIR$/../../../device/java">
+      <sourceFolder url="file://$MODULE_DIR$/../../../device/java/android" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/../../../device/java/config/release" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/../../../device/java/ext" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/../../../device/java/tests" isTestSource="true" />
+    </content>
+    <content url="file://$MODULE_DIR$/../../../device/out/target/common/obj">
+      <sourceFolder url="file://$MODULE_DIR$/../../../device/out/target/common/obj/JAVA_LIBRARIES/framework-res_intermediates/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/../../../device/out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src" isTestSource="false" />
+    </content>
+    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="inheritedJdk" />
+    <orderEntryProperties />
+  </component>
+</module>
+

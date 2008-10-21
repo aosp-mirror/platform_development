@@ -1,0 +1,327 @@
+#!/bin/bash
+#
+# Copyright (C) 2008 The Android Open Source Project
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Options and default values
+# TODO: other options ideas:
+#   pass options to am
+# TODO capture more non-error output when not -v 
+
+optListTests=0
+optSkipBuild=0
+optPreview=0
+optRawmode=0
+optAdbTarget=""
+optVerbose=0
+optWaitForDebugger=0
+optTestClass=""
+optTestMethod=""
+optUserTests=${HOME}/.android/runtest.rc
+
+#
+# process command-line options.  You must pass them into this function.
+# TODO error messages on once-only or mutually-exclusive options
+#
+function processOptions() {
+  while getopts "l b n r d e s: v w c:t:u:" opt ; do  
+    case ${opt} in  
+      l ) optListTests=1 ;;
+      b ) optSkipBuild=1 ;;
+      n ) optPreview=1 ;;
+      r ) optRawMode=1 ;;
+      d ) optAdbTarget="-d" ;;
+      e ) optAdbTarget="-e" ;;
+      s ) optAdbTarget="-s ${OPTARG}" ;;
+      v ) optVerbose=1 ;;
+      w ) optWaitForDebugger=1 ;;
+      c ) optTestClass=${OPTARG} ;;
+      t ) optTestMethod=${OPTARG} ;;
+      u ) optUserTests=${OPTARG} ;;
+      esac
+  done 
+} 
+
+# The list below are built-in test definitions.  You can also define your own 
+# tests by creating a file named "~/.android/runtest.rc" and adding them to that 
+# file.  (No array needed, just plain lines of text).
+#
+# Rests are defined by entries with the following format:
+# <short-name> <build-path> <test-package> <test-class> 
+#              <testrunner-package> <testrunner-component>
+#
+# These map to the following commands:
+#   (if test-class = "#")
+#      adb shell am instrument -w \
+#        <testrunner-package>/<testrunner-component>
+#   (else)
+#      adb shell am instrument -w \
+#        -e class <test-package>.<test-class> \
+#        <testrunner-package>/<testrunner-component>
+#
+# In order to define the most common cases simply, "#" can be used for some of
+# the fields, with the following default values:
+#   <test-package> = "#": test class is fully qualified with package
+#   <build-path> = "#":  skip build/sync step
+#   <test-class> = "#":  omit "-e class" section
+#   <testrunner-package> = "#":   use same value as test-package 
+#   <testrunner-component> = "#":  use "android.test.InstrumentationTestRunner"
+#
+# TODO: fields may be omitted completely if the trailing values are all "#"
+# TODO: this should be a here doc instead of an array
+
+knownTests=(
+  # NAME      BUILD DIR               <test-package> <test-class> <testrunner-package> <testrunner-component>
+
+  # system-wide tests
+  "framework  tests/FrameworkTests    # com.android.frameworktest.AllTests com.android.frameworktest.tests #"
+  "core       java/tests              android.core CoreTests # #"
+  "android    apps/AndroidTests       com.android.unit_tests AndroidTests # #"
+  "smoke      tests/SmokeTest         com.android.smoketest # com.android.smoketest.tests #"
+  "libcore    java/tests/android       android.core JavaTests # #"
+  "apidemos   samples/ApiDemos        com.example.android.apis # com.example.android.apis.tests #"
+
+  # targeted framework tests
+  "heap       apps/AndroidTests       com.android.unit_tests HeapTest # #"
+  "activity   apps/AndroidTests       com.android.unit_tests activity.ActivityTests # #"
+  "deadlock  tests/Deadlock           com.android.deadlock # com.android.deadlock.tests #"
+  
+  # selected app tests
+  "browser    apps/Browser            com.android.browser # # .BrowserTestRunner"
+  "browserfunc apps/Browser           com.android.browser # # .BrowserFunctionalTestRunner"
+  "calendar   apps/Calendar/tests     com.android.calendar.tests # # #"
+  "calprov    content/providers/calendar   com.android.providers.calendar.tests # # #"
+  "camera     tests/Camera            com.android.cameratests # # CameraInstrumentationTestRunner"
+  "contactsprov content/tests/providers/contacts  com.android.providers.contacts # com.android.providers.contactstests .ContactsProviderInstrumentation"
+  "gmail      partner/google/tests/Gmail  com.google.android.gmailtests # # .GmailTestRunner"
+  "gmailprov  partner/google/tests/GmailProvider  com.google.android.gmailprovidertests # # #"
+  "maps       partner/google/tests/Maps   com.google.android.mapstests # # .MapInstrumentationTestRunner"
+  "mapsapi    partner/google/tests/Maps   com.google.android.mapstests # # .MapApiInstrumentationTestRunner"
+  "media      tests/MediaFrameworkTest    com.android.mediaframeworktest # # .MediaFrameworkTestRunner"
+  "mediaunit  tests/MediaFrameworkTest com.android.mediaframeworktest # # .MediaFrameworkUnitTestRunner"
+  "mediaprov  tests/MediaProvider     com.android.mediaprovidertests # # .MediaProviderTestsInstrumentation"
+  "mms        apps/Mms                # # com.android.mms.tests com.android.mms.ui.MMSInstrumentationTestRunner"
+  "mmslaunch  apps/Mms                # # com.android.mms.tests com.android.mms.SmsLaunchPerformance"
+  "phone      tests/Phone             com.android.phonetests # # .PhoneInstrumentationTestRunner"
+  "phonestress tests/Phone            com.android.phonetests # # .PhoneInstrumentationStressTestRunner"
+  "ringtone   tests/RingtoneSettings  com.android.ringtonesettingstests # # .RingtoneSettingsInstrumentationTestRunner"
+  "vending    partner/google/apps/Vending/tests   com.android.vendingtests # # #"
+  "youtube    partner/google/apps/YouTube/  com.google.android.youtube # # .YouTubeTestRunner"
+)
+
+#
+# Searches for a user-defined test file (~/.android/runtest.rc and, if found, 
+# prepends any test definitions to the master list in knownTests.
+# TODO allow override filename to be set by option
+#
+function setupInputArray() {
+  if [[ -f ${optUserTests} ]] ; then
+    declare -a lines
+    exec 3<${optUserTests} || exit
+    while read curline <&3; do
+      if [[ -z ${curline} || ${curline:0:1} = "#" ]]; then 
+        continue
+      fi
+      lines=("${lines[@]}" "${curline}")
+    done
+    exec 3<&-
+    
+    # now prepend the user lines (so they can override defaults)
+    knownTests=("${lines[@]}" "${knownTests[@]}")
+  fi
+}
+
+#
+# Searches for a specific test in the knownTests array.  If found, writes out
+# the remaining elements in the definition line (not including the test name).
+#
+function findTest() {
+  count=${#knownTests[@]}
+  index=0
+  while [[ ${index} -lt ${count} ]]
+  do
+    # If the first word in the entry matches the argument...
+    test=(${knownTests[$index]})
+    if [[ ${test[0]} = $1 ]] ; then
+      # Print all but the first word
+      echo ${test[@]:1}
+      return
+    fi
+    let "index = $index + 1"
+  done
+}
+
+#
+# Generate a simple listing of available tests
+#
+function dumpTests() {
+  echo "The following tests are currently defined:"
+  count=${#knownTests[@]}
+  index=0
+  while [[ ${index} -lt ${count} ]]
+  do
+    test=(${knownTests[$index]})
+    echo "  " ${test[0]}
+    let "index = $index + 1"
+  done
+}
+
+#
+# Writes the full pathname of the "top" of the development tree, as set by envsetup & lunch.
+# (based on gettop() from envsetup.sh)
+#
+function gettop {
+  TOPFILE=config/envsetup.make
+  if [[ -n ${TOP} && -f ${TOP}/${TOPFILE} ]] ; then
+    echo ${TOP}
+  else
+    if [[ -f ${TOPFILE} ]] ; then
+      echo ${PWD}
+    else
+      # We redirect cd to /dev/null in case it's aliased to
+      # a command that prints something as a side-effect
+      # (like pushd)
+      HERE=${PWD}
+      T=
+    # while [ \( ! \( -f ${TOPFILE} \) \) -a \( $PWD != "/" \) ]; do
+      while [[ ! -f ${TOPFILE} && ${PWD} != "/" ]] ; do
+        cd .. > /dev/null
+        T=${PWD}
+      done
+      cd ${HERE} > /dev/null
+      if [[ -f ${T}/${TOPFILE} ]]; then
+        echo ${T}
+      fi
+    fi
+  fi
+}
+
+#
+# Captures the "mmm" command from envsetup.sh
+#
+function call_mmm() {
+  T=$(gettop)
+  if [[ -n ${T} ]] ; then
+    . ${T}/envsetup.sh
+    mmm ${T}/$@
+  fi
+}
+
+# main script
+
+progName=$(basename $0)
+
+if [[ $# -eq 0 ]] ; then
+  echo "usage: $progName -l" >&2
+  echo "       $progName [-b] [-p] [-n] [-r] [-v]" >&2
+  echo "               [-u <user-tests-file>]" >&2
+  echo "               [-c test-class]" >&2
+  echo "               [-t test-method]" >&2
+  echo "               [-d | -e | -s serial-number]" >&2
+  echo "               <short-test-name>" >&2
+  exit 1
+fi
+
+processOptions $@
+shift $((OPTIND-1))
+
+setupInputArray
+
+# if requested, list all tests and halt
+if [[ ${optListTests} -ne 0 ]] ; then
+  dumpTests
+  exit 0
+fi
+
+testInfo=($(findTest $1))
+if [[ ${#testInfo[@]} -eq 5 ]] ; then 
+  # break out test definition elements
+  buildPath=${testInfo[0]}
+  testPackage=${testInfo[1]}
+  testClass=${testInfo[2]}
+  runnerPackage=${testInfo[3]}
+  runnerComponent=${testInfo[4]}
+  
+  # replace wildcards with default values
+  if [[ ${testPackage} == "#" ]] ; then
+    testPackage=
+  fi
+  if [[ ${runnerPackage} == "#" ]] ; then
+    runnerPackage=$testPackage
+  fi
+  if [[ ${runnerComponent} == "#" ]] ; then
+    runnerComponent="android.test.InstrumentationTestRunner" 
+  fi
+  
+  if [[ -n ${optTestClass} ]] ; then
+    testClass=$optTestClass
+  fi
+
+  # build & sync, if requested
+  if [[ ${optSkipBuild} -eq 0 ]] ; then
+    if [[ ${buildPath} != "#" ]] ; then
+      if [[ $optVerbose -ne 0 || ${optPreview} -ne 0 ]] ; then 
+        echo mmm ${buildPath} "&&" adb ${optAdbTarget} sync
+      fi
+      if [[ ${optPreview} -eq 0 ]] ; then
+        call_mmm ${buildPath} && adb ${optAdbTarget} sync
+        buildResult=$?
+      else
+        buildResult=0
+      fi
+      if [[ $buildResult -ne 0 ]] ; then
+        exit ${buildResult}
+      fi
+    fi
+  fi
+      
+  # setup additional clauses for the command
+  classOptions=""
+  if [[ ${testClass} != "#" ]] ; then
+    if [[ -z ${testPackage} ]] ; then
+      classOptions="-e class ${testClass}"
+    else
+      classOptions="-e class ${testPackage}.${testClass}"
+    fi
+    if [[ -n ${optTestMethod} ]] ; then
+      classOptions=${classOptions}#${optTestMethod}
+    fi
+  fi
+  debugOptions=""
+  if [[ ${optWaitForDebugger} -ne 0 ]] ; then
+    debugOptions="-e debug true"
+  fi
+  if [[ ${optRawMode} -ne 0 ]] ; then
+    debugOptions="-r "${debugOptions}
+  fi
+  
+  # now run the command
+  if [[ $optVerbose -ne 0 || ${optPreview} -ne 0 ]] ; then 
+    echo adb ${optAdbTarget} shell am instrument -w \
+      ${debugOptions} \
+      ${classOptions} \
+      ${runnerPackage}/${runnerComponent}
+  fi
+  if [[ ${optPreview} -eq 0 ]] ; then
+    adb ${optAdbTarget} shell am instrument -w \
+      ${debugOptions} \
+      ${classOptions} \
+      ${runnerPackage}/${runnerComponent}
+  fi
+  exit 0
+else
+  echo "$progName: unknown test \"$1\"" >&2
+  exit 1
+fi
+    

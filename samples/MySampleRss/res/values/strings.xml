@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resources>
+    <string name="menu_option_start">Start RSS Service</string>
+    <string name="menu_option_stop">Stop RSS Service</string>
+    <string name="menu_option_add">Add New Feed</string>
+    <string name="menu_option_delete">Delete Feed</string>
+    <string name="menu_option_update">Update All Feeds</string>
+    <string name="add_item_title">Title</string>
+    <string name="add_item_url">URL</string>
+    <string name="submit">Submit</string>
+    <string name="cancel">Cancel</string>
+    <string name="reader_3_label">MyRssReader3</string>
+    <string name="reader_4_label">MyRssReader4</string>
+    <string name="reader_5_label">MyRssReader5</string>
+    <string name="add_item_label">Add a new Feed</string>
+</resources>

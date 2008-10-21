@@ -1,0 +1,264 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 42;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		008CFC4D0C04B77E00FB4126 /* SkMovie_gif.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 008CFC4C0C04B77E00FB4126 /* SkMovie_gif.cpp */; };
+		00B13BE30C0C6EFA0033F013 /* SkMovie.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 00B13BE20C0C6EFA0033F013 /* SkMovie.cpp */; };
+		FE08AB3F0945EFBE0057213F /* gif_lib_private.h in Headers */ = {isa = PBXBuildFile; fileRef = FE08AB3D0945EFBE0057213F /* gif_lib_private.h */; };
+		FE08AB400945EFBE0057213F /* gif_lib.h in Headers */ = {isa = PBXBuildFile; fileRef = FE08AB3E0945EFBE0057213F /* gif_lib.h */; };
+		FE08AB440945EFEF0057213F /* dgif_lib.c in Sources */ = {isa = PBXBuildFile; fileRef = FE08AB410945EFEF0057213F /* dgif_lib.c */; };
+		FE08AB450945EFEF0057213F /* gif_err.c in Sources */ = {isa = PBXBuildFile; fileRef = FE08AB420945EFEF0057213F /* gif_err.c */; };
+		FE08AB460945EFEF0057213F /* gifalloc.c in Sources */ = {isa = PBXBuildFile; fileRef = FE08AB430945EFEF0057213F /* gifalloc.c */; };
+		FE7B86240948E6A1001B952C /* SkImageDecoder_libgif.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE7B86230948E6A1001B952C /* SkImageDecoder_libgif.cpp */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		008CFC4C0C04B77E00FB4126 /* SkMovie_gif.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkMovie_gif.cpp; path = ../../libs/graphics/images/SkMovie_gif.cpp; sourceTree = SOURCE_ROOT; };
+		00B13BE20C0C6EFA0033F013 /* SkMovie.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkMovie.cpp; path = ../../libs/graphics/images/SkMovie.cpp; sourceTree = SOURCE_ROOT; };
+		D2AAC046055464E500DB518D /* libgif.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libgif.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		FE08AB3D0945EFBE0057213F /* gif_lib_private.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = gif_lib_private.h; path = "../../extlibs/libgif-4.0/gif_lib_private.h"; sourceTree = SOURCE_ROOT; };
+		FE08AB3E0945EFBE0057213F /* gif_lib.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = gif_lib.h; path = "../../extlibs/libgif-4.0/gif_lib.h"; sourceTree = SOURCE_ROOT; };
+		FE08AB410945EFEF0057213F /* dgif_lib.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = dgif_lib.c; path = "../../extlibs/libgif-4.0/dgif_lib.c"; sourceTree = SOURCE_ROOT; };
+		FE08AB420945EFEF0057213F /* gif_err.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = gif_err.c; path = "../../extlibs/libgif-4.0/gif_err.c"; sourceTree = SOURCE_ROOT; };
+		FE08AB430945EFEF0057213F /* gifalloc.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = gifalloc.c; path = "../../extlibs/libgif-4.0/gifalloc.c"; sourceTree = SOURCE_ROOT; };
+		FE7B86230948E6A1001B952C /* SkImageDecoder_libgif.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkImageDecoder_libgif.cpp; path = ../../libs/graphics/images/SkImageDecoder_libgif.cpp; sourceTree = SOURCE_ROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		D289987405E68DCB004EDB86 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		08FB7794FE84155DC02AAC07 /* gif */ = {
+			isa = PBXGroup;
+			children = (
+				00B13BE20C0C6EFA0033F013 /* SkMovie.cpp */,
+				FE08AB3C0945EF830057213F /* Include */,
+				08FB7795FE84155DC02AAC07 /* Source */,
+				C6A0FF2B0290797F04C91782 /* Documentation */,
+				1AB674ADFE9D54B511CA2CBB /* Products */,
+			);
+			name = gif;
+			sourceTree = "<group>";
+		};
+		08FB7795FE84155DC02AAC07 /* Source */ = {
+			isa = PBXGroup;
+			children = (
+				008CFC4C0C04B77E00FB4126 /* SkMovie_gif.cpp */,
+				FE7B86230948E6A1001B952C /* SkImageDecoder_libgif.cpp */,
+				FE08AB410945EFEF0057213F /* dgif_lib.c */,
+				FE08AB420945EFEF0057213F /* gif_err.c */,
+				FE08AB430945EFEF0057213F /* gifalloc.c */,
+			);
+			name = Source;
+			sourceTree = "<group>";
+		};
+		1AB674ADFE9D54B511CA2CBB /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				D2AAC046055464E500DB518D /* libgif.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		C6A0FF2B0290797F04C91782 /* Documentation */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Documentation;
+			sourceTree = "<group>";
+		};
+		FE08AB3C0945EF830057213F /* Include */ = {
+			isa = PBXGroup;
+			children = (
+				FE08AB3D0945EFBE0057213F /* gif_lib_private.h */,
+				FE08AB3E0945EFBE0057213F /* gif_lib.h */,
+			);
+			name = Include;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		D2AAC043055464E500DB518D /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FE08AB3F0945EFBE0057213F /* gif_lib_private.h in Headers */,
+				FE08AB400945EFBE0057213F /* gif_lib.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		D2AAC045055464E500DB518D /* gif */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = FE5F47EB094782A50095980F /* Build configuration list for PBXNativeTarget "gif" */;
+			buildPhases = (
+				D2AAC043055464E500DB518D /* Headers */,
+				D2AAC044055464E500DB518D /* Sources */,
+				D289987405E68DCB004EDB86 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = gif;
+			productName = gif;
+			productReference = D2AAC046055464E500DB518D /* libgif.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		08FB7793FE84155DC02AAC07 /* Project object */ = {
+			isa = PBXProject;
+			buildConfigurationList = FE5F47EF094782A50095980F /* Build configuration list for PBXProject "gif" */;
+			hasScannedForEncodings = 1;
+			mainGroup = 08FB7794FE84155DC02AAC07 /* gif */;
+			projectDirPath = "";
+			targets = (
+				D2AAC045055464E500DB518D /* gif */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		D2AAC044055464E500DB518D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FE08AB440945EFEF0057213F /* dgif_lib.c in Sources */,
+				FE08AB450945EFEF0057213F /* gif_err.c in Sources */,
+				FE08AB460945EFEF0057213F /* gifalloc.c in Sources */,
+				FE7B86240948E6A1001B952C /* SkImageDecoder_libgif.cpp in Sources */,
+				008CFC4D0C04B77E00FB4126 /* SkMovie_gif.cpp in Sources */,
+				00B13BE30C0C6EFA0033F013 /* SkMovie.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		FE5F47EC094782A50095980F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_CPP_RTTI = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					_LIB,
+					SK_FORCE_SCALARFIXED,
+				);
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = ../../include/graphics;
+				INSTALL_PATH = /usr/local/lib;
+				LIBRARY_STYLE = STATIC;
+				PREBINDING = NO;
+				PRODUCT_NAME = gif;
+				ZERO_LINK = YES;
+			};
+			name = Debug;
+		};
+		FE5F47ED094782A50095980F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = YES;
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_MODEL_TUNING = G5;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				INSTALL_PATH = /usr/local/lib;
+				LIBRARY_STYLE = STATIC;
+				PREBINDING = NO;
+				PRODUCT_NAME = gif;
+				ZERO_LINK = NO;
+			};
+			name = Release;
+		};
+		FE5F47F0094782A50095980F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+				GCC_CW_ASM_SYNTAX = NO;
+				GCC_ENABLE_CPP_RTTI = NO;
+				GCC_ENABLE_PASCAL_STRINGS = NO;
+				GCC_ENABLE_SYMBOL_SEPARATION = NO;
+				GCC_USE_GCC3_PFE_SUPPORT = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = "$(HEADER_SEARCH_PATHS)";
+				LINK_WITH_STANDARD_LIBRARIES = NO;
+				PREBINDING = NO;
+				PRECOMPS_INCLUDE_HEADERS_FROM_BUILT_PRODUCTS_DIR = NO;
+				SHARED_PRECOMPS_DIR = "";
+				STRIP_INSTALLED_PRODUCT = NO;
+				USER_HEADER_SEARCH_PATHS = "../../include/graphics ../../include/corecg";
+			};
+			name = Debug;
+		};
+		FE5F47F1094782A50095980F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+				GCC_CW_ASM_SYNTAX = NO;
+				GCC_ENABLE_CPP_RTTI = NO;
+				GCC_ENABLE_PASCAL_STRINGS = NO;
+				GCC_ENABLE_SYMBOL_SEPARATION = NO;
+				GCC_PREPROCESSOR_DEFINITIONS = SK_RELEASE;
+				GCC_USE_GCC3_PFE_SUPPORT = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = "$(HEADER_SEARCH_PATHS)";
+				LINK_WITH_STANDARD_LIBRARIES = NO;
+				PREBINDING = NO;
+				PRECOMPS_INCLUDE_HEADERS_FROM_BUILT_PRODUCTS_DIR = NO;
+				SHARED_PRECOMPS_DIR = "";
+				STRIP_INSTALLED_PRODUCT = NO;
+				USER_HEADER_SEARCH_PATHS = "../../include/graphics ../../include/corecg";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		FE5F47EB094782A50095980F /* Build configuration list for PBXNativeTarget "gif" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FE5F47EC094782A50095980F /* Debug */,
+				FE5F47ED094782A50095980F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		FE5F47EF094782A50095980F /* Build configuration list for PBXProject "gif" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FE5F47F0094782A50095980F /* Debug */,
+				FE5F47F1094782A50095980F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 08FB7793FE84155DC02AAC07 /* Project object */;
+}

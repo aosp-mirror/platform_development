@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.2"?>
+<plugin>
+   <extension
+         id="PlatformNature"
+         name="PlatformNature"
+         point="org.eclipse.core.resources.natures">
+      <runtime>
+         <run class="com.android.ide.eclipse.platform.project.PlatformNature"/>
+      </runtime>
+   </extension>
+   <extension
+         point="org.eclipse.ui.ide.projectNatureImages">
+      <image
+            icon="icons/android_project.png"
+            id="com.android.ide.eclipse.platform.PlatformNature.image"
+            natureId="com.android.ide.eclipse.platform.PlatformNature">
+      </image>
+   </extension>
+   <extension
+         point="org.eclipse.ui.preferencePages">
+      <page
+            class="com.android.ide.eclipse.platform.preferences.AndroidPreferencePage"
+            id="com.android.ide.eclipse.preferences.main"
+            name="Android"/>
+   </extension>
+   <extension
+         point="org.eclipse.jdt.core.classpathContainerInitializer">
+      <classpathContainerInitializer
+            class="com.android.ide.eclipse.platform.project.PlatformClasspathContainerInitializer"
+            id="com.android.ide.eclipse.platform.DUMMY_CONTAINER">
+      </classpathContainerInitializer>
+   </extension>
+   <extension
+         point="org.eclipse.ui.popupMenus">
+      <objectContribution
+            id="com.android.ide.eclipse.platform.contribution1"
+            nameFilter="*"
+            objectClass="org.eclipse.core.resources.IProject"
+            adaptable="true">
+         <menu
+               id="com.android.ide.eclipse.platform.AndroidTools"
+               label="Android Tools"
+               path="additions">
+            <separator name="group1"/>
+         </menu>
+         <visibility>
+            <not>
+            <or>
+            <objectState
+                name="projectNature"
+                value="com.android.ide.eclipse.platform.PlatformNature"/>
+            <objectState
+                name="open"
+                value="false"/>
+            </or>
+            </not>
+         </visibility>
+         <action
+               class="com.android.ide.eclipse.platform.project.ConvertToPlatformAction"
+               enablesFor="1"
+               id="com.android.ide.eclipse.platform.ConvertToPlatformAction"
+               label="Convert To Android Project"
+               menubarPath="com.android.ide.eclipse.platform.AndroidTools/group1"/>
+      </objectContribution>
+    </extension>   
+</plugin>

@@ -1,0 +1,20 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Android Plugin Tests
+Bundle-SymbolicName: com.android.ide.eclipse.tests
+Bundle-Version: 0.8.1.qualifier
+Bundle-Activator: com.android.ide.eclipse.tests.AndroidTestPlugin
+Require-Bundle: org.eclipse.ui,
+ org.eclipse.core.runtime,
+ org.eclipse.core.resources,
+ com.android.ide.eclipse.adt,
+ org.junit,
+ com.android.ide.eclipse.common,
+ com.android.ide.eclipse.editors,
+ org.eclipse.jdt.core,
+ org.eclipse.jdt.launching,
+ org.eclipse.ui.views
+Eclipse-LazyStart: true
+Bundle-Vendor: The Android Open Source Project
+Bundle-ClassPath: kxml2-2.3.0.jar,
+ .

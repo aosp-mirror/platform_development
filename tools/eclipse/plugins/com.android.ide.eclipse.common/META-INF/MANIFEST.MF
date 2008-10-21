@@ -1,0 +1,22 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Android Common Plugin
+Bundle-SymbolicName: com.android.ide.eclipse.common;singleton:=true
+Bundle-Version: 0.8.1.qualifier
+Bundle-ClassPath: .,
+ sdkstats.jar,
+ androidprefs.jar
+Bundle-Vendor: The Android Open Source Project
+Eclipse-LazyStart: true
+Export-Package: com.android.ide.eclipse.common,
+ com.android.ide.eclipse.common.project,
+ com.android.ide.eclipse.common.resources
+Require-Bundle: org.eclipse.core.resources,
+ org.eclipse.core.runtime,
+ org.eclipse.jdt.core,
+ org.eclipse.ui.console,
+ org.eclipse.ui,
+ org.eclipse.jdt.ui,
+ org.eclipse.jface.text,
+ org.eclipse.ui.editors
+Bundle-Activator: com.android.ide.eclipse.common.CommonPlugin

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright (C) 2008 The Android Open Source Project
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+  
+          http://www.apache.org/licenses/LICENSE-2.0
+  
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
+
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.android.launchperf">
+  <application android:label="Launch Performance">
+      <uses-library android:name="android.test.runner" />
+
+    <activity android:name="SimpleActivity" android:label="Simple Activity">
+      <intent-filter>
+        <action android:name="android.intent.action.MAIN" />
+        <category android:name="android.intent.category.DEFAULT" />
+      </intent-filter>
+    </activity>
+
+    <activity android:name="EmptyActivity" android:label="Empty Activity">
+      <intent-filter>
+        <action android:name="android.intent.action.MAIN" />
+        <category android:name="android.intent.category.DEFAULT" />
+      </intent-filter>
+    </activity>
+
+    <activity android:name="ComplexActivity" android:label="Complex Activity">
+      <intent-filter>
+        <action android:name="android.intent.action.MAIN" />
+        <category android:name="android.intent.category.DEFAULT" />
+      </intent-filter>
+    </activity>
+
+  </application>
+
+  <instrumentation android:name="SimpleActivityLaunchPerformance"
+    android:targetPackage="com.android.launchperf"
+    android:label="Simple Activity Launch Performance">
+  </instrumentation>
+
+  <instrumentation android:name="ComplexActivityLaunchPerformance"
+    android:targetPackage="com.android.launchperf"
+    android:label="Complex Activity Launch Performance">
+  </instrumentation>
+
+  <instrumentation android:name="EmptyActivityLaunchPerformance"
+    android:targetPackage="com.android.launchperf"
+    android:label="Empty Activity Launch Performance">
+  </instrumentation>
+
+  <instrumentation android:name="HelloWorldLaunchPerformance"
+    android:targetPackage="com.example.android.apis"
+    android:label="Hello World Launch Performance">
+  </instrumentation>
+
+</manifest>

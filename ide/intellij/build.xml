@@ -1,0 +1,8 @@
+<project name="android" default="make" basedir="../../">
+    <target name="make"
+            description="Run make and then regenerate IntelliJ configuration.">
+        <exec executable="/bin/bash">
+            <arg value="ide/intellij/make+intelligen.sh"/>
+        </exec>
+    </target>
+</project>

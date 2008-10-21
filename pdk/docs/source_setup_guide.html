@@ -1,0 +1,289 @@
+
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+<title>Android - Host System Setup</title>
+<script src="http://www.google.com/uds/api?file=uds.js&amp;v=1.0&amp;key=internal-codesite" type="text/javascript"></script>
+<script src="http://code.google.com/js/jquery.js" type="text/javascript"></script>
+<script type="text/javascript">var _tocPath_ = 'http://code.google.com/android/_toc.ezt';</script>
+<script src="http://code.google.com/js/codesite.pack.01312008.js" type="text/javascript"></script>
+<link href="http://code.google.com/css/codesite.pack.01312008.css" type="text/css" rel="stylesheet">
+</link>
+
+<!--[if IE]><link rel="stylesheet" type="text/css" href="/css/iehacks.css" /><![endif]-->
+<script src="http://code.google.com/android/assets/search_autocomplete.js"></script>
+<link rel="stylesheet" type="text/css" href="http://code.google.com/css/semantic_headers.css" />
+<link rel="stylesheet" type="text/css" href="http://code.google.com/android/assets/style.css" />
+<script>
+    jQuery(document).ready(function() {
+            jQuery("pre").addClass("prettyprint");
+        });
+    </script>
+<style type="text/css">
+<!--
+h1,h2,h3 {
+	color: #000000;
+}
+-->
+</style>
+</head>
+<body class="gc-documentation">
+<div id="gc-container">
+<a name="top"></a>
+<div id="skipto"> </div>
+<div id="langpref">
+  <!--<a class="dropdown" href="/">English</a> <span>|</span> <a href="/more/">Site Directory</a> -->
+</div>
+<div id="gc-header">
+  <div id="logo"><a href="http://code.google.com/android/index.html"><img src="http://code.google.com/android/images/logo_android.gif" alt="Android"/></a></div>
+  <div id="search" style="inline">
+    <div id="searchForm" class="searchForm" style="height: 44px;">
+      <!--previously form was here-->
+    </div>
+    <!-- end searchForm -->
+    <noscript>
+    <style type="text/css">
+      .searchForm {
+        display : none !important;
+      }
+      .searchForm2 {
+        display : inline !important;
+      }
+      </style>
+    </noscript>
+    <div id="searchForm2" class="searchForm2" style="display:none">
+      <form id="searchbox_001456098540849067467:6whlsytkdqg" action="http://www.google.com/cse">
+        <input type="hidden" name="cx" value="001456098540849067467:6whlsytkdqg" />
+        <input type="hidden" name="cof" value="FORID:0" />
+        <input type="text" name="q" maxlength="2048" size="41" autocomplete="off" title="Google Code Search"/>
+        <input type="submit" name="sa" value="Search" title="Search"/>
+        <br/>
+        <div class="greytext">e.g. "ajax apis" or "open source"</div>
+      </form>
+    </div>
+    <!-- end searchForm2 -->
+  </div>
+  <!-- end search -->
+</div>
+<!-- end gc-header -->
+<div id="searchControl" class="search-control"></div>
+<!--[if IE]><iframe id="backiFrame" name="backiFrame" src='/dummy.html' style="display:none"></iframe><![endif]-->
+<div id="codesiteContent">
+<a name="gc-topnav-anchor"></a>
+<div id="gc-topnav">
+  <h1>Android Platform Development Kit</h1>
+  <ul class="gc-topnav-tabs">
+    <li id="sdk_link"> <a href="http://code.google.com/android/index.html" title="Android Software Development Kit">SDK</a> </li>
+    <li id="docs_link"> <a href="index.html" title="Official Android documentation">Docs</a> </li>
+    <li id="faq_link"> <a href="http://code.google.com/android/kb/index.html" title="Answers to frequently asked questions about Android">FAQ</a> </li>
+    <li> <a href="http://android-developers.blogspot.com/" title="Official Android blog">Blog</a> </li>
+    <li> <a href="http://code.google.com/android/groups.html" title="Android developer forum">Group</a> </li>
+    <li> <a href="http://code.google.com/android/terms.html" title="Android terms of service">Terms</a> </li>
+    <li> <a href="mailto:android-pdk-feedback@google.com?subject=PDK%20Feedback&body=(filed%20from:%20source_setup_guide.html%20v0.3%20-%209%20June%202008)%0D%0A%0D%0ASUMMARY:%0D%0A%0D%0A%0D%0A%0D%0ASTEPS%20TO%20REPRODUCE:%0D%0A%0D%0A%0D%0A%0D%0AADDITIONAL%20NOTES:">Report a Problem</a> </li>
+  </ul>
+</div>
+<!-- end gc-topnav -->
+<div class="g-section g-tpl-180">
+<a name="gc-toc"></a>
+<div class="g-unit g-first" id="gc-toc">
+  <ul>
+    <li>
+      <h1><a href="index.html">Documentation</a></h1>
+      <ul>
+        <li> <strong>Introduction</strong>
+          <ul>
+            <li><a href="system_requirements.html">Device Requirements</a></li>            
+          </ul>
+        </li>
+        <li> <strong>Dev Environment Setup</strong>
+          <ul>
+            <li><a href="source_setup_guide.html">Host System Setup</a></li>
+            <li><a href="getting_source_code.html">Getting Source Code</a></li>
+            <li> <a href="intro_source_code.html">Source Code Overview</a></li>			
+            <li><a href="build_system.html">Build System</a></li>
+          </ul>
+        </li>
+        <li> <strong>Basic Bring up</strong>
+          <ul>
+            <li><a href="build_new_device.html">Building New Device</a></li>
+            <li><a href="bring_up.html">Bring up</a></li>
+            <li><a href="keymaps_keyboard_input.html">Keymaps and Keyboard</a></li>
+            <li><a href="display_drivers.html">Display Drivers</a></li>
+          </ul>
+        </li>
+        <li> <strong>Multimedia</strong>
+          <ul>
+            <li><a href="audio_sub_system.html">Audio Subsystem</a></li>
+          </ul>
+        </li>
+        <li> <strong>Power Management</strong>
+          <ul>
+            <li><a href="power_management.html">Power Management</a></li>
+          </ul>
+        </li>
+        <li> <strong>Telephony</strong>
+          <ul>
+            <li><a href="telephony.html">Radio Interface Layer</a></li>
+          </ul>
+        </li>
+        <li> <strong>Testing</strong>
+          <ul>
+            <li><a href="instrumentation_framework.html">Instrumentation Framework</a></li>
+            <li><a href="instrumentation_testing.html">Instrumentation Testing</a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+<a name="gc-pagecontent"></a>
+<div class="g-unit" id="gc-pagecontent">
+<div id="jd-content">
+<div class="jd-descr">
+
+
+<a name="androidSourceAccessSetupGuideTitle"></a><h1>Host System Setup</h1>
+
+
+
+<a name="toc"/>
+<div style="padding:10px">
+<a href="#androidSourceSetupIntro">Introduction</a><br/>
+<a href="#androidSourceSetupBuildSystemSetupPackages">Installing Packages</a><br/><div style="padding-left:40px">
+
+<a href="#androidSourceSetupBuildSystemSetupRequiredPackages">Required Packages</a><br/>
+<a href="#androidSourceSetupUbuntu606Intro">Ubuntu 6.06 (Dapper)</a><br/>
+<a href="#androidSourceSetupUbuntu710Intro">Ubuntu 7.10</a><br/>
+<a href="#androidSourceSetupUbuntu804Intro">Ubuntu 8.04</a><br/></div>
+<a href="#androidSourceSetupBuildSystemSetupJavaIntro">Installing Java</a><br/></div></font></div>
+
+<a name="androidSourceSetupIntro"></a><h2>Introduction</h2>
+
+<p>This section provides instructions on how to configure your host system to build Android for mobile devices. While Android is designed as host-environment agnostic, it has been tested and is known to work on the following Linux operating system; Ubuntu 6.06 (Dapper), 7.10 (Gutsy), and 8.04. Cygwin is not recommended. </p>
+
+
+<a name="androidSourceSetupBuildSystemSetupPackages"></a><h2>Installing Packages</h2>
+
+
+
+<a name="androidSourceSetupBuildSystemSetupRequiredPackages"></a><h3>Required Packages</h3>
+
+<p>Android requires the following system packages:</p>
+<p><ul>
+<li>flex: This lexical analyzer generator is used to read a given input file for a description of a scanner to generate.</li>
+<li>bison: This is a general-purpose parser generator.</li>
+<li>gperf: This is a perfect hash function generator.</li>
+<li>libesd0-dev: This enlightened sound daemon (dev files) is used to mix digitized audio streams for playback by a single device.</li>
+<li>libwxgtk2.6-dev: This package provides GUI components and other facilities for many different platforms.</li>
+<li>build-essential: This package contains a list of packages considered fundamental to building Debian packages.</li>
+</ul></p>
+
+
+<a name="androidSourceSetupUbuntu606Intro"></a><h3>Ubuntu 6.06 (Dapper)</h3>
+
+<p>On a clean Dapper system, type the following:</p>
+<pre class="prettyprint">
+% sudo apt-get install flex bison gperf libesd0-dev libwxgtk2.6-dev zlib1g-dev 
+   build-essential
+</pre>
+<p>This snippet includes an artificial line break to maintain a print-friendly document.</p>
+
+
+<a name="androidSourceSetupUbuntu710Intro"></a><h3>Ubuntu 7.10</h3>
+
+<ol><li>The libwxgtk2.6-dev package will only work if the following code is included in your  /etc/apt/source file.
+<p><pre class="prettyprint">
+## N.B. software from this repository is ENTIRELY UNSUPPORTED by the Ubuntu
+## team, and may not be under a free license. Please satisfy yourself as to
+## your rights to use the software. Also, please note that software in
+## universe WILL NOT receive any review or updates from the Ubuntu security
+## team.
+# Line commented out by installer because it failed to verify:
+deb http://us.archive.ubuntu.com/ubuntu/ gutsy universe
+# Line commented out by installer because it failed to verify:
+deb-src http://us.archive.ubuntu.com/ubuntu/ gutsy universe
+# Line commented out by installer because it failed to verify:
+deb http://us.archive.ubuntu.com/ubuntu/ gutsy-updates universe
+# Line commented out by installer because it failed to verify:
+deb-src http://us.archive.ubuntu.com/ubuntu/ gutsy-updates universe
+</pre></p></li>
+<li>Install required packages with the following command:
+<p><pre class="prettyprint">
+% sudo apt-get install flex bison gperf libesd0-dev libwxgtk2.6-dev zlib1g-dev
+   build-essential
+</pre></p>
+This snippet includes an artificial line break to maintain a print-friendly document.
+</li>
+<li>
+<p>Install the X11 development environment with the following commands:</p>
+<p><pre class="prettyprint">
+% sudo apt-get install x-dev
+% sudo apt-get install libx11-dev
+% sudo apt-get install libncurses5-dev
+</pre></p>
+</li>
+</ol>
+
+
+<a name="androidSourceSetupUbuntu804Intro"></a><h3>Ubuntu 8.04</h3>
+
+<p>On a clean system, type the following:</p>
+<pre class="prettify">
+% sudo apt-get install flex bison gperf libesd0-dev libwxgtk2.6-dev
+zlib1g-dev build-essential
+% sudo apt-get install x-dev
+% sudo apt-get install libx11-dev
+% sudo apt-get install libncurses5-dev
+% sudo apt-get install sun-java5-jdk
+</pre>
+
+
+<a name="androidSourceSetupBuildSystemSetupJavaIntro"></a><h2>Installing Java</h2>
+
+<p>Android source code includes a hard dependency on the Java Developer Kit (JDK) 5.0 Update 12 or greater. The specific file name of the Update 12 package is <code>jdk-1_5_0_12-linux-i586.bin</code>. To download this version of the Java JDK:</p>
+<p><ol>
+<li>Navigate to: <a href="http://java.sun.com/products/archive/">http://java.sun.com/products/archive/</a>.</li>
+<li>Select '5.0 Update 12' from the 'Java 2 Platform Standard Edition (J2SE)' -> 'JDK/JRE - 5.0' field and click 'Go.'</li>
+<li>Click 'Download JDK.'</li>
+<li>In the 'Linux Platform' section, click 'Linux self-extracting file' associated with the jdk-1_5_0_12-linux-i586.bin package.</li>
+<li>Follow the installation instructions.</li>
+</ol>
+</p>
+
+<p>Once you have cleanly installed the JDK, modify your PATH environment variable to include <code>&lt;jdk-install-dir&gt;/jdk1.5.0_12/bin</code> at its beginning so that Dapper will use the correct installation. </p>
+<p><b>Ubuntu 7.10</b></p>
+<p>An alternative method to quickly install Java is to enable multiverse repo in <code>/etc/apt/sources.list</code> and then execute:</p>
+<pre class="prettyprint">
+% sudo apt-get install sun-java5-jdk
+</pre>
+
+
+<p><span class="lh2"><a name="androidFooter"></a></span>
+
+        </div>
+      </div>
+      <!-- end gc-pagecontent -->
+    </div>
+    <!-- end gooey wrapper -->
+  </div>
+  <!-- end codesearchresults -->
+  <div id="gc-footer" dir="ltr">
+    <div class="text"> &copy;2008 Google<!-- - <a href="/">Code Home</a> - <a href="http://www.google.com/accounts/TOS">Site Terms of Service</a> - <a href="http://www.google.com/privacy.html">Privacy Policy</a> - <a href="/more">Site Directory</a> --></div>
+  </div>
+  <!-- end gc-footer -->
+</div>
+<!-- end gc-containter -->
+<script src="http://www.google-analytics.com/ga.js" type="text/javascript">
+</script>
+<script type="text/javascript">
+  try {
+    var pageTracker = _gat._getTracker("UA-18071-1");
+    pageTracker._setAllowAnchor(true);
+    pageTracker._initData();
+    pageTracker._trackPageview(); 
+  } catch(e) {}
+</script>
+<div id="jd-build-id"> v0.3 - 9 June 2008</div>
+</div></div></div></body>
+</html>
+

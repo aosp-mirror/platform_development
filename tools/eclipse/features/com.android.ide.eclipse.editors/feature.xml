@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feature
+      id="com.android.ide.eclipse.editors"
+      label="Android Editors"
+      version="0.8.1.qualifier"
+      provider-name="The Android Open Source Project"
+      plugin="com.android.ide.eclipse.editors">
+
+   <description>
+      This feature provides Editors for Android files.
+   </description>
+
+   <copyright>
+      Copyright (C) 2007 The Android Open Source Project
+   </copyright>
+
+   <url>
+      <update label="Android Update Site" url="https://dl-ssl.google.com/android/eclipse/"/>
+   </url>
+
+   <requires>
+      <import plugin="com.android.ide.eclipse.common"/>
+      <import plugin="org.eclipse.ui"/>
+      <import plugin="org.eclipse.core.runtime"/>
+      <import plugin="org.eclipse.core.resources"/>
+      <import plugin="org.eclipse.ui.editors"/>
+      <import plugin="org.eclipse.jface.text"/>
+      <import plugin="org.eclipse.ui.ide"/>
+      <import plugin="org.eclipse.wst.sse.ui"/>
+      <import plugin="org.eclipse.wst.xml.ui"/>
+      <import plugin="org.eclipse.wst.xml.core"/>
+      <import plugin="org.eclipse.wst.sse.core"/>
+      <import plugin="org.eclipse.ui.forms"/>
+      <import plugin="org.eclipse.jdt.core"/>
+      <import plugin="org.eclipse.ui.browser"/>
+      <import plugin="org.eclipse.jdt.ui"/>
+      <import plugin="org.eclipse.gef"/>
+      <import plugin="org.eclipse.ui.views"/>
+      <import plugin="org.eclipse.ui.console"/>
+   </requires>
+
+   <plugin
+         id="com.android.ide.eclipse.editors"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+</feature>

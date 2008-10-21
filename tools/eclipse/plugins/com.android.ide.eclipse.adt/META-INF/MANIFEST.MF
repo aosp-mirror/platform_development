@@ -1,0 +1,36 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Android Development Toolkit
+Bundle-SymbolicName: com.android.ide.eclipse.adt;singleton:=true
+Bundle-Version: 0.8.1.qualifier
+Bundle-ClassPath: .,
+ jarutils.jar,
+ androidprefs.jar
+Bundle-Activator: com.android.ide.eclipse.adt.AdtPlugin
+Bundle-Vendor: The Android Open Source Project
+Require-Bundle: com.android.ide.eclipse.common,
+ com.android.ide.eclipse.ddms,
+ org.eclipse.core.runtime,
+ org.eclipse.core.resources,
+ org.eclipse.debug.core,
+ org.eclipse.debug.ui,
+ org.eclipse.jdt,
+ org.eclipse.ant.core,
+ org.eclipse.jdt.core,
+ org.eclipse.jdt.ui,
+ org.eclipse.jdt.launching,
+ org.eclipse.jface.text,
+ org.eclipse.ui.editors,
+ org.eclipse.ui.workbench.texteditor,
+ org.eclipse.ui.console,
+ org.eclipse.core.filesystem,
+ org.eclipse.ui,
+ org.eclipse.ui.ide,
+ org.eclipse.ui.forms
+Eclipse-LazyStart: true
+Export-Package: com.android.ide.eclipse.adt.build;x-friends:="com.android.ide.eclipse.tests",
+ com.android.ide.eclipse.adt.project;x-friends:="com.android.ide.eclipse.tests",
+ com.android.ide.eclipse.adt.project.internal;x-friends:="com.android.ide.eclipse.tests",
+ com.android.ide.eclipse.adt.resources;x-friends:="com.android.ide.eclipse.tests"
+
+

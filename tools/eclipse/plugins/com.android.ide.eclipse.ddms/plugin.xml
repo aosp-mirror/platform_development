@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.2"?>
+<plugin>
+   <extension
+         point="org.eclipse.ui.views">
+      <category
+            name="Android"
+            id="com.android.ide.eclipse.ddms.views.category">
+      </category>
+      <view
+            allowMultiple="false"
+            category="com.android.ide.eclipse.ddms.views.category"
+            class="com.android.ide.eclipse.ddms.views.DeviceView"
+            icon="icons/device.png"
+            id="com.android.ide.eclipse.ddms.views.DeviceView"
+            name="Devices">
+      </view>
+      <view
+            allowMultiple="false"
+            category="com.android.ide.eclipse.ddms.views.category"
+            class="com.android.ide.eclipse.ddms.views.LogCatView"
+            icon="icons/android.png"
+            id="com.android.ide.eclipse.ddms.views.LogCatView"
+            name="LogCat"/>
+      <!-- Disabled for now due to AWT/SWT bridge issue on Leopard.
+      <view
+            allowMultiple="false"
+            category="com.android.ide.eclipse.ddms.views.category"
+            class="com.android.ide.eclipse.ddms.views.EventLogView"
+            icon="icons/android.png"
+            id="com.android.ide.eclipse.ddms.views.EventLogView"
+            name="Event Log"/> -->
+      <view
+            allowMultiple="false"
+            category="com.android.ide.eclipse.ddms.views.category"
+            class="com.android.ide.eclipse.ddms.views.ThreadView"
+            icon="icons/thread.png"
+            id="com.android.ide.eclipse.ddms.views.ThreadView"
+            name="Threads"/>
+      <view
+            allowMultiple="false"
+            category="com.android.ide.eclipse.ddms.views.category"
+            class="com.android.ide.eclipse.ddms.views.HeapView"
+            icon="icons/heap.png"
+            id="com.android.ide.eclipse.ddms.views.HeapView"
+            name="Heap"/>
+      <view
+            allowMultiple="false"
+            category="com.android.ide.eclipse.ddms.views.category"
+            class="com.android.ide.eclipse.ddms.views.FileExplorerView"
+            icon="icons/android.png"
+            id="com.android.ide.eclipse.ddms.views.FileExplorerView"
+            name="File Explorer"/>
+      <view
+            allowMultiple="false"
+            category="com.android.ide.eclipse.ddms.views.category"
+            class="com.android.ide.eclipse.ddms.views.EmulatorControlView"
+            icon="icons/emulator.png"
+            id="com.android.ide.eclipse.ddms.views.EmulatorControlView"
+            name="Emulator Control"/>
+   </extension>
+   <extension
+         point="org.eclipse.ui.perspectives">
+      <perspective
+            class="com.android.ide.eclipse.ddms.Perspective"
+            icon="icons/android.png"
+            id="com.android.ide.eclipse.ddms.Perspective"
+            name="DDMS"/>
+   </extension>
+   <extension
+         point="org.eclipse.core.runtime.preferences">
+      <initializer class="com.android.ide.eclipse.ddms.preferences.PreferenceInitializer"/>
+   </extension>
+   <extension
+         point="org.eclipse.ui.perspectiveExtensions">
+      <perspectiveExtension targetID="org.eclipse.jdt.ui.JavaPerspective">
+         <perspectiveShortcut id="com.android.ide.eclipse.ddms.Perspective"/>
+      </perspectiveExtension>
+      <perspectiveExtension targetID="org.eclipse.ui.resourcePerspective">
+         <perspectiveShortcut id="com.android.ide.eclipse.ddms.Perspective"/>
+      </perspectiveExtension>
+      <perspectiveExtension targetID="org.eclipse.debug.ui.DebugPerspective">
+         <perspectiveShortcut id="com.android.ide.eclipse.ddms.Perspective"/>
+         <view id="com.android.ide.eclipse.ddms.views.LogCatView"
+	         relative="org.eclipse.ui.views.ProblemView"
+	         relationship="stack" />
+      </perspectiveExtension>
+   </extension>
+   <extension
+         point="org.eclipse.ui.preferencePages">
+      <page
+            category="com.android.ide.eclipse.preferences.main"
+            class="com.android.ide.eclipse.ddms.preferences.PreferencePage"
+            id="com.android.ide.eclipse.ddms.preferences.PreferencePage"
+            name="DDMS"/>
+      <page
+            category="com.android.ide.eclipse.preferences.main"
+            class="com.android.ide.eclipse.ddms.preferences.LogCatPreferencePage"
+            id="com.android.ide.eclipse.ddms.preferences.LogCatPreferencePage"
+            name="LogCat"/>
+   </extension>
+</plugin>

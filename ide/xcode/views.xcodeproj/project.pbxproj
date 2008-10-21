@@ -1,0 +1,330 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 42;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		005FA5B00B52AB9000896055 /* SkBGViewArtist.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 005FA59B0B52AB9000896055 /* SkBGViewArtist.cpp */; };
+		005FA5B10B52AB9000896055 /* SkBorderView.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 005FA59C0B52AB9000896055 /* SkBorderView.cpp */; };
+		005FA5B20B52AB9000896055 /* SkImageView.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 005FA59D0B52AB9000896055 /* SkImageView.cpp */; };
+		005FA5B30B52AB9000896055 /* SkListView.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 005FA59E0B52AB9000896055 /* SkListView.cpp */; };
+		005FA5B40B52AB9000896055 /* SkListWidget.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 005FA59F0B52AB9000896055 /* SkListWidget.cpp */; };
+		005FA5B50B52AB9000896055 /* SkOSFile.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 005FA5A00B52AB9000896055 /* SkOSFile.cpp */; };
+		005FA5B60B52AB9000896055 /* SkOSMenu.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 005FA5A10B52AB9000896055 /* SkOSMenu.cpp */; };
+		005FA5B70B52AB9000896055 /* SkOSSound.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 005FA5A20B52AB9000896055 /* SkOSSound.cpp */; };
+		005FA5B80B52AB9000896055 /* SkParsePaint.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 005FA5A30B52AB9000896055 /* SkParsePaint.cpp */; };
+		005FA5B90B52AB9000896055 /* SkProgressBarView.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 005FA5A40B52AB9000896055 /* SkProgressBarView.cpp */; };
+		005FA5BA0B52AB9000896055 /* SkProgressView.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 005FA5A50B52AB9000896055 /* SkProgressView.cpp */; };
+		005FA5BB0B52AB9000896055 /* SkScrollBarView.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 005FA5A60B52AB9000896055 /* SkScrollBarView.cpp */; };
+		005FA5BC0B52AB9000896055 /* SkStackViewLayout.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 005FA5A70B52AB9000896055 /* SkStackViewLayout.cpp */; };
+		005FA5BD0B52AB9000896055 /* SkView.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 005FA5A80B52AB9000896055 /* SkView.cpp */; };
+		005FA5BE0B52AB9000896055 /* SkViewInflate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 005FA5A90B52AB9000896055 /* SkViewInflate.cpp */; };
+		005FA5BF0B52AB9000896055 /* SkViewPriv.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 005FA5AA0B52AB9000896055 /* SkViewPriv.cpp */; };
+		005FA5C00B52AB9000896055 /* SkViewPriv.h in Headers */ = {isa = PBXBuildFile; fileRef = 005FA5AB0B52AB9000896055 /* SkViewPriv.h */; };
+		005FA5C10B52AB9000896055 /* SkWidget.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 005FA5AC0B52AB9000896055 /* SkWidget.cpp */; };
+		005FA5C20B52AB9000896055 /* SkWidgets.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 005FA5AD0B52AB9000896055 /* SkWidgets.cpp */; };
+		005FA5C30B52AB9000896055 /* SkWidgetViews.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 005FA5AE0B52AB9000896055 /* SkWidgetViews.cpp */; };
+		005FA5C40B52AB9000896055 /* SkWindow.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 005FA5AF0B52AB9000896055 /* SkWindow.cpp */; };
+		FECBEAA00C60D34E00DB1DDA /* SkEvent.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FECBEA9A0C60D34E00DB1DDA /* SkEvent.cpp */; };
+		FECBEAA10C60D34E00DB1DDA /* SkEventSink.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FECBEA9B0C60D34E00DB1DDA /* SkEventSink.cpp */; };
+		FECBEAA20C60D34E00DB1DDA /* SkMetaData.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FECBEA9C0C60D34E00DB1DDA /* SkMetaData.cpp */; };
+		FECBEAA30C60D34E00DB1DDA /* SkTagList.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FECBEA9D0C60D34E00DB1DDA /* SkTagList.cpp */; };
+		FECBEAA40C60D34E00DB1DDA /* SkTagList.h in Headers */ = {isa = PBXBuildFile; fileRef = FECBEA9E0C60D34E00DB1DDA /* SkTagList.h */; };
+		FECBEAA50C60D34E00DB1DDA /* SkTextBox.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FECBEA9F0C60D34E00DB1DDA /* SkTextBox.cpp */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		005FA59B0B52AB9000896055 /* SkBGViewArtist.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkBGViewArtist.cpp; path = ../../tests/skia/views/SkBGViewArtist.cpp; sourceTree = SOURCE_ROOT; };
+		005FA59C0B52AB9000896055 /* SkBorderView.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkBorderView.cpp; path = ../../tests/skia/views/SkBorderView.cpp; sourceTree = SOURCE_ROOT; };
+		005FA59D0B52AB9000896055 /* SkImageView.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkImageView.cpp; path = ../../tests/skia/views/SkImageView.cpp; sourceTree = SOURCE_ROOT; };
+		005FA59E0B52AB9000896055 /* SkListView.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkListView.cpp; path = ../../tests/skia/views/SkListView.cpp; sourceTree = SOURCE_ROOT; };
+		005FA59F0B52AB9000896055 /* SkListWidget.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkListWidget.cpp; path = ../../tests/skia/views/SkListWidget.cpp; sourceTree = SOURCE_ROOT; };
+		005FA5A00B52AB9000896055 /* SkOSFile.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkOSFile.cpp; path = ../../tests/skia/views/SkOSFile.cpp; sourceTree = SOURCE_ROOT; };
+		005FA5A10B52AB9000896055 /* SkOSMenu.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkOSMenu.cpp; path = ../../tests/skia/views/SkOSMenu.cpp; sourceTree = SOURCE_ROOT; };
+		005FA5A20B52AB9000896055 /* SkOSSound.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkOSSound.cpp; path = ../../tests/skia/views/SkOSSound.cpp; sourceTree = SOURCE_ROOT; };
+		005FA5A30B52AB9000896055 /* SkParsePaint.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkParsePaint.cpp; path = ../../tests/skia/views/SkParsePaint.cpp; sourceTree = SOURCE_ROOT; };
+		005FA5A40B52AB9000896055 /* SkProgressBarView.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkProgressBarView.cpp; path = ../../tests/skia/views/SkProgressBarView.cpp; sourceTree = SOURCE_ROOT; };
+		005FA5A50B52AB9000896055 /* SkProgressView.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkProgressView.cpp; path = ../../tests/skia/views/SkProgressView.cpp; sourceTree = SOURCE_ROOT; };
+		005FA5A60B52AB9000896055 /* SkScrollBarView.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkScrollBarView.cpp; path = ../../tests/skia/views/SkScrollBarView.cpp; sourceTree = SOURCE_ROOT; };
+		005FA5A70B52AB9000896055 /* SkStackViewLayout.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkStackViewLayout.cpp; path = ../../tests/skia/views/SkStackViewLayout.cpp; sourceTree = SOURCE_ROOT; };
+		005FA5A80B52AB9000896055 /* SkView.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkView.cpp; path = ../../tests/skia/views/SkView.cpp; sourceTree = SOURCE_ROOT; };
+		005FA5A90B52AB9000896055 /* SkViewInflate.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkViewInflate.cpp; path = ../../tests/skia/views/SkViewInflate.cpp; sourceTree = SOURCE_ROOT; };
+		005FA5AA0B52AB9000896055 /* SkViewPriv.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkViewPriv.cpp; path = ../../tests/skia/views/SkViewPriv.cpp; sourceTree = SOURCE_ROOT; };
+		005FA5AB0B52AB9000896055 /* SkViewPriv.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkViewPriv.h; path = ../../tests/skia/views/SkViewPriv.h; sourceTree = SOURCE_ROOT; };
+		005FA5AC0B52AB9000896055 /* SkWidget.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkWidget.cpp; path = ../../tests/skia/views/SkWidget.cpp; sourceTree = SOURCE_ROOT; };
+		005FA5AD0B52AB9000896055 /* SkWidgets.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkWidgets.cpp; path = ../../tests/skia/views/SkWidgets.cpp; sourceTree = SOURCE_ROOT; };
+		005FA5AE0B52AB9000896055 /* SkWidgetViews.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkWidgetViews.cpp; path = ../../tests/skia/views/SkWidgetViews.cpp; sourceTree = SOURCE_ROOT; };
+		005FA5AF0B52AB9000896055 /* SkWindow.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkWindow.cpp; path = ../../tests/skia/views/SkWindow.cpp; sourceTree = SOURCE_ROOT; };
+		D2AAC046055464E500DB518D /* libviews.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libviews.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		FECBEA9A0C60D34E00DB1DDA /* SkEvent.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkEvent.cpp; path = ../../libs/graphics/views/SkEvent.cpp; sourceTree = SOURCE_ROOT; };
+		FECBEA9B0C60D34E00DB1DDA /* SkEventSink.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkEventSink.cpp; path = ../../libs/graphics/views/SkEventSink.cpp; sourceTree = SOURCE_ROOT; };
+		FECBEA9C0C60D34E00DB1DDA /* SkMetaData.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkMetaData.cpp; path = ../../libs/graphics/views/SkMetaData.cpp; sourceTree = SOURCE_ROOT; };
+		FECBEA9D0C60D34E00DB1DDA /* SkTagList.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkTagList.cpp; path = ../../libs/graphics/views/SkTagList.cpp; sourceTree = SOURCE_ROOT; };
+		FECBEA9E0C60D34E00DB1DDA /* SkTagList.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkTagList.h; path = ../../libs/graphics/views/SkTagList.h; sourceTree = SOURCE_ROOT; };
+		FECBEA9F0C60D34E00DB1DDA /* SkTextBox.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkTextBox.cpp; path = ../../libs/graphics/views/SkTextBox.cpp; sourceTree = SOURCE_ROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		D289987405E68DCB004EDB86 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		00797CCD0A88F0D50017AF55 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				005FA59B0B52AB9000896055 /* SkBGViewArtist.cpp */,
+				005FA59C0B52AB9000896055 /* SkBorderView.cpp */,
+				005FA59D0B52AB9000896055 /* SkImageView.cpp */,
+				005FA59E0B52AB9000896055 /* SkListView.cpp */,
+				005FA59F0B52AB9000896055 /* SkListWidget.cpp */,
+				005FA5A00B52AB9000896055 /* SkOSFile.cpp */,
+				005FA5A10B52AB9000896055 /* SkOSMenu.cpp */,
+				005FA5A20B52AB9000896055 /* SkOSSound.cpp */,
+				005FA5A30B52AB9000896055 /* SkParsePaint.cpp */,
+				005FA5A40B52AB9000896055 /* SkProgressBarView.cpp */,
+				005FA5A50B52AB9000896055 /* SkProgressView.cpp */,
+				005FA5A60B52AB9000896055 /* SkScrollBarView.cpp */,
+				005FA5A70B52AB9000896055 /* SkStackViewLayout.cpp */,
+				005FA5A80B52AB9000896055 /* SkView.cpp */,
+				005FA5A90B52AB9000896055 /* SkViewInflate.cpp */,
+				005FA5AA0B52AB9000896055 /* SkViewPriv.cpp */,
+				005FA5AB0B52AB9000896055 /* SkViewPriv.h */,
+				005FA5AC0B52AB9000896055 /* SkWidget.cpp */,
+				005FA5AD0B52AB9000896055 /* SkWidgets.cpp */,
+				005FA5AE0B52AB9000896055 /* SkWidgetViews.cpp */,
+				005FA5AF0B52AB9000896055 /* SkWindow.cpp */,
+			);
+			name = Views;
+			sourceTree = "<group>";
+		};
+		08FB7794FE84155DC02AAC07 /* views */ = {
+			isa = PBXGroup;
+			children = (
+				00797CCD0A88F0D50017AF55 /* Views */,
+				08FB7795FE84155DC02AAC07 /* Source */,
+				C6A0FF2B0290797F04C91782 /* Documentation */,
+				1AB674ADFE9D54B511CA2CBB /* Products */,
+			);
+			name = views;
+			sourceTree = "<group>";
+		};
+		08FB7795FE84155DC02AAC07 /* Source */ = {
+			isa = PBXGroup;
+			children = (
+				FECBEA9A0C60D34E00DB1DDA /* SkEvent.cpp */,
+				FECBEA9B0C60D34E00DB1DDA /* SkEventSink.cpp */,
+				FECBEA9C0C60D34E00DB1DDA /* SkMetaData.cpp */,
+				FECBEA9D0C60D34E00DB1DDA /* SkTagList.cpp */,
+				FECBEA9E0C60D34E00DB1DDA /* SkTagList.h */,
+				FECBEA9F0C60D34E00DB1DDA /* SkTextBox.cpp */,
+			);
+			name = Source;
+			sourceTree = "<group>";
+		};
+		1AB674ADFE9D54B511CA2CBB /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				D2AAC046055464E500DB518D /* libviews.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		C6A0FF2B0290797F04C91782 /* Documentation */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Documentation;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		D2AAC043055464E500DB518D /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				005FA5C00B52AB9000896055 /* SkViewPriv.h in Headers */,
+				FECBEAA40C60D34E00DB1DDA /* SkTagList.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		D2AAC045055464E500DB518D /* views */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1DEB91EB08733DB70010E9CD /* Build configuration list for PBXNativeTarget "views" */;
+			buildPhases = (
+				D2AAC043055464E500DB518D /* Headers */,
+				D2AAC044055464E500DB518D /* Sources */,
+				D289987405E68DCB004EDB86 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = views;
+			productName = views;
+			productReference = D2AAC046055464E500DB518D /* libviews.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		08FB7793FE84155DC02AAC07 /* Project object */ = {
+			isa = PBXProject;
+			buildConfigurationList = 1DEB91EF08733DB70010E9CD /* Build configuration list for PBXProject "views" */;
+			hasScannedForEncodings = 1;
+			mainGroup = 08FB7794FE84155DC02AAC07 /* views */;
+			projectDirPath = "";
+			targets = (
+				D2AAC045055464E500DB518D /* views */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		D2AAC044055464E500DB518D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				005FA5B00B52AB9000896055 /* SkBGViewArtist.cpp in Sources */,
+				005FA5B10B52AB9000896055 /* SkBorderView.cpp in Sources */,
+				005FA5B20B52AB9000896055 /* SkImageView.cpp in Sources */,
+				005FA5B30B52AB9000896055 /* SkListView.cpp in Sources */,
+				005FA5B40B52AB9000896055 /* SkListWidget.cpp in Sources */,
+				005FA5B50B52AB9000896055 /* SkOSFile.cpp in Sources */,
+				005FA5B60B52AB9000896055 /* SkOSMenu.cpp in Sources */,
+				005FA5B70B52AB9000896055 /* SkOSSound.cpp in Sources */,
+				005FA5B80B52AB9000896055 /* SkParsePaint.cpp in Sources */,
+				005FA5B90B52AB9000896055 /* SkProgressBarView.cpp in Sources */,
+				005FA5BA0B52AB9000896055 /* SkProgressView.cpp in Sources */,
+				005FA5BB0B52AB9000896055 /* SkScrollBarView.cpp in Sources */,
+				005FA5BC0B52AB9000896055 /* SkStackViewLayout.cpp in Sources */,
+				005FA5BD0B52AB9000896055 /* SkView.cpp in Sources */,
+				005FA5BE0B52AB9000896055 /* SkViewInflate.cpp in Sources */,
+				005FA5BF0B52AB9000896055 /* SkViewPriv.cpp in Sources */,
+				005FA5C10B52AB9000896055 /* SkWidget.cpp in Sources */,
+				005FA5C20B52AB9000896055 /* SkWidgets.cpp in Sources */,
+				005FA5C30B52AB9000896055 /* SkWidgetViews.cpp in Sources */,
+				005FA5C40B52AB9000896055 /* SkWindow.cpp in Sources */,
+				FECBEAA00C60D34E00DB1DDA /* SkEvent.cpp in Sources */,
+				FECBEAA10C60D34E00DB1DDA /* SkEventSink.cpp in Sources */,
+				FECBEAA20C60D34E00DB1DDA /* SkMetaData.cpp in Sources */,
+				FECBEAA30C60D34E00DB1DDA /* SkTagList.cpp in Sources */,
+				FECBEAA50C60D34E00DB1DDA /* SkTextBox.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		1DEB91EC08733DB70010E9CD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(NATIVE_ARCH)";
+				COPY_PHASE_STRIP = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				INSTALL_PATH = /usr/local/lib;
+				PRODUCT_NAME = views;
+				ZERO_LINK = NO;
+			};
+			name = Debug;
+		};
+		1DEB91ED08733DB70010E9CD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(NATIVE_ARCH)";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_MODEL_TUNING = G5;
+				INSTALL_PATH = /usr/local/lib;
+				PRODUCT_NAME = views;
+				ZERO_LINK = NO;
+			};
+			name = Release;
+		};
+		1DEB91F008733DB70010E9CD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = YES;
+				COPY_PHASE_STRIP = NO;
+				GCC_CW_ASM_SYNTAX = NO;
+				GCC_ENABLE_CPP_RTTI = NO;
+				GCC_ENABLE_PASCAL_STRINGS = NO;
+				GCC_ENABLE_SYMBOL_SEPARATION = NO;
+				GCC_PREPROCESSOR_DEFINITIONS = "";
+				GCC_USE_GCC3_PFE_SUPPORT = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = "$(HEADER_SEARCH_PATHS)";
+				LINK_WITH_STANDARD_LIBRARIES = NO;
+				PREBINDING = NO;
+				PRECOMPS_INCLUDE_HEADERS_FROM_BUILT_PRODUCTS_DIR = NO;
+				SDKROOT = "";
+				SHARED_PRECOMPS_DIR = "";
+				STRIP_INSTALLED_PRODUCT = NO;
+				USER_HEADER_SEARCH_PATHS = "../../include/graphics ../../include/corecg ../../libs/graphics/sgl";
+			};
+			name = Debug;
+		};
+		1DEB91F108733DB70010E9CD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = YES;
+				COPY_PHASE_STRIP = NO;
+				GCC_CW_ASM_SYNTAX = NO;
+				GCC_ENABLE_CPP_RTTI = NO;
+				GCC_ENABLE_PASCAL_STRINGS = NO;
+				GCC_ENABLE_SYMBOL_SEPARATION = NO;
+				GCC_PREPROCESSOR_DEFINITIONS = SK_RELEASE;
+				GCC_USE_GCC3_PFE_SUPPORT = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = "$(HEADER_SEARCH_PATHS)";
+				LINK_WITH_STANDARD_LIBRARIES = NO;
+				PREBINDING = NO;
+				PRECOMPS_INCLUDE_HEADERS_FROM_BUILT_PRODUCTS_DIR = NO;
+				SDKROOT = "";
+				SHARED_PRECOMPS_DIR = "";
+				STRIP_INSTALLED_PRODUCT = NO;
+				USER_HEADER_SEARCH_PATHS = "../../include/graphics ../../include/corecg ../../libs/graphics/sgl";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1DEB91EB08733DB70010E9CD /* Build configuration list for PBXNativeTarget "views" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1DEB91EC08733DB70010E9CD /* Debug */,
+				1DEB91ED08733DB70010E9CD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		1DEB91EF08733DB70010E9CD /* Build configuration list for PBXProject "views" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1DEB91F008733DB70010E9CD /* Debug */,
+				1DEB91F108733DB70010E9CD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 08FB7793FE84155DC02AAC07 /* Project object */;
+}

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins">
+		<accessrules>
+			<accessrule kind="accessible" pattern="org/eclipse/wst/**/internal/**"/>
+		</accessrules>
+	</classpathentry>
+	<classpathentry kind="lib" path="kxml2-2.3.0.jar"/>
+	<classpathentry kind="lib" path="layoutlib_api.jar"/>
+	<classpathentry kind="lib" path="ninepatch.jar"/>
+	<classpathentry kind="lib" path="layoutlib_utils.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
