@@ -119,7 +119,7 @@ system.img tools/lib/images/system.img
 ramdisk.img tools/lib/images/ramdisk.img
 userdata.img tools/lib/images/userdata.img
 userdata.img tools/lib/images/userdata.img
-development/emulator/prebuilt/android-arm/kernel-qemu tools/lib/images/kernel-qemu
+prebuilt/android-arm/kernel/kernel-qemu tools/lib/images/kernel-qemu
 
 # emulator skins
 development/emulator/skins/HVGA   tools/lib/images/skins/HVGA
