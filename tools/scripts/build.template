@@ -20,7 +20,8 @@
     <!-- The intermediates directory, Eclipse uses "bin"
          for its own output, so we do the same. -->
     <property name="outdir" value="bin" />
-    
+    <property name="outdir-main" value="../${outdir}" />
+
     <!-- ************************************************************************************* -->
     <!-- No user servicable parts below. -->
 
@@ -59,6 +60,11 @@
             value="${basedir}\${outdir-classes}"
             else="${basedir}/${outdir-classes}" >
         <os family="windows"/>
+    </condition>
+    <condition property="outdir-main-classes"
+            value="${outdir-main}/classes">
+        <available file="${outdir-main}/classes"
+                type="dir"/>
     </condition>
 
     <!-- Create R.java in the source directory -->
@@ -160,6 +166,7 @@
                 bootclasspath="${android-jar}">
             <classpath>
                 <fileset dir="${external-libs}" includes="*.jar"/>
+                <pathelement path="${outdir-main-classes}"/>
             </classpath>
          </javac>
     </target>

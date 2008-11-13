@@ -266,16 +266,37 @@ public class ActivityCreator {
      * Installs a destination file that is based on the template file at source.
      * For each match of each key in keywords will be replaced with its
      * corresponding value in the destination file.
-     * 
+     *
+     * Invokes ActivityCreator#installTemplate(String, String, java.util.Map, boolean, String) with
+     * the main project output directory (#mOutDir) as the last argument.
+     *
      * @param source the path to the source template file
      * @param dest the path to the destination file
      * @param keywords in the destination file, the keys will be replaced by their values
-     * @param force True to force writing the file even if it already exists  
+     * @param force True to force writing the file even if it already exists
+     * 
+     * @see ActivityCreator#installTemplate(String, String, java.util.Map, boolean, String)
      */
     private void installTemplate(String source, String dest,
             Map<String, String> keywords, boolean force) {
+        installTemplate(source, dest, keywords, force, mOutDir);
+    }
+
+    /**
+     * Installs a destination file that is based on the template file at source.
+     * For each match of each key in keywords will be replaced with its
+     * corresponding value in the destination file.
+     *
+     * @param source the path to the source template file
+     * @param dest the path to the destination file
+     * @param keywords in the destination file, the keys will be replaced by their values
+     * @param force True to force writing the file even if it already exists
+     * @param outDir the output directory to copy the template file to
+     */
+    private void installTemplate(String source, String dest,
+            Map<String, String> keywords, boolean force, String outDir) {
         final String sourcePath = mLibDir + File.separator + source;
-        final String destPath = mOutDir + File.separator + dest;
+        final String destPath = outDir + File.separator + dest;
 
         final File destPathFile = new File(destPath);
         if (!force && destPathFile.exists()) {
@@ -283,27 +304,27 @@ public class ActivityCreator {
                     destPathFile.getName());
             return;
         }
-        
+
         try {
             BufferedWriter out = new BufferedWriter(new FileWriter(destPathFile));
             BufferedReader in = new BufferedReader(new FileReader(sourcePath));
             String line;
-            
+
             while ((line = in.readLine()) != null) {
                 for (String key : keywords.keySet()) {
                     line = line.replace(key, keywords.get(key));
                 }
-                
+
                 out.write(line);
                 out.newLine();
             }
-            
+
             out.close();
             in.close();
         } catch (Exception e) {
             printHelpAndExit("ERROR: Could not access %1$s: %2$s", destPath, e.getMessage());
         }
-        
+
         println("Added file %1$s", destPath);
     }
 
@@ -329,12 +350,14 @@ public class ActivityCreator {
     private void setupProject() {
         String packageName = null;
         String activityName = null;
+        String activityTestName = null;
         try {
             /* Grab package and Activity names */
             int lastPeriod = mPackageFull.lastIndexOf('.');
             packageName = mPackageFull.substring(0, lastPeriod);
             if (lastPeriod < mPackageFull.length() - 1) {
                 activityName = mPackageFull.substring(lastPeriod+1);
+                activityTestName = activityName + "Test";
             }
             
             if (packageName.indexOf('.') == -1) {
@@ -346,8 +369,14 @@ public class ActivityCreator {
         
         println("Package: %1$s", packageName);
         println("Output directory: %1$s", mOutDir);
+        String testsOutDir = mOutDir + File.separator + "tests";
+        println("Tests directory: %1$s", testsOutDir);
+
         if (activityName != null) {
             println("Activity name: %1$s", activityName);
+        }
+        if (activityTestName != null) {
+            println("ActivityTest name: %1$s", activityTestName);
         }
         
         final HashMap<String, String> keywords = createBaseKeywordMap();
@@ -370,8 +399,17 @@ public class ActivityCreator {
             installTemplate("java_file.template", srcDir + File.separator
                     + activityName + ".java", keywords);
         }
+        /* Make ActivityTest java file */
+        createDirs(srcDir, testsOutDir);
+        if (isDirEmpty(srcDir, "Java", testsOutDir) && activityTestName != null) {
+            installTemplate("java_tests_file.template", srcDir + File.separator
+                    + activityTestName + ".java", keywords, false, testsOutDir);
+        }
         createDirs("bin");
         createDirs("libs");
+        createDirs("bin", testsOutDir);
+        createDirs("libs", testsOutDir);
+        createDirs("res", testsOutDir);
 
         /* Make res files */
         final String valuesDir = "res" + File.separator + "values";
@@ -393,7 +431,16 @@ public class ActivityCreator {
                 keywords);
         
         installTemplate("build.template", "build.xml", keywords);
-        installTemplate("default.properties.template", "default.properties", keywords, true /*force*/);
+        installTemplate("default.properties.template", "default.properties",
+                keywords, true /*force*/);
+
+        /* Make AndroidManifest.xml and build.xml files for tests*/
+        installTemplate("AndroidManifest.tests.template", "AndroidManifest.xml",
+                keywords, false, testsOutDir);
+
+        installTemplate("build.template", "build.xml", keywords, false, testsOutDir);
+        installTemplate("default.properties.template", "default.properties",
+                keywords, true /*force*/, testsOutDir);
 
         if (mIde.equals("intellij")) {
             /* IntelliJ files */
@@ -500,10 +547,27 @@ public class ActivityCreator {
     /**
      * Creates the path in the output directory along with any parent paths
      * that don't exist.
+     *
+     * Invokes ActivityCreator#createDirs(String, String) with
+     * the main project output directory (#mOutDir) as the last argument.
+     *
      * @param path the directory out/path that is created.
+     *
+     * @see com.android.activitycreator.ActivityCreator#createDirs(String, String)
      */
     public void createDirs(String path) {
-        final File pathFile = new File(mOutDir + File.separator + path);
+        createDirs(path, mOutDir);
+    }
+    
+    /**
+     * Creates the path in the output directory along with any parent paths
+     * that don't exist.
+     * 
+     * @param path the directory out/path that is created.
+     * @param dir the directory in which the path to be created
+     */
+    public void createDirs(String path, String dir) {
+        final File pathFile = new File(dir + File.separator + path);
         boolean existedBefore = true;
 
         if (!pathFile.exists()) {
@@ -529,28 +593,45 @@ public class ActivityCreator {
             }
         }
     }
-    
+
     /**
      * Checks whether the path in the output directory is empty
-     * 
+     *
+     * Invokes ActivityCreator#isDirEmpty(String, String, String) with
+     * the main project output directory (#mOutDir) as the last argument.
+     *
      * @param path the out/path directory that is checked
      * @param message the logical name for what this path points to (used in
      *        warning message)
      * @return whether the directory is empty
+     * @see com.android.activitycreator.ActivityCreator#isDirEmpty(String, String, String) 
      */
     public boolean isDirEmpty(String path, String message) {
-        File pathFile = new File(mOutDir + File.separator + path);
-        
+        return isDirEmpty(path, message, mOutDir);
+    }
+    
+    /**
+     * Checks whether the path in the output directory is empty
+     *
+     * @param path the out/path directory that is checked
+     * @param message the logical name for what this path points to (used in
+     *        warning message)
+     * @param outDir the output director to check
+     * @return whether the directory is empty
+     */
+    public boolean isDirEmpty(String path, String message, String outDir) {
+        File pathFile = new File(outDir + File.separator + path);
+
         String[] pathListing = pathFile.list();
         if ((pathListing != null) && (pathListing.length > 0)) {
             println("WARNING: There are already some %1$s files present. None will be created!",
                     message);
             return false;
         }
-        
+
         return true;
     }
-    
+
     /**
      * Strips the string of beginning and trailing characters (multiple
      * characters will be stripped, example stripString("..test...", '.')
@@ -588,9 +669,10 @@ public class ActivityCreator {
      * Returns true if the project is an alias project.
      * <p/>
      * Alias projects require both the --url and the --label options.
+     * @return boolean true if the project requested is an alias project
      */
     private boolean isAliasProject() {
-        return (isStringEmpty(mAliasData) == false && isStringEmpty(mApplicationLabel) == false);
+        return (!isStringEmpty(mAliasData) && !isStringEmpty(mApplicationLabel));
     }
 
     /**

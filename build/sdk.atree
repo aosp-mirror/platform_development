@@ -41,6 +41,7 @@ obj/framework.aidl tools/lib/framework.aidl
 # sdk scripts
 development/tools/scripts/AndroidManifest.template tools/lib/AndroidManifest.template
 development/tools/scripts/AndroidManifest.alias.template tools/lib/AndroidManifest.alias.template
+development/tools/scripts/AndroidManifest.tests.template tools/lib/AndroidManifest.tests.template
 development/tools/scripts/build.template tools/lib/build.template
 development/tools/scripts/build.alias.template tools/lib/build.alias.template
 development/tools/scripts/default.properties.template tools/lib/default.properties.template
@@ -48,6 +49,7 @@ development/tools/scripts/iml.template tools/lib/iml.template
 development/tools/scripts/ipr.template tools/lib/ipr.template
 development/tools/scripts/iws.template tools/lib/iws.template
 development/tools/scripts/java_file.template tools/lib/java_file.template
+development/tools/scripts/java_tests_file.template tools/lib/java_tests_file.template
 development/tools/scripts/layout.template tools/lib/layout.template
 development/tools/scripts/strings.template tools/lib/strings.template
 development/tools/scripts/alias.template tools/lib/alias.template
