@@ -1,39 +1,50 @@
 #!/bin/bash
 function die() {
-  echo "Error: $*"
-  exit 1
+    echo "Error: $*"
+    exit 1
 }
 
-cd ../plugins/com.android.ide.eclipse.editors
+set -e # fail early
+
+# CD to the top android directory
+D=`dirname "$0"`
+cd "$D/../../../../"
+
+DEST="development/tools/eclipse/plugins/com.android.ide.eclipse.editors"
+# computes "../.." from DEST to here (in /android)
+BACK=`echo $DEST | sed 's@[^/]*@..@g'`
+
+LIBS="layoutlib_api layoutlib_utils ninepatch"
+
+echo "make java libs ..."
+make -j3 showcommands $LIBS || die "Fail to build one of $LIBS."
+
+echo "Copying java libs to $DEST"
+
 HOST=`uname`
 if [ "$HOST" == "Linux" ]; then
-  ln -svf ../../../../out/host/linux-x86/framework/layoutlib_api.jar .
-  ln -svf ../../../../out/host/linux-x86/framework/layoutlib_utils.jar .
-  ln -svf ../../../../out/host/linux-x86/framework/kxml2-2.3.0.jar .
-  ln -svf ../../../../out/host/linux-x86/framework/ninepatch.jar .
+    for LIB in $LIBS; do
+        ln -svf $BACK/out/host/linux-x86/framework/$LIB.jar "$DEST/"
+    done
+    ln -svf $BACK/out/host/linux-x86/framework/kxml2-2.3.0.jar "$DEST/"
+  
 elif [ "$HOST" == "Darwin" ]; then
-  ln -svf ../../../../out/host/darwin-x86/framework/layoutlib_api.jar .
-  ln -svf ../../../../out/host/darwin-x86/framework/layoutlib_utils.jar .
-  ln -svf ../../../../out/host/darwin-x86/framework/kxml2-2.3.0.jar .
-  ln -svf ../../../../out/host/darwin-x86/framework/ninepatch.jar .
+    for LIB in $LIBS; do
+        ln -svf $BACK/out/host/darwin-x86/framework/$LIB.jar "$DEST/"
+    done
+    ln -svf $BACK/out/host/darwin-x86/framework/kxml2-2.3.0.jar "$DEST/"
+
 elif [ "${HOST:0:6}" == "CYGWIN" ]; then
-  set -e # fail early
-  DEVICE_DIR="../../../../"
-  echo "make java libs ..."
-  ( cd "$DEVICE_DIR" &&
-      make -j3 showcommands layoutlib_api layoutlib_utils ninepatch ) || \
-      die "Define javac and 'make layoutlib_api ninepatch' from device."
+    for LIB in $LIBS; do
+        cp -vf  $BACK/out/host/windows-x86/framework/$LIB.jar "$DEST/"
+    done
 
-  echo "Copying java libs to $PWD"
-  for JAR in layoutlib_api.jar layoutlib_utils.jar ninepatch.jar ; do
-    cp -vf  "$DEVICE_DIR/out/host/windows-x86/framework/$JAR" .
-  done
-  if [ ! -f "./kxml2-2.3.0.jar" ]; then
-      cp -v $DEVICE_DIR/prebuilt/common/kxml2/kxml2-2.3.0.jar .
-      chmod -v a+rx *.jar
-  fi
+    if [ ! -f "$DEST/kxml2-2.3.0.jar" ]; then
+        cp -v "prebuilt/common/kxml2/kxml2-2.3.0.jar" "$DEST/"
+    fi
 
+    chmod -v a+rx "$DEST"/*.jar
 else
-  echo "Unsupported platform ($HOST). Nothing done."
+    echo "Unsupported platform ($HOST). Nothing done."
 fi
 
