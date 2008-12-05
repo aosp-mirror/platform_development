@@ -24,7 +24,7 @@ function back() {
 BASE="development/tools/eclipse/plugins/com.android.ide.eclipse.ddms"
 
 DEST=$BASE/libs
-mkdir -p $D
+mkdir -p $DEST
 BACK=`back $DEST`
 for i in prebuilt/common/jfreechart/*.jar; do
   $CMD $BACK/$i $DEST/
