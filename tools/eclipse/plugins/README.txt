@@ -11,104 +11,53 @@ The ADT feature is composed of four plugins:
 - com.android.ide.eclipse.ddms:
     A plugin version of the tool DDMS
 
-Because the DDMS plugin source code is not yet released, compiling the
-ADT/Common/Editors plugins requires to install the DDMS plugin in eclipse.
+Each of these live in development/tools/eclipse/plugins/
 
-Basic requirements:
+2 Features are used to distribute the plugins:
+ADT, which contains ADT, ddms, common
+Editors, which contains Editors, and requires the ADT feature.
+
+The feature projects are located in development/tools/eclipse/features/
+
+Finally 2 site projects are located in development/tools/eclipse/sites/
+internal: is a site containing the features mentioned above as well as a test feature.
+external: contains only the ADT and Editors features.
+
+
+Basic requirements to develop on the plugins:
 - Eclipse 3.3 or 3.4 with JDT and PDE.
-- DDMS plugin installed and running.
 
 
---------------------------
-1- Install the DDMS plugin
---------------------------
+----------------------------------
+1- Loading the projects in Eclipse
+----------------------------------
 
-The easiest way to setup the DDMS plugin in your Eclipse environment is to
-install the ADT features (see SDK documentation for details) and then remove
-the following features and plugins:
+The plugins projects depend on jar files located in the Android source tree,
+or, in some cases, built by the Android source.
 
-- <eclipse-directory>/features/com.android.ide.eclipse.adt_x.x.x.jar
-- <eclipse-directory>/plugins/com.android.ide.eclipse.adt_x.x.x.jar
-- <eclipse-directory>/plugins/com.android.ide.eclipse.common_x.x.x.jar
-- <eclipse-directory>/plugins/com.android.ide.eclipse.editors_x.x.x.jar
+Also, some source code (ddms) is located in a different location and needs to
+be linked into the DDMS plugin source.
 
-This will leave you with only the DDMS plugin installed in your Eclipse
-distribution.
+To automatize all of this, cd into development/tools/eclipse/scripts/
+and run create_all_symlinks.sh
+
+Once this has been done successfully, use the import project action in Eclipse
+and point it to development/tools/eclipse. It will find all the projects in the
+sub folder.
 
 
--------------------------------------
-2- Setting up the ADT/Common project
--------------------------------------
+-----------------------------------------------
+2- Launching/Debugging the plugins from Eclipse
+-----------------------------------------------
 
-- Download the ADT/Common/Editors source.
+- Open Debug Dialog.
+- Create an "Eclipse Application" configuration.
+- in the "Plug-ins" tab, make sure the plugins are selected (you may
+  want to disable the test plugin if you just want to run ADT)
 
-- From the SDK, copy the following jars:
-   * androidprefs.jar    => com.android.ide.eclipse.adt folder.
-   * jarutils.jar        => com.android.ide.eclipse.adt folder.
-   * ping.jar            => com.android.ide.eclipse.common folder.
-   * androidprefs.jar    => com.android.ide.eclipse.common folder.
+-----------------------------
+3- Building a new update site
+-----------------------------
 
-- Create a java project from existing source for both the ADT plugin and the
-  common plugin.
-
-- In the Package Explorer, right click the projects and choose
-     PDE Tools > Convert Projects to Plug-in Project...
-
-- Select your projects in the dialog box and click OK.
-
-- In the Package Explorer, for ADT and common, right click the jar files mentioned above
-  and choose Build Path > Add to Build Path
-
-At this point the projects will compile.
-
-To launch the projects, open the Run/Debug Dialog and create an "Eclipse
-Application" launch configuration.
-
-Additionnaly, another feature containing the Android Editors Plugin
-(com.android.ide.eclipse.editors) is available.
-
-- Make sure the common project is present in your workspace as the Editors
-  plugin depends on this plugin. Alternatively, you can have the offical ADT
-  feature installed in your Eclipse distribution.
-- Create a java project from existing source for the Editors project.
-- In the Package Explorer, right click the project and choose
-     PDE Tools > Convert Projects to Plug-in Project...
-- Select your project in the dialog box and click OK.
-
-Create an "Eclipse Application" launch configuration to test the plugin.
-
--------------------------------------
-3- Setting up the Editors project
--------------------------------------
-
-The "editors" plugin is optional. You can use ADT to develop Android
-applications without the XML editor support. When this plugin is present, it
-offers several customized form-based XML editors and one graphical layout
-editor.
-
-At the time of this release (Android 0.9 SDK), some of the supporting libraries
-still need some cleanup and are currently only provided as JAR files.
-
-- Download the ADT/Common/Editors source.
-
-- From the source archives, copy the following jars:
-   * ninepatch.jar       => com.android.ide.eclipse.editors folder.
-   * layoutlib_utils.jar => com.android.ide.eclipse.editors folder.
-   * layoutlib_api.jar   => com.android.ide.eclipse.editors folder.
-
-- From http://kxml.sourceforge.net/ download:
-   * kXML2-2.3.0.jar     => com.android.ide.eclipse.editors folder.
-
-- Create a java project from existing source for both the editors plugin.
-
-- In the Package Explorer, right click the project and choose
-     PDE Tools > Convert Projects to Plug-in Project...
-
-- Select your project in the dialog box and click OK.
-
-- In the Package Explorer for editors, right click the jar files mentioned
-  above and choose Build Path > Add to Build Path
-
-To launch the projects, reuse the "Eclipse Application" launch configuration
-created for ADT.
-
+- From Eclipse, open the site.xml of the site project you want to build and click
+  "Build All" from the "Site Map" tab.
