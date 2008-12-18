@@ -16,11 +16,10 @@
 
 package com.example.android.apis.graphics.spritetext;
 
-import com.example.android.apis.graphics.GLSurfaceView;
-
 import javax.microedition.khronos.opengles.GL;
 
 import android.app.Activity;
+import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 
 public class SpriteTextActivity extends Activity {

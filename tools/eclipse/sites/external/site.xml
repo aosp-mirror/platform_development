@@ -3,10 +3,7 @@
    <description url="https://dl-ssl.google.com/android/eclipse/">
       Update Site for Android Development Toolkit
    </description>
-   <feature url="features/com.android.ide.eclipse.adt_0.8.1.qualifier.jar" id="com.android.ide.eclipse.adt" version="0.8.1.qualifier">
-      <category name="developer"/>
-   </feature>
-   <feature url="features/com.android.ide.eclipse.editors_0.8.1.qualifier.jar" id="com.android.ide.eclipse.editors" version="0.8.1.qualifier">
+   <feature url="features/com.android.ide.eclipse.adt_0.9.0.qualifier.jar" id="com.android.ide.eclipse.adt" version="0.9.0.qualifier">
       <category name="developer"/>
    </feature>
    <category-def name="developer" label="Developer Tools">

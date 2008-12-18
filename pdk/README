@@ -1,0 +1,62 @@
+Building the pdk
+
+1) get a cupcake source tree
+
+2) from the root
+  . build/envsetup.sh
+
+3) run choosecombo
+  Build for the simulator or the device?
+       1. Device
+       2. Simulator
+
+  Which would you like? [1] 1
+
+
+  Build type choices are:
+       1. release
+       2. debug
+
+  Which would you like? [1] 1
+
+
+  Product choices are:
+       0. emulator
+       1. generic
+       2. sim
+       3. surf
+  You can also type the name of a product if you know it.
+  Which would you like? [generic] 1
+
+
+  Variant choices are:
+       1. user
+       2. userdebug
+       3. eng
+  Which would you like? [eng] 3
+
+  ============================================
+  TARGET_PRODUCT=generic
+  TARGET_BUILD_VARIANT=eng
+  TARGET_SIMULATOR=false
+  TARGET_BUILD_TYPE=release
+  TARGET_ARCH=arm
+  HOST_ARCH=x86
+  HOST_OS=linux
+  HOST_BUILD_TYPE=release
+  BUILD_ID=
+  ============================================
+
+4) mkdir dist
+   mkdir logs
+   mkpdkcupcake.sh
+
+(which contains: 
+
+DT=`date +%y%m%d-%H%M%S`
+#time make -j4 PRODUCT-generic-eng pdk dist DIST_DIR=dist 2>&1 | tee logs/$DT
+time make -j4 pdk dist DIST_DIR=dist 2>&1 | tee logs/$DT
+
+so you can see the results of the build in the logs directory.)
+
+5) the pdk tar file is put in the dist directory.

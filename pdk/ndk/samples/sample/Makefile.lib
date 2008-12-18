@@ -1,0 +1,31 @@
+
+NDK_BASE   := ../..
+
+include $(NDK_BASE)/config/config.mk
+
+# Assumes PREBUILT is defined to point to the correct flavor of the prebuilt 
+# directory in the Android source tree
+
+SOURCES    := hellolibrary.c
+OBJECTS    := $(SOURCES:.c=.o)
+LIBS       := -lc -lm
+ALIB       := $(PREBUILT)/toolchain/arm-eabi-4.2.1/lib/gcc/arm-eabi/4.2.1/interwork/libgcc.a
+
+all: sharedlib staticlib
+
+# Using shared and static suffixes as these are going in the same directory;
+# typically you would not do this as you would make only one version,
+# but if we don't we'll screw up the linking because of linker defaults.
+
+staticlib: $(OBJECTS)
+	$(AR) -cr libhello-static.a $(OBJECTS) 
+	
+sharedlib: hellolibrary-shared.o
+	$(CC) -nostdlib -Wl,-soname,libhello-shared.so -Wl,-shared,-Bsymbolic -L$(NDK_BASE)/lib $^ $(LIBS) -o libhello-shared.so -Wl,--no-undefined $(ALIB)
+	
+hellolibrary-shared.o: hellolibrary.c
+	$(CC) -c -fpic $(INC) -o $@ $^ 
+
+clean:
+	rm -rf *.o libhello-static.a libhello-shared.so
+					                                            

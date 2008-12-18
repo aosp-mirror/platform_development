@@ -15,7 +15,7 @@
 -->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" 
-      package="com.android.notepad.tests">
+      package="com.example.android.notepad.tests">
     
     <!-- We add an application tag here just so that we can indicate that
          this package needs to link against the android.test library,

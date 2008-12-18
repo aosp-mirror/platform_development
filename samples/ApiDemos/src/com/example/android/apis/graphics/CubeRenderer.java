@@ -17,7 +17,10 @@
 package com.example.android.apis.graphics;
 
 import javax.microedition.khronos.egl.EGL10;
+import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
+
+import android.opengl.GLSurfaceView;
 
 /**
  * Render a pair of tumbling cubes.
@@ -29,7 +32,7 @@ class CubeRenderer implements GLSurfaceView.Renderer {
         mCube = new Cube();
     }
 
-    public void drawFrame(GL10 gl) {
+    public void onDrawFrame(GL10 gl) {
         /*
          * Usually, the first thing one might want to do is to clear
          * the screen. The most efficient way of doing this is to use
@@ -84,7 +87,7 @@ class CubeRenderer implements GLSurfaceView.Renderer {
             }
     }
 
-    public void sizeChanged(GL10 gl, int width, int height) {
+    public void onSurfaceChanged(GL10 gl, int width, int height) {
          gl.glViewport(0, 0, width, height);
 
          /*
@@ -99,7 +102,7 @@ class CubeRenderer implements GLSurfaceView.Renderer {
          gl.glFrustumf(-ratio, ratio, -1, 1, 1, 10);
     }
 
-    public void surfaceCreated(GL10 gl) {
+    public void onSurfaceCreated(GL10 gl, EGLConfig config) {
         /*
          * By default, OpenGL enables features that improve quality
          * but reduce performance. One might want to tweak that

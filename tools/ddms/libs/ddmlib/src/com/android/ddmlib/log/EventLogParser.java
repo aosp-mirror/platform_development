@@ -228,6 +228,9 @@ public final class EventLogParser {
                     // just ignore this description if data type and data unit don't match
                     // TODO: log the error.
                 }
+            } else {
+                Log.e("EventLogParser",  //$NON-NLS-1$
+                    String.format("Can't parse %1$s", description));  //$NON-NLS-1$
             }
         }
         

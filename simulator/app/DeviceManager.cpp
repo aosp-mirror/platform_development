@@ -61,7 +61,7 @@ DeviceManager::~DeviceManager(void)
 
         printf("Sim: Waiting for old runtime thread..."); fflush(stdout);
         code = mThread->Wait();        // join the old thread
-        printf("done (code=%d)\n", (int) code);
+        printf("done (code=%ld)\n", (long) code);
     }
     delete mThread;
     mThread = NULL;
@@ -187,7 +187,7 @@ bool DeviceManager::StartRuntime(android::Pipe* reader, android::Pipe* writer)
         // clean up old thread
         printf("Sim: Waiting for old runtime thread..."); fflush(stdout);
         code = mThread->Wait();        // join the old thread
-        printf("done (code=%d)\n", (int) code);
+        printf("done (code=%ld)\n", (long) code);
 
         delete mThread;
         mThread = NULL;
@@ -916,13 +916,13 @@ void* DeviceManager::DeviceThread::Entry(void)
      * Right now we're just shipping a big binary blob over.
      */
     assert(android::Simulator::kValuesPerDisplay >= 5);
-    long buf[1 + 1 + mpDeviceManager->GetNumDisplays() *
+    int buf[1 + 1 + mpDeviceManager->GetNumDisplays() *
                     android::Simulator::kValuesPerDisplay];
     buf[0] = android::Simulator::kDisplayConfigMagic;
     buf[1] = mpDeviceManager->GetNumDisplays();
     for (int i = 0; i < mpDeviceManager->GetNumDisplays(); i++) {
         DeviceManager::Display* pDisplay = mpDeviceManager->GetDisplay(i);
-        long* pBuf = &buf[2 + android::Simulator::kValuesPerDisplay * i];
+        int* pBuf = &buf[2 + android::Simulator::kValuesPerDisplay * i];
 
         pBuf[0] = pDisplay->GetWidth();
         pBuf[1] = pDisplay->GetHeight();

@@ -5,7 +5,7 @@
  * may not use this file except in compliance with the License. You may obtain a
  * copy of the License at
  * 
- * http://www.eclipse.org/org/documents/epl-v10.php
+ *      http://www.eclipse.org/org/documents/epl-v10.php
  * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
@@ -16,9 +16,8 @@
 package com.android.ide.eclipse.tests.functests.sampleProjects;
 
 import com.android.ide.eclipse.adt.project.ProjectHelper;
-import com.android.ide.eclipse.adt.project.internal.StubSampleProjectWizard;
+import com.android.ide.eclipse.adt.wizards.newproject.StubSampleProjectWizard;
 import com.android.ide.eclipse.tests.FuncTestCase;
-
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResourceChangeEvent;

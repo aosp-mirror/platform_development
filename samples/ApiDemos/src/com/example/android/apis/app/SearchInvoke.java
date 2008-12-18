@@ -22,6 +22,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.SearchManager;
 import android.os.Bundle;
+import android.provider.SearchRecentSuggestions;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -111,6 +112,8 @@ public class SearchInvoke extends Activity
         
             // first, get rid of our menus (if any)
         menu.removeItem(0);
+        menu.removeItem(1);
+        
             // next, add back item(s) based on current menu mode
         switch (mMenuMode.getSelectedItemPosition())
         {
@@ -131,6 +134,8 @@ public class SearchInvoke extends Activity
             item = menu.add( 0, 0, 0, "(Disabled)");
             break;
         }
+        
+        item = menu.add(0, 1, 0, "Clear History");
         return true;
     }
     
@@ -166,6 +171,9 @@ public class SearchInvoke extends Activity
                     .show();
                 break;
             }
+            break;
+        case 1:
+            clearSearchHistory();
             break;
         }
     
@@ -209,6 +217,25 @@ public class SearchInvoke extends Activity
         
         // Returning true indicates that we did launch the search, instead of blocking it.
         return true;
+    }
+    
+    /**
+     * Any application that implements search suggestions based on previous actions (such as
+     * recent queries, page/items viewed, etc.) should provide a way for the user to clear the
+     * history.  This gives the user a measure of privacy, if they do not wish for their recent
+     * searches to be replayed by other users of the device (via suggestions).
+     * 
+     * This example shows how to clear the search history for apps that use 
+     * android.provider.SearchRecentSuggestions.  If you have developed a custom suggestions
+     * provider, you'll need to provide a similar API for clearing history.
+     * 
+     * In this sample app we call this method from a "Clear History" menu item.  You could also 
+     * implement the UI in your preferences, or any other logical place in your UI.
+     */
+    private void clearSearchHistory() {
+        SearchRecentSuggestions suggestions = new SearchRecentSuggestions(this, 
+                SearchSuggestionSampleProvider.AUTHORITY, SearchSuggestionSampleProvider.MODE);
+        suggestions.clearHistory();
     }
     
 }

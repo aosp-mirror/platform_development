@@ -151,7 +151,7 @@ xalloc0( size_t  sz )
 
 #define  xnew0(p)   (p) = xalloc0(sizeof(*(p)))
 
-#define  xfree(p)    ({  free((p)), (p) = NULL; })
+#define  xfree(p)    (free((p)), (p) = NULL)
 
 static void*
 xrealloc( void*  block, size_t  size )
@@ -622,13 +622,6 @@ fdhandler_event( FDHandler*  f, int  events )
 {
    int  len;
 
-    if (events & (EPOLLHUP|EPOLLERR)) {
-        /* disconnection */
-        D("%s: disconnect on fd %d", __FUNCTION__, f->fd);
-        receiver_close( f->receiver );
-        return;
-    }
-
     if (events & EPOLLIN) {
         Packet*  p = packet_alloc();
         int      len;
@@ -641,6 +634,19 @@ fdhandler_event( FDHandler*  f, int  events )
             p->channel = -101;  /* special debug value */
             receiver_post( f->receiver, p );
         }
+    }
+
+    /* in certain cases, it's possible to have both EPOLLIN and
+     * EPOLLHUP at the same time. This indicates that there is incoming
+     * data to read, but that the connection was nonetheless closed
+     * by the sender. Be sure to read the data before closing
+     * the receiver to avoid packet loss.
+     */
+    if (events & (EPOLLHUP|EPOLLERR)) {
+        /* disconnection */
+        D("%s: disconnect on fd %d", __FUNCTION__, f->fd);
+        receiver_close( f->receiver );
+        return;
     }
 
     if (events & EPOLLOUT && f->out_first) {
@@ -687,13 +693,6 @@ fdhandler_init( FDHandler*      f,
 static void
 fdhandler_accept_event( FDHandler*  f, int  events )
 {
-    if (events & (EPOLLHUP|EPOLLERR)) {
-        /* disconnecting !! */
-        D("%s: closing fd %d", __FUNCTION__, f->fd);
-        receiver_close( f->receiver );
-        return;
-    }
-
     if (events & EPOLLIN) {
         /* this is an accept - send a dummy packet to the receiver */
         Packet*  p = packet_alloc();
@@ -702,6 +701,13 @@ fdhandler_accept_event( FDHandler*  f, int  events )
         p->data[0] = 1;
         p->len     = 1;
         receiver_post( f->receiver, p );
+    }
+
+    if (events & (EPOLLHUP|EPOLLERR)) {
+        /* disconnecting !! */
+        D("%s: closing fd %d", __FUNCTION__, f->fd);
+        receiver_close( f->receiver );
+        return;
     }
 }
 
@@ -1243,8 +1249,9 @@ static Multiplexer  _multiplexer[1];
 #define  QEMUD_PREFIX  "qemud_"
 
 static const struct { const char* name; ChannelType  ctype; }   default_channels[] = {
-    { "gsm", CHANNEL_DUPLEX },     /* GSM AT command channel, used by commands/rild/rild.c */
-    { "gps", CHANNEL_BROADCAST },  /* GPS NMEA commands, used by libs/hardware/qemu_gps.c  */
+    { "gsm", CHANNEL_DUPLEX },       /* GSM AT command channel, used by commands/rild/rild.c */
+    { "gps", CHANNEL_BROADCAST },    /* GPS NMEA commands, used by libs/hardware/qemu_gps.c  */
+    { "control", CHANNEL_DUPLEX },   /* Used for power/leds/vibrator/etc... */
     { NULL, 0 }
 };
 

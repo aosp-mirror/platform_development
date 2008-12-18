@@ -17,6 +17,8 @@
 package com.example.android.apis;
 
 import android.test.ApplicationTestCase;
+import android.test.suitebuilder.annotation.MediumTest;
+import android.test.suitebuilder.annotation.SmallTest;
 
 /**
  * This is a simple framework for a test of an Application.  See 
@@ -45,12 +47,14 @@ public class ApiDemosApplicationTests extends ApplicationTestCase<ApiDemosApplic
        * explain any and all failures in other tests.  This is not guaranteed
        * to run before other tests, as junit uses reflection to find the tests.
        */
+      @SmallTest
       public void testPreconditions() {
       }
       
       /**
        * Test basic startup/shutdown of Application
        */
+      @MediumTest
       public void testSimpleCreate() {
           createApplication(); 
       }

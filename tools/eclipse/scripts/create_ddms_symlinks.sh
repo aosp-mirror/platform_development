@@ -4,58 +4,76 @@
 # Run this from device/tools/eclipse/scripts
 #----------------------------------------------------------------------------|
 
-CMD="ln -svf"
-DIR="ln -svf"
+set -e
+
 HOST=`uname`
 if [ "${HOST:0:6}" == "CYGWIN" ]; then
-  CMD="cp -rvf"
-  DIR="rsync -avW --delete-after"
+    # We can't use symlinks under Cygwin
+
+    function cpfile { # $1=dest $2=source
+        cp -fv $2 $1/
+    }
+
+    function cpdir() { # $1=dest $2=source
+        rsync -avW --delete-after $2 $1
+    }
+
+else
+    # For all other systems which support symlinks
+
+    # computes the "reverse" path, e.g. "a/b/c" => "../../.."
+    function back() {
+        echo $1 | sed 's@[^/]*@..@g'
+    }
+
+    function cpfile { # $1=dest $2=source
+        ln -svf `back $1`/$2 $1/
+    }
+
+    function cpdir() { # $1=dest $2=source
+        ln -svf `back $1`/$2 $1
+    }
 fi
 
-cd ../plugins/com.android.ide.eclipse.ddms
-mkdir -p libs
-cd libs
-$CMD ../../../../../prebuilt/common/jfreechart/jcommon-1.0.12.jar .
-$CMD ../../../../../prebuilt/common/jfreechart/jfreechart-1.0.9.jar .
-$CMD ../../../../../prebuilt/common/jfreechart/jfreechart-1.0.9-swt.jar .
-
-cd ../src/com/android
-$DIR ../../../../../../ddms/libs/ddmlib/src/com/android/ddmlib .
-$DIR ../../../../../../ddms/libs/ddmuilib/src/com/android/ddmuilib .
-
-# goes back to the icons directory
-cd ../../../icons/
-$CMD ../../../../ddms/libs/ddmuilib/src/resources/images/debug-attach.png .
-$CMD ../../../../ddms/libs/ddmuilib/src/resources/images/debug-wait.png .
-$CMD ../../../../ddms/libs/ddmuilib/src/resources/images/debug-error.png .
-$CMD ../../../../ddms/libs/ddmuilib/src/resources/images/device.png .
-$CMD ../../../../ddms/libs/ddmuilib/src/resources/images/emulator.png .
-$CMD ../../../../ddms/libs/ddmuilib/src/resources/images/heap.png .
-$CMD ../../../../ddms/libs/ddmuilib/src/resources/images/thread.png .
-$CMD ../../../../ddms/libs/ddmuilib/src/resources/images/empty.png .
-$CMD ../../../../ddms/libs/ddmuilib/src/resources/images/warning.png .
-$CMD ../../../../ddms/libs/ddmuilib/src/resources/images/d.png .
-$CMD ../../../../ddms/libs/ddmuilib/src/resources/images/e.png .
-$CMD ../../../../ddms/libs/ddmuilib/src/resources/images/i.png .
-$CMD ../../../../ddms/libs/ddmuilib/src/resources/images/v.png .
-$CMD ../../../../ddms/libs/ddmuilib/src/resources/images/w.png .
-$CMD ../../../../ddms/libs/ddmuilib/src/resources/images/add.png .
-$CMD ../../../../ddms/libs/ddmuilib/src/resources/images/delete.png .
-$CMD ../../../../ddms/libs/ddmuilib/src/resources/images/edit.png .
-$CMD ../../../../ddms/libs/ddmuilib/src/resources/images/save.png .
-$CMD ../../../../ddms/libs/ddmuilib/src/resources/images/push.png .
-$CMD ../../../../ddms/libs/ddmuilib/src/resources/images/pull.png .
-$CMD ../../../../ddms/libs/ddmuilib/src/resources/images/clear.png .
-$CMD ../../../../ddms/libs/ddmuilib/src/resources/images/up.png .
-$CMD ../../../../ddms/libs/ddmuilib/src/resources/images/down.png .
-$CMD ../../../../ddms/libs/ddmuilib/src/resources/images/gc.png .
-$CMD ../../../../ddms/libs/ddmuilib/src/resources/images/halt.png .
-$CMD ../../../../ddms/libs/ddmuilib/src/resources/images/load.png .
-$CMD ../../../../ddms/libs/ddmuilib/src/resources/images/importBug.png .
-$CMD ../../../../ddms/libs/ddmuilib/src/resources/images/play.png .
-$CMD ../../../../ddms/libs/ddmuilib/src/resources/images/pause.png .
-$CMD ../../../../ddms/libs/ddmuilib/src/resources/images/forward.png .
-$CMD ../../../../ddms/libs/ddmuilib/src/resources/images/backward.png .
+# CD to the top android directory
+D=`dirname "$0"`
+cd "$D/../../../../"
 
 
+BASE="development/tools/eclipse/plugins/com.android.ide.eclipse.ddms"
+
+DEST=$BASE/libs
+mkdir -p $DEST
+for i in prebuilt/common/jfreechart/*.jar; do
+  cpfile $DEST $i
+done
+
+DEST=$BASE/src/com/android
+mkdir -p $DEST
+for i in development/tools/ddms/libs/ddmlib/src/com/android/ddmlib \
+         development/tools/ddms/libs/ddmuilib/src/com/android/ddmuilib ; do
+  cpdir $DEST $i
+done
+
+DEST=$BASE/icons
+mkdir -p $DEST
+for i in \
+    add.png \
+    backward.png \
+    clear.png \
+    d.png debug-attach.png debug-error.png debug-wait.png delete.png device.png down.png \
+    e.png edit.png empty.png emulator.png \
+    forward.png \
+    gc.png \
+    heap.png halt.png \
+    i.png importBug.png \
+    load.png \
+    pause.png play.png pull.png push.png \
+    save.png \
+    thread.png \
+    up.png \
+    v.png \
+    w.png warning.png ; do
+  cpfile $DEST development/tools/ddms/libs/ddmuilib/src/resources/images/$i
+done
 

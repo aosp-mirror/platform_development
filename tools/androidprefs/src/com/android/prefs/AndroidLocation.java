@@ -32,6 +32,11 @@ public final class AndroidLocation {
     private static final String ANDROID_SDK_VERSION = "SDK-1.0";
 
     /**
+     * VM folder inside the path returned by {@link #getFolder()}
+     */
+    public static final String FOLDER_VMS = "vm";
+
+    /**
      * Throw when the location of the android folder couldn't be found.
      */
     public static final class AndroidLocationException extends Exception {

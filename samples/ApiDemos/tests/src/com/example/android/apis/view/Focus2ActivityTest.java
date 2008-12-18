@@ -19,6 +19,7 @@ package com.example.android.apis.view;
 import com.example.android.apis.R;
 
 import android.test.ActivityInstrumentationTestCase;
+import android.test.suitebuilder.annotation.MediumTest;
 import android.view.KeyEvent;
 import android.widget.Button;
 
@@ -67,6 +68,7 @@ public class Focus2ActivityTest extends ActivityInstrumentationTestCase<Focus2> 
      * explain any and all failures in other tests.  This is not guaranteed
      * to run before other tests, as junit uses reflection to find the tests.
      */
+    @MediumTest
     public void testPreconditions() {
         assertTrue("center button should be right of left button",
                 mLeftButton.getRight() < mCenterButton.getLeft());
@@ -75,11 +77,13 @@ public class Focus2ActivityTest extends ActivityInstrumentationTestCase<Focus2> 
         assertTrue("left button should be focused", mLeftButton.isFocused());
     }
 
+    @MediumTest
     public void testGoingRightFromLeftButtonJumpsOverCenterToRight() {
         sendKeys(KeyEvent.KEYCODE_DPAD_RIGHT);
         assertTrue("right button should be focused", mRightButton.isFocused());
     }
 
+    @MediumTest
     public void testGoingLeftFromRightButtonGoesToCenter()  {
         // Give right button focus by having it request focus.  We post it
         // to the UI thread because we are not running on the same thread, and

@@ -24,6 +24,8 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.test.MoreAsserts;
 import android.test.ServiceTestCase;
+import android.test.suitebuilder.annotation.MediumTest;
+import android.test.suitebuilder.annotation.SmallTest;
 
 /**
  * This is a simple framework for a test of a Service.  See {@link android.test.ServiceTestCase
@@ -51,12 +53,14 @@ public class LocalServiceTest extends ServiceTestCase<LocalService> {
      * explain any and all failures in other tests.  This is not guaranteed
      * to run before other tests, as junit uses reflection to find the tests.
      */
+    @SmallTest
     public void testPreconditions() {
     }
     
     /**
      * Test basic startup/shutdown of Service
      */
+    @SmallTest
     public void testStartable() {
         Intent startIntent = new Intent();
         startIntent.setClass(getContext(), LocalService.class);
@@ -66,6 +70,7 @@ public class LocalServiceTest extends ServiceTestCase<LocalService> {
     /**
      * Test binding to service
      */
+    @MediumTest
     public void testBindable() {
         Intent startIntent = new Intent();
         startIntent.setClass(getContext(), LocalService.class);

@@ -23,7 +23,7 @@ import android.os.Bundle;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.Window;
-
+import java.io.IOException;
 
 // ----------------------------------------------------------------------
 
@@ -64,7 +64,13 @@ class Preview extends SurfaceView implements SurfaceHolder.Callback {
         // The Surface has been created, acquire the camera and tell it where
         // to draw.
         mCamera = Camera.open();
-        mCamera.setPreviewDisplay(holder);
+        try {
+           mCamera.setPreviewDisplay(holder);
+        } catch (IOException exception) {
+            mCamera.release();
+            mCamera = null;
+            // TODO: add more exception handling logic here
+        }
     }
 
     public void surfaceDestroyed(SurfaceHolder holder) {

@@ -216,9 +216,6 @@ public class UiElementPullParserTest extends TestCase {
         } catch (XmlPullParserException e) {
             e.printStackTrace();
             assertTrue(false);
-        } catch (IOException e) {
-            e.printStackTrace();
-            assertTrue(false);
         }
     }
 

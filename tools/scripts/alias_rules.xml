@@ -1,0 +1,52 @@
+<?xml version="1.0" ?>
+<project name="alias_rules" default="package">
+
+    <!-- No user servicable parts below. -->
+
+    <!-- Input directories -->
+    <property name="resource-dir" value="res" />
+
+    <!-- The final package file to generate -->
+    <property name="out-package" value="${ant.project.name}.apk" />
+
+    <!-- Tools -->
+    <condition property="aapt" value="${android-tools}/aapt.exe" else="${android-tools}/aapt" >
+        <os family="windows"/>
+    </condition>
+    <condition property="adb" value="${android-tools}/adb.exe" else="${android-tools}/adb" >
+        <os family="windows"/>
+    </condition>
+    <property name="android-jar" value="${sdk-folder}/android.jar" />
+
+    <!-- Rules -->
+
+    <!-- Packages the manifest and the resource files -->
+    <target name="package-res">
+        <echo>Packaging resources...</echo>
+        <exec executable="${aapt}" failonerror="true">
+            <arg value="package" />
+            <arg value="-f" />
+            <arg value="-M" />
+            <arg value="AndroidManifest.xml" />
+            <arg value="-S" />
+            <arg value="${resource-dir}" />
+            <arg value="-I" />
+            <arg value="${android-jar}" />
+            <arg value="-F" />
+            <arg value="${out-package}" />
+        </exec>
+    </target>
+
+    <!-- Create the package file for this project from the sources. -->
+    <target name="package" depends="package-res" />
+
+    <!-- Create the package and install package on the default emulator -->
+    <target name="install" depends="package">
+        <echo>Sending package to default emulator...</echo>
+        <exec executable="${adb}" failonerror="true">
+            <arg value="install" />
+            <arg value="${out-package}" />
+        </exec>
+    </target>
+
+</project>

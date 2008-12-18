@@ -21,7 +21,7 @@ import android.content.ComponentName;
 import android.content.pm.PackageManager;
 import android.location.LocationManager;
 import android.os.Bundle;
-import android.provider.Settings.System;
+import android.provider.Settings;
 
 /**
  * Entry point for SDK SetupWizard.
@@ -34,16 +34,16 @@ public class DefaultActivity extends Activity {
         super.onCreate(icicle);
         
         // Add a persistent setting to allow other apps to know the device has been provisioned.
-        System.putInt(getContentResolver(), System.DEVICE_PROVISIONED, 1);
+        Settings.Secure.putInt(getContentResolver(), Settings.Secure.DEVICE_PROVISIONED, 1);
 
         // Enable the GPS.
         // Not needed since this SDK will contain the Settings app.
         LocationManager locationManager = (LocationManager)getSystemService(LOCATION_SERVICE);
-        System.putString(getContentResolver(), System.LOCATION_PROVIDERS_ALLOWED, LocationManager.GPS_PROVIDER);
+        Settings.Secure.putString(getContentResolver(), Settings.Secure.LOCATION_PROVIDERS_ALLOWED, LocationManager.GPS_PROVIDER);
         locationManager.updateProviders();
         
         // enable install from non market
-        System.putInt(getContentResolver(), System.INSTALL_NON_MARKET_APPS, 1);
+        Settings.Secure.putInt(getContentResolver(), Settings.Secure.INSTALL_NON_MARKET_APPS, 1);
 
         // remove this activity from the package manager.
         PackageManager pm = getPackageManager();

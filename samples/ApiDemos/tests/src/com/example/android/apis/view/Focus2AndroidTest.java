@@ -20,6 +20,7 @@ import com.example.android.apis.R;
 
 import android.content.Context;
 import android.test.AndroidTestCase;
+import android.test.suitebuilder.annotation.SmallTest;
 import android.view.FocusFinder;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -87,6 +88,7 @@ public class Focus2AndroidTest extends AndroidTestCase {
      * explain any and all failures in other tests.  This is not guaranteed
      * to run before other tests, as junit uses reflection to find the tests.
      */
+    @SmallTest
     public void testPreconditions() {
         assertNotNull(mLeftButton);
         assertTrue("center button should be right of left button",
@@ -95,12 +97,14 @@ public class Focus2AndroidTest extends AndroidTestCase {
                 mCenterButton.getRight() < mRightButton.getLeft());
     }
 
+    @SmallTest
     public void testGoingRightFromLeftButtonJumpsOverCenterToRight() {
         assertEquals("right should be next focus from left",
                 mRightButton,
                 mFocusFinder.findNextFocus(mRoot, mLeftButton, View.FOCUS_RIGHT));
     }
 
+    @SmallTest
     public void testGoingLeftFromRightButtonGoesToCenter() {
         assertEquals("center should be next focus from right",
                 mCenterButton,

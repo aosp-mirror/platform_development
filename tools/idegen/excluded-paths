@@ -1,0 +1,64 @@
+# Default Idegen excluded paths file. Contains regular expressions, one per
+# line, which match paths of directories and .jar files that should be excluded
+# from the IDE configuration.
+#
+# We want to exclude as litte as possible by default, so it's important to
+# document the reason for each exclusion.
+#
+# Developers can also create an 'excluded-paths' file in the project's root
+# directory and add their own excludes to slim down their build.
+#
+# Currently, we lump all the .java files together into one big module, so you
+# can't have two classes with the same name at once. In the future, we'll
+# generate individual modules, each with their own dependencies, much like the
+# build, so we won't have to worry about duplicate names any more than the
+# build does.
+#
+# Note: Google-specific excludes go in vendor/google/excluded-paths.
+
+# Generated API stubs. We only want the originals in our IDE.
+android_stubs
+
+# Extra copies of JUnit.
+^dalvik/dx/src/junit$
+^dalvik/libcore/luni/src/test/java/junit$
+
+# Duplicate R.java files. We'll keep the versions from the "intermediates"
+# directories.
+^out/target/common/R$
+
+# Not actually built. Also disabled in make file.
+^development/samples/MySampleRss$
+^development/apps/OBJViewer$
+^packages/apps/IM/samples/PluginDemo$
+
+# We don't currently support development tool source code. Development tools
+# typically have their own IDE configurations anyway.
+#
+# The main problem is that the development tools are meant to run against a
+# fully featured desktop VM while almost everything in our IDE configuration
+# is meant to run against Android's more limited APIs. Mixing the two
+# environments in one IDE configuration doesn't work well.
+^development/tools$
+^external/jdiff$
+^external/emma$
+^external/clearsilver$
+layoutlib
+^prebuilt/.*\.jar$
+^dalvik/.*\.jar$
+^build/tools/droiddoc$
+
+# Each test has a Main.java in the default package, so they conflict with
+# each other.
+^dalvik/tests$
+
+# We can only support one policy impl at a time.
+^frameworks/policies/base/mid$
+#^frameworks/policies/base/phone$
+
+# We don't want compiled jars.
+^out/.*\.jar$
+
+# This directory contains only an R.java file which is the same as the one in
+# Camera_intermediates.
+^out/target/common/obj/APPS/CameraTests_intermediates$

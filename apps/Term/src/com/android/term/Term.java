@@ -20,16 +20,13 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.content.res.TypedArray;
-import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
-import android.graphics.ColorFilter;
-import android.graphics.ColorMatrix;
-import android.graphics.LightingColorFilter;
 import android.graphics.ColorMatrixColorFilter;
 import android.graphics.Paint;
 import android.graphics.PorterDuff;
@@ -50,26 +47,19 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
-import android.view.SubMenu;
 import android.view.View;
 
 import java.io.FileDescriptor;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Map;
+import java.util.ArrayList;
 
 /**
  * A terminal emulator activity.
  */
 
 public class Term extends Activity {
-
-    /**
-     * Set to true to configure a test mode where the terminal emulator talks
-     * directly to a test application, rather than to a shell.
-     */
-    public static final boolean TEST_MODE = false;
 
     /**
      * Set to true to log each character received from the remote process to the
@@ -99,6 +89,8 @@ public class Term extends Activity {
      */
     private FileDescriptor mTermFd;
 
+    private boolean mShellRunning;
+
     /**
      * Used to send data to the remote process.
      */
@@ -110,49 +102,46 @@ public class Term extends Activity {
      */
     private TermKeyListener mKeyListener;
 
-    private boolean mWhiteOnBlue = true;
-
-    private float mRotation;
-
     /**
      * The name of our emulator view in the view resource.
      */
     private static final int EMULATOR_VIEW = R.id.emulatorView;
 
-    // Menu IDs:
+    private int mFontSize = 9;
+    private int mColorId = 2;
+    private int mControlKeyId = 0;
 
-    private static final int MENU_GROUP_NONE = Menu.FIRST;
-    private static final int MENU_SCREEN_SIZE_ID = 0;
-    private static final int MENU_SCREEN_SIZE_ITEM_ID = 1;
-    private static final int MENU_SCREEN_SIZE_ITEM_COUNT = 10;
-    private static final int MENU_SCREEN_SIZE_ITEM_ID_END =
-        MENU_SCREEN_SIZE_ITEM_ID + MENU_SCREEN_SIZE_ITEM_COUNT;
-
-    private static final int MENU_WHITE_ON_BLUE_ID =
-        MENU_SCREEN_SIZE_ITEM_ID_END;
-    private static final int MENU_RESET_TERMINAL_ID =
-        MENU_SCREEN_SIZE_ITEM_ID_END + 1;
-    private static final int MENU_EMAIL_TRANSCRIPT_ID =
-        MENU_SCREEN_SIZE_ITEM_ID_END + 2;
-
-    private static final int MENU_DOCUMENT_KEYS_ID =
-            MENU_EMAIL_TRANSCRIPT_ID + 1;
-
-    private static final String[] MENU_SCREEN_SIZE_LABELS = {
-        "4 x 8", "6 pt", "7 pt", "8 pt", "9 pt", "10 pt", "12 pt",
-        "14 pt", "16 pt", "20 pt"};
-
-    private static final int[] TEXT_SIZE = {0, 6, 7, 8, 9, 10, 12, 14, 16, 20};
-
-    private int mFontSelection = 3;
-
-    private static final String FONT_SELECTION_KEY = "font selection";
-    private static final String ROTATION_KEY = "rotation";
-    private static final String WHITE_ON_BLUE_KEY = "whiteOnBlue";
+    private static final String FONTSIZE_KEY = "fontsize";
+    private static final String COLOR_KEY = "color";
+    private static final String CONTROLKEY_KEY = "controlkey";
+    private static final String SHELL_KEY = "shell";
+    private static final String INITIALCOMMAND_KEY = "initialcommand";
 
     public static final int WHITE = 0xffffffff;
     public static final int BLACK = 0xff000000;
     public static final int BLUE = 0xff344ebd;
+
+    private static final int[][] COLOR_SCHEMES = {
+        {BLACK, WHITE}, {WHITE, BLACK}, {WHITE, BLUE}};
+
+    private static final int[] CONTROL_KEY_SCHEMES = {
+        KeyEvent.KEYCODE_DPAD_CENTER,
+        KeyEvent.KEYCODE_AT,
+        KeyEvent.KEYCODE_ALT_LEFT,
+        KeyEvent.KEYCODE_ALT_RIGHT
+    };
+    private static final String[] CONTROL_KEY_NAME = {
+        "Ball", "@", "Left-Alt", "Right-Alt"
+    };
+
+    private int mControlKeyCode;
+
+    private final static String DEFAULT_SHELL = "/system/bin/sh -";
+    private String mShell;
+
+    private final static String DEFAULT_INITIAL_COMMAND =
+        "export PATH=/data/local/bin:$PATH";
+    private String mInitialCommand;
 
     private SharedPreferences mPrefs;
 
@@ -160,67 +149,215 @@ public class Term extends Activity {
     public void onCreate(Bundle icicle) {
         super.onCreate(icicle);
         Log.e(Term.LOG_TAG, "onCreate");
+        mPrefs = PreferenceManager.getDefaultSharedPreferences(this);
+        mPrefs.registerOnSharedPreferenceChangeListener(
+                new SharedPreferences.OnSharedPreferenceChangeListener(){
+
+                    public void onSharedPreferenceChanged(
+                            SharedPreferences sharedPreferences, String key) {
+                        readPrefs();
+                        updatePrefs();
+                    }});
+        readPrefs();
 
         setContentView(R.layout.term_activity);
 
         mEmulatorView = (EmulatorView) findViewById(EMULATOR_VIEW);
 
+        startListening();
+
+        mKeyListener = new TermKeyListener();
+
+        updatePrefs();
+    }
+
+    private void startListening() {
         int[] processId = new int[1];
 
-        if (TEST_MODE) {
-            // This is a vt100 test suite.
-            mTermFd = Exec.createSubprocess("/sbin/vttest", null, null);
-        } else {
-            // This is the standard Android shell.
-            mTermFd = Exec.createSubprocess("/system/bin/sh", "-", null,
-                    processId);
-        }
+        createSubprocess(processId);
+        mShellRunning = true;
 
         final int procId = processId[0];
-        final Term me = this;
 
         final Handler handler = new Handler() {
             @Override
             public void handleMessage(Message msg) {
-                me.finish();
+                mShellRunning = false;
             }
         };
 
         Runnable watchForDeath = new Runnable() {
 
             public void run() {
-                Log.e(Term.LOG_TAG, "waiting for: " + procId);
+                Log.i(Term.LOG_TAG, "waiting for: " + procId);
                int result = Exec.waitFor(procId);
-                Log.e(Term.LOG_TAG, "Subprocess exited: " + result);
-                handler.sendEmptyMessage(0);
+                Log.i(Term.LOG_TAG, "Subprocess exited: " + result);
+                handler.sendEmptyMessage(result);
              }
 
         };
         Thread watcher = new Thread(watchForDeath);
         watcher.start();
 
-        mPrefs = PreferenceManager.getDefaultSharedPreferences(this);
-        mFontSelection = mPrefs.getInt(FONT_SELECTION_KEY, mFontSelection);
-        mWhiteOnBlue = mPrefs.getBoolean(WHITE_ON_BLUE_KEY, mWhiteOnBlue);
-        mRotation = mPrefs.getFloat(ROTATION_KEY, mRotation);
-
         mTermOut = new FileOutputStream(mTermFd);
 
         mEmulatorView.initialize(mTermFd, mTermOut);
-        mEmulatorView.setTextSize(TEXT_SIZE[mFontSelection]);
-        mEmulatorView.setRotation(mRotation);
-        setColors();
 
-        mKeyListener = new TermKeyListener();
+        sendInitialCommand();
+    }
+
+    private void sendInitialCommand() {
+        String initialCommand = mInitialCommand;
+        if (initialCommand == null) {
+            initialCommand = DEFAULT_INITIAL_COMMAND;
+        }
+        if (initialCommand.length() > 0) {
+            write(initialCommand + '\r');
+        }
+    }
+
+    private void restart() {
+        startActivity(getIntent());
+        finish();
+    }
+
+    private void write(String data) {
+        try {
+            mTermOut.write(data.getBytes());
+            mTermOut.flush();
+        } catch (IOException e) {
+            // Ignore exception
+            // We don't really care if the receiver isn't listening.
+            // We just make a best effort to answer the query.
+        }
+    }
+
+    private void createSubprocess(int[] processId) {
+        String shell = mShell;
+        if (shell == null) {
+            shell = DEFAULT_SHELL;
+        }
+        ArrayList<String> args = parse(shell);
+        String arg0 = args.get(0);
+        String arg1 = null;
+        String arg2 = null;
+        if (args.size() >= 2) {
+            arg1 = args.get(1);
+        }
+        if (args.size() >= 3) {
+            arg2 = args.get(2);
+        }
+        mTermFd = Exec.createSubprocess(arg0, arg1, arg2, processId);
+    }
+
+    private ArrayList<String> parse(String cmd) {
+        final int PLAIN = 0;
+        final int WHITESPACE = 1;
+        final int INQUOTE = 2;
+        int state = WHITESPACE;
+        ArrayList<String> result =  new ArrayList<String>();
+        int cmdLen = cmd.length();
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < cmdLen; i++) {
+            char c = cmd.charAt(i);
+            if (state == PLAIN) {
+                if (Character.isWhitespace(c)) {
+                    result.add(builder.toString());
+                    builder.delete(0,builder.length());
+                    state = WHITESPACE;
+                } else if (c == '"') {
+                    state = INQUOTE;
+                } else {
+                    builder.append(c);
+                }
+            } else if (state == WHITESPACE) {
+                if (Character.isWhitespace(c)) {
+                    // do nothing
+                } else if (c == '"') {
+                    state = INQUOTE;
+                } else {
+                    state = PLAIN;
+                    builder.append(c);
+                }
+            } else if (state == INQUOTE) {
+                if (c == '\\') {
+                    if (i + 1 < cmdLen) {
+                        i += 1;
+                        builder.append(cmd.charAt(i));
+                    }
+                } else if (c == '"') {
+                    state = PLAIN;
+                } else {
+                    builder.append(c);
+                }
+            }
+        }
+        if (builder.length() > 0) {
+            result.add(builder.toString());
+        }
+        return result;
+    }
+
+    private void readPrefs() {
+        mFontSize = readIntPref(FONTSIZE_KEY, mFontSize, 20);
+        mColorId = readIntPref(COLOR_KEY, mColorId, COLOR_SCHEMES.length - 1);
+        mControlKeyId = readIntPref(CONTROLKEY_KEY, mControlKeyId,
+                CONTROL_KEY_SCHEMES.length - 1);
+        {
+            String newShell = readStringPref(SHELL_KEY, mShell);
+            if ((newShell == null) || ! newShell.equals(mShell)) {
+                if (mShell != null) {
+                    Log.i(Term.LOG_TAG, "New shell set. Restarting.");
+                    restart();
+                }
+                mShell = newShell;
+            }
+        }
+        {
+            String newInitialCommand = readStringPref(INITIALCOMMAND_KEY,
+                    mInitialCommand);
+            if ((newInitialCommand == null)
+                    || ! newInitialCommand.equals(mInitialCommand)) {
+                if (mInitialCommand != null) {
+                    Log.i(Term.LOG_TAG, "New initial command set. Restarting.");
+                    restart();
+                }
+                mInitialCommand = newInitialCommand;
+            }
+        }
+    }
+
+    private void updatePrefs() {
+        mEmulatorView.setTextSize(mFontSize);
+        setColors();
+        mControlKeyCode = CONTROL_KEY_SCHEMES[mControlKeyId];
+    }
+
+    private int readIntPref(String key, int defaultValue, int maxValue) {
+        int val;
+        try {
+            val = Integer.parseInt(
+                mPrefs.getString(key, Integer.toString(defaultValue)));
+        } catch (NumberFormatException e) {
+            val = defaultValue;
+        }
+        val = Math.max(0, Math.min(val, maxValue));
+        return val;
+    }
+
+    private String readStringPref(String key, String defaultValue) {
+        return mPrefs.getString(key, defaultValue);
     }
 
     @Override
     public void onPause() {
         SharedPreferences.Editor e = mPrefs.edit();
         e.clear();
-        e.putInt(FONT_SELECTION_KEY, mFontSelection);
-        e.putBoolean(WHITE_ON_BLUE_KEY, mWhiteOnBlue);
-        e.putFloat(ROTATION_KEY, mRotation);
+        e.putString(FONTSIZE_KEY, Integer.toString(mFontSize));
+        e.putString(COLOR_KEY, Integer.toString(mColorId));
+        e.putString(CONTROLKEY_KEY, Integer.toString(mControlKeyId));
+        e.putString(SHELL_KEY, mShell);
+        e.putString(INITIALCOMMAND_KEY, mInitialCommand);
         e.commit();
 
         super.onPause();
@@ -235,7 +372,9 @@ public class Term extends Activity {
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if (isSystemKey(keyCode, event)) {
+        if (handleControlKey(keyCode, true)) {
+            return true;
+        } else if (isSystemKey(keyCode, event)) {
             // Don't intercept the system keys
             return super.onKeyDown(keyCode, event);
         } else if (handleDPad(keyCode, true)) {
@@ -257,7 +396,9 @@ public class Term extends Activity {
 
     @Override
     public boolean onKeyUp(int keyCode, KeyEvent event) {
-        if (isSystemKey(keyCode, event)) {
+        if (handleControlKey(keyCode, false)) {
+            return true;
+        } else if (isSystemKey(keyCode, event)) {
             // Don't intercept the system keys
             return super.onKeyUp(keyCode, event);
         } else if (handleDPad(keyCode, false)) {
@@ -268,44 +409,55 @@ public class Term extends Activity {
         return true;
     }
 
+    private boolean handleControlKey(int keyCode, boolean down) {
+        if (keyCode == mControlKeyCode) {
+            mKeyListener.handleControlKey(down);
+            return true;
+        }
+        return false;
+    }
+
     /**
      * Handle dpad left-right-up-down events. Don't handle
      * dpad-center, that's our control key.
      * @param keyCode
      * @param down
-     * @return
      */
     private boolean handleDPad(int keyCode, boolean down) {
         if (keyCode < KeyEvent.KEYCODE_DPAD_UP ||
-                keyCode > KeyEvent.KEYCODE_DPAD_RIGHT) {
+                keyCode > KeyEvent.KEYCODE_DPAD_CENTER) {
             return false;
         }
 
         if (down) {
             try {
-                char code;
-                switch (keyCode) {
-                case KeyEvent.KEYCODE_DPAD_UP:
-                    code = 'A';
-                    break;
-                case KeyEvent.KEYCODE_DPAD_DOWN:
-                    code = 'B';
-                    break;
-                case KeyEvent.KEYCODE_DPAD_LEFT:
-                    code = 'D';
-                    break;
-                default:
-                case KeyEvent.KEYCODE_DPAD_RIGHT:
-                    code = 'C';
-                    break;
-                }
-                mTermOut.write(27); // ESC
-                if (mEmulatorView.getKeypadApplicationMode()) {
-                    mTermOut.write('O');
+                if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER) {
+                    mTermOut.write('\r');
                 } else {
-                    mTermOut.write('[');
+                    char code;
+                    switch (keyCode) {
+                    case KeyEvent.KEYCODE_DPAD_UP:
+                        code = 'A';
+                        break;
+                    case KeyEvent.KEYCODE_DPAD_DOWN:
+                        code = 'B';
+                        break;
+                    case KeyEvent.KEYCODE_DPAD_LEFT:
+                        code = 'D';
+                        break;
+                    default:
+                    case KeyEvent.KEYCODE_DPAD_RIGHT:
+                        code = 'C';
+                        break;
+                    }
+                    mTermOut.write(27); // ESC
+                    if (mEmulatorView.getKeypadApplicationMode()) {
+                        mTermOut.write('O');
+                    } else {
+                        mTermOut.write('[');
+                    }
+                    mTermOut.write(code);
                 }
-                mTermOut.write(code);
             } catch (IOException e) {
                 // Ignore
             }
@@ -319,82 +471,36 @@ public class Term extends Activity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        SubMenu screenSize = menu.addSubMenu(MENU_GROUP_NONE,
-                MENU_SCREEN_SIZE_ID, 0, "Font Size");
-        String[] labels = MENU_SCREEN_SIZE_LABELS;
-        for (int i = 0; i < MENU_SCREEN_SIZE_ITEM_COUNT; i++) {
-            MenuItem item = screenSize.add(i, MENU_SCREEN_SIZE_ITEM_ID + i, 0,
-                    labels[i]);
-            item.setCheckable(true);
-        }
-        {
-            MenuItem item = menu.add(MENU_WHITE_ON_BLUE_ID, MENU_WHITE_ON_BLUE_ID,
-                0, "Toggle White on Blue");
-        }
-        menu.add(MENU_RESET_TERMINAL_ID, MENU_RESET_TERMINAL_ID,
-                0, "Reset Terminal");
-        menu.add(MENU_EMAIL_TRANSCRIPT_ID, MENU_EMAIL_TRANSCRIPT_ID,
-                0, "Email To...");
-        menu.add(MENU_DOCUMENT_KEYS_ID, MENU_DOCUMENT_KEYS_ID,
-                0, "Special keys...");
-        return true;
-    }
-
-    @Override
-    public boolean onPrepareOptionsMenu(Menu menu) {
-        super.onPrepareOptionsMenu(menu);
-        for (int i = 0; i < MENU_SCREEN_SIZE_ITEM_COUNT; i++) {
-            menu.findItem(MENU_SCREEN_SIZE_ITEM_ID + i).setChecked(i == mFontSelection);
-        }
+        getMenuInflater().inflate(R.menu.main, menu);
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
-        if (id >= MENU_SCREEN_SIZE_ITEM_ID
-                && id < MENU_SCREEN_SIZE_ITEM_ID_END) {
-            doSetFontSize(id - MENU_SCREEN_SIZE_ITEM_ID);
-            return true;
-        } else if (id == MENU_WHITE_ON_BLUE_ID) {
-            doWhiteOnBlue();
-        } else if (id == MENU_RESET_TERMINAL_ID) {
+        if (id == R.id.menu_preferences) {
+            doPreferences();
+        } else if (id == R.id.menu_reset) {
             doResetTerminal();
-        } else if (id == MENU_EMAIL_TRANSCRIPT_ID) {
+        } else if (id == R.id.menu_send_email) {
             doEmailTranscript();
-        } else if (id == MENU_DOCUMENT_KEYS_ID) {
+        } else if (id == R.id.menu_special_keys) {
             doDocumentKeys();
         }
         return super.onOptionsItemSelected(item);
     }
 
-    private void doWhiteOnBlue() {
-        mWhiteOnBlue = ! mWhiteOnBlue;
-        setColors();
-    }
-
-    private void doRotate90() {
-        mRotation = mRotation != 0.0f ? 0.0f : 90.0f;
-        mEmulatorView.setRotation(mRotation);
+    private void doPreferences() {
+        startActivity(new Intent(this, TermPreferences.class));
     }
 
     private void setColors() {
-        if (mWhiteOnBlue) {
-            mEmulatorView.setColors(WHITE, BLUE);
-        } else {
-            mEmulatorView.setColors(BLACK, WHITE);
-        }
-    }
-
-    private void doSetFontSize(int i) {
-        if (mFontSelection != i) {
-            mFontSelection = i;
-            mEmulatorView.setTextSize(TEXT_SIZE[i]);
-        }
+        int[] scheme = COLOR_SCHEMES[mColorId];
+        mEmulatorView.setColors(scheme[0], scheme[1]);
     }
 
     private void doResetTerminal() {
-        mEmulatorView.resetTerminal();
+        restart();
     }
 
     private void doEmailTranscript() {
@@ -411,15 +517,16 @@ public class Term extends Activity {
     }
 
     private void doDocumentKeys() {
+        String controlKey = CONTROL_KEY_NAME[mControlKeyId];
         new AlertDialog.Builder(this).
-            setTitle("Press Jog Ball and Key").
-            setMessage("Ball Space ==> Control-@ (NUL)\n"
-                    + "Ball A..Z ==> Control-A..Z\n"
-                    + "Ball 1 ==> Control-[ (ESC)\n"
-                    + "Ball 5 ==> Control-_\n"
-                    + "Ball . ==> Control-\\\n"
-                    + "Ball 0 ==> Control-]\n"
-                    + "Ball 6 ==> Control-^").
+            setTitle("Press " + controlKey + " and Key").
+            setMessage(controlKey + " Space ==> Control-@ (NUL)\n"
+                    + controlKey + " A..Z ==> Control-A..Z\n"
+                    + controlKey + " 1 ==> Control-[ (ESC)\n"
+                    + controlKey + " 5 ==> Control-_\n"
+                    + controlKey + " . ==> Control-\\\n"
+                    + controlKey + " 0 ==> Control-]\n"
+                    + controlKey + " 6 ==> Control-^").
             show();
      }
 
@@ -1857,6 +1964,10 @@ class TerminalEmulator {
         write(attributes);
     }
 
+    /**
+     * Send data to the shell process
+     * @param data
+     */
     private void write(byte[] data) {
         try {
             mTermOut.write(data);
@@ -2246,6 +2357,108 @@ class PaintRenderer extends BaseTextRenderer {
     }
 
 /**
+ * A multi-thread-safe produce-consumer byte array.
+ * Only allows one producer and one consumer.
+ */
+
+class ByteQueue {
+    public ByteQueue(int size) {
+        mBuffer = new byte[size];
+    }
+
+    public int getBytesAvailable() {
+        synchronized(this) {
+            return mStoredBytes;
+        }
+    }
+
+    public int read(byte[] buffer, int offset, int length)
+        throws InterruptedException {
+        if (length + offset > buffer.length) {
+            throw
+                new IllegalArgumentException("length + offset > buffer.length");
+        }
+        if (length < 0) {
+            throw
+            new IllegalArgumentException("length < 0");
+
+        }
+        if (length == 0) {
+            return 0;
+        }
+        synchronized(this) {
+            while (mStoredBytes == 0) {
+                wait();
+            }
+            int totalRead = 0;
+            int bufferLength = mBuffer.length;
+            boolean wasFull = bufferLength == mStoredBytes;
+            while (length > 0 && mStoredBytes > 0) {
+                int oneRun = Math.min(bufferLength - mHead, mStoredBytes);
+                int bytesToCopy = Math.min(length, oneRun);
+                System.arraycopy(mBuffer, mHead, buffer, offset, bytesToCopy);
+                mHead += bytesToCopy;
+                if (mHead >= bufferLength) {
+                    mHead = 0;
+                }
+                mStoredBytes -= bytesToCopy;
+                length -= bytesToCopy;
+                offset += bytesToCopy;
+                totalRead += bytesToCopy;
+            }
+            if (wasFull) {
+                notify();
+            }
+            return totalRead;
+        }
+    }
+
+    public void write(byte[] buffer, int offset, int length)
+    throws InterruptedException {
+        if (length + offset > buffer.length) {
+            throw
+                new IllegalArgumentException("length + offset > buffer.length");
+        }
+        if (length < 0) {
+            throw
+            new IllegalArgumentException("length < 0");
+
+        }
+        if (length == 0) {
+            return;
+        }
+        synchronized(this) {
+            int bufferLength = mBuffer.length;
+            boolean wasEmpty = mStoredBytes == 0;
+            while (length > 0) {
+                while(bufferLength == mStoredBytes) {
+                    wait();
+                }
+                int tail = mHead + mStoredBytes;
+                int oneRun;
+                if (tail >= bufferLength) {
+                    tail = tail - bufferLength;
+                    oneRun = mHead - tail;
+                } else {
+                    oneRun = bufferLength - tail;
+                }
+                int bytesToCopy = Math.min(oneRun, length);
+                System.arraycopy(buffer, offset, mBuffer, tail, bytesToCopy);
+                offset += bytesToCopy;
+                mStoredBytes += bytesToCopy;
+                length -= bytesToCopy;
+            }
+            if (wasEmpty) {
+                notify();
+            }
+        }
+    }
+
+    private byte[] mBuffer;
+    private int mHead;
+    private int mStoredBytes;
+}
+/**
  * A view on a transcript and a terminal emulator. Displays the text of the
  * transcript and the current cursor position of the terminal emulator.
  */
@@ -2340,6 +2553,9 @@ class EmulatorView extends View implements GestureDetector.OnGestureListener {
 
     private FileOutputStream mTermOut;
 
+    private ByteQueue mByteQueue;
+    private final static int MAX_BYTES_PER_UPDATE = 4 * 1024;
+
     /**
      * Used to temporarily hold data received from the remote process. Allocated
      * once and used permanently to minimize heap thrashing.
@@ -2347,25 +2563,16 @@ class EmulatorView extends View implements GestureDetector.OnGestureListener {
     private byte[] mReceiveBuffer;
 
     /**
-     * Our private message id, which we use to check for new input from the
+     * Our private message id, which we use to receive new input from the
      * remote process.
      */
     private static final int UPDATE = 1;
 
     /**
-     * The period in milliseconds between updates.
+     * Thread that polls for input from the remote process
      */
-    private static final int UPDATE_PERIOD_MS = 20;
 
-    /**
-     * The target time for our next update.
-     */
-    private long mNextTime;
-
-    /**
-     * Rotation amount for manual portrait/landscape rotation
-     */
-    private float mRotation;
+    private Thread mPollingThread;
 
     private GestureDetector mGestureDetector;
     private float mScrollRemainder;
@@ -2376,21 +2583,13 @@ class EmulatorView extends View implements GestureDetector.OnGestureListener {
     private final Handler mHandler = new Handler() {
         /**
          * Handle the callback message. Call our enclosing class's update
-         * method, and then reschedule another callback in the future. In this
-         * way we implement a periodic callback.
+         * method.
          *
          * @param msg The callback message.
          */
         public void handleMessage(Message msg) {
             if (msg.what == UPDATE) {
                 update();
-                msg = obtainMessage(UPDATE);
-                long current = SystemClock.uptimeMillis();
-                if (mNextTime < current) {
-                    mNextTime = current + UPDATE_PERIOD_MS;
-                }
-                sendMessageAtTime(msg, mNextTime);
-                mNextTime += UPDATE_PERIOD_MS;
             }
         }
     };
@@ -2465,18 +2664,17 @@ class EmulatorView extends View implements GestureDetector.OnGestureListener {
      *
      * @param termFd the file descriptor
      * @param termOut the output stream for the pseudo-teletype
-     * @param textSize the point size of the text font
      */
     public void initialize(FileDescriptor termFd, FileOutputStream termOut) {
         mTermOut = termOut;
         mTermFd = termFd;
         mTextSize = 10;
-        mRotation = 0.0f;
         mForeground = Term.WHITE;
         mBackground = Term.BLACK;
         updateText();
         mTermIn = new FileInputStream(mTermFd);
         mReceiveBuffer = new byte[4 * 1024];
+        mByteQueue = new ByteQueue(4 * 1024);
     }
 
     /**
@@ -2527,17 +2725,6 @@ class EmulatorView extends View implements GestureDetector.OnGestureListener {
     public void setTextSize(int fontSize) {
         mTextSize = fontSize;
         updateText();
-    }
-
-    /**
-     * Set the rotation. Currently only 0 and 90 degrees are supported
-     */
-
-    public void setRotation(float angle) {
-        mRotation = angle;
-        if (mKnownSize) {
-            updateSize(getWidth(), getHeight());
-        }
     }
 
     // Begin GestureDetector.OnGestureListener methods
@@ -2625,21 +2812,31 @@ class EmulatorView extends View implements GestureDetector.OnGestureListener {
         if (!mKnownSize) {
             mKnownSize = true;
 
-            // Set a timer so we're called back to check for input from the
+            // Set up a thread to read input from the
             // pseudo-teletype:
-            Message msg = mHandler.obtainMessage(UPDATE);
-            mNextTime = SystemClock.uptimeMillis() + UPDATE_PERIOD_MS;
-            mHandler.sendMessageAtTime(msg, mNextTime);
+
+            mPollingThread = new Thread(new Runnable() {
+
+                public void run() {
+                    try {
+                        while(true) {
+                            int read = mTermIn.read(mBuffer);
+                            mByteQueue.write(mBuffer, 0, read);
+                            mHandler.sendMessage(
+                                    mHandler.obtainMessage(UPDATE));
+                        }
+                    } catch (IOException e) {
+                    } catch (InterruptedException e) {
+                    }
+                }
+                private byte[] mBuffer = new byte[4096];
+            });
+            mPollingThread.setName("Input reader");
+            mPollingThread.start();
         }
     }
 
     private void updateSize(int w, int h) {
-        if (mRotation != 0.0f) {
-            int temp = w;
-            w = h;
-            h = temp;
-        }
-
         mColumns = w / mCharacterWidth;
         mRows = h / mCharacterHeight;
 
@@ -2674,26 +2871,12 @@ class EmulatorView extends View implements GestureDetector.OnGestureListener {
      * Look for new input from the ptty, send it to the terminal emulator.
      */
     private void update() {
+        int bytesAvailable = mByteQueue.getBytesAvailable();
+        int bytesToRead = Math.min(bytesAvailable, mReceiveBuffer.length);
         try {
-            // To avoid starving user input, only process 20 KB
-            // of input at once
-            int processed = 0;
-            while (processed < 20000) {
-                int available =
-                        Math.min(mReceiveBuffer.length, mTermIn.available());
-                if (available <= 0) {
-                    break;
-                }
-
-                int received = mTermIn.read(mReceiveBuffer, 0, available);
-                if (received > 0) {
-                    append(mReceiveBuffer, 0, received);
-                }
-                processed += received;
-            }
-        } catch (IOException e) {
-            // I/O exceptions break out of the input loop, but we don't
-            // report them to the user.
+            int bytesRead = mByteQueue.read(mReceiveBuffer, 0, bytesToRead);
+            append(mReceiveBuffer, 0, bytesRead);
+        } catch (InterruptedException e) {
         }
     }
 
@@ -2701,14 +2884,6 @@ class EmulatorView extends View implements GestureDetector.OnGestureListener {
     protected void onDraw(Canvas canvas) {
         int w = getWidth();
         int h = getHeight();
-        if (mRotation != 0.0f) {
-            canvas.save(Canvas.MATRIX_SAVE_FLAG);
-            int pivot = Math.min(w, h) >> 1;
-            canvas.rotate(mRotation, pivot, pivot);
-            int temp = w;
-            w = h;
-            h = temp;
-        }
         canvas.drawRect(0, 0, w, h, mBackgroundPaint);
         mVisibleColumns = w / mCharacterWidth;
         float x = -mLeftColumn * mCharacterWidth;
@@ -2723,9 +2898,6 @@ class EmulatorView extends View implements GestureDetector.OnGestureListener {
             }
             mTranscriptScreen.drawText(i, canvas, x, y, mTextRenderer, cursorX);
             y += mCharacterHeight;
-        }
-        if (mRotation != 0.0f) {
-            canvas.restore();
         }
     }
 
@@ -2842,6 +3014,14 @@ class TermKeyListener {
     public TermKeyListener() {
     }
 
+    public void handleControlKey(boolean down) {
+        if (down) {
+            mControlKey.onPress();
+        } else {
+            mControlKey.onRelease();
+        }
+    }
+
     /**
      * Handle a keyDown event.
      *
@@ -2860,10 +3040,6 @@ class TermKeyListener {
         case KeyEvent.KEYCODE_SHIFT_LEFT:
         case KeyEvent.KEYCODE_SHIFT_RIGHT:
             mCapKey.onPress();
-            break;
-
-        case KeyEvent.KEYCODE_DPAD_CENTER:
-            mControlKey.onPress();
             break;
 
         case KeyEvent.KEYCODE_ENTER:
@@ -2928,9 +3104,6 @@ class TermKeyListener {
         case KeyEvent.KEYCODE_SHIFT_LEFT:
         case KeyEvent.KEYCODE_SHIFT_RIGHT:
             mCapKey.onRelease();
-            break;
-        case KeyEvent.KEYCODE_DPAD_CENTER:
-            mControlKey.onRelease();
             break;
         default:
             // Ignore other keyUps

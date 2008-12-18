@@ -48,17 +48,10 @@
             android:layout_alignParentLeft="true"
             android:text="@string/development_settings_wait_for_debugger_text" />
 
-        <CheckBox android:id="@+id/enable_adb"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/wait_for_debugger"
-            android:layout_alignParentLeft="true"
-            android:text="@string/development_settings_enable_adb_text" />
-
         <View android:id="@+id/separator"
             android:layout_width="8dip"
             android:layout_height="8dip"
-            android:layout_below="@id/enable_adb"
+            android:layout_below="@id/wait_for_debugger"
             android:layout_alignParentLeft="true" />
 
         <CheckBox android:id="@+id/show_load"
@@ -122,17 +115,10 @@
             android:layout_alignParentLeft="true"
             android:text="@string/development_settings_show_sleep_text" />
             
-        <CheckBox android:id="@+id/keep_screen_on"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/show_sleep"
-            android:layout_alignParentLeft="true"
-            android:text="@string/development_settings_keep_screen_on_text" />
-            
         <Spinner android:id="@+id/window_animation_scale"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:layout_below="@id/keep_screen_on"
+            android:layout_below="@id/show_sleep"
             android:layout_alignParentLeft="true">
         </Spinner>
 

@@ -1,56 +1,70 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry kind="src" path="java/android"/>
-	<classpathentry excluding="android/com/google/tests/|ext/" kind="src" path="java/tests"/>
-	<classpathentry kind="lib" path="apps/Calculator/arity-1.3.1.jar"/>
-	<classpathentry kind="lib" path="java/ext/googleclient-lib.jar"/>
-	<classpathentry kind="lib" path="java/maps/maps-lib.jar"/>
-	<classpathentry kind="lib" path="partner/google/apps/Maps/libprotobuffer.jar"/>
-	<classpathentry kind="src" path="apps/AlarmClock/src"/>
-	<classpathentry kind="src" path="apps/Anagrams/src"/>
-	<classpathentry kind="src" path="apps/AndroidTests/DisabledTestApp/src"/>
-	<classpathentry kind="src" path="apps/AndroidTests/EnabledTestApp/src"/>
-	<classpathentry kind="src" path="apps/AndroidTests/src"/>
-	<classpathentry kind="src" path="apps/Browser/src"/>
-	<classpathentry kind="src" path="apps/Calculator/src"/>
-	<classpathentry kind="src" path="apps/OldCalculator/src"/>
-	<classpathentry kind="src" path="apps/Calendar/src"/>
-	<classpathentry kind="src" path="apps/Camera/src"/>
-	<classpathentry kind="src" path="apps/Contacts/src"/>
-	<classpathentry kind="src" path="apps/Fallback/src"/>
-	<classpathentry kind="src" path="apps/FontLab/src"/>
-	<classpathentry kind="src" path="apps/IM/src"/>
-	<classpathentry kind="src" path="apps/Mms/src"/>
-	<classpathentry kind="src" path="apps/Music/src"/>
-	<classpathentry kind="src" path="apps/PackageInstaller/src"/>
-	<classpathentry kind="src" path="apps/Phone/src"/>
-	<classpathentry kind="src" path="apps/Quake/src"/>
-	<classpathentry kind="src" path="apps/Settings/src"/>
-	<classpathentry kind="src" path="apps/SoundRecorder/src"/>
-	<classpathentry kind="src" path="apps/StkTest/src"/>
-	<classpathentry kind="src" path="apps/Sync/src"/>
-	<classpathentry kind="src" path="apps/Term/src"/>
-	<classpathentry kind="src" path="apps/TestHarness/src"/>
-	<classpathentry kind="src" path="apps/ToDoList/src"/>
-	<classpathentry kind="src" path="apps/Updater/src"/>
-	<classpathentry kind="src" path="apps/VoiceDialer/src"/>
-	<classpathentry kind="src" path="apps/WapBrowser/src"/>
-	<classpathentry kind="src" path="apps/WhackAMole/src"/>
-	<classpathentry kind="src" path="commands/am/src"/>
-	<classpathentry kind="src" path="commands/input/src"/>
-	<classpathentry kind="src" path="commands/monkey/src"/>
-	<classpathentry kind="src" path="commands/pm/src"/>
-	<classpathentry kind="src" path="content/providers/calendar/src"/>
-	<classpathentry kind="src" path="content/providers/contacts/src"/>
-	<classpathentry kind="src" path="content/providers/downloads/src"/>
-	<classpathentry kind="src" path="content/providers/drm/src"/>
-	<classpathentry kind="src" path="content/providers/im/src"/>
-	<classpathentry kind="src" path="content/providers/media/src"/>
-	<classpathentry kind="src" path="content/providers/settings/src"/>
-	<classpathentry kind="src" path="content/providers/subscribedfeeds/src"/>
-	<classpathentry kind="src" path="content/providers/sync/src"/>
-	<classpathentry kind="src" path="content/providers/telephony/src"/>
-	<classpathentry kind="src" path="content/tests/providers/contacts/src"/>
+	<classpathentry kind="src" path="packages/apps/AlarmClock/src"/>
+	<classpathentry kind="src" path="packages/apps/Browser/src"/>
+	<classpathentry kind="src" path="packages/apps/Calendar/src"/>
+	<classpathentry kind="src" path="packages/apps/Calculator/src"/>
+	<classpathentry kind="src" path="packages/apps/Camera/src"/>
+	<classpathentry kind="src" path="packages/apps/Contacts/src"/>
+	<classpathentry kind="src" path="packages/apps/Email/src"/>
+	<classpathentry kind="src" path="packages/apps/GoogleSearch/src"/>
+	<classpathentry kind="src" path="packages/apps/HTMLViewer/src"/>
+	<classpathentry kind="src" path="packages/apps/IM/src"/>
+	<classpathentry kind="src" path="packages/apps/IM/plugin"/>
+	<classpathentry kind="src" path="packages/apps/Launcher/src"/>
+	<classpathentry kind="src" path="packages/apps/Music/src"/>
+	<classpathentry kind="src" path="packages/apps/Mms/src"/>
+	<classpathentry kind="src" path="packages/apps/PackageInstaller/src"/>
+	<classpathentry kind="src" path="packages/apps/Phone/src"/>
+	<classpathentry kind="src" path="packages/apps/Settings/src"/>
+	<classpathentry kind="src" path="packages/apps/SoundRecorder/src"/>
+	<classpathentry kind="src" path="packages/apps/Stk/src"/>
+	<classpathentry kind="src" path="packages/apps/Sync/src"/>
+	<classpathentry kind="src" path="packages/apps/Updater/src"/>
+	<classpathentry kind="src" path="packages/apps/VoiceDialer/src"/>
+	<classpathentry kind="src" path="packages/providers/CalendarProvider/src"/>
+	<classpathentry kind="src" path="packages/providers/ContactsProvider/src"/>
+	<classpathentry kind="src" path="packages/providers/DownloadProvider/src"/>
+	<classpathentry kind="src" path="packages/providers/DrmProvider/src"/>
+	<classpathentry kind="src" path="packages/providers/ImProvider/src"/>
+	<classpathentry kind="src" path="packages/providers/MediaProvider/src"/>
+	<classpathentry kind="src" path="packages/providers/TelephonyProvider/src"/>
+	<classpathentry kind="src" path="vendor/google/apps/Street/src"/>
+	<classpathentry kind="src" path="vendor/google/apps/YouTube/src"/>
+	<classpathentry kind="src" path="frameworks/base/awt"/>
+	<classpathentry kind="src" path="frameworks/base/cmds/am/src"/>
+	<classpathentry kind="src" path="frameworks/base/cmds/input/src"/>
+	<classpathentry kind="src" path="frameworks/base/cmds/pm/src"/>
+	<classpathentry kind="src" path="frameworks/base/cmds/svc/src"/>
+	<classpathentry kind="src" path="frameworks/base/core/java"/>
+	<classpathentry kind="src" path="frameworks/base/graphics/java"/>
+	<classpathentry kind="src" path="frameworks/base/im/java"/>
+	<classpathentry kind="src" path="frameworks/base/location/java"/>
+	<classpathentry kind="src" path="frameworks/base/media/java"/>
+	<classpathentry kind="src" path="frameworks/base/opengl/java"/>
+	<classpathentry kind="src" path="frameworks/base/packages/SettingsProvider/src"/>
+	<classpathentry kind="src" path="frameworks/base/packages/SubscribedFeedsProvider/src"/>
+	<classpathentry kind="src" path="frameworks/base/sax/java"/>
+	<classpathentry kind="src" path="frameworks/base/services/java"/>
+	<classpathentry kind="src" path="frameworks/base/telephony/java"/>
+	<classpathentry kind="src" path="frameworks/base/test-runner"/>
+	<classpathentry kind="src" path="frameworks/base/wifi/java"/>
+	<classpathentry kind="src" path="frameworks/policies/base/phone"/>
+	<classpathentry kind="src" path="development/samples/ApiDemos/src"/>
+	<classpathentry kind="src" path="development/samples/ApiDemos/tests/src"/>
+	<classpathentry kind="src" path="development/samples/Compass/src"/>
+	<classpathentry kind="src" path="development/samples/HelloActivity/src"/>
+	<classpathentry kind="src" path="development/samples/HelloActivity/tests/src"/>
+	<classpathentry kind="src" path="development/samples/Home/src"/>
+	<classpathentry kind="src" path="development/samples/LunarLander/src"/>
+	<classpathentry kind="src" path="development/samples/LunarLander/tests/src"/>
+	<classpathentry kind="src" path="development/samples/NotePad/src"/>
+	<classpathentry kind="src" path="development/samples/NotePad/tests/src"/>
+	<classpathentry kind="src" path="development/samples/RSSReader/src"/>
+	<classpathentry kind="src" path="development/samples/SkeletonApp/src"/>
+	<classpathentry kind="src" path="development/samples/SkeletonApp/tests/src"/>
+	<classpathentry kind="src" path="development/samples/Snake/src"/>
+	<classpathentry kind="src" path="development/samples/Snake/tests/src"/>
 	<classpathentry kind="src" path="dalvik/libcore/annotation/src/main/java"/>
 	<classpathentry kind="src" path="dalvik/libcore/archive/src/main/java"/>
 	<classpathentry kind="src" path="dalvik/libcore/auth/src/main/java"/>
@@ -59,77 +73,44 @@
 	<classpathentry kind="src" path="dalvik/libcore/crypto/src/main/java"/>
 	<classpathentry kind="src" path="dalvik/libcore/dalvik/src/main/java"/>
 	<classpathentry kind="src" path="dalvik/libcore/icu/src/main/java"/>
-	<classpathentry kind="src" path="dalvik/libcore/instrument/src/main/java"/>
 	<classpathentry kind="src" path="dalvik/libcore/json/src/main/java"/>
 	<classpathentry kind="src" path="dalvik/libcore/junit/src/main/java"/>
 	<classpathentry kind="src" path="dalvik/libcore/logging/src/main/java"/>
 	<classpathentry kind="src" path="dalvik/libcore/luni-kernel/src/main/java"/>
 	<classpathentry kind="src" path="dalvik/libcore/luni/src/main/java"/>
 	<classpathentry kind="src" path="dalvik/libcore/math/src/main/java"/>
-	<classpathentry kind="src" path="dalvik/libcore/nio/src/main/java"/>
 	<classpathentry kind="src" path="dalvik/libcore/nio_char/src/main/java"/>
+	<classpathentry kind="src" path="dalvik/libcore/nio/src/main/java"/>
 	<classpathentry kind="src" path="dalvik/libcore/openssl/src/main/java"/>
 	<classpathentry kind="src" path="dalvik/libcore/prefs/src/main/java"/>
 	<classpathentry kind="src" path="dalvik/libcore/regex/src/main/java"/>
 	<classpathentry kind="src" path="dalvik/libcore/security-kernel/src/main/java"/>
 	<classpathentry kind="src" path="dalvik/libcore/security/src/main/java"/>
-	<classpathentry kind="src" path="dalvik/libcore/sound/src/main/java"/>
 	<classpathentry kind="src" path="dalvik/libcore/sql/src/main/java"/>
 	<classpathentry kind="src" path="dalvik/libcore/suncompat/src/main/java"/>
 	<classpathentry kind="src" path="dalvik/libcore/text/src/main/java"/>
 	<classpathentry kind="src" path="dalvik/libcore/x-net/src/main/java"/>
 	<classpathentry kind="src" path="dalvik/libcore/xml/src/main/java"/>
-	<classpathentry kind="src" path="java/config/release"/>
-	<classpathentry kind="src" path="java/ext"/>
-	<classpathentry kind="src" path="java/gtalkservice"/>
-	<classpathentry kind="src" path="java/maps"/>
-	<classpathentry kind="src" path="java/policy/phone"/>
-	<classpathentry kind="src" path="java/services"/>
-	<classpathentry kind="src" path="java/tests/ext"/>
-	<classpathentry kind="src" path="java/test-runner"/>
-	<classpathentry kind="src" path="out/target/common/R"/>
-	<classpathentry kind="src" path="out/target/common/obj/APPS/AndroidTests_intermediates/src/src"/>
 	<classpathentry kind="src" path="out/target/common/obj/APPS/ApiDemos_intermediates/src/src"/>
 	<classpathentry kind="src" path="out/target/common/obj/APPS/Browser_intermediates/src/src"/>
-	<classpathentry kind="src" path="out/target/common/obj/APPS/Development_intermediates/src/src"/>
 	<classpathentry kind="src" path="out/target/common/obj/APPS/IM_intermediates/src/src"/>
 	<classpathentry kind="src" path="out/target/common/obj/APPS/Music_intermediates/src/src"/>
 	<classpathentry kind="src" path="out/target/common/obj/APPS/Phone_intermediates/src/src"/>
-	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src"/>
-	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/com.google.android.gtalkservice_intermediates/src"/>
-	<classpathentry kind="src" path="partner/google/apps/Cocktail/src"/>
-	<classpathentry kind="src" path="partner/google/apps/GTalkService/src"/>
-	<classpathentry kind="src" path="partner/google/apps/Gadgets/src"/>
-	<classpathentry kind="src" path="partner/google/apps/Gmail/src"/>
-	<classpathentry kind="src" path="partner/google/apps/GoogleApps/src"/>
-	<classpathentry kind="src" path="partner/google/apps/Home/src"/>
-	<classpathentry kind="src" path="partner/google/apps/Maps/src"/>
-	<classpathentry kind="src" path="partner/google/apps/SetupWizard/src"/>
-	<classpathentry kind="src" path="partner/google/apps/Street/src"/>
-	<classpathentry kind="src" path="partner/google/apps/Talk/src"/>
-	<classpathentry kind="src" path="partner/google/apps/Vending/src"/>
-	<classpathentry kind="src" path="partner/google/apps/YouTube/src"/>
-	<classpathentry kind="src" path="partner/google/providers/gmail/src"/>
-	<classpathentry kind="src" path="partner/google/tests/GmailProvider/src"/>
-	<classpathentry kind="src" path="partner/google/tests/GoogleApps/src"/>
-	<classpathentry kind="src" path="partner/google/tests/Maps/src"/>
-	<classpathentry kind="src" path="partner/google/tests/WeiTest/src"/>
-	<classpathentry kind="src" path="partner/tmobile/apps/MyFaves/src"/>
-	<classpathentry kind="src" path="partner/tmobile/tests/CarrierDiagnostics/src"/>
-	<classpathentry kind="src" path="samples/ApiDemos/src"/>
-	<classpathentry kind="src" path="samples/HelloActivity/src"/>
-	<classpathentry kind="src" path="samples/ImageCaption/src"/>
-	<classpathentry kind="src" path="samples/LunarLander/src"/>
-	<classpathentry kind="src" path="samples/NotePad/src"/>
-	<classpathentry kind="src" path="samples/RSSReader/src"/>
-	<classpathentry kind="src" path="samples/SkeletonApp/src"/>
-	<classpathentry kind="src" path="samples/Snake/src"/>
-	<classpathentry kind="src" path="tests/Dashboard/src"/>
-	<classpathentry kind="src" path="tests/DataSets/src"/>
-	<classpathentry kind="src" path="tests/Development/src"/>
-	<classpathentry kind="src" path="tests/DumpRenderTree/src"/>
-	<classpathentry kind="src" path="tests/FrameworkTests/src"/>
-	<classpathentry kind="src" path="tests/FrameworkTests/tests/src"/>
-	<classpathentry kind="src" path="tests/framework-tests/src"/>
-	<classpathentry kind="output" path="out/eclipse"/>
+	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/com.android.im.plugin_intermediates/src"/>
+	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src/core/java"/>
+	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src/im/java"/>
+	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src/location/java"/>
+	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src/media/java"/>
+	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src/telephony/java"/>
+	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src/wifi/java"/>
+	<classpathentry kind="src" path="out/target/common/R"/>
+	<classpathentry kind="src" path="external/tagsoup/src"/>
+	<classpathentry kind="src" path="external/protobuf/src"/>
+	<classpathentry kind="src" path="external/gdata/src"/>
+	<classpathentry kind="src" path="external/apache-http/src"/>
+	<classpathentry kind="lib" path="external/googleclient/googleclient-lib.jar"/>
+	<classpathentry kind="lib" path="out/target/common/obj/JAVA_LIBRARIES/google-framework_intermediates/javalib.jar"/>
+	<classpathentry kind="lib" path="out/target/common/obj/JAVA_LIBRARIES/googlelogin-client_intermediates/javalib.jar"/>
+	<classpathentry kind="lib" path="packages/apps/Calculator/arity-1.3.1.jar"/>
+	<classpathentry kind="output" path="out/target/common/obj/JAVA_LIBRARIES/android_stubs_current_intermediates/classes"/>
 </classpath>

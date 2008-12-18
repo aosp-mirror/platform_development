@@ -33,7 +33,6 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.QualifiedName;
-import org.eclipse.jdt.core.IClasspathAttribute;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
@@ -178,31 +177,6 @@ public final class ProjectHelper {
     }
 
     /**
-     * Check the validity of the javadoc attributes in a classpath entry.
-     * @param frameworkEntry the classpath entry to check.
-     * @return true if the javadoc attributes is valid, false otherwise.
-     */
-    public static boolean checkJavaDocPath(IClasspathEntry frameworkEntry) {
-        // get the list of extra attributes
-        IClasspathAttribute[] attributes = frameworkEntry.getExtraAttributes();
-
-        // and search for the one about the javadoc
-        for (IClasspathAttribute att : attributes) {
-            if (IClasspathAttribute.JAVADOC_LOCATION_ATTRIBUTE_NAME.
-                    equals(att.getName())) {
-                // we found a javadoc attribute. Now we test its value.
-                // get the expect value
-                String validJavaDoc = getJavaDocPath(AdtPlugin.getOsAbsoluteFramework());
-
-                // now compare and return
-                return validJavaDoc.equals(att.getValue());
-            }
-        }
-
-        return false;
-    }
-
-    /**
      * Fix the project. This checks the SDK location.
      * @param project The project to fix.
      * @throws JavaModelException
@@ -264,14 +238,7 @@ public final class ProjectHelper {
                     continue;
                 }
             } else if (kind == IClasspathEntry.CPE_CONTAINER) {
-                IPath containerPath = entry.getPath();
-                
-                if (AndroidClasspathContainerInitializer.checkOldPath(containerPath)) {
-                    entries = ProjectHelper.removeEntryFromClasspath(entries, i);
-
-                    // continue, to skip the i++;
-                    continue;
-                } else if (AndroidClasspathContainerInitializer.checkPath(containerPath)) {
+                if (AndroidClasspathContainerInitializer.checkPath(entry.getPath())) {
                     foundContainer = true;
                 }
             }

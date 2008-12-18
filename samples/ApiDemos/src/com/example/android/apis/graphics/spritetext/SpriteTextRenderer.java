@@ -16,17 +16,6 @@
 
 package com.example.android.apis.graphics.spritetext;
 
-import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Paint;
-import android.opengl.GLU;
-import android.opengl.GLUtils;
-import android.os.SystemClock;
-
-import com.example.android.apis.R;
-import com.example.android.apis.graphics.GLSurfaceView;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -35,7 +24,19 @@ import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
 
 import javax.microedition.khronos.egl.EGL10;
+import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
+
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Paint;
+import android.opengl.GLSurfaceView;
+import android.opengl.GLU;
+import android.opengl.GLUtils;
+import android.os.SystemClock;
+
+import com.example.android.apis.R;
 
 public class SpriteTextRenderer implements GLSurfaceView.Renderer{
 
@@ -59,7 +60,7 @@ public class SpriteTextRenderer implements GLSurfaceView.Renderer{
         return configSpec;
     }
 
-    public void surfaceCreated(GL10 gl) {
+    public void onSurfaceCreated(GL10 gl, EGLConfig config) {
         /*
          * By default, OpenGL enables features that improve quality
          * but reduce performance. One might want to tweak that
@@ -141,7 +142,7 @@ public class SpriteTextRenderer implements GLSurfaceView.Renderer{
         mNumericSprite.initialize(gl, mLabelPaint);
     }
 
-    public void drawFrame(GL10 gl) {
+    public void onDrawFrame(GL10 gl) {
         /*
          * By default, OpenGL enables features that improve quality
          * but reduce performance. One might want to tweak that
@@ -237,7 +238,7 @@ public class SpriteTextRenderer implements GLSurfaceView.Renderer{
         mLabels.draw(gl, tx, ty, labelId);
     }
 
-    public void sizeChanged(GL10 gl, int w, int h) {
+    public void onSurfaceChanged(GL10 gl, int w, int h) {
         mWidth = w;
         mHeight = h;
         gl.glViewport(0, 0, w, h);

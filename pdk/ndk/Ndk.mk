@@ -18,10 +18,6 @@
 # Assembled using the generic build by default.
 # (set in device/config/product_config.make)
 
-# NOTE: gcc source is in a separate perforce tree which must be checked out to
-# the same directory that the device code is checked out to; so that gcc can be
-# copied from ../toolchain/compiler/gcc-4.2.1
-
 # A macro to make rules to copy all newer files in a directory tree matching an
 # optional find filter and add the files to a list variable for dependencies.
 # Designed after copy_headers.make: Create a rule to copy each file;
@@ -40,24 +36,41 @@ define define-tree-copy-rules
 endef
 
 #-------------------------------------------------------------------------------
-# Install all the files needed to build the ndk (both with and without source)
-#   We make three sets of trees:
-#			Common files used in both versions of the ndk
-#			Files used in the standard ndk (no source files included)
-#			Files used in the ndk-src (includes source files)
-#   We do this as some partners want to recompile our libraries for optimization
+# Install all the files needed to build the ndk.
+#   We build three versions of the NDK
+#       (1) The full version, with source.
+#       (2) The full version, without source.
+#       (3) A JNI-only version, with source.
+#
+#   We make five sets of trees:
+#		(A) Common files used in all versions of the NDK
+#   (B) Common files used in the full versions of the NDK
+#		(C) Files used in the standard ndk (no source files included)
+#		(D) Files used in both the JNI-only and full-with-source version
+#		(E) Files used in just the full-with-source version
+#
+#   Each NDK version is created by combining the appropriate trees:
+#
+#            (A)   (B)  (C)  (D)  (E)
+#       (1)  yes   yes       yes  yes
+#       (2)  yes   yes  yes
+#       (3)  yes             yes
+#
+# Source is provided for partners who want to recompile our libraries for optimization.
+# The JNI-only version is provided for partners that want to create shared
+# libraries that can be packaged with APK files and called from Java code.
 
 LOCAL_PATH := $(my-dir)
 
 # Source trees for the ndk
-sample_src_dir := $(LOCAL_PATH)/sample
+samples_src_dir := $(LOCAL_PATH)/samples
+sample_src_dir := $(samples_src_dir)/sample
+samplejni_src_dir := $(samples_src_dir)/samplejni
 config_src_dir := $(LOCAL_PATH)/config
 kernel_common_src_dir := $(KERNEL_HEADERS_COMMON)
 kernel_arch_src_dir := $(KERNEL_HEADERS_ARCH)
-bionic_src_dir := system/bionic
-libm_src_dir := system/libm
-libstdcpp_src_dir := system/libstdc++
-gcc_src_dir := ../toolchain/compiler/gcc-4.2.1
+bionic_src_dir := bionic
+jni_src_dir := $(JNI_H_INCLUDE)
 
 # Workspace directory
 ndk_intermediates := $(call intermediates-dir-for,PACKAGING,ndk)
@@ -65,24 +78,26 @@ ndk_intermediates := $(call intermediates-dir-for,PACKAGING,ndk)
 # Common destination trees for the ndk
 ndk_common_tree := $(ndk_intermediates)/common
 ndk_common_dest_dir := $(ndk_common_tree)/ndk
-sample_dest_dir := $(ndk_common_dest_dir)/sample
+samplejni_dest_dir := $(ndk_common_dest_dir)/samples/samplejni
 config_dest_dir := $(ndk_common_dest_dir)/config
 kernel_dest_dir := $(ndk_common_dest_dir)/include/kernel/include
 gcc_dest_dir := $(ndk_common_dest_dir)/toolchain
+jni_dest_dir := $(ndk_common_dest_dir)/include/nativehelper
+
+# Common-full destination trees for the ndk
+ndk_common_full_tree := $(ndk_intermediates)/common_full
+ndk_common_full_dest_dir := $(ndk_common_full_tree)/ndk
+sample_dest_dir := $(ndk_common_full_dest_dir)/samples/sample
 
 # Destination trees without source for the standard ndk (without source)
 ndk_no_src_tree := $(ndk_intermediates)/no_src
 ndk_no_src_dest_dir := $(ndk_no_src_tree)/ndk
 bionic_no_src_dest_dir := $(ndk_no_src_dest_dir)/include/bionic
-libm_no_src_dest_dir := $(ndk_no_src_dest_dir)/include/libm
-libstdcpp_no_src_dest_dir := $(ndk_no_src_dest_dir)/include/libstdc++
 
 # Destination trees including source for the ndk with source
 ndk_src_tree := $(ndk_intermediates)/with_src
 ndk_src_dest_dir := $(ndk_src_tree)/ndk
 bionic_src_dest_dir := $(ndk_src_dest_dir)/include/bionic
-libm_src_dest_dir := $(ndk_src_dest_dir)/include/libm
-libstdcpp_src_dest_dir := $(ndk_src_dest_dir)/include/libstdc++
 
 # Destinations of all common files (not picked up by tree rules below)
 ndk_common_dest_files := $(ndk_common_dest_dir)/README \
@@ -91,56 +106,64 @@ ndk_common_dest_files := $(ndk_common_dest_dir)/README \
 		$(ndk_common_dest_dir)/lib/crtbegin_dynamic.o \
 		$(ndk_common_dest_dir)/lib/crtend_android.o \
 		$(ndk_common_dest_dir)/lib/libc.so \
-		$(ndk_common_dest_dir)/lib/libdl.so \
-		$(ndk_common_dest_dir)/lib/libm.so \
-		$(ndk_common_dest_dir)/lib/libstdc++.so
+		$(ndk_common_dest_dir)/lib/libm.so 
+    
+# Destinations of files used by the full, non-jni-only configurations
+ndk_common_full_dest_files := \
+		$(ndk_common_full_dest_dir)/lib/libdl.so \
+		$(ndk_common_full_dest_dir)/lib/libstdc++.so
 
 # Install common files outside common trees
 $(ndk_common_dest_dir)/README: $(LOCAL_PATH)/README | $(ACP)
 	@echo "NDK README: from $? to $@"
 	$(copy-file-to-target)
 
-$(ndk_common_dest_dir)/config/armelf.x: config/armelf.x | $(ACP)
+$(ndk_common_dest_dir)/config/armelf.x: $(BUILD_SYSTEM)/armelf.x | $(ACP)
 	@echo "NDK config: $@"
 	$(copy-file-to-target)
 
-$(ndk_common_dest_dir)/config/armelflib.x: config/armelflib.x | $(ACP)
+$(ndk_common_dest_dir)/config/armelflib.x: $(BUILD_SYSTEM)/armelflib.x | $(ACP)
 	@echo "NDK config: $@"
 	$(copy-file-to-target)
 
 $(ndk_common_dest_dir)/lib/%: $(TARGET_OUT_INTERMEDIATE_LIBRARIES)/% | $(ACP)
 	@echo "NDK lib: $@"
 	$(copy-file-to-target)
-# (TODO): libandroid_rumtime libnativehelper
+
+# Install common_full files outside common trees
+$(ndk_common_full_dest_dir)/lib/%: $(TARGET_OUT_INTERMEDIATE_LIBRARIES)/% | $(ACP)
+	@echo "NDK lib full: $@"
+	$(copy-file-to-target)
 
 # Install files in common trees
 listvar := ndk_common_dest_files
-$(call define-tree-copy-rules,$(sample_src_dir),$(sample_dest_dir),$(listvar))
+$(call define-tree-copy-rules,$(samplejni_src_dir),$(samplejni_dest_dir),$(listvar))
 $(call define-tree-copy-rules,$(config_src_dir),$(config_dest_dir),$(listvar))
 $(call define-tree-copy-rules,$(kernel_common_src_dir),$(kernel_dest_dir),$(listvar))
 $(call define-tree-copy-rules,$(kernel_arch_src_dir),$(kernel_dest_dir),$(listvar))
-$(call define-tree-copy-rules,$(gcc_src_dir),$(gcc_dest_dir),$(listvar))
-# TODO: jni
-# TODO: gdb
+$(call define-tree-copy-rules,$(jni_src_dir),$(jni_dest_dir),$(listvar), -name jni.h)
+
+# Install files common to the full builds but not the JNI build
+listvar := ndk_common_full_dest_files
+$(call define-tree-copy-rules,$(sample_src_dir),$(sample_dest_dir),$(listvar))
 
 # Install files without sources
 listvar := ndk_no_src_dest_files
 $(call define-tree-copy-rules,$(bionic_src_dir),$(bionic_no_src_dest_dir),$(listvar),-name '*.h')
-$(call define-tree-copy-rules,$(libm_src_dir),$(libm_no_src_dest_dir),$(listvar),-name '*.h')
-# Pull out files from only the include directory in libstdc++
-$(call define-tree-copy-rules,$(libstdcpp_src_dir),$(libstdcpp_no_src_dest_dir),$(listvar),-regex '.*/include/.*')
 
 # Install files including sources
 listvar := ndk_with_src_dest_files
 $(call define-tree-copy-rules,$(bionic_src_dir),$(bionic_src_dest_dir),$(listvar))
-$(call define-tree-copy-rules,$(libm_src_dir),$(libm_src_dest_dir),$(listvar))
-$(call define-tree-copy-rules,$(libstdcpp_src_dir),$(libstdcpp_src_dest_dir),$(listvar))
+
 
 #-------------------------------------------------------------------------------
-# Create the two versions of the ndk (with and without source)
+# Create the multiple versions of the ndk:
+# ndk_no_src           all files without source
+# ndk_with_source      all files with source
+# ndk_jni_with_source  just files for building JNI shared libraries with source.
 
 # Name the tar files
-name := android_ndk-$(REQUESTED_PRODUCT)
+name := android_ndk-$(TARGET_PRODUCT)
 ifeq ($(TARGET_BUILD_TYPE),debug)
   name := $(name)_debug
 endif
@@ -149,16 +172,20 @@ ndk_tarfile := $(ndk_intermediates)/$(name).tar
 ndk_tarfile_zipped := $(ndk_tarfile).gz
 ndk_with_src_tarfile := $(ndk_intermediates)/$(name)-src.tar
 ndk_with_src_tarfile_zipped := $(ndk_with_src_tarfile).gz
+ndk_jni_with_src_tarfile := $(ndk_intermediates)/$(name)-jni-src.tar
+ndk_jni_with_src_tarfile_zipped := $(ndk_jni_with_src_tarfile).gz
 
-.PHONY: ndk ndk_with_src ndk_no_src ndk_debug
+.PHONY: ndk ndk_with_src ndk_no_src ndk_jni_with_src ndk_debug
 
-ndk: ndk_no_src ndk_with_src
+ndk: ndk_no_src ndk_with_src ndk_jni_with_src
 ndk_no_src: $(ndk_tarfile_zipped)
 ndk_with_src: $(ndk_with_src_tarfile_zipped)
+ndk_jni_with_src: $(ndk_jni_with_src_tarfile_zipped)
 
 # Put the ndk zip files in the distribution directory
 $(call dist-for-goals,pdk,$(ndk_tarfile_zipped))
 $(call dist-for-goals,pdk,$(ndk_with_src_tarfile_zipped))
+$(call dist-for-goals,pdk,$(ndk_jni_with_src_tarfile_zipped))
 
 # zip up tar files
 %.tar.gz: %.tar
@@ -166,15 +193,25 @@ $(call dist-for-goals,pdk,$(ndk_with_src_tarfile_zipped))
 	$(hide) gzip -cf $< > $@
 
 # tar up the files without our sources to make the ndk.
-$(ndk_tarfile): $(ndk_common_dest_files) $(ndk_no_src_dest_files)
+$(ndk_tarfile): $(ndk_common_dest_files) $(ndk_common_full_dest_files) $(ndk_no_src_dest_files)
 	@echo "NDK: $@"
 	@mkdir -p $(dir $@)
 	@rm -f $@
 	$(hide) tar rf $@ -C $(ndk_common_tree) ndk
+	$(hide) tar rf $@ -C $(ndk_common_full_tree) ndk
 	$(hide) tar rf $@ -C $(ndk_no_src_tree) ndk
 
 # tar up the full sources to make the ndk with sources.
-$(ndk_with_src_tarfile): $(ndk_common_dest_files) $(ndk_with_src_dest_files)
+$(ndk_with_src_tarfile): $(ndk_common_dest_files) $(ndk_common_full_dest_files) $(ndk_with_src_dest_files) $(ndk_full_with_src_dest_files)
+	@echo "NDK: $@"
+	@mkdir -p $(dir $@)
+	@rm -f $@
+	$(hide) tar rf $@ -C $(ndk_common_tree) ndk
+	$(hide) tar rf $@ -C $(ndk_common_full_tree) ndk
+	$(hide) tar rf $@ -C $(ndk_src_tree) ndk
+	
+# tar up the sources to make the ndk with JNI support.
+$(ndk_jni_with_src_tarfile): $(ndk_common_dest_files) $(ndk_with_src_dest_files)
 	@echo "NDK: $@"
 	@mkdir -p $(dir $@)
 	@rm -f $@
@@ -184,9 +221,12 @@ $(ndk_with_src_tarfile): $(ndk_common_dest_files) $(ndk_with_src_dest_files)
 # Debugging reporting can go here, add it as a target to get output.
 ndk_debug: ndk
 	@echo "You are here: $@"
-	@echo "ndk_with_src tar file: $(ndk_with_src_tarfile_zipped)"
 	@echo "ndk tar file:          $(ndk_tarfile_zipped)"
-	@echo "ndk_with_src files:    $(ndk_with_src_dest_files)"
+	@echo "ndk_with_src tar file: $(ndk_with_src_tarfile_zipped)"
+	@echo "ndk_jni_with_src tar file: $(ndk_jni_with_src_tarfile_zipped)"
 	@echo "ndk_files:             $(ndk_no_src_dest_files)"
+	@echo "ndk_with_src files:    $(ndk_with_src_dest_files)"
+	@echo "ndk_full_with_src files:    $(ndk_full_with_src_dest_files)"
 	@echo "ndk_common_files:      $(ndk_common_dest_files)"
+	@echo "ndk_common_full_dest_files:      $(ndk_common_full_dest_files)"
 

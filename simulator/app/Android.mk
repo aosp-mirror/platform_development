@@ -1,7 +1,7 @@
 # Copyright 2005 The Android Open Source Project
 #
 
-ifneq ($(TARGET_ARCH),arm)
+ifeq ($(TARGET_SIMULATOR),true)
 
 LOCAL_PATH := $(call my-dir)
 
@@ -127,4 +127,4 @@ $(LOCAL_INSTALLED_MODULE): | $(asset_target)
 
 ALL_DEFAULT_INSTALLED_MODULES += $(asset_target)
 
-endif
+endif # $(TARGET_SIMULATOR) == true

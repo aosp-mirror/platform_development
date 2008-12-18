@@ -2,7 +2,7 @@
 <feature
       id="com.android.ide.eclipse.adt"
       label="Android Development Tools"
-      version="0.8.1.qualifier"
+      version="0.9.0.qualifier"
       provider-name="The Android Open Source Project"
       plugin="com.android.ide.eclipse.adt">
 
@@ -14,35 +14,33 @@
       Copyright (C) 2007 The Android Open Source Project
    </copyright>
 
+   <license>
+      License TBD.
+   </license>
+
    <url>
       <update label="Android Update Site" url="https://dl-ssl.google.com/android/eclipse/"/>
    </url>
 
    <requires>
-      <import plugin="org.eclipse.core.resources"/>
       <import plugin="org.eclipse.core.runtime"/>
-      <import plugin="org.eclipse.jdt.core"/>
-      <import plugin="org.eclipse.ui.console"/>
-      <import plugin="org.eclipse.ui"/>
-      <import plugin="org.eclipse.jdt.ui"/>
-      <import plugin="org.eclipse.jface.text"/>
-      <import plugin="org.eclipse.ui.editors"/>
+      <import plugin="org.eclipse.core.resources"/>
       <import plugin="org.eclipse.debug.core"/>
       <import plugin="org.eclipse.debug.ui"/>
       <import plugin="org.eclipse.jdt"/>
       <import plugin="org.eclipse.ant.core"/>
+      <import plugin="org.eclipse.jdt.core"/>
+      <import plugin="org.eclipse.jdt.ui"/>
       <import plugin="org.eclipse.jdt.launching"/>
+      <import plugin="org.eclipse.jface.text"/>
+      <import plugin="org.eclipse.ui.editors"/>
       <import plugin="org.eclipse.ui.workbench.texteditor"/>
+      <import plugin="org.eclipse.ui.console"/>
       <import plugin="org.eclipse.core.filesystem"/>
+      <import plugin="org.eclipse.ui"/>
       <import plugin="org.eclipse.ui.ide"/>
+      <import plugin="org.eclipse.ui.forms"/>
    </requires>
-
-   <plugin
-         id="com.android.ide.eclipse.common"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
 
    <plugin
          id="com.android.ide.eclipse.adt"

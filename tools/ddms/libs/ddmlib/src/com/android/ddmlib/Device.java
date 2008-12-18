@@ -30,8 +30,10 @@ import java.util.Map;
 
 /**
  * A Device. It can be a physical device or an emulator.
+ * 
+ * TODO: make this class package-protected, and shift all callers to use IDevice
  */
-public final class Device {
+public final class Device implements IDevice {
     /**
      * The state of a device.
      */
@@ -61,22 +63,9 @@ public final class Device {
         }
     }
     
-    public final static String PROP_BUILD_VERSION = "ro.build.version.release";
-    public final static String PROP_DEBUGGABLE = "ro.debuggable";
-
-    /** Serial number of the first connected emulator. */
-    public final static String FIRST_EMULATOR_SN = "emulator-5554"; //$NON-NLS-1$
-
     /** Emulator Serial Number regexp. */
     final static String RE_EMULATOR_SN = "emulator-(\\d+)"; //$NON-NLS-1$
     
-    /** Device change bit mask: {@link DeviceState} change. */
-    public static final int CHANGE_STATE = 0x0001;
-    /** Device change bit mask: {@link Client} list change. */
-    public static final int CHANGE_CLIENT_LIST = 0x0002;
-    /** Device change bit mask: build info change. */
-    public static final int CHANGE_BUILD_INFO = 0x0004;
-
     /** Serial number of the device */
     String serialNumber = null;
 
@@ -94,38 +83,41 @@ public final class Device {
      */
     private SocketChannel mSocketChannel;
     
-    /**
-     * Returns the serial number of the device.
+    /* 
+     * (non-Javadoc)
+     * @see com.android.ddmlib.IDevice#getSerialNumber()
      */
     public String getSerialNumber() {
         return serialNumber;
     }
     
-    /**
-     * Returns the state of the device.
+    /* 
+     * (non-Javadoc)
+     * @see com.android.ddmlib.IDevice#getState()
      */
     public DeviceState getState() {
         return state;
     }
     
-    /**
-     * Returns the device properties. It contains the whole output of 'getprop'
+    /* 
+     * (non-Javadoc)
+     * @see com.android.ddmlib.IDevice#getProperties()
      */
     public Map<String, String> getProperties() {
         return Collections.unmodifiableMap(mProperties);
     }
 
-    /**
-     * Returns the number of property for this device.
+    /* 
+     * (non-Javadoc)
+     * @see com.android.ddmlib.IDevice#getPropertyCount()
      */
     public int getPropertyCount() {
         return mProperties.size();
     }
 
-    /**
-     * Returns a property value.
-     * @param name the name of the value to return.
-     * @return the value or <code>null</code> if the property does not exist.
+    /* 
+     * (non-Javadoc)
+     * @see com.android.ddmlib.IDevice#getProperty(java.lang.String)
      */
     public String getProperty(String name) {
         return mProperties.get(name);
@@ -137,46 +129,49 @@ public final class Device {
         return serialNumber;
     }
 
-    /**
-     * Returns if the device is ready.
-     * @return <code>true</code> if {@link #getState()} returns {@link DeviceState#ONLINE}.
+    /* 
+     * (non-Javadoc)
+     * @see com.android.ddmlib.IDevice#isOnline()
      */
     public boolean isOnline() {
         return state == DeviceState.ONLINE;
     }
 
-    /**
-     * Returns <code>true</code> if the device is an emulator.
+    /* 
+     * (non-Javadoc)
+     * @see com.android.ddmlib.IDevice#isEmulator()
      */
     public boolean isEmulator() {
         return serialNumber.matches(RE_EMULATOR_SN);
     }
 
-    /**
-     * Returns if the device is offline.
-     * @return <code>true</code> if {@link #getState()} returns {@link DeviceState#OFFLINE}.
+    /* 
+     * (non-Javadoc)
+     * @see com.android.ddmlib.IDevice#isOffline()
      */
     public boolean isOffline() {
         return state == DeviceState.OFFLINE;
     }
 
-    /**
-     * Returns if the device is in bootloader mode.
-     * @return <code>true</code> if {@link #getState()} returns {@link DeviceState#BOOTLOADER}.
+    /* 
+     * (non-Javadoc)
+     * @see com.android.ddmlib.IDevice#isBootLoader()
      */
     public boolean isBootLoader() {
         return state == DeviceState.BOOTLOADER;
     }
 
-    /**
-     * Returns whether the {@link Device} has {@link Client}s.
+    /* 
+     * (non-Javadoc)
+     * @see com.android.ddmlib.IDevice#hasClients()
      */
     public boolean hasClients() {
         return mClients.size() > 0;
     }
 
-    /**
-     * Returns the array of clients.
+    /* 
+     * (non-Javadoc)
+     * @see com.android.ddmlib.IDevice#getClients()
      */
     public Client[] getClients() {
         synchronized (mClients) {
@@ -184,10 +179,9 @@ public final class Device {
         }
     }
     
-    /**
-     * Returns a {@link Client} by its application name.
-     * @param applicationName the name of the application
-     * @return the <code>Client</code> object or <code>null</code> if no match was found.
+    /* 
+     * (non-Javadoc)
+     * @see com.android.ddmlib.IDevice#getClient(java.lang.String)
      */
     public Client getClient(String applicationName) {
         synchronized (mClients) {
@@ -202,9 +196,9 @@ public final class Device {
         return null;
     }
 
-    /**
-     * Returns a {@link SyncService} object to push / pull files to and from the device.
-     * @return <code>null</code> if the SyncService couldn't be created.
+    /* 
+     * (non-Javadoc)
+     * @see com.android.ddmlib.IDevice#getSyncService()
      */
     public SyncService getSyncService() {
         SyncService syncService = new SyncService(AndroidDebugBridge.sSocketAddr, this);
@@ -215,28 +209,25 @@ public final class Device {
         return null;
     }
 
-    /**
-     * Returns a {@link FileListingService} for this device.
+    /* 
+     * (non-Javadoc)
+     * @see com.android.ddmlib.IDevice#getFileListingService()
      */
     public FileListingService getFileListingService() {
         return new FileListingService(this);
     }
 
-    /**
-     * Takes a screen shot of the device and returns it as a {@link RawImage}.
-     * @return the screenshot as a <code>RawImage</code> or <code>null</code> if
-     * something went wrong.
-     * @throws IOException
+    /* 
+     * (non-Javadoc)
+     * @see com.android.ddmlib.IDevice#getScreenshot()
      */
     public RawImage getScreenshot() throws IOException {
         return AdbHelper.getFrameBuffer(AndroidDebugBridge.sSocketAddr, this);
     }
 
-    /**
-     * Executes a shell command on the device, and sends the result to a receiver.
-     * @param command The command to execute
-     * @param receiver The receiver object getting the result from the command.
-     * @throws IOException
+    /* 
+     * (non-Javadoc)
+     * @see com.android.ddmlib.IDevice#executeShellCommand(java.lang.String, com.android.ddmlib.IShellOutputReceiver)
      */
     public void executeShellCommand(String command, IShellOutputReceiver receiver)
             throws IOException {
@@ -244,20 +235,17 @@ public final class Device {
                 receiver);
     }
     
-    /**
-     * Runs the event log service and outputs the event log to the {@link LogReceiver}.
-     * @param receiver the receiver to receive the event log entries.
-     * @throws IOException
+    /* 
+     * (non-Javadoc)
+     * @see com.android.ddmlib.IDevice#runEventLogService(com.android.ddmlib.log.LogReceiver)
      */
     public void runEventLogService(LogReceiver receiver) throws IOException {
         AdbHelper.runEventLogService(AndroidDebugBridge.sSocketAddr, this, receiver);
     }
     
-    /**
-     * Creates a port forwarding between a local and a remote port.
-     * @param localPort the local port to forward
-     * @param remotePort the remote port.
-     * @return <code>true</code> if success.
+    /* 
+     * (non-Javadoc)
+     * @see com.android.ddmlib.IDevice#createForward(int, int)
      */
     public boolean createForward(int localPort, int remotePort) {
         try {
@@ -269,11 +257,9 @@ public final class Device {
         }
     }
 
-    /**
-     * Removes a port forwarding between a local and a remote port.
-     * @param localPort the local port to forward
-     * @param remotePort the remote port.
-     * @return <code>true</code> if success.
+    /* 
+     * (non-Javadoc)
+     * @see com.android.ddmlib.IDevice#removeForward(int, int)
      */
     public boolean removeForward(int localPort, int remotePort) {
         try {
@@ -285,9 +271,9 @@ public final class Device {
         }
     }
 
-    /**
-     * Returns the name of the client by pid or <code>null</code> if pid is unknown
-     * @param pid the pid of the client.
+    /* 
+     * (non-Javadoc)
+     * @see com.android.ddmlib.IDevice#getClientName(int)
      */
     public String getClientName(int pid) {
         synchronized (mClients) {

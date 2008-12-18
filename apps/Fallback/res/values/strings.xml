@@ -15,7 +15,11 @@
 -->
 
 <resources>
+    <!-- Name of the fallback application. It's used only on the SDK when applications from
+         real phones aren't available. -->
     <string name="appTitle">Fallback</string>
+    <!-- Dialog title informing the user that the requested action is not supported -->
     <string name="title">Unsupported action</string>
+    <!-- Dialog content informing the user that the requested action is not supported -->
     <string name="error">That action is not currently supported.</string>
 </resources>

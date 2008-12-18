@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 if [ "$1" == "-h" ]
 then
@@ -20,7 +20,7 @@ fi
 apps=$1
 if [ "$apps" == "" ]
 then
-    apps=$ANDROID_BUILD_TOP/apps/*
+    apps=$ANDROID_BUILD_TOP/packages/apps/*
 fi
 
 for app in $apps
@@ -28,9 +28,9 @@ do
     if [ -d $app/res ]
     then
         pushd $app > /dev/null
-        for i in $(grep -R "string name=" res | sed 's/.*<string name="//'|sed 's/".*$//')
+        for i in $(grep -R "\(string\|plurals\) name=" res | sed 's/.*<\(string\|plurals\) name="//'|sed 's/".*$//'|sort -u)
         do
-            echo $i $(grep -Rw R.string.$i\\\|@string/$i .|wc -l)
+            echo $i $(grep -Rw R.plurals.$i\\\|R.string.$i\\\|@string/$i .|wc -l)
         done | grep ' 0$' | {
             if [ "$showall" == "yes" ]
             then

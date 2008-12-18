@@ -7,6 +7,18 @@
 <script src="http://code.google.com/js/jquery.js" type="text/javascript"></script>
 <script type="text/javascript">var _tocPath_ = 'http://code.google.com/android/_toc.ezt';</script>
 <script src="http://code.google.com/js/codesite.pack.01312008.js" type="text/javascript"></script>
+<script language="JavaScript">
+function resizeHeight() {
+	if(document.getElementById && !(document.all)) {
+		height= document.getElementById('doxygen').contentDocument.body.scrollHeight + 20;
+		document.getElementById('doxygen').style.height = height;
+	}
+	else if(document.all) {
+		height= document.frames('doxygen').document.body.scrollHeight + 20;
+		document.all.doxygen.style.height = height;
+	}
+}
+</script>
 <link href="http://code.google.com/css/codesite.pack.01312008.css" type="text/css" rel="stylesheet">
 </link>
 
@@ -33,6 +45,7 @@ h1,h2,h3 {
 <div id="skipto"> </div>
 <div id="langpref">
   <!--<a class="dropdown" href="/">English</a> <span>|</span> <a href="/more/">Site Directory</a> -->
+
 </div>
 <div id="gc-header">
   <div id="logo"><a href="http://code.google.com/android/index.html"><img src="http://code.google.com/android/images/logo_android.gif" alt="Android"/></a></div>
@@ -51,6 +64,7 @@ h1,h2,h3 {
       }
       </style>
     </noscript>
+
     <div id="searchForm2" class="searchForm2" style="display:none">
       <form id="searchbox_001456098540849067467:6whlsytkdqg" action="http://www.google.com/cse">
         <input type="hidden" name="cx" value="001456098540849067467:6whlsytkdqg" />
@@ -59,6 +73,7 @@ h1,h2,h3 {
         <input type="submit" name="sa" value="Search" title="Search"/>
         <br/>
         <div class="greytext">e.g. "ajax apis" or "open source"</div>
+
       </form>
     </div>
     <!-- end searchForm2 -->
@@ -71,15 +86,18 @@ h1,h2,h3 {
 <div id="codesiteContent">
 <a name="gc-topnav-anchor"></a>
 <div id="gc-topnav">
+
   <h1>Android Platform Development Kit</h1>
   <ul class="gc-topnav-tabs">
     <li id="sdk_link"> <a href="http://code.google.com/android/index.html" title="Android Software Development Kit">SDK</a> </li>
     <li id="docs_link"> <a href="index.html" title="Official Android documentation">Docs</a> </li>
     <li id="faq_link"> <a href="http://code.google.com/android/kb/index.html" title="Answers to frequently asked questions about Android">FAQ</a> </li>
+
     <li> <a href="http://android-developers.blogspot.com/" title="Official Android blog">Blog</a> </li>
     <li> <a href="http://code.google.com/android/groups.html" title="Android developer forum">Group</a> </li>
     <li> <a href="http://code.google.com/android/terms.html" title="Android terms of service">Terms</a> </li>
-    <li> <a href="mailto:android-pdk-feedback@google.com?subject=PDK%20Feedback&body=(filed%20from:%20index.html%20v0.3%20-%209%20June%202008)%0D%0A%0D%0ASUMMARY:%0D%0A%0D%0A%0D%0A%0D%0ASTEPS%20TO%20REPRODUCE:%0D%0A%0D%0A%0D%0A%0D%0AADDITIONAL%20NOTES:">Report a Problem</a> </li>
+    <li> <a href="mailto:android-pdk-feedback@google.com?subject=PDK%20Feedback&body=(filed%20from:%20index.html%20v0.6%20-%2025%20November%202008)%0D%0A%0D%0ASUMMARY:%0D%0A%0D%0A%0D%0A%0D%0ASTEPS%20TO%20REPRODUCE:%0D%0A%0D%0A%0D%0A%0D%0AADDITIONAL%20NOTES:">Report a Problem</a> </li>
+
   </ul>
 </div>
 <!-- end gc-topnav -->
@@ -91,19 +109,18 @@ h1,h2,h3 {
       <h1><a href="index.html">Documentation</a></h1>
       <ul>
         <li> <strong>Introduction</strong>
+
           <ul>
             <li><a href="system_requirements.html">Device Requirements</a></li>            
           </ul>
         </li>
         <li> <strong>Dev Environment Setup</strong>
           <ul>
-            <li><a href="source_setup_guide.html">Host System Setup</a></li>
-            <li><a href="getting_source_code.html">Getting Source Code</a></li>
-            <li> <a href="intro_source_code.html">Source Code Overview</a></li>			
             <li><a href="build_system.html">Build System</a></li>
           </ul>
         </li>
         <li> <strong>Basic Bring up</strong>
+
           <ul>
             <li><a href="build_new_device.html">Building New Device</a></li>
             <li><a href="bring_up.html">Bring up</a></li>
@@ -111,26 +128,39 @@ h1,h2,h3 {
             <li><a href="display_drivers.html">Display Drivers</a></li>
           </ul>
         </li>
+
         <li> <strong>Multimedia</strong>
           <ul>
-            <li><a href="audio_sub_system.html">Audio Subsystem</a></li>
+            <li><a href="audio_sub_system.html">Audio</a></li>
+            <li><a href="camera.html">Camera</a></li>			
           </ul>
         </li>
         <li> <strong>Power Management</strong>
+
           <ul>
             <li><a href="power_management.html">Power Management</a></li>
           </ul>
         </li>
+
+        <li> <strong>Networking</strong>
+          <ul>
+            <li><a href="wifi.html">Wi-Fi</a></li>
+            <li><a href="gps.html">GPS</a></li>
+            <li><a href="bluetooth.html">Bluetooth</a></li>
+          </ul>
+        </li>
+
         <li> <strong>Telephony</strong>
           <ul>
             <li><a href="telephony.html">Radio Interface Layer</a></li>
+
           </ul>
         </li>
         <li> <strong>Testing</strong>
           <ul>
-            <li><a href="instrumentation_framework.html">Instrumentation Framework</a></li>
             <li><a href="instrumentation_testing.html">Instrumentation Testing</a></li>
           </ul>
+
         </li>
       </ul>
     </li>
@@ -212,7 +242,7 @@ with at least keypad and display drivers properly installed.</p>
     pageTracker._trackPageview(); 
   } catch(e) {}
 </script>
-<div id="jd-build-id"> v0.3 - 9 June 2008</div>
+<div id="jd-build-id"> v0.6 - 25 November 2008</div>
 </div></div></div></body>
 </html>
 

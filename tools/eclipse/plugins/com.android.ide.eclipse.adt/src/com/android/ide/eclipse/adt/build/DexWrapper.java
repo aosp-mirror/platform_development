@@ -17,6 +17,7 @@
 package com.android.ide.eclipse.adt.build;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.sdk.LoadStatus;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IStatus;
@@ -47,9 +48,6 @@ public final class DexWrapper {
     
     private static DexWrapper sWrapper;
 
-    /** Status for the Loading of the dex jar file */
-    public enum LoadStatus { LOADING, LOADED, FAILED }
-    
     private static LoadStatus sLoadStatus = LoadStatus.LOADING;
 
     private Method mRunMethod;

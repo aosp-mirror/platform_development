@@ -27,12 +27,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
-import android.os.RemoteException;
 import android.os.IBinder;
+import android.os.RemoteException;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.EditText;
 import android.widget.Spinner;
 
 /**
@@ -52,12 +53,10 @@ public class GLSTester extends Activity {
     CheckBox mDoNotify = null;
     CheckBox mRunIntent = null;
     Spinner mService = null;
+    EditText mUsernameEdit = null;
 
     private class Listener implements View.OnClickListener {
-        private boolean mRequireGoogle;
-
-        public Listener(boolean requireGoogle) {
-            mRequireGoogle = requireGoogle;
+        public Listener() {
         }
 
         public void onClick(View v) {
@@ -69,7 +68,10 @@ public class GLSTester extends Activity {
                 String service = (String) mService.getSelectedItem();
                 mText.append("service: " + service + "\n");
 
-                String account = mGls.getAccount(mRequireGoogle);
+                String account = mUsernameEdit.getText().toString();
+                if (account.length() == 0) {
+                    account = null;
+                }
                 mText.append("account: " + account + "\n");
                 GoogleLoginCredentialsResult result =
                     mGls.blockingGetCredentials(account, service, mDoNotify.isChecked());
@@ -120,6 +122,8 @@ public class GLSTester extends Activity {
         setContentView(R.layout.gls_tester);
 
         mText = (LogTextBox) findViewById(R.id.text);
+        mText.append("Hello, world!\n");
+        Log.v(TAG, "hello, world!");
 
         mDoNotify = (CheckBox) findViewById(R.id.do_notification);
         mRunIntent = (CheckBox) findViewById(R.id.run_intent);
@@ -127,17 +131,56 @@ public class GLSTester extends Activity {
 
         mService = (Spinner) findViewById(R.id.service_spinner);
 
+        mUsernameEdit = (EditText) findViewById(R.id.username_edit);
+
         Button b;
         b = (Button) findViewById(R.id.require_google);
-        b.setOnClickListener(new Listener(GoogleLoginServiceConstants.REQUIRE_GOOGLE));
+        b.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                try {
+                    String account = mGls.getAccount(GoogleLoginServiceConstants.REQUIRE_GOOGLE);
+                    mText.append("REQUIRE_GOOGLE gave: " + account + "\n");
+                    mUsernameEdit.setText(account == null ? "" : account);
+                } catch (RemoteException e) {
+                    mText.append("exception: " + e + "\n");
+                }
+            } });
+
         b = (Button) findViewById(R.id.prefer_hosted);
-        b.setOnClickListener(new Listener(GoogleLoginServiceConstants.PREFER_HOSTED));
+        b.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                try {
+                    String account = mGls.getAccount(GoogleLoginServiceConstants.PREFER_HOSTED);
+                    mText.append("PREFER_HOSTED gave: " + account + "\n");
+                    mUsernameEdit.setText(account == null ? "" : account);
+                } catch (RemoteException e) {
+                    mText.append("exception: " + e + "\n");
+                }
+            } });
+
+
+        b = (Button) findViewById(R.id.get_accounts);
+        b.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                try {
+                    String[] accounts = mGls.getAccounts();
+                    mText.append("account list: (" + accounts.length + " entries)\n");
+                    for (String username: accounts) {
+                        mText.append("  " + username + "\n");
+                    }
+                } catch (RemoteException e) {
+                    mText.append("exception: " + e + "\n");
+                }
+            } });
 
         b = (Button) findViewById(R.id.clear);
         b.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 mText.setText("");
             } });
+
+        b = (Button) findViewById(R.id.go);
+        b.setOnClickListener(new Listener());
 
         b = (Button) findViewById(R.id.wipe_passwords);
         b.setOnClickListener(new View.OnClickListener() {

@@ -17,6 +17,7 @@
 package com.android.ide.eclipse.adt.project;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.common.AndroidConstants;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
@@ -117,7 +118,7 @@ public class CreateAidlImportAction  implements IObjectActionDelegate {
             // create the file with the parcelables
             if (parcelables.size() > 0) {
                 IPath path = project.getLocation();
-                path = path.append("/project.aidl"); //$NON-NLS-1$
+                path = path.append(AndroidConstants.FN_PROJECT_AIDL);
                 
                 File f = new File(path.toOSString());
                 if (f.exists() == false) {
@@ -194,7 +195,7 @@ public class CreateAidlImportAction  implements IObjectActionDelegate {
         
         IType[] superInterfaces = typeHierarchy.getAllSuperInterfaces(type);
         for (IType superInterface : superInterfaces) {
-            if ("android.os.Parcelable".equals(superInterface.getFullyQualifiedName())) { //$NON-NLS-1$
+            if (AndroidConstants.CLASS_PARCELABLE.equals(superInterface.getFullyQualifiedName())) {
                 parcelables.add(type.getFullyQualifiedName());
             }
         }

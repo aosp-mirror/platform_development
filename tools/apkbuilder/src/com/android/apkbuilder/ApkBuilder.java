@@ -335,8 +335,9 @@ public final class ApkBuilder {
                         DebugKeyProvider.getDefaultKeyStoreOsPath()));
                 
                 
-                DebugKeyProvider keyProvider = new DebugKeyProvider(storeType,
-                        null /* IKeyGenOutput */);
+                DebugKeyProvider keyProvider = new DebugKeyProvider(
+                        null /* osKeyPath: use default */,
+                        storeType, null /* IKeyGenOutput */);
                 PrivateKey key = keyProvider.getDebugKey();
                 X509Certificate certificate = (X509Certificate)keyProvider.getCertificate();
                 

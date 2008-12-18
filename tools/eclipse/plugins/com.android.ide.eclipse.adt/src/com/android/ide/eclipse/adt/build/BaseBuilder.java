@@ -806,12 +806,6 @@ abstract class BaseBuilder extends IncrementalProjectBuilder {
                     // get the IPath
                     IPath path = e.getPath();
 
-                    // get the file name. if it's the framework jar, we ignore that file.
-                    // since we now use classpath container, this is here for legacy purpose only.
-                    if (AndroidConstants.FN_FRAMEWORK_LIBRARY.equals(path.lastSegment())) {
-                        continue;
-                    }
-
                     // check the name ends with .jar
                     if (AndroidConstants.EXT_JAR.equalsIgnoreCase(path.getFileExtension())) {
                         boolean local = false;

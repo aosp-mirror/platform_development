@@ -49,7 +49,6 @@ public class DevelopmentSettings extends Activity {
     private static final int DEBUG_APP_REQUEST = 1;
 
     private Button mDebugAppButton;
-    private CheckBox mEnableAdbCB;
     private CheckBox mWaitForDebuggerCB;
     private CheckBox mAlwaysFinishCB;
     private CheckBox mShowLoadCB;
@@ -59,7 +58,6 @@ public class DevelopmentSettings extends Activity {
     private CheckBox mShowBackgroundCB;
     private CheckBox mShowSleepCB;
     private CheckBox mShowMapsCompassCB;
-    private CheckBox mKeepScreenOnCB;
     private CheckBox mShowXmppCB;
     private Spinner mMaxProcsSpinner;
     private Spinner mWindowAnimationScaleSpinner;
@@ -67,13 +65,11 @@ public class DevelopmentSettings extends Activity {
     private Spinner mFontHintingSpinner;
 
     private String mDebugApp;
-    private boolean mEnableAdb;
     private boolean mWaitForDebugger;
     private boolean mAlwaysFinish;
     private int mProcessLimit;
     private boolean mShowSleep;
     private boolean mShowMapsCompass;
-    private boolean mKeepScreenOn;
     private boolean mShowXmpp;
     private AnimationScaleSelectedListener mWindowAnimationScale
             = new AnimationScaleSelectedListener(0);
@@ -93,8 +89,6 @@ public class DevelopmentSettings extends Activity {
 
         mDebugAppButton = (Button)findViewById(R.id.debug_app);
         mDebugAppButton.setOnClickListener(mDebugAppClicked);
-        mEnableAdbCB = (CheckBox)findViewById(R.id.enable_adb);
-        mEnableAdbCB.setOnClickListener(mEnableAdbClicked);
         mWaitForDebuggerCB = (CheckBox)findViewById(R.id.wait_for_debugger);
         mWaitForDebuggerCB.setOnClickListener(mWaitForDebuggerClicked);
         mAlwaysFinishCB = (CheckBox)findViewById(R.id.always_finish);
@@ -114,8 +108,6 @@ public class DevelopmentSettings extends Activity {
         mShowSleepCB.setOnClickListener(mShowSleepClicked);
         mShowMapsCompassCB = (CheckBox)findViewById(R.id.show_maps_compass);
         mShowMapsCompassCB.setOnClickListener(mShowMapsCompassClicked);
-        mKeepScreenOnCB = (CheckBox)findViewById(R.id.keep_screen_on);
-        mKeepScreenOnCB.setOnClickListener(mKeepScreenOnClicked);
         mShowXmppCB = (CheckBox)findViewById(R.id.show_xmpp);
         mShowXmppCB.setOnClickListener(mShowXmppClicked);
         mMaxProcsSpinner = (Spinner)findViewById(R.id.max_procs);
@@ -181,7 +173,6 @@ public class DevelopmentSettings extends Activity {
         updateFlingerOptions();
         updateSleepOptions();
         updateMapsCompassOptions();
-        updateKeepScreenOnOptions();
         updateXmppOptions();        
 
         try {
@@ -210,13 +201,10 @@ public class DevelopmentSettings extends Activity {
             getContentResolver(), Settings.System.DEBUG_APP);
         mWaitForDebugger = Settings.System.getInt(
             getContentResolver(), Settings.System.WAIT_FOR_DEBUGGER, 0) != 0;
-        mEnableAdb = Settings.System.getInt(
-            getContentResolver(), Settings.System.ADB_ENABLED, 0) != 0;
 
         mDebugAppButton.setText(
             mDebugApp == null || mDebugApp.length() == 0 ? "(none)" : mDebugApp);
         mWaitForDebuggerCB.setChecked(mWaitForDebugger);
-        mEnableAdbCB.setChecked(mEnableAdb);
     }
 
     private void writeFinishOptions() {
@@ -330,17 +318,6 @@ public class DevelopmentSettings extends Activity {
         mShowMapsCompassCB.setChecked(mShowMapsCompass);
     }
 
-    private void writeKeepScreenOnOptions() {
-        Settings.System.putInt(getContentResolver(), Settings.System.STAY_ON_WHILE_PLUGGED_IN,
-                mKeepScreenOn ? 1 : 0);
-    }
-
-    private void updateKeepScreenOnOptions() {
-        mKeepScreenOn = Settings.System.getInt(getContentResolver(),
-                Settings.System.STAY_ON_WHILE_PLUGGED_IN, 0) != 0;
-        mKeepScreenOnCB.setChecked(mKeepScreenOn);
-    }
-
     private void writeXmppOptions() {
         Settings.System.setShowGTalkServiceStatus(getContentResolver(), mShowXmpp);
     }
@@ -366,13 +343,6 @@ public class DevelopmentSettings extends Activity {
             updateDebugOptions();
         }
     }
-
-    private View.OnClickListener mEnableAdbClicked = new View.OnClickListener() {
-        public void onClick(View v) {
-            Settings.System.putInt(getContentResolver(), Settings.System.ADB_ENABLED, 
-                                ((CheckBox)v).isChecked() ? 1 : 0);
-        }
-    };
 
     private View.OnClickListener mWaitForDebuggerClicked =
             new View.OnClickListener() {
@@ -450,15 +420,6 @@ public class DevelopmentSettings extends Activity {
     };
 
     
-    private View.OnClickListener mKeepScreenOnClicked =
-            new View.OnClickListener() {
-        public void onClick(View v) {
-            mKeepScreenOn = ((CheckBox)v).isChecked();
-            writeKeepScreenOnOptions();
-            updateKeepScreenOnOptions();
-        }
-    };
-
     private View.OnClickListener mShowXmppClicked = new View.OnClickListener() {
         public void onClick(View v) {
             mShowXmpp = ((CheckBox)v).isChecked();

@@ -62,13 +62,10 @@ public class ResourceManagerBuilder extends IncrementalProjectBuilder {
         switch (res) {
             case ProjectHelper.COMPILER_COMPLIANCE_LEVEL:
                 errorMessage = Messages.Requires_Compiler_Compliance_5;
-                return null;
             case ProjectHelper.COMPILER_COMPLIANCE_SOURCE:
                 errorMessage = Messages.Requires_Source_Compatibility_5;
-                return null;
             case ProjectHelper.COMPILER_COMPLIANCE_CODEGEN_TARGET:
                 errorMessage = Messages.Requires_Class_Compatibility_5;
-                return null;
         }
 
         if (errorMessage != null) {

@@ -28,6 +28,7 @@ import android.view.*;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ByteArrayOutputStream;
 
 public class BitmapDecode extends GraphicsActivity {
     
@@ -46,6 +47,19 @@ public class BitmapDecode extends GraphicsActivity {
         
         private Movie mMovie;
         private long mMovieStart;
+        
+        private static byte[] streamToBytes(InputStream is) {
+            ByteArrayOutputStream os = new ByteArrayOutputStream(1024);
+            byte[] buffer = new byte[1024];
+            int len;
+            try {
+                while ((len = is.read(buffer)) >= 0) {
+                    os.write(buffer, 0, len);
+                }
+            } catch (java.io.IOException e) {
+            }
+            return os.toByteArray();
+        }
         
         public SampleView(Context context) {
             super(context);
@@ -87,7 +101,12 @@ public class BitmapDecode extends GraphicsActivity {
             mDrawable.setBounds(150, 20, 300, 100);
             
             is = context.getResources().openRawResource(R.drawable.animated_gif);
-            mMovie = Movie.decodeStream(is);
+            if (true) {
+                mMovie = Movie.decodeStream(is);
+            } else {
+                byte[] array = streamToBytes(is);
+                mMovie = Movie.decodeByteArray(array, 0, array.length);
+            }
         }
         
         @Override protected void onDraw(Canvas canvas) {
@@ -107,11 +126,17 @@ public class BitmapDecode extends GraphicsActivity {
             if (mMovieStart == 0) {   // first time
                 mMovieStart = now;
             }
-            int relTime = (int)((now - mMovieStart) % mMovie.duration());
-            mMovie.setTime(relTime);
-            mMovie.draw(canvas, getWidth() - mMovie.width(),
-                        getHeight() - mMovie.height());
-            invalidate();
+            if (mMovie != null) {
+                int dur = mMovie.duration();
+                if (dur == 0) {
+                    dur = 1000;
+                }
+                int relTime = (int)((now - mMovieStart) % dur);
+                mMovie.setTime(relTime);
+                mMovie.draw(canvas, getWidth() - mMovie.width(),
+                            getHeight() - mMovie.height());
+                invalidate();
+            }
         }
     }
 }

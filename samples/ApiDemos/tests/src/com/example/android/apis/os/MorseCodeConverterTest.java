@@ -17,6 +17,7 @@
 package com.example.android.apis.os;
 
 import junit.framework.TestCase;
+import android.test.suitebuilder.annotation.SmallTest;
 
 /**
  * An example of a true unit test that tests the utility class {@link MorseCodeConverter}.
@@ -28,6 +29,7 @@ import junit.framework.TestCase;
  */
 public class MorseCodeConverterTest extends TestCase {
 
+    @SmallTest
     public void testCharacterS() throws Exception {
 
         long[] expectedBeeps = {

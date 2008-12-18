@@ -48,6 +48,8 @@ public final class NativeAllocationInfo {
         sAllocFunctionFilter.add("operator new"); //$NON-NLS-1$
         sAllocFunctionFilter.add("leak_free"); //$NON-NLS-1$
         sAllocFunctionFilter.add("chk_free"); //$NON-NLS-1$
+        sAllocFunctionFilter.add("chk_memalign"); //$NON-NLS-1$
+        sAllocFunctionFilter.add("Malloc"); //$NON-NLS-1$
     }
 
     private final int mSize;

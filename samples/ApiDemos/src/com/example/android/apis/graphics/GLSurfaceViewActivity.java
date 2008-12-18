@@ -17,6 +17,7 @@
 package com.example.android.apis.graphics;
 
 import android.app.Activity;
+import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 
 /**
