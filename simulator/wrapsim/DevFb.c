@@ -63,7 +63,7 @@ static void configureInitialState(int displayIdx, FbState* fbState)
     fbState->vinfo.blue.length = 5;
 
     fbState->vinfo.width = 51;           // physical dimension, used for dpi
-    fbState->vinfo.height = 38;          
+    fbState->vinfo.height = 76;
 
     fbState->vinfo.pixclock = 103092;    
     fbState->vinfo.upper_margin = 3;

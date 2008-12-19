@@ -1,0 +1,21 @@
+
+NDK_BASE   := ../..
+
+include $(NDK_BASE)/config/config.mk
+
+EXECUTABLE := hello_cpp
+SOURCES    := hello_cpp.cpp
+OBJECTS    := $(SOURCES:.cpp=.o)
+LIBS       := -lc -lm -lstdc++
+
+all: $(EXECUTABLE)
+
+# need $(LINK) before all objects and $(POSTLINK) after all objects for 
+# android runtime setup.
+
+hello_cpp: $(OBJECTS)
+	$(CC) $(LINK) -o $@ $(OBJECTS) $(LIBS) $(POSTLINK)
+
+clean:
+	rm -rf *.o hello_cpp
+

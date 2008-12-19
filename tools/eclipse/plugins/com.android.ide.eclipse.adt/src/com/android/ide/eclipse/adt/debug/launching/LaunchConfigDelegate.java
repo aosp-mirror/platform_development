@@ -83,11 +83,6 @@ public class LaunchConfigDelegate extends LaunchConfigurationDelegate {
     /** Skin to be used to launch the emulator */
     public static final String ATTR_SKIN = AdtPlugin.PLUGIN_ID + ".skin"; //$NON-NLS-1$
 
-    /**
-     * Name of the default Skin.
-     */
-    public static final String DEFAULT_SKIN = "HVGA"; //$NON-NLS-1$
-
     public static final String ATTR_SPEED = AdtPlugin.PLUGIN_ID + ".speed"; //$NON-NLS-1$
 
     /**
@@ -138,8 +133,7 @@ public class LaunchConfigDelegate extends LaunchConfigurationDelegate {
         // if we have a valid debug port, this means we're debugging an app
         // that's already launched.
         if (debugPort != INVALID_DEBUG_PORT) {
-            AndroidLaunchController.launchRemoteDebugger(configuration,
-                    debugPort, androidLaunch, monitor);
+            AndroidLaunchController.launchRemoteDebugger(debugPort, androidLaunch, monitor);
             return;
         }
 
@@ -302,7 +296,8 @@ public class LaunchConfigDelegate extends LaunchConfigurationDelegate {
         // everything seems fine, we ask the launch controller to handle
         // the rest
         controller.launch(project, mode, applicationPackage, manifestParser.getPackage(),
-                manifestParser.getDebuggable(), activityName, config, androidLaunch, monitor);
+                manifestParser.getDebuggable(), manifestParser.getApiLevelRequirement(),
+                activityName, config, androidLaunch, monitor);
     }
     
     @Override

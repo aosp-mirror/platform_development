@@ -22,6 +22,7 @@ import com.example.android.apis.view.Focus2ActivityTest;
 import android.content.Context;
 import android.content.Intent;
 import android.test.ActivityUnitTestCase;
+import android.test.suitebuilder.annotation.MediumTest;
 import android.widget.Button;
 
 /**
@@ -68,6 +69,7 @@ public class ForwardingTest extends ActivityUnitTestCase<Forwarding> {
      * explain any and all failures in other tests.  This is not guaranteed
      * to run before other tests, as junit uses reflection to find the tests.
      */
+    @MediumTest
     public void testPreconditions() {
         startActivity(mStartIntent, null, null);
         mButton = (Button) getActivity().findViewById(R.id.go);
@@ -80,6 +82,7 @@ public class ForwardingTest extends ActivityUnitTestCase<Forwarding> {
      * This test demonstrates examining the way that activity calls startActivity() to launch 
      * other activities.
      */
+    @MediumTest
     public void testSubLaunch() {
         Forwarding activity = startActivity(mStartIntent, null, null);
         mButton = (Button) activity.findViewById(R.id.go);
@@ -95,6 +98,7 @@ public class ForwardingTest extends ActivityUnitTestCase<Forwarding> {
     /**
      * This test demonstrates ways to exercise the Activity's life cycle.
      */
+    @MediumTest
     public void testLifeCycleCreate() {
         Forwarding activity = startActivity(mStartIntent, null, null);
         

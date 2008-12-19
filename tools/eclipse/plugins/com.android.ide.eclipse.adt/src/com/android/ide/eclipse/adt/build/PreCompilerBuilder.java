@@ -18,14 +18,16 @@ package com.android.ide.eclipse.adt.build;
 
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.editors.java.ReadOnlyJavaEditor;
 import com.android.ide.eclipse.adt.project.FixLaunchConfig;
 import com.android.ide.eclipse.adt.project.ProjectHelper;
+import com.android.ide.eclipse.adt.sdk.LoadStatus;
+import com.android.ide.eclipse.adt.sdk.Sdk;
 import com.android.ide.eclipse.common.AndroidConstants;
 import com.android.ide.eclipse.common.project.AndroidManifestHelper;
 import com.android.ide.eclipse.common.project.AndroidManifestParser;
 import com.android.ide.eclipse.common.project.BaseProjectHelper;
 import com.android.ide.eclipse.common.project.XmlErrorHandler.BasicXmlErrorListener;
+import com.android.sdklib.IAndroidTarget;
 
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
@@ -44,7 +46,6 @@ import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.ui.ide.IDE;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -130,7 +131,6 @@ public class PreCompilerBuilder extends BaseBuilder {
                             mSource);
                     try {
                         mNewFile.setDerived(true);
-                        IDE.setDefaultEditor(mNewFile, ReadOnlyJavaEditor.ID);
                     } catch (CoreException e) {
                         // This really shouldn't happen since we check that the resource exist.
                         // Worst case scenario, the resource isn't marked as derived.
@@ -266,8 +266,14 @@ public class PreCompilerBuilder extends BaseBuilder {
 
                 // record the state
                 mCompileResources |= dv.getCompileResources();
-                mergeAidlFileModifications(dv.getAidlToCompile(),
-                        dv.getAidlToRemove());
+                
+                // handle aidl modification
+                if (dv.getFullAidlRecompilation()) {
+                    buildAidlCompilationList(project, sourceList);
+                } else {
+                    mergeAidlFileModifications(dv.getAidlToCompile(),
+                            dv.getAidlToRemove());
+                }
 
                 // if there was some XML errors, we just return w/o doing
                 // anything since we've put some markers in the files anyway.
@@ -290,6 +296,12 @@ public class PreCompilerBuilder extends BaseBuilder {
         // At this point we have stored what needs to be build, so we can
         // do some high level test and abort if needed.
 
+        // check if we have finished loading the SDK.
+        if (AdtPlugin.getDefault().getSdkLoadStatus(javaProject) != LoadStatus.LOADED) {
+            // we exit silently
+            return null;
+        }
+
         // check the compiler compliance level, not displaying the error message
         // since this is not the first builder.
         if (ProjectHelper.checkCompilerCompliance(getProject())
@@ -302,11 +314,17 @@ public class PreCompilerBuilder extends BaseBuilder {
         // Check that the SDK directory has been setup.
         String osSdkFolder = AdtPlugin.getOsSdkFolder();
 
-        if (osSdkFolder.length() == 0) {
+        if (osSdkFolder == null || osSdkFolder.length() == 0) {
             AdtPlugin.printBuildToConsole(AdtConstants.BUILD_VERBOSE, project,
                     Messages.No_SDK_Setup_Error);
             markProject(AdtConstants.MARKER_ADT, Messages.No_SDK_Setup_Error,
                     IMarker.SEVERITY_ERROR);
+            return null;
+        }
+        
+        IAndroidTarget projectTarget = Sdk.getCurrent().getTarget(project);
+        if (projectTarget == null) {
+            // no target. error has been output by the container initializer: exit silently.
             return null;
         }
 
@@ -448,7 +466,7 @@ public class PreCompilerBuilder extends BaseBuilder {
                 array.add("-S"); //$NON-NLS-1$
                 array.add(osResPath);
                 array.add("-I"); //$NON-NLS-1$
-                array.add(AdtPlugin.getOsAbsoluteFramework());
+                array.add(projectTarget.getPath(IAndroidTarget.ANDROID_JAR));
 
                 if (AdtPlugin.getBuildVerbosity() == AdtConstants.BUILD_VERBOSE) {
                     StringBuilder sb = new StringBuilder();
@@ -563,6 +581,8 @@ public class PreCompilerBuilder extends BaseBuilder {
             deleteObsoleteGeneratedClass(AndroidConstants.FN_MANIFEST_CLASS,
                     mManifestPackageSourceFolder, mManifestPackage);
         }
+        
+        // FIXME: delete all java generated from aidl.
     }
 
     @Override
@@ -736,12 +756,14 @@ public class PreCompilerBuilder extends BaseBuilder {
         if (mAidlToCompile.size() == 0 && mAidlToRemove.size() == 0) {
             return false;
         }
+        
 
         // create the command line
         String[] command = new String[4 + sourceFolders.size() + (folderAidlPath != null ? 1 : 0)];
         int index = 0;
+        int aidlIndex;
         command[index++] = AdtPlugin.getOsAbsoluteAidl();
-        command[index++] = "-p" + AdtPlugin.getOsAbsoluteFrameworkAidl(); //$NON-NLS-1$
+        command[aidlIndex = index++] = "-p"; //$NON-NLS-1$
         if (folderAidlPath != null) {
             command[index++] = "-p" + folderAidlPath; //$NON-NLS-1$
         }
@@ -813,6 +835,8 @@ public class PreCompilerBuilder extends BaseBuilder {
             prepareFileForExternalModification(javaFile);
 
             // finish to set the command line.
+            command[aidlIndex] = "-p" + Sdk.getCurrent().getTarget(aidlFile.getProject()).getPath(
+                    IAndroidTarget.ANDROID_AIDL); //$NON-NLS-1$
             command[index] = osPath;
             command[index + 1] = osJavaPath;
 
@@ -922,7 +946,8 @@ public class PreCompilerBuilder extends BaseBuilder {
     }
 
     /**
-     * Goes through the buildpath and fills the list of aidl files to compile.
+     * Goes through the build paths and fills the list of aidl files to compile
+     * ({@link #mAidlToCompile}).
      * @param project The project.
      * @param buildPaths The list of build paths.
      */
@@ -977,7 +1002,7 @@ public class PreCompilerBuilder extends BaseBuilder {
                        scanContainerForAidl((IFolder)r);
                        break;
                    default:
-                       // this would mean it's a project or the workspaceroot
+                       // this would mean it's a project or the workspace root
                        // which is unlikely to happen. we do nothing
                        break;
                }

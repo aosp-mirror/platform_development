@@ -30,9 +30,9 @@ import com.android.ddmlib.SyncService.SyncResult;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.debug.launching.DeviceChooserDialog.DeviceChooserResponse;
 import com.android.ide.eclipse.adt.debug.ui.EmulatorConfigTab;
-import com.android.ide.eclipse.adt.debug.ui.SkinRepository;
 import com.android.ide.eclipse.adt.project.ProjectHelper;
 import com.android.ide.eclipse.common.project.AndroidManifestHelper;
+import com.android.sdklib.SdkConstants;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
@@ -102,6 +102,9 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
         /** Debuggable attribute of the manifest file. */
         Boolean mDebuggable = null;
         
+        /** Required ApiVersionNumber by the app. 0 means no requirements */
+        int mRequiredApiVersionNumber = 0;
+        
         InstallRetryMode mRetryMode = InstallRetryMode.NEVER;
         
         /**
@@ -126,8 +129,8 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
 
         /** Basic constructor with activity and package info. */
         public DelayedLaunchInfo(IProject project, String packageName, String activity,
-                IFile pack, Boolean debuggable, int launchAction, AndroidLaunch launch,
-                IProgressMonitor monitor) {
+                IFile pack, Boolean debuggable, int requiredApiVersionNumber, int launchAction,
+                AndroidLaunch launch, IProgressMonitor monitor) {
             mProject = project;
             mPackageName = packageName;
             mActivity = activity;
@@ -136,6 +139,7 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
             mLaunch = launch;
             mMonitor = monitor;
             mDebuggable = debuggable;
+            mRequiredApiVersionNumber = requiredApiVersionNumber;
         }
     }
     
@@ -256,13 +260,10 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
             try {
                 mSkin = config.getAttribute(LaunchConfigDelegate.ATTR_SKIN, mSkin);
                 if (mSkin == null) {
-                    mSkin = SkinRepository.getInstance().checkSkin(
-                            LaunchConfigDelegate.DEFAULT_SKIN);
-                } else {
-                    mSkin = SkinRepository.getInstance().checkSkin(mSkin);
+                    mSkin = SdkConstants.SKIN_DEFAULT;
                 }
             } catch (CoreException e) {
-                mSkin = SkinRepository.getInstance().checkSkin(LaunchConfigDelegate.DEFAULT_SKIN);
+                mSkin = SdkConstants.SKIN_DEFAULT;
             }
 
             int index = LaunchConfigDelegate.DEFAULT_SPEED;
@@ -539,7 +540,7 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
                         LaunchConfigDelegate.DEFAULT_DELAY);
                 
                 // default skin
-                wc.setAttribute(LaunchConfigDelegate.ATTR_SKIN, LaunchConfigDelegate.DEFAULT_SKIN);
+                wc.setAttribute(LaunchConfigDelegate.ATTR_SKIN, SdkConstants.SKIN_DEFAULT);
                 
                 // default wipe data mode
                 wc.setAttribute(LaunchConfigDelegate.ATTR_WIPE_DATA,
@@ -599,13 +600,14 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
      *      defined by <code>ILaunchManager</code> - <code>RUN_MODE</code> or
      *      <code>DEBUG_MODE</code>.
      * @param apk the resource to the apk to launch.
-     * @param debuggable 
+     * @param debuggable the debuggable value of the app, or null if not set.
+     * @param requiredApiVersionNumber the api version required by the app, or -1 if none.
      * @param activity the class to provide to am to launch
      * @param config the launch configuration
      * @param launch the launch object
      */
     public void launch(final IProject project, String mode, IFile apk,
-            String packageName, Boolean debuggable, String activity,
+            String packageName, Boolean debuggable, int requiredApiVersionNumber, String activity,
             final AndroidLaunchConfiguration config, final AndroidLaunch launch,
             IProgressMonitor monitor) {
         
@@ -619,7 +621,8 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
 
         // create the launch info
         final DelayedLaunchInfo launchInfo = new DelayedLaunchInfo(project, packageName,
-                activity, apk, debuggable, config.mLaunchAction, launch, monitor);
+                activity, apk, debuggable, requiredApiVersionNumber, config.mLaunchAction,
+                launch, monitor);
 
         // set the debug mode
         launchInfo.mDebugMode = mode.equals(ILaunchManager.DEBUG_MODE);
@@ -711,6 +714,7 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
             
                             // stop the launch and return
                             mWaitingForEmulatorLaunches.remove(launchInfo);
+                            AdtPlugin.printErrorToConsole(project, "Launch canceled!");
                             launch.stopLaunch();
                             return;
                         }
@@ -761,31 +765,63 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
         }
     }
     
-    private void checkBuildInfo(DelayedLaunchInfo launchInfo, Device device) {
+    /**
+     * Checks the build information, and returns whether the launch should continue.
+     * <p/>The value tested are:
+     * <ul>
+     * <li>Minimum API version requested by the application. If the target device does not match,
+     * the launch is canceled.</li>
+     * <li>Debuggable attribute of the application and whether or not the device requires it. If
+     * the device requires it and it is not set in the manifest, the launch will be forced to
+     * "release" mode instead of "debug"</li>
+     * <ul>
+     * @param launchInfo
+     * @param device
+     * @return
+     */
+    private boolean checkBuildInfo(DelayedLaunchInfo launchInfo, Device device) {
         if (device != null) {
-            // get the SDK build
-            String sdkBuild = AdtPlugin.getSdkApiVersion();
-
-            // can only complain if the sdkBuild is known
-            if (sdkBuild != null) {
-                
-                String deviceVersion = device.getProperty(Device.PROP_BUILD_VERSION);
-
-                if (deviceVersion == null) {
-                    AdtPlugin.printToConsole(launchInfo.mProject, "WARNING: Unknown device API version!");
-                } else {
-                    if (sdkBuild.equals(deviceVersion) == false) {
-                        // TODO do a proper check, including testing the content of the uses-sdk string in the manifest to detect real incompatibility.
-                        String msg = String.format(
-                                "WARNING: Device API version (%1$s) does not match SDK API version (%2$s)",
-                                deviceVersion, sdkBuild);
-                        AdtPlugin.printErrorToConsole(launchInfo.mProject, msg);
-                    }
-                }
-            } else {
-                AdtPlugin.printToConsole(launchInfo.mProject, "WARNING: Unknown SDK API version!");
+            // check the app required API level versus the target device API level
+            
+            String deviceApiVersionName = device.getProperty(Device.PROP_BUILD_VERSION);
+            String value = device.getProperty(Device.PROP_BUILD_VERSION_NUMBER);
+            int deviceApiVersionNumber = 0;
+            try {
+                deviceApiVersionNumber = Integer.parseInt(value);
+            } catch (NumberFormatException e) {
+                // pass, we'll keep the deviceVersionNumber value at 0.
             }
             
+            if (launchInfo.mRequiredApiVersionNumber == 0) {
+                // warn the API level requirement is not set.
+                AdtPlugin.printErrorToConsole(launchInfo.mProject,
+                        "WARNING: Application does not specify an API level requirement!");
+
+                // and display the target device API level (if known)
+                if (deviceApiVersionName == null || deviceApiVersionNumber == 0) {
+                    AdtPlugin.printErrorToConsole(launchInfo.mProject,
+                            "WARNING: Unknown device API version!");
+                } else {
+                    AdtPlugin.printErrorToConsole(launchInfo.mProject, String.format(
+                            "Device API version is %1$d (Android %2$s)", deviceApiVersionNumber,
+                            deviceApiVersionName));
+                }
+            } else { // app requires a specific API level
+                if (deviceApiVersionName == null || deviceApiVersionNumber == 0) {
+                    AdtPlugin.printToConsole(launchInfo.mProject,
+                            "WARNING: Unknown device API version!");
+                } else if (deviceApiVersionNumber < launchInfo.mRequiredApiVersionNumber) {
+                    String msg = String.format(
+                            "ERROR: Application requires API version %1$d. Device API version is %2$d (Android %3$s).",
+                            launchInfo.mRequiredApiVersionNumber, deviceApiVersionNumber,
+                            deviceApiVersionName);
+                    AdtPlugin.printErrorToConsole(launchInfo.mProject, msg);
+                    
+                    // abort the launch
+                    return false;
+                }
+            }
+
             // now checks that the device/app can be debugged (if needed)
             if (device.isEmulator() == false && launchInfo.mDebugMode) {
                 String debuggableDevice = device.getProperty(Device.PROP_DEBUGGABLE);
@@ -818,6 +854,8 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
                 }
             }
         }
+        
+        return true;
     }
 
     /**
@@ -829,10 +867,16 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
      * @return true if succeed
      */
     private boolean simpleLaunch(DelayedLaunchInfo launchInfo, Device device) {
-        checkBuildInfo(launchInfo, device);
+        // API level check
+        if (checkBuildInfo(launchInfo, device) == false) {
+            AdtPlugin.printErrorToConsole(launchInfo.mProject, "Launch canceled!");
+            launchInfo.mLaunch.stopLaunch();
+            return false;
+        }
 
         // sync the app
         if (syncApp(launchInfo, device) == false) {
+            AdtPlugin.printErrorToConsole(launchInfo.mProject, "Launch canceled!");
             launchInfo.mLaunch.stopLaunch();
             return false;
         }
@@ -1127,6 +1171,8 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
         } catch (IOException e) {
             // something went wrong trying to launch the app.
             // lets stop the Launch
+            AdtPlugin.printErrorToConsole(info.mProject,
+                    String.format("Launch error: %s", e.getMessage()));
             info.mLaunch.stopLaunch();
 
             // and remove it from the list of app waiting for debuggers
@@ -1139,25 +1185,20 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
     private boolean launchEmulator(AndroidLaunchConfiguration config) {
 
         // split the custom command line in segments
-        String[] segs;
+        ArrayList<String> customArgs = new ArrayList<String>();
         boolean has_wipe_data = false;
         if (config.mEmulatorCommandLine != null && config.mEmulatorCommandLine.length() > 0) {
-            segs = config.mEmulatorCommandLine.split("\\s+"); //$NON-NLS-1$
+            String[] segments = config.mEmulatorCommandLine.split("\\s+"); //$NON-NLS-1$
 
             // we need to remove the empty strings
-            ArrayList<String> array = new ArrayList<String>();
-            for (String s : segs) {
+            for (String s : segments) {
                 if (s.length() > 0) {
-                    array.add(s);
+                    customArgs.add(s);
                     if (!has_wipe_data && s.equals(FLAG_WIPE_DATA)) {
                         has_wipe_data = true;
                     }
                 }
             }
-
-            segs = array.toArray(new String[array.size()]);
-        } else {
-            segs = new String[0];
         }
 
         boolean needs_wipe_data = config.mWipeData && !has_wipe_data;
@@ -1167,29 +1208,37 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
             }
         }
         
-        boolean needs_no_boot_anim = config.mNoBootAnim;
+        // build the command line based on the available parameters.
+        ArrayList<String> list = new ArrayList<String>();
+
+        list.add(AdtPlugin.getOsAbsoluteEmulator());
+        if (config.mSkin != null) {
+            list.add(FLAG_SKIN);
+            list.add(config.mSkin);
+        }
         
-        // get the command line
-        String[] command = new String[7 + segs.length +
-                                      (needs_wipe_data ? 1 : 0) +
-                                      (needs_no_boot_anim ? 1 : 0)];
-        int index = 0;
-        command[index++] = AdtPlugin.getOsAbsoluteEmulator();
-        command[index++] = FLAG_SKIN; //$NON-NLS-1$
-        command[index++] = config.mSkin;
-        command[index++] = FLAG_NETSPEED; //$NON-NLS-1$
-        command[index++] = config.mNetworkSpeed;
-        command[index++] = FLAG_NETDELAY; //$NON-NLS-1$
-        command[index++] = config.mNetworkDelay;
+        if (config.mNetworkSpeed != null) {
+            list.add(FLAG_NETSPEED);
+            list.add(config.mNetworkSpeed);
+        }
+        
+        if (config.mNetworkDelay != null) {
+            list.add(FLAG_NETDELAY);
+            list.add(config.mNetworkDelay);
+        }
+        
         if (needs_wipe_data) {
-            command[index++] = FLAG_WIPE_DATA;
+            list.add(FLAG_WIPE_DATA);
         }
-        if (needs_no_boot_anim) {
-            command[index++] = FLAG_NO_BOOT_ANIM;
+
+        if (config.mNoBootAnim) {
+            list.add(FLAG_NO_BOOT_ANIM);
         }
-        for (String s : segs) {
-            command[index++] = s;
-        }
+
+        list.addAll(customArgs);
+        
+        // convert the list into an array for the call to exec.
+        String[] command = list.toArray(new String[list.size()]);
 
         // launch the emulator
         try {
@@ -1278,12 +1327,11 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
     /**
      * Launch a new thread that connects a remote debugger on the specified port.
      * @param debugPort The port to connect the debugger to
-     * @param launch The associated AndroidLaunch object.
+     * @param androidLaunch The associated AndroidLaunch object.
      * @param monitor A Progress monitor
      * @see connectRemoveDebugger()
      */
-    public static void launchRemoteDebugger(final ILaunchConfiguration config,
-            final int debugPort, final AndroidLaunch androidLaunch,
+    public static void launchRemoteDebugger( final int debugPort, final AndroidLaunch androidLaunch,
             final IProgressMonitor monitor) {
         new Thread("Debugger connection") { //$NON-NLS-1$
             @Override
@@ -1342,13 +1390,14 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
         synchronized (sListLock) {
             // look if there's an app waiting for a device
             if (mWaitingForEmulatorLaunches.size() > 0) {
-                // remove first item from the list
+                // get/remove first launch item from the list
+                // FIXME: what if we have multiple launches waiting?
                 DelayedLaunchInfo launchInfo = mWaitingForEmulatorLaunches.get(0);
                 mWaitingForEmulatorLaunches.remove(0);
-                
-                // give it its device
+
+                // give the launch item its device for later use.
                 launchInfo.mDevice = device;
-                
+
                 // and move it to the other list
                 mWaitingForReadyEmulatorList.add(launchInfo);
                 
@@ -1433,12 +1482,23 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
                     
                     // look for application waiting for home
                     synchronized (sListLock) {
-                        boolean foundMatch = false;
                         for (int i = 0 ; i < mWaitingForReadyEmulatorList.size() ;) {
                             DelayedLaunchInfo launchInfo = mWaitingForReadyEmulatorList.get(i);
                             if (launchInfo.mDevice == device) {
                                 // it's match, remove from the list
                                 mWaitingForReadyEmulatorList.remove(i);
+                                
+                                // We couldn't check earlier the API level of the device
+                                // (it's asynchronous when the device boot, and usually
+                                // deviceConnected is called before it's queried for its build info)
+                                // so we check now
+                                if (checkBuildInfo(launchInfo, device) == false) {
+                                    // device is not the proper API!
+                                    AdtPlugin.printErrorToConsole(launchInfo.mProject,
+                                            "Launch canceled!");
+                                    launchInfo.mLaunch.stopLaunch();
+                                    return;
+                                }
         
                                 AdtPlugin.printToConsole(launchInfo.mProject,
                                         String.format("HOME is up on device '%1$s'",
@@ -1448,16 +1508,14 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
                                 if (syncApp(launchInfo, device)) {
                                     // application package is sync'ed, lets attempt to launch it.
                                     launchApp(launchInfo, device);
-                                    
-                                    // if we haven't checked the device build info, lets do it here
-                                    if (foundMatch == false) {
-                                        foundMatch = true;
-                                        checkBuildInfo(launchInfo, device);
-                                    }
                                 } else {
                                     // failure! Cancel and return
+                                    AdtPlugin.printErrorToConsole(launchInfo.mProject,
+                                    "Launch canceled!");
                                     launchInfo.mLaunch.stopLaunch();
                                 }
+                                
+                                break;
                             } else {
                                 i++;
                             }
@@ -1530,6 +1588,8 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
                                     }
                                 } catch (CoreException e) {
                                     // well something went wrong.
+                                    AdtPlugin.printErrorToConsole(launchInfo.mProject,
+                                            String.format("Launch error: %s", e.getMessage()));
                                     // stop the launch
                                     launchInfo.mLaunch.stopLaunch();
                                 }

@@ -21,10 +21,10 @@
     <string name="menu_upload_exceptions">Upload Exceptions</string>
     <string name="menu_clear_exceptions">Clear Exceptions</string>
 
-	<string name="device_info_default">unknown</string>
-	<string name="device_info_uptime">Uptime</string>
-	<string name="device_info_awaketime">Awake Time</string>
-	<string name="device_info_asleeptime">Asleep Time</string>
+        <string name="device_info_default">unknown</string>
+        <string name="device_info_uptime">Uptime</string>
+        <string name="device_info_awaketime">Awake Time</string>
+        <string name="device_info_asleeptime">Asleep Time</string>
 
     <string name="build_id_label">Build ID</string>
     <string name="build_date_label">Build Date</string>
@@ -78,7 +78,7 @@
     <string name="development_settings_show_load_text">Show running processes</string>
     <string name="development_settings_show_updates_text">Show screen updates</string>
     <string name="development_settings_enable_gl_text">Enable OpenGL ES (reboot needed)</string>
-    <string name="development_settings_enable_adb_text">Enable ADB</string>
+    <string name="development_settings_allow_mock_location_text">Allow mock locations for testing</string>
     <string name="development_settings_wait_for_debugger_text">Wait for debugger</string>
     <string name="development_settings_show_background_text">Show background</string>
     <string name="development_settings_show_xmpp_text">Show GTalk service connection status</string>
@@ -105,11 +105,22 @@
     <string name="red_button_behavior_label">End Button Behavior</string>
 
     <string name="gls_tester_label">GLS Tester</string>
-    <string name="gls_tester_prefer_hosted">Prefer Hosted</string>
-    <string name="gls_tester_require_google">Require Google</string>
+    <string name="gls_tester_prefer_hosted">Hosted</string>
+    <string name="gls_tester_require_google">Google</string>
+    <string name="gls_tester_get_accounts">List</string>
     <string name="gls_tester_clear">Clear</string>
+    <string name="gls_tester_go">Go</string>
     <string name="gls_tester_do_notification">Notify on failure</string>
     <string name="gls_tester_run_intent">Run intent</string>
     <string name="gls_tester_wipe_passwords">Wipe passwords</string>
+    <string name="process_name_header">Process Name:</string>
+    <string name="package_list_header">Packages in process:</string>
+    <string name="package_label">Package Name:</string>
 
+    <!-- Application configuration requirements related attributes -->
+    <string name="touchscreen_label">touchscreen:</string>
+    <string name="input_method_label">inputMethod:</string>
+    <string name="hard_keyboard_label">hardKeyboard:</string>
+    <string name="navigation_label">navigation:</string>
+    <string name="five_way_nav_label">five way nav:</string>
 </resources>

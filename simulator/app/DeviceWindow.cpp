@@ -140,9 +140,9 @@ void DeviceWindow::ClampMouse(wxMouseEvent* pEvent)
 void DeviceWindow::OnUserEvent(UserEvent& event)
 {
     wxBitmap* pBitmap;
-    int displayIndex;
+    long displayIndex;
 
-    displayIndex = (int) event.GetData();
+    displayIndex = (long) event.GetData();
 
     //printf("GOT UAE %d\n", displayIndex);
 

@@ -20,7 +20,6 @@
     <uses-permission android:name="android.permission.WRITE_SETTINGS" />
     <uses-permission android:name="android.permission.DUMP" />
     <uses-permission android:name="android.permission.SET_PREFERRED_APPLICATIONS" />
-    <uses-permission android:name="android.permission.DELETE_PACKAGES" />
     <uses-permission android:name="android.permission.RESTART_PACKAGES" />
     <uses-permission android:name="android.permission.SET_ANIMATION_SCALE" />
     <uses-permission android:name="android.permission.SET_PROCESS_LIMIT" />
@@ -30,6 +29,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="com.google.android.googleapps.permission.GOOGLE_AUTH" />
     <uses-permission android:name="com.google.android.googleapps.permission.GOOGLE_AUTH.ALL_SERVICES" />
+    <uses-permission android:name="com.google.android.googleapps.permission.GOOGLE_AUTH.YouTubeUser" />
     <uses-permission android:name="com.google.android.googleapps.permission.ACCESS_GOOGLE_PASSWORD" />
 
     <application android:label="Dev Tools"
@@ -71,6 +71,14 @@
         <activity android:name="AppPicker"
                 android:theme="@android:style/Theme.Dialog">
         </activity>
+        <activity android:name="PointerLocation" android:label="Pointer Location"
+                android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen"
+                android:configChanges="keyboard|keyboardHidden|navigation|orientation">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.TEST" />
+            </intent-filter>
+        </activity>
 
         <activity android:name="DataList">
         </activity>
@@ -103,5 +111,30 @@
                 <category android:name="android.intent.category.TEST" />
             </intent-filter>
         </activity>
+
+    <activity android:name="RunningProcesses" android:label="Running processes">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.TEST" />
+            </intent-filter>
+        </activity>
+    <activity android:name="ProcessInfo" android:label="Process Information">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+    <activity android:name="AppHwConfigList" android:label="Applications Hw Configuration">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.TEST" />
+            </intent-filter>
+    </activity>
+    <activity android:name="AppHwPref" android:label="Applications Hardware Preferences">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+    </activity>
     </application>
 </manifest>

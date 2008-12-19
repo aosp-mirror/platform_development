@@ -1,13 +1,15 @@
+# Assumes PREBUILT is defined to point to the correct flavor of the prebuilt 
+# directory in the Android source tree
 
-CC         := $(NDK_BASE)/toolchain/arm-eabi/bin/arm-eabi-gcc
-AR         := $(NDK_BASE)/toolchain/arm-eabi/bin/arm-eabi-ar
+CC  := $(PREBUILT)/toolchain/arm-eabi-4.2.1/bin/arm-eabi-gcc
+AR  := $(PREBUILT)/toolchain/arm-eabi-4.2.1/bin/arm-eabi-ar
 
-INC        := -I$(NDK_BASE)/include/bionic/arch-arm/include \
-	-I$(NDK_BASE)/include/bionic/include \
-	-I$(NDK_BASE)/include/kernel/include \
-	-I$(NDK_BASE)/include/libm/include \
-	-I$(NDK_BASE)/include/libm/include/arm \
-	-I$(NDK_BASE)/include/libstdc++/include
+INC   := -I$(NDK_BASE)/include/bionic/libc/arch-arm/include \
+         -I$(NDK_BASE)/include/kernel/include \
+         -I$(NDK_BASE)/include/bionic/libm/include \
+         -I$(NDK_BASE)/include/bionic/libm/include/arm \
+         -I$(NDK_BASE)/include/bionic/libc/include \
+         -I$(NDK_BASE)/include/bionic/libstdc++/include
 
 LINK       := -nostdlib -Bdynamic \
      -Wl,-T,$(NDK_BASE)/config/armelf.x \

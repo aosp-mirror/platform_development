@@ -423,7 +423,7 @@ void LogWindow::OnLogLevel(wxCommandEvent& event)
 
     selection = event.GetInt();
     wxComboBox* pCombo = (wxComboBox*) FindWindow(IDC_LOG_LEVEL);
-    priority = (android_LogPriority) (int)pCombo->GetClientData(event.GetInt());
+    priority = (android_LogPriority) (long)pCombo->GetClientData(event.GetInt());
 
     printf("Sim: log level selected: %d (%s)\n", (int) priority,
         (const char*) gLogLevels[selection].name.ToAscii());

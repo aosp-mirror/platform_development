@@ -144,6 +144,19 @@ public class StatusBarNotifications extends Activity {
         });
     }
 
+    private PendingIntent makeMoodIntent(int moodId) {
+        // The PendingIntent to launch our activity if the user selects this
+        // notification.  Note the use of FLAG_UPDATE_CURRENT so that if there
+        // is already an active matching pending intent, we will update its
+        // extras to be the ones passed in here.
+        PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
+                new Intent(this, NotificationDisplay.class)
+                        .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        .putExtra("moodimg", moodId),
+                PendingIntent.FLAG_UPDATE_CURRENT);
+        return contentIntent;
+    }
+    
     private void setMood(int moodId, int textId, boolean showTicker) {
         // In this sample, we'll use the same text for the ticker and the expanded notification
         CharSequence text = getText(textId);
@@ -155,13 +168,9 @@ public class StatusBarNotifications extends Activity {
         Notification notification = new Notification(moodId, tickerText,
                 System.currentTimeMillis());
 
-        // The PendingIntent to launch our activity if the user selects this notification
-        PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
-                new Intent(this, StatusBarNotifications.class), 0);
-
         // Set the info for the views that show in the notification panel.
         notification.setLatestEventInfo(this, getText(R.string.status_bar_notifications_mood_title),
-                       text, contentIntent);
+                       text, makeMoodIntent(moodId));
 
         // Send the notification.
         // We use a layout id because it is a unique number.  We use it later to cancel.
@@ -176,8 +185,7 @@ public class StatusBarNotifications extends Activity {
         Notification notif = new Notification();
 
         // This is who should be launched if the user selects our notification.
-        notif.contentIntent = PendingIntent.getActivity(this, 0,
-                new Intent(this, StatusBarNotifications.class), 0);
+        notif.contentIntent = makeMoodIntent(moodId);
 
         // In this sample, we'll use the same text for the ticker and the expanded notification
         CharSequence text = getText(textId);

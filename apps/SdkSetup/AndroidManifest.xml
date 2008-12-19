@@ -17,8 +17,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
         package="com.android.sdksetup">
 
-    <!-- For miscellaneous settings -->
-    <uses-permission android:name="android.permission.WRITE_SETTINGS" />
+    <!-- For miscellaneous secure settings -->
+    <uses-permission android:name="android.permission.WRITE_SECURE_SETTINGS" />
 
     <application>
         <activity android:name="DefaultActivity"

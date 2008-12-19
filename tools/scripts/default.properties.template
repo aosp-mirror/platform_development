@@ -2,4 +2,17 @@
 # Do not modify this file -- YOUR CHANGES WILL BE ERASED!
 # Instead customize values in a "build.properties" file.
 
+# location of the SDK
 sdk-folder=ANDROID_SDK_FOLDER
+
+# target mode. Value can be "platform" or "add-on"
+target-mode=TARGET_MODE
+
+# target API level.
+target-api=TARGET_API
+
+# target name, if target-mode=add-on
+target-name=TARGET_NAME
+
+# target platform. This is either the target itself or the platform the add-on is based on.
+target-folder=TARGET_FOLDER

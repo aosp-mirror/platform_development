@@ -19,11 +19,6 @@
              <property name="id" value="com.android.ide.eclipse.adt" />
          </ant>
          
-        <ant antfile="${genericTargets}" target="${target}">
-            <property name="type" value="feature" />
-            <property name="id" value="com.android.ide.eclipse.editors" />
-        </ant>
-         
         <antcall target="buildInternalFeatures"/>
          
      </target>
@@ -35,15 +30,10 @@
      <target name="buildInternalFeatures" if="internalSite">
         <ant antfile="${genericTargets}" target="${target}">
             <property name="type" value="feature" />
-            <property name="id" value="com.android.ide.eclipse.platform" />
-        </ant>
-        <ant antfile="${genericTargets}" target="${target}">
-            <property name="type" value="feature" />
             <property name="id" value="com.android.ide.eclipse.tests" />
         </ant>
      </target>    
          
- 
      <!-- ===================================================================== -->
      <!-- Targets to assemble the built elements for particular configurations  -->
      <!-- These generally call the generated assemble scripts (named in         -->
@@ -54,14 +44,6 @@
      <target name="assemble.com.android.ide.eclipse.adt">
          <ant antfile="${assembleScriptName}" dir="${buildDirectory}"/>
      </target>
-    
-    <target name="assemble.com.android.ide.eclipse.editors">
-        <ant antfile="${assembleScriptName}" dir="${buildDirectory}"/>
-    </target>
-    
-    <target name="assemble.com.android.ide.eclipse.platform">
-        <ant antfile="${assembleScriptName}" dir="${buildDirectory}"/>
-    </target>
     
     <target name="assemble.com.android.ide.eclipse.tests">
         <ant antfile="${assembleScriptName}" dir="${buildDirectory}"/>

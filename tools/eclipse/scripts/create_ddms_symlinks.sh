@@ -4,47 +4,76 @@
 # Run this from device/tools/eclipse/scripts
 #----------------------------------------------------------------------------|
 
-CMD="ln -svf"
-DIR="ln -svf"
+set -e
+
 HOST=`uname`
 if [ "${HOST:0:6}" == "CYGWIN" ]; then
-    CMD="cp -rvf"
-    DIR="rsync -avW --delete-after"
+    # We can't use symlinks under Cygwin
+
+    function cpfile { # $1=dest $2=source
+        cp -fv $2 $1/
+    }
+
+    function cpdir() { # $1=dest $2=source
+        rsync -avW --delete-after $2 $1
+    }
+
+else
+    # For all other systems which support symlinks
+
+    # computes the "reverse" path, e.g. "a/b/c" => "../../.."
+    function back() {
+        echo $1 | sed 's@[^/]*@..@g'
+    }
+
+    function cpfile { # $1=dest $2=source
+        ln -svf `back $1`/$2 $1/
+    }
+
+    function cpdir() { # $1=dest $2=source
+        ln -svf `back $1`/$2 $1
+    }
 fi
 
 # CD to the top android directory
 D=`dirname "$0"`
 cd "$D/../../../../"
 
-# computes relative ".." paths from $1 to here (in /android)
-function back() {
-  echo $1 | sed 's@[^/]*@..@g'
-}
 
 BASE="development/tools/eclipse/plugins/com.android.ide.eclipse.ddms"
 
 DEST=$BASE/libs
 mkdir -p $DEST
-BACK=`back $DEST`
 for i in prebuilt/common/jfreechart/*.jar; do
-  $CMD $BACK/$i $DEST/
+  cpfile $DEST $i
 done
 
 DEST=$BASE/src/com/android
-BACK=`back $DEST`
+mkdir -p $DEST
 for i in development/tools/ddms/libs/ddmlib/src/com/android/ddmlib \
          development/tools/ddms/libs/ddmuilib/src/com/android/ddmuilib ; do
-  $DIR $BACK/$i $DEST/
+  cpdir $DEST $i
 done
 
 DEST=$BASE/icons
-BACK=`back $DEST`
-
-for i in debug-attach.png debug-wait.png debug-error.png device.png emulator.png \
-         heap.png thread.png empty.png warning.png d.png e.png i.png \
-         v.png w.png add.png delete.png edit.png save.png push.png pull.png \
-         clear.png up.png down.png gc.png halt.png load.png importBug.png \
-         play.png pause.png forward.png backward.png ; do
-  $CMD $BACK/development/tools/ddms/libs/ddmuilib/src/resources/images/$i $DEST/
+mkdir -p $DEST
+for i in \
+    add.png \
+    backward.png \
+    clear.png \
+    d.png debug-attach.png debug-error.png debug-wait.png delete.png device.png down.png \
+    e.png edit.png empty.png emulator.png \
+    forward.png \
+    gc.png \
+    heap.png halt.png \
+    i.png importBug.png \
+    load.png \
+    pause.png play.png pull.png push.png \
+    save.png \
+    thread.png \
+    up.png \
+    v.png \
+    w.png warning.png ; do
+  cpfile $DEST development/tools/ddms/libs/ddmuilib/src/resources/images/$i
 done
 

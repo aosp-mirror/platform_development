@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+/*
+ * Copyright 2008, The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+-->
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory
+        android:title="@string/general_title">
+        
+        <ListPreference
+                android:key="window_animations"
+                android:title="@string/title_window_animations"
+                android:summary="@string/summary_window_animations"
+                android:entries="@array/entries_animations"
+                android:entryValues="@array/entryvalues_animations"
+                android:dialogTitle="@string/dialog_title_window_animations" />
+                
+        <ListPreference
+                android:key="transition_animations"
+                android:title="@string/title_transition_animations"
+                android:summary="@string/summary_transition_animations"
+                android:entries="@array/entries_animations"
+                android:entryValues="@array/entryvalues_animations"
+                android:dialogTitle="@string/dialog_title_transition_animations" />
+        
+        <ListPreference
+                android:key="font_size"
+                android:title="@string/title_font_size"
+                android:summary="@string/summary_font_size"
+                android:entries="@array/entries_font_size"
+                android:entryValues="@array/entryvalues_font_size"
+                android:dialogTitle="@string/dialog_title_font_size" />
+        
+        <ListPreference
+                android:key="end_button"
+                android:title="@string/title_end_button"
+                android:summary="@string/summary_end_button"
+                android:entries="@array/entries_end_button"
+                android:entryValues="@array/entryvalues_end_button"
+                android:dialogTitle="@string/dialog_title_end_button" />
+        
+        <CheckBoxPreference 
+            android:key="accelerometer" 
+            android:title="@string/title_accelerometer" 
+            android:summaryOn="@string/summary_on_accelerometer"
+            android:summaryOff="@string/summary_off_accelerometer"/>
+        
+    </PreferenceCategory>
+            
+    <PreferenceCategory
+        android:title="@string/applications_title">
+                
+        <CheckBoxPreference 
+            android:key="maps_compass" 
+            android:title="@string/title_maps_compass" 
+            android:summaryOn="@string/summary_on_maps_compass"
+            android:summaryOff="@string/summary_off_maps_compass"/>
+        
+    </PreferenceCategory>
+        
+</PreferenceScreen>

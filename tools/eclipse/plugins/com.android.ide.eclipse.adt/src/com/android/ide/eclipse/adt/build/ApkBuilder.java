@@ -19,6 +19,8 @@ package com.android.ide.eclipse.adt.build;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.project.ProjectHelper;
+import com.android.ide.eclipse.adt.sdk.LoadStatus;
+import com.android.ide.eclipse.adt.sdk.Sdk;
 import com.android.ide.eclipse.common.AndroidConstants;
 import com.android.ide.eclipse.common.project.BaseProjectHelper;
 import com.android.jarutils.DebugKeyProvider;
@@ -28,6 +30,7 @@ import com.android.jarutils.DebugKeyProvider.IKeyGenOutput;
 import com.android.jarutils.DebugKeyProvider.KeytoolException;
 import com.android.jarutils.SignedJarBuilder.IZipEntryFilter;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
+import com.android.sdklib.IAndroidTarget;
 
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
@@ -44,6 +47,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
@@ -296,6 +300,15 @@ public class ApkBuilder extends BaseBuilder {
         saveProjectBooleanProperty(PROPERTY_PACKAGE_RESOURCES, mPackageResources);
         saveProjectBooleanProperty(PROPERTY_BUILD_APK, mBuildFinalPackage);
 
+        // At this point, we can abort the build if we have to, as we have computed
+        // our resource delta and stored the result.
+        
+        // check if we have finished loading the SDK.
+        if (AdtPlugin.getDefault().getSdkLoadStatus(javaProject) != LoadStatus.LOADED) {
+            // we exit silently
+            return referencedProjects;
+        }
+
         // Now check the compiler compliance level, not displaying the error
         // message since this is not the first builder.
         if (ProjectHelper.checkCompilerCompliance(getProject())
@@ -502,7 +515,8 @@ public class ApkBuilder extends BaseBuilder {
             commandArray.add(osAssetsPath);
         }
         commandArray.add("-I"); //$NON-NLS-1$
-        commandArray.add(AdtPlugin.getOsAbsoluteFramework());
+        commandArray.add(
+                Sdk.getCurrent().getTarget(project).getPath(IAndroidTarget.ANDROID_JAR));
         commandArray.add("-F"); //$NON-NLS-1$
         commandArray.add(osOutFilePath);
 
@@ -584,16 +598,9 @@ public class ApkBuilder extends BaseBuilder {
         DexWrapper wrapper = DexWrapper.getWrapper();
         
         if (wrapper == null) {
-            if (DexWrapper.getStatus() == DexWrapper.LoadStatus.FAILED) {
+            if (DexWrapper.getStatus() == LoadStatus.FAILED) {
                 throw new CoreException(new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID,
                         Messages.ApkBuilder_UnableBuild_Dex_Not_loaded));
-            } else {
-                // means we haven't loaded the dex jar yet.
-                // We set the project to be recompiled after dex is loaded. 
-                AdtPlugin.getDefault().addPostDexProject(javaProject);
-                
-                // and we exit silently
-                return false;
             }
         }
 
@@ -677,7 +684,7 @@ public class ApkBuilder extends BaseBuilder {
             }
             
             // TODO: get the store type from somewhere else.
-            DebugKeyProvider provider = new DebugKeyProvider(null /* storeType */,
+            DebugKeyProvider provider = new DebugKeyProvider(osKeyPath, null /* storeType */,
                     new IKeyGenOutput() {
                         public void err(String message) {
                             AdtPlugin.printErrorToConsole(javaProject.getProject(),
@@ -747,9 +754,18 @@ public class ApkBuilder extends BaseBuilder {
                 }
             }
 
+            // now write the native libraries.
+            // First look if the lib folder is there.
+            IResource libFolder = javaProject.getProject().findMember(
+                    AndroidConstants.FD_NATIVE_LIBS);
+            if (libFolder != null && libFolder.exists() &&
+                    libFolder.getType() == IResource.FOLDER) {
+                // look inside and put .so in lib/* by keeping the relative folder path.
+                writeNativeLibraries(libFolder.getFullPath().segmentCount(), builder, libFolder);
+            }
+
             // close the jar file and write the manifest and sign it.
             builder.close();
-
         } catch (GeneralSecurityException e1) {
             // mark project and return
             String msg = String.format(Messages.Final_Archive_Error_s, e1.getMessage());
@@ -784,6 +800,12 @@ public class ApkBuilder extends BaseBuilder {
 
             // and also output it in the console
             AdtPlugin.printErrorToConsole(javaProject.getProject(), msg);
+        } catch (CoreException e) {
+            // mark project and return
+            String msg = String.format(Messages.Final_Archive_Error_s, e.getMessage());
+            AdtPlugin.printErrorToConsole(javaProject.getProject(), msg);
+            markProject(AdtConstants.MARKER_ADT, msg, IMarker.SEVERITY_ERROR);
+            return false;
         } finally {
             if (fos != null) {
                 try {
@@ -797,6 +819,48 @@ public class ApkBuilder extends BaseBuilder {
         return true;
     }
     
+    /**
+     * Writes native libraries into a {@link SignedJarBuilder}.
+     * <p/>This recursively go through folder and writes .so files. 
+     * The path in the archive is based on the root folder containing the libraries in the project.
+     * Its segment count is passed to the method to compute the resources path relative to the root
+     * folder.
+     * Native libraries in the archive must be in a "lib" folder. Everything in the project native
+     * lib folder directly goes in this "lib" folder in the archive.
+     * 
+     *  
+     * @param rooSegmentCount The number of segment of the path of the folder containing the
+     * libraries. This is used to compute the path in the archive.
+     * @param jarBuilder the {@link SignedJarBuilder} used to create the archive.
+     * @param resource the IResource to write.
+     * @throws CoreException
+     * @throws IOException 
+     */
+    private void writeNativeLibraries(int rootSegmentCount, SignedJarBuilder jarBuilder,
+            IResource resource) throws CoreException, IOException {
+        if (resource.getType() == IResource.FILE) {
+            IPath path = resource.getFullPath();
+
+            // check the extension.
+            if (path.getFileExtension().equalsIgnoreCase(AndroidConstants.EXT_NATIVE_LIB)) {
+                // remove the first segment to build the path inside the archive.
+                path = path.removeFirstSegments(rootSegmentCount);
+                
+                // add it to the archive.
+                IPath apkPath = new Path(AndroidConstants.FD_APK_NATIVE_LIBS);
+                apkPath = apkPath.append(path);
+                
+                // writes the file in the apk.
+                jarBuilder.writeFile(resource.getLocation().toFile(), apkPath.toString());
+            }
+        } else if (resource.getType() == IResource.FOLDER) {
+            IResource[] members = ((IFolder)resource).members();
+            for (IResource member : members) {
+                writeNativeLibraries(rootSegmentCount, jarBuilder, member);
+            }
+        }
+    }
+
     /**
      * Writes the standard resources of a project and its referenced projects
      * into a {@link SignedJarBuilder}.

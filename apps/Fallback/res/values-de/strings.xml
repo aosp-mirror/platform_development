@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resources xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <string name="appTitle">"Fallback"</string>
+    <string name="title">"Nicht unterstützte Aktion"</string>
+    <string name="error">"Diese Aktion wird zurzeit nicht unterstützt."</string>
+</resources>

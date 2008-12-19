@@ -17,10 +17,6 @@ set -e # fail early
 
 echo ; echo "### ADT ###" ; echo
 $DEST/create_adt_symlinks.sh "$*"
-echo ; echo "### COMMON ###" ; echo
-$DEST/create_common_symlinks.sh "$*"
-echo ; echo "### EDITORS ###" ; echo
-$DEST/create_editors_symlinks.sh "$*"
 echo ; echo "### DDMS ###" ; echo
 $DEST/create_ddms_symlinks.sh "$*"
 echo ; echo "### TEST ###" ; echo

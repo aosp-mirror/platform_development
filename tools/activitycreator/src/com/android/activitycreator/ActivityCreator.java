@@ -44,6 +44,9 @@ import javax.xml.xpath.XPathFactory;
  * @hide
  */
 public class ActivityCreator {
+    // FIXME: target platform must be provided by the user
+    private final String mTargetPlatform = "android-1.1";
+
     /** Whether we are in silent mode (i.e.: don't print any non-error messages) */
     private boolean mSilent;
     
@@ -53,7 +56,10 @@ public class ActivityCreator {
     /** Path to SDK */
     private String mSdkDir;
     
-    /** Path to lib */
+    /** Path to target platform's template folder */
+    private String mTemplateDir;
+
+    /** Path to tools/lib for the build templates */
     private String mLibDir;
     
     /** Path to output */
@@ -115,6 +121,8 @@ public class ActivityCreator {
         
         mSdkDir = toolsDir.getParent();
         mLibDir = mToolsDir + File.separator + "lib";
+        mTemplateDir = mSdkDir + File.separator + "platforms" + File.separator +
+                mTargetPlatform + File.separator + "templates";
         try {
             mOutDir = new File("").getCanonicalPath();
         } catch (IOException e) {
@@ -127,6 +135,10 @@ public class ActivityCreator {
         
         if (!(new File(mSdkDir).exists())) {
             printHelpAndExit("ERROR: SDK directory does not exist.");
+        }
+
+        if (!(new File(mTemplateDir).exists())) {
+            printHelpAndExit("ERROR: Target platform templates directory does not exist.");
         }
 
         if (!(new File(mLibDir).exists())) {
@@ -263,86 +275,124 @@ public class ActivityCreator {
     }
     
     /**
-     * Installs a destination file that is based on the template file at source.
+     * Installs a destination file that is based on a code template file at the source.
      * For each match of each key in keywords will be replaced with its
      * corresponding value in the destination file.
-     *
-     * Invokes ActivityCreator#installTemplate(String, String, java.util.Map, boolean, String) with
+     * 
+     * Invokes {@link #installProjectTemplate(String, String, Map, boolean, String)} with
      * the main project output directory (#mOutDir) as the last argument.
-     *
-     * @param source the path to the source template file
+     * 
+     * @param source the name of to the source template file
+     * @param dest the path to the destination file
+     * @param keywords in the destination file, the keys will be replaced by their values
+     * @param force True to force writing the file even if it already exists  
+     * 
+     * @see #installProjectTemplate(String, String, Map, boolean, String)
+     */
+    private void installProjectTemplate(String source, String dest,
+            Map<String, String> keywords, boolean force) {
+        installProjectTemplate(source, dest, keywords, force, mOutDir);
+    }
+    
+    /**
+     * Installs a destination file that is based on a code template file at the source.
+     * For each match of each key in keywords will be replaced with its
+     * corresponding value in the destination file.
+     * 
+     * @param source the name of to the source template file
+     * @param dest the path to the destination file
+     * @param keywords in the destination file, the keys will be replaced by their values
+     * @param force True to force writing the file even if it already exists  
+     * @param outDir the output directory to copy the template file to
+     */
+    private void installProjectTemplate(String source, String dest,
+            Map<String, String> keywords, boolean force, String outDir) {
+        final String sourcePath = mTemplateDir + File.separator + source;
+        final String destPath = outDir + File.separator + dest;
+
+        installFullPathTemplate(sourcePath, destPath, keywords, force);
+    }
+
+    /**
+     * Installs a destination file that is based on a build template file at the source.
+     * For each match of each key in keywords will be replaced with its
+     * corresponding value in the destination file.
+     * 
+     * Invokes {@link #installBuildTemplate(String, String, Map, boolean, String)} with
+     * the main project output directory (#mOutDir) as the last argument.
+     * 
+     * @param source the name of to the source template file
      * @param dest the path to the destination file
      * @param keywords in the destination file, the keys will be replaced by their values
      * @param force True to force writing the file even if it already exists
      * 
-     * @see ActivityCreator#installTemplate(String, String, java.util.Map, boolean, String)
+     * @see #installBuildTemplate(String, String, Map, boolean, String)
      */
-    private void installTemplate(String source, String dest,
+    private void installBuildTemplate(String source, String dest,
             Map<String, String> keywords, boolean force) {
-        installTemplate(source, dest, keywords, force, mOutDir);
+        installBuildTemplate(source, dest, keywords, force, mOutDir);
+    }
+
+    /**
+     * Installs a destination file that is based on a build template file at the source.
+     * For each match of each key in keywords will be replaced with its
+     * corresponding value in the destination file.
+     * 
+     * @param source the name of to the source template file
+     * @param dest the path to the destination file
+     * @param keywords in the destination file, the keys will be replaced by their values
+     * @param force True to force writing the file even if it already exists  
+     * @param outDir the output directory to copy the template file to
+     */
+    private void installBuildTemplate(String source, String dest,
+            Map<String, String> keywords, boolean force, String outDir) {
+        final String sourcePath = mLibDir + File.separator + source;
+        final String destPath = outDir + File.separator + dest;
+
+        installFullPathTemplate(sourcePath, destPath, keywords, force);
     }
 
     /**
      * Installs a destination file that is based on the template file at source.
      * For each match of each key in keywords will be replaced with its
      * corresponding value in the destination file.
-     *
-     * @param source the path to the source template file
-     * @param dest the path to the destination file
+     * 
+     * @param sourcePath the full path to the source template file
+     * @param destPath the full path to the destination file
      * @param keywords in the destination file, the keys will be replaced by their values
-     * @param force True to force writing the file even if it already exists
-     * @param outDir the output directory to copy the template file to
+     * @param force True to force writing the file even if it already exists  
      */
-    private void installTemplate(String source, String dest,
-            Map<String, String> keywords, boolean force, String outDir) {
-        final String sourcePath = mLibDir + File.separator + source;
-        final String destPath = outDir + File.separator + dest;
-
+    private void installFullPathTemplate(String sourcePath, String destPath,
+            Map<String, String> keywords, boolean force) {
         final File destPathFile = new File(destPath);
         if (!force && destPathFile.exists()) {
             println("WARNING! The file %1$s already exists and will not be overwritten!\n",
                     destPathFile.getName());
             return;
         }
-
+        
         try {
             BufferedWriter out = new BufferedWriter(new FileWriter(destPathFile));
             BufferedReader in = new BufferedReader(new FileReader(sourcePath));
             String line;
-
+            
             while ((line = in.readLine()) != null) {
                 for (String key : keywords.keySet()) {
                     line = line.replace(key, keywords.get(key));
                 }
-
+                
                 out.write(line);
                 out.newLine();
             }
-
+            
             out.close();
             in.close();
         } catch (Exception e) {
             printHelpAndExit("ERROR: Could not access %1$s: %2$s", destPath, e.getMessage());
         }
-
+        
         println("Added file %1$s", destPath);
     }
-
-    /**
-     * Installs a destination file that is based on the template file at source.
-     * For each match of each key in keywords will be replaced with its
-     * corresponding value in the destination file.
-     * 
-     * This version does NOT install the file if it already exists.
-     * 
-     * @param source the path to the source template file
-     * @param dest the path to the destination file
-     * @param keywords in the destination file, the keys will be replaced by their values
-     */
-    private void installTemplate(String source, String dest, Map<String, String> keywords) {
-        installTemplate(source, dest, keywords, false /* force */);
-    }
-
 
     /**
      * Set up the Android-related files
@@ -380,6 +430,9 @@ public class ActivityCreator {
         }
         
         final HashMap<String, String> keywords = createBaseKeywordMap();
+
+        addTargetKeywords(keywords);
+
         keywords.put("PACKAGE", packageName);
         if (activityName != null) {
             keywords.put("ACTIVITY_NAME", activityName);
@@ -396,17 +449,19 @@ public class ActivityCreator {
         final String srcDir = "src" + File.separator + packagePath;
         createDirs(srcDir);
         if (isDirEmpty(srcDir, "Java") && activityName != null) {
-            installTemplate("java_file.template", srcDir + File.separator
-                    + activityName + ".java", keywords);
-        }
-        /* Make ActivityTest java file */
-        createDirs(srcDir, testsOutDir);
-        if (isDirEmpty(srcDir, "Java", testsOutDir) && activityTestName != null) {
-            installTemplate("java_tests_file.template", srcDir + File.separator
-                    + activityTestName + ".java", keywords, false, testsOutDir);
+            installProjectTemplate("java_file.template", srcDir + File.separator
+                    + activityName + ".java", keywords, false /*force*/);
         }
         createDirs("bin");
         createDirs("libs");
+        createDirs("res");
+
+        /* Make ActivityTest java file */
+        createDirs(srcDir, testsOutDir);
+        if (isDirEmpty(srcDir, "Java", testsOutDir) && activityTestName != null) {
+            installProjectTemplate("java_tests_file.template", srcDir + File.separator
+                    + activityTestName + ".java", keywords, false, testsOutDir);
+        }
         createDirs("bin", testsOutDir);
         createDirs("libs", testsOutDir);
         createDirs("res", testsOutDir);
@@ -415,39 +470,42 @@ public class ActivityCreator {
         final String valuesDir = "res" + File.separator + "values";
         createDirs(valuesDir);
         if (isDirEmpty(valuesDir, "Resource Values")) {
-            installTemplate("strings.template", valuesDir + File.separator
-                    + "strings.xml", keywords);
+            installProjectTemplate("strings.template", valuesDir + File.separator
+                    + "strings.xml", keywords, false /*force*/);
         }
         
         final String layoutDir = "res" + File.separator + "layout";
         createDirs(layoutDir);
         if (isDirEmpty(layoutDir, "Resource Layout")) {
-            installTemplate("layout.template", layoutDir + File.separator
-                    + "main.xml", keywords);
+            installProjectTemplate("layout.template", layoutDir + File.separator
+                    + "main.xml", keywords, false /*force*/);
         }
         
         /* Make AndroidManifest.xml and build.xml files */
-        installTemplate("AndroidManifest.template", "AndroidManifest.xml",
-                keywords);
+        installProjectTemplate("AndroidManifest.template", "AndroidManifest.xml",
+                keywords, false /*force*/);
         
-        installTemplate("build.template", "build.xml", keywords);
-        installTemplate("default.properties.template", "default.properties",
-                keywords, true /*force*/);
+        installBuildTemplate("build.template", "build.xml", keywords, false /*force*/);
+        installBuildTemplate("default.properties.template", "default.properties", keywords,
+                true /*force*/);
 
-        /* Make AndroidManifest.xml and build.xml files for tests*/
-        installTemplate("AndroidManifest.tests.template", "AndroidManifest.xml",
-                keywords, false, testsOutDir);
-
-        installTemplate("build.template", "build.xml", keywords, false, testsOutDir);
-        installTemplate("default.properties.template", "default.properties",
-                keywords, true /*force*/, testsOutDir);
+        /* Make AndroidManifest.xml and build.xml files for tests */
+        installProjectTemplate("AndroidManifest.tests.template", "AndroidManifest.xml",
+                keywords, false /*force*/, testsOutDir);
+        
+        installBuildTemplate("build.template", "build.xml", keywords, false /*force*/, testsOutDir);
+        installBuildTemplate("default.properties.template", "default.properties", keywords,
+                true /*force*/, testsOutDir);
 
         if (mIde.equals("intellij")) {
             /* IntelliJ files */
             if (activityName != null) {
-                installTemplate("iml.template", activityName + ".iml", keywords);
-                installTemplate("ipr.template", activityName + ".ipr", keywords);
-                installTemplate("iws.template", activityName + ".iws", keywords);
+                installProjectTemplate("iml.template", activityName + ".iml", keywords,
+                        false /*force*/);
+                installProjectTemplate("ipr.template", activityName + ".ipr", keywords,
+                        false /*force*/);
+                installProjectTemplate("iws.template", activityName + ".iws", keywords,
+                        false /*force*/);
             }
         } else if (!isStringEmpty(mIde)) {
             println("WARNING: Unknown IDE option \"%1$s\". No IDE files generated.",
@@ -481,22 +539,24 @@ public class ActivityCreator {
         final String xmlDir = "res" + File.separator + "xml";
         createDirs(xmlDir);
         if (isDirEmpty(xmlDir, "Resource Xml")) {
-            installTemplate("alias.template", xmlDir + File.separator + "alias.xml", keywords);
+            installProjectTemplate("alias.template", xmlDir + File.separator + "alias.xml",
+                    keywords, false /*force*/);
         }
 
         final String valuesDir = "res" + File.separator + "values";
         createDirs(valuesDir);
         if (isDirEmpty(valuesDir, "Resource Values")) {
-            installTemplate("strings.template", valuesDir + File.separator
-                    + "strings.xml", keywords);
+            installProjectTemplate("strings.template", valuesDir + File.separator
+                    + "strings.xml", keywords, false /*force*/);
         }
 
         
         /* Make AndroidManifest.xml and build.xml files */
-        installTemplate("AndroidManifest.alias.template", "AndroidManifest.xml", keywords);
+        installProjectTemplate("AndroidManifest.alias.template", "AndroidManifest.xml", keywords,
+                false /*force*/);
         
-        installTemplate("build.alias.template", "build.xml", keywords);
-        installTemplate("default.properties.template", "default.properties", keywords, true /*force*/);
+        installBuildTemplate("build.alias.template", "build.xml", keywords, false /*force*/);
+        installBuildTemplate("default.properties.template", "default.properties", keywords, true /*force*/);
     }
 
     
@@ -513,6 +573,16 @@ public class ActivityCreator {
         keywords.put("ANDROID_SDK_FOLDER", mSdkDir.replace('\\', '/'));
         
         return keywords;
+    }
+    
+    private void addTargetKeywords(HashMap<String, String> keywords) {
+        // FIXME: get this from the target selection
+        keywords.put("TARGET_MODE",  "platform");
+        keywords.put("TARGET_API",  "1"); // this is potentially wrong but since it's only used
+                                          // when editing a project config, this is ok for now.
+        keywords.put("TARGET_NAME",  "android"); // this is only used in add-on mode.
+        keywords.put("TARGET_FOLDER",  mTargetPlatform);
+        keywords.put("TARGET_MODE",  "platform");
     }
 
     

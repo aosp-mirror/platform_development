@@ -18,6 +18,7 @@ package com.example.android.apis.graphics;
 
 import android.app.Activity;
 import android.graphics.PixelFormat;
+import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 
 
@@ -37,7 +38,7 @@ public class TranslucentGLSurfaceViewActivity extends Activity {
         // of the cube:
         mGLSurfaceView.setRenderer(new CubeRenderer(true));
         // Use a surface format with an Alpha channel:
-        mGLSurfaceView.getHolder().setFormat(PixelFormat.RGBA_8888);
+        mGLSurfaceView.getHolder().setFormat(PixelFormat.TRANSLUCENT);
         setContentView(mGLSurfaceView);
     }
 

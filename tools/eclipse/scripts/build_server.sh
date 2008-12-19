@@ -46,9 +46,10 @@ function die() {
 }
 
 function check_params() {
-  # This needs to run from //device
-  [ `basename "$PWD"` == "device" ] || \
-    die "Please execute $0 from the //device directory, not $PWD"
+  # This needs to run from the top android directory
+  # Automatically CD to the top android directory, whatever its name
+  D=`dirname "$0"`
+  cd "$D/../../../../" && echo "Switched to directory $PWD"
 
   # The current Eclipse build has some Linux dependency in its config files
   [ `uname` == "Linux" ] || die "This must run from a Linux box."
@@ -60,14 +61,12 @@ function check_params() {
 
 function build_libs() {
   MAKE_OPT="-j8"
-  echo "*** Building: make $MAKE_OPT dx ping ddms jarutils androidprefs layoutlib_api"
-  make $MAKE_OPT dx ping ddms jarutils androidprefs layoutlib_api layoutlib_utils
+  echo "*** Building: make $MAKE_OPT dx ping ddms jarutils androidprefs layoutlib_api ninepatch sdklib sdkuilib"
+  make $MAKE_OPT dx ping ddms jarutils androidprefs layoutlib_api layoutlib_utils ninepatch sdklib sdkuilib
 }
 
 function build_plugin {
-  cd tools/eclipse/scripts
-  ./create_all_symlinks.sh
-  cd .. # cd back to tools/eclipse
+  development/tools/eclipse/scripts/create_all_symlinks.sh
 
   # Qualifier is "v" followed by date/time in YYYYMMDDHHSS format and the optional
   # build number.
@@ -90,7 +89,7 @@ function build_plugin {
   [ -d "$DEST_DIR/$BUILD_PREFIX" ] || rm -rfv "$DEST_DIR/$BUILD_PREFIX"
 
   # Perform the Eclipse build and move the result in $DEST_DIR/android-build
-  ./doBuild.sh $QUALIFIER $INTERNAL_BUILD -d "$DEST_DIR" -a "$BUILD_PREFIX"
+  development/tools/eclipse/scripts/build_plugins.sh $QUALIFIER $INTERNAL_BUILD -d "$DEST_DIR" -a "$BUILD_PREFIX"
 
   # Cleanup
   [ -d "$QUALIFIER" ] && rm -rfv "$QUALIFIER"

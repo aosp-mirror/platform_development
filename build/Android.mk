@@ -4,7 +4,7 @@ LOCAL_PATH := $(call my-dir)
 # anywhere else, and the rules don't support.  Aditionally, the depenencies on
 # these files don't really matter, because they are all generated as part of
 # building the docs.  So for the dependency, we just use the
-# framework-timestamp file, which is the $@ of the droiddoc rule.
+# offline-sdk-timestamp file, which is the $@ of the droiddoc rule.
 # We also need to depend on framework-res.apk, in order to pull the
 # resource files out of there for aapt.
 #
@@ -22,7 +22,7 @@ $(full_target): PRIVATE_INTERMEDIATES_DIR := $(intermediates)
 $(full_target): PRIVATE_CLASS_INTERMEDIATES_DIR := $(classes_dir)
 $(full_target): PRIVATE_FRAMEWORK_RES_PACKAGE := $(framework_res_package)
 
-$(full_target): $(OUT_DOCS)/framework-timestamp $(framework_res_package)
+$(full_target): $(OUT_DOCS)/offline-sdk-timestamp $(framework_res_package)
 	@echo Compiling SDK Stubs: $@
 	$(hide) rm -rf $(PRIVATE_CLASS_INTERMEDIATES_DIR)
 	$(hide) mkdir -p $(PRIVATE_CLASS_INTERMEDIATES_DIR)

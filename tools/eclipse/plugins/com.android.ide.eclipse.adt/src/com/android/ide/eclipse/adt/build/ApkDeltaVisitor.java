@@ -42,6 +42,7 @@ import java.util.ArrayList;
  * <li>Any change to the classes.dex inside the output folder</li>
  * <li>Any change to the packaged resources file inside the output folder</li>
  * <li>Any change to a non java/aidl file inside the source folders</li>
+ * <li>Any change to .so file inside the lib (native library) folder</li>
  * </ul>
  */
 public class ApkDeltaVisitor extends BaseDeltaVisitor
@@ -79,6 +80,8 @@ public class ApkDeltaVisitor extends BaseDeltaVisitor
 
     private IPath mResPath;
 
+    private IPath mLibFolder;
+
     /**
      * Builds the object with a specified output folder.
      * @param builder the xml builder using this object to visit the
@@ -103,6 +106,11 @@ public class ApkDeltaVisitor extends BaseDeltaVisitor
         IResource resFolder = builder.getProject().findMember(AndroidConstants.FD_RESOURCES);
         if (resFolder != null) {
             mResPath = resFolder.getFullPath();
+        }
+        
+        IResource libFolder = builder.getProject().findMember(AndroidConstants.FD_NATIVE_LIBS);
+        if (libFolder != null) {
+            mLibFolder = libFolder.getFullPath();
         }
     }
 
@@ -161,6 +169,7 @@ public class ApkDeltaVisitor extends BaseDeltaVisitor
         
         // check the other folders.
         if (mOutputPath != null && mOutputPath.isPrefixOf(path)) {
+            // a resource changed inside the output folder.
             if (type == IResource.FILE) {
                 // just check this is a .class file. Any modification will
                 // trigger a change in the classes.dex file
@@ -217,6 +226,17 @@ public class ApkDeltaVisitor extends BaseDeltaVisitor
             mPackageResources = true;
             mMakeFinalPackage = true;
             return false;
+        } else if (mLibFolder != null && mLibFolder.isPrefixOf(path)) {
+            // inside the native library folder. Test if the changed resource is a .so file.
+            if (type == IResource.FILE &&
+                    path.getFileExtension().equalsIgnoreCase(AndroidConstants.EXT_NATIVE_LIB)) {
+                mMakeFinalPackage = true;
+                return false; // return false for file.
+            }
+
+            // for folders, return true only if we don't already know we have to make the
+            // final package.
+            return mMakeFinalPackage == false;
         } else {
             // we are in a folder that is neither the resource folders, nor the output.
             // check against all the source folders, unless we already know we need to do

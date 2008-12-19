@@ -30,6 +30,9 @@ typedef struct AudioState {
  */
 static int configureInitialState(const char* pathName, AudioState* audioState)
 {
+#if BUILD_SIM_WITHOUT_AUDIO
+    return 0;
+#else
     esd_player_info_t *pi; 
     audioState->fd = -1;
     audioState->sourceId = -1;
@@ -62,6 +65,7 @@ static int configureInitialState(const char* pathName, AudioState* audioState)
     }
     printf("Couldn't open audio device. Faking it.\n");
     return 0;
+#endif
 }
 
 /*
@@ -71,6 +75,9 @@ static int configureInitialState(const char* pathName, AudioState* audioState)
  */
 static ssize_t writeAudio(FakeDev* dev, int fd, const void* buf, size_t count)
 {
+#if BUILD_SIM_WITHOUT_AUDIO
+    return 0;
+#else
     AudioState *state = (AudioState*)dev->state;
     if (state->fd >= 0)
         return _ws_write(state->fd, buf, count);
@@ -78,6 +85,7 @@ static ssize_t writeAudio(FakeDev* dev, int fd, const void* buf, size_t count)
     // fake timing
     usleep(count * 10000 / 441 * 4);
     return count;
+#endif
 }
 
 /*
@@ -93,11 +101,15 @@ static int ioctlAudio(FakeDev* dev, int fd, int request, void* argp)
  */
 static int closeAudio(FakeDev* dev, int fd)
 {
+#if BUILD_SIM_WITHOUT_AUDIO
+    return 0;
+#else
     AudioState *state = (AudioState*)dev->state;
     close(state->fd);
     free(state);
     dev->state = NULL;
     return 0;
+#endif
 }
 
 /*

@@ -18,13 +18,19 @@ package com.android.ide.eclipse.adt.debug.ui;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.debug.launching.LaunchConfigDelegate;
-import com.android.ide.eclipse.adt.debug.ui.SkinRepository.Skin;
+import com.android.ide.eclipse.adt.sdk.Sdk;
+import com.android.ide.eclipse.common.project.BaseProjectHelper;
 import com.android.ide.eclipse.ddms.DdmsPlugin;
+import com.android.sdklib.IAndroidTarget;
+import com.android.sdklib.SdkConstants;
 
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 import org.eclipse.debug.ui.AbstractLaunchConfigurationTab;
+import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
@@ -81,6 +87,8 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
     private Button mWipeDataButton;
 
     private Button mNoBootAnimButton;
+
+    private IAndroidTarget mTarget;
 
     /**
      * Returns the emulator ready speed option value.
@@ -169,12 +177,6 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
         new Label(mEmulatorOptionsGroup, SWT.NONE).setText("Screen Size:");
 
         mSkinCombo = new Combo(mEmulatorOptionsGroup, SWT.READ_ONLY);
-        Skin[] skins = SkinRepository.getInstance().getSkins();
-        if (skins != null) {
-            for (Skin skin : skins) {
-                mSkinCombo.add(skin.getDescription());
-            }
-        }
         mSkinCombo.addSelectionListener(new SelectionAdapter() {
             // called when selection changes
             @Override
@@ -182,7 +184,6 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
                 updateLaunchConfigurationDialog();
             }
         });
-        mSkinCombo.pack();
 
         // network options
         new Label(mEmulatorOptionsGroup, SWT.NONE).setText("Network Speed:");
@@ -287,6 +288,42 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
         }
         mAutoTargetButton.setSelection(value);
         mManualTargetButton.setSelection(!value);
+        
+        // look for the project name to get its target.
+        String projectName = "";
+        try {
+            projectName = configuration.getAttribute(
+                    IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, projectName);
+        } catch (CoreException ce) {
+        }
+
+        IProject project = null;
+
+        // get the list of existing Android projects from the workspace.
+        IJavaProject[] projects = BaseProjectHelper.getAndroidProjects();
+        if (projects != null) {
+            // look for the project whose name we read from the configuration.
+            for (IJavaProject p : projects) {
+                if (p.getElementName().equals(projectName)) {
+                    project = p.getProject();
+                    break;
+                }
+            }
+        }
+
+        mSkinCombo.removeAll();
+        if (project != null) {
+            mTarget = Sdk.getCurrent().getTarget(project);
+            if (mTarget != null) {
+                String[] skins = mTarget.getSkins();
+                if (skins != null) {
+                    for (String skin : skins) {
+                        mSkinCombo.add(skin);
+                    }
+                    mSkinCombo.pack();
+                }
+            }
+        }
 
         value = LaunchConfigDelegate.DEFAULT_WIPE_DATA;
         try {
@@ -307,16 +344,18 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
         int index = -1;
         try {
             String skin = configuration.getAttribute(LaunchConfigDelegate.ATTR_SKIN, (String)null);
-            if (skin != null) {
-                index = getSkinIndex(skin);
+            if (skin == null) {
+                skin = SdkConstants.SKIN_DEFAULT;
             }
+
+            index = getSkinIndex(skin);
         } catch (CoreException e) {
-            index = getSkinIndex(SkinRepository.getInstance().checkSkin(
-                    LaunchConfigDelegate.DEFAULT_SKIN));
+            index = getSkinIndex(SdkConstants.SKIN_DEFAULT);
         }
 
         if (index == -1) {
-            mSkinCombo.clearSelection();
+            mSkinCombo.select(0);
+            updateLaunchConfigurationDialog();
         } else {
             mSkinCombo.select(index);
         }
@@ -387,7 +426,7 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
         configuration.setAttribute(LaunchConfigDelegate.ATTR_TARGET_MODE,
                 LaunchConfigDelegate.DEFAULT_TARGET_MODE);
         configuration.setAttribute(LaunchConfigDelegate.ATTR_SKIN,
-                LaunchConfigDelegate.DEFAULT_SKIN);
+                SdkConstants.SKIN_DEFAULT);
         configuration.setAttribute(LaunchConfigDelegate.ATTR_SPEED,
                 LaunchConfigDelegate.DEFAULT_SPEED);
         configuration.setAttribute(LaunchConfigDelegate.ATTR_DELAY,
@@ -403,11 +442,31 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
    }
 
     private String getSkinNameByIndex(int index) {
-        return SkinRepository.getInstance().getSkinNameByIndex(index);
+        if (mTarget != null && index > 0) {
+            String[] skins = mTarget.getSkins();
+            if (skins != null && index < skins.length) {
+                return skins[index];
+            }
+        }
+        
+        return null;
     }
 
     private int getSkinIndex(String name) {
-        return SkinRepository.getInstance().getSkinIndex(name);
+        if (mTarget != null) {
+            String[] skins = mTarget.getSkins();
+            if (skins != null) {
+                int index = 0;
+                for (String skin : skins) {
+                    if (skin.equalsIgnoreCase(name)) {
+                        return index;
+                    }
+                    index++;
+                }
+            }
+        }
+        
+        return -1;
     }
 
 }

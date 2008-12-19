@@ -51,6 +51,8 @@
         <activity android:name="NoteEditor"
             android:theme="@android:style/Theme.Light"
             android:label="@string/title_note"
+            android:screenOrientation="sensor"
+            android:configChanges="keyboardHidden|orientation"
         >
             <!-- This filter says that we can view or edit the data of
                  a single note -->

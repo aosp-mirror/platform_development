@@ -2,14 +2,20 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Android Development Toolkit
 Bundle-SymbolicName: com.android.ide.eclipse.adt;singleton:=true
-Bundle-Version: 0.8.1.qualifier
+Bundle-Version: 0.9.0.qualifier
 Bundle-ClassPath: .,
  jarutils.jar,
- androidprefs.jar
+ androidprefs.jar,
+ sdkstats.jar,
+ kxml2-2.3.0.jar,
+ layoutlib_api.jar,
+ ninepatch.jar,
+ layoutlib_utils.jar,
+ sdklib.jar,
+ sdkuilib.jar
 Bundle-Activator: com.android.ide.eclipse.adt.AdtPlugin
 Bundle-Vendor: The Android Open Source Project
-Require-Bundle: com.android.ide.eclipse.common,
- com.android.ide.eclipse.ddms,
+Require-Bundle: com.android.ide.eclipse.ddms,
  org.eclipse.core.runtime,
  org.eclipse.core.resources,
  org.eclipse.debug.core,
@@ -26,11 +32,48 @@ Require-Bundle: com.android.ide.eclipse.common,
  org.eclipse.core.filesystem,
  org.eclipse.ui,
  org.eclipse.ui.ide,
- org.eclipse.ui.forms
+ org.eclipse.ui.forms,
+ org.eclipse.gef,
+ org.eclipse.ui.browser,
+ org.eclipse.ui.views,
+ org.eclipse.wst.sse.core,
+ org.eclipse.wst.sse.ui,
+ org.eclipse.wst.xml.core,
+ org.eclipse.wst.xml.ui
 Eclipse-LazyStart: true
-Export-Package: com.android.ide.eclipse.adt.build;x-friends:="com.android.ide.eclipse.tests",
+Export-Package: com.android.ide.eclipse.adt,
+ com.android.ide.eclipse.adt.build;x-friends:="com.android.ide.eclipse.tests",
  com.android.ide.eclipse.adt.project;x-friends:="com.android.ide.eclipse.tests",
  com.android.ide.eclipse.adt.project.internal;x-friends:="com.android.ide.eclipse.tests",
- com.android.ide.eclipse.adt.resources;x-friends:="com.android.ide.eclipse.tests"
+ com.android.ide.eclipse.adt.sdk;x-friends:="com.android.ide.eclipse.tests",
+ com.android.ide.eclipse.adt.wizards.newproject;x-friends:="com.android.ide.eclipse.tests",
+ com.android.ide.eclipse.common,
+ com.android.ide.eclipse.common.project,
+ com.android.ide.eclipse.common.resources,
+ com.android.ide.eclipse.editors;x-friends:="com.android.ide.eclipse.tests",
+ com.android.ide.eclipse.editors.descriptors;x-friends:="com.android.ide.eclipse.tests",
+ com.android.ide.eclipse.editors.layout;x-friends:="com.android.ide.eclipse.tests",
+ com.android.ide.eclipse.editors.layout.descriptors;x-friends:="com.android.ide.eclipse.tests",
+ com.android.ide.eclipse.editors.layout.parts;x-friends:="com.android.ide.eclipse.tests",
+ com.android.ide.eclipse.editors.layout.uimodel;x-friends:="com.android.ide.eclipse.tests",
+ com.android.ide.eclipse.editors.manifest;x-friends:="com.android.ide.eclipse.tests",
+ com.android.ide.eclipse.editors.manifest.descriptors;x-friends:="com.android.ide.eclipse.tests",
+ com.android.ide.eclipse.editors.manifest.model;x-friends:="com.android.ide.eclipse.tests",
+ com.android.ide.eclipse.editors.manifest.pages;x-friends:="com.android.ide.eclipse.tests",
+ com.android.ide.eclipse.editors.menu;x-friends:="com.android.ide.eclipse.tests",
+ com.android.ide.eclipse.editors.menu.descriptors;x-friends:="com.android.ide.eclipse.tests",
+ com.android.ide.eclipse.editors.resources;x-friends:="com.android.ide.eclipse.tests",
+ com.android.ide.eclipse.editors.resources.configurations;x-friends:="com.android.ide.eclipse.tests",
+ com.android.ide.eclipse.editors.resources.descriptors;x-friends:="com.android.ide.eclipse.tests",
+ com.android.ide.eclipse.editors.resources.explorer;x-friends:="com.android.ide.eclipse.tests",
+ com.android.ide.eclipse.editors.resources.manager;x-friends:="com.android.ide.eclipse.tests",
+ com.android.ide.eclipse.editors.resources.manager.files;x-friends:="com.android.ide.eclipse.tests",
+ com.android.ide.eclipse.editors.resources.uimodel;x-friends:="com.android.ide.eclipse.tests",
+ com.android.ide.eclipse.editors.ui;x-friends:="com.android.ide.eclipse.tests",
+ com.android.ide.eclipse.editors.ui.tree;x-friends:="com.android.ide.eclipse.tests",
+ com.android.ide.eclipse.editors.uimodel;x-friends:="com.android.ide.eclipse.tests",
+ com.android.ide.eclipse.editors.wizards;x-friends:="com.android.ide.eclipse.tests",
+ com.android.ide.eclipse.editors.xml;x-friends:="com.android.ide.eclipse.tests",
+ com.android.ide.eclipse.editors.xml.descriptors;x-friends:="com.android.ide.eclipse.tests"
 
 

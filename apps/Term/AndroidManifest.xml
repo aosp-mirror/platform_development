@@ -1,7 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.android.term">
-    <uses-permission android:name="android.permission.INTERNET"/>
     <application android:icon="@drawable/app_terminal"
-                android:label="Terminal Emulator">
+                android:label="@string/application_terminal">
         <activity android:name="Term"
                 android:theme="@style/Theme"
                 android:launchMode="singleInstance"
@@ -11,5 +10,6 @@
                 <category android:name="android.intent.category.TEST" />
             </intent-filter>
         </activity>
+        <activity android:name="TermPreferences"/>
     </application>
 </manifest> 

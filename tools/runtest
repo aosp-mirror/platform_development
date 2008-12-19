@@ -16,13 +16,15 @@
 
 # Options and default values
 # TODO: other options ideas:
-#   pass options to am
+#   pass options to am (then remove some of the more specific options)
 # TODO capture more non-error output when not -v 
+# TODO read configs from vendor/*, not just from vendor/google
 
 optListTests=0
 optSkipBuild=0
 optPreview=0
 optRawmode=0
+optSuiteAssignmentMode=0
 optAdbTarget=""
 optVerbose=0
 optWaitForDebugger=0
@@ -35,12 +37,13 @@ optUserTests=${HOME}/.android/runtest.rc
 # TODO error messages on once-only or mutually-exclusive options
 #
 function processOptions() {
-  while getopts "l b n r d e s: v w c:t:u:" opt ; do  
+  while getopts "l b n a r d e s: v w c:t:u:" opt ; do  
     case ${opt} in  
       l ) optListTests=1 ;;
       b ) optSkipBuild=1 ;;
       n ) optPreview=1 ;;
       r ) optRawMode=1 ;;
+      a ) optSuiteAssignmentMode=1 ;;
       d ) optAdbTarget="-d" ;;
       e ) optAdbTarget="-e" ;;
       s ) optAdbTarget="-s ${OPTARG}" ;;
@@ -52,6 +55,30 @@ function processOptions() {
       esac
   done 
 } 
+
+#
+# Show the command usage and options
+#
+function showUsage() {
+  echo "usage: The $progName script works in two ways.  You can query it for a list" >&2
+  echo "       of tests, or you can launch a test, test case, or test suite." >&2
+  echo "" >&2
+  echo "       $progName -l           # To view the list of tests" >&2
+  echo "" >&2
+  echo "       $progName              # To launch tests" >&2
+  echo "           [-b]                     # Skip build - just launch" >&2
+  echo "           [-n]                     # Do not execute, just preview commands" >&2
+  echo "           [-r]                     # Raw mode (for output to other tools)" >&2
+  echo "           [-a]                     # Suite assignment (for details & usage" >&2
+  echo "                                    #   see InstrumentationTestRunner)" >&2
+  echo "           [-v]                     # Increase verbosity of ${progName}" >&2
+  echo "           [-w]                     # Wait for debugger before launching tests" >&2
+  echo "           [-c test-class]          # Restrict test to a specific class" >&2
+  echo "           [-t test-method]         # Restrict test to a specific method" >&2
+  echo "           [-e | -d | -s ser-num]   # use emulator, device, or serial number" >&2
+  echo "           [-u user-tests-file]     # Alternate source of user definitions" >&2
+  echo "           short-test-name          # (req'd) test configuration to launch" >&2
+}
 
 # The list below are built-in test definitions.  You can also define your own 
 # tests by creating a file named "~/.android/runtest.rc" and adding them to that 
@@ -85,50 +112,50 @@ knownTests=(
   # NAME      BUILD DIR               <test-package> <test-class> <testrunner-package> <testrunner-component>
 
   # system-wide tests
-  "framework  tests/FrameworkTests    # com.android.frameworktest.AllTests com.android.frameworktest.tests #"
-  "core       java/tests              android.core CoreTests # #"
-  "android    apps/AndroidTests       com.android.unit_tests AndroidTests # #"
-  "smoke      tests/SmokeTest         com.android.smoketest # com.android.smoketest.tests #"
-  "libcore    java/tests/android       android.core JavaTests # #"
-  "apidemos   samples/ApiDemos        com.example.android.apis # com.example.android.apis.tests #"
+  "framework  frameworks/base/tests/FrameworkTest # com.android.frameworktest.AllTests com.android.frameworktest.tests #"
+  "android    frameworks/base/tests/AndroidTests  com.android.unit_tests AndroidTests # #"
+  "smoke      tests/SmokeTest                     com.android.smoketest # com.android.smoketest.tests #"
+  "core       frameworks/base/tests/CoreTests     # android.core.CoreTests android.core #"
+  "libcore    frameworks/base/tests/CoreTests     # android.core.JavaTests android.core #"
+  "apidemos   samples/ApiDemos                    com.example.android.apis # com.example.android.apis.tests #"
 
   # targeted framework tests
-  "heap       apps/AndroidTests       com.android.unit_tests HeapTest # #"
-  "activity   apps/AndroidTests       com.android.unit_tests activity.ActivityTests # #"
-  "deadlock  tests/Deadlock           com.android.deadlock # com.android.deadlock.tests #"
+  "heap       frameworks/base/tests/AndroidTests  com.android.unit_tests HeapTest # #"
+  "activity   frameworks/base/tests/AndroidTests  com.android.unit_tests activity.ActivityTests # #"
+  "deadlock  tests/Deadlock                       com.android.deadlock # com.android.deadlock.tests #"
   
   # selected app tests
-  "browser    apps/Browser            com.android.browser # # .BrowserTestRunner"
-  "browserfunc apps/Browser           com.android.browser # # .BrowserFunctionalTestRunner"
-  "calendar   apps/Calendar/tests     com.android.calendar.tests # # #"
+  "browser    packages/apps/Browser            com.android.browser # # .BrowserTestRunner"
+  "browserfunc packages/apps/Browser           com.android.browser # # .BrowserFunctionalTestRunner"
+  "calendar   packages/apps/Calendar/tests     com.android.calendar.tests # # #"
   "calprov    content/providers/calendar   com.android.providers.calendar.tests # # #"
   "camera     tests/Camera            com.android.cameratests # # CameraInstrumentationTestRunner"
   "contactsprov content/tests/providers/contacts  com.android.providers.contacts # com.android.providers.contactstests .ContactsProviderInstrumentation"
-  "gmail      partner/google/tests/Gmail  com.google.android.gmailtests # # .GmailTestRunner"
-  "gmailprov  partner/google/tests/GmailProvider  com.google.android.gmailprovidertests # # #"
-  "maps       partner/google/tests/Maps   com.google.android.mapstests # # .MapInstrumentationTestRunner"
-  "mapsapi    partner/google/tests/Maps   com.google.android.mapstests # # .MapApiInstrumentationTestRunner"
+  "email      packages/apps/Email              com.android.email # com.android.email.tests #"
+  "emailsmall packages/apps/Email              com.android.email SmallTests com.android.email.tests #"
   "media      tests/MediaFrameworkTest    com.android.mediaframeworktest # # .MediaFrameworkTestRunner"
   "mediaunit  tests/MediaFrameworkTest com.android.mediaframeworktest # # .MediaFrameworkUnitTestRunner"
   "mediaprov  tests/MediaProvider     com.android.mediaprovidertests # # .MediaProviderTestsInstrumentation"
-  "mms        apps/Mms                # # com.android.mms.tests com.android.mms.ui.MMSInstrumentationTestRunner"
-  "mmslaunch  apps/Mms                # # com.android.mms.tests com.android.mms.SmsLaunchPerformance"
+  "mms        packages/apps/Mms                # # com.android.mms.tests com.android.mms.ui.MMSInstrumentationTestRunner"
+  "mmslaunch  packages/apps/Mms                # # com.android.mms.tests com.android.mms.SmsLaunchPerformance"
   "phone      tests/Phone             com.android.phonetests # # .PhoneInstrumentationTestRunner"
   "phonestress tests/Phone            com.android.phonetests # # .PhoneInstrumentationStressTestRunner"
   "ringtone   tests/RingtoneSettings  com.android.ringtonesettingstests # # .RingtoneSettingsInstrumentationTestRunner"
-  "vending    partner/google/apps/Vending/tests   com.android.vendingtests # # #"
-  "youtube    partner/google/apps/YouTube/  com.google.android.youtube # # .YouTubeTestRunner"
 )
 
 #
-# Searches for a user-defined test file (~/.android/runtest.rc and, if found, 
-# prepends any test definitions to the master list in knownTests.
-# TODO allow override filename to be set by option
+# Searches for a runtest.rc file in a given directory and, if found, prepends it to
+# the list of known tests.
 #
-function setupInputArray() {
-  if [[ -f ${optUserTests} ]] ; then
+function readConfigFile () {
+  pathToRc=$1
+  if [[ -z ${pathToRc} ]]; then 
+    exit 0
+  fi
+  rcFile=${pathToRc}/runtest.rc
+  if [[ -f ${rcFile} ]] ; then
     declare -a lines
-    exec 3<${optUserTests} || exit
+    exec 3<${rcFile} || exit
     while read curline <&3; do
       if [[ -z ${curline} || ${curline:0:1} = "#" ]]; then 
         continue
@@ -182,7 +209,7 @@ function dumpTests() {
 # (based on gettop() from envsetup.sh)
 #
 function gettop {
-  TOPFILE=config/envsetup.make
+  TOPFILE=build/core/envsetup.mk
   if [[ -n ${TOP} && -f ${TOP}/${TOPFILE} ]] ; then
     echo ${TOP}
   else
@@ -211,10 +238,10 @@ function gettop {
 # Captures the "mmm" command from envsetup.sh
 #
 function call_mmm() {
-  T=$(gettop)
-  if [[ -n ${T} ]] ; then
-    . ${T}/envsetup.sh
-    mmm ${T}/$@
+  TOP=$(gettop)
+  if [[ -n ${TOP} ]] ; then
+    . ${TOP}/build/envsetup.sh
+    mmm ${TOP}/$@
   fi
 }
 
@@ -223,20 +250,16 @@ function call_mmm() {
 progName=$(basename $0)
 
 if [[ $# -eq 0 ]] ; then
-  echo "usage: $progName -l" >&2
-  echo "       $progName [-b] [-p] [-n] [-r] [-v]" >&2
-  echo "               [-u <user-tests-file>]" >&2
-  echo "               [-c test-class]" >&2
-  echo "               [-t test-method]" >&2
-  echo "               [-d | -e | -s serial-number]" >&2
-  echo "               <short-test-name>" >&2
+  showUsage
   exit 1
 fi
 
 processOptions $@
 shift $((OPTIND-1))
 
-setupInputArray
+readConfigFile $optUserTests
+# TODO: Read from *any* vendor/*/runtest.rc
+readConfigFile $(gettop)/vendor/google
 
 # if requested, list all tests and halt
 if [[ ${optListTests} -ne 0 ]] ; then
@@ -272,10 +295,10 @@ if [[ ${#testInfo[@]} -eq 5 ]] ; then
   if [[ ${optSkipBuild} -eq 0 ]] ; then
     if [[ ${buildPath} != "#" ]] ; then
       if [[ $optVerbose -ne 0 || ${optPreview} -ne 0 ]] ; then 
-        echo mmm ${buildPath} "&&" adb ${optAdbTarget} sync
+        echo mmm ${buildPath} "&&" adb ${optAdbTarget} remount "&&" adb ${optAdbTarget} sync
       fi
       if [[ ${optPreview} -eq 0 ]] ; then
-        call_mmm ${buildPath} && adb ${optAdbTarget} sync
+        call_mmm ${buildPath} && adb ${optAdbTarget} remount && adb ${optAdbTarget} sync
         buildResult=$?
       else
         buildResult=0
@@ -283,6 +306,10 @@ if [[ ${#testInfo[@]} -eq 5 ]] ; then
       if [[ $buildResult -ne 0 ]] ; then
         exit ${buildResult}
       fi
+      # finally, sleep a bit.  this is a hack.  it gives the package manager time to
+      # install the package(s) that were just synced.  this causes a reduction in the number
+      # of false failures, but it's not a perfect solution.
+      sleep 2
     fi
   fi
       
@@ -301,6 +328,9 @@ if [[ ${#testInfo[@]} -eq 5 ]] ; then
   debugOptions=""
   if [[ ${optWaitForDebugger} -ne 0 ]] ; then
     debugOptions="-e debug true"
+  fi
+  if [[ ${optSuiteAssignmentMode} -ne 0 ]] ; then
+    debugOptions="-e suiteAssignment true "${debugOptions}
   fi
   if [[ ${optRawMode} -ne 0 ]] ; then
     debugOptions="-r "${debugOptions}

@@ -103,7 +103,7 @@ public class ClientData {
     private boolean mIsDdmAware;
 
     // the client's process ID
-    private int mPid = -1;
+    private final int mPid;
 
     // Java VM identification string
     private String mVmIdentifier;
@@ -270,14 +270,6 @@ public class ClientData {
      */
     public int getPid() {
         return mPid;
-    }
-
-    /**
-     * Sets process ID.
-     */
-    void setPid(int pid) {
-        assert pid != mPid;
-        mPid = pid;
     }
 
     /**

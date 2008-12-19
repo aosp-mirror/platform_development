@@ -84,16 +84,21 @@ final class HandleHello extends ChunkHandler {
 
         vmIdent = getString(data, vmIdentLen);
         appName = getString(data, appNameLen);
-
+        
         Log.d("ddm-hello", "HELO: v=" + version + ", pid=" + pid
             + ", vm='" + vmIdent + "', app='" + appName + "'");
 
         ClientData cd = client.getClientData();
+        
         synchronized (cd) {
-            cd.setVmIdentifier(vmIdent);
-            cd.setClientDescription(appName);
-            cd.setPid(pid);
-            cd.isDdmAware(true);
+            if (cd.getPid() == pid) {
+                cd.setVmIdentifier(vmIdent);
+                cd.setClientDescription(appName);
+                cd.isDdmAware(true);
+            } else {
+                Log.e("ddm-hello", "Received pid (" + pid + ") does not match client pid ("
+                        + cd.getPid() + ")");
+            }
         }
 
         client = checkDebuggerPortForAppName(client, appName);

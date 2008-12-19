@@ -30,41 +30,43 @@ bin/mksdcard tools/mksdcard
 development/tools/scripts/add-accounts-sdk tools/add-accounts.py
 
 # the uper-jar file that apps link against
-out/target/common/obj/PACKAGING/android_jar_intermediates/android.jar android.jar
+out/target/common/obj/PACKAGING/android_jar_intermediates/android.jar platforms/${PLATFORM_NAME}/android.jar
 
-sdk/sdk-build.prop tools/lib/build.prop
+sdk/sdk-build.prop platforms/${PLATFORM_NAME}/build.prop
 development/tools/scripts/plugin.prop tools/lib/plugin.prop
 
 # the aidl precompiled include
-obj/framework.aidl tools/lib/framework.aidl
+obj/framework.aidl platforms/${PLATFORM_NAME}/framework.aidl
 
 # sdk scripts
-development/tools/scripts/AndroidManifest.template tools/lib/AndroidManifest.template
-development/tools/scripts/AndroidManifest.alias.template tools/lib/AndroidManifest.alias.template
-development/tools/scripts/AndroidManifest.tests.template tools/lib/AndroidManifest.tests.template
+development/tools/scripts/AndroidManifest.template platforms/${PLATFORM_NAME}/templates/AndroidManifest.template
+development/tools/scripts/AndroidManifest.alias.template platforms/${PLATFORM_NAME}/templates/AndroidManifest.alias.template
+development/tools/scripts/AndroidManifest.tests.template platforms/${PLATFORM_NAME}/templates/AndroidManifest.tests.template
+development/tools/scripts/iml.template platforms/${PLATFORM_NAME}/templates/iml.template
+development/tools/scripts/ipr.template platforms/${PLATFORM_NAME}/templates/ipr.template
+development/tools/scripts/iws.template platforms/${PLATFORM_NAME}/templates/iws.template
+development/tools/scripts/java_file.template platforms/${PLATFORM_NAME}/templates/java_file.template
+development/tools/scripts/java_tests_file.template platforms/${PLATFORM_NAME}/templates/java_tests_file.template
+development/tools/scripts/layout.template platforms/${PLATFORM_NAME}/templates/layout.template
+development/tools/scripts/strings.template platforms/${PLATFORM_NAME}/templates/strings.template
+development/tools/scripts/alias.template platforms/${PLATFORM_NAME}/templates/alias.template
 development/tools/scripts/build.template tools/lib/build.template
 development/tools/scripts/build.alias.template tools/lib/build.alias.template
 development/tools/scripts/default.properties.template tools/lib/default.properties.template
-development/tools/scripts/iml.template tools/lib/iml.template
-development/tools/scripts/ipr.template tools/lib/ipr.template
-development/tools/scripts/iws.template tools/lib/iws.template
-development/tools/scripts/java_file.template tools/lib/java_file.template
-development/tools/scripts/java_tests_file.template tools/lib/java_tests_file.template
-development/tools/scripts/layout.template tools/lib/layout.template
-development/tools/scripts/strings.template tools/lib/strings.template
-development/tools/scripts/alias.template tools/lib/alias.template
+development/tools/scripts/android_rules.xml tools/lib/android_rules.xml
+development/tools/scripts/alias_rules.xml tools/lib/alias_rules.xml
 
 # emacs support
 development/tools/scripts/android.el tools/lib/android.el
 
 # samples
-development/samples/HelloActivity
-development/samples/Home
-development/samples/LunarLander
-development/samples/NotePad
-development/samples/ApiDemos
-development/samples/SkeletonApp
-development/samples/Snake
+development/samples/HelloActivity platforms/${PLATFORM_NAME}/samples/HelloActivity
+development/samples/Home platforms/${PLATFORM_NAME}/samples/Home
+development/samples/LunarLander platforms/${PLATFORM_NAME}/samples/LunarLander
+development/samples/NotePad platforms/${PLATFORM_NAME}/samples/NotePad
+development/samples/ApiDemos platforms/${PLATFORM_NAME}/samples/ApiDemos
+development/samples/SkeletonApp platforms/${PLATFORM_NAME}/samples/SkeletonApp
+development/samples/Snake platforms/${PLATFORM_NAME}/samples/Snake
 
 # dx
 bin/dx tools/dx
@@ -115,47 +117,53 @@ framework/traceview.jar tools/lib/traceview.jar
 bin/activitycreator tools/activitycreator
 framework/activitycreator.jar tools/lib/activitycreator.jar
 
+# sdkmanager
+bin/android tools/android
+framework/sdklib.jar tools/lib/sdklib.jar
+framework/sdkmanager.jar tools/lib/sdkmanager.jar
+
 # emulator
 bin/emulator tools/emulator
-system.img tools/lib/images/system.img
-ramdisk.img tools/lib/images/ramdisk.img
-userdata.img tools/lib/images/userdata.img
-userdata.img tools/lib/images/userdata.img
-prebuilt/android-arm/kernel/kernel-qemu tools/lib/images/kernel-qemu
+system.img platforms/${PLATFORM_NAME}/images/system.img
+ramdisk.img platforms/${PLATFORM_NAME}/images/ramdisk.img
+userdata.img platforms/${PLATFORM_NAME}/images/userdata.img
+prebuilt/android-arm/kernel/kernel-qemu platforms/${PLATFORM_NAME}/images/kernel-qemu
+external/qemu/android/vm/hardware-properties.ini tools/lib/hardware-properties.ini
 
 # emulator skins
-development/emulator/skins/HVGA   tools/lib/images/skins/HVGA
-development/emulator/skins/HVGA-L tools/lib/images/skins/HVGA-L
-development/emulator/skins/HVGA-P tools/lib/images/skins/HVGA-P
-development/emulator/skins/QVGA-L tools/lib/images/skins/QVGA-L
-development/emulator/skins/QVGA-P tools/lib/images/skins/QVGA-P
+development/emulator/skins/HVGA   platforms/${PLATFORM_NAME}/skins/HVGA
+development/emulator/skins/HVGA-L platforms/${PLATFORM_NAME}/skins/HVGA-L
+development/emulator/skins/HVGA-P platforms/${PLATFORM_NAME}/skins/HVGA-P
+development/emulator/skins/QVGA-L platforms/${PLATFORM_NAME}/skins/QVGA-L
+development/emulator/skins/QVGA-P platforms/${PLATFORM_NAME}/skins/QVGA-P
 
-# NOTICE files are copied by config/Makefile
+# NOTICE files are copied by build/core/Makefile
 
 # the readme
 development/docs/SDK_RELEASE_NOTES RELEASE_NOTES.txt
 
 # the docs
-docs/framework docs
+docs/offline-sdk docs
 frameworks/base/docs/docs-redirect.html documentation.html
 frameworks/base/docs/docs-samples-redirect.html docs/samples/index.html
 
 # tools support
-docs/activity_actions.txt tools/lib/activity_actions.txt
-docs/broadcast_actions.txt tools/lib/broadcast_actions.txt
-docs/service_actions.txt tools/lib/service_actions.txt
-docs/categories.txt tools/lib/categories.txt
-docs/widgets.txt tools/lib/widgets.txt
-framework/layoutlib.jar tools/lib/layoutlib.jar
-frameworks/base/core/res tools/lib/res/default
-frameworks/base/data/fonts/fonts.xml tools/lib/fonts/default/fonts.xml
-frameworks/base/data/fonts/DroidSans.ttf tools/lib/fonts/default/DroidSans.ttf
-frameworks/base/data/fonts/DroidSans-Bold.ttf tools/lib/fonts/default/DroidSans-Bold.ttf
-frameworks/base/data/fonts/DroidSansFallback.ttf tools/lib/fonts/default/DroidSansFallback.ttf
-frameworks/base/data/fonts/DroidSansMono.ttf tools/lib/fonts/default/DroidSansMono.ttf
-frameworks/base/data/fonts/DroidSerif-Bold.ttf tools/lib/fonts/default/DroidSerif-Bold.ttf
-frameworks/base/data/fonts/DroidSerif-BoldItalic.ttf tools/lib/fonts/default/DroidSerif-BoldItalic.ttf
-frameworks/base/data/fonts/DroidSerif-Italic.ttf tools/lib/fonts/default/DroidSerif-Italic.ttf
-frameworks/base/data/fonts/DroidSerif-Regular.ttf tools/lib/fonts/default/DroidSerif-Regular.ttf
+docs/activity_actions.txt platforms/${PLATFORM_NAME}/data/activity_actions.txt
+docs/broadcast_actions.txt platforms/${PLATFORM_NAME}/data/broadcast_actions.txt
+docs/service_actions.txt platforms/${PLATFORM_NAME}/data/service_actions.txt
+docs/categories.txt platforms/${PLATFORM_NAME}/data/categories.txt
+docs/widgets.txt platforms/${PLATFORM_NAME}/data/widgets.txt
+framework/layoutlib.jar platforms/${PLATFORM_NAME}/data/layoutlib.jar
+frameworks/base/core/res/res platforms/${PLATFORM_NAME}/data/res
+frameworks/base/data/fonts/fonts.xml platforms/${PLATFORM_NAME}/data/fonts/fonts.xml
+frameworks/base/data/fonts/DroidSans.ttf platforms/${PLATFORM_NAME}/data/fonts/DroidSans.ttf
+frameworks/base/data/fonts/DroidSans-Bold.ttf platforms/${PLATFORM_NAME}/data/fonts/DroidSans-Bold.ttf
+frameworks/base/data/fonts/DroidSansFallback.ttf platforms/${PLATFORM_NAME}/data/fonts/DroidSansFallback.ttf
+frameworks/base/data/fonts/DroidSansMono.ttf platforms/${PLATFORM_NAME}/data/fonts/DroidSansMono.ttf
+frameworks/base/data/fonts/DroidSerif-Bold.ttf platforms/${PLATFORM_NAME}/data/fonts/DroidSerif-Bold.ttf
+frameworks/base/data/fonts/DroidSerif-BoldItalic.ttf platforms/${PLATFORM_NAME}/data/fonts/DroidSerif-BoldItalic.ttf
+frameworks/base/data/fonts/DroidSerif-Italic.ttf platforms/${PLATFORM_NAME}/data/fonts/DroidSerif-Italic.ttf
+frameworks/base/data/fonts/DroidSerif-Regular.ttf platforms/${PLATFORM_NAME}/data/fonts/DroidSerif-Regular.ttf
 
-
+# empty add-on folder with just a readme
+development/tools/scripts/README_add-ons.txt add-ons/README.txt

@@ -20,7 +20,7 @@ fi
 apps=$1
 if [ "$apps" == "" ]
 then
-    apps=$ANDROID_BUILD_TOP/apps/*
+    apps=$ANDROID_BUILD_TOP/packages/apps/*
 fi
 
 for app in $apps
@@ -31,7 +31,7 @@ do
         rDotJava=$(find out/target/common/obj/APPS/${appname}_intermediates/ -name R.java)
         for i in $(cat $rDotJava | grep "\w*=0x\d*" | sed 's/ *public static final int //' | sed 's/=0x.*//')
         do
-            echo $i $(grep -Rw R\\..*\\.$i\\\|@style/$i\\\|@drawable/$i\\\|@color/$i\\\|@xml/$i\\\|@layout/$i\\\|@menu/$i\\\|@+id/$i\\\|@array/$i\\\|@string/$i $app | wc -l)
+            echo $i $(grep -Rw R\\..*\\.$i\\\|@style/$i\\\|@drawable/$i\\\|@anim/$i\\\|@color/$i\\\|@xml/$i\\\|@layout/$i\\\|@menu/$i\\\|@+id/$i\\\|@array/$i\\\|@string/$i $app | wc -l)
         done | grep " 0$" | {
             if [ "$showall" == "yes" ]
             then

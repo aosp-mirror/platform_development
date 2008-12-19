@@ -129,10 +129,12 @@ void PropertyServer::SetDefaultProperties(void)
         { "app.setupwizard.disable", "1" },
 
         /* Dalvik options, set by AndroidRuntime */
-        { "dalvik.vm.execution-mode", "int:portable" },
+        { "dalvik.vm.stack-trace-file", "/data/anr/traces.txt" },
+        //{ "dalvik.vm.execution-mode", "int:portable" },
         { "dalvik.vm.enableassertions", "all" },    // -ea
         { "dalvik.vm.verify-bytecode", "false" },   // -Xverify
         { "dalvik.vm.deadlock-predict", "off" },    // -Xdeadlockpredict
+        //{ "dalvik.vm.jniopts", "forcecopy" },       // -Xjniopts
         { "log.redirect-stdio", "false" },          // -Xlog-stdio
 
         /* SurfaceFlinger options */

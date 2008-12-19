@@ -90,6 +90,7 @@ public class JavaResourceFilter implements IZipEntryFilter {
             "package.html".equalsIgnoreCase(fileName) == false &&
             "overview.html".equalsIgnoreCase(fileName) == false &&
             ".cvsignore".equalsIgnoreCase(fileName) == false &&
-            ".DS_Store".equals(fileName) == false;
+            ".DS_Store".equals(fileName) == false && 
+            fileName.charAt(fileName.length()-1) != '~';
     }
 }

@@ -42,6 +42,7 @@ import java.util.ArrayList;
 class PreCompilerDeltaVisitor extends BaseDeltaVisitor implements
         IResourceDeltaVisitor {
 
+    // Result fields.
     /**
      * Compile flag. This is set to true if one of the changed/added/removed
      * file is a resource file. Upon visiting all the delta resources, if
@@ -50,6 +51,22 @@ class PreCompilerDeltaVisitor extends BaseDeltaVisitor implements
      */
     private boolean mCompileResources = false;
 
+    /** List of .aidl files found that are modified or new. */
+    private final ArrayList<IFile> mAidlToCompile = new ArrayList<IFile>();
+
+    /** List of .aidl files that have been removed. */
+    private final ArrayList<IFile> mAidlToRemove = new ArrayList<IFile>();
+    
+    /** Aidl forced recompilation flag. This is set to true if project.aidl is modified. */
+    private boolean mFullAidlCompilation = false;
+
+    /** Manifest check/parsing flag. */
+    private boolean mCheckedManifestXml = false;
+
+    /** Application Pacakge, gathered from the parsing of the manifest */
+    private String mJavaPackage = null;
+
+    // Internal usage fields.
     /**
      * In Resource folder flag. This allows us to know if we're in the
      * resource folder.
@@ -65,14 +82,6 @@ class PreCompilerDeltaVisitor extends BaseDeltaVisitor implements
     /** List of source folders. */
     private ArrayList<IPath> mSourceFolders;
 
-    /** List of .aidl files found that are modified or new. */
-    private final ArrayList<IFile> mAidlToCompile = new ArrayList<IFile>();
-
-    /** List of .aidl files that have been removed. */
-    private final ArrayList<IFile> mAidlToRemove = new ArrayList<IFile>();
-
-    private boolean mCheckedManifestXml = false;
-    private String mJavaPackage = null;
 
     public PreCompilerDeltaVisitor(BaseBuilder builder, ArrayList<IPath> sourceFolders) {
         super(builder);
@@ -90,6 +99,10 @@ class PreCompilerDeltaVisitor extends BaseDeltaVisitor implements
     public ArrayList<IFile> getAidlToRemove() {
         return mAidlToRemove;
     }
+    
+    public boolean getFullAidlRecompilation() {
+        return mFullAidlCompilation;
+    }
 
     /**
      * Returns whether the manifest file was parsed/checked for error during the resource delta
@@ -100,7 +113,7 @@ class PreCompilerDeltaVisitor extends BaseDeltaVisitor implements
     }
     
     /**
-     * Returns the manifest package if the manifest was checked.
+     * Returns the manifest package if the manifest was checked/parsed.
      * <p/>
      * This can return null in two cases:
      * <ul>
@@ -169,11 +182,14 @@ class PreCompilerDeltaVisitor extends BaseDeltaVisitor implements
                 // we don't want to go to the children, not like they are
                 // any for this resource anyway.
                 return false;
+            } else if (AndroidConstants.FN_PROJECT_AIDL.equalsIgnoreCase(segments[1])) {
+                // need to force recompilation of all the aidl files
+                mFullAidlCompilation = true;
             }
         }
 
         // at this point we can either be in the source folder or in the
-        // resource foler or in a different folder that contains a source
+        // resource folder or in a different folder that contains a source
         // folder.
         // This is due to not all source folder being src/. Some could be
         // something/somethingelse/src/
@@ -227,7 +243,8 @@ class PreCompilerDeltaVisitor extends BaseDeltaVisitor implements
                                     PreCompilerBuilder.PROPERTY_ANDROID_CONFLICT, true);
                         }
 
-                        // we add it anyway so that we can try to compile it every time.
+                        // we add it anyway so that we can try to compile it at every compilation
+                        // until the conflict is fixed.
                         mAidlToCompile.add(file);
 
                     } else {
@@ -245,6 +262,8 @@ class PreCompilerDeltaVisitor extends BaseDeltaVisitor implements
 
             boolean outputMessage = false;
 
+            // Special case of R.java/Manifest.java.
+            // FIXME: This does not check the package. Any modification of R.java/Manifest.java in another project will trigger a new recompilation of the resources.
             if (AndroidConstants.FN_RESOURCE_CLASS.equals(fileName) ||
                     AndroidConstants.FN_MANIFEST_CLASS.equals(fileName)) {
                 // if it was removed, there's a possibility that it was removed due to a
