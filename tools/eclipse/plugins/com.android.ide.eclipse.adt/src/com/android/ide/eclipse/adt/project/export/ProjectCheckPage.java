@@ -256,7 +256,6 @@ final class ProjectCheckPage extends ExportWizardPage {
     
     /**
      * Checks the parameters for correctness, and update the error message and buttons.
-     * @return the current IProject of this launch config.
      */
     private void handleProjectNameChange() {
         setPageComplete(false);

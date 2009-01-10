@@ -115,8 +115,6 @@ public class SingleResourceFile extends ResourceFile {
     
     /**
      * Returns the name of the resources.
-     * @param type 
-     * @return
      */
     private String getResourceName(ResourceType type) {
         // get the name from the filename.

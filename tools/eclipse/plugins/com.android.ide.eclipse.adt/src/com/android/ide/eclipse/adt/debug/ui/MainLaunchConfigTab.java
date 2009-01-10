@@ -398,11 +398,13 @@ public class MainLaunchConfigTab extends AbstractLaunchConfigurationTab {
         config.setMappedResources(resources);
     }
 
-    /** Loads the ui with the activities of the specified project, and store the
-     * activities in <code>mActivities</code>
+    /**
+     * Loads the ui with the activities of the specified project, and stores the
+     * activities in <code>mActivities</code>.
+     * <p/>
      * First activity is selected by default if present.
-     * @param project The project to load the activities from
-     * @return The array of activities or null if none could be found.
+     * 
+     * @param project The project to load the activities from.
      */
     private void loadActivities(IProject project) {
         if (project != null) {

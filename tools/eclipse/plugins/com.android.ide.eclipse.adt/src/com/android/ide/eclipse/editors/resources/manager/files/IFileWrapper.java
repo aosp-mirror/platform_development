@@ -55,7 +55,7 @@ public class IFileWrapper implements IAbstractFile {
         }
         
         if (obj instanceof IFile) {
-            return mFile.equals((IFile)obj);
+            return mFile.equals(obj);
         }
 
         return super.equals(obj);

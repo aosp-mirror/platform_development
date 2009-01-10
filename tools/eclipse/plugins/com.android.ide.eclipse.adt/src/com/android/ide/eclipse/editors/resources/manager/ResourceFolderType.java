@@ -16,21 +16,21 @@
 
 package com.android.ide.eclipse.editors.resources.manager;
 
-import com.android.ide.eclipse.common.AndroidConstants;
 import com.android.ide.eclipse.editors.resources.configurations.FolderConfiguration;
+import com.android.sdklib.SdkConstants;
 
 /**
  * Enum representing a type of resource folder.
  */
 public enum ResourceFolderType {
-    ANIM(AndroidConstants.FD_ANIM),
-    COLOR(AndroidConstants.FD_COLOR),
-    DRAWABLE(AndroidConstants.FD_DRAWABLE),
-    LAYOUT(AndroidConstants.FD_LAYOUT),
-    MENU(AndroidConstants.FD_MENU),
-    RAW(AndroidConstants.FD_RAW),
-    VALUES(AndroidConstants.FD_VALUES),
-    XML(AndroidConstants.FD_XML);
+    ANIM(SdkConstants.FD_ANIM),
+    COLOR(SdkConstants.FD_COLOR),
+    DRAWABLE(SdkConstants.FD_DRAWABLE),
+    LAYOUT(SdkConstants.FD_LAYOUT),
+    MENU(SdkConstants.FD_MENU),
+    RAW(SdkConstants.FD_RAW),
+    VALUES(SdkConstants.FD_VALUES),
+    XML(SdkConstants.FD_XML);
 
     private final String mName;
 

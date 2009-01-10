@@ -97,7 +97,7 @@ public class AndroidManifestHelper {
      */
     public String getPackageName() {
         try {
-            return getPackageNameInternal(mXPath, getSource());
+            return mXPath.evaluate("/manifest/@package", getSource());  //$NON-NLS-1$
         } catch (XPathExpressionException e1) {
             // If the XPath failed to evaluate, we'll return null.
         } catch (Exception e) {
@@ -111,17 +111,39 @@ public class AndroidManifestHelper {
     }
 
     /**
+     * Returns the minSdkVersion defined in the manifest file.
+     *
+     * @return A String object with the package or null if any error happened.
+     */
+    public String getMinSdkVersion() {
+        try {
+            return mXPath.evaluate("/manifest/uses-sdk/@"                       //$NON-NLS-1$
+                    + AndroidXPathFactory.DEFAULT_NS_PREFIX
+                    + ":minSdkVersion", getSource());                           //$NON-NLS-1$
+        } catch (XPathExpressionException e1) {
+            // If the XPath failed to evaluate, we'll return null.
+        } catch (Exception e) {
+            // if this happens this is due to the resource being out of sync.
+            // so we must refresh it and do it again
+
+            // for any other kind of exception we must return null as well;
+        }
+
+        return null;
+    }
+    /**
      * Returns the i-th activity defined in the manifest file.
      *
-     * @param manifest The manifest's IFile object.
      * @param index The 1-based index of the activity to return.
-     * @param xpath An optional xpath object. If null is provided a new one will
-     *        be created.
      * @return A String object with the activity or null if any error happened.
      */
     public String getActivityName(int index) {
         try {
-            return getActivityNameInternal(index, mXPath, getSource());
+            return mXPath.evaluate("/manifest/application/activity["            //$NON-NLS-1$
+                    + index
+                    + "]/@"                                                     //$NON-NLS-1$
+                    + AndroidXPathFactory.DEFAULT_NS_PREFIX +":name",           //$NON-NLS-1$
+                    getSource());
         } catch (XPathExpressionException e1) {
             // If the XPath failed to evaluate, we'll return null.
         } catch (Exception e) {
@@ -214,28 +236,6 @@ public class AndroidManifestHelper {
         }
         
         return null;
-    }
-
-    /**
-     * Performs the actual XPath evaluation to get the package name.
-     * Extracted so that we can share it with AndroidManifestFromProject.
-     */
-    private static String getPackageNameInternal(XPath xpath, InputSource source)
-        throws XPathExpressionException {
-        return xpath.evaluate("/manifest/@package", source);  //$NON-NLS-1$
-    }
-
-    /**
-     * Performs the actual XPath evaluation to get the activity name.
-     * Extracted so that we can share it with AndroidManifestFromProject.
-     */
-    private static String getActivityNameInternal(int index, XPath xpath, InputSource source)
-        throws XPathExpressionException {
-        return xpath.evaluate("/manifest/application/activity[" //$NON-NLS-1$
-                              + index
-                              + "]/@" //$NON-NLS-1$
-                              + AndroidXPathFactory.DEFAULT_NS_PREFIX +":name", //$NON-NLS-1$
-                              source);
     }
 
 }

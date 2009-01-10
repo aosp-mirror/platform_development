@@ -69,15 +69,15 @@ abstract class BaseBuilder extends IncrementalProjectBuilder {
     /**
      * First line of dual line aapt error.<br>
      * "ERROR at line &lt;line&gt;: &lt;error&gt;"<br>
-     * " (Occured while parsing &lt;path&gt;)"
+     * " (Occurred while parsing &lt;path&gt;)"
      */
     private final static Pattern sPattern1Line1 = Pattern.compile(
             "^ERROR\\s+at\\s+line\\s+(\\d+):\\s+(.*)$"); //$NON-NLS-1$
     /**
      * Second line of dual line aapt error.<br>
      * "ERROR at line &lt;line&gt;: &lt;error&gt;"<br>
-     * " (Occured while parsing &lt;path&gt;)"<br>
-     * @see sPattern1Line1
+     * " (Occurred while parsing &lt;path&gt;)"<br>
+     * @see #sPattern1Line1
      */
     private final static Pattern sPattern1Line2 = Pattern.compile(
             "^\\s+\\(Occurred while parsing\\s+(.*)\\)$");  //$NON-NLS-1$
@@ -92,7 +92,7 @@ abstract class BaseBuilder extends IncrementalProjectBuilder {
      * Second line of dual line aapt error.<br>
      * "ERROR: &lt;error&gt;"<br>
      * "Defined at file &lt;path&gt; line &lt;line&gt;"<br>
-     * @see sPattern2Line1
+     * @see #sPattern2Line1
      */
     private final static Pattern sPattern2Line2 = Pattern.compile(
             "Defined\\s+at\\s+file\\s+(.+)\\s+line\\s+(\\d+)"); //$NON-NLS-1$
@@ -113,7 +113,7 @@ abstract class BaseBuilder extends IncrementalProjectBuilder {
      * Second line of dual line aapt error.<br>
      * "ERROR parsing XML file &lt;path&gt;"<br>
      * "&lt;error&gt; at line &lt;line&gt;"<br>
-     * @see sPattern4Line1
+     * @see #sPattern4Line1
      */
     private final static Pattern sPattern4Line2 = Pattern.compile(
             "^(.+)\\s+at\\s+line\\s+(\\d+)$"); //$NON-NLS-1$
@@ -263,7 +263,7 @@ abstract class BaseBuilder extends IncrementalProjectBuilder {
 
     /**
      * Adds a marker to the current project.
-     * @param file the file to be marked
+     * 
      * @param markerId The id of the marker to add.
      * @param message the message associated with the mark
      * @param severity the severity of the marker.
@@ -292,12 +292,11 @@ abstract class BaseBuilder extends IncrementalProjectBuilder {
 
     /**
      * Removes markers from a container and its children.
-     * @param container The container from which to delete the markers.
+     * @param folder The container from which to delete the markers.
      * @param markerId The id of the markers to remove. If null, all marker of
      * type <code>IMarker.PROBLEM</code> will be removed.
      */
-    protected final void removeMarkersFromContainer(IContainer folder,
-            String markerId) {
+    protected final void removeMarkersFromContainer(IContainer folder, String markerId) {
         try {
             if (folder.exists()) {
                 folder.deleteMarkers(markerId, true, IResource.DEPTH_INFINITE);

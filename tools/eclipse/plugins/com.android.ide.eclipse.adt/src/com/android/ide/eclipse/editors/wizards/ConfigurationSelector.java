@@ -79,8 +79,7 @@ import java.util.HashMap;
  * To use this, instantiate somewhere in the UI and then:
  * <ul>
  * <li>Use {@link #setConfiguration(String)} or {@link #setConfiguration(FolderConfiguration)}.
- * <li>Retrieve the configuration using {@link #getConfiguration(FolderConfiguration)} and
- *     test it using {@link FolderConfiguration#isValid()}.
+ * <li>Retrieve the configuration using {@link #getConfiguration(FolderConfiguration)}.
  * </ul> 
  */
 public class ConfigurationSelector extends Composite {

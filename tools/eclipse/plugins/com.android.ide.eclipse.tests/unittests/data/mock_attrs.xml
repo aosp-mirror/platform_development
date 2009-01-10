@@ -18,7 +18,7 @@
 -->
 <resources>
     <!-- WARNING !!! THIS IS A MOCK FILE. DO NOT USE FOR DOCUMENTATION PURPOSES.
-         This file has been trimmed down to only extract a number of interest cases 
+         This file has been trimmed down to only extract a number of interesting cases 
          for unit tests.
          
          What this contains:
@@ -313,6 +313,28 @@
              indices are ignored. -->
         <attr name="collapseColumns" format="string" />
     </declare-styleable>
+
+	<!-- Test for deprecated attributes. -->
+	<declare-styleable name="DeprecatedTest">
+		<!-- Deprecated comments using delimiters.
+			 Ignored. {@deprecated In-line deprecated.} {@ignore Ignored}.
+		 -->
+		<attr name="deprecated-inline" /> 
+
+		<!-- Deprecated comments on their own line.
+			 @deprecated Multi-line version of deprecated
+			    that works till the next tag.
+			 @ignore This tag must be ignored
+		 -->
+		<attr name="deprecated-multiline" />
+		
+		<!-- This attribute is not deprecated. -->
+		<attr name="deprecated-not" />
+		
+        <!-- {@deprecated There is no other javadoc here. } -->
+        <attr name="deprecated-no-javadoc" format="boolean" />
+		
+	</declare-styleable>
 
 </resources>
 

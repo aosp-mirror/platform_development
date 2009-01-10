@@ -91,7 +91,12 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
 
     /**
      * Constructor for AndroidContentAssist 
-     * @param rootElementDescriptors The valid root elements of the XML hierarchy
+     * @param descriptorId An id for {@link AndroidTargetData#getDescriptorProvider(int)}.
+     *      The Id can be one of {@link AndroidTargetData#DESCRIPTOR_MANIFEST},
+     *      {@link AndroidTargetData#DESCRIPTOR_LAYOUT},
+     *      {@link AndroidTargetData#DESCRIPTOR_MENU},
+     *      or {@link AndroidTargetData#DESCRIPTOR_XML}.
+     *      All other values will throw an {@link IllegalArgumentException} later at runtime.
      */
     public AndroidContentAssist(int descriptorId) {
         mDescriptorId = descriptorId;
@@ -723,7 +728,6 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
     
     /**
      * Computes (if needed) and returns the root descriptor.
-     * @return
      */
     private ElementDescriptor getRootDescriptor() {
         if (mRootDescriptor == null) {

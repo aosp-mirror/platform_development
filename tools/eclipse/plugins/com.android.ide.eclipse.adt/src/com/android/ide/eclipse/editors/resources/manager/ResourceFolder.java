@@ -185,7 +185,7 @@ public final class ResourceFolder extends Resource {
     
     /**
      * Returns the {@link ResourceFile} matching a given name.
-     * @param file The name of the file to return.
+     * @param filename The name of the file to return.
      * @return the {@link ResourceFile} or <code>null</code> if no match was found.
      */
     public ResourceFile getFile(String filename) {

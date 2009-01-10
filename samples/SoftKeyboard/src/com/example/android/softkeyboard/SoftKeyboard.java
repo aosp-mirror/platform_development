@@ -20,8 +20,9 @@ import android.content.Context;
 import android.inputmethodservice.InputMethodService;
 import android.inputmethodservice.Keyboard;
 import android.inputmethodservice.KeyboardView;
-import android.text.TextUtils;
+import android.text.method.MetaKeyKeyListener;
 import android.util.Log;
+import android.view.KeyCharacterMap;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.WindowManager;
@@ -48,12 +49,12 @@ public class SoftKeyboard extends InputMethodService
     private CompletionInfo[] mCompletions;
     
     private StringBuilder mComposing = new StringBuilder();
-    private boolean mPredicting;
     private boolean mPredictionOn;
     private boolean mCompletionOn;
     private int mLastDisplayWidth;
     private boolean mCapsLock;
     private long mLastShiftTime;
+    private long mMetaState;
     
     private Keyboard mSymbolsKeyboard;
     private Keyboard mSymbolsShiftedKeyboard;
@@ -61,8 +62,6 @@ public class SoftKeyboard extends InputMethodService
     
     private String mWordSeparators;
     
-    private InputConnection mOldConnection;
-
     private void makeKeyboards() {
         // Configuration change is coming after the keyboard gets recreated. So don't rely on that.
         // If keyboards have already been made, check if we have a screen width change and 
@@ -80,7 +79,6 @@ public class SoftKeyboard extends InputMethodService
     
     @Override public void onCreate() {
         super.onCreate();
-        //setStatusIcon(R.drawable.ime_qwerty);
         makeKeyboards();
         mWordSeparators = getResources().getString(R.string.word_separators);
     }
@@ -97,7 +95,6 @@ public class SoftKeyboard extends InputMethodService
 
     @Override
     public View onCreateCandidatesView() {
-        makeKeyboards();
         mCandidateView = new CandidateView(this);
         mCandidateView.setService(this);
         return mCandidateView;
@@ -105,33 +102,28 @@ public class SoftKeyboard extends InputMethodService
 
     @Override 
     public void onStartInputView(EditorInfo attribute, boolean restarting) {
-        // In landscape mode, this method gets called without the input view being created.
-        if (mInputView == null) {
-            return;
-        }
-
-        if (mQwertyKeyboard == null) {
-            makeKeyboards();
-        }
-
-        if (mOldConnection != null) {
-            commitTyped(mOldConnection);
+        mComposing.setLength(0);
+        updateCandidates();
+        
+        if (!restarting) {
+            // Clear shift states.
+            mMetaState = 0;
         }
         
         mPredictionOn = false;
         mCompletionOn = false;
         mCompletions = null;
+        Keyboard keyboard;
         switch (attribute.inputType&EditorInfo.TYPE_MASK_CLASS) {
             case EditorInfo.TYPE_CLASS_NUMBER:
             case EditorInfo.TYPE_CLASS_DATETIME:
-                mInputView.setKeyboard(mSymbolsKeyboard);
+                keyboard = mSymbolsKeyboard;
                 break;
             case EditorInfo.TYPE_CLASS_PHONE:
-                mInputView.setKeyboard(mSymbolsKeyboard);
+                keyboard = mSymbolsKeyboard;
                 break;
             default:
-                mInputView.setKeyboard(mQwertyKeyboard);
-                //startPrediction();
+                keyboard = mQwertyKeyboard;
                 mPredictionOn = true;
                 // Make sure that passwords are not displayed in candidate view
                 int variation = attribute.inputType &  EditorInfo.TYPE_MASK_VARIATION;
@@ -149,34 +141,49 @@ public class SoftKeyboard extends InputMethodService
                 updateShiftKeyState(attribute);
                 break;
         }
-        mInputView.closing();
+        
+        if (mInputView != null) {
+            mInputView.setKeyboard(keyboard);
+            mInputView.closing();
+        }
+        
         mComposing.setLength(0);
-        mCandidateView.setSuggestions(null, false, false);
-        mOldConnection = getCurrentInputConnection();
-        setCandidatesViewShown(mPredictionOn || mCompletionOn);
+        setSuggestions(null, false, false);
     }
 
     @Override
     public void onFinishInput() {
         super.onFinishInput();
-        commitTyped(mOldConnection);
+        mComposing.setLength(0);
+        updateCandidates();
         if (mInputView != null) {
             mInputView.closing();
         }
     }
     
     @Override
-    public void onDisplayCompletions(CompletionInfo[] completions) {
-        if (false) {
-            Log.i("foo", "Received completions:");
-            for (int i=0; i<(completions != null ? completions.length : 0); i++) {
-                Log.i("foo", "  #" + i + ": " + completions[i]);
+    public void onUpdateSelection(int oldSelStart, int oldSelEnd,
+            int newSelStart, int newSelEnd,
+            int candidatesStart, int candidatesEnd) {
+        // If the current selection in the text view changes, we should
+        // clear whatever candidate text we have.
+        if (mComposing.length() > 0 && (newSelStart != candidatesEnd
+                || newSelEnd != candidatesEnd)) {
+            mComposing.setLength(0);
+            updateCandidates();
+            InputConnection ic = getCurrentInputConnection();
+            if (ic != null) {
+                ic.finishComposingText();
             }
         }
+    }
+
+    @Override
+    public void onDisplayCompletions(CompletionInfo[] completions) {
         if (mCompletionOn) {
             mCompletions = completions;
             if (completions == null) {
-                mCandidateView.setSuggestions(null, false, false);
+                setSuggestions(null, false, false);
                 return;
             }
             
@@ -185,8 +192,40 @@ public class SoftKeyboard extends InputMethodService
                 CompletionInfo ci = completions[i];
                 if (ci != null) stringList.add(ci.getText().toString());
             }
-            mCandidateView.setSuggestions(stringList, true, true);
+            setSuggestions(stringList, true, true);
         }
+    }
+    
+    private boolean translateKeyDown(int keyCode, KeyEvent event) {
+        mMetaState = MetaKeyKeyListener.handleKeyDown(mMetaState,
+                keyCode, event);
+        int c = event.getUnicodeChar(MetaKeyKeyListener.getMetaState(mMetaState));
+        mMetaState = MetaKeyKeyListener.adjustMetaAfterKeypress(mMetaState);
+        InputConnection ic = getCurrentInputConnection();
+        if (c == 0 || ic == null) {
+            return false;
+        }
+        
+        boolean dead = false;
+
+        if ((c & KeyCharacterMap.COMBINING_ACCENT) != 0) {
+            dead = true;
+            c = c & KeyCharacterMap.COMBINING_ACCENT_MASK;
+        }
+        
+        if (mComposing.length() > 0) {
+            char accent = mComposing.charAt(mComposing.length() -1 );
+            int composed = KeyEvent.getDeadChar(accent, c);
+
+            if (composed != 0) {
+                c = composed;
+                mComposing.setLength(mComposing.length()-1);
+            }
+        }
+        
+        onKey(c, null);
+        
+        return true;
     }
     
     @Override
@@ -199,12 +238,16 @@ public class SoftKeyboard extends InputMethodService
                     }
                 }
                 break;
-            case KeyEvent.KEYCODE_DPAD_DOWN:
-            case KeyEvent.KEYCODE_DPAD_UP:
-            case KeyEvent.KEYCODE_DPAD_LEFT:
-            case KeyEvent.KEYCODE_DPAD_RIGHT:
-                abortComposition();
+            case KeyEvent.KEYCODE_DEL:
+                if (mComposing.length() > 0) {
+                    onKey(Keyboard.KEYCODE_DELETE, null);
+                    return true;
+                }
                 break;
+            default:
+                if (mPredictionOn && translateKeyDown(keyCode, event)) {
+                    return true;
+                }
         }
         return super.onKeyDown(keyCode, event);
     }
@@ -225,6 +268,11 @@ public class SoftKeyboard extends InputMethodService
                     return true;
                 }
                 break;
+            default:
+                if (mPredictionOn) {
+                    mMetaState = MetaKeyKeyListener.handleKeyUp(mMetaState,
+                            keyCode, event);
+                }
         }
         return super.onKeyUp(keyCode, event);
     }
@@ -262,7 +310,7 @@ public class SoftKeyboard extends InputMethodService
     
     private void sendKey(int keyCode) {
         switch (keyCode) {
-            case 10:
+            case '\n':
                 keyDownUp(KeyEvent.KEYCODE_ENTER);
                 break;
             default:
@@ -280,11 +328,11 @@ public class SoftKeyboard extends InputMethodService
     public void onKey(int primaryCode, int[] keyCodes) {
         if (isWordSeparator(primaryCode)) {
             // Handle separator
-            if (mPredicting) {
+            if (mComposing.length() > 0) {
                 commitTyped(getCurrentInputConnection());
             }
             sendKey(primaryCode);
-            updateShiftKeyState(getCurrentInputInfo());
+            updateShiftKeyState(getCurrentInputEditorInfo());
         } else if (primaryCode == Keyboard.KEYCODE_DELETE) {
             handleBackspace();
         } else if (primaryCode == Keyboard.KEYCODE_SHIFT) {
@@ -294,7 +342,8 @@ public class SoftKeyboard extends InputMethodService
             return;
         } else if (primaryCode == LatinKeyboardView.KEYCODE_OPTIONS) {
             // Show a menu or somethin'
-        } else if (primaryCode == Keyboard.KEYCODE_MODE_CHANGE) {
+        } else if (primaryCode == Keyboard.KEYCODE_MODE_CHANGE
+                && mInputView != null) {
             Keyboard current = mInputView.getKeyboard();
             if (current == mSymbolsKeyboard || current == mSymbolsShiftedKeyboard) {
                 current = mQwertyKeyboard;
@@ -320,34 +369,47 @@ public class SoftKeyboard extends InputMethodService
             if (mComposing.length() > 0) {
                 ArrayList<String> list = new ArrayList<String>();
                 list.add(mComposing.toString());
-                mCandidateView.setSuggestions(list, true, true);
+                setSuggestions(list, true, true);
             } else {
-                mCandidateView.setSuggestions(null, false, false);
+                setSuggestions(null, false, false);
             }
         }
     }
     
+    public void setSuggestions(List<String> suggestions, boolean completions,
+            boolean typedWordValid) {
+        mCandidateView.setSuggestions(suggestions, completions, typedWordValid);
+        if (suggestions != null && suggestions.size() > 0) {
+            setCandidatesViewShown(true);
+        } else if (isFullscreenMode()) {
+            setCandidatesViewShown(true);
+        } else {
+            setCandidatesViewShown(false);
+        }
+    }
+    
     private void handleBackspace() {
-        if (mPredicting) {
-            final int length = mComposing.length();
-            if (length > 0) {
-                mComposing.delete(length - 1, length);
-                getCurrentInputConnection().setComposingText(mComposing, mComposing.length());
-                updateCandidates();
-                if (mComposing.length() == 0) {
-                    mPredicting = false;
-                }
-            } else {
-                getCurrentInputConnection().deleteSurroundingText(1, 0);
-            }
+        final int length = mComposing.length();
+        if (length > 1) {
+            mComposing.delete(length - 1, length);
+            getCurrentInputConnection().setComposingText(mComposing, mComposing.length());
+            updateCandidates();
+        } else if (length > 0) {
+            mComposing.setLength(0);
+            getCurrentInputConnection().commitText("", 0);
+            updateCandidates();
         } else {
             //getCurrentInputConnection().deleteSurroundingText(1, 0);
             keyDownUp(KeyEvent.KEYCODE_DEL);
         }
-        updateShiftKeyState(getCurrentInputInfo());
+        updateShiftKeyState(getCurrentInputEditorInfo());
     }
 
     private void handleShift() {
+        if (mInputView == null) {
+            return;
+        }
+        
         Keyboard currentKeyboard = mInputView.getKeyboard();
         if (mQwertyKeyboard == currentKeyboard) {
             // Alphabet keyboard
@@ -365,19 +427,20 @@ public class SoftKeyboard extends InputMethodService
     }
     
     private void handleCharacter(int primaryCode, int[] keyCodes) {
-        if (isAlphabet(primaryCode) && mPredictionOn && !isCursorTouchingWord()) {
-            if (!mPredicting) {
-                mPredicting = true;
-                mComposing.setLength(0);
+        if (isInputViewShown()) {
+            if (mInputView.isShifted()) {
+                primaryCode = Character.toUpperCase(primaryCode);
             }
         }
-        if (mInputView.isShifted()) {
-            primaryCode = Character.toUpperCase(primaryCode);
+        if (isAlphabet(primaryCode) && mPredictionOn) {
+            mComposing.append((char) primaryCode);
+            getCurrentInputConnection().setComposingText(mComposing, mComposing.length());
+            updateShiftKeyState(getCurrentInputEditorInfo());
+            updateCandidates();
+        } else {
+            getCurrentInputConnection().commitText(
+                    String.valueOf((char) primaryCode), 0);
         }
-        mComposing.append((char) primaryCode);
-        getCurrentInputConnection().setComposingText(mComposing, mComposing.length());
-        updateShiftKeyState(getCurrentInputInfo());
-        updateCandidates();
     }
 
     private void handleClose() {
@@ -394,20 +457,6 @@ public class SoftKeyboard extends InputMethodService
         } else {
             mLastShiftTime = now;
         }
-    }
-    
-    private boolean isCursorTouchingWord() {
-        CharSequence toLeft = getCurrentInputConnection().getTextBeforeCursor(1);
-        CharSequence toRight = getCurrentInputConnection().getTextAfterCursor(1);
-        if (!TextUtils.isEmpty(toLeft)
-                && !isWordSeparator(toLeft.charAt(0))) {
-            return true;
-        }
-        if (!TextUtils.isEmpty(toRight) 
-                && !isWordSeparator(toRight.charAt(0))) {
-            return true;
-        }
-        return false;
     }
     
     protected String getWordSeparators() {
@@ -431,7 +480,12 @@ public class SoftKeyboard extends InputMethodService
             if (mCandidateView != null) {
                 mCandidateView.clear();
             }
-            updateShiftKeyState(getCurrentInputInfo());
+            updateShiftKeyState(getCurrentInputEditorInfo());
+        } else if (mComposing.length() > 0) {
+            // If we were generating candidate suggestions for the current
+            // text, we would commit one of them here.  But for this sample,
+            // we will just commit the current text.
+            commitTyped(getCurrentInputConnection());
         }
     }
     
@@ -451,11 +505,5 @@ public class SoftKeyboard extends InputMethodService
 
     public void swipeUp() {
         // ?
-    }
-
-    private void abortComposition() {
-        commitTyped(getCurrentInputConnection());
-        mComposing.setLength(0); // Don't want to allow uncommit after this
-        updateCandidates();
     }
 }

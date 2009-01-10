@@ -319,7 +319,7 @@ public class AndroidManifestParser {
          * @see org.xml.sax.helpers.DefaultHandler#error(org.xml.sax.SAXParseException)
          */
         @Override
-        public void error(SAXParseException e) throws SAXException {
+        public void error(SAXParseException e) {
             if (mMarkErrors) {
                 handleError(e, e.getLineNumber());
             }
@@ -329,7 +329,7 @@ public class AndroidManifestParser {
          * @see org.xml.sax.helpers.DefaultHandler#fatalError(org.xml.sax.SAXParseException)
          */
         @Override
-        public void fatalError(SAXParseException e) throws SAXException {
+        public void fatalError(SAXParseException e) {
             if (mMarkErrors) {
                 handleError(e, e.getLineNumber());
             }
@@ -348,7 +348,6 @@ public class AndroidManifestParser {
         /**
          * Processes the activity node.
          * @param attributes the attributes for the activity node.
-         * @throws CoreException 
          */
         private void processActivityNode(Attributes attributes) {
             // lets get the activity name, and add it to the list
@@ -381,7 +380,6 @@ public class AndroidManifestParser {
          * @param attributes the attributes for the activity node.
          * @param superClassName the fully qualified name of the super class that this
          * node is representing
-         * @throws CoreException 
          */
         private void processNode(Attributes attributes, String superClassName) {
             // lets get the class name, and check it if required.
@@ -567,12 +565,11 @@ public class AndroidManifestParser {
     /**
      * Parses the manifest file, collects data, and checks for errors.
      * @param javaProject The java project. Required.
-     * @param manifestFile
+     * @param manifestFile The manifest file to parse.
      * @param errorListener the {@link XmlErrorListener} object being notified of the presence
      * of errors. Optional.
      * @return an {@link AndroidManifestParser} or null if the parsing failed.
      * @throws CoreException
-     * @see {@link #parse(IJavaProject, IFile, XmlErrorListener, boolean, boolean)}
      */
     public static AndroidManifestParser parseForError(IJavaProject javaProject, IFile manifestFile,
             XmlErrorListener errorListener) throws CoreException {
@@ -581,12 +578,9 @@ public class AndroidManifestParser {
 
     /**
      * Parses the manifest file, and collects data.
-     * @param manifestFile
-     * @param errorListener the {@link XmlErrorListener} object being notified of the presence
-     * of errors. Optional.
+     * @param manifestFile The manifest file to parse.
      * @return an {@link AndroidManifestParser} or null if the parsing failed.
      * @throws CoreException
-     * @see {@link #parse(IJavaProject, IFile, XmlErrorListener, boolean, boolean)}
      */
     public static AndroidManifestParser parseForData(IFile manifestFile) throws CoreException {
         return parse(null /* javaProject */, manifestFile, null /* errorListener */,

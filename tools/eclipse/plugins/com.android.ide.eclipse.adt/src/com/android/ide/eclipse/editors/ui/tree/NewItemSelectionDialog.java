@@ -17,7 +17,6 @@
 package com.android.ide.eclipse.editors.ui.tree;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.common.AndroidConstants;
 import com.android.ide.eclipse.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.editors.layout.descriptors.ViewElementDescriptor;
 import com.android.ide.eclipse.editors.uimodel.UiElementNode;

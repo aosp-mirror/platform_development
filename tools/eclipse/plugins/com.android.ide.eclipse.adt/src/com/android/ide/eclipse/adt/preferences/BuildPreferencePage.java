@@ -199,7 +199,7 @@ public class BuildPreferencePage extends FieldEditorPreferencePage implements
          */
         private void handleException(Throwable t) {
             String msg = t.getMessage();
-            if (t == null) {
+            if (msg == null) {
                 Throwable cause = t.getCause();
                 if (cause != null) {
                     handleException(cause);

@@ -132,7 +132,7 @@ public final class MultiResourceFile extends ResourceFile implements IValueResou
     /**
      * Adds a resource item to the list
      * @param resType The type of the resource
-     * @param name The name of the resource.
+     * @param value The value of the resource.
      */
     public void addResourceValue(String resType, ResourceValue value) {
         ResourceType type = ResourceType.getEnum(resType);

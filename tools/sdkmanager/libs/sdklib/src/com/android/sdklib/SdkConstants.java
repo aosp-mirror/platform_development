@@ -64,6 +64,40 @@ public final class SdkConstants {
     /** Skin layout file */
     public final static String FN_SKIN_LAYOUT = "layout";//$NON-NLS-1$
 
+    /* Folder Names for Android Projects . */
+
+    /** Resources folder name, i.e. "res". */
+    public final static String FD_RESOURCES = "res"; //$NON-NLS-1$
+    /** Assets folder name, i.e. "assets" */
+    public final static String FD_ASSETS = "assets"; //$NON-NLS-1$
+    /** Default source folder name, i.e. "src" */
+    public final static String FD_SOURCES = "src"; //$NON-NLS-1$
+    /** Default native library folder name inside the project, i.e. "libs"
+     * While the folder inside the .apk is "lib", we call that one libs because
+     * that's what we use in ant for both .jar and .so and we need to make the 2 development ways
+     * compatible. */
+    public final static String FD_NATIVE_LIBS = "libs"; //$NON-NLS-1$
+    /** Native lib folder inside the APK: "lib" */
+    public final static String FD_APK_NATIVE_LIBS = "lib"; //$NON-NLS-1$
+    /** Default output folder name, i.e. "bin" */
+    public final static String FD_OUTPUT = "bin"; //$NON-NLS-1$
+    /** Default anim resource folder name, i.e. "anim" */
+    public final static String FD_ANIM = "anim"; //$NON-NLS-1$
+    /** Default color resource folder name, i.e. "color" */
+    public final static String FD_COLOR = "color"; //$NON-NLS-1$
+    /** Default drawable resource folder name, i.e. "drawable" */
+    public final static String FD_DRAWABLE = "drawable"; //$NON-NLS-1$
+    /** Default layout resource folder name, i.e. "layout" */
+    public final static String FD_LAYOUT = "layout"; //$NON-NLS-1$
+    /** Default menu resource folder name, i.e. "menu" */
+    public final static String FD_MENU = "menu"; //$NON-NLS-1$
+    /** Default values resource folder name, i.e. "values" */
+    public final static String FD_VALUES = "values"; //$NON-NLS-1$
+    /** Default xml resource folder name, i.e. "xml" */
+    public final static String FD_XML = "xml"; //$NON-NLS-1$
+    /** Default raw resource folder name, i.e. "raw" */
+    public final static String FD_RAW = "raw"; //$NON-NLS-1$
+
     /* Folder Names for the Android SDK */
     
     /** Name of the SDK platforms folder. */
@@ -90,13 +124,12 @@ public final class SdkConstants {
     public final static String FD_RES = "res";
     /** Name of the SDK font folder, i.e. "fonts" */
     public final static String FD_FONTS = "fonts";
-    /** Default values resource folder name, i.e. "values" */
-    public final static String FD_VALUES = "values";
     /** Name of the android sources directory */
     public static final String FD_ANDROID_SOURCES = "sources";
     /** Name of the addon libs folder. */
     public final static String FD_ADDON_LIBS = "libs";
 
+    
     /* Folder path relative to the SDK root */
     /** Path of the documentation directory relative to the sdk folder.
      *  This is an OS path, ending with a separator. */

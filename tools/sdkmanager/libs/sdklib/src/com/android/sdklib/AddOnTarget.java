@@ -95,12 +95,20 @@ final class AddOnTarget implements IAndroidTarget {
         }
     }
     
+    public String getLocation() {
+        return mLocation;
+    }
+    
     public String getName() {
         return mName;
     }
     
     public String getVendor() {
         return mVendor;
+    }
+    
+    public String getFullName() {
+        return String.format("%1$s (%2$s)", mName, mVendor);
     }
     
     public String getDescription() {
@@ -138,6 +146,28 @@ final class AddOnTarget implements IAndroidTarget {
 
     public IOptionalLibrary[] getOptionalLibraries() {
         return mLibraries;
+    }
+    
+    public boolean isCompatibleBaseFor(IAndroidTarget target) {
+        // basic test
+        if (target == this) {
+            return true;
+        }
+
+        // if the receiver has no optional library, then anything with api version number >= to
+        // the receiver is compatible.
+        if (mLibraries.length == 0) {
+            return target.getApiVersionNumber() >= getApiVersionNumber();
+        }
+
+        // Otherwise, target is only compatible if the vendor and name are equals with the api
+        // number greater or equal (ie target is a newer version of this add-on).
+        if (target.isPlatform() == false) {
+            return (mVendor.equals(target.getVendor()) && mName.equals(target.getName()) &&
+                    target.getApiVersionNumber() >= getApiVersionNumber());
+        }
+
+        return false;
     }
     
     public String hashString() {

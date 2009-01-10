@@ -59,7 +59,7 @@ public class FolderWrapper implements IAbstractFolder {
         }
         
         if (obj instanceof File) {
-            return mFolder.equals((File)obj);
+            return mFolder.equals(obj);
         }
 
         return super.equals(obj);

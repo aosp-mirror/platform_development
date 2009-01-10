@@ -30,6 +30,7 @@ import com.android.ide.eclipse.editors.resources.manager.files.IAbstractFolder;
 import com.android.ide.eclipse.editors.resources.manager.files.IFileWrapper;
 import com.android.ide.eclipse.editors.resources.manager.files.IFolderWrapper;
 import com.android.sdklib.IAndroidTarget;
+import com.android.sdklib.SdkConstants;
 
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
@@ -269,8 +270,7 @@ public final class ResourceManager implements IProjectListener, IFolderListener,
     
     /**
      * Loads and returns the resources for a given {@link IAndroidTarget}
-     * @param osFilePath the path to the folder containing all the versions of the framework
-     * resources
+     * @param androidTarget the target from which to load the framework resources
      */
     public ProjectResources loadFrameworkResources(IAndroidTarget androidTarget) {
         String osResourcesPath = androidTarget.getPath(IAndroidTarget.RESOURCES);
@@ -329,7 +329,7 @@ public final class ResourceManager implements IProjectListener, IFolderListener,
                 return;
             }
             
-            IFolder resourceFolder = project.getFolder(AndroidConstants.FD_RESOURCES);
+            IFolder resourceFolder = project.getFolder(SdkConstants.FD_RESOURCES);
             
             ProjectResources projectResources = mMap.get(project);
             if (projectResources == null) {
@@ -478,7 +478,7 @@ public final class ResourceManager implements IProjectListener, IFolderListener,
      * @return true if the path is under /project res/
      */
     private boolean isInResFolder(IPath path) {
-        return AndroidConstants.FD_RESOURCES.equalsIgnoreCase(path.segment(1));
+        return SdkConstants.FD_RESOURCES.equalsIgnoreCase(path.segment(1));
     }
     
     /**

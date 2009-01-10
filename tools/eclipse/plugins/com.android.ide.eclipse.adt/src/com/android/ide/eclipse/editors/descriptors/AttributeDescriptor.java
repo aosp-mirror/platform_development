@@ -38,6 +38,7 @@ public abstract class AttributeDescriptor {
     private String mXmlLocalName;
     private ElementDescriptor mParent;
     private final String mNsUri;
+    private boolean mDeprecated;
     
     /**
      * Creates a new {@link AttributeDescriptor}
@@ -68,6 +69,14 @@ public abstract class AttributeDescriptor {
     
     public final ElementDescriptor getParent() {
         return mParent;
+    }
+
+    public void setDeprecated(boolean isDeprecated) {
+        mDeprecated = isDeprecated;
+    }
+    
+    public boolean isDeprecated() {
+        return mDeprecated;
     }
 
     /** 

@@ -60,7 +60,7 @@ endef
 # The JNI-only version is provided for partners that want to create shared
 # libraries that can be packaged with APK files and called from Java code.
 
-LOCAL_PATH := $(my-dir)
+LOCAL_PATH := $(call my-dir)
 
 # Source trees for the ndk
 samples_src_dir := $(LOCAL_PATH)/samples
@@ -183,9 +183,9 @@ ndk_with_src: $(ndk_with_src_tarfile_zipped)
 ndk_jni_with_src: $(ndk_jni_with_src_tarfile_zipped)
 
 # Put the ndk zip files in the distribution directory
-$(call dist-for-goals,pdk,$(ndk_tarfile_zipped))
-$(call dist-for-goals,pdk,$(ndk_with_src_tarfile_zipped))
-$(call dist-for-goals,pdk,$(ndk_jni_with_src_tarfile_zipped))
+$(call dist-for-goals,ndk,$(ndk_tarfile_zipped))
+$(call dist-for-goals,ndk,$(ndk_with_src_tarfile_zipped))
+$(call dist-for-goals,ndk,$(ndk_jni_with_src_tarfile_zipped))
 
 # zip up tar files
 %.tar.gz: %.tar

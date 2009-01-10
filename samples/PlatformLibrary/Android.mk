@@ -35,6 +35,23 @@ LOCAL_SRC_FILES := $(call all-java-files-under, java)
 include $(BUILD_JAVA_LIBRARY)
 
 # ============================================================
+include $(CLEAR_VARS)
+
+LOCAL_MODULE := com.example.android.platform_library.xml
+
+LOCAL_MODULE_TAGS := samples
+
+LOCAL_MODULE_CLASS := ETC
+
+# This will install the file in /system/etc/permissions
+#
+LOCAL_MODULE_PATH := $(TARGET_OUT_ETC)/permissions
+
+LOCAL_SRC_FILES := $(LOCAL_MODULE)
+
+include $(BUILD_PREBUILT)
+
+# ============================================================
 
 # Also build all of the sub-targets under this one: the library's
 # associated JNI code, and a sample client of the library.

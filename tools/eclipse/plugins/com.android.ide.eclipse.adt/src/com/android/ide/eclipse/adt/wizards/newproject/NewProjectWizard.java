@@ -22,6 +22,7 @@ import com.android.ide.eclipse.adt.project.ProjectHelper;
 import com.android.ide.eclipse.adt.sdk.Sdk;
 import com.android.ide.eclipse.common.AndroidConstants;
 import com.android.sdklib.IAndroidTarget;
+import com.android.sdklib.SdkConstants;
 
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
@@ -85,32 +86,36 @@ public class NewProjectWizard extends Wizard implements INewWizard {
     private static final String PARAM_IS_NEW_PROJECT = "IS_NEW_PROJECT"; //$NON-NLS-1$
     private static final String PARAM_SRC_FOLDER = "SRC_FOLDER"; //$NON-NLS-1$
     private static final String PARAM_SDK_TARGET = "SDK_TARGET"; //$NON-NLS-1$
+    private static final String PARAM_MIN_SDK_VERSION = "MIN_SDK_VERSION"; //$NON-NLS-1$
 
     private static final String PH_ACTIVITIES = "ACTIVITIES"; //$NON-NLS-1$
+    private static final String PH_USES_SDK = "USES-SDK"; //$NON-NLS-1$
     private static final String PH_INTENT_FILTERS = "INTENT_FILTERS"; //$NON-NLS-1$
     private static final String PH_STRINGS = "STRINGS"; //$NON-NLS-1$
 
     private static final String BIN_DIRECTORY =
-        AndroidConstants.FD_BINARIES + AndroidConstants.WS_SEP;
+        SdkConstants.FD_OUTPUT + AndroidConstants.WS_SEP;
     private static final String RES_DIRECTORY =
-        AndroidConstants.FD_RESOURCES + AndroidConstants.WS_SEP;
+        SdkConstants.FD_RESOURCES + AndroidConstants.WS_SEP;
     private static final String ASSETS_DIRECTORY =
-        AndroidConstants.FD_ASSETS + AndroidConstants.WS_SEP;
+        SdkConstants.FD_ASSETS + AndroidConstants.WS_SEP;
     private static final String DRAWABLE_DIRECTORY =
-        AndroidConstants.FD_DRAWABLE + AndroidConstants.WS_SEP;
+        SdkConstants.FD_DRAWABLE + AndroidConstants.WS_SEP;
     private static final String LAYOUT_DIRECTORY =
-        AndroidConstants.FD_LAYOUT + AndroidConstants.WS_SEP;
+        SdkConstants.FD_LAYOUT + AndroidConstants.WS_SEP;
     private static final String VALUES_DIRECTORY =
-        AndroidConstants.FD_VALUES + AndroidConstants.WS_SEP;
+        SdkConstants.FD_VALUES + AndroidConstants.WS_SEP;
 
     private static final String TEMPLATES_DIRECTORY = "templates/"; //$NON-NLS-1$
     private static final String TEMPLATE_MANIFEST = TEMPLATES_DIRECTORY
             + "AndroidManifest.template"; //$NON-NLS-1$
     private static final String TEMPLATE_ACTIVITIES = TEMPLATES_DIRECTORY
             + "activity.template"; //$NON-NLS-1$
+    private static final String TEMPLATE_USES_SDK = TEMPLATES_DIRECTORY
+            + "uses-sdk.template"; //$NON-NLS-1$
     private static final String TEMPLATE_INTENT_LAUNCHER = TEMPLATES_DIRECTORY
     		+ "launcher_intent_filter.template"; //$NON-NLS-1$
-    
+
     private static final String TEMPLATE_STRINGS = TEMPLATES_DIRECTORY
             + "strings.template"; //$NON-NLS-1$
     private static final String TEMPLATE_STRING = TEMPLATES_DIRECTORY
@@ -235,6 +240,7 @@ public class NewProjectWizard extends Wizard implements INewWizard {
         parameters.put(PARAM_IS_NEW_PROJECT, mMainPage.isNewProject());
         parameters.put(PARAM_SRC_FOLDER, mMainPage.getSourceFolder());
         parameters.put(PARAM_SDK_TARGET, mMainPage.getSdkTarget());
+        parameters.put(PARAM_MIN_SDK_VERSION, mMainPage.getMinSdkVersion());
 
         if (mMainPage.isCreateActivity()) {
             // An activity name can be of the form ".package.Class" or ".Class".
@@ -448,6 +454,15 @@ public class NewProjectWizard extends Wizard implements INewWizard {
             } else {
                 // remove the activity(ies) from the manifest
                 manifestTemplate = manifestTemplate.replaceAll(PH_ACTIVITIES, "");
+            }
+            
+            String minSdkVersion = (String) parameters.get(PARAM_MIN_SDK_VERSION);
+            if (minSdkVersion != null && minSdkVersion.length() > 0) {
+                String usesSdkTemplate = AdtPlugin.readEmbeddedTextFile(TEMPLATE_USES_SDK);
+                String usesSdk = replaceParameters(usesSdkTemplate, parameters);
+                manifestTemplate = manifestTemplate.replaceAll(PH_USES_SDK, usesSdk);
+            } else {
+                manifestTemplate = manifestTemplate.replaceAll(PH_USES_SDK, "");
             }
 
             // Save in the project as UTF-8

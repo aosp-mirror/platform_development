@@ -61,7 +61,7 @@ public class IFolderWrapper implements IAbstractFolder {
         }
         
         if (obj instanceof IFolder) {
-            return mFolder.equals((IFolder)obj);
+            return mFolder.equals(obj);
         }
 
         return super.equals(obj);

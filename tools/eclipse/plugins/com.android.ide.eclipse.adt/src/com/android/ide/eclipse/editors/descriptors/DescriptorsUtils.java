@@ -92,8 +92,9 @@ public final class DescriptorsUtils {
      * @param nsUri The URI of the attribute. Can be null if attribute has no namespace.
      *              See {@link AndroidConstants#NS_RESOURCES} for a common value.
      * @param infos The array of {@link AttributeInfo} to read and append to attributes
-     * @param requiredAttributes An optional list of attributes to mark as "required" (i.e. append
-     *        a "*" to their UI name as a hint for the user.)
+     * @param requiredAttributes An optional set of attributes to mark as "required" (i.e. append
+     *        a "*" to their UI name as a hint for the user.) If not null, must contains
+     *        entries in the form "elem-name/attr-name". Elem-name can be "*".
      * @param overrides A map [attribute name => TextAttributeDescriptor creator]. A creator
      *        can either by a Class<? extends TextAttributeDescriptor> or an instance of
      *        {@link ITextAttributeCreator} that instantiates the right TextAttributeDescriptor.
@@ -101,16 +102,15 @@ public final class DescriptorsUtils {
     public static void appendAttributes(ArrayList<AttributeDescriptor> attributes,
             String elementXmlName,
             String nsUri, AttributeInfo[] infos,
-            String[] requiredAttributes,
+            Set<String> requiredAttributes,
             Map<String, Object> overrides) {
         for (AttributeInfo info : infos) {
             boolean required = false;
             if (requiredAttributes != null) {
-                for(String attr_name : requiredAttributes) {
-                    if (attr_name.equals(info.getName())) {
-                        required = true;
-                        break;
-                    }
+                String attr_name = info.getName();
+                if (requiredAttributes.contains("*/" + attr_name) ||
+                        requiredAttributes.contains(elementXmlName + "/" + attr_name)) {
+                    required = true;
                 }
             }
             appendAttribute(attributes, elementXmlName, nsUri, info, required, overrides);
@@ -144,7 +144,26 @@ public final class DescriptorsUtils {
         if (required) {
             uiName += "*"; //$NON-NLS-1$
         }
-        String tooltip = formatTooltip(info.getJavaDoc()); // tooltip
+        
+        String tooltip = null;
+        String rawTooltip = info.getJavaDoc();
+        if (rawTooltip == null) {
+            rawTooltip = "";
+        }
+        
+        String deprecated = info.getDeprecatedDoc();
+        if (deprecated != null) {
+            if (rawTooltip.length() > 0) {
+                rawTooltip += "@@"; //$NON-NLS-1$ insert a break
+            }
+            rawTooltip += "* Deprecated";
+            if (deprecated.length() != 0) {
+                rawTooltip += ": " + deprecated;                            //$NON-NLS-1$
+            }
+            if (deprecated.length() == 0 || !deprecated.endsWith(".")) {    //$NON-NLS-1$
+                rawTooltip += ".";                                          //$NON-NLS-1$
+            }
+        }
 
         // Add the known types to the tooltip
         Format[] formats_list = info.getFormats();
@@ -154,11 +173,14 @@ public final class DescriptorsUtils {
             HashSet<Format> formats_set = new HashSet<Format>();
             
             StringBuilder sb = new StringBuilder();
-            if (tooltip != null) {
-                sb.append(tooltip);
-                sb.append(" "); //$NON-NLS-1$
+            if (rawTooltip != null && rawTooltip.length() > 0) {
+                sb.append(rawTooltip);
+                sb.append(" ");     //$NON-NLS-1$
             }
-            sb.append("["); //$NON-NLS-1$
+            if (sb.length() > 0) {
+                sb.append("@@");    //$NON-NLS-1$  @@ inserts a break before the types
+            }
+            sb.append("[");         //$NON-NLS-1$
             for (int i = 0; i < flen; i++) {
                 Format f = formats_list[i];
                 formats_set.add(f);
@@ -172,19 +194,21 @@ public final class DescriptorsUtils {
             sb.append("]"); //$NON-NLS-1$
 
             if (required) {
-                sb.append(". Required.");
+                sb.append(".@@* ");          //$NON-NLS-1$ @@ inserts a break.
+                sb.append("Required.");
             }
 
             // The extra space at the end makes the tooltip more readable on Windows.
             sb.append(" "); //$NON-NLS-1$
 
-            tooltip = sb.toString();
+            rawTooltip = sb.toString();
+            tooltip = formatTooltip(rawTooltip);
 
             // Create a specialized attribute if we can
             if (overrides != null) {
                 for (Entry<String, Object> entry: overrides.entrySet()) {
                     String key = entry.getKey();
-                    String elements[] = key.split("/");
+                    String elements[] = key.split("/");          //$NON-NLS-1$
                     String overrideAttrLocalName = null;
                     if (elements.length < 1) {
                         continue;
@@ -193,7 +217,7 @@ public final class DescriptorsUtils {
                         elements = null;
                     } else {
                         overrideAttrLocalName = elements[elements.length - 1];
-                        elements = elements[0].split(",");
+                        elements = elements[0].split(",");       //$NON-NLS-1$
                     }
                     
                     if (overrideAttrLocalName == null ||
@@ -204,7 +228,8 @@ public final class DescriptorsUtils {
                     boolean ok_element = elements.length < 1;
                     if (!ok_element) {
                         for (String element : elements) {
-                            if (element.equals("*") || element.equals(elementXmlName)) {
+                            if (element.equals("*")              //$NON-NLS-1$
+                                    || element.equals(elementXmlName)) {
                                 ok_element = true;
                                 break;
                             }
@@ -271,8 +296,12 @@ public final class DescriptorsUtils {
 
         // By default a simple text field is used
         if (attr == null) {
+            if (tooltip == null) {
+                tooltip = formatTooltip(rawTooltip);
+            }
             attr = new TextAttributeDescriptor(xmlLocalName, uiName, nsUri, tooltip);
         }
+        attr.setDeprecated(info.getDeprecatedDoc() != null);
         attributes.add(attr);
     }
 
@@ -582,6 +611,8 @@ public final class DescriptorsUtils {
         Pattern p_code = Pattern.compile("<code>(.+?)</code>(.*)");                 //$NON-NLS-1$
         // Detects @blah@, used in hard-coded tooltip descriptors
         Pattern p_elem = Pattern.compile("@([\\w -]+)@(.*)");                       //$NON-NLS-1$
+        // Detects a buffer that starts by @@ (request for a break)
+        Pattern p_break = Pattern.compile("@@(.*)");                                //$NON-NLS-1$
         // Detects a buffer that starts by @ < or { (one that was not matched above)
         Pattern p_open = Pattern.compile("([@<\\{])(.*)");                          //$NON-NLS-1$
         // Detects everything till the next potential separator, i.e. @ < or {
@@ -616,6 +647,10 @@ public final class DescriptorsUtils {
                 if (text != null) {
                     currentLength += text.length() - 2;
                 }
+            } else if ((m = p_break.matcher(javadoc)).matches()) {
+                spans.add(BREAK);
+                currentLength = 0;
+                javadoc = m.group(1);
             } else if ((m = p_open.matcher(javadoc)).matches()) {
                 s = m.group(1);
                 javadoc = m.group(2);

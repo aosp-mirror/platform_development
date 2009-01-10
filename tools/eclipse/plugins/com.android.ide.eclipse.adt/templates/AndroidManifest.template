@@ -6,4 +6,5 @@
     <application android:icon="@drawable/icon" android:label="APPLICATION_NAME">
 ACTIVITIES
     </application>
+USES-SDK
 </manifest> 

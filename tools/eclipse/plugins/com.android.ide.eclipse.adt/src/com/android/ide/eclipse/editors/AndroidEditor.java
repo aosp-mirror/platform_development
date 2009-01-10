@@ -722,7 +722,7 @@ public abstract class AndroidEditor extends FormEditor implements IResourceChang
     }
     
     /**
-     * Returns the {@link PlatformData} for the edited file.
+     * Returns the {@link AndroidTargetData} for the edited file.
      */
     public AndroidTargetData getTargetData() {
         IProject project = getProject();

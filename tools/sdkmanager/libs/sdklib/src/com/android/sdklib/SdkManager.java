@@ -36,8 +36,8 @@ import java.util.regex.Pattern;
  */
 public final class SdkManager {
     
-    private final static String PROP_VERSION_SDK = "ro.build.version.sdk";
-    private final static String PROP_VERSION_RELEASE = "ro.build.version.release";
+    public final static String PROP_VERSION_SDK = "ro.build.version.sdk";
+    public final static String PROP_VERSION_RELEASE = "ro.build.version.release";
     
     private final static String ADDON_NAME = "name";
     private final static String ADDON_VENDOR = "vendor";
@@ -73,7 +73,7 @@ public final class SdkManager {
             return manager;
         } catch (IllegalArgumentException e) {
             if (log != null) {
-                log.error(e.getMessage());
+                log.error(e, "Error parsing the sdk.");
             }
         }
         
@@ -188,13 +188,14 @@ public final class SdkManager {
                     // looks like apiNumber does not parse to a number.
                     // Ignore this platform.
                     if (log != null) {
-                        log.error("Ignoring platform '%1$s': %2$s is not a valid number in %3$s.",
+                        log.error(null,
+                                "Ignoring platform '%1$s': %2$s is not a valid number in %3$s.",
                                 platform.getName(), PROP_VERSION_SDK, SdkConstants.FN_BUILD_PROP);
                     }
                 }
             }
         } else if (log != null) {
-            log.error("Ignoring platform '%1$s': %2$s is missing.", platform.getName(),
+            log.error(null, "Ignoring platform '%1$s': %2$s is missing.", platform.getName(),
                     SdkConstants.FN_BUILD_PROP);
         }
         
@@ -281,7 +282,7 @@ public final class SdkManager {
                         
                         if (baseTarget == null) {
                             if (log != null) {
-                                log.error(
+                                log.error(null,
                                         "Ignoring add-on '%1$s': Unable to find base platform with API level %2$d",
                                         addon.getName(), apiValue);
                             }
@@ -292,7 +293,7 @@ public final class SdkManager {
                         // looks like apiNumber does not parse to a number.
                         // Ignore this add-on.
                         if (log != null) {
-                            log.error(
+                            log.error(null,
                                     "Ignoring add-on '%1$s': %2$s is not a valid number in %3$s.",
                                     addon.getName(), ADDON_API, SdkConstants.FN_BUILD_PROP);
                         }
@@ -331,7 +332,7 @@ public final class SdkManager {
                 return target;
             }
         } else if (log != null) {
-            log.error("Ignoring add-on '%1$s': %2$s is missing.", addon.getName(),
+            log.error(null, "Ignoring add-on '%1$s': %2$s is missing.", addon.getName(),
                     SdkConstants.FN_MANIFEST_INI);
         }
         
@@ -340,7 +341,7 @@ public final class SdkManager {
     
     private void displayAddonManifestError(ISdkLog log, String addonName, String valueName) {
         if (log != null) {
-            log.error("Ignoring add-on '%1$s': '%2$s' is missing from %3$s.",
+            log.error(null, "Ignoring add-on '%1$s': '%2$s' is missing from %3$s.",
                     addonName, valueName, SdkConstants.FN_MANIFEST_INI);
         }
     }

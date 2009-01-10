@@ -60,8 +60,9 @@ public class ProjectHelperTest extends TestCase {
         ProjectHelper.fixProjectClasspathEntries(javaProject);
         
         IClasspathEntry[] fixedEntries = javaProject.getRawClasspath();
-        assertEquals(2, fixedEntries.length);
+        assertEquals(3, fixedEntries.length);
         assertEquals("Project/src", fixedEntries[0].getPath().toString());
-        assertEquals(CONTAINER_ID, fixedEntries[1].getPath().toString());
+        assertEquals(OLD_CONTAINER_ID, fixedEntries[1].getPath().toString());
+        assertEquals(CONTAINER_ID, fixedEntries[2].getPath().toString());
     }
 }

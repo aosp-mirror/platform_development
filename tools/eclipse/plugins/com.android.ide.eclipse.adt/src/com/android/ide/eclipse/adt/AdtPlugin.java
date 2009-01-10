@@ -1201,7 +1201,7 @@ public class AdtPlugin extends AbstractUIPlugin {
                     if (file.getFullPath().segmentCount() == 4) {
                         // check if we are inside the res folder.
                         String segment = file.getFullPath().segment(1); 
-                        if (segment.equalsIgnoreCase(AndroidConstants.FD_RESOURCES)) {
+                        if (segment.equalsIgnoreCase(SdkConstants.FD_RESOURCES)) {
                             // we are inside a res/ folder, get the actual ResourceFolder
                             ProjectResources resources = ResourceManager.getInstance().
                                 getProjectResources(file.getProject());

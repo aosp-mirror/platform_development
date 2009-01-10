@@ -40,6 +40,11 @@ import java.util.ArrayList;
 
 /**
  * The SDK target selector is a table that is added to the given parent composite.
+ * <p/>
+ * To use, create it using {@link #SdkTargetSelector(Composite, IAndroidTarget[], boolean)} then
+ * call {@link #setSelection(IAndroidTarget)}, {@link #setSelectionListener(SelectionListener)}
+ * and finally use {@link #getFirstSelected()} or {@link #getAllSelected()} to retrieve the
+ * selection.
  */
 public class SdkTargetSelector {
     
@@ -49,6 +54,14 @@ public class SdkTargetSelector {
     private Table mTable;
     private Label mDescription;
 
+    /**
+     * Creates a new SDK Target Selector.
+     * 
+     * @param parent The parent composite where the selector will be added.
+     * @param targets The list of targets. This is <em>not</em> copied, the caller must not modify.
+     * @param allowMultipleSelection True if more than one SDK target can be selected at the same
+     *        time.
+     */
     public SdkTargetSelector(Composite parent, IAndroidTarget[] targets,
             boolean allowMultipleSelection) {
         mTargets = targets;
@@ -81,11 +94,22 @@ public class SdkTargetSelector {
         column1.setText("Vendor");
         final TableColumn column2 = new TableColumn(mTable, SWT.NONE);
         column2.setText("API Level");
+        final TableColumn column3 = new TableColumn(mTable, SWT.NONE);
+        column3.setText("SDK");
 
-        adjustColumnsWidth(mTable, column0, column1, column2);
+        adjustColumnsWidth(mTable, column0, column1, column2, column3);
         setupSelectionListener(mTable);
         fillTable(mTable);
         setupTooltip(mTable);
+    }
+
+    /**
+     * Returns the list of known targets.
+     * <p/>
+     * This is not a copy. Callers must <em>not</em> modify this array.
+     */
+    public IAndroidTarget[] getTargets() {
+        return mTargets;
     }
 
     /**
@@ -107,18 +131,31 @@ public class SdkTargetSelector {
     
     /**
      * Sets the current target selection.
+     * <p/>
+     * If the selection is actually changed, this will invoke the selection listener
+     * (if any) with a null event.
+     * 
      * @param target the target to be selection
      * @return true if the target could be selected, false otherwise.
      */
     public boolean setSelection(IAndroidTarget target) {
         boolean found = false;
+        boolean modified = false;
         for (TableItem i : mTable.getItems()) {
             if ((IAndroidTarget) i.getData() == target) {
                 found = true;
-                i.setChecked(true);
-            } else {
+                if (!i.getChecked()) {
+                    modified = true;
+                    i.setChecked(true);
+                }
+            } else if (i.getChecked()) {
+                modified = true;
                 i.setChecked(false);
             }
+        }
+        
+        if (modified && mSelectionListener != null) {
+            mSelectionListener.widgetSelected(null);
         }
         
         return found;
@@ -166,15 +203,17 @@ public class SdkTargetSelector {
     private void adjustColumnsWidth(final Table table,
             final TableColumn column0,
             final TableColumn column1,
-            final TableColumn column2) {
+            final TableColumn column2,
+            final TableColumn column3) {
         // Add a listener to resize the column to the full width of the table
         table.addControlListener(new ControlAdapter() {
             @Override
             public void controlResized(ControlEvent e) {
                 Rectangle r = table.getClientArea();
-                column0.setWidth(r.width * 3 / 10); // 30%  
-                column1.setWidth(r.width * 5 / 10); // 50%
-                column2.setWidth(r.width * 2 / 10); // 20%
+                column0.setWidth(r.width * 30 / 100); // 30%  
+                column1.setWidth(r.width * 45 / 100); // 45%
+                column2.setWidth(r.width * 15 / 100); // 15%
+                column3.setWidth(r.width * 10 / 100); // 10%
             }
         });
     }
@@ -238,6 +277,7 @@ public class SdkTargetSelector {
      * <li>column 0: sdk name
      * <li>column 1: sdk vendor
      * <li>column 2: sdk api name
+     * <li>column 3: sdk version
      * </ul>
      */
     private void fillTable(final Table table) {
@@ -249,6 +289,7 @@ public class SdkTargetSelector {
                 item.setText(0, target.getName());
                 item.setText(1, target.getVendor());
                 item.setText(2, target.getApiVersionName());
+                item.setText(3, Integer.toString(target.getApiVersionNumber()));
             }
         } else {
             table.setEnabled(false);
@@ -257,6 +298,7 @@ public class SdkTargetSelector {
             item.setText(0, "--");
             item.setText(1, "No target available");
             item.setText(2, "--");
+            item.setText(3, "--");
         }
     }
 

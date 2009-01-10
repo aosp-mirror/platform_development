@@ -130,48 +130,14 @@ public class AndroidConstants {
     public final static String FN_TRACEVIEW = (CURRENT_PLATFORM == PLATFORM_WINDOWS) ?
             "traceview.exe" : "traceview"; //$NON-NLS-1$ //$NON-NLS-2$
 
-    /** Folder Names for Android Projects . */
-
-    /* Resources folder name, i.e. "res". */
-    public final static String FD_RESOURCES = "res"; //$NON-NLS-1$
-    /** Assets folder name, i.e. "assets" */
-    public final static String FD_ASSETS = "assets"; //$NON-NLS-1$
-    /** Default source folder name, i.e. "src" */
-    public final static String FD_SOURCES = "src"; //$NON-NLS-1$
-    /** Default native library folder name inside the project, i.e. "libs"
-     * While the folder inside the .apk is "lib", we call that one libs because
-     * that's what we use in ant for both .jar and .so and we need to make the 2 development ways
-     * compatible. */
-    public final static String FD_NATIVE_LIBS = "libs"; //$NON-NLS-1$
-    /** Native lib folder inside the APK: "lib" */
-    public final static String FD_APK_NATIVE_LIBS = "lib"; //$NON-NLS-1$
-    /** Default bin folder name, i.e. "bin" */
-    public final static String FD_BINARIES = "bin"; //$NON-NLS-1$
-    /** Default anim resource folder name, i.e. "anim" */
-    public final static String FD_ANIM = "anim"; //$NON-NLS-1$
-    /** Default color resource folder name, i.e. "color" */
-    public final static String FD_COLOR = "color"; //$NON-NLS-1$
-    /** Default drawable resource folder name, i.e. "drawable" */
-    public final static String FD_DRAWABLE = "drawable"; //$NON-NLS-1$
-    /** Default layout resource folder name, i.e. "layout" */
-    public final static String FD_LAYOUT = "layout"; //$NON-NLS-1$
-    /** Default menu resource folder name, i.e. "menu" */
-    public final static String FD_MENU = "menu"; //$NON-NLS-1$
-    /** Default values resource folder name, i.e. "values" */
-    public final static String FD_VALUES = "values"; //$NON-NLS-1$
-    /** Default xml resource folder name, i.e. "xml" */
-    public final static String FD_XML = "xml"; //$NON-NLS-1$
-    /** Default raw resource folder name, i.e. "raw" */
-    public final static String FD_RAW = "raw"; //$NON-NLS-1$
-
     /** Absolute path of the workspace root, i.e. "/" */
     public final static String WS_ROOT = WS_SEP;
 
     /** Absolute path of the resource folder, eg "/res".<br> This is a workspace path. */
-    public final static String WS_RESOURCES = WS_SEP + FD_RESOURCES;
+    public final static String WS_RESOURCES = WS_SEP + SdkConstants.FD_RESOURCES;
 
     /** Absolute path of the resource folder, eg "/assets".<br> This is a workspace path. */
-    public final static String WS_ASSETS = WS_SEP + FD_ASSETS;
+    public final static String WS_ASSETS = WS_SEP + SdkConstants.FD_ASSETS;
 
     /** Leaf of the javaDoc folder. Does not start with a separator. */
     public final static String WS_JAVADOC_FOLDER_LEAF = SdkConstants.FD_DOCS + "/reference"; //$NON-NLS-1$

@@ -18,6 +18,7 @@ package com.android.ide.eclipse.adt.project;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.common.AndroidConstants;
+import com.android.sdklib.SdkConstants;
 
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
@@ -53,13 +54,13 @@ public class FolderDecorator implements ILightweightLabelDecorator {
                     // check the folder is directly under the project.
                     if (folder.getParent().getType() == IResource.PROJECT) {
                         String name = folder.getName();
-                        if (name.equals(AndroidConstants.FD_ASSETS)) {
+                        if (name.equals(SdkConstants.FD_ASSETS)) {
                             decorate(decoration, " [Android assets]");
                             decoration.addOverlay(mDescriptor, IDecoration.TOP_RIGHT);
-                        } else if (name.equals(AndroidConstants.FD_RESOURCES)) {
+                        } else if (name.equals(SdkConstants.FD_RESOURCES)) {
                             decorate(decoration, " [Android resources]");
                             decoration.addOverlay(mDescriptor, IDecoration.TOP_RIGHT);
-                        } else if (name.equals(AndroidConstants.FD_NATIVE_LIBS)) {
+                        } else if (name.equals(SdkConstants.FD_NATIVE_LIBS)) {
                             decorate(decoration, " [Native Libraries]");
                         }
                     }

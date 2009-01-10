@@ -39,7 +39,7 @@ public final class PixelDensityQualifier extends ResourceQualifier {
     /**
      * Creates and returns a qualifier from the given folder segment. If the segment is incorrect,
      * <code>null</code> is returned.
-     * @param segment the folder segment from which to create a qualifier.
+     * @param folderSegment the folder segment from which to create a qualifier.
      * @return a new {@link CountryCodeQualifier} object or <code>null</code>
      */
     public static PixelDensityQualifier getQualifier(String folderSegment) {
@@ -66,7 +66,7 @@ public final class PixelDensityQualifier extends ResourceQualifier {
     /**
      * Returns the folder name segment for the given value. This is equivalent to calling
      * {@link #toString()} on a {@link NetworkCodeQualifier} object.
-     * @param value the value of the qualifier, as returned by {@link #getCode()}.
+     * @param value the value of the qualifier, as returned by {@link #getValue()}.
      */
     public static String getFolderSegment(int value) {
         if (value != DEFAULT_DENSITY) {

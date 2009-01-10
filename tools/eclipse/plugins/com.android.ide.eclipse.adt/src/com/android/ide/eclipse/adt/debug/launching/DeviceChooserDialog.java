@@ -19,6 +19,7 @@ package com.android.ide.eclipse.adt.debug.launching;
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.Client;
 import com.android.ddmlib.Device;
+import com.android.ddmlib.IDevice;
 import com.android.ddmlib.AndroidDebugBridge.IDeviceChangeListener;
 import com.android.ddmlib.Device.DeviceState;
 import com.android.ddmuilib.IImageLoader;
@@ -27,7 +28,10 @@ import com.android.ddmuilib.TableHelper;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.debug.launching.AndroidLaunchController.AndroidLaunchConfiguration;
 import com.android.ide.eclipse.adt.debug.launching.AndroidLaunchController.DelayedLaunchInfo;
+import com.android.ide.eclipse.adt.sdk.Sdk;
 import com.android.ide.eclipse.ddms.DdmsPlugin;
+import com.android.sdklib.IAndroidTarget;
+import com.android.sdklib.vm.VmManager.VmInfo;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -67,19 +71,26 @@ public class DeviceChooserDialog extends Dialog implements IDeviceChangeListener
 
     private final static String PREFS_COL_SERIAL = "deviceChooser.serial"; //$NON-NLS-1$
     private final static String PREFS_COL_STATE = "deviceChooser.state"; //$NON-NLS-1$
-    private final static String PREFS_COL_BUILD = "deviceChooser.build"; //$NON-NLS-1$
+    private final static String PREFS_COL_VM = "deviceChooser.vm"; //$NON-NLS-1$
+    private final static String PREFS_COL_TARGET = "deviceChooser.target"; //$NON-NLS-1$
+    private final static String PREFS_COL_DEBUG = "deviceChooser.debug"; //$NON-NLS-1$
 
     private Table mDeviceTable;
     private TableViewer mViewer;
     
     private Image mDeviceImage;
     private Image mEmulatorImage;
+    private Image mMatchImage;
+    private Image mNoMatchImage;
+    private Image mWarningImage;
 
     private Button mOkButton;
     private Button mCreateButton;
     
     private DeviceChooserResponse mResponse;
     private DelayedLaunchInfo mLaunchInfo;
+    private IAndroidTarget mProjectTarget;
+    private Sdk mSdk;
     
     /**
      * Basic Content Provider for a table full of {@link Device} objects. The input is
@@ -111,13 +122,44 @@ public class DeviceChooserDialog extends Dialog implements IDeviceChangeListener
     private class LabelProvider implements ITableLabelProvider {
 
         public Image getColumnImage(Object element, int columnIndex) {
-            if (columnIndex == 0 && element instanceof Device) {
-                if (((Device)element).isEmulator()) {
-                    return mEmulatorImage;
+            if (element instanceof Device) {
+                Device device = (Device)element;
+                switch (columnIndex) {
+                    case 0:
+                        return device.isEmulator() ? mEmulatorImage : mDeviceImage;
+                        
+                    case 2:
+                        // check for compatibility.
+                        if (device.isEmulator() == false) { // physical device
+                            // get the api level of the device
+                            try {
+                                String apiValue = device.getProperty(
+                                        IDevice.PROP_BUILD_VERSION_NUMBER);
+                                int api = Integer.parseInt(apiValue);
+                                if (api >= mProjectTarget.getApiVersionNumber()) {
+                                    // if the project is compiling against an add-on, the optional
+                                    // API may be missing from the device.
+                                    return mProjectTarget.isPlatform() ?
+                                            mMatchImage : mWarningImage;
+                                } else {
+                                    return mNoMatchImage;
+                                }
+                            } catch (NumberFormatException e) {
+                                // lets consider the device non compatible
+                                return mNoMatchImage;
+                            }
+                        } else {
+                            // get the VmInfo
+                            VmInfo info = mSdk.getVmManager().getVm(device.getVmName());
+                            if (info == null) {
+                                return mWarningImage;
+                            }
+                            return mProjectTarget.isCompatibleBaseFor(info.getTarget()) ?
+                                    mMatchImage : mNoMatchImage;
+                        }
                 }
-
-                return mDeviceImage;
             }
+
             return null;
         }
 
@@ -128,15 +170,30 @@ public class DeviceChooserDialog extends Dialog implements IDeviceChangeListener
                     case 0:
                         return device.getSerialNumber();
                     case 1:
-                        return getStateString(device);
-                    case 2:
-                        String debuggable = device.getProperty(Device.PROP_DEBUGGABLE);
-                        String version = device.getProperty(Device.PROP_BUILD_VERSION);
-                        if (debuggable != null && debuggable.equals("1")) { //$NON-NLS-1$
-                            return String.format("%1$s (debug)", version); //$NON-NLS-1$
+                        if (device.isEmulator()) {
+                            return device.getVmName();
                         } else {
-                            return String.format("%1$s", version); //$NON-NLS-1$
+                            return "N/A"; // devices don't have VM names.
                         }
+                    case 2:
+                        if (device.isEmulator()) {
+                            VmInfo info = mSdk.getVmManager().getVm(device.getVmName());
+                            if (info == null) {
+                                return "?";
+                            }
+                            return info.getTarget().getFullName();
+                        } else {
+                            return device.getProperty(IDevice.PROP_BUILD_VERSION);
+                        }
+                    case 3:
+                        String debuggable = device.getProperty(IDevice.PROP_DEBUGGABLE);
+                        if (debuggable != null && debuggable.equals("1")) { //$NON-NLS-1$
+                            return "Yes";
+                        } else {
+                            return "";
+                        }
+                    case 4:
+                        return getStateString(device);
                 }
             }
 
@@ -164,6 +221,7 @@ public class DeviceChooserDialog extends Dialog implements IDeviceChangeListener
     public static class DeviceChooserResponse {
         public boolean mustContinue;
         public boolean mustLaunchEmulator;
+        public VmInfo vmToLaunch;
         public Device deviceToUse;
     }
     
@@ -175,14 +233,18 @@ public class DeviceChooserDialog extends Dialog implements IDeviceChangeListener
      * Prepare and display the dialog.
      * @param response
      * @param project 
+     * @param projectTarget 
      * @param launch 
      * @param launchInfo 
      * @param config 
      */
     public void open(DeviceChooserResponse response, IProject project,
-            AndroidLaunch launch, DelayedLaunchInfo launchInfo, AndroidLaunchConfiguration config) {
+            IAndroidTarget projectTarget, AndroidLaunch launch, DelayedLaunchInfo launchInfo,
+            AndroidLaunchConfiguration config) {
         mResponse = response;
+        mProjectTarget = projectTarget;
         mLaunchInfo = launchInfo;
+        mSdk = Sdk.getCurrent();
 
         Shell parent = getParent();
         Shell shell = new Shell(parent, getStyle());
@@ -218,6 +280,9 @@ public class DeviceChooserDialog extends Dialog implements IDeviceChangeListener
 
         mEmulatorImage.dispose();
         mDeviceImage.dispose();
+        mMatchImage.dispose();
+        mNoMatchImage.dispose();
+        mWarningImage.dispose();
 
         AndroidLaunchController.getInstance().continueLaunch(response, project, launch,
                 launchInfo, config);
@@ -249,14 +314,22 @@ public class DeviceChooserDialog extends Dialog implements IDeviceChangeListener
                 SWT.LEFT, "AAA+AAAAAAAAAAAAAAAAAAA", //$NON-NLS-1$
                 PREFS_COL_SERIAL, store);
 
+        TableHelper.createTableColumn(mDeviceTable, "VM Name",
+                SWT.LEFT, "engineering", //$NON-NLS-1$
+                PREFS_COL_VM, store);
+
+        TableHelper.createTableColumn(mDeviceTable, "Target",
+                SWT.LEFT, "AAA+Android 9.9.9", //$NON-NLS-1$
+                PREFS_COL_TARGET, store);
+
+        TableHelper.createTableColumn(mDeviceTable, "Debug",
+                SWT.LEFT, "Debug", //$NON-NLS-1$
+                PREFS_COL_DEBUG, store);
+
         TableHelper.createTableColumn(mDeviceTable, "State",
                 SWT.LEFT, "bootloader", //$NON-NLS-1$
                 PREFS_COL_STATE, store);
 
-        TableHelper.createTableColumn(mDeviceTable, "Build Info",
-                SWT.LEFT, "engineering", //$NON-NLS-1$
-                PREFS_COL_BUILD, store);
-        
         // create the viewer for it
         mViewer = new TableViewer(mDeviceTable);
         mViewer.setContentProvider(new ContentProvider());
@@ -357,19 +430,41 @@ public class DeviceChooserDialog extends Dialog implements IDeviceChangeListener
     }
     
     private void loadImages() {
-        IImageLoader loader = DdmsPlugin.getImageLoader();
+        IImageLoader ddmsLoader = DdmsPlugin.getImageLoader();
         Display display = DdmsPlugin.getDisplay();
+        IImageLoader adtLoader = AdtPlugin.getImageLoader();
 
         if (mDeviceImage == null) {
-            mDeviceImage = ImageHelper.loadImage(loader, display,
+            mDeviceImage = ImageHelper.loadImage(ddmsLoader, display,
                     "device.png", //$NON-NLS-1$
                     ICON_WIDTH, ICON_WIDTH,
                     display.getSystemColor(SWT.COLOR_RED));
         }
         if (mEmulatorImage == null) {
-            mEmulatorImage = ImageHelper.loadImage(loader, display,
+            mEmulatorImage = ImageHelper.loadImage(ddmsLoader, display,
                     "emulator.png", ICON_WIDTH, ICON_WIDTH, //$NON-NLS-1$
                     display.getSystemColor(SWT.COLOR_BLUE));
+        }
+        
+        if (mMatchImage == null) {
+            mMatchImage = ImageHelper.loadImage(adtLoader, display,
+                    "match.png", //$NON-NLS-1$
+                    ICON_WIDTH, ICON_WIDTH,
+                    display.getSystemColor(SWT.COLOR_GREEN));
+        }
+
+        if (mNoMatchImage == null) {
+            mNoMatchImage = ImageHelper.loadImage(adtLoader, display,
+                    "error.png", //$NON-NLS-1$
+                    ICON_WIDTH, ICON_WIDTH,
+                    display.getSystemColor(SWT.COLOR_RED));
+        }
+
+        if (mWarningImage == null) {
+            mWarningImage = ImageHelper.loadImage(adtLoader, display,
+                    "warning.png", //$NON-NLS-1$
+                    ICON_WIDTH, ICON_WIDTH,
+                    display.getSystemColor(SWT.COLOR_YELLOW));
         }
 
     }
@@ -438,7 +533,7 @@ public class DeviceChooserDialog extends Dialog implements IDeviceChangeListener
      * @param device the device that was updated.
      * @param changeMask the mask indicating what changed.
      * 
-     * @see IDeviceChangeListener#deviceChanged(Device)
+     * @see IDeviceChangeListener#deviceChanged(Device, int)
      */
     public void deviceChanged(final Device device, int changeMask) {
         if ((changeMask & (Device.CHANGE_STATE | Device.CHANGE_BUILD_INFO)) != 0) {

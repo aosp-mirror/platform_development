@@ -45,6 +45,8 @@ public class AndroidJarLoaderTest extends TestCase {
 
     @Override
     public void tearDown() throws Exception {
+        mFrameworkClassLoader = null;
+        System.gc();
     }
 
     /** Preloads classes. They should load just fine. */
@@ -74,8 +76,9 @@ public class AndroidJarLoaderTest extends TestCase {
         Class<?> c = _findClass(mFrameworkClassLoader, "jar.example.Class2");  //$NON-NLS-1$
         assertEquals("jar.example.Class2", c.getName());              //$NON-NLS-1$
         HashMap<String, Class<?>> map = getPrivateClassCache();
+        assertTrue(map.containsKey("jar.example.Class1"));            //$NON-NLS-1$
         assertTrue(map.containsKey("jar.example.Class2"));            //$NON-NLS-1$
-        assertEquals(1, map.size());
+        assertEquals(2, map.size());
     }
     
     /** call the protected method findClass */

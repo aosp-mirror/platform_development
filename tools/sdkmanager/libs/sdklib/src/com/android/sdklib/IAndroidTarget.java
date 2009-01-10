@@ -22,23 +22,41 @@ package com.android.sdklib;
  */
 public interface IAndroidTarget extends Comparable<IAndroidTarget> {
     
+    /** OS Path to the "android.jar" file. */
     public static int ANDROID_JAR         = 1;
+    /** OS Path to the "framework.aidl" file. */
     public static int ANDROID_AIDL        = 2;
+    /** OS Path to "images" folder which contains the emulator system images. */
     public static int IMAGES              = 3;
+    /** OS Path to the "samples" folder which contains sample projects. */
     public static int SAMPLES             = 4;
+    /** OS Path to the "skins" folder which contains the emulator skins. */ 
     public static int SKINS               = 5;
+    /** OS Path to the "templates" folder which contains the templates for new projects. */
     public static int TEMPLATES           = 6;
+    /** OS Path to the "data" folder which contains data & libraries for the SDK tools. */
     public static int DATA                = 7;
+    /** OS Path to the "attrs.xml" file. */
     public static int ATTRIBUTES          = 8;
+    /** OS Path to the "attrs_manifest.xml" file. */
     public static int MANIFEST_ATTRIBUTES = 9;
+    /** OS Path to the "data/layoutlib.jar" library. */
     public static int LAYOUT_LIB          = 10;
+    /** OS Path to the "data/res" folder. */
     public static int RESOURCES           = 11;
+    /** OS Path to the "data/fonts" folder. */
     public static int FONTS               = 12;
+    /** OS Path to the "data/widgets.txt" file. */
     public static int WIDGETS             = 13;
+    /** OS Path to the "data/activity_actions.txt" file. */
     public static int ACTIONS_ACTIVITY    = 14;
+    /** OS Path to the "data/broadcast_actions.txt" file. */
     public static int ACTIONS_BROADCAST   = 15;
+    /** OS Path to the "data/service_actions.txt" file. */
     public static int ACTIONS_SERVICE     = 16;
+    /** OS Path to the "data/categories.txt" file. */
     public static int CATEGORIES          = 17;
+    /** OS Path to the "sources" folder. */
     public static int SOURCES             = 18;
     
     public interface IOptionalLibrary {
@@ -46,6 +64,11 @@ public interface IAndroidTarget extends Comparable<IAndroidTarget> {
         String getJarName();
         String getJarPath();
     }
+
+    /**
+     * Returns the target location.
+     */
+    String getLocation();
 
     /**
      * Returns the name of the vendor of the target.
@@ -56,6 +79,12 @@ public interface IAndroidTarget extends Comparable<IAndroidTarget> {
      * Returns the name of the target.
      */
     String getName();
+    
+    /**
+     * Returns the full name of the target, possibly including vendor name.
+     * @return
+     */
+    String getFullName();
     
     /**
      * Returns the description of the target.
@@ -80,7 +109,7 @@ public interface IAndroidTarget extends Comparable<IAndroidTarget> {
     /**
      * Returns the path of a platform component.
      * @param pathId the id representing the path to return. Any of the constants defined in the
-     * {@link ITargetDataProvider} interface can be used.
+     * {@link IAndroidTarget} interface can be used.
      */
     String getPath(int pathId);
     
@@ -94,6 +123,15 @@ public interface IAndroidTarget extends Comparable<IAndroidTarget> {
      * @return an array of optional libraries or <code>null</code> if there is none.
      */
     IOptionalLibrary[] getOptionalLibraries();
+    
+    /**
+     * Returns whether the given target is compatible with the receiver.
+     * <p/>A target is considered compatible if applications developed for the receiver can run on
+     * the given target.
+     *
+     * @param target the IAndroidTarget to test.
+     */
+    boolean isCompatibleBaseFor(IAndroidTarget target);
     
     /**
      * Returns a string able to uniquely identify a target.

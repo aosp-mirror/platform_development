@@ -31,6 +31,7 @@ import com.android.jarutils.DebugKeyProvider.KeytoolException;
 import com.android.jarutils.SignedJarBuilder.IZipEntryFilter;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.IAndroidTarget;
+import com.android.sdklib.SdkConstants;
 
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
@@ -120,6 +121,10 @@ public class ApkBuilder extends BaseBuilder {
             }
         }
 
+        /**
+         * {@inheritDoc}
+         * @throws CoreException
+         */
         public boolean visit(IResourceDelta delta) throws CoreException {
             //  no need to keep looking if we already know we need to convert
             // to dex and make the final package.
@@ -589,7 +594,7 @@ public class ApkBuilder extends BaseBuilder {
      * @param osBinPath the path to the output folder of the project
      * @param osOutFilePath the path of the dex file to create.
      * @param referencedJavaProjects the list of referenced projects for this project.
-     * @return
+     *
      * @throws CoreException
      */
     private boolean executeDx(IJavaProject javaProject, String osBinPath, String osOutFilePath,
@@ -756,8 +761,7 @@ public class ApkBuilder extends BaseBuilder {
 
             // now write the native libraries.
             // First look if the lib folder is there.
-            IResource libFolder = javaProject.getProject().findMember(
-                    AndroidConstants.FD_NATIVE_LIBS);
+            IResource libFolder = javaProject.getProject().findMember(SdkConstants.FD_NATIVE_LIBS);
             if (libFolder != null && libFolder.exists() &&
                     libFolder.getType() == IResource.FOLDER) {
                 // look inside and put .so in lib/* by keeping the relative folder path.
@@ -829,7 +833,7 @@ public class ApkBuilder extends BaseBuilder {
      * lib folder directly goes in this "lib" folder in the archive.
      * 
      *  
-     * @param rooSegmentCount The number of segment of the path of the folder containing the
+     * @param rootSegmentCount The number of segment of the path of the folder containing the
      * libraries. This is used to compute the path in the archive.
      * @param jarBuilder the {@link SignedJarBuilder} used to create the archive.
      * @param resource the IResource to write.
@@ -847,7 +851,7 @@ public class ApkBuilder extends BaseBuilder {
                 path = path.removeFirstSegments(rootSegmentCount);
                 
                 // add it to the archive.
-                IPath apkPath = new Path(AndroidConstants.FD_APK_NATIVE_LIBS);
+                IPath apkPath = new Path(SdkConstants.FD_APK_NATIVE_LIBS);
                 apkPath = apkPath.append(path);
                 
                 // writes the file in the apk.

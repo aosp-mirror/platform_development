@@ -41,7 +41,7 @@ public class ConfigMatchTest extends TestCase {
     private static final String MISC2_FILENAME = "bar.xml"; //$NON-NLS-1$
     
     private ProjectResources mResources;
-    private ArrayList<ResourceQualifier> mQualifierList;
+    private ResourceQualifier[] mQualifierList;
     private FolderConfiguration config4;
     private FolderConfiguration config3;
     private FolderConfiguration config2;
@@ -60,7 +60,7 @@ public class ConfigMatchTest extends TestCase {
         qualifierListField.setAccessible(true);
         
         // get the actual list.
-        mQualifierList = (ArrayList<ResourceQualifier>)qualifierListField.get(manager);
+        mQualifierList = (ResourceQualifier[])qualifierListField.get(manager);
         
         // create the project resources.
         mResources = new ProjectResources(false /* isFrameworkRepository */);
@@ -191,10 +191,10 @@ public class ConfigMatchTest extends TestCase {
         FolderConfiguration config = new FolderConfiguration();
         
         // those must be of the same length
-        assertEquals(qualifierValues.length, mQualifierList.size());
+        assertEquals(qualifierValues.length, mQualifierList.length);
         
         int index = 0;
-        
+
         for (ResourceQualifier qualifier : mQualifierList) {
             String value = qualifierValues[index++];
             if (value != null) {
