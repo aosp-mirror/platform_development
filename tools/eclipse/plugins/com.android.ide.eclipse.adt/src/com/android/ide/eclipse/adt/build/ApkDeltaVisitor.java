@@ -18,6 +18,7 @@ package com.android.ide.eclipse.adt.build;
 
 import com.android.ide.eclipse.adt.build.BaseBuilder.BaseDeltaVisitor;
 import com.android.ide.eclipse.common.AndroidConstants;
+import com.android.sdklib.SdkConstants;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
@@ -98,17 +99,17 @@ public class ApkDeltaVisitor extends BaseDeltaVisitor
             mOutputPath = outputfolder.getFullPath();
         }
         
-        IResource assetFolder = builder.getProject().findMember(AndroidConstants.FD_ASSETS);
+        IResource assetFolder = builder.getProject().findMember(SdkConstants.FD_ASSETS);
         if (assetFolder != null) {
             mAssetPath = assetFolder.getFullPath();
         }
 
-        IResource resFolder = builder.getProject().findMember(AndroidConstants.FD_RESOURCES);
+        IResource resFolder = builder.getProject().findMember(SdkConstants.FD_RESOURCES);
         if (resFolder != null) {
             mResPath = resFolder.getFullPath();
         }
         
-        IResource libFolder = builder.getProject().findMember(AndroidConstants.FD_NATIVE_LIBS);
+        IResource libFolder = builder.getProject().findMember(SdkConstants.FD_NATIVE_LIBS);
         if (libFolder != null) {
             mLibFolder = libFolder.getFullPath();
         }
@@ -126,8 +127,9 @@ public class ApkDeltaVisitor extends BaseDeltaVisitor
         return mMakeFinalPackage;
     }
 
-    /*
-     * (non-Javadoc)
+    /**
+     * {@inheritDoc}
+     * @throws CoreException 
      *
      * @see org.eclipse.core.resources.IResourceDeltaVisitor
      *      #visit(org.eclipse.core.resources.IResourceDelta)

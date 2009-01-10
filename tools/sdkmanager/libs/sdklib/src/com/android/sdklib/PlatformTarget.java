@@ -95,6 +95,10 @@ final class PlatformTarget implements IAndroidTarget {
     public String getName() {
         return mName;
     }
+    
+    public String getFullName() {
+        return mName;
+    }
 
     /*
      * (non-Javadoc)
@@ -136,7 +140,17 @@ final class PlatformTarget implements IAndroidTarget {
     public IOptionalLibrary[] getOptionalLibraries() {
         return null;
     }
+    
+    public boolean isCompatibleBaseFor(IAndroidTarget target) {
+        // basic test
+        if (target == this) {
+            return true;
+        }
 
+        // target is compatible wit the receiver as long as its api version number is greater or
+        // equal.
+        return target.getApiVersionNumber() >= mApiVersionNumber;
+    }
     
     public String hashString() {
         return String.format(PLATFORM_HASH, mApiVersionNumber);

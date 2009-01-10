@@ -33,8 +33,10 @@ import org.eclipse.core.runtime.IStatus;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeSet;
 import java.util.Map.Entry;
 
@@ -166,7 +168,13 @@ public final class AndroidManifestDescriptors implements IDescriptorProvider {
                 "android", //$NON-NLS-1$
                 AndroidConstants.NS_RESOURCES); 
 
+        // -- setup the required attributes overrides --
+        
+        Set<String> required = new HashSet<String>();
+        required.add("provider/authorities");  //$NON-NLS-1$
+        
         // -- setup the various attribute format overrides --
+        
         // The key for each override is "element1,element2,.../attr-xml-local-name" or
         // "*/attr-xml-local-name" to match the attribute in any element.
         
@@ -181,7 +189,7 @@ public final class AndroidManifestDescriptors implements IDescriptorProvider {
                         tooltip);
             }
         });
-
+        
         overrides.put("*/theme",         ThemeAttributeDescriptor.class);   //$NON-NLS-1$
         overrides.put("*/permission",    ListAttributeDescriptor.class);    //$NON-NLS-1$
         overrides.put("*/targetPackage", PackageAttributeDescriptor.class); //$NON-NLS-1$
@@ -212,8 +220,12 @@ public final class AndroidManifestDescriptors implements IDescriptorProvider {
 
         // --
 
-        inflateElement(manifestMap, overrides, elementDescs,
-                MANIFEST_ELEMENT, "AndroidManifest"); //$NON-NLS-1$
+        inflateElement(manifestMap,
+                overrides,
+                required,
+                elementDescs,
+                MANIFEST_ELEMENT,
+                "AndroidManifest"); //$NON-NLS-1$
         insertAttribute(MANIFEST_ELEMENT, PACKAGE_ATTR_DESC);
         
         sanityCheck(manifestMap, MANIFEST_ELEMENT);
@@ -312,16 +324,17 @@ public final class AndroidManifestDescriptors implements IDescriptorProvider {
      * "Inflates" the properties of an {@link ElementDescriptor} from the styleable declaration.
      * <p/>
      * This first creates all the attributes for the given ElementDescriptor.
-     * It then find all children of the descriptor, inflate them recursively and set them
+     * It then finds all children of the descriptor, inflate them recursively and set them
      * as child to this ElementDescriptor.
      * 
-     * @param styleMap The input styleable map for manifest elements & attributes
+     * @param styleMap The input styleable map for manifest elements & attributes.
      * @param overrides A list of attribute overrides (to customize the type of the attribute
-     *          descriptors)
+     *          descriptors).
+     * @param requiredAttributes Set of attributes to be marked as required.
      * @param existingElementDescs A map of already created element descriptors, keyed by
      *          XML local name. This is used to use the static elements created initially by this
      *          class, which are referenced directly by editors (so that reloading an SDK won't
-     *          break these references)
+     *          break these references).
      * @param elemDesc The current {@link ElementDescriptor} to inflate.
      * @param styleName The name of the {@link ElementDescriptor} to inflate. Its XML local name
      *          will be guessed automatically from the style name. 
@@ -329,6 +342,7 @@ public final class AndroidManifestDescriptors implements IDescriptorProvider {
     private void inflateElement(
             Map<String, DeclareStyleableInfo> styleMap,
             Map<String, Object> overrides,
+            Set<String> requiredAttributes,
             HashMap<String, ElementDescriptor> existingElementDescs,
             ElementDescriptor elemDesc,
             String styleName) {
@@ -342,7 +356,9 @@ public final class AndroidManifestDescriptors implements IDescriptorProvider {
             DescriptorsUtils.appendAttributes(attrDescs,
                     elemDesc.getXmlLocalName(),
                     AndroidConstants.NS_RESOURCES,
-                    style.getAttributes(), null, overrides);
+                    style.getAttributes(),
+                    requiredAttributes,
+                    overrides);
             elemDesc.setTooltip(style.getJavaDoc());
             elemDesc.setAttributes(attrDescs.toArray(new AttributeDescriptor[attrDescs.size()]));
         }
@@ -373,7 +389,12 @@ public final class AndroidManifestDescriptors implements IDescriptorProvider {
                 }
                 children.add(child);
                 
-                inflateElement(styleMap, overrides, existingElementDescs, child, childStyleName);
+                inflateElement(styleMap,
+                        overrides,
+                        requiredAttributes,
+                        existingElementDescs,
+                        child,
+                        childStyleName);
             }
         }
         elemDesc.setChildren(children.toArray(new ElementDescriptor[children.size()]));

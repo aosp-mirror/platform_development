@@ -82,11 +82,8 @@ public final class AndroidTargetParser {
     
     /**
      * Parses the framework, collects all interesting information and stores them in the
-     * {@link FrameworkResourceManager} given to the constructor.
+     * {@link IAndroidTarget} given to the constructor.
      * 
-     * @param osSdkPath the OS path of the SDK directory.
-     * @param resourceManager the {@link FrameworkResourceManager} that will store the parsed
-     * resources.
      * @param monitor A progress monitor. Can be null. Caller is responsible for calling done.
      * @return True if the SDK path was valid and parsing has been attempted.
      */
@@ -400,7 +397,6 @@ public final class AndroidTargetParser {
      * Loads and collects the action and category default values from the framework.
      * The values are added to the <code>actions</code> and <code>categories</code> lists.
      * 
-     * @param osLibPath The OS path to the SDK tools/lib folder, ending with a separator.
      * @param activityActions the list which will receive the activity action values.
      * @param broadcastActions the list which will receive the broadcast action values.
      * @param serviceActions the list which will receive the service action values.

@@ -55,8 +55,10 @@ public class DeclareStyleableInfo {
         private String[] mEnumValues;
         /** Values for flag. null for other types. */
         private String[] mFlagValues;
-        /** Short javadoc */
+        /** Short javadoc (i.e. the first sentence). */
         private String mJavaDoc;
+        /** Documentation for deprecated attributes. Null if not deprecated. */
+        private String mDeprecatedDoc;
 
         /**
          * @param name The XML Name of the attribute
@@ -74,6 +76,7 @@ public class DeclareStyleableInfo {
             mEnumValues = info.mEnumValues;
             mFlagValues = info.mFlagValues;
             mJavaDoc = info.mJavaDoc;
+            mDeprecatedDoc = info.mDeprecatedDoc;
         }
         
         /** Returns the XML Name of the attribute */
@@ -93,9 +96,13 @@ public class DeclareStyleableInfo {
         public String[] getFlagValues() {
             return mFlagValues;
         }
-        /** Returns a short javadoc */
+        /** Returns a short javadoc, .i.e. the first sentence. */
         public String getJavaDoc() {
             return mJavaDoc;
+        }
+        /** Returns the documentation for deprecated attributes. Null if not deprecated. */
+        public String getDeprecatedDoc() {
+            return mDeprecatedDoc;
         }
 
         /** Sets the values for enums. null for other types. */
@@ -106,9 +113,13 @@ public class DeclareStyleableInfo {
         public void setFlagValues(String[] values) {
             mFlagValues = values;
         }
-        /** Sets a short javadoc */
+        /** Sets a short javadoc, .i.e. the first sentence. */
         public void setJavaDoc(String javaDoc) {
             mJavaDoc = javaDoc;
+        }
+        /** Sets the documentation for deprecated attributes. Null if not deprecated. */
+        public void setDeprecatedDoc(String deprecatedDoc) {
+            mDeprecatedDoc = deprecatedDoc;
         }
 
     }

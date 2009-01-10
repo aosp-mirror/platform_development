@@ -76,8 +76,26 @@ public final class VmManager {
         buildVmList(sdk);
     }
     
+    /**
+     * Returns the existing VMs.
+     * @return a newly allocated arrays containing all the VMs.
+     */
     public VmInfo[] getVms() {
         return mVmList.toArray(new VmInfo[mVmList.size()]);
+    }
+    
+    /**
+     * Returns the {@link VmInfo} matching the given <var>name</var>.
+     * @return the matching VmInfo or <code>null</code> if none were found.
+     */
+    public VmInfo getVm(String name) {
+        for (VmInfo info : mVmList) {
+            if (info.name.equals(name)) {
+                return info;
+            }
+        }
+        
+        return null;
     }
 
     /**
@@ -101,7 +119,7 @@ public final class VmManager {
             File rootDirectory = new File(parentFolder);
             if (rootDirectory.isDirectory() == false) {
                 if (log != null) {
-                    log.error("%s does not exists.", parentFolder);
+                    log.error(null, "%s does not exists.", parentFolder);
                 }
                 return;
             }
@@ -109,7 +127,7 @@ public final class VmManager {
             File vmFolder = new File(parentFolder, name + ".avm");
             if (vmFolder.exists()) {
                 if (log != null) {
-                    log.error("%s already exists.", vmFolder.getAbsolutePath());
+                    log.error(null, "%s already exists.", vmFolder.getAbsolutePath());
                 }
                 return;
             }

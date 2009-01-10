@@ -200,12 +200,22 @@ public final class DevicePanel extends Panel implements IDebugBridgeChangeListen
                     case DEVICE_COL_STATE:
                         return getStateString(device);
                     case DEVICE_COL_BUILD: {
+                        String vmName = device.getVmName();
                         String debuggable = device.getProperty(Device.PROP_DEBUGGABLE);
                         String version = device.getProperty(Device.PROP_BUILD_VERSION);
-                        if (debuggable != null && debuggable.equals("1")) { //$NON-NLS-1$
-                            return String.format("%1$s (debug)", version); //$NON-NLS-1$
+                        if (device.isEmulator()) {
+                            if (debuggable != null && debuggable.equals("1")) { //$NON-NLS-1$
+                                return String.format("%1$s [%2$s, debug]", vmName, //$NON-NLS-1$
+                                        version);
+                            } else {
+                                return String.format("%1$s [%2$s]", vmName, version); //$NON-NLS-1$
+                            }
                         } else {
-                            return String.format("%1$s", version); //$NON-NLS-1$
+                            if (debuggable != null && debuggable.equals("1")) { //$NON-NLS-1$
+                                return String.format("%1$s, debug", version); //$NON-NLS-1$
+                            } else {
+                                return String.format("%1$s", version); //$NON-NLS-1$
+                            }
                         }
                     }
                 }

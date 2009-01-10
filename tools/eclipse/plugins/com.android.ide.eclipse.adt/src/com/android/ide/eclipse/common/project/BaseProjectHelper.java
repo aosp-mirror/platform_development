@@ -82,11 +82,13 @@ public final class BaseProjectHelper {
     }
 
     /**
-     * Adds a marker to a file on a specific line
+     * Adds a marker to a file on a specific line. This methods catches thrown
+     * {@link CoreException}, and returns null instead.
      * @param file the file to be marked
      * @param markerId The id of the marker to add.
      * @param message the message associated with the mark
-     * @param lineNumber the line number where to put the mark
+     * @param lineNumber the line number where to put the mark. If line is < 1, it puts the marker
+     * on line 1.
      * @param severity the severity of the marker.
      * @return the IMarker that was added or null if it failed to add one.
      */
@@ -96,7 +98,7 @@ public final class BaseProjectHelper {
             IMarker marker = file.createMarker(markerId);
             marker.setAttribute(IMarker.MESSAGE, message);
             marker.setAttribute(IMarker.SEVERITY, severity);
-            if (lineNumber == -1) {
+            if (lineNumber < 1) {
                 lineNumber = 1;
             }
             marker.setAttribute(IMarker.LINE_NUMBER, lineNumber);
@@ -108,7 +110,7 @@ public final class BaseProjectHelper {
 
             return marker;
         } catch (CoreException e) {
-            AdtPlugin.log(e, "Failed to add marker '%1$s' to '%2$s'",
+            AdtPlugin.log(e, "Failed to add marker '%1$s' to '%2$s'", //$NON-NLS-1$
                     markerId, file.getFullPath());
         }
         
@@ -116,7 +118,8 @@ public final class BaseProjectHelper {
     }
 
     /**
-     * Adds a marker to a resource.
+     * Adds a marker to a resource. This methods catches thrown {@link CoreException},
+     * and returns null instead.
      * @param resource the file to be marked
      * @param markerId The id of the marker to add.
      * @param message the message associated with the mark
@@ -129,7 +132,7 @@ public final class BaseProjectHelper {
             IMarker marker = resource.createMarker(markerId);
             marker.setAttribute(IMarker.MESSAGE, message);
             marker.setAttribute(IMarker.SEVERITY, severity);
-            
+
             // on Windows, when adding a marker to a project, it takes a refresh for the marker
             // to show. In order to fix this we're forcing a refresh of elements receiving
             // markers (and only the element, not its children), to force the marker display.
@@ -137,13 +140,43 @@ public final class BaseProjectHelper {
 
             return marker;
         } catch (CoreException e) {
-            AdtPlugin.log(e, "Failed to add marker '%1$s' to '%2$s'",
+            AdtPlugin.log(e, "Failed to add marker '%1$s' to '%2$s'", //$NON-NLS-1$
                     markerId, resource.getFullPath());
         }
         
         return null;
     }
-    
+
+    /**
+     * Adds a marker to a resource. This method does not catch {@link CoreException} and instead
+     * throw them.
+     * @param resource the file to be marked
+     * @param markerId The id of the marker to add.
+     * @param message the message associated with the mark
+     * @param lineNumber the line number where to put the mark if != -1.
+     * @param severity the severity of the marker.
+     * @param priority the priority of the marker
+     * @return the IMarker that was added.
+     * @throws CoreException 
+     */
+    public final static IMarker addMarker(IResource resource, String markerId,
+            String message, int lineNumber, int severity, int priority) throws CoreException {
+        IMarker marker = resource.createMarker(markerId);
+        marker.setAttribute(IMarker.MESSAGE, message);
+        marker.setAttribute(IMarker.SEVERITY, severity);
+        if (lineNumber != -1) {
+            marker.setAttribute(IMarker.LINE_NUMBER, lineNumber);
+        }
+        marker.setAttribute(IMarker.PRIORITY, priority);
+
+        // on Windows, when adding a marker to a project, it takes a refresh for the marker
+        // to show. In order to fix this we're forcing a refresh of elements receiving
+        // markers (and only the element, not its children), to force the marker display.
+        resource.refreshLocal(IResource.DEPTH_ZERO, new NullProgressMonitor());
+
+        return marker;
+    }
+
     /**
      * Tests that a class name is valid for usage in the manifest.
      * <p/>

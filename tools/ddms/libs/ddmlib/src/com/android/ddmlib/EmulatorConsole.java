@@ -54,6 +54,7 @@ public final class EmulatorConsole {
     private final static String HOST = "127.0.0.1";  //$NON-NLS-1$
 
     private final static String COMMAND_PING = "help\r\n"; //$NON-NLS-1$
+    private final static String COMMAND_VM_NAME = "vm name\r\n"; //$NON-NLS-1$
     private final static String COMMAND_KILL = "kill\r\n"; //$NON-NLS-1$
     private final static String COMMAND_GSM_STATUS = "gsm status\r\n"; //$NON-NLS-1$
     private final static String COMMAND_GSM_CALL = "gsm call %1$s\r\n"; //$NON-NLS-1$
@@ -306,6 +307,24 @@ public final class EmulatorConsole {
         if (sendCommand(COMMAND_KILL)) {
             RemoveConsole(mPort);
         }
+    }
+    
+    public synchronized String getVmName() {
+        if (sendCommand(COMMAND_VM_NAME)) {
+            String[] result = readLines();
+            if (result != null && result.length == 2) { // this should be the name on first line,
+                                                        // and ok on 2nd line
+                return result[0];
+            } else {
+                // try to see if there's a message after KO
+                Matcher m = RE_KO.matcher(result[result.length-1]);
+                if (m.matches()) {
+                    return m.group(1);
+                }
+            }
+        }
+        
+        return null;
     }
 
     /**

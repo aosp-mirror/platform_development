@@ -23,6 +23,7 @@ import com.android.ide.eclipse.adt.project.ProjectHelper;
 import com.android.ide.eclipse.common.AndroidConstants;
 import com.android.ide.eclipse.common.project.AndroidManifestParser;
 import com.android.ide.eclipse.common.project.BaseProjectHelper;
+import com.android.sdklib.SdkConstants;
 
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
@@ -154,7 +155,7 @@ class PreCompilerDeltaVisitor extends BaseDeltaVisitor implements
             // then we are not yet in a source or resource folder
             mInRes = mInSrc = false;
 
-            if (AndroidConstants.FD_RESOURCES.equalsIgnoreCase(segments[1])) {
+            if (SdkConstants.FD_RESOURCES.equalsIgnoreCase(segments[1])) {
                 // this is the resource folder that was modified. we want to
                 // see its content.
 

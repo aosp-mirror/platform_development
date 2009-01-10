@@ -55,6 +55,7 @@ public class CandidateView extends View {
     private int mColorNormal;
     private int mColorRecommended;
     private int mColorOther;
+    private int mVerticalPadding;
     private Paint mPaint;
     private boolean mScrolled;
     private int mTargetScrollX;
@@ -86,6 +87,7 @@ public class CandidateView extends View {
         mColorNormal = r.getColor(R.color.candidate_normal);
         mColorRecommended = r.getColor(R.color.candidate_recommended);
         mColorOther = r.getColor(R.color.candidate_other);
+        mVerticalPadding = r.getDimensionPixelSize(R.dimen.candidate_vertical_padding);
         
         mPaint = new Paint();
         mPaint.setColor(mColorNormal);
@@ -139,7 +141,7 @@ public class CandidateView extends View {
         // not have a divider below)
         Rect padding = new Rect();
         mSelectionHighlight.getPadding(padding);
-        final int desiredHeight = ((int)mPaint.getTextSize()) + 1
+        final int desiredHeight = ((int)mPaint.getTextSize()) + mVerticalPadding
                 + padding.top + padding.bottom;
         
         // Maximum possible width and desired height
@@ -174,7 +176,7 @@ public class CandidateView extends View {
         final int scrollX = getScrollX();
         final boolean scrolled = mScrolled;
         final boolean typedWordValid = mTypedWordValid;
-        final int y = (int) (height + mPaint.getTextSize()) / 2;
+        final int y = (int) (((height - mPaint.getTextSize()) / 2) - mPaint.ascent());
 
         for (int i = 0; i < count; i++) {
             String suggestion = mSuggestions.get(i);

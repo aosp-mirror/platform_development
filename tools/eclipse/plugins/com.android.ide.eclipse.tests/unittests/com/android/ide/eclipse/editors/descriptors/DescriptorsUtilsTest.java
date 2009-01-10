@@ -99,28 +99,26 @@ public class DescriptorsUtilsTest extends TestCase {
         ElementDescriptor desc = new ElementDescriptor("application");
         desc.setSdkUrl(DescriptorsUtils.MANIFEST_SDK_URL + "TagApplication");
         String docBaseUrl = "http://base";
-        assertEquals("<form><p></p></form>", DescriptorsUtils.formatFormText("", desc, docBaseUrl));
+        assertEquals("<form><li style=\"image\" value=\"image\"></li></form>", DescriptorsUtils.formatFormText("", desc, docBaseUrl));
 
-        assertEquals("<form><p><a href=\"http://base/reference/android/R.styleable.html#TagApplication\">application</a></p></form>",
+        assertEquals("<form><li style=\"image\" value=\"image\"><a href=\"http://base/reference/android/R.styleable.html#TagApplication\">application</a></li></form>",
                 DescriptorsUtils.formatFormText(
                         "<code>application</code>",
                         desc, docBaseUrl));
 
-        assertEquals("<form><p><b>android.content.Intent</b></p></form>",
+        assertEquals("<form><li style=\"image\" value=\"image\"><b>android.content.Intent</b></li></form>",
                 DescriptorsUtils.formatFormText(
                         "{@link android.content.Intent}",
                         desc, docBaseUrl));
 
-        assertEquals("<form><p><a href=\"http://base/reference/android/R.styleable.html#AndroidManifestPermission\">AndroidManifestPermission</a></p></form>",
+        assertEquals("<form><li style=\"image\" value=\"image\"><a href=\"http://base/reference/android/R.styleable.html#AndroidManifestPermission\">AndroidManifestPermission</a></li></form>",
                 DescriptorsUtils.formatFormText(
                         "{@link #AndroidManifestPermission}",
                         desc, docBaseUrl));
 
-        assertEquals("<form><p><a href=\"http://base/reference/android/R.styleable.html#AndroidManifestPermission\">\"permission\"</a></p></form>",
+        assertEquals("<form><li style=\"image\" value=\"image\"><a href=\"http://base/reference/android/R.styleable.html#AndroidManifestPermission\">\"permission\"</a></li></form>",
                 DescriptorsUtils.formatFormText(
                         "{@link #AndroidManifestPermission &lt;permission&gt;}",
                         desc, docBaseUrl));
-
     }
-
 }

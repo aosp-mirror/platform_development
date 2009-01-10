@@ -12,18 +12,14 @@ create a system image that will be delivered on a device which will include
 a custom library as shown here.  It can not be used to create a third party
 shared library, which is not currently supported in Android.
 
-Note that while this example is almost entirely self-contained -- you can
-build it and run the client app without any changes to the framework -- there
-is one change you must make so that the system will recognize your library:
+To declare your library to the framework, you must place a file with a .xml
+extension in the /system/etc/permissions directory with the following contents:
 
-In frameworks/base/data/etc/permissions.xml is a list of all of the optional
-shared libraries available in the system.  You will need to add an entry at
-the bottom of this file for your own shared library, which looks like this
-for our sample code here:
-
+<?xml version="1.0" encoding="utf-8"?>
+<permissions>
     <library name="com.example.android.platform_library"
             file="/system/framework/com.example.android.platform_library.jar"/>
-
+</permissions>
 
 There are three major parts of this example, supplying three distinct
 build targets and corresponding build outputs:

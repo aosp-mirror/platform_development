@@ -18,17 +18,17 @@ package com.android.ide.eclipse.adt.sdk;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.project.internal.AndroidClasspathContainerInitializer;
+import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.ISdkLog;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.project.ProjectProperties;
+import com.android.sdklib.project.ProjectProperties.PropertyType;
+import com.android.sdklib.vm.VmManager;
 
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IProjectDescription;
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 
@@ -46,21 +46,20 @@ import java.util.HashMap;
  * To start using an SDK, call {@link #loadSdk(String)} which returns the instance of
  * the Sdk object.
  * 
- * To get the list of platforms present in the SDK, call {@link #getPlatforms()}.
- * To get the list of add-ons present in the SDK, call {@link #getAddons()}.
- * 
+ * To get the list of platforms or add-ons present in the SDK, call {@link #getTargets()}.
  */
 public class Sdk {
-    private final static String PROPERTY_PROJECT_TARGET = "androidTarget"; //$NON-NLS-1$
-    
     private static Sdk sCurrentSdk = null;
 
     private final SdkManager mManager;
+    private final VmManager mVmManager;
+
     private final HashMap<IProject, IAndroidTarget> mProjectMap =
             new HashMap<IProject, IAndroidTarget>();
     private final HashMap<IAndroidTarget, AndroidTargetData> mTargetMap = 
             new HashMap<IAndroidTarget, AndroidTargetData>();
     private final String mDocBaseUrl;
+
     
     /**
      * Loads an SDK and returns an {@link Sdk} object if success.
@@ -74,18 +73,33 @@ public class Sdk {
 
         final ArrayList<String> logMessages = new ArrayList<String>();
         ISdkLog log = new ISdkLog() {
-            public void error(String errorFormat, Object... arg) {
-                logMessages.add(String.format(errorFormat, arg));
+            public void error(Throwable throwable, String errorFormat, Object... arg) {
+                if (errorFormat != null) {
+                    logMessages.add(String.format(errorFormat, arg));
+                }
+                
+                if (throwable != null) {
+                    logMessages.add(throwable.getMessage());
+                }
             }
             public void warning(String warningFormat, Object... arg) {
                 logMessages.add(String.format(warningFormat, arg));
+            }
+            public void printf(String msgFormat, Object... arg) {
+                logMessages.add(String.format(msgFormat, arg));
             }
         };
 
         // get an SdkManager object for the location
         SdkManager manager = SdkManager.createManager(sdkLocation, log);
         if (manager != null) {
-            sCurrentSdk = new Sdk(manager);
+            VmManager vmManager = null;
+            try {
+                vmManager = new VmManager(manager, log);
+            } catch (AndroidLocationException e) {
+                log.error(e, "Error parsing the VMs");
+            }
+            sCurrentSdk = new Sdk(manager, vmManager);
             return sCurrentSdk;
         } else {
             StringBuilder sb = new StringBuilder("Error Loading the SDK:\n");
@@ -103,6 +117,13 @@ public class Sdk {
      */
     public static Sdk getCurrent() {
         return sCurrentSdk;
+    }
+    
+    /**
+     * Returns the location (OS path) of the current SDK.
+     */
+    public String getSdkLocation() {
+        return mManager.getLocation();
     }
     
     /**
@@ -181,7 +202,8 @@ public class Sdk {
      */
     public static String getProjectTargetHashString(IProject project) {
         // load the default.properties from the project folder.
-        ProjectProperties properties = ProjectProperties.load(project.getLocation().toOSString());
+        ProjectProperties properties = ProjectProperties.load(project.getLocation().toOSString(),
+                PropertyType.DEFAULT);
         if (properties == null) {
             AdtPlugin.log(IStatus.ERROR, "Failed to load properties file for project '%s'",
                     project.getName());
@@ -200,10 +222,12 @@ public class Sdk {
     public static void setProjectTargetHashString(IProject project, String targetHashString) {
         // because we don't want to erase other properties from default.properties, we first load
         // them
-        ProjectProperties properties = ProjectProperties.load(project.getLocation().toOSString());
+        ProjectProperties properties = ProjectProperties.load(project.getLocation().toOSString(),
+                PropertyType.DEFAULT);
         if (properties == null) {
             // doesn't exist yet? we create it.
-            properties = ProjectProperties.create(project.getLocation().toOSString());
+            properties = ProjectProperties.create(project.getLocation().toOSString(),
+                    PropertyType.DEFAULT);
         }
         
         // add/change the target hash string.
@@ -218,7 +242,7 @@ public class Sdk {
         }
     }
     /**
-     * Return the {@link PlatformData} for a given {@link IAndroidTarget}.
+     * Return the {@link AndroidTargetData} for a given {@link IAndroidTarget}.
      */
     public AndroidTargetData getTargetData(IAndroidTarget target) {
         synchronized (mTargetMap) {
@@ -226,8 +250,17 @@ public class Sdk {
         }
     }
     
-    private Sdk(SdkManager manager) {
+    /**
+     * Returns the {@link VmManager}. If the VmManager failed to parse the VM folder, this could
+     * be <code>null</code>.
+     */
+    public VmManager getVmManager() {
+        return mVmManager;
+    }
+    
+    private Sdk(SdkManager manager, VmManager vmManager) {
         mManager = manager;
+        mVmManager = vmManager;
         
         // pre-compute some paths
         mDocBaseUrl = getDocumentationBaseUrl(mManager.getLocation() +

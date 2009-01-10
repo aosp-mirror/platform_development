@@ -1,31 +1,51 @@
 <?xml version="1.0" ?>
-<project name="ACTIVITY_NAME" default="debug">
+<project name="ACTIVITY_NAME" default="help">
+
+    <!-- The local.properties file is created and updated by the 'android' tool.
+         It contain the path to the SDK. It should *NOT* be checked in in Version
+         Control Systems. -->
+    <property file="local.properties"/>
 
     <!-- The build.properties file can be created by you and is never touched
-         by activitycreator. If you want to manually set properties, this is
-         the best place to set them. -->
+         by the 'android' tool. This is the place to change some of the default property values
+         used by the Ant rules.
+         Here are some properties you may want to change/update:
+         
+         application-package
+             the name of your application package as defined in the manifest. Used by the
+             'uninstall' rule.
+         source-folder
+             the name of the source folder. Default is 'src'.
+         out-folder
+             the name of the output folder. Default is 'bin'.
+
+         Properties related to the SDK location or the project target should be updated
+          using the 'android' tool with the 'update' action.
+
+         This file is an integral part of the build system for your application and
+         should be checked in in Version Control Systems.
+
+         -->
     <property file="build.properties"/>
 
-    <!-- The default.properties file is created and updated by activitycreator.
-         It will set any properties not already defined by build.properties. -->
+    <!-- The default.properties file is created and updated by the 'android' tool, as well
+         as ADT. 
+         This file is an integral part of the build system for your application and
+         should be checked in in Version Control Systems. -->
     <property file="default.properties"/>
 
-    <!-- ************************************************************************************* -->
-    <!-- These settings were written by activitycreator.
-         Do not change them unless you really know what you are doing. -->
-
-    <!-- Application Package Name -->
-    <property name="application-package" value="PACKAGE" />
-
-    <!-- The intermediates directory, Eclipse uses "bin"
-         for its own output, so we do the same. -->
-    <property name="outdir" value="bin" />
-    <property name="outdir-main" value="../${outdir}" />
-
-    <!-- ************************************************************************************* -->
-    <!-- Import the default Android build rules. 
+    <!-- Custom Android task to deal with the project target, and import the proper rules.
          This requires ant 1.6.0 or above. -->
+    <path id="android.antlibs">
+        <pathelement path="${sdk-location}/tools/lib/anttasks.jar" />
+        <pathelement path="${sdk-location}/tools/lib/sdklib.jar" />
+        <pathelement path="${sdk-location}/tools/lib/androidprefs.jar" />
+    </path>
+    
+    <taskdef name="androidinit" classname="com.android.ant.AndroidInitTask"
+        classpathref="android.antlibs"/>
 
-    <import file="${sdk-folder}/tools/lib/android_rules.xml" />
-
+    <!-- Class the Android Init task that will import the proper rule file containing
+         all the Ant targets -->
+    <androidinit />
 </project>

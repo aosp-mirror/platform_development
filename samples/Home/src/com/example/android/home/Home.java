@@ -388,13 +388,13 @@ public class Home extends Activity {
         super.onCreateOptionsMenu(menu);
 
         menu.add(0, MENU_WALLPAPER_SETTINGS, 0, R.string.menu_wallpaper)
-                 .setIcon(R.drawable.ic_menu_gallery)
+                 .setIcon(android.R.drawable.ic_menu_gallery)
                  .setAlphabeticShortcut('W');
         menu.add(0, MENU_SEARCH, 0, R.string.menu_search)
                 .setIcon(android.R.drawable.ic_search_category_default)
                 .setAlphabeticShortcut(SearchManager.MENU_KEY);
         menu.add(0, MENU_SETTINGS, 0, R.string.menu_settings)
-                .setIcon(R.drawable.ic_menu_preferences)
+                .setIcon(android.R.drawable.ic_menu_preferences)
                 .setIntent(new Intent(android.provider.Settings.ACTION_SETTINGS));
 
         return true;

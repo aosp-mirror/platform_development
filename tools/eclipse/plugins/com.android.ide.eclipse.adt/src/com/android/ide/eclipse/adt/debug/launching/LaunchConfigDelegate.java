@@ -80,9 +80,8 @@ public class LaunchConfigDelegate extends LaunchConfigurationDelegate {
      */
     public static final String ATTR_ACTIVITY = AdtPlugin.PLUGIN_ID + ".activity"; //$NON-NLS-1$
 
-    /** Skin to be used to launch the emulator */
-    public static final String ATTR_SKIN = AdtPlugin.PLUGIN_ID + ".skin"; //$NON-NLS-1$
-
+    public static final String ATTR_VM_NAME = AdtPlugin.PLUGIN_ID + ".vm"; //$NON-NLS-1$
+    
     public static final String ATTR_SPEED = AdtPlugin.PLUGIN_ID + ".speed"; //$NON-NLS-1$
 
     /**
@@ -317,6 +316,10 @@ public class LaunchConfigDelegate extends LaunchConfigurationDelegate {
                         1 /* code, unused */, "Can't find the project!", null /* exception */));
     }
 
+    /**
+     * {@inheritDoc}
+     * @throws CoreException
+     */
     @Override
     public ILaunch getLaunch(ILaunchConfiguration configuration, String mode)
             throws CoreException {
@@ -406,8 +409,6 @@ public class LaunchConfigDelegate extends LaunchConfigurationDelegate {
 
     /**
      * Returns the name of the activity.
-     * @param configuration
-     * @return
      */
     private String getActivityName(ILaunchConfiguration configuration) {
         String empty = "";

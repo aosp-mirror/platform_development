@@ -60,13 +60,22 @@ import java.util.ArrayList;
  */
 
 public class Term extends Activity {
+    /**
+     * Set to true to add debugging code and logging.
+     */
+    public static final boolean DEBUG = false;
 
     /**
      * Set to true to log each character received from the remote process to the
      * android log, which makes it easier to debug some kinds of problems with
      * emulating escape sequences and control codes.
      */
-    public static final boolean LOG_CHARACTERS_FLAG = false;
+    public static final boolean LOG_CHARACTERS_FLAG = DEBUG && false;
+
+    /**
+     * Set to true to log unknown escape sequences.
+     */
+    public static final boolean LOG_UNKNOWN_ESCAPE_SEQUENCES = DEBUG && false;
 
     /**
      * The tag we use when logging, so that our messages can be distinguished
@@ -619,7 +628,7 @@ interface Screen {
      * @param columns
      * @param rows
      */
-    void resize(int columns, int rows);
+    void resize(int columns, int rows, int foreColor, int backColor);
 }
 
 
@@ -673,7 +682,7 @@ class TranscriptScreen implements Screen {
     private char[] mData;
 
     /**
-     * The data's stored as bytes, but the drawing routines require chars, so we
+     * The data's stored as color-encoded chars, but the drawing routines require chars, so we
      * need a temporary buffer to hold a row's worth of characters.
      */
     private char[] mRowBuffer;
@@ -695,23 +704,25 @@ class TranscriptScreen implements Screen {
      *        transcript that holds lines that have scrolled off the top of the
      *        screen.
      */
-    public TranscriptScreen(int columns, int totalRows, int screenRows) {
-        init(columns, totalRows, screenRows);
+    public TranscriptScreen(int columns, int totalRows, int screenRows,
+            int foreColor, int backColor) {
+        init(columns, totalRows, screenRows, foreColor, backColor);
     }
 
-    private void init(int columns, int totalRows, int screenRows) {
+    private void init(int columns, int totalRows, int screenRows, int foreColor, int backColor) {
         mColumns = columns;
         mTotalRows = totalRows;
         mActiveTranscriptRows = 0;
         mHead = 0;
-        mActiveRows = mScreenRows;
+        mActiveRows = screenRows;
         mScreenRows = screenRows;
         int totalSize = columns * totalRows;
         mData = new char[totalSize];
-        blockSet(0, 0, mColumns, mScreenRows, ' ', 0, 7);
+        blockSet(0, 0, mColumns, mScreenRows, ' ', foreColor, backColor);
         mRowBuffer = new char[columns];
         mLineWrap = new boolean[totalRows];
-    }
+        consistencyCheck();
+   }
 
     /**
      * Convert a row value from the public external coordinate system to our
@@ -781,7 +792,7 @@ class TranscriptScreen implements Screen {
 
         // Adjust the transcript so that the last line of the transcript
         // is ready to receive the newly scrolled data
-
+        consistencyCheck();
         int expansionRows = Math.min(1, mTotalRows - mActiveRows);
         int rollRows = 1 - expansionRows;
         mActiveRows += expansionRows;
@@ -789,6 +800,7 @@ class TranscriptScreen implements Screen {
         if (mActiveTranscriptRows > 0) {
             mHead = (mHead + rollRows) % mActiveTranscriptRows;
         }
+        consistencyCheck();
 
         // Block move the scroll line to the transcript
         int topOffset = getOffset(topMargin);
@@ -798,7 +810,6 @@ class TranscriptScreen implements Screen {
         int topLine = externalToInternalRow(topMargin);
         int destLine = externalToInternalRow(-1);
         System.arraycopy(mLineWrap, topLine, mLineWrap, destLine, 1);
-
 
         // Block move the scrolled data up
         int numScrollChars = (bottomMargin - topMargin - 1) * mColumns;
@@ -811,6 +822,41 @@ class TranscriptScreen implements Screen {
         // Erase the bottom line of the scroll region
         blockSet(0, bottomMargin - 1, mColumns, 1, ' ', foreColor, backColor);
         mLineWrap[externalToInternalRow(bottomMargin-1)] = false;
+    }
+
+    private void consistencyCheck() {
+        checkPositive(mColumns);
+        checkPositive(mTotalRows);
+        checkRange(0, mActiveTranscriptRows, mTotalRows);
+        if (mActiveTranscriptRows == 0) {
+            checkEqual(mHead, 0);
+        } else {
+            checkRange(0, mHead, mActiveTranscriptRows-1);
+        }
+        checkEqual(mScreenRows + mActiveTranscriptRows, mActiveRows);
+        checkRange(0, mScreenRows, mTotalRows);
+
+        checkEqual(mTotalRows, mLineWrap.length);
+        checkEqual(mTotalRows*mColumns, mData.length);
+        checkEqual(mColumns, mRowBuffer.length);
+    }
+
+    private void checkPositive(int n) {
+        if (n < 0) {
+            throw new IllegalArgumentException("checkPositive " + n);
+        }
+    }
+
+    private void checkRange(int a, int b, int c) {
+        if (a > b || b > c) {
+            throw new IllegalArgumentException("checkRange " + a + " <= " + b + " <= " + c);
+        }
+    }
+
+    private void checkEqual(int a, int b) {
+        if (a != b) {
+            throw new IllegalArgumentException("checkEqual " + a + " == " + b);
+        }
     }
 
     /**
@@ -872,7 +918,7 @@ class TranscriptScreen implements Screen {
         for (int y = 0; y < h; y++) {
             int offset = getOffset(sx, sy + y);
             for (int x = 0; x < w; x++) {
-                data[offset + x] = (char) val;
+                data[offset + x] = encodedVal;
             }
         }
     }
@@ -954,7 +1000,7 @@ class TranscriptScreen implements Screen {
         return internalGetTranscriptText(true);
     }
 
-    public String internalGetTranscriptText(boolean stripColors) {
+    private String internalGetTranscriptText(boolean stripColors) {
         StringBuilder builder = new StringBuilder();
         char[] rowBuffer = mRowBuffer;
         char[] data = mData;
@@ -982,54 +1028,10 @@ class TranscriptScreen implements Screen {
         return builder.toString();
     }
 
-    public void resize(int columns, int rows) {
-        if (columns == mColumns) {
-            if (rows == mScreenRows) {
-                return;
-            }
-            if (rows < mTotalRows) {
-                mScreenRows = rows;
-                mActiveTranscriptRows = mActiveRows - mScreenRows;
-                return;
-            }
-        }
-        // Tough case: columns size changes or need to expand rows
-        String transcriptText = internalGetTranscriptText(false);
-        int totalRows = Math.max(rows + 1, mTotalRows);
-        init(columns, totalRows, rows);
-        int length = transcriptText.length();
-
-        // Copy transcript into buffer
-        int row = 0;
-        char[] data = mData;
-        int col = 0;
-        for(int i = 0; i < length && row < totalRows; i++) {
-            char c = transcriptText.charAt(i);
-            if (c == '\n') {
-                row++;
-                col = 0;
-            } else {
-                if (col < columns) {
-                    data[row * columns + col] = c;
-                    col += 1;
-                } else {
-                    if (row < totalRows-1) {
-                        mLineWrap[row] = true;
-                        row++;
-                        col = 0;
-                        data[row * columns + col] = c;
-                        col += 1;
-                    } else {
-                        break; // ran out of room
-                    }
-                }
-            }
-        }
-        mActiveRows = rows;
-        mActiveTranscriptRows = mActiveRows - mScreenRows;
+    public void resize(int columns, int rows, int foreColor, int backColor) {
+        init(columns, mTotalRows, rows, foreColor, backColor);
     }
 }
-
 
 /**
  * Renders text into a screen. Contains all the terminal-specific knowlege and
@@ -1270,12 +1272,14 @@ class TerminalEmulator {
         if (mRows == rows && mColumns == columns) {
             return;
         }
-        mScreen.resize(columns, rows);
+        String transcriptText = mScreen.getTranscriptText();
+
+        mScreen.resize(columns, rows, mForeColor, mBackColor);
+
         if (mRows != rows) {
             mRows = rows;
             mTopMargin = 0;
             mBottomMargin = mRows;
-            mCursorRow = Math.min(mCursorRow, mBottomMargin-1);
         }
         if (mColumns != columns) {
             int oldColumns = mColumns;
@@ -1288,7 +1292,23 @@ class TerminalEmulator {
                 mCursorCol -= columns;
                 mCursorRow = Math.min(mBottomMargin-1, mCursorRow + 1);
             }
-            mAboutToAutoWrap = false;
+        }
+        mCursorRow = 0;
+        mCursorCol = 0;
+        mAboutToAutoWrap = false;
+
+        int end = transcriptText.length()-1;
+        while ((end >= 0) && transcriptText.charAt(end) == '\n') {
+            end--;
+        }
+        for(int i = 0; i <= end; i++) {
+            byte c = (byte) transcriptText.charAt(i);
+            if (c == '\n') {
+                setCursorCol(0);
+                doLinefeed();
+            } else {
+                emit(c);
+            }
         }
     }
 
@@ -1877,7 +1897,9 @@ class TerminalEmulator {
             } else if (code >= 40 && code <= 47) { // background color
                 mBackColor = (mBackColor & 0x8) | (code - 40);
             } else {
-                Log.w(Term.LOG_TAG, String.format("SGR unknown code %d", code));
+                if (Term.LOG_UNKNOWN_ESCAPE_SEQUENCES) {
+                    Log.w(Term.LOG_TAG, String.format("SGR unknown code %d", code));
+                }
             }
         }
     }
@@ -2030,52 +2052,59 @@ class TerminalEmulator {
     }
 
     private void unimplementedSequence(byte b) {
-        logError("unimplemented", b);
+        if (Term.LOG_UNKNOWN_ESCAPE_SEQUENCES) {
+            logError("unimplemented", b);
+        }
         finishSequence();
     }
 
     private void unknownSequence(byte b) {
-        logError("unknown", b);
-
+        if (Term.LOG_UNKNOWN_ESCAPE_SEQUENCES) {
+            logError("unknown", b);
+        }
         finishSequence();
     }
 
     private void unknownParameter(int parameter) {
-        // We could log that we didn't recognize parameter.
-        StringBuilder buf = new StringBuilder();
-        buf.append("Unknown parameter");
-        buf.append(parameter);
-        logError(buf.toString());
+        if (Term.LOG_UNKNOWN_ESCAPE_SEQUENCES) {
+            StringBuilder buf = new StringBuilder();
+            buf.append("Unknown parameter");
+            buf.append(parameter);
+            logError(buf.toString());
+        }
     }
 
     private void logError(String errorType, byte b) {
-        // We could log that we didn't recognize character b.
-        StringBuilder buf = new StringBuilder();
-        buf.append(errorType);
-        buf.append(" sequence ");
-        buf.append(" EscapeState: ");
-        buf.append(mEscapeState);
-        buf.append(" char: '");
-        buf.append((char) b);
-        buf.append("' (");
-        buf.append((int) b);
-        buf.append(")");
-        boolean firstArg = true;
-        for (int i = 0; i <= mArgIndex; i++) {
-            int value = mArgs[i];
-            if (value >= 0) {
-                if (firstArg) {
-                    firstArg = false;
-                    buf.append("args = ");
+        if (Term.LOG_UNKNOWN_ESCAPE_SEQUENCES) {
+            StringBuilder buf = new StringBuilder();
+            buf.append(errorType);
+            buf.append(" sequence ");
+            buf.append(" EscapeState: ");
+            buf.append(mEscapeState);
+            buf.append(" char: '");
+            buf.append((char) b);
+            buf.append("' (");
+            buf.append((int) b);
+            buf.append(")");
+            boolean firstArg = true;
+            for (int i = 0; i <= mArgIndex; i++) {
+                int value = mArgs[i];
+                if (value >= 0) {
+                    if (firstArg) {
+                        firstArg = false;
+                        buf.append("args = ");
+                    }
+                    buf.append(String.format("%d; ", value));
                 }
-                buf.append(String.format("%d; ", value));
             }
+            logError(buf.toString());
         }
-        logError(buf.toString());
     }
 
     private void logError(String error) {
-        Log.e(Term.LOG_TAG, error);
+        if (Term.LOG_UNKNOWN_ESCAPE_SEQUENCES) {
+            Log.e(Term.LOG_TAG, error);
+        }
         finishSequence();
     }
 
@@ -2848,7 +2877,7 @@ class EmulatorView extends View implements GestureDetector.OnGestureListener {
             mEmulator.updateSize(mColumns, mRows);
         } else {
             mTranscriptScreen =
-                    new TranscriptScreen(mColumns, TRANSCRIPT_ROWS, mRows);
+                    new TranscriptScreen(mColumns, TRANSCRIPT_ROWS, mRows, 0, 7);
             mEmulator =
                     new TerminalEmulator(mTranscriptScreen, mColumns, mRows,
                             mTermOut);

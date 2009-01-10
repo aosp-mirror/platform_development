@@ -393,8 +393,6 @@ public class ProjectResources implements IResourceRepository {
 
     /**
      * Resolves a compiled resource id of type int[] into the resource name.
-     * @param id
-     * @return
      */
     public String resolveResourceValue(int[] id) {
         if (mStyleableValueToNameMap != null) {
@@ -407,9 +405,6 @@ public class ProjectResources implements IResourceRepository {
 
     /**
      * Returns the value of a resource by its type and name.
-     * @param type
-     * @param name
-     * @return
      */
     public Integer getResourceValue(String type, String name) {
         if (mResourceValueMap != null) {
@@ -444,8 +439,7 @@ public class ProjectResources implements IResourceRepository {
     
     /**
      * Returns the list of regions used in the resources with the given language.
-     * @param currentLanguage the current language the region must be associated with
-     * @return
+     * @param currentLanguage the current language the region must be associated with.
      */
     public Set<String> getRegions(String currentLanguage) {
         Set<String> set = new HashSet<String>();

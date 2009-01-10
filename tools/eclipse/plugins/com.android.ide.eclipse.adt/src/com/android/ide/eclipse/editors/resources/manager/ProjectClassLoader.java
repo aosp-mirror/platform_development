@@ -107,7 +107,6 @@ public final class ProjectClassLoader extends ClassLoader {
      * @param parent the root of the file.
      * @param segments the segments containing the path of the file
      * @param index the offset at which to start looking into segments.
-     * @return
      * @throws FileNotFoundException
      */
     private File getFile(File parent, String[] segments, int index)
@@ -168,8 +167,6 @@ public final class ProjectClassLoader extends ClassLoader {
     
     /**
      * Loads a class from the 3rd party jar present in the project
-     * @param name
-     * @return
      * @throws ClassNotFoundException
      */
     private Class<?> loadClassFromJar(String name) throws ClassNotFoundException {

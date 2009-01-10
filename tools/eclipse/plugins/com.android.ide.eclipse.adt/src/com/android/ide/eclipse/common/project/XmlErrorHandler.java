@@ -62,6 +62,7 @@ public class XmlErrorHandler extends DefaultHandler {
     /**
      * Xml Error call back
      * @param exception the parsing exception
+     * @throws SAXException 
      */
     @Override
     public void error(SAXParseException exception) throws SAXException {
@@ -71,6 +72,7 @@ public class XmlErrorHandler extends DefaultHandler {
     /**
      * Xml Fatal Error call back
      * @param exception the parsing exception
+     * @throws SAXException 
      */
     @Override
     public void fatalError(SAXParseException exception) throws SAXException {
@@ -80,6 +82,7 @@ public class XmlErrorHandler extends DefaultHandler {
     /**
      * Xml Warning call back
      * @param exception the parsing exception
+     * @throws SAXException 
      */
     @Override
     public void warning(SAXParseException exception) throws SAXException {

@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2008 Google Inc.
+ * Copyright (C) 2008 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,10 @@ import com.example.android.apis.R;
 
 import java.util.ArrayList;
 
-public class VoiceRecognition extends Activity {
+/**
+ * Sample code that invokes the speech recognition intent API.
+ */
+public class VoiceRecognition extends Activity implements OnClickListener {
     
     private static final int VOICE_RECOGNITION_REQUEST_CODE = 1234;
     
@@ -51,34 +54,41 @@ public class VoiceRecognition extends Activity {
         mList = (ListView) findViewById(R.id.list);
 
         // Attach actions to buttons
-        speakButton.setOnClickListener(new OnClickListener() {
-            public void onClick(View v) {
-                startVoiceRecognitionActivity();
-            }
-        });
+        speakButton.setOnClickListener(this);
     }
 
-    void startVoiceRecognitionActivity() {
-        Intent intent = new Intent("android.intent.action.VOICE_RECOGNITION");
-        this.startActivityForResult(intent, VOICE_RECOGNITION_REQUEST_CODE);
+    /**
+     * Handle the click on the start recognition button.
+     */
+    public void onClick(View v) {
+        if (v.getId() == R.id.btn_speak) {
+            startVoiceRecognitionActivity();
+        }
     }
 
+    /**
+     * Fire an intent to start the speech recognition activity.
+     */
+    private void startVoiceRecognitionActivity() {
+        //TODO Get these values from constants
+        Intent intent = new Intent("android.speech.action.RECOGNIZE_SPEECH");
+        intent.putExtra("language_model", "free_form");
+        intent.putExtra("prompt", "Speech recognition demo");
+        startActivityForResult(intent, VOICE_RECOGNITION_REQUEST_CODE);
+    }
+
+    /**
+     * Handle the results from the recognition activity.
+     */
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        
-        android.util.Log.d("mike", "**************  onActivityResult" + data );
-        
         if (requestCode == VOICE_RECOGNITION_REQUEST_CODE && resultCode == RESULT_OK) {
-            ArrayList<String>matches = data.getStringArrayListExtra("queries");
-            
-            
-            android.util.Log.d("mike", "**************  onActivityResult" + matches);
-            
-            mList.setAdapter(new ArrayAdapter<String>(this,
-                    android.R.layout.simple_list_item_1, matches));
+            //TODO get the value from a constant
+            ArrayList<String>matches = data.getStringArrayListExtra("results");
+            mList.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1,
+                    matches));
         }
-        
+
         super.onActivityResult(requestCode, resultCode, data);
     }
-
 }

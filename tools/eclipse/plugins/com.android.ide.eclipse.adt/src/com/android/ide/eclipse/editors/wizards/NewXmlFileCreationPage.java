@@ -30,6 +30,7 @@ import com.android.ide.eclipse.editors.resources.descriptors.ResourcesDescriptor
 import com.android.ide.eclipse.editors.resources.manager.ResourceFolderType;
 import com.android.ide.eclipse.editors.wizards.ConfigurationSelector.ConfigurationState;
 import com.android.sdklib.IAndroidTarget;
+import com.android.sdklib.SdkConstants;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
@@ -243,7 +244,7 @@ class NewXmlFileCreationPage extends WizardPage {
     /** Absolute destination folder root, e.g. "/res/" */
     private static String sResFolderAbs = AndroidConstants.WS_RESOURCES + AndroidConstants.WS_SEP;
     /** Relative destination folder root, e.g. "res/" */
-    private static String sResFolderRel = AndroidConstants.FD_RESOURCES + AndroidConstants.WS_SEP;
+    private static String sResFolderRel = SdkConstants.FD_RESOURCES + AndroidConstants.WS_SEP;
     
     private IProject mProject;
     private Text mProjectTextField;
@@ -629,7 +630,7 @@ class NewXmlFileCreationPage extends WizardPage {
                 // Disregard this folder selection if it doesn't point to /res/something
                 if (wsFolderPath != null &&
                         wsFolderPath.segmentCount() > 1 &&
-                        AndroidConstants.FD_RESOURCES.equals(wsFolderPath.segment(0))) {
+                        SdkConstants.FD_RESOURCES.equals(wsFolderPath.segment(0))) {
                     score += 2;
                 } else {
                     wsFolderPath = null;
@@ -1002,7 +1003,7 @@ class NewXmlFileCreationPage extends WizardPage {
             String fileName = getFileName();
             if (fileName == null || fileName.length() == 0) {
                 error = "A destination file name is required.";
-            } else if (fileName != null && !fileName.endsWith(AndroidConstants.DOT_XML)) {
+            } else if (!fileName.endsWith(AndroidConstants.DOT_XML)) {
                 error = String.format("The filename must end with %1$s.", AndroidConstants.DOT_XML);
             }
         }

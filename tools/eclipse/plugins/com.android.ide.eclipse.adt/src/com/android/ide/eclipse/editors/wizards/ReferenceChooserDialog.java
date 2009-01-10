@@ -17,7 +17,6 @@
 package com.android.ide.eclipse.editors.wizards;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.common.AndroidConstants;
 import com.android.ide.eclipse.common.resources.IResourceRepository;
 import com.android.ide.eclipse.common.resources.ResourceItem;
 import com.android.ide.eclipse.common.resources.ResourceType;

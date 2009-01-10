@@ -493,7 +493,7 @@ public final class ExportWizard extends Wizard implements IExportWizard {
             }
 
             // no more cause and still no message. display the first exception.
-            return cause.getClass().getCanonicalName();
+            return t.getClass().getCanonicalName();
         }
         
         return message;

@@ -20,7 +20,6 @@ import com.android.layoutlib.api.IXmlPullParser;
 
 import org.xmlpull.v1.XmlPullParserException;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 
@@ -178,7 +177,7 @@ public abstract class BasePullParser implements IXmlPullParser {
         return mParsingState;
     }
 
-    public int nextTag() throws XmlPullParserException, IOException {
+    public int nextTag() throws XmlPullParserException {
         int eventType = next();
         if (eventType != START_TAG && eventType != END_TAG) {
             throw new XmlPullParserException("expected start or end tag", this, null);
@@ -186,7 +185,7 @@ public abstract class BasePullParser implements IXmlPullParser {
         return eventType;
     }
 
-    public String nextText() throws XmlPullParserException, IOException {
+    public String nextText() throws XmlPullParserException {
         if (getEventType() != START_TAG) {
             throw new XmlPullParserException("parser must be on START_TAG to read next text", this,
                     null);
@@ -208,7 +207,7 @@ public abstract class BasePullParser implements IXmlPullParser {
         }
     }
 
-    public int nextToken() throws XmlPullParserException, IOException {
+    public int nextToken() throws XmlPullParserException {
         return next();
     }
 

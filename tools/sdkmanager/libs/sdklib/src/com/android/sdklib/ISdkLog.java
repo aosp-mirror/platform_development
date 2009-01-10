@@ -21,5 +21,6 @@ package com.android.sdklib;
  */
 public interface ISdkLog {
     void warning(String warningFormat, Object... args);
-    void error(String errorFormat, Object... args);
+    void error(Throwable t, String errorFormat, Object... args);
+    void printf(String msgFormat, Object... args);
 }

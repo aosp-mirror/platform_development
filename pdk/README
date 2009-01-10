@@ -1,4 +1,4 @@
-Building the pdk
+Building the pdk (platform development kit)
 
 1) get a cupcake source tree
 
@@ -54,9 +54,15 @@ Building the pdk
 (which contains: 
 
 DT=`date +%y%m%d-%H%M%S`
-#time make -j4 PRODUCT-generic-eng pdk dist DIST_DIR=dist 2>&1 | tee logs/$DT
-time make -j4 pdk dist DIST_DIR=dist 2>&1 | tee logs/$DT
+time make -j4 pdk pdk_all dist DIST_DIR=dist 2>&1 | tee logs/$DT
 
 so you can see the results of the build in the logs directory.)
 
 5) the pdk tar file is put in the dist directory.
+
+
+The build target 'pdk' brings in the pdk/ndk make files into the build system.
+ Then there are three targets:
+  pdk_docs - which builds the pdk documentation
+  ndk - which builds the native development kit (native compiler, linker, etc.)
+  pdk_all - which builds the above two targets

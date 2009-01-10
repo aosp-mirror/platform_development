@@ -28,8 +28,12 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.ClasspathContainerInitializer;
 import org.eclipse.jdt.core.IAccessRule;
 import org.eclipse.jdt.core.IClasspathAttribute;
@@ -125,7 +129,7 @@ public class AndroidClasspathContainerInitializer extends ClasspathContainerInit
      */
     private static IClasspathContainer allocateAndroidContainer(String containerId,
             IJavaProject javaProject) {
-        IProject iProject = javaProject.getProject();
+        final IProject iProject = javaProject.getProject();
 
         // remove potential MARKER_TARGETs.
         try {
@@ -139,7 +143,9 @@ public class AndroidClasspathContainerInitializer extends ClasspathContainerInit
         }
 
         
-        // first we check if the SDK has been loaded
+        // First we check if the SDK has been loaded.
+        // By passing the javaProject to getSdkLoadStatus(), we ensure that, should the SDK
+        // not be loaded yet, the classpath container will be resolved again once the SDK is loaded.
         boolean sdkIsLoaded = AdtPlugin.getDefault().getSdkLoadStatus(javaProject) ==
             LoadStatus.LOADED;
 
@@ -172,8 +178,14 @@ public class AndroidClasspathContainerInitializer extends ClasspathContainerInit
         String message = null;
         boolean outputToConsole = true;
         if (hashString == null || hashString.length() == 0) {
-            message = String.format(
-                    "Project has no target set. Edit the project properties to set one.");
+            // if there is no hash string we only show this if the SDK is loaded.
+            // For a project opened at start-up with no target, this would be displayed twice,
+            // once when the project is opened, and once after the SDK has finished loading.
+            // By testing the sdk is loaded, we only show this once in the console.
+            if (sdkIsLoaded) {
+                message = String.format(
+                        "Project has no target set. Edit the project properties to set one.");
+            }
         } else if (sdkIsLoaded) {
             message = String.format(
                     "Unable to resolve target '%s'", hashString);
@@ -187,23 +199,41 @@ public class AndroidClasspathContainerInitializer extends ClasspathContainerInit
             // and it's expected. (we do keep the error marker though).
             outputToConsole = false;
         }
+        
+        if (message != null) {
+            // log the error and put the marker on the project if we can.
+            if (outputToConsole) {
+                AdtPlugin.printBuildToConsole(AdtConstants.BUILD_ALWAYS, iProject, message);
+            }
+            
+            try {
+                BaseProjectHelper.addMarker(iProject, AdtConstants.MARKER_TARGET, message, -1,
+                        IMarker.SEVERITY_ERROR, IMarker.PRIORITY_HIGH);
+            } catch (CoreException e) {
+                // In some cases, the workspace may be locked for modification when we pass here.
+                // We schedule a new job to put the marker after.
+                final String fmessage = message;
+                Job markerJob = new Job("Android SDK: Resolving error markers") {
+                    @SuppressWarnings("unchecked")
+                    @Override
+                    protected IStatus run(IProgressMonitor monitor) {
+                        try {
+                            BaseProjectHelper.addMarker(iProject, AdtConstants.MARKER_TARGET,
+                                    fmessage, -1, IMarker.SEVERITY_ERROR, IMarker.PRIORITY_HIGH);
+                        } catch (CoreException e2) {
+                            return e2.getStatus();
+                        }
 
-        // log the error and put the marker on the project
-        if (outputToConsole) {
-            AdtPlugin.printBuildToConsole(AdtConstants.BUILD_ALWAYS, iProject, message);
+                        return Status.OK_STATUS;
+                    }
+                };
+
+                // build jobs are run after other interactive jobs
+                markerJob.setPriority(Job.BUILD);
+                markerJob.schedule();
+            }
         }
-        IMarker marker = BaseProjectHelper.addMarker(iProject, AdtConstants.MARKER_TARGET, message,
-                IMarker.SEVERITY_ERROR);
-        
-        // add a marker priority as this is an more important error than the error that will
-        // spring from the lack of library
-        try {
-            marker.setAttribute(IMarker.PRIORITY, IMarker.PRIORITY_HIGH);
-        } catch (CoreException e) {
-            // just log the error
-            AdtPlugin.log(e, "Error changing target marker priority.");
-        }
-        
+
         // return a dummy container to replace the one we may have had before.
         return new IClasspathContainer() {
             public IClasspathEntry[] getClasspathEntries() {

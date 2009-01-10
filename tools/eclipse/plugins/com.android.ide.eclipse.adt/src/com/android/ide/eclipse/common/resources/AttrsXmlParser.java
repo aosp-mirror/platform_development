@@ -20,6 +20,7 @@ import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.common.resources.DeclareStyleableInfo.AttributeInfo;
 import com.android.ide.eclipse.common.resources.DeclareStyleableInfo.AttributeInfo.Format;
 import com.android.ide.eclipse.common.resources.ViewClassInfo.LayoutParamsInfo;
+import com.android.ide.eclipse.editors.descriptors.DescriptorsUtils;
 
 import org.eclipse.core.runtime.IStatus;
 import org.w3c.dom.Document;
@@ -228,7 +229,7 @@ public final class AttrsXmlParser {
                             }
                             mStyleMap.put(name, style);
                             if (lastComment != null) {
-                                style.setJavaDoc(formatJavadoc(lastComment.getNodeValue()));
+                                style.setJavaDoc(parseJavadoc(lastComment.getNodeValue()));
                             }
                         }
                     }
@@ -263,14 +264,15 @@ public final class AttrsXmlParser {
                 }
                 if (info != null) {
                     if (lastComment != null) {
-                        info.setJavaDoc(formatJavadoc(lastComment.getNodeValue()));
+                        info.setJavaDoc(parseJavadoc(lastComment.getNodeValue()));
+                        info.setDeprecatedDoc(parseDeprecatedDoc(lastComment.getNodeValue()));
                     }
                 }
             }
         }
         return info;
     }
-    
+
     /**
      * Finds all the attributes for a particular style node,
      * e.g. a declare-styleable of name "TextView" or "LinearLayout_Layout".
@@ -431,16 +433,23 @@ public final class AttrsXmlParser {
     }
     
     /**
-     * Formats the javadoc.
+     * Parses the javadoc comment.
      * Only keeps the first sentence.
-     * Removes and simplifies links and references.
+     * <p/>
+     * This does not remove nor simplify links and references. Such a transformation
+     * is done later at "display" time in {@link DescriptorsUtils#formatTooltip(String)} and co.
      */
-    private String formatJavadoc(String comment) {
+    private String parseJavadoc(String comment) {
         if (comment == null) {
             return null;
         }
+        
         // sanitize & collapse whitespace
         comment = comment.replaceAll("\\s+", " "); //$NON-NLS-1$ //$NON-NLS-2$
+
+        // Explicitly remove any @deprecated tags since they are handled separately.
+        comment = comment.replaceAll("(?:\\{@deprecated[^}]*\\}|@deprecated[^@}]*)", "");
+
         // take everything up to the first dot that is followed by a space or the end of the line.
         // I love regexps :-). For the curious, the regexp is:
         // - start of line
@@ -456,6 +465,41 @@ public final class AttrsXmlParser {
         //      - followed by a space (?= non-capturing zero-width positive look-ahead)
         // - anything else is ignored
         comment = comment.replaceFirst("^\\s*(.*?(?:$|(?<![a-zA-Z]\\.[a-zA-Z])\\.(?=\\s))).*", "$1"); //$NON-NLS-1$ //$NON-NLS-2$
+        
         return comment;
+    }
+
+
+    /**
+     * Parses the javadoc and extract the first @deprecated tag, if any.
+     * Returns null if there's no @deprecated tag.
+     * The deprecated tag can be of two forms:
+     * - {+@deprecated ...text till the next bracket }
+     *   Note: there should be no space or + between { and @. I need one in this comment otherwise
+     *   this method will be tagged as deprecated ;-)
+     * - @deprecated ...text till the next @tag or end of the comment.
+     * In both cases the comment can be multi-line.
+     */
+    private String parseDeprecatedDoc(String comment) {
+        // Skip if we can't even find the tag in the comment.
+        if (comment == null) {
+            return null;
+        }
+        
+        // sanitize & collapse whitespace
+        comment = comment.replaceAll("\\s+", " "); //$NON-NLS-1$ //$NON-NLS-2$
+
+        int pos = comment.indexOf("{@deprecated");
+        if (pos >= 0) {
+            comment = comment.substring(pos + 12 /* len of {@deprecated */);
+            comment = comment.replaceFirst("^([^}]*).*", "$1");
+        } else if ((pos = comment.indexOf("@deprecated")) >= 0) {
+            comment = comment.substring(pos + 11 /* len of @deprecated */);
+            comment = comment.replaceFirst("^(.*?)(?:@.*|$)", "$1");
+        } else {
+            return null;
+        }
+        
+        return comment.trim();
     }
 }

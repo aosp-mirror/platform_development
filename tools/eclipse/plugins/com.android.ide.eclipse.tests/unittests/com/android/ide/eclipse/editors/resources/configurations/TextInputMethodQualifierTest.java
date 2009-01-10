@@ -54,11 +54,11 @@ public class TextInputMethodQualifierTest extends TestCase {
     }
 
     public void testNoKey() {
-        assertEquals(true, timq.checkAndSet("nokey", config)); //$NON-NLS-1$
+        assertEquals(true, timq.checkAndSet("nokeys", config)); //$NON-NLS-1$
         assertTrue(config.getTextInputMethodQualifier() != null);
         assertEquals(TextInputMethodQualifier.TextInputMethod.NOKEY,
                 config.getTextInputMethodQualifier().getValue());
-        assertEquals("nokey", config.getTextInputMethodQualifier().toString()); //$NON-NLS-1$
+        assertEquals("nokeys", config.getTextInputMethodQualifier().toString()); //$NON-NLS-1$
     }
 
     public void testFailures() {

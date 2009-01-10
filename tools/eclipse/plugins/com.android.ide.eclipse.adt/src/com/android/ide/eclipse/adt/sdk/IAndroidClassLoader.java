@@ -64,7 +64,7 @@ public interface IAndroidClassLoader {
         throws IOException, InvalidAttributeValueException, ClassFormatError;
 
     /**
-     * Returns a {@link IClass} by its fully-qualified name.
+     * Returns a {@link IClassDescriptor} by its fully-qualified name.
      * @param className the fully-qualified name of the class to return.
      * @throws ClassNotFoundException
      */

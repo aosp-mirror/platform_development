@@ -39,7 +39,7 @@ public class AndroidXPathFactory {
 
         /**
          * Construct the context with the prefix associated with the android namespace.
-         * @param prefix the Prefix
+         * @param androidPrefix the Prefix
          */
         public AndroidNamespaceContext(String androidPrefix) {
             mAndroidPrefix = androidPrefix;
@@ -71,7 +71,7 @@ public class AndroidXPathFactory {
     /**
      * Creates a new XPath object, specifying which prefix in the query is used for the
      * android namespace.
-     * @param prefix The namespace prefix.
+     * @param androidPrefix The namespace prefix.
      */
     public static XPath newXPath(String androidPrefix) {
         XPath xpath = sFactory.newXPath();

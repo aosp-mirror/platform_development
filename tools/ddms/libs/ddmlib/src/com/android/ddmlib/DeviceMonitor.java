@@ -349,7 +349,7 @@ final class DeviceMonitor {
                                     }
 
                                     if (device.getPropertyCount() == 0) {
-                                        queryForBuild(device);
+                                        queryNewDeviceForInfo(device);
                                     }
                                 }
                             }
@@ -387,7 +387,7 @@ final class DeviceMonitor {
     
                     // look for their build info.
                     if (newDevice.isOnline()) {
-                        queryForBuild(newDevice);
+                        queryNewDeviceForInfo(newDevice);
                     }
                 }
             }
@@ -413,11 +413,20 @@ final class DeviceMonitor {
      * Queries a device for its build info.
      * @param device the device to query.
      */
-    private void queryForBuild(Device device) {
+    private void queryNewDeviceForInfo(Device device) {
         // TODO: do this in a separate thread.
         try {
+            // first get the list of properties.
             device.executeShellCommand(GetPropReceiver.GETPROP_COMMAND,
                     new GetPropReceiver(device));
+            
+            // now get the emulator VM name (if applicable).
+            if (device.isEmulator()) {
+                EmulatorConsole console = EmulatorConsole.getConsole(device);
+                if (console != null) {
+                    device.mVmName = console.getVmName();
+                }
+            }
         } catch (IOException e) {
             // if we can't get the build info, it doesn't matter too much
         }

@@ -205,6 +205,14 @@
     <string name="activity_themes">Content/Resources/Themes</string>
     <string name="activity_resources">Content/Resources/Resources</string>
 
+    <!-- ============================== -->
+    <!--  app/intents examples strings     -->
+    <!-- ============================== -->
+    
+    <string name="activity_intents">App/Intents</string>
+    <string name="intents">Example of launching various Intents.</string>
+    <string name="get_music">Get Music</string>
+        
     <!-- =================================== -->
     <!--  app/notification examples strings  -->
     <!-- =================================== -->

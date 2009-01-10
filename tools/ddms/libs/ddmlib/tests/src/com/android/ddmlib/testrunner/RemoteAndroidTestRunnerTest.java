@@ -201,6 +201,10 @@ public class RemoteAndroidTestRunnerTest extends TestCase {
             throw new UnsupportedOperationException();
         }
 
+        public String getVmName() {
+            return "";
+        }
+
     }
     
     /** An empty implementation of TestRunListener

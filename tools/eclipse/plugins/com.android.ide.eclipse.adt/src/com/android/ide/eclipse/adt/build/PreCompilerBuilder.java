@@ -1128,10 +1128,8 @@ public class PreCompilerBuilder extends BaseBuilder {
      * Finish a file created/modified by an outside command line process.
      * The file is marked as modified by Android, and the parent folder is refreshed, so that,
      * in case the file didn't exist beforehand, the file appears in the package explorer.
-     * @param file The file to "finish".
-     * @param parent The parent container. Can be null (in which case it'll be
-     *  figured out from the file's IResource.
-     * @param monitor a monitor to display progress.
+     * @param rFile The R file to "finish".
+     * @param manifestFile The manifest file to "finish".
      * @throws CoreException
      */
     private void finishJavaFilesAfterExternalModification(IFile rFile, IFile manifestFile)
@@ -1150,9 +1148,7 @@ public class PreCompilerBuilder extends BaseBuilder {
      * The file is marked as modified by Android, and the parent folder is refreshed, so that,
      * in case the file didn't exist beforehand, the file appears in the package explorer.
      * @param file The file to "finish".
-     * @param parent The parent container. Can be null (in which case it'll be
-     *  figured out from the file's IResource.
-     * @param monitor a monitor to display progress.
+     * @param aidlFile The AIDL file to "finish".
      * @throws CoreException
      */
     private void finishFileAfterExternalModification(IFile file, IFile aidlFile)

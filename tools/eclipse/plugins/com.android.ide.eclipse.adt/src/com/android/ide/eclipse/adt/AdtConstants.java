@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.adt;
 
+import com.android.ide.eclipse.adt.project.internal.AndroidClasspathContainerInitializer;
 
 
 /**
@@ -42,8 +43,8 @@ public class AdtConstants {
 
     /** Marker for Android Target errors.
      * This is not cleared on each like other markers. Instead, it's cleared
-     * when a ContainerClasspathInitialized has succeeded in creating an
-     * {@link AndroidClasspathContainer}*/
+     * when an {@link AndroidClasspathContainerInitializer} has succeeded in creating an
+     * AndroidClasspathContainer */
     public final static String MARKER_TARGET = AdtPlugin.PLUGIN_ID + ".targetProblem"; //$NON-NLS-1$
 
     /** Build verbosity "Always". Those messages are always displayed. */

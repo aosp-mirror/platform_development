@@ -22,7 +22,9 @@ import com.android.ide.eclipse.adt.sdk.Sdk;
 import com.android.ide.eclipse.common.project.BaseProjectHelper;
 import com.android.ide.eclipse.ddms.DdmsPlugin;
 import com.android.sdklib.IAndroidTarget;
-import com.android.sdklib.SdkConstants;
+import com.android.sdklib.vm.VmManager;
+import com.android.sdklib.vm.VmManager.VmInfo;
+import com.android.sdkuilib.VmSelector;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
@@ -70,6 +72,11 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
         { "UMTS", "umts" }, //$NON-NLS-2$
     };
 
+    private Button mAutoTargetButton;
+    private Button mManualTargetButton;
+
+    private VmSelector mPreferredVmSelector;
+
     private Combo mSpeedCombo;
 
     private Combo mDelayCombo;
@@ -78,17 +85,9 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
 
     private Text mEmulatorCLOptions;
 
-    private Combo mSkinCombo;
-
-    private Button mAutoTargetButton;
-
-    private Button mManualTargetButton;
-
     private Button mWipeDataButton;
 
     private Button mNoBootAnimButton;
-
-    private IAndroidTarget mTarget;
 
     /**
      * Returns the emulator ready speed option value.
@@ -147,6 +146,11 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
         targetModeGroup.setLayout(layout);
         targetModeGroup.setFont(font);
 
+        mManualTargetButton = new Button(targetModeGroup, SWT.RADIO);
+        mManualTargetButton.setText("Manual");
+        // Since there are only 2 radio buttons, we can put a listener on only one (they
+        // are both called on select and unselect event.
+
         // add the radio button
         mAutoTargetButton = new Button(targetModeGroup, SWT.RADIO);
         mAutoTargetButton.setText("Automatic");
@@ -159,11 +163,16 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
             }
         });
 
-        mManualTargetButton = new Button(targetModeGroup, SWT.RADIO);
-        mManualTargetButton.setText("Manual");
-        // Since there are only 2 radio buttons, we can put a listener on only
-        // one (they
-        // are both called on select and unselect event.
+        new Label(targetModeGroup, SWT.NONE).setText("Preferred VM");
+        VmInfo[] vms = new VmInfo[0];
+        mPreferredVmSelector = new VmSelector(targetModeGroup, vms,
+                false /*allowMultipleSelection*/);
+        mPreferredVmSelector.setSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                updateLaunchConfigurationDialog();
+            }
+        });
 
         // emulator size
         mEmulatorOptionsGroup = new Group(topComp, SWT.NONE);
@@ -173,17 +182,6 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
         layout.numColumns = 2;
         mEmulatorOptionsGroup.setLayout(layout);
         mEmulatorOptionsGroup.setFont(font);
-
-        new Label(mEmulatorOptionsGroup, SWT.NONE).setText("Screen Size:");
-
-        mSkinCombo = new Combo(mEmulatorOptionsGroup, SWT.READ_ONLY);
-        mSkinCombo.addSelectionListener(new SelectionAdapter() {
-            // called when selection changes
-            @Override
-            public void widgetSelected(SelectionEvent e) {
-                updateLaunchConfigurationDialog();
-            }
-        });
 
         // network options
         new Label(mEmulatorOptionsGroup, SWT.NONE).setText("Network Speed:");
@@ -279,8 +277,9 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
      * @see org.eclipse.debug.ui.ILaunchConfigurationTab#initializeFrom(org.eclipse.debug.core.ILaunchConfiguration)
      */
     public void initializeFrom(ILaunchConfiguration configuration) {
-        boolean value = LaunchConfigDelegate.DEFAULT_TARGET_MODE; // true ==
-                                                                    // automatic
+        VmManager vmManager = Sdk.getCurrent().getVmManager();
+
+        boolean value = LaunchConfigDelegate.DEFAULT_TARGET_MODE; // true == automatic
         try {
             value = configuration.getAttribute(LaunchConfigDelegate.ATTR_TARGET_MODE, value);
         } catch (CoreException e) {
@@ -290,11 +289,12 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
         mManualTargetButton.setSelection(!value);
         
         // look for the project name to get its target.
-        String projectName = "";
+        String stringValue = "";
         try {
-            projectName = configuration.getAttribute(
-                    IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, projectName);
+            stringValue = configuration.getAttribute(
+                    IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, stringValue);
         } catch (CoreException ce) {
+            // let's not do anything here, we'll use the default value
         }
 
         IProject project = null;
@@ -304,25 +304,41 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
         if (projects != null) {
             // look for the project whose name we read from the configuration.
             for (IJavaProject p : projects) {
-                if (p.getElementName().equals(projectName)) {
+                if (p.getElementName().equals(stringValue)) {
                     project = p.getProject();
                     break;
                 }
             }
         }
 
-        mSkinCombo.removeAll();
+        // update the VM list
+        VmInfo[] vms = null;
+        if (vmManager != null) {
+            vms = vmManager.getVms();
+        }
+
+        IAndroidTarget projectTarget = null;
         if (project != null) {
-            mTarget = Sdk.getCurrent().getTarget(project);
-            if (mTarget != null) {
-                String[] skins = mTarget.getSkins();
-                if (skins != null) {
-                    for (String skin : skins) {
-                        mSkinCombo.add(skin);
-                    }
-                    mSkinCombo.pack();
-                }
-            }
+            projectTarget = Sdk.getCurrent().getTarget(project);
+        } else {
+            vms = null; // no project? we don't want to display any "compatible" VMs.
+        }
+        
+        mPreferredVmSelector.setVms(vms, projectTarget);
+
+        stringValue = "";
+        try {
+            stringValue = configuration.getAttribute(LaunchConfigDelegate.ATTR_VM_NAME,
+                    stringValue);
+        } catch (CoreException e) {
+            // let's not do anything here, we'll use the default value
+        }
+
+        if (stringValue != null && stringValue.length() > 0 && vmManager != null) {
+            VmInfo targetVm = vmManager.getVm(stringValue);
+            mPreferredVmSelector.setSelection(targetVm);
+        } else {
+            mPreferredVmSelector.setSelection(null);
         }
 
         value = LaunchConfigDelegate.DEFAULT_WIPE_DATA;
@@ -342,23 +358,6 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
         mNoBootAnimButton.setSelection(value);
 
         int index = -1;
-        try {
-            String skin = configuration.getAttribute(LaunchConfigDelegate.ATTR_SKIN, (String)null);
-            if (skin == null) {
-                skin = SdkConstants.SKIN_DEFAULT;
-            }
-
-            index = getSkinIndex(skin);
-        } catch (CoreException e) {
-            index = getSkinIndex(SdkConstants.SKIN_DEFAULT);
-        }
-
-        if (index == -1) {
-            mSkinCombo.select(0);
-            updateLaunchConfigurationDialog();
-        } else {
-            mSkinCombo.select(index);
-        }
 
         index = LaunchConfigDelegate.DEFAULT_SPEED;
         try {
@@ -405,8 +404,12 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
     public void performApply(ILaunchConfigurationWorkingCopy configuration) {
         configuration.setAttribute(LaunchConfigDelegate.ATTR_TARGET_MODE,
                 mAutoTargetButton.getSelection());
-        configuration.setAttribute(LaunchConfigDelegate.ATTR_SKIN,
-                getSkinNameByIndex(mSkinCombo.getSelectionIndex()));
+        VmInfo vm = mPreferredVmSelector.getFirstSelected();
+        if (vm != null) {
+            configuration.setAttribute(LaunchConfigDelegate.ATTR_VM_NAME, vm.getName());
+        } else {
+            configuration.setAttribute(LaunchConfigDelegate.ATTR_VM_NAME, (String)null);
+        }
         configuration.setAttribute(LaunchConfigDelegate.ATTR_SPEED,
                 mSpeedCombo.getSelectionIndex());
         configuration.setAttribute(LaunchConfigDelegate.ATTR_DELAY,
@@ -425,8 +428,6 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
     public void setDefaults(ILaunchConfigurationWorkingCopy configuration) {
         configuration.setAttribute(LaunchConfigDelegate.ATTR_TARGET_MODE,
                 LaunchConfigDelegate.DEFAULT_TARGET_MODE);
-        configuration.setAttribute(LaunchConfigDelegate.ATTR_SKIN,
-                SdkConstants.SKIN_DEFAULT);
         configuration.setAttribute(LaunchConfigDelegate.ATTR_SPEED,
                 LaunchConfigDelegate.DEFAULT_SPEED);
         configuration.setAttribute(LaunchConfigDelegate.ATTR_DELAY,
@@ -440,33 +441,4 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
         String emuOptions = store.getString(AdtPlugin.PREFS_EMU_OPTIONS);
         configuration.setAttribute(LaunchConfigDelegate.ATTR_COMMANDLINE, emuOptions);
    }
-
-    private String getSkinNameByIndex(int index) {
-        if (mTarget != null && index > 0) {
-            String[] skins = mTarget.getSkins();
-            if (skins != null && index < skins.length) {
-                return skins[index];
-            }
-        }
-        
-        return null;
-    }
-
-    private int getSkinIndex(String name) {
-        if (mTarget != null) {
-            String[] skins = mTarget.getSkins();
-            if (skins != null) {
-                int index = 0;
-                for (String skin : skins) {
-                    if (skin.equalsIgnoreCase(name)) {
-                        return index;
-                    }
-                    index++;
-                }
-            }
-        }
-        
-        return -1;
-    }
-
 }

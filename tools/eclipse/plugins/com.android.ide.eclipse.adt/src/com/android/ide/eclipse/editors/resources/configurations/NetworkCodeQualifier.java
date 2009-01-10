@@ -66,7 +66,7 @@ public final class NetworkCodeQualifier extends ResourceQualifier {
     /**
      * Returns the folder name segment for the given value. This is equivalent to calling
      * {@link #toString()} on a {@link NetworkCodeQualifier} object.
-     * @param value the value of the qualifier, as returned by {@link #getCode()}.
+     * @param code the value of the qualifier, as returned by {@link #getCode()}.
      */
     public static String getFolderSegment(int code) {
         if (code != DEFAULT_CODE && code >= 1 && code <= 999) { // code is 1-3 digit.

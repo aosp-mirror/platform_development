@@ -23,6 +23,8 @@ import com.android.sdklib.ISdkLog;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.IAndroidTarget.IOptionalLibrary;
+import com.android.sdklib.project.ProjectCreator;
+import com.android.sdklib.project.ProjectCreator.OutputLevel;
 import com.android.sdklib.vm.HardwareProperties;
 import com.android.sdklib.vm.VmManager;
 import com.android.sdklib.vm.HardwareProperties.HardwareProperty;
@@ -35,31 +37,20 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Main class for the 'android' application
- *
+ * Main class for the 'android' application.
  */
 class Main {
     
     private final static String TOOLSDIR = "com.android.sdkmanager.toolsdir";
     
-    private final static String ARG_LIST_TARGET = "target";
-    private final static String ARG_LIST_VM = "vm";
-    
     private final static String[] BOOLEAN_YES_REPLIES = new String[] { "yes", "y" };
     private final static String[] BOOLEAN_NO_REPLIES = new String[] { "no", "n" };
 
     private String mSdkFolder;
+    private ISdkLog mSdkLog;
     private SdkManager mSdkManager;
     private VmManager mVmManager;
-
-    /* --list parameters */
-    private String mListObject;
-
-    /* --create parameters */
-    private boolean mCreateVm;
-    private int mCreateTargetId;
-    private IAndroidTarget mCreateTarget;
-    private String mCreateName;
+    private SdkCommandLine mSdkCommandLine;
 
     public static void main(String[] args) {
         new Main().run(args);
@@ -71,7 +62,7 @@ class Main {
      */
     private void run(String[] args) {
         init();
-        parseArgs(args);
+        mSdkCommandLine.parseArgs(args);
         parseSdk();
         doAction();
     }
@@ -81,70 +72,41 @@ class Main {
      * doing basic parsing of the SDK.
      */
     private void init() {
+        mSdkCommandLine = new SdkCommandLine();
+
         /* We get passed a property for the tools dir */
         String toolsDirProp = System.getProperty(TOOLSDIR);
         if (toolsDirProp == null) {
             // for debugging, it's easier to override using the process environment
             toolsDirProp = System.getenv(TOOLSDIR);
         }
-        if (toolsDirProp == null) {
-            printHelpAndExit("ERROR: The tools directory property is not set, please make sure you are executing android or android.bat");
-        }
-        
-        // got back a level for the SDK folder
-        File tools = new File(toolsDirProp);
-        mSdkFolder = tools.getParent();
-        
-    }
     
-    /**
-     * Parses command-line arguments, or prints help/usage and exits if error.
-     * @param args arguments passed to the program
-     */
-    private void parseArgs(String[] args) {
-        final int numArgs = args.length;
-
-        try {
-            int argPos = 0;
-            for (; argPos < numArgs; argPos++) {
-                final String arg = args[argPos];
-                if (arg.equals("-l") || arg.equals("--list")) {
-                    mListObject = args[++argPos];
-                } else if (arg.equals("-c") || arg.equals("--create")) {
-                    mCreateVm = true;
-                    parseCreateArgs(args, ++argPos);
+        if (toolsDirProp != null) {
+            // got back a level for the SDK folder
+            File tools;
+            if (toolsDirProp.length() > 0) {
+                tools = new File(toolsDirProp);
+                mSdkFolder = tools.getParent();
+            } else {
+                try {
+                    tools = new File(".").getCanonicalFile();
+                    mSdkFolder = tools.getParent();
+                } catch (IOException e) {
+                    // Will print an error below since mSdkFolder is not defined
                 }
             }
-        } catch (ArrayIndexOutOfBoundsException e) {
-            /* Any OOB triggers help */
-            printHelpAndExit("ERROR: Not enough arguments.");
         }
-    }
 
-    private void parseCreateArgs(String[] args, int argPos) {
-        final int numArgs = args.length;
-
-        try {
-            for (; argPos < numArgs; argPos++) {
-                final String arg = args[argPos];
-                if (arg.equals("-t") || arg.equals("--target")) {
-                    String targetId = args[++argPos];
-                    try {
-                        // get the target id
-                        mCreateTargetId = Integer.parseInt(targetId);
-                    } catch (NumberFormatException e) {
-                        printHelpAndExit("ERROR: Target Id is not a number");
-                    }
-                } else if (arg.equals("-n") || arg.equals("--name")) {
-                    mCreateName = args[++argPos];
-                } else {
-                    printHelpAndExit("ERROR: '%s' unknown argument for --create mode",
-                            args[argPos]);
-                }
+        if (mSdkFolder == null) {
+            String os = System.getProperty("os.name");
+            String cmd = "android";
+            if (os.startsWith("Windows")) {
+                cmd += ".bat";
             }
-        } catch (ArrayIndexOutOfBoundsException e) {
-            /* Any OOB triggers help */
-            printHelpAndExit("ERROR: Not enough arguments for --create");
+
+            mSdkCommandLine.printHelpAndExit(
+                "ERROR: The tools directory property is not set, please make sure you are executing %1$s",
+                cmd);
         }
     }
 
@@ -152,10 +114,15 @@ class Main {
      * Does the basic SDK parsing required for all actions
      */
     private void parseSdk() {
-        mSdkManager = SdkManager.createManager(mSdkFolder, new ISdkLog() {
-            public void error(String errorFormat, Object... args) {
-                System.err.printf("Error: " + errorFormat, args);
-                System.err.println("");
+        mSdkLog = new ISdkLog() {
+            public void error(Throwable t, String errorFormat, Object... args) {
+                if (errorFormat != null) {
+                    System.err.printf("Error: " + errorFormat, args);
+                    System.err.println("");
+                }
+                if (t != null) {
+                    System.err.print("Error: " + t.getMessage());
+                }
             }
 
             public void warning(String warningFormat, Object... args) {
@@ -165,10 +132,15 @@ class Main {
                     System.out.println("");
                 }
             }
-        });
+
+            public void printf(String msgFormat, Object... args) {
+                System.out.printf(msgFormat, args);
+            }
+        };
+        mSdkManager = SdkManager.createManager(mSdkFolder, mSdkLog);
         
         if (mSdkManager == null) {
-            printHelpAndExit("ERROR: Unable to parse SDK content.");
+            mSdkCommandLine.printHelpAndExit("ERROR: Unable to parse SDK content.");
         }
     }
     
@@ -176,19 +148,37 @@ class Main {
      * Actually do an action...
      */
     private void doAction() {
-        if (mListObject != null) {
+        String action = mSdkCommandLine.getActionRequested();
+        
+        if (SdkCommandLine.ACTION_LIST.equals(action)) {
             // list action.
-            if (ARG_LIST_TARGET.equals(mListObject)) {
+            if (SdkCommandLine.ARG_TARGET.equals(mSdkCommandLine.getListFilter())) {
                 displayTargetList();
-            } else if (ARG_LIST_VM.equals(mListObject)) {
+            } else if (SdkCommandLine.ARG_VM.equals(mSdkCommandLine.getListFilter())) {
                 displayVmList();
             } else {
-                printHelpAndExit("'%s' is not a valid --list option", mListObject);
+                displayTargetList();
+                displayVmList();
             }
-        } else if (mCreateVm) {
+        } else if (SdkCommandLine.ACTION_NEW_VM.equals(action)) {
             createVm();
+        } else if (SdkCommandLine.ACTION_NEW_PROJECT.equals(action)) {
+            // get the target and try to resolve it.
+            int targetId = mSdkCommandLine.getNewProjectTargetId();
+            IAndroidTarget[] targets = mSdkManager.getTargets();
+            if (targetId < 1 || targetId > targets.length) {
+                mSdkCommandLine.printHelpAndExit("ERROR: Wrong target id.");
+            }
+            IAndroidTarget target = targets[targetId - 1];
+            
+            ProjectCreator creator = new ProjectCreator(mSdkFolder,
+                    OutputLevel.NORMAL, mSdkLog);
+            
+            creator.createProject(mSdkCommandLine.getNewProjectLocation(),
+                    mSdkCommandLine.getNewProjectName(), mSdkCommandLine.getNewProjectPackage(),
+                    mSdkCommandLine.getNewProjectActivity(), target, true);
         } else {
-            printHelpAndExit(null);
+            mSdkCommandLine.printHelpAndExit(null);
         }
     }
 
@@ -274,7 +264,7 @@ class Main {
                 index++;
             }
         } catch (AndroidLocationException e) {
-            printHelpAndExit(e.getMessage());
+            mSdkCommandLine.printHelpAndExit(e.getMessage());
         }
     }
     
@@ -283,11 +273,14 @@ class Main {
      */
     private void createVm() {
         // find a matching target
-        if (mCreateTargetId >= 1 && mCreateTargetId <= mSdkManager.getTargets().length) {
-            mCreateTarget = mSdkManager.getTargets()[mCreateTargetId-1]; // target it is 1-based
+        int targetId = mSdkCommandLine.getNewVmTargetId();
+        IAndroidTarget target = null;
+        
+        if (targetId >= 1 && targetId <= mSdkManager.getTargets().length) {
+            target = mSdkManager.getTargets()[targetId-1]; // target it is 1-based
         } else {
-            printHelpAndExit(
-                    "ERROR: Target Id is not a valid Id. Check android --list target for the list of targets.");
+            mSdkCommandLine.printHelpAndExit(
+                    "ERROR: Target Id is not a valid Id. Check 'android list target' for the list of targets.");
         }
         
         try {
@@ -295,19 +288,24 @@ class Main {
             String vmRoot = AndroidLocation.getFolder() + AndroidLocation.FOLDER_VMS;
             
             Map<String, String> hardwareConfig = null;
-            if (mCreateTarget.isPlatform()) {
+            if (target.isPlatform()) {
                 try {
-                    hardwareConfig = promptForHardware(mCreateTarget);
+                    hardwareConfig = promptForHardware(target);
                 } catch (IOException e) {
-                    printHelpAndExit(e.getMessage());
+                    mSdkCommandLine.printHelpAndExit(e.getMessage());
                 }
             }
             
-            VmManager.createVm(vmRoot, mCreateName, mCreateTarget, null /*skinName*/,
-                    null /*sdcardPath*/, 0 /*sdcardSize*/, hardwareConfig,
+            VmManager.createVm(vmRoot,
+                    mSdkCommandLine.getNewVmName(),
+                    target,
+                    null /*skinName*/,
+                    null /*sdcardPath*/,
+                    0 /*sdcardSize*/,
+                    hardwareConfig,
                     null /* sdklog */);
         } catch (AndroidLocationException e) {
-            printHelpAndExit(e.getMessage());
+            mSdkCommandLine.printHelpAndExit(e.getMessage());
         }
     }
 
@@ -325,7 +323,7 @@ class Main {
         System.out.print(String.format("Do you which to create a custom hardware profile [%s]",
                 defaultAnswer));
         
-        result = readLine(readLineBuffer);
+        result = readLine(readLineBuffer).trim();
         // handle default:
         if (result.length() == 0) {
             result = defaultAnswer;
@@ -391,8 +389,7 @@ class Main {
                     break;
                 case INTEGER:
                     try {
-                        @SuppressWarnings("unused")
-                        int value = Integer.parseInt(result);
+                        Integer.parseInt(result);
                         map.put(property.getName(), result);
                         i++; // valid reply, move to next property
                     } catch (NumberFormatException e) {
@@ -414,9 +411,8 @@ class Main {
     }
     
     /**
-     * Read the line from the input stream.
+     * Reads the line from the input stream.
      * @param buffer
-     * @return
      * @throws IOException
      */
     private String readLine(byte[] buffer) throws IOException {
@@ -434,7 +430,12 @@ class Main {
             return new String(buffer, 0, count) + secondHalf;
         }
 
-        return new String(buffer, 0, count - 1); // -1 to not include the carriage return
+        // ignore end whitespace
+        while (count > 0 && (buffer[count-1] == '\r' || buffer[count-1] == '\n')) {
+            count--;
+        }
+        
+        return new String(buffer, 0, count);
     }
     
     /**
@@ -442,6 +443,7 @@ class Main {
      * @throws IOException If the value is not a boolean string.
      */
     private boolean getBooleanReply(String reply) throws IOException {
+        
         for (String valid : BOOLEAN_YES_REPLIES) {
             if (valid.equalsIgnoreCase(reply)) {
                 return true;
@@ -455,33 +457,5 @@ class Main {
         }
 
         throw new IOException(String.format("%s is not a valid reply", reply));
-    }
-
-    /**
-     * Prints the help/usage and exits.
-     * @param errorFormat Optional error message to print prior to usage using String.format 
-     * @param args Arguments for String.format
-     */
-    private void printHelpAndExit(String errorFormat, Object... args) {
-        if (errorFormat != null) {
-            System.err.println(String.format(errorFormat, args));
-        }
-        
-        /*
-         * usage should fit in 80 columns
-         *   12345678901234567890123456789012345678901234567890123456789012345678901234567890
-         */
-        final String usage = "\n" +
-            "Usage:\n" +
-            "  android --list [target|vm]\n" +
-            "  android --create --target <target id> --name <name>\n" +
-            "\n" +
-            "Options:\n" +
-            " -l [target|vm], --list [target|vm]\n" +
-            "         Outputs the available targets or Virtual Machines and their Ids.\n" +
-            "\n";
-        
-        System.out.println(usage);
-        System.exit(1);
     }
 }

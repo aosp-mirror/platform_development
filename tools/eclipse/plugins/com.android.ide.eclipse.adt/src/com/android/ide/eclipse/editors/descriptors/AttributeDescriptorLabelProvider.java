@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.editors.descriptors;
 
+import com.android.ide.eclipse.editors.IconFactory;
 import com.android.ide.eclipse.editors.uimodel.UiAbstractTextAttributeNode;
 
 import org.eclipse.jface.viewers.ILabelProvider;
@@ -35,6 +36,17 @@ public class AttributeDescriptorLabelProvider implements ILabelProvider {
     }
 
     public Image getImage(Object element) {
+        if (element instanceof UiAbstractTextAttributeNode) {
+            UiAbstractTextAttributeNode node = (UiAbstractTextAttributeNode) element;
+            if (node.getDescriptor().isDeprecated()) {
+                String v = node.getCurrentValue();
+                if (v != null && v.length() > 0) {
+                    IconFactory factory = IconFactory.getInstance();
+                    return factory.getIcon("warning"); //$NON-NLS-1$
+                }                
+            }
+        }
+
         return null;
     }
 

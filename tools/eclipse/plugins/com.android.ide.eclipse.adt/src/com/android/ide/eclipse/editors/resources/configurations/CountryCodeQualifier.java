@@ -66,7 +66,7 @@ public final class CountryCodeQualifier extends ResourceQualifier {
     /**
      * Returns the folder name segment for the given value. This is equivalent to calling
      * {@link #toString()} on a {@link CountryCodeQualifier} object.
-     * @param value the value of the qualifier, as returned by {@link #getCode()}.
+     * @param code the value of the qualifier, as returned by {@link #getCode()}.
      */
     public static String getFolderSegment(int code) {
         if (code != DEFAULT_CODE && code >= 100 && code <=999) { // code is 3 digit.) {

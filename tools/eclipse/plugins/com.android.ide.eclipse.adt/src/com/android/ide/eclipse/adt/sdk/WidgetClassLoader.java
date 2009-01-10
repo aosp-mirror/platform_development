@@ -323,7 +323,7 @@ public final class WidgetClassLoader implements IAndroidClassLoader {
     }
 
     /**
-     * Returns a {@link IClass} by its fully-qualified name.
+     * Returns a {@link IAndroidClassLoader.IClassDescriptor} by its fully-qualified name.
      * @param className the fully-qualified name of the class to return.
      * @throws ClassNotFoundException
      */

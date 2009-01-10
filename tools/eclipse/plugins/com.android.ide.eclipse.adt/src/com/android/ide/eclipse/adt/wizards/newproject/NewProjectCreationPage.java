@@ -26,6 +26,7 @@ import com.android.ide.eclipse.adt.sdk.Sdk;
 import com.android.ide.eclipse.common.AndroidConstants;
 import com.android.ide.eclipse.common.project.AndroidManifestHelper;
 import com.android.sdklib.IAndroidTarget;
+import com.android.sdklib.SdkConstants;
 import com.android.sdkuilib.SdkTargetSelector;
 
 import org.eclipse.core.filesystem.URIUtil;
@@ -64,9 +65,11 @@ import java.util.regex.Pattern;
  * NewAndroidProjectCreationPage is a project creation page that provides the
  * following fields:
  * <ul>
+ * <li> Project name
+ * <li> SDK Target
+ * <li> Application name
  * <li> Package name
  * <li> Activity name
- * <li> Location of the SDK
  * </ul>
  * Note: this class is public so that it can be accessed from unit tests.
  * It is however an internal class. Its API may change without notice.
@@ -93,13 +96,14 @@ public class NewProjectCreationPage extends WizardPage {
     private static final Pattern sProjectNamePattern = Pattern.compile("^[\\w][\\w. -]*$");  //$NON-NLS-1$
     /** Last user-browsed location, static so that it be remembered for the whole session */
     private static String sCustomLocationOsPath = "";  //$NON-NLS-1$
+    private static boolean sAutoComputeCustomLocation = true;
 
     private final int MSG_NONE = 0;
     private final int MSG_WARNING = 1;
     private final int MSG_ERROR = 2;
     
     private String mUserPackageName = "";       //$NON-NLS-1$
-    private String mUserActivityName = "";    //$NON-NLS-1$
+    private String mUserActivityName = "";      //$NON-NLS-1$
     private boolean mUserCreateActivityCheck = INITIAL_CREATE_ACTIVITY;
     private String mSourceFolder = "";          //$NON-NLS-1$
 
@@ -114,6 +118,8 @@ public class NewProjectCreationPage extends WizardPage {
     private Text mLocationPathField;
     private Button mBrowseButton;
     private Button mCreateActivityCheck;
+    private Text mMinSdkVersionField;
+    private SdkTargetSelector mSdkTargetSelector;
 
     private boolean mInternalLocationPathUpdate;
     protected boolean mInternalProjectNameUpdate;
@@ -122,7 +128,7 @@ public class NewProjectCreationPage extends WizardPage {
     private boolean mInternalActivityNameUpdate;
     protected boolean mProjectNameModifiedByUser;
     protected boolean mApplicationNameModifiedByUser;
-    private SdkTargetSelector mSdkTargetSelector;
+    private boolean mInternalMinSdkVersionUpdate;
 
 
     /**
@@ -133,13 +139,6 @@ public class NewProjectCreationPage extends WizardPage {
     public NewProjectCreationPage(String pageName) {
         super(pageName);
         setPageComplete(false);
-        if (sCustomLocationOsPath == null ||
-                sCustomLocationOsPath.length() == 0 ||
-                !new File(sCustomLocationOsPath).isDirectory()) {
-            // FIXME location of samples is pretty much impossible here.
-            //sCustomLocationOsPath = AdtPlugin.getOsSdkSamplesFolder();
-            sCustomLocationOsPath = File.listRoots()[0].getAbsolutePath();
-        }
     }
 
     // --- Getters used by NewProjectWizard ---
@@ -168,6 +167,11 @@ public class NewProjectCreationPage extends WizardPage {
     /** Returns the value of the activity name field with spaces trimmed. */
     public String getActivityName() {
         return mActivityNameField == null ? INITIAL_NAME : mActivityNameField.getText().trim();
+    }
+
+    /** Returns the value of the min sdk version field with spaces trimmed. */
+    public String getMinSdkVersion() {
+        return mMinSdkVersionField == null ? "" : mMinSdkVersionField.getText().trim();
     }
 
     /** Returns the value of the application name field with spaces trimmed. */
@@ -200,7 +204,7 @@ public class NewProjectCreationPage extends WizardPage {
      * "src" constant. */
     public String getSourceFolder() {
         if (isNewProject() || mSourceFolder == null || mSourceFolder.length() == 0) {
-            return AndroidConstants.FD_SOURCES;
+            return SdkConstants.FD_SOURCES;
         } else {
             return mSourceFolder;
         }
@@ -389,9 +393,16 @@ public class NewProjectCreationPage extends WizardPage {
         }
 
         mSdkTargetSelector = new SdkTargetSelector(group, targets, false /*multi-selection*/);
+
+        // If there's only one target, select it
+        if (targets != null && targets.length == 1) {
+            mSdkTargetSelector.setSelection(targets[0]);
+        }
+        
         mSdkTargetSelector.setSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
+                updateLocationPathField(null);
                 setPageComplete(validatePage());
             }
         });
@@ -506,6 +517,25 @@ public class NewProjectCreationPage extends WizardPage {
                 onActivityNameFieldModified();
             }
         });
+
+        // min sdk version label
+        label = new Label(group, SWT.NONE);
+        label.setText("Min SDK Version:");
+        label.setFont(parent.getFont());
+        label.setToolTipText("The minimum SDK version number that the application requires. Must be an integer > 0. It can be empty.");
+
+        // min sdk version entry field
+        mMinSdkVersionField = new Text(group, SWT.BORDER);
+        data = new GridData(GridData.FILL_HORIZONTAL);
+        label.setToolTipText("The minimum SDK version number that the application requires. Must be an integer > 0. It can be empty.");
+        mMinSdkVersionField.setLayoutData(data);
+        mMinSdkVersionField.setFont(parent.getFont());
+        mMinSdkVersionField.addListener(SWT.Modify, new Listener() {
+            public void handleEvent(Event event) {
+                onMinSdkVersionFieldModified();
+                setPageComplete(validatePage());
+            }
+        });
     }
 
 
@@ -588,7 +618,29 @@ public class NewProjectCreationPage extends WizardPage {
             mInternalLocationPathUpdate = true;
             if (custom_location) {
                 if (abs_dir != null) {
+                    // We get here if the user selected a directory with the "Browse" button.
+                    // Disable auto-compute of the custom location unless the user selected
+                    // the exact same path.
+                    sAutoComputeCustomLocation = sAutoComputeCustomLocation &&
+                                                 abs_dir.equals(sCustomLocationOsPath);
                     sCustomLocationOsPath = TextProcessor.process(abs_dir);
+                } else  if (sAutoComputeCustomLocation ||
+                            !new File(sCustomLocationOsPath).isDirectory()) {
+                    // By default select the samples directory of the current target
+                    IAndroidTarget target = getSdkTarget();
+                    if (target != null) {
+                        sCustomLocationOsPath = target.getPath(IAndroidTarget.SAMPLES);
+                    }
+
+                    // If we don't have a target, select the base directory of the
+                    // "universal sdk". If we don't even have that, use a root drive.
+                    if (sCustomLocationOsPath == null || sCustomLocationOsPath.length() == 0) {
+                        if (Sdk.getCurrent() != null) {
+                            sCustomLocationOsPath = Sdk.getCurrent().getSdkLocation();
+                        } else {
+                            sCustomLocationOsPath = File.listRoots()[0].getAbsolutePath();
+                        }
+                    }
                 }
                 if (!mLocationPathField.getText().equals(sCustomLocationOsPath)) {
                     mLocationPathField.setText(sCustomLocationOsPath);
@@ -615,8 +667,13 @@ public class NewProjectCreationPage extends WizardPage {
     private void onLocationPathFieldModified() {
         if (!mInternalLocationPathUpdate) {
             // When the updates doesn't come from updateLocationPathField, it must be the user
-            // editing the field manually, in which case we want to save the value internally.
-            sCustomLocationOsPath = getLocationPathFieldValue();
+            // editing the field manually, in which case we want to save the value internally
+            // and we disable auto-compute of the custom location (to avoid overriding the user
+            // value)
+            String newPath = getLocationPathFieldValue();
+            sAutoComputeCustomLocation = sAutoComputeCustomLocation &&
+                                         newPath.equals(sCustomLocationOsPath);
+            sCustomLocationOsPath = newPath;
             extractNamesFromAndroidManifest();
             setPageComplete(validatePage());
         }
@@ -665,6 +722,31 @@ public class NewProjectCreationPage extends WizardPage {
     }
 
     /**
+     * Called when the min sdk version field has been modified.
+     * 
+     * Ignore the internal modifications. When modified by the user, try to match
+     * a target with the same API level.
+     */
+    private void onMinSdkVersionFieldModified() {
+        if (mInternalMinSdkVersionUpdate) {
+            return;
+        }
+
+        try {
+            int version = Integer.parseInt(getMinSdkVersion());
+            
+            for (IAndroidTarget target : mSdkTargetSelector.getTargets()) {
+                if (target.getApiVersionNumber() == version) {
+                    mSdkTargetSelector.setSelection(target);
+                    break;
+                }
+            }
+        } catch (NumberFormatException e) {
+            // ignore
+        }
+    }
+
+    /**
      * Called when the radio buttons are changed between the "create new project" and the
      * "use existing source" mode. This reverts the fields to whatever the user manually
      * entered before.
@@ -697,88 +779,131 @@ public class NewProjectCreationPage extends WizardPage {
      * can actually be found in the custom user directory.
      */
     private void extractNamesFromAndroidManifest() {
-        if (!isNewProject()) {
-            File f = new File(getProjectLocation());
-            if (f.isDirectory()) {
-                Path path = new Path(f.getPath());
-                String osPath = path.append(AndroidConstants.FN_ANDROID_MANIFEST).toOSString();
-                AndroidManifestHelper manifest = new AndroidManifestHelper(osPath);
-                if (manifest.exists()) {
-                    String packageName = null;
-                    String activityName = null;
-                    try {
-                        packageName = manifest.getPackageName();
-                        activityName = manifest.getActivityName(1);
-                    } catch (Exception e) {
-                        // pass
-                    }
+        if (isNewProject()) {
+            return;
+        }
+
+        String projectLocation = getProjectLocation();
+        File f = new File(projectLocation);
+        if (!f.isDirectory()) {
+            return;
+        }
+
+        Path path = new Path(f.getPath());
+        String osPath = path.append(AndroidConstants.FN_ANDROID_MANIFEST).toOSString();
+        AndroidManifestHelper manifest = new AndroidManifestHelper(osPath);
+        if (!manifest.exists()) {
+            return;
+        }
+        
+        String packageName = null;
+        String activityName = null;
+        String minSdkVersion = null;
+        try {
+            packageName = manifest.getPackageName();
+            activityName = manifest.getActivityName(1);
+            minSdkVersion = manifest.getMinSdkVersion();
+        } catch (Exception e) {
+            // ignore exceptions
+        }
 
 
-                    if (packageName != null && packageName.length() > 0) {
-                        mPackageNameField.setText(packageName);
-                    }
+        if (packageName != null && packageName.length() > 0) {
+            mPackageNameField.setText(packageName);
+        }
 
-                    if (activityName != null && activityName.length() > 0) {
-                        mInternalActivityNameUpdate = true;
-                        mInternalCreateActivityUpdate = true;
-                        mActivityNameField.setText(activityName);
-                        mCreateActivityCheck.setSelection(true);
-                        mInternalCreateActivityUpdate = false;
-                        mInternalActivityNameUpdate = false;
+        if (activityName != null && activityName.length() > 0) {
+            mInternalActivityNameUpdate = true;
+            mInternalCreateActivityUpdate = true;
+            mActivityNameField.setText(activityName);
+            mCreateActivityCheck.setSelection(true);
+            mInternalCreateActivityUpdate = false;
+            mInternalActivityNameUpdate = false;
 
-                        // If project name and application names are empty, use the activity
-                        // name as a default. If the activity name has dots, it's a part of a
-                        // package specification and only the last identifier must be used.
-                        if (activityName.indexOf('.') != -1) {
-                            String[] ids = activityName.split(AndroidConstants.RE_DOT);
-                            activityName = ids[ids.length - 1];
-                        }
-                        if (mProjectNameField.getText().length() == 0 ||
-                                !mProjectNameModifiedByUser) {
-                            mInternalProjectNameUpdate = true;
-                            mProjectNameField.setText(activityName);
-                            mInternalProjectNameUpdate = false;
-                        }
-                        if (mApplicationNameField.getText().length() == 0 ||
-                                !mApplicationNameModifiedByUser) {
-                            mInternalApplicationNameUpdate = true;
-                            mApplicationNameField.setText(activityName);
-                            mInternalApplicationNameUpdate = false;
-                        }
-                    } else {
-                        mInternalActivityNameUpdate = true;
-                        mInternalCreateActivityUpdate = true;
-                        mActivityNameField.setText("");
-                        mCreateActivityCheck.setSelection(false);
-                        mInternalCreateActivityUpdate = false;
-                        mInternalActivityNameUpdate = false;
-                        
-                        // There is no activity name to use to fill in the project and application
-                        // name. However if there's a package name, we can use this as a base.
-                        if (packageName != null && packageName.length() > 0) {
-                            // Package name is a java identifier, so it's most suitable for
-                            // an application name.
+            // If project name and application names are empty, use the activity
+            // name as a default. If the activity name has dots, it's a part of a
+            // package specification and only the last identifier must be used.
+            if (activityName.indexOf('.') != -1) {
+                String[] ids = activityName.split(AndroidConstants.RE_DOT);
+                activityName = ids[ids.length - 1];
+            }
+            if (mProjectNameField.getText().length() == 0 ||
+                    !mProjectNameModifiedByUser) {
+                mInternalProjectNameUpdate = true;
+                mProjectNameField.setText(activityName);
+                mInternalProjectNameUpdate = false;
+            }
+            if (mApplicationNameField.getText().length() == 0 ||
+                    !mApplicationNameModifiedByUser) {
+                mInternalApplicationNameUpdate = true;
+                mApplicationNameField.setText(activityName);
+                mInternalApplicationNameUpdate = false;
+            }
+        } else {
+            mInternalActivityNameUpdate = true;
+            mInternalCreateActivityUpdate = true;
+            mActivityNameField.setText("");  //$NON-NLS-1$
+            mCreateActivityCheck.setSelection(false);
+            mInternalCreateActivityUpdate = false;
+            mInternalActivityNameUpdate = false;
+            
+            // There is no activity name to use to fill in the project and application
+            // name. However if there's a package name, we can use this as a base.
+            if (packageName != null && packageName.length() > 0) {
+                // Package name is a java identifier, so it's most suitable for
+                // an application name.
 
-                            if (mApplicationNameField.getText().length() == 0 ||
-                                    !mApplicationNameModifiedByUser) {
-                                mInternalApplicationNameUpdate = true;
-                                mApplicationNameField.setText(packageName);
-                                mInternalApplicationNameUpdate = false;
-                            }
+                if (mApplicationNameField.getText().length() == 0 ||
+                        !mApplicationNameModifiedByUser) {
+                    mInternalApplicationNameUpdate = true;
+                    mApplicationNameField.setText(packageName);
+                    mInternalApplicationNameUpdate = false;
+                }
 
-                            // For the project name, remove any dots
-                            packageName = packageName.replace('.', '_');
-                            if (mProjectNameField.getText().length() == 0 ||
-                                    !mProjectNameModifiedByUser) {
-                                mInternalProjectNameUpdate = true;
-                                mProjectNameField.setText(packageName);
-                                mInternalProjectNameUpdate = false;
-                            }
-                            
-                        }
+                // For the project name, remove any dots
+                packageName = packageName.replace('.', '_');
+                if (mProjectNameField.getText().length() == 0 ||
+                        !mProjectNameModifiedByUser) {
+                    mInternalProjectNameUpdate = true;
+                    mProjectNameField.setText(packageName);
+                    mInternalProjectNameUpdate = false;
+                }
+                
+            }
+        }
+
+        // Select the target matching the manifest's sdk, if any
+        boolean foundTarget = false;
+        if (minSdkVersion != null) {
+            try {
+                int sdkVersion = Integer.parseInt(minSdkVersion); 
+
+                for (IAndroidTarget target : mSdkTargetSelector.getTargets()) {
+                    if (target.getApiVersionNumber() == sdkVersion) {
+                        mSdkTargetSelector.setSelection(target);
+                        foundTarget = true;
+                        break;
                     }
                 }
+            } catch(NumberFormatException e) {
+                // ignore
             }
+        }
+        
+        if (!foundTarget) {
+            for (IAndroidTarget target : mSdkTargetSelector.getTargets()) {
+                if (projectLocation.startsWith(target.getLocation())) {
+                    mSdkTargetSelector.setSelection(target);
+                    foundTarget = true;
+                    break;
+                }
+            }
+        }
+
+        if (!foundTarget) {
+            mInternalMinSdkVersionUpdate = true;
+            mMinSdkVersionField.setText(minSdkVersion == null ? "" : minSdkVersion); //$NON-NLS-1$
+            mInternalMinSdkVersionUpdate = false;
         }
     }
 
@@ -803,6 +928,9 @@ public class NewProjectCreationPage extends WizardPage {
         }
         if ((status & MSG_ERROR) == 0) {
             status |= validateActivityField();
+        }
+        if ((status & MSG_ERROR) == 0) {
+            status |= validateMinSdkVersionField();
         }
         if ((status & MSG_ERROR) == 0) {
             status |= validateSourceFolder();
@@ -946,6 +1074,38 @@ public class NewProjectCreationPage extends WizardPage {
         if (getSdkTarget() == null) {
             return setStatus("An SDK Target must be specified.", MSG_ERROR);
         }
+        return MSG_NONE;
+    }
+
+    /**
+     * Validates the sdk target choice.
+     * 
+     * @return The wizard message type, one of MSG_ERROR, MSG_WARNING or MSG_NONE.
+     */
+    private int validateMinSdkVersionField() {
+
+        // If the min sdk version is empty, it is always accepted.
+        if (getMinSdkVersion().length() == 0) {
+            return MSG_NONE;
+        }
+
+        int version = -1;
+        try {
+            // If not empty, it must be a valid integer > 0
+            version = Integer.parseInt(getMinSdkVersion());
+        } catch (NumberFormatException e) {
+            // ignore
+        }
+        
+        if (version < 1) {
+            return setStatus("Min SDK Version must be an integer > 0.", MSG_ERROR);
+        }
+                
+        if (getSdkTarget() != null && getSdkTarget().getApiVersionNumber() != version) {
+            return setStatus("The API level for the selected SDK target does not match the Min SDK version.",
+                    MSG_WARNING);
+        }
+
         return MSG_NONE;
     }
 

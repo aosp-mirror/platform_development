@@ -50,11 +50,10 @@ development/tools/scripts/java_tests_file.template platforms/${PLATFORM_NAME}/te
 development/tools/scripts/layout.template platforms/${PLATFORM_NAME}/templates/layout.template
 development/tools/scripts/strings.template platforms/${PLATFORM_NAME}/templates/strings.template
 development/tools/scripts/alias.template platforms/${PLATFORM_NAME}/templates/alias.template
+development/tools/scripts/android_rules.xml platforms/${PLATFORM_NAME}/templates/android_rules.xml
+development/tools/scripts/alias_rules.xml platforms/${PLATFORM_NAME}/templates/alias_rules.xml
 development/tools/scripts/build.template tools/lib/build.template
 development/tools/scripts/build.alias.template tools/lib/build.alias.template
-development/tools/scripts/default.properties.template tools/lib/default.properties.template
-development/tools/scripts/android_rules.xml tools/lib/android_rules.xml
-development/tools/scripts/alias_rules.xml tools/lib/alias_rules.xml
 
 # emacs support
 development/tools/scripts/android.el tools/lib/android.el
@@ -116,6 +115,7 @@ framework/traceview.jar tools/lib/traceview.jar
 # activitycreator
 bin/activitycreator tools/activitycreator
 framework/activitycreator.jar tools/lib/activitycreator.jar
+framework/anttasks.jar tools/lib/anttasks.jar
 
 # sdkmanager
 bin/android tools/android

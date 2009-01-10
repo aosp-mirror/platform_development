@@ -17,7 +17,6 @@
 package com.android.ide.eclipse.editors.resources.manager.files;
 
 import org.eclipse.core.resources.IFile;
-import org.eclipse.core.runtime.CoreException;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -45,7 +44,7 @@ public class FileWrapper implements IAbstractFile {
         mFile = file;
     }
 
-    public InputStream getContents() throws CoreException {
+    public InputStream getContents() {
         try {
             return new FileInputStream(mFile);
         } catch (FileNotFoundException e) {
@@ -74,7 +73,7 @@ public class FileWrapper implements IAbstractFile {
         }
         
         if (obj instanceof File) {
-            return mFile.equals((File)obj);
+            return mFile.equals(obj);
         }
 
         return super.equals(obj);

@@ -37,7 +37,8 @@ import javax.management.InvalidAttributeValueException;
 public class AndroidJarLoader extends ClassLoader implements IAndroidClassLoader {
     
     /**
-     * Wrapper around a {@link Class} to provide the methods of {@link IClassDescriptor}.
+     * Wrapper around a {@link Class} to provide the methods of
+     * {@link IAndroidClassLoader.IClassDescriptor}.
      */
     public final static class ClassWrapper implements IClassDescriptor {
         private Class<?> mClass;
@@ -416,7 +417,7 @@ public class AndroidJarLoader extends ClassLoader implements IAndroidClassLoader
     }
 
     /**
-     * Returns a {@link IClass} by its fully-qualified name.
+     * Returns a {@link IAndroidClassLoader.IClassDescriptor} by its fully-qualified name.
      * @param className the fully-qualified name of the class to return.
      * @throws ClassNotFoundException
      */

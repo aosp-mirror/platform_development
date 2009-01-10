@@ -95,6 +95,10 @@ public class TextAttributeDescriptor extends AttributeDescriptor implements IPro
     }
 
     public String getCategory() {
+        if (isDeprecated()) {
+            return "Deprecated";
+        }
+
         ElementDescriptor parent = getParent();
         if (parent != null) {
             return parent.getUiName();
