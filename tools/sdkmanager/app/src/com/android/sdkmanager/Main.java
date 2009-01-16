@@ -40,17 +40,28 @@ import java.util.Map;
  * Main class for the 'android' application.
  */
 class Main {
-    
+
+    /** Java property that defines the location of the sdk/tools directory. */
     private final static String TOOLSDIR = "com.android.sdkmanager.toolsdir";
+    /** Java property that defines the working directory. On Windows the current working directory
+     *  is actually the tools dir, in which case this is used to get the original CWD. */
+    private final static String WORKDIR = "com.android.sdkmanager.workdir";
     
     private final static String[] BOOLEAN_YES_REPLIES = new String[] { "yes", "y" };
     private final static String[] BOOLEAN_NO_REPLIES = new String[] { "no", "n" };
 
+    /** Path to the SDK folder. This is the parent of {@link #TOOLSDIR}. */
     private String mSdkFolder;
+    /** Logger object. Use this to print normal output, warnings or errors. */
     private ISdkLog mSdkLog;
+    /** The SDK manager parses the SDK folder and gives access to the content. */
     private SdkManager mSdkManager;
+    /** Virtual Machine manager to access the list of VMs or create new ones. */
     private VmManager mVmManager;
+    /** Command-line processor with options specific to SdkManager. */
     private SdkCommandLine mSdkCommandLine;
+    /** The working directory, either null or set to an existing absolute canonical directory. */
+    private File mWorkDir;
 
     public static void main(String[] args) {
         new Main().run(args);
@@ -58,9 +69,9 @@ class Main {
     
     /**
      * Runs the sdk manager app
-     * @param args
      */
     private void run(String[] args) {
+        createLogger();
         init();
         mSdkCommandLine.parseArgs(args);
         parseSdk();
@@ -68,13 +79,47 @@ class Main {
     }
 
     /**
+     * Creates the {@link #mSdkLog} object.
+     * <p/>
+     * This must be done before {@link #init()} as it will be used to report errors.
+     */
+    private void createLogger() {
+        mSdkLog = new ISdkLog() {
+            public void error(Throwable t, String errorFormat, Object... args) {
+                if (errorFormat != null) {
+                    System.err.printf("Error: " + errorFormat, args);
+                    if (!errorFormat.endsWith("\n")) {
+                        System.err.printf("\n");
+                    }
+                }
+                if (t != null) {
+                    System.err.printf("Error: %s\n", t.getMessage());
+                }
+            }
+
+            public void warning(String warningFormat, Object... args) {
+                if (mSdkCommandLine.isVerbose()) {
+                    System.out.printf("Warning: " + warningFormat, args);
+                    if (!warningFormat.endsWith("\n")) {
+                        System.out.printf("\n");
+                    }
+                }
+            }
+
+            public void printf(String msgFormat, Object... args) {
+                System.out.printf(msgFormat, args);
+            }
+        };
+    }
+
+    /**
      * Init the application by making sure the SDK path is available and
      * doing basic parsing of the SDK.
      */
     private void init() {
-        mSdkCommandLine = new SdkCommandLine();
+        mSdkCommandLine = new SdkCommandLine(mSdkLog);
 
-        /* We get passed a property for the tools dir */
+        // We get passed a property for the tools dir
         String toolsDirProp = System.getProperty(TOOLSDIR);
         if (toolsDirProp == null) {
             // for debugging, it's easier to override using the process environment
@@ -98,15 +143,28 @@ class Main {
         }
 
         if (mSdkFolder == null) {
-            String os = System.getProperty("os.name");
-            String cmd = "android";
-            if (os.startsWith("Windows")) {
-                cmd += ".bat";
+            errorAndExit("The tools directory property is not set, please make sure you are executing %1$s",
+                SdkConstants.AndroidCmdName());
+        }
+        
+        // We might get passed a property for the working directory
+        // Either it is a valid directory and mWorkDir is set to it's absolute canonical value
+        // or mWorkDir remains null.
+        String workDirProp = System.getProperty(WORKDIR);
+        if (workDirProp == null) {
+            workDirProp = System.getenv(WORKDIR);
+        }
+        if (workDirProp != null) {
+            // This should be a valid directory
+            mWorkDir = new File(workDirProp);
+            try {
+                mWorkDir = mWorkDir.getCanonicalFile().getAbsoluteFile();
+            } catch (IOException e) {
+                mWorkDir = null;
             }
-
-            mSdkCommandLine.printHelpAndExit(
-                "ERROR: The tools directory property is not set, please make sure you are executing %1$s",
-                cmd);
+            if (mWorkDir == null || !mWorkDir.isDirectory()) {
+                errorAndExit("The working directory does not seem to be valid: '%1$s", workDirProp);
+            }
         }
     }
 
@@ -114,33 +172,10 @@ class Main {
      * Does the basic SDK parsing required for all actions
      */
     private void parseSdk() {
-        mSdkLog = new ISdkLog() {
-            public void error(Throwable t, String errorFormat, Object... args) {
-                if (errorFormat != null) {
-                    System.err.printf("Error: " + errorFormat, args);
-                    System.err.println("");
-                }
-                if (t != null) {
-                    System.err.print("Error: " + t.getMessage());
-                }
-            }
-
-            public void warning(String warningFormat, Object... args) {
-                if (false) {
-                    // TODO: on display warnings in verbose mode.
-                    System.out.printf("Warning: " + warningFormat, args);
-                    System.out.println("");
-                }
-            }
-
-            public void printf(String msgFormat, Object... args) {
-                System.out.printf(msgFormat, args);
-            }
-        };
         mSdkManager = SdkManager.createManager(mSdkFolder, mSdkLog);
         
         if (mSdkManager == null) {
-            mSdkCommandLine.printHelpAndExit("ERROR: Unable to parse SDK content.");
+            errorAndExit("Unable to parse SDK content.");
         }
     }
     
@@ -167,18 +202,56 @@ class Main {
             int targetId = mSdkCommandLine.getNewProjectTargetId();
             IAndroidTarget[] targets = mSdkManager.getTargets();
             if (targetId < 1 || targetId > targets.length) {
-                mSdkCommandLine.printHelpAndExit("ERROR: Wrong target id.");
+                errorAndExit("Target id is not valid. Use '%s list -f target' to get the target Ids.",
+                        SdkConstants.AndroidCmdName());
             }
             IAndroidTarget target = targets[targetId - 1];
             
             ProjectCreator creator = new ProjectCreator(mSdkFolder,
-                    OutputLevel.NORMAL, mSdkLog);
+                    mSdkCommandLine.isVerbose() ? OutputLevel.VERBOSE : OutputLevel.NORMAL,
+                    mSdkLog);
+
+            String projectDir = getProjectLocation(mSdkCommandLine.getNewProjectLocation());
             
-            creator.createProject(mSdkCommandLine.getNewProjectLocation(),
+            creator.createProject(projectDir,
                     mSdkCommandLine.getNewProjectName(), mSdkCommandLine.getNewProjectPackage(),
-                    mSdkCommandLine.getNewProjectActivity(), target, true);
+                    mSdkCommandLine.getNewProjectActivity(), target, false /* isTestProject*/);
         } else {
             mSdkCommandLine.printHelpAndExit(null);
+        }
+    }
+
+    /**
+     * Adjusts the project location to make it absolute & canonical relative to the
+     * working directory, if any.
+     * 
+     * @return The project absolute path relative to {@link #mWorkDir} or the original
+     *         newProjectLocation otherwise.
+     */
+    private String getProjectLocation(String newProjectLocation) {
+        
+        // If the new project location is absolute, use it as-is
+        File projectDir = new File(newProjectLocation);
+        if (projectDir.isAbsolute()) {
+            return newProjectLocation;
+        }
+
+        // if there's no working directory, just use the project location as-is.
+        if (mWorkDir == null) {
+            return newProjectLocation;
+        }
+
+        // Combine then and get an absolute canonical directory
+        try {
+            projectDir = new File(mWorkDir, newProjectLocation).getCanonicalFile();
+            
+            return projectDir.getPath();
+        } catch (IOException e) {
+            errorAndExit("Failed to combine working directory '%1$s' with project location '%2$s': %3$s",
+                    mWorkDir.getPath(),
+                    newProjectLocation,
+                    e.getMessage());
+            return null;
         }
     }
 
@@ -186,48 +259,51 @@ class Main {
      * Displays the list of available Targets (Platforms and Add-ons)
      */
     private void displayTargetList() {
-        System.out.println("Available Android targets:");
+        mSdkLog.printf("Available Android targets:\n");
 
         int index = 1;
         for (IAndroidTarget target : mSdkManager.getTargets()) {
             if (target.isPlatform()) {
-                System.out.printf("[%d] %s\n", index, target.getName());
-                System.out.printf("     API level: %d\n", target.getApiVersionNumber());
+                mSdkLog.printf("[%d] %s\n", index, target.getName());
+                mSdkLog.printf("     API level: %d\n", target.getApiVersionNumber());
             } else {
-                System.out.printf("[%d] Add-on: %s\n", index, target.getName());
-                System.out.printf("     Vendor: %s\n", target.getVendor());
+                mSdkLog.printf("[%d] Add-on: %s\n", index, target.getName());
+                mSdkLog.printf("     Vendor: %s\n", target.getVendor());
                 if (target.getDescription() != null) {
-                    System.out.printf("     Description: %s\n", target.getDescription());
+                    mSdkLog.printf("     Description: %s\n", target.getDescription());
                 }
-                System.out.printf("     Based on Android %s (API level %d)\n",
+                mSdkLog.printf("     Based on Android %s (API level %d)\n",
                         target.getApiVersionName(), target.getApiVersionNumber());
                 
                 // display the optional libraries.
                 IOptionalLibrary[] libraries = target.getOptionalLibraries();
                 if (libraries != null) {
+                    mSdkLog.printf("     Libraries:\n");
                     for (IOptionalLibrary library : libraries) {
-                        System.out.printf("     Library: %s (%s)\n", library.getName(),
-                                library.getJarName());
+                        mSdkLog.printf("     * %1$s (%2$s)\n",
+                                library.getName(), library.getJarName());
+                        mSdkLog.printf(String.format(
+                                "         %1$s\n", library.getDescription()));
                     }
                 }
             }
 
             // get the target skins
             String[] skins = target.getSkins();
-            System.out.print("     Skins: ");
+            mSdkLog.printf("     Skins: ");
             if (skins != null) {
                 boolean first = true;
                 for (String skin : skins) {
                     if (first == false) {
-                        System.out.print(", ");
+                        mSdkLog.printf(", ");
                     } else {
                         first = false;
                     }
-                    System.out.print(skin);
+                    mSdkLog.printf(skin);
                 }
-                System.out.println("");
+                mSdkLog.printf("\n");
             } else {
-                System.out.println("no skins.");
+                mSdkLog.printf("no skins.\n");
             }
             
             index++;
@@ -241,30 +317,29 @@ class Main {
         try {
             mVmManager = new VmManager(mSdkManager, null /* sdklog */);
 
-            System.out.println("Available Android VMs:");
+            mSdkLog.printf("Available Android VMs:\n");
 
             int index = 1;
             for (VmInfo info : mVmManager.getVms()) {
-                System.out.printf("[%d] %s\n", index, info.getName());
-                System.out.printf("    Path: %s\n", info.getPath());
+                mSdkLog.printf("[%d] %s\n", index, info.getName());
+                mSdkLog.printf("    Path: %s\n", info.getPath());
 
                 // get the target of the Vm
                 IAndroidTarget target = info.getTarget();
                 if (target.isPlatform()) {
-                    System.out.printf("    Target: %s (API level %d)\n", target.getName(),
+                    mSdkLog.printf("    Target: %s (API level %d)\n", target.getName(),
                             target.getApiVersionNumber());
                 } else {
-                    System.out.printf("    Target: %s (%s)\n", target.getName(), target
+                    mSdkLog.printf("    Target: %s (%s)\n", target.getName(), target
                             .getVendor());
-                    System.out.printf("    Based on Android %s (API level %d)\n", target
+                    mSdkLog.printf("    Based on Android %s (API level %d)\n", target
                             .getApiVersionName(), target.getApiVersionNumber());
-
                 }
 
                 index++;
             }
         } catch (AndroidLocationException e) {
-            mSdkCommandLine.printHelpAndExit(e.getMessage());
+            errorAndExit(e.getMessage());
         }
     }
     
@@ -279,33 +354,43 @@ class Main {
         if (targetId >= 1 && targetId <= mSdkManager.getTargets().length) {
             target = mSdkManager.getTargets()[targetId-1]; // target it is 1-based
         } else {
-            mSdkCommandLine.printHelpAndExit(
-                    "ERROR: Target Id is not a valid Id. Check 'android list target' for the list of targets.");
+            errorAndExit("Target id is not valid. Use '%s list -f target' to get the target Ids.",
+                    SdkConstants.AndroidCmdName());
         }
-        
+
         try {
-            // default to standard path now
-            String vmRoot = AndroidLocation.getFolder() + AndroidLocation.FOLDER_VMS;
-            
-            Map<String, String> hardwareConfig = null;
-            if (target.isPlatform()) {
-                try {
-                    hardwareConfig = promptForHardware(target);
-                } catch (IOException e) {
-                    mSdkCommandLine.printHelpAndExit(e.getMessage());
+            mVmManager = new VmManager(mSdkManager, mSdkLog);
+
+            String vmName = mSdkCommandLine.getNewVmName();
+            VmInfo info = mVmManager.getVm(vmName);
+            if (info != null) {
+                errorAndExit("VM %s already exists.", vmName);
+            } else {
+                String vmParentFolder = mSdkCommandLine.getNewVmLocation();
+                if (vmParentFolder == null) {
+                    vmParentFolder = AndroidLocation.getFolder() + AndroidLocation.FOLDER_VMS;
                 }
+
+                Map<String, String> hardwareConfig = null;
+                if (target.isPlatform()) {
+                    try {
+                        hardwareConfig = promptForHardware(target);
+                    } catch (IOException e) {
+                        errorAndExit(e.getMessage());
+                    }
+                }
+
+                mVmManager.createVm(vmParentFolder,
+                        mSdkCommandLine.getNewVmName(),
+                        target,
+                        mSdkCommandLine.getNewVmSkin(),
+                        null /*sdcardPath*/,
+                        0 /*sdcardSize*/,
+                        hardwareConfig,
+                        mSdkLog);
             }
-            
-            VmManager.createVm(vmRoot,
-                    mSdkCommandLine.getNewVmName(),
-                    target,
-                    null /*skinName*/,
-                    null /*sdcardPath*/,
-                    0 /*sdcardSize*/,
-                    hardwareConfig,
-                    null /* sdklog */);
         } catch (AndroidLocationException e) {
-            mSdkCommandLine.printHelpAndExit(e.getMessage());
+            errorAndExit(e.getMessage());
         }
     }
 
@@ -318,10 +403,9 @@ class Main {
         String result;
         String defaultAnswer = "no";
         
-        System.out.print(String.format("%s is a basic Android platform.\n",
-                createTarget.getName()));
-        System.out.print(String.format("Do you which to create a custom hardware profile [%s]",
-                defaultAnswer));
+        mSdkLog.printf("%s is a basic Android platform.\n", createTarget.getName());
+        mSdkLog.printf("Do you wish to create a custom hardware profile [%s]",
+                defaultAnswer);
         
         result = readLine(readLineBuffer).trim();
         // handle default:
@@ -334,7 +418,7 @@ class Main {
             return null;
         }
         
-        System.out.println(""); // empty line
+        mSdkLog.printf("\n"); // empty line
         
         // get the list of possible hardware properties
         File hardwareDefs = new File (mSdkFolder + File.separator +
@@ -349,23 +433,23 @@ class Main {
 
             String description = property.getDescription();
             if (description != null) {
-                System.out.printf("%s: %s\n", property.getAbstract(), description);
+                mSdkLog.printf("%s: %s\n", property.getAbstract(), description);
             } else {
-                System.out.println(property.getAbstract());
+                mSdkLog.printf("%s\n", property.getAbstract());
             }
 
             String defaultValue = property.getDefault();
             
             if (defaultValue != null) {
-                System.out.printf("%s [%s]:", property.getName(), defaultValue);
+                mSdkLog.printf("%s [%s]:", property.getName(), defaultValue);
             } else {
-                System.out.printf("%s (%s):", property.getName(), property.getType());
+                mSdkLog.printf("%s (%s):", property.getName(), property.getType());
             }
             
             result = readLine(readLineBuffer);
             if (result.length() == 0) {
                 if (defaultValue != null) {
-                    System.out.println(""); // empty line
+                    mSdkLog.printf("\n"); // empty line
                     i++; // go to the next property if we have a valid default value.
                          // if there's no default, we'll redo this property
                 }
@@ -384,7 +468,7 @@ class Main {
                         }
                     } catch (IOException e) {
                         // display error, and do not increment i to redo this property
-                        System.out.println("\n" + e.getMessage());
+                        mSdkLog.printf("\n%s\n", e.getMessage());
                     }
                     break;
                 case INTEGER:
@@ -394,7 +478,7 @@ class Main {
                         i++; // valid reply, move to next property
                     } catch (NumberFormatException e) {
                         // display error, and do not increment i to redo this property
-                        System.out.println("\n" + e.getMessage());
+                        mSdkLog.printf("\n%s\n", e.getMessage());
                     }
                     break;
                 case DISKSIZE:
@@ -404,7 +488,7 @@ class Main {
                     break;
             }
             
-            System.out.println(""); // empty line
+            mSdkLog.printf("\n"); // empty line
         }
 
         return map;
@@ -457,5 +541,10 @@ class Main {
         }
 
         throw new IOException(String.format("%s is not a valid reply", reply));
+    }
+    
+    private void errorAndExit(String format, Object...args) {
+        mSdkLog.error(null, format, args);
+        System.exit(1);
     }
 }

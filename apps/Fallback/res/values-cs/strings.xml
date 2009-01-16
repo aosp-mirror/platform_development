@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resources xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <string name="appTitle">"Záloha"</string>
+    <string name="title">"Akce není podporována"</string>
+    <string name="error">"Tato akce není momentálně podporována."</string>
+</resources>

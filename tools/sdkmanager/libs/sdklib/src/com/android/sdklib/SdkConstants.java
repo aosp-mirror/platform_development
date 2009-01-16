@@ -201,7 +201,18 @@ public final class SdkConstants {
     public final static String OS_ADDON_LIBS_FOLDER = FD_ADDON_LIBS + File.separator;
     
     
-    /* Skin default */
+    /** Skin default **/
     public final static String SKIN_DEFAULT = "default";
+
+    /** Returns the appropriate name for the 'android' command, which is 'android.bat' for
+     * Windows and 'android' for all other platforms. */
+    public static String AndroidCmdName() {
+        String os = System.getProperty("os.name");
+        String cmd = "android";
+        if (os.startsWith("Windows")) {
+            cmd += ".bat";
+        }
+        return cmd;
+    }
 
 }

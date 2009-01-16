@@ -445,7 +445,7 @@ public class SoftKeyboard extends InputMethodService
 
     private void handleClose() {
         commitTyped(getCurrentInputConnection());
-        dismissSoftInput();
+        dismissSoftInput(0);
         mInputView.closing();
     }
 
@@ -506,4 +506,8 @@ public class SoftKeyboard extends InputMethodService
     public void swipeUp() {
         // ?
     }
+    
+    public void onPress(int primaryCode) { }
+    
+    public void onRelease(int primaryCode) { }
 }

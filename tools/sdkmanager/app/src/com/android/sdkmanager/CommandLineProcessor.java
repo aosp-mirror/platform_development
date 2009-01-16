@@ -16,6 +16,8 @@
 
 package com.android.sdkmanager;
 
+import com.android.sdklib.ISdkLog;
+
 import java.util.HashMap;
 import java.util.Map.Entry;
 
@@ -57,8 +59,10 @@ public class CommandLineProcessor {
      * The key is a string "action/longName".
      */
     private final HashMap<String, Arg> mArguments = new HashMap<String, Arg>();
+    private final ISdkLog mLog;
     
-    public CommandLineProcessor(String[][] actions) {
+    public CommandLineProcessor(ISdkLog logger, String[][] actions) {
+        mLog = logger;
         mActions = actions;
 
         define(MODE.STRING, false, INTERNAL_FLAG, null, KEY_ACTION, "Selected Action", null);
@@ -564,7 +568,7 @@ public class CommandLineProcessor {
      * @param args Format arguments.
      */
     protected void stdout(String format, Object...args) {
-        System.out.println(String.format(format, args));
+        mLog.printf(format + "\n", args);
     }
 
     /**
@@ -575,6 +579,6 @@ public class CommandLineProcessor {
      * @param args Format arguments.
      */
     protected void stderr(String format, Object...args) {
-        System.err.println(String.format(format, args));
+        mLog.error(null, format, args);
     }
 }

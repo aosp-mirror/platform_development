@@ -143,16 +143,16 @@ void AndroidUsbPipeFileObject::OnEvtIoDeviceControl(WDFREQUEST request,
                                                     ULONG ioctl_code) {
   ASSERT_IRQL_LOW_OR_DISPATCH();
 
-  switch (GetCtlCode(ioctl_code)) {
-    case ADB_CTL_GET_ENDPOINT_INFORMATION:
+  switch (ioctl_code) {
+    case ADB_IOCTL_GET_ENDPOINT_INFORMATION:
       OnCtlGetEndpointInformation(request, output_buf_len);
       break;
 
-    case ADB_CTL_BULK_READ:
+    case ADB_IOCTL_BULK_READ:
       OnCtlBulkRead(request, output_buf_len, input_buf_len);
       break;
 
-    case ADB_CTL_BULK_WRITE:
+    case ADB_IOCTL_BULK_WRITE:
       OnCtlBulkWrite(request, output_buf_len, input_buf_len);
       break;
 
@@ -300,7 +300,7 @@ void AndroidUsbPipeFileObject::OnCtlBulkWrite(WDFREQUEST request,
   // 1. Never trust anything that comes from the User Mode.
   // 2. Never assume that anything that User Mode buffer has will remain
   // unchanged.
-  void* transfer_buffer = transfer_param->write_buffer;
+  void* transfer_buffer = transfer_param->GetWriteBuffer();
   ULONG transfer_size = transfer_param->transfer_size;
 
   // Make sure zero length I/O doesn't go through

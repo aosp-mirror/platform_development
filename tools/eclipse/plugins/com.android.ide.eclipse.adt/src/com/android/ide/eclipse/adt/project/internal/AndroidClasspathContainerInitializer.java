@@ -22,6 +22,7 @@ import com.android.ide.eclipse.adt.sdk.LoadStatus;
 import com.android.ide.eclipse.adt.sdk.Sdk;
 import com.android.ide.eclipse.common.project.BaseProjectHelper;
 import com.android.sdklib.IAndroidTarget;
+import com.android.sdklib.IAndroidTarget.IOptionalLibrary;
 
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;
@@ -42,6 +43,9 @@ import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
+
+import java.util.ArrayList;
+import java.util.HashSet;
 
 /**
  * Classpath container initializer responsible for binding {@link AndroidClasspathContainer} to
@@ -141,7 +145,6 @@ public class AndroidClasspathContainerInitializer extends ClasspathContainerInit
             // just log the error
             AdtPlugin.log(ce, "Error removing target marker.");
         }
-
         
         // First we check if the SDK has been loaded.
         // By passing the javaProject to getSdkLoadStatus(), we ensure that, should the SDK
@@ -255,15 +258,19 @@ public class AndroidClasspathContainerInitializer extends ClasspathContainerInit
     }
 
     /**
-     * Creates and returns a new {@link IClasspathEntry} object for the android
-     * framework. <p/>This references the OS path to the android.jar and the
+     * Creates and returns an array of {@link IClasspathEntry} objects for the android
+     * framework and optional libraries.
+     * <p/>This references the OS path to the android.jar and the
      * java doc directory. This is dynamically created when a project is opened,
      * and never saved in the project itself, so there's no risk of storing an
      * obsolete path.
      * 
      * @param target The target that contains the libraries.
      */
-    private static IClasspathEntry createFrameworkClasspath(IAndroidTarget target) {
+    private static IClasspathEntry[] createFrameworkClasspath(IAndroidTarget target) {
+        ArrayList<IClasspathEntry> list = new ArrayList<IClasspathEntry>();
+        
+        // First, we create the IClasspathEntry for the framework.
         // now add the android framework to the class path.
         // create the path object.
         IPath android_lib = new Path(target.getPath(IAndroidTarget.ANDROID_JAR));
@@ -278,14 +285,49 @@ public class AndroidClasspathContainerInitializer extends ClasspathContainerInit
                 new Path("com/android/internal/**"), //$NON-NLS-1$
                 IAccessRule.K_NON_ACCESSIBLE);
 
-        IClasspathEntry classpathEntry = JavaCore.newLibraryEntry(android_lib,
+        IClasspathEntry frameworkClasspathEntry = JavaCore.newLibraryEntry(android_lib,
                 android_src, // source attachment path
                 null,        // default source attachment root path.
                 new IAccessRule[] { accessRule },
                 new IClasspathAttribute[] { cpAttribute },
                 false // not exported.
                 );
+        
+        list.add(frameworkClasspathEntry);
+        
+        // now deal with optional libraries
+        IOptionalLibrary[] libraries = target.getOptionalLibraries();
+        if (libraries != null) {
+            HashSet<String> visitedJars = new HashSet<String>();
+            for (IOptionalLibrary library : libraries) {
+                String jarPath = library.getJarPath();
+                if (visitedJars.contains(jarPath) == false) {
+                    visitedJars.add(jarPath);
 
-        return classpathEntry;
+                    // create the java doc link, if needed
+                    String targetDocPath = target.getPath(IAndroidTarget.DOCS);
+                    IClasspathAttribute[] attributes = null;
+                    if (targetDocPath != null) {
+                        attributes = new IClasspathAttribute[] {
+                                JavaCore.newClasspathAttribute(
+                                        IClasspathAttribute.JAVADOC_LOCATION_ATTRIBUTE_NAME,
+                                        targetDocPath)
+                        };
+                    }
+
+                    IClasspathEntry entry = JavaCore.newLibraryEntry(
+                            new Path(library.getJarPath()),
+                            null, // source attachment path
+                            null, // default source attachment root path.
+                            null,
+                            attributes,
+                            false // not exported.
+                            );
+                    list.add(entry);
+                }
+            }
+        }
+
+        return list.toArray(new IClasspathEntry[list.size()]);
     }
 }

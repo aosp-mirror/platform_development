@@ -67,19 +67,22 @@ typedef struct _AdbEndpointInformation {
 {0xf72fe0d4, 0xcbcb, 0x407d, {0x88, 0x14, 0x9e, 0xd6, 0x73, 0xd0, 0xdd, 0x6b}};
 
 /// Defines vendor ID for the device
-#define DEVICE_VENDOR_ID            0x18D1
+#define DEVICE_VENDOR_ID            0x0BB4
 
 /// Defines product ID for the device with single interface.
-#define DEVICE_SINGLE_PRODUCT_ID    0xD00D
+#define DEVICE_SINGLE_PRODUCT_ID    0x0C01
 
 /// Defines product ID for the composite device.
-#define DEVICE_COMPOSITE_PRODUCT_ID 0xDEED
+#define DEVICE_COMPOSITE_PRODUCT_ID 0x0C02
+
+/// Defines interface ID for the device.
+#define DEVICE_INTERFACE_ID         0x01
+
+/// Defines vendor ID for the device
+#define DEVICE_EMULATOR_VENDOR_ID   0x18D1
 
 /// Defines product ID for a SoftUSB device simulator that is used to test
 /// the driver in isolation from hardware.
 #define DEVICE_EMULATOR_PROD_ID     0xDDDD
-
-/// Defines interface ID for the device.
-#define DEVICE_INTERFACE_ID         0x01
 
 #endif  // ANDROID_USB_API_ADB_API_EXTRA_H__

@@ -22,7 +22,7 @@
 	 android:id="@+id/snake"
 		android:layout_width="fill_parent"
                 android:layout_height="fill_parent"
-                tileSize="12"
+                tileSize="24"
                 />
 	
 	<RelativeLayout

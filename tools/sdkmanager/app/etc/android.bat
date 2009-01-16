@@ -20,6 +20,9 @@ rem Set up prog to be the path of this script, including following symlinks,
 rem and set up progdir to be the fully-qualified pathname of its directory.
 set prog=%~f0
 
+rem Grab current directory before we change it
+set workdir=%cd%
+
 rem Change current directory to where ddms is, to avoid issues with directories
 rem containing whitespaces.
 cd %~dp0
@@ -45,4 +48,4 @@ if debug NEQ "%1" goto NoDebug
 
 set jarpath=%frameworkdir%%jarfile%
 
-call java %java_debug% -Djava.ext.dirs=%frameworkdir% -Djava.library.path=%libdir% -Dcom.android.sdkmanager.toolsdir= -jar %jarpath% %*
+call java %java_debug% -Djava.ext.dirs=%frameworkdir% -Djava.library.path=%libdir% -Dcom.android.sdkmanager.toolsdir= -Dcom.android.sdkmanager.workdir="%workdir%" -jar %jarpath% %*

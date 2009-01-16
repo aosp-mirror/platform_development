@@ -58,11 +58,14 @@ public interface IAndroidTarget extends Comparable<IAndroidTarget> {
     public static int CATEGORIES          = 17;
     /** OS Path to the "sources" folder. */
     public static int SOURCES             = 18;
+    /** OS Path to the target specific docs */
+    public static int DOCS                = 19;
     
     public interface IOptionalLibrary {
         String getName();
         String getJarName();
         String getJarPath();
+        String getDescription();
     }
 
     /**
@@ -82,7 +85,6 @@ public interface IAndroidTarget extends Comparable<IAndroidTarget> {
     
     /**
      * Returns the full name of the target, possibly including vendor name.
-     * @return
      */
     String getFullName();
     

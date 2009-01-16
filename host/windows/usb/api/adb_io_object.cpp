@@ -191,7 +191,7 @@ ADBAPIHANDLE AdbIOObject::CommonAsyncReadWrite(bool is_read,
       AdbBulkTransfer transfer_param;
       transfer_param.time_out = time_out;
       transfer_param.transfer_size = is_read ? 0 : bytes_to_transfer;
-      transfer_param.write_buffer = is_read ? NULL : buffer;
+      transfer_param.SetWriteBuffer(is_read ? NULL : buffer);
 
       res = DeviceIoControl(usb_handle(),
         is_read ? ADB_IOCTL_BULK_READ : ADB_IOCTL_BULK_WRITE,
@@ -254,7 +254,7 @@ bool AdbIOObject::CommonSyncReadWrite(bool is_read,
     AdbBulkTransfer transfer_param;
     transfer_param.time_out = time_out;
     transfer_param.transfer_size = is_read ? 0 : bytes_to_transfer;
-    transfer_param.write_buffer = is_read ? NULL : buffer;
+    transfer_param.SetWriteBuffer(is_read ? NULL : buffer);
 
     ULONG tmp;
     ret = DeviceIoControl(usb_handle(),

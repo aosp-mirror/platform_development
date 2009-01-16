@@ -78,9 +78,11 @@ function package() {
     unzip "$SDK_ZIP" -d "$DIST_DIR"
     mv -v "$UNZIPPED" "$DEST"
     
-    # USB Driver is not in tools
-    mkdir -pv $DEST/usb_driver
-    cp -rv development/host/windows/prebuilt/usb/driver/* $DEST/usb_driver
+    # USB Driver for ADB
+    mkdir -pv $DEST/usb_driver/x86
+    cp -rv development/host/windows/prebuilt/usb/driver/* $DEST/usb_driver/x86/
+    mkdir -pv $DEST/usb_driver/amd64
+    cp -rv development/host/windows/prebuilt/usb/driver_amd_64/* $DEST/usb_driver/amd64/
 
     # Remove obsolete stuff from tools
     TOOLS="$DEST/tools"

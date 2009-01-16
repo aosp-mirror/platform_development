@@ -104,7 +104,7 @@
         <javac encoding="ascii" target="1.5" debug="true" extdirs=""
                 srcdir="${source-folder}"
                 destdir="${out-classes}"
-                bootclasspath="${android-jar}">
+                bootclasspathref="android.target.classpath">
             <classpath>
                 <fileset dir="${external-libs}" includes="*.jar"/>
                 <pathelement path="${main-out-classes}"/>

@@ -17,7 +17,6 @@
 package com.example.android.snake;
 
 import java.util.ArrayList;
-import java.util.Map;
 import java.util.Random;
 
 import android.content.Context;
@@ -550,6 +549,5 @@ public class SnakeView extends TileView {
             return "Coordinate: [" + x + "," + y + "]";
         }
     }
-
-
+    
 }

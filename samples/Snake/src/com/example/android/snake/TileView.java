@@ -25,7 +25,6 @@ import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.view.View;
 
-import java.util.Map;
 
 /**
  * TileView: a View-variant designed for handling arrays of "icons" or other

@@ -89,13 +89,43 @@ public class ProjectCreator {
             String packageName, String activityName, IAndroidTarget target,
             boolean isTestProject) {
         
-        // check project folder exists.
+        // create project folder if it does not exist
         File projectFolder = new File(folderPath);
-        if (projectFolder.isDirectory() == false) {
-            mLog.error(null, "Folder '%s' does not exist. Aborting...", folderPath);
-            return;
+        if (!projectFolder.exists()) {
+
+            boolean created = false;
+            Throwable t = null;
+            try {
+                created = projectFolder.mkdirs();
+            } catch (Exception e) {
+                t = e;
+            }
+            
+            if (created) {
+                println("Created project directory: %1$s", projectFolder);
+            } else {
+                mLog.error(t, "Could not create directory: %1$s", projectFolder);
+                return;
+            }
+        } else {
+            Exception e = null;
+            String error = null;
+            try {
+                String[] content = projectFolder.list();
+                if (content == null) {
+                    error = "Project directory %1$s is not a directory.";
+                } else if (content.length != 0) {
+                    error = "Project directory %1$s is not empty. Please consider using '%2$s update' instead.";
+                }
+            } catch (Exception e1) {
+                e = e1;
+            }
+            
+            if (e != null || error != null) {
+                mLog.error(e, error, projectFolder, SdkConstants.AndroidCmdName());
+            }
         }
-        
+
         try {
             // first create the project properties.
 
@@ -110,6 +140,11 @@ public class ProjectCreator {
                     PropertyType.DEFAULT);
             defaultProperties.setAndroidTarget(target);
             defaultProperties.save();
+            
+            // create an empty build.properties
+            ProjectProperties buildProperties = ProjectProperties.create(folderPath,
+                    PropertyType.BUILD);
+            buildProperties.save();
 
             // create the map for place-holders of values to replace in the templates
             final HashMap<String, String> keywords = new HashMap<String, String>();
@@ -190,7 +225,7 @@ public class ProjectCreator {
      * corresponding value in the created file.
      * 
      * @param templateName the name of to the template file
-     * @param dest the path to the destination file, relative to the project
+     * @param destFile the path to the destination file, relative to the project
      * @param placeholderMap a map of (place-holder, value) to create the file from the template.
      * @param target the Target of the project that will be providing the template.
      * @throws ProjectCreateException 
@@ -211,7 +246,7 @@ public class ProjectCreator {
      * corresponding value in the created file.
      * 
      * @param templateName the name of to the template file
-     * @param dest the path to the destination file, relative to the project
+     * @param destFile the path to the destination file, relative to the project
      * @param placeholderMap a map of (place-holder, value) to create the file from the template.
      * @throws ProjectCreateException 
      */
@@ -261,7 +296,6 @@ public class ProjectCreator {
         println("Added file %1$s", destFile);
     }
 
-    
     /**
      * Prints a message unless silence is enabled.
      * @param format Format for String.format

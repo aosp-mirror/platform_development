@@ -45,7 +45,7 @@
     <taskdef name="androidinit" classname="com.android.ant.AndroidInitTask"
         classpathref="android.antlibs"/>
 
-    <!-- Class the Android Init task that will import the proper rule file containing
-         all the Ant targets -->
+    <!-- Execute the Android Init task that will import the proper rule file containing
+         all the Ant targets, as well as setup some properties specific to the target. -->
     <androidinit />
 </project>

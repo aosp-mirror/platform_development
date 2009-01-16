@@ -32,12 +32,12 @@ class AndroidClasspathContainer implements IClasspathContainer {
     /**
      * Constructs the container with the {@link IClasspathEntry} representing the android
      * framework jar file and the container id
-     * @param entry the entry representing the android framework.
+     * @param entries the entries representing the android framework and optional libraries.
      * @param path the path containing the classpath container id.
      * @param name the name of the container to display.
      */
-    AndroidClasspathContainer(IClasspathEntry entry, IPath path, String name) {
-        mClasspathEntry = new IClasspathEntry[] { entry };
+    AndroidClasspathContainer(IClasspathEntry[] entries, IPath path, String name) {
+        mClasspathEntry = entries;
         mContainerPath = path;
         mName = name;
     }
