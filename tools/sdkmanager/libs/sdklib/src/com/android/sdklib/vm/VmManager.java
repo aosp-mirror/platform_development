@@ -20,7 +20,6 @@ import com.android.prefs.AndroidLocation;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.ISdkLog;
-import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
 
 import java.io.File;
@@ -54,20 +53,20 @@ public final class VmManager {
         String name;
         String path;
         IAndroidTarget target;
-        
+
         public String getName() {
             return name;
         }
-        
+
         public String getPath() {
             return path;
         }
-        
+
         public IAndroidTarget getTarget() {
             return target;
         }
     }
-    
+
     private final ArrayList<VmInfo> mVmList = new ArrayList<VmInfo>();
     private ISdkLog mSdkLog;
 
@@ -75,7 +74,7 @@ public final class VmManager {
         mSdkLog = sdkLog;
         buildVmList(sdk);
     }
-    
+
     /**
      * Returns the existing VMs.
      * @return a newly allocated arrays containing all the VMs.
@@ -83,7 +82,7 @@ public final class VmManager {
     public VmInfo[] getVms() {
         return mVmList.toArray(new VmInfo[mVmList.size()]);
     }
-    
+
     /**
      * Returns the {@link VmInfo} matching the given <var>name</var>.
      * @return the matching VmInfo or <code>null</code> if none were found.
@@ -99,7 +98,7 @@ public final class VmManager {
     }
 
     /**
-     * Creates a new VM.
+     * Creates a new VM. It is expected that there is no existing VM with this name already.
      * @param parentFolder the folder to contain the VM. A new folder will be created in this
      * folder with the name of the VM
      * @param name the name of the VM
@@ -109,27 +108,25 @@ public final class VmManager {
      * @param sdcardSize the size of a local sdcard to create. Can be 0 for no local sdcard.
      * @param hardwareConfig the hardware setup for the VM
      */
-    public static void createVm(String parentFolder, String name, IAndroidTarget target,
+    public VmInfo createVm(String parentFolder, String name, IAndroidTarget target,
             String skinName, String sdcardPath, int sdcardSize, Map<String,String> hardwareConfig,
             ISdkLog log) {
-
-        // now write the ini file in the vmRoot folder.
-        // get the Android prefs location.
+        
         try {
             File rootDirectory = new File(parentFolder);
             if (rootDirectory.isDirectory() == false) {
                 if (log != null) {
-                    log.error(null, "%s does not exists.", parentFolder);
+                    log.error(null, "Folder %s does not exist.", parentFolder);
                 }
-                return;
+                return null;
             }
             
             File vmFolder = new File(parentFolder, name + ".avm");
             if (vmFolder.exists()) {
                 if (log != null) {
-                    log.error(null, "%s already exists.", vmFolder.getAbsolutePath());
+                    log.error(null, "Folder %s is in the way.", vmFolder.getAbsolutePath());
                 }
-                return;
+                return null;
             }
             
             // create the vm folder.
@@ -164,13 +161,29 @@ public final class VmManager {
             // Config file
             values.clear();
             if (skinName != null) {
-                values.put("skin", skinName);
-            } else {
-                values.put("skin", SdkConstants.SKIN_DEFAULT);
+                // check that the skin name is valid
+                String[] skinNames = target.getSkins();
+                boolean found = false;
+                for (String n : skinNames) {
+                    if (n.equals(skinName)) {
+                        values.put("skin", skinName);
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (found == false && log != null) {
+                    log.warning("Skin '%1$s' does not exists, using default skin.", skinName);
+                }
             }
-            
+
             if (sdcardPath != null) {
-                values.put("sdcard", sdcardPath);
+                File sdcard = new File(sdcardPath);
+                if (sdcard.isFile()) {
+                    values.put("sdcard", sdcardPath);
+                } else if (log != null) {
+                    log.warning("sdcarad image '%1$s' does not exists.", sdcardPath);
+                }
             } else if (sdcardSize != 0) {
                 // TODO: create sdcard image.
             }
@@ -182,21 +195,36 @@ public final class VmManager {
             File configIniFile = new File(vmFolder, CONFIG_INI);
             createConfigIni(configIniFile, values);
             
-            if (target.isPlatform()) {
-                System.out.println(String.format(
-                        "Created VM '%s' based on %s", name, target.getName()));
-            } else {
-                System.out.println(String.format(
-                        "Created VM '%s' based on %s (%s)", name, target.getName(),
-                        target.getVendor()));
+            if (log != null) {
+                if (target.isPlatform()) {
+                    log.printf("Created VM '%s' based on %s\n", name, target.getName());
+                } else {
+                    log.printf(
+                            "Created VM '%s' based on %s (%s)\n", name, target.getName(),
+                            target.getVendor());
+                }
             }
+            
+            // create the VmInfo object, and add it to the list
+            VmInfo vmInfo = new VmInfo();
+            vmInfo.name = name;
+            vmInfo.path = vmFolder.getAbsolutePath();
+            vmInfo.target = target;
+            
+            mVmList.add(vmInfo);
+            
+            return vmInfo;
         } catch (AndroidLocationException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            if (log != null) {
+                log.error(e, null);
+            }
         } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            if (log != null) {
+                log.error(e, null);
+            }
         }
+        
+        return null;
     }
 
     private void buildVmList(SdkManager sdk) throws AndroidLocationException {

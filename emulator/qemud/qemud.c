@@ -1250,7 +1250,7 @@ static Multiplexer  _multiplexer[1];
 
 static const struct { const char* name; ChannelType  ctype; }   default_channels[] = {
     { "gsm", CHANNEL_DUPLEX },       /* GSM AT command channel, used by commands/rild/rild.c */
-    { "gps", CHANNEL_BROADCAST },    /* GPS NMEA commands, used by libs/hardware/qemu_gps.c  */
+    { "gps", CHANNEL_BROADCAST },    /* GPS NMEA commands, used by libs/hardware_legacy/qemu_gps.c  */
     { "control", CHANNEL_DUPLEX },   /* Used for power/leds/vibrator/etc... */
     { NULL, 0 }
 };

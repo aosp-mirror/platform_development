@@ -27,6 +27,8 @@ import com.android.ide.eclipse.common.AndroidConstants;
 import com.android.ide.eclipse.common.project.AndroidManifestHelper;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkConstants;
+import com.android.sdklib.project.ProjectProperties;
+import com.android.sdklib.project.ProjectProperties.PropertyType;
 import com.android.sdkuilib.SdkTargetSelector;
 
 import org.eclipse.core.filesystem.URIUtil;
@@ -129,6 +131,7 @@ public class NewProjectCreationPage extends WizardPage {
     protected boolean mProjectNameModifiedByUser;
     protected boolean mApplicationNameModifiedByUser;
     private boolean mInternalMinSdkVersionUpdate;
+    private boolean mMinSdkVersionModifiedByUser;
 
 
     /**
@@ -402,6 +405,7 @@ public class NewProjectCreationPage extends WizardPage {
         mSdkTargetSelector.setSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
+                onSdkTargetModified();
                 updateLocationPathField(null);
                 setPageComplete(validatePage());
             }
@@ -735,6 +739,14 @@ public class NewProjectCreationPage extends WizardPage {
         try {
             int version = Integer.parseInt(getMinSdkVersion());
             
+            // Before changing, compare with the currently selected one, if any.
+            // There can be multiple targets with the same sdk api version, so don't change
+            // it if it's already at the right version.
+            IAndroidTarget curr_target = getSdkTarget();
+            if (curr_target != null && curr_target.getApiVersionNumber() == version) {
+                return;
+            }
+            
             for (IAndroidTarget target : mSdkTargetSelector.getTargets()) {
                 if (target.getApiVersionNumber() == version) {
                     mSdkTargetSelector.setSelection(target);
@@ -743,6 +755,24 @@ public class NewProjectCreationPage extends WizardPage {
             }
         } catch (NumberFormatException e) {
             // ignore
+        }
+
+        mMinSdkVersionModifiedByUser = true;
+    }
+    
+    /**
+     * Called when an SDK target is modified.
+     * 
+     * If the minSdkVersion field hasn't been modified by the user yet, we change it
+     * to reflect the sdk api level that has just been selected.
+     */
+    private void onSdkTargetModified() {
+        IAndroidTarget target = getSdkTarget();
+        
+        if (target != null && !mMinSdkVersionModifiedByUser) {
+            mInternalMinSdkVersionUpdate = true;
+            mMinSdkVersionField.setText(Integer.toString(target.getApiVersionNumber()));
+            mInternalMinSdkVersionUpdate = false;
         }
     }
 
@@ -872,9 +902,22 @@ public class NewProjectCreationPage extends WizardPage {
             }
         }
 
-        // Select the target matching the manifest's sdk, if any
+        // Select the target matching the manifest's sdk or build properties, if any
         boolean foundTarget = false;
-        if (minSdkVersion != null) {
+        
+        ProjectProperties p = ProjectProperties.create(projectLocation, null);
+        if (p != null) {
+            // Check the {build|default}.properties files if present
+            p.merge(PropertyType.BUILD).merge(PropertyType.DEFAULT);
+            String v = p.getProperty(ProjectProperties.PROPERTY_TARGET);
+            IAndroidTarget target = Sdk.getCurrent().getTargetFromHashString(v);
+            if (target != null) {
+                mSdkTargetSelector.setSelection(target);
+                foundTarget = true;
+            }
+        }
+
+        if (!foundTarget && minSdkVersion != null) {
             try {
                 int sdkVersion = Integer.parseInt(minSdkVersion); 
 

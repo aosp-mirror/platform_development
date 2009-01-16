@@ -16,10 +16,14 @@
 
 package com.android.sdkmanager;
 
+import com.android.sdklib.ISdkLog;
+
 import junit.framework.TestCase;
 
 public class SdkCommandLineTest extends TestCase {
 
+    private MockStdLogger mLog;
+    
     /**
      * A mock version of the {@link SdkCommandLine} class that does not
      * exits and discards its stdout/stderr output.
@@ -28,7 +32,8 @@ public class SdkCommandLineTest extends TestCase {
         private boolean mExitCalled;
         private boolean mHelpCalled;
         
-        public MockSdkCommandLine() {
+        public MockSdkCommandLine(ISdkLog logger) {
+            super(logger);
         }
 
         @Override
@@ -64,6 +69,7 @@ public class SdkCommandLineTest extends TestCase {
 
     @Override
     protected void setUp() throws Exception {
+        mLog = new MockStdLogger();
         super.setUp();
     }
 
@@ -74,7 +80,7 @@ public class SdkCommandLineTest extends TestCase {
 
     /** Test list with long name and verbose */
     public final void testList_Long_Verbose() {
-        MockSdkCommandLine c = new MockSdkCommandLine();
+        MockSdkCommandLine c = new MockSdkCommandLine(mLog);
         assertEquals("all", c.getListFilter());
         c.parseArgs(new String[] { "-v", "list", "--filter", "vm" });
         assertFalse(c.wasHelpCalled());
@@ -85,7 +91,7 @@ public class SdkCommandLineTest extends TestCase {
 
     /** Test list with short name and no verbose */
     public final void testList_Short() {
-        MockSdkCommandLine c = new MockSdkCommandLine();
+        MockSdkCommandLine c = new MockSdkCommandLine(mLog);
         assertEquals("all", c.getListFilter());
         c.parseArgs(new String[] { "list", "-f", "vm" });
         assertFalse(c.wasHelpCalled());
@@ -95,7 +101,7 @@ public class SdkCommandLineTest extends TestCase {
     
     /** Test list with long name and missing parameter */
     public final void testList_Long_MissingParam() {
-        MockSdkCommandLine c = new MockSdkCommandLine();
+        MockSdkCommandLine c = new MockSdkCommandLine(mLog);
         assertEquals("all", c.getListFilter());
         c.parseArgs(new String[] { "list", "--filter" });
         assertTrue(c.wasHelpCalled());

@@ -648,8 +648,11 @@ public class ApkBuilder extends BaseBuilder {
                 return false;
             }
         } catch (Throwable ex) {
-            String message = String.format(Messages.Dalvik_Error_s,
-                    ex.getMessage());
+            String message = ex.getMessage();
+            if (message == null) {
+                message = ex.getClass().getCanonicalName();
+            }
+            message = String.format(Messages.Dalvik_Error_s, message);
             AdtPlugin.printErrorToConsole(getProject(), message);
             markProject(AdtConstants.MARKER_ADT, message, IMarker.SEVERITY_ERROR);
             if ((ex instanceof NoClassDefFoundError)

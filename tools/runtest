@@ -17,7 +17,7 @@
 # Options and default values
 # TODO: other options ideas:
 #   pass options to am (then remove some of the more specific options)
-# TODO capture more non-error output when not -v 
+# TODO capture more non-error output when not -v
 # TODO read configs from vendor/*, not just from vendor/google
 
 optListTests=0
@@ -53,8 +53,8 @@ function processOptions() {
       t ) optTestMethod=${OPTARG} ;;
       u ) optUserTests=${OPTARG} ;;
       esac
-  done 
-} 
+  done
+}
 
 #
 # Show the command usage and options
@@ -80,12 +80,12 @@ function showUsage() {
   echo "           short-test-name          # (req'd) test configuration to launch" >&2
 }
 
-# The list below are built-in test definitions.  You can also define your own 
-# tests by creating a file named "~/.android/runtest.rc" and adding them to that 
+# The list below are built-in test definitions.  You can also define your own
+# tests by creating a file named "~/.android/runtest.rc" and adding them to that
 # file.  (No array needed, just plain lines of text).
 #
 # Rests are defined by entries with the following format:
-# <short-name> <build-path> <test-package> <test-class> 
+# <short-name> <build-path> <test-package> <test-class>
 #              <testrunner-package> <testrunner-component>
 #
 # These map to the following commands:
@@ -102,7 +102,7 @@ function showUsage() {
 #   <test-package> = "#": test class is fully qualified with package
 #   <build-path> = "#":  skip build/sync step
 #   <test-class> = "#":  omit "-e class" section
-#   <testrunner-package> = "#":   use same value as test-package 
+#   <testrunner-package> = "#":   use same value as test-package
 #   <testrunner-component> = "#":  use "android.test.InstrumentationTestRunner"
 #
 # TODO: fields may be omitted completely if the trailing values are all "#"
@@ -123,6 +123,8 @@ knownTests=(
   "heap       frameworks/base/tests/AndroidTests  com.android.unit_tests HeapTest # #"
   "activity   frameworks/base/tests/AndroidTests  com.android.unit_tests activity.ActivityTests # #"
   "deadlock  tests/Deadlock                       com.android.deadlock # com.android.deadlock.tests #"
+  "syncadapter vendor/google/tests/AbstractGDataSyncAdapterTest # # com.google.android.providers.abstractgdatasyncadaptertests #"
+  "tablemerger frameworks/base/tests/FrameworkTest # android.content.AbstractTableMergerTest com.android.frameworktest.tests #"
   
   # selected app tests
   "browser    packages/apps/Browser            com.android.browser # # .BrowserTestRunner"
@@ -130,7 +132,7 @@ knownTests=(
   "calendar   packages/apps/Calendar/tests     com.android.calendar.tests # # #"
   "calprov    content/providers/calendar   com.android.providers.calendar.tests # # #"
   "camera     tests/Camera            com.android.cameratests # # CameraInstrumentationTestRunner"
-  "contactsprov content/tests/providers/contacts  com.android.providers.contacts # com.android.providers.contactstests .ContactsProviderInstrumentation"
+  "contactsprov packages/providers/GoogleContactsProvider/tests com.android.providers.contacts # com.android.providers.contactstests #"
   "email      packages/apps/Email              com.android.email # com.android.email.tests #"
   "emailsmall packages/apps/Email              com.android.email SmallTests com.android.email.tests #"
   "media      tests/MediaFrameworkTest    com.android.mediaframeworktest # # .MediaFrameworkTestRunner"
@@ -157,13 +159,13 @@ function readConfigFile () {
     declare -a lines
     exec 3<${rcFile} || exit
     while read curline <&3; do
-      if [[ -z ${curline} || ${curline:0:1} = "#" ]]; then 
+      if [[ -z ${curline} || ${curline:0:1} = "#" ]]; then
         continue
       fi
       lines=("${lines[@]}" "${curline}")
     done
     exec 3<&-
-    
+
     # now prepend the user lines (so they can override defaults)
     knownTests=("${lines[@]}" "${knownTests[@]}")
   fi
@@ -268,14 +270,14 @@ if [[ ${optListTests} -ne 0 ]] ; then
 fi
 
 testInfo=($(findTest $1))
-if [[ ${#testInfo[@]} -eq 5 ]] ; then 
+if [[ ${#testInfo[@]} -eq 5 ]] ; then
   # break out test definition elements
   buildPath=${testInfo[0]}
   testPackage=${testInfo[1]}
   testClass=${testInfo[2]}
   runnerPackage=${testInfo[3]}
   runnerComponent=${testInfo[4]}
-  
+
   # replace wildcards with default values
   if [[ ${testPackage} == "#" ]] ; then
     testPackage=
@@ -284,9 +286,9 @@ if [[ ${#testInfo[@]} -eq 5 ]] ; then
     runnerPackage=$testPackage
   fi
   if [[ ${runnerComponent} == "#" ]] ; then
-    runnerComponent="android.test.InstrumentationTestRunner" 
+    runnerComponent="android.test.InstrumentationTestRunner"
   fi
-  
+
   if [[ -n ${optTestClass} ]] ; then
     testClass=$optTestClass
   fi
@@ -294,7 +296,7 @@ if [[ ${#testInfo[@]} -eq 5 ]] ; then
   # build & sync, if requested
   if [[ ${optSkipBuild} -eq 0 ]] ; then
     if [[ ${buildPath} != "#" ]] ; then
-      if [[ $optVerbose -ne 0 || ${optPreview} -ne 0 ]] ; then 
+      if [[ $optVerbose -ne 0 || ${optPreview} -ne 0 ]] ; then
         echo mmm ${buildPath} "&&" adb ${optAdbTarget} remount "&&" adb ${optAdbTarget} sync
       fi
       if [[ ${optPreview} -eq 0 ]] ; then
@@ -312,7 +314,7 @@ if [[ ${#testInfo[@]} -eq 5 ]] ; then
       sleep 2
     fi
   fi
-      
+
   # setup additional clauses for the command
   classOptions=""
   if [[ ${testClass} != "#" ]] ; then
@@ -335,9 +337,9 @@ if [[ ${#testInfo[@]} -eq 5 ]] ; then
   if [[ ${optRawMode} -ne 0 ]] ; then
     debugOptions="-r "${debugOptions}
   fi
-  
+
   # now run the command
-  if [[ $optVerbose -ne 0 || ${optPreview} -ne 0 ]] ; then 
+  if [[ $optVerbose -ne 0 || ${optPreview} -ne 0 ]] ; then
     echo adb ${optAdbTarget} shell am instrument -w \
       ${debugOptions} \
       ${classOptions} \
@@ -354,4 +356,4 @@ else
   echo "$progName: unknown test \"$1\"" >&2
   exit 1
 fi
-    
+

@@ -60,35 +60,35 @@
               CTL_CODE(FILE_DEVICE_UNKNOWN, \
                        ADB_CTL_GET_USB_DEVICE_DESCRIPTOR, \
                        METHOD_BUFFERED, \
-                       FILE_ANY_ACCESS)
+                       FILE_READ_ACCESS)
 
 /// IOCTL that gets USB_CONFIGURATION_DESCRIPTOR
 #define ADB_IOCTL_GET_USB_CONFIGURATION_DESCRIPTOR \
               CTL_CODE(FILE_DEVICE_UNKNOWN, \
                        ADB_CTL_GET_USB_CONFIGURATION_DESCRIPTOR, \
                        METHOD_BUFFERED, \
-                       FILE_ANY_ACCESS)
+                       FILE_READ_ACCESS)
 
 /// IOCTL that gets USB_INTERFACE_DESCRIPTOR
 #define ADB_IOCTL_GET_USB_INTERFACE_DESCRIPTOR \
               CTL_CODE(FILE_DEVICE_UNKNOWN, \
                        ADB_CTL_GET_USB_INTERFACE_DESCRIPTOR, \
                        METHOD_BUFFERED, \
-                       FILE_ANY_ACCESS)
+                       FILE_READ_ACCESS)
 
 /// IOCTL that gets endpoint information
 #define ADB_IOCTL_GET_ENDPOINT_INFORMATION \
               CTL_CODE(FILE_DEVICE_UNKNOWN, \
                        ADB_CTL_GET_ENDPOINT_INFORMATION, \
                        METHOD_BUFFERED, \
-                       FILE_ANY_ACCESS)
+                       FILE_READ_ACCESS)
 
 /// Bulk read IOCTL
 #define ADB_IOCTL_BULK_READ \
               CTL_CODE(FILE_DEVICE_UNKNOWN, \
                        ADB_CTL_BULK_READ, \
                        METHOD_OUT_DIRECT, \
-                       FILE_ANY_ACCESS)
+                       FILE_READ_ACCESS)
 
 // For bulk write IOCTL we send request data in the form of AdbBulkTransfer
 // structure and output buffer is just ULONG that receives number of bytes
@@ -99,14 +99,14 @@
               CTL_CODE(FILE_DEVICE_UNKNOWN, \
                        ADB_CTL_BULK_WRITE, \
                        METHOD_BUFFERED, \
-                       FILE_ANY_ACCESS)
+                       FILE_WRITE_ACCESS)
 
 /// IOCTL that gets device serial number
 #define ADB_IOCTL_GET_SERIAL_NUMBER \
               CTL_CODE(FILE_DEVICE_UNKNOWN, \
                        ADB_CTL_GET_SERIAL_NUMBER, \
                        METHOD_BUFFERED, \
-                       FILE_ANY_ACCESS)
+                       FILE_READ_ACCESS)
 
 ///@}
 
@@ -131,9 +131,49 @@ struct AdbBulkTransfer {
   /// size is defined by the output buffer size.
   ULONG transfer_size;
 
+  /// Initializes statically allocated structure
+  __forceinline AdbBulkTransfer() {
+    time_out = 0;
+    transfer_size = 0;
+    for_x64 = 0;
+  }
+
+  /// Provides access to protected write_buffer field
+  void* GetWriteBuffer() {
+    return write_buffer;
+  }
+
+  /// Provides access to protected write_buffer field
+  const void* GetWriteBuffer() const {
+    return write_buffer;
+  }
+
+  /// Sets write_buffer field.
+  void SetWriteBuffer(void* buffer) {
+    // For 32-bit we must zero out high 32 bit of the address, so 64-bit
+    // driver will see valid address when accessing 64-bit write_buffer.
+    for_x64 = 0;
+    write_buffer = buffer;
+  }
+
+protected:
   /// Pointer to the actual buffer for ADB_CTL_BULK_WRITE request. This field
-  /// is not used in ADB_CTL_BULK_READ request.
-  void* write_buffer;
+  /// is not used in ADB_CTL_BULK_READ request. Note that in order to support
+  /// compatibility between 32-bit and 64-bit versions of both, driver and
+  /// application we must sizeof this field to the max pointer sizeof (which
+  /// is 64 bit in our case). The idea is that if IOCTL was issued by a 64-bit
+  /// process to a 64-bit driver, write_buffer will be valid 64-bit pointer to
+  /// the write buffer. Same is true for 32-bit app talking to 32-bit driver.
+  /// If, however, a 32-bit app is talking to 64-bit driver, then write_buffer
+  /// initialized by 32-bit app will contain 32-bit address, which will be
+  /// correctly picked up ("extended") by 64-bit driver. Since when setting
+  /// this field by a 32-bit app requires some extra work (see SetWriteBuffer)
+  /// we hide this field, making it accessible only throug the accessor
+  /// methods (Get/SetWriteBuffer).
+  union {
+    void* write_buffer;
+    __int64 for_x64;
+  };
 };
 
 #endif  // ANDROID_USB_COMMON_DEFINES_H__

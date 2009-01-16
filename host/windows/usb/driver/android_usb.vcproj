@@ -18,33 +18,36 @@
 			ConfigurationType="0">
 			<Tool
 				Name="VCNMakeTool"
-				BuildCommandLine="call c:\winddk\6000\bin\setenv.bat c:\winddk\6000\ chk WXP
+				BuildCommandLine="call C:\WinDDK\6000\bin\setenv.bat C:\WinDDK\6000\ chk WXP
 set PROJECTDIR=$(ProjectDir)
 set DRIVE=%PROJECTDIR:~0,2%
 %DRIVE%
 cd %PROJECTDIR%
 build -beEIFZ
 cd %PROJECTDIR%
-copy android_usb.inf ..\build\debug\i386\android_usb.inf"
-				ReBuildCommandLine="call c:\winddk\6000\bin\setenv.bat c:\winddk\6000\ chk WXP
+copy /Y android_usb.inf ..\build\debug\i386\android_usb.inf
+copy /Y C:\WINDDK\6000\redist\wdf\x86\WdfCoInstaller01005.dll ..\build\debug\i386
+set PATH=%PATH%;C:\WINDDK\6001.18001\bin\SelfSign
+Inf2Cat /driver:..\build\debug\i386 /os:XP_X86,Server2003_X86,Vista_X86
+"
+				ReBuildCommandLine="call C:\WinDDK\6000\bin\setenv.bat C:\WinDDK\6000\ chk WXP
 set PROJECTDIR=$(ProjectDir)
 set DRIVE=%PROJECTDIR:~0,2%
 %DRIVE%
 cd %PROJECTDIR%
 build -cbeEIFZ
 cd %PROJECTDIR%
-copy android_usb.inf ..\build\debug\i386\android_usb.inf
-cd ..\build\debug\i386
-set Path=%Path%;$(VCInstallDir)bin;$(VSInstallDir)Common7\IDE
-dumpbin /ALL /OUT:androidusb.txt androidusb.sys
+copy /Y android_usb.inf ..\build\debug\i386\android_usb.inf
+copy /Y C:\WINDDK\6000\redist\wdf\x86\WdfCoInstaller01005.dll ..\build\debug\i386
+set PATH=%PATH%;C:\WINDDK\6001.18001\bin\SelfSign
+Inf2Cat /driver:..\build\debug\i386 /os:XP_X86,Server2003_X86,Vista_X86
 "
-				CleanCommandLine="call c:\winddk\6000\bin\setenv.bat c:\winddk\6000\ chk WXP
+				CleanCommandLine="call C:\WinDDK\6000\bin\setenv.bat C:\WinDDK\6000\ chk WXP
 set PROJECTDIR=$(ProjectDir)
 set DRIVE=%PROJECTDIR:~0,2%
 %DRIVE%
 cd %PROJECTDIR%
-build -c0
-"/>
+build -c0"/>
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
@@ -53,29 +56,113 @@ build -c0
 			ConfigurationType="0">
 			<Tool
 				Name="VCNMakeTool"
-				BuildCommandLine="call c:\winddk\6000\bin\setenv.bat c:\winddk\6000\ free WXP
+				BuildCommandLine="call C:\WinDDK\6000\bin\setenv.bat C:\WinDDK\6000\ fre WXP
 set PROJECTDIR=$(ProjectDir)
 set DRIVE=%PROJECTDIR:~0,2%
 %DRIVE%
 cd %PROJECTDIR%
 build -beEIFZ
 cd %PROJECTDIR%
-copy android_usb.inf ..\build\release\i386\android_usb.inf"
-				ReBuildCommandLine="call c:\winddk\6000\bin\setenv.bat c:\winddk\6000\ free WXP
+copy /Y android_usb.inf ..\build\release\i386\android_usb.inf
+copy /Y C:\WINDDK\6000\redist\wdf\x86\WdfCoInstaller01005.dll ..\build\release\i386
+set PATH=%PATH%;C:\WINDDK\6001.18001\bin\SelfSign
+Inf2Cat /driver:..\build\release\i386 /os:XP_X86,Server2003_X86,Vista_X86
+"
+				ReBuildCommandLine="call C:\WinDDK\6000\bin\setenv.bat C:\WinDDK\6000\ fre WXP
 set PROJECTDIR=$(ProjectDir)
 set DRIVE=%PROJECTDIR:~0,2%
 %DRIVE%
 cd %PROJECTDIR%
 build -cbeEIFZ
 cd %PROJECTDIR%
-copy android_usb.inf ..\build\release\i386\android_usb.inf"
-				CleanCommandLine="call c:\winddk\6000\bin\setenv.bat c:\winddk\6000\ free WXP
+copy /Y android_usb.inf ..\build\release\i386\android_usb.inf
+copy /Y C:\WINDDK\6000\redist\wdf\x86\WdfCoInstaller01005.dll ..\build\release\i386
+set PATH=%PATH%;C:\WINDDK\6001.18001\bin\SelfSign
+Inf2Cat /driver:..\build\release\i386 /os:XP_X86,Server2003_X86,Vista_X86
+"
+				CleanCommandLine="call C:\WinDDK\6000\bin\setenv.bat C:\WinDDK\6000\ fre WXP
 set PROJECTDIR=$(ProjectDir)
 set DRIVE=%PROJECTDIR:~0,2%
 %DRIVE%
 cd %PROJECTDIR%
-build -c0
-"/>
+build -c0"/>
+		</Configuration>
+		<Configuration
+			Name="Debug-64|Win32"
+			OutputDirectory="$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
+			ConfigurationType="0">
+			<Tool
+				Name="VCNMakeTool"
+				BuildCommandLine="call C:\WinDDK\6000\bin\setenv.bat C:\WinDDK\6000\ chk AMD64 WNET
+set PROJECTDIR=$(ProjectDir)
+set DRIVE=%PROJECTDIR:~0,2%
+%DRIVE%
+cd %PROJECTDIR%
+build -beEIFZ
+cd %PROJECTDIR%
+copy android_usb.inf ..\build\debug\amd64\android_usb.inf
+copy C:\WINDDK\6000\redist\wdf\amd64\WdfCoInstaller01005.dll ..\build\debug\amd64
+set PATH=%PATH%;C:\WINDDK\6001.18001\bin\SelfSign
+Inf2Cat /driver:..\build\debug\amd64 /os:XP_X64,Server2003_X64,Vista_X64
+"
+				ReBuildCommandLine="call C:\WinDDK\6000\bin\setenv.bat C:\WinDDK\6000\ chk AMD64 WNET
+set PROJECTDIR=$(ProjectDir)
+set DRIVE=%PROJECTDIR:~0,2%
+%DRIVE%
+cd %PROJECTDIR%
+build -cbeEIFZ
+cd %PROJECTDIR%
+copy android_usb.inf ..\build\debug\amd64\android_usb.inf
+copy C:\WINDDK\6000\redist\wdf\amd64\WdfCoInstaller01005.dll ..\build\debug\amd64
+set PATH=%PATH%;C:\WINDDK\6001.18001\bin\SelfSign
+SignTool sign /v /s AndroidTestCertStore /n Android /t http://timestamp.verisign.com/scripts/timestamp.dll ..\build\debug\amd64\androidusb.sys
+Inf2Cat /driver:..\build\debug\amd64 /os:XP_X64,Server2003_X64,Vista_X64
+SignTool sign /v /s AndroidTestCertStore /n Android /t http://timestamp.verisign.com/scripts/timestamp.dll ..\build\debug\amd64\androidusba64.cat"
+				CleanCommandLine="call C:\WinDDK\6000\bin\setenv.bat C:\WinDDK\6000\ chk AMD64 WNET
+set PROJECTDIR=$(ProjectDir)
+set DRIVE=%PROJECTDIR:~0,2%
+%DRIVE%
+cd %PROJECTDIR%
+build -c0"/>
+		</Configuration>
+		<Configuration
+			Name="Release-64|Win32"
+			OutputDirectory="$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
+			ConfigurationType="0">
+			<Tool
+				Name="VCNMakeTool"
+				BuildCommandLine="call C:\WinDDK\6000\bin\setenv.bat C:\WinDDK\6000\ fre AMD64 WNET
+set PROJECTDIR=$(ProjectDir)
+set DRIVE=%PROJECTDIR:~0,2%
+%DRIVE%
+cd %PROJECTDIR%
+build -beEIFZ
+cd %PROJECTDIR%
+copy android_usb.inf ..\build\release\amd64\android_usb.inf
+copy C:\WINDDK\6000\redist\wdf\amd64\WdfCoInstaller01005.dll ..\build\release\amd64
+set PATH=%PATH%;C:\WINDDK\6001.18001\bin\SelfSign
+Inf2Cat /driver:..\build\release\amd64 /os:XP_X64,Server2003_X64,Vista_X64
+"
+				ReBuildCommandLine="call C:\WinDDK\6000\bin\setenv.bat C:\WinDDK\6000\ fre AMD64 WNET
+set PROJECTDIR=$(ProjectDir)
+set DRIVE=%PROJECTDIR:~0,2%
+%DRIVE%
+cd %PROJECTDIR%
+build -cbeEIFZ
+cd %PROJECTDIR%
+copy android_usb.inf ..\build\release\amd64\android_usb.inf
+copy C:\WINDDK\6000\redist\wdf\amd64\WdfCoInstaller01005.dll ..\build\release\amd64
+set PATH=%PATH%;C:\WINDDK\6001.18001\bin\SelfSign
+Inf2Cat /driver:..\build\release\amd64 /os:XP_X64,Server2003_X64,Vista_X64
+"
+				CleanCommandLine="call C:\WinDDK\6000\bin\setenv.bat C:\WinDDK\6000\ fre AMD64 WNET
+set PROJECTDIR=$(ProjectDir)
+set DRIVE=%PROJECTDIR:~0,2%
+%DRIVE%
+cd %PROJECTDIR%
+build -c0"/>
 		</Configuration>
 	</Configurations>
 	<References>
@@ -749,10 +836,10 @@ build -c0
 					RelativePath="..\..\..\..\Winddk\6000\inc\api\usb.h">
 				</File>
 				<File
-					RelativePath="..\..\..\..\..\..\..\..\Winddk\6000\inc\api\usb100.h">
+					RelativePath="..\..\..\..\Winddk\6000\inc\api\usb100.h">
 				</File>
 				<File
-					RelativePath="..\..\..\..\Winddk\6000\inc\api\usb100.h">
+					RelativePath="..\..\..\..\..\..\..\..\Winddk\6000\inc\api\usb100.h">
 				</File>
 				<File
 					RelativePath="..\..\..\..\..\..\..\..\Winddk\6000\inc\api\usb200.h">
@@ -794,10 +881,10 @@ build -c0
 					RelativePath="..\..\..\..\Winddk\6000\inc\ddk\videoagp.h">
 				</File>
 				<File
-					RelativePath="..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdf.h">
+					RelativePath="..\..\..\..\..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdf.h">
 				</File>
 				<File
-					RelativePath="..\..\..\..\..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdf.h">
+					RelativePath="..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdf.h">
 				</File>
 				<File
 					RelativePath="..\..\..\..\..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdf10.h">
@@ -806,16 +893,16 @@ build -c0
 					RelativePath="..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdf10.h">
 				</File>
 				<File
-					RelativePath="..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdf11.h">
-				</File>
-				<File
 					RelativePath="..\..\..\..\..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdf11.h">
 				</File>
 				<File
-					RelativePath="..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfassert.h">
+					RelativePath="..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdf11.h">
 				</File>
 				<File
 					RelativePath="..\..\..\..\..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfassert.h">
+				</File>
+				<File
+					RelativePath="..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfassert.h">
 				</File>
 				<File
 					RelativePath="..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfbugcodes.h">
@@ -824,28 +911,28 @@ build -c0
 					RelativePath="..\..\..\..\..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfbugcodes.h">
 				</File>
 				<File
-					RelativePath="..\..\..\..\..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfchildlist.h">
-				</File>
-				<File
 					RelativePath="..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfchildlist.h">
 				</File>
 				<File
-					RelativePath="..\..\..\..\..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfcollection.h">
+					RelativePath="..\..\..\..\..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfchildlist.h">
 				</File>
 				<File
 					RelativePath="..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfcollection.h">
 				</File>
 				<File
-					RelativePath="..\..\..\..\..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfcommonbuffer.h">
+					RelativePath="..\..\..\..\..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfcollection.h">
 				</File>
 				<File
 					RelativePath="..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfcommonbuffer.h">
 				</File>
 				<File
-					RelativePath="..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfcontrol.h">
+					RelativePath="..\..\..\..\..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfcommonbuffer.h">
 				</File>
 				<File
 					RelativePath="..\..\..\..\..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfcontrol.h">
+				</File>
+				<File
+					RelativePath="..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfcontrol.h">
 				</File>
 				<File
 					RelativePath="..\..\..\..\..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfcore.h">
@@ -854,28 +941,28 @@ build -c0
 					RelativePath="..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfcore.h">
 				</File>
 				<File
-					RelativePath="..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfdevice.h">
-				</File>
-				<File
 					RelativePath="..\..\..\..\..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfdevice.h">
 				</File>
 				<File
-					RelativePath="..\..\..\..\..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfdmaenabler.h">
+					RelativePath="..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfdevice.h">
 				</File>
 				<File
 					RelativePath="..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfdmaenabler.h">
 				</File>
 				<File
-					RelativePath="..\..\..\..\..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfdmatransaction.h">
+					RelativePath="..\..\..\..\..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfdmaenabler.h">
 				</File>
 				<File
 					RelativePath="..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfdmatransaction.h">
 				</File>
 				<File
-					RelativePath="..\..\..\..\..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfdpc.h">
+					RelativePath="..\..\..\..\..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfdmatransaction.h">
 				</File>
 				<File
 					RelativePath="..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfdpc.h">
+				</File>
+				<File
+					RelativePath="..\..\..\..\..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfdpc.h">
 				</File>
 				<File
 					RelativePath="..\..\..\..\..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfdriver.h">
@@ -884,16 +971,16 @@ build -c0
 					RelativePath="..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfdriver.h">
 				</File>
 				<File
-					RelativePath="..\..\..\..\..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdffdo.h">
-				</File>
-				<File
 					RelativePath="..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdffdo.h">
 				</File>
 				<File
-					RelativePath="..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdffileobject.h">
+					RelativePath="..\..\..\..\..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdffdo.h">
 				</File>
 				<File
 					RelativePath="..\..\..\..\..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdffileobject.h">
+				</File>
+				<File
+					RelativePath="..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdffileobject.h">
 				</File>
 				<File
 					RelativePath="..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdffuncenum.h">
@@ -902,16 +989,16 @@ build -c0
 					RelativePath="..\..\..\..\..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdffuncenum.h">
 				</File>
 				<File
-					RelativePath="..\..\..\..\..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfglobals.h">
-				</File>
-				<File
 					RelativePath="..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfglobals.h">
 				</File>
 				<File
-					RelativePath="..\..\..\..\..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfinstaller.h">
+					RelativePath="..\..\..\..\..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfglobals.h">
 				</File>
 				<File
 					RelativePath="..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfinstaller.h">
+				</File>
+				<File
+					RelativePath="..\..\..\..\..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfinstaller.h">
 				</File>
 				<File
 					RelativePath="..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfinterrupt.h">
@@ -920,28 +1007,28 @@ build -c0
 					RelativePath="..\..\..\..\..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfinterrupt.h">
 				</File>
 				<File
-					RelativePath="..\..\..\..\..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfio.h">
-				</File>
-				<File
 					RelativePath="..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfio.h">
 				</File>
 				<File
-					RelativePath="..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfiotarget.h">
+					RelativePath="..\..\..\..\..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfio.h">
 				</File>
 				<File
 					RelativePath="..\..\..\..\..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfiotarget.h">
 				</File>
 				<File
-					RelativePath="..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfmemory.h">
+					RelativePath="..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfiotarget.h">
 				</File>
 				<File
 					RelativePath="..\..\..\..\..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfmemory.h">
 				</File>
 				<File
-					RelativePath="..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfminiport.h">
+					RelativePath="..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfmemory.h">
 				</File>
 				<File
 					RelativePath="..\..\..\..\..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfminiport.h">
+				</File>
+				<File
+					RelativePath="..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfminiport.h">
 				</File>
 				<File
 					RelativePath="..\..\..\..\..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfobject.h">
@@ -950,28 +1037,28 @@ build -c0
 					RelativePath="..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfobject.h">
 				</File>
 				<File
-					RelativePath="..\..\..\..\..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfpdo.h">
-				</File>
-				<File
 					RelativePath="..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfpdo.h">
 				</File>
 				<File
-					RelativePath="..\..\..\..\..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfpool.h">
+					RelativePath="..\..\..\..\..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfpdo.h">
 				</File>
 				<File
 					RelativePath="..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfpool.h">
 				</File>
 				<File
-					RelativePath="..\..\..\..\..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfqueryinterface.h">
+					RelativePath="..\..\..\..\..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfpool.h">
 				</File>
 				<File
 					RelativePath="..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfqueryinterface.h">
 				</File>
 				<File
-					RelativePath="..\..\..\..\..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfregistry.h">
+					RelativePath="..\..\..\..\..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfqueryinterface.h">
 				</File>
 				<File
 					RelativePath="..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfregistry.h">
+				</File>
+				<File
+					RelativePath="..\..\..\..\..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfregistry.h">
 				</File>
 				<File
 					RelativePath="..\..\..\..\..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfrequest.h">
@@ -980,28 +1067,28 @@ build -c0
 					RelativePath="..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfrequest.h">
 				</File>
 				<File
-					RelativePath="..\..\..\..\..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfresource.h">
-				</File>
-				<File
 					RelativePath="..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfresource.h">
 				</File>
 				<File
-					RelativePath="..\..\..\..\..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfstatus.h">
+					RelativePath="..\..\..\..\..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfresource.h">
 				</File>
 				<File
 					RelativePath="..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfstatus.h">
 				</File>
 				<File
-					RelativePath="..\..\..\..\..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfstring.h">
+					RelativePath="..\..\..\..\..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfstatus.h">
 				</File>
 				<File
 					RelativePath="..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfstring.h">
 				</File>
 				<File
-					RelativePath="..\..\..\..\..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfsync.h">
+					RelativePath="..\..\..\..\..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfstring.h">
 				</File>
 				<File
 					RelativePath="..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfsync.h">
+				</File>
+				<File
+					RelativePath="..\..\..\..\..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfsync.h">
 				</File>
 				<File
 					RelativePath="..\..\..\..\..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdftimer.h">
@@ -1010,28 +1097,28 @@ build -c0
 					RelativePath="..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdftimer.h">
 				</File>
 				<File
-					RelativePath="..\..\..\..\..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdftraceenums.h">
-				</File>
-				<File
 					RelativePath="..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdftraceenums.h">
 				</File>
 				<File
-					RelativePath="..\..\..\..\..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdftypes.h">
+					RelativePath="..\..\..\..\..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdftraceenums.h">
 				</File>
 				<File
 					RelativePath="..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdftypes.h">
 				</File>
 				<File
-					RelativePath="..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfusb.h">
+					RelativePath="..\..\..\..\..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdftypes.h">
 				</File>
 				<File
 					RelativePath="..\..\..\..\..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfusb.h">
 				</File>
 				<File
-					RelativePath="..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfverifier.h">
+					RelativePath="..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfusb.h">
 				</File>
 				<File
 					RelativePath="..\..\..\..\..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfverifier.h">
+				</File>
+				<File
+					RelativePath="..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfverifier.h">
 				</File>
 				<File
 					RelativePath="..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfwmi.h">
@@ -1040,16 +1127,16 @@ build -c0
 					RelativePath="..\..\..\..\..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfwmi.h">
 				</File>
 				<File
-					RelativePath="..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfworkitem.h">
-				</File>
-				<File
 					RelativePath="..\..\..\..\..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfworkitem.h">
 				</File>
 				<File
-					RelativePath="..\..\..\..\Winddk\6000\inc\ddk\wdm.h">
+					RelativePath="..\..\..\..\Winddk\6000\inc\wdf\kmdf\10\wdfworkitem.h">
 				</File>
 				<File
 					RelativePath="..\..\..\..\..\..\..\..\Winddk\6000\inc\ddk\wdm.h">
+				</File>
+				<File
+					RelativePath="..\..\..\..\Winddk\6000\inc\ddk\wdm.h">
 				</File>
 				<File
 					RelativePath="..\..\..\..\Winddk\6000\inc\ddk\wdmguid.h">

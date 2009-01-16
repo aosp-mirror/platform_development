@@ -66,7 +66,7 @@ public final class ProjectProperties {
            "# This file must be checked in Version Control Systems.\n" +
            "# \n" +
            "# To customize properties used by the Ant build system use,\n" +
-           "# \"build.properties\", and override values to adapt the script to your" +
+           "# \"build.properties\", and override values to adapt the script to your\n" +
            "# project structure.\n" +
            "\n";
 
@@ -74,17 +74,18 @@ public final class ProjectProperties {
 //          1-------10--------20--------30--------40--------50--------60--------70--------80        
            "# This file is used to override default values used by the Ant build system.\n" +
            "# \n" +
-           "# This file must be checked in Version Control Systems, as it is" +
+           "# This file must be checked in Version Control Systems, as it is\n" +
            "# integral to the build system of your project.\n" +
-           "# \n" +
-           "# Use this file to change values like:\n" +
-           "# application-package\n:" +
-           "#     the name of your application package as defined in the manifest.\n" +
-           "#     Used by the 'uninstall' rule.\n"+
-           "# source-folder\n:" +
-           "#     the name of the source folder. Default is 'src'.\n" +
-           "# out-folder\n:" +
-           "#     the name of the output folder. Default is 'bin'\n" +
+           "\n" +
+           "# The name of your application package as defined in the manifest.\n" +
+           "# Used by the 'uninstall' rule.\n"+
+           "#application-package=com.example.myproject\n" +
+           "\n" +
+           "# The name of the source folder.\n" +
+           "#source-folder=src\n" +
+           "\n" +
+           "# The name of the output folder.\n" +
+           "#out-folder=bin\n" +
            "\n";
 
     private final static Map<String, String> COMMENT_MAP = new HashMap<String, String>();
@@ -104,7 +105,9 @@ public final class ProjectProperties {
     /**
      * Loads a project properties file and return a {@link ProjectProperties} object
      * containing the properties
+     * 
      * @param projectFolderOsPath the project folder.
+     * @param type One the possible {@link PropertyType}s. 
      */
     public static ProjectProperties load(String projectFolderOsPath, PropertyType type) {
         File projectFolder = new File(projectFolderOsPath);
@@ -119,7 +122,44 @@ public final class ProjectProperties {
         }
         return null;
     }
-    
+ 
+    /**
+     * Merges all properties from the given file into the current properties.
+     * <p/>
+     * This emulates the Ant behavior: existing properties are <em>not</em> overriden.
+     * Only new undefined properties become defined.
+     * <p/>
+     * Typical usage:
+     * <ul>
+     * <li>Create a ProjectProperties with {@link PropertyType#BUILD}
+     * <li>Merge in values using {@link PropertyType#DEFAULT}
+     * <li>The result is that this contains all the properties from default plus those
+     *     overridden by the build.properties file.
+     * </ul>
+     * 
+     * @param type One the possible {@link PropertyType}s. 
+     * @return this object, for chaining.
+     */
+    public ProjectProperties merge(PropertyType type) {
+        File projectFolder = new File(mProjectFolderOsPath);
+        if (projectFolder.isDirectory()) {
+            File defaultFile = new File(projectFolder, type.mFilename);
+            if (defaultFile.isFile()) {
+                Map<String, String> map = SdkManager.parsePropertyFile(defaultFile, null /* log */);
+                if (map != null) {
+                    for(Entry<String, String> entry : map.entrySet()) {
+                        String key = entry.getKey();
+                        String value = entry.getValue();
+                        if (!mProperties.containsKey(key) && value != null) {
+                            mProperties.put(key, value);
+                        }
+                    }
+                }
+            }
+        }
+        return this;
+    }
+
     /**
      * Creates a new project properties object, with no properties.
      * <p/>The file is not created until {@link #save()} is called.
@@ -185,10 +225,9 @@ public final class ProjectProperties {
     
     /**
      * Private constructor.
-     * Use {@link #load(String)} or {@link #create(String)} to instantiate.
-     * @param projectFolderOsPath
-     * @param map
-     * @param type 
+     * <p/>
+     * Use {@link #load(String, PropertyType)} or {@link #create(String, PropertyType)}
+     * to instantiate.
      */
     private ProjectProperties(String projectFolderOsPath, Map<String, String> map,
             PropertyType type) {

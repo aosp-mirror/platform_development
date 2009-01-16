@@ -16,6 +16,7 @@
 
 package com.android.sdkmanager;
 
+import com.android.sdklib.ISdkLog;
 import com.android.sdklib.SdkManager;
 
 
@@ -38,6 +39,8 @@ public class SdkCommandLine extends CommandLineProcessor {
     public static final String KEY_NAME = "name";
     public static final String KEY_OUT = "out";
     public static final String KEY_FILTER = "filter";
+    public static final String KEY_SKIN = "skin";
+    public static final String KEY_SDCARD_PATH = "sdcard";
 
     public final static String ACTION_LIST = "list";
     public final static String ACTION_NEW_VM = ARG_VM;
@@ -52,11 +55,11 @@ public class SdkCommandLine extends CommandLineProcessor {
         { ACTION_NEW_PROJECT,
             "Creates a new project using a template." },
         { ACTION_UPDATE_PROJECT,
-            "Updates a new project from existing source (must have an AndroidManifest.xml)." },
+            "Updates a project from existing source (must have an AndroidManifest.xml)." },
         };
     
-    public SdkCommandLine() {
-        super(ACTIONS);
+    public SdkCommandLine(ISdkLog logger) {
+        super(logger, ACTIONS);
 
         define(MODE.ENUM, false, ACTION_LIST, "f", KEY_FILTER,
                 "List filter", new String[] { ARG_ALL, ARG_TARGET, ARG_VM });
@@ -67,6 +70,10 @@ public class SdkCommandLine extends CommandLineProcessor {
                 "Name of the new VM", null);
         define(MODE.INTEGER, true, ACTION_NEW_VM, "t", KEY_TARGET_ID,
                 "Target id of the new VM", null);
+        define(MODE.STRING, true, ACTION_NEW_VM, "s", KEY_SKIN,
+                "Skin of the new VM", null);
+        define(MODE.STRING, true, ACTION_NEW_VM, "p", KEY_SDCARD_PATH,
+                "Path to a shared SD card image for the new VM", null);
 
         define(MODE.ENUM, true, ACTION_NEW_PROJECT, "m", KEY_MODE,
                 "Project mode", new String[] { ARG_ACTIVITY, ARG_ALIAS });
@@ -110,6 +117,17 @@ public class SdkCommandLine extends CommandLineProcessor {
     public String getNewVmName() {
         return ((String) getValue(ACTION_NEW_VM, KEY_NAME));
     }
+    
+    /** Helper to retrieve the --skin name for the new vm action. */
+    public String getNewVmSkin() {
+        return ((String) getValue(ACTION_NEW_VM, KEY_SKIN));
+    }
+
+    /** Helper to retrieve the --sdcard name for the new vm action. */
+    public String getNewVmSdCard() {
+        return ((String) getValue(ACTION_NEW_VM, KEY_SDCARD_PATH));
+    }
+
 
     // -- some helpers for project action flags
     

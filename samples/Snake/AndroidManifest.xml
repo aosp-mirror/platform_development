@@ -22,7 +22,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.android.snake">
     <application android:label="Snake on a Phone">
-        <activity android:name="Snake">
+      <activity android:name="Snake"
+        android:screenOrientation="portrait"
+        android:configChanges="keyboardHidden|orientation">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

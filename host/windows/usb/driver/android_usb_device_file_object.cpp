@@ -47,26 +47,26 @@ void AndroidUsbDeviceFileObject::OnEvtIoDeviceControl(WDFREQUEST request,
                                                       ULONG ioctl_code) {
   ASSERT_IRQL_LOW_OR_DISPATCH();
 
-  switch (GetCtlCode(ioctl_code)) {
-    case ADB_CTL_GET_USB_DEVICE_DESCRIPTOR:
+  switch (ioctl_code) {
+    case ADB_IOCTL_GET_USB_DEVICE_DESCRIPTOR:
       device_object()->OnGetUsbDeviceDescriptorCtl(request, output_buf_len);
       break;
 
-    case ADB_CTL_GET_USB_CONFIGURATION_DESCRIPTOR:
+    case ADB_IOCTL_GET_USB_CONFIGURATION_DESCRIPTOR:
       device_object()->OnGetUsbConfigDescriptorCtl(request, output_buf_len);
       break;
 
-    case ADB_CTL_GET_USB_INTERFACE_DESCRIPTOR:
+    case ADB_IOCTL_GET_USB_INTERFACE_DESCRIPTOR:
       device_object()->OnGetUsbInterfaceDescriptorCtl(request, output_buf_len);
       break;
 
-    case ADB_CTL_GET_ENDPOINT_INFORMATION:
+    case ADB_IOCTL_GET_ENDPOINT_INFORMATION:
       device_object()->OnGetEndpointInformationCtl(request,
                                                    input_buf_len,
                                                    output_buf_len);
       break;
 
-    case ADB_CTL_GET_SERIAL_NUMBER:
+    case ADB_IOCTL_GET_SERIAL_NUMBER:
       device_object()->OnGetSerialNumberCtl(request, output_buf_len);
       break;
 

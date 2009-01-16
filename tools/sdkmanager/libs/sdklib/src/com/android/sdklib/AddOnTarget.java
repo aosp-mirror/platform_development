@@ -17,6 +17,8 @@
 package com.android.sdklib;
 
 import java.io.File;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -35,11 +37,13 @@ final class AddOnTarget implements IAndroidTarget {
         private final String mJarName;
         private final String mJarPath;
         private final String mName;
+        private final String mDescription;
 
-        OptionalLibrary(String jarName, String jarPath, String name) {
+        OptionalLibrary(String jarName, String jarPath, String name, String description) {
             mJarName = jarName;
             mJarPath = jarPath;
             mName = name;
+            mDescription = description;
         }
 
         public String getJarName() {
@@ -52,6 +56,10 @@ final class AddOnTarget implements IAndroidTarget {
 
         public String getName() {
             return mName;
+        }
+        
+        public String getDescription() {
+            return mDescription;
         }
     }
     
@@ -70,11 +78,11 @@ final class AddOnTarget implements IAndroidTarget {
      * @param vendor the vendor name of the add-on
      * @param description the add-on description
      * @param libMap A map containing the optional libraries. The map key is the fully-qualified
-     * library name. The value is the .jar filename
+     * library name. The value is a 2 string array with the .jar filename, and the description.
      * @param basePlatform the platform the add-on is extending.
      */
     AddOnTarget(String location, String name, String vendor, String description,
-            Map<String, String> libMap, PlatformTarget basePlatform) {
+            Map<String, String[]> libMap, PlatformTarget basePlatform) {
         if (location.endsWith(File.separator) == false) {
             location = location + File.separator;
         }
@@ -86,12 +94,16 @@ final class AddOnTarget implements IAndroidTarget {
         mBasePlatform = basePlatform;
         
         // handle the optional libraries.
-        mLibraries = new IOptionalLibrary[libMap.size()];
-        int index = 0;
-        for (Entry<String, String> entry : libMap.entrySet()) {
-            mLibraries[index++] = new OptionalLibrary(entry.getValue(),
-                    mLocation + SdkConstants.OS_ADDON_LIBS_FOLDER + entry.getValue(),
-                    entry.getKey());
+        if (libMap != null) {
+            mLibraries = new IOptionalLibrary[libMap.size()];
+            int index = 0;
+            for (Entry<String, String[]> entry : libMap.entrySet()) {
+                String jarFile = entry.getValue()[0];
+                String desc = entry.getValue()[1];
+                mLibraries[index++] = new OptionalLibrary(jarFile,
+                        mLocation + SdkConstants.OS_ADDON_LIBS_FOLDER + jarFile,
+                        entry.getKey(), desc);
+            }
         }
     }
     
@@ -135,6 +147,8 @@ final class AddOnTarget implements IAndroidTarget {
                 return mLocation + SdkConstants.OS_IMAGES_FOLDER;
             case SKINS:
                 return mLocation + SdkConstants.OS_SKINS_FOLDER;
+            case DOCS:
+                return mLocation + SdkConstants.FD_DOCS + File.separator;
             default :
                 return mBasePlatform.getPath(pathId);
         }
@@ -223,6 +237,11 @@ final class AddOnTarget implements IAndroidTarget {
 
 
     public void setSkins(String[] skins) {
-        mSkins = skins;
+        // we mix the add-on and base platform skins
+        HashSet<String> skinSet = new HashSet<String>();
+        skinSet.addAll(Arrays.asList(skins));
+        skinSet.addAll(Arrays.asList(mBasePlatform.getSkins()));
+        
+        mSkins = skinSet.toArray(new String[skinSet.size()]);
     }
 }

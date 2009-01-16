@@ -10,8 +10,9 @@ Signature="$WINDOWS NT$"
 Class=USB
 ClassGuid={F72FE0D4-CBCB-407d-8814-9ED673D0DD6B}
 Provider=%GOOG%
-DriverVer=date,1.0.0009.00000
-CatalogFile=androidusb.cat
+DriverVer=12/11/2008,1.0.0009.00000
+CatalogFile.NTx86=androidusb86.cat
+CatalogFile.NTamd64=androidusba64.cat
 
 ; ================= Class section =====================
 
@@ -28,7 +29,7 @@ DefaultDestDir = 12
 ; ================= Device section =====================
 
 [Manufacturer]
-%MfgName%=Google,NTx86
+%MfgName%=Google,NTx86,NTamd64
 
 ; For Win2K
 [Google]
@@ -40,6 +41,14 @@ DefaultDestDir = 12
 
 ; For XP and later
 [Google.NTx86]
+; For loopback testing
+%USB\VID_18D1&PID_DDDD.DeviceDescTest%=androidusb.Dev, USB\VID_18D1&PID_DDDD
+; HTC Dream
+%USB\VID_0BB4&PID_0C01.DeviceDescRelease%=androidusb.Dev, USB\VID_0BB4&PID_0C01
+%USB\VID_0BB4&PID_0C02&MI_01.DeviceDescRelease%=androidusb.Dev, USB\VID_0BB4&PID_0C02&MI_01
+
+; For AMD64 and later
+[Google.NTamd64]
 ; For loopback testing
 %USB\VID_18D1&PID_DDDD.DeviceDescTest%=androidusb.Dev, USB\VID_18D1&PID_DDDD
 ; HTC Dream

@@ -91,8 +91,8 @@ public class HardwareProperties {
     }
     
     /**
-     * Parses the harware definition file.
-     * @param buildProp the property file to parse
+     * Parses the hardware definition file.
+     * @param file the property file to parse
      * @param log the ISdkLog object receiving warning/error from the parsing.
      * @return the map of (key,value) pairs, or null if the parsing failed.
      */
