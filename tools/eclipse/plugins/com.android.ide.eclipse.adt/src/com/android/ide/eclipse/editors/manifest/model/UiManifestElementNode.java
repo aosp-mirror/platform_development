@@ -16,12 +16,12 @@
 
 package com.android.ide.eclipse.editors.manifest.model;
 
-import com.android.ide.eclipse.common.AndroidConstants;
 import com.android.ide.eclipse.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.editors.manifest.descriptors.AndroidManifestDescriptors;
 import com.android.ide.eclipse.editors.manifest.descriptors.ManifestElementDescriptor;
 import com.android.ide.eclipse.editors.uimodel.UiAttributeNode;
 import com.android.ide.eclipse.editors.uimodel.UiElementNode;
+import com.android.sdklib.SdkConstants;
 
 import org.w3c.dom.Element;
 
@@ -74,10 +74,10 @@ public final class UiManifestElementNode extends UiElementNode {
             if (desc != manifestDescriptors.getManifestElement() &&
                     desc != manifestDescriptors.getApplicationElement()) {
                 Element elem = (Element) getXmlNode();
-                String attr = elem.getAttributeNS(AndroidConstants.NS_RESOURCES,
+                String attr = elem.getAttributeNS(SdkConstants.NS_RESOURCES,
                                                   AndroidManifestDescriptors.ANDROID_NAME_ATTR);
                 if (attr == null || attr.length() == 0) {
-                    attr = elem.getAttributeNS(AndroidConstants.NS_RESOURCES,
+                    attr = elem.getAttributeNS(SdkConstants.NS_RESOURCES,
                                                AndroidManifestDescriptors.ANDROID_LABEL_ATTR);
                 }
                 if (attr != null && attr.length() > 0) {

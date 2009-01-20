@@ -163,7 +163,7 @@ class NewXmlFileCreationPage extends WizardPage {
 
         /**
          * If the generated resource XML file requires an "android" XMLNS, this should be set
-         * to {@link AndroidConstants#NS_RESOURCES}. When it is null, no XMLNS is generated.
+         * to {@link SdkConstants#NS_RESOURCES}. When it is null, no XMLNS is generated.
          */
         String getXmlns() {
             return mXmlns;
@@ -188,7 +188,7 @@ class NewXmlFileCreationPage extends WizardPage {
                 ResourceFolderType.LAYOUT,                          // folder type
                 AndroidTargetData.DESCRIPTOR_LAYOUT,                // root seed
                 "LinearLayout",                                     // default root
-                AndroidConstants.NS_RESOURCES,                      // xmlns
+                SdkConstants.NS_RESOURCES,                          // xmlns
                 "android:layout_width=\"wrap_content\"\n" +         // default attributes
                 "android:layout_height=\"wrap_content\""
                 ),
@@ -205,7 +205,7 @@ class NewXmlFileCreationPage extends WizardPage {
                 ResourceFolderType.MENU,                            // folder type
                 MenuDescriptors.MENU_ROOT_ELEMENT,                  // root seed
                 null,                                               // default root
-                AndroidConstants.NS_RESOURCES,                      // xmlns
+                SdkConstants.NS_RESOURCES,                          // xmlns
                 null                                                // default attributes
                 ),
         new TypeInfo("Preference",                                  // UI name
@@ -213,7 +213,7 @@ class NewXmlFileCreationPage extends WizardPage {
                 ResourceFolderType.XML,                             // folder type
                 AndroidTargetData.DESCRIPTOR_PREFERENCES,           // root seed
                 AndroidConstants.CLASS_PREFERENCE_SCREEN,           // default root
-                AndroidConstants.NS_RESOURCES,                      // xmlns
+                SdkConstants.NS_RESOURCES,                          // xmlns
                 null                                                // default attributes
                 ),
         new TypeInfo("Searchable",                                  // UI name
@@ -221,7 +221,7 @@ class NewXmlFileCreationPage extends WizardPage {
                 ResourceFolderType.XML,                             // folder type
                 AndroidTargetData.DESCRIPTOR_SEARCHABLE,            // root seed
                 null,                                               // default root
-                AndroidConstants.NS_RESOURCES,                      // xmlns
+                SdkConstants.NS_RESOURCES,                          // xmlns
                 null                                                // default attributes
                 ),
         new TypeInfo("Animation",                                   // UI name

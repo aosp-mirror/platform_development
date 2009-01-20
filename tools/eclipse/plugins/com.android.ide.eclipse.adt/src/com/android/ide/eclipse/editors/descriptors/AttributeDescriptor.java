@@ -17,10 +17,10 @@
 package com.android.ide.eclipse.editors.descriptors;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.common.AndroidConstants;
 import com.android.ide.eclipse.editors.IconFactory;
 import com.android.ide.eclipse.editors.uimodel.UiAttributeNode;
 import com.android.ide.eclipse.editors.uimodel.UiElementNode;
+import com.android.sdklib.SdkConstants;
 
 import org.eclipse.swt.graphics.Image;
 
@@ -45,7 +45,7 @@ public abstract class AttributeDescriptor {
      * 
      * @param xmlLocalName The XML name of the attribute (case sensitive)
      * @param nsUri The URI of the attribute. Can be null if attribute has no namespace.
-     *              See {@link AndroidConstants#NS_RESOURCES} for a common value.
+     *              See {@link SdkConstants#NS_RESOURCES} for a common value.
      */
     public AttributeDescriptor(String xmlLocalName, String nsUri) {
         mXmlLocalName = xmlLocalName;

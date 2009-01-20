@@ -144,7 +144,7 @@ class Main {
 
         if (mSdkFolder == null) {
             errorAndExit("The tools directory property is not set, please make sure you are executing %1$s",
-                SdkConstants.AndroidCmdName());
+                SdkConstants.androidCmdName());
         }
         
         // We might get passed a property for the working directory
@@ -203,19 +203,48 @@ class Main {
             IAndroidTarget[] targets = mSdkManager.getTargets();
             if (targetId < 1 || targetId > targets.length) {
                 errorAndExit("Target id is not valid. Use '%s list -f target' to get the target Ids.",
-                        SdkConstants.AndroidCmdName());
+                        SdkConstants.androidCmdName());
             }
             IAndroidTarget target = targets[targetId - 1];
             
             ProjectCreator creator = new ProjectCreator(mSdkFolder,
-                    mSdkCommandLine.isVerbose() ? OutputLevel.VERBOSE : OutputLevel.NORMAL,
+                    mSdkCommandLine.isVerbose() ? OutputLevel.VERBOSE :
+                        mSdkCommandLine.isSilent() ? OutputLevel.SILENT :
+                            OutputLevel.NORMAL,
                     mSdkLog);
 
             String projectDir = getProjectLocation(mSdkCommandLine.getNewProjectLocation());
             
             creator.createProject(projectDir,
-                    mSdkCommandLine.getNewProjectName(), mSdkCommandLine.getNewProjectPackage(),
-                    mSdkCommandLine.getNewProjectActivity(), target, false /* isTestProject*/);
+                    mSdkCommandLine.getNewProjectName(),
+                    mSdkCommandLine.getNewProjectPackage(),
+                    mSdkCommandLine.getNewProjectActivity(),
+                    target,
+                    false /* isTestProject*/);
+        } else if (SdkCommandLine.ACTION_UPDATE_PROJECT.equals(action)) {
+            // get the target and try to resolve it.
+            IAndroidTarget target = null;
+            int targetId = mSdkCommandLine.getUpdateProjectTargetId();
+            if (targetId >= 0) {
+                IAndroidTarget[] targets = mSdkManager.getTargets();
+                if (targetId < 1 || targetId > targets.length) {
+                    errorAndExit("Target id is not valid. Use '%s list -f target' to get the target Ids.",
+                            SdkConstants.androidCmdName());
+                }
+                target = targets[targetId - 1];
+            }
+            
+            ProjectCreator creator = new ProjectCreator(mSdkFolder,
+                    mSdkCommandLine.isVerbose() ? OutputLevel.VERBOSE :
+                        mSdkCommandLine.isSilent() ? OutputLevel.SILENT :
+                            OutputLevel.NORMAL,
+                    mSdkLog);
+
+            String projectDir = getProjectLocation(mSdkCommandLine.getUpdateProjectLocation());
+            
+            creator.updateProject(projectDir,
+                    target,
+                    mSdkCommandLine.getUpdateProjectName());
         } else {
             mSdkCommandLine.printHelpAndExit(null);
         }
@@ -355,7 +384,7 @@ class Main {
             target = mSdkManager.getTargets()[targetId-1]; // target it is 1-based
         } else {
             errorAndExit("Target id is not valid. Use '%s list -f target' to get the target Ids.",
-                    SdkConstants.AndroidCmdName());
+                    SdkConstants.androidCmdName());
         }
 
         try {
@@ -384,8 +413,7 @@ class Main {
                         mSdkCommandLine.getNewVmName(),
                         target,
                         mSdkCommandLine.getNewVmSkin(),
-                        null /*sdcardPath*/,
-                        0 /*sdcardSize*/,
+                        mSdkCommandLine.getNewVmSdCard(),
                         hardwareConfig,
                         mSdkLog);
             }

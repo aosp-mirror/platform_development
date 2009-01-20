@@ -47,6 +47,10 @@ public final class ProjectProperties {
             mFilename = filename;
             mHeader = header;
         }
+        
+        public String getFilename() {
+            return mFilename;
+        }
     }
     
     private final static String LOCAL_HEADER =

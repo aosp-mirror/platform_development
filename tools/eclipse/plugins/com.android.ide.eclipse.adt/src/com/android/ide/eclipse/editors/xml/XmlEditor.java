@@ -26,6 +26,7 @@ import com.android.ide.eclipse.editors.descriptors.DocumentDescriptor;
 import com.android.ide.eclipse.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.editors.uimodel.UiDocumentNode;
 import com.android.sdklib.IAndroidTarget;
+import com.android.sdklib.SdkConstants;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
@@ -80,7 +81,7 @@ public class XmlEditor extends AndroidEditor {
         
             FirstElementParser.Result result = FirstElementParser.parse(
                     file.getLocation().toOSString(),
-                    AndroidConstants.NS_RESOURCES);
+                    SdkConstants.NS_RESOURCES);
             
             if (result != null) {
                 String name = result.getElement(); 

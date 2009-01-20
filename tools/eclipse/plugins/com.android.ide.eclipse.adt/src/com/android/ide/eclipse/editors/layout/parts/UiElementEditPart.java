@@ -16,10 +16,10 @@
 
 package com.android.ide.eclipse.editors.layout.parts;
 
-import com.android.ide.eclipse.common.AndroidConstants;
 import com.android.ide.eclipse.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.editors.uimodel.IUiUpdateListener;
 import com.android.ide.eclipse.editors.uimodel.UiElementNode;
+import com.android.sdklib.SdkConstants;
 
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.geometry.Point;
@@ -177,7 +177,7 @@ public abstract class UiElementEditPart extends AbstractGraphicalEditPart
                 NamedNodeMap nodeAttributes = xmlNode.getAttributes();
                 if (nodeAttributes != null) {
                     Node attr = nodeAttributes.getNamedItemNS(
-                            AndroidConstants.NS_RESOURCES, attrName);
+                            SdkConstants.NS_RESOURCES, attrName);
                     if (attr != null) {
                         return attr.getNodeValue();
                     }

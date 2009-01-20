@@ -56,47 +56,15 @@ public final class AndroidLocation {
      */
     public final static String getFolder() throws AndroidLocationException {
         if (sPrefsLocation == null) {
-            String osName = System.getProperty("os.name");
-
-            // First we check for unknown or non windows OS.
-            if (osName == null || osName.startsWith("Windows") == false) {
-                String home = findValidPath("user.home", "HOME");
-
-                if (home != null) {
-                    sPrefsLocation = home + File.separator + ".android" + File.separator;
-                }
-            } else {
-                String localAppData = findValidPath("LOCALAPPDATA");
-                if (localAppData == null) {
-                    localAppData = findValidPath("USERPROFILE");
-                    if (localAppData != null) {
-                        localAppData = localAppData + "\\Local Settings\\Application Data";
-                        
-                        // check that this directory exists.
-                        File f = new File(localAppData);
-                        if (f.isDirectory() == false) {
-                            localAppData = null;
-                        }
-                    }
-
-                    // ok if nothing worked, revert to HOME
-                    if (localAppData == null) {
-                        localAppData = findValidPath("HOME", "user.home");
-                    }
-                }
-                
-                if (localAppData != null) {
-                    sPrefsLocation = localAppData + "\\Android\\";
-                }
-            }
+            String home = findValidPath("user.home", "HOME");
             
-            // if all the above failed, try to create a temporary file to get its parent and
-            // use that as the folder
-            if (sPrefsLocation == null) {
-                // no home dir?
+            // if the above failed, we throw an exception.
+            if (home == null) {
                 throw new AndroidLocationException(
                         "Unable to get the home directory. Make sure the user.home property is set up");
             } else {
+                sPrefsLocation = home + File.separator + ".android" + File.separator;
+
                 // make sure the folder exists!
                 File f = new File(sPrefsLocation);
                 if (f.exists() == false) {
@@ -107,7 +75,7 @@ public final class AndroidLocation {
                 }
             }
         }
-        
+
         return sPrefsLocation;
     }
 

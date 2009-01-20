@@ -44,7 +44,7 @@ public class ClassAttributeDescriptor extends TextAttributeDescriptor {
      * @param xmlLocalName The XML name of the attribute (case sensitive, with android: prefix).
      * @param uiName The UI name of the attribute. Cannot be an empty string and cannot be null.
      * @param nsUri The URI of the attribute. Can be null if attribute has no namespace.
-     *              See {@link AndroidConstants#NS_RESOURCES} for a common value.
+     *              See {@link SdkConstants#NS_RESOURCES} for a common value.
      * @param tooltip A non-empty tooltip string or null.
      * @param mandatory indicates if the class attribute is mandatory.
      */
@@ -64,7 +64,7 @@ public class ClassAttributeDescriptor extends TextAttributeDescriptor {
      * @param xmlLocalName The XML local name of the attribute (case sensitive).
      * @param uiName The UI name of the attribute. Cannot be an empty string and cannot be null.
      * @param nsUri The URI of the attribute. Can be null if attribute has no namespace.
-     *              See {@link AndroidConstants#NS_RESOURCES} for a common value.
+     *              See {@link SdkConstants#NS_RESOURCES} for a common value.
      * @param tooltip A non-empty tooltip string or null.
      * @param mandatory indicates if the class attribute is mandatory.
      */

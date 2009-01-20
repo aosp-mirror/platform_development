@@ -17,7 +17,6 @@
 package com.android.ide.eclipse.editors;
 
 import com.android.ide.eclipse.adt.sdk.AndroidTargetData;
-import com.android.ide.eclipse.common.AndroidConstants;
 import com.android.ide.eclipse.editors.descriptors.AttributeDescriptor;
 import com.android.ide.eclipse.editors.descriptors.DescriptorsUtils;
 import com.android.ide.eclipse.editors.descriptors.ElementDescriptor;
@@ -29,6 +28,7 @@ import com.android.ide.eclipse.editors.descriptors.XmlnsAttributeDescriptor;
 import com.android.ide.eclipse.editors.uimodel.UiAttributeNode;
 import com.android.ide.eclipse.editors.uimodel.UiElementNode;
 import com.android.ide.eclipse.editors.uimodel.UiFlagAttributeNode;
+import com.android.sdklib.SdkConstants;
 
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
@@ -199,13 +199,13 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
      *  
      * @param node The current node. Must not be null.
      * @param nsUri The namespace URI of which the prefix is to be found,
-     *              e.g. AndroidConstants.NS_RESOURCES
+     *              e.g. {@link SdkConstants#NS_RESOURCES}
      * @return The first prefix declared or the default "android" prefix.
      */
     private String lookupNamespacePrefix(Node node, String nsUri) {
         // Note: Node.lookupPrefix is not implemented in wst/xml/core NodeImpl.java
         // The following emulates this:
-        //   String prefix = node.lookupPrefix(AndroidConstants.NS_RESOURCES);
+        //   String prefix = node.lookupPrefix(SdkConstants.NS_RESOURCES);
 
         if (XmlnsAttributeDescriptor.XMLNS_URI.equals(nsUri)) {
             return "xmlns"; //$NON-NLS-1$
@@ -223,7 +223,7 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
                 Node attr = attrs.item(n);
                 if ("xmlns".equals(attr.getPrefix())) {  //$NON-NLS-1$
                     String uri = attr.getNodeValue();
-                    if (AndroidConstants.NS_RESOURCES.equals(uri)) {
+                    if (SdkConstants.NS_RESOURCES.equals(uri)) {
                         return attr.getLocalName();
                     }
                     visited.add(uri);
@@ -234,7 +234,7 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
         // Use a sensible default prefix if we can't find one.
         // We need to make sure the prefix is not one that was declared in the scope
         // visited above.
-        prefix = AndroidConstants.NS_RESOURCES.equals(nsUri) ? "android" : "ns"; //$NON-NLS-1$ //$NON-NLS-2$
+        prefix = SdkConstants.NS_RESOURCES.equals(nsUri) ? "android" : "ns"; //$NON-NLS-1$ //$NON-NLS-2$
         String base = prefix;
         for (int i = 1; visited.contains(prefix); i++) {
             prefix = base + Integer.toString(i);

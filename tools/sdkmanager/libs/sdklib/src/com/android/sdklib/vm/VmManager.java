@@ -20,14 +20,17 @@ import com.android.prefs.AndroidLocation;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.ISdkLog;
+import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -42,12 +45,14 @@ public final class VmManager {
     
     private final static String VM_INFO_PATH = "path";
     private final static String VM_INFO_TARGET = "target";
-    
+
     private final static String IMAGE_USERDATA = "userdata.img";
     private final static String CONFIG_INI = "config.ini";
-    
+
     private final static Pattern INI_NAME_PATTERN = Pattern.compile("(.+)\\.ini$",
             Pattern.CASE_INSENSITIVE);
+
+    private final static Pattern SDCARD_SIZE_PATTERN = Pattern.compile("\\d+[MK]?");
 
     public static final class VmInfo {
         String name;
@@ -69,10 +74,12 @@ public final class VmManager {
 
     private final ArrayList<VmInfo> mVmList = new ArrayList<VmInfo>();
     private ISdkLog mSdkLog;
+    private final SdkManager mSdk;
 
     public VmManager(SdkManager sdk, ISdkLog sdkLog) throws AndroidLocationException {
+        mSdk = sdk;
         mSdkLog = sdkLog;
-        buildVmList(sdk);
+        buildVmList();
     }
 
     /**
@@ -104,12 +111,12 @@ public final class VmManager {
      * @param name the name of the VM
      * @param target the target of the VM
      * @param skinName the name of the skin. Can be null.
-     * @param sdcardPath the path to the sdCard. Can be null.
-     * @param sdcardSize the size of a local sdcard to create. Can be 0 for no local sdcard.
+     * @param sdcard the parameter value for the sdCard. Can be null. This is either a path to
+     * an existing sdcard image or a sdcard size (\d+, \d+K, \dM).
      * @param hardwareConfig the hardware setup for the VM
      */
     public VmInfo createVm(String parentFolder, String name, IAndroidTarget target,
-            String skinName, String sdcardPath, int sdcardSize, Map<String,String> hardwareConfig,
+            String skinName, String sdcard, Map<String,String> hardwareConfig,
             ISdkLog log) {
         
         try {
@@ -128,7 +135,7 @@ public final class VmManager {
                 }
                 return null;
             }
-            
+
             // create the vm folder.
             vmFolder.mkdir();
 
@@ -177,15 +184,40 @@ public final class VmManager {
                 }
             }
 
-            if (sdcardPath != null) {
-                File sdcard = new File(sdcardPath);
-                if (sdcard.isFile()) {
-                    values.put("sdcard", sdcardPath);
-                } else if (log != null) {
-                    log.warning("sdcarad image '%1$s' does not exists.", sdcardPath);
+            if (sdcard != null) {
+                File sdcardFile = new File(sdcard);
+                if (sdcardFile.isFile()) {
+                    values.put("sdcard", sdcard);
+                } else {
+                    // check that it matches the pattern for sdcard size
+                    Matcher m = SDCARD_SIZE_PATTERN.matcher(sdcard);
+                    if (m.matches()) {
+                        // create the sdcard.
+                        sdcardFile = new File(vmFolder, "sdcard.img");
+                        String path = sdcardFile.getAbsolutePath();
+                        
+                        // execute mksdcard with the proper parameters.
+                        File toolsFolder = new File(mSdk.getLocation(), SdkConstants.FD_TOOLS);
+                        File mkSdCard = new File(toolsFolder, SdkConstants.mkSdCardCmdName());
+                        
+                        if (mkSdCard.isFile() == false) {
+                            log.error(null, "'%1$s' is missing from the SDK tools folder.",
+                                    mkSdCard.getName());
+                            return null;
+                        }
+                        
+                        if (createSdCard(mkSdCard.getAbsolutePath(), sdcard, path, log) == false) {
+                            return null; // mksdcard output has already been displayed, no need to
+                                         // output anything else.
+                        }
+                        
+                        // add its path to the values.
+                        values.put("sdcard", path);
+                    } else {
+                        log.error(null, "'%1$s' is not recognized as a valid sdcard value", sdcard);
+                        return null;
+                    }
                 }
-            } else if (sdcardSize != 0) {
-                // TODO: create sdcard image.
             }
 
             if (hardwareConfig != null) {
@@ -227,7 +259,7 @@ public final class VmManager {
         return null;
     }
 
-    private void buildVmList(SdkManager sdk) throws AndroidLocationException {
+    private void buildVmList() throws AndroidLocationException {
         // get the Android prefs location.
         String vmRoot = AndroidLocation.getFolder() + AndroidLocation.FOLDER_VMS;
         
@@ -253,14 +285,14 @@ public final class VmManager {
         });
         
         for (File vm : vms) {
-            VmInfo info = parseVmInfo(vm, sdk);
+            VmInfo info = parseVmInfo(vm);
             if (info != null) {
                 mVmList.add(info);
             }
         }
     }
     
-    private VmInfo parseVmInfo(File path, SdkManager sdk) {
+    private VmInfo parseVmInfo(File path) {
         Map<String, String> map = SdkManager.parsePropertyFile(path, mSdkLog);
         
         String vmPath = map.get(VM_INFO_PATH);
@@ -273,7 +305,7 @@ public final class VmManager {
             return null;
         }
 
-        IAndroidTarget target = sdk.getTargetFromHashString(targetHash);
+        IAndroidTarget target = mSdk.getTargetFromHashString(targetHash);
         if (target == null) {
             return null;
         }
@@ -301,4 +333,118 @@ public final class VmManager {
         writer.close();
 
     }
+    
+    private boolean createSdCard(String toolLocation, String size, String location, ISdkLog log) {
+        try {
+            String[] command = new String[3];
+            command[0] = toolLocation;
+            command[1] = size;
+            command[2] = location;
+            Process process = Runtime.getRuntime().exec(command);
+    
+            ArrayList<String> errorOutput = new ArrayList<String>();
+            ArrayList<String> stdOutput = new ArrayList<String>();
+            int status = grabProcessOutput(process, errorOutput, stdOutput,
+                    true /* waitForReaders */);
+    
+            if (status != 0) {
+                log.error(null, "Failed to create the SD card.");
+                for (String error : errorOutput) {
+                    log.error(null, error);
+                }
+                
+                return false;
+            }
+
+            return true;
+        } catch (InterruptedException e) {
+            log.error(null, "Failed to create the SD card.");
+        } catch (IOException e) {
+            log.error(null, "Failed to create the SD card.");
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Gets the stderr/stdout outputs of a process and returns when the process is done.
+     * Both <b>must</b> be read or the process will block on windows.
+     * @param process The process to get the ouput from
+     * @param errorOutput The array to store the stderr output. cannot be null.
+     * @param stdOutput The array to store the stdout output. cannot be null.
+     * @param waitforReaders if true, this will wait for the reader threads. 
+     * @return the process return code.
+     * @throws InterruptedException
+     */
+    private int grabProcessOutput(final Process process, final ArrayList<String> errorOutput,
+            final ArrayList<String> stdOutput, boolean waitforReaders)
+            throws InterruptedException {
+        assert errorOutput != null;
+        assert stdOutput != null;
+        // read the lines as they come. if null is returned, it's
+        // because the process finished
+        Thread t1 = new Thread("") { //$NON-NLS-1$
+            @Override
+            public void run() {
+                // create a buffer to read the stderr output
+                InputStreamReader is = new InputStreamReader(process.getErrorStream());
+                BufferedReader errReader = new BufferedReader(is);
+
+                try {
+                    while (true) {
+                        String line = errReader.readLine();
+                        if (line != null) {
+                            errorOutput.add(line);
+                        } else {
+                            break;
+                        }
+                    }
+                } catch (IOException e) {
+                    // do nothing.
+                }
+            }
+        };
+
+        Thread t2 = new Thread("") { //$NON-NLS-1$
+            @Override
+            public void run() {
+                InputStreamReader is = new InputStreamReader(process.getInputStream());
+                BufferedReader outReader = new BufferedReader(is);
+
+                try {
+                    while (true) {
+                        String line = outReader.readLine();
+                        if (line != null) {
+                            stdOutput.add(line);
+                        } else {
+                            break;
+                        }
+                    }
+                } catch (IOException e) {
+                    // do nothing.
+                }
+            }
+        };
+
+        t1.start();
+        t2.start();
+
+        // it looks like on windows process#waitFor() can return
+        // before the thread have filled the arrays, so we wait for both threads and the
+        // process itself.
+        if (waitforReaders) {
+            try {
+                t1.join();
+            } catch (InterruptedException e) {
+            }
+            try {
+                t2.join();
+            } catch (InterruptedException e) {
+            }
+        }
+
+        // get the return code from the process
+        return process.waitFor();
+    }
+
 }

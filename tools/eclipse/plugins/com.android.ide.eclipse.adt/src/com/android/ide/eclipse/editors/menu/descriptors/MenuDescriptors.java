@@ -16,13 +16,13 @@
 
 package com.android.ide.eclipse.editors.menu.descriptors;
 
-import com.android.ide.eclipse.common.AndroidConstants;
 import com.android.ide.eclipse.common.resources.DeclareStyleableInfo;
 import com.android.ide.eclipse.editors.descriptors.AttributeDescriptor;
 import com.android.ide.eclipse.editors.descriptors.DescriptorsUtils;
 import com.android.ide.eclipse.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.editors.descriptors.IDescriptorProvider;
 import com.android.ide.eclipse.editors.descriptors.XmlnsAttributeDescriptor;
+import com.android.sdklib.SdkConstants;
 
 import java.util.ArrayList;
 import java.util.Map;
@@ -121,7 +121,7 @@ public final class MenuDescriptors implements IDescriptorProvider {
                 false /* mandatory */);
 
         XmlnsAttributeDescriptor xmlns = new XmlnsAttributeDescriptor("android", //$NON-NLS-1$
-                AndroidConstants.NS_RESOURCES); 
+                SdkConstants.NS_RESOURCES); 
 
         updateElement(mDescriptor, styleMap, "Menu", xmlns); //$NON-NLS-1$
         mDescriptor.setChildren(new ElementDescriptor[] { top_item, top_group });
@@ -159,7 +159,7 @@ public final class MenuDescriptors implements IDescriptorProvider {
         if (style != null) {
             DescriptorsUtils.appendAttributes(descs,
                     null,   // elementName
-                    AndroidConstants.NS_RESOURCES,
+                    SdkConstants.NS_RESOURCES,
                     style.getAttributes(),
                     null,   // requiredAttributes
                     null);  // overrides

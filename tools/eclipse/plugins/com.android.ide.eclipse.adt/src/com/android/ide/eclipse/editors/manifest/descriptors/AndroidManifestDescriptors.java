@@ -28,6 +28,7 @@ import com.android.ide.eclipse.editors.descriptors.ListAttributeDescriptor;
 import com.android.ide.eclipse.editors.descriptors.ReferenceAttributeDescriptor;
 import com.android.ide.eclipse.editors.descriptors.TextAttributeDescriptor;
 import com.android.ide.eclipse.editors.descriptors.XmlnsAttributeDescriptor;
+import com.android.sdklib.SdkConstants;
 
 import org.eclipse.core.runtime.IStatus;
 
@@ -166,7 +167,7 @@ public final class AndroidManifestDescriptors implements IDescriptorProvider {
 
         XmlnsAttributeDescriptor xmlns = new XmlnsAttributeDescriptor(
                 "android", //$NON-NLS-1$
-                AndroidConstants.NS_RESOURCES); 
+                SdkConstants.NS_RESOURCES); 
 
         // -- setup the required attributes overrides --
         
@@ -355,7 +356,7 @@ public final class AndroidManifestDescriptors implements IDescriptorProvider {
             ArrayList<AttributeDescriptor> attrDescs = new ArrayList<AttributeDescriptor>();
             DescriptorsUtils.appendAttributes(attrDescs,
                     elemDesc.getXmlLocalName(),
-                    AndroidConstants.NS_RESOURCES,
+                    SdkConstants.NS_RESOURCES,
                     style.getAttributes(),
                     requiredAttributes,
                     overrides);

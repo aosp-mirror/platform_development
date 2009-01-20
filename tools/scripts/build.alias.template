@@ -1,5 +1,5 @@
 <?xml version="1.0" ?>
-<project name="ACTIVITY_NAME" default="package">
+<project name="PROJECT_NAME" default="package">
 
     <!-- The build.properties file can be created by you and is never touched
          by activitycreator. If you want to manually set properties, this is

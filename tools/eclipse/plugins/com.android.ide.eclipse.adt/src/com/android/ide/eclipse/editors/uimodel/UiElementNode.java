@@ -18,7 +18,6 @@ package com.android.ide.eclipse.editors.uimodel;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.sdk.AndroidTargetData;
-import com.android.ide.eclipse.common.AndroidConstants;
 import com.android.ide.eclipse.editors.AndroidEditor;
 import com.android.ide.eclipse.editors.descriptors.AttributeDescriptor;
 import com.android.ide.eclipse.editors.descriptors.ElementDescriptor;
@@ -31,6 +30,7 @@ import com.android.ide.eclipse.editors.manifest.descriptors.AndroidManifestDescr
 import com.android.ide.eclipse.editors.resources.descriptors.ResourcesDescriptors;
 import com.android.ide.eclipse.editors.uimodel.IUiUpdateListener.UiUpdateState;
 import com.android.ide.eclipse.editors.xml.descriptors.XmlDescriptors;
+import com.android.sdklib.SdkConstants;
 
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.ui.IEditorInput;
@@ -201,21 +201,21 @@ public class UiElementNode implements IPropertySource {
             // just using the UI name below.
             Element elem = (Element) mXmlNode;
             
-            String attr = elem.getAttributeNS(AndroidConstants.NS_RESOURCES,
+            String attr = elem.getAttributeNS(SdkConstants.NS_RESOURCES,
                                               AndroidManifestDescriptors.ANDROID_NAME_ATTR);
             if (attr == null || attr.length() == 0) {
-                attr = elem.getAttributeNS(AndroidConstants.NS_RESOURCES,
+                attr = elem.getAttributeNS(SdkConstants.NS_RESOURCES,
                                            AndroidManifestDescriptors.ANDROID_LABEL_ATTR);
             }
             if (attr == null || attr.length() == 0) {
-                attr = elem.getAttributeNS(AndroidConstants.NS_RESOURCES,
+                attr = elem.getAttributeNS(SdkConstants.NS_RESOURCES,
                                            XmlDescriptors.PREF_KEY_ATTR);
             }
             if (attr == null || attr.length() == 0) {
                 attr = elem.getAttribute(ResourcesDescriptors.NAME_ATTR);
             }
             if (attr == null || attr.length() == 0) {
-                attr = elem.getAttributeNS(AndroidConstants.NS_RESOURCES,
+                attr = elem.getAttributeNS(SdkConstants.NS_RESOURCES,
                                            LayoutDescriptors.ID_ATTR);
 
                 if (attr != null && attr.length() > 0) {
@@ -1205,13 +1205,13 @@ public class UiElementNode implements IPropertySource {
      *  
      * @param node The current node. Must not be null.
      * @param nsUri The namespace URI of which the prefix is to be found,
-     *              e.g. AndroidConstants.NS_RESOURCES
+     *              e.g. SdkConstants.NS_RESOURCES
      * @return The first prefix declared or the default "android" prefix.
      */
     private String lookupNamespacePrefix(Node node, String nsUri) {
         // Note: Node.lookupPrefix is not implemented in wst/xml/core NodeImpl.java
         // The following code emulates this simple call:
-        //   String prefix = node.lookupPrefix(AndroidConstants.NS_RESOURCES);
+        //   String prefix = node.lookupPrefix(SdkConstants.NS_RESOURCES);
 
         // if the requested URI is null, it denotes an attribute with no namespace.
         if (nsUri == null) {
@@ -1234,7 +1234,7 @@ public class UiElementNode implements IPropertySource {
                 if ("xmlns".equals(attr.getPrefix())) {  //$NON-NLS-1$
                     String uri = attr.getNodeValue();
                     String nsPrefix = attr.getLocalName(); 
-                    if (AndroidConstants.NS_RESOURCES.equals(uri)) {
+                    if (SdkConstants.NS_RESOURCES.equals(uri)) {
                         return nsPrefix;
                     }
                     visited.add(nsPrefix);
@@ -1245,7 +1245,7 @@ public class UiElementNode implements IPropertySource {
         // Use a sensible default prefix if we can't find one.
         // We need to make sure the prefix is not one that was declared in the scope
         // visited above.
-        String prefix = AndroidConstants.NS_RESOURCES.equals(nsUri) ? "android" : "ns"; //$NON-NLS-1$ //$NON-NLS-2$
+        String prefix = SdkConstants.NS_RESOURCES.equals(nsUri) ? "android" : "ns"; //$NON-NLS-1$ //$NON-NLS-2$
         String base = prefix;
         for (int i = 1; visited.contains(prefix); i++) {
             prefix = base + Integer.toString(i);

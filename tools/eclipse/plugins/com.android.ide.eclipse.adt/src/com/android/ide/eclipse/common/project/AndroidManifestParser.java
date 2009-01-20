@@ -18,6 +18,7 @@ package com.android.ide.eclipse.common.project;
 
 import com.android.ide.eclipse.common.AndroidConstants;
 import com.android.ide.eclipse.common.project.XmlErrorHandler.XmlErrorListener;
+import com.android.sdklib.SdkConstants;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
@@ -442,7 +443,7 @@ public class AndroidManifestParser {
          * @param attributeName the name of the attribute to look for.
          * @param hasNamespace Indicates whether the attribute has an android namespace.
          * @return a String with the value or null if the attribute was not found.
-         * @see AndroidConstants#NS_RESOURCES
+         * @see SdkConstants#NS_RESOURCES
          */
         private String getAttributeValue(Attributes attributes, String attributeName,
                 boolean hasNamespace) {
@@ -450,7 +451,7 @@ public class AndroidManifestParser {
             for (int i = 0 ; i < count ; i++) {
                 if (attributeName.equals(attributes.getLocalName(i)) &&
                         ((hasNamespace &&
-                                AndroidConstants.NS_RESOURCES.equals(attributes.getURI(i))) ||
+                                SdkConstants.NS_RESOURCES.equals(attributes.getURI(i))) ||
                                 (hasNamespace == false && attributes.getURI(i).length() == 0))) {
                     return attributes.getValue(i);
                 }

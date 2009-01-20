@@ -19,6 +19,7 @@ package com.android.ide.eclipse.editors.layout;
 import com.android.ide.eclipse.common.AndroidConstants;
 import com.android.ide.eclipse.editors.layout.descriptors.ViewElementDescriptor;
 import com.android.layoutlib.api.IXmlPullParser;
+import com.android.sdklib.SdkConstants;
 
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -61,7 +62,7 @@ public class WidgetPullParser extends BasePullParser {
     }
 
     public String getAttributeNamespace(int index) {
-        return AndroidConstants.NS_RESOURCES;
+        return SdkConstants.NS_RESOURCES;
     }
 
     public String getAttributePrefix(int index) {
@@ -78,7 +79,7 @@ public class WidgetPullParser extends BasePullParser {
     }
 
     public String getAttributeValue(String ns, String name) {
-        if (AndroidConstants.NS_RESOURCES.equals(ns)) {
+        if (SdkConstants.NS_RESOURCES.equals(ns)) {
             for (String[] attribute : mAttributes) {
                 if (name.equals(attribute[0])) {
                     return attribute[1];

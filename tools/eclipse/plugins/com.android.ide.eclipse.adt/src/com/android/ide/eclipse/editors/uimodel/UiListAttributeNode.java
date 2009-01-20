@@ -18,7 +18,6 @@ package com.android.ide.eclipse.editors.uimodel;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.sdk.AndroidTargetData;
-import com.android.ide.eclipse.common.AndroidConstants;
 import com.android.ide.eclipse.editors.AndroidEditor;
 import com.android.ide.eclipse.editors.descriptors.AttributeDescriptor;
 import com.android.ide.eclipse.editors.descriptors.DescriptorsUtils;
@@ -26,6 +25,7 @@ import com.android.ide.eclipse.editors.descriptors.ListAttributeDescriptor;
 import com.android.ide.eclipse.editors.descriptors.TextAttributeDescriptor;
 import com.android.ide.eclipse.editors.descriptors.XmlnsAttributeDescriptor;
 import com.android.ide.eclipse.editors.ui.SectionHelper;
+import com.android.sdklib.SdkConstants;
 
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.swt.SWT;
@@ -135,7 +135,7 @@ public class UiListAttributeNode extends UiAbstractTextAttributeNode {
         
         // FrameworkResourceManager expects a specific prefix for the attribute.
         String prefix = "";
-        if (AndroidConstants.NS_RESOURCES.equals(descriptor.getNamespaceUri())) {
+        if (SdkConstants.NS_RESOURCES.equals(descriptor.getNamespaceUri())) {
             prefix = "android:"; //$NON-NLS-1$
         } else if (XmlnsAttributeDescriptor.XMLNS_URI.equals(descriptor.getNamespaceUri())) {
             prefix = "xmlns:"; //$NON-NLS-1$

@@ -66,3 +66,7 @@ The build target 'pdk' brings in the pdk/ndk make files into the build system.
   pdk_docs - which builds the pdk documentation
   ndk - which builds the native development kit (native compiler, linker, etc.)
   pdk_all - which builds the above two targets
+
+for doxygen version changing you can pass in the variable:
+doxygen_version='<path/name_of_doxygen_executable>'
+on the make line.
