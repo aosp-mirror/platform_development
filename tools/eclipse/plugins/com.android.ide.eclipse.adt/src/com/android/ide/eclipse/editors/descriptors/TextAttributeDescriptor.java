@@ -16,11 +16,11 @@
 
 package com.android.ide.eclipse.editors.descriptors;
 
-import com.android.ide.eclipse.common.AndroidConstants;
 import com.android.ide.eclipse.editors.ui.TextValueCellEditor;
 import com.android.ide.eclipse.editors.uimodel.UiAttributeNode;
 import com.android.ide.eclipse.editors.uimodel.UiElementNode;
 import com.android.ide.eclipse.editors.uimodel.UiTextAttributeNode;
+import com.android.sdklib.SdkConstants;
 
 import org.eclipse.jface.viewers.CellEditor;
 import org.eclipse.jface.viewers.ILabelProvider;
@@ -47,7 +47,7 @@ public class TextAttributeDescriptor extends AttributeDescriptor implements IPro
      * @param xmlLocalName The XML name of the attribute (case sensitive)
      * @param uiName The UI name of the attribute. Cannot be an empty string and cannot be null.
      * @param nsUri The URI of the attribute. Can be null if attribute has no namespace.
-     *              See {@link AndroidConstants#NS_RESOURCES} for a common value.
+     *              See {@link SdkConstants#NS_RESOURCES} for a common value.
      * @param tooltip A non-empty tooltip string or null
      */
     public TextAttributeDescriptor(String xmlLocalName, String uiName,

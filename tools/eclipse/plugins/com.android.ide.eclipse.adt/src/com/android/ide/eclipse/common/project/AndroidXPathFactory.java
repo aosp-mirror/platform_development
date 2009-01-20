@@ -16,7 +16,7 @@
 
 package com.android.ide.eclipse.common.project;
 
-import com.android.ide.eclipse.common.AndroidConstants;
+import com.android.sdklib.SdkConstants;
 
 import java.util.Iterator;
 
@@ -48,7 +48,7 @@ public class AndroidXPathFactory {
         public String getNamespaceURI(String prefix) {
             if (prefix != null) {
                 if (prefix.equals(mAndroidPrefix)) {
-                    return AndroidConstants.NS_RESOURCES;
+                    return SdkConstants.NS_RESOURCES;
                 }
             }
             

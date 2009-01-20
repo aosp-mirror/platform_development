@@ -158,9 +158,6 @@ public class AndroidConstants {
     /** Regexp for aidl extension, i.e. "\.aidl$" */
     public final static String RE_AIDL_EXT = "\\.aidl$"; //$NON-NLS-1$
 
-    /** Namespace for the resource XML, i.e. "http://schemas.android.com/apk/res/android" */
-    public final static String NS_RESOURCES = "http://schemas.android.com/apk/res/android"; //$NON-NLS-1$
-
     /** Namespace pattern for the custom resource XML, i.e. "http://schemas.android.com/apk/res/%s" */
     public final static String NS_CUSTOM_RESOURCES = "http://schemas.android.com/apk/res/%1$s"; //$NON-NLS-1$
 

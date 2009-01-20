@@ -3,6 +3,7 @@
 	<name>adt-tests</name>
 	<comment></comment>
 	<projects>
+		<project>SdkLib</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

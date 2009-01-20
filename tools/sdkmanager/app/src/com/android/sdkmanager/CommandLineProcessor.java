@@ -45,6 +45,8 @@ public class CommandLineProcessor {
     public static final String KEY_HELP = "help";
     /** The global verbose flag. */
     public static final String KEY_VERBOSE = "verbose";
+    /** The global silent flag. */
+    public static final String KEY_SILENT = "silent";
     /** The internal action flag. */
     public static final String KEY_ACTION = "action";
 
@@ -65,10 +67,18 @@ public class CommandLineProcessor {
         mLog = logger;
         mActions = actions;
 
-        define(MODE.STRING, false, INTERNAL_FLAG, null, KEY_ACTION, "Selected Action", null);
+        define(MODE.STRING, false, INTERNAL_FLAG, null, KEY_ACTION,
+                "Selected Action", null);
 
-        define(MODE.BOOLEAN, false, GLOBAL_FLAG, "v", KEY_VERBOSE, "Verbose mode", false);
-        define(MODE.BOOLEAN, false, GLOBAL_FLAG, "h", KEY_HELP, "This help", false);
+        define(MODE.BOOLEAN, false, GLOBAL_FLAG, "v", KEY_VERBOSE,
+                "Verbose mode: errors, warnings and informational messages are printed.",
+                false);
+        define(MODE.BOOLEAN, false, GLOBAL_FLAG, "s", KEY_SILENT,
+                "Silent mode: only errors are printed out.",
+                false);
+        define(MODE.BOOLEAN, false, GLOBAL_FLAG, "h", KEY_HELP,
+                "This help.",
+                false);
     }
     
     //------------------
@@ -77,6 +87,11 @@ public class CommandLineProcessor {
     /** Helper that returns true if --verbose was requested. */
     public boolean isVerbose() {
         return ((Boolean) getValue(GLOBAL_FLAG, KEY_VERBOSE)).booleanValue();
+    }
+
+    /** Helper that returns true if --silent was requested. */
+    public boolean isSilent() {
+        return ((Boolean) getValue(GLOBAL_FLAG, KEY_SILENT)).booleanValue();
     }
 
     /** Helper that returns true if --help was requested. */
@@ -204,18 +219,29 @@ public class CommandLineProcessor {
                 needsHelp = "Missing action name.";
             } else {
                 // Validate that all mandatory arguments are non-null for this action
+                String missing = null;
+                boolean plural = false;
                 for (Entry<String, Arg> entry : mArguments.entrySet()) {
                     Arg arg = entry.getValue();
                     if (arg.getAction().equals(action)) {
                         if (arg.isMandatory() && arg.getCurrentValue() == null) {
-                            needsHelp = String.format("The parameter --%1$s must be defined for action '%2$s'",
-                                    arg.getLongArg(),
-                                    action);
-                            break;
+                            if (missing == null) {
+                                missing = "--" + arg.getLongArg();
+                            } else {
+                                missing += ", --" + arg.getLongArg();
+                                plural = true;
+                            }
                         }
                     }
                 }
-                
+
+                if (missing != null) {
+                    needsHelp  = String.format("The %1$s %2$s must be defined for action '%3$s'",
+                            plural ? "parameters" : "parameter",
+                            missing,
+                            action);
+                }
+
                 setValue(INTERNAL_FLAG, KEY_ACTION, action);
             }
         }
@@ -324,24 +350,29 @@ public class CommandLineProcessor {
             Arg arg = entry.getValue();
             if (arg.getAction().equals(action)) {
                 
-                String value = null;
+                String value = "";
                 if (arg.getDefaultValue() instanceof String[]) {
-                    value = "";
                     for (String v : (String[]) arg.getDefaultValue()) {
                         if (value.length() > 0) {
-                            value += "|";
+                            value += ", ";
                         }
                         value += v;
                     }
                 } else if (arg.getDefaultValue() != null) {
                     value = arg.getDefaultValue().toString();
                 }
+                if (value.length() > 0) {
+                    value = " (" + value + ")";
+                }
+                
+                String required = arg.isMandatory() ? " [required]" : "";
 
-                stdout("  -%1$s %2$-10s %3$s%4$s",
+                stdout("  -%1$s %2$-10s %3$s%4$s%5$s",
                         arg.getShortArg(),
                         "--" + arg.getLongArg(),
                         arg.getDescription(),
-                        value == null ? "" : " (" + value + ")");
+                        value,
+                        required);
                 numOptions++;
             }
         }

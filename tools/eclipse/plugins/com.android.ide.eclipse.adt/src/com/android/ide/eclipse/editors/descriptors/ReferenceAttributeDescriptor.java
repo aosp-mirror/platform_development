@@ -16,12 +16,12 @@
 
 package com.android.ide.eclipse.editors.descriptors;
 
-import com.android.ide.eclipse.common.AndroidConstants;
 import com.android.ide.eclipse.common.resources.ResourceType;
 import com.android.ide.eclipse.editors.ui.ResourceValueCellEditor;
 import com.android.ide.eclipse.editors.uimodel.UiAttributeNode;
 import com.android.ide.eclipse.editors.uimodel.UiElementNode;
 import com.android.ide.eclipse.editors.uimodel.UiResourceAttributeNode;
+import com.android.sdklib.SdkConstants;
 
 import org.eclipse.jface.viewers.CellEditor;
 import org.eclipse.swt.widgets.Composite;
@@ -39,7 +39,7 @@ public final class ReferenceAttributeDescriptor extends TextAttributeDescriptor 
      * @param xmlLocalName The XML name of the attribute (case sensitive)
      * @param uiName The UI name of the attribute. Cannot be an empty string and cannot be null.
      * @param nsUri The URI of the attribute. Can be null if attribute has no namespace.
-     *              See {@link AndroidConstants#NS_RESOURCES} for a common value.
+     *              See {@link SdkConstants#NS_RESOURCES} for a common value.
      * @param tooltip A non-empty tooltip string or null
      */
     public ReferenceAttributeDescriptor(String xmlLocalName, String uiName, String nsUri,
@@ -55,7 +55,7 @@ public final class ReferenceAttributeDescriptor extends TextAttributeDescriptor 
      * @param xmlLocalName The XML name of the attribute (case sensitive)
      * @param uiName The UI name of the attribute. Cannot be an empty string and cannot be null.
      * @param nsUri The URI of the attribute. Can be null if attribute has no namespace.
-     *              See {@link AndroidConstants#NS_RESOURCES} for a common value.
+     *              See {@link SdkConstants#NS_RESOURCES} for a common value.
      * @param tooltip A non-empty tooltip string or null
      */
     public ReferenceAttributeDescriptor(ResourceType resourceType, 

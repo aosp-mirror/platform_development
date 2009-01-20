@@ -82,9 +82,11 @@ public class Sdk {
                     logMessages.add(throwable.getMessage());
                 }
             }
+
             public void warning(String warningFormat, Object... arg) {
                 logMessages.add(String.format(warningFormat, arg));
             }
+            
             public void printf(String msgFormat, Object... arg) {
                 logMessages.add(String.format(msgFormat, arg));
             }

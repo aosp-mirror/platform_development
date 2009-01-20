@@ -16,18 +16,17 @@
 
 package com.android.ide.eclipse.editors.layout;
 
-import com.android.ide.eclipse.common.AndroidConstants;
 import com.android.ide.eclipse.editors.descriptors.AttributeDescriptor;
 import com.android.ide.eclipse.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.editors.descriptors.TextAttributeDescriptor;
 import com.android.ide.eclipse.editors.mock.MockXmlNode;
 import com.android.ide.eclipse.editors.uimodel.UiElementNode;
+import com.android.sdklib.SdkConstants;
 
 import org.w3c.dom.Node;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
-import java.io.IOException;
 import java.util.HashMap;
 
 import junit.framework.TestCase;
@@ -47,22 +46,22 @@ public class UiElementPullParserTest extends TestCase {
         // Also add some dummy attributes.
         ElementDescriptor buttonDescriptor = new ElementDescriptor("Button", "Button", "", "",
                 new AttributeDescriptor[] {
-                    new TextAttributeDescriptor("name", "name", AndroidConstants.NS_RESOURCES, ""),
-                    new TextAttributeDescriptor("text", "text", AndroidConstants.NS_RESOURCES, ""),
+                    new TextAttributeDescriptor("name", "name", SdkConstants.NS_RESOURCES, ""),
+                    new TextAttributeDescriptor("text", "text", SdkConstants.NS_RESOURCES, ""),
                     },
                 new ElementDescriptor[] {}, false);
 
         ElementDescriptor textDescriptor = new ElementDescriptor("TextView", "TextView", "", "",
                 new AttributeDescriptor[] {
-                new TextAttributeDescriptor("name", "name", AndroidConstants.NS_RESOURCES, ""),
-                new TextAttributeDescriptor("text", "text", AndroidConstants.NS_RESOURCES, ""), },
+                new TextAttributeDescriptor("name", "name", SdkConstants.NS_RESOURCES, ""),
+                new TextAttributeDescriptor("text", "text", SdkConstants.NS_RESOURCES, ""), },
                 new ElementDescriptor[] {}, false);
 
         ElementDescriptor linearDescriptor = new ElementDescriptor("LinearLayout", "Linear Layout",
                 "", "",
                 new AttributeDescriptor[] {
                     new TextAttributeDescriptor("orientation", "orientation",
-                            AndroidConstants.NS_RESOURCES, ""),
+                            SdkConstants.NS_RESOURCES, ""),
                 },
                 new ElementDescriptor[] { }, false);
 
@@ -70,7 +69,7 @@ public class UiElementPullParserTest extends TestCase {
                 "Relative Layout", "", "",
                 new AttributeDescriptor[] {
                     new TextAttributeDescriptor("orientation", "orientation",
-                            AndroidConstants.NS_RESOURCES, ""),
+                            SdkConstants.NS_RESOURCES, ""),
                 },
                 new ElementDescriptor[] { }, false);
 
@@ -99,8 +98,8 @@ public class UiElementPullParserTest extends TestCase {
          */
         MockXmlNode button1 = new MockXmlNode(null /* namespace */, "Button", Node.ELEMENT_NODE,
                 null);
-        button1.addAttributes(AndroidConstants.NS_RESOURCES, "name", "button1");
-        button1.addAttributes(AndroidConstants.NS_RESOURCES, "text", "button1text");
+        button1.addAttributes(SdkConstants.NS_RESOURCES, "name", "button1");
+        button1.addAttributes(SdkConstants.NS_RESOURCES, "text", "button1text");
         
         // create a map of the attributes we add to the multi-attribute nodes so that
         // we can more easily test the values when we parse the XML.
@@ -112,8 +111,8 @@ public class UiElementPullParserTest extends TestCase {
 
         MockXmlNode button2 = new MockXmlNode(null /* namespace */, "Button", Node.ELEMENT_NODE,
                 null);
-        button2.addAttributes(AndroidConstants.NS_RESOURCES, "name", "button2");
-        button2.addAttributes(AndroidConstants.NS_RESOURCES, "text", "button2text");
+        button2.addAttributes(SdkConstants.NS_RESOURCES, "name", "button2");
+        button2.addAttributes(SdkConstants.NS_RESOURCES, "text", "button2text");
 
         button2Map = new HashMap<String, String>();
         button2Map.put("name", "button2");
@@ -121,8 +120,8 @@ public class UiElementPullParserTest extends TestCase {
         
         MockXmlNode text = new MockXmlNode(null /* namespace */, "TextView", Node.ELEMENT_NODE,
                 null);
-        text.addAttributes(AndroidConstants.NS_RESOURCES, "name", "text1");
-        text.addAttributes(AndroidConstants.NS_RESOURCES, "text", "text1text");
+        text.addAttributes(SdkConstants.NS_RESOURCES, "name", "text1");
+        text.addAttributes(SdkConstants.NS_RESOURCES, "text", "text1text");
 
         textMap = new HashMap<String, String>();
         textMap.put("name", "text1");
@@ -130,17 +129,17 @@ public class UiElementPullParserTest extends TestCase {
 
         MockXmlNode relative = new MockXmlNode(null /* namespace */, "RelativeLayout",
                 Node.ELEMENT_NODE, new MockXmlNode[] { button2, text });
-        relative.addAttributes(AndroidConstants.NS_RESOURCES, "orientation", "toto");
+        relative.addAttributes(SdkConstants.NS_RESOURCES, "orientation", "toto");
         
         MockXmlNode linear = new MockXmlNode(null /* namespace */, "LinearLayout",
                 Node.ELEMENT_NODE, new MockXmlNode[] { button1, relative });
-        linear.addAttributes(AndroidConstants.NS_RESOURCES, "orientation", "vertical");
+        linear.addAttributes(SdkConstants.NS_RESOURCES, "orientation", "vertical");
         
         MockXmlNode root = new MockXmlNode(null /* namespace */, "root", Node.ELEMENT_NODE,
                 new MockXmlNode[] { linear });
         
         // put the namespace/prefix in place
-        root.setPrefix(AndroidConstants.NS_RESOURCES, "android");
+        root.setPrefix(SdkConstants.NS_RESOURCES, "android");
 
         // load the xml into the UiElementNode
         ui.loadFromXmlNode(root);
@@ -165,7 +164,7 @@ public class UiElementPullParserTest extends TestCase {
             assertEquals("LinearLayout", parser.getName());
             assertEquals(1, parser.getAttributeCount());
             assertEquals("orientation", parser.getAttributeName(0));
-            assertEquals(AndroidConstants.NS_RESOURCES, parser.getAttributeNamespace(0));
+            assertEquals(SdkConstants.NS_RESOURCES, parser.getAttributeNamespace(0));
             assertEquals("android", parser.getAttributePrefix(0));
             assertEquals("vertical", parser.getAttributeValue(0));
             
@@ -183,7 +182,7 @@ public class UiElementPullParserTest extends TestCase {
             assertEquals("RelativeLayout", parser.getName());
             assertEquals(1, parser.getAttributeCount());
             assertEquals("orientation", parser.getAttributeName(0));
-            assertEquals(AndroidConstants.NS_RESOURCES, parser.getAttributeNamespace(0));
+            assertEquals(SdkConstants.NS_RESOURCES, parser.getAttributeNamespace(0));
             assertEquals("android", parser.getAttributePrefix(0));
             assertEquals("toto", parser.getAttributeValue(0));
 
@@ -234,7 +233,7 @@ public class UiElementPullParserTest extends TestCase {
         assertNotNull(referenceValue);
         assertEquals(referenceValue, value);
         
-        assertEquals(AndroidConstants.NS_RESOURCES, parser.getAttributeNamespace(i));
+        assertEquals(SdkConstants.NS_RESOURCES, parser.getAttributeNamespace(i));
         assertEquals("android", parser.getAttributePrefix(i));
     }
 

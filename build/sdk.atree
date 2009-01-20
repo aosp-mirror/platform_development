@@ -112,9 +112,7 @@ framework/swing-worker-1.1.jar tools/lib/swing-worker-1.1.jar
 bin/traceview tools/traceview
 framework/traceview.jar tools/lib/traceview.jar
 
-# activitycreator
-bin/activitycreator tools/activitycreator
-framework/activitycreator.jar tools/lib/activitycreator.jar
+# custom ant tasks
 framework/anttasks.jar tools/lib/anttasks.jar
 
 # sdkmanager

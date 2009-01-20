@@ -31,6 +31,11 @@ import java.io.File;
  */
 public final class SdkConstants {
 
+    /** An SDK Project's AndroidManifest.xml file */
+    public static final String FN_ANDROID_MANIFEST_XML= "AndroidManifest.xml";
+    /** An SDK Project's build.xml file */
+    public final static String FN_BUILD_XML = "build.xml";
+
     /** Name of the framework library, i.e. "android.jar" */
     public static final String FN_FRAMEWORK_LIBRARY = "android.jar";
     /** Name of the layout attributes, i.e. "attrs.xml" */
@@ -129,7 +134,9 @@ public final class SdkConstants {
     /** Name of the addon libs folder. */
     public final static String FD_ADDON_LIBS = "libs";
 
-    
+    /** Namespace for the resource XML, i.e. "http://schemas.android.com/apk/res/android" */
+    public final static String NS_RESOURCES = "http://schemas.android.com/apk/res/android";
+
     /* Folder path relative to the SDK root */
     /** Path of the documentation directory relative to the sdk folder.
      *  This is an OS path, ending with a separator. */
@@ -206,11 +213,22 @@ public final class SdkConstants {
 
     /** Returns the appropriate name for the 'android' command, which is 'android.bat' for
      * Windows and 'android' for all other platforms. */
-    public static String AndroidCmdName() {
+    public static String androidCmdName() {
         String os = System.getProperty("os.name");
         String cmd = "android";
         if (os.startsWith("Windows")) {
             cmd += ".bat";
+        }
+        return cmd;
+    }
+
+    /** Returns the appropriate name for the 'mksdcard' command, which is 'mksdcard.exe' for
+     * Windows and 'mkdsdcard' for all other platforms. */
+    public static String mkSdCardCmdName() {
+        String os = System.getProperty("os.name");
+        String cmd = "mksdcard";
+        if (os.startsWith("Windows")) {
+            cmd += ".exe";
         }
         return cmd;
     }

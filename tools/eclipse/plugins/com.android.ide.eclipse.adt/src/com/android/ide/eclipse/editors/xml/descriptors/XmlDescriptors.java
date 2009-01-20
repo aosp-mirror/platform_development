@@ -25,9 +25,10 @@ import com.android.ide.eclipse.editors.descriptors.DescriptorsUtils;
 import com.android.ide.eclipse.editors.descriptors.DocumentDescriptor;
 import com.android.ide.eclipse.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.editors.descriptors.IDescriptorProvider;
-import com.android.ide.eclipse.editors.descriptors.XmlnsAttributeDescriptor;
 import com.android.ide.eclipse.editors.descriptors.SeparatorAttributeDescriptor;
+import com.android.ide.eclipse.editors.descriptors.XmlnsAttributeDescriptor;
 import com.android.ide.eclipse.editors.layout.descriptors.ViewElementDescriptor;
+import com.android.sdklib.SdkConstants;
 
 import java.util.ArrayList;
 import java.util.Map;
@@ -111,7 +112,7 @@ public final class XmlDescriptors implements IDescriptorProvider {
 
         XmlnsAttributeDescriptor xmlns = new XmlnsAttributeDescriptor(
                 "android", //$NON-NLS-1$
-                AndroidConstants.NS_RESOURCES); 
+                SdkConstants.NS_RESOURCES); 
 
         ElementDescriptor searchable = createSearchable(searchableStyleMap, xmlns);
         ElementDescriptor preferences = createPreference(prefs, prefGroups, xmlns);
@@ -191,7 +192,7 @@ public final class XmlDescriptors implements IDescriptorProvider {
         if (style != null) {
             DescriptorsUtils.appendAttributes(descs,
                     null,   // elementName
-                    AndroidConstants.NS_RESOURCES,
+                    SdkConstants.NS_RESOURCES,
                     style.getAttributes(),
                     null,   // requiredAttributes
                     null);  // overrides
@@ -280,7 +281,7 @@ public final class XmlDescriptors implements IDescriptorProvider {
         ArrayList<AttributeDescriptor> attributes = new ArrayList<AttributeDescriptor>();
         DescriptorsUtils.appendAttributes(attributes,
                 null,   // elementName
-                AndroidConstants.NS_RESOURCES,
+                SdkConstants.NS_RESOURCES,
                 info.getAttributes(),
                 null,   // requiredAttributes
                 null);  // overrides
@@ -294,7 +295,7 @@ public final class XmlDescriptors implements IDescriptorProvider {
                         String.format("Attributes from %1$s", link.getShortClassName()))); 
                 DescriptorsUtils.appendAttributes(attributes,
                         null,   // elementName
-                        AndroidConstants.NS_RESOURCES,
+                        SdkConstants.NS_RESOURCES,
                         attrList,
                         null,   // requiredAttributes
                         null);  // overrides

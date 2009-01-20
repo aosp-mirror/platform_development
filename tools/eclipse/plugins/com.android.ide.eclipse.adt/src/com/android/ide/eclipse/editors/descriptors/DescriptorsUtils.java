@@ -23,6 +23,7 @@ import com.android.ide.eclipse.common.resources.DeclareStyleableInfo.AttributeIn
 import com.android.ide.eclipse.editors.layout.LayoutConstants;
 import com.android.ide.eclipse.editors.uimodel.UiDocumentNode;
 import com.android.ide.eclipse.editors.uimodel.UiElementNode;
+import com.android.sdklib.SdkConstants;
 
 import org.eclipse.swt.graphics.Image;
 
@@ -75,7 +76,7 @@ public final class DescriptorsUtils {
          * @param xmlName The XML attribute name.
          * @param uiName The UI attribute name.
          * @param nsUri The URI of the attribute. Can be null if attribute has no namespace.
-         *              See {@link AndroidConstants#NS_RESOURCES} for a common value.
+         *              See {@link SdkConstants#NS_RESOURCES} for a common value.
          * @param tooltip An optional tooltip.
          * @return A new {@link TextAttributeDescriptor} (or derived) instance.
          */
@@ -90,7 +91,7 @@ public final class DescriptorsUtils {
      * @param elementXmlName Optional XML local name of the element to which attributes are
      *              being added. When not null, this is used to filter overrides.
      * @param nsUri The URI of the attribute. Can be null if attribute has no namespace.
-     *              See {@link AndroidConstants#NS_RESOURCES} for a common value.
+     *              See {@link SdkConstants#NS_RESOURCES} for a common value.
      * @param infos The array of {@link AttributeInfo} to read and append to attributes
      * @param requiredAttributes An optional set of attributes to mark as "required" (i.e. append
      *        a "*" to their UI name as a hint for the user.) If not null, must contains
@@ -125,7 +126,7 @@ public final class DescriptorsUtils {
      *              being added. When not null, this is used to filter overrides.
      * @param info The {@link AttributeInfo} to append to attributes
      * @param nsUri The URI of the attribute. Can be null if attribute has no namespace.
-     *              See {@link AndroidConstants#NS_RESOURCES} for a common value.
+     *              See {@link SdkConstants#NS_RESOURCES} for a common value.
      * @param required True if the attribute is to be marked as "required" (i.e. append
      *        a "*" to its UI name as a hint for the user.)
      * @param overrides A map [attribute name => TextAttributeDescriptor creator]. A creator

@@ -26,6 +26,7 @@ import com.android.ide.eclipse.editors.descriptors.DocumentDescriptor;
 import com.android.ide.eclipse.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.editors.descriptors.IDescriptorProvider;
 import com.android.ide.eclipse.editors.descriptors.SeparatorAttributeDescriptor;
+import com.android.sdklib.SdkConstants;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -134,7 +135,7 @@ public final class LayoutDescriptors implements IDescriptorProvider {
         ArrayList<AttributeDescriptor> attributes = new ArrayList<AttributeDescriptor>();
         DescriptorsUtils.appendAttributes(attributes,
                 null, // elementName
-                AndroidConstants.NS_RESOURCES,
+                SdkConstants.NS_RESOURCES,
                 info.getAttributes(),
                 null, // requiredAttributes
                 null /* overrides */);
@@ -148,7 +149,7 @@ public final class LayoutDescriptors implements IDescriptorProvider {
                         String.format("Attributes from %1$s", link.getShortClassName()))); 
                 DescriptorsUtils.appendAttributes(attributes,
                         null, // elementName
-                        AndroidConstants.NS_RESOURCES,
+                        SdkConstants.NS_RESOURCES,
                         attrList,
                         null, // requiredAttributes
                         null /* overrides */);
@@ -163,7 +164,7 @@ public final class LayoutDescriptors implements IDescriptorProvider {
             boolean need_separator = true;
             for (AttributeInfo attr_info : layoutParams.getAttributes()) {
                 if (DescriptorsUtils.containsAttribute(layoutAttributes,
-                        AndroidConstants.NS_RESOURCES, attr_info)) {
+                        SdkConstants.NS_RESOURCES, attr_info)) {
                     continue;
                 }
                 if (need_separator) {
@@ -182,7 +183,7 @@ public final class LayoutDescriptors implements IDescriptorProvider {
                 }
                 DescriptorsUtils.appendAttribute(layoutAttributes,
                         null, // elementName
-                        AndroidConstants.NS_RESOURCES,
+                        SdkConstants.NS_RESOURCES,
                         attr_info,
                         false, // required
                         null /* overrides */);

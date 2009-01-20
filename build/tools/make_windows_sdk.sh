@@ -87,7 +87,7 @@ function package() {
     # Remove obsolete stuff from tools
     TOOLS="$DEST/tools"
     LIB="$DEST/tools/lib"
-    rm -v "$TOOLS"/{aapt,aidl,adb,emulator,traceview,draw9patch,hierarchyviewer,dx,dexdump,apkbuilder,ddms,dmtracedump,mksdcard,sqlite3,activitycreator,android}
+    rm -v "$TOOLS"/{aapt,aidl,adb,emulator,traceview,draw9patch,hierarchyviewer,dx,dexdump,apkbuilder,ddms,dmtracedump,mksdcard,sqlite3,android}
     rm -v --force "$LIB"/*.so "$LIB"/*.jnilib
 
     # Copy all the new stuff in tools
@@ -108,7 +108,6 @@ function package() {
     cp -v development/tools/traceview/etc/traceview.bat "$TOOLS"
     cp -v development/tools/hierarchyviewer/etc/hierarchyviewer.bat "$TOOLS"
     cp -v development/tools/draw9patch/etc/draw9patch.bat "$TOOLS"
-    cp -v development/tools/activitycreator/etc/activitycreator.bat "$TOOLS"
     cp -v development/tools/sdkmanager/app/etc/android.bat "$TOOLS"
 
     # Fix EOL chars to make window users happy - fix all files at the top level only

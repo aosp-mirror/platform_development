@@ -17,9 +17,9 @@
 package com.android.ide.eclipse.editors.descriptors;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.common.AndroidConstants;
 import com.android.ide.eclipse.editors.IconFactory;
 import com.android.ide.eclipse.editors.uimodel.UiElementNode;
+import com.android.sdklib.SdkConstants;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.graphics.Image;
@@ -147,7 +147,7 @@ public class ElementDescriptor {
     public final String getNamespace() {
         // For now we hard-code the prefix as being "android"
         if (mXmlName.startsWith("android:")) { //$NON-NLs-1$
-            return AndroidConstants.NS_RESOURCES;
+            return SdkConstants.NS_RESOURCES;
         }
         
         return ""; //$NON-NLs-1$
