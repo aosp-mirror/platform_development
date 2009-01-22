@@ -1582,6 +1582,13 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".graphics.BitmapPixels" android:label="Graphics/BitmapPixels">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
         <activity android:name=".graphics.Xfermodes" android:label="Graphics/Xfermodes">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

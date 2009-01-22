@@ -68,6 +68,8 @@ public class SoftKeyboard extends InputMethodService
     private Keyboard mSymbolsShiftedKeyboard;
     private Keyboard mQwertyKeyboard;
     
+    private Keyboard mCurKeyboard;
+    
     private String mWordSeparators;
     
     /**
@@ -132,8 +134,8 @@ public class SoftKeyboard extends InputMethodService
      * bound to the client, and are now receiving all of the detailed information
      * about the target of our edits.
      */
-    @Override public void onStartInputView(EditorInfo attribute, boolean restarting) {
-        super.onStartInputView(attribute, restarting);
+    @Override public void onStartInput(EditorInfo attribute, boolean restarting) {
+        super.onStartInput(attribute, restarting);
         
         // Reset our state.  We want to do this even if restarting, because
         // the underlying state of the text editor could have changed in any way.
@@ -148,7 +150,6 @@ public class SoftKeyboard extends InputMethodService
         mPredictionOn = false;
         mCompletionOn = false;
         mCompletions = null;
-        Keyboard keyboard;
         
         // We are now going to initialize our state based on the type of
         // text being edited.
@@ -157,13 +158,13 @@ public class SoftKeyboard extends InputMethodService
             case EditorInfo.TYPE_CLASS_DATETIME:
                 // Numbers and dates default to the symbols keyboard, with
                 // no extra features.
-                keyboard = mSymbolsKeyboard;
+                mCurKeyboard = mSymbolsKeyboard;
                 break;
                 
             case EditorInfo.TYPE_CLASS_PHONE:
                 // Phones will also default to the symbols keyboard, though
                 // often you will want to have a dedicated phone keyboard.
-                keyboard = mSymbolsKeyboard;
+                mCurKeyboard = mSymbolsKeyboard;
                 break;
                 
             case EditorInfo.TYPE_CLASS_TEXT:
@@ -171,7 +172,7 @@ public class SoftKeyboard extends InputMethodService
                 // normal alphabetic keyboard, and assume that we should
                 // be doing predictive text (showing candidates as the
                 // user types).
-                keyboard = mQwertyKeyboard;
+                mCurKeyboard = mQwertyKeyboard;
                 mPredictionOn = true;
                 
                 // We now look for a few special variations of text that will
@@ -209,13 +210,7 @@ public class SoftKeyboard extends InputMethodService
             default:
                 // For all unknown input types, default to the alphabetic
                 // keyboard with no special features.
-                keyboard = mQwertyKeyboard;
-        }
-        
-        // Apply the selected keyboard to the input view.
-        if (mInputView != null) {
-            mInputView.setKeyboard(keyboard);
-            mInputView.closing();
+                mCurKeyboard = mQwertyKeyboard;
         }
     }
 
@@ -236,9 +231,17 @@ public class SoftKeyboard extends InputMethodService
         // its window.
         setCandidatesViewShown(false);
         
+        mCurKeyboard = mQwertyKeyboard;
         if (mInputView != null) {
             mInputView.closing();
         }
+    }
+    
+    @Override public void onStartInputView(EditorInfo attribute, boolean restarting) {
+        super.onStartInputView(attribute, restarting);
+        // Apply the selected keyboard to the input view.
+        mInputView.setKeyboard(mCurKeyboard);
+        mInputView.closing();
     }
     
     /**
@@ -349,6 +352,10 @@ public class SoftKeyboard extends InputMethodService
                     return true;
                 }
                 break;
+                
+            case KeyEvent.KEYCODE_ENTER:
+                // Let the underlying text editor always handle these.
+                return false;
                 
             default:
                 // For all other keys, if we want to do transformations on
@@ -500,13 +507,13 @@ public class SoftKeyboard extends InputMethodService
     
     public void setSuggestions(List<String> suggestions, boolean completions,
             boolean typedWordValid) {
+        if (suggestions != null && suggestions.size() > 0) {
+            setCandidatesViewShown(true);
+        } else if (isFullscreenMode()) {
+            setCandidatesViewShown(true);
+        }
         if (mCandidateView != null) {
             mCandidateView.setSuggestions(suggestions, completions, typedWordValid);
-            if (suggestions != null && suggestions.size() > 0) {
-                setCandidatesViewShown(true);
-            } else if (isFullscreenMode()) {
-                setCandidatesViewShown(true);
-            }
         }
     }
     
