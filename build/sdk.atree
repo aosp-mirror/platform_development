@@ -126,7 +126,7 @@ system.img platforms/${PLATFORM_NAME}/images/system.img
 ramdisk.img platforms/${PLATFORM_NAME}/images/ramdisk.img
 userdata.img platforms/${PLATFORM_NAME}/images/userdata.img
 prebuilt/android-arm/kernel/kernel-qemu platforms/${PLATFORM_NAME}/images/kernel-qemu
-external/qemu/android/vm/hardware-properties.ini tools/lib/hardware-properties.ini
+external/qemu/android/avd/hardware-properties.ini tools/lib/hardware-properties.ini
 
 # emulator skins
 development/emulator/skins/HVGA   platforms/${PLATFORM_NAME}/skins/HVGA

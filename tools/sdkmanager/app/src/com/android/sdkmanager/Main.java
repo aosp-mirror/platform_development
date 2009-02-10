@@ -23,12 +23,12 @@ import com.android.sdklib.ISdkLog;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.IAndroidTarget.IOptionalLibrary;
+import com.android.sdklib.avd.AvdManager;
+import com.android.sdklib.avd.HardwareProperties;
+import com.android.sdklib.avd.AvdManager.AvdInfo;
+import com.android.sdklib.avd.HardwareProperties.HardwareProperty;
 import com.android.sdklib.project.ProjectCreator;
 import com.android.sdklib.project.ProjectCreator.OutputLevel;
-import com.android.sdklib.vm.HardwareProperties;
-import com.android.sdklib.vm.VmManager;
-import com.android.sdklib.vm.HardwareProperties.HardwareProperty;
-import com.android.sdklib.vm.VmManager.VmInfo;
 
 import java.io.File;
 import java.io.IOException;
@@ -56,8 +56,8 @@ class Main {
     private ISdkLog mSdkLog;
     /** The SDK manager parses the SDK folder and gives access to the content. */
     private SdkManager mSdkManager;
-    /** Virtual Machine manager to access the list of VMs or create new ones. */
-    private VmManager mVmManager;
+    /** Virtual Machine manager to access the list of AVDs or create new ones. */
+    private AvdManager mAvdManager;
     /** Command-line processor with options specific to SdkManager. */
     private SdkCommandLine mSdkCommandLine;
     /** The working directory, either null or set to an existing absolute canonical directory. */
@@ -183,26 +183,31 @@ class Main {
      * Actually do an action...
      */
     private void doAction() {
-        String action = mSdkCommandLine.getActionRequested();
+        String verb = mSdkCommandLine.getVerb();
+        String directObject = mSdkCommandLine.getDirectObject();
         
-        if (SdkCommandLine.ACTION_LIST.equals(action)) {
+        if (SdkCommandLine.VERB_LIST.equals(verb)) {
             // list action.
-            if (SdkCommandLine.ARG_TARGET.equals(mSdkCommandLine.getListFilter())) {
+            if (SdkCommandLine.OBJECT_TARGET.equals(directObject)) {
                 displayTargetList();
-            } else if (SdkCommandLine.ARG_VM.equals(mSdkCommandLine.getListFilter())) {
-                displayVmList();
+            } else if (SdkCommandLine.OBJECT_AVD.equals(directObject)) {
+                displayAvdList();
             } else {
                 displayTargetList();
-                displayVmList();
+                displayAvdList();
             }
-        } else if (SdkCommandLine.ACTION_NEW_VM.equals(action)) {
-            createVm();
-        } else if (SdkCommandLine.ACTION_NEW_PROJECT.equals(action)) {
+
+        } else if (SdkCommandLine.VERB_CREATE.equals(verb) &&
+                SdkCommandLine.OBJECT_AVD.equals(directObject)) {
+            createAvd();
+
+        } else if (SdkCommandLine.VERB_CREATE.equals(verb) &&
+                SdkCommandLine.OBJECT_PROJECT.equals(directObject)) {
             // get the target and try to resolve it.
-            int targetId = mSdkCommandLine.getNewProjectTargetId();
+            int targetId = mSdkCommandLine.getCreateProjectTargetId();
             IAndroidTarget[] targets = mSdkManager.getTargets();
             if (targetId < 1 || targetId > targets.length) {
-                errorAndExit("Target id is not valid. Use '%s list -f target' to get the target Ids.",
+                errorAndExit("Target id is not valid. Use '%s list targets' to get the target ids.",
                         SdkConstants.androidCmdName());
             }
             IAndroidTarget target = targets[targetId - 1];
@@ -213,22 +218,24 @@ class Main {
                             OutputLevel.NORMAL,
                     mSdkLog);
 
-            String projectDir = getProjectLocation(mSdkCommandLine.getNewProjectLocation());
+            String projectDir = getProjectLocation(mSdkCommandLine.getCreateProjectLocation());
             
             creator.createProject(projectDir,
-                    mSdkCommandLine.getNewProjectName(),
-                    mSdkCommandLine.getNewProjectPackage(),
-                    mSdkCommandLine.getNewProjectActivity(),
+                    mSdkCommandLine.getCreateProjectName(),
+                    mSdkCommandLine.getCreateProjectPackage(),
+                    mSdkCommandLine.getCreateProjectActivity(),
                     target,
                     false /* isTestProject*/);
-        } else if (SdkCommandLine.ACTION_UPDATE_PROJECT.equals(action)) {
+
+        } else if (SdkCommandLine.VERB_UPDATE.equals(verb) &&
+                SdkCommandLine.OBJECT_PROJECT.equals(directObject)) {
             // get the target and try to resolve it.
             IAndroidTarget target = null;
             int targetId = mSdkCommandLine.getUpdateProjectTargetId();
             if (targetId >= 0) {
                 IAndroidTarget[] targets = mSdkManager.getTargets();
                 if (targetId < 1 || targetId > targets.length) {
-                    errorAndExit("Target id is not valid. Use '%s list -f target' to get the target Ids.",
+                    errorAndExit("Target id is not valid. Use '%s list targets' to get the target ids.",
                             SdkConstants.androidCmdName());
                 }
                 target = targets[targetId - 1];
@@ -340,20 +347,20 @@ class Main {
     }
     
     /**
-     * Displays the list of available VMs.
+     * Displays the list of available AVDs.
      */
-    private void displayVmList() {
+    private void displayAvdList() {
         try {
-            mVmManager = new VmManager(mSdkManager, null /* sdklog */);
+            mAvdManager = new AvdManager(mSdkManager, null /* sdklog */);
 
-            mSdkLog.printf("Available Android VMs:\n");
+            mSdkLog.printf("Available Android Virtual Devices:\n");
 
             int index = 1;
-            for (VmInfo info : mVmManager.getVms()) {
+            for (AvdInfo info : mAvdManager.getAvds()) {
                 mSdkLog.printf("[%d] %s\n", index, info.getName());
                 mSdkLog.printf("    Path: %s\n", info.getPath());
 
-                // get the target of the Vm
+                // get the target of the AVD
                 IAndroidTarget target = info.getTarget();
                 if (target.isPlatform()) {
                     mSdkLog.printf("    Target: %s (API level %d)\n", target.getName(),
@@ -373,57 +380,85 @@ class Main {
     }
     
     /**
-     * Creates a new VM. This is a text based creation with command line prompt.
+     * Creates a new AVD. This is a text based creation with command line prompt.
      */
-    private void createVm() {
+    private void createAvd() {
         // find a matching target
-        int targetId = mSdkCommandLine.getNewVmTargetId();
+        int targetId = mSdkCommandLine.getCreateAvdTargetId();
         IAndroidTarget target = null;
         
         if (targetId >= 1 && targetId <= mSdkManager.getTargets().length) {
             target = mSdkManager.getTargets()[targetId-1]; // target it is 1-based
         } else {
-            errorAndExit("Target id is not valid. Use '%s list -f target' to get the target Ids.",
+            errorAndExit("Target id is not valid. Use '%s list targets' to get the target ids.",
                     SdkConstants.androidCmdName());
         }
 
         try {
-            mVmManager = new VmManager(mSdkManager, mSdkLog);
+            boolean removePrevious = false;
+            mAvdManager = new AvdManager(mSdkManager, mSdkLog);
 
-            String vmName = mSdkCommandLine.getNewVmName();
-            VmInfo info = mVmManager.getVm(vmName);
+            String avdName = mSdkCommandLine.getCreateAvdName();
+            AvdInfo info = mAvdManager.getAvd(avdName);
             if (info != null) {
-                errorAndExit("VM %s already exists.", vmName);
-            } else {
-                String vmParentFolder = mSdkCommandLine.getNewVmLocation();
-                if (vmParentFolder == null) {
-                    vmParentFolder = AndroidLocation.getFolder() + AndroidLocation.FOLDER_VMS;
+                if (mSdkCommandLine.getCreateAvdForce()) {
+                    removePrevious = true;
+                    mSdkLog.warning(
+                            "Android Virtual Device '%s' already exists and will be replaced.",
+                            avdName);
+                } else {
+                    errorAndExit("Android Virtual Device '%s' already exists.", avdName);
+                    return;
                 }
-
-                Map<String, String> hardwareConfig = null;
-                if (target.isPlatform()) {
-                    try {
-                        hardwareConfig = promptForHardware(target);
-                    } catch (IOException e) {
-                        errorAndExit(e.getMessage());
-                    }
-                }
-
-                mVmManager.createVm(vmParentFolder,
-                        mSdkCommandLine.getNewVmName(),
-                        target,
-                        mSdkCommandLine.getNewVmSkin(),
-                        mSdkCommandLine.getNewVmSdCard(),
-                        hardwareConfig,
-                        mSdkLog);
             }
+
+            String avdParentFolder = mSdkCommandLine.getCreateAvdLocation();
+            if (avdParentFolder == null) {
+                avdParentFolder = AndroidLocation.getFolder() + AndroidLocation.FOLDER_AVD;
+            }
+
+            Map<String, String> hardwareConfig = null;
+            if (target.isPlatform()) {
+                try {
+                    hardwareConfig = promptForHardware(target);
+                } catch (IOException e) {
+                    errorAndExit(e.getMessage());
+                }
+            }
+            
+            AvdInfo oldAvdInfo = null;
+            if (removePrevious) {
+                oldAvdInfo = mAvdManager.getAvd(avdName);
+            }
+
+            AvdInfo newAvdInfo = mAvdManager.createAvd(avdParentFolder,
+                    avdName,
+                    target,
+                    mSdkCommandLine.getCreateAvdSkin(),
+                    mSdkCommandLine.getCreateAvdSdCard(),
+                    hardwareConfig,
+                    removePrevious,
+                    mSdkLog);
+            
+            if (newAvdInfo != null && 
+                    oldAvdInfo != null &&
+                    !oldAvdInfo.getPath().equals(newAvdInfo.getPath())) {
+                mSdkLog.warning("Removing previous AVD directory at %s", oldAvdInfo.getPath());
+                // Remove the old data directory
+                File dir = new File(oldAvdInfo.getPath());
+                mAvdManager.recursiveDelete(dir);
+                dir.delete();
+                // Remove old avd info from manager
+                mAvdManager.removeAvd(oldAvdInfo);
+            }
+            
         } catch (AndroidLocationException e) {
             errorAndExit(e.getMessage());
         }
     }
 
     /**
-     * Prompts the user to setup a hardware config for a Platform-based VM.
+     * Prompts the user to setup a hardware config for a Platform-based AVD.
      * @throws IOException 
      */
     private Map<String, String> promptForHardware(IAndroidTarget createTarget) throws IOException {

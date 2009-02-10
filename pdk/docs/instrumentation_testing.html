@@ -200,7 +200,7 @@ h1,h2,h3 {
 <a href="#androidTestingLocationFiles">Location of Files</a><br/>
 <a href="#androidTestingContentMakefile">Contents of makefile</a><br/>
 <a href="#androidTestingContentManifest">Content of Manifest</a><br/>
-<a href="#androidInstrumentationTestingCreatingTestRunner">New Instrumentation TestRunner</a><br/>
+<a href="#androidInstrumentationTestingCreatingTestRunner">New InstrumentationTestRunner</a><br/>
 <a href="#androidInstrumentationTestingCreatingTestCase">New InstrumentationTestCase</a><br/>
 <a href="#androidInstrumentationFrameworkTestCase">Exploring a Test Case</a><br/>
 <a href="#androidTestingKindsofTests">Deciding Kinds of Tests to Write</a><br/></div>
@@ -493,23 +493,28 @@ include $(BUILD_PACKAGE)
 
 <a name="androidTestingContentManifest"></a><h3>Content of Manifest</h3>
 
-<p>Use the following example to create an <code>AndroidManifest.xml</code> file that declares the instrumentation. Specify that the framework supplied Instrumentation TestRunner targest the package of your application, allowing the tests that are run with the instrumentation to get access to all of the classes of your application without having to build the source into the test app. The name of the test application is typically the same as your target application with <code>.tests</code> appended. </p>
+<p>Use the following example to create an <code>AndroidManifest.xml</code> file that declares the instrumentation. Specify that the framework supplied InstrumentationTestRunner targets the package of your application, allowing the tests that are run with the instrumentation to get access to all of the classes of your application without having to build the source into the test app. The name of the test application is typically the same as your target application with <code>.tests</code> appended. </p>
 <pre> 
 # Add appropriate copyright banner here
 &lt;manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.android.samples.tests"&gt;
- 
-    &lt;uses-permission android:name="android.permission.RUN_INSTRUMENTATION" /&gt;
- 
+    package="com.example.android.apis.tests"&gt;
+
+    &lt;!-- We add an application tag here just so that we can indicate that
+         this package needs to link against the android.test library,
+         which is needed when building test cases. -->
+    &lt;application>
+        &lt;uses-library android:name="android.test.runner" />
+    &lt;/application>
+
     &lt;!--
     This declares that this app uses the instrumentation test runner targeting
-    the package of com.android.samples.  To run the tests use the command:
-    "adb shell am instrument -w com.android.samples.tests/android.test.InstrumentationTestRunner"
-    --&gt;
+    the package of com.example.android.apis.  To run the tests use the command:
+    "adb shell am instrument -w com.example.android.apis.tests/android.test.InstrumentationTestRunner"
+    -->
     &lt;instrumentation android:name="android.test.InstrumentationTestRunner"
-                     android:targetPackage="com.android.samples"
-                     android:label="Tests for Api Demos."/&gt;
- 
+                     android:targetPackage="com.example.android.apis"
+                     android:label="Tests for Api Demos."/>
+
 &lt;/manifest&gt;
 </pre> 
 <p>&nbsp;</p> 
@@ -520,7 +525,7 @@ $ adb shell am instrument -w \
 </pre> 
 
 
-<a name="androidInstrumentationTestingCreatingTestRunner"></a><h3>New Instrumentation TestRunner</h3>
+<a name="androidInstrumentationTestingCreatingTestRunner"></a><h3>New InstrumentationTestRunner</h3>
 
 <p>Create a class that derives from this class. You must override two abstract methods; one that returns the class loader of the target package, and another that defines all of the tests within the package. For example, the snippet below displays the test runner for the framework tests.</p>
 <pre class="prettify">
@@ -544,8 +549,6 @@ public class FrameworkInstrumentationTestRunner extends InstrumentationTestRunne
 </pre>
 <p> Next, in an appropriate <code>AndroidManifest.xml</code>, define the instrumentation for the derived class with the appropriate <code>android:targetPackage</code> set.  For example, the snippet below defines the instrumentation runner for the framework tests.</p>
 <pre class="prettify">
-&lt;uses-permission android:name="android.permission.RUN_INSTRUMENTATION" /&gt;
-
 &lt;instrumentation android:name="android.tests.FrameworkInstrumentationTestRunner"
                  android:targetPackage="com.google.android.frameworktest"
                  android:label="framework instrumentation test runner" /&gt;

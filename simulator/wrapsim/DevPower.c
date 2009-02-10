@@ -1,7 +1,7 @@
 /*
  * Copyright 2007 The Android Open Source Project
  *
- * Magic entries in /sys/android_power/.
+ * Magic entries in /sys/class/power_supply/.
  */
 #include "Common.h"
 
@@ -11,30 +11,6 @@
 
 #include <fcntl.h>
 #include <sys/ioctl.h>
-
-#if 0
-/*
- * Set of entries found in /sys/android_power.
- */
-typedef enum DeviceIndex {
-    kPowerUnknown = 0,
-
-    kPowerAutoOffTimeout,
-    kPowerBatteryLevel,
-    kPowerBatteryLevelLow,
-    kPowerBatteryLevelRaw,
-    kPowerBatteryLevelScale,
-    kPowerBatteryLowLevel,
-    kPowerBatteryShutdownLevel,
-    kPowerChargingState,
-    kPowerRequestState,
-    kPowerState,
-
-    kPowerAcquireFullWakeLock,
-    kPowerAcquirePartialWakeLock,
-    kPowerReleaseWakeLock,
-} DeviceIndex;
-#endif
 
 /*
  * Map filename to device index.
@@ -47,38 +23,26 @@ static const struct {
     //DeviceIndex     idx;
     const char*     data;
 } gDeviceMap[] = {
-    { "auto_off_timeout",           //kPowerAutoOffTimeout,
-        "\n" },
-    { "battery_level",              //kPowerBatteryLevel,
-        "9\n" },
-    { "battery_level_low",          //kPowerBatteryLevelLow,
+    { "ac/online",
         "0\n" },
-    { "battery_level_raw",          //kPowerBatteryLevelRaw,
+
+    { "battery/batt_temp",
+        "281\n", },
+    { "battery/batt_vol",
+        "4170\n" },
+    { "battery/capacity",
         "100\n" },
-    { "battery_level_scale",        //kPowerBatteryLevelScale,
-        "9\n" },
-    { "battery_low_level",          //kPowerBatteryLowLevel,
-        "10\n" },
-    { "battery_shutdown_level",     //kPowerBatteryShutdownLevel,
-        "5\n", },
-    { "charging_state",             //kPowerChargingState,
-        "Maintaining\n" },
-    { "request_state",              //kPowerRequestState,
-        "wake\n" },
-    { "state",                      //kPowerState,
-        "0-1-0\n" },
+    { "battery/health",
+        "Good\n" },
+    { "battery/present",
+        "0\n" },
+    { "battery/status",
+        "Full" },
+    { "battery/technology",
+        "Li-ion\n" },
 
-    { "acquire_full_wake_lock",     //kPowerAcquireFullWakeLock,
-        "\n" },
-    { "acquire_partial_wake_lock",  //kPowerAcquirePartialWakeLock,
-        "\n" },
-    { "release_wake_lock",          //kPowerReleaseWakeLock,
-        "radio-interface PowerManagerService KeyEvents\n" },
-    { "wait_for_fb_sleep",          //kSleepFileName,
-        "" },                       // this means "block forever on read"
-    { "wait_for_fb_wake",           //kWakeFileName,
-        "0" },
-
+    { "usb/online",
+        "1\n" },
 };
 
 /*
@@ -96,7 +60,7 @@ typedef struct PowerState {
  */
 static void configureInitialState(const char* pathName, PowerState* powerState)
 {
-    const char* cp = pathName + strlen("/sys/android_power/");
+    const char* cp = pathName + strlen("/sys/class/power_supply/");
     int i;
 
     powerState->which = -1;
@@ -134,8 +98,11 @@ static ssize_t readPower(FakeDev* dev, int fd, void* buf, size_t count)
 
     wsLog("%s: read %d\n", dev->debugName, count);
 
-    if (state->which < 0 || state->which >= sizeof(gDeviceMap)/sizeof(gDeviceMap[0]))
+    if (state->which < 0 ||
+        state->which >= (int) (sizeof(gDeviceMap)/sizeof(gDeviceMap[0])))
+    {
         return 0;
+    }
 
     const char* data = gDeviceMap[state->which].data;
     size_t strLen = strlen(data);

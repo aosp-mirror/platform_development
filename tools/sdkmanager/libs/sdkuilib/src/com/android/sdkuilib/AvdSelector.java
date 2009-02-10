@@ -17,7 +17,7 @@
 package com.android.sdkuilib;
 
 import com.android.sdklib.IAndroidTarget;
-import com.android.sdklib.vm.VmManager.VmInfo;
+import com.android.sdklib.avd.AvdManager.AvdInfo;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ControlAdapter;
@@ -40,16 +40,16 @@ import java.util.ArrayList;
 
 
 /**
- * The VM selector is a table that is added to the given parent composite.
+ * The AVD selector is a table that is added to the given parent composite.
  * <p/>
- * To use, create it using {@link #VmSelector(Composite, VmInfo[], boolean)} then
- * call {@link #setSelection(VmInfo)}, {@link #setSelectionListener(SelectionListener)}
+ * To use, create it using {@link #AvdSelector(Composite, AvdInfo[], boolean)} then
+ * call {@link #setSelection(AvdInfo)}, {@link #setSelectionListener(SelectionListener)}
  * and finally use {@link #getFirstSelected()} or {@link #getAllSelected()} to retrieve the
  * selection.
  */
-public final class VmSelector {
+public final class AvdSelector {
     
-    private VmInfo[] mVms;
+    private AvdInfo[] mAvds;
     private final boolean mAllowMultipleSelection;
     private SelectionListener mSelectionListener;
     private Table mTable;
@@ -59,12 +59,12 @@ public final class VmSelector {
      * Creates a new SDK Target Selector.
      * 
      * @param parent The parent composite where the selector will be added.
-     * @param vms The list of vms. This is <em>not</em> copied, the caller must not modify.
+     * @param avds The list of AVDs. This is <em>not</em> copied, the caller must not modify.
      * @param allowMultipleSelection True if more than one SDK target can be selected at the same
      *        time.
      */
-    public VmSelector(Composite parent, VmInfo[] vms, boolean allowMultipleSelection) {
-        mVms = vms;
+    public AvdSelector(Composite parent, AvdInfo[] avds, boolean allowMultipleSelection) {
+        mAvds = avds;
 
         // Layout has 1 column
         Composite group = new Composite(parent, SWT.NONE);
@@ -89,7 +89,7 @@ public final class VmSelector {
 
         // create the table columns
         final TableColumn column0 = new TableColumn(mTable, SWT.NONE);
-        column0.setText("VM Name");
+        column0.setText("AVD Name");
         final TableColumn column1 = new TableColumn(mTable, SWT.NONE);
         column1.setText("Target Name");
         final TableColumn column2 = new TableColumn(mTable, SWT.NONE);
@@ -104,25 +104,25 @@ public final class VmSelector {
     }
     
     /**
-     * Sets a new set of VM, with an optional filter.
+     * Sets a new set of AVD, with an optional filter.
      * <p/>This must be called from the UI thread.
      * 
-     * @param vms The list of vms. This is <em>not</em> copied, the caller must not modify.
-     * @param filter An IAndroidTarget. If non-null, only VM whose target are compatible with the
+     * @param avds The list of AVDs. This is <em>not</em> copied, the caller must not modify.
+     * @param filter An IAndroidTarget. If non-null, only AVD whose target are compatible with the
      * filter target will displayed an available for selection.
      */
-    public void setVms(VmInfo[] vms, IAndroidTarget filter) {
-        mVms = vms;
+    public void setAvds(AvdInfo[] avds, IAndroidTarget filter) {
+        mAvds = avds;
         fillTable(mTable, filter);
     }
 
     /**
-     * Returns the list of known Vms.
+     * Returns the list of known AVDs.
      * <p/>
      * This is not a copy. Callers must <em>not</em> modify this array.
      */
-    public VmInfo[] getVms() {
-        return mVms;
+    public AvdInfo[] getAvds() {
+        return mAvds;
     }
 
     /**
@@ -151,11 +151,11 @@ public final class VmSelector {
      * @param target the target to be selection
      * @return true if the target could be selected, false otherwise.
      */
-    public boolean setSelection(VmInfo target) {
+    public boolean setSelection(AvdInfo target) {
         boolean found = false;
         boolean modified = false;
         for (TableItem i : mTable.getItems()) {
-            if ((VmInfo) i.getData() == target) {
+            if ((AvdInfo) i.getData() == target) {
                 found = true;
                 if (!i.getChecked()) {
                     modified = true;
@@ -181,14 +181,14 @@ public final class VmSelector {
      * @see #getFirstSelected()
      * @return An array of selected items. The list can be empty but not null.
      */
-    public VmInfo[] getAllSelected() {
+    public AvdInfo[] getAllSelected() {
         ArrayList<IAndroidTarget> list = new ArrayList<IAndroidTarget>();
         for (TableItem i : mTable.getItems()) {
             if (i.getChecked()) {
                 list.add((IAndroidTarget) i.getData());
             }
         }
-        return list.toArray(new VmInfo[list.size()]);
+        return list.toArray(new AvdInfo[list.size()]);
     }
 
     /**
@@ -198,10 +198,10 @@ public final class VmSelector {
      * @see #getAllSelected()
      * @return The first selected item or null.
      */
-    public VmInfo getFirstSelected() {
+    public AvdInfo getFirstSelected() {
         for (TableItem i : mTable.getItems()) {
             if (i.getChecked()) {
-                return (VmInfo) i.getData();
+                return (AvdInfo) i.getData();
             }
         }
         return null;
@@ -283,7 +283,7 @@ public final class VmSelector {
     }
 
     /**
-     * Fills the table with all VM.
+     * Fills the table with all AVD.
      * The table columns are:
      * <ul>
      * <li>column 0: sdk name
@@ -294,14 +294,14 @@ public final class VmSelector {
      */
     private void fillTable(final Table table, IAndroidTarget filter) {
         table.removeAll();
-        if (mVms != null && mVms.length > 0) {
+        if (mAvds != null && mAvds.length > 0) {
             table.setEnabled(true);
-            for (VmInfo vm : mVms) {
-                if (filter == null || filter.isCompatibleBaseFor(vm.getTarget())) {
+            for (AvdInfo avd : mAvds) {
+                if (filter == null || filter.isCompatibleBaseFor(avd.getTarget())) {
                     TableItem item = new TableItem(table, SWT.NONE);
-                    item.setData(vm);
-                    item.setText(0, vm.getName());
-                    IAndroidTarget target = vm.getTarget();
+                    item.setData(avd);
+                    item.setText(0, avd.getName());
+                    IAndroidTarget target = avd.getTarget();
                     item.setText(1, target.getFullName());
                     item.setText(2, target.getApiVersionName());
                     item.setText(3, Integer.toString(target.getApiVersionNumber()));
@@ -314,7 +314,7 @@ public final class VmSelector {
             TableItem item = new TableItem(table, SWT.NONE);
             item.setData(null);
             item.setText(0, "--");
-            item.setText(1, "No VM available");
+            item.setText(1, "No AVD available");
             item.setText(2, "--");
             item.setText(3, "--");
         }
@@ -365,13 +365,13 @@ public final class VmSelector {
     }
 
     /**
-     * Updates the description label with the path of the item's VM, if any.
+     * Updates the description label with the path of the item's AVD, if any.
      */
     private void updateDescription(TableItem item) {
         if (item != null) {
             Object data = item.getData();
-            if (data instanceof VmInfo) {
-                String newTooltip = ((VmInfo) data).getPath();
+            if (data instanceof AvdInfo) {
+                String newTooltip = ((AvdInfo) data).getPath();
                 mDescription.setText(newTooltip == null ? "" : newTooltip);  //$NON-NLS-1$
             }
         }

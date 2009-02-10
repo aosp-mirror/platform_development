@@ -222,15 +222,19 @@ class GTView extends SurfaceView implements SurfaceHolder.Callback {
     private float mMotionStartRotVelocity;
     private float mMotionStartTiltAngle;
     private int mMotionDirection;
-
+    
+    private boolean mPaused = true;
+    private boolean mHaveSurface = false;
+    private boolean mStartAnimating = false;
+    
     public void surfaceCreated(SurfaceHolder holder) {
-        EGL10 egl = (EGL10)EGLContext.getEGL();
-        mEGLSurface = egl.eglCreateWindowSurface(mEGLDisplay, mEGLConfig, this, null);
-        egl.eglMakeCurrent(mEGLDisplay, mEGLSurface, mEGLSurface, mEGLContext);
+        mHaveSurface = true;
+        startEGL();
     }
 
     public void surfaceDestroyed(SurfaceHolder holder) {
-        // nothing to do
+        mHaveSurface = false;
+        stopEGL();
     }
 
     public void surfaceChanged(SurfaceHolder holder, int format, int w, int h) {
@@ -249,59 +253,114 @@ class GTView extends SurfaceView implements SurfaceHolder.Callback {
         getHolder().addCallback(this);
         getHolder().setType(SurfaceHolder.SURFACE_TYPE_GPU);
 
-        AssetManager am = context.getAssets();
         startTime = System.currentTimeMillis();
-
-        EGL10 egl = (EGL10)EGLContext.getEGL();
-        EGLDisplay dpy = egl.eglGetDisplay(EGL10.EGL_DEFAULT_DISPLAY);
-        int[] version = new int[2];
-        egl.eglInitialize(dpy, version);
-        int[] configSpec = {
-                EGL10.EGL_DEPTH_SIZE,   16,
-                EGL10.EGL_NONE
-        };
-        EGLConfig[] configs = new EGLConfig[1];
-        int[] num_config = new int[1];
-        egl.eglChooseConfig(dpy, configSpec, configs, 1, num_config);
-        mEGLConfig = configs[0];
-        mEGLContext = egl.eglCreateContext(dpy, mEGLConfig, EGL10.EGL_NO_CONTEXT, null);
-        mEGLDisplay = dpy;
 
         mClock = new Clock();
 
+        startEGL();
+        
         setFocusable(true);
         setFocusableInTouchMode(true);
         requestFocus();
-
-        try {
-            loadAssets(am);
-        } catch (IOException ioe) {
-            ioe.printStackTrace();
-            throw new RuntimeException(ioe);
-        } catch (ArrayIndexOutOfBoundsException aioobe) {
-            aioobe.printStackTrace();
-            throw new RuntimeException(aioobe);
-        }
     }
 
     /**
-     * Destroy the view.
+     * Creates an egl context. If the state of the activity is right, also
+     * creates the egl surface. Otherwise the surface will be created in a
+     * future call to createEGLSurface().
      */
-    public void destroy() {
+    private void startEGL() {
         EGL10 egl = (EGL10)EGLContext.getEGL();
-        egl.eglMakeCurrent(mEGLDisplay, 
-                egl.EGL_NO_SURFACE, egl.EGL_NO_SURFACE, egl.EGL_NO_CONTEXT);
-        egl.eglDestroyContext(mEGLDisplay, mEGLContext);
-        egl.eglDestroySurface(mEGLDisplay, mEGLSurface);
-        egl.eglTerminate(mEGLDisplay);
-        mEGLContext = null;
+
+        if (mEGLContext == null) {
+            EGLDisplay dpy = egl.eglGetDisplay(EGL10.EGL_DEFAULT_DISPLAY);
+            int[] version = new int[2];
+            egl.eglInitialize(dpy, version);
+            int[] configSpec = {
+                    EGL10.EGL_DEPTH_SIZE,   16,
+                    EGL10.EGL_NONE
+            };
+            EGLConfig[] configs = new EGLConfig[1];
+            int[] num_config = new int[1];
+            egl.eglChooseConfig(dpy, configSpec, configs, 1, num_config);
+            mEGLConfig = configs[0];
+
+            mEGLContext = egl.eglCreateContext(dpy, mEGLConfig, 
+                    EGL10.EGL_NO_CONTEXT, null);
+            mEGLDisplay = dpy;
+            
+            AssetManager am = mContext.getAssets();
+            try {
+                loadAssets(am);
+            } catch (IOException ioe) {
+                ioe.printStackTrace();
+                throw new RuntimeException(ioe);
+            } catch (ArrayIndexOutOfBoundsException aioobe) {
+                aioobe.printStackTrace();
+                throw new RuntimeException(aioobe);
+            }
+        }
+        
+        if (mEGLSurface == null && !mPaused && mHaveSurface) {
+            mEGLSurface = egl.eglCreateWindowSurface(mEGLDisplay, mEGLConfig, 
+                    this, null);
+            egl.eglMakeCurrent(mEGLDisplay, mEGLSurface, mEGLSurface, 
+                    mEGLContext);
+            mInitialized = false;
+            if (mStartAnimating) {
+                startAnimating();
+                mStartAnimating = false;
+            }
+        }
+    }
+    
+    /**
+     * Destroys the egl context. If an egl surface has been created, it is
+     * destroyed as well.
+     */
+    private void stopEGL() {
+        EGL10 egl = (EGL10)EGLContext.getEGL();
+        if (mEGLSurface != null) {
+            egl.eglMakeCurrent(mEGLDisplay, 
+                    egl.EGL_NO_SURFACE, egl.EGL_NO_SURFACE, egl.EGL_NO_CONTEXT);
+            egl.eglDestroySurface(mEGLDisplay, mEGLSurface);
+            mEGLSurface = null;
+        }
+
+        if (mEGLContext != null) {
+            egl.eglDestroyContext(mEGLDisplay, mEGLContext);
+            egl.eglTerminate(mEGLDisplay);
+            mEGLContext = null;
+            mEGLDisplay = null;
+            mEGLConfig = null;
+        }
+    }
+    
+    public void onPause() {
+        mPaused = true;
+        stopAnimating();
+        stopEGL();
+    }
+    
+    public void onResume() {
+        mPaused = false;
+        startEGL();
+    }
+    
+    public void destroy() {
+        stopAnimating();
+        stopEGL();
     }
 
     /**
      * Begin animation.
      */
     public void startAnimating() {
-        mHandler.sendEmptyMessage(INVALIDATE);
+        if (mEGLSurface == null) {
+            mStartAnimating = true; // will start when egl surface is created
+        } else {
+            mHandler.sendEmptyMessage(INVALIDATE);
+        }
     }
 
     /**
@@ -1390,32 +1449,25 @@ public class GlobalTime extends Activity {
 
     GTView gtView = null;
 
-    private void setGTView() {
-        if (gtView == null) {
-            gtView = new GTView(this);
-            setContentView(gtView);
-        }
-    }
-
     @Override protected void onCreate(Bundle icicle) {
         super.onCreate(icicle);
-        setGTView();
+        gtView = new GTView(this);
+        setContentView(gtView);
     }
 
     @Override protected void onResume() {
         super.onResume();
-        setGTView();
+        gtView.onResume();
         Looper.myQueue().addIdleHandler(new Idler());
     }
 
     @Override protected void onPause() {
         super.onPause();
-        gtView.stopAnimating();
+        gtView.onPause();
     }
 
     @Override protected void onStop() {
         super.onStop();
-        gtView.stopAnimating();
         gtView.destroy();
         gtView = null;
     }

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.sdklib.vm;
+package com.android.sdklib.avd;
 
 import com.android.prefs.AndroidLocation;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
@@ -39,12 +39,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Virtual Machine manager to access the list of VMs or create new ones.
+ * Virtual Device Manager to access the list of AVDs or create new ones.
  */
-public final class VmManager {
+public final class AvdManager {
     
-    private final static String VM_INFO_PATH = "path";
-    private final static String VM_INFO_TARGET = "target";
+    private static final String AVD_FOLDER_EXTENSION = ".avd";
+    private final static String AVD_INFO_PATH = "path";
+    private final static String AVD_INFO_TARGET = "target";
 
     private final static String IMAGE_USERDATA = "userdata.img";
     private final static String CONFIG_INI = "config.ini";
@@ -54,7 +55,7 @@ public final class VmManager {
 
     private final static Pattern SDCARD_SIZE_PATTERN = Pattern.compile("\\d+[MK]?");
 
-    public static final class VmInfo {
+    public static final class AvdInfo {
         String name;
         String path;
         IAndroidTarget target;
@@ -72,30 +73,30 @@ public final class VmManager {
         }
     }
 
-    private final ArrayList<VmInfo> mVmList = new ArrayList<VmInfo>();
+    private final ArrayList<AvdInfo> mAvdList = new ArrayList<AvdInfo>();
     private ISdkLog mSdkLog;
     private final SdkManager mSdk;
 
-    public VmManager(SdkManager sdk, ISdkLog sdkLog) throws AndroidLocationException {
+    public AvdManager(SdkManager sdk, ISdkLog sdkLog) throws AndroidLocationException {
         mSdk = sdk;
         mSdkLog = sdkLog;
-        buildVmList();
+        buildAvdList();
     }
 
     /**
-     * Returns the existing VMs.
-     * @return a newly allocated arrays containing all the VMs.
+     * Returns the existing AVDs.
+     * @return a newly allocated array containing all the AVDs.
      */
-    public VmInfo[] getVms() {
-        return mVmList.toArray(new VmInfo[mVmList.size()]);
+    public AvdInfo[] getAvds() {
+        return mAvdList.toArray(new AvdInfo[mAvdList.size()]);
     }
 
     /**
-     * Returns the {@link VmInfo} matching the given <var>name</var>.
-     * @return the matching VmInfo or <code>null</code> if none were found.
+     * Returns the {@link AvdInfo} matching the given <var>name</var>.
+     * @return the matching AvdInfo or <code>null</code> if none were found.
      */
-    public VmInfo getVm(String name) {
-        for (VmInfo info : mVmList) {
+    public AvdInfo getAvd(String name) {
+        for (AvdInfo info : mAvdList) {
             if (info.name.equals(name)) {
                 return info;
             }
@@ -105,19 +106,20 @@ public final class VmManager {
     }
 
     /**
-     * Creates a new VM. It is expected that there is no existing VM with this name already.
-     * @param parentFolder the folder to contain the VM. A new folder will be created in this
-     * folder with the name of the VM
-     * @param name the name of the VM
-     * @param target the target of the VM
+     * Creates a new AVD. It is expected that there is no existing AVD with this name already.
+     * @param parentFolder the folder to contain the AVD. A new folder will be created in this
+     * folder with the name of the AVD
+     * @param name the name of the AVD
+     * @param target the target of the AVD
      * @param skinName the name of the skin. Can be null.
      * @param sdcard the parameter value for the sdCard. Can be null. This is either a path to
      * an existing sdcard image or a sdcard size (\d+, \d+K, \dM).
-     * @param hardwareConfig the hardware setup for the VM
+     * @param hardwareConfig the hardware setup for the AVD
+     * @param removePrevious If true remove any previous files.
      */
-    public VmInfo createVm(String parentFolder, String name, IAndroidTarget target,
+    public AvdInfo createAvd(String parentFolder, String name, IAndroidTarget target,
             String skinName, String sdcard, Map<String,String> hardwareConfig,
-            ISdkLog log) {
+            boolean removePrevious, ISdkLog log) {
         
         try {
             File rootDirectory = new File(parentFolder);
@@ -128,24 +130,31 @@ public final class VmManager {
                 return null;
             }
             
-            File vmFolder = new File(parentFolder, name + ".avm");
-            if (vmFolder.exists()) {
-                if (log != null) {
-                    log.error(null, "Folder %s is in the way.", vmFolder.getAbsolutePath());
+            File avdFolder = new File(parentFolder, name + AVD_FOLDER_EXTENSION);
+            if (avdFolder.exists()) {
+                if (removePrevious) {
+                    // AVD already exists and removePrevious is set, try to remove the
+                    // directory's content first (but not the directory itself).
+                    recursiveDelete(avdFolder);
+                } else {
+                    // AVD shouldn't already exist if removePrevious is false.
+                    if (log != null) {
+                        log.error(null, "Folder %s is in the way.", avdFolder.getAbsolutePath());
+                    }
+                    return null;
                 }
-                return null;
             }
 
-            // create the vm folder.
-            vmFolder.mkdir();
+            // create the AVD folder.
+            avdFolder.mkdir();
 
             HashMap<String, String> values = new HashMap<String, String>();
 
             // prepare the ini file.
-            String vmRoot = AndroidLocation.getFolder() + AndroidLocation.FOLDER_VMS;
-            File iniFile = new File(vmRoot, name + ".ini");
-            values.put(VM_INFO_PATH, vmFolder.getAbsolutePath());
-            values.put(VM_INFO_TARGET, target.hashString());
+            String avdRoot = AndroidLocation.getFolder() + AndroidLocation.FOLDER_AVD;
+            File iniFile = new File(avdRoot, name + ".ini");
+            values.put(AVD_INFO_PATH, avdFolder.getAbsolutePath());
+            values.put(AVD_INFO_TARGET, target.hashString());
             createConfigIni(iniFile, values);
 
             // writes the userdata.img in it.
@@ -153,7 +162,7 @@ public final class VmManager {
             File userdataSrc = new File(imagePath, IMAGE_USERDATA);
             FileInputStream fis = new FileInputStream(userdataSrc);
             
-            File userdataDest = new File(vmFolder, IMAGE_USERDATA);
+            File userdataDest = new File(avdFolder, IMAGE_USERDATA);
             FileOutputStream fos = new FileOutputStream(userdataDest);
             
             byte[] buffer = new byte[4096];
@@ -193,7 +202,7 @@ public final class VmManager {
                     Matcher m = SDCARD_SIZE_PATTERN.matcher(sdcard);
                     if (m.matches()) {
                         // create the sdcard.
-                        sdcardFile = new File(vmFolder, "sdcard.img");
+                        sdcardFile = new File(avdFolder, "sdcard.img");
                         String path = sdcardFile.getAbsolutePath();
                         
                         // execute mksdcard with the proper parameters.
@@ -224,28 +233,27 @@ public final class VmManager {
                 values.putAll(hardwareConfig);
             }
 
-            File configIniFile = new File(vmFolder, CONFIG_INI);
+            File configIniFile = new File(avdFolder, CONFIG_INI);
             createConfigIni(configIniFile, values);
             
             if (log != null) {
                 if (target.isPlatform()) {
-                    log.printf("Created VM '%s' based on %s\n", name, target.getName());
+                    log.printf("Created AVD '%s' based on %s\n", name, target.getName());
                 } else {
-                    log.printf(
-                            "Created VM '%s' based on %s (%s)\n", name, target.getName(),
-                            target.getVendor());
+                    log.printf("Created AVD '%s' based on %s (%s)\n", name, target.getName(),
+                               target.getVendor());
                 }
             }
             
-            // create the VmInfo object, and add it to the list
-            VmInfo vmInfo = new VmInfo();
-            vmInfo.name = name;
-            vmInfo.path = vmFolder.getAbsolutePath();
-            vmInfo.target = target;
+            // create the AvdInfo object, and add it to the list
+            AvdInfo avdInfo = new AvdInfo();
+            avdInfo.name = name;
+            avdInfo.path = avdFolder.getAbsolutePath();
+            avdInfo.target = target;
             
-            mVmList.add(vmInfo);
+            mAvdList.add(avdInfo);
             
-            return vmInfo;
+            return avdInfo;
         } catch (AndroidLocationException e) {
             if (log != null) {
                 log.error(e, null);
@@ -259,21 +267,35 @@ public final class VmManager {
         return null;
     }
 
-    private void buildVmList() throws AndroidLocationException {
+    /**
+     * Helper method to recursively delete a folder's content (but not the folder itself).
+     * 
+     * @throws SecurityException like {@link File#delete()} does if file/folder is not writable.
+     */
+    public void recursiveDelete(File folder) {
+        for (File f : folder.listFiles()) {
+            if (f.isDirectory()) {
+                recursiveDelete(folder);
+            }
+            f.delete();
+        }
+    }
+
+    private void buildAvdList() throws AndroidLocationException {
         // get the Android prefs location.
-        String vmRoot = AndroidLocation.getFolder() + AndroidLocation.FOLDER_VMS;
+        String avdRoot = AndroidLocation.getFolder() + AndroidLocation.FOLDER_AVD;
         
         // ensure folder validity.
-        File folder = new File(vmRoot);
+        File folder = new File(avdRoot);
         if (folder.isFile()) {
-            throw new AndroidLocationException(String.format("%s is not a valid folder.", vmRoot));
+            throw new AndroidLocationException(String.format("%s is not a valid folder.", avdRoot));
         } else if (folder.exists() == false) {
             // folder is not there, we create it and return
             folder.mkdirs();
             return;
         }
         
-        File[] vms = folder.listFiles(new FilenameFilter() {
+        File[] avds = folder.listFiles(new FilenameFilter() {
             public boolean accept(File parent, String name) {
                 if (INI_NAME_PATTERN.matcher(name).matches()) {
                     // check it's a file and not a folder
@@ -284,23 +306,23 @@ public final class VmManager {
             }
         });
         
-        for (File vm : vms) {
-            VmInfo info = parseVmInfo(vm);
+        for (File avd : avds) {
+            AvdInfo info = parseAvdInfo(avd);
             if (info != null) {
-                mVmList.add(info);
+                mAvdList.add(info);
             }
         }
     }
     
-    private VmInfo parseVmInfo(File path) {
+    private AvdInfo parseAvdInfo(File path) {
         Map<String, String> map = SdkManager.parsePropertyFile(path, mSdkLog);
         
-        String vmPath = map.get(VM_INFO_PATH);
-        if (vmPath == null) {
+        String avdPath = map.get(AVD_INFO_PATH);
+        if (avdPath == null) {
             return null;
         }
         
-        String targetHash = map.get(VM_INFO_TARGET);
+        String targetHash = map.get(AVD_INFO_TARGET);
         if (targetHash == null) {
             return null;
         }
@@ -310,14 +332,14 @@ public final class VmManager {
             return null;
         }
 
-        VmInfo info = new VmInfo();
+        AvdInfo info = new AvdInfo();
         Matcher matcher = INI_NAME_PATTERN.matcher(path.getName());
         if (matcher.matches()) {
             info.name = matcher.group(1);
         } else {
             info.name = path.getName(); // really this should not happen.
         }
-        info.path = vmPath;
+        info.path = avdPath;
         info.target = target;
         
         return info;
@@ -445,6 +467,16 @@ public final class VmManager {
 
         // get the return code from the process
         return process.waitFor();
+    }
+
+    /**
+     * Removes an {@link AvdInfo} from the internal list.
+     * 
+     * @param avdInfo The {@link AvdInfo} to remove.
+     * @return true if this {@link AvdInfo} was present and has been removed.
+     */
+    public boolean removeAvd(AvdInfo avdInfo) {
+        return mAvdList.remove(avdInfo);
     }
 
 }

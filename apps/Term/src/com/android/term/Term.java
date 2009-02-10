@@ -48,6 +48,12 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.inputmethod.CompletionInfo;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.ExtractedText;
+import android.view.inputmethod.ExtractedTextRequest;
+import android.view.inputmethod.InputConnection;
+import android.view.inputmethod.InputMethodManager;
 
 import java.io.FileDescriptor;
 import java.io.FileInputStream;
@@ -176,6 +182,9 @@ public class Term extends Activity {
         startListening();
 
         mKeyListener = new TermKeyListener();
+
+        mEmulatorView.setFocusable(true);
+        mEmulatorView.requestFocus();
 
         updatePrefs();
     }
@@ -2583,7 +2592,6 @@ class EmulatorView extends View implements GestureDetector.OnGestureListener {
     private FileOutputStream mTermOut;
 
     private ByteQueue mByteQueue;
-    private final static int MAX_BYTES_PER_UPDATE = 4 * 1024;
 
     /**
      * Used to temporarily hold data received from the remote process. Allocated
@@ -2641,6 +2649,117 @@ class EmulatorView extends View implements GestureDetector.OnGestureListener {
     public void resetTerminal() {
         mEmulator.reset();
         invalidate();
+    }
+
+    @Override
+    public boolean onCheckIsTextEditor() {
+        return true;
+    }
+
+    @Override
+    public InputConnection onCreateInputConnection(EditorInfo outAttrs) {
+        return new InputConnection(){
+
+            public boolean beginBatchEdit() {
+                return true;
+            }
+
+            public boolean clearMetaKeyStates(int states) {
+                return true;
+            }
+
+            public boolean commitCompletion(CompletionInfo text) {
+                return true;
+            }
+
+            public boolean commitText(CharSequence text, int newCursorPosition) {
+                sendText(text);
+                return true;
+            }
+
+            public boolean deleteSurroundingText(int leftLength, int rightLength) {
+                return true;
+            }
+
+            public boolean endBatchEdit() {
+                return true;
+            }
+
+            public boolean finishComposingText() {
+                return true;
+            }
+
+            public int getCursorCapsMode(int reqModes) {
+                return 0;
+            }
+
+            public ExtractedText getExtractedText(ExtractedTextRequest request,
+                    int flags) {
+                return null;
+            }
+
+            public CharSequence getTextAfterCursor(int n, int flags) {
+                return null;
+            }
+
+            public CharSequence getTextBeforeCursor(int n, int flags) {
+                return null;
+            }
+
+            public boolean hideStatusIcon() {
+                return true;
+            }
+
+            public boolean performContextMenuAction(int id) {
+                return true;
+            }
+
+            public boolean performPrivateCommand(String action, Bundle data) {
+                return true;
+            }
+
+            public boolean sendKeyEvent(KeyEvent event) {
+                switch(event.getKeyCode()) {
+                case KeyEvent.KEYCODE_ENTER:
+                    sendChar('\r');
+                    break;
+                case KeyEvent.KEYCODE_DEL:
+                    sendChar(127);
+                    break;
+                }
+                return true;
+            }
+
+            public boolean setComposingText(CharSequence text, int newCursorPosition) {
+                return true;
+            }
+
+            public boolean setSelection(int start, int end) {
+                return true;
+            }
+
+            public boolean showStatusIcon(String packageName, int resId) {
+                return true;
+            }
+
+            private void sendChar(int c) {
+                try {
+                    mTermOut.write(c);
+                } catch (IOException ex) {
+
+                }
+            }
+            private void sendText(CharSequence text) {
+                int n = text.length();
+                try {
+                    for(int i = 0; i < n; i++) {
+                        char c = text.charAt(i);
+                        mTermOut.write(c);
+                    }
+                } catch (IOException e) {
+                }
+            }
+        };
     }
 
     public boolean getKeypadApplicationMode() {

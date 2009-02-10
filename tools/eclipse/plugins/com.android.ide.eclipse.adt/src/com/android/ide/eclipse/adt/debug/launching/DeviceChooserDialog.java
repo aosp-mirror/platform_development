@@ -31,7 +31,7 @@ import com.android.ide.eclipse.adt.debug.launching.AndroidLaunchController.Delay
 import com.android.ide.eclipse.adt.sdk.Sdk;
 import com.android.ide.eclipse.ddms.DdmsPlugin;
 import com.android.sdklib.IAndroidTarget;
-import com.android.sdklib.vm.VmManager.VmInfo;
+import com.android.sdklib.avd.AvdManager.AvdInfo;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -70,10 +70,10 @@ public class DeviceChooserDialog extends Dialog implements IDeviceChangeListener
     private final static int ICON_WIDTH = 16;
 
     private final static String PREFS_COL_SERIAL = "deviceChooser.serial"; //$NON-NLS-1$
-    private final static String PREFS_COL_STATE = "deviceChooser.state"; //$NON-NLS-1$
-    private final static String PREFS_COL_VM = "deviceChooser.vm"; //$NON-NLS-1$
+    private final static String PREFS_COL_STATE  = "deviceChooser.state"; //$NON-NLS-1$
+    private final static String PREFS_COL_AVD     = "deviceChooser.avd"; //$NON-NLS-1$
     private final static String PREFS_COL_TARGET = "deviceChooser.target"; //$NON-NLS-1$
-    private final static String PREFS_COL_DEBUG = "deviceChooser.debug"; //$NON-NLS-1$
+    private final static String PREFS_COL_DEBUG  = "deviceChooser.debug"; //$NON-NLS-1$
 
     private Table mDeviceTable;
     private TableViewer mViewer;
@@ -149,8 +149,8 @@ public class DeviceChooserDialog extends Dialog implements IDeviceChangeListener
                                 return mNoMatchImage;
                             }
                         } else {
-                            // get the VmInfo
-                            VmInfo info = mSdk.getVmManager().getVm(device.getVmName());
+                            // get the AvdInfo
+                            AvdInfo info = mSdk.getAvdManager().getAvd(device.getAvdName());
                             if (info == null) {
                                 return mWarningImage;
                             }
@@ -171,13 +171,13 @@ public class DeviceChooserDialog extends Dialog implements IDeviceChangeListener
                         return device.getSerialNumber();
                     case 1:
                         if (device.isEmulator()) {
-                            return device.getVmName();
+                            return device.getAvdName();
                         } else {
-                            return "N/A"; // devices don't have VM names.
+                            return "N/A"; // devices don't have AVD names.
                         }
                     case 2:
                         if (device.isEmulator()) {
-                            VmInfo info = mSdk.getVmManager().getVm(device.getVmName());
+                            AvdInfo info = mSdk.getAvdManager().getAvd(device.getAvdName());
                             if (info == null) {
                                 return "?";
                             }
@@ -221,7 +221,7 @@ public class DeviceChooserDialog extends Dialog implements IDeviceChangeListener
     public static class DeviceChooserResponse {
         public boolean mustContinue;
         public boolean mustLaunchEmulator;
-        public VmInfo vmToLaunch;
+        public AvdInfo avdToLaunch;
         public Device deviceToUse;
     }
     
@@ -314,9 +314,9 @@ public class DeviceChooserDialog extends Dialog implements IDeviceChangeListener
                 SWT.LEFT, "AAA+AAAAAAAAAAAAAAAAAAA", //$NON-NLS-1$
                 PREFS_COL_SERIAL, store);
 
-        TableHelper.createTableColumn(mDeviceTable, "VM Name",
+        TableHelper.createTableColumn(mDeviceTable, "AVD Name",
                 SWT.LEFT, "engineering", //$NON-NLS-1$
-                PREFS_COL_VM, store);
+                PREFS_COL_AVD, store);
 
         TableHelper.createTableColumn(mDeviceTable, "Target",
                 SWT.LEFT, "AAA+Android 9.9.9", //$NON-NLS-1$

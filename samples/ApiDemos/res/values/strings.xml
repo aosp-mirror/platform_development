@@ -185,11 +185,21 @@
     <string name="custom_title_left_button">Change Left</string>
     <string name="custom_title_right_button">Change Right</string>
 
+    <string name="activity_reorder">App/Activity/Reorder Activities</string>
+    <string name="reorder_on_launch">This is the first of a sequence of four Activities.  A button on the fourth will use the Intent.FLAG_ACTIVITY_REORDER_TO_FRONT flag to bring the second of the activities to the front of the history stack. After that, proceeding back through the history should begin with the newly-frontmost second reorder activity, then the fourth, the third, and finally the first.</string>
+    <string name="reorder_launch_two">Go to the second</string>
+    <string name="reorder_two_text">This is the second in a sequence of four Activities.</string>
+    <string name="reorder_launch_three">Go to the third</string>
+    <string name="reorder_three_text">This is the third of a sequence of four Activities.</string>
+    <string name="reorder_launch_four">Go to the fourth</string>
+    <string name="reorder_four_text">This is the last in a sequence of four Activities.</string>
+    <string name="reorder_second_to_front">Bring the second in front</string>
+
     <string name="menu_from_xml_title">App/Menu/Inflate from XML</string>
     <string name="menu_from_xml_instructions_press_menu">Select a menu resource and press the menu key.</string>
     <string name="menu_from_xml_instructions_go_back">If you want to choose another menu resource, go back and re-run this activity.</string>
 
-   <string name="voice_recognition">App/Voice Recognition</string>
+    <string name="voice_recognition">App/Voice Recognition</string>
 
     <!-- ============================== -->
     <!--  app/content examples strings  -->

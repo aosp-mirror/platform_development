@@ -19,16 +19,20 @@ package com.android.ide.eclipse.adt.build;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.project.ProjectHelper;
+import com.android.ide.eclipse.adt.sdk.LoadStatus;
+import com.android.ide.eclipse.adt.sdk.Sdk;
 import com.android.ide.eclipse.common.AndroidConstants;
 import com.android.ide.eclipse.common.project.BaseProjectHelper;
+import com.android.sdklib.IAndroidTarget;
 
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
-import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.JavaCore;
 
 import java.util.Map;
 
@@ -36,7 +40,7 @@ import java.util.Map;
  * Resource manager builder whose only purpose is to refresh the resource folder
  * so that the other builder use an up to date version.
  */
-public class ResourceManagerBuilder extends IncrementalProjectBuilder {
+public class ResourceManagerBuilder extends BaseBuilder {
 
     public static final String ID = "com.android.ide.eclipse.adt.ResourceManagerBuilder"; //$NON-NLS-1$
 
@@ -72,6 +76,38 @@ public class ResourceManagerBuilder extends IncrementalProjectBuilder {
             BaseProjectHelper.addMarker(project, AdtConstants.MARKER_ADT, errorMessage,
                     IMarker.SEVERITY_ERROR);
             AdtPlugin.printErrorToConsole(project, errorMessage);
+            
+            // interrupt the build. The next builders will not run.
+            stopBuild(errorMessage);
+        }
+
+        // Check that the SDK directory has been setup.
+        String osSdkFolder = AdtPlugin.getOsSdkFolder();
+
+        if (osSdkFolder == null || osSdkFolder.length() == 0) {
+            AdtPlugin.printBuildToConsole(AdtConstants.BUILD_VERBOSE, project,
+                    Messages.No_SDK_Setup_Error);
+            markProject(AdtConstants.MARKER_ADT, Messages.No_SDK_Setup_Error,
+                    IMarker.SEVERITY_ERROR);
+
+            // This interrupts the build. The next builders will not run.
+            stopBuild(Messages.No_SDK_Setup_Error);
+        }
+
+        // check if we have finished loading the SDK.
+        IJavaProject javaProject = JavaCore.create(project);
+        if (AdtPlugin.getDefault().getSdkLoadStatus(javaProject) != LoadStatus.LOADED) {
+            // we exit silently
+            // This interrupts the build. The next builders will not run.
+            stopBuild("SDK is not loaded yet");
+        }
+        
+        // check the project has a target
+        IAndroidTarget projectTarget = Sdk.getCurrent().getTarget(project);
+        if (projectTarget == null) {
+            // no target. marker has been set by the container initializer: exit silently.
+            // This interrupts the build. The next builders will not run.
+            stopBuild("Project has no target");
         }
 
         // Check the preference to be sure we are supposed to refresh

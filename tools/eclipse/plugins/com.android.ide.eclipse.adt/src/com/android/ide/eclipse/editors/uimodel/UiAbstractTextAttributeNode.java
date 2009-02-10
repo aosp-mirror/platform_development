@@ -79,7 +79,7 @@ public abstract class UiAbstractTextAttributeNode extends UiAttributeNode
     public void updateValue(Node xml_attribute_node) {
         mCurrentValue = DEFAULT_VALUE;
         if (xml_attribute_node != null) {
-            mCurrentValue = xml_attribute_node.getNodeValue().trim();
+            mCurrentValue = xml_attribute_node.getNodeValue();
         }
 
         if (isValid() && !getTextWidgetValue().equals(mCurrentValue)) {
@@ -101,7 +101,7 @@ public abstract class UiAbstractTextAttributeNode extends UiAttributeNode
     public void commit() {
         UiElementNode parent = getUiParent();
         if (parent != null && isValid() && isDirty()) {
-            String value = getTextWidgetValue().trim();
+            String value = getTextWidgetValue();
             if (parent.commitAttributeToXml(this, value)) {
                 mCurrentValue = value;
                 setDirty(false);

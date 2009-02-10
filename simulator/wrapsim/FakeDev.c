@@ -47,10 +47,6 @@ resources.)
  * Devices we intercept.
  *
  * Needed:
- *  /sys/android_power/battery_level_scale
- *  /sys/android_power/battery_level
- *  /sys/android_power/battery_level_raw
- *  /sys/android_power/charging_state
  *  /dev/alarm
  *  radio
  */
@@ -70,7 +66,7 @@ FakedPath fakedpaths[] =
     { "/dev/input/event0",      wsOpenDevEvent },
     { "/dev/input/*",           NULL },
     { "/dev/log/*",             wsOpenDevLog },
-    { "/sys/android_power/*",   wsOpenDevPower },
+    { "/sys/class/power_supply/*", wsOpenDevPower },
     { "/sys/devices/platform/android-vibrator/enable",  wsOpenDevVibrator },
     { "/sys/qemu_trace/*",      NULL },
     { NULL,                     NULL }

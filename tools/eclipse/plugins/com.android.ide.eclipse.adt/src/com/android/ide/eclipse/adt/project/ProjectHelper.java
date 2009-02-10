@@ -361,7 +361,7 @@ public final class ProjectHelper {
     }
 
     /**
-     * Returns a {@link IProject} by its running application name, as it returned by the VM.
+     * Returns a {@link IProject} by its running application name, as it returned by the AVD.
      * <p/>
      * <var>applicationName</var> will in most case be the package declared in the manifest, but
      * can, in some cases, be a custom process name declared in the manifest, in the

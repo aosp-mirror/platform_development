@@ -19,10 +19,13 @@ package com.android.ide.eclipse.adt.build;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.project.ProjectHelper;
+import com.android.ide.eclipse.adt.sdk.LoadStatus;
+import com.android.ide.eclipse.adt.sdk.Sdk;
 import com.android.ide.eclipse.common.AndroidConstants;
 import com.android.ide.eclipse.common.project.BaseProjectHelper;
 import com.android.ide.eclipse.common.project.XmlErrorHandler;
 import com.android.ide.eclipse.common.project.XmlErrorHandler.XmlErrorListener;
+import com.android.sdklib.IAndroidTarget;
 
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
@@ -34,6 +37,8 @@ import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
@@ -841,4 +846,53 @@ abstract class BaseBuilder extends IncrementalProjectBuilder {
 
         return oslibraryList.toArray(new String[oslibraryList.size()]);
     }
+    
+    /**
+     * Aborts the build if the SDK/project setups are broken. This does not
+     * display any errors.
+     * 
+     * @param javaProject The {@link IJavaProject} being compiled.
+     * @throws CoreException
+     */
+    protected final void abortOnBadSetup(IJavaProject javaProject) throws CoreException {
+        // check if we have finished loading the SDK.
+        if (AdtPlugin.getDefault().getSdkLoadStatus(javaProject) != LoadStatus.LOADED) {
+            // we exit silently
+            stopBuild("SDK is not loaded yet");
+        }
+
+        // check the compiler compliance level.
+        if (ProjectHelper.checkCompilerCompliance(getProject()) !=
+                ProjectHelper.COMPILER_COMPLIANCE_OK) {
+            // we exit silently
+            stopBuild(Messages.Compiler_Compliance_Error);
+        }
+
+        // Check that the SDK directory has been setup.
+        String osSdkFolder = AdtPlugin.getOsSdkFolder();
+
+        if (osSdkFolder == null || osSdkFolder.length() == 0) {
+            stopBuild(Messages.No_SDK_Setup_Error);
+        }
+
+        IAndroidTarget projectTarget = Sdk.getCurrent().getTarget(javaProject.getProject());
+        if (projectTarget == null) {
+            // no target. error has been output by the container initializer:
+            // exit silently.
+            stopBuild("Project has no target");
+        }
+    }
+    
+    /**
+     * Throws an exception to cancel the build.
+     * 
+     * @param error the error message
+     * @param args the printf-style arguments to the error message.
+     * @throws CoreException
+     */
+    protected final void stopBuild(String error, Object... args) throws CoreException {
+        throw new CoreException(new Status(IStatus.CANCEL, AdtPlugin.PLUGIN_ID,
+                String.format(error, args)));
+    }
+
 }

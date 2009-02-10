@@ -22,9 +22,9 @@ import com.android.ide.eclipse.adt.sdk.Sdk;
 import com.android.ide.eclipse.common.project.BaseProjectHelper;
 import com.android.ide.eclipse.ddms.DdmsPlugin;
 import com.android.sdklib.IAndroidTarget;
-import com.android.sdklib.vm.VmManager;
-import com.android.sdklib.vm.VmManager.VmInfo;
-import com.android.sdkuilib.VmSelector;
+import com.android.sdklib.avd.AvdManager;
+import com.android.sdklib.avd.AvdManager.AvdInfo;
+import com.android.sdkuilib.AvdSelector;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
@@ -75,7 +75,7 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
     private Button mAutoTargetButton;
     private Button mManualTargetButton;
 
-    private VmSelector mPreferredVmSelector;
+    private AvdSelector mPreferredAvdSelector;
 
     private Combo mSpeedCombo;
 
@@ -163,11 +163,11 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
             }
         });
 
-        new Label(targetModeGroup, SWT.NONE).setText("Preferred VM");
-        VmInfo[] vms = new VmInfo[0];
-        mPreferredVmSelector = new VmSelector(targetModeGroup, vms,
+        new Label(targetModeGroup, SWT.NONE).setText("Preferred Android Virtual Device");
+        AvdInfo[] avds = new AvdInfo[0];
+        mPreferredAvdSelector = new AvdSelector(targetModeGroup, avds,
                 false /*allowMultipleSelection*/);
-        mPreferredVmSelector.setSelectionListener(new SelectionAdapter() {
+        mPreferredAvdSelector.setSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
                 updateLaunchConfigurationDialog();
@@ -277,7 +277,7 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
      * @see org.eclipse.debug.ui.ILaunchConfigurationTab#initializeFrom(org.eclipse.debug.core.ILaunchConfiguration)
      */
     public void initializeFrom(ILaunchConfiguration configuration) {
-        VmManager vmManager = Sdk.getCurrent().getVmManager();
+        AvdManager avdManager = Sdk.getCurrent().getAvdManager();
 
         boolean value = LaunchConfigDelegate.DEFAULT_TARGET_MODE; // true == automatic
         try {
@@ -311,34 +311,34 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
             }
         }
 
-        // update the VM list
-        VmInfo[] vms = null;
-        if (vmManager != null) {
-            vms = vmManager.getVms();
+        // update the AVD list
+        AvdInfo[] avds = null;
+        if (avdManager != null) {
+            avds = avdManager.getAvds();
         }
 
         IAndroidTarget projectTarget = null;
         if (project != null) {
             projectTarget = Sdk.getCurrent().getTarget(project);
         } else {
-            vms = null; // no project? we don't want to display any "compatible" VMs.
+            avds = null; // no project? we don't want to display any "compatible" AVDs.
         }
         
-        mPreferredVmSelector.setVms(vms, projectTarget);
+        mPreferredAvdSelector.setAvds(avds, projectTarget);
 
         stringValue = "";
         try {
-            stringValue = configuration.getAttribute(LaunchConfigDelegate.ATTR_VM_NAME,
+            stringValue = configuration.getAttribute(LaunchConfigDelegate.ATTR_AVD_NAME,
                     stringValue);
         } catch (CoreException e) {
             // let's not do anything here, we'll use the default value
         }
 
-        if (stringValue != null && stringValue.length() > 0 && vmManager != null) {
-            VmInfo targetVm = vmManager.getVm(stringValue);
-            mPreferredVmSelector.setSelection(targetVm);
+        if (stringValue != null && stringValue.length() > 0 && avdManager != null) {
+            AvdInfo targetAvd = avdManager.getAvd(stringValue);
+            mPreferredAvdSelector.setSelection(targetAvd);
         } else {
-            mPreferredVmSelector.setSelection(null);
+            mPreferredAvdSelector.setSelection(null);
         }
 
         value = LaunchConfigDelegate.DEFAULT_WIPE_DATA;
@@ -404,11 +404,11 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
     public void performApply(ILaunchConfigurationWorkingCopy configuration) {
         configuration.setAttribute(LaunchConfigDelegate.ATTR_TARGET_MODE,
                 mAutoTargetButton.getSelection());
-        VmInfo vm = mPreferredVmSelector.getFirstSelected();
-        if (vm != null) {
-            configuration.setAttribute(LaunchConfigDelegate.ATTR_VM_NAME, vm.getName());
+        AvdInfo avd = mPreferredAvdSelector.getFirstSelected();
+        if (avd != null) {
+            configuration.setAttribute(LaunchConfigDelegate.ATTR_AVD_NAME, avd.getName());
         } else {
-            configuration.setAttribute(LaunchConfigDelegate.ATTR_VM_NAME, (String)null);
+            configuration.setAttribute(LaunchConfigDelegate.ATTR_AVD_NAME, (String)null);
         }
         configuration.setAttribute(LaunchConfigDelegate.ATTR_SPEED,
                 mSpeedCombo.getSelectionIndex());

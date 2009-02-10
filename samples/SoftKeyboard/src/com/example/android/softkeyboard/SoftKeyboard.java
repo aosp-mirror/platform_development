@@ -27,6 +27,7 @@ import android.view.View;
 import android.view.inputmethod.CompletionInfo;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
+import android.view.inputmethod.InputMethodManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -73,11 +74,19 @@ public class SoftKeyboard extends InputMethodService
     private String mWordSeparators;
     
     /**
-     * Helper function to generate the various keyboard layouts used by the
-     * input method.  Takes care of regenerating the layouts if the width
-     * of the input method changes.
+     * Main initialization of the input method component.  Be sure to call
+     * to super class.
      */
-    private void makeKeyboards() {
+    @Override public void onCreate() {
+        super.onCreate();
+        mWordSeparators = getResources().getString(R.string.word_separators);
+    }
+    
+    /**
+     * This is the point where you can do all of your UI initialization.  It
+     * is called after creation and any configuration change.
+     */
+    @Override public void onInitializeInterface() {
         if (mQwertyKeyboard != null) {
             // Configuration changes can happen after the keyboard gets recreated,
             // so we need to be able to re-build the keyboards if the available
@@ -92,25 +101,12 @@ public class SoftKeyboard extends InputMethodService
     }
     
     /**
-     * Main initialization of the input method component.  Be sure to call
-     * to super class.
-     */
-    @Override public void onCreate() {
-        super.onCreate();
-        makeKeyboards();
-        mWordSeparators = getResources().getString(R.string.word_separators);
-    }
-    
-    /**
      * Called by the framework when your view for creating input needs to
      * be generated.  This will be called the first time your input method
      * is displayed, and every time it needs to be re-created such as due to
      * a configuration change.
      */
     @Override public View onCreateInputView() {
-        // We call makeKeyboards() here to regenerate them if needed due to
-        // a configuration change.
-        makeKeyboards();
         mInputView = (KeyboardView) getLayoutInflater().inflate(
                 R.layout.input, null);
         mInputView.setOnKeyboardActionListener(this);

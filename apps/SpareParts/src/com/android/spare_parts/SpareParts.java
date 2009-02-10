@@ -42,6 +42,7 @@ public class SpareParts extends PreferenceActivity
 
     private static final String WINDOW_ANIMATIONS_PREF = "window_animations";
     private static final String TRANSITION_ANIMATIONS_PREF = "transition_animations";
+    private static final String FANCY_IME_ANIMATIONS_PREF = "fancy_ime_animations";
     private static final String FONT_SIZE_PREF = "font_size";
     private static final String END_BUTTON_PREF = "end_button";
     private static final String ACCELEROMETER_PREF = "accelerometer";
@@ -51,6 +52,7 @@ public class SpareParts extends PreferenceActivity
     
     private ListPreference mWindowAnimationsPref;
     private ListPreference mTransitionAnimationsPref;
+    private CheckBoxPreference mFancyImeAnimationsPref;
     private ListPreference mFontSizePref;
     private ListPreference mEndButtonPref;
     private CheckBoxPreference mAccelerometerPref;
@@ -69,6 +71,7 @@ public class SpareParts extends PreferenceActivity
         mWindowAnimationsPref.setOnPreferenceChangeListener(this);
         mTransitionAnimationsPref = (ListPreference) prefSet.findPreference(TRANSITION_ANIMATIONS_PREF);
         mTransitionAnimationsPref.setOnPreferenceChangeListener(this);
+        mFancyImeAnimationsPref = (CheckBoxPreference) prefSet.findPreference(FANCY_IME_ANIMATIONS_PREF);
         mFontSizePref = (ListPreference) prefSet.findPreference(FONT_SIZE_PREF);
         mFontSizePref.setOnPreferenceChangeListener(this);
         mEndButtonPref = (ListPreference) prefSet.findPreference(END_BUTTON_PREF);
@@ -83,6 +86,9 @@ public class SpareParts extends PreferenceActivity
 
     private void updateToggles() {
         try {
+            mFancyImeAnimationsPref.setChecked(Settings.System.getInt(
+                    getContentResolver(), 
+                    Settings.System.FANCY_IME_ANIMATIONS, 0) != 0);
             mAccelerometerPref.setChecked(Settings.System.getInt(
                     getContentResolver(), 
                     Settings.System.ACCELEROMETER_ROTATION, 0) != 0);
@@ -181,6 +187,10 @@ public class SpareParts extends PreferenceActivity
             Settings.System.putInt(getContentResolver(),
                     Settings.System.ACCELEROMETER_ROTATION,
                     mAccelerometerPref.isChecked() ? 1 : 0);
+        } else if (FANCY_IME_ANIMATIONS_PREF.equals(key)) {
+            Settings.System.putInt(getContentResolver(),
+                    Settings.System.FANCY_IME_ANIMATIONS,
+                    mFancyImeAnimationsPref.isChecked() ? 1 : 0);
         } else if (MAPS_COMPASS_PREF.equals(key)) {
             try {
                 Context c = createPackageContext("com.google.android.apps.maps", 0);

@@ -187,10 +187,10 @@ public final class CustomViewDescriptorService {
     /**
      * Computes (if needed) and returns the {@link ElementDescriptor} for the specified type.
      * 
-     * @param type
+     * @param type 
      * @param project 
      * @param typeHierarchy
-     * @return A ViewElementDescriptor
+     * @return A ViewElementDescriptor or null if type or typeHierarchy is null.
      */
     private ViewElementDescriptor getDescriptor(IType type, IProject project,
             ITypeHierarchy typeHierarchy) {
@@ -198,10 +198,15 @@ public final class CustomViewDescriptorService {
         List<ElementDescriptor> builtInList = null;
 
         Sdk currentSdk = Sdk.getCurrent();
-        IAndroidTarget target = currentSdk.getTarget(project);
+        IAndroidTarget target = currentSdk == null ? null : currentSdk.getTarget(project);
         if (target != null) {
             AndroidTargetData data = currentSdk.getTargetData(target);
             builtInList = data.getLayoutDescriptors().getViewDescriptors();
+        }
+
+        // give up if there's no type
+        if (type == null) {
+            return null;
         }
 
         String canonicalName = type.getFullyQualifiedName();
@@ -218,6 +223,11 @@ public final class CustomViewDescriptorService {
         }
         
         // it's not a built-in class? Lets look if the superclass is built-in
+        // give up if there's no type
+        if (typeHierarchy == null) {
+            return null;
+        }
+
         IType parentType = typeHierarchy.getSuperclass(type);
         if (parentType != null) {
             ViewElementDescriptor parentDescriptor = getDescriptor(parentType, project,

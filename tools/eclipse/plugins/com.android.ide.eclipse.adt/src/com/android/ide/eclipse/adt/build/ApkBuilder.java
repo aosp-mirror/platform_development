@@ -181,7 +181,7 @@ public class ApkBuilder extends BaseBuilder {
             return mMakeFinalPackage;
         }
     }
-    
+
     /**
      * {@link IZipEntryFilter} to filter out everything that is not a standard java resources.
      * <p/>Used in {@link SignedJarBuilder#writeZip(java.io.InputStream, IZipEntryFilter)} when
@@ -215,6 +215,7 @@ public class ApkBuilder extends BaseBuilder {
 
         // First thing we do is go through the resource delta to not
         // lose it if we have to abort the build for any reason.
+        ApkDeltaVisitor dv = null;
         if (kind == FULL_BUILD) {
             AdtPlugin.printBuildToConsole(AdtConstants.BUILD_VERBOSE, project,
                     Messages.Start_Full_Apk_Build);
@@ -233,22 +234,13 @@ public class ApkBuilder extends BaseBuilder {
                 mConvertToDex = true;
                 mBuildFinalPackage = true;
             } else {
-                ApkDeltaVisitor dv = new ApkDeltaVisitor(this, sourceList, outputFolder);
+                dv = new ApkDeltaVisitor(this, sourceList, outputFolder);
                 delta.accept(dv);
 
                 // save the state
                 mPackageResources |= dv.getPackageResources();
                 mConvertToDex |= dv.getConvertToDex();
                 mBuildFinalPackage |= dv.getMakeFinalPackage();
-
-                if (dv.mXmlError) {
-                    AdtPlugin.printBuildToConsole(AdtConstants.BUILD_VERBOSE, project,
-                    Messages.Xml_Error);
-
-                    // if there was some XML errors, we just return w/o doing
-                    // anything since we've put some markers in the files anyway
-                    return referencedProjects;
-                }
             }
 
             // also go through the delta for all the referenced projects, until we are forced to
@@ -258,13 +250,13 @@ public class ApkBuilder extends BaseBuilder {
                 IJavaProject referencedJavaProject = referencedJavaProjects[i];
                 delta = getDelta(referencedJavaProject.getProject());
                 if (delta != null) {
-                    ReferencedProjectDeltaVisitor dv = new ReferencedProjectDeltaVisitor(
+                    ReferencedProjectDeltaVisitor refProjectDv = new ReferencedProjectDeltaVisitor(
                             referencedJavaProject);
-                    delta.accept(dv);
+                    delta.accept(refProjectDv);
 
                     // save the state
-                    mConvertToDex |= dv.needDexConvertion();
-                    mBuildFinalPackage |= dv.needMakeFinalPackage();
+                    mConvertToDex |= refProjectDv.needDexConvertion();
+                    mBuildFinalPackage |= refProjectDv.needMakeFinalPackage();
                 }
             }
         }
@@ -307,29 +299,14 @@ public class ApkBuilder extends BaseBuilder {
 
         // At this point, we can abort the build if we have to, as we have computed
         // our resource delta and stored the result.
+        abortOnBadSetup(javaProject);
         
-        // check if we have finished loading the SDK.
-        if (AdtPlugin.getDefault().getSdkLoadStatus(javaProject) != LoadStatus.LOADED) {
-            // we exit silently
-            return referencedProjects;
-        }
-
-        // Now check the compiler compliance level, not displaying the error
-        // message since this is not the first builder.
-        if (ProjectHelper.checkCompilerCompliance(getProject())
-                != ProjectHelper.COMPILER_COMPLIANCE_OK) {
-            return referencedProjects;
-        }
-
-        // now check if the project has problem marker already
-        if (ProjectHelper.hasError(project, true)) {
-            // we found a marker with error severity: we abort the build.
-            // Since this is going to happen every time we save a file while
-            // errors are remaining, we do not force the display of the console, which
-            // would, in most cases, show on top of the Problem view (which is more
-            // important in that case).
+        if (dv != null && dv.mXmlError) {
             AdtPlugin.printBuildToConsole(AdtConstants.BUILD_VERBOSE, project,
-                    Messages.Project_Has_Errors);
+            Messages.Xml_Error);
+
+            // if there was some XML errors, we just return w/o doing
+            // anything since we've put some markers in the files anyway
             return referencedProjects;
         }
 

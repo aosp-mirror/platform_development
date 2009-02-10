@@ -35,8 +35,8 @@ import com.android.ide.eclipse.adt.sdk.Sdk;
 import com.android.ide.eclipse.common.project.AndroidManifestHelper;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkManager;
-import com.android.sdklib.vm.VmManager;
-import com.android.sdklib.vm.VmManager.VmInfo;
+import com.android.sdklib.avd.AvdManager;
+import com.android.sdklib.avd.AvdManager.AvdInfo;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
@@ -74,7 +74,7 @@ import java.util.regex.Pattern;
 public final class AndroidLaunchController implements IDebugBridgeChangeListener,
         IDeviceChangeListener, IClientChangeListener {
     
-    private static final String FLAG_VM = "-vm"; //$NON-NLS-1$
+    private static final String FLAG_AVD = "-avd"; //$NON-NLS-1$
     private static final String FLAG_NETDELAY = "-netdelay"; //$NON-NLS-1$
     private static final String FLAG_NETSPEED = "-netspeed"; //$NON-NLS-1$
     private static final String FLAG_WIPE_DATA = "-wipe-data"; //$NON-NLS-1$
@@ -228,9 +228,9 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
         public boolean mNoBootAnim = LaunchConfigDelegate.DEFAULT_NO_BOOT_ANIM;
         
         /**
-         * Vm Name.
+         * AVD Name.
          */
-        public String mVmName = null;
+        public String mAvdName = null;
         
         public String mNetworkSpeed = EmulatorConfigTab.getSpeed(
                 LaunchConfigDelegate.DEFAULT_SPEED);
@@ -262,7 +262,7 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
             }
 
             try {
-                mVmName = config.getAttribute(LaunchConfigDelegate.ATTR_VM_NAME, mVmName);
+                mAvdName = config.getAttribute(LaunchConfigDelegate.ATTR_AVD_NAME, mAvdName);
             } catch (CoreException e) {
             }
 
@@ -531,8 +531,8 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
                 wc.setAttribute(LaunchConfigDelegate.ATTR_TARGET_MODE,
                         LaunchConfigDelegate.DEFAULT_TARGET_MODE);
 
-                // default VM: None
-                wc.setAttribute(LaunchConfigDelegate.ATTR_VM_NAME, (String)null);
+                // default AVD: None
+                wc.setAttribute(LaunchConfigDelegate.ATTR_AVD_NAME, (String)null);
 
                 // set the default network speed
                 wc.setAttribute(LaunchConfigDelegate.ATTR_SPEED,
@@ -629,12 +629,12 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
 
         // get the SDK
         Sdk currentSdk = Sdk.getCurrent();
-        VmManager vmManager = currentSdk.getVmManager();
+        AvdManager avdManager = currentSdk.getAvdManager();
         
         // get the project target
         final IAndroidTarget projectTarget = currentSdk.getTarget(project);
         
-        // FIXME: check errors on missing sdk, vm manager, or project target.
+        // FIXME: check errors on missing sdk, AVD manager, or project target.
         
         // device chooser response object.
         final DeviceChooserResponse response = new DeviceChooserResponse();
@@ -644,81 +644,81 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
          * - Manually Mode
          *       Always display a UI that lets a user see the current running emulators/devices.
          *       The UI must show which devices are compatibles, and allow launching new emulators
-         *       with compatible (and not yet running) VM.
+         *       with compatible (and not yet running) AVD.
          * - Automatic Way
-         *     * Preferred VM set.
-         *           If Preferred VM is not running: launch it.
-         *           Launch the application on the preferred VM.
-         *     * No preferred VM.
+         *     * Preferred AVD set.
+         *           If Preferred AVD is not running: launch it.
+         *           Launch the application on the preferred AVD.
+         *     * No preferred AVD.
          *           Count the number of compatible emulators/devices.
          *           If != 1, display a UI similar to manual mode.
-         *           If == 1, launch the application on this VM/device.
+         *           If == 1, launch the application on this AVD/device.
          */
         
         if (config.mTargetMode == AndroidLaunchConfiguration.AUTO_TARGET_MODE) {
             // if we are in automatic target mode, we need to find the current devices
             Device[] devices = AndroidDebugBridge.getBridge().getDevices();
             
-            // first check if we have a preferred VM name, and if it actually exists, and is valid
+            // first check if we have a preferred AVD name, and if it actually exists, and is valid
             // (ie able to run the project).
-            // We need to check this in case the VM was recreated with a different target that is
+            // We need to check this in case the AVD was recreated with a different target that is
             // not compatible.
-            VmInfo preferredVm = null;
-            if (config.mVmName != null) {
-                preferredVm = vmManager.getVm(config.mVmName);
-                if (projectTarget.isCompatibleBaseFor(preferredVm.getTarget()) == false) {
-                    preferredVm = null;
+            AvdInfo preferredAvd = null;
+            if (config.mAvdName != null) {
+                preferredAvd = avdManager.getAvd(config.mAvdName);
+                if (projectTarget.isCompatibleBaseFor(preferredAvd.getTarget()) == false) {
+                    preferredAvd = null;
 
                     AdtPlugin.printErrorToConsole(project, String.format(
-                            "Preferred VM '%1$s' is not compatible with the project target '%2$s'. Looking for a compatible VM...",
-                            config.mVmName, projectTarget.getName()));
+                            "Preferred AVD '%1$s' is not compatible with the project target '%2$s'. Looking for a compatible AVD...",
+                            config.mAvdName, projectTarget.getName()));
                 }
             }
                 
-            if (preferredVm != null) {
+            if (preferredAvd != null) {
                 // look for a matching device
                 for (Device d : devices) {
-                    String deviceVm = d.getVmName();
-                    if (deviceVm != null && deviceVm.equals(config.mVmName)) {
+                    String deviceAvd = d.getAvdName();
+                    if (deviceAvd != null && deviceAvd.equals(config.mAvdName)) {
                         response.mustContinue = true;
                         response.mustLaunchEmulator = false;
                         response.deviceToUse = d;
 
                         AdtPlugin.printToConsole(project, String.format(
-                                "Automatic Target Mode: Preferred VM '%1$s' is available on emulator '%2$s'",
-                                config.mVmName, d));
+                                "Automatic Target Mode: Preferred AVD '%1$s' is available on emulator '%2$s'",
+                                config.mAvdName, d));
 
                         continueLaunch(response, project, launch, launchInfo, config);
                         return;
                     }
                 }
                 
-                // at this point we have a valid preferred VM that is not running.
+                // at this point we have a valid preferred AVD that is not running.
                 // We need to start it.
                 response.mustContinue = true;
                 response.mustLaunchEmulator = true;
-                response.vmToLaunch = preferredVm;
+                response.avdToLaunch = preferredAvd;
 
                 AdtPlugin.printToConsole(project, String.format(
-                        "Automatic Target Mode: Preferred VM '%1$s' is not available. Launching new emulator.",
-                        config.mVmName));
+                        "Automatic Target Mode: Preferred AVD '%1$s' is not available. Launching new emulator.",
+                        config.mAvdName));
 
                 continueLaunch(response, project, launch, launchInfo, config);
                 return;
             }
 
-            // no (valid) preferred VM? look for one.
-            HashMap<Device, VmInfo> compatibleRunningVms = new HashMap<Device, VmInfo>();
+            // no (valid) preferred AVD? look for one.
+            HashMap<Device, AvdInfo> compatibleRunningAvds = new HashMap<Device, AvdInfo>();
             boolean hasDevice = false; // if there's 1+ device running, we may force manual mode,
                                        // as we cannot always detect proper compatibility with
                                        // devices. This is the case if the project target is not
                                        // a standard platform
             for (Device d : devices) {
-                String deviceVm = d.getVmName();
-                if (deviceVm != null) { // physical devices return null.
-                    VmInfo info = vmManager.getVm(deviceVm);
+                String deviceAvd = d.getAvdName();
+                if (deviceAvd != null) { // physical devices return null.
+                    AvdInfo info = avdManager.getAvd(deviceAvd);
                     if (info != null && projectTarget.isCompatibleBaseFor(info.getTarget())) {
-                        compatibleRunningVms.put(d, info);
+                        compatibleRunningAvds.put(d, info);
                     }
                 } else {
                     if (projectTarget.isPlatform()) { // means this can run on any device as long
@@ -728,7 +728,7 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
                             int apiNumber = Integer.parseInt(apiString);
                             if (apiNumber >= projectTarget.getApiVersionNumber()) {
                                 // device is compatible with project
-                                compatibleRunningVms.put(d, null);
+                                compatibleRunningAvds.put(d, null);
                                 continue;
                             }
                         } catch (NumberFormatException e) {
@@ -741,54 +741,54 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
             
             // depending on the number of devices, we'll simulate an automatic choice
             // from the device chooser or simply show up the device chooser.
-            if (hasDevice == false && compatibleRunningVms.size() == 0) {
+            if (hasDevice == false && compatibleRunningAvds.size() == 0) {
                 // if zero emulators/devices, we launch an emulator.
-                // We need to figure out which VM first.
+                // We need to figure out which AVD first.
                 
-                // we are going to take the closest VM. ie a compatible VM that has the API level
+                // we are going to take the closest AVD. ie a compatible AVD that has the API level
                 // closest to the project target.
-                VmInfo[] vms = vmManager.getVms();
-                VmInfo defaultVm = null;
-                for (VmInfo vm : vms) {
-                    if (projectTarget.isCompatibleBaseFor(vm.getTarget())) {
-                        if (defaultVm == null ||
-                                vm.getTarget().getApiVersionNumber() <
-                                    defaultVm.getTarget().getApiVersionNumber()) {
-                            defaultVm = vm;
+                AvdInfo[] avds = avdManager.getAvds();
+                AvdInfo defaultAvd = null;
+                for (AvdInfo avd : avds) {
+                    if (projectTarget.isCompatibleBaseFor(avd.getTarget())) {
+                        if (defaultAvd == null ||
+                                avd.getTarget().getApiVersionNumber() <
+                                    defaultAvd.getTarget().getApiVersionNumber()) {
+                            defaultAvd = avd;
                         }
                     }
                 }
 
-                if (defaultVm != null) {
+                if (defaultAvd != null) {
                     response.mustContinue = true;
                     response.mustLaunchEmulator = true;
-                    response.vmToLaunch = defaultVm;
+                    response.avdToLaunch = defaultAvd;
 
                     AdtPlugin.printToConsole(project, String.format(
-                            "Automatic Target Mode: launching new emulator with compatible VM '%1$s'",
-                            defaultVm.getName()));
+                            "Automatic Target Mode: launching new emulator with compatible AVD '%1$s'",
+                            defaultAvd.getName()));
 
                     continueLaunch(response, project, launch, launchInfo, config);
                     return;
                 } else {
-                    // FIXME: ask the user if he wants to create a VM.
-                    // we found no compatible VM.
+                    // FIXME: ask the user if he wants to create a AVD.
+                    // we found no compatible AVD.
                     AdtPlugin.printErrorToConsole(project, String.format(
-                            "Failed to find a VM compatible with target '%1$s'. Launch aborted.",
+                            "Failed to find a AVD compatible with target '%1$s'. Launch aborted.",
                             projectTarget.getName()));
                     launch.stopLaunch();
                     return;
                 }
-            } else if (hasDevice == false && compatibleRunningVms.size() == 1) {
-                Entry<Device, VmInfo> e = compatibleRunningVms.entrySet().iterator().next();
+            } else if (hasDevice == false && compatibleRunningAvds.size() == 1) {
+                Entry<Device, AvdInfo> e = compatibleRunningAvds.entrySet().iterator().next();
                 response.mustContinue = true;
                 response.mustLaunchEmulator = false;
                 response.deviceToUse = e.getKey();
 
-                // get the VmInfo, if null, the device is a physical device.
-                VmInfo vmInfo = e.getValue();
-                if (vmInfo != null) {
-                    message = String.format("Automatic Target Mode: using existing emulator '%1$s' running compatible VM '%2$s'",
+                // get the AvdInfo, if null, the device is a physical device.
+                AvdInfo avdInfo = e.getValue();
+                if (avdInfo != null) {
+                    message = String.format("Automatic Target Mode: using existing emulator '%1$s' running compatible AVD '%2$s'",
                             response.deviceToUse, e.getValue().getName());
                 } else {
                     message = String.format("Automatic Target Mode: using device '%1$s'",
@@ -801,7 +801,7 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
             }
 
             // if more than one device, we'll bring up the DeviceChooser dialog below.
-            if (compatibleRunningVms.size() >= 2) {
+            if (compatibleRunningAvds.size() >= 2) {
                 message = "Automatic Target Mode: Several compatible targets. Please select a target device."; 
             } else if (hasDevice) {
                 message = "Automatic Target Mode: Unable to detect device compatibility. Please select a target device."; 
@@ -849,7 +849,7 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
                     synchronized (sListLock) {
                         mWaitingForEmulatorLaunches.add(launchInfo);
                         AdtPlugin.printToConsole(project, "Launching a new emulator.");
-                        boolean status = launchEmulator(config, response.vmToLaunch);
+                        boolean status = launchEmulator(config, response.avdToLaunch);
             
                         if (status == false) {
                             // launching the emulator failed!
@@ -1323,7 +1323,7 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
         }
     }
 
-    private boolean launchEmulator(AndroidLaunchConfiguration config, VmInfo vmToLaunch) {
+    private boolean launchEmulator(AndroidLaunchConfiguration config, AvdInfo avdToLaunch) {
 
         // split the custom command line in segments
         ArrayList<String> customArgs = new ArrayList<String>();
@@ -1353,8 +1353,8 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
         ArrayList<String> list = new ArrayList<String>();
 
         list.add(AdtPlugin.getOsAbsoluteEmulator());
-        list.add(FLAG_VM);
-        list.add(vmToLaunch.getName());
+        list.add(FLAG_AVD);
+        list.add(avdToLaunch.getName());
         
         if (config.mNetworkSpeed != null) {
             list.add(FLAG_NETSPEED);

@@ -80,7 +80,7 @@ public class LaunchConfigDelegate extends LaunchConfigurationDelegate {
      */
     public static final String ATTR_ACTIVITY = AdtPlugin.PLUGIN_ID + ".activity"; //$NON-NLS-1$
 
-    public static final String ATTR_VM_NAME = AdtPlugin.PLUGIN_ID + ".vm"; //$NON-NLS-1$
+    public static final String ATTR_AVD_NAME = AdtPlugin.PLUGIN_ID + ".avd"; //$NON-NLS-1$
     
     public static final String ATTR_SPEED = AdtPlugin.PLUGIN_ID + ".speed"; //$NON-NLS-1$
 

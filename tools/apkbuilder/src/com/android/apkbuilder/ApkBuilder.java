@@ -319,7 +319,7 @@ public final class ApkBuilder {
      * @param files 
      * @param javaResources 
      * @param storeType the optional type of the debug keystore. If <code>null</code>, the default
-     * keystore type of the VM is used.
+     * keystore type of the Java VM is used.
      */
     private void createPackage(File outFile, ArrayList<FileInputStream> zipArchives,
             ArrayList<File> files, ArrayList<ApkFile> javaResources,

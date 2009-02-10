@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.samples.app;
+package com.example.android.apis.app;
 
 import android.app.Activity;
 import android.content.Intent;

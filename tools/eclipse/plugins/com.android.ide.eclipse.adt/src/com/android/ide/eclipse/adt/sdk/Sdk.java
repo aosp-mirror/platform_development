@@ -23,9 +23,9 @@ import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.ISdkLog;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
+import com.android.sdklib.avd.AvdManager;
 import com.android.sdklib.project.ProjectProperties;
 import com.android.sdklib.project.ProjectProperties.PropertyType;
-import com.android.sdklib.vm.VmManager;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IStatus;
@@ -52,7 +52,7 @@ public class Sdk {
     private static Sdk sCurrentSdk = null;
 
     private final SdkManager mManager;
-    private final VmManager mVmManager;
+    private final AvdManager mAvdManager;
 
     private final HashMap<IProject, IAndroidTarget> mProjectMap =
             new HashMap<IProject, IAndroidTarget>();
@@ -95,13 +95,13 @@ public class Sdk {
         // get an SdkManager object for the location
         SdkManager manager = SdkManager.createManager(sdkLocation, log);
         if (manager != null) {
-            VmManager vmManager = null;
+            AvdManager avdManager = null;
             try {
-                vmManager = new VmManager(manager, log);
+                avdManager = new AvdManager(manager, log);
             } catch (AndroidLocationException e) {
-                log.error(e, "Error parsing the VMs");
+                log.error(e, "Error parsing the AVDs");
             }
-            sCurrentSdk = new Sdk(manager, vmManager);
+            sCurrentSdk = new Sdk(manager, avdManager);
             return sCurrentSdk;
         } else {
             StringBuilder sb = new StringBuilder("Error Loading the SDK:\n");
@@ -255,16 +255,16 @@ public class Sdk {
     }
     
     /**
-     * Returns the {@link VmManager}. If the VmManager failed to parse the VM folder, this could
+     * Returns the {@link AvdManager}. If the AvdManager failed to parse the AVD folder, this could
      * be <code>null</code>.
      */
-    public VmManager getVmManager() {
-        return mVmManager;
+    public AvdManager getAvdManager() {
+        return mAvdManager;
     }
     
-    private Sdk(SdkManager manager, VmManager vmManager) {
+    private Sdk(SdkManager manager, AvdManager avdManager) {
         mManager = manager;
-        mVmManager = vmManager;
+        mAvdManager = avdManager;
         
         // pre-compute some paths
         mDocBaseUrl = getDocumentationBaseUrl(mManager.getLocation() +

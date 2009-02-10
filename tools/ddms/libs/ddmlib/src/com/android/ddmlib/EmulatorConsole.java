@@ -54,7 +54,7 @@ public final class EmulatorConsole {
     private final static String HOST = "127.0.0.1";  //$NON-NLS-1$
 
     private final static String COMMAND_PING = "help\r\n"; //$NON-NLS-1$
-    private final static String COMMAND_VM_NAME = "vm name\r\n"; //$NON-NLS-1$
+    private final static String COMMAND_AVD_NAME = "vm name\r\n"; //$NON-NLS-1$  // TODO change with emulator
     private final static String COMMAND_KILL = "kill\r\n"; //$NON-NLS-1$
     private final static String COMMAND_GSM_STATUS = "gsm status\r\n"; //$NON-NLS-1$
     private final static String COMMAND_GSM_CALL = "gsm call %1$s\r\n"; //$NON-NLS-1$
@@ -309,8 +309,8 @@ public final class EmulatorConsole {
         }
     }
     
-    public synchronized String getVmName() {
-        if (sendCommand(COMMAND_VM_NAME)) {
+    public synchronized String getAvdName() {
+        if (sendCommand(COMMAND_AVD_NAME)) {
             String[] result = readLines();
             if (result != null && result.length == 2) { // this should be the name on first line,
                                                         // and ok on 2nd line

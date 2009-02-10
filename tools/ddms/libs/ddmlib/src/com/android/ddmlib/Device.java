@@ -69,8 +69,8 @@ public final class Device implements IDevice {
     /** Serial number of the device */
     String serialNumber = null;
 
-    /** Name of the vm */
-    String mVmName = null;
+    /** Name of the AVD */
+    String mAvdName = null;
 
     /** State of the device. */
     DeviceState state = null;
@@ -94,8 +94,8 @@ public final class Device implements IDevice {
         return serialNumber;
     }
     
-    public String getVmName() {
-        return mVmName;
+    public String getAvdName() {
+        return mAvdName;
     }
 
     

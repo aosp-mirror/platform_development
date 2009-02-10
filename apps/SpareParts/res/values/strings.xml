@@ -30,6 +30,10 @@
     <string name="summary_transition_animations">Speed of animations moving between screens</string>
     <string name="dialog_title_transition_animations">Select transition speed</string>
     
+    <string name="title_fancy_ime_animations">Fancy input animations</string>
+    <string name="summary_on_fancy_ime_animations">Use fancier animations for input method windows</string>
+    <string name="summary_off_fancy_ime_animations">Use normal animations for input method windows</string>
+    
     <string name="title_font_size">Font size</string>
     <string name="summary_font_size">Overall size of fonts</string>
     <string name="dialog_title_font_size">Select font size</string>

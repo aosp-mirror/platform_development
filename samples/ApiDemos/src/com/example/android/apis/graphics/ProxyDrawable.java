@@ -24,6 +24,7 @@ import android.graphics.drawable.Drawable;
 public class ProxyDrawable extends Drawable {
     
     private Drawable mProxy;
+    private boolean mMutated;
 
     public ProxyDrawable(Drawable target) {
         mProxy = target;
@@ -87,6 +88,15 @@ public class ProxyDrawable extends Drawable {
         if (mProxy != null) {
             mProxy.setAlpha(alpha);
         }
+    }
+
+    @Override
+    public Drawable mutate() {
+        if (mProxy != null && !mMutated && super.mutate() == this) {
+            mProxy.mutate();
+            mMutated = true;
+        }
+        return this;
     }
 }
     

@@ -201,7 +201,7 @@ public class RemoteAndroidTestRunnerTest extends TestCase {
             throw new UnsupportedOperationException();
         }
 
-        public String getVmName() {
+        public String getAvdName() {
             return "";
         }
 

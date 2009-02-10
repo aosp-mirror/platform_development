@@ -38,7 +38,7 @@ public class EventLogImporter {
         if (top == null) {
             throw new FileNotFoundException();
         }
-        final String tagFile = top + "/data/etc/event-log-tags";
+        final String tagFile = top + "/system/core/logcat/event-log-tags";
         BufferedReader tagReader = new BufferedReader(
                 new InputStreamReader(new FileInputStream(tagFile)));
         BufferedReader eventReader = new BufferedReader(

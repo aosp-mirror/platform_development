@@ -32,9 +32,9 @@ public final class AndroidLocation {
     private static final String ANDROID_SDK_VERSION = "SDK-1.0";
 
     /**
-     * VM folder inside the path returned by {@link #getFolder()}
+     * Virtual Device folder inside the path returned by {@link #getFolder()}
      */
-    public static final String FOLDER_VMS = "vm";
+    public static final String FOLDER_AVD = "avd";
 
     /**
      * Throw when the location of the android folder couldn't be found.
@@ -56,7 +56,7 @@ public final class AndroidLocation {
      */
     public final static String getFolder() throws AndroidLocationException {
         if (sPrefsLocation == null) {
-            String home = findValidPath("user.home", "HOME");
+            String home = findValidPath("ANDROID_SDK_HOME", "user.home", "HOME");
             
             // if the above failed, we throw an exception.
             if (home == null) {

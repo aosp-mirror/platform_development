@@ -20,7 +20,6 @@ import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.project.FixLaunchConfig;
 import com.android.ide.eclipse.adt.project.ProjectHelper;
-import com.android.ide.eclipse.adt.sdk.LoadStatus;
 import com.android.ide.eclipse.adt.sdk.Sdk;
 import com.android.ide.eclipse.common.AndroidConstants;
 import com.android.ide.eclipse.common.project.AndroidManifestHelper;
@@ -224,7 +223,7 @@ public class PreCompilerBuilder extends BaseBuilder {
     public PreCompilerBuilder() {
         super();
     }
-
+    
     // build() returns a list of project from which this project depends for future compilation.
     @SuppressWarnings("unchecked") //$NON-NLS-1$
     @Override
@@ -274,15 +273,6 @@ public class PreCompilerBuilder extends BaseBuilder {
                     mergeAidlFileModifications(dv.getAidlToCompile(),
                             dv.getAidlToRemove());
                 }
-
-                // if there was some XML errors, we just return w/o doing
-                // anything since we've put some markers in the files anyway.
-                if (dv.mXmlError) {
-                    AdtPlugin.printBuildToConsole(AdtConstants.BUILD_VERBOSE, project,
-                            Messages.Xml_Error);
-
-                    return null;
-                }
                 
                 // get the java package from the visitor
                 javaPackage = dv.getManifestPackage();
@@ -295,38 +285,18 @@ public class PreCompilerBuilder extends BaseBuilder {
 
         // At this point we have stored what needs to be build, so we can
         // do some high level test and abort if needed.
-
-        // check if we have finished loading the SDK.
-        if (AdtPlugin.getDefault().getSdkLoadStatus(javaProject) != LoadStatus.LOADED) {
-            // we exit silently
-            return null;
-        }
-
-        // check the compiler compliance level, not displaying the error message
-        // since this is not the first builder.
-        if (ProjectHelper.checkCompilerCompliance(getProject())
-                != ProjectHelper.COMPILER_COMPLIANCE_OK) {
-            AdtPlugin.printBuildToConsole(AdtConstants.BUILD_VERBOSE, project,
-                    Messages.Compiler_Compliance_Error);
-            return null;
-        }
-
-        // Check that the SDK directory has been setup.
-        String osSdkFolder = AdtPlugin.getOsSdkFolder();
-
-        if (osSdkFolder == null || osSdkFolder.length() == 0) {
-            AdtPlugin.printBuildToConsole(AdtConstants.BUILD_VERBOSE, project,
-                    Messages.No_SDK_Setup_Error);
-            markProject(AdtConstants.MARKER_ADT, Messages.No_SDK_Setup_Error,
-                    IMarker.SEVERITY_ERROR);
-            return null;
-        }
+        abortOnBadSetup(javaProject);
         
-        IAndroidTarget projectTarget = Sdk.getCurrent().getTarget(project);
-        if (projectTarget == null) {
-            // no target. error has been output by the container initializer: exit silently.
-            return null;
+        // if there was some XML errors, we just return w/o doing
+        // anything since we've put some markers in the files anyway.
+        if (dv != null && dv.mXmlError) {
+            AdtPlugin.printBuildToConsole(AdtConstants.BUILD_VERBOSE, project,
+                    Messages.Xml_Error);
+
+            // This interrupts the build. The next builders will not run.
+            stopBuild(Messages.Xml_Error);
         }
+
 
         // get the manifest file
         IFile manifest = AndroidManifestHelper.getManifest(project);
@@ -336,7 +306,9 @@ public class PreCompilerBuilder extends BaseBuilder {
                     AndroidConstants.FN_ANDROID_MANIFEST);
             AdtPlugin.printBuildToConsole(AdtConstants.BUILD_VERBOSE, project, msg);
             markProject(AdtConstants.MARKER_ADT, msg, IMarker.SEVERITY_ERROR);
-            return null;
+
+            // This interrupts the build. The next builders will not run.
+            stopBuild(msg);
         }
 
         // lets check the XML of the manifest first, if that hasn't been done by the
@@ -353,7 +325,9 @@ public class PreCompilerBuilder extends BaseBuilder {
                 String msg = String.format(Messages.s_Contains_Xml_Error,
                         AndroidConstants.FN_ANDROID_MANIFEST);
                 AdtPlugin.printBuildToConsole(AdtConstants.BUILD_VERBOSE, project, msg);
-                return null;
+
+                // This interrupts the build. The next builders will not run.
+                stopBuild(msg);
             }
             
             // get the java package from the parser
@@ -366,7 +340,9 @@ public class PreCompilerBuilder extends BaseBuilder {
                     AndroidConstants.FN_ANDROID_MANIFEST);
             AdtPlugin.printBuildToConsole(AdtConstants.BUILD_VERBOSE, project,
                     msg);
-            return null;
+
+            // This interrupts the build. The next builders will not run.
+            stopBuild(msg);
         }
 
         // at this point we have the java package. We need to make sure it's not a different package
@@ -409,7 +385,8 @@ public class PreCompilerBuilder extends BaseBuilder {
                 AdtPlugin.printBuildToConsole(AdtConstants.BUILD_VERBOSE, project, message);
 
                 // abort
-                return null;
+                // This interrupts the build. The next builders will not run.
+                stopBuild(message);
             }
 
 
@@ -429,6 +406,8 @@ public class PreCompilerBuilder extends BaseBuilder {
                 String osOutputPath = outputLocation.toOSString();
                 String osResPath = resLocation.toOSString();
                 String osManifestPath = manifestLocation.toOSString();
+
+                IAndroidTarget projectTarget = Sdk.getCurrent().getTarget(project);
 
                 // remove the aapt markers
                 removeMarkersFromFile(manifest, AndroidConstants.MARKER_AAPT);
@@ -517,20 +496,25 @@ public class PreCompilerBuilder extends BaseBuilder {
                                 Messages.AAPT_Error);
 
                         // abort if exec failed.
-                        return null;
+                        // This interrupts the build. The next builders will not run.
+                        stopBuild(Messages.AAPT_Error);
                     }
                 } catch (IOException e1) {
                     // something happen while executing the process,
                     // mark the project and exit
                     String msg = String.format(Messages.AAPT_Exec_Error, array.get(0));
                     markProject(AdtConstants.MARKER_ADT, msg, IMarker.SEVERITY_ERROR);
-                    return null;
+
+                    // This interrupts the build. The next builders will not run.
+                    stopBuild(msg);
                 } catch (InterruptedException e) {
                     // we got interrupted waiting for the process to end...
                     // mark the project and exit
                     String msg = String.format(Messages.AAPT_Exec_Error, array.get(0));
                     markProject(AdtConstants.MARKER_ADT, msg, IMarker.SEVERITY_ERROR);
-                    return null;
+
+                    // This interrupts the build. The next builders will not run.
+                    stopBuild(msg);
                 }
 
                 // if the return code was OK, we refresh the folder that
