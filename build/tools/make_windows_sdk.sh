@@ -1,11 +1,17 @@
 #!/bin/bash
 # Quick semi-auto file to build Windows SDK tools.
 #
-# Limitations:
+# Limitations and requirements:
 # - Expects the emulator has been built first, will pick it up from prebuilt.
 # - Run in Cygwin
-# - Needs Cygwin package zip
 # - Expects to have one of the existing SDK (Darwin or Linux) to build the Windows one
+# - Needs Cygwin packages: autoconf, bison, curl, flex, gcc, g++, git,
+#   gnupg, make, mingw-zlib, python, zip, unzip
+# - Must NOT have cygwin package readline (its GPL license might taint the SDK if
+#   it gets compiled in)
+# - Does not need a Java Development Kit or any other tools outside of cygwin.
+# - If you think you may have Windows versions of tools (e.g. make) installed, it may
+#   reduce confusion levels to 'export PATH=/usr/bin'
 
 set -e  # Fail this script as soon as a command fails -- fail early, fail fast
 
@@ -36,6 +42,10 @@ function check() {
         # the LAST couple of underscores. You can have underscores *before* the
         # SDK number if you want, but not after, e.g these are valid:
         #    android_sdk_4242_platform.zip or blah_42_.zip
+        #
+        # Note that the root directory name in the zip must match the zip
+        # name, too, so there's no point just changing the zip name to match
+        # the above format.
         #
         # SDK_NUMBER will be empty if nothing matched.
         filename=`basename "$SDK_ZIP"`
