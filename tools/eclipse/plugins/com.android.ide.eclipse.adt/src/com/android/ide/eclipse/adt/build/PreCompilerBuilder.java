@@ -285,7 +285,7 @@ public class PreCompilerBuilder extends BaseBuilder {
 
         // At this point we have stored what needs to be build, so we can
         // do some high level test and abort if needed.
-        abortOnBadSetup(javaProject);
+        abortOnBadSetup(project);
         
         // if there was some XML errors, we just return w/o doing
         // anything since we've put some markers in the files anyway.

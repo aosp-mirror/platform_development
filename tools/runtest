@@ -84,7 +84,7 @@ function showUsage() {
 # tests by creating a file named "~/.android/runtest.rc" and adding them to that
 # file.  (No array needed, just plain lines of text).
 #
-# Rests are defined by entries with the following format:
+# Tests are defined by entries with the following format:
 # <short-name> <build-path> <test-package> <test-class>
 #              <testrunner-package> <testrunner-component>
 #
@@ -151,11 +151,7 @@ knownTests=(
 # the list of known tests.
 #
 function readConfigFile () {
-  pathToRc=$1
-  if [[ -z ${pathToRc} ]]; then 
-    exit 0
-  fi
-  rcFile=${pathToRc}/runtest.rc
+  rcFile=$1
   if [[ -f ${rcFile} ]] ; then
     declare -a lines
     exec 3<${rcFile} || exit
@@ -262,7 +258,7 @@ shift $((OPTIND-1))
 
 readConfigFile $optUserTests
 # TODO: Read from *any* vendor/*/runtest.rc
-readConfigFile $(gettop)/vendor/google
+readConfigFile $(gettop)/vendor/google/runtest.rc
 
 # if requested, list all tests and halt
 if [[ ${optListTests} -ne 0 ]] ; then
@@ -339,6 +335,10 @@ if [[ ${#testInfo[@]} -eq 5 ]] ; then
     debugOptions="-r "${debugOptions}
   fi
 
+  # "prevent" a race condition where we try to run the tests before they're
+  # actually installed
+  sleep 2
+  
   # now run the command
   if [[ $optVerbose -ne 0 || ${optPreview} -ne 0 ]] ; then
     echo adb ${optAdbTarget} shell am instrument -w \

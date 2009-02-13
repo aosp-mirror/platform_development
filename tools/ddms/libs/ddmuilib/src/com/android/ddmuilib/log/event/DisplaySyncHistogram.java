@@ -18,7 +18,6 @@ package com.android.ddmuilib.log.event;
 
 import com.android.ddmlib.log.EventContainer;
 import com.android.ddmlib.log.EventLogParser;
-import com.android.ddmlib.log.InvalidTypeException;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.jfree.chart.plot.XYPlot;
@@ -35,26 +34,15 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.TimeZone;
 
-public class DisplaySyncHistogram extends EventDisplay {
+public class DisplaySyncHistogram extends SyncCommon {
 
+    Map<SimpleTimePeriod, Integer> mTimePeriodMap[];
 
-    // State information while processing the event stream
-    protected int mLastState; // 0 if event started, 1 if event stopped
-    protected long mLastStartTime; // ms
-    protected long mLastStopTime; //ms
-    protected String mLastDetails;
-    protected int mLastEvent; // server, poll, etc
+    // Information to graph for each authority
+    private TimePeriodValues mDatasetsSyncHist[];
 
     public DisplaySyncHistogram(String name) {
         super(name);
-    }
-
-    /**
-     * Resets the display.
-     */
-    @Override
-    void resetUI() {
-        initSyncHistogramDisplay();
     }
 
     /**
@@ -67,22 +55,20 @@ public class DisplaySyncHistogram extends EventDisplay {
     public Control createComposite(final Composite parent, EventLogParser logParser,
             final ILogColumnListener listener) {
         Control composite = createCompositeChart(parent, logParser, "Sync Histogram");
-        initSyncHistogramDisplay();
+        resetUI();
         return composite;
     }
 
-    // Information to graph for each authority
-    private TimePeriodValues mDatasetsSyncHist[];
-
     /**
-     * Initializes the display.
+     * Resets the display.
      */
-    private void initSyncHistogramDisplay() {
+    @Override
+    void resetUI() {
+        super.resetUI();
         XYPlot xyPlot = mChart.getXYPlot();
 
         AbstractXYItemRenderer br = new XYBarRenderer();
         mDatasetsSyncHist = new TimePeriodValues[NUM_AUTHS+1];
-        mLastDetails = "";
         mTimePeriodMap = new HashMap[NUM_AUTHS + 1];
 
         TimePeriodValuesCollection tpvc = new TimePeriodValuesCollection();
@@ -99,72 +85,44 @@ public class DisplaySyncHistogram extends EventDisplay {
     }
 
     /**
-     * Updates the display with a new event.  This is the main entry point for
-     * each event.  This method has the logic to tie together the start event,
-     * stop event, and details event into one graph item.  Note that the details
-     * can happen before or after the stop event.
-     * @param event The event
+     * Callback to process a sync event.
+     *
+     * @param event      The sync event
+     * @param startTime Start time (ms) of events
+     * @param stopTime Stop time (ms) of events
+     * @param details Details associated with the event.
+     * @param newEvent True if this event is a new sync event.  False if this event
+     * @param syncSource
      */
     @Override
-    void newEvent(EventContainer event, EventLogParser logParser) {
-        try {
-            if (event.mTag == EVENT_SYNC) {
-                int state = Integer.parseInt(event.getValueAsString(1));
-                if (state == 0) { // start
-                    mLastStartTime = (long)event.sec * 1000L + (event.nsec / 1000000L);
-                    mLastState = 0;
-                    mLastEvent = Integer.parseInt(event.getValueAsString(2));
-                    mLastDetails = "";
-                } else if (state == 1) { // stop
-                    if (mLastState == 0) {
-                        mLastStopTime = (long)event.sec * 1000L + (event.nsec / 1000000L);
-                        if (mLastStartTime == 0) {
-                            // Log starts with a stop event
-                            mLastStartTime = mLastStopTime;
-                        }
-                        int auth = getAuth(event.getValueAsString(0));
-                        if (mLastDetails.indexOf('x') >= 0 || mLastDetails.indexOf('X') >= 0) {
-                            auth = ERRORS;
-                        }
-                        double delta = (mLastStopTime - mLastStartTime) * 100. / 1000 / 3600; // Percent of hour
-                        addHistEvent(event, auth, delta);
-                        mLastState = 1;
-                    }
-                }
-            } else if (event.mTag == EVENT_SYNC_DETAILS) {
-                int auth = getAuth(event.getValueAsString(0));
-                mLastDetails = event.getValueAsString(3);
-                if (mLastState != 0) { // Not inside event
-                    long updateTime = (long)event.sec * 1000L + (event.nsec / 1000000L);
-                    if (updateTime - mLastStopTime <= 250) {
-                        // Got details within 250ms after event, so delete and re-insert
-                        // Details later than 250ms (arbitrary) are discarded as probably
-                        // unrelated.
-                        //int lastItem = mDatasetsSync[auth].getItemCount();
-                        //addHistEvent(event);
-                        if (mLastDetails.indexOf('x') >= 0 || mLastDetails.indexOf('X') >= 0) {
-                            // Item turns out to be in error, so transfer time from old auth to error.
-
-                            double delta = (mLastStopTime - mLastStartTime) * 100. / 1000 / 3600; // Percent of hour
-                            addHistEvent(event, auth, -delta);
-                            addHistEvent(event, ERRORS, delta);
-                        }
-                    }
-                }
+    void processSyncEvent(EventContainer event, int auth, long startTime, long stopTime,
+            String details, boolean newEvent, int syncSource) {
+        if (newEvent) {
+            if (details.indexOf('x') >= 0 || details.indexOf('X') >= 0) {
+                auth = ERRORS;
             }
-        } catch (InvalidTypeException e) {
+            double delta = (stopTime - startTime) * 100. / 1000 / 3600; // Percent of hour
+            addHistEvent(0, auth, delta);
+        } else {
+            // sync_details arrived for an event that has already been graphed.
+            if (details.indexOf('x') >= 0 || details.indexOf('X') >= 0) {
+                // Item turns out to be in error, so transfer time from old auth to error.
+                double delta = (stopTime - startTime) * 100. / 1000 / 3600; // Percent of hour
+                addHistEvent(0, auth, -delta);
+                addHistEvent(0, ERRORS, delta);
+            }
         }
     }
 
     /**
      * Helper to add an event to the data series.
      * Also updates error series if appropriate (x or X in details).
-     * @param event The event
-     * @param auth
-     * @param value
+     * @param stopTime Time event ends
+     * @param auth Sync authority
+     * @param value Value to graph for event
      */
-    private void addHistEvent(EventContainer event, int auth, double value) {
-        SimpleTimePeriod hour = getTimePeriod(mLastStopTime, mHistWidth);
+    private void addHistEvent(long stopTime, int auth, double value) {
+        SimpleTimePeriod hour = getTimePeriod(stopTime, mHistWidth);
 
         // Loop over all datasets to do the stacking.
         for (int i = auth; i <= ERRORS; i++) {
@@ -172,9 +130,8 @@ public class DisplaySyncHistogram extends EventDisplay {
         }
     }
 
-    Map<SimpleTimePeriod, Integer> mTimePeriodMap[];
-
-    private void addToPeriod(TimePeriodValues tpv[], int auth, SimpleTimePeriod period, double value) {
+    private void addToPeriod(TimePeriodValues tpv[], int auth, SimpleTimePeriod period,
+            double value) {
         int index;
         if (mTimePeriodMap[auth].containsKey(period)) {
             index = mTimePeriodMap[auth].get(period);
@@ -198,7 +155,8 @@ public class DisplaySyncHistogram extends EventDisplay {
         TimeZone zone = RegularTimePeriod.DEFAULT_TIME_ZONE;
         Calendar calendar = Calendar.getInstance(zone);
         calendar.setTime(date);
-        long hoursOfYear = calendar.get(Calendar.HOUR_OF_DAY) + calendar.get(Calendar.DAY_OF_YEAR) * 24;
+        long hoursOfYear = calendar.get(Calendar.HOUR_OF_DAY) +
+                calendar.get(Calendar.DAY_OF_YEAR) * 24;
         int year = calendar.get(Calendar.YEAR);
         hoursOfYear = (hoursOfYear / numHoursWide) * numHoursWide;
         calendar.clear();

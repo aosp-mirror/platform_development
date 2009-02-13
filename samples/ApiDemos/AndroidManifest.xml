@@ -1653,6 +1653,25 @@
         </activity>
 
         <!-- ************************************* -->
+        <!--      GADGET PACKAGE SAMPLES           -->
+        <!-- ************************************* -->
+
+        <receiver android:name=".gadget.ExampleGadgetProvider">
+            <meta-data android:name="android.gadget.provider"
+                    android:resource="@xml/gadget_provider" />
+            <intent-filter>
+                <action android:name="android.gadget.action.GADGET_UPDATE" />
+            </intent-filter>
+        </receiver>
+
+        <receiver android:name=".gadget.ExampleBroadcastReceiver" android:enabled="false">
+            <intent-filter>
+                <action android:name="android.intent.ACTION_TIMEZONE_CHANGED" />
+                <action android:name="android.intent.ACTION_TIME" />
+            </intent-filter>
+        </receiver>
+
+        <!-- ************************************* -->
         <!--             OTHER SAMPLES             -->
         <!-- ************************************* -->
 

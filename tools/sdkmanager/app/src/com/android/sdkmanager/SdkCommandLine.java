@@ -27,7 +27,6 @@ public class SdkCommandLine extends CommandLineProcessor {
 
     public final static String VERB_LIST   = "list";
     public final static String VERB_CREATE = "create";
-    public final static String VERB_RENAME = "rename";
     public final static String VERB_MOVE   = "move";
     public final static String VERB_DELETE = "delete";
     public final static String VERB_UPDATE = "update";
@@ -51,6 +50,7 @@ public class SdkCommandLine extends CommandLineProcessor {
     public static final String KEY_SKIN      = "skin";
     public static final String KEY_SDCARD    = "sdcard";
     public static final String KEY_FORCE     = "force";
+    public static final String KEY_RENAME    = "rename";
 
     /**
      * Action definitions for SdkManager command line.
@@ -64,91 +64,93 @@ public class SdkCommandLine extends CommandLineProcessor {
      * </ul>
      */
     private final static String[][] ACTIONS = {
-            { VERB_LIST,
-                NO_VERB_OBJECT,
+            { VERB_LIST, NO_VERB_OBJECT,
                 "Lists existing targets or virtual devices." },
-            { VERB_LIST,
-                OBJECT_AVD,
+            { VERB_LIST, OBJECT_AVD,
                 "Lists existing Android Virtual Devices.",
                 OBJECT_AVDS },
-            { VERB_LIST,
-                OBJECT_TARGET,
+            { VERB_LIST, OBJECT_TARGET,
                 "Lists existing targets.",
                 OBJECT_TARGETS },
     
-            { VERB_CREATE,
-                OBJECT_AVD,
+            { VERB_CREATE, OBJECT_AVD,
                 "Creates a new Android Virtual Device." },
-            { VERB_RENAME,
-                OBJECT_AVD,
-                "Renames a new Android Virtual Device." },
-            { VERB_MOVE,
-                OBJECT_AVD,
-                "Moves a new Android Virtual Device." },
-            { VERB_DELETE,
-                OBJECT_AVD,
-                "Deletes a new Android Virtual Device." },
+            { VERB_MOVE, OBJECT_AVD,
+                "Moves or renames an Android Virtual Device." },
+            { VERB_DELETE, OBJECT_AVD,
+                "Deletes an Android Virtual Device." },
     
-            { VERB_CREATE,
-                OBJECT_PROJECT,
+            { VERB_CREATE, OBJECT_PROJECT,
                 "Creates a new Android Project." },
-            { VERB_UPDATE,
-                OBJECT_PROJECT,
+            { VERB_UPDATE, OBJECT_PROJECT,
                 "Updates an Android Project (must have an AndroidManifest.xml)." },
         };
     
     public SdkCommandLine(ISdkLog logger) {
         super(logger, ACTIONS);
 
+        // --- create avd ---
+        
         define(MODE.STRING, false, 
-                VERB_CREATE, OBJECT_AVD,
-                "p", KEY_PATH,
-                "Location path of the parent directory where the new AVD will be created", null);
+                VERB_CREATE, OBJECT_AVD, "p", KEY_PATH,
+                "Location path of the directory where the new AVD will be created", null);
         define(MODE.STRING, true, 
-                VERB_CREATE, OBJECT_AVD,
-                "n", KEY_NAME,
+                VERB_CREATE, OBJECT_AVD, "n", KEY_NAME,
                 "Name of the new AVD", null);
         define(MODE.INTEGER, true, 
-                VERB_CREATE, OBJECT_AVD,
-                "t", KEY_TARGET_ID,
+                VERB_CREATE, OBJECT_AVD, "t", KEY_TARGET_ID,
                 "Target id of the new AVD", null);
-        define(MODE.STRING, true, 
-                VERB_CREATE, OBJECT_AVD,
-                "s", KEY_SKIN,
+        define(MODE.STRING, false, 
+                VERB_CREATE, OBJECT_AVD, "s", KEY_SKIN,
                 "Skin of the new AVD", null);
         define(MODE.STRING, false, 
-                VERB_CREATE, OBJECT_AVD,
-                "c", KEY_SDCARD,
+                VERB_CREATE, OBJECT_AVD, "c", KEY_SDCARD,
                 "Path to a shared SD card image, or size of a new sdcard for the new AVD", null);
         define(MODE.BOOLEAN, false, 
-                VERB_CREATE, OBJECT_AVD,
-                "f", KEY_FORCE,
+                VERB_CREATE, OBJECT_AVD, "f", KEY_FORCE,
                 "Force creation (override an existing AVD)", false);
 
+        // --- delete avd ---
+        
+        define(MODE.STRING, true, 
+                VERB_DELETE, OBJECT_AVD, "n", KEY_NAME,
+                "Name of the AVD to delete", null);
+
+        // --- move avd ---
+        
+        define(MODE.STRING, true, 
+                VERB_MOVE, OBJECT_AVD, "n", KEY_NAME,
+                "Name of the AVD to move or rename", null);
+        define(MODE.STRING, false, 
+                VERB_MOVE, OBJECT_AVD, "r", KEY_RENAME,
+                "New name of the AVD to rename", null);
+        define(MODE.STRING, false, 
+                VERB_MOVE, OBJECT_AVD, "p", KEY_PATH,
+                "New location path of the directory where to move the AVD", null);
+
+        // --- create project ---
+
         define(MODE.ENUM, true, 
-                VERB_CREATE, OBJECT_PROJECT,
-                "m", KEY_MODE,
+                VERB_CREATE, OBJECT_PROJECT, "m", KEY_MODE,
                 "Project mode", new String[] { ARG_ACTIVITY, ARG_ALIAS });
         define(MODE.STRING, true, 
                 VERB_CREATE, OBJECT_PROJECT,
                 "p", KEY_PATH,
                 "Location path of new project", null);
         define(MODE.INTEGER, true, 
-                VERB_CREATE, OBJECT_PROJECT,
-                "t", KEY_TARGET_ID,
+                VERB_CREATE, OBJECT_PROJECT, "t", KEY_TARGET_ID,
                 "Target id of the new project", null);
         define(MODE.STRING, true, 
-                VERB_CREATE, OBJECT_PROJECT,
-                "k", KEY_PACKAGE,
+                VERB_CREATE, OBJECT_PROJECT, "k", KEY_PACKAGE,
                 "Package name", null);
         define(MODE.STRING, true, 
-                VERB_CREATE, OBJECT_PROJECT,
-                "a", KEY_ACTIVITY,
+                VERB_CREATE, OBJECT_PROJECT, "a", KEY_ACTIVITY,
                 "Activity name", null);
         define(MODE.STRING, false, 
-                VERB_CREATE, OBJECT_PROJECT,
-                "n", KEY_NAME,
+                VERB_CREATE, OBJECT_PROJECT, "n", KEY_NAME,
                 "Project name", null);
+
+        // --- update project ---
 
         define(MODE.STRING, true, 
                 VERB_UPDATE, OBJECT_PROJECT,
@@ -164,79 +166,55 @@ public class SdkCommandLine extends CommandLineProcessor {
                 "Project name", null);
     }
     
-    // -- some helpers for AVD action flags
+    // -- some helpers for generic action flags
     
-    /** Helper to retrieve the --out location for the new AVD action. */
-    public String getCreateAvdLocation() {
-        return ((String) getValue(VERB_CREATE, OBJECT_AVD, KEY_PATH));
+    /** Helper to retrieve the --path value. */
+    public String getParamLocationPath() {
+        return ((String) getValue(null, null, KEY_PATH));
     }
     
-    /** Helper to retrieve the --target id for the new AVD action. */
-    public int getCreateAvdTargetId() {
-        return ((Integer) getValue(VERB_CREATE, OBJECT_AVD, KEY_TARGET_ID)).intValue();
+    /** Helper to retrieve the --target id value. */
+    public int getParamTargetId() {
+        return ((Integer) getValue(null, null, KEY_TARGET_ID)).intValue();
     }
 
-    /** Helper to retrieve the --name for the new AVD action. */
-    public String getCreateAvdName() {
-        return ((String) getValue(VERB_CREATE, OBJECT_AVD, KEY_NAME));
+    /** Helper to retrieve the --name value. */
+    public String getParamName() {
+        return ((String) getValue(null, null, KEY_NAME));
     }
     
-    /** Helper to retrieve the --skin name for the new AVD action. */
-    public String getCreateAvdSkin() {
-        return ((String) getValue(VERB_CREATE, OBJECT_AVD, KEY_SKIN));
+    /** Helper to retrieve the --skin value. */
+    public String getParamSkin() {
+        return ((String) getValue(null, null, KEY_SKIN));
     }
 
-    /** Helper to retrieve the --sdcard data for the new AVD action. */
-    public String getCreateAvdSdCard() {
-        return ((String) getValue(VERB_CREATE, OBJECT_AVD, KEY_SDCARD));
+    /** Helper to retrieve the --sdcard value. */
+    public String getParamSdCard() {
+        return ((String) getValue(null, null, KEY_SDCARD));
     }
     
-    public boolean getCreateAvdForce() {
-        return ((Boolean) getValue(VERB_CREATE, OBJECT_AVD, KEY_FORCE)).booleanValue();
+    /** Helper to retrieve the --force flag. */
+    public boolean getFlagForce() {
+        return ((Boolean) getValue(null, null, KEY_FORCE)).booleanValue();
+    }
+
+    // -- some helpers for avd action flags
+
+    /** Helper to retrieve the --rename value for a move verb. */
+    public String getParamMoveNewName() {
+        return ((String) getValue(VERB_MOVE, null, KEY_RENAME));
     }
 
 
     // -- some helpers for project action flags
     
-    /** Helper to retrieve the --out location for the new project action. */
-    public String getCreateProjectLocation() {
-        return ((String) getValue(VERB_CREATE, OBJECT_PROJECT, KEY_PATH));
-    }
-    
-    /** Helper to retrieve the --target id for the new project action. */
-    public int getCreateProjectTargetId() {
-        return ((Integer) getValue(VERB_CREATE, OBJECT_PROJECT, KEY_TARGET_ID)).intValue();
-    }
-
-    /** Helper to retrieve the --name for the new project action. */
-    public String getCreateProjectName() {
-        return ((String) getValue(VERB_CREATE, OBJECT_PROJECT, KEY_NAME));
-    }
-
-    /** Helper to retrieve the --package for the new project action. */
-    public String getCreateProjectPackage() {
-        return ((String) getValue(VERB_CREATE, OBJECT_PROJECT, KEY_PACKAGE));
+    /** Helper to retrieve the --package value. */
+    public String getParamProjectPackage() {
+        return ((String) getValue(null, OBJECT_PROJECT, KEY_PACKAGE));
     }
 
     /** Helper to retrieve the --activity for the new project action. */
-    public String getCreateProjectActivity() {
-        return ((String) getValue(VERB_CREATE, OBJECT_PROJECT, KEY_ACTIVITY));
-    }
-
-    // -- some helpers for update action flags
-    
-    /** Helper to retrieve the --out location for the update project action. */
-    public String getUpdateProjectLocation() {
-        return ((String) getValue(VERB_UPDATE, OBJECT_PROJECT, KEY_PATH));
-    }
-    
-    /** Helper to retrieve the --target id for the update project action. */
-    public int getUpdateProjectTargetId() {
-        return ((Integer) getValue(VERB_UPDATE, OBJECT_PROJECT, KEY_TARGET_ID)).intValue();
-    }
-
-    /** Helper to retrieve the --name for the update project action. */
-    public String getUpdateProjectName() {
-        return ((String) getValue(VERB_UPDATE, OBJECT_PROJECT, KEY_NAME));
+    public String getParamProjectActivity() {
+        return ((String) getValue(null, OBJECT_PROJECT, KEY_ACTIVITY));
     }
 }

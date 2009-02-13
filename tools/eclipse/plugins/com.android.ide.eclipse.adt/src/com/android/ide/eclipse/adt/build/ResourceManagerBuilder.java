@@ -31,8 +31,6 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jdt.core.IJavaProject;
-import org.eclipse.jdt.core.JavaCore;
 
 import java.util.Map;
 
@@ -95,8 +93,7 @@ public class ResourceManagerBuilder extends BaseBuilder {
         }
 
         // check if we have finished loading the SDK.
-        IJavaProject javaProject = JavaCore.create(project);
-        if (AdtPlugin.getDefault().getSdkLoadStatus(javaProject) != LoadStatus.LOADED) {
+        if (AdtPlugin.getDefault().getSdkLoadStatus() != LoadStatus.LOADED) {
             // we exit silently
             // This interrupts the build. The next builders will not run.
             stopBuild("SDK is not loaded yet");

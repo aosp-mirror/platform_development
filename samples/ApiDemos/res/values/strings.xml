@@ -813,5 +813,12 @@
     <string name="textColorTertiary">textColorTertiary</string>
     <string name="listSeparatorTextViewStyle">listSeparatorTextViewStyle</string>
 
+    <!-- ============================ -->
+    <!--  gadget examples strings     -->
+    <!-- ============================ -->
+
+    <string name="gadget_configure_instructions">This text will be shown before the date in our example gadget.</string>
+    <string name="gadget_prefix_default">Oh hai</string>
+    <string name="gadget_text_format"><xliff:g id="prefix">%1$s</xliff:g>: <xliff:g id="time">%2$s</xliff:g></string>
 </resources>
 

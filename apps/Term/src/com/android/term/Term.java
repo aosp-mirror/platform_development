@@ -48,6 +48,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.inputmethod.BaseInputConnection;
 import android.view.inputmethod.CompletionInfo;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.ExtractedText;
@@ -2658,7 +2659,7 @@ class EmulatorView extends View implements GestureDetector.OnGestureListener {
 
     @Override
     public InputConnection onCreateInputConnection(EditorInfo outAttrs) {
-        return new InputConnection(){
+        return new BaseInputConnection(this, false) {
 
             public boolean beginBatchEdit() {
                 return true;

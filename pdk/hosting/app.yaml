@@ -1,0 +1,11 @@
+application: pdk-docs
+version: 1
+runtime: python
+api_version: 1
+
+handlers:
+- url: /docs
+  static_dir: docs
+
+- url: /
+  script: pdk.py

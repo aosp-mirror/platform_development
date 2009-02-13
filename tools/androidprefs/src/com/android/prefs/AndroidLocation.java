@@ -22,15 +22,6 @@ import java.io.File;
  * Manages the location of the android files (including emulator files, ddms config, debug keystore)
  */
 public final class AndroidLocation {
-    
-    /**
-     * Used to know where to store the user data image.
-     * <p/>
-     * This <em>must</em> match the constant ANDROID_SDK_VERSION used by the emulator
-     * to find its own emulator images. It is defined in tools/qemu/android.h
-     */
-    private static final String ANDROID_SDK_VERSION = "SDK-1.0";
-
     /**
      * Virtual Device folder inside the path returned by {@link #getFolder()}
      */
@@ -77,25 +68,6 @@ public final class AndroidLocation {
         }
 
         return sPrefsLocation;
-    }
-
-    /**
-     * Returns the folder where the emulator is going to find its android related files.
-     * @return an OS specific path, terminated by a separator.
-     * @throws AndroidLocationException 
-     */
-    public final static String getEmulatorFolder() throws AndroidLocationException {
-        String path = getFolder() + ANDROID_SDK_VERSION + File.separator;
-        
-        File f = new File(path);
-        if (f.exists() == false) {
-            f.mkdir();
-        } else if (f.isFile()) {
-            throw new AndroidLocationException(path +
-                    " is not a directory! This is required to run Android tools.");
-        }
-
-        return path;
     }
 
     /**

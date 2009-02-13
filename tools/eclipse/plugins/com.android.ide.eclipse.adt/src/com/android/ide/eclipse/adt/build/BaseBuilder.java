@@ -854,15 +854,15 @@ abstract class BaseBuilder extends IncrementalProjectBuilder {
      * @param javaProject The {@link IJavaProject} being compiled.
      * @throws CoreException
      */
-    protected final void abortOnBadSetup(IJavaProject javaProject) throws CoreException {
+    protected final void abortOnBadSetup(IProject project) throws CoreException {
         // check if we have finished loading the SDK.
-        if (AdtPlugin.getDefault().getSdkLoadStatus(javaProject) != LoadStatus.LOADED) {
+        if (AdtPlugin.getDefault().getSdkLoadStatus() != LoadStatus.LOADED) {
             // we exit silently
             stopBuild("SDK is not loaded yet");
         }
 
         // check the compiler compliance level.
-        if (ProjectHelper.checkCompilerCompliance(getProject()) !=
+        if (ProjectHelper.checkCompilerCompliance(project) !=
                 ProjectHelper.COMPILER_COMPLIANCE_OK) {
             // we exit silently
             stopBuild(Messages.Compiler_Compliance_Error);
@@ -875,7 +875,7 @@ abstract class BaseBuilder extends IncrementalProjectBuilder {
             stopBuild(Messages.No_SDK_Setup_Error);
         }
 
-        IAndroidTarget projectTarget = Sdk.getCurrent().getTarget(javaProject.getProject());
+        IAndroidTarget projectTarget = Sdk.getCurrent().getTarget(project);
         if (projectTarget == null) {
             // no target. error has been output by the container initializer:
             // exit silently.

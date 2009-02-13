@@ -54,6 +54,7 @@ import org.eclipse.debug.ui.DebugUITools;
 import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
 import org.eclipse.jdt.launching.IVMConnector;
 import org.eclipse.jdt.launching.JavaRuntime;
+import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.preference.IPreferenceStore;
 
@@ -133,7 +134,7 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
         boolean mCancelled = false;
 
         /** Basic constructor with activity and package info. */
-        public DelayedLaunchInfo(IProject project, String packageName, String activity,
+        private DelayedLaunchInfo(IProject project, String packageName, String activity,
                 IFile pack, Boolean debuggable, int requiredApiVersionNumber, int launchAction,
                 AndroidLaunch launch, IProgressMonitor monitor) {
             mProject = project;
@@ -195,7 +196,8 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
     }
 
     /**
-     * Represents a launch configuration.
+     * Launch configuration data. This stores the result of querying the
+     * {@link ILaunchConfiguration} so that it's only done once. 
      */
     static final class AndroidLaunchConfiguration {
         
@@ -680,9 +682,7 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
                 for (Device d : devices) {
                     String deviceAvd = d.getAvdName();
                     if (deviceAvd != null && deviceAvd.equals(config.mAvdName)) {
-                        response.mustContinue = true;
-                        response.mustLaunchEmulator = false;
-                        response.deviceToUse = d;
+                        response.setDeviceToUse(d);
 
                         AdtPlugin.printToConsole(project, String.format(
                                 "Automatic Target Mode: Preferred AVD '%1$s' is available on emulator '%2$s'",
@@ -695,9 +695,7 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
                 
                 // at this point we have a valid preferred AVD that is not running.
                 // We need to start it.
-                response.mustContinue = true;
-                response.mustLaunchEmulator = true;
-                response.avdToLaunch = preferredAvd;
+                response.setAvdToLaunch(preferredAvd);
 
                 AdtPlugin.printToConsole(project, String.format(
                         "Automatic Target Mode: Preferred AVD '%1$s' is not available. Launching new emulator.",
@@ -760,9 +758,7 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
                 }
 
                 if (defaultAvd != null) {
-                    response.mustContinue = true;
-                    response.mustLaunchEmulator = true;
-                    response.avdToLaunch = defaultAvd;
+                    response.setAvdToLaunch(defaultAvd);
 
                     AdtPlugin.printToConsole(project, String.format(
                             "Automatic Target Mode: launching new emulator with compatible AVD '%1$s'",
@@ -781,18 +777,16 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
                 }
             } else if (hasDevice == false && compatibleRunningAvds.size() == 1) {
                 Entry<Device, AvdInfo> e = compatibleRunningAvds.entrySet().iterator().next();
-                response.mustContinue = true;
-                response.mustLaunchEmulator = false;
-                response.deviceToUse = e.getKey();
+                response.setDeviceToUse(e.getKey());
 
                 // get the AvdInfo, if null, the device is a physical device.
                 AvdInfo avdInfo = e.getValue();
                 if (avdInfo != null) {
                     message = String.format("Automatic Target Mode: using existing emulator '%1$s' running compatible AVD '%2$s'",
-                            response.deviceToUse, e.getValue().getName());
+                            response.getDeviceToUse(), e.getValue().getName());
                 } else {
                     message = String.format("Automatic Target Mode: using device '%1$s'",
-                            response.deviceToUse);
+                            response.getDeviceToUse());
                 }
                 AdtPlugin.printToConsole(project, message);
 
@@ -813,13 +807,35 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
         // bring up the device chooser.
         AdtPlugin.getDisplay().asyncExec(new Runnable() {
             public void run() {
-                DeviceChooserDialog dialog = new DeviceChooserDialog(
-                        AdtPlugin.getDisplay().getActiveShell());
-                dialog.open(response, project, projectTarget, launch, launchInfo, config);
+                try {
+                    // open the chooser dialog. It'll fill 'response' with the device to use
+                    // or the AVD to launch.
+                    DeviceChooserDialog dialog = new DeviceChooserDialog(
+                            AdtPlugin.getDisplay().getActiveShell(),
+                            response, launchInfo.mPackageName, projectTarget);
+                    if (dialog.open() == Dialog.OK) {
+                        AndroidLaunchController.this.continueLaunch(response, project, launch,
+                                launchInfo, config);
+                    } else {
+                        AdtPlugin.printErrorToConsole(project, "Launch canceled!");
+                        launch.stopLaunch();
+                        return;
+                    }
+                } catch (Exception e) {
+                    // there seems to be some case where the shell will be null. (might be
+                    // an OS X bug). Because of this the creation of the dialog will throw
+                    // and IllegalArg exception interrupting the launch with no user feedback.
+                    // So we trap all the exception and display something.
+                    String msg = e.getMessage();
+                    if (msg == null) {
+                        msg = e.getClass().getCanonicalName();
+                    }
+                    AdtPlugin.printErrorToConsole(project,
+                            String.format("Error during launch: %s", msg));
+                    launch.stopLaunch();
+                }
             }
         });
-        
-        return;
     }
     
     /**
@@ -833,23 +849,21 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
     void continueLaunch(final DeviceChooserResponse response, final IProject project,
             final AndroidLaunch launch, final DelayedLaunchInfo launchInfo,
             final AndroidLaunchConfiguration config) {
-        if (response.mustContinue == false) {
-            AdtPlugin.printErrorToConsole(project, "Launch canceled!");
-            launch.stopLaunch();
-            return;
-        }
 
-        // Since this is called from the DeviceChooserDialog open, we are in the UI
-        // thread. So we spawn a temporary new one to finish the launch.
+        // Since this is called from the UI thread we spawn a new thread
+        // to finish the launch.
         new Thread() {
             @Override
             public void run() {
-                if (response.mustLaunchEmulator) {
+                if (response.getAvdToLaunch() != null) {
                     // there was no selected device, we start a new emulator.
                     synchronized (sListLock) {
+                        AvdInfo info = response.getAvdToLaunch();
                         mWaitingForEmulatorLaunches.add(launchInfo);
-                        AdtPlugin.printToConsole(project, "Launching a new emulator.");
-                        boolean status = launchEmulator(config, response.avdToLaunch);
+                        AdtPlugin.printToConsole(project, String.format(
+                                "Launching a new emulator with Virtual Device '%1$s'",
+                                info.getName()));
+                        boolean status = launchEmulator(config, info);
             
                         if (status == false) {
                             // launching the emulator failed!
@@ -865,9 +879,9 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
                         
                         return;
                     }
-                } else if (response.deviceToUse != null) {
-                    launchInfo.mDevice = response.deviceToUse;
-                    simpleLaunch(launchInfo, response.deviceToUse);
+                } else if (response.getDeviceToUse() != null) {
+                    launchInfo.mDevice = response.getDeviceToUse();
+                    simpleLaunch(launchInfo, launchInfo.mDevice);
                 }
             }
         }.start();

@@ -56,14 +56,18 @@ public final class AvdSelector {
     private Label mDescription;
 
     /**
-     * Creates a new SDK Target Selector.
+     * Creates a new SDK Target Selector, and fills it with a list of {@link AvdInfo}, filtered
+     * by a {@link IAndroidTarget}.
+     * <p/>Only the {@link AvdInfo} able to run application developed for the given
+     * {@link IAndroidTarget} will be displayed.
      * 
      * @param parent The parent composite where the selector will be added.
      * @param avds The list of AVDs. This is <em>not</em> copied, the caller must not modify.
      * @param allowMultipleSelection True if more than one SDK target can be selected at the same
      *        time.
      */
-    public AvdSelector(Composite parent, AvdInfo[] avds, boolean allowMultipleSelection) {
+    public AvdSelector(Composite parent, AvdInfo[] avds, IAndroidTarget filter,
+            boolean allowMultipleSelection) {
         mAvds = avds;
 
         // Layout has 1 column
@@ -99,8 +103,31 @@ public final class AvdSelector {
 
         adjustColumnsWidth(mTable, column0, column1, column2, column3);
         setupSelectionListener(mTable);
-        fillTable(mTable, null /* target filter */);
+        fillTable(mTable, filter);
         setupTooltip(mTable);
+    }
+    
+    /**
+     * Creates a new SDK Target Selector, and fills it with a list of {@link AvdInfo}.
+     * 
+     * @param parent The parent composite where the selector will be added.
+     * @param avds The list of AVDs. This is <em>not</em> copied, the caller must not modify.
+     * @param allowMultipleSelection True if more than one SDK target can be selected at the same
+     *        time.
+     */
+    public AvdSelector(Composite parent, AvdInfo[] avds, boolean allowMultipleSelection) {
+        this(parent, avds, null /* filter */, allowMultipleSelection);
+    }
+
+    
+    public void setTableHeightHint(int heightHint) {
+        GridData data = new GridData();
+        data.heightHint = heightHint;
+        data.grabExcessVerticalSpace = true;
+        data.grabExcessHorizontalSpace = true;
+        data.horizontalAlignment = GridData.FILL;
+        data.verticalAlignment = GridData.FILL;
+        mTable.setLayoutData(data);
     }
     
     /**
@@ -205,6 +232,18 @@ public final class AvdSelector {
             }
         }
         return null;
+    }
+
+    /**
+     * Enables the receiver if the argument is true, and disables it otherwise.
+     * A disabled control is typically not selectable from the user interface
+     * and draws with an inactive or "grayed" look.
+     * 
+     * @param enabled the new enabled state.
+     */
+    public void setEnabled(boolean enabled) {
+        mTable.setEnabled(enabled);
+        mDescription.setEnabled(enabled);
     }
 
     /**

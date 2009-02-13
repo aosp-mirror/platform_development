@@ -1,4 +1,4 @@
-<?xml version="1.0" ?>
+<?xml version="1.0" encoding="UTF-8"?>
 <project name="android_rules" default="debug">
 
     <property name="android-tools" value="${sdk-location}/tools" />

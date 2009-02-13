@@ -1691,7 +1691,7 @@ public class GraphicalLayoutEditor extends GraphicalEditorWithPalette
                     // In this case data could be null, but this is not an error.
                     // We can just silently return, as all the opened editors are automatically
                     // refreshed once the SDK finishes loading.
-                    if (AdtPlugin.getDefault().getSdkLoadStatus(null) != LoadStatus.LOADING) {
+                    if (AdtPlugin.getDefault().getSdkLoadStatus() != LoadStatus.LOADING) {
                         showErrorInEditor(String.format(
                                 "The project target (%s) was not properly loaded.",
                                 target.getName()));

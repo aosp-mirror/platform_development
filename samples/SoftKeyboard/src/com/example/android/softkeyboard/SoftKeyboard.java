@@ -358,6 +358,26 @@ public class SoftKeyboard extends InputMethodService
                 // text being entered with a hard keyboard, we need to process
                 // it and do the appropriate action.
                 if (PROCESS_HARD_KEYS) {
+                    if (keyCode == KeyEvent.KEYCODE_SPACE
+                            && (event.getMetaState()&KeyEvent.META_ALT_ON) != 0) {
+                        // A silly example: in our input method, Alt+Space
+                        // is a shortcut for 'android' in lower case.
+                        InputConnection ic = getCurrentInputConnection();
+                        if (ic != null) {
+                            // First, tell the editor that it is no longer in the
+                            // shift state, since we are consuming this.
+                            ic.clearMetaKeyStates(KeyEvent.META_ALT_ON);
+                            keyDownUp(KeyEvent.KEYCODE_A);
+                            keyDownUp(KeyEvent.KEYCODE_N);
+                            keyDownUp(KeyEvent.KEYCODE_D);
+                            keyDownUp(KeyEvent.KEYCODE_R);
+                            keyDownUp(KeyEvent.KEYCODE_O);
+                            keyDownUp(KeyEvent.KEYCODE_I);
+                            keyDownUp(KeyEvent.KEYCODE_D);
+                            // And we consume this event.
+                            return true;
+                        }
+                    }
                     if (mPredictionOn && translateKeyDown(keyCode, event)) {
                         return true;
                     }

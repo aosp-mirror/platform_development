@@ -128,15 +128,49 @@ public class CommandLineProcessor {
     
     /**
      * Raw access to parsed parameter values.
-     * @param verb The verb name, including {@link #GLOBAL_FLAG_VERB}.
-     * @param directObject The direct object name, including {@link #NO_VERB_OBJECT}.
-     * @param longFlagName The long flag name for the given action.
+     * <p/>
+     * The default is to scan all parameters. Parameters that have been explicitly set on the
+     * command line are returned first. Otherwise one with a non-null value is returned.
+     * <p/>
+     * Both a verb and a direct object filter can be specified. When they are non-null they limit
+     * the scope of the search. 
+     * <p/>
+     * If nothing has been found, return the last default value seen matching the filter.
+     * 
+     * @param verb The verb name, including {@link #GLOBAL_FLAG_VERB}. If null, all possible
+     *             verbs that match the direct object condition will be examined and the first
+     *             value set will be used.
+     * @param directObject The direct object name, including {@link #NO_VERB_OBJECT}. If null,
+     *             all possible direct objects that match the verb condition will be examined and
+     *             the first value set will be used.
+     * @param longFlagName The long flag name for the given action. Mandatory. Cannot be null.
      * @return The current value object stored in the parameter, which depends on the argument mode.
      */
     public Object getValue(String verb, String directObject, String longFlagName) {
-        String key = verb + "/" + directObject + "/" + longFlagName;
-        Arg arg = mArguments.get(key);
-        return arg.getCurrentValue();
+
+        if (verb != null && directObject != null) {
+            String key = verb + "/" + directObject + "/" + longFlagName;
+            Arg arg = mArguments.get(key);
+            return arg.getCurrentValue();
+        }
+        
+        Object lastDefault = null;
+        for (Arg arg : mArguments.values()) {
+            if (arg.getLongArg().equals(longFlagName)) {
+                if (verb == null || arg.getVerb().equals(verb)) {
+                    if (directObject == null || arg.getDirectObject().equals(directObject)) {
+                        if (arg.isInCommandLine()) {
+                            return arg.getCurrentValue();
+                        }
+                        if (arg.getCurrentValue() != null) {
+                            lastDefault = arg.getCurrentValue();
+                        }
+                    }
+                }
+            }
+        }
+        
+        return lastDefault;
     }
 
     /**
@@ -243,6 +277,9 @@ public class CommandLineProcessor {
                         }
                     }
                 } else if (arg != null) {
+                    // This argument was present on the command line
+                    arg.setInCommandLine(true);
+                    
                     // Process keyword
                     String error = null;
                     if (arg.getMode().needsExtra()) {
@@ -408,13 +445,15 @@ public class CommandLineProcessor {
             "Global options:");
         listOptions(GLOBAL_FLAG_VERB, NO_VERB_OBJECT);
 
-        stdout("\nValid actions are composed of a verb and an optional direct object:");
-        for (String[] action : mActions) {
-            
-            stdout("- %1$6s %2$-7s: %3$s",
-                    action[ACTION_VERB_INDEX],
-                    action[ACTION_OBJECT_INDEX],
-                    action[ACTION_DESC_INDEX]);
+        if (verb == null || directObject == null) {
+            stdout("\nValid actions are composed of a verb and an optional direct object:");
+            for (String[] action : mActions) {
+                
+                stdout("- %1$6s %2$-7s: %3$s",
+                        action[ACTION_VERB_INDEX],
+                        action[ACTION_OBJECT_INDEX],
+                        action[ACTION_DESC_INDEX]);
+            }
         }
         
         for (String[] action : mActions) {
@@ -575,15 +614,26 @@ public class CommandLineProcessor {
      * or a String array (in which case the first item is the current by default.)  
      */
     static class Arg {
+        /** Verb for that argument. Never null. */
         private final String mVerb;
+        /** Direct Object for that argument. Never null, but can be empty string. */
         private final String mDirectObject;
+        /** The 1-letter short name of the argument, e.g. -v. */
         private final String mShortName;
+        /** The long name of the argument, e.g. --verbose. */
         private final String mLongName;
+        /** A description. Never null. */
         private final String mDescription;
+        /** A default value. Can be null. */
         private final Object mDefaultValue;
+        /** The argument mode (type + process method). Never null. */
         private final MODE mMode;
+        /** True if this argument is mandatory for this verb/directobject. */
         private final boolean mMandatory;
+        /** Current value. Initially set to the default value. */
         private Object mCurrentValue;
+        /** True if the argument has been used on the command line. */
+        private boolean mInCommandLine;
 
         /**
          * Creates a new argument flag description.
@@ -612,6 +662,7 @@ public class CommandLineProcessor {
             mLongName = longName;
             mDescription = description;
             mDefaultValue = defaultValue;
+            mInCommandLine = false;
             if (defaultValue instanceof String[]) {
                 mCurrentValue = ((String[])defaultValue)[0];
             } else {
@@ -619,44 +670,64 @@ public class CommandLineProcessor {
             }
         }
         
+        /** Return true if this argument is mandatory for this verb/directobject. */
         public boolean isMandatory() {
             return mMandatory;
         }
         
+        /** Returns the 1-letter short name of the argument, e.g. -v. */
         public String getShortArg() {
             return mShortName;
         }
         
+        /** Returns the long name of the argument, e.g. --verbose. */
         public String getLongArg() {
             return mLongName;
         }
         
+        /** Returns the description. Never null. */
         public String getDescription() {
             return mDescription;
         }
         
+        /** Returns the verb for that argument. Never null. */
         public String getVerb() {
             return mVerb;
         }
 
+        /** Returns the direct Object for that argument. Never null, but can be empty string. */
         public String getDirectObject() {
             return mDirectObject;
         }
         
+        /** Returns the default value. Can be null. */
         public Object getDefaultValue() {
             return mDefaultValue;
         }
         
+        /** Returns the current value. Initially set to the default value. Can be null. */
         public Object getCurrentValue() {
             return mCurrentValue;
         }
 
+        /** Sets the current value. Can be null. */
         public void setCurrentValue(Object currentValue) {
             mCurrentValue = currentValue;
         }
         
+        /** Returns the argument mode (type + process method). Never null. */
         public MODE getMode() {
             return mMode;
+        }
+        
+        /** Returns true if the argument has been used on the command line. */
+        public boolean isInCommandLine() {
+            return mInCommandLine;
+        }
+        
+        /** Sets if the argument has been used on the command line. */
+        public void setInCommandLine(boolean inCommandLine) {
+            mInCommandLine = inCommandLine;
         }
     }
     

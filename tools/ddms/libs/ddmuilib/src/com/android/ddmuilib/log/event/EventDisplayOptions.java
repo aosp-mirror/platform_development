@@ -438,7 +438,8 @@ class EventDisplayOptions  extends Dialog {
         mDisplayTypeCombo.add("Filtered Log");
         mDisplayTypeCombo.add("Graph");
         mDisplayTypeCombo.add("Sync");
-        mDisplayTypeCombo.add("Sync histogram");
+        mDisplayTypeCombo.add("Sync Histogram");
+        mDisplayTypeCombo.add("Sync Performance");
         mDisplayTypeCombo.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {

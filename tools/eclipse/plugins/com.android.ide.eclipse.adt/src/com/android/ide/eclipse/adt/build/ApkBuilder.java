@@ -299,7 +299,7 @@ public class ApkBuilder extends BaseBuilder {
 
         // At this point, we can abort the build if we have to, as we have computed
         // our resource delta and stored the result.
-        abortOnBadSetup(javaProject);
+        abortOnBadSetup(project);
         
         if (dv != null && dv.mXmlError) {
             AdtPlugin.printBuildToConsole(AdtConstants.BUILD_VERBOSE, project,

@@ -65,6 +65,12 @@
             android:summaryOn="@string/summary_on_accelerometer"
             android:summaryOff="@string/summary_off_accelerometer"/>
         
+        <CheckBoxPreference 
+            android:key="haptic_feedback" 
+            android:title="@string/title_haptic_feedback" 
+            android:summaryOn="@string/summary_on_haptic_feedback"
+            android:summaryOff="@string/summary_off_haptic_feedback"/>
+        
     </PreferenceCategory>
             
     <PreferenceCategory

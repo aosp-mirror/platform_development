@@ -377,9 +377,11 @@ public final class SdkManager {
      * @return the map of (key,value) pairs, or null if the parsing failed.
      */
     public static Map<String, String> parsePropertyFile(File buildProp, ISdkLog log) {
+        FileInputStream fis = null;
+        BufferedReader reader = null;
         try {
-            FileInputStream fis = new FileInputStream(buildProp);
-            BufferedReader reader = new BufferedReader(new InputStreamReader(fis));
+            fis = new FileInputStream(buildProp);
+            reader = new BufferedReader(new InputStreamReader(fis));
 
             String line = null;
             Map<String, String> map = new HashMap<String, String>();
@@ -406,6 +408,21 @@ public final class SdkManager {
             if (log != null) {
                 log.warning("Error parsing '%1$s': %2$s.", buildProp.getAbsolutePath(),
                         e.getMessage());
+            }
+        } finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                    // pass
+                }
+            }
+            if (fis != null) {
+                try {
+                    fis.close();
+                } catch (IOException e) {
+                    // pass
+                }
             }
         }
 

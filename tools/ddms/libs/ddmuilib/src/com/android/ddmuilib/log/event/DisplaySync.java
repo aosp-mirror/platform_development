@@ -39,7 +39,7 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.regex.Pattern;
 
-public class DisplaySync extends EventDisplay {
+public class DisplaySync extends SyncCommon {
 
     // Information to graph for each authority
     private TimePeriodValues mDatasetsSync[];
@@ -49,24 +49,9 @@ public class DisplaySync extends EventDisplay {
 
     // Dataset of error events to graph
     private TimeSeries mDatasetError;
-    
-    // State information while processing the event stream
-    private int mLastState; // 0 if event started, 1 if event stopped
-    private long mLastStartTime; // ms
-    private long mLastStopTime; //ms
-    private String mLastDetails;
-    private int mLastEvent; // server, poll, etc
 
     public DisplaySync(String name) {
         super(name);
-    }
-
-    /**
-     * Resets the display.
-     */
-    @Override
-    void resetUI() {
-        initSyncDisplay();
     }
 
     /**
@@ -79,21 +64,22 @@ public class DisplaySync extends EventDisplay {
     public Control createComposite(final Composite parent, EventLogParser logParser,
             final ILogColumnListener listener) {
         Control composite = createCompositeChart(parent, logParser, "Sync Status");
-        initSyncDisplay();
+        resetUI();
         return composite;
     }
 
     /**
-     * Initialize the Plot and series data for the sync display.
+     * Resets the display.
      */
-    void initSyncDisplay() {
+    @Override
+    void resetUI() {
+        super.resetUI();
         XYPlot xyPlot = mChart.getXYPlot();
 
         XYBarRenderer br = new XYBarRenderer();
         mDatasetsSync = new TimePeriodValues[NUM_AUTHS];
         mTooltipsSync = new List[NUM_AUTHS];
         mTooltipGenerators = new CustomXYToolTipGenerator[NUM_AUTHS];
-        mLastDetails = "";
 
         TimePeriodValuesCollection tpvc = new TimePeriodValuesCollection();
         xyPlot.setDataset(tpvc);
@@ -123,61 +109,28 @@ public class DisplaySync extends EventDisplay {
             br.setSeriesToolTipGenerator(i, mTooltipGenerators[i]);
             mTooltipGenerators[i].addToolTipSeries(mTooltipsSync[i]);
 
-            mDatasetsSyncTickle[i] = new TimeSeries(AUTH_NAMES[i] + " tickle", FixedMillisecond.class);
+            mDatasetsSyncTickle[i] = new TimeSeries(AUTH_NAMES[i] + " tickle",
+                    FixedMillisecond.class);
             tsc.addSeries(mDatasetsSyncTickle[i]);
             ls.setSeriesShape(i, ShapeUtilities.createUpTriangle(2.5f));
         }
     }
 
     /**
-     * Updates the display with a new event.  This is the main entry point for
-     * each event.  This method has the logic to tie together the start event,
-     * stop event, and details event into one graph item.  Note that the details
-     * can happen before or after the stop event.
-     * @param event The event
-     * @param logParser the log parser (unused)
+     * Updates the display with a new event.
+     *
+     * @param event     The event
+     * @param logParser The parser providing the event.
      */
     @Override
     void newEvent(EventContainer event, EventLogParser logParser) {
+        super.newEvent(event, logParser); // Handle sync operation
         try {
-            if (event.mTag == EVENT_SYNC) {
-                int state = Integer.parseInt(event.getValueAsString(1));
-                if (state == 0) { // start
-                    mLastStartTime = (long)event.sec * 1000L + (event.nsec / 1000000L);
-                    mLastState = 0;
-                    mLastEvent = Integer.parseInt(event.getValueAsString(2));
-                    mLastDetails = "";
-                } else if (state == 1) { // stop
-                    if (mLastState == 0) {
-                        mLastStopTime = (long)event.sec * 1000L + (event.nsec / 1000000L);
-                        if (mLastStartTime == 0) {
-                            // Log starts with a stop event
-                            mLastStartTime = mLastStopTime;
-                        }
-                        addEvent(event);
-                        mLastState = 1;
-                    }
-                }
-            } else if (event.mTag == EVENT_TICKLE) {
+            if (event.mTag == EVENT_TICKLE) {
                 int auth = getAuth(event.getValueAsString(0));
                 if (auth >= 0) {
                     long msec = (long)event.sec * 1000L + (event.nsec / 1000000L);
                     mDatasetsSyncTickle[auth].addOrUpdate(new FixedMillisecond(msec), -1);
-                }
-            } else if (event.mTag == EVENT_SYNC_DETAILS) {
-                int auth = getAuth(event.getValueAsString(0));
-                mLastDetails = event.getValueAsString(3);
-                if (mLastState != 0) { // Not inside event
-                    long updateTime = (long)event.sec * 1000L + (event.nsec / 1000000L);
-                    if (updateTime - mLastStopTime <= 250) {
-                        // Got details within 250ms after event, so delete and re-insert
-                        // Details later than 250ms (arbitrary) are discarded as probably
-                        // unrelated.
-                        int lastItem = mDatasetsSync[auth].getItemCount();
-                        mDatasetsSync[auth].delete(lastItem-1, lastItem-1);
-                        mTooltipsSync[auth].remove(lastItem-1);
-                        addEvent(event);
-                    }
                 }
             }
         } catch (InvalidTypeException e) {
@@ -300,29 +253,31 @@ public class DisplaySync extends EventDisplay {
         return sb.toString();
     }
 
+
     /**
-     * Helper to add an event to the data series.
-     * Also updates error series if appropriate (x or X in details).
-     * @param event The event
+     * Callback to process a sync event.
      */
-    private void addEvent(EventContainer event) {
-        try {
-            int auth = getAuth(event.getValueAsString(0));
-            double height = getHeightFromDetails(mLastDetails);
-            height = height / (mLastStopTime - mLastStartTime + 1) * 10000;
-            if (height > 30) {
-                height = 30;
-            }
-            mDatasetsSync[auth].add(new SimpleTimePeriod(mLastStartTime, mLastStopTime), height);
-            mTooltipsSync[auth].add(getTextFromDetails(auth, mLastDetails,
-                    mLastEvent));
-            mTooltipGenerators[auth].addToolTipSeries(mTooltipsSync[auth]);
-            if (mLastDetails.indexOf('x') >= 0 || mLastDetails.indexOf('X') >= 0) {
-                long msec = (long)event.sec * 1000L + (event.nsec / 1000000L);
-                mDatasetError.addOrUpdate(new FixedMillisecond(msec), -1);
-            }
-        } catch (InvalidTypeException e) {
-            e.printStackTrace();
+    @Override
+    void processSyncEvent(EventContainer event, int auth, long startTime, long stopTime,
+            String details, boolean newEvent, int syncSource) {
+        if (!newEvent) {
+            // Details arrived for a previous sync event
+            // Remove event before reinserting.
+            int lastItem = mDatasetsSync[auth].getItemCount();
+            mDatasetsSync[auth].delete(lastItem-1, lastItem-1);
+            mTooltipsSync[auth].remove(lastItem-1);
+        }
+        double height = getHeightFromDetails(details);
+        height = height / (stopTime - startTime + 1) * 10000;
+        if (height > 30) {
+            height = 30;
+        }
+        mDatasetsSync[auth].add(new SimpleTimePeriod(startTime, stopTime), height);
+        mTooltipsSync[auth].add(getTextFromDetails(auth, details, syncSource));
+        mTooltipGenerators[auth].addToolTipSeries(mTooltipsSync[auth]);
+        if (details.indexOf('x') >= 0 || details.indexOf('X') >= 0) {
+            long msec = (long)event.sec * 1000L + (event.nsec / 1000000L);
+            mDatasetError.addOrUpdate(new FixedMillisecond(msec), -1);
         }
     }
 

@@ -89,6 +89,8 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
 
     private Button mNoBootAnimButton;
 
+    private Label mPreferredAvdLabel;
+
     /**
      * Returns the emulator ready speed option value.
      * @param value The index of the combo selection.
@@ -160,13 +162,26 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
             @Override
             public void widgetSelected(SelectionEvent e) {
                 updateLaunchConfigurationDialog();
+                
+                boolean auto = mAutoTargetButton.getSelection();
+                mPreferredAvdSelector.setEnabled(auto);
+                mPreferredAvdLabel.setEnabled(auto);
             }
         });
 
-        new Label(targetModeGroup, SWT.NONE).setText("Preferred Android Virtual Device");
+        Composite offsetComp = new Composite(targetModeGroup, SWT.NONE);
+        offsetComp.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        layout = new GridLayout(1, false);
+        layout.marginRight = layout.marginHeight = 0;
+        layout.marginLeft = 30;
+        offsetComp.setLayout(layout);
+
+        mPreferredAvdLabel = new Label(offsetComp, SWT.NONE);
+        mPreferredAvdLabel.setText("Select a preferred Android Virtual Device:");
         AvdInfo[] avds = new AvdInfo[0];
-        mPreferredAvdSelector = new AvdSelector(targetModeGroup, avds,
+        mPreferredAvdSelector = new AvdSelector(offsetComp, avds,
                 false /*allowMultipleSelection*/);
+        mPreferredAvdSelector.setTableHeightHint(100);
         mPreferredAvdSelector.setSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {

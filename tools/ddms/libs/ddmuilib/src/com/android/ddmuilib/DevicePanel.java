@@ -200,22 +200,26 @@ public final class DevicePanel extends Panel implements IDebugBridgeChangeListen
                     case DEVICE_COL_STATE:
                         return getStateString(device);
                     case DEVICE_COL_BUILD: {
-                        String avdName = device.getAvdName();
-                        String debuggable = device.getProperty(Device.PROP_DEBUGGABLE);
                         String version = device.getProperty(Device.PROP_BUILD_VERSION);
-                        if (device.isEmulator()) {
-                            if (debuggable != null && debuggable.equals("1")) { //$NON-NLS-1$
-                                return String.format("%1$s [%2$s, debug]", avdName, //$NON-NLS-1$
-                                        version);
+                        if (version != null) {
+                            String debuggable = device.getProperty(Device.PROP_DEBUGGABLE);
+                            if (device.isEmulator()) {
+                                String avdName = device.getAvdName();
+                                if (debuggable != null && debuggable.equals("1")) { //$NON-NLS-1$
+                                    return String.format("%1$s [%2$s, debug]", avdName,
+                                            version);
+                                } else {
+                                    return String.format("%1$s [%2$s]", avdName, version); //$NON-NLS-1$
+                                }
                             } else {
-                                return String.format("%1$s [%2$s]", avdName, version); //$NON-NLS-1$
+                                if (debuggable != null && debuggable.equals("1")) { //$NON-NLS-1$
+                                    return String.format("%1$s, debug", version);
+                                } else {
+                                    return String.format("%1$s", version); //$NON-NLS-1$
+                                }
                             }
                         } else {
-                            if (debuggable != null && debuggable.equals("1")) { //$NON-NLS-1$
-                                return String.format("%1$s, debug", version); //$NON-NLS-1$
-                            } else {
-                                return String.format("%1$s", version); //$NON-NLS-1$
-                            }
+                            return "unknown";
                         }
                     }
                 }

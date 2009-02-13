@@ -166,8 +166,12 @@ public class AdtPlugin extends AbstractUIPlugin {
     /** Load status of the SDK. Any access MUST be in a synchronized(mPostLoadProjects) block */
     private LoadStatus mSdkIsLoaded = LoadStatus.LOADING;
     /** Project to update once the SDK is loaded.
-     * Any access MUST be in a synchronized(mPostLoadProjects) block */
-    private final ArrayList<IJavaProject> mPostLoadProjects = new ArrayList<IJavaProject>();
+     * Any access MUST be in a synchronized(mPostLoadProjectsToResolve) block */
+    private final ArrayList<IJavaProject> mPostLoadProjectsToResolve =
+            new ArrayList<IJavaProject>();
+    /** Project to check validity of cache vs actual once the SDK is loaded.
+     * Any access MUST be in a synchronized(mPostLoadProjectsToResolve) block */
+    private final ArrayList<IJavaProject> mPostLoadProjectsToCheck = new ArrayList<IJavaProject>();
     
     private ResourceMonitor mResourceMonitor;
     private ArrayList<Runnable> mResourceRefreshListener = new ArrayList<Runnable>();
@@ -306,12 +310,12 @@ public class AdtPlugin extends AbstractUIPlugin {
                     if (checkSdkLocationAndId()) {
                         // if sdk if valid, reparse it
                         
-                        // add the current Android project to the list of projects to be updated
+                        // add all the opened Android projects to the list of projects to be updated
                         // after the SDK is reloaded
-                        synchronized (mPostLoadProjects) {
+                        synchronized (getSdkLockObject()) {
                             // get the project to refresh.
                             IJavaProject[] androidProjects = BaseProjectHelper.getAndroidProjects();
-                            mPostLoadProjects.addAll(Arrays.asList(androidProjects));
+                            mPostLoadProjectsToResolve.addAll(Arrays.asList(androidProjects));
                         }
     
                         // parse the SDK resources at the new location
@@ -869,17 +873,42 @@ public class AdtPlugin extends AbstractUIPlugin {
     }
     
     /**
-     * Returns whether the Sdk has been loaded. If the SDK has not been loaded, the given
-     * <var>project</var> is added to a list of projects to recompile after the SDK is loaded.
+     * Returns whether the Sdk has been loaded.
      */
-    public LoadStatus getSdkLoadStatus(IJavaProject project) {
-        synchronized (mPostLoadProjects) {
-            // only add the project to the list, if we are still loading.
-            if (mSdkIsLoaded == LoadStatus.LOADING && project != null) {
-                mPostLoadProjects.add(project);
-            }
-            
+    public final LoadStatus getSdkLoadStatus() {
+        synchronized (getSdkLockObject()) {
             return mSdkIsLoaded;
+        }
+    }
+    
+    /**
+     * Returns the lock object for SDK loading. If you wish to do things while the SDK is loading,
+     * you must synchronize on this object.
+     * @return
+     */
+    public final Object getSdkLockObject() {
+        return mPostLoadProjectsToResolve;
+    }
+    
+    /**
+     * Sets the given {@link IJavaProject} to have its target resolved again once the SDK finishes
+     * to load.
+     */
+    public final void setProjectToResolve(IJavaProject javaProject) {
+        synchronized (getSdkLockObject()) {
+            mPostLoadProjectsToResolve.add(javaProject);
+        }
+    }
+    
+    /**
+     * Sets the given {@link IJavaProject} to have its target checked for consistency
+     * once the SDK finishes to load. This is used if the target is resolved using cached
+     * information while the SDK is loading.
+     */
+    public final void setProjectToCheck(IJavaProject javaProject) {
+        // only lock on 
+        synchronized (getSdkLockObject()) {
+            mPostLoadProjectsToCheck.add(javaProject);
         }
     }
 
@@ -1018,9 +1047,9 @@ public class AdtPlugin extends AbstractUIPlugin {
                         for (IAndroidTarget target : sdk.getTargets()) {
                             IStatus status = new AndroidTargetParser(target).run(progress);
                             if (status.getCode() != IStatus.OK) {
-                                synchronized (mPostLoadProjects) {
+                                synchronized (getSdkLockObject()) {
                                     mSdkIsLoaded = LoadStatus.FAILED;
-                                    mPostLoadProjects.clear();
+                                    mPostLoadProjectsToResolve.clear();
                                 }
                                 return status;
                             }
@@ -1034,22 +1063,30 @@ public class AdtPlugin extends AbstractUIPlugin {
                         IStatus res = DexWrapper.loadDex(
                                 mOsSdkLocation + AndroidConstants.OS_SDK_LIBS_DX_JAR);
                         if (res != Status.OK_STATUS) {
-                            synchronized (mPostLoadProjects) {
+                            synchronized (getSdkLockObject()) {
                                 mSdkIsLoaded = LoadStatus.FAILED;
-                                mPostLoadProjects.clear();
+                                mPostLoadProjectsToResolve.clear();
                             }
                             return res;
                         }
 
-                        synchronized (mPostLoadProjects) {
+                        synchronized (getSdkLockObject()) {
                             mSdkIsLoaded = LoadStatus.LOADED;
 
+                            // check the projects that need checking.
+                            // The method modifies the list (it removes the project that
+                            // do not need to be resolved again).
+                            AndroidClasspathContainerInitializer.checkProjectsCache(
+                                    mPostLoadProjectsToCheck);
+                            
+                            mPostLoadProjectsToResolve.addAll(mPostLoadProjectsToCheck);
+                            
                             // update the project that needs recompiling.
-                            if (mPostLoadProjects.size() > 0) {
-                                IJavaProject[] array = mPostLoadProjects.toArray(
-                                        new IJavaProject[mPostLoadProjects.size()]);
+                            if (mPostLoadProjectsToResolve.size() > 0) {
+                                IJavaProject[] array = mPostLoadProjectsToResolve.toArray(
+                                        new IJavaProject[mPostLoadProjectsToResolve.size()]);
                                 AndroidClasspathContainerInitializer.updateProjects(array);
-                                mPostLoadProjects.clear();
+                                mPostLoadProjectsToResolve.clear();
                             }
                         }
                     }

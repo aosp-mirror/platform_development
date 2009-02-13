@@ -45,7 +45,6 @@ import org.jfree.data.time.TimeSeriesCollection;
 import org.jfree.experimental.chart.swt.ChartComposite;
 import org.jfree.experimental.swt.SWTUtils;
 
-import java.awt.Color;
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -71,26 +70,11 @@ abstract class EventDisplay {
     public final static int DISPLAY_TYPE_GRAPH = 2;
     public final static int DISPLAY_TYPE_SYNC = 3;
     public final static int DISPLAY_TYPE_SYNC_HIST = 4;
+    public final static int DISPLAY_TYPE_SYNC_PERF = 5;
 
     private final static int EVENT_CHECK_FAILED = 0;
     protected final static int EVENT_CHECK_SAME_TAG = 1;
     protected final static int EVENT_CHECK_SAME_VALUE = 2;
-
-    // Some common variables for sync display.  These define the sync backends
-    //and how they should be displayed.
-    protected static final int CALENDAR = 0;
-    protected static final int GMAIL = 1;
-    protected static final int FEEDS = 2;
-    protected static final int CONTACTS = 3;
-    protected static final int ERRORS = 4;
-    protected static final int NUM_AUTHS = (CONTACTS + 1);
-    protected static final String AUTH_NAMES[] = {"Calendar", "Gmail", "Feeds", "Contacts", "Errors"};
-    protected static final Color AUTH_COLORS[] = {Color.MAGENTA, Color.GREEN, Color.BLUE, Color.ORANGE, Color.RED};
-
-    // Values from data/etc/event-log-tags
-    final int EVENT_SYNC = 2720;
-    final int EVENT_TICKLE = 2742;
-    final int EVENT_SYNC_DETAILS = 2743;
 
     /**
      * Creates the appropriate EventDisplay subclass.
@@ -111,8 +95,10 @@ abstract class EventDisplay {
                 return new DisplaySyncHistogram(name);
             case DISPLAY_TYPE_GRAPH:
                 return new DisplayGraph(name);
+            case DISPLAY_TYPE_SYNC_PERF:
+                return new DisplaySyncPerf(name);
             default:
-                throw new InvalidParameterException("Unknown Display Type"); //$NON-NLS-1$
+                throw new InvalidParameterException("Unknown Display Type " + type); //$NON-NLS-1$
         }
     }
 
@@ -981,29 +967,5 @@ abstract class EventDisplay {
 
     long getHistWidth() {
         return mHistWidth;
-    }
-
-    /**
-     * Convert authority name to auth number.
-     *
-     * @param authname "calendar", etc.
-     * @return number series number associated with the authority
-     */
-    protected int getAuth(String authname) throws InvalidTypeException {
-        if ("calendar".equals(authname) || "cl".equals(authname)) {
-            return CALENDAR;
-        } else if ("contacts".equals(authname) || "cp".equals(authname)) {
-            return CONTACTS;
-        } else if ("subscribedfeeds".equals(authname)) {
-            return FEEDS;
-        } else if ("gmail-ls".equals(authname) || "mail".equals(authname)) {
-            return GMAIL;
-        } else if ("gmail-live".equals(authname)) {
-            return GMAIL;
-        } else if ("unknown".equals(authname)) {
-            return -1; // Unknown tickles; discard
-        } else {
-            throw new InvalidTypeException("Unknown authname " + authname);
-        }
     }
 }

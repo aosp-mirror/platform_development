@@ -56,8 +56,6 @@ class Main {
     private ISdkLog mSdkLog;
     /** The SDK manager parses the SDK folder and gives access to the content. */
     private SdkManager mSdkManager;
-    /** Virtual Machine manager to access the list of AVDs or create new ones. */
-    private AvdManager mAvdManager;
     /** Command-line processor with options specific to SdkManager. */
     private SdkCommandLine mSdkCommandLine;
     /** The working directory, either null or set to an existing absolute canonical directory. */
@@ -201,60 +199,82 @@ class Main {
                 SdkCommandLine.OBJECT_AVD.equals(directObject)) {
             createAvd();
 
+        } else if (SdkCommandLine.VERB_DELETE.equals(verb) &&
+                SdkCommandLine.OBJECT_AVD.equals(directObject)) {
+            deleteAvd();
+
+        } else if (SdkCommandLine.VERB_MOVE.equals(verb) &&
+                SdkCommandLine.OBJECT_AVD.equals(directObject)) {
+            moveAvd();
+
         } else if (SdkCommandLine.VERB_CREATE.equals(verb) &&
                 SdkCommandLine.OBJECT_PROJECT.equals(directObject)) {
-            // get the target and try to resolve it.
-            int targetId = mSdkCommandLine.getCreateProjectTargetId();
+            createProject();
+
+        } else if (SdkCommandLine.VERB_UPDATE.equals(verb) &&
+                SdkCommandLine.OBJECT_PROJECT.equals(directObject)) {
+            updateProject();
+        } else {
+            mSdkCommandLine.printHelpAndExit(null);
+        }
+    }
+
+    /**
+     * Creates a new Android project based on command-line parameters 
+     */
+    private void createProject() {
+        // get the target and try to resolve it.
+        int targetId = mSdkCommandLine.getParamTargetId();
+        IAndroidTarget[] targets = mSdkManager.getTargets();
+        if (targetId < 1 || targetId > targets.length) {
+            errorAndExit("Target id is not valid. Use '%s list targets' to get the target ids.",
+                    SdkConstants.androidCmdName());
+        }
+        IAndroidTarget target = targets[targetId - 1];
+        
+        ProjectCreator creator = new ProjectCreator(mSdkFolder,
+                mSdkCommandLine.isVerbose() ? OutputLevel.VERBOSE :
+                    mSdkCommandLine.isSilent() ? OutputLevel.SILENT :
+                        OutputLevel.NORMAL,
+                mSdkLog);
+
+        String projectDir = getProjectLocation(mSdkCommandLine.getParamLocationPath());
+        
+        creator.createProject(projectDir,
+                mSdkCommandLine.getParamName(),
+                mSdkCommandLine.getParamProjectPackage(),
+                mSdkCommandLine.getParamProjectActivity(),
+                target,
+                false /* isTestProject*/);
+    }
+
+    /**
+     * Updates an existing Android project based on command-line parameters 
+     */
+    private void updateProject() {
+        // get the target and try to resolve it.
+        IAndroidTarget target = null;
+        int targetId = mSdkCommandLine.getParamTargetId();
+        if (targetId >= 0) {
             IAndroidTarget[] targets = mSdkManager.getTargets();
             if (targetId < 1 || targetId > targets.length) {
                 errorAndExit("Target id is not valid. Use '%s list targets' to get the target ids.",
                         SdkConstants.androidCmdName());
             }
-            IAndroidTarget target = targets[targetId - 1];
-            
-            ProjectCreator creator = new ProjectCreator(mSdkFolder,
-                    mSdkCommandLine.isVerbose() ? OutputLevel.VERBOSE :
-                        mSdkCommandLine.isSilent() ? OutputLevel.SILENT :
-                            OutputLevel.NORMAL,
-                    mSdkLog);
-
-            String projectDir = getProjectLocation(mSdkCommandLine.getCreateProjectLocation());
-            
-            creator.createProject(projectDir,
-                    mSdkCommandLine.getCreateProjectName(),
-                    mSdkCommandLine.getCreateProjectPackage(),
-                    mSdkCommandLine.getCreateProjectActivity(),
-                    target,
-                    false /* isTestProject*/);
-
-        } else if (SdkCommandLine.VERB_UPDATE.equals(verb) &&
-                SdkCommandLine.OBJECT_PROJECT.equals(directObject)) {
-            // get the target and try to resolve it.
-            IAndroidTarget target = null;
-            int targetId = mSdkCommandLine.getUpdateProjectTargetId();
-            if (targetId >= 0) {
-                IAndroidTarget[] targets = mSdkManager.getTargets();
-                if (targetId < 1 || targetId > targets.length) {
-                    errorAndExit("Target id is not valid. Use '%s list targets' to get the target ids.",
-                            SdkConstants.androidCmdName());
-                }
-                target = targets[targetId - 1];
-            }
-            
-            ProjectCreator creator = new ProjectCreator(mSdkFolder,
-                    mSdkCommandLine.isVerbose() ? OutputLevel.VERBOSE :
-                        mSdkCommandLine.isSilent() ? OutputLevel.SILENT :
-                            OutputLevel.NORMAL,
-                    mSdkLog);
-
-            String projectDir = getProjectLocation(mSdkCommandLine.getUpdateProjectLocation());
-            
-            creator.updateProject(projectDir,
-                    target,
-                    mSdkCommandLine.getUpdateProjectName());
-        } else {
-            mSdkCommandLine.printHelpAndExit(null);
+            target = targets[targetId - 1];
         }
+        
+        ProjectCreator creator = new ProjectCreator(mSdkFolder,
+                mSdkCommandLine.isVerbose() ? OutputLevel.VERBOSE :
+                    mSdkCommandLine.isSilent() ? OutputLevel.SILENT :
+                        OutputLevel.NORMAL,
+                mSdkLog);
+
+        String projectDir = getProjectLocation(mSdkCommandLine.getParamLocationPath());
+        
+        creator.updateProject(projectDir,
+                target,
+                mSdkCommandLine.getParamName());
     }
 
     /**
@@ -325,24 +345,31 @@ class Main {
             }
 
             // get the target skins
-            String[] skins = target.getSkins();
-            mSdkLog.printf("     Skins: ");
-            if (skins != null) {
-                boolean first = true;
-                for (String skin : skins) {
-                    if (first == false) {
-                        mSdkLog.printf(", ");
-                    } else {
-                        first = false;
-                    }
-                    mSdkLog.printf(skin);
-                }
-                mSdkLog.printf("\n");
-            } else {
-                mSdkLog.printf("no skins.\n");
-            }
+            displaySkinList(target, "     Skins: ");
             
             index++;
+        }
+    }
+
+    /**
+     * Displays the skins valid for the given target.
+     */
+    private void displaySkinList(IAndroidTarget target, String message) {
+        String[] skins = target.getSkins();
+        mSdkLog.printf(message);
+        if (skins != null) {
+            boolean first = true;
+            for (String skin : skins) {
+                if (first == false) {
+                    mSdkLog.printf(", ");
+                } else {
+                    first = false;
+                }
+                mSdkLog.printf(skin);
+            }
+            mSdkLog.printf("\n");
+        } else {
+            mSdkLog.printf("no skins.\n");
         }
     }
     
@@ -351,12 +378,12 @@ class Main {
      */
     private void displayAvdList() {
         try {
-            mAvdManager = new AvdManager(mSdkManager, null /* sdklog */);
+            AvdManager avdManager = new AvdManager(mSdkManager, null /* sdklog */);
 
             mSdkLog.printf("Available Android Virtual Devices:\n");
 
             int index = 1;
-            for (AvdInfo info : mAvdManager.getAvds()) {
+            for (AvdInfo info : avdManager.getAvds()) {
                 mSdkLog.printf("[%d] %s\n", index, info.getName());
                 mSdkLog.printf("    Path: %s\n", info.getPath());
 
@@ -384,7 +411,7 @@ class Main {
      */
     private void createAvd() {
         // find a matching target
-        int targetId = mSdkCommandLine.getCreateAvdTargetId();
+        int targetId = mSdkCommandLine.getParamTargetId();
         IAndroidTarget target = null;
         
         if (targetId >= 1 && targetId <= mSdkManager.getTargets().length) {
@@ -396,12 +423,12 @@ class Main {
 
         try {
             boolean removePrevious = false;
-            mAvdManager = new AvdManager(mSdkManager, mSdkLog);
+            AvdManager avdManager = new AvdManager(mSdkManager, mSdkLog);
 
-            String avdName = mSdkCommandLine.getCreateAvdName();
-            AvdInfo info = mAvdManager.getAvd(avdName);
+            String avdName = mSdkCommandLine.getParamName();
+            AvdInfo info = avdManager.getAvd(avdName);
             if (info != null) {
-                if (mSdkCommandLine.getCreateAvdForce()) {
+                if (mSdkCommandLine.getFlagForce()) {
                     removePrevious = true;
                     mSdkLog.warning(
                             "Android Virtual Device '%s' already exists and will be replaced.",
@@ -412,9 +439,13 @@ class Main {
                 }
             }
 
-            String avdParentFolder = mSdkCommandLine.getCreateAvdLocation();
-            if (avdParentFolder == null) {
-                avdParentFolder = AndroidLocation.getFolder() + AndroidLocation.FOLDER_AVD;
+            String paramFolderPath = mSdkCommandLine.getParamLocationPath();
+            File avdFolder = null;
+            if (paramFolderPath != null) {
+                avdFolder = new File(paramFolderPath);
+            } else {
+                avdFolder = new File(AndroidLocation.getFolder() + AndroidLocation.FOLDER_AVD,
+                        avdName + AvdManager.AVD_FOLDER_EXTENSION);
             }
 
             Map<String, String> hardwareConfig = null;
@@ -425,17 +456,45 @@ class Main {
                     errorAndExit(e.getMessage());
                 }
             }
-            
+
             AvdInfo oldAvdInfo = null;
             if (removePrevious) {
-                oldAvdInfo = mAvdManager.getAvd(avdName);
+                oldAvdInfo = avdManager.getAvd(avdName);
+            }
+            
+            // Validate skin is either default (empty) or NNNxMMM or a valid skin name.
+            String skin = mSdkCommandLine.getParamSkin();
+            if (skin != null && skin.length() == 0) {
+                skin = null;
+            }
+            if (skin != null) {
+                boolean valid = false;
+                // Is it a know skin name for this target?
+                for (String s : target.getSkins()) {
+                    if (skin.equalsIgnoreCase(s)) {
+                        skin = s;  // Make skin names case-insensitive.
+                        valid = true;
+                        break;
+                    }
+                }
+                
+                // Is it NNNxMMM?
+                if (!valid) {
+                    valid = skin.matches("[0-9]{2,}x[0-9]{2,}");
+                }
+
+                if (!valid) {
+                    displaySkinList(target, "Valid skins: ");
+                    errorAndExit("'%s' is not a valid skin name or size (NNNxMMM)", skin);
+                    return;
+                }
             }
 
-            AvdInfo newAvdInfo = mAvdManager.createAvd(avdParentFolder,
+            AvdInfo newAvdInfo = avdManager.createAvd(avdFolder,
                     avdName,
                     target,
-                    mSdkCommandLine.getCreateAvdSkin(),
-                    mSdkCommandLine.getCreateAvdSdCard(),
+                    skin,
+                    mSdkCommandLine.getParamSdCard(),
                     hardwareConfig,
                     removePrevious,
                     mSdkLog);
@@ -446,10 +505,10 @@ class Main {
                 mSdkLog.warning("Removing previous AVD directory at %s", oldAvdInfo.getPath());
                 // Remove the old data directory
                 File dir = new File(oldAvdInfo.getPath());
-                mAvdManager.recursiveDelete(dir);
+                avdManager.recursiveDelete(dir);
                 dir.delete();
                 // Remove old avd info from manager
-                mAvdManager.removeAvd(oldAvdInfo);
+                avdManager.removeAvd(oldAvdInfo);
             }
             
         } catch (AndroidLocationException e) {
@@ -457,6 +516,126 @@ class Main {
         }
     }
 
+    /**
+     * Delete an AVD.
+     */
+    private void deleteAvd() {
+        try {
+            String avdName = mSdkCommandLine.getParamName();
+            AvdManager avdManager = new AvdManager(mSdkManager, mSdkLog);
+            AvdInfo info = avdManager.getAvd(avdName);
+    
+            if (info == null) {
+                errorAndExit("There is no Android Virtual Device named '%s'.", avdName);
+                return;
+            }
+    
+            avdManager.deleteAvd(info, mSdkLog);
+        } catch (AndroidLocationException e) {
+            errorAndExit(e.getMessage());
+        }
+    }
+    
+    /**
+     * Move an AVD.
+     */
+    private void moveAvd() {
+        try {
+            String avdName = mSdkCommandLine.getParamName();
+            AvdManager avdManager = new AvdManager(mSdkManager, mSdkLog);
+            AvdInfo info = avdManager.getAvd(avdName);
+    
+            if (info == null) {
+                errorAndExit("There is no Android Virtual Device named '%s'.", avdName);
+                return;
+            }
+            
+            // This is a rename if there's a new name for the AVD
+            String newName = mSdkCommandLine.getParamMoveNewName();
+            if (newName != null && newName.equals(info.getName())) {
+                // same name, not actually a rename operation
+                newName = null;
+            }
+
+            // This is a move (of the data files) if there's a new location path
+            String paramFolderPath = mSdkCommandLine.getParamLocationPath();
+            if (paramFolderPath != null) {
+                // check if paths are the same. Use File methods to account for OS idiosyncrasies.
+                try {
+                    File f1 = new File(paramFolderPath).getCanonicalFile();
+                    File f2 = new File(info.getPath()).getCanonicalFile();
+                    if (f1.equals(f2)) {
+                        // same canonical path, so not actually a move
+                        paramFolderPath = null;
+                    }
+                } catch (IOException e) {
+                    // Fail to resolve canonical path. Fail now since a move operation might fail
+                    // later and be harder to recover from. 
+                    errorAndExit(e.getMessage());
+                    return;
+                }
+            }
+            
+            if (newName == null && paramFolderPath == null) {
+                mSdkLog.warning("Move operation aborted: same AVD name, same canonical data path");
+                return;
+            }
+            
+            // If a rename was requested and no data move was requested, check if the original
+            // data path is our default constructed from the AVD name. In this case we still want
+            // to rename that folder too.
+            if (newName != null && paramFolderPath == null) {
+                // Compute the original data path
+                File originalFolder = new File(
+                        AndroidLocation.getFolder() + AndroidLocation.FOLDER_AVD,
+                        info.getName() + AvdManager.AVD_FOLDER_EXTENSION);
+                if (originalFolder.equals(info.getPath())) {
+                    try {
+                        // The AVD is using the default data folder path based on the AVD name.
+                        // That folder needs to be adjusted to use the new name.
+                        File f = new File(AndroidLocation.getFolder() + AndroidLocation.FOLDER_AVD,
+                                     newName + AvdManager.AVD_FOLDER_EXTENSION);
+                        paramFolderPath = f.getCanonicalPath();
+                    } catch (IOException e) {
+                        // Fail to resolve canonical path. Fail now rather than later. 
+                        errorAndExit(e.getMessage());
+                    }
+                }
+            }
+            
+            // Check for conflicts
+            
+            if (newName != null && avdManager.getAvd(newName) != null) {
+                errorAndExit("There is already an AVD named '%s'.", newName);
+                return;
+            }
+            if (newName != null) {
+                if (avdManager.getAvd(newName) != null) {
+                    errorAndExit("There is already an AVD named '%s'.", newName);
+                    return;
+                }
+
+                File ini = info.getIniFile();
+                if (ini.equals(AvdInfo.getIniFile(newName))) {
+                    errorAndExit("The AVD file '%s' is in the way.", ini.getCanonicalPath());
+                    return;
+                }
+            }
+
+            if (paramFolderPath != null && new File(paramFolderPath).exists()) {
+                errorAndExit(
+                        "There is already a file or directory at '%s'.\nUse --path to specify a different data folder.",
+                        paramFolderPath);
+            }
+            
+            avdManager.moveAvd(info, newName, paramFolderPath, mSdkLog);
+        } catch (AndroidLocationException e) {
+            errorAndExit(e.getMessage());
+        } catch (IOException e) {
+            errorAndExit(e.getMessage());
+        }
+    }
+    
     /**
      * Prompts the user to setup a hardware config for a Platform-based AVD.
      * @throws IOException 

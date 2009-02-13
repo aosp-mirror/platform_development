@@ -26,14 +26,15 @@ import com.android.ddmuilib.IImageLoader;
 import com.android.ddmuilib.ImageHelper;
 import com.android.ddmuilib.TableHelper;
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.debug.launching.AndroidLaunchController.AndroidLaunchConfiguration;
-import com.android.ide.eclipse.adt.debug.launching.AndroidLaunchController.DelayedLaunchInfo;
 import com.android.ide.eclipse.adt.sdk.Sdk;
 import com.android.ide.eclipse.ddms.DdmsPlugin;
 import com.android.sdklib.IAndroidTarget;
+import com.android.sdklib.avd.AvdManager;
 import com.android.sdklib.avd.AvdManager.AvdInfo;
+import com.android.sdkuilib.AvdSelector;
 
-import org.eclipse.core.resources.IProject;
+import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -50,23 +51,19 @@ import org.eclipse.swt.SWTException;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Dialog;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Table;
 
+import java.util.ArrayList;
+
 public class DeviceChooserDialog extends Dialog implements IDeviceChangeListener {
 
-    private final static int DLG_WIDTH = 500;
-    private final static int DLG_HEIGHT = 300;
     private final static int ICON_WIDTH = 16;
 
     private final static String PREFS_COL_SERIAL = "deviceChooser.serial"; //$NON-NLS-1$
@@ -77,6 +74,7 @@ public class DeviceChooserDialog extends Dialog implements IDeviceChangeListener
 
     private Table mDeviceTable;
     private TableViewer mViewer;
+    private AvdSelector mPreferredAvdSelector;
     
     private Image mDeviceImage;
     private Image mEmulatorImage;
@@ -84,13 +82,16 @@ public class DeviceChooserDialog extends Dialog implements IDeviceChangeListener
     private Image mNoMatchImage;
     private Image mWarningImage;
 
-    private Button mOkButton;
-    private Button mCreateButton;
-    
-    private DeviceChooserResponse mResponse;
-    private DelayedLaunchInfo mLaunchInfo;
-    private IAndroidTarget mProjectTarget;
-    private Sdk mSdk;
+    private final DeviceChooserResponse mResponse;
+    private final String mPackageName;
+    private final IAndroidTarget mProjectTarget;
+    private final Sdk mSdk;
+
+    private final AvdInfo[] mFullAvdList;
+
+    private Button mDeviceRadioButton;
+
+    private boolean mDisableAvdSelectionChange = false;
     
     /**
      * Basic Content Provider for a table full of {@link Device} objects. The input is
@@ -135,14 +136,18 @@ public class DeviceChooserDialog extends Dialog implements IDeviceChangeListener
                             try {
                                 String apiValue = device.getProperty(
                                         IDevice.PROP_BUILD_VERSION_NUMBER);
-                                int api = Integer.parseInt(apiValue);
-                                if (api >= mProjectTarget.getApiVersionNumber()) {
-                                    // if the project is compiling against an add-on, the optional
-                                    // API may be missing from the device.
-                                    return mProjectTarget.isPlatform() ?
-                                            mMatchImage : mWarningImage;
+                                if (apiValue != null) {
+                                    int api = Integer.parseInt(apiValue);
+                                    if (api >= mProjectTarget.getApiVersionNumber()) {
+                                        // if the project is compiling against an add-on, the optional
+                                        // API may be missing from the device.
+                                        return mProjectTarget.isPlatform() ?
+                                                mMatchImage : mWarningImage;
+                                    } else {
+                                        return mNoMatchImage;
+                                    }
                                 } else {
-                                    return mNoMatchImage;
+                                    return mWarningImage;
                                 }
                             } catch (NumberFormatException e) {
                                 // lets consider the device non compatible
@@ -183,7 +188,11 @@ public class DeviceChooserDialog extends Dialog implements IDeviceChangeListener
                             }
                             return info.getTarget().getFullName();
                         } else {
-                            return device.getProperty(IDevice.PROP_BUILD_VERSION);
+                            String deviceBuild = device.getProperty(IDevice.PROP_BUILD_VERSION);
+                            if (deviceBuild == null) {
+                                return "unknown";
+                            }
+                            return deviceBuild;
                         }
                     case 3:
                         String debuggable = device.getProperty(IDevice.PROP_DEBUGGABLE);
@@ -219,62 +228,48 @@ public class DeviceChooserDialog extends Dialog implements IDeviceChangeListener
     }
     
     public static class DeviceChooserResponse {
-        public boolean mustContinue;
-        public boolean mustLaunchEmulator;
-        public AvdInfo avdToLaunch;
-        public Device deviceToUse;
-    }
-    
-    public DeviceChooserDialog(Shell parent) {
-        super(parent, SWT.DIALOG_TRIM | SWT.APPLICATION_MODAL);
-    }
-
-    /**
-     * Prepare and display the dialog.
-     * @param response
-     * @param project 
-     * @param projectTarget 
-     * @param launch 
-     * @param launchInfo 
-     * @param config 
-     */
-    public void open(DeviceChooserResponse response, IProject project,
-            IAndroidTarget projectTarget, AndroidLaunch launch, DelayedLaunchInfo launchInfo,
-            AndroidLaunchConfiguration config) {
-        mResponse = response;
-        mProjectTarget = projectTarget;
-        mLaunchInfo = launchInfo;
-        mSdk = Sdk.getCurrent();
-
-        Shell parent = getParent();
-        Shell shell = new Shell(parent, getStyle());
-        shell.setText("Device Chooser");
-
-        loadImages();
-        createContents(shell);
+        private AvdInfo mAvdToLaunch;
+        private Device mDeviceToUse;
         
-        // Set the dialog size.
-        shell.setMinimumSize(DLG_WIDTH, DLG_HEIGHT);
-        Rectangle r = parent.getBounds();
-        // get the center new top left.
-        int cx = r.x + r.width/2;
-        int x = cx - DLG_WIDTH / 2;
-        int cy = r.y + r.height/2;
-        int y = cy - DLG_HEIGHT / 2;
-        shell.setBounds(x, y, DLG_WIDTH, DLG_HEIGHT);
-        
-        shell.pack();
-        shell.open();
-        
-        // start the listening.
-        AndroidDebugBridge.addDeviceChangeListener(this);
-
-        Display display = parent.getDisplay();
-        while (!shell.isDisposed()) {
-            if (!display.readAndDispatch())
-                display.sleep();
+        public void setDeviceToUse(Device d) {
+            mDeviceToUse = d;
+            mAvdToLaunch = null;
         }
         
+        public void setAvdToLaunch(AvdInfo avd) {
+            mAvdToLaunch = avd;
+            mDeviceToUse = null;
+        }
+        
+        public Device getDeviceToUse() {
+            return mDeviceToUse;
+        }
+        
+        public AvdInfo getAvdToLaunch() {
+            return mAvdToLaunch;
+        }
+    }
+    
+    public DeviceChooserDialog(Shell parent, DeviceChooserResponse response, String packageName,
+            IAndroidTarget projectTarget) {
+        super(parent);
+        mResponse = response;
+        mPackageName = packageName;
+        mProjectTarget = projectTarget;
+        mSdk = Sdk.getCurrent();
+        
+        // get the full list of Android Virtual Devices
+        AvdManager avdManager = mSdk.getAvdManager();
+        if (avdManager != null) {
+            mFullAvdList = avdManager.getAvds();
+        } else {
+            mFullAvdList = null;
+        }
+
+        loadImages();
+    }
+
+    private void cleanup() {
         // done listening.
         AndroidDebugBridge.removeDeviceChangeListener(this);
 
@@ -283,30 +278,73 @@ public class DeviceChooserDialog extends Dialog implements IDeviceChangeListener
         mMatchImage.dispose();
         mNoMatchImage.dispose();
         mWarningImage.dispose();
-
-        AndroidLaunchController.getInstance().continueLaunch(response, project, launch,
-                launchInfo, config);
     }
     
-    /**
-     * Create the device chooser dialog contents.
-     * @param shell the parent shell.
-     */
-    private void createContents(final Shell shell) {
-        shell.setLayout(new GridLayout(1, true));
+    @Override
+    protected void okPressed() {
+        cleanup();
+        super.okPressed();
+    }
+    
+    @Override
+    protected void cancelPressed() {
+        cleanup();
+        super.cancelPressed();
+    }
+    
+    @Override
+    protected Control createContents(Composite parent) {
+        Control content = super.createContents(parent);
+        
+        // this must be called after createContents() has happened so that the
+        // ok button has been created (it's created after the call to createDialogArea)
+        updateDefaultSelection();
 
-        shell.addListener(SWT.Close, new Listener() {
-            public void handleEvent(Event event) {
-                event.doit = true;
+        return content;
+    }
+
+    
+    @Override
+    protected Control createDialogArea(Composite parent) {
+        Composite top = new Composite(parent, SWT.NONE);
+        top.setLayout(new GridLayout(1, true));
+
+        mDeviceRadioButton = new Button(top, SWT.RADIO);
+        mDeviceRadioButton.setText("Choose an Android running device");
+        mDeviceRadioButton.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                boolean deviceMode = mDeviceRadioButton.getSelection();
+
+                mDeviceTable.setEnabled(deviceMode);
+                mPreferredAvdSelector.setEnabled(!deviceMode);
+
+                if (deviceMode) {
+                    handleDeviceSelection();
+                } else {
+                    mResponse.setAvdToLaunch(mPreferredAvdSelector.getFirstSelected());
+                }
+                
+                enableOkButton();
             }
         });
+        mDeviceRadioButton.setSelection(true);
         
-        Label l = new Label(shell, SWT.NONE);
-        l.setText("Select the target device.");
+
+        // offset the selector from the radio button
+        Composite offsetComp = new Composite(top, SWT.NONE);
+        offsetComp.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        GridLayout layout = new GridLayout(1, false);
+        layout.marginRight = layout.marginHeight = 0;
+        layout.marginLeft = 30;
+        offsetComp.setLayout(layout);
 
         IPreferenceStore store = AdtPlugin.getDefault().getPreferenceStore(); 
-        mDeviceTable = new Table(shell, SWT.SINGLE | SWT.FULL_SELECTION);
-        mDeviceTable.setLayoutData(new GridData(GridData.FILL_BOTH));
+        mDeviceTable = new Table(offsetComp, SWT.SINGLE | SWT.FULL_SELECTION);
+        GridData gd;
+        mDeviceTable.setLayoutData(gd = new GridData(GridData.FILL_BOTH));
+        gd.heightHint = 100;
+
         mDeviceTable.setHeaderVisible(true);
         mDeviceTable.setLinesVisible(true);
 
@@ -342,91 +380,47 @@ public class DeviceChooserDialog extends Dialog implements IDeviceChangeListener
                     IStructuredSelection structuredSelection = (IStructuredSelection)selection;
                     Object object = structuredSelection.getFirstElement();
                     if (object instanceof Device) {
-                        Device selectedDevice = (Device)object;
-                        
-                        mResponse.deviceToUse = selectedDevice;
-                        mResponse.mustContinue = true;
-                        shell.close();
+                        mResponse.setDeviceToUse((Device)object);
                     }
                 }
             }
         });
-
-        // bottom part with the ok/cancel
-        Composite bottomComp = new Composite(shell, SWT.NONE);
-        bottomComp.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-        // 3 items in the layout: createButton, spacer, composite with ok/cancel
-        // (to force same width).
-        bottomComp.setLayout(new GridLayout(3 /* numColums */, false /* makeColumnsEqualWidth */));
         
-        mCreateButton = new Button(bottomComp, SWT.NONE);
-        mCreateButton.setText("Launch Emulator");
-        mCreateButton.addSelectionListener(new SelectionAdapter() {
-            @Override
-            public void widgetSelected(SelectionEvent e) {
-                mResponse.mustContinue = true;
-                mResponse.mustLaunchEmulator = true;
-                shell.close();
-            }
-        });
+        Button radio2 = new Button(top, SWT.RADIO);
+        radio2.setText("Launch a new Virtual Device");
+
+        // offset the selector from the radio button
+        offsetComp = new Composite(top, SWT.NONE);
+        offsetComp.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        layout = new GridLayout(1, false);
+        layout.marginRight = layout.marginHeight = 0;
+        layout.marginLeft = 30;
+        offsetComp.setLayout(layout);
         
-        // the spacer
-        Composite spacer = new Composite(bottomComp, SWT.NONE);
-        GridData gd;
-        spacer.setLayoutData(gd = new GridData(GridData.FILL_HORIZONTAL));
-        gd.heightHint = 0;
-        
-        // the composite to contain ok/cancel
-        Composite buttonContainer = new Composite(bottomComp, SWT.NONE);
-        GridLayout gl = new GridLayout(2 /* numColums */, true /* makeColumnsEqualWidth */);
-        gl.marginHeight = gl.marginWidth = 0;
-        buttonContainer.setLayout(gl);
-
-        mOkButton = new Button(buttonContainer, SWT.NONE);
-        mOkButton.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-        mOkButton.setEnabled(false);
-        mOkButton.setText("OK");
-        mOkButton.addSelectionListener(new SelectionAdapter() {
-            @Override
-            public void widgetSelected(SelectionEvent e) {
-                mResponse.mustContinue = true;
-                shell.close();
-            }
-        });
-
-        Button cancelButton = new Button(buttonContainer, SWT.NONE);
-        cancelButton.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-        cancelButton.setText("Cancel");
-        cancelButton.addSelectionListener(new SelectionAdapter() {
-            @Override
-            public void widgetSelected(SelectionEvent e) {
-                mResponse.mustContinue = false;
-                shell.close();
-            }
-        });
-
+        mPreferredAvdSelector = new AvdSelector(offsetComp, getNonRunningAvds(), mProjectTarget,
+                false /*allowMultipleSelection*/);
+        mPreferredAvdSelector.setTableHeightHint(100);
+        mPreferredAvdSelector.setEnabled(false);
         mDeviceTable.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
-                int count = mDeviceTable.getSelectionCount();
-                if (count != 1) {
-                    handleSelection(null);
-                } else {
-                    int index = mDeviceTable.getSelectionIndex();
-                    Object data = mViewer.getElementAt(index);
-                    if (data instanceof Device) {
-                        handleSelection((Device)data);
-                    } else {
-                        handleSelection(null);
-                    }
+                handleDeviceSelection();
+            }
+        });
+        
+        mPreferredAvdSelector.setSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                if (mDisableAvdSelectionChange == false) {
+                    mResponse.setAvdToLaunch(mPreferredAvdSelector.getFirstSelected());
+                    enableOkButton();
                 }
             }
         });
         
-        mDeviceTable.setFocus();
-        shell.setDefaultButton(mOkButton);
-        
-        updateDefaultSelection();
+        AndroidDebugBridge.addDeviceChangeListener(this);
+
+        return top;
     }
     
     private void loadImages() {
@@ -504,6 +498,10 @@ public class DeviceChooserDialog extends Dialog implements IDeviceChangeListener
                     
                     // update the selection
                     updateDefaultSelection();
+                    
+                    // update the display of AvdInfo (since it's filtered to only display
+                    // non running AVD.)
+                    refillAvdList();
                 } else {
                     // table is disposed, we need to do something.
                     // lets remove ourselves from the listener.
@@ -546,20 +544,46 @@ public class DeviceChooserDialog extends Dialog implements IDeviceChangeListener
                         
                         // update the defaultSelection.
                         updateDefaultSelection();
-                        
+                    
+                        // update the display of AvdInfo (since it's filtered to only display
+                        // non running AVD). This is done on deviceChanged because the avd name
+                        // of a (emulator) device may be updated as the emulator boots.
+                        refillAvdList();
+
                         // if the changed device is the current selection,
                         // we update the OK button based on its state.
-                        if (device == mResponse.deviceToUse) {
-                            mOkButton.setEnabled(mResponse.deviceToUse.isOnline());
+                        if (device == mResponse.getDeviceToUse()) {
+                            enableOkButton();
                         }
+
                     } else {
                         // table is disposed, we need to do something.
                         // lets remove ourselves from the listener.
                         AndroidDebugBridge.removeDeviceChangeListener(dialog);
                     }
-    
                 }
             });
+        }
+    }
+    
+    /**
+     * Returns whether the dialog is in "device" mode (true), or in "avd" mode (false).
+     */
+    private boolean isDeviceMode() {
+        return mDeviceRadioButton.getSelection();
+    }
+    
+    /**
+     * Enables or disables the OK button of the dialog based on various selections in the dialog.
+     */
+    private void enableOkButton() {
+        Button okButton = getButton(IDialogConstants.OK_ID);
+        
+        if (isDeviceMode()) {
+            okButton.setEnabled(mResponse.getDeviceToUse() != null &&
+                    mResponse.getDeviceToUse().isOnline());
+        } else {
+            okButton.setEnabled(mResponse.getAvdToLaunch() != null);
         }
     }
     
@@ -577,16 +601,31 @@ public class DeviceChooserDialog extends Dialog implements IDeviceChangeListener
         }
     }
     
+    private void handleDeviceSelection() {
+        int count = mDeviceTable.getSelectionCount();
+        if (count != 1) {
+            handleSelection(null);
+        } else {
+            int index = mDeviceTable.getSelectionIndex();
+            Object data = mViewer.getElementAt(index);
+            if (data instanceof Device) {
+                handleSelection((Device)data);
+            } else {
+                handleSelection(null);
+            }
+        }
+    }
+
     private void handleSelection(Device device) {
-        mResponse.deviceToUse = device;
-        mOkButton.setEnabled(device != null && mResponse.deviceToUse.isOnline());
+        mResponse.setDeviceToUse(device);
+        enableOkButton();
     }
     
     /**
      * Look for a default device to select. This is done by looking for the running
      * clients on each device and finding one similar to the one being launched.
      * <p/>
-     * This is done every time the device list changed, until there is a selection..
+     * This is done every time the device list changed unless there is a already selection.
      */
     private void updateDefaultSelection() {
         if (mDeviceTable.getSelectionCount() == 0) {
@@ -599,8 +638,7 @@ public class DeviceChooserDialog extends Dialog implements IDeviceChangeListener
                 
                 for (Client client : clients) {
                     
-                    if (mLaunchInfo.mPackageName.equals(
-                            client.getClientData().getClientDescription())) {
+                    if (mPackageName.equals(client.getClientData().getClientDescription())) {
                         // found a match! Select it.
                         mViewer.setSelection(new StructuredSelection(device));
                         handleSelection(device);
@@ -611,6 +649,57 @@ public class DeviceChooserDialog extends Dialog implements IDeviceChangeListener
                 }
             }
         }
-    }
 
+        handleDeviceSelection();
+    }
+    
+    /**
+     * Returns the list of {@link AvdInfo} that are not already running in an emulator.
+     */
+    private AvdInfo[] getNonRunningAvds() {
+        ArrayList<AvdInfo> list = new ArrayList<AvdInfo>();
+        
+        Device[] devices = AndroidDebugBridge.getBridge().getDevices();
+        
+        // loop through all the Avd and put the one that are not running in the list.
+        avdLoop: for (AvdInfo info : mFullAvdList) {
+            for (Device d : devices) {
+                if (info.getName().equals(d.getAvdName())) {
+                    continue avdLoop;
+                }
+            }
+            list.add(info);
+        }
+        
+        return list.toArray(new AvdInfo[list.size()]);
+    } 
+    
+    /**
+     * Refills the AVD list keeping the current selection.
+     */
+    private void refillAvdList() {
+        AvdInfo[] array = getNonRunningAvds();
+        
+        // save the current selection
+        AvdInfo selected = mPreferredAvdSelector.getFirstSelected();
+        
+        // disable selection change.
+        mDisableAvdSelectionChange = true;
+        
+        // set the new list in the selector
+        mPreferredAvdSelector.setAvds(array, mProjectTarget);
+        
+        // attempt to reselect the proper avd if needed
+        if (selected != null) {
+            if (mPreferredAvdSelector.setSelection(selected) == false) {
+                // looks like the selection is lost. this can happen if an emulator
+                // running the AVD that was selected was launched from outside of Eclipse).
+                mResponse.setAvdToLaunch(null);
+                enableOkButton();
+            }
+        }
+        
+        // enable the selection change
+        mDisableAvdSelectionChange = false;
+    }
 }
