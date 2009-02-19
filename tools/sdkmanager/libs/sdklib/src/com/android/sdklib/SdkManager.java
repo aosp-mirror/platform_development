@@ -44,6 +44,7 @@ public final class SdkManager {
     private final static String ADDON_API = "api";
     private final static String ADDON_DESCRIPTION = "description";
     private final static String ADDON_LIBRARIES = "libraries";
+    private final static String ADDON_DEFAULT_SKIN = "skin";
     
     private final static Pattern PATTERN_PROP = Pattern.compile(
             "^([a-zA-Z0-9._-]+)\\s*=\\s*(.*)\\s*$");
@@ -51,6 +52,17 @@ public final class SdkManager {
     private final static Pattern PATTERN_LIB_DATA = Pattern.compile(
             "^([a-zA-Z0-9._-]+\\.jar);(.*)$", Pattern.CASE_INSENSITIVE);
     
+    /** List of items in the platform to check when parsing it. These paths are relative to the
+     * platform root folder. */
+    private final static String[] sPlatformContentList = new String[] {
+        SdkConstants.FN_FRAMEWORK_LIBRARY,
+        SdkConstants.FN_FRAMEWORK_AIDL,
+        SdkConstants.OS_SDK_TOOLS_FOLDER + SdkConstants.FN_AAPT,
+        SdkConstants.OS_SDK_TOOLS_FOLDER + SdkConstants.FN_AIDL,
+        SdkConstants.OS_SDK_TOOLS_FOLDER + SdkConstants.FN_DX,
+        SdkConstants.OS_SDK_TOOLS_LIB_FOLDER + SdkConstants.FN_DX_JAR,
+    };
+
     /** the location of the SDK */
     private final String mSdkLocation;
     private IAndroidTarget[] mTargets;
@@ -176,6 +188,10 @@ public final class SdkManager {
                     String apiNumber = map.get(PROP_VERSION_SDK);
                     String apiName = map.get(PROP_VERSION_RELEASE);
                     if (apiNumber != null && apiName != null) {
+                        // api number and name looks valid, perform a few more checks
+                        if (checkPlatformContent(platform, log) == false) {
+                            return null;
+                        }
                         // create the target.
                         PlatformTarget target = new PlatformTarget(
                                 platform.getAbsolutePath(),
@@ -351,7 +367,19 @@ public final class SdkManager {
                 
                 // need to parse the skins.
                 String[] skins = parseSkinFolder(target.getPath(IAndroidTarget.SKINS));
-                target.setSkins(skins);
+                
+                // get the default skin, or take it from the base platform if needed.
+                String defaultSkin = propertyMap.get(ADDON_DEFAULT_SKIN);
+                
+                if (defaultSkin == null) {
+                    if (skins.length == 1) {
+                        defaultSkin = skins[1];
+                    } else {
+                        defaultSkin = baseTarget.getDefaultSkin();
+                    }
+                }
+                
+                target.setSkins(skins, defaultSkin);
 
                 return target;
             }
@@ -369,7 +397,28 @@ public final class SdkManager {
                     addonName, valueName, SdkConstants.FN_MANIFEST_INI);
         }
     }
+    
+    /**
+     * Checks the given platform has all the required files, and returns true if they are all
+     * present.
+     * <p/>This checks the presence of the following files: android.jar, framework.aidl, aapt(.exe),
+     * aidl(.exe), dx(.bat), and dx.jar
+     */
+    private boolean checkPlatformContent(File platform, ISdkLog log) {
+        for (String relativePath : sPlatformContentList) {
+            File f = new File(platform, relativePath);
+            if (f.exists() == false) {
+                log.error(null,
+                        "Ignoring platform '%1$s': %2$s is missing.",
+                        platform.getName(), relativePath);
+                return false;
+            }
+            
+        }
+        return true;
+    }
 
+    
     /**
      * Parses a property file and returns
      * @param buildProp the property file to parse

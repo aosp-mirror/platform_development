@@ -18,7 +18,7 @@
 package com.android.ide.eclipse.editors;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.common.AndroidConstants;
+import com.android.sdklib.SdkConstants;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
@@ -231,7 +231,7 @@ public class IconFactory {
             // Text measurement varies so slightly depending on the platform
             int ofx = 0;
             int ofy = 0;
-            if (AndroidConstants.CURRENT_PLATFORM == AndroidConstants.PLATFORM_WINDOWS) {
+            if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
                 ofx = +1;
                 ofy = -1;
             }

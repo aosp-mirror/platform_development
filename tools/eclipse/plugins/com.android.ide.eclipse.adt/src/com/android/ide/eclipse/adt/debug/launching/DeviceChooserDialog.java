@@ -310,7 +310,7 @@ public class DeviceChooserDialog extends Dialog implements IDeviceChangeListener
         top.setLayout(new GridLayout(1, true));
 
         mDeviceRadioButton = new Button(top, SWT.RADIO);
-        mDeviceRadioButton.setText("Choose an Android running device");
+        mDeviceRadioButton.setText("Choose a running Android device");
         mDeviceRadioButton.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
@@ -387,7 +387,7 @@ public class DeviceChooserDialog extends Dialog implements IDeviceChangeListener
         });
         
         Button radio2 = new Button(top, SWT.RADIO);
-        radio2.setText("Launch a new Virtual Device");
+        radio2.setText("Launch a new Android Virtual Device");
 
         // offset the selector from the radio button
         offsetComp = new Composite(top, SWT.NONE);

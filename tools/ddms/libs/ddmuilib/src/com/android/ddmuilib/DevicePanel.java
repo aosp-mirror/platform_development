@@ -205,6 +205,10 @@ public final class DevicePanel extends Panel implements IDebugBridgeChangeListen
                             String debuggable = device.getProperty(Device.PROP_DEBUGGABLE);
                             if (device.isEmulator()) {
                                 String avdName = device.getAvdName();
+                                if (avdName == null) {
+                                    avdName = "?"; // the device is probably not online yet, so
+                                                   // we don't know its AVD name just yet.
+                                }
                                 if (debuggable != null && debuggable.equals("1")) { //$NON-NLS-1$
                                     return String.format("%1$s [%2$s, debug]", avdName,
                                             version);

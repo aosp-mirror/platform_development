@@ -30,7 +30,18 @@ import java.io.File;
  *
  */
 public final class SdkConstants {
+    public final static int PLATFORM_UNKNOWN = 0;
+    public final static int PLATFORM_LINUX = 1;
+    public final static int PLATFORM_WINDOWS = 2;
+    public final static int PLATFORM_DARWIN = 3;
 
+    /**
+     * Returns current platform, one of {@link #PLATFORM_WINDOWS}, {@link #PLATFORM_DARWIN},
+     * {@link #PLATFORM_LINUX} or {@link #PLATFORM_UNKNOWN}.
+     */
+    public final static int CURRENT_PLATFORM = currentPlatform();
+
+    
     /** An SDK Project's AndroidManifest.xml file */
     public static final String FN_ANDROID_MANIFEST_XML= "AndroidManifest.xml";
     /** An SDK Project's build.xml file */
@@ -68,6 +79,21 @@ public final class SdkConstants {
 
     /** Skin layout file */
     public final static String FN_SKIN_LAYOUT = "layout";//$NON-NLS-1$
+
+    /** dex.jar file */
+    public static final String FN_DX_JAR = "dx.jar"; //$NON-NLS-1$
+
+    /** dx executable */
+    public final static String FN_DX = (CURRENT_PLATFORM == PLATFORM_WINDOWS) ?
+            "dx.bat" : "dx"; //$NON-NLS-1$ //$NON-NLS-2$
+
+    /** aapt executable */
+    public final static String FN_AAPT = (CURRENT_PLATFORM == PLATFORM_WINDOWS) ?
+            "aapt.exe" : "aapt"; //$NON-NLS-1$ //$NON-NLS-2$
+
+    /** aidl executable */
+    public final static String FN_AIDL = (CURRENT_PLATFORM == PLATFORM_WINDOWS) ?
+            "aidl.exe" : "aidl"; //$NON-NLS-1$ //$NON-NLS-2$
 
     /* Folder Names for Android Projects . */
 
@@ -142,11 +168,11 @@ public final class SdkConstants {
      *  This is an OS path, ending with a separator. */
     public final static String OS_SDK_DOCS_FOLDER = FD_DOCS + File.separator;
 
-    /** Path of the tools directory relative to the sdk folder.
+    /** Path of the tools directory relative to the sdk folder, or to a platform folder.
      *  This is an OS path, ending with a separator. */
     public final static String OS_SDK_TOOLS_FOLDER = FD_TOOLS + File.separator;
 
-    /** Path of the lib directory relative to the sdk folder.
+    /** Path of the lib directory relative to the sdk folder, or to a platform folder.
      *  This is an OS path, ending with a separator. */
     public final static String OS_SDK_TOOLS_LIB_FOLDER =
             OS_SDK_TOOLS_FOLDER + FD_LIB + File.separator;
@@ -233,4 +259,22 @@ public final class SdkConstants {
         return cmd;
     }
 
+    /**
+     * Returns current platform
+     * 
+     * @return one of {@link #PLATFORM_WINDOWS}, {@link #PLATFORM_DARWIN},
+     * {@link #PLATFORM_LINUX} or {@link #PLATFORM_UNKNOWN}.
+     */
+    private static int currentPlatform() {
+        String os = System.getProperty("os.name");          //$NON-NLS-1$
+        if (os.startsWith("Mac OS")) {                      //$NON-NLS-1$
+            return PLATFORM_DARWIN;
+        } else if (os.startsWith("Windows")) {              //$NON-NLS-1$
+            return PLATFORM_WINDOWS;
+        } else if (os.startsWith("Linux")) {                //$NON-NLS-1$
+            return PLATFORM_LINUX;
+        }
+
+        return PLATFORM_UNKNOWN;
+    }
 }

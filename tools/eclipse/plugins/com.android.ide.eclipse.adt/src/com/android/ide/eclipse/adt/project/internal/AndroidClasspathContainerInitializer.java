@@ -172,13 +172,7 @@ public class AndroidClasspathContainerInitializer extends ClasspathContainerInit
 
                 // if we are loaded and the target is non null, we create a valid ClassPathContainer
                 if (sdkIsLoaded && target != null) {
-                    String targetName = null;
-                    if (target.isPlatform()) {
-                        targetName = target.getName();
-                    } else {
-                        targetName = String.format("%1$s (%2$s)", target.getName(),
-                                target.getApiVersionName());
-                    }
+                    String targetName = target.getFullName();
 
                     return new AndroidClasspathContainer(
                             createClasspathEntries(iProject, target, targetName),

@@ -33,6 +33,7 @@ import java.util.Map.Entry;
 public final class ProjectProperties {
     /** The property name for the project target */
     public final static String PROPERTY_TARGET = "target";
+    public final static String PROPERTY_CONFIGS = "configs";
     public final static String PROPERTY_SDK = "sdk-location";
     
     public static enum PropertyType {
@@ -200,6 +201,14 @@ public final class ProjectProperties {
      */
     public String getProperty(String name) {
         return mProperties.get(name);
+    }
+    
+    /**
+     * Removes a property and returns its previous value (or null if the property did not exist).
+     * @param name the name of the property to remove.
+     */
+    public String removeProperty(String name) {
+        return mProperties.remove(name);
     }
 
     /**

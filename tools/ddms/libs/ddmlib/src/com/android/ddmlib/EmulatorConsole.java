@@ -54,7 +54,7 @@ public final class EmulatorConsole {
     private final static String HOST = "127.0.0.1";  //$NON-NLS-1$
 
     private final static String COMMAND_PING = "help\r\n"; //$NON-NLS-1$
-    private final static String COMMAND_AVD_NAME = "vm name\r\n"; //$NON-NLS-1$  // TODO change with emulator
+    private final static String COMMAND_AVD_NAME = "avd name\r\n"; //$NON-NLS-1$
     private final static String COMMAND_KILL = "kill\r\n"; //$NON-NLS-1$
     private final static String COMMAND_GSM_STATUS = "gsm status\r\n"; //$NON-NLS-1$
     private final static String COMMAND_GSM_CALL = "gsm call %1$s\r\n"; //$NON-NLS-1$

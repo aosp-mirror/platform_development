@@ -19,7 +19,7 @@ package com.android.ide.eclipse.adt.build;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.project.ProjectHelper;
-import com.android.ide.eclipse.adt.sdk.LoadStatus;
+import com.android.ide.eclipse.adt.sdk.AndroidTargetData;
 import com.android.ide.eclipse.adt.sdk.Sdk;
 import com.android.ide.eclipse.common.AndroidConstants;
 import com.android.ide.eclipse.common.project.BaseProjectHelper;
@@ -67,6 +67,8 @@ import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Map;
+import java.util.Set;
+import java.util.Map.Entry;
 
 public class ApkBuilder extends BaseBuilder {
 
@@ -280,8 +282,12 @@ public class ApkBuilder extends BaseBuilder {
             }
         }
 
-        // also check the final file!
-        String finalPackageName = project.getName() + AndroidConstants.DOT_ANDROID_PACKAGE;
+        // get the extra configs for the project. This will give us a list of custom apk
+        // to build based on a restricted set of resources.
+        Map<String, String> configs = Sdk.getCurrent().getProjectConfigs(project);
+
+        // also check the final file(s)!
+        String finalPackageName = getFileName(project, null /*config*/);
         if (mBuildFinalPackage == false && outputFolder != null) {
             tmp = outputFolder.findMember(finalPackageName);
             if (tmp == null || (tmp instanceof IFile &&
@@ -289,6 +295,24 @@ public class ApkBuilder extends BaseBuilder {
                 String msg = String.format(Messages.s_Missing_Repackaging, finalPackageName);
                 AdtPlugin.printBuildToConsole(AdtConstants.BUILD_VERBOSE, project, msg);
                 mBuildFinalPackage = true;
+            }
+
+            if (configs != null) {
+                Set<Entry<String, String>> entrySet = configs.entrySet();
+                
+                for (Entry<String, String> entry : entrySet) {
+                    String filename = getFileName(project, entry.getKey());
+
+                    tmp = outputFolder.findMember(filename);
+                    if (tmp == null || (tmp instanceof IFile &&
+                            tmp.exists() == false)) {
+                        String msg = String.format(Messages.s_Missing_Repackaging,
+                                finalPackageName);
+                        AdtPlugin.printBuildToConsole(AdtConstants.BUILD_VERBOSE, project, msg);
+                        mBuildFinalPackage = true;
+                        break;
+                    }
+                }
             }
         }
 
@@ -358,6 +382,17 @@ public class ApkBuilder extends BaseBuilder {
             // handle already present .apk, and if that one failed as well, the user will be
             // notified.
             finalPackage.delete();
+            
+            if (configs != null) {
+                Set<Entry<String, String>> entrySet = configs.entrySet();
+                for (Entry<String, String> entry : entrySet) {
+                    String packageFilepath = osBinPath + File.separator +
+                            getFileName(project, entry.getKey());
+
+                    finalPackage = new File(packageFilepath);
+                    finalPackage.delete();
+                }
+            }
 
             // first we check if we need to package the resources.
             if (mPackageResources) {
@@ -401,12 +436,29 @@ public class ApkBuilder extends BaseBuilder {
                         osAssetsPath = assetsFolder.getLocation().toOSString();
                     }
 
+                    // build the default resource package
                     if (executeAapt(project, osManifestPath, osResPath,
                             osAssetsPath, osBinPath + File.separator +
-                            AndroidConstants.FN_RESOURCES_AP_) == false) {
+                            AndroidConstants.FN_RESOURCES_AP_, null /*configFilter*/) == false) {
                         // aapt failed. Whatever files that needed to be marked
                         // have already been marked. We just return.
                         return referencedProjects;
+                    }
+                    
+                    // now do the same thing for all the configured resource packages.
+                    if (configs != null) {
+                        Set<Entry<String, String>> entrySet = configs.entrySet();
+                        for (Entry<String, String> entry : entrySet) {
+                            String outPathFormat = osBinPath + File.separator +
+                                    AndroidConstants.FN_RESOURCES_S_AP_;
+                            String outPath = String.format(outPathFormat, entry.getKey());
+                            if (executeAapt(project, osManifestPath, osResPath,
+                                    osAssetsPath, outPath, entry.getValue()) == false) {
+                                // aapt failed. Whatever files that needed to be marked
+                                // have already been marked. We just return.
+                                return referencedProjects;
+                            }
+                        }
                     }
 
                     // build has been done. reset the state of the builder
@@ -433,25 +485,49 @@ public class ApkBuilder extends BaseBuilder {
             }
 
             // now we need to make the final package from the intermediary apk
-            // and classes.dex
+            // and classes.dex.
+            // This is the default package with all the resources.
             
+            String classesDexPath = osBinPath + File.separator + AndroidConstants.FN_CLASSES_DEX; 
             if (finalPackage(osBinPath + File.separator + AndroidConstants.FN_RESOURCES_AP_,
-                            osBinPath + File.separator + AndroidConstants.FN_CLASSES_DEX,
-                            osFinalPackagePath, javaProject, referencedJavaProjects) == false) {
+                            classesDexPath,osFinalPackagePath, javaProject,
+                            referencedJavaProjects) == false) {
                 return referencedProjects;
-            } else {
-                // get the resource to bin
-                outputFolder.refreshLocal(IResource.DEPTH_ONE, monitor);
-
-                // build has been done. reset the state of the builder
-                mBuildFinalPackage = false;
-
-                // and store it
-                saveProjectBooleanProperty(PROPERTY_BUILD_APK, mBuildFinalPackage);
-                
-                AdtPlugin.printBuildToConsole(AdtConstants.BUILD_VERBOSE, getProject(),
-                        "Build Success!");
             }
+            
+            // now do the same thing for all the configured resource packages.
+            if (configs != null) {
+                String resPathFormat = osBinPath + File.separator +
+                        AndroidConstants.FN_RESOURCES_S_AP_;
+
+                Set<Entry<String, String>> entrySet = configs.entrySet();
+                for (Entry<String, String> entry : entrySet) {
+                    // make the filename for the resource package.
+                    String resPath = String.format(resPathFormat, entry.getKey());
+                    
+                    // make the filename for the apk to generate
+                    String apkOsFilePath = osBinPath + File.separator +
+                            getFileName(project, entry.getKey());
+                    if (finalPackage(resPath, classesDexPath, apkOsFilePath, javaProject,
+                            referencedJavaProjects) == false) {
+                        return referencedProjects;
+                    }
+                }
+            }
+
+            // we are done.
+            
+            // get the resource to bin
+            outputFolder.refreshLocal(IResource.DEPTH_ONE, monitor);
+
+            // build has been done. reset the state of the builder
+            mBuildFinalPackage = false;
+
+            // and store it
+            saveProjectBooleanProperty(PROPERTY_BUILD_APK, mBuildFinalPackage);
+            
+            AdtPlugin.printBuildToConsole(AdtConstants.BUILD_VERBOSE, getProject(),
+                    "Build Success!");
         }
         return referencedProjects;
     }
@@ -475,18 +551,25 @@ public class ApkBuilder extends BaseBuilder {
      * @param osResPath The path to the res folder
      * @param osAssetsPath The path to the assets folder. This can be null.
      * @param osOutFilePath The path to the temporary resource file to create.
+     * @param configFilter The configuration filter for the resources to include
+     * (used with -c option)
      * @return true if success, false otherwise.
      */
     private boolean executeAapt(IProject project, String osManifestPath,
-            String osResPath, String osAssetsPath, String osOutFilePath) {
+            String osResPath, String osAssetsPath, String osOutFilePath, String configFilter) {
+        IAndroidTarget target = Sdk.getCurrent().getTarget(project);
 
         // Create the command line.
         ArrayList<String> commandArray = new ArrayList<String>();
-        commandArray.add(AdtPlugin.getOsAbsoluteAapt());
+        commandArray.add(target.getPath(IAndroidTarget.AAPT));
         commandArray.add("package"); //$NON-NLS-1$
         commandArray.add("-f");//$NON-NLS-1$
         if (AdtPlugin.getBuildVerbosity() == AdtConstants.BUILD_VERBOSE) {
             commandArray.add("-v"); //$NON-NLS-1$
+        }
+        if (configFilter != null) {
+            commandArray.add("-c"); //$NON-NLS-1$
+            commandArray.add(configFilter);
         }
         commandArray.add("-M"); //$NON-NLS-1$
         commandArray.add(osManifestPath);
@@ -497,8 +580,7 @@ public class ApkBuilder extends BaseBuilder {
             commandArray.add(osAssetsPath);
         }
         commandArray.add("-I"); //$NON-NLS-1$
-        commandArray.add(
-                Sdk.getCurrent().getTarget(project).getPath(IAndroidTarget.ANDROID_JAR));
+        commandArray.add(target.getPath(IAndroidTarget.ANDROID_JAR));
         commandArray.add("-F"); //$NON-NLS-1$
         commandArray.add(osOutFilePath);
 
@@ -576,14 +658,19 @@ public class ApkBuilder extends BaseBuilder {
      */
     private boolean executeDx(IJavaProject javaProject, String osBinPath, String osOutFilePath,
             IJavaProject[] referencedJavaProjects) throws CoreException {
+        IAndroidTarget target = Sdk.getCurrent().getTarget(javaProject.getProject());
+        AndroidTargetData targetData = Sdk.getCurrent().getTargetData(target);
+        if (targetData == null) {
+            throw new CoreException(new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID,
+                    Messages.ApkBuilder_UnableBuild_Dex_Not_loaded));
+        }
+        
         // get the dex wrapper
-        DexWrapper wrapper = DexWrapper.getWrapper();
+        DexWrapper wrapper = targetData.getDexWrapper();
         
         if (wrapper == null) {
-            if (DexWrapper.getStatus() == LoadStatus.FAILED) {
-                throw new CoreException(new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID,
-                        Messages.ApkBuilder_UnableBuild_Dex_Not_loaded));
-            }
+            throw new CoreException(new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID,
+                    Messages.ApkBuilder_UnableBuild_Dex_Not_loaded));
         }
 
         // make sure dx use the proper output streams.
@@ -1002,6 +1089,19 @@ public class ApkBuilder extends BaseBuilder {
         }
 
         return list.toArray(new IJavaProject[list.size()]);
+    }
+    
+    /**
+     * Returns the apk filename for the given project
+     * @param project The project.
+     * @param config An optional config name. Can be null.
+     */
+    private static String getFileName(IProject project, String config) {
+        if (config != null) {
+            return project.getName() + "-" + config + AndroidConstants.DOT_ANDROID_PACKAGE; //$NON-NLS-1$ 
+        }
+        
+        return project.getName() + AndroidConstants.DOT_ANDROID_PACKAGE;
     }
 
     /**

@@ -1519,6 +1519,7 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
                     AdtPlugin.printErrorToConsole(launchInfo.mProject,
                             String.format(message1, launchInfo.mActivity));
                 }
+                launchInfo.mLaunch.stopLaunch();
             }
             for (DelayedLaunchInfo launchInfo : mWaitingForDebuggerApplications) {
                 if (launchInfo.mLaunchAction == LaunchConfigDelegate.ACTION_DO_NOTHING) {
@@ -1527,7 +1528,11 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
                     AdtPlugin.printErrorToConsole(launchInfo.mProject,
                             String.format(message1, launchInfo.mActivity));
                 }
+                launchInfo.mLaunch.stopLaunch();
             }
+
+            mWaitingForReadyEmulatorList.clear();
+            mWaitingForDebuggerApplications.clear();
         }
     }
 
@@ -1573,24 +1578,31 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
      * 
      * @see IDeviceChangeListener#deviceDisconnected(Device)
      */
+    @SuppressWarnings("unchecked")
     public void deviceDisconnected(Device device) {
         // any pending launch on this device must be canceled.
         String message = "%1$s disconnected! Cancelling '%2$s' launch!";
         synchronized (sListLock) {
-            for (DelayedLaunchInfo launchInfo : mWaitingForReadyEmulatorList) {
+            ArrayList<DelayedLaunchInfo> copyList =
+                (ArrayList<DelayedLaunchInfo>)mWaitingForReadyEmulatorList.clone();
+            for (DelayedLaunchInfo launchInfo : copyList) {
                 if (launchInfo.mDevice == device) {
                     AdtPlugin.printErrorToConsole(launchInfo.mProject,
                             String.format(message, device.getSerialNumber(), launchInfo.mActivity));
+                    launchInfo.mLaunch.stopLaunch();
+                    mWaitingForReadyEmulatorList.remove(launchInfo);
                 }
             }
-            for (DelayedLaunchInfo launchInfo : mWaitingForDebuggerApplications) {
+            copyList = (ArrayList<DelayedLaunchInfo>)mWaitingForDebuggerApplications.clone();
+            for (DelayedLaunchInfo launchInfo : copyList) {
                 if (launchInfo.mDevice == device) {
                     AdtPlugin.printErrorToConsole(launchInfo.mProject,
                             String.format(message, device.getSerialNumber(), launchInfo.mActivity));
+                    launchInfo.mLaunch.stopLaunch();
+                    mWaitingForDebuggerApplications.remove(launchInfo);
                 }
             }
         }
-
     }
 
     /**

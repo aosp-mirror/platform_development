@@ -189,20 +189,15 @@ public class ResourceMonitor implements IResourceChangeListener {
                     // the project is opening or closing.
                     IProject project = (IProject)r;
                     
-                    // the OPEN flag represent a toggle in the open/close state of the
-                    // project, but this is sent before the project actually toggles
-                    // its state.
-                    // This means that if the project is closing, isOpen() will return true.
-                    boolean isClosing = project.isOpen();
-                    if (isClosing) {
+                    if (project.isOpen()) {
                         // notify the listeners.
                         for (IProjectListener pl : mProjectListeners) {
-                            pl.projectClosed(project);
+                            pl.projectOpened(project);
                         }
                     } else {
                         // notify the listeners.
                         for (IProjectListener pl : mProjectListeners) {
-                            pl.projectOpened(project);
+                            pl.projectClosed(project);
                         }
                     }
                 }
@@ -287,6 +282,20 @@ public class ResourceMonitor implements IResourceChangeListener {
     }
 
     /**
+     * Removes an existing folder listener.
+     * @param listener the listener to remove.
+     */
+    public synchronized void removeFolderListener(IFolderListener listener) {
+        for (int i = 0 ; i < mFolderListeners.size() ; i++) {
+            FolderListenerBundle bundle = mFolderListeners.get(i);
+            if (bundle.listener == listener) {
+                mFolderListeners.remove(i);
+                return;
+            }
+        }
+    }
+
+    /**
      * Adds a project listener.
      * @param listener The listener to receive the events.
      */
@@ -305,8 +314,28 @@ public class ResourceMonitor implements IResourceChangeListener {
         }
     }
     
+    /**
+     * Removes an existing project listener.
+     * @param listener the listener to remove.
+     */
+    public synchronized void removeProjectListener(IProjectListener listener) {
+        mProjectListeners.remove(listener);
+    }
+    
+    /**
+     * Adds a resource event listener.
+     * @param listener The listener to receive the events.
+     */
     public synchronized void addResourceEventListener(IResourceEventListener listener) {
         mEventListeners.add(listener);
+    }
+
+    /**
+     * Removes an existing Resource Event listener.
+     * @param listener the listener to remove.
+     */
+    public synchronized void removeResourceEventListener(IResourceEventListener listener) {
+        mEventListeners.remove(listener);
     }
 
     /**

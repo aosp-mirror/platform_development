@@ -356,6 +356,7 @@ class Main {
      */
     private void displaySkinList(IAndroidTarget target, String message) {
         String[] skins = target.getSkins();
+        String defaultSkin = target.getDefaultSkin();
         mSdkLog.printf(message);
         if (skins != null) {
             boolean first = true;
@@ -366,6 +367,10 @@ class Main {
                     first = false;
                 }
                 mSdkLog.printf(skin);
+                
+                if (skin.equals(defaultSkin)) {
+                    mSdkLog.printf(" (default)");
+                }
             }
             mSdkLog.printf("\n");
         } else {
@@ -385,7 +390,7 @@ class Main {
             int index = 1;
             for (AvdInfo info : avdManager.getAvds()) {
                 mSdkLog.printf("[%d] %s\n", index, info.getName());
-                mSdkLog.printf("    Path: %s\n", info.getPath());
+                mSdkLog.printf("      Path: %s\n", info.getPath());
 
                 // get the target of the AVD
                 IAndroidTarget target = info.getTarget();
@@ -395,8 +400,22 @@ class Main {
                 } else {
                     mSdkLog.printf("    Target: %s (%s)\n", target.getName(), target
                             .getVendor());
-                    mSdkLog.printf("    Based on Android %s (API level %d)\n", target
+                    mSdkLog.printf("            Based on Android %s (API level %d)\n", target
                             .getApiVersionName(), target.getApiVersionNumber());
+                }
+                
+                // display some extra values.
+                Map<String, String> properties = info.getProperties();
+                String skin = properties.get(AvdManager.AVD_INI_SKIN_NAME);
+                if (skin != null) {
+                    mSdkLog.printf("      Skin: %s\n", skin);
+                }
+                String sdcard = properties.get(AvdManager.AVD_INI_SDCARD_SIZE);
+                if (sdcard == null) {
+                    sdcard = properties.get(AvdManager.AVD_INI_SDCARD_PATH);
+                }
+                if (sdcard != null) {
+                    mSdkLog.printf("    Sdcard: %s\n", sdcard);
                 }
 
                 index++;
@@ -489,7 +508,7 @@ class Main {
                     return;
                 }
             }
-
+            
             AvdInfo newAvdInfo = avdManager.createAvd(avdFolder,
                     avdName,
                     target,

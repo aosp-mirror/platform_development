@@ -235,6 +235,7 @@ public class PreCompilerBuilder extends BaseBuilder {
         // get the project objects
         IProject project = getProject();
         IJavaProject javaProject = JavaCore.create(project);
+        IAndroidTarget projectTarget = Sdk.getCurrent().getTarget(project);
 
         // now we need to get the classpath list
         ArrayList<IPath> sourceList = BaseProjectHelper.getSourceClasspaths(javaProject);
@@ -407,8 +408,6 @@ public class PreCompilerBuilder extends BaseBuilder {
                 String osResPath = resLocation.toOSString();
                 String osManifestPath = manifestLocation.toOSString();
 
-                IAndroidTarget projectTarget = Sdk.getCurrent().getTarget(project);
-
                 // remove the aapt markers
                 removeMarkersFromFile(manifest, AndroidConstants.MARKER_AAPT);
                 removeMarkersFromContainer(resFolder, AndroidConstants.MARKER_AAPT);
@@ -432,7 +431,7 @@ public class PreCompilerBuilder extends BaseBuilder {
 
                 // launch aapt: create the command line
                 ArrayList<String> array = new ArrayList<String>();
-                array.add(AdtPlugin.getOsAbsoluteAapt());
+                array.add(projectTarget.getPath(IAndroidTarget.AAPT));
                 array.add("package"); //$NON-NLS-1$
                 array.add("-m"); //$NON-NLS-1$
                 if (AdtPlugin.getBuildVerbosity() == AdtConstants.BUILD_VERBOSE) {
@@ -541,7 +540,7 @@ public class PreCompilerBuilder extends BaseBuilder {
         if (projectAidl != null && projectAidl.exists()) {
             folderAidlPath = projectAidl.getLocation().toOSString();
         }
-        boolean aidlStatus = handleAidl(sourceList, folderAidlPath, monitor);
+        boolean aidlStatus = handleAidl(projectTarget, sourceList, folderAidlPath, monitor);
 
         if (aidlStatus == false && mCompileResources == false) {
             AdtPlugin.printBuildToConsole(AdtConstants.BUILD_VERBOSE, project,
@@ -729,14 +728,15 @@ public class PreCompilerBuilder extends BaseBuilder {
     /**
      * Compiles aidl files into java. This will also removes old java files
      * created from aidl files that are now gone.
+     * @param projectTarget Target of the project
      * @param sourceFolders the list of source folders, relative to the workspace.
      * @param folderAidlPath 
      * @param monitor the projess monitor
      * @returns true if it did something
      * @throws CoreException
      */
-    private boolean handleAidl(ArrayList<IPath> sourceFolders, String folderAidlPath,
-            IProgressMonitor monitor) throws CoreException {
+    private boolean handleAidl(IAndroidTarget projectTarget, ArrayList<IPath> sourceFolders,
+            String folderAidlPath, IProgressMonitor monitor) throws CoreException {
         if (mAidlToCompile.size() == 0 && mAidlToRemove.size() == 0) {
             return false;
         }
@@ -746,7 +746,7 @@ public class PreCompilerBuilder extends BaseBuilder {
         String[] command = new String[4 + sourceFolders.size() + (folderAidlPath != null ? 1 : 0)];
         int index = 0;
         int aidlIndex;
-        command[index++] = AdtPlugin.getOsAbsoluteAidl();
+        command[index++] = projectTarget.getPath(IAndroidTarget.AIDL);
         command[aidlIndex = index++] = "-p"; //$NON-NLS-1$
         if (folderAidlPath != null) {
             command[index++] = "-p" + folderAidlPath; //$NON-NLS-1$

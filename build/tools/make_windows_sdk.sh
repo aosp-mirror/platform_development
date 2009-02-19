@@ -9,6 +9,10 @@
 
 set -e  # Fail this script as soon as a command fails -- fail early, fail fast
 
+# Set to 1 to force removal of old unzipped SDK. Only disable for debugging, as it
+# will make some rm/mv commands to fail.
+FORCE="1" 
+
 SDK_ZIP="$1"
 DIST_DIR="$2"
 
@@ -71,38 +75,52 @@ function package() {
     DEST_NAME_ZIP="${DEST_NAME}.zip"
 
     # Unzip current linux/mac SDK and rename using the windows name
-    [ -e "$DEST" ] && rm -rfv "$DEST"  # cleanup dest first if exists
-    UNZIPPED=`basename "$SDK_ZIP"`
-    UNZIPPED="$DIST_DIR/${UNZIPPED/.zip/}"
-    [ -e "$UNZIPPED" ] && rm -rfv "$UNZIPPED"  # cleanup unzip dir (if exists)
-    unzip "$SDK_ZIP" -d "$DIST_DIR"
-    mv -v "$UNZIPPED" "$DEST"
+    if [[ -n "$FORCE" || ! -d "$DEST" ]]; then
+        [ -e "$DEST" ] && rm -rfv "$DEST"  # cleanup dest first if exists
+        UNZIPPED=`basename "$SDK_ZIP"`
+        UNZIPPED="$DIST_DIR/${UNZIPPED/.zip/}"
+        [ -e "$UNZIPPED" ] && rm -rfv "$UNZIPPED"  # cleanup unzip dir (if exists)
+        unzip "$SDK_ZIP" -d "$DIST_DIR"
+        mv -v "$UNZIPPED" "$DEST"
+    fi
     
+    # Assert that the package contains only one platform
+    PLATFORMS="$DEST/platforms"
+    THE_PLATFORM=`echo $PLATFORMS/*`
+    PLATFORM_TOOLS=$THE_PLATFORM/tools
+    echo "Platform found: " $THE_PLATFORM
+    [[ -d "$THE_PLATFORM" ]] || die \
+        "Error: One platform was expected in $SDK_ZIP. " \
+        "Instead found " $THE_PLATFORM
+    [[ -d "$PLATFORM_TOOLS" ]] || die "Missing folder $PLATFORM_TOOLS."
+
+
     # USB Driver for ADB
     mkdir -pv $DEST/usb_driver/x86
     cp -rv development/host/windows/prebuilt/usb/driver/* $DEST/usb_driver/x86/
     mkdir -pv $DEST/usb_driver/amd64
     cp -rv development/host/windows/prebuilt/usb/driver_amd_64/* $DEST/usb_driver/amd64/
 
-    # Remove obsolete stuff from tools
+    # Remove obsolete stuff from tools & platform
     TOOLS="$DEST/tools"
     LIB="$DEST/tools/lib"
-    rm -v "$TOOLS"/{aapt,aidl,adb,emulator,traceview,draw9patch,hierarchyviewer,dx,dexdump,apkbuilder,ddms,dmtracedump,mksdcard,sqlite3,android}
+    rm -v "$TOOLS"/{adb,emulator,traceview,draw9patch,hierarchyviewer,apkbuilder,ddms,dmtracedump,mksdcard,sqlite3,android}
     rm -v --force "$LIB"/*.so "$LIB"/*.jnilib
+    rm -v "$PLATFORM_TOOLS"/{aapt,aidl,dx,dexdump}
+
 
     # Copy all the new stuff in tools
+    # Note: some tools are first copied here and then moved in platforms/<name>/tools/
     cp -v out/host/windows-x86/bin/*.{exe,dll} "$TOOLS"
     cp -v prebuilt/windows/swt/*.{jar,dll} "$LIB"
-    # Do we want the emulator NOTICE in the tools dir? Cf http://b/930608.
-    # If yes, uncomment the following line:
-    # cp -v external/qemu/NOTICE "$TOOLS"/emulator_NOTICE.txt
 
+    # If you want the emulator NOTICE in the tools dir, uncomment the following line:
+    # cp -v external/qemu/NOTICE "$TOOLS"/emulator_NOTICE.txt
 
     # We currently need libz from MinGW for aapt
     cp -v /cygdrive/c/cygwin/bin/mgwz.dll "$TOOLS"
 
     # Update a bunch of bat files
-    cp -v dalvik/dx/etc/dx.bat "$TOOLS"
     cp -v development/tools/apkbuilder/etc/apkbuilder.bat "$TOOLS"
     cp -v development/tools/ddms/app/etc/ddms.bat "$TOOLS"
     cp -v development/tools/traceview/etc/traceview.bat "$TOOLS"
@@ -110,8 +128,15 @@ function package() {
     cp -v development/tools/draw9patch/etc/draw9patch.bat "$TOOLS"
     cp -v development/tools/sdkmanager/app/etc/android.bat "$TOOLS"
 
+    # Copy or move platform specific tools to the default platform.
+    cp -v dalvik/dx/etc/dx.bat "$PLATFORM_TOOLS"
+    # Note: mgwz.dll must be in same folder than aapt.exe
+    mv -v "$TOOLS"/{aapt.exe,aidl.exe,dexdump.exe,mgwz.dll} "$PLATFORM_TOOLS"
+
     # Fix EOL chars to make window users happy - fix all files at the top level only
-    find "$DIST_DIR" -maxdepth 1 -type f -print | xargs unix2dos -D
+    # as well as all batch files including those in platforms/<name>/tools/
+    find "$DIST_DIR" -maxdepth 1 -type f -writable -print0 | xargs -0 unix2dos -D
+    find "$DIST_DIR" -maxdepth 3 -name "*.bat" -type f -writable -print0 | xargs -0 unix2dos -D
 
     # Done.. Zip it
     pushd "$DIST_DIR" > /dev/null

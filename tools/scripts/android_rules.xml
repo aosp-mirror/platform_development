@@ -1,6 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="android_rules" default="debug">
 
+    <!--
+        This rules file is meant to be imported by the custom Ant task:
+            com.android.ant.AndroidInitTask
+
+        The following properties are put in place by the importing task:
+            android-jar, android-aidl, aapt, aidl, and dx
+
+        Additionnaly, the task sets up the following classpath reference:
+            android.target.classpath
+        This is used by the compiler task as the boot classpath.
+    -->
+
     <property name="android-tools" value="${sdk-location}/tools" />
 
     <!-- Input directories -->
@@ -55,13 +67,10 @@
     <condition property="exe" value="exe" else=""><os family="windows"/></condition>
     <condition property="bat" value="bat" else=""><os family="windows"/></condition>
 
-    <property name="aapt" value="${android-tools}/aapt${exe}"/>
-    <property name="aidl" value="${android-tools}/aidl${exe}"/>
     <property name="adb" value="${android-tools}/adb${exe}"/>
-    <property name="dx" value="${android-tools}/dx${bat}"/>
     <property name="apk-builder" value="${android-tools}/apkbuilder${bat}"/>
 
-	<!-- rules -->
+    <!-- rules -->
 
     <!-- Create the output directories if they don't exist yet. -->
     <target name="dirs">

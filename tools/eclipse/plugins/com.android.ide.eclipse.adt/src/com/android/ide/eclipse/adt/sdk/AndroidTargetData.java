@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.adt.sdk;
 
+import com.android.ide.eclipse.adt.build.DexWrapper;
 import com.android.ide.eclipse.common.resources.IResourceRepository;
 import com.android.ide.eclipse.editors.descriptors.IDescriptorProvider;
 import com.android.ide.eclipse.editors.layout.descriptors.LayoutDescriptors;
@@ -54,6 +55,8 @@ public class AndroidTargetData {
 
     private final IAndroidTarget mTarget;
 
+    private DexWrapper mDexWrapper;
+
     /**
      * mAttributeValues is a map { key => list [ values ] }.
      * The key for the map is "(element-xml-name,attribute-namespace:attribute-xml-local-name)".
@@ -64,27 +67,34 @@ public class AndroidTargetData {
      * This is used for attributes that do not have a unique name, but still need to be populated
      * with values in the UI. Uniquely named attributes have their values in {@link #mEnumValueMap}.
      */
-    private final Hashtable<String, String[]> mAttributeValues = new Hashtable<String, String[]>();
+    private Hashtable<String, String[]> mAttributeValues = new Hashtable<String, String[]>();
     
     private IResourceRepository mSystemResourceRepository;
 
-    private final AndroidManifestDescriptors mManifestDescriptors;
-    private final LayoutDescriptors mLayoutDescriptors;
-    private final MenuDescriptors mMenuDescriptors;
-    private final XmlDescriptors mXmlDescriptors;
+    private AndroidManifestDescriptors mManifestDescriptors;
+    private LayoutDescriptors mLayoutDescriptors;
+    private MenuDescriptors mMenuDescriptors;
+    private XmlDescriptors mXmlDescriptors;
 
-    private final Map<String, Map<String, Integer>> mEnumValueMap;
+    private Map<String, Map<String, Integer>> mEnumValueMap;
 
-    private final ProjectResources mFrameworkResources;
-    private final LayoutBridge mLayoutBridge;
+    private ProjectResources mFrameworkResources;
+    private LayoutBridge mLayoutBridge;
 
     private boolean mLayoutBridgeInit = false;
 
+    AndroidTargetData(IAndroidTarget androidTarget) {
+        mTarget = androidTarget;
+    }
+    
+    void setDexWrapper(DexWrapper wrapper) {
+        mDexWrapper = wrapper;
+    }
+    
     /**
      * Creates an AndroidTargetData object.
      */
-    AndroidTargetData(IAndroidTarget androidTarget,
-            IResourceRepository systemResourceRepository,
+    void setExtraData(IResourceRepository systemResourceRepository,
             AndroidManifestDescriptors manifestDescriptors,
             LayoutDescriptors layoutDescriptors,
             MenuDescriptors menuDescriptors,
@@ -98,7 +108,6 @@ public class AndroidTargetData {
             ProjectResources resources,
             LayoutBridge layoutBridge) {
         
-        mTarget = androidTarget;
         mSystemResourceRepository = systemResourceRepository;
         mManifestDescriptors = manifestDescriptors;
         mLayoutDescriptors = layoutDescriptors;
@@ -111,6 +120,10 @@ public class AndroidTargetData {
         setPermissions(permissionValues);
         setIntentFilterActionsAndCategories(activityIntentActionValues, broadcastIntentActionValues,
                 serviceIntentActionValues, intentCategoryValues);
+    }
+    
+    public DexWrapper getDexWrapper() {
+        return mDexWrapper;
     }
     
     public IResourceRepository getSystemResources() {

@@ -19,8 +19,8 @@
 #
 
 # host tools from out/host/$(HOST_OS)-$(HOST_ARCH)/
-bin/aapt tools/aapt
-bin/aidl tools/aidl
+bin/aapt platforms/${PLATFORM_NAME}/tools/aapt
+bin/aidl platforms/${PLATFORM_NAME}/tools/aidl
 bin/adb tools/adb
 bin/sqlite3 tools/sqlite3
 bin/dmtracedump tools/dmtracedump
@@ -68,9 +68,9 @@ development/samples/SkeletonApp platforms/${PLATFORM_NAME}/samples/SkeletonApp
 development/samples/Snake platforms/${PLATFORM_NAME}/samples/Snake
 
 # dx
-bin/dx tools/dx
-bin/dexdump tools/dexdump
-framework/dx.jar tools/lib/dx.jar
+bin/dx platforms/${PLATFORM_NAME}/tools/dx
+bin/dexdump platforms/${PLATFORM_NAME}/tools/dexdump
+framework/dx.jar platforms/${PLATFORM_NAME}/tools/lib/dx.jar
 
 #androidprefs
 framework/androidprefs.jar tools/lib/androidprefs.jar

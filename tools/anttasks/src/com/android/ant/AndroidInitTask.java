@@ -55,6 +55,12 @@ public class AndroidInitTask extends ImportTask {
     private final static String PROPERTY_ANDROID_JAR = "android-jar";
     // ant property with the path to the framework.jar
     private final static String PROPERTY_ANDROID_AIDL = "android-aidl";
+    // ant property with the path to the aapt tool
+    private final static String PROPERTY_AAPT = "aapt";
+    // ant property with the path to the aidl tool
+    private final static String PROPERTY_AIDL = "aidl";
+    // ant property with the path to the dx tool
+    private final static String PROPERTY_DX = "dx";
     // ref id to the <path> object containing all the boot classpaths.
     private final static String REF_CLASSPATH = "android.target.classpath";
 
@@ -122,15 +128,19 @@ public class AndroidInitTask extends ImportTask {
         System.out.println("Project Target: " + androidTarget.getName());
         if (androidTarget.isPlatform() == false) {
             System.out.println("Vendor: " + androidTarget.getVendor());
+            System.out.println("Platform Version: " + androidTarget.getApiVersionName());
         }
-        System.out.println("Platform Version: " + androidTarget.getApiVersionName());
         System.out.println("API level: " + androidTarget.getApiVersionNumber());
         
-        // sets up the properties to find android.jar/framework.aidl
+        // sets up the properties to find android.jar/framework.aidl/target tools
         String androidJar = androidTarget.getPath(IAndroidTarget.ANDROID_JAR);
-        String androidAidl = androidTarget.getPath(IAndroidTarget.ANDROID_AIDL);
         antProject.setProperty(PROPERTY_ANDROID_JAR, androidJar);
-        antProject.setProperty(PROPERTY_ANDROID_AIDL, androidAidl);
+
+        antProject.setProperty(PROPERTY_ANDROID_AIDL,
+                androidTarget.getPath(IAndroidTarget.ANDROID_AIDL));
+        antProject.setProperty(PROPERTY_AAPT, androidTarget.getPath(IAndroidTarget.AAPT));
+        antProject.setProperty(PROPERTY_AIDL, androidTarget.getPath(IAndroidTarget.AIDL));
+        antProject.setProperty(PROPERTY_DX, androidTarget.getPath(IAndroidTarget.DX));
 
         // sets up the boot classpath
 

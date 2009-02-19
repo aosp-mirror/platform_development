@@ -20,7 +20,6 @@ import com.android.ddmuilib.StackTracePanel;
 import com.android.ddmuilib.StackTracePanel.ISourceRevealer;
 import com.android.ddmuilib.console.DdmConsole;
 import com.android.ddmuilib.console.IDdmConsole;
-import com.android.ide.eclipse.adt.build.DexWrapper;
 import com.android.ide.eclipse.adt.debug.launching.AndroidLaunchController;
 import com.android.ide.eclipse.adt.preferences.BuildPreferencePage;
 import com.android.ide.eclipse.adt.project.ProjectHelper;
@@ -423,8 +422,6 @@ public class AdtPlugin extends AbstractUIPlugin {
         
         stopEditors();
         
-        DexWrapper.unloadDex();
-
         mRed.dispose();
         synchronized (AdtPlugin.class) {
             sPlugin = null;
@@ -465,19 +462,9 @@ public class AdtPlugin extends AbstractUIPlugin {
         return SdkConstants.OS_SDK_TOOLS_FOLDER + AndroidConstants.FN_ADB;
     }
 
-    /** Returns the aapt path relative to the sdk folder */
-    public static String getOsRelativeAapt() {
-        return SdkConstants.OS_SDK_TOOLS_FOLDER + AndroidConstants.FN_AAPT;
-    }
-
     /** Returns the emulator path relative to the sdk folder */
     public static String getOsRelativeEmulator() {
         return SdkConstants.OS_SDK_TOOLS_FOLDER + AndroidConstants.FN_EMULATOR;
-    }
-
-    /** Returns the aidl path relative to the sdk folder */
-    public static String getOsRelativeAidl() {
-        return SdkConstants.OS_SDK_TOOLS_FOLDER + AndroidConstants.FN_AIDL;
     }
 
     /** Returns the absolute adb path */
@@ -491,19 +478,9 @@ public class AdtPlugin extends AbstractUIPlugin {
                 AndroidConstants.FN_TRACEVIEW;
     }
 
-    /** Returns the absolute aapt path */
-    public static String getOsAbsoluteAapt() {
-        return getOsSdkFolder() + getOsRelativeAapt();
-    }
-
     /** Returns the absolute emulator path */
     public static String getOsAbsoluteEmulator() {
         return getOsSdkFolder() + getOsRelativeEmulator();
-    }
-
-    /** Returns the absolute aidl path */
-    public static String getOsAbsoluteAidl() {
-        return getOsSdkFolder() + getOsRelativeAidl();
     }
 
     /**
@@ -968,8 +945,6 @@ public class AdtPlugin extends AbstractUIPlugin {
         // check the path to various tools we use
         String[] filesToCheck = new String[] {
                 osSdkLocation + getOsRelativeAdb(),
-                osSdkLocation + getOsRelativeAapt(),
-                osSdkLocation + getOsRelativeAidl(),
                 osSdkLocation + getOsRelativeEmulator()
         };
         for (String file : filesToCheck) {
@@ -1058,17 +1033,6 @@ public class AdtPlugin extends AbstractUIPlugin {
                         // FIXME: move this per platform, or somewhere else.
                         progress = SubMonitor.convert(monitor,
                                 Messages.AdtPlugin_Parsing_Resources, 20);
-                        DexWrapper.unloadDex();
-
-                        IStatus res = DexWrapper.loadDex(
-                                mOsSdkLocation + AndroidConstants.OS_SDK_LIBS_DX_JAR);
-                        if (res != Status.OK_STATUS) {
-                            synchronized (getSdkLockObject()) {
-                                mSdkIsLoaded = LoadStatus.FAILED;
-                                mPostLoadProjectsToResolve.clear();
-                            }
-                            return res;
-                        }
 
                         synchronized (getSdkLockObject()) {
                             mSdkIsLoaded = LoadStatus.LOADED;

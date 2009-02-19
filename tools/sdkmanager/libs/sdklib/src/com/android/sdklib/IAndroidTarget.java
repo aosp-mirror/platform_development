@@ -60,6 +60,14 @@ public interface IAndroidTarget extends Comparable<IAndroidTarget> {
     public static int SOURCES             = 18;
     /** OS Path to the target specific docs */
     public static int DOCS                = 19;
+    /** OS Path to the target's version of the aapt tool. */
+    public static int AAPT                = 20;
+    /** OS Path to the target's version of the aidl tool. */
+    public static int AIDL                = 21;
+    /** OS Path to the target's version of the dx too. */
+    public static int DX                  = 22;
+    /** OS Path to the target's version of the dx.jar file. */
+    public static int DX_JAR              = 23;
     
     public interface IOptionalLibrary {
         String getName();
@@ -109,6 +117,12 @@ public interface IAndroidTarget extends Comparable<IAndroidTarget> {
     boolean isPlatform();
     
     /**
+     * Returns the parent target. This is likely to only be non <code>null</code> if
+     * {@link #isPlatform()} returns <code>false</code>
+     */
+    IAndroidTarget getParent();
+    
+    /**
      * Returns the path of a platform component.
      * @param pathId the id representing the path to return. Any of the constants defined in the
      * {@link IAndroidTarget} interface can be used.
@@ -119,6 +133,11 @@ public interface IAndroidTarget extends Comparable<IAndroidTarget> {
      * Returns the available skins for this target.
      */
     String[] getSkins();
+    
+    /**
+     * Returns the default skin for this target.
+     */
+    String getDefaultSkin();
     
     /**
      * Returns the available optional libraries for this target.

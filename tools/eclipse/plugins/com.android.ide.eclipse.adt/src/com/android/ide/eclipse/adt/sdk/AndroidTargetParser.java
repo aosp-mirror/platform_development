@@ -17,6 +17,7 @@
 package com.android.ide.eclipse.adt.sdk;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.build.DexWrapper;
 import com.android.ide.eclipse.adt.sdk.AndroidTargetData.LayoutBridge;
 import com.android.ide.eclipse.common.AndroidConstants;
 import com.android.ide.eclipse.common.resources.AttrsXmlParser;
@@ -91,8 +92,25 @@ public final class AndroidTargetParser {
         try {
             SubMonitor progress = SubMonitor.convert(monitor,
                     String.format("Parsing SDK %1$s", mAndroidTarget.getName()),
-                    120);
+                    200);
             
+            AndroidTargetData targetData = new AndroidTargetData(mAndroidTarget);
+
+            // load DX.
+            DexWrapper dexWrapper = new DexWrapper();
+            IStatus res = dexWrapper.loadDex(mAndroidTarget.getPath(IAndroidTarget.DX_JAR));
+            if (res != Status.OK_STATUS) {
+                return new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID,
+                        String.format("dx.jar loading failed for target '%1$s'",
+                                mAndroidTarget.getFullName()));
+            }
+            
+            // we have loaded dx.
+            targetData.setDexWrapper(dexWrapper);
+            
+            // parse the rest of the data.
+            progress.setWorkRemaining(120);
+
             AndroidJarLoader classLoader =
                 new AndroidJarLoader(mAndroidTarget.getPath(IAndroidTarget.ANDROID_JAR));
             
@@ -229,8 +247,7 @@ public final class AndroidTargetParser {
             progress.worked(10);
             
             // and finally create the PlatformData with all that we loaded.
-            AndroidTargetData targetData = new AndroidTargetData(mAndroidTarget,
-                    frameworkRepository,
+            targetData.setExtraData(frameworkRepository,
                     manifestDescriptors,
                     layoutDescriptors,
                     menuDescriptors,

@@ -18,6 +18,8 @@ package com.android.ide.eclipse.adt.sdk;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.project.internal.AndroidClasspathContainerInitializer;
+import com.android.ide.eclipse.editors.resources.manager.ResourceMonitor;
+import com.android.ide.eclipse.editors.resources.manager.ResourceMonitor.IProjectListener;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.ISdkLog;
@@ -28,6 +30,8 @@ import com.android.sdklib.project.ProjectProperties;
 import com.android.sdklib.project.ProjectProperties.PropertyType;
 
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IncrementalProjectBuilder;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
@@ -38,6 +42,9 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.Map.Entry;
 
 /**
  * Central point to load, manipulate and deal with the Android SDK. Only one SDK can be used
@@ -48,18 +55,19 @@ import java.util.HashMap;
  * 
  * To get the list of platforms or add-ons present in the SDK, call {@link #getTargets()}.
  */
-public class Sdk {
+public class Sdk implements IProjectListener {
     private static Sdk sCurrentSdk = null;
 
     private final SdkManager mManager;
     private final AvdManager mAvdManager;
 
-    private final HashMap<IProject, IAndroidTarget> mProjectMap =
+    private final HashMap<IProject, IAndroidTarget> mProjectTargetMap =
             new HashMap<IProject, IAndroidTarget>();
-    private final HashMap<IAndroidTarget, AndroidTargetData> mTargetMap = 
+    private final HashMap<IAndroidTarget, AndroidTargetData> mTargetDataMap = 
             new HashMap<IAndroidTarget, AndroidTargetData>();
+    private final HashMap<IProject, Map<String, String>> mProjectConfigMap =
+        new HashMap<IProject, Map<String, String>>();
     private final String mDocBaseUrl;
-
     
     /**
      * Loads an SDK and returns an {@link Sdk} object if success.
@@ -67,7 +75,7 @@ public class Sdk {
      */
     public static Sdk loadSdk(String sdkLocation) {
         if (sCurrentSdk != null) {
-            // manual unload?
+            sCurrentSdk.dispose();
             sCurrentSdk = null;
         }
 
@@ -159,16 +167,16 @@ public class Sdk {
      * Associates an {@link IProject} and an {@link IAndroidTarget}.
      */
     public void setProject(IProject project, IAndroidTarget target) {
-        synchronized (mProjectMap) {
+        synchronized (mProjectTargetMap) {
             // look for the current target of the project
-            IAndroidTarget previousTarget = mProjectMap.get(project);
+            IAndroidTarget previousTarget = mProjectTargetMap.get(project);
             
             if (target != previousTarget) {
                 // save the target hash string in the project persistent property
                 setProjectTargetHashString(project, target.hashString());
                 
                 // put it in a local map for easy access.
-                mProjectMap.put(project, target);
+                mProjectTargetMap.put(project, target);
 
                 // recompile the project if needed.
                 IJavaProject javaProject = JavaCore.create(project);
@@ -182,11 +190,11 @@ public class Sdk {
      * Returns the {@link IAndroidTarget} object associated with the given {@link IProject}.
      */
     public IAndroidTarget getTarget(IProject project) {
-        synchronized (mProjectMap) {
-            IAndroidTarget target = mProjectMap.get(project);
+        synchronized (mProjectTargetMap) {
+            IAndroidTarget target = mProjectTargetMap.get(project);
             if (target == null) {
                 // get the value from the project persistent property.
-                String targetHashString = getProjectTargetHashString(project);
+                String targetHashString = loadProjectProperties(project, this);
 
                 if (targetHashString != null) {
                     target = mManager.getTargetFromHashString(targetHashString);
@@ -197,14 +205,19 @@ public class Sdk {
         }
     }
     
+
     /**
-     * Returns the hash string uniquely identifying the target of a project. This methods reads
-     * the string from the project persistent preferences/properties.
-     * <p/>The string is equivalent to the return of {@link IAndroidTarget#hashString()}.
+     * Parses the project properties and returns the hash string uniquely identifying the
+     * target of the given project.
+     * <p/>
+     * This methods reads the content of the <code>default.properties</code> file present in
+     * the root folder of the project.
+     * <p/>The returned string is equivalent to the return of {@link IAndroidTarget#hashString()}.
      * @param project The project for which to return the target hash string.
+     * @param storeConfigs Whether the read configuration should be stored in the map. 
      * @return the hash string or null if the project does not have a target set.
      */
-    public static String getProjectTargetHashString(IProject project) {
+    private static String loadProjectProperties(IProject project, Sdk storeConfigs) {
         // load the default.properties from the project folder.
         ProjectProperties properties = ProjectProperties.load(project.getLocation().toOSString(),
                 PropertyType.DEFAULT);
@@ -214,11 +227,46 @@ public class Sdk {
             return null;
         }
         
+        if (storeConfigs != null) {
+            // get the list of configs.
+            String configList = properties.getProperty(ProjectProperties.PROPERTY_CONFIGS);
+            
+            // this is a comma separated list
+            String[] configs = configList.split(","); //$NON-NLS-1$
+            
+            // read the value of each config and store it in a map
+            HashMap<String, String> configMap = new HashMap<String, String>();
+            
+            for (String config : configs) {
+                String configValue = properties.getProperty(config);
+                if (configValue != null) {
+                    configMap.put(config, configValue);
+                }
+            }
+            
+            if (configMap.size() > 0) {
+                storeConfigs.mProjectConfigMap.put(project, configMap);
+            }
+        }
+        
         return properties.getProperty(ProjectProperties.PROPERTY_TARGET);
+    }
+    
+    /**
+     * Returns the hash string uniquely identifying the target of a project.
+     * <p/>
+     * This methods reads the content of the <code>default.properties</code> file present in
+     * the root folder of the project.
+     * <p/>The string is equivalent to the return of {@link IAndroidTarget#hashString()}.
+     * @param project The project for which to return the target hash string.
+     * @return the hash string or null if the project does not have a target set.
+     */
+    public static String getProjectTargetHashString(IProject project) {
+        return loadProjectProperties(project, null /*storeConfigs*/);
     }
 
     /**
-     * Sets a target hash string in a project's persistent preferences/property storage.
+     * Sets a target hash string in given project's <code>default.properties</code> file.
      * @param project The project in which to save the hash string.
      * @param targetHashString The target hash string to save. This must be the result from
      * {@link IAndroidTarget#hashString()}.
@@ -249,11 +297,81 @@ public class Sdk {
      * Return the {@link AndroidTargetData} for a given {@link IAndroidTarget}.
      */
     public AndroidTargetData getTargetData(IAndroidTarget target) {
-        synchronized (mTargetMap) {
-            return mTargetMap.get(target);
+        synchronized (mTargetDataMap) {
+            return mTargetDataMap.get(target);
         }
     }
     
+    /**
+     * Returns the configuration map for a given project.
+     * <p/>The Map key are name to be used in the apk filename, while the values are comma separated
+     * config values. The config value can be passed directly to aapt through the -c option.
+     */
+    public Map<String, String> getProjectConfigs(IProject project) {
+        return mProjectConfigMap.get(project);
+    }
+    
+    public void setProjectConfigs(IProject project, Map<String, String> configMap)
+            throws CoreException {
+        // first set the new map
+        mProjectConfigMap.put(project, configMap);
+        
+        // Now we write this in default.properties.
+        // Because we don't want to erase other properties from default.properties, we first load
+        // them
+        ProjectProperties properties = ProjectProperties.load(project.getLocation().toOSString(),
+                PropertyType.DEFAULT);
+        if (properties == null) {
+            // doesn't exist yet? we create it.
+            properties = ProjectProperties.create(project.getLocation().toOSString(),
+                    PropertyType.DEFAULT);
+        }
+        
+        // load the current configs, in order to remove the value properties for each of them
+        // in case a config was removed.
+        
+        // get the list of configs.
+        String configList = properties.getProperty(ProjectProperties.PROPERTY_CONFIGS);
+        
+        // this is a comma separated list
+        String[] configs = configList.split(","); //$NON-NLS-1$
+        
+        boolean hasRemovedConfig = false;
+        
+        for (String config : configs) {
+            if (configMap.containsKey(config) == false) {
+                hasRemovedConfig = true;
+                properties.removeProperty(config);
+            }
+        }
+        
+        // now add the properties.
+        Set<Entry<String, String>> entrySet = configMap.entrySet();
+        StringBuilder sb = new StringBuilder();
+        for (Entry<String, String> entry : entrySet) {
+            if (sb.length() > 0) {
+                sb.append(",");
+            }
+            sb.append(entry.getKey());
+            properties.setProperty(entry.getKey(), entry.getValue());
+        }
+        properties.setProperty(ProjectProperties.PROPERTY_CONFIGS, sb.toString());
+
+        // and rewrite the file.
+        try {
+            properties.save();
+        } catch (IOException e) {
+            AdtPlugin.log(e, "Failed to save default.properties for project '%s'",
+                    project.getName());
+        }
+
+        // we're done, force a rebuild. If there was removed config, we clean instead of build
+        // (to remove the obsolete ap_ and apk file from removed configs). 
+        project.build(hasRemovedConfig ?
+                IncrementalProjectBuilder.CLEAN_BUILD : IncrementalProjectBuilder.FULL_BUILD,
+                null);
+    }
+
     /**
      * Returns the {@link AvdManager}. If the AvdManager failed to parse the AVD folder, this could
      * be <code>null</code>.
@@ -266,14 +384,25 @@ public class Sdk {
         mManager = manager;
         mAvdManager = avdManager;
         
+        // listen to projects closing
+        ResourceMonitor monitor = ResourceMonitor.getMonitor();
+        monitor.addProjectListener(this);
+        
         // pre-compute some paths
         mDocBaseUrl = getDocumentationBaseUrl(mManager.getLocation() +
                 SdkConstants.OS_SDK_DOCS_FOLDER);
     }
+
+    /**
+     *  Cleans and unloads the SDK.
+     */
+    private void dispose() {
+        ResourceMonitor.getMonitor().removeProjectListener(this);
+    }
     
     void setTargetData(IAndroidTarget target, AndroidTargetData data) {
-        synchronized (mTargetMap) {
-            mTargetMap.put(target, data);
+        synchronized (mTargetDataMap) {
+            mTargetDataMap.put(target, data);
         }
     }
     
@@ -314,6 +443,24 @@ public class Sdk {
         return null;
     }
 
+    public void projectClosed(IProject project) {
+        mProjectTargetMap.remove(project);
+        mProjectConfigMap.remove(project);
+    }
+
+    public void projectDeleted(IProject project) {
+        projectClosed(project);
+    }
+
+    public void projectOpened(IProject project) {
+        // ignore this. The project will be added to the map the first time the target needs
+        // to be resolved.
+    }
+
+    public void projectOpenedWithWorkspace(IProject project) {
+        // ignore this. The project will be added to the map the first time the target needs
+        // to be resolved.
+    }
 }
 
 

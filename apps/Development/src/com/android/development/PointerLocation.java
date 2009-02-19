@@ -40,6 +40,11 @@ public class PointerLocation extends Activity {
     protected void onCreate(Bundle icicle) {
         super.onCreate(icicle);
         setContentView(new MyView(this));
+        
+        // Make the screen full bright for this activity.
+        WindowManager.LayoutParams lp = getWindow().getAttributes();
+        lp.screenBrightness = 1.0f;
+        getWindow().setAttributes(lp);
     }
     
     public class MyView extends View {
