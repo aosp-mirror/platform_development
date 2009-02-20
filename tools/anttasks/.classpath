@@ -4,5 +4,6 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/SdkLib"/>
 	<classpathentry kind="var" path="ANDROID_SRC/prebuilt/common/ant/ant.jar"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/ApkBuilder"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

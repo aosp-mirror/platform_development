@@ -290,7 +290,7 @@
       <perspectiveExtension targetID="org.eclipse.jdt.ui.JavaPerspective">
          <newWizardShortcut id="com.android.ide.eclipse.adt.project.NewProjectWizard" />
          <newWizardShortcut
-               id="com.android.ide.eclipse.adt.wizards.NewXmlFileWizard">
+               id="com.android.ide.eclipse.editors.wizards.NewXmlFileWizard">
          </newWizardShortcut>
       </perspectiveExtension>
       <perspectiveExtension targetID="org.eclipse.debug.ui.DebugPerspective">

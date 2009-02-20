@@ -50,6 +50,7 @@ public class MonkeySourceRandom implements MonkeyEventSource{
         KeyEvent.KEYCODE_HOME, KeyEvent.KEYCODE_BACK,
         KeyEvent.KEYCODE_CALL, KeyEvent.KEYCODE_ENDCALL,
         KeyEvent.KEYCODE_VOLUME_UP, KeyEvent.KEYCODE_VOLUME_DOWN,
+        KeyEvent.KEYCODE_MUTE,
     };
     /** Nice names for all key events. */
     private static final String[] KEY_NAMES = {
@@ -144,6 +145,7 @@ public class MonkeySourceRandom implements MonkeyEventSource{
         "KEYCODE_PREVIOUSSONG",
         "KEYCODE_REWIND",
         "KEYCODE_FORWARD",
+        "KEYCODE_MUTE",
         
         "TAG_LAST_KEYCODE"      // EOL.  used to keep the lists in sync
     };

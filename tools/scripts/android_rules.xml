@@ -13,6 +13,17 @@
         This is used by the compiler task as the boot classpath.
     -->
 
+    <!-- Custom tasks -->
+    <taskdef name="aaptexec"
+        classname="com.android.ant.AaptExecLoopTask"
+        classpathref="android.antlibs"/>
+
+    <taskdef name="apkbuilder"
+        classname="com.android.ant.ApkBuilderTask"
+        classpathref="android.antlibs"/>
+
+    <!-- Properties -->
+
     <property name="android-tools" value="${sdk-location}/tools" />
 
     <!-- Input directories -->
@@ -20,15 +31,12 @@
     <property name="resource-folder" value="res" />
     <property name="asset-folder" value="assets" />
     <property name="source-location" value="${basedir}/${source-folder}" />
-    <available file="${basedir}/${asset-folder}" property="has.asset.folder"/>
 
     <!-- folder for the 3rd party java libraries -->
-    <property name="external-libs" value="libs" />
-    <property name="external-libs-location" value="${basedir}/${external-libs}"/>
+    <property name="external-libs-folder" value="libs" />
 
     <!-- folder for the native libraries -->
-    <property name="native-libs" value="libs" />
-    <property name="native-libs-location" value="${basedir}/${native-libs}"/>
+    <property name="native-libs-folder" value="libs" />
 
     <!-- Output directories -->
     <property name="out-folder" value="bin" />
@@ -54,21 +62,11 @@
     </condition>
 
     <!-- The final package file to generate -->
-    <property name="resources-package" value="${out-folder}/${ant.project.name}.ap_"/>
-    <property name="resources-package-location" value="${basedir}/${resources-package}"/>
-
     <property name="out-debug-package" value="${out-folder}/${ant.project.name}-debug.apk"/>
-    <property name="out-debug-package-location" value="${basedir}/${out-debug-package}"/>
-
-    <property name="out-unsigned-package" value="${out-folder}/${ant.project.name}-unsigned.apk"/>
-    <property name="out-unsigned-package-location" value="${basedir}/${out-unsigned-package}"/>
 
     <!-- Tools -->
     <condition property="exe" value="exe" else=""><os family="windows"/></condition>
-    <condition property="bat" value="bat" else=""><os family="windows"/></condition>
-
     <property name="adb" value="${android-tools}/adb${exe}"/>
-    <property name="apk-builder" value="${android-tools}/apkbuilder${bat}"/>
 
     <!-- rules -->
 
@@ -115,7 +113,7 @@
                 destdir="${out-classes}"
                 bootclasspathref="android.target.classpath">
             <classpath>
-                <fileset dir="${external-libs}" includes="*.jar"/>
+                <fileset dir="${external-libs-folder}" includes="*.jar"/>
                 <pathelement path="${main-out-classes}"/>
             </classpath>
          </javac>
@@ -128,85 +126,56 @@
             <arg value="--dex" />
             <arg value="--output=${intermediate-dex-location}" />
             <arg path="${out-classes-location}" />
-            <fileset dir="${external-libs}" includes="*.jar"/>
+            <fileset dir="${external-libs-folder}" includes="*.jar"/>
         </apply>
     </target>
 
-    <!-- Put the project's resources into the output package file. -->
-    <target name="package-res-and-assets" if="has.asset.folder">
-        <echo>Packaging resources and assets...</echo>
-        <exec executable="${aapt}" failonerror="true">
-            <arg value="package" />
-            <arg value="-f" />
-            <arg value="-M" />
-            <arg path="AndroidManifest.xml" />
-            <arg value="-S" />
-            <arg path="${resource-folder}" />
-            <arg value="-A" />
-            <arg path="${asset-folder}" />
-            <arg value="-I" />
-            <arg path="${android-jar}" />
-            <arg value="-F" />
-            <arg value="${resources-package}" />
-        </exec>
-    </target>
-
-    <!-- Same as package-res-and-assets, but without "-A ${asset-folder}" -->
-    <target name="package-res-no-assets" unless="has.asset.folder">
-        <echo>Packaging resources...</echo>
-        <exec executable="${aapt}" failonerror="true">
-            <arg value="package" />
-            <arg value="-f" />
-            <arg value="-M" />
-            <arg path="AndroidManifest.xml" />
-            <arg value="-S" />
-            <arg path="${resource-folder}" />
-            <!-- No assets directory -->
-            <arg value="-I" />
-            <arg path="${android-jar}" />
-            <arg value="-F" />
-            <arg path="${resources-package}" />
-        </exec>
+    <!-- Put the project's resources into the output package file
+         This actually can create multiple resource package in case
+         Some custom apk with specific configuration have been
+         declared in default.properties.
+         -->
+    <target name="package-resources">
+        <echo>Packaging resources</echo>
+        <aaptexec executable="${aapt}"
+                command="package"
+                manifest="AndroidManifest.xml"
+                resources="${resource-folder}"
+                assets="${asset-folder}"
+                androidjar="${android-jar}"
+                outfolder="${out-folder}"
+                basename="${ant.project.name}" />
     </target>
 
     <!-- Package the application and sign it with a debug key.
          This is the default target when building. It is used for debug. -->
-    <target name="debug" depends="dex, package-res-and-assets, package-res-no-assets">
-        <echo>Packaging ${out-debug-package}, and signing it with a debug key...</echo>
-        <exec executable="${apk-builder}" failonerror="true">
-            <arg value="${out-debug-package-location}" />
-            <arg value="-z" />
-            <arg path="${resources-package-location}" />
-            <arg value="-f" />
-            <arg path="${intermediate-dex-location}" />
-            <arg value="-rf" />
-            <arg path="${source-location}" />
-            <arg value="-rj" />
-            <arg path="${external-libs-location}" />
-            <arg value="-nf" />
-            <arg path="${native-libs-location}" />
-        </exec>
+    <target name="debug" depends="dex, package-resources">
+        <apkbuilder
+                outfolder="${out-folder}"
+                basename="${ant.project.name}"
+                signed="true"
+                verbose="false">
+            <file path="${intermediate-dex}" />
+            <sourcefolder path="${source-folder}" />
+            <jarfolder path="${external-libs-folder}" />
+            <nativefolder path="${native-libs-folder}" />
+        </apkbuilder>
     </target>
 
     <!-- Package the application without signing it.
          This allows for the application to be signed later with an official publishing key. -->
-    <target name="release" depends="dex, package-res-and-assets, package-res-no-assets">
-        <echo>Packaging ${out-unsigned-package} for release...</echo>
-        <exec executable="${apk-builder}" failonerror="true">
-            <arg value="${out-unsigned-package-location}" />
-            <arg value="-u" />
-            <arg value="-z" />
-            <arg path="${resources-package-location}" />
-            <arg value="-f" />
-            <arg path="${intermediate-dex-location}" />
-            <arg value="-rf" />
-            <arg path="${source-location}" />
-            <arg value="-rj" />
-            <arg path="${external-libs-location}" />
-            <arg value="-nf" />
-            <arg path="${native-libs-location}" />
-        </exec>
-        <echo>It will need to be signed with jarsigner before it is published.</echo>
+    <target name="release" depends="dex, package-resources">
+        <apkbuilder
+                outfolder="${out-folder}"
+                basename="${ant.project.name}"
+                signed="false"
+                verbose="false">
+            <file path="${intermediate-dex}" />
+            <sourcefolder path="${source-folder}" />
+            <jarfolder path="${external-libs-folder}" />
+            <nativefolder path="${native-libs-folder}" />
+        </apkbuilder>
+        <echo>All generated packages need to be signed with jarsigner before they are published.</echo>
     </target>
 
     <!-- Install the package on the default emulator -->

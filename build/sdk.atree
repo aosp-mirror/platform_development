@@ -138,7 +138,7 @@ development/emulator/skins/QVGA-P platforms/${PLATFORM_NAME}/skins/QVGA-P
 # NOTICE files are copied by build/core/Makefile
 
 # the readme
-development/docs/SDK_RELEASE_NOTES RELEASE_NOTES.txt
+development/docs/SDK_RELEASE_NOTES RELEASE_NOTES.html
 
 # the docs
 docs/offline-sdk docs

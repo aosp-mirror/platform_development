@@ -16,6 +16,11 @@
          
          <ant antfile="${genericTargets}" target="${target}">
              <property name="type" value="feature" />
+             <property name="id" value="com.android.ide.eclipse.ddms" />
+         </ant>
+
+         <ant antfile="${genericTargets}" target="${target}">
+             <property name="type" value="feature" />
              <property name="id" value="com.android.ide.eclipse.adt" />
          </ant>
          
@@ -42,6 +47,10 @@
      <!-- Replace element.id with the id of the top level element being built   -->
      <!-- ===================================================================== -->
      <target name="assemble.com.android.ide.eclipse.adt">
+         <ant antfile="${assembleScriptName}" dir="${buildDirectory}"/>
+     </target>
+
+     <target name="assemble.com.android.ide.eclipse.ddms">
          <ant antfile="${assembleScriptName}" dir="${buildDirectory}"/>
      </target>
     

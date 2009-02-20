@@ -1,11 +1,11 @@
 /*
- * Copyright (C) 2008 The Android Open Source Project
+ * Copyright (C) 2009 The Android Open Source Project
  *
- * Licensed under the Eclipse Public License, Version 1.0 (the "License");
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.eclipse.org/org/documents/epl-v10.php
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -33,7 +33,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 
 /**
- * Import Target Ant task. This task accomplishes:
+ * Setup/Import Ant task. This task accomplishes:
  * <ul>
  * <li>Gets the project target hash string from {@link ProjectProperties#PROPERTY_TARGET},
  * and resolves it to get the project's {@link IAndroidTarget}.</li>
@@ -42,13 +42,13 @@ import java.util.HashSet;
  * the libraries. This includes the default android.jar from the resolved target but also optional
  * libraries provided by the target (if any, when the target is an add-on).</li>
  * <li>Imports the build rules located in the resolved target so that the build actually does
- * something.</li>
- * </ul>
+ * something. This can be disabled with the attribute <var>import</var> set to <code>false</code>
+ * </li></ul>
  * 
  * This is used in build.xml/template.
  *
  */
-public class AndroidInitTask extends ImportTask {
+public final class SetupTask extends ImportTask {
     private final static String ANDROID_RULES = "android_rules.xml";
     
     // ant property with the path to the android.jar
@@ -63,6 +63,8 @@ public class AndroidInitTask extends ImportTask {
     private final static String PROPERTY_DX = "dx";
     // ref id to the <path> object containing all the boot classpaths.
     private final static String REF_CLASSPATH = "android.target.classpath";
+    
+    private boolean mDoImport = true;
 
     @Override
     public void execute() throws BuildException {
@@ -172,24 +174,35 @@ public class AndroidInitTask extends ImportTask {
         // find the file to import, and import it.
         String templateFolder = androidTarget.getPath(IAndroidTarget.TEMPLATES);
         
-        // make sure the file exists.
-        File templates = new File(templateFolder);
-        if (templates.isDirectory() == false) {
-            throw new BuildException(String.format("Template directory '%s' is missing.",
-                    templateFolder));
+        // Now the import section. This is only executed if the task actually has to import a file.
+        if (mDoImport) {
+            // make sure the file exists.
+            File templates = new File(templateFolder);
+            if (templates.isDirectory() == false) {
+                throw new BuildException(String.format("Template directory '%s' is missing.",
+                        templateFolder));
+            }
+            
+            // now check the rules file exists.
+            File rules = new File(templateFolder, ANDROID_RULES);
+            if (rules.isFile() == false) {
+                throw new BuildException(String.format("Build rules file '%s' is missing.",
+                        templateFolder));
+           }
+            
+            // set the file location to import
+            setFile(rules.getAbsolutePath());
+            
+            // and import
+            super.execute();
         }
-        
-        // now check the rules file exists.
-        File rules = new File(templateFolder, ANDROID_RULES);
-        if (rules.isFile() == false) {
-            throw new BuildException(String.format("Build rules file '%s' is missing.",
-                    templateFolder));
-       }
-        
-        // set the file location to import
-        setFile(rules.getAbsolutePath());
-        
-        // and import it
-        super.execute();
+    }
+
+    /**
+     * Sets the value of the "import" attribute.
+     * @param value the value.
+     */
+    public void setImport(boolean value) {
+        mDoImport = value;
     }
 }

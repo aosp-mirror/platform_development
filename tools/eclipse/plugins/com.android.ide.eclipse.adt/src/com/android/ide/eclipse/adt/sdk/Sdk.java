@@ -26,6 +26,7 @@ import com.android.sdklib.ISdkLog;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.avd.AvdManager;
+import com.android.sdklib.project.ApkConfigurationHelper;
 import com.android.sdklib.project.ProjectProperties;
 import com.android.sdklib.project.ProjectProperties.PropertyType;
 
@@ -43,8 +44,6 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
-import java.util.Map.Entry;
 
 /**
  * Central point to load, manipulate and deal with the Android SDK. Only one SDK can be used
@@ -65,7 +64,7 @@ public class Sdk implements IProjectListener {
             new HashMap<IProject, IAndroidTarget>();
     private final HashMap<IAndroidTarget, AndroidTargetData> mTargetDataMap = 
             new HashMap<IAndroidTarget, AndroidTargetData>();
-    private final HashMap<IProject, Map<String, String>> mProjectConfigMap =
+    private final HashMap<IProject, Map<String, String>> mProjectApkConfigMap =
         new HashMap<IProject, Map<String, String>>();
     private final String mDocBaseUrl;
     
@@ -214,10 +213,10 @@ public class Sdk implements IProjectListener {
      * the root folder of the project.
      * <p/>The returned string is equivalent to the return of {@link IAndroidTarget#hashString()}.
      * @param project The project for which to return the target hash string.
-     * @param storeConfigs Whether the read configuration should be stored in the map. 
+     * @param sdkStorage The sdk in which to store the Apk Configs. Can be null. 
      * @return the hash string or null if the project does not have a target set.
      */
-    private static String loadProjectProperties(IProject project, Sdk storeConfigs) {
+    private static String loadProjectProperties(IProject project, Sdk sdkStorage) {
         // load the default.properties from the project folder.
         ProjectProperties properties = ProjectProperties.load(project.getLocation().toOSString(),
                 PropertyType.DEFAULT);
@@ -227,25 +226,11 @@ public class Sdk implements IProjectListener {
             return null;
         }
         
-        if (storeConfigs != null) {
-            // get the list of configs.
-            String configList = properties.getProperty(ProjectProperties.PROPERTY_CONFIGS);
-            
-            // this is a comma separated list
-            String[] configs = configList.split(","); //$NON-NLS-1$
-            
-            // read the value of each config and store it in a map
-            HashMap<String, String> configMap = new HashMap<String, String>();
-            
-            for (String config : configs) {
-                String configValue = properties.getProperty(config);
-                if (configValue != null) {
-                    configMap.put(config, configValue);
-                }
-            }
+        if (sdkStorage != null) {
+            Map<String, String> configMap = ApkConfigurationHelper.getConfigs(properties);
             
             if (configMap.size() > 0) {
-                storeConfigs.mProjectConfigMap.put(project, configMap);
+                sdkStorage.mProjectApkConfigMap.put(project, configMap);
             }
         }
         
@@ -307,14 +292,14 @@ public class Sdk implements IProjectListener {
      * <p/>The Map key are name to be used in the apk filename, while the values are comma separated
      * config values. The config value can be passed directly to aapt through the -c option.
      */
-    public Map<String, String> getProjectConfigs(IProject project) {
-        return mProjectConfigMap.get(project);
+    public Map<String, String> getProjectApkConfigs(IProject project) {
+        return mProjectApkConfigMap.get(project);
     }
     
-    public void setProjectConfigs(IProject project, Map<String, String> configMap)
+    public void setProjectApkConfigs(IProject project, Map<String, String> configMap)
             throws CoreException {
         // first set the new map
-        mProjectConfigMap.put(project, configMap);
+        mProjectApkConfigMap.put(project, configMap);
         
         // Now we write this in default.properties.
         // Because we don't want to erase other properties from default.properties, we first load
@@ -327,35 +312,8 @@ public class Sdk implements IProjectListener {
                     PropertyType.DEFAULT);
         }
         
-        // load the current configs, in order to remove the value properties for each of them
-        // in case a config was removed.
-        
-        // get the list of configs.
-        String configList = properties.getProperty(ProjectProperties.PROPERTY_CONFIGS);
-        
-        // this is a comma separated list
-        String[] configs = configList.split(","); //$NON-NLS-1$
-        
-        boolean hasRemovedConfig = false;
-        
-        for (String config : configs) {
-            if (configMap.containsKey(config) == false) {
-                hasRemovedConfig = true;
-                properties.removeProperty(config);
-            }
-        }
-        
-        // now add the properties.
-        Set<Entry<String, String>> entrySet = configMap.entrySet();
-        StringBuilder sb = new StringBuilder();
-        for (Entry<String, String> entry : entrySet) {
-            if (sb.length() > 0) {
-                sb.append(",");
-            }
-            sb.append(entry.getKey());
-            properties.setProperty(entry.getKey(), entry.getValue());
-        }
-        properties.setProperty(ProjectProperties.PROPERTY_CONFIGS, sb.toString());
+        // sets the configs in the property file.
+        boolean hasRemovedConfig = ApkConfigurationHelper.setConfigs(properties, configMap);
 
         // and rewrite the file.
         try {
@@ -445,7 +403,7 @@ public class Sdk implements IProjectListener {
 
     public void projectClosed(IProject project) {
         mProjectTargetMap.remove(project);
-        mProjectConfigMap.remove(project);
+        mProjectApkConfigMap.remove(project);
     }
 
     public void projectDeleted(IProject project) {

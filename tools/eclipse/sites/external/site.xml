@@ -6,6 +6,9 @@
    <feature url="features/com.android.ide.eclipse.adt_0.9.0.qualifier.jar" id="com.android.ide.eclipse.adt" version="0.9.0.qualifier">
       <category name="developer"/>
    </feature>
+   <feature url="features/com.android.ide.eclipse.ddms_0.9.0.qualifier.jar" id="com.android.ide.eclipse.ddms" version="0.9.0.qualifier">
+      <category name="developer"/>
+   </feature>
    <category-def name="developer" label="Developer Tools">
       <description>
          Features that add Android support to Eclipse for application developers.

@@ -314,9 +314,14 @@ public class ProjectCreator {
             }
         }
 
-        // Update default.prop iif --target was specified
+        // Update default.prop if --target was specified
         if (target != null) {
-            props = ProjectProperties.create(folderPath, PropertyType.DEFAULT);
+            // we already attempted to load the file earlier, if that failed, create it.
+            if (props == null) {
+                props = ProjectProperties.create(folderPath, PropertyType.DEFAULT);
+            }
+            
+            // set or replace the target
             props.setAndroidTarget(target);
             try {
                 props.save();
@@ -330,7 +335,14 @@ public class ProjectCreator {
         }
         
         // Refresh/create "sdk" in local.properties
-        props = ProjectProperties.create(folderPath, PropertyType.LOCAL);
+        // because the file may already exists and contain other values (like apk config),
+        // we first try to load it.
+        props = ProjectProperties.load(folderPath, PropertyType.LOCAL);
+        if (props == null) {
+            props = ProjectProperties.create(folderPath, PropertyType.LOCAL);
+        }
+        
+        // set or replace the sdk location.
         props.setProperty(ProjectProperties.PROPERTY_SDK, mSdkFolder);
         try {
             props.save();

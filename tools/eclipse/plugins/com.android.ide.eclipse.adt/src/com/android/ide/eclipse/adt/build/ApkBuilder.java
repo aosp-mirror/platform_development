@@ -284,7 +284,7 @@ public class ApkBuilder extends BaseBuilder {
 
         // get the extra configs for the project. This will give us a list of custom apk
         // to build based on a restricted set of resources.
-        Map<String, String> configs = Sdk.getCurrent().getProjectConfigs(project);
+        Map<String, String> configs = Sdk.getCurrent().getProjectApkConfigs(project);
 
         // also check the final file(s)!
         String finalPackageName = getFileName(project, null /*config*/);
