@@ -1,14 +1,18 @@
 0.9.0 (work in progress)
-- Support for SDK with multiple versions of the Android platform and vendor supplied add-ons.
+- Support for the new Android SDK with support for multiple versions of the Android platform and for vendor supplied add-ons.
+    * New Project Wizard lets you choose which platform/add-on to target.
+    * Project properties (right click project in Package Explorer, then "Properties"), lets you edit project target.
+    * New Launch configuration option to choose debug deployment target.
+- Ability to export multiple apk from one project, using resource filters. See the 'android' property for Android projects.
 
 0.8.1:
 
-- Alternate Layout wizard. In the layout editor, the "create" button is now enabled, and allows to easily create alternate versions.
+- Alternate Layout wizard. In the layout editor, the "create" button is now enabled to easily create alternate versions of the current layout.
 - Fixed issue with custom themes/styles in the layout editor.
-- Export Wizard: To export an application for release, sign with a non debug key. Accessible from the export menu, from the Android Tools contextual menu, or from the overview page of the manifest editor.
+- Export Wizard: To export an application for release, and sign it with a non debug key. Accessible from the export menu, from the Android Tools contextual menu, or from the overview page of the manifest editor.
 - New XML File Wizard: To easily create new XML resources file in the /res directory.
 - New checks on launch when attempting to debug on a device.
-- Basic support for drag'n'drop in Graphical layout editor. You can add new items by drag'n'drop from the palette. There's is no support for moving/resizing yet.
+- Basic support for drag'n'drop in Graphical layout editor. You can add new items by drag'n'drop from the palette. There is no support for moving/resizing yet.
 - Undo/redo support in all XML form editors and Graphical layout editor.
 
 0.8.0:

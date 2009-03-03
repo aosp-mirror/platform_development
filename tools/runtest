@@ -113,7 +113,7 @@ knownTests=(
 
   # system-wide tests
   "framework  frameworks/base/tests/FrameworkTest # com.android.frameworktest.AllTests com.android.frameworktest.tests #"
-  "android    frameworks/base/tests/AndroidTests  com.android.unit_tests AndroidTests # #"
+  "android    frameworks/base/tests/AndroidTests  # AndroidTests com.android.unit_tests #"
   "smoke      frameworks/base/tests/SmokeTest     com.android.smoketest # com.android.smoketest.tests #"
   "core       frameworks/base/tests/CoreTests     # android.core.CoreTests android.core #"
   "libcore    frameworks/base/tests/CoreTests     # android.core.JavaTests android.core #"

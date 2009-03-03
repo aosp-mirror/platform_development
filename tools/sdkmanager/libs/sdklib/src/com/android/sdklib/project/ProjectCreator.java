@@ -209,7 +209,7 @@ public class ProjectCreator {
             }
             
             // create the source folder and the java package folders.
-            final String srcFolderPath = SdkConstants.FD_SOURCES + File.separator + packagePath;
+            String srcFolderPath = SdkConstants.FD_SOURCES + File.separator + packagePath;
             File sourceFolder = createDirs(projectFolder, srcFolderPath);
             String javaTemplate = "java_file.template";
             String activityFileName = activityName + ".java";
@@ -219,6 +219,10 @@ public class ProjectCreator {
             }
             installTemplate(javaTemplate, new File(sourceFolder, activityFileName),
                     keywords, target);
+
+            // create the generate source folder
+            srcFolderPath = SdkConstants.FD_GEN_SOURCES + File.separator + packagePath;
+            sourceFolder = createDirs(projectFolder, srcFolderPath);
 
             // create other useful folders
             File resourceFodler = createDirs(projectFolder, SdkConstants.FD_RESOURCES);

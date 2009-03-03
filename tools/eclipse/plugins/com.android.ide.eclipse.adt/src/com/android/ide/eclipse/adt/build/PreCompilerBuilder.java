@@ -234,6 +234,10 @@ public class PreCompilerBuilder extends BaseBuilder {
 
         // get the project objects
         IProject project = getProject();
+        
+        // Top level check to make sure the build can move forward.
+        abortOnBadSetup(project);
+        
         IJavaProject javaProject = JavaCore.create(project);
         IAndroidTarget projectTarget = Sdk.getCurrent().getTarget(project);
 
@@ -284,10 +288,6 @@ public class PreCompilerBuilder extends BaseBuilder {
         saveProjectBooleanProperty(PROPERTY_COMPILE_RESOURCES , mCompileResources);
         // TODO also needs to store the list of aidl to compile/remove
 
-        // At this point we have stored what needs to be build, so we can
-        // do some high level test and abort if needed.
-        abortOnBadSetup(project);
-        
         // if there was some XML errors, we just return w/o doing
         // anything since we've put some markers in the files anyway.
         if (dv != null && dv.mXmlError) {
@@ -381,7 +381,7 @@ public class PreCompilerBuilder extends BaseBuilder {
                 // mark the manifest file
                 String message = String.format(Messages.Package_s_Doesnt_Exist_Error,
                         mManifestPackage);
-                BaseProjectHelper.addMarker(manifest, AndroidConstants.MARKER_AAPT, message,
+                BaseProjectHelper.addMarker(manifest, AndroidConstants.MARKER_AAPT_COMPILE, message,
                         IMarker.SEVERITY_ERROR);
                 AdtPlugin.printBuildToConsole(AdtConstants.BUILD_VERBOSE, project, message);
 
@@ -409,8 +409,8 @@ public class PreCompilerBuilder extends BaseBuilder {
                 String osManifestPath = manifestLocation.toOSString();
 
                 // remove the aapt markers
-                removeMarkersFromFile(manifest, AndroidConstants.MARKER_AAPT);
-                removeMarkersFromContainer(resFolder, AndroidConstants.MARKER_AAPT);
+                removeMarkersFromFile(manifest, AndroidConstants.MARKER_AAPT_COMPILE);
+                removeMarkersFromContainer(resFolder, AndroidConstants.MARKER_AAPT_COMPILE);
 
                 AdtPlugin.printBuildToConsole(AdtConstants.BUILD_VERBOSE, project,
                         Messages.Preparing_Generated_Files);

@@ -57,8 +57,11 @@ public final class DexWrapper {
     private Field mConsoleErr;
     
     /**
-     * Loads the dex library from a file path. The loaded library can be used with the
-     * {@link DexWrapper} object returned by {@link #getWrapper()}
+     * Loads the dex library from a file path.
+     * 
+     * The loaded library can be used via
+     * {@link DexWrapper#run(String, String[], boolean, PrintStream, PrintStream)}.
+     * 
      * @param osFilepath the location of the dex.jar file.
      * @return an IStatus indicating the result of the load.
      */

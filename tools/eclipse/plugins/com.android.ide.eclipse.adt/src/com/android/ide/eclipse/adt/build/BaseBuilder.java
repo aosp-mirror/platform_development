@@ -149,6 +149,15 @@ abstract class BaseBuilder extends IncrementalProjectBuilder {
     private final static Pattern sPattern8Line1 = Pattern.compile(
             "^(invalid resource directory name): (.*)$"); //$NON-NLS-1$
 
+    /**
+     * 2 line aapt error<br>
+     * "ERROR: Invalid configuration: foo"<br>
+     * "                              ^^^"<br>
+     * There's no need to parse the 2nd line.
+     */
+    private final static Pattern sPattern9Line1 = Pattern.compile(
+            "^Invalid configuration: (.+)$"); //$NON-NLS-1$
+
     /** SAX Parser factory. */
     private SAXParserFactory mParserFactory;
 
@@ -440,8 +449,8 @@ abstract class BaseBuilder extends IncrementalProjectBuilder {
                 String location = m.group(1);
 
                 // check the values and attempt to mark the file.
-                if (checkAndMark(location, lineStr, msg, osRoot,
-                        project, IMarker.SEVERITY_ERROR) == false) {
+                if (checkAndMark(location, lineStr, msg, osRoot, project,
+                        AndroidConstants.MARKER_AAPT_COMPILE, IMarker.SEVERITY_ERROR) == false) {
                     return true;
                 }
                 continue;
@@ -465,7 +474,7 @@ abstract class BaseBuilder extends IncrementalProjectBuilder {
 
                 // display the error
                 if (checkAndMark(location, null, msg, osRoot, project,
-                        IMarker.SEVERITY_ERROR) == false) {
+                        AndroidConstants.MARKER_AAPT_COMPILE, IMarker.SEVERITY_ERROR) == false) {
                     return true;
                 }
 
@@ -488,8 +497,8 @@ abstract class BaseBuilder extends IncrementalProjectBuilder {
                 String lineStr = m.group(2);
 
                 // check the values and attempt to mark the file.
-                if (checkAndMark(location, lineStr, msg, osRoot,
-                        project, IMarker.SEVERITY_ERROR) == false) {
+                if (checkAndMark(location, lineStr, msg, osRoot, project,
+                        AndroidConstants.MARKER_AAPT_COMPILE, IMarker.SEVERITY_ERROR) == false) {
                     return true;
                 }
                 continue;
@@ -502,8 +511,8 @@ abstract class BaseBuilder extends IncrementalProjectBuilder {
                 String msg = m.group(3);
 
                 // check the values and attempt to mark the file.
-                if (checkAndMark(location, lineStr, msg, osRoot,
-                        project, IMarker.SEVERITY_ERROR) == false) {
+                if (checkAndMark(location, lineStr, msg, osRoot, project,
+                        AndroidConstants.MARKER_AAPT_COMPILE, IMarker.SEVERITY_ERROR) == false) {
                     return true;
                 }
 
@@ -526,8 +535,8 @@ abstract class BaseBuilder extends IncrementalProjectBuilder {
                 String lineStr = m.group(2);
 
                 // check the values and attempt to mark the file.
-                if (checkAndMark(location, lineStr, msg, osRoot,
-                        project, IMarker.SEVERITY_ERROR) == false) {
+                if (checkAndMark(location, lineStr, msg, osRoot, project,
+                        AndroidConstants.MARKER_AAPT_COMPILE, IMarker.SEVERITY_ERROR) == false) {
                     return true;
                 }
 
@@ -542,8 +551,8 @@ abstract class BaseBuilder extends IncrementalProjectBuilder {
                 String msg = m.group(3);
 
                 // check the values and attempt to mark the file.
-                if (checkAndMark(location, lineStr, msg, osRoot,
-                        project,IMarker.SEVERITY_WARNING) == false) {
+                if (checkAndMark(location, lineStr, msg, osRoot, project,
+                        AndroidConstants.MARKER_AAPT_COMPILE, IMarker.SEVERITY_WARNING) == false) {
                     return true;
                 }
 
@@ -558,8 +567,8 @@ abstract class BaseBuilder extends IncrementalProjectBuilder {
                 String msg = m.group(3);
 
                 // check the values and attempt to mark the file.
-                if (checkAndMark(location, lineStr, msg, osRoot,
-                        project, IMarker.SEVERITY_ERROR) == false) {
+                if (checkAndMark(location, lineStr, msg, osRoot, project,
+                        AndroidConstants.MARKER_AAPT_COMPILE, IMarker.SEVERITY_ERROR) == false) {
                     return true;
                 }
 
@@ -574,7 +583,25 @@ abstract class BaseBuilder extends IncrementalProjectBuilder {
 
                 // check the values and attempt to mark the file.
                 if (checkAndMark(location, null, msg, osRoot, project,
-                        IMarker.SEVERITY_ERROR) == false) {
+                        AndroidConstants.MARKER_AAPT_COMPILE, IMarker.SEVERITY_ERROR) == false) {
+                    return true;
+                }
+
+                // success, go to the next line
+                continue;
+            }
+
+            m = sPattern9Line1.matcher(p);
+            if (m.matches()) {
+                String badConfig = m.group(1);
+                String msg = String.format("APK Configuration filter '%1$s' is invalid", badConfig);
+                
+                // skip the next line
+                i++;
+
+                // check the values and attempt to mark the file.
+                if (checkAndMark(null /*location*/, null, msg, osRoot, project,
+                        AndroidConstants.MARKER_AAPT_PACKAGE, IMarker.SEVERITY_ERROR) == false) {
                     return true;
                 }
 
@@ -659,23 +686,25 @@ abstract class BaseBuilder extends IncrementalProjectBuilder {
     /**
      * Check if the parameters gotten from the error output are valid, and mark
      * the file with an AAPT marker.
-     * @param location
+     * @param location the full OS path of the error file. If null, the project is marked
      * @param lineStr
      * @param message
      * @param root The root directory of the project, in OS specific format.
      * @param project
+     * @param markerId The marker id to put.
      * @param severity The severity of the marker to put (IMarker.SEVERITY_*)
-     * @return true if the parameters were valid and the file was marked
-     * sucessfully.
+     * @return true if the parameters were valid and the file was marked successfully.
      *
      * @see IMarker
      */
     private final  boolean checkAndMark(String location, String lineStr,
-            String message, String root, IProject project, int severity) {
+            String message, String root, IProject project, String markerId, int severity) {
         // check this is in fact a file
-        File f = new File(location);
-        if (f.exists() == false) {
-            return false;
+        if (location != null) {
+            File f = new File(location);
+            if (f.exists() == false) {
+                return false;
+            }
         }
 
         // get the line number
@@ -692,16 +721,18 @@ abstract class BaseBuilder extends IncrementalProjectBuilder {
         }
 
         // add the marker
-        IResource f2 = getResourceFromFullPath(location, root, project);
-        if (f2 == null) {
-            return false;
+        IResource f2 = project;
+        if (location != null) {
+            f2 = getResourceFromFullPath(location, root, project);
+            if (f2 == null) {
+                return false;
+            }
         }
 
         // check if there's a similar marker already, since aapt is launched twice
         boolean markerAlreadyExists = false;
         try {
-            IMarker[] markers = f2.findMarkers(AndroidConstants.MARKER_AAPT, true,
-                    IResource.DEPTH_ZERO);
+            IMarker[] markers = f2.findMarkers(markerId, true, IResource.DEPTH_ZERO);
 
             for (IMarker marker : markers) {
                 int tmpLine = marker.getAttribute(IMarker.LINE_NUMBER, -1);
@@ -732,10 +763,10 @@ abstract class BaseBuilder extends IncrementalProjectBuilder {
 
         if (markerAlreadyExists == false) {
             if (line != -1) {
-                BaseProjectHelper.addMarker(f2, AndroidConstants.MARKER_AAPT, message, line,
+                BaseProjectHelper.addMarker(f2, markerId, message, line,
                         severity);
             } else {
-                BaseProjectHelper.addMarker(f2, AndroidConstants.MARKER_AAPT, message, severity);
+                BaseProjectHelper.addMarker(f2, markerId, message, severity);
             }
         }
 
@@ -851,7 +882,7 @@ abstract class BaseBuilder extends IncrementalProjectBuilder {
      * Aborts the build if the SDK/project setups are broken. This does not
      * display any errors.
      * 
-     * @param javaProject The {@link IJavaProject} being compiled.
+     * @param project The {@link IJavaProject} being compiled.
      * @throws CoreException
      */
     protected final void abortOnBadSetup(IProject project) throws CoreException {

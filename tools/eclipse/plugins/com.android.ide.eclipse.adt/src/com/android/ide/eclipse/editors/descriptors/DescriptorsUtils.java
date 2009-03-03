@@ -313,7 +313,7 @@ public final class DescriptorsUtils {
      * 
      * @param attributes The list of {@link AttributeDescriptor} to compare to.
      * @param nsUri The URI of the attribute. Can be null if attribute has no namespace.
-     *              See {@link AndroidConstants#NS_RESOURCES} for a common value.
+     *              See {@link SdkConstants#NS_RESOURCES} for a common value.
      * @param info The {@link AttributeInfo} to know whether it is included in the above list.
      * @return True if this {@link AttributeInfo} is already present in
      *         the {@link AttributeDescriptor} list.

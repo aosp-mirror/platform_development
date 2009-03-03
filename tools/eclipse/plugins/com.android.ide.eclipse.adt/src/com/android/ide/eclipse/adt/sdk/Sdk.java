@@ -18,6 +18,7 @@ package com.android.ide.eclipse.adt.sdk;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.project.internal.AndroidClasspathContainerInitializer;
+import com.android.ide.eclipse.adt.sdk.AndroidTargetData.LayoutBridge;
 import com.android.ide.eclipse.editors.resources.manager.ResourceMonitor;
 import com.android.ide.eclipse.editors.resources.manager.ResourceMonitor.IProjectListener;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
@@ -33,6 +34,7 @@ import com.android.sdklib.project.ProjectProperties.PropertyType;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
@@ -67,6 +69,22 @@ public class Sdk implements IProjectListener {
     private final HashMap<IProject, Map<String, String>> mProjectApkConfigMap =
         new HashMap<IProject, Map<String, String>>();
     private final String mDocBaseUrl;
+    
+    /**
+     * Classes implementing this interface will receive notification when targets are changed.
+     */
+    public interface ITargetChangeListener {
+        /**
+         * Sent when project has its target changed.
+         */
+        void onProjectTargetChange(IProject changedProject);
+        
+        /**
+         * Called when the targets are loaded (either the SDK finished loading when Eclipse starts,
+         * or the SDK is changed).
+         */
+        void onTargetsLoaded();
+    }
     
     /**
      * Loads an SDK and returns an {@link Sdk} object if success.
@@ -163,24 +181,87 @@ public class Sdk implements IProjectListener {
     }
     
     /**
-     * Associates an {@link IProject} and an {@link IAndroidTarget}.
+     * Sets a new target and a new list of Apk configuration for a given project.
+     * 
+     * @param project the project to receive the new apk configurations
+     * @param target The new target to set, or <code>null</code> to not change the current target.
+     * @param apkConfigMap a map of apk configurations. The map contains (name, filter) where name
+     * is the name of the configuration (a-zA-Z0-9 only), and filter is the comma separated list of
+     * resource configuration to include in the apk (see aapt -c). Can be <code>null</code> if the
+     * apk configurations should not be updated.
      */
-    public void setProject(IProject project, IAndroidTarget target) {
+    public void setProject(IProject project, IAndroidTarget target,
+            Map<String, String> apkConfigMap) {
         synchronized (mProjectTargetMap) {
-            // look for the current target of the project
-            IAndroidTarget previousTarget = mProjectTargetMap.get(project);
-            
-            if (target != previousTarget) {
-                // save the target hash string in the project persistent property
-                setProjectTargetHashString(project, target.hashString());
-                
-                // put it in a local map for easy access.
-                mProjectTargetMap.put(project, target);
+            boolean resolveProject = false;
+            boolean compileProject = false;
+            boolean cleanProject = false;
 
-                // recompile the project if needed.
+            ProjectProperties properties = ProjectProperties.load(
+                    project.getLocation().toOSString(), PropertyType.DEFAULT);
+            if (properties == null) {
+                // doesn't exist yet? we create it.
+                properties = ProjectProperties.create(project.getLocation().toOSString(),
+                        PropertyType.DEFAULT);
+            }
+
+            if (target != null) {
+                // look for the current target of the project
+                IAndroidTarget previousTarget = mProjectTargetMap.get(project);
+
+                if (target != previousTarget) {
+                    // save the target hash string in the project persistent property
+                    properties.setAndroidTarget(target);
+                    
+                    // put it in a local map for easy access.
+                    mProjectTargetMap.put(project, target);
+                    
+                    resolveProject = true;
+                }
+            }
+            
+            if (apkConfigMap != null) {
+                // save the apk configs in the project persistent property
+                cleanProject = ApkConfigurationHelper.setConfigs(properties, apkConfigMap);
+
+                // put it in a local map for easy access.
+                mProjectApkConfigMap.put(project, apkConfigMap);
+                
+                compileProject = true;
+            }
+
+            // we are done with the modification. Save the property file.
+            try {
+                properties.save();
+            } catch (IOException e) {
+                AdtPlugin.log(e, "Failed to save default.properties for project '%s'",
+                        project.getName());
+            }
+            
+            if (resolveProject) {
+                // force a resolve of the project by updating the classpath container.
                 IJavaProject javaProject = JavaCore.create(project);
                 AndroidClasspathContainerInitializer.updateProjects(
                         new IJavaProject[] { javaProject });
+            } else if (compileProject) {
+                // If there was removed configs, we clean instead of build
+                // (to remove the obsolete ap_ and apk file from removed configs).
+                try {
+                    project.build(cleanProject ?
+                                IncrementalProjectBuilder.CLEAN_BUILD :
+                                IncrementalProjectBuilder.FULL_BUILD,
+                            null);
+                } catch (CoreException e) {
+                    // failed to build? force resolve instead.
+                    IJavaProject javaProject = JavaCore.create(project);
+                    AndroidClasspathContainerInitializer.updateProjects(
+                            new IJavaProject[] { javaProject });
+                }
+            }
+            
+            // finally, update the opened editors.
+            if (resolveProject) {
+                AdtPlugin.getDefault().updateTargetListener(project);
             }
         }
     }
@@ -218,7 +299,12 @@ public class Sdk implements IProjectListener {
      */
     private static String loadProjectProperties(IProject project, Sdk sdkStorage) {
         // load the default.properties from the project folder.
-        ProjectProperties properties = ProjectProperties.load(project.getLocation().toOSString(),
+        IPath location = project.getLocation();
+        if (location == null) {  // can return null when the project is being deleted.
+            // do nothing and return null;
+            return null;
+        }
+        ProjectProperties properties = ProjectProperties.load(location.toOSString(),
                 PropertyType.DEFAULT);
         if (properties == null) {
             AdtPlugin.log(IStatus.ERROR, "Failed to load properties file for project '%s'",
@@ -229,7 +315,7 @@ public class Sdk implements IProjectListener {
         if (sdkStorage != null) {
             Map<String, String> configMap = ApkConfigurationHelper.getConfigs(properties);
             
-            if (configMap.size() > 0) {
+            if (configMap != null) {
                 sdkStorage.mProjectApkConfigMap.put(project, configMap);
             }
         }
@@ -296,40 +382,6 @@ public class Sdk implements IProjectListener {
         return mProjectApkConfigMap.get(project);
     }
     
-    public void setProjectApkConfigs(IProject project, Map<String, String> configMap)
-            throws CoreException {
-        // first set the new map
-        mProjectApkConfigMap.put(project, configMap);
-        
-        // Now we write this in default.properties.
-        // Because we don't want to erase other properties from default.properties, we first load
-        // them
-        ProjectProperties properties = ProjectProperties.load(project.getLocation().toOSString(),
-                PropertyType.DEFAULT);
-        if (properties == null) {
-            // doesn't exist yet? we create it.
-            properties = ProjectProperties.create(project.getLocation().toOSString(),
-                    PropertyType.DEFAULT);
-        }
-        
-        // sets the configs in the property file.
-        boolean hasRemovedConfig = ApkConfigurationHelper.setConfigs(properties, configMap);
-
-        // and rewrite the file.
-        try {
-            properties.save();
-        } catch (IOException e) {
-            AdtPlugin.log(e, "Failed to save default.properties for project '%s'",
-                    project.getName());
-        }
-
-        // we're done, force a rebuild. If there was removed config, we clean instead of build
-        // (to remove the obsolete ap_ and apk file from removed configs). 
-        project.build(hasRemovedConfig ?
-                IncrementalProjectBuilder.CLEAN_BUILD : IncrementalProjectBuilder.FULL_BUILD,
-                null);
-    }
-
     /**
      * Returns the {@link AvdManager}. If the AvdManager failed to parse the AVD folder, this could
      * be <code>null</code>.
@@ -402,8 +454,24 @@ public class Sdk implements IProjectListener {
     }
 
     public void projectClosed(IProject project) {
-        mProjectTargetMap.remove(project);
-        mProjectApkConfigMap.remove(project);
+        // get the target project
+        synchronized (mProjectTargetMap) {
+            IAndroidTarget target = mProjectTargetMap.get(project);
+            if (target != null) {
+                // get the bridge for the target, and clear the cache for this project.
+                AndroidTargetData data = mTargetDataMap.get(target);
+                if (data != null) {
+                    LayoutBridge bridge = data.getLayoutBridge();
+                    if (bridge != null && bridge.status == LoadStatus.LOADED) {
+                        bridge.bridge.clearCaches(project);
+                    }
+                }
+            }
+            
+            // now remove the project for the maps.
+            mProjectTargetMap.remove(project);
+            mProjectApkConfigMap.remove(project);
+        }
     }
 
     public void projectDeleted(IProject project) {

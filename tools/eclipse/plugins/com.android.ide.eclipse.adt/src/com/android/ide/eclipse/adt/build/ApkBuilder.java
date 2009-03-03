@@ -203,6 +203,9 @@ public class ApkBuilder extends BaseBuilder {
         // get a project object
         IProject project = getProject();
 
+        // Top level check to make sure the build can move forward.
+        abortOnBadSetup(project);
+
         // get the list of referenced projects.
         IProject[] referencedProjects = ProjectHelper.getReferencedProjects(project);
         IJavaProject[] referencedJavaProjects = getJavaProjects(referencedProjects);
@@ -262,69 +265,12 @@ public class ApkBuilder extends BaseBuilder {
                 }
             }
         }
-
-        // do some extra check, in case the output files are not present. This
-        // will force to recreate them.
-        IResource tmp = null;
-
-        if (mPackageResources == false && outputFolder != null) {
-            tmp = outputFolder.findMember(AndroidConstants.FN_RESOURCES_AP_);
-            if (tmp == null || tmp.exists() == false) {
-                mPackageResources = true;
-                mBuildFinalPackage = true;
-            }
-        }
-        if (mConvertToDex == false && outputFolder != null) {
-            tmp = outputFolder.findMember(AndroidConstants.FN_CLASSES_DEX);
-            if (tmp == null || tmp.exists() == false) {
-                mConvertToDex = true;
-                mBuildFinalPackage = true;
-            }
-        }
-
-        // get the extra configs for the project. This will give us a list of custom apk
-        // to build based on a restricted set of resources.
-        Map<String, String> configs = Sdk.getCurrent().getProjectApkConfigs(project);
-
-        // also check the final file(s)!
-        String finalPackageName = getFileName(project, null /*config*/);
-        if (mBuildFinalPackage == false && outputFolder != null) {
-            tmp = outputFolder.findMember(finalPackageName);
-            if (tmp == null || (tmp instanceof IFile &&
-                    tmp.exists() == false)) {
-                String msg = String.format(Messages.s_Missing_Repackaging, finalPackageName);
-                AdtPlugin.printBuildToConsole(AdtConstants.BUILD_VERBOSE, project, msg);
-                mBuildFinalPackage = true;
-            }
-
-            if (configs != null) {
-                Set<Entry<String, String>> entrySet = configs.entrySet();
-                
-                for (Entry<String, String> entry : entrySet) {
-                    String filename = getFileName(project, entry.getKey());
-
-                    tmp = outputFolder.findMember(filename);
-                    if (tmp == null || (tmp instanceof IFile &&
-                            tmp.exists() == false)) {
-                        String msg = String.format(Messages.s_Missing_Repackaging,
-                                finalPackageName);
-                        AdtPlugin.printBuildToConsole(AdtConstants.BUILD_VERBOSE, project, msg);
-                        mBuildFinalPackage = true;
-                        break;
-                    }
-                }
-            }
-        }
-
+        
         // store the build status in the persistent storage
         saveProjectBooleanProperty(PROPERTY_CONVERT_TO_DEX , mConvertToDex);
         saveProjectBooleanProperty(PROPERTY_PACKAGE_RESOURCES, mPackageResources);
         saveProjectBooleanProperty(PROPERTY_BUILD_APK, mBuildFinalPackage);
 
-        // At this point, we can abort the build if we have to, as we have computed
-        // our resource delta and stored the result.
-        abortOnBadSetup(project);
-        
         if (dv != null && dv.mXmlError) {
             AdtPlugin.printBuildToConsole(AdtConstants.BUILD_VERBOSE, project,
             Messages.Xml_Error);
@@ -349,6 +295,82 @@ public class ApkBuilder extends BaseBuilder {
             // while we do have to cancel the build, we don't have to return
             // any error or throw anything.
             return referencedProjects;
+        }
+
+        // get the extra configs for the project.
+        // The map contains (name, filter) where 'name' is a name to be used in the apk filename,
+        // and filter is the resource filter to be used in the aapt -c parameters to restrict
+        // which resource configurations to package in the apk.
+        Map<String, String> configs = Sdk.getCurrent().getProjectApkConfigs(project);
+
+        // do some extra check, in case the output files are not present. This
+        // will force to recreate them.
+        IResource tmp = null;
+
+        if (mPackageResources == false) {
+            // check the full resource package
+            tmp = outputFolder.findMember(AndroidConstants.FN_RESOURCES_AP_);
+            if (tmp == null || tmp.exists() == false) {
+                mPackageResources = true;
+                mBuildFinalPackage = true;
+            } else {
+                // if the full package is present, we check the filtered resource packages as well
+                if (configs != null) {
+                    Set<Entry<String, String>> entrySet = configs.entrySet();
+                    
+                    for (Entry<String, String> entry : entrySet) {
+                        String filename = String.format(AndroidConstants.FN_RESOURCES_S_AP_,
+                                entry.getKey());
+    
+                        tmp = outputFolder.findMember(filename);
+                        if (tmp == null || (tmp instanceof IFile &&
+                                tmp.exists() == false)) {
+                            String msg = String.format(Messages.s_Missing_Repackaging, filename);
+                            AdtPlugin.printBuildToConsole(AdtConstants.BUILD_VERBOSE, project, msg);
+                            mPackageResources = true;
+                            mBuildFinalPackage = true;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        // check classes.dex is present. If not we force to recreate it.
+        if (mConvertToDex == false) {
+            tmp = outputFolder.findMember(AndroidConstants.FN_CLASSES_DEX);
+            if (tmp == null || tmp.exists() == false) {
+                mConvertToDex = true;
+                mBuildFinalPackage = true;
+            }
+        }
+
+        // also check the final file(s)!
+        String finalPackageName = getFileName(project, null /*config*/);
+        if (mBuildFinalPackage == false) {
+            tmp = outputFolder.findMember(finalPackageName);
+            if (tmp == null || (tmp instanceof IFile &&
+                    tmp.exists() == false)) {
+                String msg = String.format(Messages.s_Missing_Repackaging, finalPackageName);
+                AdtPlugin.printBuildToConsole(AdtConstants.BUILD_VERBOSE, project, msg);
+                mBuildFinalPackage = true;
+            } else if (configs != null) {
+                // if the full apk is present, we check the filtered apk as well
+                Set<Entry<String, String>> entrySet = configs.entrySet();
+                
+                for (Entry<String, String> entry : entrySet) {
+                    String filename = getFileName(project, entry.getKey());
+
+                    tmp = outputFolder.findMember(filename);
+                    if (tmp == null || (tmp instanceof IFile &&
+                            tmp.exists() == false)) {
+                        String msg = String.format(Messages.s_Missing_Repackaging, filename);
+                        AdtPlugin.printBuildToConsole(AdtConstants.BUILD_VERBOSE, project, msg);
+                        mBuildFinalPackage = true;
+                        break;
+                    }
+                }
+            }
         }
 
         // at this point we know if we need to recreate the temporary apk
@@ -396,6 +418,9 @@ public class ApkBuilder extends BaseBuilder {
 
             // first we check if we need to package the resources.
             if (mPackageResources) {
+                // remove some aapt_package only markers.
+                removeMarkersFromContainer(project, AndroidConstants.MARKER_AAPT_PACKAGE);
+
                 // need to figure out some path before we can execute aapt;
 
                 // resource to the AndroidManifest.xml file
@@ -552,7 +577,8 @@ public class ApkBuilder extends BaseBuilder {
      * @param osAssetsPath The path to the assets folder. This can be null.
      * @param osOutFilePath The path to the temporary resource file to create.
      * @param configFilter The configuration filter for the resources to include
-     * (used with -c option)
+     * (used with -c option, for example "port,en,fr" to include portrait, English and French
+     * resources.)
      * @return true if success, false otherwise.
      */
     private boolean executeAapt(IProject project, String osManifestPath,

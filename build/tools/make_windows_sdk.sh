@@ -146,6 +146,11 @@ function package() {
     echo "Done"
     echo
     echo "Resulting SDK is in $DIST_DIR/$DEST_NAME_ZIP"
+
+    # We want fastboot and adb next to the new SDK
+    for i in fastboot.exe adb.exe AdbWinApi.dll; do
+        mv -vf out/host/windows-x86/bin/$i "$DIST_DIR"/$i
+    done
 }
 
 check

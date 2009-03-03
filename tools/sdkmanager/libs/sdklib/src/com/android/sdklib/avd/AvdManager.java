@@ -55,6 +55,12 @@ public final class AvdManager {
     public final static String AVD_INI_IMAGES_1 = "image.sysdir.1";
     public final static String AVD_INI_IMAGES_2 = "image.sysdir.2";
 
+    /**
+     * Pattern to match pixel-sized skin "names", e.g. "320x480".
+     */
+    public final static Pattern NUMERIC_SKIN_SIZE = Pattern.compile("[0-9]{2,}x[0-9]{2,}");
+
+    
     private final static String USERDATA_IMG = "userdata.img";
     private final static String CONFIG_INI = "config.ini";
     private final static String SDCARD_IMG = "sdcard.img";
@@ -255,16 +261,21 @@ public final class AvdManager {
                 skinName = target.getDefaultSkin();
             }
 
-            // get the path of the skin (relative to the SDK)
-            // assume skin name is valid
-            String skinPath = getSkinRelativePath(skinName, target, log);
-            if (skinPath == null) {
-                needCleanup = true;
-                return null;
-            }
+            if (NUMERIC_SKIN_SIZE.matcher(skinName).matches()) {
+                // Skin name is an actual screen resolution, no skin.path
+                values.put(AVD_INI_SKIN_NAME, skinName);
+            } else {
+                // get the path of the skin (relative to the SDK)
+                // assume skin name is valid
+                String skinPath = getSkinRelativePath(skinName, target, log);
+                if (skinPath == null) {
+                    needCleanup = true;
+                    return null;
+                }
 
-            values.put(AVD_INI_SKIN_PATH, skinPath);
-            values.put(AVD_INI_SKIN_NAME, skinName);
+                values.put(AVD_INI_SKIN_PATH, skinPath);
+                values.put(AVD_INI_SKIN_NAME, skinName);
+            }
 
             if (sdcard != null) {
                 File sdcardFile = new File(sdcard);

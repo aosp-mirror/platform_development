@@ -383,24 +383,28 @@ class Main {
      */
     private void displayAvdList() {
         try {
-            AvdManager avdManager = new AvdManager(mSdkManager, null /* sdklog */);
+            AvdManager avdManager = new AvdManager(mSdkManager, mSdkLog);
 
             mSdkLog.printf("Available Android Virtual Devices:\n");
 
-            int index = 1;
-            for (AvdInfo info : avdManager.getAvds()) {
-                mSdkLog.printf("[%d] %s\n", index, info.getName());
-                mSdkLog.printf("      Path: %s\n", info.getPath());
+            AvdInfo[] avds = avdManager.getAvds();
+            for (int index = 0 ; index < avds.length ; index++) {
+                AvdInfo info = avds[index];
+                if (index > 0) {
+                    mSdkLog.printf("---------\n");
+                }
+                mSdkLog.printf("    Name: %s\n", info.getName());
+                mSdkLog.printf("    Path: %s\n", info.getPath());
 
                 // get the target of the AVD
                 IAndroidTarget target = info.getTarget();
                 if (target.isPlatform()) {
-                    mSdkLog.printf("    Target: %s (API level %d)\n", target.getName(),
+                    mSdkLog.printf("  Target: %s (API level %d)\n", target.getName(),
                             target.getApiVersionNumber());
                 } else {
-                    mSdkLog.printf("    Target: %s (%s)\n", target.getName(), target
+                    mSdkLog.printf("  Target: %s (%s)\n", target.getName(), target
                             .getVendor());
-                    mSdkLog.printf("            Based on Android %s (API level %d)\n", target
+                    mSdkLog.printf("          Based on Android %s (API level %d)\n", target
                             .getApiVersionName(), target.getApiVersionNumber());
                 }
                 
@@ -408,17 +412,15 @@ class Main {
                 Map<String, String> properties = info.getProperties();
                 String skin = properties.get(AvdManager.AVD_INI_SKIN_NAME);
                 if (skin != null) {
-                    mSdkLog.printf("      Skin: %s\n", skin);
+                    mSdkLog.printf("    Skin: %s\n", skin);
                 }
                 String sdcard = properties.get(AvdManager.AVD_INI_SDCARD_SIZE);
                 if (sdcard == null) {
                     sdcard = properties.get(AvdManager.AVD_INI_SDCARD_PATH);
                 }
                 if (sdcard != null) {
-                    mSdkLog.printf("    Sdcard: %s\n", sdcard);
+                    mSdkLog.printf("  Sdcard: %s\n", sdcard);
                 }
-
-                index++;
             }
         } catch (AndroidLocationException e) {
             errorAndExit(e.getMessage());
@@ -499,7 +501,7 @@ class Main {
                 
                 // Is it NNNxMMM?
                 if (!valid) {
-                    valid = skin.matches("[0-9]{2,}x[0-9]{2,}");
+                    valid = AvdManager.NUMERIC_SKIN_SIZE.matcher(skin).matches();
                 }
 
                 if (!valid) {

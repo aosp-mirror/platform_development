@@ -18,6 +18,14 @@
       <persistent value="true"/>
    </extension>
    <extension
+         id="com.android.ide.eclipse.common.aapt2Problem"
+         name="Android AAPT Problem"
+         point="org.eclipse.core.resources.markers">
+      <super type="org.eclipse.core.resources.problemmarker"/>
+      <super type="org.eclipse.core.resources.textmarker"/>
+      <persistent value="true"/>
+   </extension>
+   <extension
          id="com.android.ide.eclipse.common.aidlProblem"
          name="Android AIDL Problem"
          point="org.eclipse.core.resources.markers">
@@ -463,5 +471,32 @@
                      args="com.android.ide.eclipse.adt.AndroidNature"/>
          </enabledWhen>
       </page>
+   </extension>
+   <extension
+         point="org.eclipse.ui.actionSets">
+      <actionSet
+            description="Android Wizards"
+            id="adt.actionSet1"
+            label="Android Wizards"
+            visible="true">
+         <action
+               class="com.android.ide.eclipse.adt.wizards.actions.NewProjectAction"
+               icon="icons/new_adt_project.png"
+               id="com.android.ide.eclipse.adt.wizards.actions.NewProjectAction"
+               label="New Android Project"
+               style="push"
+               toolbarPath="android_project"
+               tooltip="Opens a wizard to help create a new Android project">
+         </action>
+         <action
+               class="com.android.ide.eclipse.adt.wizards.actions.NewXmlFileAction"
+               icon="icons/new_xml.png"
+               id="com.android.ide.eclipse.adt.wizards.actions.NewXmlFileAction"
+               label="New Android XML File"
+               style="push"
+               toolbarPath="android_project"
+               tooltip="Opens a wizard to help create a new Android XML file">
+         </action>
+      </actionSet>
    </extension>
 </plugin>

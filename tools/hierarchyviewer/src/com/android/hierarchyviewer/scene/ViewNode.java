@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 public class ViewNode {
     public String id;
@@ -52,8 +53,15 @@ public class ViewNode {
     public boolean willNotDraw;
     public boolean hasMargins;
     
+    boolean hasFocus;
+    int index;
+
     public boolean decoded;
-    
+    public boolean filtered;
+
+    private String shortName;
+    private StateListener listener;
+
     void decode() {
         id = namedProperties.get("mID").value;
 
@@ -73,6 +81,7 @@ public class ViewNode {
         marginBottom = getInt("layout_bottomMargin", Integer.MIN_VALUE);
         baseline = getInt("getBaseline()", 0);
         willNotDraw = getBoolean("willNotDraw()", false);
+        hasFocus = getBoolean("hasFocus()", false);
 
         hasMargins = marginLeft != Integer.MIN_VALUE &&
                 marginRight != Integer.MIN_VALUE &&
@@ -101,9 +110,31 @@ public class ViewNode {
                 return Integer.parseInt(p.value);
             } catch (NumberFormatException e) {
                 return defaultValue;
-            }   
+            }
         }
         return defaultValue;
+    }
+
+    public void filter(Pattern pattern) {
+        if (pattern == null || pattern.pattern().length() == 0) {
+            filtered = false;
+        } else {
+            filtered = pattern.matcher(shortName).find() || pattern.matcher(id).find();
+        }
+        listener.nodeStateChanged(this);
+    }
+
+    void computeIndex() {
+        index = parent == null ? 0 : parent.children.indexOf(this);
+        listener.nodeIndexChanged(this);
+    }
+
+    void setShortName(String shortName) {
+        this.shortName = shortName;
+    }
+
+    void setStateListener(StateListener listener) {
+        this.listener = listener;
     }
 
     @SuppressWarnings({"StringEquality"})
@@ -163,5 +194,10 @@ public class ViewNode {
             hash = 61 * hash + (this.value != null ? this.value.hashCode() : 0);
             return hash;
         }
+    }
+
+    interface StateListener {
+        void nodeStateChanged(ViewNode node);
+        void nodeIndexChanged(ViewNode node);
     }
 }

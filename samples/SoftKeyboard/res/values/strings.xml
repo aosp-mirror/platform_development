@@ -25,9 +25,7 @@
     <string name="word_separators">\u0020.,;:!?\n()[]*&amp;@{}/&lt;&gt;_+=|&quot;</string>
     
     <!-- Labels on soft keys -->
-    <string name="label_done">Done</string>
-    <string name="label_search">Search</string>
-    <string name="label_enter">Enter</string>
-    <string name="label_next">Next</string>
-    <string name="label_previous">Previous</string>
+    <string name="label_go_key">Go</string>
+    <string name="label_next_key">Next</string>
+    <string name="label_send_key">Send</string>
 </resources>

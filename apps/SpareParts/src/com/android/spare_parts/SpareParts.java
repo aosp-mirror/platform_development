@@ -19,7 +19,11 @@ package com.android.spare_parts;
 
 import android.app.ActivityManagerNative;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.Configuration;
 import android.os.RemoteException;
@@ -28,6 +32,7 @@ import android.preference.CheckBoxPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
+import android.preference.PreferenceGroup;
 import android.preference.PreferenceScreen;
 import android.provider.Settings;
 import android.provider.Settings.SettingNotFoundException;
@@ -35,11 +40,17 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.IWindowManager;
 
+import java.util.List;
+
 public class SpareParts extends PreferenceActivity
         implements Preference.OnPreferenceChangeListener,
         SharedPreferences.OnSharedPreferenceChangeListener {
     private static final String TAG = "SpareParts";
 
+    private static final String BATTERY_HISTORY_PREF = "battery_history_settings";
+    private static final String BATTERY_INFORMATION_PREF = "battery_information_settings";
+    private static final String USAGE_STATISTICS_PREF = "usage_statistics_settings";
+    
     private static final String WINDOW_ANIMATIONS_PREF = "window_animations";
     private static final String TRANSITION_ANIMATIONS_PREF = "transition_animations";
     private static final String FANCY_IME_ANIMATIONS_PREF = "fancy_ime_animations";
@@ -62,6 +73,41 @@ public class SpareParts extends PreferenceActivity
     
     private IWindowManager mWindowManager;
 
+    public static boolean updatePreferenceToSpecificActivityOrRemove(Context context,
+            PreferenceGroup parentPreferenceGroup, String preferenceKey, int flags) {
+        
+        Preference preference = parentPreferenceGroup.findPreference(preferenceKey);
+        if (preference == null) {
+            return false;
+        }
+        
+        Intent intent = preference.getIntent();
+        if (intent != null) {
+            // Find the activity that is in the system image
+            PackageManager pm = context.getPackageManager();
+            List<ResolveInfo> list = pm.queryIntentActivities(intent, 0);
+            int listSize = list.size();
+            for (int i = 0; i < listSize; i++) {
+                ResolveInfo resolveInfo = list.get(i);
+                if ((resolveInfo.activityInfo.applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM)
+                        != 0) {
+                    
+                    // Replace the intent with this specific activity
+                    preference.setIntent(new Intent().setClassName(
+                            resolveInfo.activityInfo.packageName,
+                            resolveInfo.activityInfo.name));
+                    
+                    return true;
+                }
+            }
+        }
+
+        // Did not find a matching activity, so remove the preference
+        parentPreferenceGroup.removePreference(preference);
+        
+        return true;
+    }
+    
     @Override
     public void onCreate(Bundle icicle) {
         super.onCreate(icicle);
@@ -84,7 +130,15 @@ public class SpareParts extends PreferenceActivity
         
         mWindowManager = IWindowManager.Stub.asInterface(ServiceManager.getService("window"));
         
-        getPreferenceScreen().getSharedPreferences().registerOnSharedPreferenceChangeListener(this);
+        final PreferenceGroup parentPreference = getPreferenceScreen();
+        updatePreferenceToSpecificActivityOrRemove(this, parentPreference,
+                BATTERY_HISTORY_PREF, 0);
+        updatePreferenceToSpecificActivityOrRemove(this, parentPreference,
+                BATTERY_INFORMATION_PREF, 0);
+        updatePreferenceToSpecificActivityOrRemove(this, parentPreference,
+                USAGE_STATISTICS_PREF, 0);
+        
+        parentPreference.getSharedPreferences().registerOnSharedPreferenceChangeListener(this);
     }
 
     private void updateToggles() {

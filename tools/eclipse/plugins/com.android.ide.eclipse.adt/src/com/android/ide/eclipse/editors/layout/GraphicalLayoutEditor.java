@@ -21,6 +21,7 @@ import com.android.ide.eclipse.adt.sdk.AndroidTargetData;
 import com.android.ide.eclipse.adt.sdk.LoadStatus;
 import com.android.ide.eclipse.adt.sdk.Sdk;
 import com.android.ide.eclipse.adt.sdk.AndroidTargetData.LayoutBridge;
+import com.android.ide.eclipse.adt.sdk.Sdk.ITargetChangeListener;
 import com.android.ide.eclipse.common.resources.ResourceType;
 import com.android.ide.eclipse.editors.IconFactory;
 import com.android.ide.eclipse.editors.layout.LayoutEditor.UiEditorActions;
@@ -198,13 +199,21 @@ public class GraphicalLayoutEditor extends GraphicalEditorWithPalette
     private ProjectCallback mProjectCallback;
     private ILayoutLog mLogger;
 
+    private boolean mNeedsXmlReload = false;
     private boolean mNeedsRecompute = false;
     private int mPlatformThemeCount = 0;
     private boolean mDisableUpdates = false;
-    private boolean mActive = false;
 
-    private Runnable mFrameworkResourceChangeListener = new Runnable() {
-        public void run() {
+    /** Listener to update the root node if the target of the file is changed because of a
+     * SDK location change or a project target change */
+    private ITargetChangeListener mTargetListener = new ITargetChangeListener() {
+        public void onProjectTargetChange(IProject changedProject) {
+            if (changedProject == getLayoutEditor().getProject()) {
+                onTargetsLoaded();
+            }
+        }
+
+        public void onTargetsLoaded() {
             // because the SDK changed we must reset the configured framework resource.
             mConfiguredFrameworkRes = null;
             
@@ -228,7 +237,7 @@ public class GraphicalLayoutEditor extends GraphicalEditorWithPalette
 
     private final Runnable mConditionalRecomputeRunnable = new Runnable() {
         public void run() {
-            if (mActive) {
+            if (mLayoutEditor.isGraphicalEditorActive()) {
                 recomputeLayout();
             } else {
                 mNeedsRecompute = true;
@@ -253,7 +262,7 @@ public class GraphicalLayoutEditor extends GraphicalEditorWithPalette
         mMatchImage = factory.getIcon("match"); //$NON-NLS-1$
         mErrorImage = factory.getIcon("error"); //$NON-NLS-1$
 
-        AdtPlugin.getDefault().addResourceChangedListener(mFrameworkResourceChangeListener);
+        AdtPlugin.getDefault().addTargetListener(mTargetListener);
     }
 
     // ------------------------------------
@@ -561,10 +570,9 @@ public class GraphicalLayoutEditor extends GraphicalEditorWithPalette
 
     @Override
     public void dispose() {
-        if (mFrameworkResourceChangeListener != null) {
-            AdtPlugin.getDefault().removeResourceChangedListener(
-                    mFrameworkResourceChangeListener);
-            mFrameworkResourceChangeListener = null;
+        if (mTargetListener != null) {
+            AdtPlugin.getDefault().removeTargetListener(mTargetListener);
+            mTargetListener = null;
         }
 
         LayoutReloadMonitor.getMonitor().removeListener(mEditedFile.getProject(), this);
@@ -1026,25 +1034,36 @@ public class GraphicalLayoutEditor extends GraphicalEditorWithPalette
     }
 
     /**
-     * Update the layout editor when the Xml model is changed.
+     * Callback for XML model changed. Only update/recompute the layout if the editor is visible
      */
     void onXmlModelChanged() {
-        GraphicalViewer viewer = getGraphicalViewer();
-
-        // try to preserve the selection before changing the content
-        SelectionManager selMan = viewer.getSelectionManager();
-        ISelection selection = selMan.getSelection();
-
-        try {
-            viewer.setContents(getModel());
-        } finally {
-            selMan.setSelection(selection);
-        }
-
         if (mLayoutEditor.isGraphicalEditorActive()) {
+            doXmlReload(true /* force */);
             recomputeLayout();
         } else {
-            mNeedsRecompute = true;
+            mNeedsXmlReload = true;
+        }
+    }
+    
+    /**
+     * Actually performs the XML reload
+     * @see #onXmlModelChanged()
+     */
+    private void doXmlReload(boolean force) {
+        if (force || mNeedsXmlReload) {
+            GraphicalViewer viewer = getGraphicalViewer();
+            
+            // try to preserve the selection before changing the content
+            SelectionManager selMan = viewer.getSelectionManager();
+            ISelection selection = selMan.getSelection();
+    
+            try {
+                viewer.setContents(getModel());
+            } finally {
+                selMan.setSelection(selection);
+            }
+            
+            mNeedsXmlReload = false;
         }
     }
 
@@ -1648,7 +1667,9 @@ public class GraphicalLayoutEditor extends GraphicalEditorWithPalette
     /**
      * Recomputes the layout with the help of layoutlib.
      */
+    @SuppressWarnings("deprecation")
     void recomputeLayout() {
+        doXmlReload(false /* force */);
         try {
             // check that the resource exists. If the file is opened but the project is closed
             // or deleted for some reason (changed from outside of eclipse), then this will
@@ -1763,20 +1784,47 @@ public class GraphicalLayoutEditor extends GraphicalEditorWithPalette
                         if (themeIndex != -1) {
                             String theme = mThemeCombo.getItem(themeIndex);
                             
-                            // change the string if it's a custom theme to make sure we can
-                            // differentiate them
-                            if (themeIndex >= mPlatformThemeCount) {
-                                theme = "*" + theme; //$NON-NLS-1$
-                            }
-    
                             // Compute the layout
                             UiElementPullParser parser = new UiElementPullParser(getModel());
                             Rectangle rect = getBounds();
-                            ILayoutResult result = bridge.bridge.computeLayout(parser,
-                                    iProject /* projectKey */,
-                                    rect.width, rect.height, theme,
-                                    mConfiguredProjectRes, frameworkResources, mProjectCallback,
-                                    mLogger);
+                            ILayoutResult result = null;
+                            if (bridge.apiLevel >= 3) {
+                                // call the new api with proper theme differentiator and
+                                // density/dpi support.
+                                boolean isProjectTheme = themeIndex >= mPlatformThemeCount;
+
+                                // FIXME pass the density/dpi from somewhere (resource config or skin).
+                                result = bridge.bridge.computeLayout(parser,
+                                        iProject /* projectKey */,
+                                        rect.width, rect.height, 160, 160.f, 160.f, 
+                                        theme, isProjectTheme,
+                                        mConfiguredProjectRes, frameworkResources, mProjectCallback,
+                                        mLogger);
+                            } else if (bridge.apiLevel == 2) {
+                                // api with boolean for separation of project/framework theme
+                                boolean isProjectTheme = themeIndex >= mPlatformThemeCount;
+
+                                result = bridge.bridge.computeLayout(parser,
+                                        iProject /* projectKey */,
+                                        rect.width, rect.height, theme, isProjectTheme,
+                                        mConfiguredProjectRes, frameworkResources, mProjectCallback,
+                                        mLogger);
+                            } else {
+                                // oldest api with no density/dpi, and project theme boolean mixed
+                                // into the theme name.
+
+                                // change the string if it's a custom theme to make sure we can
+                                // differentiate them
+                                if (themeIndex >= mPlatformThemeCount) {
+                                    theme = "*" + theme; //$NON-NLS-1$
+                                }
+        
+                                result = bridge.bridge.computeLayout(parser,
+                                        iProject /* projectKey */,
+                                        rect.width, rect.height, theme,
+                                        mConfiguredProjectRes, frameworkResources, mProjectCallback,
+                                        mLogger);
+                            }
     
                             // update the UiElementNode with the layout info.
                             if (result.getSuccess() == ILayoutResult.SUCCESS) {
@@ -1921,8 +1969,7 @@ public class GraphicalLayoutEditor extends GraphicalEditorWithPalette
      * Responds to a page change that made the Graphical editor page the activated page.
      */
     void activated() {
-    	mActive = true;
-        if (mNeedsRecompute) {
+        if (mNeedsRecompute || mNeedsXmlReload) {
             recomputeLayout();
         }
     }
@@ -1931,7 +1978,7 @@ public class GraphicalLayoutEditor extends GraphicalEditorWithPalette
      * Responds to a page change that made the Graphical editor page the deactivated page
      */
     void deactivated() {
-    	mActive = false;
+        // nothing to be done here for now.
     }
 
     /**

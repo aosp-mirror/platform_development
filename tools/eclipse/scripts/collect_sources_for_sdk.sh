@@ -22,6 +22,13 @@ if [ "-n" == "$1" ]; then
     shift
 fi
 
+DIR="frameworks"
+if [ "-s" == "$1" ]; then
+    shift
+    DIR="$1"
+    shift
+fi
+
 SRC="$1"
 DST="$2"
 
@@ -36,7 +43,7 @@ function process() {
 
 N=0
 E=0
-for i in `find -L "${SRC}/frameworks" -name "*.java"`; do
+for i in `find -L "${SRC}/${DIR}" -name "*.java"`; do
     if [ -f "$i" ]; then
         # look for ^package (android.view.blah);$
         PACKAGE=`sed -n '/^package [^ ;]\+; */{s/[^ ]* *\([^ ;]*\).*/\1/p;q}' "$i"`

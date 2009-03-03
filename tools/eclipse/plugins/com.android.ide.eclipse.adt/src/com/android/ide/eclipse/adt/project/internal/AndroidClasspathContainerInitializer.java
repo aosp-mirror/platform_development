@@ -266,7 +266,6 @@ public class AndroidClasspathContainerInitializer extends ClasspathContainerInit
                     // We schedule a new job to put the marker after.
                     final String fmessage = markerMessage;
                     Job markerJob = new Job("Android SDK: Resolving error markers") {
-                        @SuppressWarnings("unchecked")
                         @Override
                         protected IStatus run(IProgressMonitor monitor) {
                             try {
@@ -296,7 +295,6 @@ public class AndroidClasspathContainerInitializer extends ClasspathContainerInit
                     // In some cases, the workspace may be locked for modification when we pass
                     // here, so we schedule a new job to put the marker after.
                     Job markerJob = new Job("Android SDK: Resolving error markers") {
-                        @SuppressWarnings("unchecked")
                         @Override
                         protected IStatus run(IProgressMonitor monitor) {
                             try {

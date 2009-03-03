@@ -148,8 +148,11 @@ public class AndroidConstants {
     /** The old common plug-in ID. Please do not use for new features. */
     public static final String COMMON_PLUGIN_ID = "com.android.ide.eclipse.common"; //$NON-NLS-1$
 
-    /** aapt marker error. */
-    public final static String MARKER_AAPT = COMMON_PLUGIN_ID + ".aaptProblem"; //$NON-NLS-1$
+    /** aapt marker error when running the compile command */
+    public final static String MARKER_AAPT_COMPILE = COMMON_PLUGIN_ID + ".aaptProblem"; //$NON-NLS-1$
+
+    /** aapt marker error when running the package command */
+    public final static String MARKER_AAPT_PACKAGE = COMMON_PLUGIN_ID + ".aapt2Problem"; //$NON-NLS-1$
 
     /** XML marker error. */
     public final static String MARKER_XML = COMMON_PLUGIN_ID + ".xmlProblem"; //$NON-NLS-1$

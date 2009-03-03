@@ -44,7 +44,7 @@ public interface IDevice {
      * Returns the serial number of the device.
      */
     public String getSerialNumber();
-    
+
     /**
      * Returns the name of the AVD the emulator is running.
      * <p/>This is only valid if {@link #isEmulator()} returns true.
@@ -150,6 +150,14 @@ public interface IDevice {
      * @throws IOException
      */
     public void runEventLogService(LogReceiver receiver) throws IOException;
+
+    /**
+     * Runs the log service for the given log and outputs the log to the {@link LogReceiver}.
+     * @param logname the logname of the log to read from.
+     * @param receiver the receiver to receive the event log entries.
+     * @throws IOException
+     */
+    public void runLogService(String logname, LogReceiver receiver) throws IOException;
 
     /**
      * Creates a port forwarding between a local and a remote port.
