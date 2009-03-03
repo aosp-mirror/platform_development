@@ -23,7 +23,6 @@ import com.android.ide.eclipse.common.AndroidConstants;
 import com.android.ide.eclipse.common.project.ProjectChooserHelper;
 import com.android.ide.eclipse.editors.descriptors.DocumentDescriptor;
 import com.android.ide.eclipse.editors.descriptors.ElementDescriptor;
-import com.android.ide.eclipse.editors.descriptors.IDescriptorProvider;
 import com.android.ide.eclipse.editors.menu.descriptors.MenuDescriptors;
 import com.android.ide.eclipse.editors.resources.configurations.FolderConfiguration;
 import com.android.ide.eclipse.editors.resources.configurations.ResourceQualifier;
@@ -82,7 +81,6 @@ class NewXmlFileCreationPage extends WizardPage {
         private final String mXmlns;
         private final String mDefaultAttrs;
         private final String mDefaultRoot;
-        private final int mTargetApiLevel;
         
         public TypeInfo(String uiName,
                         String tooltip, 
@@ -90,8 +88,7 @@ class NewXmlFileCreationPage extends WizardPage {
                         Object rootSeed,
                         String defaultRoot,
                         String xmlns,
-                        String defaultAttrs,
-                        int targetApiLevel) {
+                        String defaultAttrs) {
             mUiName = uiName;
             mResFolderType = resFolderType;
             mTooltip = tooltip;
@@ -99,7 +96,6 @@ class NewXmlFileCreationPage extends WizardPage {
             mDefaultRoot = defaultRoot;
             mXmlns = xmlns;
             mDefaultAttrs = defaultAttrs;
-            mTargetApiLevel = targetApiLevel;
         }
 
         /** Returns the UI name for the resource type. Unique. Never null. */
@@ -180,13 +176,6 @@ class NewXmlFileCreationPage extends WizardPage {
         String getDefaultAttrs() {
             return mDefaultAttrs;
         }
-
-        /**
-         * The minimum API level required by the current SDK target to support this feature.
-         */
-        public int getTargetApiLevel() {
-            return mTargetApiLevel;
-        }
     }
 
     /**
@@ -201,8 +190,7 @@ class NewXmlFileCreationPage extends WizardPage {
                 "LinearLayout",                                     // default root
                 SdkConstants.NS_RESOURCES,                          // xmlns
                 "android:layout_width=\"wrap_content\"\n" +         // default attributes
-                "android:layout_height=\"wrap_content\"",
-                1                                                   // target API level
+                "android:layout_height=\"wrap_content\""
                 ),
         new TypeInfo("Values",                                      // UI name
                 "An XML file with simple values: colors, strings, dimensions, etc.", // tooltip
@@ -210,8 +198,7 @@ class NewXmlFileCreationPage extends WizardPage {
                 ResourcesDescriptors.ROOT_ELEMENT,                  // root seed
                 null,                                               // default root
                 null,                                               // xmlns
-                null,                                               // default attributes
-                1                                                   // target API level
+                null                                                // default attributes
                 ),
         new TypeInfo("Menu",                                        // UI name
                 "An XML file that describes an menu.",              // tooltip
@@ -219,17 +206,7 @@ class NewXmlFileCreationPage extends WizardPage {
                 MenuDescriptors.MENU_ROOT_ELEMENT,                  // root seed
                 null,                                               // default root
                 SdkConstants.NS_RESOURCES,                          // xmlns
-                null,                                               // default attributes
-                1                                                   // target API level
-                ),
-        new TypeInfo("Gadget Provider",                             // UI name
-                "An XML file that describes a gadget provider.",    // tooltip
-                ResourceFolderType.XML,                             // folder type
-                AndroidTargetData.DESCRIPTOR_GADGET_PROVIDER,       // root seed
-                null,                                               // default root
-                SdkConstants.NS_RESOURCES,                          // xmlns
-                null,                                               // default attributes
-                3                                                   // target API level
+                null                                                // default attributes
                 ),
         new TypeInfo("Preference",                                  // UI name
                 "An XML file that describes preferences.",          // tooltip
@@ -237,17 +214,15 @@ class NewXmlFileCreationPage extends WizardPage {
                 AndroidTargetData.DESCRIPTOR_PREFERENCES,           // root seed
                 AndroidConstants.CLASS_PREFERENCE_SCREEN,           // default root
                 SdkConstants.NS_RESOURCES,                          // xmlns
-                null,                                               // default attributes
-                1                                                   // target API level
+                null                                                // default attributes
                 ),
         new TypeInfo("Searchable",                                  // UI name
-                "An XML file that describes a searchable.",         // tooltip
+                "An XML file that describes a searchable [TODO].",  // tooltip
                 ResourceFolderType.XML,                             // folder type
                 AndroidTargetData.DESCRIPTOR_SEARCHABLE,            // root seed
                 null,                                               // default root
                 SdkConstants.NS_RESOURCES,                          // xmlns
-                null,                                               // default attributes
-                1                                                   // target API level
+                null                                                // default attributes
                 ),
         new TypeInfo("Animation",                                   // UI name
                 "An XML file that describes an animation.",         // tooltip
@@ -262,13 +237,9 @@ class NewXmlFileCreationPage extends WizardPage {
                     },
                 "set",              //$NON-NLS-1$                   // default root
                 null,                                               // xmlns
-                null,                                               // default attributes
-                1                                                   // target API level
+                null                                                // default attributes
                 ),
     };
-
-    /** Number of columns in the grid layout */
-    final static int NUM_COL = 4;
 
     /** Absolute destination folder root, e.g. "/res/" */
     private static String sResFolderAbs = AndroidConstants.WS_RESOURCES + AndroidConstants.WS_SEP;
@@ -319,7 +290,7 @@ class NewXmlFileCreationPage extends WizardPage {
 
         initializeDialogUnits(parent);
 
-        composite.setLayout(new GridLayout(NUM_COL, false /*makeColumnsEqualWidth*/));
+        composite.setLayout(new GridLayout(3, false /*makeColumnsEqualWidth*/));
         composite.setLayoutData(new GridData(GridData.FILL_BOTH));
 
         createProjectGroup(composite);
@@ -332,9 +303,8 @@ class NewXmlFileCreationPage extends WizardPage {
         setControl(composite);
 
         // Update state the first time
-        initializeFromSelection(mInitialSelection);
         initializeRootValues();
-        enableTypesBasedOnApi();
+        initializeFromSelection(mInitialSelection);
         validatePage();
     }
 
@@ -449,34 +419,16 @@ class NewXmlFileCreationPage extends WizardPage {
     }
 
     /**
-     * Pads the parent with empty cells to match the number of columns of the parent grid.
-     * 
-     * @param parent A grid layout with NUM_COL columns
-     * @param col The current number of columns used.
-     * @return 0, the new number of columns used, for convenience.
-     */
-    private int padWithEmptyCells(Composite parent, int col) {
-        for (; col < NUM_COL; ++col) {
-            emptyCell(parent);
-        }
-        col = 0;
-        return col;
-    }
-
-    /**
      * Creates the project & filename fields.
      * <p/>
-     * The parent must be a GridLayout with NUM_COL colums.
+     * The parent must be a GridLayout with 3 colums.
      */
     private void createProjectGroup(Composite parent) {
-        int col = 0;
-        
         // project name
         String tooltip = "The Android Project where the new resource file will be created.";
         Label label = new Label(parent, SWT.NONE);
         label.setText("Project");
         label.setToolTipText(tooltip);
-        ++col;
 
         mProjectTextField = new Text(parent, SWT.BORDER);
         mProjectTextField.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
@@ -486,7 +438,6 @@ class NewXmlFileCreationPage extends WizardPage {
                 onProjectFieldUpdated();
             }
         });
-        ++col;
 
         mProjectBrowseButton = new Button(parent, SWT.NONE);
         mProjectBrowseButton.setText("Browse...");
@@ -498,16 +449,12 @@ class NewXmlFileCreationPage extends WizardPage {
             }
         });
         mProjectChooserHelper = new ProjectChooserHelper(parent.getShell());
-        ++col;
 
-        col = padWithEmptyCells(parent, col);
-        
         // file name
         tooltip = "The name of the resource file to create.";
         label = new Label(parent, SWT.NONE);
         label.setText("File");
         label.setToolTipText(tooltip);
-        ++col;
 
         mFileNameTextField = new Text(parent, SWT.BORDER);
         mFileNameTextField.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
@@ -517,32 +464,31 @@ class NewXmlFileCreationPage extends WizardPage {
                 validatePage();
             }
         });
-        ++col;
 
-        padWithEmptyCells(parent, col);
+        emptyCell(parent);
     }
 
     /**
      * Creates the type field, {@link ConfigurationSelector} and the folder field.
      * <p/>
-     * The parent must be a GridLayout with NUM_COL colums.
+     * The parent must be a GridLayout with 3 colums.
      */
     private void createTypeGroup(Composite parent) {
         // separator
         Label label = new Label(parent, SWT.SEPARATOR | SWT.HORIZONTAL);
-        label.setLayoutData(newGridData(NUM_COL, GridData.GRAB_HORIZONTAL));
+        label.setLayoutData(newGridData(3, GridData.GRAB_HORIZONTAL));
         
         // label before type radios
         label = new Label(parent, SWT.NONE);
         label.setText("What type of resource would you like to create?");
-        label.setLayoutData(newGridData(NUM_COL));
+        label.setLayoutData(newGridData(3));
 
         // display the types on three columns of radio buttons.
         emptyCell(parent);
         Composite grid = new Composite(parent, SWT.NONE);
-        padWithEmptyCells(parent, 2);
+        emptyCell(parent);
 
-        grid.setLayout(new GridLayout(NUM_COL, true /*makeColumnsEqualWidth*/));
+        grid.setLayout(new GridLayout(3, true /*makeColumnsEqualWidth*/));
         
         SelectionListener radioListener = new SelectionAdapter() {
             @Override
@@ -555,27 +501,23 @@ class NewXmlFileCreationPage extends WizardPage {
         };
         
         int n = sTypes.length;
-        int num_lines = (n + NUM_COL/2) / NUM_COL;
-        for (int line = 0, k = 0; line < num_lines; line++) {
-            for (int i = 0; i < NUM_COL; i++, k++) {
-                if (k < n) {
-                    TypeInfo type = sTypes[k];
-                    Button radio = new Button(grid, SWT.RADIO);
-                    type.setWidget(radio);
-                    radio.setSelection(false);
-                    radio.setText(type.getUiName());
-                    radio.setToolTipText(type.getTooltip());
-                    radio.addSelectionListener(radioListener);
-                } else {
-                    emptyCell(grid);
-                }
+        int num_lines = n/3;
+        for (int line = 0; line < num_lines; line++) {
+            for (int i = 0; i < 3; i++) {
+                TypeInfo type = sTypes[line * 3 + i];
+                Button radio = new Button(grid, SWT.RADIO);
+                type.setWidget(radio);
+                radio.setSelection(false);
+                radio.setText(type.getUiName());
+                radio.setToolTipText(type.getTooltip());
+                radio.addSelectionListener(radioListener);
             }
         }
 
         // label before configuration selector
         label = new Label(parent, SWT.NONE);
         label.setText("What type of resource configuration would you like?");
-        label.setLayoutData(newGridData(NUM_COL));
+        label.setLayoutData(newGridData(3));
 
         // configuration selector
         emptyCell(parent);
@@ -585,7 +527,6 @@ class NewXmlFileCreationPage extends WizardPage {
         gd.heightHint = ConfigurationSelector.HEIGHT_HINT;
         mConfigSelector.setLayoutData(gd);
         mConfigSelector.setOnChangeListener(new onConfigSelectorUpdated());
-        emptyCell(parent);
         
         // folder name
         String tooltip = "The folder where the file will be generated, relative to the project.";
@@ -601,23 +542,25 @@ class NewXmlFileCreationPage extends WizardPage {
                 onWsFolderPathUpdated();
             }
         });
+
+        emptyCell(parent);
     }
 
     /**
      * Creates the root element combo.
      * <p/>
-     * The parent must be a GridLayout with NUM_COL colums.
+     * The parent must be a GridLayout with 3 colums.
      */
     private void createRootGroup(Composite parent) {
         // separator
         Label label = new Label(parent, SWT.SEPARATOR | SWT.HORIZONTAL);
-        label.setLayoutData(newGridData(NUM_COL, GridData.GRAB_HORIZONTAL));
+        label.setLayoutData(newGridData(3, GridData.GRAB_HORIZONTAL));
 
         // label before the root combo
         String tooltip = "The root element to create in the XML file.";
         label = new Label(parent, SWT.NONE);
         label.setText("Select the root element for the XML file:");
-        label.setLayoutData(newGridData(NUM_COL));
+        label.setLayoutData(newGridData(3));
         label.setToolTipText(tooltip);
 
         // root combo
@@ -629,7 +572,7 @@ class NewXmlFileCreationPage extends WizardPage {
         mRootElementCombo.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         mRootElementCombo.setToolTipText(tooltip);
         
-        padWithEmptyCells(parent, 2);
+        emptyCell(parent);
     }
 
     /**
@@ -747,13 +690,11 @@ class NewXmlFileCreationPage extends WizardPage {
                 // get the AndroidTargetData from the project
                 IAndroidTarget target = Sdk.getCurrent().getTarget(mProject);
                 AndroidTargetData data = Sdk.getCurrent().getTargetData(target);
+                ElementDescriptor descriptor = data.getDescriptorProvider(
+                        (Integer)rootSeed).getDescriptor();
                 
-                IDescriptorProvider provider = data.getDescriptorProvider((Integer)rootSeed);
-                ElementDescriptor descriptor = provider.getDescriptor();
-                if (descriptor != null) {
-                    HashSet<ElementDescriptor> visited = new HashSet<ElementDescriptor>();
-                    initRootElementDescriptor(roots, descriptor, visited);
-                }
+                HashSet<ElementDescriptor> visited = new HashSet<ElementDescriptor>();
+                initRootElementDescriptor(roots, descriptor, visited);
 
                 // Sort alphabetically.
                 Collections.sort(roots);
@@ -802,7 +743,15 @@ class NewXmlFileCreationPage extends WizardPage {
         }
 
         if (found != mProject) {
-            changeProject(found);
+            mProject = found;
+
+            // update the Type with the new descriptors.
+            initializeRootValues();
+            
+            // update the combo
+            updateRootCombo(getSelectedType());
+            
+            validatePage();
         }
     }
 
@@ -812,27 +761,17 @@ class NewXmlFileCreationPage extends WizardPage {
     private void onProjectBrowse() {
         IJavaProject p = mProjectChooserHelper.chooseJavaProject(mProjectTextField.getText());
         if (p != null) {
-            changeProject(p.getProject());
+            mProject = p.getProject();
             mProjectTextField.setText(mProject.getName());
+            
+            // update the Type with the new descriptors.
+            initializeRootValues();
+            
+            // update the combo
+            updateRootCombo(getSelectedType());
+            
+            validatePage();
         }
-    }
-
-    /**
-     * Changes mProject to the given new project and update the UI accordingly.
-     */
-    private void changeProject(IProject newProject) {
-        mProject = newProject;
-
-        // enable types based on new API level
-        enableTypesBasedOnApi();
-        
-        // update the Type with the new descriptors.
-        initializeRootValues();
-        
-        // update the combo
-        updateRootCombo(getSelectedType());
-        
-        validatePage();
     } 
 
     /**
@@ -1047,26 +986,6 @@ class NewXmlFileCreationPage extends WizardPage {
     }
 
     /**
-     * Helper method to enable the type radio buttons depending on the current API level.
-     * <p/>
-     * A type radio button is enabled either if:
-     * - if mProject is null, API level 1 is considered valid
-     * - if mProject is !null, the project->target->API must be >= to the type's API level.
-     */
-    private void enableTypesBasedOnApi() {
-
-        IAndroidTarget target = mProject != null ? Sdk.getCurrent().getTarget(mProject) : null;
-        int currentApiLevel = 1;
-        if (target != null) {
-            currentApiLevel = target.getApiVersionNumber();
-        }
-        
-        for (TypeInfo type : sTypes) {
-            type.getWidget().setEnabled(type.getTargetApiLevel() <= currentApiLevel);
-        }
-    }
-
-    /**
      * Validates the fields, displays errors and warnings.
      * Enables the finish button if there are no errors.
      */
@@ -1095,22 +1014,6 @@ class NewXmlFileCreationPage extends WizardPage {
 
             if (type == null) {
                 error = "One of the types must be selected (e.g. layout, values, etc.)";
-            }
-        }
-
-        // -- validate type API level
-        if (error == null) {
-            IAndroidTarget target = Sdk.getCurrent().getTarget(mProject);
-            int currentApiLevel = 1;
-            if (target != null) {
-                currentApiLevel = target.getApiVersionNumber();
-            }
-
-            TypeInfo type = getSelectedType();
-
-            if (type.getTargetApiLevel() > currentApiLevel) {
-                error = "The API level of the selected type (e.g. gadget, etc.) is not " +
-                        "compatible with the API level of the project.";
             }
         }
 

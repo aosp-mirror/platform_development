@@ -65,11 +65,11 @@ public class SoftKeyboard extends InputMethodService
     private long mLastShiftTime;
     private long mMetaState;
     
-    private LatinKeyboard mSymbolsKeyboard;
-    private LatinKeyboard mSymbolsShiftedKeyboard;
-    private LatinKeyboard mQwertyKeyboard;
+    private Keyboard mSymbolsKeyboard;
+    private Keyboard mSymbolsShiftedKeyboard;
+    private Keyboard mQwertyKeyboard;
     
-    private LatinKeyboard mCurKeyboard;
+    private Keyboard mCurKeyboard;
     
     private String mWordSeparators;
     
@@ -208,10 +208,6 @@ public class SoftKeyboard extends InputMethodService
                 // keyboard with no special features.
                 mCurKeyboard = mQwertyKeyboard;
         }
-        
-        // Update the label on the enter key, depending on what the application
-        // says it will do.
-        mCurKeyboard.setImeOptions(getResources(), attribute.imeOptions);
     }
 
     /**
@@ -506,18 +502,6 @@ public class SoftKeyboard extends InputMethodService
         } else {
             handleCharacter(primaryCode, keyCodes);
         }
-    }
-
-    public void onText(CharSequence text) {
-        InputConnection ic = getCurrentInputConnection();
-        if (ic == null) return;
-        ic.beginBatchEdit();
-        if (mComposing.length() > 0) {
-            commitTyped(ic);
-        }
-        ic.commitText(text, 0);
-        ic.endBatchEdit();
-        updateShiftKeyState(getCurrentInputEditorInfo());
     }
 
     /**

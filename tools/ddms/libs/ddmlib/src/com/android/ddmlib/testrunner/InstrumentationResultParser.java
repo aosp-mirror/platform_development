@@ -20,21 +20,24 @@ import com.android.ddmlib.IShellOutputReceiver;
 import com.android.ddmlib.Log;
 import com.android.ddmlib.MultiLineReceiver;
 
+import java.util.Hashtable;
+import java.util.Map;
+
 /**
- * Parses the 'raw output mode' results of an instrumentation test run from shell and informs a 
- * ITestRunListener of the results.
+ * Parses the 'raw output mode' results of an instrument test run from shell, and informs a 
+ * ITestRunListener of the results
  * 
- * <p>Expects the following output:
+ * Expects the following output:
  * 
- * <p>If fatal error occurred when attempted to run the tests:
- * <pre> INSTRUMENTATION_FAILED: </pre>  
+ * If fatal error occurred when attempted to run the tests:
+ * <i> INSTRUMENTATION_FAILED: </i>  
  * 
- * <p>Otherwise, expect a series of test results, each one containing a set of status key/value
+ * Otherwise, expect a series of test results, each one containing a set of status key/value
  * pairs, delimited by a start(1)/pass(0)/fail(-2)/error(-1) status code result. At end of test 
  * run, expects that the elapsed test time in seconds will be displayed  
  * 
- * <p>For example:
- * <pre>
+ * i.e.
+ * <i>
  * INSTRUMENTATION_STATUS_CODE: 1
  * INSTRUMENTATION_STATUS: class=com.foo.FooTest
  * INSTRUMENTATION_STATUS: test=testFoo
@@ -45,85 +48,64 @@ import com.android.ddmlib.MultiLineReceiver;
  * ... 
  * 
  * Time: X
- * </pre>
- * <p>Note that the "value" portion of the key-value pair may wrap over several text lines
+ * </i>
+ * 
+ * Note that the "value" portion of the key-value pair may wrap over several text lines
  */
 public class InstrumentationResultParser extends MultiLineReceiver {
     
-    /** Relevant test status keys. */
-    private static class StatusKeys {
-        private static final String TEST = "test";
-        private static final String CLASS = "class";
-        private static final String STACK = "stack";
-        private static final String NUMTESTS = "numtests";
-    }
+    // relevant test status keys
+    private static final String CODE_KEY = "code";
+    private static final String TEST_KEY = "test";
+    private static final String CLASS_KEY = "class";
+    private static final String STACK_KEY = "stack";
+    private static final String NUMTESTS_KEY = "numtests";
     
-    /** Test result status codes. */
-    private static class StatusCodes {
-        private static final int FAILURE = -2;
-        private static final int START = 1;
-        private static final int ERROR = -1;
-        private static final int OK = 0;
-    }
+    // test result status codes
+    private static final int FAILURE_STATUS_CODE = -2;
+    private static final int START_STATUS_CODE = 1;
+    private static final int ERROR_STATUS_CODE = -1;
+    private static final int OK_STATUS_CODE = 0;
 
-    /** Prefixes used to identify output. */
-    private static class Prefixes {
-        private static final String STATUS = "INSTRUMENTATION_STATUS: ";
-        private static final String STATUS_CODE = "INSTRUMENTATION_STATUS_CODE: ";
-        private static final String STATUS_FAILED = "INSTRUMENTATION_FAILED: ";
-        private static final String TIME_REPORT = "Time: ";
-    }
+    // recognized output patterns
+    private static final String STATUS_PREFIX = "INSTRUMENTATION_STATUS: ";
+    private static final String STATUS_PREFIX_CODE = "INSTRUMENTATION_STATUS_CODE: ";
+    private static final String STATUS_FAILED = "INSTRUMENTATION_FAILED: ";
+    private static final String TIME_REPORT = "Time: ";
     
     private final ITestRunListener mTestListener;
-
-    /** 
-     * Test result data
-     */
-    private static class TestResult {
-        private Integer mCode = null;
-        private String mTestName = null;
-        private String mTestClass = null;
-        private String mStackTrace = null;
-        private Integer mNumTests = null;
-        
-        /** Returns true if all expected values have been parsed */
-        boolean isComplete() {
-            return mCode != null && mTestName != null && mTestClass != null;
-        }
-    }
-    
-    /** Stores the status values for the test result currently being parsed */
-    private TestResult mCurrentTestResult = null;
-    
-    /** Stores the current "key" portion of the status key-value being parsed. */
-    private String mCurrentKey = null;
-    
-    /** Stores the current "value" portion of the status key-value being parsed. */
-    private StringBuilder mCurrentValue = null;
-    
-    /** True if start of test has already been reported to listener. */
-    private boolean mTestStartReported = false;
-    
-    /** The elapsed time of the test run, in milliseconds. */
-    private long mTestTime = 0;
-    
-    /** True if current test run has been canceled by user. */
-    private boolean mIsCancelled = false;
+    /** key-value map for current test */
+    private Map<String, String> mStatusValues;
+    /** stores the current "key" portion of the status key-value being parsed */
+    private String mCurrentKey;
+    /** stores the current "value" portion of the status key-value being parsed */
+    private StringBuilder mCurrentValue;
+    /** true if start of test has already been reported to listener */
+    private boolean mTestStartReported;
+    /** the elapsed time of the test run, in ms */
+    private long mTestTime;
+    /** true if current test run has been canceled by user */
+    private boolean mIsCancelled;
     
     private static final String LOG_TAG = "InstrumentationResultParser";
     
     /**
-     * Creates the InstrumentationResultParser.
-     * 
-     * @param listener informed of test results as the tests are executing
+     * Creates the InstrumentationResultParser
+     * @param listener - listener to report results to. will be informed of test results as the 
+     * tests are executing
      */
     public InstrumentationResultParser(ITestRunListener listener) {
+        mStatusValues = new Hashtable<String, String>();
+        mCurrentKey = null;
+        setTrimLine(false);
         mTestListener = listener;
+        mTestStartReported = false;
+        mTestTime = 0;
+        mIsCancelled = false;
     }
     
     /**
-     * Processes the instrumentation test output from shell.
-     * 
+     * Processes the instrumentation test output from shell
      * @see MultiLineReceiver#processNewLines
      */
     @Override
@@ -134,37 +116,31 @@ public class InstrumentationResultParser extends MultiLineReceiver {
     }
     
     /**
-     * Parse an individual output line. Expects a line that is one of:
-     * <ul>
-     * <li> 
-     * The start of a new status line (starts with Prefixes.STATUS or Prefixes.STATUS_CODE), 
-     * and thus there is a new key=value pair to parse, and the previous key-value pair is 
-     * finished. 
-     * </li>
-     * <li>
-     * A continuation of the previous status (the "value" portion of the key has wrapped
-     * to the next line).
-     * </li>  
-     * <li> A line reporting a fatal error in the test run (Prefixes.STATUS_FAILED) </li>
-     * <li> A line reporting the total elapsed time of the test run. (Prefixes.TIME_REPORT) </li>  
-     * </ul>
+     * Parse an individual output line. Expects a line that either is:
+     * a) the start of a new status line (ie. starts with STATUS_PREFIX or STATUS_PREFIX_CODE), 
+     *    and thus there is a new key=value pair to parse, and the previous key-value pair is 
+     *    finished
+     * b) a continuation of the previous status (ie the "value" portion of the key has wrapped
+     *    to the next line. 
+     * c) a line reporting a fatal error in the test run (STATUS_FAILED)
+     * d) a line reporting the total elapsed time of the test run.  
      *    
-     * @param line  Text output line
+     * @param line - text output line
      */
     private void parse(String line) {
-        if (line.startsWith(Prefixes.STATUS_CODE)) {
+        if (line.startsWith(STATUS_PREFIX_CODE)) {
             // Previous status key-value has been collected. Store it.
             submitCurrentKeyValue();
             parseStatusCode(line);
-        } else if (line.startsWith(Prefixes.STATUS)) {
+        } else if (line.startsWith(STATUS_PREFIX)) {
             // Previous status key-value has been collected. Store it.
             submitCurrentKeyValue();
-            parseKey(line, Prefixes.STATUS.length());
-        } else if (line.startsWith(Prefixes.STATUS_FAILED)) {
+            parseKey(line, STATUS_PREFIX.length());
+        } else if (line.startsWith(STATUS_FAILED)) {
             Log.e(LOG_TAG, "test run failed " + line);
             mTestListener.testRunFailed(line);
-        } else if (line.startsWith(Prefixes.TIME_REPORT)) {
-            parseTime(line, Prefixes.TIME_REPORT.length());
+        } else if (line.startsWith(TIME_REPORT)) {
+            parseTime(line, TIME_REPORT.length());
         } else {
             if (mCurrentValue != null) {
                 // this is a value that has wrapped to next line. 
@@ -177,53 +153,21 @@ public class InstrumentationResultParser extends MultiLineReceiver {
     }
     
     /**
-     * Stores the currently parsed key-value pair into mCurrentTestInfo.
+     * Stores the currently parsed key-value pair in the status map
      */
     private void submitCurrentKeyValue() {
         if (mCurrentKey != null && mCurrentValue != null) {
-            TestResult testInfo = getCurrentTestInfo();
-            String statusValue = mCurrentValue.toString();
-
-            if (mCurrentKey.equals(StatusKeys.CLASS)) {
-                testInfo.mTestClass = statusValue.trim();
-            }
-            else if (mCurrentKey.equals(StatusKeys.TEST)) {
-                testInfo.mTestName = statusValue.trim();
-            }
-            else if (mCurrentKey.equals(StatusKeys.NUMTESTS)) {
-                try {
-                    testInfo.mNumTests = Integer.parseInt(statusValue);
-                }
-                catch (NumberFormatException e) {
-                    Log.e(LOG_TAG, "Unexpected integer number of tests, received " + statusValue);
-                }
-            }
-            else if (mCurrentKey.equals(StatusKeys.STACK)) {
-                testInfo.mStackTrace = statusValue;
-            }
-
+            mStatusValues.put(mCurrentKey, mCurrentValue.toString());
             mCurrentKey = null;
             mCurrentValue = null;
         }
     }
     
-    private TestResult getCurrentTestInfo() {
-        if (mCurrentTestResult == null) {
-            mCurrentTestResult = new TestResult();
-        }
-        return mCurrentTestResult;
-    }
-    
-    private void clearCurrentTestInfo() {
-        mCurrentTestResult = null;
-    }
-    
     /**
-     * Parses the key from the current line.
-     * Expects format of "key=value".
-     *  
-     * @param line full line of text to parse 
-     * @param keyStartPos the starting position of the key in the given line
+     * Parses the key from the current line
+     * Expects format of "key=value",  
+     * @param line - full line of text to parse 
+     * @param keyStartPos - the starting position of the key in the given line
      */
     private void parseKey(String line, int keyStartPos) {
         int endKeyPos = line.indexOf('=', keyStartPos);
@@ -234,8 +178,7 @@ public class InstrumentationResultParser extends MultiLineReceiver {
     }
     
     /**
-     * Parses the start of a key=value pair.
-     *  
+     * Parses the start of a key=value pair. 
      * @param line - full line of text to parse 
      * @param valueStartPos - the starting position of the value in the given line
      */
@@ -245,25 +188,20 @@ public class InstrumentationResultParser extends MultiLineReceiver {
     }
     
     /**
-     * Parses out a status code result. 
+     * Parses out a status code result. For consistency, stores the result as a CODE entry in 
+     * key-value status map 
      */
     private void parseStatusCode(String line) {
-        String value = line.substring(Prefixes.STATUS_CODE.length()).trim();
-        TestResult testInfo = getCurrentTestInfo();
-        try {
-            testInfo.mCode = Integer.parseInt(value);    
-        }
-        catch (NumberFormatException e) {
-            Log.e(LOG_TAG, "Expected integer status code, received: " + value);
-        }
+        String value = line.substring(STATUS_PREFIX_CODE.length()).trim();
+        mStatusValues.put(CODE_KEY, value);
         
         // this means we're done with current test result bundle
-        reportResult(testInfo);
-        clearCurrentTestInfo();
+        reportResult(mStatusValues);
+        mStatusValues.clear();
     }
     
     /**
-     * Returns true if test run canceled.
+     * Returns true if test run canceled
      * 
      * @see IShellOutputReceiver#isCancelled()
      */
@@ -272,7 +210,7 @@ public class InstrumentationResultParser extends MultiLineReceiver {
     }
     
     /**
-     * Requests cancellation of test run.
+     * Requests cancellation of test result parsing
      */
     public void cancel() {
         mIsCancelled = true;
@@ -281,62 +219,82 @@ public class InstrumentationResultParser extends MultiLineReceiver {
     /**
      * Reports a test result to the test run listener. Must be called when a individual test
      * result has been fully parsed. 
-     * 
-     * @param statusMap key-value status pairs of test result
+     * @param statusMap - key-value status pairs of test result
      */
-    private void reportResult(TestResult testInfo) {
-        if (!testInfo.isComplete()) {
-            Log.e(LOG_TAG, "invalid instrumentation status bundle " + testInfo.toString());
+    private void reportResult(Map<String, String> statusMap) {
+        String className = statusMap.get(CLASS_KEY);
+        String testName = statusMap.get(TEST_KEY);
+        String statusCodeString = statusMap.get(CODE_KEY);
+        
+        if (className == null || testName == null || statusCodeString == null) {
+            Log.e(LOG_TAG, "invalid instrumentation status bundle " + statusMap.toString());
             return;
         }
-        reportTestRunStarted(testInfo);
-        TestIdentifier testId = new TestIdentifier(testInfo.mTestClass, testInfo.mTestName);
+        className = className.trim();
+        testName = testName.trim();
 
-        switch (testInfo.mCode) {
-            case StatusCodes.START:
-                mTestListener.testStarted(testId);
-                break;
-            case StatusCodes.FAILURE:
-                mTestListener.testFailed(ITestRunListener.TestFailure.FAILURE, testId, 
-                        getTrace(testInfo));
-                mTestListener.testEnded(testId);
-                break;
-            case StatusCodes.ERROR:
-                mTestListener.testFailed(ITestRunListener.TestFailure.ERROR, testId, 
-                        getTrace(testInfo));
-                mTestListener.testEnded(testId);
-                break;
-            case StatusCodes.OK:
-                mTestListener.testEnded(testId);
-                break;
-            default:
-                Log.e(LOG_TAG, "Unknown status code received: " + testInfo.mCode);
-                mTestListener.testEnded(testId);
-            break;
+        reportTestStarted(statusMap);
+        
+        try {
+           int statusCode = Integer.parseInt(statusCodeString);
+           
+           switch (statusCode) {
+               case START_STATUS_CODE:
+                   mTestListener.testStarted(className, testName);
+                   break;
+               case FAILURE_STATUS_CODE:
+                   mTestListener.testFailed(ITestRunListener.STATUS_FAILURE, className, testName, 
+                           getTrace(statusMap));
+                   mTestListener.testEnded(className, testName);
+                   break;
+               case ERROR_STATUS_CODE:
+                   mTestListener.testFailed(ITestRunListener.STATUS_ERROR, className, testName, 
+                           getTrace(statusMap));
+                   mTestListener.testEnded(className, testName);
+                   break;
+               case OK_STATUS_CODE:
+                   mTestListener.testEnded(className, testName);
+                   break;
+               default:
+                   Log.e(LOG_TAG, "Expected status code, received: " + statusCodeString);
+                   mTestListener.testEnded(className, testName);
+                   break;
+           }
         }
-
+        catch (NumberFormatException e) {
+           Log.e(LOG_TAG, "Expected integer status code, received: " + statusCodeString);    
+        }
     }
     
     /**
      * Reports the start of a test run, and the total test count, if it has not been previously 
-     * reported.
-     * 
-     * @param testInfo current test status values
+     * reported
+     * @param statusMap - key-value status pairs
      */
-    private void reportTestRunStarted(TestResult testInfo) {
+    private void reportTestStarted(Map<String, String> statusMap) {
         // if start test run not reported yet
-        if (!mTestStartReported && testInfo.mNumTests != null) {
-            mTestListener.testRunStarted(testInfo.mNumTests);
-            mTestStartReported = true;
+        if (!mTestStartReported) {
+            String numTestsString = statusMap.get(NUMTESTS_KEY);
+            if (numTestsString != null) {
+                try {
+                    int numTests = Integer.parseInt(numTestsString);
+                    mTestListener.testRunStarted(numTests);
+                    mTestStartReported = true;
+                }
+                catch (NumberFormatException e) {
+                    Log.e(LOG_TAG, "Unexpected numTests format " + numTestsString);
+                }
+            }
         }
     }
     
     /**
-     * Returns the stack trace of the current failed test, from the provided testInfo.
+     * Returns the stack trace of the current failed test, from the provided key-value status map
      */
-    private String getTrace(TestResult testInfo) {
-        if (testInfo.mStackTrace != null) {
-            return testInfo.mStackTrace;    
+    private String getTrace(Map<String, String> statusMap) {
+        String stackTrace = statusMap.get(STACK_KEY);
+        if (stackTrace != null) {        
+            return stackTrace;    
         }
         else {
             Log.e(LOG_TAG, "Could not find stack trace for failed test ");
@@ -345,7 +303,7 @@ public class InstrumentationResultParser extends MultiLineReceiver {
     }
     
     /**
-     * Parses out and store the elapsed time.
+     * Parses out and store the elapsed time
      */
     private void parseTime(String line, int startPos) {
         String timeString = line.substring(startPos);

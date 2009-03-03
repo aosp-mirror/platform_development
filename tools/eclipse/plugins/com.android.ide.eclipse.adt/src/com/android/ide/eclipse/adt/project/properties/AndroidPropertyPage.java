@@ -18,7 +18,6 @@ package com.android.ide.eclipse.adt.project.properties;
 
 import com.android.ide.eclipse.adt.sdk.Sdk;
 import com.android.sdklib.IAndroidTarget;
-import com.android.sdkuilib.ApkConfigWidget;
 import com.android.sdkuilib.SdkTargetSelector;
 
 import org.eclipse.core.resources.IProject;
@@ -33,8 +32,6 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.IWorkbenchPropertyPage;
 import org.eclipse.ui.dialogs.PropertyPage;
 
-import java.util.Map;
-
 /**
  * Property page for "Android" project.
  * This is accessible from the Package Explorer when right clicking a project and choosing
@@ -45,7 +42,6 @@ public class AndroidPropertyPage extends PropertyPage implements IWorkbenchPrope
 
     private IProject mProject;
     private SdkTargetSelector mSelector;
-    private ApkConfigWidget mApkConfigWidget;
 
     public AndroidPropertyPage() {
         // pass
@@ -55,14 +51,7 @@ public class AndroidPropertyPage extends PropertyPage implements IWorkbenchPrope
     protected Control createContents(Composite parent) {
         // get the element (this is not yet valid in the constructor).
         mProject = (IProject)getElement();
-
-        // get the targets from the sdk
-        IAndroidTarget[] targets = null;
-        if (Sdk.getCurrent() != null) {
-            targets = Sdk.getCurrent().getTargets();
-        }
-
-        // build the UI.
+        
         Composite top = new Composite(parent, SWT.NONE);
         top.setLayoutData(new GridData(GridData.FILL_BOTH));
         top.setLayout(new GridLayout(1, false));
@@ -70,28 +59,20 @@ public class AndroidPropertyPage extends PropertyPage implements IWorkbenchPrope
         Label l = new Label(top, SWT.NONE);
         l.setText("Project Target");
         
+        // get the targets from the sdk
+        IAndroidTarget[] targets = null;
+        if (Sdk.getCurrent() != null) {
+            targets = Sdk.getCurrent().getTargets();
+        }
+        
+        // build the UI.
         mSelector = new SdkTargetSelector(top, targets, false /*allowMultipleSelection*/);
 
-        l = new Label(top, SWT.SEPARATOR | SWT.HORIZONTAL);
-        l.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-
-        l = new Label(top, SWT.NONE);
-        l.setText("Project APK Configurations");
-
-        mApkConfigWidget = new ApkConfigWidget(top);
-
-        // fill the ui
-        Sdk currentSdk = Sdk.getCurrent();
-        if (currentSdk != null && mProject.isOpen()) {
-            // get the target
-            IAndroidTarget target = currentSdk.getTarget(mProject);
+        if (Sdk.getCurrent() != null) {
+            IAndroidTarget target = Sdk.getCurrent().getTarget(mProject);
             if (target != null) {
                 mSelector.setSelection(target);
             }
-            
-            // get the apk configurations
-            Map<String, String> configs = currentSdk.getProjectApkConfigs(mProject);
-            mApkConfigWidget.fillTable(configs);
         }
 
         mSelector.setSelectionListener(new SelectionAdapter() {
@@ -102,20 +83,14 @@ public class AndroidPropertyPage extends PropertyPage implements IWorkbenchPrope
                 setValid(target != null);
             }
         });
-        
-        if (mProject.isOpen() == false) {
-            // disable the ui.
-        }
 
         return top;
     }
 
     @Override
     public boolean performOk() {
-        Sdk currentSdk = Sdk.getCurrent();
-        if (currentSdk != null) {
-            currentSdk.setProject(mProject, mSelector.getFirstSelected(),
-                    mApkConfigWidget.getApkConfigs());
+        if (Sdk.getCurrent() != null) {
+            Sdk.getCurrent().setProject(mProject, mSelector.getFirstSelected());
         }
         
         return true;

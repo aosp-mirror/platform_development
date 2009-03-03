@@ -76,9 +76,6 @@ import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
 import javax.swing.JTree;
 import javax.swing.Box;
-import javax.swing.JTextField;
-import javax.swing.text.Document;
-import javax.swing.text.BadLocationException;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.event.ChangeEvent;
@@ -87,8 +84,6 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.event.TreeSelectionEvent;
-import javax.swing.event.DocumentListener;
-import javax.swing.event.DocumentEvent;
 import javax.swing.table.DefaultTableModel;
 import java.awt.image.BufferedImage;
 import java.awt.BorderLayout;
@@ -110,8 +105,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
 import java.util.concurrent.ExecutionException;
 
 public class Workspace extends JFrame {
@@ -163,8 +156,6 @@ public class Workspace extends JFrame {
     private JTable windows;
     private JLabel minZoomLabel;
     private JLabel maxZoomLabel;
-    private JTextField filterText;
-    private JLabel filterLabel;
 
     public Workspace() {
         super("Hierarchy Viewer");
@@ -322,33 +313,10 @@ public class Workspace extends JFrame {
 
         graphViewButton.setSelected(true);
 
-        filterText = new JTextField(20);
-        filterText.putClientProperty("JComponent.sizeVariant", "small");
-        filterText.getDocument().addDocumentListener(new DocumentListener() {
-            public void insertUpdate(DocumentEvent e) {
-                updateFilter(e);
-            }
-
-            public void removeUpdate(DocumentEvent e) {
-                updateFilter(e);
-            }
-
-            public void changedUpdate(DocumentEvent e) {
-                updateFilter(e);
-            }
-        });
-
-        filterLabel = new JLabel("Filter by class or id:");
-        filterLabel.putClientProperty("JComponent.sizeVariant", "small");
-        filterLabel.setBorder(BorderFactory.createEmptyBorder(0, 6, 0, 6));
-
-        leftSide.add(filterLabel);
-        leftSide.add(filterText);
-
         minZoomLabel = new JLabel();
         minZoomLabel.setText("20%");
         minZoomLabel.putClientProperty("JComponent.sizeVariant", "small");
-        minZoomLabel.setBorder(BorderFactory.createEmptyBorder(0, 12, 0, 0));
+        minZoomLabel.setBorder(BorderFactory.createEmptyBorder(0, 6, 0, 0));
         leftSide.add(minZoomLabel);
 
         zoomSlider = new JSlider();
@@ -389,18 +357,12 @@ public class Workspace extends JFrame {
 
         statusPanel.add(rightSide, BorderLayout.LINE_END);
 
-        hideStatusBarComponents();
-
-        return statusPanel;
-    }
-
-    private void hideStatusBarComponents() {
         viewCountLabel.setVisible(false);
         zoomSlider.setVisible(false);
         minZoomLabel.setVisible(false);
-        maxZoomLabel.setVisible(false);
-        filterLabel.setVisible(false);
-        filterText.setVisible(false);
+        maxZoomLabel.setVisible(false);        
+
+        return statusPanel;
     }
 
     private JToolBar buildToolBar() {
@@ -551,7 +513,10 @@ public class Workspace extends JFrame {
     }
 
     private void toggleGraphView() {
-        showStatusBarComponents();
+        viewCountLabel.setVisible(true);
+        zoomSlider.setVisible(true);
+        minZoomLabel.setVisible(true);
+        maxZoomLabel.setVisible(true);
 
         screenViewer.stop();
         mainPanel.remove(pixelPerfectPanel);
@@ -559,15 +524,6 @@ public class Workspace extends JFrame {
 
         validate();
         repaint();
-    }
-
-    private void showStatusBarComponents() {
-        viewCountLabel.setVisible(true);
-        zoomSlider.setVisible(true);
-        minZoomLabel.setVisible(true);
-        maxZoomLabel.setVisible(true);
-        filterLabel.setVisible(true);
-        filterText.setVisible(true);
     }
 
     private void togglePixelPerfectView() {
@@ -578,7 +534,10 @@ public class Workspace extends JFrame {
             screenViewer.start();
         }
 
-        hideStatusBarComponents();
+        viewCountLabel.setVisible(false);
+        zoomSlider.setVisible(false);
+        minZoomLabel.setVisible(false);
+        maxZoomLabel.setVisible(false);
 
         mainPanel.remove(mainSplitter);
         mainPanel.add(pixelPerfectPanel, BorderLayout.CENTER);
@@ -643,7 +602,10 @@ public class Workspace extends JFrame {
             graphViewButton.setEnabled(true);
             pixelPerfectViewButton.setEnabled(true);
 
-            showStatusBarComponents();
+            viewCountLabel.setVisible(true);
+            zoomSlider.setVisible(true);
+            minZoomLabel.setVisible(true);
+            maxZoomLabel.setVisible(true);            
         }
 
         sceneView = scene.createView();
@@ -814,7 +776,10 @@ public class Workspace extends JFrame {
             pixelPerfectPanel = mainSplitter = null;
             graphViewButton.setSelected(true);
 
-            hideStatusBarComponents();
+            viewCountLabel.setVisible(false);
+            zoomSlider.setVisible(false);
+            minZoomLabel.setVisible(false);
+            maxZoomLabel.setVisible(false);
 
             saveMenuItem.setEnabled(false);            
             showDevicesMenuItem.setEnabled(false);
@@ -898,34 +863,6 @@ public class Workspace extends JFrame {
                 }
             }
         });
-    }
-
-    private void updateFilter(DocumentEvent e) {
-        final Document document = e.getDocument();
-        try {
-            updateFilteredNodes(document.getText(0, document.getLength()));
-        } catch (BadLocationException e1) {
-            e1.printStackTrace();
-        }
-    }
-
-    private void updateFilteredNodes(String filterText) {
-        final ViewNode root = scene.getRoot();
-        try {
-            final Pattern pattern = Pattern.compile(filterText, Pattern.CASE_INSENSITIVE);
-            filterNodes(pattern, root);
-        } catch (PatternSyntaxException e) {
-            filterNodes(null, root);
-        }
-        repaint();
-    }
-
-    private void filterNodes(Pattern pattern, ViewNode root) {
-        root.filter(pattern);
-
-        for (ViewNode node : root.children) {
-            filterNodes(pattern, node);
-        }
     }
 
     public void beginTask() {

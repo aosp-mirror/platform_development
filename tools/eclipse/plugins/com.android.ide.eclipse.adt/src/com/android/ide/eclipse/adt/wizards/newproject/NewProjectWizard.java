@@ -105,8 +105,6 @@ public class NewProjectWizard extends Wizard implements INewWizard {
         SdkConstants.FD_LAYOUT + AndroidConstants.WS_SEP;
     private static final String VALUES_DIRECTORY =
         SdkConstants.FD_VALUES + AndroidConstants.WS_SEP;
-    private static final String GEN_SRC_DIRECTORY =
-        SdkConstants.FD_GEN_SOURCES + AndroidConstants.WS_SEP;
 
     private static final String TEMPLATES_DIRECTORY = "templates/"; //$NON-NLS-1$
     private static final String TEMPLATE_MANIFEST = TEMPLATES_DIRECTORY
@@ -116,7 +114,7 @@ public class NewProjectWizard extends Wizard implements INewWizard {
     private static final String TEMPLATE_USES_SDK = TEMPLATES_DIRECTORY
             + "uses-sdk.template"; //$NON-NLS-1$
     private static final String TEMPLATE_INTENT_LAUNCHER = TEMPLATES_DIRECTORY
-            + "launcher_intent_filter.template"; //$NON-NLS-1$
+    		+ "launcher_intent_filter.template"; //$NON-NLS-1$
 
     private static final String TEMPLATE_STRINGS = TEMPLATES_DIRECTORY
             + "strings.template"; //$NON-NLS-1$
@@ -343,20 +341,15 @@ public class NewProjectWizard extends Wizard implements INewWizard {
 
             // Create folders in the project if they don't already exist
             addDefaultDirectories(project, AndroidConstants.WS_ROOT, DEFAULT_DIRECTORIES, monitor);
-            String[] sourceFolders = new String[] {
-                        (String) parameters.get(PARAM_SRC_FOLDER),
-                        GEN_SRC_DIRECTORY
-                    };
-            addDefaultDirectories(project, AndroidConstants.WS_ROOT, sourceFolders, monitor);
+            String[] sourceFolder = new String[] { (String) parameters.get(PARAM_SRC_FOLDER) };
+            addDefaultDirectories(project, AndroidConstants.WS_ROOT, sourceFolder, monitor);
 
             // Create the resource folders in the project if they don't already exist.
             addDefaultDirectories(project, RES_DIRECTORY, RES_DIRECTORIES, monitor);
 
             // Setup class path
             IJavaProject javaProject = JavaCore.create(project);
-            for (String sourceFolder : sourceFolders) {
-                setupSourceFolder(javaProject, sourceFolder, monitor);
-            }
+            setupSourceFolder(javaProject, sourceFolder[0], monitor);
 
             if (((Boolean) parameters.get(PARAM_IS_NEW_PROJECT)).booleanValue()) {
                 // Create files in the project if they don't already exist
@@ -366,7 +359,7 @@ public class NewProjectWizard extends Wizard implements INewWizard {
                 addIcon(project, monitor);
 
                 // Create the default package components
-                addSampleCode(project, sourceFolders[0], parameters, stringDictionary, monitor);
+                addSampleCode(project, sourceFolder[0], parameters, stringDictionary, monitor);
 
                 // add the string definition file if needed
                 if (stringDictionary.size() > 0) {
@@ -378,8 +371,7 @@ public class NewProjectWizard extends Wizard implements INewWizard {
                         monitor);
             }
 
-            Sdk.getCurrent().setProject(project, (IAndroidTarget) parameters.get(PARAM_SDK_TARGET),
-                    null /* apkConfigMap*/);
+            Sdk.getCurrent().setProject(project, (IAndroidTarget) parameters.get(PARAM_SDK_TARGET));
             
             // Fix the project to make sure all properties are as expected.
             // Necessary for existing projects and good for new ones to.

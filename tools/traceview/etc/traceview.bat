@@ -20,9 +20,9 @@ rem Set up prog to be the path of this script, including following symlinks,
 rem and set up progdir to be the fully-qualified pathname of its directory.
 set prog=%~f0
 
-rem Change current directory and drive to where traceview.bat is, to avoid
-rem issues with directories containing whitespaces.
-cd /d %~dp0
+rem Change current directory to where traceview is, to avoid issues with directories
+rem containing whitespaces.
+cd %~dp0
 
 set jarfile=traceview.jar
 set frameworkdir=

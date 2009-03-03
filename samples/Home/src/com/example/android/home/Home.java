@@ -21,26 +21,28 @@ import android.app.ActivityManager;
 import android.app.SearchManager;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.content.res.Resources;
+import android.database.ContentObserver;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.PaintFlagsDrawFilter;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
-import android.graphics.ColorFilter;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.PaintDrawable;
 import android.os.Bundle;
-import android.os.Environment;
+import android.os.Handler;
 import android.util.Log;
-import android.util.Xml;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -55,18 +57,13 @@ import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
 import android.widget.GridView;
 import android.widget.TextView;
+import android.net.Uri;
 
 import java.io.IOException;
-import java.io.FileReader;
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-
-import org.xmlpull.v1.XmlPullParser;
-import org.xmlpull.v1.XmlPullParserException;
 
 public class Home extends Activity {
     /**
@@ -78,13 +75,6 @@ public class Home extends Activity {
      * Keys during freeze/thaw.
      */
     private static final String KEY_SAVE_GRID_OPENED = "grid.opened";
-
-    private static final String DEFAULT_FAVORITES_PATH = "etc/favorites.xml";
-
-    private static final String TAG_FAVORITES = "favorites";
-    private static final String TAG_FAVORITE = "favorite";
-    private static final String TAG_PACKAGE = "package";
-    private static final String TAG_CLASS = "class";    
 
     // Identifiers for option menu items
     private static final int MENU_WALLPAPER_SETTINGS = Menu.FIRST + 1;
@@ -100,8 +90,11 @@ public class Home extends Activity {
     private static ArrayList<ApplicationInfo> mApplications;
     private static LinkedList<ApplicationInfo> mFavorites;
 
+    private Handler mHandler = new Handler();
+
     private final BroadcastReceiver mWallpaperReceiver = new WallpaperIntentReceiver();
     private final BroadcastReceiver mApplicationsReceiver = new ApplicationsIntentReceiver();
+    private final ContentObserver mObserver = new FavoritesChangeObserver();
 
     private GridView mGrid;
 
@@ -127,6 +120,7 @@ public class Home extends Activity {
         setContentView(R.layout.home);
 
         registerIntentReceivers();
+        registerContentObservers();
 
         setDefaultWallpaper();
 
@@ -162,6 +156,7 @@ public class Home extends Activity {
             mApplications.get(i).icon.setCallback(null);
         }
 
+        getContentResolver().unregisterContentObserver(mObserver);
         unregisterReceiver(mWallpaperReceiver);
         unregisterReceiver(mApplicationsReceiver);
     }
@@ -204,6 +199,16 @@ public class Home extends Activity {
     }
 
     /**
+     * Registers various content observers. The current implementation registers
+     * only a favorites observer to keep track of the favorites applications.
+     */
+    private void registerContentObservers() {
+        ContentResolver resolver = getContentResolver();
+        resolver.registerContentObserver(Uri.parse("content://" +
+                android.provider.Settings.AUTHORITY + "/favorites?notify=true"), true, mObserver);
+    }
+
+    /**
      * Creates a new appplications adapter for the grid view and registers it.
      */
     private void bindApplications() {
@@ -242,7 +247,7 @@ public class Home extends Activity {
                     Log.e(LOG_TAG, "Failed to clear wallpaper " + e);
                 }
             } else {
-                getWindow().setBackgroundDrawable(new ClippedDrawable(wallpaper));
+                getWindow().setBackgroundDrawable(wallpaper);
             }
             mWallpaperChecked = true;
         }
@@ -254,17 +259,18 @@ public class Home extends Activity {
      */
     private void bindFavorites(boolean isLaunching) {
         if (!isLaunching || mFavorites == null) {
+            final Cursor c = getContentResolver().query(Uri.parse("content://" +
+                android.provider.Settings.AUTHORITY + "/favorites?notify=true"),
+                    null, null, null, "cellX");
 
-            FileReader favReader;
+            final int intentIndex = c.getColumnIndexOrThrow("intent");
+            final int titleIndex = c.getColumnIndexOrThrow("title");
+            final int typeIndex = c.getColumnIndexOrThrow("itemType");
 
-            // Environment.getRootDirectory() is a fancy way of saying ANDROID_ROOT or "/system".
-            final File favFile = new File(Environment.getRootDirectory(), DEFAULT_FAVORITES_PATH);
-            try {
-                favReader = new FileReader(favFile);
-            } catch (FileNotFoundException e) {
-                Log.e(LOG_TAG, "Couldn't find or open favorites file " + favFile);
-                return;
-            }
+            final PackageManager manager = getPackageManager();
+
+            ApplicationInfo info;
+            String intentDescription;
 
             if (mFavorites == null) {
                 mFavorites = new LinkedList<ApplicationInfo>();
@@ -272,75 +278,36 @@ public class Home extends Activity {
                 mFavorites.clear();
             }
 
-            final Intent intent = new Intent(Intent.ACTION_MAIN, null);
-            intent.addCategory(Intent.CATEGORY_LAUNCHER);
+            while (c.moveToNext()) {
+                final int itemType = c.getInt(typeIndex);
 
-            final PackageManager packageManager = getPackageManager();
+                if (itemType == 0 || // 0 == application
+                    itemType == 1) { // 1 == shortcut
 
-            try {
-                final XmlPullParser parser = Xml.newPullParser();
-                parser.setInput(favReader);
-
-                beginDocument(parser, TAG_FAVORITES);
-
-                ApplicationInfo info;
-
-                while (true) {
-                    nextElement(parser);
-
-                    String name = parser.getName();
-                    if (!TAG_FAVORITE.equals(name)) {
-                        break;
+                    intentDescription = c.getString(intentIndex);
+                    if (intentDescription == null) {
+                        continue;
                     }
 
-                    final String favoritePackage = parser.getAttributeValue(null, TAG_PACKAGE);
-                    final String favoriteClass = parser.getAttributeValue(null, TAG_CLASS);
-
-                    final ComponentName cn = new ComponentName(favoritePackage, favoriteClass);
-                    intent.setComponent(cn);
-                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-
-                    info = getApplicationInfo(packageManager, intent);
+                    Intent intent;
+                    try {
+                        intent = Intent.getIntent(intentDescription);
+                    } catch (java.net.URISyntaxException e) {
+                        continue;
+                    }
+                    info = getApplicationInfo(manager, intent);
                     if (info != null) {
+                        info.title = c.getString(titleIndex);
                         info.intent = intent;
                         mFavorites.addFirst(info);
                     }
                 }
-            } catch (XmlPullParserException e) {
-                Log.w(LOG_TAG, "Got exception parsing favorites.", e);
-            } catch (IOException e) {
-                Log.w(LOG_TAG, "Got exception parsing favorites.", e);
             }
+
+            c.close();
         }
 
         mApplicationsStack.setFavorites(mFavorites);
-    }
-
-    private static void beginDocument(XmlPullParser parser, String firstElementName)
-            throws XmlPullParserException, IOException {
-
-        int type;
-        while ((type = parser.next()) != XmlPullParser.START_TAG &&
-                type != XmlPullParser.END_DOCUMENT) {
-            // Empty
-        }
-
-        if (type != XmlPullParser.START_TAG) {
-            throw new XmlPullParserException("No start tag found");
-        }
-
-        if (!parser.getName().equals(firstElementName)) {
-            throw new XmlPullParserException("Unexpected start tag: found " + parser.getName() +
-                    ", expected " + firstElementName);
-        }
-    }
-
-    private static void nextElement(XmlPullParser parser) throws XmlPullParserException, IOException {
-        int type;
-        while ((type = parser.next()) != XmlPullParser.START_TAG &&
-                type != XmlPullParser.END_DOCUMENT) {
-            // Empty
-        }
     }
 
     /**
@@ -392,6 +359,14 @@ public class Home extends Activity {
             info.title = "";
         }
         return info;
+    }
+
+    /**
+     * When the notification that favorites have changed is received, requests
+     * a favorites list refresh.
+     */
+    private void onFavoritesChanged() {
+        bindFavorites(false);
     }
 
     @Override
@@ -555,7 +530,7 @@ public class Home extends Activity {
     private class WallpaperIntentReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            getWindow().setBackgroundDrawable(new ClippedDrawable(getWallpaper()));
+            getWindow().setBackgroundDrawable(getWallpaper());
         }
     }
 
@@ -569,6 +544,20 @@ public class Home extends Activity {
             bindApplications();
             bindRecents();
             bindFavorites(false);
+        }
+    }
+
+    /**
+     * Receives notifications whenever the user favorites have changed.
+     */
+    private class FavoritesChangeObserver extends ContentObserver {
+        public FavoritesChangeObserver() {
+            super(mHandler);
+        }
+
+        @Override
+        public void onChange(boolean selfChange) {
+            onFavoritesChanged();
         }
     }
 
@@ -591,12 +580,13 @@ public class Home extends Activity {
                 convertView = inflater.inflate(R.layout.application, parent, false);
             }
 
+            //final ImageView imageView = (ImageView) convertView.findViewById(R.id.icon);
             Drawable icon = info.icon;
 
             if (!info.filtered) {
-                //final Resources resources = getContext().getResources();
-                int width = 42;//(int) resources.getDimension(android.R.dimen.app_icon_size);
-                int height = 42;//(int) resources.getDimension(android.R.dimen.app_icon_size);
+                final Resources resources = getContext().getResources();
+                int width = (int) resources.getDimension(android.R.dimen.app_icon_size);
+                int height = (int) resources.getDimension(android.R.dimen.app_icon_size);
 
                 final int iconWidth = icon.getIntrinsicWidth();
                 final int iconHeight = icon.getIntrinsicHeight();
@@ -695,49 +685,6 @@ public class Home extends Activity {
         public void onItemClick(AdapterView parent, View v, int position, long id) {
             ApplicationInfo app = (ApplicationInfo) parent.getItemAtPosition(position);
             startActivity(app.intent);
-        }
-    }
-
-    /**
-     * When a drawable is attached to a View, the View gives the Drawable its dimensions
-     * by calling Drawable.setBounds(). In this application, the View that draws the
-     * wallpaper has the same size as the screen. However, the wallpaper might be larger
-     * that the screen which means it will be automatically stretched. Because stretching
-     * a bitmap while drawing it is very expensive, we use a ClippedDrawable instead.
-     * This drawable simply draws another wallpaper but makes sure it is not stretched
-     * by always giving it its intrinsic dimensions. If the wallpaper is larger than the
-     * screen, it will simply get clipped but it won't impact performance.
-     */
-    private class ClippedDrawable extends Drawable {
-        private final Drawable mWallpaper;
-
-        public ClippedDrawable(Drawable wallpaper) {
-            mWallpaper = wallpaper;
-        }
-
-        @Override
-        public void setBounds(int left, int top, int right, int bottom) {
-            super.setBounds(left, top, right, bottom);
-            // Ensure the wallpaper is as large as it really is, to avoid stretching it
-            // at drawing time
-            mWallpaper.setBounds(left, top, left + mWallpaper.getIntrinsicWidth(),
-                    top + mWallpaper.getIntrinsicHeight());
-        }
-
-        public void draw(Canvas canvas) {
-            mWallpaper.draw(canvas);
-        }
-
-        public void setAlpha(int alpha) {
-            mWallpaper.setAlpha(alpha);
-        }
-
-        public void setColorFilter(ColorFilter cf) {
-            mWallpaper.setColorFilter(cf);
-        }
-
-        public int getOpacity() {
-            return mWallpaper.getOpacity();
         }
     }
 }

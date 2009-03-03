@@ -19,35 +19,6 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
     <PreferenceCategory
-        android:title="@string/device_info_title">
-
-        <PreferenceScreen android:key="battery_history_settings"
-                android:title="@string/title_battery_history" 
-                android:summary="@string/summary_battery_history">
-            <intent android:action="android.intent.action.MAIN"
-                    android:targetPackage="com.android.settings"
-                    android:targetClass="com.android.settings.battery_history.BatteryHistory" />
-        </PreferenceScreen>
-        
-        <PreferenceScreen android:key="battery_information_settings"
-                android:title="@string/title_battery_information" 
-                android:summary="@string/summary_battery_information">
-            <intent android:action="android.intent.action.MAIN"
-                    android:targetPackage="com.android.settings"
-                    android:targetClass="com.android.settings.BatteryInfo" />
-        </PreferenceScreen>
-        
-        <PreferenceScreen android:key="usage_statistics_settings"
-                android:title="@string/title_usage_statistics" 
-                android:summary="@string/summary_usage_statistics">
-            <intent android:action="android.intent.action.MAIN"
-                    android:targetPackage="com.android.settings"
-                    android:targetClass="com.android.settings.UsageStats" />
-        </PreferenceScreen>
-        
-    </PreferenceCategory>
-            
-    <PreferenceCategory
         android:title="@string/general_title">
         
         <ListPreference

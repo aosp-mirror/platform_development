@@ -48,57 +48,32 @@ import java.util.ArrayList;
  */
 public class SdkTargetSelector {
     
-    private IAndroidTarget[] mTargets;
-    private final boolean mAllowSelection;
+    private final IAndroidTarget[] mTargets;
     private final boolean mAllowMultipleSelection;
     private SelectionListener mSelectionListener;
     private Table mTable;
     private Label mDescription;
-    private Composite mInnerGroup;
-    
-    /**
-     * Creates a new SDK Target Selector.
-     * 
-     * @param parent The parent composite where the selector will be added.
-     * @param targets The list of targets. This is <em>not</em> copied, the caller must not modify.
-     *                Targets can be null or an empty array, in which case the table is disabled.
-     * @param allowMultipleSelection True if more than one SDK target can be selected at the same
-     *        time.
-     */
-    public SdkTargetSelector(Composite parent, IAndroidTarget[] targets,
-            boolean allowMultipleSelection) {
-        this(parent, targets, true /*allowSelection*/, allowMultipleSelection);
-    }
 
     /**
      * Creates a new SDK Target Selector.
      * 
      * @param parent The parent composite where the selector will be added.
      * @param targets The list of targets. This is <em>not</em> copied, the caller must not modify.
-     *                Targets can be null or an empty array, in which case the table is disabled.
-     * @param allowSelection True if selection is enabled.
      * @param allowMultipleSelection True if more than one SDK target can be selected at the same
-     *        time. Used only if allowSelection is true.
+     *        time.
      */
     public SdkTargetSelector(Composite parent, IAndroidTarget[] targets,
-            boolean allowSelection,
             boolean allowMultipleSelection) {
+        mTargets = targets;
+
         // Layout has 1 column
-        mInnerGroup = new Composite(parent, SWT.NONE);
-        mInnerGroup.setLayout(new GridLayout());
-        mInnerGroup.setLayoutData(new GridData(GridData.FILL_BOTH));
-        mInnerGroup.setFont(parent.getFont());
+        Composite group = new Composite(parent, SWT.NONE);
+        group.setLayout(new GridLayout());
+        group.setLayoutData(new GridData(GridData.FILL_BOTH));
+        group.setFont(parent.getFont());
         
-        mAllowSelection = allowSelection;
         mAllowMultipleSelection = allowMultipleSelection;
-        int style = SWT.BORDER;
-        if (allowSelection) {
-            style |= SWT.CHECK | SWT.FULL_SELECTION;
-        }
-        if (!mAllowMultipleSelection) {
-            style |= SWT.SINGLE;
-        }
-        mTable = new Table(mInnerGroup, style);
+        mTable = new Table(group, SWT.CHECK | SWT.FULL_SELECTION | SWT.SINGLE | SWT.BORDER);
         mTable.setHeaderVisible(true);
         mTable.setLinesVisible(false);
 
@@ -109,7 +84,7 @@ public class SdkTargetSelector {
         data.verticalAlignment = GridData.FILL;
         mTable.setLayoutData(data);
 
-        mDescription = new Label(mInnerGroup, SWT.WRAP);
+        mDescription = new Label(group, SWT.WRAP);
         mDescription.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
         // create the table columns
@@ -118,25 +93,14 @@ public class SdkTargetSelector {
         final TableColumn column1 = new TableColumn(mTable, SWT.NONE);
         column1.setText("Vendor");
         final TableColumn column2 = new TableColumn(mTable, SWT.NONE);
-        column2.setText("Version");
+        column2.setText("API Level");
         final TableColumn column3 = new TableColumn(mTable, SWT.NONE);
-        column3.setText("API Level");
+        column3.setText("SDK");
 
         adjustColumnsWidth(mTable, column0, column1, column2, column3);
         setupSelectionListener(mTable);
-        setTargets(targets);
+        fillTable(mTable);
         setupTooltip(mTable);
-    }
-    
-    /**
-     * Returns the layout data of the inner composite widget that contains the target selector.
-     * By default the layout data is set to a {@link GridData} with a {@link GridData#FILL_BOTH}
-     * mode.
-     * <p/>
-     * This can be useful if you want to change the {@link GridData#horizontalSpan} for example.
-     */
-    public Object getLayoutData() {
-        return mInnerGroup.getLayoutData();
     }
 
     /**
@@ -146,16 +110,6 @@ public class SdkTargetSelector {
      */
     public IAndroidTarget[] getTargets() {
         return mTargets;
-    }
-
-    /**
-     * Changes the targets of the SDK Target Selector.
-     * 
-     * @param targets The list of targets. This is <em>not</em> copied, the caller must not modify.
-     */
-    public void setTargets(IAndroidTarget[] targets) {
-        mTargets = targets;
-        fillTable(mTable);
     }
 
     /**
@@ -185,10 +139,6 @@ public class SdkTargetSelector {
      * @return true if the target could be selected, false otherwise.
      */
     public boolean setSelection(IAndroidTarget target) {
-        if (!mAllowSelection) {
-            return false;
-        }
-
         boolean found = false;
         boolean modified = false;
         for (TableItem i : mTable.getItems()) {
@@ -274,10 +224,6 @@ public class SdkTargetSelector {
      * double-clicked (aka "the default selection").
      */
     private void setupSelectionListener(final Table table) {
-        if (!mAllowSelection) {
-            return;
-        }
-
         // Add a selection listener that will check/uncheck items when they are double-clicked
         table.addSelectionListener(new SelectionListener() {
             /** Default selection means double-click on "most" platforms */
@@ -335,9 +281,6 @@ public class SdkTargetSelector {
      * </ul>
      */
     private void fillTable(final Table table) {
-        
-        table.removeAll();
-        
         if (mTargets != null && mTargets.length > 0) {
             table.setEnabled(true);
             for (IAndroidTarget target : mTargets) {

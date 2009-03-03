@@ -103,8 +103,6 @@ public final class SdkConstants {
     public final static String FD_ASSETS = "assets"; //$NON-NLS-1$
     /** Default source folder name, i.e. "src" */
     public final static String FD_SOURCES = "src"; //$NON-NLS-1$
-    /** Default generated source folder name, i.e. "gen" */
-    public final static String FD_GEN_SOURCES = "gen"; //$NON-NLS-1$
     /** Default native library folder name inside the project, i.e. "libs"
      * While the folder inside the .apk is "lib", we call that one libs because
      * that's what we use in ant for both .jar and .so and we need to make the 2 development ways

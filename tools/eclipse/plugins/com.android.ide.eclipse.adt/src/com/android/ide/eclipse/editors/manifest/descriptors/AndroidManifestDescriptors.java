@@ -195,8 +195,6 @@ public final class AndroidManifestDescriptors implements IDescriptorProvider {
         overrides.put("*/permission",    ListAttributeDescriptor.class);    //$NON-NLS-1$
         overrides.put("*/targetPackage", PackageAttributeDescriptor.class); //$NON-NLS-1$
         
-        overrides.put("uses-library/name", ListAttributeDescriptor.class);       //$NON-NLS-1$
-
         overrides.put("action,category,uses-permission/" + ANDROID_NAME_ATTR,    //$NON-NLS-1$
                       ListAttributeDescriptor.class);
         overrides.put("application/" + ANDROID_NAME_ATTR, ApplicationAttributeDescriptor.class);  //$NON-NLS-1$

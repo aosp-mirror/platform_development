@@ -17,19 +17,11 @@
 package com.android.ide.eclipse.adt.preferences;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.sdk.Sdk;
-import com.android.ide.eclipse.adt.sdk.Sdk.ITargetChangeListener;
-import com.android.sdklib.IAndroidTarget;
-import com.android.sdkuilib.SdkTargetSelector;
 
-import org.eclipse.core.resources.IProject;
 import org.eclipse.jface.preference.DirectoryFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.jface.resource.JFaceResources;
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
@@ -88,9 +80,6 @@ public class AndroidPreferencePage extends FieldEditorPreferencePage implements
      */
     private static class SdkDirectoryFieldEditor extends DirectoryFieldEditor {
 
-        private SdkTargetSelector mTargetSelector;
-        private TargetChangedListener mTargetChangeListener;
-
         public SdkDirectoryFieldEditor(String name, String labelText, Composite parent) {
             super(name, labelText, parent);
             setEmptyStringAllowed(false);
@@ -141,69 +130,6 @@ public class AndroidPreferencePage extends FieldEditorPreferencePage implements
         public Text getTextControl(Composite parent) {
             setValidateStrategy(VALIDATE_ON_KEY_STROKE);
             return super.getTextControl(parent);
-        }
-
-        /* (non-Javadoc)
-         * Method declared on StringFieldEditor (and FieldEditor).
-         */
-        @Override
-        protected void doFillIntoGrid(Composite parent, int numColumns) {
-            super.doFillIntoGrid(parent, numColumns);
-
-            GridData gd;
-            Label l = new Label(parent, SWT.NONE);
-            l.setText("Note: The list of SDK Targets below is only reloaded once you hit 'Apply' or 'OK'.");
-            gd = new GridData(GridData.FILL_HORIZONTAL);
-            gd.horizontalSpan = numColumns;
-            l.setLayoutData(gd);
-            
-            try {
-                // We may not have an sdk if the sdk path pref is empty or not valid.
-                Sdk sdk = Sdk.getCurrent();
-                IAndroidTarget[] targets = sdk != null ? sdk.getTargets() : null;
-                
-                mTargetSelector = new SdkTargetSelector(parent,
-                        targets,
-                        false, /*allowSelection*/
-                        false /*multipleSelection*/);
-                gd = (GridData) mTargetSelector.getLayoutData();
-                gd.horizontalSpan = numColumns;
-                
-                if (mTargetChangeListener == null) {
-                    mTargetChangeListener = new TargetChangedListener();
-                    AdtPlugin.getDefault().addTargetListener(mTargetChangeListener);
-                }
-            } catch (Exception e) {
-                // We need to catch *any* exception that arises here, otherwise it disables
-                // the whole pref panel. We can live without the Sdk target selector but
-                // not being able to actually set an sdk path.
-                AdtPlugin.log(e, "SdkTargetSelector failed");
-            }
-        }
-        
-        @Override
-        public void dispose() {
-            super.dispose();
-            if (mTargetChangeListener != null) {
-                AdtPlugin.getDefault().removeTargetListener(mTargetChangeListener);
-                mTargetChangeListener = null;
-            }
-        }
-        
-        private class TargetChangedListener implements ITargetChangeListener {
-            public void onProjectTargetChange(IProject changedProject) {
-                // do nothing.
-            }
-
-            public void onTargetsLoaded() {
-                if (mTargetSelector != null) {
-                    // We may not have an sdk if the sdk path pref is empty or not valid.
-                    Sdk sdk = Sdk.getCurrent();
-                    IAndroidTarget[] targets = sdk != null ? sdk.getTargets() : null;
-
-                    mTargetSelector.setTargets(targets);
-                }
-            }
         }
     }
 }

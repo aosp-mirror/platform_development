@@ -20,7 +20,7 @@ import junit.framework.TestCase;
 
 
 /**
- * Tests InstrumentationResultParser.
+ * Tests InstrumentationResultParser
  */
 public class InstrumentationResultParserTest extends TestCase {
 
@@ -51,7 +51,7 @@ public class InstrumentationResultParserTest extends TestCase {
 
     /**
      * Tests that the test run started and test start events is sent on first
-     * bundle received.
+     * bundle received
      */
     public void testTestStarted() {
         StringBuilder output = buildCommonResult();
@@ -63,7 +63,7 @@ public class InstrumentationResultParserTest extends TestCase {
     }
 
     /**
-     * Tests that a single successful test execution.
+     * Tests that a single successful test execution
      */
     public void testTestSuccess() {
         StringBuilder output = buildCommonResult();
@@ -74,11 +74,11 @@ public class InstrumentationResultParserTest extends TestCase {
         injectTestString(output.toString());
         assertCommonAttributes();
         assertEquals(1, mTestResult.mNumTestsRun);
-        assertEquals(null, mTestResult.mTestStatus);
+        assertEquals(0, mTestResult.mTestStatus);
     }
 
     /**
-     * Test basic parsing of failed test case.
+     * Test basic parsing of failed test case
      */
     public void testTestFailed() {
         StringBuilder output = buildCommonResult();
@@ -91,12 +91,12 @@ public class InstrumentationResultParserTest extends TestCase {
         assertCommonAttributes();
 
         assertEquals(1, mTestResult.mNumTestsRun);
-        assertEquals(ITestRunListener.TestFailure.FAILURE, mTestResult.mTestStatus);
+        assertEquals(ITestRunListener.STATUS_FAILURE, mTestResult.mTestStatus);
         assertEquals(STACK_TRACE, mTestResult.mTrace);
     }
     
     /**
-     * Test basic parsing and conversion of time from output.
+     * Test basic parsing and conversion of time from output
      */
     public void testTimeParsing() {
         final String timeString = "Time: 4.9";
@@ -105,7 +105,7 @@ public class InstrumentationResultParserTest extends TestCase {
     }
 
     /**
-     * builds a common test result using TEST_NAME and TEST_CLASS.
+     * builds a common test result using TEST_NAME and TEST_CLASS
      */
     private StringBuilder buildCommonResult() {
         StringBuilder output = new StringBuilder();
@@ -118,7 +118,7 @@ public class InstrumentationResultParserTest extends TestCase {
     }
 
     /**
-     * Adds common status results to the provided output.
+     * Adds common status results to the provided output
      */
     private void addCommonStatus(StringBuilder output) {
         addStatusKey(output, "stream", "\r\n" + CLASS_NAME);
@@ -130,7 +130,7 @@ public class InstrumentationResultParserTest extends TestCase {
     }
 
     /**
-     * Adds a stack trace status bundle to output.
+     * Adds a stack trace status bundle to output
      */
     private void addStackTrace(StringBuilder output) {
         addStatusKey(output, "stack", STACK_TRACE);
@@ -138,7 +138,7 @@ public class InstrumentationResultParserTest extends TestCase {
     }
 
     /**
-     * Helper method to add a status key-value bundle.
+     * Helper method to add a status key-value bundle
      */
     private void addStatusKey(StringBuilder outputBuilder, String key,
             String value) {
@@ -168,7 +168,7 @@ public class InstrumentationResultParserTest extends TestCase {
     }
 
     /**
-     * inject a test string into the result parser.
+     * inject a test string into the result parser
      * 
      * @param result
      */
@@ -185,7 +185,7 @@ public class InstrumentationResultParserTest extends TestCase {
     }
 
     /**
-     * A specialized test listener that stores a single test events.
+     * A specialized test listener that stores a single test events
      */
     private class VerifyingTestResult implements ITestRunListener {
 
@@ -194,28 +194,29 @@ public class InstrumentationResultParserTest extends TestCase {
         int mNumTestsRun;
         String mTestName;
         long mTestTime;
-        TestFailure mTestStatus;
+        int mTestStatus;
         String mTrace;
         boolean mStopped;
 
         VerifyingTestResult() {
             mNumTestsRun = 0;
-            mTestStatus = null;
+            mTestStatus = 0;
             mStopped = false;
         }
 
-        public void testEnded(TestIdentifier test) {
+        public void testEnded(String className, String testName) {
             mNumTestsRun++;
-            assertEquals("Unexpected class name", mSuiteName, test.getClassName());
-            assertEquals("Unexpected test ended", mTestName, test.getTestName());
+            assertEquals("Unexpected class name", mSuiteName, className);
+            assertEquals("Unexpected test ended", mTestName, testName);
 
         }
 
-        public void testFailed(TestFailure status, TestIdentifier test, String trace) {
+        public void testFailed(int status, String className, String testName,
+                String trace) {
             mTestStatus = status;
             mTrace = trace;
-            assertEquals("Unexpected class name", mSuiteName, test.getClassName());
-            assertEquals("Unexpected test ended", mTestName, test.getTestName());
+            assertEquals("Unexpected class name", mSuiteName, className);
+            assertEquals("Unexpected test ended", mTestName, testName);
         }
 
         public void testRunEnded(long elapsedTime) {
@@ -232,9 +233,9 @@ public class InstrumentationResultParserTest extends TestCase {
             mStopped = true;
         }
 
-        public void testStarted(TestIdentifier test) {
-            mSuiteName = test.getClassName();
-            mTestName = test.getTestName();
+        public void testStarted(String className, String testName) {
+            mSuiteName = className;
+            mTestName = testName;
         }
 
         public void testRunFailed(String errorMessage) {

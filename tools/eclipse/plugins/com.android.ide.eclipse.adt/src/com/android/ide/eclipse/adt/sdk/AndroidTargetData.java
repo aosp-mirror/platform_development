@@ -27,7 +27,6 @@ import com.android.ide.eclipse.editors.resources.manager.ProjectResources;
 import com.android.ide.eclipse.editors.xml.descriptors.XmlDescriptors;
 import com.android.layoutlib.api.ILayoutBridge;
 import com.android.sdklib.IAndroidTarget;
-import com.android.sdklib.IAndroidTarget.IOptionalLibrary;
 
 import java.util.Hashtable;
 import java.util.Map;
@@ -44,7 +43,6 @@ public class AndroidTargetData {
     public final static int DESCRIPTOR_RESOURCES = 5;
     public final static int DESCRIPTOR_SEARCHABLE = 6;
     public final static int DESCRIPTOR_PREFERENCES = 7;
-    public final static int DESCRIPTOR_GADGET_PROVIDER = 8;
     
     public final static class LayoutBridge {
         /** Link to the layout bridge */
@@ -53,8 +51,6 @@ public class AndroidTargetData {
         public LoadStatus status = LoadStatus.LOADING;
         
         public ClassLoader classLoader;
-        
-        public int apiLevel;
     }
 
     private final IAndroidTarget mTarget;
@@ -97,7 +93,6 @@ public class AndroidTargetData {
     
     /**
      * Creates an AndroidTargetData object.
-     * @param optionalLibraries 
      */
     void setExtraData(IResourceRepository systemResourceRepository,
             AndroidManifestDescriptors manifestDescriptors,
@@ -110,7 +105,6 @@ public class AndroidTargetData {
             String[] broadcastIntentActionValues,
             String[] serviceIntentActionValues,
             String[] intentCategoryValues,
-            IOptionalLibrary[] optionalLibraries,
             ProjectResources resources,
             LayoutBridge layoutBridge) {
         
@@ -126,9 +120,8 @@ public class AndroidTargetData {
         setPermissions(permissionValues);
         setIntentFilterActionsAndCategories(activityIntentActionValues, broadcastIntentActionValues,
                 serviceIntentActionValues, intentCategoryValues);
-        setOptionalLibraries(optionalLibraries);
     }
-
+    
     public DexWrapper getDexWrapper() {
         return mDexWrapper;
     }
@@ -158,8 +151,6 @@ public class AndroidTargetData {
                 return ResourcesDescriptors.getInstance();
             case DESCRIPTOR_PREFERENCES:
                 return mXmlDescriptors.getPreferencesProvider();
-            case DESCRIPTOR_GADGET_PROVIDER:
-                return mXmlDescriptors.getGadgetProvider();
             case DESCRIPTOR_SEARCHABLE:
                 return mXmlDescriptors.getSearchableProvider();
             default :
@@ -291,20 +282,6 @@ public class AndroidTargetData {
         setValues("(receiver,action,android:name)", broadcastIntentActions); //$NON-NLS-1$
         setValues("(service,action,android:name)", serviceIntentActions); //$NON-NLS-1$
         setValues("(category,android:name)", intentCategoryValues); //$NON-NLS-1$
-    }
-    
-    private void setOptionalLibraries(IOptionalLibrary[] optionalLibraries) {
-        String[] values;
-        
-        if (optionalLibraries == null) {
-            values = new String[0];
-        } else {
-            values = new String[optionalLibraries.length];
-            for (int i = 0; i < optionalLibraries.length; i++) {
-                values[i] = optionalLibraries[i].getName();
-            }
-        }
-        setValues("(uses-library,android:name)", values);
     }
 
     /**

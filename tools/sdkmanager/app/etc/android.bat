@@ -23,9 +23,9 @@ set prog=%~f0
 rem Grab current directory before we change it
 set workdir=%cd%
 
-rem Change current directory and drive to where the script is, to avoid
-rem issues with directories containing whitespaces.
-cd /d %~dp0
+rem Change current directory to where ddms is, to avoid issues with directories
+rem containing whitespaces.
+cd %~dp0
 
 set jarfile=sdkmanager.jar
 set frameworkdir=

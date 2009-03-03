@@ -53,9 +53,6 @@ public final class XmlDescriptors implements IDescriptorProvider {
     /** The root document descriptor for preferences. */
     private DocumentDescriptor mPrefDescriptor = new DocumentDescriptor("xml_doc", null /* children */); //$NON-NLS-1$ 
 
-    /** The root document descriptor for gadget provider. */
-    private DocumentDescriptor mGadgetDescriptor = new DocumentDescriptor("xml_doc", null /* children */); //$NON-NLS-1$ 
-
     /** @return the root descriptor for both searchable and preferences. */
     public DocumentDescriptor getDescriptor() {
         return mDescriptor;
@@ -73,11 +70,6 @@ public final class XmlDescriptors implements IDescriptorProvider {
     /** @return the root descriptor for preferences. */
     public DocumentDescriptor getPreferencesDescriptor() {
         return mPrefDescriptor;
-    }
-    
-    /** @return the root descriptor for gadget providers. */
-    public DocumentDescriptor getGadgetDescriptor() {
-        return mGadgetDescriptor;
     }
     
     public IDescriptorProvider getSearchableProvider() {
@@ -104,18 +96,6 @@ public final class XmlDescriptors implements IDescriptorProvider {
         };
     }
 
-    public IDescriptorProvider getGadgetProvider() {
-        return new IDescriptorProvider() {
-            public ElementDescriptor getDescriptor() {
-                return mGadgetDescriptor;
-            }
-
-            public ElementDescriptor[] getRootElementDescriptors() {
-                return mGadgetDescriptor.getChildren();
-            }
-        };
-    }
-
     /**
      * Updates the document descriptor.
      * <p/>
@@ -123,13 +103,11 @@ public final class XmlDescriptors implements IDescriptorProvider {
      * all at once.
      * 
      * @param searchableStyleMap The map style=>attributes for <searchable> from the attrs.xml file
-     * @param gadgetStyleMap The map style=>attributes for <gadget-provider> from the attrs.xml file
      * @param prefs The list of non-group preference descriptions 
      * @param prefGroups The list of preference group descriptions
      */
     public synchronized void updateDescriptors(
             Map<String, DeclareStyleableInfo> searchableStyleMap,
-            Map<String, DeclareStyleableInfo> gadgetStyleMap,
             ViewClassInfo[] prefs, ViewClassInfo[] prefGroups) {
 
         XmlnsAttributeDescriptor xmlns = new XmlnsAttributeDescriptor(
@@ -137,16 +115,11 @@ public final class XmlDescriptors implements IDescriptorProvider {
                 SdkConstants.NS_RESOURCES); 
 
         ElementDescriptor searchable = createSearchable(searchableStyleMap, xmlns);
-        ElementDescriptor gadget = createGadgetProviderInfo(gadgetStyleMap, xmlns);
         ElementDescriptor preferences = createPreference(prefs, prefGroups, xmlns);
         ArrayList<ElementDescriptor> list =  new ArrayList<ElementDescriptor>();
         if (searchable != null) {
             list.add(searchable);
             mSearchDescriptor.setChildren(new ElementDescriptor[]{ searchable });
-        }
-        if (gadget != null) {
-            list.add(gadget);
-            mGadgetDescriptor.setChildren(new ElementDescriptor[]{ gadget });
         }
         if (preferences != null) {
             list.add(preferences);
@@ -187,28 +160,6 @@ public final class XmlDescriptors implements IDescriptorProvider {
                 new ElementDescriptor[] { action_key }, // childrenElements
                 false /* mandatory */ );
         return searchable;
-    }
-    
-    /**
-     * Returns the new ElementDescriptor for <gadget-provider>
-     */
-    private ElementDescriptor createGadgetProviderInfo(
-            Map<String, DeclareStyleableInfo> gadgetStyleMap,
-            XmlnsAttributeDescriptor xmlns) {
-
-        if (gadgetStyleMap == null) {
-            return null;
-        }
-        
-        ElementDescriptor gadget = createElement(gadgetStyleMap,
-                "GadgetProviderInfo", //$NON-NLS-1$ styleName
-                "gadget-provider", //$NON-NLS-1$ xmlName
-                "Gadget Provider", // uiName
-                null, // sdk url
-                xmlns, // extraAttribute
-                null, // childrenElements
-                false /* mandatory */ );
-        return gadget;
     }
 
     /**

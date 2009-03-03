@@ -60,25 +60,22 @@ public class ViewHierarchyScene extends GraphScene<ViewNode, String> {
 
     @Override
     protected Widget attachNodeWidget(ViewNode node) {
-        Widget widget = createBox(node, node.name, node.id);
+        Widget widget = createBox(node.name, node.id);
         widget.getActions().addAction(createSelectAction());
         widget.getActions().addAction(moveAction);
         widgetLayer.addChild(widget);
         return widget;
     }
 
-    private Widget createBox(ViewNode node, String nodeName, String id) {
-        final String shortName = getShortName(nodeName);
-        node.setShortName(shortName);
-
-        GradientWidget box = new GradientWidget(this, node);
+    private Widget createBox(String node, String id) {
+        Widget box = new GradientWidget(this);
         box.setLayout(LayoutFactory.createVerticalFlowLayout());
         box.setBorder(BorderFactory.createLineBorder(2, Color.BLACK));
         box.setOpaque(true);
 
         LabelWidget label = new LabelWidget(this);
         label.setFont(getDefaultFont().deriveFont(Font.PLAIN, 12.0f));
-        label.setLabel(shortName);
+        label.setLabel(getShortName(node));
         label.setBorder(BorderFactory.createEmptyBorder(6, 6, 0, 6));
         label.setAlignment(LabelWidget.Alignment.CENTER);
 
@@ -86,11 +83,9 @@ public class ViewHierarchyScene extends GraphScene<ViewNode, String> {
         
         label = new LabelWidget(this);
         label.setFont(getDefaultFont().deriveFont(Font.PLAIN, 10.0f));
-        label.setLabel(getAddress(nodeName));
+        label.setLabel(getAddress(node));
         label.setBorder(BorderFactory.createEmptyBorder(3, 6, 0, 6));
         label.setAlignment(LabelWidget.Alignment.CENTER);
-
-        box.addressWidget = label;
         
         box.addChild(label);
         
@@ -141,7 +136,7 @@ public class ViewHierarchyScene extends GraphScene<ViewNode, String> {
         connection.setTargetAnchor(AnchorFactory.createRectangularAnchor(target));
     }
     
-    private static class GradientWidget extends Widget implements ViewNode.StateListener {
+    private static class GradientWidget extends Widget {
         public static final GradientPaint BLUE_EXPERIENCE = new GradientPaint(
                 new Point2D.Double(0, 0),
                 new Color(168, 204, 241),
@@ -182,28 +177,15 @@ public class ViewHierarchyScene extends GraphScene<ViewNode, String> {
                 new Color(129, 138, 155),
                 new Point2D.Double(0, 1),
                 new Color(58, 66, 82));
-        public static final GradientPaint NIGHT_GRAY_VERY_LIGHT = new GradientPaint(
-                new Point2D.Double(0, 0),
-                new Color(129, 138, 155, 60),
-                new Point2D.Double(0, 1),
-                new Color(58, 66, 82, 60));
 
         private static Color UNSELECTED = Color.BLACK;
         private static Color SELECTED = Color.WHITE;
 
-        private final ViewNode node;
-
-        private LabelWidget addressWidget;
-
         private boolean isSelected = false;
-        private final GradientPaint selectedGradient = MAC_OSX_SELECTED;
-        private final GradientPaint filteredGradient = RED_XP;
-        private final GradientPaint focusGradient = NIGHT_GRAY_VERY_LIGHT;
+        private GradientPaint gradient = MAC_OSX_SELECTED;
 
-        public GradientWidget(ViewHierarchyScene scene, ViewNode node) {
+        public GradientWidget(ViewHierarchyScene scene) {
             super(scene);
-            this.node = node;
-            node.setStateListener(this);
         }
 
         @Override
@@ -211,12 +193,8 @@ public class ViewHierarchyScene extends GraphScene<ViewNode, String> {
             super.notifyStateChanged(previous, state);
             isSelected = state.isSelected() || state.isFocused() || state.isWidgetFocused();
 
-            pickChildrenColor();
-        }
-
-        private void pickChildrenColor() {
             for (Widget child : getChildren()) {
-                child.setForeground(isSelected || node.filtered ? SELECTED : UNSELECTED);
+                child.setForeground(isSelected ? SELECTED : UNSELECTED);
             }
 
             repaint();
@@ -228,35 +206,14 @@ public class ViewHierarchyScene extends GraphScene<ViewNode, String> {
 
             Graphics2D g2 = getGraphics();
             Rectangle bounds = getBounds();
-
+            
             if (!isSelected) {
-                if (!node.filtered) {
-                    if (!node.hasFocus) {
-                        g2.setColor(Color.WHITE);
-                    } else {
-                        g2.setPaint(new GradientPaint(bounds.x, bounds.y,
-                                focusGradient.getColor1(), bounds.x, bounds.x + bounds.height,
-                                focusGradient.getColor2()));
-                    }
-                } else {
-                    g2.setPaint(new GradientPaint(bounds.x, bounds.y, filteredGradient.getColor1(),
-                        bounds.x, bounds.x + bounds.height, filteredGradient.getColor2()));
-                }
+                g2.setColor(Color.WHITE);
             } else {
-                g2.setPaint(new GradientPaint(bounds.x, bounds.y, selectedGradient.getColor1(),
-                        bounds.x, bounds.x + bounds.height, selectedGradient.getColor2()));
+                g2.setPaint(new GradientPaint(bounds.x, bounds.y, gradient.getColor1(),
+                        bounds.x, bounds.x + bounds.height, gradient.getColor2()));
             }
             g2.fillRect(bounds.x, bounds.y, bounds.width, bounds.height);
-        }
-
-        public void nodeStateChanged(ViewNode node) {
-            pickChildrenColor();
-        }
-
-        public void nodeIndexChanged(ViewNode node) {
-            if (addressWidget != null) {
-                addressWidget.setLabel("#" + node.index + addressWidget.getLabel());
-            }
         }
     }
 }

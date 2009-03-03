@@ -28,7 +28,6 @@ import com.android.ide.eclipse.adt.project.internal.AndroidClasspathContainerIni
 import com.android.ide.eclipse.adt.sdk.AndroidTargetParser;
 import com.android.ide.eclipse.adt.sdk.LoadStatus;
 import com.android.ide.eclipse.adt.sdk.Sdk;
-import com.android.ide.eclipse.adt.sdk.Sdk.ITargetChangeListener;
 import com.android.ide.eclipse.common.AndroidConstants;
 import com.android.ide.eclipse.common.EclipseUiHelper;
 import com.android.ide.eclipse.common.SdkStatsHelper;
@@ -174,8 +173,7 @@ public class AdtPlugin extends AbstractUIPlugin {
     private final ArrayList<IJavaProject> mPostLoadProjectsToCheck = new ArrayList<IJavaProject>();
     
     private ResourceMonitor mResourceMonitor;
-    private ArrayList<ITargetChangeListener> mTargetChangeListeners =
-            new ArrayList<ITargetChangeListener>();
+    private ArrayList<Runnable> mResourceRefreshListener = new ArrayList<Runnable>();
 
     /**
      * Custom PrintStream for Dx output. This class overrides the method
@@ -863,6 +861,7 @@ public class AdtPlugin extends AbstractUIPlugin {
     /**
      * Returns the lock object for SDK loading. If you wish to do things while the SDK is loading,
      * you must synchronize on this object.
+     * @return
      */
     public final Object getSdkLockObject() {
         return mPostLoadProjectsToResolve;
@@ -987,7 +986,7 @@ public class AdtPlugin extends AbstractUIPlugin {
                             Constants.BUNDLE_VERSION);
                     Version version = new Version(versionString);
                     
-                    SdkStatsHelper.pingUsageServer("adt", version); //$NON-NLS-1$
+                    SdkStatsHelper.pingUsageServer("editors", version); //$NON-NLS-1$
                     
                     return Status.OK_STATUS;
                 } catch (Throwable t) {
@@ -1020,26 +1019,23 @@ public class AdtPlugin extends AbstractUIPlugin {
                         
                         progress.setTaskName(Messages.AdtPlugin_Parsing_Resources);
                         
-                        int n = sdk.getTargets().length;
-                        if (n > 0) {
-                            int w = 60 / n;
-                            for (IAndroidTarget target : sdk.getTargets()) {
-                                SubMonitor p2 = progress.newChild(w);
-                                IStatus status = new AndroidTargetParser(target).run(p2);
-                                if (status.getCode() != IStatus.OK) {
-                                    synchronized (getSdkLockObject()) {
-                                        mSdkIsLoaded = LoadStatus.FAILED;
-                                        mPostLoadProjectsToResolve.clear();
-                                    }
-                                    return status;
+                        for (IAndroidTarget target : sdk.getTargets()) {
+                            IStatus status = new AndroidTargetParser(target).run(progress);
+                            if (status.getCode() != IStatus.OK) {
+                                synchronized (getSdkLockObject()) {
+                                    mSdkIsLoaded = LoadStatus.FAILED;
+                                    mPostLoadProjectsToResolve.clear();
                                 }
+                                return status;
                             }
                         }
 
+                        // FIXME: move this per platform, or somewhere else.
+                        progress = SubMonitor.convert(monitor,
+                                Messages.AdtPlugin_Parsing_Resources, 20);
+
                         synchronized (getSdkLockObject()) {
                             mSdkIsLoaded = LoadStatus.LOADED;
-
-                            progress.setTaskName("Check Projects");
 
                             // check the projects that need checking.
                             // The method modifies the list (it removes the project that
@@ -1056,33 +1052,25 @@ public class AdtPlugin extends AbstractUIPlugin {
                                 AndroidClasspathContainerInitializer.updateProjects(array);
                                 mPostLoadProjectsToResolve.clear();
                             }
-                            
-                            progress.worked(10);
                         }
                     }
                         
                     // Notify resource changed listeners
-                    progress.setTaskName("Refresh UI");
-                    progress.setWorkRemaining(mTargetChangeListeners.size());
+                    progress.subTask("Refresh UI");
+                    progress.setWorkRemaining(mResourceRefreshListener.size());
                     
                     // Clone the list before iterating, to avoid Concurrent Modification
                     // exceptions
-                    final List<ITargetChangeListener> listeners =
-                            (List<ITargetChangeListener>)mTargetChangeListeners.clone();
-                    final SubMonitor progress2 = progress;
-                    AdtPlugin.getDisplay().syncExec(new Runnable() {
-                        public void run() {
-                            for (ITargetChangeListener listener : listeners) {
-                                try {
-                                    listener.onTargetsLoaded();
-                                } catch (Exception e) {
-                                    AdtPlugin.log(e, "Failed to update a TargetChangeListener.");  //$NON-NLS-1$
-                                } finally {
-                                    progress2.worked(1);
-                                }
-                            }
+                    List<Runnable> listeners = (List<Runnable>)mResourceRefreshListener.clone();
+                    for (Runnable listener : listeners) {
+                        try {
+                            AdtPlugin.getDisplay().syncExec(listener);
+                        } catch (Exception e) {
+                            AdtPlugin.log(e, "ResourceRefreshListener Failed");  //$NON-NLS-1$
+                        } finally {
+                            progress.worked(1);
                         }
-                    });
+                    }
                 } finally {
                     if (monitor != null) {
                         monitor.done();
@@ -1328,42 +1316,12 @@ public class AdtPlugin extends AbstractUIPlugin {
         }, IResourceDelta.ADDED | IResourceDelta.CHANGED);
     }
 
-    /**
-     * Adds a new {@link ITargetChangeListener} to be notified when a new SDK is loaded, or when
-     * a project has its target changed.
-     */
-    public void addTargetListener(ITargetChangeListener listener) {
-        mTargetChangeListeners.add(listener);
+    public void addResourceChangedListener(Runnable resourceRefreshListener) {
+        mResourceRefreshListener.add(resourceRefreshListener);
     }
 
-    /**
-     * Removes an existing {@link ITargetChangeListener}.
-     * @see #addTargetListener(ITargetChangeListener)
-     */
-    public void removeTargetListener(ITargetChangeListener listener) {
-        mTargetChangeListeners.remove(listener);
-    }
-
-    /**
-     * Updates all the {@link ITargetChangeListener} that a target has changed for a given project.
-     * <p/>Only editors related to that project should reload.
-     */
-    @SuppressWarnings("unchecked")
-    public void updateTargetListener(final IProject project) {
-        final List<ITargetChangeListener> listeners =
-            (List<ITargetChangeListener>)mTargetChangeListeners.clone();
-
-        AdtPlugin.getDisplay().asyncExec(new Runnable() {
-            public void run() {
-                for (ITargetChangeListener listener : listeners) {
-                    try {
-                        listener.onProjectTargetChange(project);
-                    } catch (Exception e) {
-                        AdtPlugin.log(e, "Failed to update a TargetChangeListener.");  //$NON-NLS-1$
-                    }
-                }
-            }
-        });
+    public void removeResourceChangedListener(Runnable resourceRefreshListener) {
+        mResourceRefreshListener.remove(resourceRefreshListener);
     }
     
     public static synchronized OutputStream getErrorStream() {

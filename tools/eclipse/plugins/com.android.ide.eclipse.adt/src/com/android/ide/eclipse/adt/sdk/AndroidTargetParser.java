@@ -92,7 +92,7 @@ public final class AndroidTargetParser {
         try {
             SubMonitor progress = SubMonitor.convert(monitor,
                     String.format("Parsing SDK %1$s", mAndroidTarget.getName()),
-                    14);
+                    200);
             
             AndroidTargetData targetData = new AndroidTargetData(mAndroidTarget);
 
@@ -107,14 +107,15 @@ public final class AndroidTargetParser {
             
             // we have loaded dx.
             targetData.setDexWrapper(dexWrapper);
-            progress.worked(1);
             
             // parse the rest of the data.
+            progress.setWorkRemaining(120);
 
             AndroidJarLoader classLoader =
                 new AndroidJarLoader(mAndroidTarget.getPath(IAndroidTarget.ANDROID_JAR));
             
             preload(classLoader, progress.newChild(40, SubMonitor.SUPPRESS_NONE));
+            progress.setWorkRemaining(80);
             
             if (progress.isCanceled()) {
                 return Status.CANCEL_STATUS;
@@ -123,7 +124,7 @@ public final class AndroidTargetParser {
             // get the resource Ids.
             progress.subTask("Resource IDs");
             IResourceRepository frameworkRepository = collectResourceIds(classLoader);
-            progress.worked(1);
+            progress.worked(5);
 
             if (progress.isCanceled()) {
                 return Status.CANCEL_STATUS;
@@ -132,7 +133,7 @@ public final class AndroidTargetParser {
             // get the permissions
             progress.subTask("Permissions");
             String[] permissionValues = collectPermissions(classLoader);
-            progress.worked(1);
+            progress.worked(5);
 
             if (progress.isCanceled()) {
                 return Status.CANCEL_STATUS;
@@ -146,7 +147,7 @@ public final class AndroidTargetParser {
             ArrayList<String> categories = new ArrayList<String>();
             collectIntentFilterActionsAndCategories(activity_actions, broadcast_actions,
                     service_actions, categories);
-            progress.worked(1);
+            progress.worked(5);
 
             if (progress.isCanceled()) {
                 return Status.CANCEL_STATUS;
@@ -157,14 +158,12 @@ public final class AndroidTargetParser {
             AttrsXmlParser attrsXmlParser = new AttrsXmlParser(
                     mAndroidTarget.getPath(IAndroidTarget.ATTRIBUTES));
             attrsXmlParser.preload();
-            progress.worked(1);
 
             progress.subTask("Manifest definitions");
             AttrsXmlParser attrsManifestXmlParser = new AttrsXmlParser(
                     mAndroidTarget.getPath(IAndroidTarget.MANIFEST_ATTRIBUTES),
                     attrsXmlParser);
             attrsManifestXmlParser.preload();
-            progress.worked(1);
 
             Collection<ViewClassInfo> mainList = new ArrayList<ViewClassInfo>();
             Collection<ViewClassInfo> groupList = new ArrayList<ViewClassInfo>();
@@ -172,7 +171,7 @@ public final class AndroidTargetParser {
             // collect the layout/widgets classes
             progress.subTask("Widgets and layouts");
             collectLayoutClasses(classLoader, attrsXmlParser, mainList, groupList,
-                    progress.newChild(1));
+                    progress.newChild(40));
             
             if (progress.isCanceled()) {
                 return Status.CANCEL_STATUS;
@@ -186,7 +185,7 @@ public final class AndroidTargetParser {
             mainList.clear();
             groupList.clear();
             collectPreferenceClasses(classLoader, attrsXmlParser, mainList, groupList,
-                    progress.newChild(1));
+                    progress.newChild(5));
 
             if (progress.isCanceled()) {
                 return Status.CANCEL_STATUS;
@@ -203,11 +202,6 @@ public final class AndroidTargetParser {
                                                                             attrsManifestXmlParser);
             Map<String, Map<String, Integer>> enumValueMap = attrsXmlParser.getEnumFlagValues();
 
-            Map<String, DeclareStyleableInfo> xmlGadgetMap = null;
-            if (mAndroidTarget.getApiVersionNumber() >= 3) {
-                xmlGadgetMap = collectGadgetDefinitions(attrsXmlParser);
-            }
-
             if (progress.isCanceled()) {
                 return Status.CANCEL_STATUS;
             }
@@ -216,7 +210,7 @@ public final class AndroidTargetParser {
             // the PlatformData object.
             AndroidManifestDescriptors manifestDescriptors = new AndroidManifestDescriptors(); 
             manifestDescriptors.updateDescriptors(manifestMap);
-            progress.worked(1);
+            progress.worked(10);
 
             if (progress.isCanceled()) {
                 return Status.CANCEL_STATUS;
@@ -224,7 +218,7 @@ public final class AndroidTargetParser {
 
             LayoutDescriptors layoutDescriptors = new LayoutDescriptors();
             layoutDescriptors.updateDescriptors(layoutViewsInfo, layoutGroupsInfo);
-            progress.worked(1);
+            progress.worked(10);
 
             if (progress.isCanceled()) {
                 return Status.CANCEL_STATUS;
@@ -232,28 +226,25 @@ public final class AndroidTargetParser {
 
             MenuDescriptors menuDescriptors = new MenuDescriptors();
             menuDescriptors.updateDescriptors(xmlMenuMap);
-            progress.worked(1);
+            progress.worked(10);
 
             if (progress.isCanceled()) {
                 return Status.CANCEL_STATUS;
             }
 
             XmlDescriptors xmlDescriptors = new XmlDescriptors();
-            xmlDescriptors.updateDescriptors(
-                    xmlSearchableMap,
-                    xmlGadgetMap,
-                    preferencesInfo,
+            xmlDescriptors.updateDescriptors(xmlSearchableMap, preferencesInfo,
                     preferenceGroupsInfo);
-            progress.worked(1);
+            progress.worked(10);
             
             // load the framework resources.
             ProjectResources resources = ResourceManager.getInstance().loadFrameworkResources(
                     mAndroidTarget);
-            progress.worked(1);
+            progress.worked(10);
             
             // now load the layout lib bridge
             LayoutBridge layoutBridge = loadLayoutBridge();
-            progress.worked(1);
+            progress.worked(10);
             
             // and finally create the PlatformData with all that we loaded.
             targetData.setExtraData(frameworkRepository,
@@ -267,7 +258,6 @@ public final class AndroidTargetParser {
                     broadcast_actions.toArray(new String[broadcast_actions.size()]),
                     service_actions.toArray(new String[service_actions.size()]),
                     categories.toArray(new String[categories.size()]),
-                    mAndroidTarget.getOptionalLibraries(),
                     resources,
                     layoutBridge);
             
@@ -278,6 +268,10 @@ public final class AndroidTargetParser {
             AdtPlugin.logAndPrintError(e, TAG, "SDK parser failed"); //$NON-NLS-1$
             AdtPlugin.printToConsole("SDK parser failed", e.getMessage());
             return new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID, "SDK parser failed", e);
+        } finally {
+            if (monitor != null) {
+                monitor.done();
+            }
         }
     }
 
@@ -611,31 +605,6 @@ public final class AndroidTargetParser {
     }
 
     /**
-     * Collects all gadgetProviderInfo definition information from the attrs.xml and returns it.
-     * 
-     * @param attrsXmlParser The parser of the attrs.xml file
-     */
-    private Map<String, DeclareStyleableInfo> collectGadgetDefinitions(
-            AttrsXmlParser attrsXmlParser) {
-        Map<String, DeclareStyleableInfo> map = attrsXmlParser.getDeclareStyleableList();
-        Map<String, DeclareStyleableInfo> map2 = new HashMap<String, DeclareStyleableInfo>();
-        for (String key : new String[] { "GadgetProviderInfo" }) {  //$NON-NLS-1$
-            if (map.containsKey(key)) {
-                map2.put(key, map.get(key));
-            } else {
-                AdtPlugin.log(IStatus.WARNING,
-                        "Gadget declare-styleable %1$s not found in file %2$s", //$NON-NLS-1$
-                        key, attrsXmlParser.getOsAttrsXmlPath());
-                AdtPlugin.printErrorToConsole("Android Framework Parser",
-                        String.format("Gadget declare-styleable %1$s not found in file %2$s", //$NON-NLS-1$
-                        key, attrsXmlParser.getOsAttrsXmlPath()));
-            }
-        }
-
-        return Collections.unmodifiableMap(map2);
-    }
-
-    /**
      * Collects all manifest definition information from the attrs_manifest.xml and returns it.
      */
     private Map<String, DeclareStyleableInfo> collectManifestDefinitions(
@@ -681,15 +650,6 @@ public final class AndroidTargetParser {
                     layoutBridge.status = LoadStatus.FAILED;
                     AdtPlugin.log(IStatus.ERROR, "Failed to load " + AndroidConstants.CLASS_BRIDGE); //$NON-NLS-1$
                 } else {
-                    // get the api level
-                    try {
-                        layoutBridge.apiLevel = layoutBridge.bridge.getApiLevel();
-                    } catch (AbstractMethodError e) {
-                        // the first version of the api did not have this method
-                        layoutBridge.apiLevel = 1;
-                    }
-                    
-                    // and mark the lib as loaded.
                     layoutBridge.status = LoadStatus.LOADED;
                 }
             }

@@ -237,7 +237,7 @@ public final class NativeHeapPanel extends BaseHeapPanel {
      */
     private HashMap<Long, NativeStackCallInfo> mSourceCache =
         new HashMap<Long,NativeStackCallInfo>();
-    private long mTotalSize;
+    private int mTotalSize;
     private Button mSaveButton;
     private Button mSymbolsButton;
 
