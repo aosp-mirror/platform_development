@@ -1,0 +1,56 @@
+<?xml version="1.0" ?>
+<!-- Copyright 2005 The Android Open Source Project -->
+
+<device name="Samsung1234">
+    <!-- title for menus -->
+    <title>Samsung Flip Phone</title>
+
+    <!-- primary display characteristics -->
+    <display name="main" width="176" height="220" format="rgb565" refresh="30"/>
+
+	<mode name="default">
+        <!-- our view of the device that shows the main display -->
+		<view display="main" x="49" y="73" rotate="0">
+
+			<!-- surrounding device image and "patches", drawn in order -->
+			<!-- (phone image is optional) -->
+			<image src="background-176x220.png" x="0" y="0"/>
+			<image src="home-background.png" x="22" y="426"/>
+			<image src="back-background.png" x="179" y="426"/>
+
+			<!-- buttons for which we have highlight images -->
+			<button keyCode="soft-left"     src="soft-left.png"     x="24" y="388"/>
+			<button keyCode="soft-right"    src="soft-right.png"    x="182" y="388"/>
+			<button keyCode="home"          src="home.png"          x="22" y="426"/>
+			<button keyCode="back"          src="back.png"          x="179" y="426"/>
+			<button keyCode="dpad-up"       src="arrow-up.png"      x="99" y="399"/>
+			<button keyCode="dpad-down"     src="arrow-down.png"    x="99" y="461"/>
+			<button keyCode="dpad-left"     src="arrow-left.png"    x="82" y="411"/>
+			<button keyCode="dpad-right"    src="arrow-right.png"   x="147" y="411"/>
+			<button keyCode="dpad-center"   src="select.png"        x="115" y="431"/>
+
+			<button keyCode="1"             src="1.png"             x="24" y="533"/>
+			<button keyCode="2"             src="2.png"             x="94" y="544"/>
+			<button keyCode="3"             src="3.png"             x="173" y="534"/>
+			<button keyCode="4"             src="4.png"             x="25" y="576"/>
+			<button keyCode="5"             src="5.png"             x="94" y="581"/>
+			<button keyCode="6"             src="6.png"             x="172" y="576"/>
+			<button keyCode="7"             src="7.png"             x="27" y="619"/>
+			<button keyCode="8"             src="8.png"             x="95" y="621"/>
+			<button keyCode="9"             src="9.png"             x="168" y="620"/>
+			<button keyCode="0"             src="0.png"             x="96" y="658"/>
+			<button keyCode="star"          src="star.png"          x="31" y="659"/>
+			<button keyCode="pound"         src="pound.png"         x="169" y="659"/>
+
+            <!-- buttons we haven't bothered to create highlight images for,
+                 or that aren't visible on-screen -->
+			<button keyCode="volume-up"/>
+			<button keyCode="volume-down"/>
+			<button keyCode="power"/>
+			<button keyCode="clear"/>
+
+		</view>
+	</mode>
+
+</device>
+

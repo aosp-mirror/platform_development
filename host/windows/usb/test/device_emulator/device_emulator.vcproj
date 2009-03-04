@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="Windows-1252"?>
+<VisualStudioProject
+	ProjectType="Visual C++"
+	Version="7.10"
+	Name="device_emulator"
+	ProjectGUID="{EAB61831-9DDA-40AA-A5EF-2D9E8F9A5C59}"
+	Keyword="MakeFileProj">
+	<Platforms>
+		<Platform
+			Name="Win32"/>
+	</Platforms>
+	<Configurations>
+		<Configuration
+			Name="Debug|Win32"
+			OutputDirectory="Debug"
+			IntermediateDirectory="Debug"
+			ConfigurationType="0">
+			<Tool
+				Name="VCNMakeTool"
+				BuildCommandLine="call c:\winddk\6000\bin\setenv.bat c:\winddk\6000\ chk WXP
+set PROJECTDIR=$(ProjectDir)
+set DRIVE=%PROJECTDIR:~0,2%
+%DRIVE%
+cd %PROJECTDIR%
+build -beEIFZ
+"
+				ReBuildCommandLine="call c:\winddk\6000\bin\setenv.bat c:\winddk\6000\ chk WXP
+set PROJECTDIR=$(ProjectDir)
+set DRIVE=%PROJECTDIR:~0,2%
+%DRIVE%
+cd %PROJECTDIR%
+build -cbeEIFZ
+"
+				CleanCommandLine="call c:\winddk\6000\bin\setenv.bat c:\winddk\6000\ chk WXP
+set PROJECTDIR=$(ProjectDir)
+set DRIVE=%PROJECTDIR:~0,2%
+%DRIVE%
+cd %PROJECTDIR%
+build -c0
+"/>
+		</Configuration>
+		<Configuration
+			Name="Release|Win32"
+			OutputDirectory="Release"
+			IntermediateDirectory="Release"
+			ConfigurationType="0">
+			<Tool
+				Name="VCNMakeTool"
+				BuildCommandLine="call c:\winddk\6000\bin\setenv.bat c:\winddk\6000\ free WXP
+set PROJECTDIR=$(ProjectDir)
+set DRIVE=%PROJECTDIR:~0,2%
+%DRIVE%
+cd %PROJECTDIR%
+build -beEIFZ"
+				ReBuildCommandLine="call c:\winddk\6000\bin\setenv.bat c:\winddk\6000\ free WXP
+set PROJECTDIR=$(ProjectDir)
+set DRIVE=%PROJECTDIR:~0,2%
+%DRIVE%
+cd %PROJECTDIR%
+build -cbeEIFZ"
+				CleanCommandLine="call c:\winddk\6000\bin\setenv.bat c:\winddk\6000\ free WXP
+set PROJECTDIR=$(ProjectDir)
+set DRIVE=%PROJECTDIR:~0,2%
+%DRIVE%
+cd %PROJECTDIR%
+build -c0
+"
+				Output="device_emulator.dll"/>
+		</Configuration>
+	</Configurations>
+	<References>
+	</References>
+	<Files>
+		<Filter
+			Name="Source Files"
+			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm;asmx"
+			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}">
+			<File
+				RelativePath=".\LoopbackDevice.cpp">
+			</File>
+			<File
+				RelativePath=".\DeviceEmulator.cpp">
+			</File>
+			<File
+				RelativePath=".\DeviceEmulator.idl">
+			</File>
+			<File
+				RelativePath=".\stdafx.cpp">
+			</File>
+		</Filter>
+		<Filter
+			Name="Header Files"
+			Filter="h;hpp;hxx;hm;inl;inc;xsd"
+			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}">
+			<File
+				RelativePath=".\LoopbackDevice.h">
+			</File>
+			<File
+				RelativePath=".\LoopbackDeviceEvents.h">
+			</File>
+			<File
+				RelativePath=".\resource.h">
+			</File>
+			<File
+				RelativePath=".\stdafx.h">
+			</File>
+			<Filter
+				Name="common"
+				Filter="">
+				<File
+					RelativePath="..\..\common\android_usb_common_defines.h">
+				</File>
+			</Filter>
+		</Filter>
+		<Filter
+			Name="Resource Files"
+			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx"
+			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}">
+			<File
+				RelativePath=".\LoopbackDevice.rgs">
+			</File>
+			<File
+				RelativePath=".\DeviceEmulator.rc">
+			</File>
+			<File
+				RelativePath=".\DeviceEmulator.rgs">
+			</File>
+		</Filter>
+		<File
+			RelativePath=".\makefile">
+		</File>
+		<File
+			RelativePath=".\RunDeviceLoopbackSample.wsf">
+		</File>
+		<File
+			RelativePath=".\DeviceEmulator.def">
+		</File>
+		<File
+			RelativePath=".\sources">
+		</File>
+	</Files>
+	<Globals>
+	</Globals>
+</VisualStudioProject>

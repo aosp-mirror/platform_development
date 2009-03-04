@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright (C) 2007 The Android Open Source Project
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+  
+          http://www.apache.org/licenses/LICENSE-2.0
+  
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
+
+<resources>
+	<string name="app_name">Lunar Lander</string>
+	
+    <string name="menu_start">Start</string>
+    <string name="menu_stop">Stop</string>
+    <string name="menu_pause">Pause</string>
+    <string name="menu_resume">Resume</string>
+    <string name="menu_easy">Easy</string>
+    <string name="menu_medium">Medium</string>
+    <string name="menu_hard">Hard</string>
+    
+    <string name="mode_ready">Lunar Lander\nPress Up To Play</string>
+	<string name="mode_pause">Paused\nPress Up To Resume</string>
+	<string name="mode_lose">Game Over\nPress Up To Play</string>
+	<string name="mode_win_prefix">Success!\n</string> 
+	<string name="mode_win_suffix">in a row\nPress Up to Play</string> 
+	
+	<string name="message_stopped">Stopped</string>
+	<string name="message_off_pad">Off Landing Pad</string> 
+	<string name="message_too_fast">Too Fast</string> 
+	<string name="message_bad_angle">Bad Angle</string> 
+
+    <string name="lunar_layout_text_text"></string>
+</resources>

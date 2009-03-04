@@ -1,0 +1,10 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.android.objviewer">
+    <application>
+        <activity android:name="OBJViewer" android:label="3D .obj File Viewer">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.TEST" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>

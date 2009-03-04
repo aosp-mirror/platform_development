@@ -1,0 +1,168 @@
+#
+# Copyright (C) 2007 The Android Open Source Project
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+#
+# These are the files that comprise that SDK
+#
+
+# host tools from out/host/$(HOST_OS)-$(HOST_ARCH)/
+bin/aapt platforms/${PLATFORM_NAME}/tools/aapt
+bin/aidl platforms/${PLATFORM_NAME}/tools/aidl
+bin/adb tools/adb
+bin/sqlite3 tools/sqlite3
+bin/dmtracedump tools/dmtracedump
+bin/mksdcard tools/mksdcard
+
+# other tools
+development/tools/scripts/add-accounts-sdk tools/add-accounts.py
+
+# the uper-jar file that apps link against
+out/target/common/obj/PACKAGING/android_jar_intermediates/android.jar platforms/${PLATFORM_NAME}/android.jar
+
+sdk/sdk-build.prop platforms/${PLATFORM_NAME}/build.prop
+development/tools/scripts/plugin.prop tools/lib/plugin.prop
+
+# the aidl precompiled include
+obj/framework.aidl platforms/${PLATFORM_NAME}/framework.aidl
+
+# sdk scripts
+development/tools/scripts/AndroidManifest.template platforms/${PLATFORM_NAME}/templates/AndroidManifest.template
+development/tools/scripts/AndroidManifest.alias.template platforms/${PLATFORM_NAME}/templates/AndroidManifest.alias.template
+development/tools/scripts/AndroidManifest.tests.template platforms/${PLATFORM_NAME}/templates/AndroidManifest.tests.template
+development/tools/scripts/iml.template platforms/${PLATFORM_NAME}/templates/iml.template
+development/tools/scripts/ipr.template platforms/${PLATFORM_NAME}/templates/ipr.template
+development/tools/scripts/iws.template platforms/${PLATFORM_NAME}/templates/iws.template
+development/tools/scripts/java_file.template platforms/${PLATFORM_NAME}/templates/java_file.template
+development/tools/scripts/java_tests_file.template platforms/${PLATFORM_NAME}/templates/java_tests_file.template
+development/tools/scripts/layout.template platforms/${PLATFORM_NAME}/templates/layout.template
+development/tools/scripts/strings.template platforms/${PLATFORM_NAME}/templates/strings.template
+development/tools/scripts/alias.template platforms/${PLATFORM_NAME}/templates/alias.template
+development/tools/scripts/android_rules.xml platforms/${PLATFORM_NAME}/templates/android_rules.xml
+development/tools/scripts/alias_rules.xml platforms/${PLATFORM_NAME}/templates/alias_rules.xml
+development/tools/scripts/build.template tools/lib/build.template
+development/tools/scripts/build.alias.template tools/lib/build.alias.template
+
+# emacs support
+development/tools/scripts/android.el tools/lib/android.el
+
+# samples
+development/samples/HelloActivity platforms/${PLATFORM_NAME}/samples/HelloActivity
+development/samples/Home platforms/${PLATFORM_NAME}/samples/Home
+development/samples/LunarLander platforms/${PLATFORM_NAME}/samples/LunarLander
+development/samples/NotePad platforms/${PLATFORM_NAME}/samples/NotePad
+development/samples/ApiDemos platforms/${PLATFORM_NAME}/samples/ApiDemos
+development/samples/SkeletonApp platforms/${PLATFORM_NAME}/samples/SkeletonApp
+development/samples/Snake platforms/${PLATFORM_NAME}/samples/Snake
+development/samples/SoftKeyboard platforms/${PLATFORM_NAME}/samples/SoftKeyboard
+
+# dx
+bin/dx platforms/${PLATFORM_NAME}/tools/dx
+bin/dexdump platforms/${PLATFORM_NAME}/tools/dexdump
+framework/dx.jar platforms/${PLATFORM_NAME}/tools/lib/dx.jar
+
+#androidprefs
+framework/androidprefs.jar tools/lib/androidprefs.jar
+
+#jarutils
+framework/jarutils.jar tools/lib/jarutils.jar
+
+#apkbuilder
+bin/apkbuilder tools/apkbuilder
+framework/apkbuilder.jar tools/lib/apkbuilder.jar
+
+# sdkstats service
+framework/sdkstats.jar tools/lib/sdkstats.jar
+
+# jfreechart. needed by ddms.
+framework/jcommon-1.0.12.jar tools/lib/jcommon-1.0.12.jar
+framework/jfreechart-1.0.9.jar tools/lib/jfreechart-1.0.9.jar
+framework/jfreechart-1.0.9-swt.jar tools/lib/jfreechart-1.0.9-swt.jar
+
+# ddms
+bin/ddms tools/ddms
+framework/ddms.jar tools/lib/ddms.jar
+framework/ddmlib.jar tools/lib/ddmlib.jar
+framework/ddmuilib.jar tools/lib/ddmuilib.jar
+
+# hierarchyviewer
+bin/hierarchyviewer tools/hierarchyviewer
+framework/hierarchyviewer.jar tools/lib/hierarchyviewer.jar
+framework/org-netbeans-api-visual.jar tools/lib/org-netbeans-api-visual.jar
+framework/org-openide-util.jar tools/lib/org-openide-util.jar
+framework/swing-worker-1.1.jar tools/lib/swing-worker-1.1.jar
+
+# draw9patch
+bin/draw9patch tools/draw9patch
+framework/draw9patch.jar tools/lib/draw9patch.jar
+framework/swing-worker-1.1.jar tools/lib/swing-worker-1.1.jar
+
+# traceview
+bin/traceview tools/traceview
+framework/traceview.jar tools/lib/traceview.jar
+
+# custom ant tasks
+framework/anttasks.jar tools/lib/anttasks.jar
+
+# sdkmanager
+bin/android tools/android
+framework/sdklib.jar tools/lib/sdklib.jar
+framework/sdkmanager.jar tools/lib/sdkmanager.jar
+
+# emulator
+bin/emulator tools/emulator
+system.img platforms/${PLATFORM_NAME}/images/system.img
+ramdisk.img platforms/${PLATFORM_NAME}/images/ramdisk.img
+userdata.img platforms/${PLATFORM_NAME}/images/userdata.img
+prebuilt/android-arm/kernel/kernel-qemu platforms/${PLATFORM_NAME}/images/kernel-qemu
+external/qemu/android/avd/hardware-properties.ini tools/lib/hardware-properties.ini
+
+# emulator skins
+development/emulator/skins/HVGA   platforms/${PLATFORM_NAME}/skins/HVGA
+development/emulator/skins/HVGA-L platforms/${PLATFORM_NAME}/skins/HVGA-L
+development/emulator/skins/HVGA-P platforms/${PLATFORM_NAME}/skins/HVGA-P
+development/emulator/skins/QVGA-L platforms/${PLATFORM_NAME}/skins/QVGA-L
+development/emulator/skins/QVGA-P platforms/${PLATFORM_NAME}/skins/QVGA-P
+
+# NOTICE files are copied by build/core/Makefile
+
+# the readme
+development/docs/SDK_RELEASE_NOTES RELEASE_NOTES.html
+
+# the docs
+docs/offline-sdk docs
+frameworks/base/docs/docs-redirect.html documentation.html
+frameworks/base/docs/docs-samples-redirect.html docs/samples/index.html
+
+# tools support
+docs/activity_actions.txt platforms/${PLATFORM_NAME}/data/activity_actions.txt
+docs/broadcast_actions.txt platforms/${PLATFORM_NAME}/data/broadcast_actions.txt
+docs/service_actions.txt platforms/${PLATFORM_NAME}/data/service_actions.txt
+docs/categories.txt platforms/${PLATFORM_NAME}/data/categories.txt
+docs/widgets.txt platforms/${PLATFORM_NAME}/data/widgets.txt
+framework/layoutlib.jar platforms/${PLATFORM_NAME}/data/layoutlib.jar
+frameworks/base/core/res/res platforms/${PLATFORM_NAME}/data/res
+frameworks/base/data/fonts/fonts.xml platforms/${PLATFORM_NAME}/data/fonts/fonts.xml
+frameworks/base/data/fonts/DroidSans.ttf platforms/${PLATFORM_NAME}/data/fonts/DroidSans.ttf
+frameworks/base/data/fonts/DroidSans-Bold.ttf platforms/${PLATFORM_NAME}/data/fonts/DroidSans-Bold.ttf
+frameworks/base/data/fonts/DroidSansFallback.ttf platforms/${PLATFORM_NAME}/data/fonts/DroidSansFallback.ttf
+frameworks/base/data/fonts/DroidSansMono.ttf platforms/${PLATFORM_NAME}/data/fonts/DroidSansMono.ttf
+frameworks/base/data/fonts/DroidSerif-Bold.ttf platforms/${PLATFORM_NAME}/data/fonts/DroidSerif-Bold.ttf
+frameworks/base/data/fonts/DroidSerif-BoldItalic.ttf platforms/${PLATFORM_NAME}/data/fonts/DroidSerif-BoldItalic.ttf
+frameworks/base/data/fonts/DroidSerif-Italic.ttf platforms/${PLATFORM_NAME}/data/fonts/DroidSerif-Italic.ttf
+frameworks/base/data/fonts/DroidSerif-Regular.ttf platforms/${PLATFORM_NAME}/data/fonts/DroidSerif-Regular.ttf
+
+# empty add-on folder with just a readme
+development/tools/scripts/README_add-ons.txt add-ons/README.txt

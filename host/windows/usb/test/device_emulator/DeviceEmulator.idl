@@ -1,0 +1,119 @@
+/*
+ * Copyright (C) 2006 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/** \file
+  This file consists of library definition for DeviceEmulator device.
+  This project has been created from DDK's SoftUSBLoopback sample project
+  that is located at $(DDK_PATH)\src\Test\DSF\USB\SoftUSBLoopback
+*/
+
+import "oaidl.idl";
+import "ocidl.idl";
+
+[
+    uuid(0C206596-5CC2-4d16-898D-4D1699BB6282),
+    version(1.0),
+    helpstring("DeviceEmulator 1.0 Type Library")
+]
+library DeviceEmulatorLib
+{
+    importlib("stdole2.tlb");
+    importlib("dsfif.tlb");
+
+
+    [
+        object,
+        uuid(0A7E88B6-E38F-4d78-ABA3-AA30DC836B7D),
+        oleautomation,
+        dual,
+        nonextensible,
+        helpstring("ILoopbackDevice Interface"),
+        pointer_default(unique)
+    ]
+    interface ILoopbackDevice : IDispatch
+    {
+        [
+            propget, 
+            id(1), 
+            helpstring("property DSFDevice")
+        ]
+        HRESULT DSFDevice([out, retval] DSFDevice** ppDSFDEevice);
+
+        [
+            id(2),
+            helpstring("Demonstrates how to use the queue method to read/write data")
+        ]
+        HRESULT _stdcall DoPolledLoopback([in] long LoopInterval);
+
+        [
+            id(3),
+            helpstring("Demonstrates how to use the eventing mechanism to read/write data")
+        ]
+        HRESULT _stdcall StartEventProcessing();
+
+        [
+            id(4),
+            helpstring("Starts event-driven simulation and returns immediately to caller.")
+        ]
+        HRESULT _stdcall StartAsyncEventProcessing();
+
+        [
+            id(5),
+            helpstring("Stops event-driven simulation started by a prior call to StartAsyncEventProcessing.")
+        ]
+        HRESULT _stdcall StopAsyncEventProcessing();
+
+        [
+            id(6),
+            helpstring("Check to see if there is any key strokes to be processed")
+        ]
+        HRESULT AreKeystrokesWaiting([out, retval] VARIANT_BOOL *pfvarKeysWaiting);
+    };
+
+    [
+        uuid(4F28A221-47B1-4f74-9ECC-CEADEDA0A287),
+        nonextensible,
+        helpstring("Loopback device event interface."),
+
+    ]
+    dispinterface ILoopbackDeviceEvents
+    {
+        properties:
+        methods:
+        [
+            id(1),
+            helpstring("Detemine if the device should stop polling the endpoint for data")
+        ]
+        HRESULT _stdcall ContinueToPoll([out,retval] VARIANT_BOOL *pfvarConitnue);
+
+        [
+            id(2),
+            helpstring("Detemine if the device should stop the event processing")
+        ]
+        HRESULT _stdcall ContinueEventProcessing([out,retval] VARIANT_BOOL *pfvarConitnue);
+    }
+
+    [
+        uuid(9A0BD4A6-E346-4668-A89C-ACA546212CD4),
+        helpstring("LoopbackDevice Class")
+    ]
+    coclass LoopbackDevice
+    {
+        [default] interface ILoopbackDevice;
+        [default, source] dispinterface ILoopbackDeviceEvents;
+    };
+};
+

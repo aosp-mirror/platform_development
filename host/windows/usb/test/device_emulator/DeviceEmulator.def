@@ -1,0 +1,16 @@
+;Module Name:
+;
+;   DeviceEmulator.def 
+;
+;Abstract:
+;    Declares the module parameters
+;
+
+LIBRARY      "DeviceEmulator.DLL"
+
+EXPORTS
+    DllCanUnloadNow     PRIVATE
+    DllGetClassObject   PRIVATE
+    DllRegisterServer   PRIVATE
+    DllUnregisterServer PRIVATE
+

@@ -1,0 +1,74 @@
+Android Simulator README
+Last updated: 14-Nov-2007
+
+See "docs/sim-layout-xml.txt" for a description of the layout.xml files
+in the device directories.
+
+The coding conventions here are generally aligned with wxWidgets' style,
+which is similar to standard Windows style.  The only significant shift
+from Android style is that function names are capitalized.  Note the
+simulator code is not part of the "android" namespace.
+
+
+===== Arguments =====
+
+The config file for the simulator, ".android.cf", can live in your
+$HOME directory or in $cwd.  The copy in $cwd takes priority.  If a
+config file does not exist, one will be created in your home directory.
+(Note that the current directory is set by "runsim.sh", so if you launch
+the simulator from the script it will look for the config file in your
+"install" directory.)
+
+The simulator takes the following optional arguments:
+
+ -f <file> : specify the configuration file to use.
+
+ -p <platform> : specify platform information.  This is usually
+    something like "Linux-release" or "CYGWIN_NT-5.1-debug".
+
+ -r : reset paths.  This causes the simulator to regenerate the paths
+    based on defaults.  This is useful when copying your .android.cf from
+    a different system, because it updates all the local paths without
+    disturbing the other options.
+
+
+===== Preferences Quick Reference =====
+
+Path preferences.  These are reset by the "-r" flag:
+
+"debugger"            (str) Path to the debugger (usually /usr/bin/gdb).
+"valgrinder"          (str) Path to valgrind (usually /usr/bin/valgrind).
+
+Common prefs:
+
+"auto-power-on"       (bool) Automatically start runtime on simulator start.
+"debug"               (bool) Launch the runtime inside <debugger>.
+"valgrind"            (bool) Launch the runtime inside <valgrinder>.
+"log-*"               (various) Preferences for the log window.
+"window-*"            (int) Positions and sizes of windows.
+"default-device"      (str) Name of the device that opens initially.
+"ld-assume-kernel"    (str) Hack to make goobuntu GDB work; use "" to disable.
+
+Less-common prefs:
+
+"gamma"               (float) Gamma correction factor (default 1.0).
+"window-device-x"     (int) Position of device window.
+"window-device-y"     (int) Position of device window.
+"trap-sigint"         (bool) Catch Ctrl-C.  Kill the runtime when we do.
+"refocus-on-restart"  (bool) When runtime rstarts, give focus to phone window.
+"launch-command"      (str) Command to run, e.g. "xterm -e" (cmd is appended).
+"launch-wrapper-args" (str) Args to launch wrapper, e.g. "-wait -output foo".
+
+
+(If you prefer gnome-terminal to xterm, you can use something like
+"gnome-terminal --disable-factory -x".  The "disable-factory" arg is
+needed to ensure that it inherits the environment variables.)
+
+
+***** NOTE *****
+
+If you're using a non-goobuntu system, make sure "ld-assume-kernel" is ""
+in your .android.cf.  gdb works correctly on Ubuntu 7.04 (fiesty) and 7.10
+(gutsy), and the goobuntu workaround will cause shared library version
+failures on startup.
+

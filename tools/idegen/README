@@ -1,0 +1,80 @@
+IDEGen automatically generates Android IDE configurations for IntelliJ IDEA
+and Eclipse. Your IDE should be able to compile everything in a reasonable
+amount of time with no errors.
+
+If you're using IntelliJ...
+
+    If this is your first time using IDEGen...
+
+        IDEA needs a lot of memory. Add "-Xms748m -Xmx748m" to your VM options
+        in "IDEA_HOME/bin/idea.vmoptions" on Linux or 
+        "IntelliJ IDEA.app/Contents/Info.plist" on OS X.
+
+        Create a JDK configuration named "1.5 (No Libraries)" by adding a new
+        JDK like you normally would and then removing all of the jar entries
+        under the "Classpath" tab. This will ensure that you only get access to
+        Android's core libraries and not those from your desktop VM.
+
+    From the project's root directory...
+
+        Repeat these steps after each sync...
+        
+        1) make (to produce generated .java source)
+        2) development/tools/idegen/idegen.sh
+        3) Open android.ipr in IntelliJ. If you already have the project open,
+           hit the sync button in IntelliJ, and it will automatically detect the
+           updated configuration.
+        
+        If you get unexpected compilation errors from IntelliJ, try running
+        "Build -> Rebuild Project". Sometimes IntelliJ gets confused after the
+        project changes significantly.
+
+If you're using Eclipse...
+
+    If this is your first time using IDEGen...
+
+        Edit eclipse.ini ("Eclipse.app/Contents/MacOS/eclipse.ini" on OS X) and
+        add "-Xms748m -Xmx748m" to your VM options.
+
+        Configure a JRE named "1.5 (No Libraries)" under "Preferences -> Java ->
+        Installed JREs". Remove all of the jar entries underneath "JRE system
+        libraries". Eclipse will not let you save your configuration unless at
+        least one jar is present, so include a random jar that won't get in the
+        way.
+
+    From the project's root directory...
+
+        Repeat these steps after each sync...
+
+        1) make (to produce generated .java source)
+        2) development/tools/idegen/idegen.sh
+        3) Import the project root directory into your Eclipse workspace. If you
+           already have the project open, simply refresh it (F5).
+
+Excluding source roots and jars
+
+    IDEGen keeps an exclusion list in the "excluded-paths" file. This file 
+    has one regular expression per line that matches paths (relative to the
+    project root) that should be excluded from the IDE configuration. We
+    use Java's regular expression parser (see java.util.regex.Parser).
+
+    You can create your own additional exclusion list by creating an
+    "excluded-paths" file in the project's root directory. For example, you
+    might exclude all apps except the Browser in your IDE configuration with
+    this regular expression: "^packages/apps/(?!Browser)".
+    
+Controlling source root ordering (Eclipse)
+
+    You may want some source roots to come before others in Eclipse. Simply
+    create a file named "path-precedence" in your project's root directory.
+    Each line in the file is a regular expression that matches a source root
+    path (relative to the project's root directory). If a given source root's
+    path matches a regular expression that comes earlier in the file, that
+    source root will come earlier in the generated configuration. If a source
+    root doesn't match any of the expressions in the file, it will come last,
+    so you effectively have an implicit ".*" rule at the end of the file.
+
+    For example, if you want your applications's source root to come first,
+    you might add an expression like "^packages/apps/MyApp/src$" to the top
+    of the "path-precedence" file.  To make source roots under ./out come last,
+    add "^(?!out/)" (which matches all paths that don't start with "out/").

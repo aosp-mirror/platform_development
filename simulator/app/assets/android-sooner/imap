@@ -1,0 +1,15 @@
+# awk '{print $1, $4-$2 "x" $5-$3 "+" $2 "+" $3}'
+
+BACKGROUND=background-alpha.png
+
+convert $BACKGROUND -crop 43x47+55+410 send.png
+convert $BACKGROUND -crop 43x47+338+411 end.png
+convert $BACKGROUND -crop 43x40+98+393 menu.png
+convert $BACKGROUND -crop 43x40+98+433 back.png
+convert $BACKGROUND -crop 47x40+291+393 favorites.png
+convert $BACKGROUND -crop 47x40+291+433 home.png
+convert $BACKGROUND -crop 81x24+177+422 select.png
+convert $BACKGROUND -crop 81x30+177+392 up.png
+convert $BACKGROUND -crop 81x30+177+446 down.png
+convert $BACKGROUND -crop 31x84+146+392 left.png
+convert $BACKGROUND -crop 31x84+258+392 right.png

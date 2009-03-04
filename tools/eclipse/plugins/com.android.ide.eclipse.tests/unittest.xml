@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- test launcher file for Android Eclipse unit tests -->
+<project name="testsuite" default="run" basedir="."> 
+    <!--The following properties should be passed into this script, set to some default value for now -->
+    <property name="eclipse.home" value="/opt/eclipse" />
+    <property name="eclipse_test" value="${eclipse.home}/plugins/org.eclipse.test_3.2.0" />
+
+    <!-- eclipse scripts use an annoying mixture of eclipse-home and eclipse.home -->
+    <!-- lets define both...-->
+    <property name="eclipse-home" value="${eclipse.home}" />
+    <property name="test-folder" value="${eclipse.home}/unittest_ws" />
+        
+    <!-- sets the properties eclipse.home, and library-file -->
+    <property name="plugin-name" value="com.android.ide.eclipse.tests" />
+    <property name="library-file" value="${eclipse_test}/library.xml" />
+	
+    <!-- This target holds all initialization code that needs to be done for -->
+    <!-- all tests that are to be run.         -->
+    <target name="init">
+    	<ant antfile="test.xml" target="init">
+    		<property name="test-folder" value="${test-folder}" />
+        </ant>
+    </target>
+
+    <!-- This target defines the tests that need to be run. -->
+    <target name="suite">
+        <!-- need to launch as ui-test since all ADT plugins depend on ui-->
+    	<!-- otherwise other plugins will not load -->
+        <ant target="ui-test" antfile="${library-file}" dir="${eclipse.home}">
+            <property name="data-dir" value="${test-folder}" />
+            <property name="plugin-name" value="${plugin-name}" />
+            <property name="classname" value="com.android.ide.eclipse.tests.UnitTests" />
+            <!-- pass extra vm arg to set test_data env variable -->
+            <property name="extraVMargs" value="-Dtest_data=${test_data}" />
+        </ant>
+    </target>
+
+    <!-- This target holds code to cleanup the testing environment after -->
+    <!-- after all of the tests have been run. You can use this target to -->
+    <!-- delete temporary files that have been created. -->
+    <target name="cleanup">
+    </target>
+
+    <!-- This target runs the test suite. Any actions that need to happen -->
+    <!-- after all the tests have been run should go here. -->
+    <target name="run" depends="init,suite,cleanup">
+        <ant target="collect" antfile="${library-file}" dir="${eclipse.home}/results">
+            <property name="includes" value="com*.xml" />
+            <property name="output-file" value="${plugin-name}.xml" />
+        </ant>
+    </target>
+</project>
+

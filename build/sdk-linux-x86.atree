@@ -1,0 +1,12 @@
+# Copyright 2007 The Android Open Source Project
+#
+
+# swt
+lib/libswt-atk-gtk-3236.so tools/lib/libswt-atk-gtk-3236.so
+lib/libswt-gtk-3236.so tools/lib/libswt-gtk-3236.so
+lib/libswt-pi-gtk-3236.so tools/lib/libswt-pi-gtk-3236.so
+lib/libswt-cairo-gtk-3236.so tools/lib/libswt-cairo-gtk-3236.so
+framework/swt.jar tools/lib/swt.jar
+framework/org.eclipse.core.commands_3.2.0.I20060605-1400.jar tools/lib/org.eclipse.core.commands_3.2.0.I20060605-1400.jar
+framework/org.eclipse.equinox.common_3.2.0.v20060603.jar tools/lib/org.eclipse.equinox.common_3.2.0.v20060603.jar
+framework/org.eclipse.jface_3.2.0.I20060605-1400.jar tools/lib/org.eclipse.jface_3.2.0.I20060605-1400.jar

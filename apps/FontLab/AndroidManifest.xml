@@ -1,0 +1,13 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.android.fontlab">
+    <application android:label="Font lab">
+		<activity android:name="FontLab">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.TEST" />
+            </intent-filter>
+		</activity>
+		<activity android:name="BackgroundPicker"/>
+		<activity android:name="FontPicker"/>
+    </application>
+</manifest>

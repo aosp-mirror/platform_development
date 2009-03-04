@@ -1,0 +1,340 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+/*
+ * Copyright (C) 2008 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+-->
+<resources>
+    <!-- WARNING !!! THIS IS A MOCK FILE. DO NOT USE FOR DOCUMENTATION PURPOSES.
+         This file has been trimmed down to only extract a number of interesting cases 
+         for unit tests.
+         
+         What this contains:
+         - View
+         - ViewGroup
+         - some attributes which format are defined in Theme
+         - orientation, gravity and layout_gravity defined before they are used
+         - ViewGroup_Layout
+         - ViewGroup_MarginLayout
+         - LinearLayout
+         - LinearLayout_Layout
+         - TableLayout
+         
+         Note that TableLayout does not have a TableLayout_Layout definition here
+         where these is a class TableLayout.LayoutData.
+    -->
+
+    <!-- These are the standard attributes that make up a complete theme. -->
+    <declare-styleable name="Theme">
+
+        <!-- Defines the scrollbars size. -->
+        <attr name="scrollbarSize" format="dimension" />
+
+    </declare-styleable>
+
+        
+    <!-- Standard orientation constant. -->
+    <attr name="orientation">
+        <!-- Defines an horizontal widget. -->
+        <enum name="horizontal" value="0" />
+        <!-- Defines a vertical widget. -->
+        <enum name="vertical" value="1" />
+    </attr>
+
+    <!-- Specifies how to place an object, both
+         its x and y axis, within a larger containing object. -->
+    <attr name="gravity">
+        <!-- Push object to the top of its container, not changing its size. -->
+        <flag name="top" value="0x30" />
+        <!-- Push object to the bottom of its container, not changing its size. -->
+        <flag name="bottom" value="0x50" />
+        <!-- Push object to the left of its container, not changing its size. -->
+        <flag name="left" value="0x03" />
+        <!-- Push object to the right of its container, not changing its size. -->
+        <flag name="right" value="0x05" />
+        <!-- Place object in the vertical center of its container, not changing its size. -->
+        <flag name="center_vertical" value="0x10" />
+        <!-- Grow the vertical size of the object if needed so it completely fills its container. -->
+        <flag name="fill_vertical" value="0x70" />
+        <!-- Place object in the horizontal center of its container, not changing its size. -->
+        <flag name="center_horizontal" value="0x01" />
+        <!-- Grow the horizontal size of the object if needed so it completely fills its container. -->
+        <flag name="fill_horizontal" value="0x07" />
+        <!-- Place the object in the center of its container in both the vertical and horizontal axis, not changing its size. -->
+        <flag name="center" value="0x11" />
+        <!-- Grow the horizontal and vertical size of the object if needed so it completely fills its container. -->
+        <flag name="fill" value="0x77" />
+    </attr>
+
+    <!-- Standard gravity constant that a child can supply to its parent.
+         Defines how to place an object, both
+         its x and y axis, within a larger containing object. -->
+    <attr name="layout_gravity">
+        <!-- Push object to the top of its container, not changing its size. -->
+        <flag name="top" value="0x30" />
+        <!-- Push object to the bottom of its container, not changing its size. -->
+        <flag name="bottom" value="0x50" />
+        <!-- Push object to the left of its container, not changing its size. -->
+        <flag name="left" value="0x03" />
+        <!-- Push object to the right of its container, not changing its size. -->
+        <flag name="right" value="0x05" />
+        <!-- Place object in the vertical center of its container, not changing its size. -->
+        <flag name="center_vertical" value="0x10" />
+        <!-- Grow the vertical size of the object if needed so it completely fills its container. -->
+        <flag name="fill_vertical" value="0x70" />
+        <!-- Place object in the horizontal center of its container, not changing its size. -->
+        <flag name="center_horizontal" value="0x01" />
+        <!-- Grow the horizontal size of the object if needed so it completely fills its container. -->
+        <flag name="fill_horizontal" value="0x07" />
+        <!-- Place the object in the center of its container in both the vertical and horizontal axis, not changing its size. -->
+        <flag name="center" value="0x11" />
+        <!-- Grow the horizontal and vertical size of the object if needed so it completely fills its container. -->
+        <flag name="fill" value="0x77" />
+    </attr>
+
+    <declare-styleable name="View">
+    <!-- NOTE: View does not have a javadoc. Do not place a comment BEFORE View to make sure it
+         is NOT interpreted as Javadoc -->
+    
+        <!-- Supply an identifier name for this view, to later retrieve it
+             with {@link android.view.View#findViewById View.findViewById()} or
+             {@link android.app.Activity#findViewById Activity.findViewById()}.
+             This must be a
+             resource reference; typically you set this using the
+             <code>@+</code> syntax to create a new ID resources.
+             For example: <code>android:id="@+id/my_id"</code> which
+             allows you to later retrieve the view
+             with <code>findViewById(R.id.my_id)</code>. -->
+        <attr name="id" format="reference" />
+        
+        <!-- Supply a tag for this view containing a String, to be retrieved
+             later with {@link android.view.View#getTag View.getTag()} or
+             searched for with {@link android.view.View#findViewWithTag
+             View.findViewWithTag()}.  It is generally preferable to use
+             IDs (through the android:id attribute) instead of tags because
+             they are faster and allow for compile-time type checking. -->
+        <attr name="tag" format="string" />
+        
+        <!-- The initial horizontal scroll offset, in pixels.-->
+        <attr name="scrollX" format="dimension" />
+
+        <!-- The initial vertical scroll offset, in pixels. -->
+        <attr name="scrollY" format="dimension" />
+
+        <!-- A drawable to use as the background.  This can be either a reference
+             to a full drawable resource (such as a PNG image, 9-patch,
+             XML state list description, etc), or a solid color such as "#ff000000"
+            (black). -->
+        <attr name="background" format="reference|color" />
+
+        <!-- Boolean that controls whether a view can take focus.  By default the user can not
+             move focus to a view; by setting this attribute to true the view is
+             allowed to take focus.  This value does not impact the behavior of
+             directly calling {@link android.view.View#requestFocus}, which will
+             always request focus regardless of this view.  It only impacts where
+             focus navigation will try to move focus. -->
+        <attr name="focusable" format="boolean" />
+
+        <!-- Sets the circumstances under which this view will take focus. There are
+             two choices: "weak" or "normal". The default value is "normal" for
+             any focusable views. The focus type only applies if the view
+             has been set to be focusable. -->
+        <attr name="focusType">
+            <!-- This view is focusable, but only if none of its descendants are already focused. -->
+            <enum name="normal" value="0" />
+            <!-- This view will always claim to be focusable. -->
+            <enum name="weak" value="1" />
+        </attr>
+        
+        <!-- Controls the initial visibility of the view.  -->
+        <attr name="visibility">
+            <!-- Visible on screen; the default value. -->
+            <enum name="visible" value="0" />
+            <!-- Not displayed, but taken into account during layout (space is left for it). -->
+            <enum name="invisible" value="1" />
+            <!-- Completely hidden, as if the view had not been added. -->
+            <enum name="gone" value="2" />
+        </attr>
+
+        <!-- Defines which scrollbars should be displayed on scrolling or not. -->
+        <attr name="scrollbars">
+            <!-- No scrollbar is displayed. -->
+            <flag name="none" value="0x00000000" />
+            <!-- Displays horizontal scrollbar only. -->
+            <flag name="horizontal" value="0x00000100" />
+            <!-- Displays vertical scrollbar only. -->
+            <flag name="vertical" value="0x00000200" />
+        </attr>
+
+        <!-- Sets the width of vertical scrollbars and height of horizontal scrollbars. -->
+        <attr name="scrollbarSize" />
+        
+        <!-- Text to display. (copied from TextView for the extra localization) -->
+        <attr name="text" format="string" localization="suggested" />
+        
+    </declare-styleable>
+
+    <!-- Attributes that can be used with a {@link android.view.ViewGroup} or any
+         of its subclasses.  Also see {@link #ViewGroup_Layout} for
+         attributes that this class processes in its children. -->
+    <declare-styleable name="ViewGroup">
+        <!-- Defines whether a child is limited to draw inside of its bounds or not.
+             This is useful with animations that scale the size of the children to more
+             than 100% for instance. In such a case, this property should be set to false
+             to allow the children to draw outside of their bounds. The default value of
+             this property is true. -->
+        <attr name="clipChildren" format="boolean" />
+        <!-- Defines the layout animation to use the first time the ViewGroup is laid out.
+             Layout animations can also be started manually after the first layout. -->
+        <attr name="layoutAnimation" format="reference" />
+        <!-- Defines whether a child's animation should be kept when it is over. Keeping
+             the animations is useful with animation whose final state is different from
+             the initial state of the View. This is particularly useful with animation
+             whose fillAfter property is enabled. This property is set to false by default. -->
+        <attr name="persistentDrawingCache">
+            <!-- The drawing cache is not persisted after use. -->
+            <flag name="none" value="0x0" />
+            <!-- The drawing cache is persisted after a layout animation. -->
+            <flag name="animation" value="0x1" />
+            <!-- The drawing cache is persisted after a scroll. -->
+            <flag name="scrolling" value="0x2" />
+            <!-- The drawing cache is always persisted. -->            
+            <flag name="all" value="0x3" />
+        </attr>
+    </declare-styleable>
+
+    <!-- This is the basic set of layout attributes that are common to all
+         layout managers.  These attributes are specified with the rest of
+         a view's normal attributes (such as {@link android.R.attr#background},
+         but will be parsed by the view's parent and ignored by the child.
+        <p>The values defined here correspond to the base layout attribute
+        class {@link android.view.ViewGroup.LayoutParams}. -->
+    <declare-styleable name="ViewGroup_Layout">
+        <!-- Specifies the basic width of the view.  This is a required attribute
+             for any view inside of a containing layout manager.  Its value may
+             be a dimension (such as "12dip") for a constant width or one of
+             the special constants. -->
+        <attr name="layout_width" format="dimension">
+            <!-- The view should be as big as its parent (minus padding). -->
+            <enum name="fill_parent" value="-1" />
+            <!-- The view should be only big enough to enclose its content (plus padding). -->
+            <enum name="wrap_content" value="-2" />
+        </attr>
+
+        <!-- Specifies the basic height of the view.  This is a required attribute
+             for any view inside of a containing layout manager.  Its value may
+             be a dimension (such as "12dip") for a constant height or one of
+             the special constants. -->
+        <attr name="layout_height" format="dimension">
+            <!-- The view should be as big as its parent (minus padding). -->
+            <enum name="fill_parent" value="-1" />
+            <!-- The view should be only big enough to enclose its content (plus padding). -->
+            <enum name="wrap_content" value="-2" />
+        </attr>
+    </declare-styleable>
+
+    <!-- This is the basic set of layout attributes for layout managers that
+         wish to place margins around their child views.
+         These attributes are specified with the rest of
+         a view's normal attributes (such as {@link android.R.attr#background},
+         but will be parsed by the view's parent and ignored by the child.
+        <p>The values defined here correspond to the base layout attribute
+        class {@link android.view.ViewGroup.MarginLayoutParams}. -->
+    <declare-styleable name="ViewGroup_MarginLayout">
+        <attr name="layout_width" />
+        <attr name="layout_height" />
+        <!--  Specifies extra space on the left side of this view.
+            This space is outside this view's bounds. -->
+        <attr name="layout_marginLeft" format="dimension"  />
+        <!--  Specifies extra space on the top side of this view.
+            This space is outside this view's bounds. -->
+        <attr name="layout_marginTop" format="dimension" />
+        <!--  Specifies extra space on the right side of this view.
+            This space is outside this view's bounds. -->
+        <attr name="layout_marginRight" format="dimension"  />
+        <!--  Specifies extra space on the bottom side of this view.
+            This space is outside this view's bounds. -->
+        <attr name="layout_marginBottom" format="dimension"  />
+    </declare-styleable>
+
+    <!-- This is a linear layout. -->
+    <declare-styleable name="LinearLayout">
+        <!-- Should the layout be a column or a row?  Use "horizontal"
+             for a row, "vertical" for a column.  The default is
+             horizontal. -->
+        <attr name="orientation" />
+        <attr name="baselineAligned" format="boolean|reference" />
+        <!-- When a linear layout is part of another layout that is baseline
+          aligned, it can specify which of its children to baseline align to
+          (i.e which child TextView).-->
+        <attr name="baselineAlignedChildIndex" format="integer|color" min="0"/>
+        <!-- Defines the maximum weight sum. If unspecified, the sum is computed
+             by adding the layout_weight of all of the children. This can be
+             used for instance to give a single child 50% of the total available
+             space by giving it a layout_weight of 0.5 and setting the weightSum
+             to 1.0. -->
+        <attr name="weightSum" format="float" />
+    </declare-styleable>
+
+    <declare-styleable name="LinearLayout_Layout">
+        <attr name="layout_width" />
+        <attr name="layout_height" />
+        <attr name="layout_weight" format="float" />
+        <attr name="layout_gravity" />
+    </declare-styleable>
+
+    <declare-styleable name="TableLayout">
+        <!-- The 0 based index of the columns to stretch. The column indices
+             must be separated by a comma: 1, 2, 5. Illegal and duplicate
+             indices are ignored. You can stretch all columns by using the
+             value "*" instead. Note that a column can be marked stretchable
+             and shrinkable at the same time. -->
+        <attr name="stretchColumns" format="string" />
+       <!-- The 0 based index of the columns to shrink. The column indices
+             must be separated by a comma: 1, 2, 5. Illegal and duplicate
+             indices are ignored. You can shrink all columns by using the
+             value "*" instead. Note that a column can be marked stretchable
+             and shrinkable at the same time. -->
+        <attr name="shrinkColumns" format="string" /> 
+        <!-- The 0 based index of the columns to collapse. The column indices
+             must be separated by a comma: 1, 2, 5. Illegal and duplicate
+             indices are ignored. -->
+        <attr name="collapseColumns" format="string" />
+    </declare-styleable>
+
+	<!-- Test for deprecated attributes. -->
+	<declare-styleable name="DeprecatedTest">
+		<!-- Deprecated comments using delimiters.
+			 Ignored. {@deprecated In-line deprecated.} {@ignore Ignored}.
+		 -->
+		<attr name="deprecated-inline" /> 
+
+		<!-- Deprecated comments on their own line.
+			 @deprecated Multi-line version of deprecated
+			    that works till the next tag.
+			 @ignore This tag must be ignored
+		 -->
+		<attr name="deprecated-multiline" />
+		
+		<!-- This attribute is not deprecated. -->
+		<attr name="deprecated-not" />
+		
+        <!-- {@deprecated There is no other javadoc here. } -->
+        <attr name="deprecated-no-javadoc" format="boolean" />
+		
+	</declare-styleable>
+
+</resources>
+

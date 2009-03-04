@@ -1,0 +1,2 @@
+Main-Class: com.android.traceview.MainWindow
+Class-Path: swt.jar org.eclipse.equinox.common_3.2.0.v20060603.jar org.eclipse.jface_3.2.0.I20060605-1400.jar org.eclipse.core.commands_3.2.0.I20060605-1400.jar

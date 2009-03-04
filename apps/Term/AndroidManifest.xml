@@ -1,0 +1,16 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.android.term">
+    <application android:icon="@drawable/app_terminal"
+                android:label="@string/application_terminal">
+        <activity android:name="Term"
+                android:theme="@style/Theme"
+                android:launchMode="singleInstance"
+                android:configChanges="keyboard|keyboardHidden|orientation"
+                android:windowSoftInputMode="adjustResize|stateVisible">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.TEST" />
+            </intent-filter>
+        </activity>
+        <activity android:name="TermPreferences"/>
+    </application>
+</manifest> 

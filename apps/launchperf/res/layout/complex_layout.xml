@@ -1,0 +1,288 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+/* //device/tests/ComplexLayout/res/layout/complex_layout.xml
+**
+** Copyright 2007, The Android Open Source Project
+**
+** Licensed under the Apache License, Version 2.0 (the "License");
+** you may not use this file except in compliance with the License.
+** You may obtain a copy of the License at
+**
+**     http://www.apache.org/licenses/LICENSE-2.0
+**
+** Unless required by applicable law or agreed to in writing, software
+** distributed under the License is distributed on an "AS IS" BASIS,
+** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+** See the License for the specific language governing permissions and
+** limitations under the License.
+*/
+-->
+
+<!-- This file describes the layout of the main ComplexLayout activity
+     user interface.
+ -->
+
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent">
+
+<!--    <TabHost
+        android:layout_width="fill_parent"
+        android:layout_height="200dip">
+    </TabHost>
+
+    <GridView
+        android:layout_width="fill_parent"
+        android:layout_height="200dip"
+        android:numColumns="5">
+    </GridView> -->
+
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="200dip"
+        android:orientation="vertical">
+        
+        <TextView
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/header_absolute"/>
+
+        <AbsoluteLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_x="0dip"
+                android:layout_y="0dip"
+                android:background="@color/red"
+                android:text="@string/test_short_paragraph"/>
+            
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_x="0dip"
+                android:layout_y="0dip"
+                android:background="@color/gray0"
+                android:text="@string/test_word"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_x="8dip"
+                android:layout_y="4dip"
+                android:background="@color/gray1"
+                android:text="@string/test_word"/>
+             <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_x="16dip"
+                android:layout_y="8dip"
+                android:background="@color/gray2"
+                android:text="@string/test_word"/>
+             <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_x="24dip"
+                android:layout_y="12dip"
+                android:background="@color/gray3"
+                android:text="@string/test_word"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_x="32dip"
+                android:layout_y="16dip"
+                android:background="@color/gray4"
+                android:text="@string/test_word"/>
+             <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_x="40dip"
+                android:layout_y="20dip"
+                android:background="@color/gray5"
+                android:text="@string/test_word"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_x="48dip"
+                android:layout_y="24dip"
+                android:background="@color/gray6"
+                android:text="@string/test_word"/>
+             <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_x="56dip"
+                android:layout_y="28dip"
+                android:background="@color/gray7"
+                android:text="@string/test_word"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_x="64dip"
+                android:layout_y="32dip"
+                android:background="@color/gray8"
+                android:text="@string/test_word"/>
+             <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_x="72dip"
+                android:layout_y="36dip"
+                android:background="@color/gray9"
+                android:text="@string/test_word"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_x="80dip"
+                android:layout_y="40dip"
+                android:background="@color/grayA"
+                android:text="@string/test_word"/>
+             <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_x="88dip"
+                android:layout_y="44dip"
+                android:background="@color/grayB"
+                android:text="@string/test_word"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_x="96dip"
+                android:layout_y="48dip"
+                android:background="@color/grayC"
+                android:text="@string/test_word"/>
+             <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_x="104dip"
+                android:layout_y="52dip"
+                android:background="@color/grayD"
+                android:text="@string/test_word"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_x="112dip"
+                android:layout_y="56dip"
+                android:background="@color/grayE"
+                android:text="@string/test_word"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_x="120dip"
+                android:layout_y="60dip"
+                android:background="@color/grayF"
+                android:text="@string/test_word"/>
+
+        </AbsoluteLayout>
+
+        <TextView
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/header_relative"/>
+
+        <RelativeLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content">
+
+            <Button android:id="@+id/relative_button1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/relative_button1"/>
+            <Button android:id="@+id/relative_button2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/relative_button1"
+                android:text="@string/relative_button2"/>
+            <Button android:id="@+id/relative_button3"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/relative_button2"
+                android:text="@string/relative_button3"/>
+            <Button android:id="@+id/relative_button4"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/relative_button3"
+                android:text="@string/relative_button4"/>
+
+            <TextView android:id="@+id/relative_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_toRightOf="@id/relative_button1"
+                android:background="@color/green"
+                android:text="@string/test_short_paragraph"/>
+
+            <Button android:id="@+id/relative_button5"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/relative_text"
+                android:layout_alignParentRight="true"
+                android:text="@string/relative_button5"/>
+            <Button android:id="@+id/relative_button6"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/relative_text"
+                android:layout_toLeftOf="@id/relative_button5"
+                android:text="@string/relative_button6"/>
+            <Button android:id="@+id/relative_button7"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/relative_text"
+                android:layout_toLeftOf="@id/relative_button6"
+                android:text="@string/relative_button7"/>
+            <Button android:id="@+id/relative_button8"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/relative_text"
+                android:layout_toLeftOf="@id/relative_button7"
+                android:text="@string/relative_button8"/>
+
+        </RelativeLayout>
+
+        <TextView
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/header_linear"/>
+
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <Button
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/relative_button1"/>
+                <Button
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/relative_button2"/>
+                <Button
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/relative_button3"/>
+                <Button
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/relative_button4"/>
+
+            </LinearLayout>
+
+            <EditText
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"/>
+
+            <TextView
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/blue"
+                android:text="@string/test_long_paragraph"/>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</ScrollView>

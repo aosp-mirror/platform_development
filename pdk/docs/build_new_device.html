@@ -1,0 +1,333 @@
+
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+<title>Android - Porting Guide</title>
+<script src="http://www.google.com/uds/api?file=uds.js&amp;v=1.0&amp;key=internal-codesite" type="text/javascript"></script>
+<script src="http://code.google.com/js/jquery.js" type="text/javascript"></script>
+<script type="text/javascript">var _tocPath_ = 'http://code.google.com/android/_toc.ezt';</script>
+<script src="http://code.google.com/js/codesite.pack.01312008.js" type="text/javascript"></script>
+<script language="JavaScript">
+function resizeHeight() {
+	if(document.getElementById && !(document.all)) {
+		height= document.getElementById('doxygen').contentDocument.body.scrollHeight + 20;
+		document.getElementById('doxygen').style.height = height;
+	}
+	else if(document.all) {
+		height= document.frames('doxygen').document.body.scrollHeight + 20;
+		document.all.doxygen.style.height = height;
+	}
+}
+</script>
+<link href="http://code.google.com/css/codesite.pack.01312008.css" type="text/css" rel="stylesheet">
+</link>
+
+<!--[if IE]><link rel="stylesheet" type="text/css" href="/css/iehacks.css" /><![endif]-->
+<script src="http://code.google.com/android/assets/search_autocomplete.js"></script>
+<link rel="stylesheet" type="text/css" href="http://code.google.com/css/semantic_headers.css" />
+<link rel="stylesheet" type="text/css" href="http://code.google.com/android/assets/style.css" />
+<script>
+    jQuery(document).ready(function() {
+            jQuery("pre").addClass("prettyprint");
+        });
+    </script>
+<style type="text/css">
+<!--
+h1,h2,h3 {
+	color: #000000;
+}
+-->
+</style>
+</head>
+<body class="gc-documentation">
+<div id="gc-container">
+<a name="top"></a>
+<div id="skipto"> </div>
+<div id="langpref">
+  <!--<a class="dropdown" href="/">English</a> <span>|</span> <a href="/more/">Site Directory</a> -->
+
+</div>
+<div id="gc-header">
+  <div id="logo"><a href="http://code.google.com/android/index.html"><img src="http://code.google.com/android/images/logo_android.gif" alt="Android"/></a></div>
+  <div id="search" style="inline">
+    <div id="searchForm" class="searchForm" style="height: 44px;">
+      <!--previously form was here-->
+    </div>
+    <!-- end searchForm -->
+    <noscript>
+    <style type="text/css">
+      .searchForm {
+        display : none !important;
+      }
+      .searchForm2 {
+        display : inline !important;
+      }
+      </style>
+    </noscript>
+
+    <div id="searchForm2" class="searchForm2" style="display:none">
+      <form id="searchbox_001456098540849067467:6whlsytkdqg" action="http://www.google.com/cse">
+        <input type="hidden" name="cx" value="001456098540849067467:6whlsytkdqg" />
+        <input type="hidden" name="cof" value="FORID:0" />
+        <input type="text" name="q" maxlength="2048" size="41" autocomplete="off" title="Google Code Search"/>
+        <input type="submit" name="sa" value="Search" title="Search"/>
+        <br/>
+        <div class="greytext">e.g. "ajax apis" or "open source"</div>
+
+      </form>
+    </div>
+    <!-- end searchForm2 -->
+  </div>
+  <!-- end search -->
+</div>
+<!-- end gc-header -->
+<div id="searchControl" class="search-control"></div>
+<!--[if IE]><iframe id="backiFrame" name="backiFrame" src='/dummy.html' style="display:none"></iframe><![endif]-->
+<div id="codesiteContent">
+<a name="gc-topnav-anchor"></a>
+<div id="gc-topnav">
+
+  <h1>Android Platform Development Kit</h1>
+  <ul class="gc-topnav-tabs">
+    <li id="sdk_link"> <a href="http://code.google.com/android/index.html" title="Android Software Development Kit">SDK</a> </li>
+    <li id="docs_link"> <a href="index.html" title="Official Android documentation">Docs</a> </li>
+    <li id="faq_link"> <a href="http://code.google.com/android/kb/index.html" title="Answers to frequently asked questions about Android">FAQ</a> </li>
+
+    <li> <a href="http://android-developers.blogspot.com/" title="Official Android blog">Blog</a> </li>
+    <li> <a href="http://code.google.com/android/groups.html" title="Android developer forum">Group</a> </li>
+    <li> <a href="http://code.google.com/android/terms.html" title="Android terms of service">Terms</a> </li>
+    <li> <a href="mailto:android-pdk-feedback@google.com?subject=PDK%20Feedback&body=(filed%20from:%20build_new_device.html%20v0.6%20-%2025%20November%202008)%0D%0A%0D%0ASUMMARY:%0D%0A%0D%0A%0D%0A%0D%0ASTEPS%20TO%20REPRODUCE:%0D%0A%0D%0A%0D%0A%0D%0AADDITIONAL%20NOTES:">Report a Problem</a> </li>
+
+  </ul>
+</div>
+<!-- end gc-topnav -->
+<div class="g-section g-tpl-180">
+<a name="gc-toc"></a>
+<div class="g-unit g-first" id="gc-toc">
+  <ul>
+    <li>
+      <h1><a href="index.html">Documentation</a></h1>
+      <ul>
+        <li> <strong>Introduction</strong>
+
+          <ul>
+            <li><a href="system_requirements.html">Device Requirements</a></li>            
+          </ul>
+        </li>
+        <li> <strong>Dev Environment Setup</strong>
+          <ul>
+            <li><a href="build_system.html">Build System</a></li>
+          </ul>
+        </li>
+        <li> <strong>Basic Bring up</strong>
+
+          <ul>
+            <li><a href="build_new_device.html">Building New Device</a></li>
+            <li><a href="bring_up.html">Bring up</a></li>
+            <li><a href="keymaps_keyboard_input.html">Keymaps and Keyboard</a></li>
+            <li><a href="display_drivers.html">Display Drivers</a></li>
+          </ul>
+        </li>
+
+        <li> <strong>Multimedia</strong>
+          <ul>
+            <li><a href="audio_sub_system.html">Audio</a></li>
+            <li><a href="camera.html">Camera</a></li>			
+          </ul>
+        </li>
+        <li> <strong>Power Management</strong>
+
+          <ul>
+            <li><a href="power_management.html">Power Management</a></li>
+          </ul>
+        </li>
+
+        <li> <strong>Networking</strong>
+          <ul>
+            <li><a href="wifi.html">Wi-Fi</a></li>
+            <li><a href="gps.html">GPS</a></li>
+            <li><a href="bluetooth.html">Bluetooth</a></li>
+          </ul>
+        </li>
+
+        <li> <strong>Telephony</strong>
+          <ul>
+            <li><a href="telephony.html">Radio Interface Layer</a></li>
+
+          </ul>
+        </li>
+        <li> <strong>Testing</strong>
+          <ul>
+            <li><a href="instrumentation_testing.html">Instrumentation Testing</a></li>
+          </ul>
+
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+<a name="gc-pagecontent"></a>
+<div class="g-unit" id="gc-pagecontent">
+<div id="jd-content">
+<div class="jd-descr">
+
+
+<a name="androidBuildNewTitle"></a><h1>Building Android for a new Mobile Device</h1>
+
+
+
+<a name="toc"/>
+<div style="padding:10px">
+<a href="#androidOHDPortingDeviceBuildingProcess">Detailed Instructions</a><br/>
+<a href="#androidBuildNewFileTree">New Product File Tree</a><br/></div></font></div>
+
+<a name="androidOHDPortingDeviceBuildingProcess"></a><h2>Detailed Instructions</h2>
+
+<p>The directions below describe how to configure make files for new mobile devices and products.</p>
+<ol>
+  <li>Create a company directory in <code>//device/partner</code>.<br/>
+  <pre class="prettyprint">
+  mkdir device/partner/&lt;company_name&gt;</pre></li>
+  <li>Create a <code>products</code> directory beneath the company directory you created in step 1.<BR>
+  <pre class="prettyprint">
+  mkdir device/partner/&lt;company_name&gt;/products/</pre></li>
+  <li>Create a product-specific make file, called <code>device/partner/&lt;company_name&gt;/products/&lt;first_product_name&gt;.mk</code>, that includes the following code:<BR>
+    <pre class="prettyprint">
+  $(call inherit-product, target/product/generic.mk)
+  #
+  # Overrides
+  PRODUCT_NAME := &lt;first_product_name&gt;
+  PRODUCT_DEVICE := &lt;board_name&gt;</pre></li>  
+  <li>In the <code>products</code> directory, create an <code>AndroidProducts.mk</code> file that point to (and is responsible for finding) the individual product make files.<BR>
+  <pre class="prettypring">
+  #
+  # This file should set PRODUCT_MAKEFILES to a list of product makefiles
+  # to expose to the build system.  LOCAL_DIR will already be set to
+  # the directory containing this file. 
+  #
+  # This file may not rely on the value of any variable other than
+  # LOCAL_DIR; do not use any conditionals, and do not look up the
+  # value of any variable that isn't set in this file or in a file that
+  # it includes.
+  #
+  
+  PRODUCT_MAKEFILES := \
+    $(LOCAL_DIR)/first_product_name.mk \</pre></li>
+  <li>Create a board-specific directory beneath your company directory that matches the <code>PRODUCT_DEVICE</code> variable <code>&lt;board_name&gt;</code> referenced in the product-specific make file above. This will include a make file that gets accessed by any product using this board.<BR>
+  <pre class="prettyprint">
+  mkdir device/partner/&lt;company_name&gt;/&lt;board_name&gt;</pre></li>
+    <li>Create a <code>product_config.mk</code> file in the directory created in the previous step (<code>device/partner/&lt;company_name&gt;/&lt;board_name&gt;</code>). If this directory does not include a <code>product_config.mk</code> file, the build will fail.<BR>
+  <pre class="prettyprint">
+  # These definitions override the defaults in config/config.make for &lt;board_name&gt;
+  #
+  # TARGET_NO_BOOTLOADER := false
+  # TARGET_HARDWARE_3D := false 
+  #
+  TARGET_USE_GENERIC_AUDIO := true</pre></li>  
+  <li>If you wish to modify system properties, create a <code>system.prop</code> file in your <code>&lt;board_name&gt;</code> directory(<code>device/partner/&lt;company_name&gt;/&lt;board_name&gt;</code>).<BR>
+  <pre class="prettyprint">
+  # system.prop for <board_name>
+  # This overrides settings in the products/generic/system.prop file
+  #
+  # rild.libpath=/system/lib/libreference-ril.so
+  # rild.libargs=-d /dev/ttyS0</pre></li>   
+  <li>Add a pointer to <code>&lt;second_product_name&gt;.mk</code> within <code>products/AndroidProducts.mk</code>.<BR>
+  <pre class="prettypring">
+  PRODUCT_MAKEFILES := \
+    $(LOCAL_DIR)/first_product_name.mk \
+    $(LOCAL_DIR)/second_product_name.mk</pre></li>
+  <li><code>device/partner/&lt;company_name&gt;/&lt;board_name&gt;</code> must include an <code>Android.mk</code> file with at least the following code:<BR><BR>
+  <pre class="prettyprint">
+  # make file for new hardware <board_name> from <company_name>
+  #
+  LOCAL_PATH := $(call my-dir)
+  #
+  # this is here to use the pre-built kernel
+  ifeq ($(TARGET_PREBUILT_KERNEL),)
+  TARGET_PREBUILT_KERNEL := $(LOCAL_PATH)/kernel
+  endif
+  #
+  file := $(INSTALLED_KERNEL_TARGET)
+  ALL_PREBUILT += $(file)
+  $(file): $(TARGET_PREBUILT_KERNEL) | $(ACP)
+		$(transform-prebuilt-to-target)
+  #
+  # no boot loader, so we don't need any of that stuff..  
+  #
+  LOCAL_PATH := partner/&lt;company_name&gt;/&lt;board_name&gt;
+  #
+  include $(CLEAR_VARS)
+  #
+  # include more board specific stuff here? Such as Audio parameters.      
+  #</pre></li>
+<li>To create a second product for the same board, create a second product-specific make file called <code>device/partner/company_name/products/&lt;second_product_name&gt;.mk</code> that includes:<BR>
+<pre class="prettyprint">
+  $(call inherit-product, partner/google/products/generic.mk)
+  #
+  # Overrides
+  PRODUCT_NAME := &lt;second_product_name&gt;
+  PRODUCT_DEVICE := &lt;board_name&gt;</pre></li>   	
+</ol>
+<p>By now, you should have two new products, called <code>&lt;first_product_name&gt;</code> and <code>&lt;second_product_name&gt;</code> associated with <code>&lt;company_name&gt;</code>. To verify that a product is properly configured (<code>&lt;first_product_name&gt;</code>, for example), execute the following:<BR>
+<pre class="prettyprint">
+  cd device
+  . ./envsetup.sh
+  partner_setup &lt;first_product_name&gt;
+  make PRODUCT-&lt;first_product_name&gt;-user
+</pre>
+<p>You should find new build binaries located in <code>device/out/target/product/&lt;board_name&gt;</code>.
+
+
+<a name="androidBuildNewFileTree"></a><h2>New Product File Tree</h2>
+
+<p>The file tree below illustrates what your own system should look like after completing the steps above.</p>
+<p>
+<ul>
+  <li><code>&lt;company_name&gt;</code></li>
+  <ul>
+    <li><code>&lt;board_name&gt;</code></li>
+    <ul>
+      <li><code>Android.mk</code></li>
+      <li><code>product_config.mk</code></li>
+      <li><code>system.prop</code></li>
+    </ul>
+    <li><code>products</code></li>
+    <ul>
+      <li><code>AndroidProducts.mk</code></li>
+      <li><code>&lt;first_product_name&gt;.mk</code></li>
+      <li><code>&lt;second_product_name&gt;.mk</code></li>
+    </ul>
+  </ul>
+</ul>
+</p>
+
+
+<p><span class="lh2"><a name="androidFooter"></a></span>
+
+        </div>
+      </div>
+      <!-- end gc-pagecontent -->
+    </div>
+    <!-- end gooey wrapper -->
+  </div>
+  <!-- end codesearchresults -->
+  <div id="gc-footer" dir="ltr">
+    <div class="text"> &copy;2008 Google<!-- - <a href="/">Code Home</a> - <a href="http://www.google.com/accounts/TOS">Site Terms of Service</a> - <a href="http://www.google.com/privacy.html">Privacy Policy</a> - <a href="/more">Site Directory</a> --></div>
+  </div>
+  <!-- end gc-footer -->
+</div>
+<!-- end gc-containter -->
+<script src="http://www.google-analytics.com/ga.js" type="text/javascript">
+</script>
+<script type="text/javascript">
+  try {
+    var pageTracker = _gat._getTracker("UA-18071-1");
+    pageTracker._setAllowAnchor(true);
+    pageTracker._initData();
+    pageTracker._trackPageview(); 
+  } catch(e) {}
+</script>
+<div id="jd-build-id"> v0.6 - 25 November 2008</div>
+</div></div></div></body>
+</html>
+

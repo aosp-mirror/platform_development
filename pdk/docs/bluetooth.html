@@ -1,0 +1,276 @@
+
+<p><span class="lh2"><a name="androidHeader"></a></span>
+
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+<title>Android - Porting Guide</title>
+<script src="http://www.google.com/uds/api?file=uds.js&amp;v=1.0&amp;key=internal-codesite" type="text/javascript"></script>
+<script src="http://code.google.com/js/jquery.js" type="text/javascript"></script>
+<script type="text/javascript">var _tocPath_ = 'http://code.google.com/android/_toc.ezt';</script>
+<script src="http://code.google.com/js/codesite.pack.01312008.js" type="text/javascript"></script>
+<script language="JavaScript">
+function resizeHeight() {
+	if(document.getElementById && !(document.all)) {
+		height= document.getElementById('doxygen').contentDocument.body.scrollHeight + 20;
+		document.getElementById('doxygen').style.height = height;
+	}
+	else if(document.all) {
+		height= document.frames('doxygen').document.body.scrollHeight + 20;
+		document.all.doxygen.style.height = height;
+	}
+}
+</script>
+<link href="http://code.google.com/css/codesite.pack.01312008.css" type="text/css" rel="stylesheet">
+</link>
+
+<!--[if IE]><link rel="stylesheet" type="text/css" href="/css/iehacks.css" /><![endif]-->
+<script src="http://code.google.com/android/assets/search_autocomplete.js"></script>
+<link rel="stylesheet" type="text/css" href="http://code.google.com/css/semantic_headers.css" />
+<link rel="stylesheet" type="text/css" href="http://code.google.com/android/assets/style.css" />
+<script>
+    jQuery(document).ready(function() {
+            jQuery("pre").addClass("prettyprint");
+        });
+    </script>
+<style type="text/css">
+<!--
+h1,h2,h3 {
+	color: #000000;
+}
+-->
+</style>
+</head>
+<body class="gc-documentation">
+<div id="gc-container">
+<a name="top"></a>
+<div id="skipto"> </div>
+<div id="langpref">
+  <!--<a class="dropdown" href="/">English</a> <span>|</span> <a href="/more/">Site Directory</a> -->
+
+</div>
+<div id="gc-header">
+  <div id="logo"><a href="http://code.google.com/android/index.html"><img src="http://code.google.com/android/images/logo_android.gif" alt="Android"/></a></div>
+  <div id="search" style="inline">
+    <div id="searchForm" class="searchForm" style="height: 44px;">
+      <!--previously form was here-->
+    </div>
+    <!-- end searchForm -->
+    <noscript>
+    <style type="text/css">
+      .searchForm {
+        display : none !important;
+      }
+      .searchForm2 {
+        display : inline !important;
+      }
+      </style>
+    </noscript>
+
+    <div id="searchForm2" class="searchForm2" style="display:none">
+      <form id="searchbox_001456098540849067467:6whlsytkdqg" action="http://www.google.com/cse">
+        <input type="hidden" name="cx" value="001456098540849067467:6whlsytkdqg" />
+        <input type="hidden" name="cof" value="FORID:0" />
+        <input type="text" name="q" maxlength="2048" size="41" autocomplete="off" title="Google Code Search"/>
+        <input type="submit" name="sa" value="Search" title="Search"/>
+        <br/>
+        <div class="greytext">e.g. "ajax apis" or "open source"</div>
+
+      </form>
+    </div>
+    <!-- end searchForm2 -->
+  </div>
+  <!-- end search -->
+</div>
+<!-- end gc-header -->
+<div id="searchControl" class="search-control"></div>
+<!--[if IE]><iframe id="backiFrame" name="backiFrame" src='/dummy.html' style="display:none"></iframe><![endif]-->
+<div id="codesiteContent">
+<a name="gc-topnav-anchor"></a>
+<div id="gc-topnav">
+
+  <h1>Android Platform Development Kit</h1>
+  <ul class="gc-topnav-tabs">
+    <li id="sdk_link"> <a href="http://code.google.com/android/index.html" title="Android Software Development Kit">SDK</a> </li>
+    <li id="docs_link"> <a href="index.html" title="Official Android documentation">Docs</a> </li>
+    <li id="faq_link"> <a href="http://code.google.com/android/kb/index.html" title="Answers to frequently asked questions about Android">FAQ</a> </li>
+
+    <li> <a href="http://android-developers.blogspot.com/" title="Official Android blog">Blog</a> </li>
+    <li> <a href="http://code.google.com/android/groups.html" title="Android developer forum">Group</a> </li>
+    <li> <a href="http://code.google.com/android/terms.html" title="Android terms of service">Terms</a> </li>
+    <li> <a href="mailto:android-pdk-feedback@google.com?subject=PDK%20Feedback&body=(filed%20from:%20bluetooth.html%20v0.6%20-%2025%20November%202008)%0D%0A%0D%0ASUMMARY:%0D%0A%0D%0A%0D%0A%0D%0ASTEPS%20TO%20REPRODUCE:%0D%0A%0D%0A%0D%0A%0D%0AADDITIONAL%20NOTES:">Report a Problem</a> </li>
+
+  </ul>
+</div>
+<!-- end gc-topnav -->
+<div class="g-section g-tpl-180">
+<a name="gc-toc"></a>
+<div class="g-unit g-first" id="gc-toc">
+  <ul>
+    <li>
+      <h1><a href="index.html">Documentation</a></h1>
+      <ul>
+        <li> <strong>Introduction</strong>
+
+          <ul>
+            <li><a href="system_requirements.html">Device Requirements</a></li>            
+          </ul>
+        </li>
+        <li> <strong>Dev Environment Setup</strong>
+          <ul>
+            <li><a href="build_system.html">Build System</a></li>
+          </ul>
+        </li>
+        <li> <strong>Basic Bring up</strong>
+
+          <ul>
+            <li><a href="build_new_device.html">Building New Device</a></li>
+            <li><a href="bring_up.html">Bring up</a></li>
+            <li><a href="keymaps_keyboard_input.html">Keymaps and Keyboard</a></li>
+            <li><a href="display_drivers.html">Display Drivers</a></li>
+          </ul>
+        </li>
+
+        <li> <strong>Multimedia</strong>
+          <ul>
+            <li><a href="audio_sub_system.html">Audio</a></li>
+            <li><a href="camera.html">Camera</a></li>			
+          </ul>
+        </li>
+        <li> <strong>Power Management</strong>
+
+          <ul>
+            <li><a href="power_management.html">Power Management</a></li>
+          </ul>
+        </li>
+
+        <li> <strong>Networking</strong>
+          <ul>
+            <li><a href="wifi.html">Wi-Fi</a></li>
+            <li><a href="gps.html">GPS</a></li>
+            <li><a href="bluetooth.html">Bluetooth</a></li>
+          </ul>
+        </li>
+
+        <li> <strong>Telephony</strong>
+          <ul>
+            <li><a href="telephony.html">Radio Interface Layer</a></li>
+
+          </ul>
+        </li>
+        <li> <strong>Testing</strong>
+          <ul>
+            <li><a href="instrumentation_testing.html">Instrumentation Testing</a></li>
+          </ul>
+
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+<a name="gc-pagecontent"></a>
+<div class="g-unit" id="gc-pagecontent">
+<div id="jd-content">
+<div class="jd-descr">
+
+
+<a name="androidBluetoothTitle"></a><h1>Bluetooth</h1>
+
+
+
+<a name="toc"/>
+<div style="padding:10px">
+<a href="#androidBluetoothIntro">Introduction</a><br/>
+<a href="#androidBluetoothPorting">Porting</a><br/><div style="padding-left:40px">
+
+<a href="#androidBluetoothPortingDriver">UART Driver</a><br/>
+<a href="#androidBluetoothPortingPowerOnOff">Bluetooth Power On / Off</a><br/></div>
+<a href="#androidBluetoothTools">Tools</a><br/></div></font></div>
+
+<a name="androidBluetoothIntro"></a><h2>Introduction</h2>
+
+<p>Android's Bluetooth stack uses BlueZ version 3.36 for GAP, SDP, and RFCOMM profiles, and is a SIG-qualified Bluetooth 2.0 host stack.</p>
+
+<p>Bluez is GPL licensed, so the Android framework interacts with userspace bluez code through D-BUS IPC to avoid proprietary code.</p>
+
+<p>Headset and Handsfree (v1.5) profiles are implemented in the Android framework and are both tightly coupled with the Phone App. These profiles are also SIG qualified.</p>
+
+<p>The diagram below offers a library-oriented view of the Bluetooth stack. Click <a href="bluetooth_process.html">Bluetooth Process Diagram</a> for a process-oriented view.</p>
+
+<p><img src="androidBluetooth.gif"></p>
+
+Solid elements represent Android blocks and dashed elements represent partner-specific blocks.
+
+
+
+<a name="androidBluetoothPorting"></a><h2>Porting</h2>
+
+<p>BlueZ is Bluetooth 2.0 compatible and should work with any 2.0 chipset. There are two integration points:</p>
+<p><ul>
+<li>UART driver</li>
+<li>Bluetooth Power On / Off</li>
+</ul>
+</p>
+
+
+<a name="androidBluetoothPortingDriver"></a><h3>UART Driver</h3>
+
+<p>The BlueZ kernel sub-system attaches to your hardware-specific UART driver using the <code>hciattach</code> daemon.</p>
+<p>For example, for MSM7201A, this is <code>drivers/serial/msm_serial.c</code>. You may also need to edit command line options to <code>hciattach</code> via <code>init.rc</code>.</p>
+
+
+<a name="androidBluetoothPortingPowerOnOff"></a><h3>Bluetooth Power On / Off</h3>
+
+<p>The method for powering on and off your bluetooth chip varies from Android V 1.0 to post 1.0.</p>
+
+<p><ul>
+<li><b>1.0</b>: Android framework writes a 0 or 1 to <code>/sys/modules/board_[PLATFORM]/parameters/bluetooth_power_on</code>.</li>
+
+<li><b>Post 1.0</b>: Android framework uses the linux <code>rfkill</code> API. See <code>arch/arm/mach-msm/board-trout-rfkill.c</code> for an example.</li>
+</ul>
+</p>
+
+
+<a name="androidBluetoothTools"></a><h2>Tools</h2>
+
+<p>BlueZ provides a rich set of command line tools for debugging and interacting with the Bluetooth sub-system, including:</p>
+<p><ul>
+<li><code>hciconfig</code></li>
+<li><code>hcitool</code></li>
+<li><code>hcidump</code></li>
+<li><code>sdptool</code></li>
+<li><code>dbus-send</code></li>
+<li><code>dbus-monitor</code></li>
+</ul>
+</p>
+
+
+<p><span class="lh2"><a name="androidFooter"></a></span>
+
+        </div>
+      </div>
+      <!-- end gc-pagecontent -->
+    </div>
+    <!-- end gooey wrapper -->
+  </div>
+  <!-- end codesearchresults -->
+  <div id="gc-footer" dir="ltr">
+    <div class="text"> &copy;2008 Google<!-- - <a href="/">Code Home</a> - <a href="http://www.google.com/accounts/TOS">Site Terms of Service</a> - <a href="http://www.google.com/privacy.html">Privacy Policy</a> - <a href="/more">Site Directory</a> --></div>
+  </div>
+  <!-- end gc-footer -->
+</div>
+<!-- end gc-containter -->
+<script src="http://www.google-analytics.com/ga.js" type="text/javascript">
+</script>
+<script type="text/javascript">
+  try {
+    var pageTracker = _gat._getTracker("UA-18071-1");
+    pageTracker._setAllowAnchor(true);
+    pageTracker._initData();
+    pageTracker._trackPageview(); 
+  } catch(e) {}
+</script>
+<div id="jd-build-id"> v0.6 - 25 November 2008</div>
+</div></div></div></body>
+</html>
+

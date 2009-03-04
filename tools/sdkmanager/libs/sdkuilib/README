@@ -1,0 +1,11 @@
+Using the Eclipse projects for ddmuilib.
+
+ddmuilib requires SWT to compile.
+
+SWT is available in the depot under prebuild/<platform>/swt
+
+Because the build path cannot contain relative path that are not inside the project directory,
+the .classpath file references a user library called ANDROID_SWT.
+
+In order to compile the project, make a user library called ANDROID_SWT containing the jar
+available at prebuild/<platform>/swt.

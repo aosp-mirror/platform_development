@@ -1,0 +1,256 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 42;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0002E9ED0BCE7EA3000C5903 /* SkXMLPullParser_expat.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0002E9EC0BCE7EA3000C5903 /* SkXMLPullParser_expat.cpp */; };
+		00AA4D270BD3A78900B9D27D /* SkXMLPullParser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 00AA4D260BD3A78900B9D27D /* SkXMLPullParser.cpp */; };
+		FE33C881094DE14B00C4A640 /* SkXMLParser_expat.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE33C880094DE14B00C4A640 /* SkXMLParser_expat.cpp */; };
+		FEDCE3DD09CEF35D0042D964 /* xmlparse.c in Sources */ = {isa = PBXBuildFile; fileRef = FEDCE3DA09CEF35D0042D964 /* xmlparse.c */; };
+		FEDCE3DE09CEF35D0042D964 /* xmlrole.c in Sources */ = {isa = PBXBuildFile; fileRef = FEDCE3DB09CEF35D0042D964 /* xmlrole.c */; };
+		FEDCE3DF09CEF35D0042D964 /* xmlrole.h in Headers */ = {isa = PBXBuildFile; fileRef = FEDCE3DC09CEF35D0042D964 /* xmlrole.h */; };
+		FEDCE3E309CEF3830042D964 /* xmltok.c in Sources */ = {isa = PBXBuildFile; fileRef = FEDCE3E109CEF3830042D964 /* xmltok.c */; };
+		FEDCE3E409CEF3830042D964 /* xmltok.h in Headers */ = {isa = PBXBuildFile; fileRef = FEDCE3E209CEF3830042D964 /* xmltok.h */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		0002E9EC0BCE7EA3000C5903 /* SkXMLPullParser_expat.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkXMLPullParser_expat.cpp; path = ../../libs/graphics/ports/SkXMLPullParser_expat.cpp; sourceTree = SOURCE_ROOT; };
+		00AA4D260BD3A78900B9D27D /* SkXMLPullParser.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkXMLPullParser.cpp; path = ../../libs/graphics/xml/SkXMLPullParser.cpp; sourceTree = SOURCE_ROOT; };
+		D2AAC046055464E500DB518D /* libexpat.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libexpat.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		FE33C880094DE14B00C4A640 /* SkXMLParser_expat.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkXMLParser_expat.cpp; path = ../../libs/graphics/ports/SkXMLParser_expat.cpp; sourceTree = SOURCE_ROOT; };
+		FEDCE3DA09CEF35D0042D964 /* xmlparse.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = xmlparse.c; path = "../../extlibs/expat-2.0.0/lib/xmlparse.c"; sourceTree = SOURCE_ROOT; };
+		FEDCE3DB09CEF35D0042D964 /* xmlrole.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = xmlrole.c; path = "../../extlibs/expat-2.0.0/lib/xmlrole.c"; sourceTree = SOURCE_ROOT; };
+		FEDCE3DC09CEF35D0042D964 /* xmlrole.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = xmlrole.h; path = "../../extlibs/expat-2.0.0/lib/xmlrole.h"; sourceTree = SOURCE_ROOT; };
+		FEDCE3E109CEF3830042D964 /* xmltok.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = xmltok.c; path = "../../extlibs/expat-2.0.0/lib/xmltok.c"; sourceTree = SOURCE_ROOT; };
+		FEDCE3E209CEF3830042D964 /* xmltok.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = xmltok.h; path = "../../extlibs/expat-2.0.0/lib/xmltok.h"; sourceTree = SOURCE_ROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		D289987405E68DCB004EDB86 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		08FB7794FE84155DC02AAC07 /* expat */ = {
+			isa = PBXGroup;
+			children = (
+				08FB7795FE84155DC02AAC07 /* Source */,
+				C6A0FF2B0290797F04C91782 /* Documentation */,
+				1AB674ADFE9D54B511CA2CBB /* Products */,
+			);
+			name = expat;
+			sourceTree = "<group>";
+		};
+		08FB7795FE84155DC02AAC07 /* Source */ = {
+			isa = PBXGroup;
+			children = (
+				00AA4D260BD3A78900B9D27D /* SkXMLPullParser.cpp */,
+				0002E9EC0BCE7EA3000C5903 /* SkXMLPullParser_expat.cpp */,
+				FEDCE3E109CEF3830042D964 /* xmltok.c */,
+				FEDCE3DA09CEF35D0042D964 /* xmlparse.c */,
+				FEDCE3E209CEF3830042D964 /* xmltok.h */,
+				FEDCE3DC09CEF35D0042D964 /* xmlrole.h */,
+				FEDCE3DB09CEF35D0042D964 /* xmlrole.c */,
+				FE33C880094DE14B00C4A640 /* SkXMLParser_expat.cpp */,
+			);
+			name = Source;
+			sourceTree = "<group>";
+		};
+		1AB674ADFE9D54B511CA2CBB /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				D2AAC046055464E500DB518D /* libexpat.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		C6A0FF2B0290797F04C91782 /* Documentation */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Documentation;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		D2AAC043055464E500DB518D /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FEDCE3DF09CEF35D0042D964 /* xmlrole.h in Headers */,
+				FEDCE3E409CEF3830042D964 /* xmltok.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		D2AAC045055464E500DB518D /* expat */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1DEB91EB08733DB70010E9CD /* Build configuration list for PBXNativeTarget "expat" */;
+			buildPhases = (
+				D2AAC043055464E500DB518D /* Headers */,
+				D2AAC044055464E500DB518D /* Sources */,
+				D289987405E68DCB004EDB86 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = expat;
+			productName = expat;
+			productReference = D2AAC046055464E500DB518D /* libexpat.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		08FB7793FE84155DC02AAC07 /* Project object */ = {
+			isa = PBXProject;
+			buildConfigurationList = 1DEB91EF08733DB70010E9CD /* Build configuration list for PBXProject "expat" */;
+			hasScannedForEncodings = 1;
+			mainGroup = 08FB7794FE84155DC02AAC07 /* expat */;
+			projectDirPath = "";
+			targets = (
+				D2AAC045055464E500DB518D /* expat */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		D2AAC044055464E500DB518D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FE33C881094DE14B00C4A640 /* SkXMLParser_expat.cpp in Sources */,
+				FEDCE3DD09CEF35D0042D964 /* xmlparse.c in Sources */,
+				FEDCE3DE09CEF35D0042D964 /* xmlrole.c in Sources */,
+				FEDCE3E309CEF3830042D964 /* xmltok.c in Sources */,
+				0002E9ED0BCE7EA3000C5903 /* SkXMLPullParser_expat.cpp in Sources */,
+				00AA4D270BD3A78900B9D27D /* SkXMLPullParser.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		1DEB91EC08733DB70010E9CD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(NATIVE_ARCH)";
+				COPY_PHASE_STRIP = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				INSTALL_PATH = /usr/local/lib;
+				PRODUCT_NAME = expat;
+				ZERO_LINK = NO;
+			};
+			name = Debug;
+		};
+		1DEB91ED08733DB70010E9CD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(NATIVE_ARCH)";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_MODEL_TUNING = G5;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					MACOS_CLASSIC,
+					XML_STATIC,
+					SK_RELEASE,
+				);
+				INSTALL_PATH = /usr/local/lib;
+				PRODUCT_NAME = expat;
+				ZERO_LINK = NO;
+			};
+			name = Release;
+		};
+		1DEB91F008733DB70010E9CD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = NO;
+				GCC_CW_ASM_SYNTAX = NO;
+				GCC_ENABLE_CPP_RTTI = NO;
+				GCC_ENABLE_PASCAL_STRINGS = NO;
+				GCC_ENABLE_SYMBOL_SEPARATION = NO;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					MACOS_CLASSIC,
+					XML_STATIC,
+				);
+				GCC_USE_GCC3_PFE_SUPPORT = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = "$(HEADER_SEARCH_PATHS)";
+				LINK_WITH_STANDARD_LIBRARIES = NO;
+				PREBINDING = NO;
+				PRECOMPS_INCLUDE_HEADERS_FROM_BUILT_PRODUCTS_DIR = NO;
+				SDKROOT = "";
+				STRIP_INSTALLED_PRODUCT = NO;
+				USER_HEADER_SEARCH_PATHS = "../../include/graphics ../../extlibs/expat-2.0.0/lib ../../include/corecg";
+			};
+			name = Debug;
+		};
+		1DEB91F108733DB70010E9CD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = NO;
+				GCC_CW_ASM_SYNTAX = NO;
+				GCC_ENABLE_CPP_RTTI = NO;
+				GCC_ENABLE_PASCAL_STRINGS = NO;
+				GCC_ENABLE_SYMBOL_SEPARATION = NO;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					MACOS_CLASSIC,
+					XML_STATIC,
+					SK_RELEASE,
+				);
+				GCC_USE_GCC3_PFE_SUPPORT = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = "$(HEADER_SEARCH_PATHS)";
+				LINK_WITH_STANDARD_LIBRARIES = NO;
+				PREBINDING = NO;
+				PRECOMPS_INCLUDE_HEADERS_FROM_BUILT_PRODUCTS_DIR = NO;
+				SDKROOT = "";
+				STRIP_INSTALLED_PRODUCT = NO;
+				USER_HEADER_SEARCH_PATHS = "../../include/graphics ../../extlibs/expat-2.0.0/lib ../../include/corecg";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1DEB91EB08733DB70010E9CD /* Build configuration list for PBXNativeTarget "expat" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1DEB91EC08733DB70010E9CD /* Debug */,
+				1DEB91ED08733DB70010E9CD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		1DEB91EF08733DB70010E9CD /* Build configuration list for PBXProject "expat" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1DEB91F008733DB70010E9CD /* Debug */,
+				1DEB91F108733DB70010E9CD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 08FB7793FE84155DC02AAC07 /* Project object */;
+}

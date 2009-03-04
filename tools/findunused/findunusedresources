@@ -1,0 +1,74 @@
+#!/bin/sh
+
+if [ "$1" == "-h" ]
+then
+    cat <<- EOH
+		    Usage: $0 [-p] [folder]
+		      -p option prints out unused resources, otherwise a total count is printed
+		      folder option causes only that app folder to be scanned, default is to scan all folders onder apps/
+		EOH
+    exit
+fi
+
+showall=no
+if [ "$1" == "-p" ]
+then
+    showall=yes
+    shift
+fi
+
+apps=$1
+if [ "$apps" == "" ]
+then
+    apps=$ANDROID_BUILD_TOP/packages/apps/*
+fi
+
+for app in $apps
+do
+    echo '-----------------------------------------------------------'
+    if [ -d $app/res ]
+    then
+        appname=$(basename $app)
+        resources=
+        for res in $(echo $app/res/*)
+        do
+            resources="$resources $(echo $res | grep -v '\-mcc\|[a-z]*-[a-z][a-z]$\|[a-z]*-[a-z][a-z]-.*')"
+        done
+        sources=$app/src
+        if [ -d $app/tests ]
+        then
+            sources="$sources $app/tests"
+        fi
+        if [ -d $app/samples ]
+        then
+            sources="$sources $app/samples"
+        fi
+
+        # find the R.java file that contains all the generated resource identifiers
+        rDotJava=$(find out/target/common/obj/APPS/${appname}_intermediates/ -name R.java)
+
+        # Simplistically process the content of the file to get the names of all the constants,
+        # and try to find a reference to each constant.
+        for i in $(cat $rDotJava | grep "\w*=0x\d*" | sed 's/ *public static final int //' | sed 's/=0x.*//')
+        do
+            # Since periods in the names get translated to underscores in R.java, and you can actually
+            # refer to such constants from java by using an underscore instead of a period, we also
+            # replace all underscores with a pattern that will match periods and underscores.
+            p=$(echo $i | sed 's/_/[\\._]/g')
+            echo $i $(grep -Rw R\\..*\\.$i\\\|@style/$p\\\|@drawable/$p\\\|@anim/$p\\\|@color/$p\\\|@xml/$p\\\|@layout/$p\\\|@menu/$p\\\|@+id/$p\\\|@array/$p\\\|@string/$p\\\|@dimen/$p $resources $sources $app/AndroidManifest.xml | wc -l)
+        done | grep " 0$" | {
+            # this block gets as its input a list of constants which no references were found, one per line
+            if [ "$showall" == "yes" ]
+            then
+                echo $app
+                cat
+            else
+                count=$(wc -l)
+                if [ "$count" != "0" ]
+                then
+                    echo $app: $count unused resources
+                fi
+            fi
+        }
+    fi
+done

@@ -1,0 +1,27 @@
+HKCR
+{
+    DeviceEmulator.LoopbackDevice.1 = s 'LoopbackDevice Class'
+    {
+        CLSID = s '{9A0BD4A6-E346-4668-A89C-ACA546212CD4}'
+    }
+    DeviceEmulator.LoopbackDevice = s 'LoopbackDevice Class'
+    {
+        CLSID = s '{9A0BD4A6-E346-4668-A89C-ACA546212CD4}'
+        CurVer = s 'DeviceEmulator.LoopbackDevice.1'
+    }
+    NoRemove CLSID
+    {
+        ForceRemove {9A0BD4A6-E346-4668-A89C-ACA546212CD4} = s 'LoopbackDevice Class'
+        {
+            ProgID = s 'DeviceEmulator.LoopbackDevice.1'
+            VersionIndependentProgID = s 'DeviceEmulator.LoopbackDevice'
+            ForceRemove 'Programmable'
+            InprocServer32 = s '%MODULE%'
+            {
+                val ThreadingModel = s 'Apartment'
+            }
+            'TypeLib' = s '{0C206596-5CC2-4d16-898D-4D1699BB6282}'
+        }
+    }
+}
+

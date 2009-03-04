@@ -1,0 +1,2 @@
+Main-Class: com.android.hierarchyviewer.HierarchyViewer
+Class-Path: ddmlib.jar swing-worker-1.1.jar org-openide-util.jar org-netbeans-api-visual.jar

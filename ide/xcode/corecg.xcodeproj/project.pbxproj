@@ -1,0 +1,396 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 42;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0026CE6809DC5A9E00D5B6BE /* SkBuffer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0026CE6709DC5A9E00D5B6BE /* SkBuffer.cpp */; };
+		0026CE8E09DC5B1F00D5B6BE /* Sk64.h in Headers */ = {isa = PBXBuildFile; fileRef = 0026CE7B09DC5B1F00D5B6BE /* Sk64.h */; };
+		0026CE8F09DC5B1F00D5B6BE /* SkBuffer.h in Headers */ = {isa = PBXBuildFile; fileRef = 0026CE7C09DC5B1F00D5B6BE /* SkBuffer.h */; };
+		0026CE9009DC5B1F00D5B6BE /* SkEndian.h in Headers */ = {isa = PBXBuildFile; fileRef = 0026CE7D09DC5B1F00D5B6BE /* SkEndian.h */; };
+		0026CE9109DC5B1F00D5B6BE /* SkFDot6.h in Headers */ = {isa = PBXBuildFile; fileRef = 0026CE7E09DC5B1F00D5B6BE /* SkFDot6.h */; };
+		0026CE9209DC5B1F00D5B6BE /* SkFixed.h in Headers */ = {isa = PBXBuildFile; fileRef = 0026CE7F09DC5B1F00D5B6BE /* SkFixed.h */; };
+		0026CE9309DC5B1F00D5B6BE /* SkFloatingPoint.h in Headers */ = {isa = PBXBuildFile; fileRef = 0026CE8009DC5B1F00D5B6BE /* SkFloatingPoint.h */; };
+		0026CE9409DC5B1F00D5B6BE /* SkMath.h in Headers */ = {isa = PBXBuildFile; fileRef = 0026CE8109DC5B1F00D5B6BE /* SkMath.h */; };
+		0026CE9509DC5B1F00D5B6BE /* SkMatrix.h in Headers */ = {isa = PBXBuildFile; fileRef = 0026CE8209DC5B1F00D5B6BE /* SkMatrix.h */; };
+		0026CE9609DC5B1F00D5B6BE /* SkPoint.h in Headers */ = {isa = PBXBuildFile; fileRef = 0026CE8309DC5B1F00D5B6BE /* SkPoint.h */; };
+		0026CE9709DC5B1F00D5B6BE /* SkPostConfig.h in Headers */ = {isa = PBXBuildFile; fileRef = 0026CE8409DC5B1F00D5B6BE /* SkPostConfig.h */; };
+		0026CE9809DC5B1F00D5B6BE /* SkPreConfig.h in Headers */ = {isa = PBXBuildFile; fileRef = 0026CE8509DC5B1F00D5B6BE /* SkPreConfig.h */; };
+		0026CE9909DC5B1F00D5B6BE /* SkRandom.h in Headers */ = {isa = PBXBuildFile; fileRef = 0026CE8609DC5B1F00D5B6BE /* SkRandom.h */; };
+		0026CE9A09DC5B1F00D5B6BE /* SkRect.h in Headers */ = {isa = PBXBuildFile; fileRef = 0026CE8709DC5B1F00D5B6BE /* SkRect.h */; };
+		0026CE9B09DC5B1F00D5B6BE /* SkRegion.h in Headers */ = {isa = PBXBuildFile; fileRef = 0026CE8809DC5B1F00D5B6BE /* SkRegion.h */; };
+		0026CE9C09DC5B1F00D5B6BE /* SkScalar.h in Headers */ = {isa = PBXBuildFile; fileRef = 0026CE8909DC5B1F00D5B6BE /* SkScalar.h */; };
+		0026CE9D09DC5B1F00D5B6BE /* SkTemplates.h in Headers */ = {isa = PBXBuildFile; fileRef = 0026CE8A09DC5B1F00D5B6BE /* SkTemplates.h */; };
+		0026CE9E09DC5B1F00D5B6BE /* SkThread.h in Headers */ = {isa = PBXBuildFile; fileRef = 0026CE8B09DC5B1F00D5B6BE /* SkThread.h */; };
+		0026CE9F09DC5B1F00D5B6BE /* SkTypes.h in Headers */ = {isa = PBXBuildFile; fileRef = 0026CE8C09DC5B1F00D5B6BE /* SkTypes.h */; };
+		0026CEA009DC5B1F00D5B6BE /* SkUserConfig.h in Headers */ = {isa = PBXBuildFile; fileRef = 0026CE8D09DC5B1F00D5B6BE /* SkUserConfig.h */; };
+		0038A95509DD931A00A82F6E /* SkChunkAlloc.h in Headers */ = {isa = PBXBuildFile; fileRef = 0038A95409DD931A00A82F6E /* SkChunkAlloc.h */; };
+		0038A95709DD932D00A82F6E /* SkChunkAlloc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0038A95609DD932D00A82F6E /* SkChunkAlloc.cpp */; };
+		003BA8560AD69605002B4C6C /* SkPerspIter.h in Headers */ = {isa = PBXBuildFile; fileRef = 003BA8550AD69605002B4C6C /* SkPerspIter.h */; };
+		005017980DF5D77400A63A26 /* SkFloatBits.h in Headers */ = {isa = PBXBuildFile; fileRef = 005017970DF5D77400A63A26 /* SkFloatBits.h */; };
+		0050180A0DF61B8E00A63A26 /* SkFloatBits.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 005018090DF61B8E00A63A26 /* SkFloatBits.cpp */; };
+		00927DBE0ADF13FD000A366E /* SkInterpolator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 00927DBD0ADF13FD000A366E /* SkInterpolator.cpp */; };
+		00927DC00ADF1411000A366E /* SkInterpolator.h in Headers */ = {isa = PBXBuildFile; fileRef = 00927DBF0ADF1411000A366E /* SkInterpolator.h */; };
+		00927DC30ADF1426000A366E /* SkThread_platform.h in Headers */ = {isa = PBXBuildFile; fileRef = 00927DC10ADF1426000A366E /* SkThread_platform.h */; };
+		00927DC40ADF1426000A366E /* SkTSearch.h in Headers */ = {isa = PBXBuildFile; fileRef = 00927DC20ADF1426000A366E /* SkTSearch.h */; };
+		FE61321509B60E66004BB4B8 /* Sk64.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE61320809B60E66004BB4B8 /* Sk64.cpp */; };
+		FE61321609B60E66004BB4B8 /* SkCordic.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE61320909B60E66004BB4B8 /* SkCordic.cpp */; };
+		FE61321709B60E66004BB4B8 /* SkCordic.h in Headers */ = {isa = PBXBuildFile; fileRef = FE61320A09B60E66004BB4B8 /* SkCordic.h */; };
+		FE61321809B60E66004BB4B8 /* SkFloat.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE61320B09B60E66004BB4B8 /* SkFloat.cpp */; };
+		FE61321909B60E66004BB4B8 /* SkFloat.h in Headers */ = {isa = PBXBuildFile; fileRef = FE61320C09B60E66004BB4B8 /* SkFloat.h */; };
+		FE61321B09B60E66004BB4B8 /* SkMath.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE61320E09B60E66004BB4B8 /* SkMath.cpp */; };
+		FE61321C09B60E66004BB4B8 /* SkMatrix.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE61320F09B60E66004BB4B8 /* SkMatrix.cpp */; };
+		FE61321D09B60E66004BB4B8 /* SkPoint.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE61321009B60E66004BB4B8 /* SkPoint.cpp */; };
+		FE61321E09B60E66004BB4B8 /* SkRect.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE61321109B60E66004BB4B8 /* SkRect.cpp */; };
+		FE61321F09B60E66004BB4B8 /* SkRegion.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE61321209B60E66004BB4B8 /* SkRegion.cpp */; };
+		FE61322009B60E66004BB4B8 /* SkSinTable.h in Headers */ = {isa = PBXBuildFile; fileRef = FE61321309B60E66004BB4B8 /* SkSinTable.h */; };
+		FE61322109B60E66004BB4B8 /* SkTSort.h in Headers */ = {isa = PBXBuildFile; fileRef = FE61321409B60E66004BB4B8 /* SkTSort.h */; };
+		FEACF21E09E460DF00D0C2E2 /* SkDebug_stdio.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FEACF21A09E460DF00D0C2E2 /* SkDebug_stdio.cpp */; };
+		FEACF21F09E460DF00D0C2E2 /* SkDebug.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FEACF21B09E460DF00D0C2E2 /* SkDebug.cpp */; };
+		FEACF22009E460DF00D0C2E2 /* SkMemory_stdlib.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FEACF21C09E460DF00D0C2E2 /* SkMemory_stdlib.cpp */; };
+		FEACF22109E460DF00D0C2E2 /* SkRegionPriv.h in Headers */ = {isa = PBXBuildFile; fileRef = FEACF21D09E460DF00D0C2E2 /* SkRegionPriv.h */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		0026CE6709DC5A9E00D5B6BE /* SkBuffer.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkBuffer.cpp; path = ../../libs/corecg/SkBuffer.cpp; sourceTree = SOURCE_ROOT; };
+		0026CE7B09DC5B1F00D5B6BE /* Sk64.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = Sk64.h; path = ../../include/corecg/Sk64.h; sourceTree = SOURCE_ROOT; };
+		0026CE7C09DC5B1F00D5B6BE /* SkBuffer.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkBuffer.h; path = ../../include/corecg/SkBuffer.h; sourceTree = SOURCE_ROOT; };
+		0026CE7D09DC5B1F00D5B6BE /* SkEndian.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkEndian.h; path = ../../include/corecg/SkEndian.h; sourceTree = SOURCE_ROOT; };
+		0026CE7E09DC5B1F00D5B6BE /* SkFDot6.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkFDot6.h; path = ../../include/corecg/SkFDot6.h; sourceTree = SOURCE_ROOT; };
+		0026CE7F09DC5B1F00D5B6BE /* SkFixed.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkFixed.h; path = ../../include/corecg/SkFixed.h; sourceTree = SOURCE_ROOT; };
+		0026CE8009DC5B1F00D5B6BE /* SkFloatingPoint.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkFloatingPoint.h; path = ../../include/corecg/SkFloatingPoint.h; sourceTree = SOURCE_ROOT; };
+		0026CE8109DC5B1F00D5B6BE /* SkMath.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkMath.h; path = ../../include/corecg/SkMath.h; sourceTree = SOURCE_ROOT; };
+		0026CE8209DC5B1F00D5B6BE /* SkMatrix.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkMatrix.h; path = ../../include/corecg/SkMatrix.h; sourceTree = SOURCE_ROOT; };
+		0026CE8309DC5B1F00D5B6BE /* SkPoint.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkPoint.h; path = ../../include/corecg/SkPoint.h; sourceTree = SOURCE_ROOT; };
+		0026CE8409DC5B1F00D5B6BE /* SkPostConfig.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkPostConfig.h; path = ../../include/corecg/SkPostConfig.h; sourceTree = SOURCE_ROOT; };
+		0026CE8509DC5B1F00D5B6BE /* SkPreConfig.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkPreConfig.h; path = ../../include/corecg/SkPreConfig.h; sourceTree = SOURCE_ROOT; };
+		0026CE8609DC5B1F00D5B6BE /* SkRandom.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkRandom.h; path = ../../include/corecg/SkRandom.h; sourceTree = SOURCE_ROOT; };
+		0026CE8709DC5B1F00D5B6BE /* SkRect.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkRect.h; path = ../../include/corecg/SkRect.h; sourceTree = SOURCE_ROOT; };
+		0026CE8809DC5B1F00D5B6BE /* SkRegion.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkRegion.h; path = ../../include/corecg/SkRegion.h; sourceTree = SOURCE_ROOT; };
+		0026CE8909DC5B1F00D5B6BE /* SkScalar.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkScalar.h; path = ../../include/corecg/SkScalar.h; sourceTree = SOURCE_ROOT; };
+		0026CE8A09DC5B1F00D5B6BE /* SkTemplates.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkTemplates.h; path = ../../include/corecg/SkTemplates.h; sourceTree = SOURCE_ROOT; };
+		0026CE8B09DC5B1F00D5B6BE /* SkThread.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkThread.h; path = ../../include/corecg/SkThread.h; sourceTree = SOURCE_ROOT; };
+		0026CE8C09DC5B1F00D5B6BE /* SkTypes.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkTypes.h; path = ../../include/corecg/SkTypes.h; sourceTree = SOURCE_ROOT; };
+		0026CE8D09DC5B1F00D5B6BE /* SkUserConfig.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkUserConfig.h; path = ../../include/corecg/SkUserConfig.h; sourceTree = SOURCE_ROOT; };
+		0038A95409DD931A00A82F6E /* SkChunkAlloc.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkChunkAlloc.h; path = ../../include/corecg/SkChunkAlloc.h; sourceTree = SOURCE_ROOT; };
+		0038A95609DD932D00A82F6E /* SkChunkAlloc.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkChunkAlloc.cpp; path = ../../libs/corecg/SkChunkAlloc.cpp; sourceTree = SOURCE_ROOT; };
+		003BA8550AD69605002B4C6C /* SkPerspIter.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkPerspIter.h; path = ../../include/corecg/SkPerspIter.h; sourceTree = SOURCE_ROOT; };
+		005017970DF5D77400A63A26 /* SkFloatBits.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SkFloatBits.h; path = ../../include/corecg/SkFloatBits.h; sourceTree = SOURCE_ROOT; };
+		005018090DF61B8E00A63A26 /* SkFloatBits.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SkFloatBits.cpp; path = ../../libs/corecg/SkFloatBits.cpp; sourceTree = SOURCE_ROOT; };
+		00927DBD0ADF13FD000A366E /* SkInterpolator.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkInterpolator.cpp; path = ../../libs/corecg/SkInterpolator.cpp; sourceTree = SOURCE_ROOT; };
+		00927DBF0ADF1411000A366E /* SkInterpolator.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkInterpolator.h; path = ../../include/corecg/SkInterpolator.h; sourceTree = SOURCE_ROOT; };
+		00927DC10ADF1426000A366E /* SkThread_platform.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkThread_platform.h; path = ../../include/corecg/SkThread_platform.h; sourceTree = SOURCE_ROOT; };
+		00927DC20ADF1426000A366E /* SkTSearch.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkTSearch.h; path = ../../include/corecg/SkTSearch.h; sourceTree = SOURCE_ROOT; };
+		D2AAC046055464E500DB518D /* libcorecg.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libcorecg.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		FE61320809B60E66004BB4B8 /* Sk64.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Sk64.cpp; path = ../../libs/corecg/Sk64.cpp; sourceTree = SOURCE_ROOT; };
+		FE61320909B60E66004BB4B8 /* SkCordic.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkCordic.cpp; path = ../../libs/corecg/SkCordic.cpp; sourceTree = SOURCE_ROOT; };
+		FE61320A09B60E66004BB4B8 /* SkCordic.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkCordic.h; path = ../../libs/corecg/SkCordic.h; sourceTree = SOURCE_ROOT; };
+		FE61320B09B60E66004BB4B8 /* SkFloat.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkFloat.cpp; path = ../../libs/corecg/SkFloat.cpp; sourceTree = SOURCE_ROOT; };
+		FE61320C09B60E66004BB4B8 /* SkFloat.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkFloat.h; path = ../../libs/corecg/SkFloat.h; sourceTree = SOURCE_ROOT; };
+		FE61320E09B60E66004BB4B8 /* SkMath.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkMath.cpp; path = ../../libs/corecg/SkMath.cpp; sourceTree = SOURCE_ROOT; };
+		FE61320F09B60E66004BB4B8 /* SkMatrix.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkMatrix.cpp; path = ../../libs/corecg/SkMatrix.cpp; sourceTree = SOURCE_ROOT; };
+		FE61321009B60E66004BB4B8 /* SkPoint.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkPoint.cpp; path = ../../libs/corecg/SkPoint.cpp; sourceTree = SOURCE_ROOT; };
+		FE61321109B60E66004BB4B8 /* SkRect.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkRect.cpp; path = ../../libs/corecg/SkRect.cpp; sourceTree = SOURCE_ROOT; };
+		FE61321209B60E66004BB4B8 /* SkRegion.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkRegion.cpp; path = ../../libs/corecg/SkRegion.cpp; sourceTree = SOURCE_ROOT; };
+		FE61321309B60E66004BB4B8 /* SkSinTable.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkSinTable.h; path = ../../libs/corecg/SkSinTable.h; sourceTree = SOURCE_ROOT; };
+		FE61321409B60E66004BB4B8 /* SkTSort.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkTSort.h; path = ../../libs/corecg/SkTSort.h; sourceTree = SOURCE_ROOT; };
+		FEACF21A09E460DF00D0C2E2 /* SkDebug_stdio.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkDebug_stdio.cpp; path = ../../libs/corecg/SkDebug_stdio.cpp; sourceTree = SOURCE_ROOT; };
+		FEACF21B09E460DF00D0C2E2 /* SkDebug.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkDebug.cpp; path = ../../libs/corecg/SkDebug.cpp; sourceTree = SOURCE_ROOT; };
+		FEACF21C09E460DF00D0C2E2 /* SkMemory_stdlib.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkMemory_stdlib.cpp; path = ../../libs/corecg/SkMemory_stdlib.cpp; sourceTree = SOURCE_ROOT; };
+		FEACF21D09E460DF00D0C2E2 /* SkRegionPriv.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SkRegionPriv.h; path = ../../libs/corecg/SkRegionPriv.h; sourceTree = SOURCE_ROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		D289987405E68DCB004EDB86 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		0026CE7A09DC5B0600D5B6BE /* Include */ = {
+			isa = PBXGroup;
+			children = (
+				005017970DF5D77400A63A26 /* SkFloatBits.h */,
+				00927DC10ADF1426000A366E /* SkThread_platform.h */,
+				00927DC20ADF1426000A366E /* SkTSearch.h */,
+				00927DBF0ADF1411000A366E /* SkInterpolator.h */,
+				003BA8550AD69605002B4C6C /* SkPerspIter.h */,
+				0038A95409DD931A00A82F6E /* SkChunkAlloc.h */,
+				0026CE7B09DC5B1F00D5B6BE /* Sk64.h */,
+				0026CE7C09DC5B1F00D5B6BE /* SkBuffer.h */,
+				FE61320A09B60E66004BB4B8 /* SkCordic.h */,
+				0026CE7D09DC5B1F00D5B6BE /* SkEndian.h */,
+				0026CE7E09DC5B1F00D5B6BE /* SkFDot6.h */,
+				0026CE7F09DC5B1F00D5B6BE /* SkFixed.h */,
+				FE61320C09B60E66004BB4B8 /* SkFloat.h */,
+				0026CE8009DC5B1F00D5B6BE /* SkFloatingPoint.h */,
+				0026CE8109DC5B1F00D5B6BE /* SkMath.h */,
+				0026CE8209DC5B1F00D5B6BE /* SkMatrix.h */,
+				0026CE8309DC5B1F00D5B6BE /* SkPoint.h */,
+				0026CE8409DC5B1F00D5B6BE /* SkPostConfig.h */,
+				0026CE8509DC5B1F00D5B6BE /* SkPreConfig.h */,
+				0026CE8609DC5B1F00D5B6BE /* SkRandom.h */,
+				0026CE8709DC5B1F00D5B6BE /* SkRect.h */,
+				0026CE8809DC5B1F00D5B6BE /* SkRegion.h */,
+				FEACF21D09E460DF00D0C2E2 /* SkRegionPriv.h */,
+				0026CE8909DC5B1F00D5B6BE /* SkScalar.h */,
+				FE61321309B60E66004BB4B8 /* SkSinTable.h */,
+				FE61321409B60E66004BB4B8 /* SkTSort.h */,
+				0026CE8A09DC5B1F00D5B6BE /* SkTemplates.h */,
+				0026CE8B09DC5B1F00D5B6BE /* SkThread.h */,
+				0026CE8C09DC5B1F00D5B6BE /* SkTypes.h */,
+				0026CE8D09DC5B1F00D5B6BE /* SkUserConfig.h */,
+			);
+			name = Include;
+			sourceTree = "<group>";
+		};
+		08FB7794FE84155DC02AAC07 /* corecg */ = {
+			isa = PBXGroup;
+			children = (
+				0026CE7A09DC5B0600D5B6BE /* Include */,
+				08FB7795FE84155DC02AAC07 /* Source */,
+				1AB674ADFE9D54B511CA2CBB /* Products */,
+			);
+			name = corecg;
+			sourceTree = "<group>";
+		};
+		08FB7795FE84155DC02AAC07 /* Source */ = {
+			isa = PBXGroup;
+			children = (
+				005018090DF61B8E00A63A26 /* SkFloatBits.cpp */,
+				00927DBD0ADF13FD000A366E /* SkInterpolator.cpp */,
+				FE61320809B60E66004BB4B8 /* Sk64.cpp */,
+				0026CE6709DC5A9E00D5B6BE /* SkBuffer.cpp */,
+				0038A95609DD932D00A82F6E /* SkChunkAlloc.cpp */,
+				FE61320909B60E66004BB4B8 /* SkCordic.cpp */,
+				FEACF21A09E460DF00D0C2E2 /* SkDebug_stdio.cpp */,
+				FEACF21B09E460DF00D0C2E2 /* SkDebug.cpp */,
+				FE61320B09B60E66004BB4B8 /* SkFloat.cpp */,
+				FE61320E09B60E66004BB4B8 /* SkMath.cpp */,
+				FE61320F09B60E66004BB4B8 /* SkMatrix.cpp */,
+				FEACF21C09E460DF00D0C2E2 /* SkMemory_stdlib.cpp */,
+				FE61321009B60E66004BB4B8 /* SkPoint.cpp */,
+				FE61321109B60E66004BB4B8 /* SkRect.cpp */,
+				FE61321209B60E66004BB4B8 /* SkRegion.cpp */,
+			);
+			name = Source;
+			sourceTree = "<group>";
+		};
+		1AB674ADFE9D54B511CA2CBB /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				D2AAC046055464E500DB518D /* libcorecg.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		D2AAC043055464E500DB518D /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FE61321709B60E66004BB4B8 /* SkCordic.h in Headers */,
+				FE61321909B60E66004BB4B8 /* SkFloat.h in Headers */,
+				FE61322009B60E66004BB4B8 /* SkSinTable.h in Headers */,
+				FE61322109B60E66004BB4B8 /* SkTSort.h in Headers */,
+				0026CE8E09DC5B1F00D5B6BE /* Sk64.h in Headers */,
+				0026CE8F09DC5B1F00D5B6BE /* SkBuffer.h in Headers */,
+				0026CE9009DC5B1F00D5B6BE /* SkEndian.h in Headers */,
+				0026CE9109DC5B1F00D5B6BE /* SkFDot6.h in Headers */,
+				0026CE9209DC5B1F00D5B6BE /* SkFixed.h in Headers */,
+				0026CE9309DC5B1F00D5B6BE /* SkFloatingPoint.h in Headers */,
+				0026CE9409DC5B1F00D5B6BE /* SkMath.h in Headers */,
+				0026CE9509DC5B1F00D5B6BE /* SkMatrix.h in Headers */,
+				0026CE9609DC5B1F00D5B6BE /* SkPoint.h in Headers */,
+				0026CE9709DC5B1F00D5B6BE /* SkPostConfig.h in Headers */,
+				0026CE9809DC5B1F00D5B6BE /* SkPreConfig.h in Headers */,
+				0026CE9909DC5B1F00D5B6BE /* SkRandom.h in Headers */,
+				0026CE9A09DC5B1F00D5B6BE /* SkRect.h in Headers */,
+				0026CE9B09DC5B1F00D5B6BE /* SkRegion.h in Headers */,
+				0026CE9C09DC5B1F00D5B6BE /* SkScalar.h in Headers */,
+				0026CE9D09DC5B1F00D5B6BE /* SkTemplates.h in Headers */,
+				0026CE9E09DC5B1F00D5B6BE /* SkThread.h in Headers */,
+				0026CE9F09DC5B1F00D5B6BE /* SkTypes.h in Headers */,
+				0026CEA009DC5B1F00D5B6BE /* SkUserConfig.h in Headers */,
+				0038A95509DD931A00A82F6E /* SkChunkAlloc.h in Headers */,
+				FEACF22109E460DF00D0C2E2 /* SkRegionPriv.h in Headers */,
+				003BA8560AD69605002B4C6C /* SkPerspIter.h in Headers */,
+				00927DC00ADF1411000A366E /* SkInterpolator.h in Headers */,
+				00927DC30ADF1426000A366E /* SkThread_platform.h in Headers */,
+				00927DC40ADF1426000A366E /* SkTSearch.h in Headers */,
+				005017980DF5D77400A63A26 /* SkFloatBits.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		D2AAC045055464E500DB518D /* corecg */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1DEB91EB08733DB70010E9CD /* Build configuration list for PBXNativeTarget "corecg" */;
+			buildPhases = (
+				D2AAC043055464E500DB518D /* Headers */,
+				D2AAC044055464E500DB518D /* Sources */,
+				D289987405E68DCB004EDB86 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = corecg;
+			productName = corecg;
+			productReference = D2AAC046055464E500DB518D /* libcorecg.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		08FB7793FE84155DC02AAC07 /* Project object */ = {
+			isa = PBXProject;
+			buildConfigurationList = 1DEB91EF08733DB70010E9CD /* Build configuration list for PBXProject "corecg" */;
+			compatibilityVersion = "Xcode 2.4";
+			hasScannedForEncodings = 1;
+			mainGroup = 08FB7794FE84155DC02AAC07 /* corecg */;
+			projectDirPath = "";
+			projectRoot = ../..;
+			targets = (
+				D2AAC045055464E500DB518D /* corecg */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		D2AAC044055464E500DB518D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FE61321509B60E66004BB4B8 /* Sk64.cpp in Sources */,
+				FE61321609B60E66004BB4B8 /* SkCordic.cpp in Sources */,
+				FE61321809B60E66004BB4B8 /* SkFloat.cpp in Sources */,
+				FE61321B09B60E66004BB4B8 /* SkMath.cpp in Sources */,
+				FE61321C09B60E66004BB4B8 /* SkMatrix.cpp in Sources */,
+				FE61321D09B60E66004BB4B8 /* SkPoint.cpp in Sources */,
+				FE61321E09B60E66004BB4B8 /* SkRect.cpp in Sources */,
+				FE61321F09B60E66004BB4B8 /* SkRegion.cpp in Sources */,
+				0026CE6809DC5A9E00D5B6BE /* SkBuffer.cpp in Sources */,
+				0038A95709DD932D00A82F6E /* SkChunkAlloc.cpp in Sources */,
+				FEACF21E09E460DF00D0C2E2 /* SkDebug_stdio.cpp in Sources */,
+				FEACF21F09E460DF00D0C2E2 /* SkDebug.cpp in Sources */,
+				FEACF22009E460DF00D0C2E2 /* SkMemory_stdlib.cpp in Sources */,
+				00927DBE0ADF13FD000A366E /* SkInterpolator.cpp in Sources */,
+				0050180A0DF61B8E00A63A26 /* SkFloatBits.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		1DEB91EC08733DB70010E9CD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				INSTALL_PATH = /usr/local/lib;
+				PRODUCT_NAME = corecg;
+				ZERO_LINK = YES;
+			};
+			name = Debug;
+		};
+		1DEB91ED08733DB70010E9CD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = (
+					ppc,
+					i386,
+				);
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_MODEL_TUNING = G5;
+				INSTALL_PATH = /usr/local/lib;
+				PRODUCT_NAME = corecg;
+			};
+			name = Release;
+		};
+		1DEB91F008733DB70010E9CD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = NO;
+				GCC_CW_ASM_SYNTAX = NO;
+				GCC_ENABLE_CPP_RTTI = NO;
+				GCC_ENABLE_PASCAL_STRINGS = NO;
+				GCC_ENABLE_SYMBOL_SEPARATION = NO;
+				GCC_USE_GCC3_PFE_SUPPORT = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = "$(HEADER_SEARCH_PATHS)";
+				LINK_WITH_STANDARD_LIBRARIES = NO;
+				PREBINDING = NO;
+				PRECOMPS_INCLUDE_HEADERS_FROM_BUILT_PRODUCTS_DIR = NO;
+				SDKROOT = "";
+				SHARED_PRECOMPS_DIR = "";
+				STRIP_INSTALLED_PRODUCT = NO;
+				USER_HEADER_SEARCH_PATHS = "../../include/skia ";
+			};
+			name = Debug;
+		};
+		1DEB91F108733DB70010E9CD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = NO;
+				GCC_CW_ASM_SYNTAX = NO;
+				GCC_ENABLE_CPP_RTTI = NO;
+				GCC_ENABLE_PASCAL_STRINGS = NO;
+				GCC_ENABLE_SYMBOL_SEPARATION = NO;
+				GCC_PREPROCESSOR_DEFINITIONS = SK_RELEASE;
+				GCC_USE_GCC3_PFE_SUPPORT = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = "$(HEADER_SEARCH_PATHS)";
+				LINK_WITH_STANDARD_LIBRARIES = NO;
+				PREBINDING = NO;
+				PRECOMPS_INCLUDE_HEADERS_FROM_BUILT_PRODUCTS_DIR = NO;
+				SDKROOT = "";
+				SHARED_PRECOMPS_DIR = "";
+				STRIP_INSTALLED_PRODUCT = NO;
+				USER_HEADER_SEARCH_PATHS = "../../include/skia ";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1DEB91EB08733DB70010E9CD /* Build configuration list for PBXNativeTarget "corecg" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1DEB91EC08733DB70010E9CD /* Debug */,
+				1DEB91ED08733DB70010E9CD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		1DEB91EF08733DB70010E9CD /* Build configuration list for PBXProject "corecg" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1DEB91F008733DB70010E9CD /* Debug */,
+				1DEB91F108733DB70010E9CD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 08FB7793FE84155DC02AAC07 /* Project object */;
+}

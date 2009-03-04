@@ -1,0 +1,35 @@
+#!/bin/sh
+
+version=tzdata2008h
+
+mkdir data
+
+for i in $version/africa \
+    $version/antarctica \
+    $version/asia \
+    $version/australasia \
+    $version/etcetera \
+    $version/europe \
+    $version/factory \
+    $version/northamerica \
+    $version/solar87 \
+    $version/solar88 \
+    $version/solar89 \
+    $version/southamerica
+do
+    zic -d data $i
+done
+
+javac -target 1.5 ZoneCompactor.java
+
+(
+    cat $version/* | grep '^Link' | awk '{print $1, $2, $3}'
+    (
+        cat $version/* | grep '^Zone' | awk '{print $2}'
+        cat $version/* | grep '^Link' | awk '{print $3}'
+    ) | LC_ALL="C" sort
+) | grep -v Riyadh8 > setup
+
+java ZoneCompactor setup data
+
+cp zoneinfo.dat zoneinfo.idx ../../../data/zoneinfo

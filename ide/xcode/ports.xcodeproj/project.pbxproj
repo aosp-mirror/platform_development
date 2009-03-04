@@ -1,0 +1,277 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 42;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		000F96970D340E3000AAF056 /* SkFontHost_gamma.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 000F96960D340E3000AAF056 /* SkFontHost_gamma.cpp */; };
+		00199D6A0AD6C5F000B087EA /* SkImageDecoder_libico.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 00199D690AD6C5F000B087EA /* SkImageDecoder_libico.cpp */; };
+		0043B2A10D75B800004A0E2A /* bmpdecoderhelper.h in Headers */ = {isa = PBXBuildFile; fileRef = 0043B29F0D75B800004A0E2A /* bmpdecoderhelper.h */; };
+		0043B2DE0D75C86D004A0E2A /* SkImageDecoder_libbmp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0043B2DD0D75C86D004A0E2A /* SkImageDecoder_libbmp.cpp */; };
+		004E32230D0F288E007F9B40 /* SkMMapStream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 004E32220D0F288D007F9B40 /* SkMMapStream.cpp */; };
+		0064A06A0AE5283700F758EE /* SkFontHost_android.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0064A0690AE5283700F758EE /* SkFontHost_android.cpp */; };
+		008CFCBD0C04C10100FB4126 /* SkImageDecoder_wbmp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 008CFCBC0C04C10100FB4126 /* SkImageDecoder_wbmp.cpp */; };
+		00AC70770D0DAB9400413F47 /* SkThread_pthread.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 00AC70760D0DAB9400413F47 /* SkThread_pthread.cpp */; };
+		00FA424D0D7601CE00D3F086 /* bmpdecoderhelper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 00FA424C0D7601CE00D3F086 /* bmpdecoderhelper.cpp */; };
+		FEDCDF8D09C1DB5B0042D964 /* SkMemory_stdlib.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FEDCDF8C09C1DB5B0042D964 /* SkMemory_stdlib.cpp */; };
+		FEDCDF9109C1DBC10042D964 /* SkDebug_stdio.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FEDCDF9009C1DBC10042D964 /* SkDebug_stdio.cpp */; };
+		FEEBB91809421FDD00C371A7 /* SkGlobals_global.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FEEBB90E09421FDD00C371A7 /* SkGlobals_global.cpp */; };
+		FEEBB91909421FDD00C371A7 /* SkImageDecoder_Factory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FEEBB90F09421FDD00C371A7 /* SkImageDecoder_Factory.cpp */; };
+		FEEBB91A09421FDD00C371A7 /* SkOSFile_stdio.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FEEBB91009421FDD00C371A7 /* SkOSFile_stdio.cpp */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		000F96960D340E3000AAF056 /* SkFontHost_gamma.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkFontHost_gamma.cpp; path = ../../libs/graphics/ports/SkFontHost_gamma.cpp; sourceTree = SOURCE_ROOT; };
+		00199D690AD6C5F000B087EA /* SkImageDecoder_libico.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkImageDecoder_libico.cpp; path = ../../libs/graphics/images/SkImageDecoder_libico.cpp; sourceTree = SOURCE_ROOT; };
+		0043B29F0D75B800004A0E2A /* bmpdecoderhelper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = bmpdecoderhelper.h; path = ../../libs/graphics/images/bmpdecoderhelper.h; sourceTree = SOURCE_ROOT; };
+		0043B2DD0D75C86D004A0E2A /* SkImageDecoder_libbmp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SkImageDecoder_libbmp.cpp; path = ../../libs/graphics/images/SkImageDecoder_libbmp.cpp; sourceTree = SOURCE_ROOT; };
+		004E32220D0F288D007F9B40 /* SkMMapStream.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkMMapStream.cpp; path = ../../libs/graphics/images/SkMMapStream.cpp; sourceTree = SOURCE_ROOT; };
+		0064A0690AE5283700F758EE /* SkFontHost_android.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkFontHost_android.cpp; path = ../../libs/graphics/ports/SkFontHost_android.cpp; sourceTree = SOURCE_ROOT; };
+		008CFCBC0C04C10100FB4126 /* SkImageDecoder_wbmp.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkImageDecoder_wbmp.cpp; path = ../../libs/graphics/images/SkImageDecoder_wbmp.cpp; sourceTree = SOURCE_ROOT; };
+		00AC70760D0DAB9400413F47 /* SkThread_pthread.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkThread_pthread.cpp; path = ../../libs/graphics/ports/SkThread_pthread.cpp; sourceTree = SOURCE_ROOT; };
+		00FA424C0D7601CE00D3F086 /* bmpdecoderhelper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = bmpdecoderhelper.cpp; path = ../../libs/graphics/images/bmpdecoderhelper.cpp; sourceTree = SOURCE_ROOT; };
+		D2AAC046055464E500DB518D /* libports.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libports.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		FE5F473C0947737F0095980F /* SkThread_none.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkThread_none.cpp; path = ../../libs/graphics/ports/SkThread_none.cpp; sourceTree = SOURCE_ROOT; };
+		FEDCDF8C09C1DB5B0042D964 /* SkMemory_stdlib.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkMemory_stdlib.cpp; path = ../../libs/corecg/SkMemory_stdlib.cpp; sourceTree = SOURCE_ROOT; };
+		FEDCDF9009C1DBC10042D964 /* SkDebug_stdio.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkDebug_stdio.cpp; path = ../../libs/corecg/SkDebug_stdio.cpp; sourceTree = SOURCE_ROOT; };
+		FEEBB90E09421FDD00C371A7 /* SkGlobals_global.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkGlobals_global.cpp; path = ../../libs/graphics/ports/SkGlobals_global.cpp; sourceTree = SOURCE_ROOT; };
+		FEEBB90F09421FDD00C371A7 /* SkImageDecoder_Factory.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkImageDecoder_Factory.cpp; path = ../../libs/graphics/ports/SkImageDecoder_Factory.cpp; sourceTree = SOURCE_ROOT; };
+		FEEBB91009421FDD00C371A7 /* SkOSFile_stdio.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SkOSFile_stdio.cpp; path = ../../libs/graphics/ports/SkOSFile_stdio.cpp; sourceTree = SOURCE_ROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		D289987405E68DCB004EDB86 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		08FB7794FE84155DC02AAC07 /* ports */ = {
+			isa = PBXGroup;
+			children = (
+				08FB7795FE84155DC02AAC07 /* Source */,
+				C6A0FF2B0290797F04C91782 /* Documentation */,
+				1AB674ADFE9D54B511CA2CBB /* Products */,
+			);
+			name = ports;
+			sourceTree = "<group>";
+		};
+		08FB7795FE84155DC02AAC07 /* Source */ = {
+			isa = PBXGroup;
+			children = (
+				00FA424C0D7601CE00D3F086 /* bmpdecoderhelper.cpp */,
+				0043B2DD0D75C86D004A0E2A /* SkImageDecoder_libbmp.cpp */,
+				0043B29F0D75B800004A0E2A /* bmpdecoderhelper.h */,
+				000F96960D340E3000AAF056 /* SkFontHost_gamma.cpp */,
+				004E32220D0F288D007F9B40 /* SkMMapStream.cpp */,
+				00AC70760D0DAB9400413F47 /* SkThread_pthread.cpp */,
+				008CFCBC0C04C10100FB4126 /* SkImageDecoder_wbmp.cpp */,
+				0064A0690AE5283700F758EE /* SkFontHost_android.cpp */,
+				00199D690AD6C5F000B087EA /* SkImageDecoder_libico.cpp */,
+				FEDCDF9009C1DBC10042D964 /* SkDebug_stdio.cpp */,
+				FEDCDF8C09C1DB5B0042D964 /* SkMemory_stdlib.cpp */,
+				FE5F473C0947737F0095980F /* SkThread_none.cpp */,
+				FEEBB90E09421FDD00C371A7 /* SkGlobals_global.cpp */,
+				FEEBB90F09421FDD00C371A7 /* SkImageDecoder_Factory.cpp */,
+				FEEBB91009421FDD00C371A7 /* SkOSFile_stdio.cpp */,
+			);
+			name = Source;
+			sourceTree = "<group>";
+		};
+		1AB674ADFE9D54B511CA2CBB /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				D2AAC046055464E500DB518D /* libports.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		C6A0FF2B0290797F04C91782 /* Documentation */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Documentation;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		D2AAC043055464E500DB518D /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0043B2A10D75B800004A0E2A /* bmpdecoderhelper.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		D2AAC045055464E500DB518D /* ports */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1DEB91EB08733DB70010E9CD /* Build configuration list for PBXNativeTarget "ports" */;
+			buildPhases = (
+				D2AAC043055464E500DB518D /* Headers */,
+				D2AAC044055464E500DB518D /* Sources */,
+				D289987405E68DCB004EDB86 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = ports;
+			productName = ports;
+			productReference = D2AAC046055464E500DB518D /* libports.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		08FB7793FE84155DC02AAC07 /* Project object */ = {
+			isa = PBXProject;
+			buildConfigurationList = 1DEB91EF08733DB70010E9CD /* Build configuration list for PBXProject "ports" */;
+			compatibilityVersion = "Xcode 2.4";
+			hasScannedForEncodings = 1;
+			mainGroup = 08FB7794FE84155DC02AAC07 /* ports */;
+			projectDirPath = "";
+			projectRoot = ../..;
+			targets = (
+				D2AAC045055464E500DB518D /* ports */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		D2AAC044055464E500DB518D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FEEBB91809421FDD00C371A7 /* SkGlobals_global.cpp in Sources */,
+				FEEBB91909421FDD00C371A7 /* SkImageDecoder_Factory.cpp in Sources */,
+				FEEBB91A09421FDD00C371A7 /* SkOSFile_stdio.cpp in Sources */,
+				FEDCDF8D09C1DB5B0042D964 /* SkMemory_stdlib.cpp in Sources */,
+				FEDCDF9109C1DBC10042D964 /* SkDebug_stdio.cpp in Sources */,
+				00199D6A0AD6C5F000B087EA /* SkImageDecoder_libico.cpp in Sources */,
+				0064A06A0AE5283700F758EE /* SkFontHost_android.cpp in Sources */,
+				008CFCBD0C04C10100FB4126 /* SkImageDecoder_wbmp.cpp in Sources */,
+				00AC70770D0DAB9400413F47 /* SkThread_pthread.cpp in Sources */,
+				004E32230D0F288E007F9B40 /* SkMMapStream.cpp in Sources */,
+				000F96970D340E3000AAF056 /* SkFontHost_gamma.cpp in Sources */,
+				0043B2DE0D75C86D004A0E2A /* SkImageDecoder_libbmp.cpp in Sources */,
+				00FA424D0D7601CE00D3F086 /* bmpdecoderhelper.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		1DEB91EC08733DB70010E9CD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(NATIVE_ARCH)";
+				COPY_PHASE_STRIP = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				INSTALL_PATH = /usr/local/lib;
+				PRODUCT_NAME = ports;
+				ZERO_LINK = NO;
+			};
+			name = Debug;
+		};
+		1DEB91ED08733DB70010E9CD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(NATIVE_ARCH)";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_MODEL_TUNING = G5;
+				INSTALL_PATH = /usr/local/lib;
+				PRODUCT_NAME = ports;
+				ZERO_LINK = NO;
+			};
+			name = Release;
+		};
+		1DEB91F008733DB70010E9CD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = NO;
+				GCC_CW_ASM_SYNTAX = NO;
+				GCC_ENABLE_CPP_RTTI = NO;
+				GCC_ENABLE_PASCAL_STRINGS = NO;
+				GCC_ENABLE_SYMBOL_SEPARATION = NO;
+				GCC_PREPROCESSOR_DEFINITIONS = SK_BUILD_FOR_MAC;
+				GCC_USE_GCC3_PFE_SUPPORT = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = "$(HEADER_SEARCH_PATHS)";
+				LINK_WITH_STANDARD_LIBRARIES = NO;
+				PREBINDING = NO;
+				PRECOMPS_INCLUDE_HEADERS_FROM_BUILT_PRODUCTS_DIR = NO;
+				SDKROOT = "";
+				SHARED_PRECOMPS_DIR = "";
+				STRIP_INSTALLED_PRODUCT = NO;
+				USER_HEADER_SEARCH_PATHS = "../../include/graphics ../../include/corecg";
+			};
+			name = Debug;
+		};
+		1DEB91F108733DB70010E9CD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = NO;
+				GCC_CW_ASM_SYNTAX = NO;
+				GCC_ENABLE_CPP_RTTI = NO;
+				GCC_ENABLE_PASCAL_STRINGS = NO;
+				GCC_ENABLE_SYMBOL_SEPARATION = NO;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					SK_BUILD_FOR_MAC,
+					SK_RELEASE,
+				);
+				GCC_USE_GCC3_PFE_SUPPORT = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = "$(HEADER_SEARCH_PATHS)";
+				LINK_WITH_STANDARD_LIBRARIES = NO;
+				PREBINDING = NO;
+				PRECOMPS_INCLUDE_HEADERS_FROM_BUILT_PRODUCTS_DIR = NO;
+				SDKROOT = "";
+				SHARED_PRECOMPS_DIR = "";
+				STRIP_INSTALLED_PRODUCT = NO;
+				USER_HEADER_SEARCH_PATHS = "../../include/graphics ../../include/corecg";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1DEB91EB08733DB70010E9CD /* Build configuration list for PBXNativeTarget "ports" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1DEB91EC08733DB70010E9CD /* Debug */,
+				1DEB91ED08733DB70010E9CD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		1DEB91EF08733DB70010E9CD /* Build configuration list for PBXProject "ports" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1DEB91F008733DB70010E9CD /* Debug */,
+				1DEB91F108733DB70010E9CD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 08FB7793FE84155DC02AAC07 /* Project object */;
+}

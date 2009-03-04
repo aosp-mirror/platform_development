@@ -1,0 +1,64 @@
+<?xml version="1.0" ?>
+<!-- Copyright 2005 The Android Open Source Project -->
+
+<device name="HTC_Tornado">
+    <!-- title for menus -->
+    <title>HTC Tornado</title>
+
+    <!-- primary display characteristics -->
+    <display name="main" width="240" height="320" format="rgb565" refresh="30"/>
+
+    <!-- display is 33.84mm x 45.12mm -->
+
+	<mode name="default">
+		<view display="main" x="58" y="117" rotate="0">
+
+			<!-- surrounding device image and "patches", drawn in order -->
+			<!-- (phone image is optional) -->
+			<image src="background.png" x="0" y="0"/>
+
+			<!-- buttons for which we have highlight images -->
+			<button keyCode="soft-left"     src="soft-left.png"     x="49" y="450"/>
+			<button keyCode="soft-right"    src="soft-right.png"    x="249" y="450"/>
+			<button keyCode="home"          src="home.png"          x="115" y="450"/>
+			<button keyCode="back"          src="back.png"          x="182" y="450"/>
+			<button keyCode="dpad-up"       src="arrow-up.png"      x="159" y="542"/>
+			<button keyCode="dpad-down"     src="arrow-down.png"    x="160" y="573"/>
+			<button keyCode="dpad-left"       src="arrow-left.png"    x="152" y="549"/>
+			<button keyCode="dpad-right"     src="arrow-right.png"   x="183" y="549"/>
+			<button keyCode="dpad-center"   src="select.png"        x="167" y="556"/>
+
+			<button keyCode="1"             src="1.png"             x="51" y="595"/>
+			<button keyCode="2"             src="2.png"             x="133" y="595"/>
+			<button keyCode="3"             src="3.png"             x="221" y="595"/>
+			<button keyCode="4"             src="4.png"             x="51" y="633"/>
+			<button keyCode="5"             src="5.png"             x="133" y="633"/>
+			<button keyCode="6"             src="6.png"             x="221" y="633"/>
+			<button keyCode="7"             src="7.png"             x="51" y="666"/>
+			<button keyCode="8"             src="8.png"             x="133" y="666"/>
+			<button keyCode="9"             src="9.png"             x="221" y="666"/>
+			<button keyCode="0"             src="0.png"             x="133" y="699"/>
+			<button keyCode="star"          src="star.png"          x="51" y="699"/>
+			<button keyCode="pound"         src="pound.png"         x="221" y="699"/>
+
+			<button keyCode="phone-dial"	src="phone-dial.png"	x="51" y="547"/>
+			<button keyCode="phone-hangup"	src="phone-hangup.png"	x="221" y="547"/>
+
+			<button keyCode="internet"	src="internet.png"	x="52" y="490"/>
+			<button keyCode="skip-backward"	src="skip-backward.png"	x="121" y="490"/>
+			<button keyCode="pause-play"	src="pause-play.png"	x="191" y="490"/>
+			<button keyCode="skip-forward"	src="skip-forward.png"	x="260" y="490"/>
+
+
+            <!-- buttons we haven't bothered to create highlight images for,
+                 or that aren't visible on-screen -->
+			<button keyCode="volume-up"/>
+			<button keyCode="volume-down"/>
+			<button keyCode="power"/>
+			<button keyCode="clear"/>
+
+		</view>
+	</mode>
+
+</device>
+

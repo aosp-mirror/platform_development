@@ -1,0 +1,53 @@
+<?xml version="1.0" ?>
+<!-- Copyright 2005 The Android Open Source Project -->
+
+<device name="HTC5600">
+    <!-- title for menus -->
+    <title>HTC AudioVox 5600</title>
+
+    <!-- primary display characteristics -->
+    <display name="main" width="176" height="220" format="rgb565" refresh="30"/>
+
+	<mode name="default">
+		<view display="main" x="36" y="73" rotate="0">
+
+			<!-- surrounding device image and "patches", drawn in order -->
+			<!-- (phone image is optional) -->
+			<image src="background.png" x="0" y="0"/>
+
+			<!-- buttons for which we have highlight images -->
+			<button keyCode="soft-left"     src="soft-left.png"     x="40" y="312"/>
+			<button keyCode="soft-right"    src="soft-right.png"    x="145" y="312"/>
+			<button keyCode="home"          src="home.png"          x="57" y="331"/>
+			<button keyCode="back"          src="back.png"          x="123" y="333"/>
+			<button keyCode="dpad-up"       src="arrow-up.png"      x="59" y="364"/>
+			<button keyCode="dpad-down"     src="arrow-down.png"    x="60" y="393"/>
+            <button keyCode="dpad-left"/>
+            <button keyCode="dpad-right"/>
+			<button keyCode="dpad-center"   src="select.png"        x="103" y="381"/>
+
+			<button keyCode="1"             src="1.png"             x="30" y="411"/>
+			<button keyCode="2"             src="2.png"             x="90" y="409"/>
+			<button keyCode="3"             src="3.png"             x="159" y="413"/>
+			<button keyCode="4"             src="4.png"             x="32" y="445"/>
+			<button keyCode="5"             src="5.png"             x="92" y="445"/>
+			<button keyCode="6"             src="6.png"             x="157" y="444"/>
+			<button keyCode="7"             src="7.png"             x="28" y="476"/>
+			<button keyCode="8"             src="8.png"             x="94" y="480"/>
+			<button keyCode="9"             src="9.png"             x="156" y="477"/>
+			<button keyCode="0"             src="0.png"             x="97" y="513"/>
+			<button keyCode="star"          src="star.png"          x="45" y="509"/>
+			<button keyCode="pound"         src="pound.png"         x="155" y="511"/>
+
+            <!-- buttons we haven't bothered to create highlight images for,
+                 or that aren't visible on-screen -->
+			<button keyCode="volume-up"/>
+			<button keyCode="volume-down"/>
+			<button keyCode="power"/>
+			<button keyCode="clear"/>
+
+		</view>
+	</mode>
+
+</device>
+

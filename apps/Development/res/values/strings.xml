@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+/* //device/apps/common/assets/res/any/strings.xml
+**
+** Copyright 2006, The Android Open Source Project
+**
+** Licensed under the Apache License, Version 2.0 (the "License");
+** you may not use this file except in compliance with the License.
+** You may obtain a copy of the License at
+**
+**     http://www.apache.org/licenses/LICENSE-2.0
+**
+** Unless required by applicable law or agreed to in writing, software
+** distributed under the License is distributed on an "AS IS" BASIS,
+** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+** See the License for the specific language governing permissions and
+** limitations under the License.
+*/
+-->
+<resources>
+    <string name="menu_upload_exceptions">Upload Exceptions</string>
+    <string name="menu_clear_exceptions">Clear Exceptions</string>
+
+        <string name="device_info_default">unknown</string>
+        <string name="device_info_uptime">Uptime</string>
+        <string name="device_info_awaketime">Awake Time</string>
+        <string name="device_info_asleeptime">Asleep Time</string>
+
+    <string name="build_id_label">Build ID</string>
+    <string name="build_date_label">Build Date</string>
+    <string name="build_type_label">Build Type</string>
+    <string name="build_product_label">Build Product</string>
+    <string name="build_user_label">Build Label</string>
+    <string name="build_host_label">Build Host</string>
+    <string name="gsm_version_baseband_label">Baseband Version</string>
+    <string name="gsm_version_ril_impl_label">RIL Impl Version</string>
+
+    <string name="turn_on_radio">Turn on radio</string>
+    <string name="turn_off_radio">Turn off radio</string>
+
+    <string name="refresh_networks">Refresh Network List</string>
+
+    <string name="radioInfo_menu_viewADN">View SIM Address Book</string>
+    <string name="radioInfo_menu_viewFDN">View Fixed Dialing Numbers</string>
+    <string name="radioInfo_menu_viewSDN">View Service Dialing Numbers</string>
+
+    <!-- Package summary in Package Browser -->
+    <string name="disabled"><i>disabled</i></string>
+    <string name="system"><i>system</i></string>
+    <string name="debuggable"><i>debuggable</i></string>
+    <string name="nocode"><i>no code</i></string>
+    <string name="persistent"><i>persistent</i></string>
+    <string name="restart">Restart</string>
+    <string name="package_summary_uid_label">User ID</string>
+    <string name="package_summary_task_label">Task Affinity</string>
+    <string name="package_summary_version_label">Version</string>
+    <string name="package_summary_source_label">Source</string>
+    <string name="package_summary_receivers_label">Receivers</string>
+    <string name="package_summary_data_label">Data</string>
+    <string name="package_summary_instrumentation_label">Instrumentation</string>
+    <string name="package_summary_process_label">Process</string>
+    <string name="package_summary_services_label">Services</string>
+    <string name="package_summary_providers_label">Providers</string>
+    <string name="package_summary_activities_label">Activities</string>
+
+    <!-- Activity details in Package Browser -->
+    <string name="none">"(none)"</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="launch_multiple">Multiple (normal)</string>
+    <string name="launch_singleTop">Single Top</string>
+    <string name="launch_singleTask">Single Task</string>
+    <string name="launch_singleInstance">Single Instance</string>
+    <string name="launch_unknown">"(Unknown)"</string>
+
+    <string name="development_settings_show_cpu_text">Show CPU usage</string>
+    <string name="development_settings_always_finish_text">Immediately destroy activities</string>
+    <string name="development_settings_show_load_text">Show running processes</string>
+    <string name="development_settings_show_updates_text">Show screen updates</string>
+    <string name="development_settings_enable_gl_text">Enable OpenGL ES (reboot needed)</string>
+    <string name="development_settings_allow_mock_location_text">Allow mock locations for testing</string>
+    <string name="development_settings_wait_for_debugger_text">Wait for debugger</string>
+    <string name="development_settings_show_background_text">Show background</string>
+    <string name="development_settings_show_xmpp_text">Show GTalk service connection status</string>
+    <string name="development_settings_debug_app_label_text">Debug App:</string>
+    <string name="development_settings_show_sleep_text">Show sleep state on LED</string>
+    <string name="development_settings_show_maps_compass_text">Show compass in Maps</string>
+    <string name="development_settings_keep_screen_on_text">Keep screen on while plugged in</string>
+
+    <string name="monkey_screen_initialActivity_text"></string>
+    <string name="monkey_screen_number_of_events_label">Number of Events: </string>
+    <string name="monkey_screen_start_text">Start</string>
+    <string name="monkey_screen_initial_activity_label">Initial Activity: </string>
+
+    <string name="radio_issue_submit_text">Submit report</string>
+    <string name="radio_issue_instructions_text">Enter a description of the issue.</string>
+
+    <string name="show_activity_clear_on_background_label">Clear on Background</string>
+    <string name="show_activity_task_affinity_label">Task Affinity</string>
+    <string name="show_activity_process_label">Process</string>
+    <string name="show_activity_state_not_needed_label">State Not Needed</string>
+    <string name="show_activity_required_permission_label">Required Permission</string>
+    <string name="show_activity_multiprocess_label">Multiprocess</string>
+
+    <string name="red_button_behavior_label">End Button Behavior</string>
+
+    <string name="gls_tester_label">GLS Tester</string>
+    <string name="gls_tester_prefer_hosted">Hosted</string>
+    <string name="gls_tester_require_google">Google</string>
+    <string name="gls_tester_get_accounts">List</string>
+    <string name="gls_tester_clear">Clear</string>
+    <string name="gls_tester_go">Go</string>
+    <string name="gls_tester_do_notification">Notify on failure</string>
+    <string name="gls_tester_run_intent">Run intent</string>
+    <string name="gls_tester_wipe_passwords">Wipe passwords</string>
+    <string name="process_name_header">Process Name:</string>
+    <string name="package_list_header">Packages in process:</string>
+    <string name="package_label">Package Name:</string>
+
+    <!-- Application configuration requirements related attributes -->
+    <string name="touchscreen_label">touchscreen:</string>
+    <string name="input_method_label">inputMethod:</string>
+    <string name="hard_keyboard_label">hardKeyboard:</string>
+    <string name="navigation_label">navigation:</string>
+    <string name="five_way_nav_label">five way nav:</string>
+</resources>

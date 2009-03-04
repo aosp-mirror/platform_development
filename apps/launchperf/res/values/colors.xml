@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+/* //device/tests/ComplexLayout/res/values/colors.xml
+**
+** Copyright 2007, The Android Open Source Project
+**
+** Licensed under the Apache License, Version 2.0 (the "License");
+** you may not use this file except in compliance with the License.
+** You may obtain a copy of the License at
+**
+**     http://www.apache.org/licenses/LICENSE-2.0
+**
+** Unless required by applicable law or agreed to in writing, software
+** distributed under the License is distributed on an "AS IS" BASIS,
+** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+** See the License for the specific language governing permissions and
+** limitations under the License.
+*/
+-->
+
+<!-- This file contains resource definitions for displayed strings, allowing
+     them to be changed based on the locale and options. -->
+
+<resources>
+    <color name="gray0">#F000</color>
+    <color name="gray1">#E111</color>
+    <color name="gray2">#D222</color>
+    <color name="gray3">#C333</color>
+    <color name="gray4">#B444</color>
+    <color name="gray5">#A555</color>
+    <color name="gray6">#9666</color>
+    <color name="gray7">#8777</color>
+    <color name="gray8">#7888</color>
+    <color name="gray9">#6999</color>
+    <color name="grayA">#5AAA</color>
+    <color name="grayB">#4BBB</color>
+    <color name="grayC">#3CCC</color>
+    <color name="grayD">#2DDD</color>
+    <color name="grayE">#1EEE</color>
+    <color name="grayF">#0FFF</color>
+    <color name="red">#F00</color>
+    <color name="green">#0F0</color>
+    <color name="blue">#00F</color>
+    <color name="replay_background">#e0eaff</color>
+</resources>
