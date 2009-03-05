@@ -616,7 +616,7 @@ public class UiClassAttributeNode extends UiTextAttributeNode {
     }
     
     @Override
-    public String[] getPossibleValues() {
+    public String[] getPossibleValues(String prefix) {
         // TODO: compute a list of existing classes for content assist completion
         return null;
     }

@@ -665,4 +665,17 @@ public final class ProjectHelper {
 
         return false;
     }
+    
+    /**
+     * Returns the apk filename for the given project
+     * @param project The project.
+     * @param config An optional config name. Can be null.
+     */
+    public static String getApkFilename(IProject project, String config) {
+        if (config != null) {
+            return project.getName() + "-" + config + AndroidConstants.DOT_ANDROID_PACKAGE; //$NON-NLS-1$ 
+        }
+        
+        return project.getName() + AndroidConstants.DOT_ANDROID_PACKAGE;
+    }
 }

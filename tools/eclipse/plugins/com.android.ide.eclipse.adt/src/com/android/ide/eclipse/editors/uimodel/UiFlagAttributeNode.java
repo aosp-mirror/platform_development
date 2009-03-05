@@ -124,9 +124,11 @@ public class UiFlagAttributeNode extends UiTextAttributeNode {
     /**
      * Get the flag names, either from the initial names set in the attribute
      * or by querying the framework resource parser.
+     * 
+     * {@inheritDoc}
      */
     @Override
-    public String[] getPossibleValues() {
+    public String[] getPossibleValues(String prefix) {
         String attr_name = getDescriptor().getXmlLocalName();
         String element_name = getUiParent().getDescriptor().getXmlName();
         
@@ -242,7 +244,7 @@ public class UiFlagAttributeNode extends UiTextAttributeNode {
             final TableColumn column = new TableColumn(mTable, SWT.NONE);
 
             // List all the expected flag names and check those which are currently used
-            String[] names = getPossibleValues();
+            String[] names = getPossibleValues(null);
             if (names != null) {
                 for (String name : names) {
                     TableItem item = new TableItem(mTable, SWT.NONE);

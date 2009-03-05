@@ -40,14 +40,24 @@ public class MainFrame extends JFrame {
     private JMenuItem saveMenuItem;
     private ImageEditorPanel imageEditor;
 
-    public MainFrame() throws HeadlessException {
+    public MainFrame(String path) throws HeadlessException {
         super("Draw 9-patch");
 
         buildActions();
         buildMenuBar();
         buildContent();
 
-        showOpenFilePanel();
+        if (path == null) {
+            showOpenFilePanel();
+        } else {
+            try {
+                File file = new File(path);
+                BufferedImage img = GraphicsUtilities.loadCompatibleImage(file.toURI().toURL());
+                showImageEditor(img, file.getAbsolutePath());
+            } catch (Exception ex) {
+                showOpenFilePanel();
+            }
+        }
 
         // pack();
         setSize(1024, 600);

@@ -48,7 +48,7 @@ public class ListValueCellEditor extends ComboBoxCellEditor {
             UiListAttributeNode uiListAttribute = (UiListAttributeNode)value;
             
             // set the possible values in the combo
-            String[] items = uiListAttribute.getPossibleValues();
+            String[] items = uiListAttribute.getPossibleValues(null);
             mItems = new String[items.length];
             System.arraycopy(items, 0, mItems, 0, items.length);
             setItems(mItems);

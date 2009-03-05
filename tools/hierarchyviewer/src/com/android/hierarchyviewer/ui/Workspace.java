@@ -67,6 +67,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
+import javax.swing.JScrollBar;
 import javax.swing.JSlider;
 import javax.swing.JSplitPane;
 import javax.swing.JTable;
@@ -105,6 +106,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -173,6 +176,7 @@ public class Workspace extends JFrame {
         add(buildMainPanel());
         setJMenuBar(buildMenuBar());
 
+        devices.changeSelection(0, 0, false, false);
         currentDeviceChanged();
 
         pack();
@@ -648,6 +652,7 @@ public class Workspace extends JFrame {
 
         sceneView = scene.createView();
         sceneView.addMouseListener(new NodeClickListener());
+        sceneView.addMouseWheelListener(new WheelZoomListener());
         sceneScroller.setViewportView(sceneView);
 
         if (extrasPanel != null) {
@@ -678,7 +683,10 @@ public class Workspace extends JFrame {
 
     private JPanel buildExtrasPanel() {
         extrasPanel = new JPanel(new BorderLayout());
-        extrasPanel.add(new JScrollPane(layoutView = new LayoutRenderer(scene)));
+        JScrollPane p = new JScrollPane(layoutView = new LayoutRenderer(scene, sceneView));
+        JScrollBar b = p.getVerticalScrollBar();
+        b.setUnitIncrement(10);
+        extrasPanel.add(p);
         extrasPanel.add(scene.createSatelliteView(), BorderLayout.SOUTH);
         extrasPanel.add(buildLayoutViewControlButtons(), BorderLayout.NORTH);
         return extrasPanel;
@@ -1231,6 +1239,15 @@ public class Workspace extends JFrame {
         }
     }
 
+    private class WheelZoomListener implements MouseWheelListener {
+        public void mouseWheelMoved(MouseWheelEvent e) {
+            if (zoomSlider != null) {
+                int val = zoomSlider.getValue();
+                val -= e.getWheelRotation() * 10;
+                zoomSlider.setValue(val);
+            }
+        }
+    }
     private class DevicesTableModel extends DefaultTableModel implements
             AndroidDebugBridge.IDeviceChangeListener {
 

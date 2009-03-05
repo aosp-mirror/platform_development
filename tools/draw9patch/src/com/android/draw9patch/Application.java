@@ -40,11 +40,12 @@ public class Application {
         }
     }
 
-    public static void main(String... args) {
+    public static void main(final String... args) {
         initUserInterface();
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
-                MainFrame frame = new MainFrame();
+                String arg = args.length > 0 ? args[0] : null;
+                MainFrame frame = new MainFrame(arg);
                 frame.setDefaultCloseOperation(MainFrame.EXIT_ON_CLOSE);
                 frame.setLocationRelativeTo(null);
                 frame.setVisible(true);

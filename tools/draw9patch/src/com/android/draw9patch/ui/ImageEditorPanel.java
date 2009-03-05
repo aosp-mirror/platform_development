@@ -651,6 +651,7 @@ class ImageEditorPanel extends JPanel {
 
         private int lastPositionX;
         private int lastPositionY;
+        private int currentButton;
         private boolean showCursor;
 
         private JLabel helpLabel;
@@ -687,16 +688,20 @@ class ImageEditorPanel extends JPanel {
             addMouseListener(new MouseAdapter() {
                 @Override
                 public void mousePressed(MouseEvent event) {
-                    paint(event.getX(), event.getY(), event.isShiftDown() ? MouseEvent.BUTTON3 :
-                                event.getButton());
+                    // Store the button here instead of retrieving it again in MouseDragged
+                    // below, because on linux, calling MouseEvent.getButton() for the drag
+                    // event returns 0, which appears to be technically correct (no button
+                    // changed state).
+                    currentButton = event.isShiftDown() ? MouseEvent.BUTTON3 : event.getButton();
+                    paint(event.getX(), event.getY(), currentButton);
                 }
             });
             addMouseMotionListener(new MouseMotionAdapter() {
                 @Override
                 public void mouseDragged(MouseEvent event) {
                     if (!checkLockedRegion(event.getX(), event.getY())) {
-                        paint(event.getX(), event.getY(), event.isShiftDown() ? MouseEvent.BUTTON3 :
-                                event.getButton());
+                        // use the stored button, see note above
+                        paint(event.getX(), event.getY(),  currentButton);
                     }
                 }
 

@@ -328,7 +328,7 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
                 }
 
                 if (currAttrNode != null) {
-                    choices = currAttrNode.getPossibleValues();
+                    choices = currAttrNode.getPossibleValues(value);
                     
                     if (currAttrNode instanceof UiFlagAttributeNode) {
                         // A "flag" can consist of several values separated by "or" (|).

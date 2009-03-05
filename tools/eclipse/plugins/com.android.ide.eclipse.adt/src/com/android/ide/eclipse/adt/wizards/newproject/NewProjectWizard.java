@@ -352,10 +352,16 @@ public class NewProjectWizard extends Wizard implements INewWizard {
             // Create the resource folders in the project if they don't already exist.
             addDefaultDirectories(project, RES_DIRECTORY, RES_DIRECTORIES, monitor);
 
-            // Setup class path
+            // Setup class path: mark folders as source folders
             IJavaProject javaProject = JavaCore.create(project);
             for (String sourceFolder : sourceFolders) {
                 setupSourceFolder(javaProject, sourceFolder, monitor);
+            }
+            
+            // Mark the gen source folder as derived
+            IFolder genSrcFolder = project.getFolder(AndroidConstants.WS_ROOT + GEN_SRC_DIRECTORY);
+            if (genSrcFolder.exists()) {
+                genSrcFolder.setDerived(true);
             }
 
             if (((Boolean) parameters.get(PARAM_IS_NEW_PROJECT)).booleanValue()) {

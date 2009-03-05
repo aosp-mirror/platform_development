@@ -346,7 +346,7 @@ public class ApkBuilder extends BaseBuilder {
         }
 
         // also check the final file(s)!
-        String finalPackageName = getFileName(project, null /*config*/);
+        String finalPackageName = ProjectHelper.getApkFilename(project, null /*config*/);
         if (mBuildFinalPackage == false) {
             tmp = outputFolder.findMember(finalPackageName);
             if (tmp == null || (tmp instanceof IFile &&
@@ -359,7 +359,7 @@ public class ApkBuilder extends BaseBuilder {
                 Set<Entry<String, String>> entrySet = configs.entrySet();
                 
                 for (Entry<String, String> entry : entrySet) {
-                    String filename = getFileName(project, entry.getKey());
+                    String filename = ProjectHelper.getApkFilename(project, entry.getKey());
 
                     tmp = outputFolder.findMember(filename);
                     if (tmp == null || (tmp instanceof IFile &&
@@ -409,7 +409,7 @@ public class ApkBuilder extends BaseBuilder {
                 Set<Entry<String, String>> entrySet = configs.entrySet();
                 for (Entry<String, String> entry : entrySet) {
                     String packageFilepath = osBinPath + File.separator +
-                            getFileName(project, entry.getKey());
+                            ProjectHelper.getApkFilename(project, entry.getKey());
 
                     finalPackage = new File(packageFilepath);
                     finalPackage.delete();
@@ -532,7 +532,7 @@ public class ApkBuilder extends BaseBuilder {
                     
                     // make the filename for the apk to generate
                     String apkOsFilePath = osBinPath + File.separator +
-                            getFileName(project, entry.getKey());
+                            ProjectHelper.getApkFilename(project, entry.getKey());
                     if (finalPackage(resPath, classesDexPath, apkOsFilePath, javaProject,
                             referencedJavaProjects) == false) {
                         return referencedProjects;
@@ -1117,19 +1117,6 @@ public class ApkBuilder extends BaseBuilder {
         return list.toArray(new IJavaProject[list.size()]);
     }
     
-    /**
-     * Returns the apk filename for the given project
-     * @param project The project.
-     * @param config An optional config name. Can be null.
-     */
-    private static String getFileName(IProject project, String config) {
-        if (config != null) {
-            return project.getName() + "-" + config + AndroidConstants.DOT_ANDROID_PACKAGE; //$NON-NLS-1$ 
-        }
-        
-        return project.getName() + AndroidConstants.DOT_ANDROID_PACKAGE;
-    }
-
     /**
      * Checks a {@link IFile} to make sure it should be packaged as standard resources.
      * @param file the IFile representing the file.

@@ -174,14 +174,16 @@ public class SoftKeyboard extends InputMethodService
                 // We now look for a few special variations of text that will
                 // modify our behavior.
                 int variation = attribute.inputType &  EditorInfo.TYPE_MASK_VARIATION;
-                if (variation == EditorInfo.TYPE_TEXT_VARIATION_PASSWORD) {
+                if (variation == EditorInfo.TYPE_TEXT_VARIATION_PASSWORD ||
+                        variation == EditorInfo.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD) {
                     // Do not display predictions / what the user is typing
                     // when they are entering a password.
                     mPredictionOn = false;
                 }
                 
                 if (variation == EditorInfo.TYPE_TEXT_VARIATION_EMAIL_ADDRESS 
-                        || variation == EditorInfo.TYPE_TEXT_VARIATION_URI) {
+                        || variation == EditorInfo.TYPE_TEXT_VARIATION_URI
+                        || variation == EditorInfo.TYPE_TEXT_VARIATION_FILTER) {
                     // Our predictions are not useful for e-mail addresses
                     // or URIs.
                     mPredictionOn = false;
@@ -207,6 +209,7 @@ public class SoftKeyboard extends InputMethodService
                 // For all unknown input types, default to the alphabetic
                 // keyboard with no special features.
                 mCurKeyboard = mQwertyKeyboard;
+                updateShiftKeyState(attribute);
         }
         
         // Update the label on the enter key, depending on what the application
@@ -428,7 +431,11 @@ public class SoftKeyboard extends InputMethodService
     private void updateShiftKeyState(EditorInfo attr) {
         if (attr != null 
                 && mInputView != null && mQwertyKeyboard == mInputView.getKeyboard()) {
-            int caps = getCurrentInputConnection().getCursorCapsMode(attr.inputType);
+            int caps = 0;
+            EditorInfo ei = getCurrentInputEditorInfo();
+            if (ei != null && ei.inputType != EditorInfo.TYPE_NULL) {
+                caps = getCurrentInputConnection().getCursorCapsMode(attr.inputType);
+            }
             mInputView.setShifted(mCapsLock || caps != 0);
         }
     }
@@ -553,7 +560,7 @@ public class SoftKeyboard extends InputMethodService
         final int length = mComposing.length();
         if (length > 1) {
             mComposing.delete(length - 1, length);
-            getCurrentInputConnection().setComposingText(mComposing, mComposing.length());
+            getCurrentInputConnection().setComposingText(mComposing, 1);
             updateCandidates();
         } else if (length > 0) {
             mComposing.setLength(0);
@@ -594,7 +601,7 @@ public class SoftKeyboard extends InputMethodService
         }
         if (isAlphabet(primaryCode) && mPredictionOn) {
             mComposing.append((char) primaryCode);
-            getCurrentInputConnection().setComposingText(mComposing, mComposing.length());
+            getCurrentInputConnection().setComposingText(mComposing, 1);
             updateShiftKeyState(getCurrentInputEditorInfo());
             updateCandidates();
         } else {
@@ -605,7 +612,7 @@ public class SoftKeyboard extends InputMethodService
 
     private void handleClose() {
         commitTyped(getCurrentInputConnection());
-        dismissSoftInput(0);
+        requestHideSelf(0);
         mInputView.closing();
     }
 

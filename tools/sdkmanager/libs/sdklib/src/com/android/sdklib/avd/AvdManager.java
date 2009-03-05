@@ -48,11 +48,49 @@ public final class AvdManager {
     private final static String AVD_INFO_PATH = "path";
     private final static String AVD_INFO_TARGET = "target";
     
+    /**
+     * AVD/config.ini key name representing the SDK-relative path of the skin folder, if any,
+     * or a 320x480 like constant for a numeric skin size.
+     * 
+     * @see #NUMERIC_SKIN_SIZE
+     */
     public final static String AVD_INI_SKIN_PATH = "skin.path";
+    /**
+     * AVD/config.ini key name representing an UI name for the skin.
+     * This config key is ignored by the emulator. It is only used by the SDK manager or
+     * tools to give a friendlier name to the skin.
+     * If missing, use the {@link #AVD_INI_SKIN_PATH} key instead.
+     */
     public final static String AVD_INI_SKIN_NAME = "skin.name";
+    /**
+     * AVD/config.ini key name representing the path to the sdcard file.
+     * If missing, the default name "sdcard.img" will be used for the sdcard, if there's such
+     * a file.
+     * 
+     * @see #SDCARD_IMG
+     */
     public final static String AVD_INI_SDCARD_PATH = "sdcard.path";
+    /**
+     * AVD/config.ini key name representing the size of the SD card.
+     * This property is for UI purposes only. It is not used by the emulator.
+     * 
+     * @see #SDCARD_SIZE_PATTERN
+     */
     public final static String AVD_INI_SDCARD_SIZE = "sdcard.size";
+    /**
+     * AVD/config.ini key name representing the first path where the emulator looks
+     * for system images. Typically this is the path to the add-on system image or
+     * the path to the platform system image if there's no add-on.
+     * <p/>
+     * The emulator looks at {@link #AVD_INI_IMAGES_1} before {@link #AVD_INI_IMAGES_2}.
+     */
     public final static String AVD_INI_IMAGES_1 = "image.sysdir.1";
+    /**
+     * AVD/config.ini key name representing the second path where the emulator looks
+     * for system images. Typically this is the path to the platform system image.
+     * 
+     * @see #AVD_INI_IMAGES_1
+     */
     public final static String AVD_INI_IMAGES_2 = "image.sysdir.2";
 
     /**
@@ -69,6 +107,9 @@ public final class AvdManager {
     private final static Pattern INI_NAME_PATTERN = Pattern.compile("(.+)\\" + INI_EXTENSION + "$",
             Pattern.CASE_INSENSITIVE);
 
+    /**
+     * Pattern for matching SD Card sizes, e.g. "4K" or "16M".
+     */
     private final static Pattern SDCARD_SIZE_PATTERN = Pattern.compile("\\d+[MK]?");
 
     /** An immutable structure describing an Android Virtual Device. */

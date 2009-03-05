@@ -25,6 +25,8 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Insets;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.Set;
 
 class LayoutRenderer extends JComponent {
@@ -34,14 +36,23 @@ class LayoutRenderer extends JComponent {
 
     private boolean showExtras;
     private ViewHierarchyScene scene;
+    private JComponent sceneView;
 
-    LayoutRenderer(ViewHierarchyScene scene) {
+    LayoutRenderer(ViewHierarchyScene scene, JComponent sceneView) {
         this.scene = scene;
+        this.sceneView = sceneView;
 
         setOpaque(true);
         setBorder(BorderFactory.createEmptyBorder(0, 0, 12, 0));
         setBackground(Color.BLACK);
         setForeground(Color.WHITE);
+
+        addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent event) {
+                selectChild(event.getX(), event.getY());
+            }
+        });
     }
 
     @Override
@@ -117,5 +128,50 @@ class LayoutRenderer extends JComponent {
     public void setShowExtras(boolean showExtras) {
         this.showExtras = showExtras;
         repaint();
+    }
+
+    private void selectChild(int x, int y) {
+
+        if (scene == null) {
+            return;
+        }
+
+        ViewNode root = scene.getRoot();
+        if (root == null) {
+            return;
+        }
+
+        Insets insets = getInsets();
+
+        int xoffset = (getWidth() - insets.left - insets.right - root.width) / 2 + insets.left + 1;
+        int yoffset = (getHeight() - insets.top - insets.bottom - root.height) / 2 + insets.top + 1;
+
+        x -= xoffset;
+        y -= yoffset;
+        if (x >= 0 && x < EMULATED_SCREEN_WIDTH && y >= 0 && y < EMULATED_SCREEN_HEIGHT) {
+            ViewNode hit = findChild(root, root, x, y);
+            scene.setFocusedObject(hit);
+            sceneView.repaint();
+        }
+    }
+
+    private ViewNode findChild(ViewNode root, ViewNode besthit, int x, int y) {
+        ViewNode hit = besthit;
+        for (ViewNode node : root.children) {
+
+            if (node.left <= x && x < node.left + node.width &&
+                node.top <= y && y < node.top + node.height) {
+                if (node.width <= hit.width && node.height <= hit.height) {
+                    hit = node;
+                }
+            }
+
+            if (node.children.size() > 0) {
+                hit = findChild(node, hit,
+                        x - (node.left - node.parent.scrollX),
+                        y - (node.top - node.parent.scrollY));
+            }
+        }
+        return hit;
     }
 }
