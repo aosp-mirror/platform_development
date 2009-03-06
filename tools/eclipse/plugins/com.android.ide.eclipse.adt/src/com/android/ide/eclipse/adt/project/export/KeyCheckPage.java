@@ -397,8 +397,10 @@ final class KeyCheckPage extends ExportWizardPage {
     /**
      * Creates the list of destination filenames based on the content of the destination field
      * and the list of APK configurations for the project.
-     * @param file
-     * @return
+     * 
+     * @param file File name from the destination field
+     * @return A list of destination filenames based <code>file</code> and the list of APK
+     *         configurations for the project.
      */
     private Map<String, String[]> getApkFileMap(File file) {
         String filename = file.getName();

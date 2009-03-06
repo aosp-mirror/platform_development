@@ -215,6 +215,11 @@ public final class ExportWizard extends Wizard implements IExportWizard {
         final boolean[] result = new boolean[1];
         try {
             workbench.getProgressService().busyCursorWhile(new IRunnableWithProgress() {
+                /**
+                 * Run the export.
+                 * @throws InvocationTargetException
+                 * @throws InterruptedException
+                 */
                 public void run(IProgressMonitor monitor) throws InvocationTargetException,
                         InterruptedException {
                     try {
