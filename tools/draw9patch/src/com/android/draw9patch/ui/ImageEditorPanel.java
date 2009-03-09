@@ -478,12 +478,28 @@ class ImageEditorPanel extends JPanel {
                         start = rect.x;
                     }
                 }
+            } else {
+                int start = -1;
+                for (Rectangle rect : patches) {
+                    if (rect.x > start) {
+                        horizontalPatchesSum += rect.width;
+                        start = rect.x;
+                    }
+                }
             }
 
             verticalPatchesSum = 0;
             if (verticalPatches.size() > 0) {
                 int start = -1;
                 for (Rectangle rect : verticalPatches) {
+                    if (rect.y > start) {
+                        verticalPatchesSum += rect.height;
+                        start = rect.y;
+                    }
+                }
+            } else {
+                int start = -1;
+                for (Rectangle rect : patches) {
                     if (rect.y > start) {
                         verticalPatchesSum += rect.height;
                         start = rect.y;
@@ -528,8 +544,7 @@ class ImageEditorPanel extends JPanel {
                 x = 0;
                 y = 0;
 
-                if (patches.size() == 0 || horizontalPatches.size() == 0 ||
-                        verticalPatches.size() == 0) {
+                if (patches.size() == 0) {
                     g.drawImage(image, 0, 0, scaledWidth, scaledHeight, null);
                     g2.dispose();
                     return;
@@ -1028,7 +1043,15 @@ class ImageEditorPanel extends JPanel {
                 horizontalPatches = getRectangles(left.first, top.second);
                 verticalPatches = getRectangles(left.second, top.first);
             } else {
-                horizontalPatches = verticalPatches = new ArrayList<Rectangle>(0);
+                if (top.first.size() > 0) {
+                    horizontalPatches = new ArrayList<Rectangle>(0);
+                    verticalPatches = getVerticalRectangles(top.first);
+                } else if (left.first.size() > 0) {
+                    horizontalPatches = getHorizontalRectangles(left.first);
+                    verticalPatches = new ArrayList<Rectangle>(0);
+                } else {
+                    horizontalPatches = verticalPatches = new ArrayList<Rectangle>(0);
+                }
             }
 
             row = GraphicsUtilities.getPixels(image, 0, height - 1, width, 1, row);
@@ -1039,6 +1062,28 @@ class ImageEditorPanel extends JPanel {
 
             left = getPatches(column, result);
             verticalPadding = getPadding(left.first);
+        }
+
+        private List<Rectangle> getVerticalRectangles(List<Pair<Integer>> topPairs) {
+            List<Rectangle> rectangles = new ArrayList<Rectangle>();
+            for (Pair<Integer> top : topPairs) {
+                int x = top.first;
+                int width = top.second - top.first;
+
+                rectangles.add(new Rectangle(x, 1, width, image.getHeight() - 2));
+            }
+            return rectangles;
+        }
+
+        private List<Rectangle> getHorizontalRectangles(List<Pair<Integer>> leftPairs) {
+            List<Rectangle> rectangles = new ArrayList<Rectangle>();
+            for (Pair<Integer> left : leftPairs) {
+                int y = left.first;
+                int height = left.second - left.first;
+
+                rectangles.add(new Rectangle(1, y, image.getWidth() - 2, height));
+            }
+            return rectangles;
         }
 
         private Pair<Integer> getPadding(List<Pair<Integer>> pairs) {
@@ -1063,7 +1108,7 @@ class ImageEditorPanel extends JPanel {
             for (Pair<Integer> left : leftPairs) {
                 int y = left.first;
                 int height = left.second - left.first;
-                for (Pair<Integer> top: topPairs) {
+                for (Pair<Integer> top : topPairs) {
                     int x = top.first;
                     int width = top.second - top.first;
 
@@ -1108,6 +1153,7 @@ class ImageEditorPanel extends JPanel {
                 startWithPatch[0] = true;
                 fixed.clear();
             }
+
             return new Pair<List<Pair<Integer>>>(fixed, patches);
         }
 

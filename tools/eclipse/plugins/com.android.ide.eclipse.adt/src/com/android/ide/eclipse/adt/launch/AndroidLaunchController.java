@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.ide.eclipse.adt.debug.launching;
+package com.android.ide.eclipse.adt.launch;
 
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.Client;
@@ -28,8 +28,7 @@ import com.android.ddmlib.AndroidDebugBridge.IDebugBridgeChangeListener;
 import com.android.ddmlib.AndroidDebugBridge.IDeviceChangeListener;
 import com.android.ddmlib.SyncService.SyncResult;
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.debug.launching.DeviceChooserDialog.DeviceChooserResponse;
-import com.android.ide.eclipse.adt.debug.ui.EmulatorConfigTab;
+import com.android.ide.eclipse.adt.launch.DeviceChooserDialog.DeviceChooserResponse;
 import com.android.ide.eclipse.adt.project.ProjectHelper;
 import com.android.ide.eclipse.adt.sdk.Sdk;
 import com.android.ide.eclipse.common.project.AndroidManifestHelper;

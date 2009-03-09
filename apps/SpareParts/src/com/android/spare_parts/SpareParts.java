@@ -57,7 +57,6 @@ public class SpareParts extends PreferenceActivity
     private static final String HAPTIC_FEEDBACK_PREF = "haptic_feedback";
     private static final String FONT_SIZE_PREF = "font_size";
     private static final String END_BUTTON_PREF = "end_button";
-    private static final String ACCELEROMETER_PREF = "accelerometer";
     private static final String MAPS_COMPASS_PREF = "maps_compass";
     
     private final Configuration mCurConfig = new Configuration();
@@ -68,7 +67,6 @@ public class SpareParts extends PreferenceActivity
     private CheckBoxPreference mHapticFeedbackPref;
     private ListPreference mFontSizePref;
     private ListPreference mEndButtonPref;
-    private CheckBoxPreference mAccelerometerPref;
     private CheckBoxPreference mShowMapsCompassPref;
     
     private IWindowManager mWindowManager;
@@ -125,7 +123,6 @@ public class SpareParts extends PreferenceActivity
         mFontSizePref.setOnPreferenceChangeListener(this);
         mEndButtonPref = (ListPreference) prefSet.findPreference(END_BUTTON_PREF);
         mEndButtonPref.setOnPreferenceChangeListener(this);
-        mAccelerometerPref = (CheckBoxPreference) prefSet.findPreference(ACCELEROMETER_PREF);
         mShowMapsCompassPref = (CheckBoxPreference) prefSet.findPreference(MAPS_COMPASS_PREF);
         
         mWindowManager = IWindowManager.Stub.asInterface(ServiceManager.getService("window"));
@@ -149,9 +146,6 @@ public class SpareParts extends PreferenceActivity
             mHapticFeedbackPref.setChecked(Settings.System.getInt(
                     getContentResolver(), 
                     Settings.System.HAPTIC_FEEDBACK_ENABLED, 0) != 0);
-            mAccelerometerPref.setChecked(Settings.System.getInt(
-                    getContentResolver(), 
-                    Settings.System.ACCELEROMETER_ROTATION, 0) != 0);
             Context c = createPackageContext("com.google.android.apps.maps", 0);
             mShowMapsCompassPref.setChecked(c.getSharedPreferences("extra-features", MODE_WORLD_READABLE)
                 .getBoolean("compass", false));
@@ -243,11 +237,7 @@ public class SpareParts extends PreferenceActivity
     }
     
     public void onSharedPreferenceChanged(SharedPreferences preferences, String key) {
-        if (ACCELEROMETER_PREF.equals(key)) {
-            Settings.System.putInt(getContentResolver(),
-                    Settings.System.ACCELEROMETER_ROTATION,
-                    mAccelerometerPref.isChecked() ? 1 : 0);
-        } else if (FANCY_IME_ANIMATIONS_PREF.equals(key)) {
+        if (FANCY_IME_ANIMATIONS_PREF.equals(key)) {
             Settings.System.putInt(getContentResolver(),
                     Settings.System.FANCY_IME_ANIMATIONS,
                     mFancyImeAnimationsPref.isChecked() ? 1 : 0);

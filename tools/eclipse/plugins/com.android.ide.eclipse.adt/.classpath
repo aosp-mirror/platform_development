@@ -10,7 +10,7 @@
 	<classpathentry kind="lib" path="layoutlib_api.jar"/>
 	<classpathentry kind="lib" path="layoutlib_utils.jar"/>
 	<classpathentry kind="lib" path="ninepatch.jar"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/SdkLib"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/SdkUiLib"/>
+	<classpathentry kind="lib" path="sdklib.jar" sourcepath="/SdkLib"/>
+	<classpathentry kind="lib" path="sdkuilib.jar" sourcepath="/SdkUiLib"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

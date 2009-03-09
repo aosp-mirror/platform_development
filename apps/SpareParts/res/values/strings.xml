@@ -57,10 +57,6 @@
     <string name="summary_end_button">Select End (red) button action</string>
     <string name="dialog_title_end_button">Select End button</string>
     
-    <string name="title_accelerometer">Display rotation</string>
-    <string name="summary_on_accelerometer">Display rotates from orientation</string>
-    <string name="summary_off_accelerometer">Display rotates from orientation</string>
-    
     <string name="applications_title">Applications</string>
     
     <string name="title_maps_compass">Show compass in Maps</string>

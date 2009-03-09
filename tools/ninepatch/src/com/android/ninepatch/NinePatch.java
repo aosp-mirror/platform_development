@@ -127,8 +127,7 @@ public class NinePatch {
         
 
         try {
-            if (mPatches.size() == 0 || mHorizontalPatches.size() == 0 ||
-                    mVerticalPatches.size() == 0) {
+            if (mPatches.size() == 0) {
                 g.drawImage(mImage, x, y, scaledWidth, scaledHeight, null);
                 return;
             }
@@ -254,12 +253,28 @@ public class NinePatch {
                     start = rect.x;
                 }
             }
+        } else {
+            int start = -1;
+            for (Rectangle rect : mPatches) {
+                if (rect.x > start) {
+                    mHorizontalPatchesSum += rect.width;
+                    start = rect.x;
+                }
+            }
         }
 
         mVerticalPatchesSum = 0;
         if (mVerticalPatches.size() > 0) {
             int start = -1;
             for (Rectangle rect : mVerticalPatches) {
+                if (rect.y > start) {
+                    mVerticalPatchesSum += rect.height;
+                    start = rect.y;
+                }
+            }
+        } else {
+            int start = -1;
+            for (Rectangle rect : mPatches) {
                 if (rect.y > start) {
                     mVerticalPatchesSum += rect.height;
                     start = rect.y;
@@ -286,27 +301,10 @@ public class NinePatch {
         boolean[] result = new boolean[1];
         Pair<List<Pair<Integer>>> left = getPatches(column, result);
         mVerticalStartWithPatch = result[0];
-        
-        // compute the min size, based on the list of fixed sections, which is stored in 
-        // Pair.mFirst
-        mMinHeight = 0;
-        List<Pair<Integer>> fixedSections = left.mFirst;
-        for (Pair<Integer> section : fixedSections) {
-            mMinHeight += section.mSecond - section.mFirst;
-        }
 
         result = new boolean[1];
         Pair<List<Pair<Integer>>> top = getPatches(row, result);
         mHorizontalStartWithPatch = result[0];
-
-        // compute the min size, based on the list of fixed sections, which is stored in 
-        // Pair.mFirst
-
-        mMinWidth = 0;
-        fixedSections = top.mFirst;
-        for (Pair<Integer> section : fixedSections) {
-            mMinWidth += section.mSecond - section.mFirst;
-        }
 
         mFixed = getRectangles(left.mFirst, top.mFirst);
         mPatches = getRectangles(left.mSecond, top.mSecond);
@@ -315,7 +313,15 @@ public class NinePatch {
             mHorizontalPatches = getRectangles(left.mFirst, top.mSecond);
             mVerticalPatches = getRectangles(left.mSecond, top.mFirst);
         } else {
-            mHorizontalPatches = mVerticalPatches = new ArrayList<Rectangle>(0);
+            if (top.mFirst.size() > 0) {
+                mHorizontalPatches = new ArrayList<Rectangle>(0);
+                mVerticalPatches = getVerticalRectangles(top.mFirst);
+            } else if (left.mFirst.size() > 0) {
+                mHorizontalPatches = getHorizontalRectangles(left.mFirst);
+                mVerticalPatches = new ArrayList<Rectangle>(0);
+            } else {
+                mHorizontalPatches = mVerticalPatches = new ArrayList<Rectangle>(0);
+            }
         }
 
         row = GraphicsUtilities.getPixels(mImage, 0, height - 1, width, 1, row);
@@ -326,31 +332,30 @@ public class NinePatch {
 
         left = getPatches(column, result);
         mVerticalPadding = getPadding(left.mFirst);
-        
-        mHorizontalPatchesSum = 0;
-        if (mHorizontalPatches.size() > 0) {
-            int start = -1;
-            for (Rectangle rect : mHorizontalPatches) {
-                if (rect.x > start) {
-                    mHorizontalPatchesSum += rect.width;
-                    start = rect.x;
-                }
-            }
-        }
-
-        mVerticalPatchesSum = 0;
-        if (mVerticalPatches.size() > 0) {
-            int start = -1;
-            for (Rectangle rect : mVerticalPatches) {
-                if (rect.y > start) {
-                    mVerticalPatchesSum += rect.height;
-                    start = rect.y;
-                }
-            }
-        }
-
     }
-    
+
+    private List<Rectangle> getVerticalRectangles(List<Pair<Integer>> topPairs) {
+        List<Rectangle> rectangles = new ArrayList<Rectangle>();
+        for (Pair<Integer> top : topPairs) {
+            int x = top.mFirst;
+            int width = top.mSecond - top.mFirst;
+
+            rectangles.add(new Rectangle(x, 1, width, mImage.getHeight() - 2));
+        }
+        return rectangles;
+    }
+
+    private List<Rectangle> getHorizontalRectangles(List<Pair<Integer>> leftPairs) {
+        List<Rectangle> rectangles = new ArrayList<Rectangle>();
+        for (Pair<Integer> left : leftPairs) {
+            int y = left.mFirst;
+            int height = left.mSecond - left.mFirst;
+
+            rectangles.add(new Rectangle(1, y, mImage.getWidth() - 2, height));
+        }
+        return rectangles;
+    }
+
     private Pair<Integer> getPadding(List<Pair<Integer>> pairs) {
         if (pairs.size() == 0) {
             return new Pair<Integer>(0, 0);
@@ -366,14 +371,14 @@ public class NinePatch {
                     pairs.get(index).mSecond - pairs.get(index).mFirst);
         }
     }
-    
+
     private List<Rectangle> getRectangles(List<Pair<Integer>> leftPairs,
             List<Pair<Integer>> topPairs) {
         List<Rectangle> rectangles = new ArrayList<Rectangle>();
         for (Pair<Integer> left : leftPairs) {
             int y = left.mFirst;
             int height = left.mSecond - left.mFirst;
-            for (Pair<Integer> top: topPairs) {
+            for (Pair<Integer> top : topPairs) {
                 int x = top.mFirst;
                 int width = top.mSecond - top.mFirst;
 
@@ -382,7 +387,7 @@ public class NinePatch {
         }
         return rectangles;
     }
-    
+
     private Pair<List<Pair<Integer>>> getPatches(int[] pixels, boolean[] startWithPatch) {
         int lastIndex = 1;
         int lastPixel = pixels[1];
@@ -390,7 +395,7 @@ public class NinePatch {
 
         List<Pair<Integer>> fixed = new ArrayList<Pair<Integer>>();
         List<Pair<Integer>> patches = new ArrayList<Pair<Integer>>();
-        
+
         for (int i = 1; i < pixels.length - 1; i++) {
             int pixel = pixels[i];
             if (pixel != lastPixel) {
@@ -418,6 +423,7 @@ public class NinePatch {
             startWithPatch[0] = true;
             fixed.clear();
         }
+
         return new Pair<List<Pair<Integer>>>(fixed, patches);
     }
 

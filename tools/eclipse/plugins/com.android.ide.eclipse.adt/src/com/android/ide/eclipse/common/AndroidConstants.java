@@ -87,7 +87,6 @@ public class AndroidConstants {
 
     /** Name of the manifest file, i.e. "AndroidManifest.xml". */
     public static final String FN_ANDROID_MANIFEST = "AndroidManifest.xml"; //$NON-NLS-1$
-    public static final String FN_PROJECT_AIDL = "project.aidl"; //$NON-NLS-1$
 
     /** Name of the android sources directory */
     public static final String FD_ANDROID_SOURCES = "sources"; //$NON-NLS-1$

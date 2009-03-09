@@ -14,11 +14,9 @@
  * limitations under the License.
  */
 
-package com.android.ide.eclipse.adt.debug.ui;
+package com.android.ide.eclipse.adt.launch;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.debug.launching.AndroidLaunchController;
-import com.android.ide.eclipse.adt.debug.launching.LaunchConfigDelegate;
 import com.android.ide.eclipse.common.project.AndroidManifestParser;
 import com.android.ide.eclipse.common.project.BaseProjectHelper;
 import com.android.ide.eclipse.common.project.ProjectChooserHelper;

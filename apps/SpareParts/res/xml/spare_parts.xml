@@ -89,12 +89,6 @@
                 android:dialogTitle="@string/dialog_title_end_button" />
         
         <CheckBoxPreference 
-            android:key="accelerometer" 
-            android:title="@string/title_accelerometer" 
-            android:summaryOn="@string/summary_on_accelerometer"
-            android:summaryOff="@string/summary_off_accelerometer"/>
-        
-        <CheckBoxPreference 
             android:key="haptic_feedback" 
             android:title="@string/title_haptic_feedback" 
             android:summaryOn="@string/summary_on_haptic_feedback"

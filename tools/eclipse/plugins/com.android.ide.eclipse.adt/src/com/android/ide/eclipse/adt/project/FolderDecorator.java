@@ -39,7 +39,7 @@ public class FolderDecorator implements ILightweightLabelDecorator {
     private ImageDescriptor mDescriptor;
 
     public FolderDecorator() {
-        mDescriptor = AdtPlugin.getImageDescriptor("/icons/android_project.png");
+        mDescriptor = AdtPlugin.getImageDescriptor("/icons/android_project.png"); //$NON-NLS-1$
     }
 
     public void decorate(Object element, IDecoration decoration) {
@@ -55,13 +55,13 @@ public class FolderDecorator implements ILightweightLabelDecorator {
                     if (folder.getParent().getType() == IResource.PROJECT) {
                         String name = folder.getName();
                         if (name.equals(SdkConstants.FD_ASSETS)) {
-                            decorate(decoration, " [Android assets]");
-                            decoration.addOverlay(mDescriptor, IDecoration.TOP_RIGHT);
+                            doDecoration(decoration, null);
                         } else if (name.equals(SdkConstants.FD_RESOURCES)) {
-                            decorate(decoration, " [Android resources]");
-                            decoration.addOverlay(mDescriptor, IDecoration.TOP_RIGHT);
-                        } else if (name.equals(SdkConstants.FD_NATIVE_LIBS)) {
-                            decorate(decoration, " [Native Libraries]");
+                            doDecoration(decoration, null);
+                        } else if (name.equals(SdkConstants.FD_GEN_SOURCES)) {
+                            doDecoration(decoration, " [Generated Java Files]");
+                      } else if (name.equals(SdkConstants.FD_NATIVE_LIBS)) {
+                          doDecoration(decoration, null);
                         }
                     }
                 }
@@ -72,20 +72,24 @@ public class FolderDecorator implements ILightweightLabelDecorator {
         }
     }
     
-    public void decorate(IDecoration decoration, String suffix) {
-        decoration.addOverlay(mDescriptor, IDecoration.TOP_RIGHT);
+    public void doDecoration(IDecoration decoration, String suffix) {
+        decoration.addOverlay(mDescriptor, IDecoration.TOP_LEFT);
 
-        // this is broken as it changes the color of the whole text, not only of the decoration.
-        // TODO: figure out how to change the color of the decoration only.
-//        decoration.addSuffix(suffix);
-//        ITheme theme = PlatformUI.getWorkbench().getThemeManager().getCurrentTheme();
-//        ColorRegistry registry = theme.getColorRegistry();
-//        decoration.setForegroundColor(registry.get("org.eclipse.jdt.ui.ColoredLabels.decorations"));
+        if (suffix != null) {
+            decoration.addSuffix(suffix);
+
+            // this is broken as it changes the color of the whole text, not only of the decoration.
+            // TODO: figure out how to change the color of the decoration only.
+//            ITheme theme = PlatformUI.getWorkbench().getThemeManager().getCurrentTheme();
+//            ColorRegistry registry = theme.getColorRegistry();
+//            decoration.setForegroundColor(
+//                    registry.get("org.eclipse.jdt.ui.ColoredLabels.decorations")); //$NON-NLS-1$
+        }
 
     }
 
     public boolean isLabelProperty(Object element, String property) {
-        // at this time return false.
+        // Property change do not affect the label
         return false;
     }
 
@@ -93,13 +97,11 @@ public class FolderDecorator implements ILightweightLabelDecorator {
         // No state change will affect the rendering.
     }
 
-
-
     public void removeListener(ILabelProviderListener listener) {
         // No state change will affect the rendering.
     }
 
     public void dispose() {
-        // nothind to dispose
+        // nothing to dispose
     }
 }

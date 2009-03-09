@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.ide.eclipse.adt.debug.launching;
+package com.android.ide.eclipse.adt.launch;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;

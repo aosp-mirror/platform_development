@@ -20,15 +20,14 @@ import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.project.ProjectHelper;
 import com.android.ide.eclipse.adt.sdk.LoadStatus;
-import com.android.ide.eclipse.adt.sdk.Sdk;
 import com.android.ide.eclipse.common.AndroidConstants;
 import com.android.ide.eclipse.common.project.BaseProjectHelper;
 import com.android.ide.eclipse.common.project.XmlErrorHandler;
 import com.android.ide.eclipse.common.project.XmlErrorHandler.XmlErrorListener;
-import com.android.sdklib.IAndroidTarget;
 
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
@@ -37,8 +36,10 @@ import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.SubProgressMonitor;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
@@ -892,25 +893,19 @@ abstract class BaseBuilder extends IncrementalProjectBuilder {
             stopBuild("SDK is not loaded yet");
         }
 
-        // check the compiler compliance level.
-        if (ProjectHelper.checkCompilerCompliance(project) !=
-                ProjectHelper.COMPILER_COMPLIANCE_OK) {
-            // we exit silently
-            stopBuild(Messages.Compiler_Compliance_Error);
+        // abort if there are TARGET or ADT type markers
+        IMarker[] markers = project.findMarkers(AdtConstants.MARKER_TARGET,
+                false /*includeSubtypes*/, IResource.DEPTH_ZERO);
+        
+        if (markers.length > 0) {
+            stopBuild("");
         }
-
-        // Check that the SDK directory has been setup.
-        String osSdkFolder = AdtPlugin.getOsSdkFolder();
-
-        if (osSdkFolder == null || osSdkFolder.length() == 0) {
-            stopBuild(Messages.No_SDK_Setup_Error);
-        }
-
-        IAndroidTarget projectTarget = Sdk.getCurrent().getTarget(project);
-        if (projectTarget == null) {
-            // no target. error has been output by the container initializer:
-            // exit silently.
-            stopBuild("Project has no target");
+        
+        markers = project.findMarkers(AdtConstants.MARKER_ADT, false /*includeSubtypes*/,
+                IResource.DEPTH_ZERO);
+        
+        if (markers.length > 0) {
+            stopBuild("");
         }
     }
     
@@ -925,5 +920,22 @@ abstract class BaseBuilder extends IncrementalProjectBuilder {
         throw new CoreException(new Status(IStatus.CANCEL, AdtPlugin.PLUGIN_ID,
                 String.format(error, args)));
     }
-
+    
+    /**
+     * Recursively delete all the derived resources.
+     */
+    protected void removeDerivedResources(IResource resource, IProgressMonitor monitor)
+            throws CoreException {
+        if (resource.exists()) {
+            if (resource.isDerived()) {
+                resource.delete(true, new SubProgressMonitor(monitor, 10));
+            } else if (resource.getType() == IResource.FOLDER) {
+                IFolder folder = (IFolder)resource;
+                IResource[] members = folder.members();
+                for (IResource member : members) {
+                    removeDerivedResources(member, monitor);
+                }
+            }
+        }
+    }
 }

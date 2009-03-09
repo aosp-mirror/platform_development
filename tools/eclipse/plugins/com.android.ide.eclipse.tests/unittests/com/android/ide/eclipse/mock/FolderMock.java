@@ -428,11 +428,11 @@ public final class FolderMock implements IFolder {
         throw new NotImplementedException();
     }
 
-	public Map getPersistentProperties() throws CoreException {
+	public Map<?,?> getPersistentProperties() throws CoreException {
         throw new NotImplementedException();
 	}
 
-	public Map getSessionProperties() throws CoreException {
+	public Map<?,?> getSessionProperties() throws CoreException {
         throw new NotImplementedException();
 	}
 

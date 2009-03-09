@@ -424,11 +424,13 @@ public class FileMock implements IFile {
         throw new NotImplementedException();
     }
 
-	public Map getPersistentProperties() throws CoreException {
+	@SuppressWarnings("unchecked")
+    public Map getPersistentProperties() throws CoreException {
         throw new NotImplementedException();
 	}
 
-	public Map getSessionProperties() throws CoreException {
+	@SuppressWarnings("unchecked")
+    public Map getSessionProperties() throws CoreException {
         throw new NotImplementedException();
 	}
 

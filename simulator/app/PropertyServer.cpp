@@ -108,6 +108,8 @@ void PropertyServer::SetDefaultProperties(void)
         { "ro.SECONDARY_SERVER_MEM", "4096" },
         { "ro.HIDDEN_APP_MEM", "8192" },
         { "ro.EMPTY_APP_MEM", "16384" },
+        { "ro.HOME_APP_ADJ", "4" },
+        { "ro.HOME_APP_MEM", "4096" },
         //{ "init.svc.adbd", "running" },       // causes ADB-JDWP
         { "init.svc.usbd", "running" },
         { "init.svc.debuggerd", "running" },

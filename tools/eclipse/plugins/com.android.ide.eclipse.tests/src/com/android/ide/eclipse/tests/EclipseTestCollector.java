@@ -15,15 +15,14 @@
  */
 package com.android.ide.eclipse.tests;
 
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
-
 import org.eclipse.core.runtime.Plugin;
 
 import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.util.Enumeration;
-import java.util.logging.Logger;
+
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
 
 /**
  * Class for collecting all test cases in an eclipse plugin
@@ -31,8 +30,6 @@ import java.util.logging.Logger;
  */
 public class EclipseTestCollector {
 
-    private static final Logger sLogger = Logger.getLogger(EclipseTestCollector.class.getName());
-    
     /**
      * Constructor
      */
@@ -49,13 +46,13 @@ public class EclipseTestCollector {
      */
     public void addTestCases(TestSuite suite, Plugin plugin, String expectedPackage) {
         if (plugin != null) {
-            Enumeration entries = plugin.getBundle().findEntries("/", "*.class", true);
+            Enumeration<?> entries = plugin.getBundle().findEntries("/", "*.class", true);
     
             while (entries.hasMoreElements()) {
                 URL entry = (URL)entries.nextElement();
                 String filePath = entry.getPath().replace(".class", "");
                 try {
-                  Class testClass = getClass(filePath, expectedPackage);
+                  Class<?> testClass = getClass(filePath, expectedPackage);
                   if (isTestClass(testClass)) {
                       suite.addTestSuite(testClass);
                   }
@@ -69,11 +66,11 @@ public class EclipseTestCollector {
     }
     
     /**
-     * Returns true if given class shouk\ld be added to suite
+     * Returns true if given class should be added to suite
      * @param testClass
      * @return
      */
-    protected boolean isTestClass(Class testClass) {
+    protected boolean isTestClass(Class<?> testClass) {
         return TestCase.class.isAssignableFrom(testClass) &&
           Modifier.isPublic(testClass.getModifiers()) &&
           hasPublicConstructor(testClass);
@@ -84,7 +81,7 @@ public class EclipseTestCollector {
      * @param testClass
      * @return
      */
-    protected boolean hasPublicConstructor(Class testClass) {
+    protected boolean hasPublicConstructor(Class<?> testClass) {
         try {
             TestSuite.getTestConstructor(testClass);
         } catch(NoSuchMethodException e) {
@@ -100,7 +97,7 @@ public class EclipseTestCollector {
      * @return
      * @throws ClassNotFoundException
      */
-    protected Class getClass(String filePath, String expectedPackage) throws ClassNotFoundException {
+    protected Class<?> getClass(String filePath, String expectedPackage) throws ClassNotFoundException {
         String dotPath = filePath.replace('/', '.');
         // remove the output folders, by finding where package name starts
         int index = dotPath.indexOf(expectedPackage);

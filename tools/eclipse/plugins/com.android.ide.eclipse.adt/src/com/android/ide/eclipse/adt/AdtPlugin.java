@@ -20,7 +20,7 @@ import com.android.ddmuilib.StackTracePanel;
 import com.android.ddmuilib.StackTracePanel.ISourceRevealer;
 import com.android.ddmuilib.console.DdmConsole;
 import com.android.ddmuilib.console.IDdmConsole;
-import com.android.ide.eclipse.adt.debug.launching.AndroidLaunchController;
+import com.android.ide.eclipse.adt.launch.AndroidLaunchController;
 import com.android.ide.eclipse.adt.preferences.BuildPreferencePage;
 import com.android.ide.eclipse.adt.project.ProjectHelper;
 import com.android.ide.eclipse.adt.project.export.ExportWizard;

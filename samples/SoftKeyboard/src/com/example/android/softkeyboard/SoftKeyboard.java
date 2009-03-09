@@ -253,6 +253,8 @@ public class SoftKeyboard extends InputMethodService
     @Override public void onUpdateSelection(int oldSelStart, int oldSelEnd,
             int newSelStart, int newSelEnd,
             int candidatesStart, int candidatesEnd) {
+        super.onUpdateSelection(oldSelStart, oldSelEnd, newSelStart, newSelEnd,
+                candidatesStart, candidatesEnd);
         
         // If the current selection in the text view changes, we should
         // clear whatever candidate text we have.

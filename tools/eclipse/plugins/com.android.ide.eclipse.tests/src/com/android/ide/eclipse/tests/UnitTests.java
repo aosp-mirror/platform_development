@@ -49,7 +49,7 @@ public class UnitTests {
          * Override parent class to exclude functional tests
          */
         @Override
-        protected boolean isTestClass(Class testClass) {
+        protected boolean isTestClass(Class<?> testClass) {
             return super.isTestClass(testClass) &&
             !testClass.getPackage().getName().startsWith(FuncTests.FUNC_TEST_PACKAGE);
         }

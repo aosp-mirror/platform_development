@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.ide.eclipse.adt.debug.launching;
+package com.android.ide.eclipse.adt.launch;
 
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.Client;

@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package com.android.ide.eclipse.adt.debug.launching;
+package com.android.ide.eclipse.adt.launch;
 
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.debug.launching.AndroidLaunchController.AndroidLaunchConfiguration;
+import com.android.ide.eclipse.adt.launch.AndroidLaunchController.AndroidLaunchConfiguration;
 import com.android.ide.eclipse.adt.project.ProjectHelper;
 import com.android.ide.eclipse.common.AndroidConstants;
 import com.android.ide.eclipse.common.project.AndroidManifestParser;
