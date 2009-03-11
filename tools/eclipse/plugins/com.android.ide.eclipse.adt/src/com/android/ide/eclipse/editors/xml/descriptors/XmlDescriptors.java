@@ -53,8 +53,8 @@ public final class XmlDescriptors implements IDescriptorProvider {
     /** The root document descriptor for preferences. */
     private DocumentDescriptor mPrefDescriptor = new DocumentDescriptor("xml_doc", null /* children */); //$NON-NLS-1$ 
 
-    /** The root document descriptor for gadget provider. */
-    private DocumentDescriptor mGadgetDescriptor = new DocumentDescriptor("xml_doc", null /* children */); //$NON-NLS-1$ 
+    /** The root document descriptor for widget provider. */
+    private DocumentDescriptor mAppWidgetDescriptor = new DocumentDescriptor("xml_doc", null /* children */); //$NON-NLS-1$ 
 
     /** @return the root descriptor for both searchable and preferences. */
     public DocumentDescriptor getDescriptor() {
@@ -75,9 +75,9 @@ public final class XmlDescriptors implements IDescriptorProvider {
         return mPrefDescriptor;
     }
     
-    /** @return the root descriptor for gadget providers. */
-    public DocumentDescriptor getGadgetDescriptor() {
-        return mGadgetDescriptor;
+    /** @return the root descriptor for widget providers. */
+    public DocumentDescriptor getAppWidgetDescriptor() {
+        return mAppWidgetDescriptor;
     }
     
     public IDescriptorProvider getSearchableProvider() {
@@ -104,14 +104,14 @@ public final class XmlDescriptors implements IDescriptorProvider {
         };
     }
 
-    public IDescriptorProvider getGadgetProvider() {
+    public IDescriptorProvider getAppWidgetProvider() {
         return new IDescriptorProvider() {
             public ElementDescriptor getDescriptor() {
-                return mGadgetDescriptor;
+                return mAppWidgetDescriptor;
             }
 
             public ElementDescriptor[] getRootElementDescriptors() {
-                return mGadgetDescriptor.getChildren();
+                return mAppWidgetDescriptor.getChildren();
             }
         };
     }
@@ -123,13 +123,13 @@ public final class XmlDescriptors implements IDescriptorProvider {
      * all at once.
      * 
      * @param searchableStyleMap The map style=>attributes for <searchable> from the attrs.xml file
-     * @param gadgetStyleMap The map style=>attributes for <gadget-provider> from the attrs.xml file
+     * @param appWidgetStyleMap The map style=>attributes for <appwidget-provider> from the attrs.xml file
      * @param prefs The list of non-group preference descriptions 
      * @param prefGroups The list of preference group descriptions
      */
     public synchronized void updateDescriptors(
             Map<String, DeclareStyleableInfo> searchableStyleMap,
-            Map<String, DeclareStyleableInfo> gadgetStyleMap,
+            Map<String, DeclareStyleableInfo> appWidgetStyleMap,
             ViewClassInfo[] prefs, ViewClassInfo[] prefGroups) {
 
         XmlnsAttributeDescriptor xmlns = new XmlnsAttributeDescriptor(
@@ -137,16 +137,16 @@ public final class XmlDescriptors implements IDescriptorProvider {
                 SdkConstants.NS_RESOURCES); 
 
         ElementDescriptor searchable = createSearchable(searchableStyleMap, xmlns);
-        ElementDescriptor gadget = createGadgetProviderInfo(gadgetStyleMap, xmlns);
+        ElementDescriptor appWidget = createAppWidgetProviderInfo(appWidgetStyleMap, xmlns);
         ElementDescriptor preferences = createPreference(prefs, prefGroups, xmlns);
         ArrayList<ElementDescriptor> list =  new ArrayList<ElementDescriptor>();
         if (searchable != null) {
             list.add(searchable);
             mSearchDescriptor.setChildren(new ElementDescriptor[]{ searchable });
         }
-        if (gadget != null) {
-            list.add(gadget);
-            mGadgetDescriptor.setChildren(new ElementDescriptor[]{ gadget });
+        if (appWidget != null) {
+            list.add(appWidget);
+            mAppWidgetDescriptor.setChildren(new ElementDescriptor[]{ appWidget });
         }
         if (preferences != null) {
             list.add(preferences);
@@ -190,25 +190,25 @@ public final class XmlDescriptors implements IDescriptorProvider {
     }
     
     /**
-     * Returns the new ElementDescriptor for <gadget-provider>
+     * Returns the new ElementDescriptor for <appwidget-provider>
      */
-    private ElementDescriptor createGadgetProviderInfo(
-            Map<String, DeclareStyleableInfo> gadgetStyleMap,
+    private ElementDescriptor createAppWidgetProviderInfo(
+            Map<String, DeclareStyleableInfo> appWidgetStyleMap,
             XmlnsAttributeDescriptor xmlns) {
 
-        if (gadgetStyleMap == null) {
+        if (appWidgetStyleMap == null) {
             return null;
         }
         
-        ElementDescriptor gadget = createElement(gadgetStyleMap,
-                "GadgetProviderInfo", //$NON-NLS-1$ styleName
-                "gadget-provider", //$NON-NLS-1$ xmlName
-                "Gadget Provider", // uiName
+        ElementDescriptor appWidget = createElement(appWidgetStyleMap,
+                "AppWidgetProviderInfo", //$NON-NLS-1$ styleName
+                "appwidget-provider", //$NON-NLS-1$ xmlName
+                "AppWidget Provider", // uiName
                 null, // sdk url
                 xmlns, // extraAttribute
                 null, // childrenElements
                 false /* mandatory */ );
-        return gadget;
+        return appWidget;
     }
 
     /**

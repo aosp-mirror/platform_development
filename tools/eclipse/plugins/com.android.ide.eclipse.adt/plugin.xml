@@ -474,15 +474,6 @@
             label="Android Wizards"
             visible="true">
          <action
-               class="com.android.ide.eclipse.adt.wizards.actions.NewProjectAction"
-               icon="icons/new_adt_project.png"
-               id="com.android.ide.eclipse.adt.wizards.actions.NewProjectAction"
-               label="New Android Project"
-               style="push"
-               toolbarPath="android_project"
-               tooltip="Opens a wizard to help create a new Android project">
-         </action>
-         <action
                class="com.android.ide.eclipse.adt.wizards.actions.NewXmlFileAction"
                icon="icons/new_xml.png"
                id="com.android.ide.eclipse.adt.wizards.actions.NewXmlFileAction"
@@ -490,6 +481,15 @@
                style="push"
                toolbarPath="android_project"
                tooltip="Opens a wizard to help create a new Android XML file">
+         </action>
+         <action
+               class="com.android.ide.eclipse.adt.wizards.actions.NewProjectAction"
+               icon="icons/new_adt_project.png"
+               id="com.android.ide.eclipse.adt.wizards.actions.NewProjectAction"
+               label="New Android Project"
+               style="push"
+               toolbarPath="android_project"
+               tooltip="Opens a wizard to help create a new Android project">
          </action>
       </actionSet>
    </extension>

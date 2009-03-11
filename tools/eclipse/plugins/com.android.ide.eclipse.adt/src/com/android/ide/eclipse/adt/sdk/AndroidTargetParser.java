@@ -203,9 +203,9 @@ public final class AndroidTargetParser {
                                                                             attrsManifestXmlParser);
             Map<String, Map<String, Integer>> enumValueMap = attrsXmlParser.getEnumFlagValues();
 
-            Map<String, DeclareStyleableInfo> xmlGadgetMap = null;
+            Map<String, DeclareStyleableInfo> xmlAppWidgetMap = null;
             if (mAndroidTarget.getApiVersionNumber() >= 3) {
-                xmlGadgetMap = collectGadgetDefinitions(attrsXmlParser);
+                xmlAppWidgetMap = collectAppWidgetDefinitions(attrsXmlParser);
             }
 
             if (progress.isCanceled()) {
@@ -241,7 +241,7 @@ public final class AndroidTargetParser {
             XmlDescriptors xmlDescriptors = new XmlDescriptors();
             xmlDescriptors.updateDescriptors(
                     xmlSearchableMap,
-                    xmlGadgetMap,
+                    xmlAppWidgetMap,
                     preferencesInfo,
                     preferenceGroupsInfo);
             progress.worked(1);
@@ -611,23 +611,23 @@ public final class AndroidTargetParser {
     }
 
     /**
-     * Collects all gadgetProviderInfo definition information from the attrs.xml and returns it.
+     * Collects all appWidgetProviderInfo definition information from the attrs.xml and returns it.
      * 
      * @param attrsXmlParser The parser of the attrs.xml file
      */
-    private Map<String, DeclareStyleableInfo> collectGadgetDefinitions(
+    private Map<String, DeclareStyleableInfo> collectAppWidgetDefinitions(
             AttrsXmlParser attrsXmlParser) {
         Map<String, DeclareStyleableInfo> map = attrsXmlParser.getDeclareStyleableList();
         Map<String, DeclareStyleableInfo> map2 = new HashMap<String, DeclareStyleableInfo>();
-        for (String key : new String[] { "GadgetProviderInfo" }) {  //$NON-NLS-1$
+        for (String key : new String[] { "AppWidgetProviderInfo" }) {  //$NON-NLS-1$
             if (map.containsKey(key)) {
                 map2.put(key, map.get(key));
             } else {
                 AdtPlugin.log(IStatus.WARNING,
-                        "Gadget declare-styleable %1$s not found in file %2$s", //$NON-NLS-1$
+                        "AppWidget declare-styleable %1$s not found in file %2$s", //$NON-NLS-1$
                         key, attrsXmlParser.getOsAttrsXmlPath());
                 AdtPlugin.printErrorToConsole("Android Framework Parser",
-                        String.format("Gadget declare-styleable %1$s not found in file %2$s", //$NON-NLS-1$
+                        String.format("AppWidget declare-styleable %1$s not found in file %2$s", //$NON-NLS-1$
                         key, attrsXmlParser.getOsAttrsXmlPath()));
             }
         }

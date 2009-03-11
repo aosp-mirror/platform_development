@@ -21,7 +21,6 @@ import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.project.FixLaunchConfig;
 import com.android.ide.eclipse.adt.sdk.Sdk;
 import com.android.ide.eclipse.common.AndroidConstants;
-import com.android.ide.eclipse.common.project.AndroidManifestHelper;
 import com.android.ide.eclipse.common.project.AndroidManifestParser;
 import com.android.ide.eclipse.common.project.BaseProjectHelper;
 import com.android.ide.eclipse.common.project.XmlErrorHandler.BasicXmlErrorListener;
@@ -272,7 +271,7 @@ public class PreCompilerBuilder extends BaseBuilder {
     
     
             // get the manifest file
-            IFile manifest = AndroidManifestHelper.getManifest(project);
+            IFile manifest = AndroidManifestParser.getManifest(project);
     
             if (manifest == null) {
                 String msg = String.format(Messages.s_File_Missing,
@@ -743,7 +742,7 @@ public class PreCompilerBuilder extends BaseBuilder {
         // create it if needed
         if (destinationFolder.exists() == false && createFolders) {
             destinationFolder.create(true /*force*/, true /*local*/,
-                    new SubProgressMonitor(monitor, 10));;
+                    new SubProgressMonitor(monitor, 10));
         }
         
         // Build the Java file name from the aidl name.
@@ -824,7 +823,7 @@ public class PreCompilerBuilder extends BaseBuilder {
     /**
      * Scans a folder and fills the list of aidl files to compile.
      * @param sourceFolder the root source folder.
-     * @param container The folder to scan.
+     * @param folder The folder to scan.
      */
     private void scanFolderForAidl(IFolder sourceFolder, IFolder folder) {
         try {

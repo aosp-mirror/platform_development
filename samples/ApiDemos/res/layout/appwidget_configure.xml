@@ -23,11 +23,11 @@
     <TextView
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:text="@string/gadget_configure_instructions"
+        android:text="@string/appwidget_configure_instructions"
     />
 
     <EditText
-        android:id="@+id/gadget_prefix"
+        android:id="@+id/appwidget_prefix"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
     />

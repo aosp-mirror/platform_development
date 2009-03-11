@@ -19,9 +19,9 @@ package com.android.ide.eclipse.adt.project;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.project.internal.AndroidClasspathContainerInitializer;
 import com.android.ide.eclipse.common.AndroidConstants;
-import com.android.ide.eclipse.common.project.AndroidManifestHelper;
 import com.android.ide.eclipse.common.project.AndroidManifestParser;
 
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectDescription;
@@ -389,18 +389,16 @@ public final class ProjectHelper {
                     continue;
                 }
 
-                AndroidManifestHelper androidManifest = new AndroidManifestHelper(p);
-                
                 // check that there is indeed a manifest file.
-                if (androidManifest.getManifestIFile() == null) {
+                IFile manifestFile = AndroidManifestParser.getManifest(p);
+                if (manifestFile == null) {
                     // no file? skip this project.
                     continue;
                 }
 
                 AndroidManifestParser parser = null;
                 try {
-                    parser = AndroidManifestParser.parseForData(
-                        androidManifest.getManifestIFile());
+                    parser = AndroidManifestParser.parseForData(manifestFile);
                 } catch (CoreException e) {
                     // skip this project.
                     continue;

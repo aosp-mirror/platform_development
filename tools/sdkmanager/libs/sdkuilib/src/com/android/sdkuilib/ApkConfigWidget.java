@@ -41,7 +41,7 @@ import java.util.Set;
  * The APK Configuration widget is a table that is added to the given parent composite.
  * <p/>
  * To use, create it using {@link #ApkConfigWidget(Composite)} then
- * call {@link #fillTable(Map) to set the initial list of configurations.
+ * call {@link #fillTable(Map)} to set the initial list of configurations.
  */
 public class ApkConfigWidget {
     private final static int INDEX_NAME = 0;

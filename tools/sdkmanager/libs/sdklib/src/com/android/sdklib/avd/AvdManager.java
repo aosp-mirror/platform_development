@@ -303,8 +303,11 @@ public final class AvdManager {
             }
 
             if (NUMERIC_SKIN_SIZE.matcher(skinName).matches()) {
-                // Skin name is an actual screen resolution, no skin.path
+                // Skin name is an actual screen resolution.
+                // Set skin.name for display purposes in the AVD manager and
+                // set skin.path for use by the emulator.
                 values.put(AVD_INI_SKIN_NAME, skinName);
+                values.put(AVD_INI_SKIN_PATH, skinName);
             } else {
                 // get the path of the skin (relative to the SDK)
                 // assume skin name is valid

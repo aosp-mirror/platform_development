@@ -18,12 +18,14 @@ package com.android.ide.eclipse.editors.layout;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.common.AndroidConstants;
-import com.android.ide.eclipse.common.project.AndroidManifestHelper;
+import com.android.ide.eclipse.common.project.AndroidManifestParser;
 import com.android.ide.eclipse.editors.resources.manager.ProjectClassLoader;
 import com.android.ide.eclipse.editors.resources.manager.ProjectResources;
 import com.android.layoutlib.api.IProjectCallback;
 
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.CoreException;
 
 import java.lang.reflect.Constructor;
 import java.util.HashMap;
@@ -83,17 +85,20 @@ public final class ProjectCallback implements IProjectCallback {
     }
     
     /**
-     * {@inheritDoc}
-     * 
      * Returns the namespace for the project. The namespace contains a standard part + the
      * application package.
+     *
+     * @return The package namespace of the project or null in case of error.
      */
     public String getNamespace() {
         if (mNamespace == null) {
-            AndroidManifestHelper manifest = new AndroidManifestHelper(mProject);
-            String javaPackage = manifest.getPackageName();
-            
-            mNamespace = String.format(AndroidConstants.NS_CUSTOM_RESOURCES, javaPackage);
+            IFile manifestFile = AndroidManifestParser.getManifest(mProject);
+            try {
+                AndroidManifestParser data = AndroidManifestParser.parseForData(manifestFile);
+                String javaPackage = data.getPackage();
+                mNamespace = String.format(AndroidConstants.NS_CUSTOM_RESOURCES, javaPackage);
+            } catch (CoreException e) {
+            }
         }
 
         return mNamespace;

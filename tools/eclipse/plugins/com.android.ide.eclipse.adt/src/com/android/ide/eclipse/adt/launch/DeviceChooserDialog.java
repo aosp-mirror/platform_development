@@ -36,12 +36,8 @@ import com.android.sdkuilib.AvdSelector;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.preference.IPreferenceStore;
-import org.eclipse.jface.viewers.DoubleClickEvent;
-import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ILabelProviderListener;
-import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
-import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
@@ -62,6 +58,12 @@ import org.eclipse.swt.widgets.Table;
 
 import java.util.ArrayList;
 
+/**
+ * A dialog that lets the user choose a device to deploy an application.
+ * The user can either choose an exiting running device (including running emulators)
+ * or start a new emulator using an Android Virtual Device configuration that matches
+ * the current project.
+ */
 public class DeviceChooserDialog extends Dialog implements IDeviceChangeListener {
 
     private final static int ICON_WIDTH = 16;
@@ -373,15 +375,27 @@ public class DeviceChooserDialog extends Dialog implements IDeviceChangeListener
         mViewer.setContentProvider(new ContentProvider());
         mViewer.setLabelProvider(new LabelProvider());
         mViewer.setInput(AndroidDebugBridge.getBridge());
-        mViewer.addDoubleClickListener(new IDoubleClickListener() {
-            public void doubleClick(DoubleClickEvent event) {
-                ISelection selection = event.getSelection();
-                if (selection instanceof IStructuredSelection) {
-                    IStructuredSelection structuredSelection = (IStructuredSelection)selection;
-                    Object object = structuredSelection.getFirstElement();
-                    if (object instanceof Device) {
-                        mResponse.setDeviceToUse((Device)object);
-                    }
+
+        mDeviceTable.addSelectionListener(new SelectionAdapter() {
+            /**
+             * Handles single-click selection on the device selector.
+             * {@inheritDoc}
+             */
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                handleDeviceSelection();
+            }
+
+            /**
+             * Handles double-click selection on the device selector.
+             * Note that the single-click handler will probably already have been called.
+             * {@inheritDoc}
+             */
+            @Override
+            public void widgetDefaultSelected(SelectionEvent e) {
+                handleDeviceSelection();
+                if (isOkButtonEnabled()) {
+                    okPressed();
                 }
             }
         });
@@ -397,23 +411,35 @@ public class DeviceChooserDialog extends Dialog implements IDeviceChangeListener
         layout.marginLeft = 30;
         offsetComp.setLayout(layout);
         
-        mPreferredAvdSelector = new AvdSelector(offsetComp, getNonRunningAvds(), mProjectTarget,
-                false /*allowMultipleSelection*/);
+        mPreferredAvdSelector = new AvdSelector(offsetComp, getNonRunningAvds(), mProjectTarget);
         mPreferredAvdSelector.setTableHeightHint(100);
         mPreferredAvdSelector.setEnabled(false);
-        mDeviceTable.addSelectionListener(new SelectionAdapter() {
-            @Override
-            public void widgetSelected(SelectionEvent e) {
-                handleDeviceSelection();
-            }
-        });
-        
         mPreferredAvdSelector.setSelectionListener(new SelectionAdapter() {
+            /**
+             * Handles single-click selection on the AVD selector.
+             * {@inheritDoc}
+             */
             @Override
             public void widgetSelected(SelectionEvent e) {
                 if (mDisableAvdSelectionChange == false) {
                     mResponse.setAvdToLaunch(mPreferredAvdSelector.getFirstSelected());
                     enableOkButton();
+                }
+            }
+            
+            /**
+             * Handles double-click selection on the AVD selector.
+             * 
+             * Note that the single-click handler will probably already have been called
+             * but the selected item can have changed in between.
+             * 
+             * {@inheritDoc}
+             */
+            @Override
+            public void widgetDefaultSelected(SelectionEvent e) {
+                widgetSelected(e);
+                if (isOkButtonEnabled()) {
+                    okPressed();
                 }
             }
         });
@@ -585,6 +611,14 @@ public class DeviceChooserDialog extends Dialog implements IDeviceChangeListener
         } else {
             okButton.setEnabled(mResponse.getAvdToLaunch() != null);
         }
+    }
+
+    /**
+     * Returns true if the ok button is enabled.
+     */
+    private boolean isOkButtonEnabled() {
+        Button okButton = getButton(IDialogConstants.OK_ID);
+        return okButton.isEnabled();
     }
     
     /**

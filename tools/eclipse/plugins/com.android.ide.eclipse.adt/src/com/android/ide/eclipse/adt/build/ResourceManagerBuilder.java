@@ -176,6 +176,7 @@ public class ResourceManagerBuilder extends BaseBuilder {
                         "Creating 'gen' source folder for generated Java files");
                 genFolder.create(true /* force */, true /* local */,
                         new SubProgressMonitor(monitor, 10));
+                genFolder.setDerived(true);
             }
             
             // add it to the source folder list, if needed only (or it will throw)

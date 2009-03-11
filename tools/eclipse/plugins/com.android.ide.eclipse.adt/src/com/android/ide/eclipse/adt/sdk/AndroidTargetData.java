@@ -44,7 +44,7 @@ public class AndroidTargetData {
     public final static int DESCRIPTOR_RESOURCES = 5;
     public final static int DESCRIPTOR_SEARCHABLE = 6;
     public final static int DESCRIPTOR_PREFERENCES = 7;
-    public final static int DESCRIPTOR_GADGET_PROVIDER = 8;
+    public final static int DESCRIPTOR_APPWIDGET_PROVIDER = 8;
     
     public final static class LayoutBridge {
         /** Link to the layout bridge */
@@ -158,8 +158,8 @@ public class AndroidTargetData {
                 return ResourcesDescriptors.getInstance();
             case DESCRIPTOR_PREFERENCES:
                 return mXmlDescriptors.getPreferencesProvider();
-            case DESCRIPTOR_GADGET_PROVIDER:
-                return mXmlDescriptors.getGadgetProvider();
+            case DESCRIPTOR_APPWIDGET_PROVIDER:
+                return mXmlDescriptors.getAppWidgetProvider();
             case DESCRIPTOR_SEARCHABLE:
                 return mXmlDescriptors.getSearchableProvider();
             default :

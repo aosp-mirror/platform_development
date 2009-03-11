@@ -31,7 +31,7 @@ import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.launch.DeviceChooserDialog.DeviceChooserResponse;
 import com.android.ide.eclipse.adt.project.ProjectHelper;
 import com.android.ide.eclipse.adt.sdk.Sdk;
-import com.android.ide.eclipse.common.project.AndroidManifestHelper;
+import com.android.ide.eclipse.common.project.AndroidManifestParser;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.avd.AvdManager;
@@ -584,8 +584,7 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
         ArrayList<IResource> array = new ArrayList<IResource>(2);
         array.add(project);
         
-        AndroidManifestHelper helper = new AndroidManifestHelper(project);
-        IFile manifest = helper.getManifestIFile();
+        IFile manifest = AndroidManifestParser.getManifest(project);
         if (manifest != null) {
             array.add(manifest);
         }

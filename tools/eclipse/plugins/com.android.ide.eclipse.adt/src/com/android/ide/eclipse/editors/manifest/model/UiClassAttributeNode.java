@@ -17,7 +17,7 @@
 package com.android.ide.eclipse.editors.manifest.model;
 
 import com.android.ide.eclipse.common.AndroidConstants;
-import com.android.ide.eclipse.common.project.AndroidManifestHelper;
+import com.android.ide.eclipse.common.project.AndroidManifestParser;
 import com.android.ide.eclipse.common.project.BaseProjectHelper;
 import com.android.ide.eclipse.editors.AndroidEditor;
 import com.android.ide.eclipse.editors.descriptors.AttributeDescriptor;
@@ -251,8 +251,8 @@ public class UiClassAttributeNode extends UiTextAttributeNode {
                     String javaPackage = getManifestPackage();
 
                     // build the fully qualified name of the class
-                    String className = AndroidManifestHelper.combinePackageAndClassName(javaPackage,
-                            textValue);
+                    String className = AndroidManifestParser.combinePackageAndClassName(
+                            javaPackage, textValue);
                     
                     // only test the vilibility for activities.
                     boolean testVisibility = AndroidConstants.CLASS_ACTIVITY.equals(

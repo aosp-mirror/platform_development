@@ -442,11 +442,15 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
                     tooltip = ((TextAttributeDescriptor) choice).getTooltip();
                 }
                 
+                // Get the namespace URI for the attribute. Note that some attributes
+                // do not have a namespace and thus return null here.
                 String nsUri = ((AttributeDescriptor)choice).getNamespaceUri();
-                nsPrefix = nsUriMap.get(nsUri);
-                if (nsPrefix == null) {
-                    nsPrefix = lookupNamespacePrefix(currentNode, nsUri);
-                    nsUriMap.put(nsUri, nsPrefix);
+                if (nsUri != null) {
+                    nsPrefix = nsUriMap.get(nsUri);
+                    if (nsPrefix == null) {
+                        nsPrefix = lookupNamespacePrefix(currentNode, nsUri);
+                        nsUriMap.put(nsUri, nsPrefix);
+                    }
                 }
                 if (nsPrefix != null) {
                     nsPrefix += ":"; //$NON-NLS-1$

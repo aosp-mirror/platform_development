@@ -36,21 +36,17 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 
-import java.util.ArrayList;
-
 
 /**
  * The AVD selector is a table that is added to the given parent composite.
  * <p/>
- * To use, create it using {@link #AvdSelector(Composite, AvdInfo[], boolean)} then
+ * To use, create it using {@link #AvdSelector(Composite, AvdInfo[])} then
  * call {@link #setSelection(AvdInfo)}, {@link #setSelectionListener(SelectionListener)}
- * and finally use {@link #getFirstSelected()} or {@link #getAllSelected()} to retrieve the
- * selection.
+ * and finally use {@link #getFirstSelected()} to retrieve the selection.
  */
 public final class AvdSelector {
     
     private AvdInfo[] mAvds;
-    private final boolean mAllowMultipleSelection;
     private SelectionListener mSelectionListener;
     private Table mTable;
     private Label mDescription;
@@ -63,11 +59,8 @@ public final class AvdSelector {
      * 
      * @param parent The parent composite where the selector will be added.
      * @param avds The list of AVDs. This is <em>not</em> copied, the caller must not modify.
-     * @param allowMultipleSelection True if more than one SDK target can be selected at the same
-     *        time.
      */
-    public AvdSelector(Composite parent, AvdInfo[] avds, IAndroidTarget filter,
-            boolean allowMultipleSelection) {
+    public AvdSelector(Composite parent, AvdInfo[] avds, IAndroidTarget filter) {
         mAvds = avds;
 
         // Layout has 1 column
@@ -76,7 +69,6 @@ public final class AvdSelector {
         group.setLayoutData(new GridData(GridData.FILL_BOTH));
         group.setFont(parent.getFont());
         
-        mAllowMultipleSelection = allowMultipleSelection;
         mTable = new Table(group, SWT.CHECK | SWT.FULL_SELECTION | SWT.SINGLE | SWT.BORDER);
         mTable.setHeaderVisible(true);
         mTable.setLinesVisible(false);
@@ -112,11 +104,9 @@ public final class AvdSelector {
      * 
      * @param parent The parent composite where the selector will be added.
      * @param avds The list of AVDs. This is <em>not</em> copied, the caller must not modify.
-     * @param allowMultipleSelection True if more than one SDK target can be selected at the same
-     *        time.
      */
-    public AvdSelector(Composite parent, AvdInfo[] avds, boolean allowMultipleSelection) {
-        this(parent, avds, null /* filter */, allowMultipleSelection);
+    public AvdSelector(Composite parent, AvdInfo[] avds) {
+        this(parent, avds, null /* filter */);
     }
 
     
@@ -160,8 +150,7 @@ public final class AvdSelector {
      * The event's item contains a {@link TableItem}.
      * The {@link TableItem#getData()} contains an {@link IAndroidTarget}.
      * <p/>
-     * It is recommended that the caller uses the {@link #getFirstSelected()} and
-     * {@link #getAllSelected()} methods instead.
+     * It is recommended that the caller uses the {@link #getFirstSelected()} method instead.
      * 
      * @param selectionListener The new listener or null to remove it.
      */
@@ -202,27 +191,9 @@ public final class AvdSelector {
     }
 
     /**
-     * Returns all selected items.
-     * This is useful when the table is in multiple-selection mode.
-     * 
-     * @see #getFirstSelected()
-     * @return An array of selected items. The list can be empty but not null.
-     */
-    public AvdInfo[] getAllSelected() {
-        ArrayList<IAndroidTarget> list = new ArrayList<IAndroidTarget>();
-        for (TableItem i : mTable.getItems()) {
-            if (i.getChecked()) {
-                list.add((IAndroidTarget) i.getData());
-            }
-        }
-        return list.toArray(new AvdInfo[list.size()]);
-    }
-
-    /**
      * Returns the first selected item.
      * This is useful when the table is in single-selection mode.
      * 
-     * @see #getAllSelected()
      * @return The first selected item or null.
      */
     public AvdInfo getFirstSelected() {
@@ -278,20 +249,11 @@ public final class AvdSelector {
     private void setupSelectionListener(final Table table) {
         // Add a selection listener that will check/uncheck items when they are double-clicked
         table.addSelectionListener(new SelectionListener() {
-            /** Default selection means double-click on "most" platforms */
-            public void widgetDefaultSelected(SelectionEvent e) {
-                if (e.item instanceof TableItem) {
-                    TableItem i = (TableItem) e.item;
-                    i.setChecked(!i.getChecked());
-                    enforceSingleSelection(i);
-                    updateDescription(i);
-                }
-
-                if (mSelectionListener != null) {
-                    mSelectionListener.widgetDefaultSelected(e);
-                }
-            }
             
+            /**
+             * Handles single-click selection on the table.
+             * {@inheritDoc}
+             */
             public void widgetSelected(SelectionEvent e) {
                 if (e.item instanceof TableItem) {
                     TableItem i = (TableItem) e.item;
@@ -305,11 +267,32 @@ public final class AvdSelector {
             }
 
             /**
-             * If we're not in multiple selection mode, uncheck all other
-             * items when this one is selected.
+             * Handles double-click selection on the table.
+             * Note that the single-click handler will probably already have been called.
+             * 
+             * On double-click, <em>always</em> check the table item.
+             * 
+             * {@inheritDoc}
+             */
+            public void widgetDefaultSelected(SelectionEvent e) {
+                if (e.item instanceof TableItem) {
+                    TableItem i = (TableItem) e.item;
+                    i.setChecked(true);
+                    enforceSingleSelection(i);
+                    updateDescription(i);
+                }
+
+                if (mSelectionListener != null) {
+                    mSelectionListener.widgetDefaultSelected(e);
+                }
+            }
+
+            /**
+             * To ensure single selection, uncheck all other items when this one is selected.
+             * This makes the chekboxes act as radio buttons.
              */
             private void enforceSingleSelection(TableItem item) {
-                if (!mAllowMultipleSelection && item.getChecked()) {
+                if (item.getChecked()) {
                     Table parentTable = item.getParent();
                     for (TableItem i2 : parentTable.getItems()) {
                         if (i2 != item && i2.getChecked()) {

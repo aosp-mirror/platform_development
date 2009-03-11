@@ -27,6 +27,7 @@ import com.android.hierarchyviewer.scene.ViewHierarchyScene;
 import com.android.hierarchyviewer.scene.ViewManager;
 import com.android.hierarchyviewer.scene.ViewNode;
 import com.android.hierarchyviewer.scene.WindowsLoader;
+import com.android.hierarchyviewer.scene.ProfilesLoader;
 import com.android.hierarchyviewer.util.OS;
 import com.android.hierarchyviewer.util.WorkerThread;
 import com.android.hierarchyviewer.ui.action.ShowDevicesAction;
@@ -43,6 +44,7 @@ import com.android.hierarchyviewer.ui.util.PngFileFilter;
 import com.android.hierarchyviewer.ui.util.IconLoader;
 import com.android.hierarchyviewer.ui.model.PropertiesTableModel;
 import com.android.hierarchyviewer.ui.model.ViewsTreeModel;
+import com.android.hierarchyviewer.ui.model.ProfilesTableModel;
 import org.jdesktop.swingworker.SwingWorker;
 import org.netbeans.api.visual.graph.layout.TreeGraphLayout;
 import org.netbeans.api.visual.model.ObjectSceneEvent;
@@ -123,6 +125,7 @@ public class Workspace extends JFrame {
     private JSplitPane sideSplitter;
     private JSplitPane mainSplitter;
     private JTable propertiesTable;
+    private JTable profilingTable;
     private JComponent pixelPerfectPanel;
     private JTree pixelPerfectTree;
     private ScreenViewer screenViewer;
@@ -274,11 +277,32 @@ public class Workspace extends JFrame {
         JScrollPane tableScroller = new JScrollPane(propertiesTable);
         tableScroller.setBorder(null);
 
+        profilingTable = new JTable();
+        profilingTable.setModel(new DefaultTableModel(new Object[][] {
+                { " " , " " }, { " " , " " }, { " " , " " } },
+                new String[] { "Operation", "Duration (ms)" }));
+        profilingTable.setBorder(null);
+        profilingTable.getTableHeader().setBorder(null);
+
+        JScrollPane firstTableScroller = new JScrollPane(profilingTable);
+        firstTableScroller.setBorder(null);
+
+        setVisibleRowCount(profilingTable, 5);
+        firstTableScroller.setMinimumSize(profilingTable.getPreferredScrollableViewportSize());
+        
+        JSplitPane tablesSplitter = new JSplitPane();
+        tablesSplitter.setBorder(null);
+        tablesSplitter.setOrientation(JSplitPane.VERTICAL_SPLIT);
+        tablesSplitter.setResizeWeight(0);
+        tablesSplitter.setLeftComponent(firstTableScroller);
+        tablesSplitter.setBottomComponent(tableScroller);
+        tablesSplitter.setContinuousLayout(true);
+
         sideSplitter = new JSplitPane();
         sideSplitter.setBorder(null);
         sideSplitter.setOrientation(JSplitPane.VERTICAL_SPLIT);
         sideSplitter.setResizeWeight(0.5);
-        sideSplitter.setLeftComponent(tableScroller);
+        sideSplitter.setLeftComponent(tablesSplitter);
         sideSplitter.setBottomComponent(null);
         sideSplitter.setContinuousLayout(true);
 
@@ -601,6 +625,22 @@ public class Workspace extends JFrame {
 
     private void showProperties(ViewNode node) {
         propertiesTable.setModel(new PropertiesTableModel(node));
+    }
+
+    private void updateProfiles(double[] profiles) {
+        profilingTable.setModel(new ProfilesTableModel(profiles));
+        setVisibleRowCount(profilingTable, profiles.length + 1);
+    }
+
+    public static void setVisibleRowCount(JTable table, int rows) {
+        int height = 0;
+        for (int row = 0; row < rows; row++) {
+            height += table.getRowHeight(row);
+        }
+
+        Dimension size = new Dimension(table.getPreferredScrollableViewportSize().width, height);
+        table.setPreferredScrollableViewportSize(size);
+        table.revalidate();
     }
 
     private void showPixelPerfectTree() {
@@ -1134,22 +1174,24 @@ public class Workspace extends JFrame {
         }
     }
 
-    private class LoadGraphTask extends SwingWorker<ViewHierarchyScene, Void> {
+    private class LoadGraphTask extends SwingWorker<double[], Void> {
         public LoadGraphTask() {
             beginTask();
         }
 
         @Override
         @WorkerThread
-        protected ViewHierarchyScene doInBackground() {
+        protected double[] doInBackground() {
             scene = ViewHierarchyLoader.loadScene(currentDevice, currentWindow);
-            return scene;
+            return ProfilesLoader.loadProfiles(currentDevice, currentWindow,
+                    scene.getRoot().toString());
         }
 
         @Override
         protected void done() {
             try {
-                createGraph(get());
+                createGraph(scene);
+                updateProfiles(get());
             } catch (InterruptedException e) {
                 e.printStackTrace();
             } catch (ExecutionException e) {

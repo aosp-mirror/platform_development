@@ -222,10 +222,10 @@ class NewXmlFileCreationPage extends WizardPage {
                 null,                                               // default attributes
                 1                                                   // target API level
                 ),
-        new TypeInfo("Gadget Provider",                             // UI name
-                "An XML file that describes a gadget provider.",    // tooltip
+        new TypeInfo("AppWidget Provider",                          // UI name
+                "An XML file that describes a widget provider.",    // tooltip
                 ResourceFolderType.XML,                             // folder type
-                AndroidTargetData.DESCRIPTOR_GADGET_PROVIDER,       // root seed
+                AndroidTargetData.DESCRIPTOR_APPWIDGET_PROVIDER,    // root seed
                 null,                                               // default root
                 SdkConstants.NS_RESOURCES,                          // xmlns
                 null,                                               // default attributes
@@ -1109,7 +1109,7 @@ class NewXmlFileCreationPage extends WizardPage {
             TypeInfo type = getSelectedType();
 
             if (type.getTargetApiLevel() > currentApiLevel) {
-                error = "The API level of the selected type (e.g. gadget, etc.) is not " +
+                error = "The API level of the selected type (e.g. AppWidget, etc.) is not " +
                         "compatible with the API level of the project.";
             }
         }

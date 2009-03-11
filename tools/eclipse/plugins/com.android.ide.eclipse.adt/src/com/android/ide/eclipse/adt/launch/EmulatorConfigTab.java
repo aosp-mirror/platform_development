@@ -178,8 +178,7 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
         mPreferredAvdLabel = new Label(offsetComp, SWT.NONE);
         mPreferredAvdLabel.setText("Select a preferred Android Virtual Device:");
         AvdInfo[] avds = new AvdInfo[0];
-        mPreferredAvdSelector = new AvdSelector(offsetComp, avds,
-                false /*allowMultipleSelection*/);
+        mPreferredAvdSelector = new AvdSelector(offsetComp, avds);
         mPreferredAvdSelector.setTableHeightHint(100);
         mPreferredAvdSelector.setSelectionListener(new SelectionAdapter() {
             @Override

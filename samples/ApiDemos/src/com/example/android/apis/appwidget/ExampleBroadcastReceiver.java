@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-package com.example.android.apis.gadget;
+package com.example.android.apis.appwidget;
 
+import android.appwidget.AppWidgetManager;
+import android.appwidget.AppWidgetProvider;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.gadget.GadgetManager;
-import android.gadget.GadgetProvider;
 import android.os.SystemClock;
 import android.util.Log;
 import android.widget.RemoteViews;
@@ -33,8 +33,8 @@ import java.util.ArrayList;
 import com.example.android.apis.R;
 
 /**
- * A BroadcastReceiver that listens for updates for the ExampleGadgetProvider.  This
- * BroadcastReceiver starts off disabled, and we only enable it when there is a gadget
+ * A BroadcastReceiver that listens for updates for the ExampleAppWidgetProvider.  This
+ * BroadcastReceiver starts off disabled, and we only enable it when there is a widget
  * instance created, in order to only receive notifications when we need them.
  */
 public class ExampleBroadcastReceiver extends BroadcastReceiver {
@@ -42,20 +42,20 @@ public class ExampleBroadcastReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         Log.d("ExmampleBroadcastReceiver", "intent=" + intent);
 
-        // For our example, we'll also update all of the gadgets when the timezone
+        // For our example, we'll also update all of the widgets when the timezone
         // changes, or the user or network sets the time.
         String action = intent.getAction();
         if (action.equals(Intent.ACTION_TIMEZONE_CHANGED)
                 || action.equals(Intent.ACTION_TIME_CHANGED)) {
-            GadgetManager gm = GadgetManager.getInstance(context);
-            ArrayList<Integer> gadgetIds = new ArrayList();
+            AppWidgetManager gm = AppWidgetManager.getInstance(context);
+            ArrayList<Integer> appWidgetIds = new ArrayList();
             ArrayList<String> texts = new ArrayList();
 
-            ExampleGadgetConfigure.loadAllTitlePrefs(context, gadgetIds, texts);
+            ExampleAppWidgetConfigure.loadAllTitlePrefs(context, appWidgetIds, texts);
 
-            final int N = gadgetIds.size();
+            final int N = appWidgetIds.size();
             for (int i=0; i<N; i++) {
-                ExampleGadgetProvider.updateGadget(context, gm, gadgetIds.get(i), texts.get(i));
+                ExampleAppWidgetProvider.updateAppWidget(context, gm, appWidgetIds.get(i), texts.get(i));
             }
         }
     }
