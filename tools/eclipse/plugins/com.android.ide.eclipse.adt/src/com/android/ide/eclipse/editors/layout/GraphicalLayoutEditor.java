@@ -86,8 +86,6 @@ import org.eclipse.gef.dnd.TemplateTransferDropTargetListener;
 import org.eclipse.gef.editparts.ScalableFreeformRootEditPart;
 import org.eclipse.gef.palette.PaletteRoot;
 import org.eclipse.gef.requests.CreationFactory;
-import org.eclipse.gef.ui.parts.GraphicalEditorWithPalette;
-import org.eclipse.gef.ui.parts.SelectionSynchronizer;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
@@ -141,7 +139,7 @@ import java.util.Set;
  * <p/>
  * To understand Drag'n'drop: http://www.eclipse.org/articles/Article-Workbench-DND/drag_drop.html
  */
-public class GraphicalLayoutEditor extends GraphicalEditorWithPalette
+public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
         implements ILayoutReloadListener {
     
     private final static String THEME_SEPARATOR = "----------"; //$NON-NLS-1$
@@ -595,6 +593,7 @@ public class GraphicalLayoutEditor extends GraphicalEditorWithPalette
         return mPaletteRoot;
     }
 
+    @Override
     public Clipboard getClipboard() {
         return mClipboard;
     }
@@ -716,7 +715,8 @@ public class GraphicalLayoutEditor extends GraphicalEditorWithPalette
      * 
      * @param uiNodeModel The {@link UiElementNode} to select.
      */
-    public void selectModel(UiElementNode uiNodeModel) {
+    @Override
+    void selectModel(UiElementNode uiNodeModel) {
         GraphicalViewer viewer = getGraphicalViewer();
         
         // Give focus to the graphical viewer (in case the outline has it)
@@ -734,6 +734,7 @@ public class GraphicalLayoutEditor extends GraphicalEditorWithPalette
     // Local methods
     //--------------
 
+    @Override
     public LayoutEditor getLayoutEditor() {
         return mLayoutEditor;
     }
@@ -863,7 +864,8 @@ public class GraphicalLayoutEditor extends GraphicalEditorWithPalette
      * Sets the UI for the edition of a new file.
      * @param configuration the configuration of the new file.
      */
-    public void editNewFile(FolderConfiguration configuration) {
+    @Override
+    void editNewFile(FolderConfiguration configuration) {
         // update the configuration UI
         setConfiguration(configuration);
         
@@ -1015,6 +1017,7 @@ public class GraphicalLayoutEditor extends GraphicalEditorWithPalette
     /**
      * Reloads this editor, by getting the new model from the {@link LayoutEditor}.
      */
+    @Override
     void reloadEditor() {
         GraphicalViewer viewer = getGraphicalViewer();
         viewer.setContents(getModel());
@@ -1036,6 +1039,7 @@ public class GraphicalLayoutEditor extends GraphicalEditorWithPalette
     /**
      * Callback for XML model changed. Only update/recompute the layout if the editor is visible
      */
+    @Override
     void onXmlModelChanged() {
         if (mLayoutEditor.isGraphicalEditorActive()) {
             doXmlReload(true /* force */);
@@ -1265,10 +1269,12 @@ public class GraphicalLayoutEditor extends GraphicalEditorWithPalette
         mCurrentLayoutLabel.setText(current != null ? current : "(Default)");
     }
 
+    @Override
     UiDocumentNode getModel() {
         return mLayoutEditor.getUiRootNode();
     }
     
+    @Override
     void reloadPalette() {
         PaletteFactory.createPaletteRoot(mPaletteRoot, mLayoutEditor.getTargetData());
     }
@@ -1667,6 +1673,7 @@ public class GraphicalLayoutEditor extends GraphicalEditorWithPalette
     /**
      * Recomputes the layout with the help of layoutlib.
      */
+    @Override
     @SuppressWarnings("deprecation")
     void recomputeLayout() {
         doXmlReload(false /* force */);
@@ -1968,6 +1975,7 @@ public class GraphicalLayoutEditor extends GraphicalEditorWithPalette
     /**
      * Responds to a page change that made the Graphical editor page the activated page.
      */
+    @Override
     void activated() {
         if (mNeedsRecompute || mNeedsXmlReload) {
             recomputeLayout();
@@ -1977,6 +1985,7 @@ public class GraphicalLayoutEditor extends GraphicalEditorWithPalette
     /**
      * Responds to a page change that made the Graphical editor page the deactivated page
      */
+    @Override
     void deactivated() {
         // nothing to be done here for now.
     }
@@ -2231,31 +2240,6 @@ public class GraphicalLayoutEditor extends GraphicalEditorWithPalette
         }
         
         return mConfiguredFrameworkRes;
-    }
-
-    /**
-     * Returns the selection synchronizer object.
-     * The synchronizer can be used to sync the selection of 2 or more EditPartViewers.
-     * <p/>
-     * This is changed from protected to public so that the outline can use it.
-     *
-     * @return the synchronizer
-     */
-    @Override
-    public SelectionSynchronizer getSelectionSynchronizer() {
-        return super.getSelectionSynchronizer();
-    }
-
-    /**
-     * Returns the edit domain.
-     * <p/>
-     * This is changed from protected to public so that the outline can use it.
-     *
-     * @return the edit domain
-     */
-    @Override
-    public DefaultEditDomain getEditDomain() {
-        return super.getEditDomain();
     }
 
     /**

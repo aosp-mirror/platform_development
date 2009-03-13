@@ -18,7 +18,6 @@ package com.android.ide.eclipse.adt.launch;
 
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.launch.AndroidLaunchController.AndroidLaunchConfiguration;
 import com.android.ide.eclipse.adt.project.ProjectHelper;
 import com.android.ide.eclipse.common.AndroidConstants;
 import com.android.ide.eclipse.common.project.AndroidManifestParser;
@@ -233,7 +232,16 @@ public class LaunchConfigDelegate extends LaunchConfigurationDelegate {
             return;
         }
 
-        String activityName = null;
+        doLaunch(configuration, mode, monitor, project, androidLaunch, config, controller,
+                applicationPackage, manifestParser);
+    }
+
+    protected void doLaunch(ILaunchConfiguration configuration, String mode,
+            IProgressMonitor monitor, IProject project, AndroidLaunch androidLaunch,
+            AndroidLaunchConfiguration config, AndroidLaunchController controller,
+            IFile applicationPackage, AndroidManifestParser manifestParser) {
+        
+       String activityName = null;
         
         if (config.mLaunchAction == ACTION_ACTIVITY) { 
             // Get the activity name defined in the config
@@ -292,11 +300,16 @@ public class LaunchConfigDelegate extends LaunchConfigurationDelegate {
             }
         }
 
+        IAndroidLaunchAction launchAction = new EmptyLaunchAction();
+        if (activityName != null) {
+            launchAction = new ActivityLaunchAction(activityName, controller);
+        }
+
         // everything seems fine, we ask the launch controller to handle
         // the rest
         controller.launch(project, mode, applicationPackage, manifestParser.getPackage(),
                 manifestParser.getDebuggable(), manifestParser.getApiLevelRequirement(),
-                activityName, config, androidLaunch, monitor);
+                launchAction, config, androidLaunch, monitor);
     }
     
     @Override

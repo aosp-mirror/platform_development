@@ -231,9 +231,9 @@ public class DeviceChooserDialog extends Dialog implements IDeviceChangeListener
     
     public static class DeviceChooserResponse {
         private AvdInfo mAvdToLaunch;
-        private Device mDeviceToUse;
+        private IDevice mDeviceToUse;
         
-        public void setDeviceToUse(Device d) {
+        public void setDeviceToUse(IDevice d) {
             mDeviceToUse = d;
             mAvdToLaunch = null;
         }
@@ -243,7 +243,7 @@ public class DeviceChooserDialog extends Dialog implements IDeviceChangeListener
             mDeviceToUse = null;
         }
         
-        public Device getDeviceToUse() {
+        public IDevice getDeviceToUse() {
             return mDeviceToUse;
         }
         
@@ -737,3 +737,4 @@ public class DeviceChooserDialog extends Dialog implements IDeviceChangeListener
         mDisableAvdSelectionChange = false;
     }
 }
+

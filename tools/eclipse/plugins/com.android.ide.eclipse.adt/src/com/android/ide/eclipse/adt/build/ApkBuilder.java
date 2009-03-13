@@ -966,9 +966,10 @@ public class ApkBuilder extends BaseBuilder {
      * @param javaProject the javaProject object.
      * @param referencedJavaProjects the java projects that this project references.
      * @throws IOException 
+     * @throws CoreException 
      */
     private void writeStandardResources(SignedJarBuilder jarBuilder, IJavaProject javaProject,
-            IJavaProject[] referencedJavaProjects) throws IOException {
+            IJavaProject[] referencedJavaProjects) throws IOException, CoreException {
         IWorkspace ws = ResourcesPlugin.getWorkspace();
         IWorkspaceRoot wsRoot = ws.getRoot();
         
@@ -978,7 +979,9 @@ public class ApkBuilder extends BaseBuilder {
         writeStandardProjectResources(jarBuilder, javaProject, wsRoot, list);
         
         for (IJavaProject referencedJavaProject : referencedJavaProjects) {
-            writeStandardProjectResources(jarBuilder, referencedJavaProject, wsRoot, list);
+            if (referencedJavaProject.getProject().hasNature(AndroidConstants.NATURE)) {
+                writeStandardProjectResources(jarBuilder, referencedJavaProject, wsRoot, list);
+            }
         }
     }
     
@@ -1067,7 +1070,9 @@ public class ApkBuilder extends BaseBuilder {
     }
 
     /**
-     * Returns the list of the output folders for the specified {@link IJavaProject} objects.
+     * Returns the list of the output folders for the specified {@link IJavaProject} objects, if
+     * they are Android projects.
+     * 
      * @param referencedJavaProjects the java projects.
      * @return an array, always. Can be empty.
      * @throws CoreException
@@ -1079,19 +1084,21 @@ public class ApkBuilder extends BaseBuilder {
         IWorkspaceRoot wsRoot = ws.getRoot();
 
         for (IJavaProject javaProject : referencedJavaProjects) {
-            // get the output folder
-            IPath path = null;
-            try {
-                path = javaProject.getOutputLocation();
-            } catch (JavaModelException e) {
-                continue;
-            }
-
-            IResource outputResource = wsRoot.findMember(path);
-            if (outputResource != null && outputResource.getType() == IResource.FOLDER) {
-                String outputOsPath = outputResource.getLocation().toOSString();
-
-                list.add(outputOsPath);
+            if (javaProject.getProject().hasNature(AndroidConstants.NATURE)) {
+                // get the output folder
+                IPath path = null;
+                try {
+                    path = javaProject.getOutputLocation();
+                } catch (JavaModelException e) {
+                    continue;
+                }
+    
+                IResource outputResource = wsRoot.findMember(path);
+                if (outputResource != null && outputResource.getType() == IResource.FOLDER) {
+                    String outputOsPath = outputResource.getLocation().toOSString();
+    
+                    list.add(outputOsPath);
+                }
             }
         }
 

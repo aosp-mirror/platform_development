@@ -686,7 +686,8 @@ public class AndroidManifestParser {
      * Parses the manifest file, and collects data.
      * @param manifestFile The manifest file to parse.
      * @return an {@link AndroidManifestParser} or null if the parsing failed.
-     * @throws CoreException
+     * @throws CoreException for example the file does not exist in the workspace or
+     *         the workspace needs to be refreshed.
      */
     public static AndroidManifestParser parseForData(IFile manifestFile) throws CoreException {
         return parse(null /* javaProject */, manifestFile, null /* errorListener */,
@@ -698,11 +699,15 @@ public class AndroidManifestParser {
      * 
      * @param osManifestFilePath The OS path of the manifest file to parse.
      * @return an {@link AndroidManifestParser} or null if the parsing failed.
-     * @throws CoreException
      */
-    public static AndroidManifestParser parseForData(String osManifestFilePath)
-            throws CoreException {
-        return parse(new File(osManifestFilePath));
+    public static AndroidManifestParser parseForData(String osManifestFilePath) {
+        try {
+            return parse(new File(osManifestFilePath));
+        } catch (CoreException e) {
+            // Ignore workspace errors (unlikely to happen since this parses an actual file,
+            // not a workspace resource).
+            return null;
+        }
     }
 
     /**

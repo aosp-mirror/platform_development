@@ -36,7 +36,6 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.ResourcesPlugin;
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
@@ -823,12 +822,7 @@ public class NewProjectCreationPage extends WizardPage {
         Path path = new Path(f.getPath());
         String osPath = path.append(AndroidConstants.FN_ANDROID_MANIFEST).toOSString();
         
-        AndroidManifestParser manifestData = null;
-        try {
-            manifestData = AndroidManifestParser.parseForData(osPath);
-        } catch (CoreException e1) {
-            // ignore any parsing issue
-        }
+        AndroidManifestParser manifestData = AndroidManifestParser.parseForData(osPath);
         if (manifestData == null) {
             return;
         }
@@ -1096,10 +1090,8 @@ public class NewProjectCreationPage extends WizardPage {
             }
 
             // Parse it and check the important fields.
-            AndroidManifestParser manifestData;
-            try {
-                manifestData = AndroidManifestParser.parseForData(osPath);
-            } catch (CoreException e) {
+            AndroidManifestParser manifestData = AndroidManifestParser.parseForData(osPath);
+            if (manifestData == null) {
                 return setStatus(
                         String.format("File %1$s could not be parsed.", osPath),
                         MSG_ERROR);

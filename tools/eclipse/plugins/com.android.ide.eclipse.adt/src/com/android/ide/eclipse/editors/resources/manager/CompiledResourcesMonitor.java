@@ -217,8 +217,10 @@ public final class CompiledResourcesMonitor implements IFileListener, IProjectLi
         try {
             IFile manifestFile = AndroidManifestParser.getManifest(project);
             AndroidManifestParser data = AndroidManifestParser.parseForData(manifestFile);
-            String javaPackage = data.getPackage();
-            return javaPackage + ".R"; //$NON-NLS-1$
+            if (data != null) {
+                String javaPackage = data.getPackage();
+                return javaPackage + ".R"; //$NON-NLS-1$
+            }
         } catch (CoreException e) {
             // This will typically happen either because the manifest file is not present
             // and/or the workspace needs to be refreshed.
@@ -227,8 +229,8 @@ public final class CompiledResourcesMonitor implements IFileListener, IProjectLi
                     "Failed to find the package of the AndroidManifest of project %1$s. Reason: %2$s",
                     project.getName(),
                     e.getMessage());
-            return null;
         }
+        return null;
     }
     
 }

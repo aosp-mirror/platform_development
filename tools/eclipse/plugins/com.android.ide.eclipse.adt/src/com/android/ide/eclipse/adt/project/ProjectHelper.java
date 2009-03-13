@@ -400,6 +400,9 @@ public final class ProjectHelper {
                 try {
                     parser = AndroidManifestParser.parseForData(manifestFile);
                 } catch (CoreException e) {
+                    // ignore, handled below.
+                }
+                if (parser == null) {
                     // skip this project.
                     continue;
                 }

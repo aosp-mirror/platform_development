@@ -253,8 +253,7 @@ public class AndroidClasspathContainerInitializer extends ClasspathContainerInit
             if (markerMessage != null) {
                 // log the error and put the marker on the project if we can.
                 if (outputToConsole) {
-                    AdtPlugin.printBuildToConsole(AdtConstants.BUILD_ALWAYS, iProject,
-                            markerMessage);
+                    AdtPlugin.printErrorToConsole(iProject, markerMessage);
                 }
                 
                 try {

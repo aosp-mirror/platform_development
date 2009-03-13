@@ -1,4 +1,5 @@
 0.9.0 (work in progress)
+- Projects now store generated Java files (R.java/Manifest.java and output from aidl) in a 'gen' source folder.
 - Support for the new Android SDK with support for multiple versions of the Android platform and for vendor supplied add-ons.
     * New Project Wizard lets you choose which platform/add-on to target.
     * Project properties (right click project in Package Explorer, then "Properties"), lets you edit project target.

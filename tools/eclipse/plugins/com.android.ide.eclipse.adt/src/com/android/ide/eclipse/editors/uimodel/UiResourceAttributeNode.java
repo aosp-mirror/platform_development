@@ -158,6 +158,35 @@ public class UiResourceAttributeNode extends UiTextAttributeNode {
         return null;
     }
     
+    /**
+     * Gets all the values one could use to auto-complete a "resource" value in an XML
+     * content assist.
+     * <p/>
+     * Typically the user is editing the value of an attribute in a resource XML, e.g.
+     *   <pre> "&lt;Button android:test="@string/my_[caret]_string..." </pre>
+     * <p/>
+     * 
+     * "prefix" is the value that the user has typed so far (or more exactly whatever is on the
+     * left side of the insertion point). In the example above it would be "@style/my_".
+     * <p/>
+     * 
+     * To avoid a huge long list of values, the completion works on two levels:
+     * <ul>
+     * <li> If a resource type as been typed so far (e.g. "@style/"), then limit the values to
+     *      the possible completions that match this type.
+     * <li> If no resource type as been typed so far, then return the various types that could be
+     *      completed. So if the project has only strings and layouts resources, for example,
+     *      the returned list will only include "@string/" and "@layout/".
+     * </ul>
+     * 
+     * Finally if anywhere in the string we find the special token "android:", we use the
+     * current framework system resources rather than the project resources.
+     * This works for both "@android:style/foo" and "@style/android:foo" conventions even though
+     * the reconstructed name will always be of the former form.
+     * 
+     * Note that "android:" here is a keyword specific to Android resources and should not be
+     * mixed with an XML namespace for an XML attribute name. 
+     */
     @Override
     public String[] getPossibleValues(String prefix) {
         IResourceRepository repository = null;
@@ -174,6 +203,8 @@ public class UiResourceAttributeNode extends UiTextAttributeNode {
             }
         } else {
             // If there's a prefix with "android:" in it, use the system resources
+            //
+            // TODO find a way to only list *public* framework resources here.
             AndroidTargetData data = editor.getTargetData();
             repository = data.getSystemResources();
             isSystem = true;

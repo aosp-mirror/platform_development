@@ -26,7 +26,7 @@ import org.eclipse.debug.core.model.ISourceLocator;
  * Custom implementation of Launch to allow access to the LaunchManager
  *
  */
-class AndroidLaunch extends Launch {
+public class AndroidLaunch extends Launch {
 
     /**
      * Basic constructor does nothing special

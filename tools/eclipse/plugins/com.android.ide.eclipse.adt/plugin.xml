@@ -481,6 +481,12 @@
                style="push"
                toolbarPath="android_project"
                tooltip="Opens a wizard to help create a new Android XML file">
+               <enablement>
+                   <objectState
+                        name="projectNature"
+                        value="com.android.ide.eclipse.adt.AndroidNature">
+                   </objectState>
+               </enablement>
          </action>
          <action
                class="com.android.ide.eclipse.adt.wizards.actions.NewProjectAction"

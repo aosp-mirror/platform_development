@@ -55,7 +55,7 @@ public class LayoutEditor extends AndroidEditor implements IShowEditorInput, IPa
     /** Root node of the UI element hierarchy */
     private UiDocumentNode mUiRootNode;
     
-    private GraphicalLayoutEditor mGraphicalEditor;
+    private AbstractGraphicalLayoutEditor mGraphicalEditor;
     private int mGraphicalEditorIndex;
     /** Implementation of the {@link IContentOutlinePage} for this editor */
     private UiContentOutlinePage mOutline;

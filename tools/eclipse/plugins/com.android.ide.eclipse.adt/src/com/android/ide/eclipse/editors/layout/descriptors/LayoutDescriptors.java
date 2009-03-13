@@ -18,7 +18,6 @@ package com.android.ide.eclipse.editors.layout.descriptors;
 
 import com.android.ide.eclipse.common.AndroidConstants;
 import com.android.ide.eclipse.common.resources.DeclareStyleableInfo;
-import com.android.ide.eclipse.common.resources.ResourceType;
 import com.android.ide.eclipse.common.resources.ViewClassInfo;
 import com.android.ide.eclipse.common.resources.DeclareStyleableInfo.AttributeInfo;
 import com.android.ide.eclipse.common.resources.ViewClassInfo.LayoutParamsInfo;
@@ -27,7 +26,6 @@ import com.android.ide.eclipse.editors.descriptors.DescriptorsUtils;
 import com.android.ide.eclipse.editors.descriptors.DocumentDescriptor;
 import com.android.ide.eclipse.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.editors.descriptors.IDescriptorProvider;
-import com.android.ide.eclipse.editors.descriptors.ReferenceAttributeDescriptor;
 import com.android.ide.eclipse.editors.descriptors.SeparatorAttributeDescriptor;
 import com.android.sdklib.SdkConstants;
 
