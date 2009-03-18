@@ -100,7 +100,7 @@ ndk_src_dest_dir := $(ndk_src_tree)/ndk
 bionic_src_dest_dir := $(ndk_src_dest_dir)/include/bionic
 
 # Destinations of all common files (not picked up by tree rules below)
-ndk_common_dest_files := $(ndk_common_dest_dir)/README \
+ndk_common_dest_files := $(ndk_common_dest_dir)/Android_NDK_README.html \
 		$(ndk_common_dest_dir)/config/armelf.x \
 		$(ndk_common_dest_dir)/config/armelflib.x \
 		$(ndk_common_dest_dir)/lib/crtbegin_dynamic.o \
@@ -114,8 +114,8 @@ ndk_common_full_dest_files := \
 		$(ndk_common_full_dest_dir)/lib/libstdc++.so
 
 # Install common files outside common trees
-$(ndk_common_dest_dir)/README: $(LOCAL_PATH)/README | $(ACP)
-	@echo "NDK README: from $? to $@"
+$(ndk_common_dest_dir)/Android_NDK_README.html: $(LOCAL_PATH)/Android_NDK_README.html | $(ACP)
+	@echo "NDK Android_NDK_README.html: from $? to $@"
 	$(copy-file-to-target)
 
 $(ndk_common_dest_dir)/config/armelf.x: $(BUILD_SYSTEM)/armelf.x | $(ACP)

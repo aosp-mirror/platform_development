@@ -19,7 +19,6 @@
 	<classpathentry kind="src" path="packages/apps/Settings/src"/>
 	<classpathentry kind="src" path="packages/apps/SoundRecorder/src"/>
 	<classpathentry kind="src" path="packages/apps/Stk/src"/>
-	<classpathentry kind="src" path="packages/apps/Sync/src"/>
 	<classpathentry kind="src" path="packages/apps/Updater/src"/>
 	<classpathentry kind="src" path="packages/apps/VoiceDialer/src"/>
 	<classpathentry kind="src" path="packages/providers/CalendarProvider/src"/>

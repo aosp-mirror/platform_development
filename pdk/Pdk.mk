@@ -16,7 +16,6 @@
 
 # Assemble the Platform Development Kit (PDK)
 # (TODO) Figure out why $(ACP) builds with target ndk but not pdk_docs
-# (TODO) Copy over index.html from templates instead of from generatedDocs 
 # (TODO) Build doxygen (depend on latest version)
 
 pdk:
@@ -37,14 +36,15 @@ include $(LOCAL_PATH)/ndk/Ndk.mk
 #-------------------------------------------------------------------------------
 # Make the Plaftorm Development Kit Documentation.
 #   Doxygenize the header files to create html docs in the generatedDocs dir.
-#   Copy the template files and the generated html to the docs dir and zip 
-#   everything up to the distribution directory.
+#   Copy the appengine files, the template files and the generated html 
+#   to the docs dir and zip everything up to the distribution directory.
 
 
 # Workspace directory
 pdk_docs_intermediates := $(call intermediates-dir-for,PACKAGING,pdkdocs)
 
-# Source directories for templates, config & header files
+# Source directories for appengine, templates, config & header files
+pdk_hosting_dir := development/pdk/hosting
 pdk_templates_dir := development/pdk/docs
 pdk_config_dir := development/pdk/doxygen_config
 pdk_docsfile_dir := $(pdk_config_dir)/docsfiles
@@ -140,6 +140,16 @@ $(pdk_doxy_docsfiles_dir)/main.dox: $(pdk_docsfile_dir)/main.dox
 	@echo "PDK: $@"
 	$(copy-file-to-target-with-cp)
 
+# Copy appengine server files
+$(pdk_docs_intermediates)/app.yaml: $(pdk_hosting_dir)/app.yaml
+	@echo "PDK: $@"
+	$(copy-file-to-target-with-cp)
+
+$(pdk_docs_intermediates)/pdk.py: $(pdk_hosting_dir)/pdk.py
+	@echo "PDK: $@"
+	$(copy-file-to-target-with-cp)
+
+
 # Run doxygen and copy all output and templates to the final destination
 # We replace index.html with a template file so don't use the generated one
 pdk_doxygen: all_copied_pdk_headers $(pdk_doxygen_config_override_file) \
@@ -178,11 +188,12 @@ $(call dist-for-goals,pdk_docs,$(pdk_docs_tarfile_zipped))
 	$(hide) gzip -cf $< > $@
 
 # tar up all the files to make the pdk docs.
-$(pdk_docs_tarfile): pdk_doxygen all_copied_pdk_templates
+$(pdk_docs_tarfile): pdk_doxygen all_copied_pdk_templates \
+    $(pdk_docs_intermediates)/pdk.py $(pdk_docs_intermediates)/app.yaml
 	@echo "PDK: $@"
 	@mkdir -p $(dir $@)
 	@rm -f $@
-	$(hide) tar rf $@ -C $(pdk_docs_intermediates) docs 
+	$(hide) tar rf $@ -C $(pdk_docs_intermediates) docs pdk.py app.yaml
 
 # Debugging reporting can go here, add it as a target to get output.
 pdk_debug:

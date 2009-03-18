@@ -1,0 +1,17 @@
+An interactive, stateful AJAX shell that runs Python code on the server.
+
+Part of http://code.google.com/p/google-app-engine-samples/.
+
+May be run as a standalone app or in an existing app as an admin-only handler.
+Can be used for system administration tasks, as an interactive way to try out
+APIs, or as a debugging aid during development.
+
+The logging, os, sys, db, and users modules are imported automatically.
+
+Interpreter state is stored in the datastore so that variables, function
+definitions, and other values in the global and local namespaces can be used
+across commands.
+
+To use the shell in your app, copy shell.py, static/*, and templates/* into
+your app's source directory. Then, copy the URL handlers from app.yaml into
+your app.yaml.

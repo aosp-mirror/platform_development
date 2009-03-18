@@ -37,10 +37,10 @@ public class SdkCommandLineTest extends TestCase {
         }
 
         @Override
-        public void printHelpAndExitForAction(String actionFilter,
+        public void printHelpAndExitForAction(String verb, String directObject,
                 String errorFormat, Object... args) {
             mHelpCalled = true;
-            super.printHelpAndExitForAction(actionFilter, errorFormat, args);
+            super.printHelpAndExitForAction(verb, directObject, errorFormat, args);
         }
 
         @Override
@@ -78,34 +78,64 @@ public class SdkCommandLineTest extends TestCase {
         super.tearDown();
     }
 
-    /** Test list with long name and verbose */
-    public final void testList_Long_Verbose() {
+    /** Test list */
+    public final void testList_Avd_Verbose() {
         MockSdkCommandLine c = new MockSdkCommandLine(mLog);
-        assertEquals("all", c.getListFilter());
-        c.parseArgs(new String[] { "-v", "list", "--filter", "vm" });
+        c.parseArgs(new String[] { "-v", "list", "avd" });
         assertFalse(c.wasHelpCalled());
         assertFalse(c.wasExitCalled());
-        assertEquals("vm", c.getListFilter());
+        assertEquals("list", c.getVerb());
+        assertEquals("avd", c.getDirectObject());
         assertTrue(c.isVerbose());
     }
 
-    /** Test list with short name and no verbose */
-    public final void testList_Short() {
+    public final void testList_Target() {
         MockSdkCommandLine c = new MockSdkCommandLine(mLog);
-        assertEquals("all", c.getListFilter());
-        c.parseArgs(new String[] { "list", "-f", "vm" });
+        c.parseArgs(new String[] { "list", "target" });
         assertFalse(c.wasHelpCalled());
         assertFalse(c.wasExitCalled());
-        assertEquals("vm", c.getListFilter());
+        assertEquals("list", c.getVerb());
+        assertEquals("target", c.getDirectObject());
+        assertFalse(c.isVerbose());
     }
-    
-    /** Test list with long name and missing parameter */
-    public final void testList_Long_MissingParam() {
+
+    public final void testList_None() {
         MockSdkCommandLine c = new MockSdkCommandLine(mLog);
-        assertEquals("all", c.getListFilter());
-        c.parseArgs(new String[] { "list", "--filter" });
+        c.parseArgs(new String[] { "list" });
+        assertFalse(c.wasHelpCalled());
+        assertFalse(c.wasExitCalled());
+        assertEquals("list", c.getVerb());
+        assertEquals("", c.getDirectObject());
+        assertFalse(c.isVerbose());
+    }
+
+    public final void testList_Invalid() {
+        MockSdkCommandLine c = new MockSdkCommandLine(mLog);
+        c.parseArgs(new String[] { "list", "unknown" });
         assertTrue(c.wasHelpCalled());
         assertTrue(c.wasExitCalled());
-        assertEquals("all", c.getListFilter());
+        assertEquals(null, c.getVerb());
+        assertEquals(null, c.getDirectObject());
+        assertFalse(c.isVerbose());
+    }
+
+    public final void testList_Plural() {
+        MockSdkCommandLine c = new MockSdkCommandLine(mLog);
+        c.parseArgs(new String[] { "list", "avds" });
+        assertFalse(c.wasHelpCalled());
+        assertFalse(c.wasExitCalled());
+        assertEquals("list", c.getVerb());
+        // we get the non-plural form
+        assertEquals("avd", c.getDirectObject());
+        assertFalse(c.isVerbose());
+
+        c = new MockSdkCommandLine(mLog);
+        c.parseArgs(new String[] { "list", "targets" });
+        assertFalse(c.wasHelpCalled());
+        assertFalse(c.wasExitCalled());
+        assertEquals("list", c.getVerb());
+        // we get the non-plural form
+        assertEquals("target", c.getDirectObject());
+        assertFalse(c.isVerbose());
     }
 }

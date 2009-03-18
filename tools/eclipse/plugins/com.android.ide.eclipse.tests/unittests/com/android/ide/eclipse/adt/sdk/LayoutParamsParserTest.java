@@ -35,7 +35,7 @@ import junit.framework.TestCase;
  * Test the inner private methods of PlatformDataParser.
  * 
  * Convention: method names that start with an underscore are actually local wrappers
- * that call private methods from {@link FrameworkResourceParser} using reflection.
+ * that call private methods from {@link AndroidTargetParser} using reflection.
  * This is inspired by the Python coding rule which mandates underscores prefixes for
  * "private" methods.
  */
@@ -131,6 +131,7 @@ public class LayoutParamsParserTest extends TestCase {
     //---- access to private methods
     
     /** Calls the private constructor of the parser */
+    @SuppressWarnings("unused")
     private AndroidTargetParser _Constructor(String osJarPath) throws Exception {
         Constructor<AndroidTargetParser> constructor =
             AndroidTargetParser.class.getDeclaredConstructor(String.class);
@@ -139,6 +140,7 @@ public class LayoutParamsParserTest extends TestCase {
     }
     
     /** calls the private getLayoutClasses() of the parser */
+    @SuppressWarnings("unused")
     private void _getLayoutClasses() throws Exception {
         Method method = AndroidTargetParser.class.getDeclaredMethod("getLayoutClasses");  //$NON-NLS-1$
         method.setAccessible(true);
@@ -146,6 +148,7 @@ public class LayoutParamsParserTest extends TestCase {
     }
     
     /** calls the private addGroup() of the parser */
+    @SuppressWarnings("unused")
     private ViewClassInfo _addGroup(Class<?> groupClass) throws Exception {
         Method method = LayoutParamsParser.class.getDeclaredMethod("addGroup",  //$NON-NLS-1$
                 IClassDescriptor.class);
@@ -154,6 +157,7 @@ public class LayoutParamsParserTest extends TestCase {
     }
 
     /** calls the private addLayoutParams() of the parser */
+    @SuppressWarnings("unused")
     private LayoutParamsInfo _addLayoutParams(Class<?> groupClass) throws Exception {
         Method method = LayoutParamsParser.class.getDeclaredMethod("addLayoutParams",   //$NON-NLS-1$
                 IClassDescriptor.class);

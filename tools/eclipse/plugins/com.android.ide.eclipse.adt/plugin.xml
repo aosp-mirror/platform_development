@@ -18,6 +18,14 @@
       <persistent value="true"/>
    </extension>
    <extension
+         id="com.android.ide.eclipse.common.aapt2Problem"
+         name="Android AAPT Problem"
+         point="org.eclipse.core.resources.markers">
+      <super type="org.eclipse.core.resources.problemmarker"/>
+      <super type="org.eclipse.core.resources.textmarker"/>
+      <persistent value="true"/>
+   </extension>
+   <extension
          id="com.android.ide.eclipse.common.aidlProblem"
          name="Android AIDL Problem"
          point="org.eclipse.core.resources.markers">
@@ -103,7 +111,7 @@
    <extension
          point="org.eclipse.debug.core.launchConfigurationTypes">
       <launchConfigurationType
-            delegate="com.android.ide.eclipse.adt.debug.launching.LaunchConfigDelegate"
+            delegate="com.android.ide.eclipse.adt.launch.LaunchConfigDelegate"
             delegateDescription="The Android Application Launcher supports running and debugging remote Android applications on devices or emulators."
             delegateName="Android Launcher"
             id="com.android.ide.eclipse.adt.debug.LaunchConfigType"
@@ -124,7 +132,7 @@
    <extension
          point="org.eclipse.debug.ui.launchConfigurationTabGroups">
       <launchConfigurationTabGroup
-            class="com.android.ide.eclipse.adt.debug.ui.LaunchConfigTabGroup"
+            class="com.android.ide.eclipse.adt.launch.LaunchConfigTabGroup"
             description="Android Application"
             id="com.android.ide.eclipse.adt.debug.LaunchConfigTabGroup"
             type="com.android.ide.eclipse.adt.debug.LaunchConfigType"/>
@@ -132,8 +140,8 @@
    <extension
          point="org.eclipse.debug.ui.launchShortcuts">
       <shortcut
-            category="com.android.ide.eclipse.adt.debug.LaunchConfigType"
-            class="com.android.ide.eclipse.adt.debug.launching.LaunchShortcut"
+            category="com.android.ide.eclipse.adt.launch.LaunchConfigType"
+            class="com.android.ide.eclipse.adt.launch.LaunchShortcut"
             icon="icons/android.png"
             id="com.android.ide.eclipse.adt.debug.launching.LaunchShortcut"
             label="Android Application"
@@ -212,12 +220,6 @@
                value="com.android.ide.eclipse.adt.AndroidNature">
          </filter>
          <action
-               class="com.android.ide.eclipse.adt.project.CreateAidlImportAction"
-               enablesFor="1"
-               id="com.android.ide.eclipse.adt.project.CreateAidlImportAction"
-               label="Create Aidl preprocess file for Parcelable classes"
-               menubarPath="com.android.ide.eclipse.adt.AndroidTools/group1"/>
-         <action
                class="com.android.ide.eclipse.adt.project.NewXmlFileWizardAction"
                enablesFor="1"
                id="com.android.ide.eclipse.adt.project.NewXmlFileWizardAction"
@@ -290,7 +292,7 @@
       <perspectiveExtension targetID="org.eclipse.jdt.ui.JavaPerspective">
          <newWizardShortcut id="com.android.ide.eclipse.adt.project.NewProjectWizard" />
          <newWizardShortcut
-               id="com.android.ide.eclipse.adt.wizards.NewXmlFileWizard">
+               id="com.android.ide.eclipse.editors.wizards.NewXmlFileWizard">
          </newWizardShortcut>
       </perspectiveExtension>
       <perspectiveExtension targetID="org.eclipse.debug.ui.DebugPerspective">
@@ -337,24 +339,24 @@
             name="Debug Android Application"
             description="Debug Android Application"
             categoryId="org.eclipse.debug.ui.category.run"
-            id="com.android.ide.eclipse.adt.debug.launching.LaunchShortcut.debug">
+            id="com.android.ide.eclipse.adt.launch.LaunchShortcut.debug">
       </command>
       <command
             name="Run Android Application"
             description="Run Android Application"
             categoryId="org.eclipse.debug.ui.category.run"
-            id="com.android.ide.eclipse.adt.debug.launching.LaunchShortcut.run">
+            id="com.android.ide.eclipse.adt.launch.LaunchShortcut.run">
       </command>
       <keyBinding
             keySequence="M3+M2+A D"
             contextId="org.eclipse.ui.globalScope"
-            commandId="com.android.ide.eclipse.adt.debug.launching.LaunchShortcut.debug"
+            commandId="com.android.ide.eclipse.adt.launch.LaunchShortcut.debug"
             keyConfigurationId="org.eclipse.ui.defaultAcceleratorConfiguration">
       </keyBinding>
       <keyBinding
             keySequence="M3+M2+A R"
             contextId="org.eclipse.ui.globalScope"
-            commandId="com.android.ide.eclipse.adt.debug.launching.LaunchShortcut.run"
+            commandId="com.android.ide.eclipse.adt.launch.LaunchShortcut.run"
             keyConfigurationId="org.eclipse.ui.defaultAcceleratorConfiguration">
       </keyBinding>
    </extension>
@@ -463,5 +465,49 @@
                      args="com.android.ide.eclipse.adt.AndroidNature"/>
          </enabledWhen>
       </page>
+   </extension>
+   <extension
+         point="org.eclipse.ui.actionSets">
+      <actionSet
+            description="Android Wizards"
+            id="adt.actionSet1"
+            label="Android Wizards"
+            visible="true">
+         <action
+               class="com.android.ide.eclipse.adt.wizards.actions.NewXmlFileAction"
+               icon="icons/new_xml.png"
+               id="com.android.ide.eclipse.adt.wizards.actions.NewXmlFileAction"
+               label="New Android XML File"
+               style="push"
+               toolbarPath="android_project"
+               tooltip="Opens a wizard to help create a new Android XML file">
+               <enablement>
+                   <objectState
+                        name="projectNature"
+                        value="com.android.ide.eclipse.adt.AndroidNature">
+                   </objectState>
+               </enablement>
+         </action>
+         <action
+               class="com.android.ide.eclipse.adt.wizards.actions.NewProjectAction"
+               icon="icons/new_adt_project.png"
+               id="com.android.ide.eclipse.adt.wizards.actions.NewProjectAction"
+               label="New Android Project"
+               style="push"
+               toolbarPath="android_project"
+               tooltip="Opens a wizard to help create a new Android project">
+         </action>
+      </actionSet>
+   </extension>
+   <extension
+         point="org.eclipse.debug.core.launchDelegates">
+       <launchDelegate
+             delegate="com.android.ide.eclipse.adt.launch.JUnitLaunchConfigDelegate"
+             delegateDescription="Removes the Android JAR from the Bootstrap Classpath"
+             id="com.android.ide.eclipse.adt.launch.JUnitLaunchConfigDelegate.launchAndroidJunit"
+             modes="run,debug"
+             name="Android JUnit"
+             type="org.eclipse.jdt.junit.launchconfig">
+       </launchDelegate>
    </extension>
 </plugin>

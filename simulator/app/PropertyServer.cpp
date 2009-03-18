@@ -108,6 +108,8 @@ void PropertyServer::SetDefaultProperties(void)
         { "ro.SECONDARY_SERVER_MEM", "4096" },
         { "ro.HIDDEN_APP_MEM", "8192" },
         { "ro.EMPTY_APP_MEM", "16384" },
+        { "ro.HOME_APP_ADJ", "4" },
+        { "ro.HOME_APP_MEM", "4096" },
         //{ "init.svc.adbd", "running" },       // causes ADB-JDWP
         { "init.svc.usbd", "running" },
         { "init.svc.debuggerd", "running" },
@@ -132,7 +134,7 @@ void PropertyServer::SetDefaultProperties(void)
         { "dalvik.vm.stack-trace-file", "/data/anr/traces.txt" },
         //{ "dalvik.vm.execution-mode", "int:portable" },
         { "dalvik.vm.enableassertions", "all" },    // -ea
-        { "dalvik.vm.verify-bytecode", "false" },   // -Xverify
+        { "dalvik.vm.dexopt-flags", "" },           // e.g. "v=a,o=v,m=n"
         { "dalvik.vm.deadlock-predict", "off" },    // -Xdeadlockpredict
         //{ "dalvik.vm.jniopts", "forcecopy" },       // -Xjniopts
         { "log.redirect-stdio", "false" },          // -Xlog-stdio

@@ -30,7 +30,7 @@ import java.util.Map;
 
 /**
  * A Device. It can be a physical device or an emulator.
- * 
+ *
  * TODO: make this class package-protected, and shift all callers to use IDevice
  */
 public final class Device implements IDevice {
@@ -62,19 +62,19 @@ public final class Device implements IDevice {
             return null;
         }
     }
-    
+
     /** Emulator Serial Number regexp. */
     final static String RE_EMULATOR_SN = "emulator-(\\d+)"; //$NON-NLS-1$
-    
+
     /** Serial number of the device */
     String serialNumber = null;
 
-    /** Name of the vm */
-    String mVmName = null;
+    /** Name of the AVD */
+    String mAvdName = null;
 
     /** State of the device. */
     DeviceState state = null;
-    
+
     /** Device properties. */
     private final Map<String, String> mProperties = new HashMap<String, String>();
 
@@ -85,29 +85,29 @@ public final class Device implements IDevice {
      * Socket for the connection monitoring client connection/disconnection.
      */
     private SocketChannel mSocketChannel;
-    
-    /* 
+
+    /*
      * (non-Javadoc)
      * @see com.android.ddmlib.IDevice#getSerialNumber()
      */
     public String getSerialNumber() {
         return serialNumber;
     }
-    
-    public String getVmName() {
-        return mVmName;
+
+    public String getAvdName() {
+        return mAvdName;
     }
 
-    
-    /* 
+
+    /*
      * (non-Javadoc)
      * @see com.android.ddmlib.IDevice#getState()
      */
     public DeviceState getState() {
         return state;
     }
-    
-    /* 
+
+    /*
      * (non-Javadoc)
      * @see com.android.ddmlib.IDevice#getProperties()
      */
@@ -115,7 +115,7 @@ public final class Device implements IDevice {
         return Collections.unmodifiableMap(mProperties);
     }
 
-    /* 
+    /*
      * (non-Javadoc)
      * @see com.android.ddmlib.IDevice#getPropertyCount()
      */
@@ -123,21 +123,21 @@ public final class Device implements IDevice {
         return mProperties.size();
     }
 
-    /* 
+    /*
      * (non-Javadoc)
      * @see com.android.ddmlib.IDevice#getProperty(java.lang.String)
      */
     public String getProperty(String name) {
         return mProperties.get(name);
     }
-    
+
 
     @Override
     public String toString() {
         return serialNumber;
     }
 
-    /* 
+    /*
      * (non-Javadoc)
      * @see com.android.ddmlib.IDevice#isOnline()
      */
@@ -145,7 +145,7 @@ public final class Device implements IDevice {
         return state == DeviceState.ONLINE;
     }
 
-    /* 
+    /*
      * (non-Javadoc)
      * @see com.android.ddmlib.IDevice#isEmulator()
      */
@@ -153,7 +153,7 @@ public final class Device implements IDevice {
         return serialNumber.matches(RE_EMULATOR_SN);
     }
 
-    /* 
+    /*
      * (non-Javadoc)
      * @see com.android.ddmlib.IDevice#isOffline()
      */
@@ -161,7 +161,7 @@ public final class Device implements IDevice {
         return state == DeviceState.OFFLINE;
     }
 
-    /* 
+    /*
      * (non-Javadoc)
      * @see com.android.ddmlib.IDevice#isBootLoader()
      */
@@ -169,7 +169,7 @@ public final class Device implements IDevice {
         return state == DeviceState.BOOTLOADER;
     }
 
-    /* 
+    /*
      * (non-Javadoc)
      * @see com.android.ddmlib.IDevice#hasClients()
      */
@@ -177,7 +177,7 @@ public final class Device implements IDevice {
         return mClients.size() > 0;
     }
 
-    /* 
+    /*
      * (non-Javadoc)
      * @see com.android.ddmlib.IDevice#getClients()
      */
@@ -186,8 +186,8 @@ public final class Device implements IDevice {
             return mClients.toArray(new Client[mClients.size()]);
         }
     }
-    
-    /* 
+
+    /*
      * (non-Javadoc)
      * @see com.android.ddmlib.IDevice#getClient(java.lang.String)
      */
@@ -204,7 +204,7 @@ public final class Device implements IDevice {
         return null;
     }
 
-    /* 
+    /*
      * (non-Javadoc)
      * @see com.android.ddmlib.IDevice#getSyncService()
      */
@@ -217,7 +217,7 @@ public final class Device implements IDevice {
         return null;
     }
 
-    /* 
+    /*
      * (non-Javadoc)
      * @see com.android.ddmlib.IDevice#getFileListingService()
      */
@@ -225,7 +225,7 @@ public final class Device implements IDevice {
         return new FileListingService(this);
     }
 
-    /* 
+    /*
      * (non-Javadoc)
      * @see com.android.ddmlib.IDevice#getScreenshot()
      */
@@ -233,7 +233,7 @@ public final class Device implements IDevice {
         return AdbHelper.getFrameBuffer(AndroidDebugBridge.sSocketAddr, this);
     }
 
-    /* 
+    /*
      * (non-Javadoc)
      * @see com.android.ddmlib.IDevice#executeShellCommand(java.lang.String, com.android.ddmlib.IShellOutputReceiver)
      */
@@ -242,16 +242,25 @@ public final class Device implements IDevice {
         AdbHelper.executeRemoteCommand(AndroidDebugBridge.sSocketAddr, command, this,
                 receiver);
     }
-    
-    /* 
+
+    /*
      * (non-Javadoc)
      * @see com.android.ddmlib.IDevice#runEventLogService(com.android.ddmlib.log.LogReceiver)
      */
     public void runEventLogService(LogReceiver receiver) throws IOException {
         AdbHelper.runEventLogService(AndroidDebugBridge.sSocketAddr, this, receiver);
     }
-    
-    /* 
+
+    /*
+     * (non-Javadoc)
+     * @see com.android.ddmlib.IDevice#runLogService(com.android.ddmlib.log.LogReceiver)
+     */
+    public void runLogService(String logname,
+            LogReceiver receiver) throws IOException {
+        AdbHelper.runLogService(AndroidDebugBridge.sSocketAddr, this, logname, receiver);
+    }
+
+    /*
      * (non-Javadoc)
      * @see com.android.ddmlib.IDevice#createForward(int, int)
      */
@@ -265,7 +274,7 @@ public final class Device implements IDevice {
         }
     }
 
-    /* 
+    /*
      * (non-Javadoc)
      * @see com.android.ddmlib.IDevice#removeForward(int, int)
      */
@@ -279,7 +288,7 @@ public final class Device implements IDevice {
         }
     }
 
-    /* 
+    /*
      * (non-Javadoc)
      * @see com.android.ddmlib.IDevice#getClientName(int)
      */
@@ -325,7 +334,7 @@ public final class Device implements IDevice {
 
         return false;
     }
-    
+
     void clearClientList() {
         synchronized (mClients) {
             mClients.clear();

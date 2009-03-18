@@ -108,7 +108,7 @@ public class UiListAttributeNode extends UiAbstractTextAttributeNode {
     }
     
     protected void fillCombo() {
-        String[] values = getPossibleValues();
+        String[] values = getPossibleValues(null);
 
         if (values == null) {
             AdtPlugin.log(IStatus.ERROR,
@@ -124,9 +124,11 @@ public class UiListAttributeNode extends UiAbstractTextAttributeNode {
     /**
      * Get the list values, either from the initial values set in the attribute
      * or by querying the framework resource parser.
+     * 
+     * {@inheritDoc}
      */
     @Override
-    public String[] getPossibleValues() {
+    public String[] getPossibleValues(String prefix) {
         AttributeDescriptor descriptor = getDescriptor();
         UiElementNode uiParent = getUiParent();
 
@@ -134,13 +136,13 @@ public class UiListAttributeNode extends UiAbstractTextAttributeNode {
         String element_name = uiParent.getDescriptor().getXmlName();
         
         // FrameworkResourceManager expects a specific prefix for the attribute.
-        String prefix = "";
+        String nsPrefix = "";
         if (SdkConstants.NS_RESOURCES.equals(descriptor.getNamespaceUri())) {
-            prefix = "android:"; //$NON-NLS-1$
+            nsPrefix = "android:"; //$NON-NLS-1$
         } else if (XmlnsAttributeDescriptor.XMLNS_URI.equals(descriptor.getNamespaceUri())) {
-            prefix = "xmlns:"; //$NON-NLS-1$
+            nsPrefix = "xmlns:"; //$NON-NLS-1$
         }
-        attr_name = prefix + attr_name;
+        attr_name = nsPrefix + attr_name;
         
         String[] values = null;
         

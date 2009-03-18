@@ -268,55 +268,60 @@ final class AdbHelper {
         };
         byte[] reply;
 
-        SocketChannel adbChan = SocketChannel.open(adbSockAddr);
-        adbChan.configureBlocking(false);
-
-        // if the device is not -1, then we first tell adb we're looking to talk
-        // to a specific device
-        setDevice(adbChan, device);
-
-        if (write(adbChan, request) == false)
-            throw new IOException("failed asking for frame buffer");
-
-        AdbResponse resp = readAdbResponse(adbChan, false /* readDiagString */);
-        if (!resp.ioSuccess || !resp.okay) {
-            Log.w("ddms", "Got timeout or unhappy response from ADB fb req: "
-                    + resp.message);
-            adbChan.close();
-            return null;
+        SocketChannel adbChan = null;
+        try {
+            adbChan = SocketChannel.open(adbSockAddr);
+            adbChan.configureBlocking(false);
+    
+            // if the device is not -1, then we first tell adb we're looking to talk
+            // to a specific device
+            setDevice(adbChan, device);
+    
+            if (write(adbChan, request) == false)
+                throw new IOException("failed asking for frame buffer");
+    
+            AdbResponse resp = readAdbResponse(adbChan, false /* readDiagString */);
+            if (!resp.ioSuccess || !resp.okay) {
+                Log.w("ddms", "Got timeout or unhappy response from ADB fb req: "
+                        + resp.message);
+                adbChan.close();
+                return null;
+            }
+    
+            reply = new byte[16];
+            if (read(adbChan, reply) == false) {
+                Log.w("ddms", "got partial reply from ADB fb:");
+                Log.hexDump("ddms", LogLevel.WARN, reply, 0, reply.length);
+                adbChan.close();
+                return null;
+            }
+            ByteBuffer buf = ByteBuffer.wrap(reply);
+            buf.order(ByteOrder.LITTLE_ENDIAN);
+    
+            imageParams.bpp = buf.getInt();
+            imageParams.size = buf.getInt();
+            imageParams.width = buf.getInt();
+            imageParams.height = buf.getInt();
+    
+            Log.d("ddms", "image params: bpp=" + imageParams.bpp + ", size="
+                    + imageParams.size + ", width=" + imageParams.width
+                    + ", height=" + imageParams.height);
+    
+            if (write(adbChan, nudge) == false)
+                throw new IOException("failed nudging");
+    
+            reply = new byte[imageParams.size];
+            if (read(adbChan, reply) == false) {
+                Log.w("ddms", "got truncated reply from ADB fb data");
+                adbChan.close();
+                return null;
+            }
+            imageParams.data = reply;
+        } finally {
+            if (adbChan != null) {
+                adbChan.close();
+            }
         }
-
-        reply = new byte[16];
-        if (read(adbChan, reply) == false) {
-            Log.w("ddms", "got partial reply from ADB fb:");
-            Log.hexDump("ddms", LogLevel.WARN, reply, 0, reply.length);
-            adbChan.close();
-            return null;
-        }
-        ByteBuffer buf = ByteBuffer.wrap(reply);
-        buf.order(ByteOrder.LITTLE_ENDIAN);
-
-        imageParams.bpp = buf.getInt();
-        imageParams.size = buf.getInt();
-        imageParams.width = buf.getInt();
-        imageParams.height = buf.getInt();
-
-        Log.d("ddms", "image params: bpp=" + imageParams.bpp + ", size="
-                + imageParams.size + ", width=" + imageParams.width
-                + ", height=" + imageParams.height);
-
-        if (write(adbChan, nudge) == false)
-            throw new IOException("failed nudging");
-
-        reply = new byte[imageParams.size];
-        if (read(adbChan, reply) == false) {
-            Log.w("ddms", "got truncated reply from ADB fb data");
-            adbChan.close();
-            return null;
-        }
-        imageParams.data = reply;
-
-        adbChan.close();
 
         return imageParams;
     }
@@ -330,58 +335,61 @@ final class AdbHelper {
             throws IOException {
         Log.v("ddms", "execute: running " + command);
 
-        SocketChannel adbChan = SocketChannel.open(adbSockAddr);
-        adbChan.configureBlocking(false);
+        SocketChannel adbChan = null;
+        try {
+            adbChan = SocketChannel.open(adbSockAddr);
+            adbChan.configureBlocking(false);
 
-        // if the device is not -1, then we first tell adb we're looking to talk
-        // to a specific device
-        setDevice(adbChan, device);
+            // if the device is not -1, then we first tell adb we're looking to
+            // talk
+            // to a specific device
+            setDevice(adbChan, device);
 
-        byte[] request = formAdbRequest("shell:" + command); //$NON-NLS-1$
-        if (write(adbChan, request) == false)
-            throw new IOException("failed submitting shell command");
+            byte[] request = formAdbRequest("shell:" + command); //$NON-NLS-1$
+            if (write(adbChan, request) == false)
+                throw new IOException("failed submitting shell command");
 
-        AdbResponse resp = readAdbResponse(adbChan, false /* readDiagString */);
-        if (!resp.ioSuccess || !resp.okay) {
-            Log.e("ddms", "ADB rejected shell command (" + command + "): "
-                    + resp.message);
-            throw new IOException("sad result from adb: " + resp.message);
-        }
-
-        byte[] data = new byte[16384];
-        ByteBuffer buf = ByteBuffer.wrap(data);
-        while (true) {
-            int count;
-
-            if (rcvr != null && rcvr.isCancelled()) {
-                Log.v("ddms", "execute: cancelled");
-                break;
+            AdbResponse resp = readAdbResponse(adbChan, false /* readDiagString */);
+            if (!resp.ioSuccess || !resp.okay) {
+                Log.e("ddms", "ADB rejected shell command (" + command + "): " + resp.message);
+                throw new IOException("sad result from adb: " + resp.message);
             }
 
-            count = adbChan.read(buf);
-            if (count < 0) {
-                // we're at the end, we flush the output
-                rcvr.flush();
-                Log.v("ddms",
-                        "execute '" + command + "' on '" + device + "' : EOF hit. Read: " + count);
-                break;
-            } else if (count == 0) {
-                try {
-                    Thread.sleep(WAIT_TIME * 5);
-                } catch (InterruptedException ie) {
+            byte[] data = new byte[16384];
+            ByteBuffer buf = ByteBuffer.wrap(data);
+            while (true) {
+                int count;
+
+                if (rcvr != null && rcvr.isCancelled()) {
+                    Log.v("ddms", "execute: cancelled");
+                    break;
                 }
-            } else {
-                if (rcvr != null) {
-                    rcvr.addOutput(buf.array(), buf.arrayOffset(), buf
-                            .position());
+
+                count = adbChan.read(buf);
+                if (count < 0) {
+                    // we're at the end, we flush the output
+                    rcvr.flush();
+                    Log.v("ddms", "execute '" + command + "' on '" + device + "' : EOF hit. Read: "
+                            + count);
+                    break;
+                } else if (count == 0) {
+                    try {
+                        Thread.sleep(WAIT_TIME * 5);
+                    } catch (InterruptedException ie) {
+                    }
+                } else {
+                    if (rcvr != null) {
+                        rcvr.addOutput(buf.array(), buf.arrayOffset(), buf.position());
+                    }
+                    buf.rewind();
                 }
-                buf.rewind();
             }
+        } finally {
+            if (adbChan != null) {
+                adbChan.close();
+            }
+            Log.v("ddms", "execute: returning");
         }
-
-        adbChan.close();
-
-        Log.v("ddms", "execute: returning");
     }
 
     /**
@@ -407,49 +415,55 @@ final class AdbHelper {
      */
     public static void runLogService(InetSocketAddress adbSockAddr, Device device, String logName,
             LogReceiver rcvr) throws IOException {
-        SocketChannel adbChan = SocketChannel.open(adbSockAddr);
-        adbChan.configureBlocking(false);
-
-        // if the device is not -1, then we first tell adb we're looking to talk
-        // to a specific device
-        setDevice(adbChan, device);
-
-        byte[] request = formAdbRequest("log:" + logName);
-        if (write(adbChan, request) == false) {
-            throw new IOException("failed to submit the log command");
-        }
-
-        AdbResponse resp = readAdbResponse(adbChan, false /* readDiagString */);
-        if (!resp.ioSuccess || !resp.okay) {
-            throw new IOException("Device rejected log command: " + resp.message);
-        }
-
-        byte[] data = new byte[16384];
-        ByteBuffer buf = ByteBuffer.wrap(data);
-        while (true) {
-            int count;
-
-            if (rcvr != null && rcvr.isCancelled()) {
-                break;
+        SocketChannel adbChan = null;
+        
+        try {
+            adbChan = SocketChannel.open(adbSockAddr);
+            adbChan.configureBlocking(false);
+    
+            // if the device is not -1, then we first tell adb we're looking to talk
+            // to a specific device
+            setDevice(adbChan, device);
+    
+            byte[] request = formAdbRequest("log:" + logName);
+            if (write(adbChan, request) == false) {
+                throw new IOException("failed to submit the log command");
             }
-
-            count = adbChan.read(buf);
-            if (count < 0) {
-                break;
-            } else if (count == 0) {
-                try {
-                    Thread.sleep(WAIT_TIME * 5);
-                } catch (InterruptedException ie) {
+    
+            AdbResponse resp = readAdbResponse(adbChan, false /* readDiagString */);
+            if (!resp.ioSuccess || !resp.okay) {
+                throw new IOException("Device rejected log command: " + resp.message);
+            }
+    
+            byte[] data = new byte[16384];
+            ByteBuffer buf = ByteBuffer.wrap(data);
+            while (true) {
+                int count;
+    
+                if (rcvr != null && rcvr.isCancelled()) {
+                    break;
                 }
-            } else {
-                if (rcvr != null) {
-                    rcvr.parseNewData(buf.array(), buf.arrayOffset(), buf.position());
+    
+                count = adbChan.read(buf);
+                if (count < 0) {
+                    break;
+                } else if (count == 0) {
+                    try {
+                        Thread.sleep(WAIT_TIME * 5);
+                    } catch (InterruptedException ie) {
+                    }
+                } else {
+                    if (rcvr != null) {
+                        rcvr.parseNewData(buf.array(), buf.arrayOffset(), buf.position());
+                    }
+                    buf.rewind();
                 }
-                buf.rewind();
+            }
+        } finally {
+            if (adbChan != null) {
+                adbChan.close();
             }
         }
-
-        adbChan.close();
     }
     
     /**
@@ -464,23 +478,28 @@ final class AdbHelper {
     public static boolean createForward(InetSocketAddress adbSockAddr, Device device, int localPort,
             int remotePort) throws IOException {
 
-        SocketChannel adbChan = SocketChannel.open(adbSockAddr);
-        adbChan.configureBlocking(false);
-
-        byte[] request = formAdbRequest(String.format(
-                "host-serial:%1$s:forward:tcp:%2$d;tcp:%3$d", //$NON-NLS-1$
-                device.serialNumber, localPort, remotePort));
-
-        if (write(adbChan, request) == false) {
-            throw new IOException("failed to submit the forward command.");
+        SocketChannel adbChan = null;
+        try {
+            adbChan = SocketChannel.open(adbSockAddr);
+            adbChan.configureBlocking(false);
+    
+            byte[] request = formAdbRequest(String.format(
+                    "host-serial:%1$s:forward:tcp:%2$d;tcp:%3$d", //$NON-NLS-1$
+                    device.serialNumber, localPort, remotePort));
+    
+            if (write(adbChan, request) == false) {
+                throw new IOException("failed to submit the forward command.");
+            }
+            
+            AdbResponse resp = readAdbResponse(adbChan, false /* readDiagString */);
+            if (!resp.ioSuccess || !resp.okay) {
+                throw new IOException("Device rejected command: " + resp.message);
+            }
+        } finally {
+            if (adbChan != null) {
+                adbChan.close();
+            }
         }
-        
-        AdbResponse resp = readAdbResponse(adbChan, false /* readDiagString */);
-        if (!resp.ioSuccess || !resp.okay) {
-            throw new IOException("Device rejected command: " + resp.message);
-        }
-        
-        adbChan.close();
         
         return true;
     }
@@ -497,23 +516,28 @@ final class AdbHelper {
     public static boolean removeForward(InetSocketAddress adbSockAddr, Device device, int localPort,
             int remotePort) throws IOException {
 
-        SocketChannel adbChan = SocketChannel.open(adbSockAddr);
-        adbChan.configureBlocking(false);
-
-        byte[] request = formAdbRequest(String.format(
-                "host-serial:%1$s:killforward:tcp:%2$d;tcp:%3$d", //$NON-NLS-1$
-                device.serialNumber, localPort, remotePort));
-
-        if (!write(adbChan, request)) {
-            throw new IOException("failed to submit the remove forward command.");
+        SocketChannel adbChan = null;
+        try {
+            adbChan = SocketChannel.open(adbSockAddr);
+            adbChan.configureBlocking(false);
+    
+            byte[] request = formAdbRequest(String.format(
+                    "host-serial:%1$s:killforward:tcp:%2$d;tcp:%3$d", //$NON-NLS-1$
+                    device.serialNumber, localPort, remotePort));
+    
+            if (!write(adbChan, request)) {
+                throw new IOException("failed to submit the remove forward command.");
+            }
+    
+            AdbResponse resp = readAdbResponse(adbChan, false /* readDiagString */);
+            if (!resp.ioSuccess || !resp.okay) {
+                throw new IOException("Device rejected command: " + resp.message);
+            }
+        } finally {
+            if (adbChan != null) {
+                adbChan.close();
+            }
         }
-
-        AdbResponse resp = readAdbResponse(adbChan, false /* readDiagString */);
-        if (!resp.ioSuccess || !resp.okay) {
-            throw new IOException("Device rejected command: " + resp.message);
-        }
-
-        adbChan.close();
 
         return true;
     }

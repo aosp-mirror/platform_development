@@ -313,6 +313,11 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
             if (currentUiNode != null) {
                 // look for an UI attribute matching the current attribute name
                 String attrName = attrInfo.name;
+                // remove any namespace prefix from the attribute name
+                int pos = attrName.indexOf(':');
+                if (pos >= 0) {
+                    attrName = attrName.substring(pos + 1);
+                }
 
                 UiAttributeNode currAttrNode = null;
                 for (UiAttributeNode attrNode : currentUiNode.getUiAttributes()) {
@@ -323,13 +328,13 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
                 }
 
                 if (currAttrNode != null) {
-                    choices = currAttrNode.getPossibleValues();
+                    choices = currAttrNode.getPossibleValues(value);
                     
                     if (currAttrNode instanceof UiFlagAttributeNode) {
                         // A "flag" can consist of several values separated by "or" (|).
                         // If the correct prefix contains such a pipe character, we change
                         // it so that only the currently edited value is completed.
-                        int pos = value.indexOf('|');
+                        pos = value.indexOf('|');
                         if (pos >= 0) {
                             attrInfo.correctedPrefix = value = value.substring(pos + 1);
                             attrInfo.needTag = 0;
@@ -437,11 +442,15 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
                     tooltip = ((TextAttributeDescriptor) choice).getTooltip();
                 }
                 
+                // Get the namespace URI for the attribute. Note that some attributes
+                // do not have a namespace and thus return null here.
                 String nsUri = ((AttributeDescriptor)choice).getNamespaceUri();
-                nsPrefix = nsUriMap.get(nsUri);
-                if (nsPrefix == null) {
-                    nsPrefix = lookupNamespacePrefix(currentNode, nsUri);
-                    nsUriMap.put(nsUri, nsPrefix);
+                if (nsUri != null) {
+                    nsPrefix = nsUriMap.get(nsUri);
+                    if (nsPrefix == null) {
+                        nsPrefix = lookupNamespacePrefix(currentNode, nsUri);
+                        nsUriMap.put(nsUri, nsPrefix);
+                    }
                 }
                 if (nsPrefix != null) {
                     nsPrefix += ":"; //$NON-NLS-1$
@@ -452,9 +461,12 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
             } else {
                 continue; // discard unknown choice
             }
+            
+            String nsKeyword = nsPrefix == null ? keyword : (nsPrefix + keyword);
 
             if (keyword.startsWith(wordPrefix) ||
-                    (nsPrefix != null && keyword.startsWith(nsPrefix))) {
+                    (nsPrefix != null && keyword.startsWith(nsPrefix)) ||
+                    (nsPrefix != null && nsKeyword.startsWith(wordPrefix))) {
                 if (nsPrefix != null) {
                     keyword = nsPrefix + keyword;
                 }
@@ -561,10 +573,11 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
     /**
      * Heuristically extracts the prefix used for determining template relevance
      * from the viewer's document. The default implementation returns the String from
-     * offset backwards that forms a potential XML element name.
+     * offset backwards that forms a potential XML element name, attribute name or
+     * attribute value.
      *
-     * Code extracted from org.eclipse.jface.text.templatesTemplateCompletionProcessor
-     * and adapted to our needs.
+     * The part were we access the docment was extracted from
+     * org.eclipse.jface.text.templatesTemplateCompletionProcessor and adapted to our needs.
      * 
      * @param viewer the viewer
      * @param offset offset into document
@@ -578,8 +591,19 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
         try {
             for (; i > 0; --i) {
                 char ch = document.getChar(i - 1);
-                // accepted characters are a-z and : (for attributes' namespace)
-                if (ch != ':' && (ch < 'a' || ch > 'z')) break;
+
+                // We want all characters that can form a valid:
+                // - element name, e.g. anything that is a valid Java class/variable literal.
+                // - attribute name, including : for the namespace
+                // - attribute value.
+                // Before we were inclusive and that made the code fragile. So now we're
+                // going to be exclusive: take everything till we get one of:
+                // - any form of whitespace
+                // - any xml separator, e.g. < > ' " and =
+                if (Character.isWhitespace(ch) ||
+                        ch == '<' || ch == '>' || ch == '\'' || ch == '"' || ch == '=') {
+                    break;
+                }
             }
 
             return document.get(i, offset - i);

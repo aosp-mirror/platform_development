@@ -22,7 +22,6 @@ import com.android.ide.eclipse.mock.JavaProjectMock;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.launching.JavaRuntime;
 
 import junit.framework.TestCase;
 

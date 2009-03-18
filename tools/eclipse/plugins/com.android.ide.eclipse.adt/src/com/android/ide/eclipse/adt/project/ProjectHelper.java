@@ -19,9 +19,9 @@ package com.android.ide.eclipse.adt.project;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.project.internal.AndroidClasspathContainerInitializer;
 import com.android.ide.eclipse.common.AndroidConstants;
-import com.android.ide.eclipse.common.project.AndroidManifestHelper;
 import com.android.ide.eclipse.common.project.AndroidManifestParser;
 
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectDescription;
@@ -361,7 +361,7 @@ public final class ProjectHelper {
     }
 
     /**
-     * Returns a {@link IProject} by its running application name, as it returned by the VM.
+     * Returns a {@link IProject} by its running application name, as it returned by the AVD.
      * <p/>
      * <var>applicationName</var> will in most case be the package declared in the manifest, but
      * can, in some cases, be a custom process name declared in the manifest, in the
@@ -389,19 +389,20 @@ public final class ProjectHelper {
                     continue;
                 }
 
-                AndroidManifestHelper androidManifest = new AndroidManifestHelper(p);
-                
                 // check that there is indeed a manifest file.
-                if (androidManifest.getManifestIFile() == null) {
+                IFile manifestFile = AndroidManifestParser.getManifest(p);
+                if (manifestFile == null) {
                     // no file? skip this project.
                     continue;
                 }
 
                 AndroidManifestParser parser = null;
                 try {
-                    parser = AndroidManifestParser.parseForData(
-                        androidManifest.getManifestIFile());
+                    parser = AndroidManifestParser.parseForData(manifestFile);
                 } catch (CoreException e) {
+                    // ignore, handled below.
+                }
+                if (parser == null) {
                     // skip this project.
                     continue;
                 }
@@ -664,5 +665,18 @@ public final class ProjectHelper {
         }
 
         return false;
+    }
+    
+    /**
+     * Returns the apk filename for the given project
+     * @param project The project.
+     * @param config An optional config name. Can be null.
+     */
+    public static String getApkFilename(IProject project, String config) {
+        if (config != null) {
+            return project.getName() + "-" + config + AndroidConstants.DOT_ANDROID_PACKAGE; //$NON-NLS-1$ 
+        }
+        
+        return project.getName() + AndroidConstants.DOT_ANDROID_PACKAGE;
     }
 }

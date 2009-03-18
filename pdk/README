@@ -70,3 +70,9 @@ The build target 'pdk' brings in the pdk/ndk make files into the build system.
 for doxygen version changing you can pass in the variable:
 doxygen_version='<path/name_of_doxygen_executable>'
 on the make line.
+
+--------------------------------------------------------------------------------
+To host the pdk docs on appengine run:
+/home/build/static/projects/apphosting/devtools/appcfg.py update pdk/
+where the pdk directory contains: pdk.py, app.yaml, and the docs directory,
+all of which are tarred up by the Pdk.mk file when using the targer pdk_docs.

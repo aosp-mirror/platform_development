@@ -152,6 +152,18 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".app.ReorderOnLaunch"
+                android:label="@string/activity_reorder">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+        
+        <activity android:name=".app.ReorderTwo" />
+        <activity android:name=".app.ReorderThree" />
+        <activity android:name=".app.ReorderFour" />
+        
         <!-- Intent Samples -->
 
         <activity android:name=".app.Intents" android:label="@string/activity_intents">
@@ -1639,6 +1651,25 @@
                 <category android:name="android.intent.category.SAMPLE_CODE" />
             </intent-filter>
         </activity>
+
+        <!-- ************************************* -->
+        <!--      APPWIDGET PACKAGE SAMPLES           -->
+        <!-- ************************************* -->
+
+        <receiver android:name=".appwidget.ExampleAppWidgetProvider">
+            <meta-data android:name="android.appwidget.provider"
+                    android:resource="@xml/appwidget_provider" />
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+        </receiver>
+
+        <receiver android:name=".appwidget.ExampleBroadcastReceiver" android:enabled="false">
+            <intent-filter>
+                <action android:name="android.intent.ACTION_TIMEZONE_CHANGED" />
+                <action android:name="android.intent.ACTION_TIME" />
+            </intent-filter>
+        </receiver>
 
         <!-- ************************************* -->
         <!--             OTHER SAMPLES             -->

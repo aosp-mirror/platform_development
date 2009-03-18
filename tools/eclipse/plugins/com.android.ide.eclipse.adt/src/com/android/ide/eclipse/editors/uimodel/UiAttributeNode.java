@@ -117,9 +117,13 @@ public abstract class UiAttributeNode {
      * <p/>
      * Implementations that do not have any known values should return null.
      * 
-     * @return A list of possible completion values or null.
+     * @param prefix An optional prefix string, which is whatever the user has already started
+     *   typing. Can be null or an empty string. The implementation can use this to filter choices
+     *   and only return strings that match this prefix. A lazy or default implementation can
+     *   simply ignore this and return everything.
+     * @return A list of possible completion values, and empty array or null.
      */
-    public abstract String[] getPossibleValues();
+    public abstract String[] getPossibleValues(String prefix);
 
     /**
      * Called when the XML is being loaded or has changed to

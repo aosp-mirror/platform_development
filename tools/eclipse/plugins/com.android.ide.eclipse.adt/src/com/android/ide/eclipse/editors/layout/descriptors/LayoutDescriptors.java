@@ -17,6 +17,7 @@
 package com.android.ide.eclipse.editors.layout.descriptors;
 
 import com.android.ide.eclipse.common.AndroidConstants;
+import com.android.ide.eclipse.common.resources.DeclareStyleableInfo;
 import com.android.ide.eclipse.common.resources.ViewClassInfo;
 import com.android.ide.eclipse.common.resources.DeclareStyleableInfo.AttributeInfo;
 import com.android.ide.eclipse.common.resources.ViewClassInfo.LayoutParamsInfo;
@@ -131,8 +132,23 @@ public final class LayoutDescriptors implements IDescriptorProvider {
         String xml_name = info.getShortClassName();
         String tooltip = info.getJavaDoc();
         
-        // Process all View attributes
         ArrayList<AttributeDescriptor> attributes = new ArrayList<AttributeDescriptor>();
+        
+        // All views and groups have an implicit "style" attribute which is a reference.
+        AttributeInfo styleInfo = new DeclareStyleableInfo.AttributeInfo(
+                "style",    //$NON-NLS-1$ xmlLocalName
+                new DeclareStyleableInfo.AttributeInfo.Format[] {
+                        DeclareStyleableInfo.AttributeInfo.Format.REFERENCE
+                    });
+        styleInfo.setJavaDoc("A reference to a custom style"); //tooltip
+        DescriptorsUtils.appendAttribute(attributes,
+                "style",    //$NON-NLS-1$
+                null,       //nsUri
+                styleInfo,
+                false,      //required
+                null);      // overrides
+        
+        // Process all View attributes
         DescriptorsUtils.appendAttributes(attributes,
                 null, // elementName
                 SdkConstants.NS_RESOURCES,
@@ -155,7 +171,7 @@ public final class LayoutDescriptors implements IDescriptorProvider {
                         null /* overrides */);
             }
         }
-        
+
         // Process all LayoutParams attributes
         ArrayList<AttributeDescriptor> layoutAttributes = new ArrayList<AttributeDescriptor>();
         LayoutParamsInfo layoutParams = info.getLayoutData();

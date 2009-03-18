@@ -20,7 +20,6 @@ import com.android.ide.eclipse.editors.resources.configurations.FolderConfigurat
 import com.android.ide.eclipse.editors.resources.configurations.ResourceQualifier;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
 
 import junit.framework.TestCase;
 
@@ -41,7 +40,6 @@ public class QualifierListTest extends TestCase {
         mManager = null;
     }
     
-    @SuppressWarnings("unchecked")
     public void testQualifierList() {
         try {
             // get the list of qualifier in the resource manager

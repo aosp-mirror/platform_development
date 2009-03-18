@@ -38,20 +38,20 @@ public class CommandLineProcessorTest extends TestCase {
         public MockCommandLineProcessor(ISdkLog logger) {
             super(logger,
                   new String[][] {
-                    { "action1", "Some action" },
-                    { "action2", "Another action" },
+                    { "verb1", "action1", "Some action" },
+                    { "verb1", "action2", "Another action" },
             });
             define(MODE.STRING, false /*mandatory*/,
-                    "action1", "1", "first", "non-mandatory flag", null);
+                    "verb1", "action1", "1", "first", "non-mandatory flag", null);
             define(MODE.STRING, true /*mandatory*/,
-                    "action1", "2", "second", "mandatory flag", null);
+                    "verb1", "action1", "2", "second", "mandatory flag", null);
         }
         
         @Override
-        public void printHelpAndExitForAction(String actionFilter,
+        public void printHelpAndExitForAction(String verb, String directObject,
                 String errorFormat, Object... args) {
             mHelpCalled = true;
-            super.printHelpAndExitForAction(actionFilter, errorFormat, args);
+            super.printHelpAndExitForAction(verb, directObject, errorFormat, args);
         }
         
         @Override
@@ -132,14 +132,14 @@ public class CommandLineProcessorTest extends TestCase {
         assertTrue(c.isVerbose());
         assertTrue(c.wasExitCalled());
         assertTrue(c.wasHelpCalled());
-        assertTrue(c.getStdErr().indexOf("Missing action name.") != -1);
+        assertTrue(c.getStdErr().indexOf("Missing verb name.") != -1);
 
         c = new MockCommandLineProcessor(mLog);        
         c.parseArgs(new String[] { "--verbose" });
         assertTrue(c.isVerbose());
         assertTrue(c.wasExitCalled());
         assertTrue(c.wasHelpCalled());
-        assertTrue(c.getStdErr().indexOf("Missing action name.") != -1);
+        assertTrue(c.getStdErr().indexOf("Missing verb name.") != -1);
     }
     
     public final void testHelp() {
@@ -148,39 +148,39 @@ public class CommandLineProcessorTest extends TestCase {
         c.parseArgs(new String[] { "-h" });
         assertTrue(c.wasExitCalled());
         assertTrue(c.wasHelpCalled());
-        assertTrue(c.getStdErr().indexOf("Missing action name.") == -1);
+        assertTrue(c.getStdErr().indexOf("Missing verb name.") == -1);
 
         c = new MockCommandLineProcessor(mLog);        
         c.parseArgs(new String[] { "--help" });
         assertTrue(c.wasExitCalled());
         assertTrue(c.wasHelpCalled());
-        assertTrue(c.getStdErr().indexOf("Missing action name.") == -1);
+        assertTrue(c.getStdErr().indexOf("Missing verb name.") == -1);
     }
 
     public final void testMandatory() {
         MockCommandLineProcessor c = new MockCommandLineProcessor(mLog);        
 
-        c.parseArgs(new String[] { "action1", "-1", "value1", "-2", "value2" });
+        c.parseArgs(new String[] { "verb1", "action1", "-1", "value1", "-2", "value2" });
         assertFalse(c.wasExitCalled());
         assertFalse(c.wasHelpCalled());
         assertEquals("", c.getStdErr());
-        assertEquals("value1", c.getValue("action1", "first"));
-        assertEquals("value2", c.getValue("action1", "second"));
+        assertEquals("value1", c.getValue("verb1", "action1", "first"));
+        assertEquals("value2", c.getValue("verb1", "action1", "second"));
 
         c = new MockCommandLineProcessor(mLog);        
-        c.parseArgs(new String[] { "action1", "-2", "value2" });
+        c.parseArgs(new String[] { "verb1", "action1", "-2", "value2" });
         assertFalse(c.wasExitCalled());
         assertFalse(c.wasHelpCalled());
         assertEquals("", c.getStdErr());
-        assertEquals(null, c.getValue("action1", "first"));
-        assertEquals("value2", c.getValue("action1", "second"));
+        assertEquals(null, c.getValue("verb1", "action1", "first"));
+        assertEquals("value2", c.getValue("verb1", "action1", "second"));
 
         c = new MockCommandLineProcessor(mLog);        
-        c.parseArgs(new String[] { "action1" });
+        c.parseArgs(new String[] { "verb1", "action1" });
         assertTrue(c.wasExitCalled());
         assertTrue(c.wasHelpCalled());
         assertTrue(c.getStdErr().indexOf("must be defined") != -1);
-        assertEquals(null, c.getValue("action1", "first"));
-        assertEquals(null, c.getValue("action1", "second"));
+        assertEquals(null, c.getValue("verb1", "action1", "first"));
+        assertEquals(null, c.getValue("verb1", "action1", "second"));
     }
 }

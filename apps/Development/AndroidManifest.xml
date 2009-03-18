@@ -51,12 +51,6 @@
                 <category android:name="android.intent.category.TEST" />
             </intent-filter>
         </activity>
-        <activity android:name="PreferredPackages" android:label="Preferred Packages">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.TEST" />
-            </intent-filter>
-        </activity>
         <activity android:name="ExceptionBrowser" android:label="Exception Browser">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

@@ -420,11 +420,11 @@ final class DeviceMonitor {
             device.executeShellCommand(GetPropReceiver.GETPROP_COMMAND,
                     new GetPropReceiver(device));
             
-            // now get the emulator VM name (if applicable).
+            // now get the emulator Virtual Device name (if applicable).
             if (device.isEmulator()) {
                 EmulatorConsole console = EmulatorConsole.getConsole(device);
                 if (console != null) {
-                    device.mVmName = console.getVmName();
+                    device.mAvdName = console.getAvdName();
                 }
             }
         } catch (IOException e) {
@@ -470,7 +470,7 @@ final class DeviceMonitor {
                 } catch (IOException e1) {
                     // we can ignore that one. It may already have been closed.
                 }
-                Log.e("DeviceMonitor",
+                Log.d("DeviceMonitor",
                         "Connection Failure when starting to monitor device '"
                         + device + "' : " + e.getMessage());
             }
@@ -558,7 +558,7 @@ final class DeviceMonitor {
 
                                     processIncomingJdwpData(device, socket, length);
                                 } catch (IOException ioe) {
-                                    Log.e("DeviceMonitor",
+                                    Log.d("DeviceMonitor",
                                             "Error reading jdwp list: " + ioe.getMessage());
                                     socket.close();
 

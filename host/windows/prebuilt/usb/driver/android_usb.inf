@@ -10,7 +10,7 @@ Signature="$WINDOWS NT$"
 Class=USB
 ClassGuid={F72FE0D4-CBCB-407d-8814-9ED673D0DD6B}
 Provider=%GOOG%
-DriverVer=12/11/2008,1.0.0009.00000
+DriverVer=1/29/2009,1.0.0010.00000
 CatalogFile.NTx86=androidusb86.cat
 CatalogFile.NTamd64=androidusba64.cat
 
@@ -38,6 +38,7 @@ DefaultDestDir = 12
 ; HTC Dream
 %USB\VID_0BB4&PID_0C01.DeviceDescRelease%=androidusb.Dev, USB\VID_0BB4&PID_0C01
 %USB\VID_0BB4&PID_0C02&MI_01.DeviceDescRelease%=androidusb.Dev, USB\VID_0BB4&PID_0C02&MI_01
+%USB\VID_0BB4&PID_0FFF.DeviceDescRelease%=androidusb.Dev, USB\VID_0BB4&PID_0FFF
 
 ; For XP and later
 [Google.NTx86]
@@ -46,6 +47,7 @@ DefaultDestDir = 12
 ; HTC Dream
 %USB\VID_0BB4&PID_0C01.DeviceDescRelease%=androidusb.Dev, USB\VID_0BB4&PID_0C01
 %USB\VID_0BB4&PID_0C02&MI_01.DeviceDescRelease%=androidusb.Dev, USB\VID_0BB4&PID_0C02&MI_01
+%USB\VID_0BB4&PID_0FFF.DeviceDescRelease%=androidusb.Dev, USB\VID_0BB4&PID_0FFF
 
 ; For AMD64 and later
 [Google.NTamd64]
@@ -54,6 +56,7 @@ DefaultDestDir = 12
 ; HTC Dream
 %USB\VID_0BB4&PID_0C01.DeviceDescRelease%=androidusb.Dev, USB\VID_0BB4&PID_0C01
 %USB\VID_0BB4&PID_0C02&MI_01.DeviceDescRelease%=androidusb.Dev, USB\VID_0BB4&PID_0C02&MI_01
+%USB\VID_0BB4&PID_0FFF.DeviceDescRelease%=androidusb.Dev, USB\VID_0BB4&PID_0FFF
 
 [androidusb.Dev.NT]
 CopyFiles=androidusb.Files.Ext
@@ -120,3 +123,4 @@ ClassName       = "ADB Interface"
 USB\VID_18D1&PID_DDDD.DeviceDescTest="ADB Testing Interface"
 USB\VID_0BB4&PID_0C01.DeviceDescRelease="HTC Dream"
 USB\VID_0BB4&PID_0C02&MI_01.DeviceDescRelease="HTC Dream Composite ADB Interface"
+USB\VID_0BB4&PID_0FFF.DeviceDescRelease="HTC Bootloader"

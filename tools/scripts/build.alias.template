@@ -1,4 +1,4 @@
-<?xml version="1.0" ?>
+<?xml version="1.0" encoding="UTF-8"?>
 <project name="PROJECT_NAME" default="package">
 
     <!-- The build.properties file can be created by you and is never touched

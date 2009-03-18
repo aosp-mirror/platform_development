@@ -13,7 +13,7 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.jdt.launching,
  org.eclipse.ui.views,
  com.android.ide.eclipse.ddms
-Eclipse-LazyStart: true
+Bundle-ActivationPolicy: lazy
 Bundle-Vendor: The Android Open Source Project
 Bundle-ClassPath: kxml2-2.3.0.jar,
  .

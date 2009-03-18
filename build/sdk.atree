@@ -19,8 +19,8 @@
 #
 
 # host tools from out/host/$(HOST_OS)-$(HOST_ARCH)/
-bin/aapt tools/aapt
-bin/aidl tools/aidl
+bin/aapt platforms/${PLATFORM_NAME}/tools/aapt
+bin/aidl platforms/${PLATFORM_NAME}/tools/aidl
 bin/adb tools/adb
 bin/sqlite3 tools/sqlite3
 bin/dmtracedump tools/dmtracedump
@@ -66,11 +66,12 @@ development/samples/NotePad platforms/${PLATFORM_NAME}/samples/NotePad
 development/samples/ApiDemos platforms/${PLATFORM_NAME}/samples/ApiDemos
 development/samples/SkeletonApp platforms/${PLATFORM_NAME}/samples/SkeletonApp
 development/samples/Snake platforms/${PLATFORM_NAME}/samples/Snake
+development/samples/SoftKeyboard platforms/${PLATFORM_NAME}/samples/SoftKeyboard
 
 # dx
-bin/dx tools/dx
-bin/dexdump tools/dexdump
-framework/dx.jar tools/lib/dx.jar
+bin/dx platforms/${PLATFORM_NAME}/tools/dx
+bin/dexdump platforms/${PLATFORM_NAME}/tools/dexdump
+framework/dx.jar platforms/${PLATFORM_NAME}/tools/lib/dx.jar
 
 #androidprefs
 framework/androidprefs.jar tools/lib/androidprefs.jar
@@ -126,7 +127,7 @@ system.img platforms/${PLATFORM_NAME}/images/system.img
 ramdisk.img platforms/${PLATFORM_NAME}/images/ramdisk.img
 userdata.img platforms/${PLATFORM_NAME}/images/userdata.img
 prebuilt/android-arm/kernel/kernel-qemu platforms/${PLATFORM_NAME}/images/kernel-qemu
-external/qemu/android/vm/hardware-properties.ini tools/lib/hardware-properties.ini
+external/qemu/android/avd/hardware-properties.ini tools/lib/hardware-properties.ini
 
 # emulator skins
 development/emulator/skins/HVGA   platforms/${PLATFORM_NAME}/skins/HVGA
@@ -138,7 +139,7 @@ development/emulator/skins/QVGA-P platforms/${PLATFORM_NAME}/skins/QVGA-P
 # NOTICE files are copied by build/core/Makefile
 
 # the readme
-development/docs/SDK_RELEASE_NOTES RELEASE_NOTES.txt
+development/docs/SDK_RELEASE_NOTES RELEASE_NOTES.html
 
 # the docs
 docs/offline-sdk docs

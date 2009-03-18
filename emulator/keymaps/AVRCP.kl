@@ -1,0 +1,7 @@
+key 164   PLAYPAUSE         WAKE
+key 128   STOP              WAKE
+key 163   NEXTSONG          WAKE
+key 165   PREVIOUSSONG      WAKE
+key 168   REWIND            WAKE
+key 159   FORWARD           WAKE
+

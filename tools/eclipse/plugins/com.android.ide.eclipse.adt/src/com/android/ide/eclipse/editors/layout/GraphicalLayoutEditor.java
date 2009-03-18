@@ -21,6 +21,7 @@ import com.android.ide.eclipse.adt.sdk.AndroidTargetData;
 import com.android.ide.eclipse.adt.sdk.LoadStatus;
 import com.android.ide.eclipse.adt.sdk.Sdk;
 import com.android.ide.eclipse.adt.sdk.AndroidTargetData.LayoutBridge;
+import com.android.ide.eclipse.adt.sdk.Sdk.ITargetChangeListener;
 import com.android.ide.eclipse.common.resources.ResourceType;
 import com.android.ide.eclipse.editors.IconFactory;
 import com.android.ide.eclipse.editors.layout.LayoutEditor.UiEditorActions;
@@ -85,8 +86,6 @@ import org.eclipse.gef.dnd.TemplateTransferDropTargetListener;
 import org.eclipse.gef.editparts.ScalableFreeformRootEditPart;
 import org.eclipse.gef.palette.PaletteRoot;
 import org.eclipse.gef.requests.CreationFactory;
-import org.eclipse.gef.ui.parts.GraphicalEditorWithPalette;
-import org.eclipse.gef.ui.parts.SelectionSynchronizer;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
@@ -140,7 +139,7 @@ import java.util.Set;
  * <p/>
  * To understand Drag'n'drop: http://www.eclipse.org/articles/Article-Workbench-DND/drag_drop.html
  */
-public class GraphicalLayoutEditor extends GraphicalEditorWithPalette
+public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
         implements ILayoutReloadListener {
     
     private final static String THEME_SEPARATOR = "----------"; //$NON-NLS-1$
@@ -198,13 +197,21 @@ public class GraphicalLayoutEditor extends GraphicalEditorWithPalette
     private ProjectCallback mProjectCallback;
     private ILayoutLog mLogger;
 
+    private boolean mNeedsXmlReload = false;
     private boolean mNeedsRecompute = false;
     private int mPlatformThemeCount = 0;
     private boolean mDisableUpdates = false;
-    private boolean mActive = false;
 
-    private Runnable mFrameworkResourceChangeListener = new Runnable() {
-        public void run() {
+    /** Listener to update the root node if the target of the file is changed because of a
+     * SDK location change or a project target change */
+    private ITargetChangeListener mTargetListener = new ITargetChangeListener() {
+        public void onProjectTargetChange(IProject changedProject) {
+            if (changedProject == getLayoutEditor().getProject()) {
+                onTargetsLoaded();
+            }
+        }
+
+        public void onTargetsLoaded() {
             // because the SDK changed we must reset the configured framework resource.
             mConfiguredFrameworkRes = null;
             
@@ -228,7 +235,7 @@ public class GraphicalLayoutEditor extends GraphicalEditorWithPalette
 
     private final Runnable mConditionalRecomputeRunnable = new Runnable() {
         public void run() {
-            if (mActive) {
+            if (mLayoutEditor.isGraphicalEditorActive()) {
                 recomputeLayout();
             } else {
                 mNeedsRecompute = true;
@@ -253,7 +260,7 @@ public class GraphicalLayoutEditor extends GraphicalEditorWithPalette
         mMatchImage = factory.getIcon("match"); //$NON-NLS-1$
         mErrorImage = factory.getIcon("error"); //$NON-NLS-1$
 
-        AdtPlugin.getDefault().addResourceChangedListener(mFrameworkResourceChangeListener);
+        AdtPlugin.getDefault().addTargetListener(mTargetListener);
     }
 
     // ------------------------------------
@@ -561,10 +568,9 @@ public class GraphicalLayoutEditor extends GraphicalEditorWithPalette
 
     @Override
     public void dispose() {
-        if (mFrameworkResourceChangeListener != null) {
-            AdtPlugin.getDefault().removeResourceChangedListener(
-                    mFrameworkResourceChangeListener);
-            mFrameworkResourceChangeListener = null;
+        if (mTargetListener != null) {
+            AdtPlugin.getDefault().removeTargetListener(mTargetListener);
+            mTargetListener = null;
         }
 
         LayoutReloadMonitor.getMonitor().removeListener(mEditedFile.getProject(), this);
@@ -587,6 +593,7 @@ public class GraphicalLayoutEditor extends GraphicalEditorWithPalette
         return mPaletteRoot;
     }
 
+    @Override
     public Clipboard getClipboard() {
         return mClipboard;
     }
@@ -708,7 +715,8 @@ public class GraphicalLayoutEditor extends GraphicalEditorWithPalette
      * 
      * @param uiNodeModel The {@link UiElementNode} to select.
      */
-    public void selectModel(UiElementNode uiNodeModel) {
+    @Override
+    void selectModel(UiElementNode uiNodeModel) {
         GraphicalViewer viewer = getGraphicalViewer();
         
         // Give focus to the graphical viewer (in case the outline has it)
@@ -726,6 +734,7 @@ public class GraphicalLayoutEditor extends GraphicalEditorWithPalette
     // Local methods
     //--------------
 
+    @Override
     public LayoutEditor getLayoutEditor() {
         return mLayoutEditor;
     }
@@ -855,7 +864,8 @@ public class GraphicalLayoutEditor extends GraphicalEditorWithPalette
      * Sets the UI for the edition of a new file.
      * @param configuration the configuration of the new file.
      */
-    public void editNewFile(FolderConfiguration configuration) {
+    @Override
+    void editNewFile(FolderConfiguration configuration) {
         // update the configuration UI
         setConfiguration(configuration);
         
@@ -1007,6 +1017,7 @@ public class GraphicalLayoutEditor extends GraphicalEditorWithPalette
     /**
      * Reloads this editor, by getting the new model from the {@link LayoutEditor}.
      */
+    @Override
     void reloadEditor() {
         GraphicalViewer viewer = getGraphicalViewer();
         viewer.setContents(getModel());
@@ -1026,25 +1037,37 @@ public class GraphicalLayoutEditor extends GraphicalEditorWithPalette
     }
 
     /**
-     * Update the layout editor when the Xml model is changed.
+     * Callback for XML model changed. Only update/recompute the layout if the editor is visible
      */
+    @Override
     void onXmlModelChanged() {
-        GraphicalViewer viewer = getGraphicalViewer();
-
-        // try to preserve the selection before changing the content
-        SelectionManager selMan = viewer.getSelectionManager();
-        ISelection selection = selMan.getSelection();
-
-        try {
-            viewer.setContents(getModel());
-        } finally {
-            selMan.setSelection(selection);
-        }
-
         if (mLayoutEditor.isGraphicalEditorActive()) {
+            doXmlReload(true /* force */);
             recomputeLayout();
         } else {
-            mNeedsRecompute = true;
+            mNeedsXmlReload = true;
+        }
+    }
+    
+    /**
+     * Actually performs the XML reload
+     * @see #onXmlModelChanged()
+     */
+    private void doXmlReload(boolean force) {
+        if (force || mNeedsXmlReload) {
+            GraphicalViewer viewer = getGraphicalViewer();
+            
+            // try to preserve the selection before changing the content
+            SelectionManager selMan = viewer.getSelectionManager();
+            ISelection selection = selMan.getSelection();
+    
+            try {
+                viewer.setContents(getModel());
+            } finally {
+                selMan.setSelection(selection);
+            }
+            
+            mNeedsXmlReload = false;
         }
     }
 
@@ -1246,10 +1269,12 @@ public class GraphicalLayoutEditor extends GraphicalEditorWithPalette
         mCurrentLayoutLabel.setText(current != null ? current : "(Default)");
     }
 
+    @Override
     UiDocumentNode getModel() {
         return mLayoutEditor.getUiRootNode();
     }
     
+    @Override
     void reloadPalette() {
         PaletteFactory.createPaletteRoot(mPaletteRoot, mLayoutEditor.getTargetData());
     }
@@ -1648,7 +1673,10 @@ public class GraphicalLayoutEditor extends GraphicalEditorWithPalette
     /**
      * Recomputes the layout with the help of layoutlib.
      */
+    @Override
+    @SuppressWarnings("deprecation")
     void recomputeLayout() {
+        doXmlReload(false /* force */);
         try {
             // check that the resource exists. If the file is opened but the project is closed
             // or deleted for some reason (changed from outside of eclipse), then this will
@@ -1691,7 +1719,7 @@ public class GraphicalLayoutEditor extends GraphicalEditorWithPalette
                     // In this case data could be null, but this is not an error.
                     // We can just silently return, as all the opened editors are automatically
                     // refreshed once the SDK finishes loading.
-                    if (AdtPlugin.getDefault().getSdkLoadStatus(null) != LoadStatus.LOADING) {
+                    if (AdtPlugin.getDefault().getSdkLoadStatus() != LoadStatus.LOADING) {
                         showErrorInEditor(String.format(
                                 "The project target (%s) was not properly loaded.",
                                 target.getName()));
@@ -1763,20 +1791,47 @@ public class GraphicalLayoutEditor extends GraphicalEditorWithPalette
                         if (themeIndex != -1) {
                             String theme = mThemeCombo.getItem(themeIndex);
                             
-                            // change the string if it's a custom theme to make sure we can
-                            // differentiate them
-                            if (themeIndex >= mPlatformThemeCount) {
-                                theme = "*" + theme; //$NON-NLS-1$
-                            }
-    
                             // Compute the layout
                             UiElementPullParser parser = new UiElementPullParser(getModel());
                             Rectangle rect = getBounds();
-                            ILayoutResult result = bridge.bridge.computeLayout(parser,
-                                    iProject /* projectKey */,
-                                    rect.width, rect.height, theme,
-                                    mConfiguredProjectRes, frameworkResources, mProjectCallback,
-                                    mLogger);
+                            ILayoutResult result = null;
+                            if (bridge.apiLevel >= 3) {
+                                // call the new api with proper theme differentiator and
+                                // density/dpi support.
+                                boolean isProjectTheme = themeIndex >= mPlatformThemeCount;
+
+                                // FIXME pass the density/dpi from somewhere (resource config or skin).
+                                result = bridge.bridge.computeLayout(parser,
+                                        iProject /* projectKey */,
+                                        rect.width, rect.height, 160, 160.f, 160.f, 
+                                        theme, isProjectTheme,
+                                        mConfiguredProjectRes, frameworkResources, mProjectCallback,
+                                        mLogger);
+                            } else if (bridge.apiLevel == 2) {
+                                // api with boolean for separation of project/framework theme
+                                boolean isProjectTheme = themeIndex >= mPlatformThemeCount;
+
+                                result = bridge.bridge.computeLayout(parser,
+                                        iProject /* projectKey */,
+                                        rect.width, rect.height, theme, isProjectTheme,
+                                        mConfiguredProjectRes, frameworkResources, mProjectCallback,
+                                        mLogger);
+                            } else {
+                                // oldest api with no density/dpi, and project theme boolean mixed
+                                // into the theme name.
+
+                                // change the string if it's a custom theme to make sure we can
+                                // differentiate them
+                                if (themeIndex >= mPlatformThemeCount) {
+                                    theme = "*" + theme; //$NON-NLS-1$
+                                }
+        
+                                result = bridge.bridge.computeLayout(parser,
+                                        iProject /* projectKey */,
+                                        rect.width, rect.height, theme,
+                                        mConfiguredProjectRes, frameworkResources, mProjectCallback,
+                                        mLogger);
+                            }
     
                             // update the UiElementNode with the layout info.
                             if (result.getSuccess() == ILayoutResult.SUCCESS) {
@@ -1920,9 +1975,9 @@ public class GraphicalLayoutEditor extends GraphicalEditorWithPalette
     /**
      * Responds to a page change that made the Graphical editor page the activated page.
      */
+    @Override
     void activated() {
-    	mActive = true;
-        if (mNeedsRecompute) {
+        if (mNeedsRecompute || mNeedsXmlReload) {
             recomputeLayout();
         }
     }
@@ -1930,8 +1985,9 @@ public class GraphicalLayoutEditor extends GraphicalEditorWithPalette
     /**
      * Responds to a page change that made the Graphical editor page the deactivated page
      */
+    @Override
     void deactivated() {
-    	mActive = false;
+        // nothing to be done here for now.
     }
 
     /**
@@ -2184,31 +2240,6 @@ public class GraphicalLayoutEditor extends GraphicalEditorWithPalette
         }
         
         return mConfiguredFrameworkRes;
-    }
-
-    /**
-     * Returns the selection synchronizer object.
-     * The synchronizer can be used to sync the selection of 2 or more EditPartViewers.
-     * <p/>
-     * This is changed from protected to public so that the outline can use it.
-     *
-     * @return the synchronizer
-     */
-    @Override
-    public SelectionSynchronizer getSelectionSynchronizer() {
-        return super.getSelectionSynchronizer();
-    }
-
-    /**
-     * Returns the edit domain.
-     * <p/>
-     * This is changed from protected to public so that the outline can use it.
-     *
-     * @return the edit domain
-     */
-    @Override
-    public DefaultEditDomain getEditDomain() {
-        return super.getEditDomain();
     }
 
     /**

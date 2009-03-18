@@ -19,6 +19,7 @@ package com.android.ide.eclipse.editors;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.sdk.AndroidTargetData;
 import com.android.ide.eclipse.adt.sdk.Sdk;
+import com.android.ide.eclipse.adt.sdk.Sdk.ITargetChangeListener;
 import com.android.ide.eclipse.editors.uimodel.UiElementNode;
 import com.android.sdklib.IAndroidTarget;
 
@@ -97,8 +98,9 @@ public abstract class AndroidEditor extends FormEditor implements IResourceChang
     private StructuredTextEditor mTextEditor;
     /** Listener for the XML model from the StructuredEditor */
     private XmlModelStateListener mXmlModelStateListener;
-    /** Listener to update the root node if the resource framework changes */
-    private Runnable mResourceRefreshListener;
+    /** Listener to update the root node if the target of the file is changed because of a
+     * SDK location change or a project target change */
+    private ITargetChangeListener mTargetListener;
 
     /**
      * Creates a form editor.
@@ -107,15 +109,21 @@ public abstract class AndroidEditor extends FormEditor implements IResourceChang
         super();
         ResourcesPlugin.getWorkspace().addResourceChangeListener(this);
         
-        mResourceRefreshListener = new Runnable() {
-            public void run() {
-                commitPages(false /* onSave */);
+        mTargetListener = new ITargetChangeListener() {
+            public void onProjectTargetChange(IProject changedProject) {
+                if (changedProject == getProject()) {
+                    onTargetsLoaded();
+                }
+            }
 
+            public void onTargetsLoaded() {
+                commitPages(false /* onSave */);
+                
                 // recreate the ui root node always
                 initUiRootNode(true /*force*/);
             }
         };
-        AdtPlugin.getDefault().addResourceChangedListener(mResourceRefreshListener);
+        AdtPlugin.getDefault().addTargetListener(mTargetListener);
     }
 
     // ---- Abstract Methods ----
@@ -340,9 +348,9 @@ public abstract class AndroidEditor extends FormEditor implements IResourceChang
         }
         ResourcesPlugin.getWorkspace().removeResourceChangeListener(this);
 
-        if (mResourceRefreshListener != null) {
-            AdtPlugin.getDefault().removeResourceChangedListener(mResourceRefreshListener);
-            mResourceRefreshListener = null;
+        if (mTargetListener != null) {
+            AdtPlugin.getDefault().removeTargetListener(mTargetListener);
+            mTargetListener = null;
         }
 
         super.dispose();

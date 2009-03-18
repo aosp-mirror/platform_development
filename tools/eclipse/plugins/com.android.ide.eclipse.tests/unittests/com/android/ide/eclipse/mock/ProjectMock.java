@@ -42,6 +42,7 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 import java.net.URI;
 import java.util.Map;
 
+@SuppressWarnings("deprecation")
 public class ProjectMock implements IProject {
 
     public void build(int kind, IProgressMonitor monitor) throws CoreException {
@@ -95,7 +96,6 @@ public class ProjectMock implements IProject {
         throw new NotImplementedException();
     }
 
-    @SuppressWarnings("deprecation")
     public IPath getPluginWorkingLocation(IPluginDescriptor plugin) {
         throw new NotImplementedException();
     }
@@ -459,6 +459,8 @@ public class ProjectMock implements IProject {
         throw new NotImplementedException();
     }
 
+    
+    @SuppressWarnings("unchecked")
     public Object getAdapter(Class adapter) {
         throw new NotImplementedException();
     }
@@ -476,11 +478,11 @@ public class ProjectMock implements IProject {
         throw new NotImplementedException();
 	}
 
-	public Map getPersistentProperties() throws CoreException {
+	public Map<?,?> getPersistentProperties() throws CoreException {
         throw new NotImplementedException();
 	}
 
-	public Map getSessionProperties() throws CoreException {
+	public Map<?,?> getSessionProperties() throws CoreException {
         throw new NotImplementedException();
 	}
 

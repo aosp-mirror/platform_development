@@ -11,3 +11,8 @@ file := $(TARGET_OUT_KEYLAYOUT)/qwerty.kl
 ALL_PREBUILT += $(file)
 $(file): $(LOCAL_PATH)/qwerty.kl | $(ACP)
 	$(transform-prebuilt-to-target)
+
+file := $(TARGET_OUT_KEYLAYOUT)/AVRCP.kl
+ALL_PREBUILT += $(file)
+$(file) : $(LOCAL_PATH)/AVRCP.kl | $(ACP)
+	$(transform-prebuilt-to-target)

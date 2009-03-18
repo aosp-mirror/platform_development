@@ -44,15 +44,15 @@ public interface IDevice {
      * Returns the serial number of the device.
      */
     public String getSerialNumber();
-    
+
     /**
-     * Returns the name of the VM the emulator is running.
+     * Returns the name of the AVD the emulator is running.
      * <p/>This is only valid if {@link #isEmulator()} returns true.
-     * <p/>If the emulator is not running any VM (for instance it's running from an Android source
+     * <p/>If the emulator is not running any AVD (for instance it's running from an Android source
      * tree build), this method will return "<code>&lt;build&gt;</code>".
-     * @return the name of the VM or <code>null</code> if there isn't any.
+     * @return the name of the AVD or <code>null</code> if there isn't any.
      */
-    public String getVmName();
+    public String getAvdName();
 
     /**
      * Returns the state of the device.
@@ -150,6 +150,14 @@ public interface IDevice {
      * @throws IOException
      */
     public void runEventLogService(LogReceiver receiver) throws IOException;
+
+    /**
+     * Runs the log service for the given log and outputs the log to the {@link LogReceiver}.
+     * @param logname the logname of the log to read from.
+     * @param receiver the receiver to receive the event log entries.
+     * @throws IOException
+     */
+    public void runLogService(String logname, LogReceiver receiver) throws IOException;
 
     /**
      * Creates a port forwarding between a local and a remote port.

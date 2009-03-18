@@ -18,6 +18,7 @@ package com.android.ide.eclipse.editors.uimodel;
 
 import com.android.ide.eclipse.adt.sdk.AndroidTargetData;
 import com.android.ide.eclipse.common.resources.IResourceRepository;
+import com.android.ide.eclipse.common.resources.ResourceItem;
 import com.android.ide.eclipse.common.resources.ResourceType;
 import com.android.ide.eclipse.editors.AndroidEditor;
 import com.android.ide.eclipse.editors.descriptors.AttributeDescriptor;
@@ -43,6 +44,10 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.forms.IManagedForm;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.TableWrapData;
+
+import java.util.ArrayList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Represents an XML attribute for a resource that can be modified using a simple text field or
@@ -153,9 +158,113 @@ public class UiResourceAttributeNode extends UiTextAttributeNode {
         return null;
     }
     
+    /**
+     * Gets all the values one could use to auto-complete a "resource" value in an XML
+     * content assist.
+     * <p/>
+     * Typically the user is editing the value of an attribute in a resource XML, e.g.
+     *   <pre> "&lt;Button android:test="@string/my_[caret]_string..." </pre>
+     * <p/>
+     * 
+     * "prefix" is the value that the user has typed so far (or more exactly whatever is on the
+     * left side of the insertion point). In the example above it would be "@style/my_".
+     * <p/>
+     * 
+     * To avoid a huge long list of values, the completion works on two levels:
+     * <ul>
+     * <li> If a resource type as been typed so far (e.g. "@style/"), then limit the values to
+     *      the possible completions that match this type.
+     * <li> If no resource type as been typed so far, then return the various types that could be
+     *      completed. So if the project has only strings and layouts resources, for example,
+     *      the returned list will only include "@string/" and "@layout/".
+     * </ul>
+     * 
+     * Finally if anywhere in the string we find the special token "android:", we use the
+     * current framework system resources rather than the project resources.
+     * This works for both "@android:style/foo" and "@style/android:foo" conventions even though
+     * the reconstructed name will always be of the former form.
+     * 
+     * Note that "android:" here is a keyword specific to Android resources and should not be
+     * mixed with an XML namespace for an XML attribute name. 
+     */
     @Override
-    public String[] getPossibleValues() {
-        // TODO: compute a list of existing resources for content assist completion
-        return null;
+    public String[] getPossibleValues(String prefix) {
+        IResourceRepository repository = null;
+        boolean isSystem = false;
+
+        UiElementNode uiNode = getUiParent();
+        AndroidEditor editor = uiNode.getEditor();
+
+        if (prefix == null || prefix.indexOf("android:") < 0) {
+            IProject project = editor.getProject();
+            if (project != null) {
+                // get the resource repository for this project and the system resources.
+                repository = ResourceManager.getInstance().getProjectResources(project);
+            }
+        } else {
+            // If there's a prefix with "android:" in it, use the system resources
+            //
+            // TODO find a way to only list *public* framework resources here.
+            AndroidTargetData data = editor.getTargetData();
+            repository = data.getSystemResources();
+            isSystem = true;
+        }
+
+        // Get list of potential resource types, either specific to this project
+        // or the generic list.
+        ResourceType[] resTypes = (repository != null) ?
+                    repository.getAvailableResourceTypes() :
+                    ResourceType.values();
+
+        // Get the type name from the prefix, if any. It's any word before the / if there's one
+        String typeName = null;
+        if (prefix != null) {
+            Matcher m = Pattern.compile(".*?([a-z]+)/.*").matcher(prefix);
+            if (m.matches()) {
+                typeName = m.group(1);
+            }
+        }
+
+        // Now collect results
+        ArrayList<String> results = new ArrayList<String>();
+
+        if (typeName == null) {
+            // This prefix does not have a / in it, so the resource string is either empty
+            // or does not have the resource type in it. Simply offer the list of potential
+            // resource types.
+
+            for (ResourceType resType : resTypes) {
+                results.add("@" + resType.getName() + "/");
+                if (resType == ResourceType.ID) {
+                    // Also offer the + version to create an id from scratch
+                    results.add("@+" + resType.getName() + "/");
+                }
+            }
+        } else if (repository != null) {
+            // We have a style name and a repository. Find all resources that match this
+            // type and recreate suggestions out of them.
+
+            ResourceType resType = ResourceType.getEnum(typeName);
+            if (resType != null) {
+                StringBuilder sb = new StringBuilder();
+                sb.append('@');
+                if (prefix.indexOf('+') >= 0) {
+                    sb.append('+');
+                }
+                
+                if (isSystem) {
+                    sb.append("android:");
+                }
+                
+                sb.append(typeName).append('/');
+                String base = sb.toString();
+
+                for (ResourceItem item : repository.getResources(resType)) {
+                    results.add(base + item.getName());
+                }
+            }
+        }
+
+        return results.toArray(new String[results.size()]);
     }
 }

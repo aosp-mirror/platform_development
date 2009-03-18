@@ -84,7 +84,7 @@ function showUsage() {
 # tests by creating a file named "~/.android/runtest.rc" and adding them to that
 # file.  (No array needed, just plain lines of text).
 #
-# Rests are defined by entries with the following format:
+# Tests are defined by entries with the following format:
 # <short-name> <build-path> <test-package> <test-class>
 #              <testrunner-package> <testrunner-component>
 #
@@ -99,8 +99,8 @@ function showUsage() {
 #
 # In order to define the most common cases simply, "#" can be used for some of
 # the fields, with the following default values:
-#   <test-package> = "#": test class is fully qualified with package
 #   <build-path> = "#":  skip build/sync step
+#   <test-package> = "#": test class is fully qualified with package
 #   <test-class> = "#":  omit "-e class" section
 #   <testrunner-package> = "#":   use same value as test-package
 #   <testrunner-component> = "#":  use "android.test.InstrumentationTestRunner"
@@ -117,7 +117,8 @@ knownTests=(
   "smoke      frameworks/base/tests/SmokeTest     com.android.smoketest # com.android.smoketest.tests #"
   "core       frameworks/base/tests/CoreTests     # android.core.CoreTests android.core #"
   "libcore    frameworks/base/tests/CoreTests     # android.core.JavaTests android.core #"
-  "apidemos   samples/ApiDemos                    com.example.android.apis # com.example.android.apis.tests #"
+  "apidemos   development/samples/ApiDemos        com.example.android.apis # com.example.android.apis.tests #"
+  "launchperf development/apps/launchperf         com.android.launchperf # # .SimpleActivityLaunchPerformance"
 
   # targeted framework tests
   "heap       frameworks/base/tests/AndroidTests  com.android.unit_tests HeapTest # #"
@@ -130,7 +131,7 @@ knownTests=(
   "browser    packages/apps/Browser            com.android.browser # # .BrowserTestRunner"
   "browserfunc packages/apps/Browser           com.android.browser # # .BrowserFunctionalTestRunner"
   "calendar   packages/apps/Calendar/tests     com.android.calendar.tests # # #"
-  "calprov    content/providers/calendar   com.android.providers.calendar.tests # # #"
+  "calprov    packages/providers/CalendarProvider   com.android.providers.calendar # com.android.providers.calendar.tests #"
   "camera     tests/Camera            com.android.cameratests # # CameraInstrumentationTestRunner"
   "contactsprov packages/providers/GoogleContactsProvider/tests com.android.providers.contacts # com.android.providers.contactstests #"
   "email      packages/apps/Email              com.android.email # com.android.email.tests #"
@@ -150,11 +151,7 @@ knownTests=(
 # the list of known tests.
 #
 function readConfigFile () {
-  pathToRc=$1
-  if [[ -z ${pathToRc} ]]; then 
-    exit 0
-  fi
-  rcFile=${pathToRc}/runtest.rc
+  rcFile=$1
   if [[ -f ${rcFile} ]] ; then
     declare -a lines
     exec 3<${rcFile} || exit
@@ -261,7 +258,7 @@ shift $((OPTIND-1))
 
 readConfigFile $optUserTests
 # TODO: Read from *any* vendor/*/runtest.rc
-readConfigFile $(gettop)/vendor/google
+readConfigFile $(gettop)/vendor/google/runtest.rc
 
 # if requested, list all tests and halt
 if [[ ${optListTests} -ne 0 ]] ; then
@@ -338,6 +335,10 @@ if [[ ${#testInfo[@]} -eq 5 ]] ; then
     debugOptions="-r "${debugOptions}
   fi
 
+  # "prevent" a race condition where we try to run the tests before they're
+  # actually installed
+  sleep 2
+  
   # now run the command
   if [[ $optVerbose -ne 0 || ${optPreview} -ne 0 ]] ; then
     echo adb ${optAdbTarget} shell am instrument -w \

@@ -31,7 +31,6 @@ import com.android.ide.eclipse.mock.FolderMock;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 
 import junit.framework.TestCase;
 
@@ -47,7 +46,6 @@ public class ConfigMatchTest extends TestCase {
     private FolderConfiguration config2;
     private FolderConfiguration config1;
 
-    @SuppressWarnings("unchecked")
     @Override
     protected void setUp() throws Exception {
         super.setUp();

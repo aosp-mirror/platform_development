@@ -17,7 +17,6 @@
 package com.android.hierarchyviewer.scene;
 
 import com.android.ddmlib.Device;
-import com.android.hierarchyviewer.device.Configuration;
 import com.android.hierarchyviewer.device.Window;
 import com.android.hierarchyviewer.device.DeviceBridge;
 

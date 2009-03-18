@@ -45,6 +45,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
 import java.util.concurrent.ExecutionException;
 
 class ScreenViewer extends JPanel implements ActionListener {
@@ -68,6 +70,8 @@ class ScreenViewer extends JPanel implements ActionListener {
 
     private Timer timer;
     private ViewNode node;
+
+    private JSlider zoomSlider;
 
     ScreenViewer(Workspace workspace, Device device, int spacing) {
         setLayout(new BorderLayout());
@@ -95,6 +99,7 @@ class ScreenViewer extends JPanel implements ActionListener {
 
     private JPanel buildLoupePanel(int spacing) {
         loupe = new LoupeViewer();
+        loupe.addMouseWheelListener(new WheelZoomListener());
         CrosshairPanel crosshairPanel = new CrosshairPanel(loupe);
 
         JPanel loupePanel = new JPanel(new BorderLayout());
@@ -106,9 +111,20 @@ class ScreenViewer extends JPanel implements ActionListener {
         return loupePanel;
     }
 
+    private class WheelZoomListener implements MouseWheelListener {
+        public void mouseWheelMoved(MouseWheelEvent e) {
+            if (zoomSlider != null) {
+                int val = zoomSlider.getValue();
+                val -= e.getWheelRotation() * 2;
+                zoomSlider.setValue(val);
+            }
+        }
+    }
+
     private JPanel buildViewerAndControls() {
         JPanel panel = new JPanel(new GridBagLayout());
         crosshair = new Crosshair(new ScreenshotViewer());
+        crosshair.addMouseWheelListener(new WheelZoomListener());
         panel.add(crosshair,
                 new GridBagConstraints(0, y++, 2, 1, 1.0f, 0.0f,
                     GridBagConstraints.FIRST_LINE_START, GridBagConstraints.NONE,
@@ -131,7 +147,8 @@ class ScreenViewer extends JPanel implements ActionListener {
                         timer.restart();
                     }
         });
-        buildSlider(panel, "Zoom:", "2x", "24x", 2, 24, 8, 2).addChangeListener(
+        zoomSlider = buildSlider(panel, "Zoom:", "2x", "24x", 2, 24, 8, 2);
+        zoomSlider.addChangeListener(
                 new ChangeListener() {
                     public void stateChanged(ChangeEvent event) {
                         zoom = ((JSlider) event.getSource()).getValue();

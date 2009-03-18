@@ -106,7 +106,7 @@ bool AdbInterfaceObject::GetSerialNumber(void* buffer,
 
   // Open USB device for this intefface
   HANDLE usb_device_handle = CreateFile(interface_name().c_str(),
-                                        FILE_READ_ATTRIBUTES | FILE_READ_EA,
+                                        GENERIC_READ,
                                         FILE_SHARE_READ | FILE_SHARE_WRITE,
                                         NULL,
                                         OPEN_EXISTING,
@@ -208,7 +208,7 @@ bool AdbInterfaceObject::GetEndpointInformation(UCHAR endpoint_index,
 
   // Open USB device for this intefface
   HANDLE usb_device_handle = CreateFile(interface_name().c_str(),
-                                        FILE_READ_ATTRIBUTES | FILE_READ_EA,
+                                        GENERIC_READ,
                                         FILE_SHARE_READ | FILE_SHARE_WRITE,
                                         NULL,
                                         OPEN_EXISTING,

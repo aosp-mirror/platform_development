@@ -20,6 +20,17 @@
 <resources>
     <string name="app_label">Spare Parts</string>
 
+    <string name="device_info_title">Device info</string>
+    
+    <string name="title_battery_history">Battery history</string>
+    <string name="summary_battery_history">Summary of how battery has been used</string>
+    
+    <string name="title_battery_information">Battery information</string>
+    <string name="summary_battery_information">Current battery status information</string>
+    
+    <string name="title_usage_statistics">Usage statistics</string>
+    <string name="summary_usage_statistics">Summary of application usage</string>
+    
     <string name="general_title">General</string>
     
     <string name="title_window_animations">Window animations</string>
@@ -30,6 +41,14 @@
     <string name="summary_transition_animations">Speed of animations moving between screens</string>
     <string name="dialog_title_transition_animations">Select transition speed</string>
     
+    <string name="title_fancy_ime_animations">Fancy input animations</string>
+    <string name="summary_on_fancy_ime_animations">Use fancier animations for input method windows</string>
+    <string name="summary_off_fancy_ime_animations">Use normal animations for input method windows</string>
+    
+    <string name="title_haptic_feedback">Haptic feedback</string>
+    <string name="summary_on_haptic_feedback">Use haptic feedback with user interaction</string>
+    <string name="summary_off_haptic_feedback">Use haptic feedback with user interaction</string>
+    
     <string name="title_font_size">Font size</string>
     <string name="summary_font_size">Overall size of fonts</string>
     <string name="dialog_title_font_size">Select font size</string>
@@ -37,10 +56,6 @@
     <string name="title_end_button">End button behavior</string>
     <string name="summary_end_button">Select End (red) button action</string>
     <string name="dialog_title_end_button">Select End button</string>
-    
-    <string name="title_accelerometer">Display rotation</string>
-    <string name="summary_on_accelerometer">Display rotates from orientation</string>
-    <string name="summary_off_accelerometer">Display rotates when lid is open</string>
     
     <string name="applications_title">Applications</string>
     

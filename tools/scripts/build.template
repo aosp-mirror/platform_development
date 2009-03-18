@@ -1,4 +1,4 @@
-<?xml version="1.0" ?>
+<?xml version="1.0" encoding="UTF-8"?>
 <project name="PROJECT_NAME" default="help">
 
     <!-- The local.properties file is created and updated by the 'android' tool.
@@ -10,7 +10,7 @@
          by the 'android' tool. This is the place to change some of the default property values
          used by the Ant rules.
          Here are some properties you may want to change/update:
-         
+
          application-package
              the name of your application package as defined in the manifest. Used by the
              'uninstall' rule.
@@ -40,12 +40,22 @@
         <pathelement path="${sdk-location}/tools/lib/anttasks.jar" />
         <pathelement path="${sdk-location}/tools/lib/sdklib.jar" />
         <pathelement path="${sdk-location}/tools/lib/androidprefs.jar" />
+        <pathelement path="${sdk-location}/tools/lib/apkbuilder.jar" />
+        <pathelement path="${sdk-location}/tools/lib/jarutils.jar" />
     </path>
-    
-    <taskdef name="androidinit" classname="com.android.ant.AndroidInitTask"
+
+    <taskdef name="setup"
+        classname="com.android.ant.SetupTask"
         classpathref="android.antlibs"/>
 
-    <!-- Execute the Android Init task that will import the proper rule file containing
-         all the Ant targets, as well as setup some properties specific to the target. -->
-    <androidinit />
+    <!-- Execute the Android Setup task that will setup some properties specific to the target,
+         and import the rules files.
+         To customize the rules, copy/paste them below the task, and disable import by setting
+         the import attribute to false:
+            <setup import="false" />
+         
+         This will ensure that the properties are setup correctly but that your customized
+         targets are used.
+    -->
+    <setup />
 </project>

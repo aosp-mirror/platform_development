@@ -17,7 +17,6 @@
 package com.android.ide.eclipse.adt.build;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.sdk.LoadStatus;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IStatus;
@@ -46,10 +45,6 @@ public final class DexWrapper {
     
     private final static String MAIN_RUN = "run"; //$NON-NLS-1$
     
-    private static DexWrapper sWrapper;
-
-    private static LoadStatus sLoadStatus = LoadStatus.LOADING;
-
     private Method mRunMethod;
 
     private Constructor<?> mArgConstructor;
@@ -62,15 +57,16 @@ public final class DexWrapper {
     private Field mConsoleErr;
     
     /**
-     * Loads the dex library from a file path. The loaded library can be used with the
-     * {@link DexWrapper} object returned by {@link #getWrapper()}
+     * Loads the dex library from a file path.
+     * 
+     * The loaded library can be used via
+     * {@link DexWrapper#run(String, String[], boolean, PrintStream, PrintStream)}.
+     * 
      * @param osFilepath the location of the dex.jar file.
      * @return an IStatus indicating the result of the load.
      */
-    public static synchronized IStatus loadDex(String osFilepath) {
+    public synchronized IStatus loadDex(String osFilepath) {
         try {
-            sWrapper = null;
-
             File f = new File(osFilepath);
             if (f.isFile() == false) {
                 return new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID, String.format(
@@ -86,44 +82,38 @@ public final class DexWrapper {
             Class<?> consoleClass = loader.loadClass(DEX_CONSOLE);
             Class<?> argClass = loader.loadClass(DEX_ARGS);
             
-            sWrapper = new DexWrapper(mainClass, argClass, consoleClass);
-            
+            try {
+                // now get the fields/methods we need
+                mRunMethod = mainClass.getMethod(MAIN_RUN, argClass);
+                
+                mArgConstructor = argClass.getConstructor();
+                mArgOutName = argClass.getField("outName"); //$NON-NLS-1$
+                mArgJarOutput = argClass.getField("jarOutput"); //$NON-NLS-1$
+                mArgFileNames = argClass.getField("fileNames"); //$NON-NLS-1$
+                mArgVerbose = argClass.getField("verbose"); //$NON-NLS-1$
+                
+                mConsoleOut = consoleClass.getField("out"); //$NON-NLS-1$
+                mConsoleErr = consoleClass.getField("err"); //$NON-NLS-1$
+                
+            } catch (SecurityException e) {
+                return createErrorStatus(Messages.DexWrapper_SecuryEx_Unable_To_Find_API, e);
+            } catch (NoSuchMethodException e) {
+                return createErrorStatus(Messages.DexWrapper_SecuryEx_Unable_To_Find_Method, e);
+            } catch (NoSuchFieldException e) {
+                return createErrorStatus(Messages.DexWrapper_SecuryEx_Unable_To_Find_Field, e);
+            }
+
             return Status.OK_STATUS;
         } catch (MalformedURLException e) {
             // really this should not happen.
-            return createErrorStatus(String.format(Messages.DexWrapper_Failed_to_load_s, osFilepath), e);
+            return createErrorStatus(
+                    String.format(Messages.DexWrapper_Failed_to_load_s, osFilepath), e);
         } catch (ClassNotFoundException e) {
-            return createErrorStatus(String.format(Messages.DexWrapper_Failed_to_load_s, osFilepath), e);
-        } catch (CoreException e) {
-            return e.getStatus();
-        } finally {
-            if (sWrapper == null) {
-                sLoadStatus = LoadStatus.FAILED;
-            } else {
-                sLoadStatus = LoadStatus.LOADED;
-            }
+            return createErrorStatus(
+                    String.format(Messages.DexWrapper_Failed_to_load_s, osFilepath), e);
         }
     }
     
-    /**
-     * Unloads the loaded dex wrapper.
-     */
-    public static synchronized void unloadDex() {
-        sWrapper = null;
-        sLoadStatus = LoadStatus.LOADING;
-    }
-    
-    public static synchronized DexWrapper getWrapper() {
-        return sWrapper;
-    }
-    
-    /**
-     * Returns the {@link LoadStatus}.
-     */
-    public static synchronized LoadStatus getStatus() {
-        return sLoadStatus;
-    }
-
     /**
      * Runs the dex command.
      * @param osOutFilePath the OS path to the outputfile (classes.dex
@@ -166,33 +156,6 @@ public final class DexWrapper {
         } catch (InvocationTargetException e) {
             throw new CoreException(createErrorStatus(
                     String.format(Messages.DexWrapper_Unable_To_Execute_Dex_s, e.getMessage()), e));
-        }
-    }
-    
-    private DexWrapper(Class<?> mainClass, Class<?> argClass, Class<?> consoleClass)
-            throws CoreException {
-        try {
-            // now get the fields/methods we need
-            mRunMethod = mainClass.getMethod(MAIN_RUN, argClass);
-            
-            mArgConstructor = argClass.getConstructor();
-            mArgOutName = argClass.getField("outName"); //$NON-NLS-1$
-            mArgJarOutput = argClass.getField("jarOutput"); //$NON-NLS-1$
-            mArgFileNames = argClass.getField("fileNames"); //$NON-NLS-1$
-            mArgVerbose = argClass.getField("verbose"); //$NON-NLS-1$
-            
-            mConsoleOut = consoleClass.getField("out"); //$NON-NLS-1$
-            mConsoleErr = consoleClass.getField("err"); //$NON-NLS-1$
-            
-        } catch (SecurityException e) {
-            throw new CoreException(createErrorStatus(
-                    Messages.DexWrapper_SecuryEx_Unable_To_Find_API, e));
-        } catch (NoSuchMethodException e) {
-            throw new CoreException(createErrorStatus(
-                    Messages.DexWrapper_SecuryEx_Unable_To_Find_Method, e));
-        } catch (NoSuchFieldException e) {
-            throw new CoreException(createErrorStatus(
-                    Messages.DexWrapper_SecuryEx_Unable_To_Find_Field, e));
         }
     }
     

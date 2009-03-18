@@ -19,7 +19,11 @@ package com.android.spare_parts;
 
 import android.app.ActivityManagerNative;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.Configuration;
 import android.os.RemoteException;
@@ -28,6 +32,7 @@ import android.preference.CheckBoxPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
+import android.preference.PreferenceGroup;
 import android.preference.PreferenceScreen;
 import android.provider.Settings;
 import android.provider.Settings.SettingNotFoundException;
@@ -35,29 +40,72 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.IWindowManager;
 
+import java.util.List;
+
 public class SpareParts extends PreferenceActivity
         implements Preference.OnPreferenceChangeListener,
         SharedPreferences.OnSharedPreferenceChangeListener {
     private static final String TAG = "SpareParts";
 
+    private static final String BATTERY_HISTORY_PREF = "battery_history_settings";
+    private static final String BATTERY_INFORMATION_PREF = "battery_information_settings";
+    private static final String USAGE_STATISTICS_PREF = "usage_statistics_settings";
+    
     private static final String WINDOW_ANIMATIONS_PREF = "window_animations";
     private static final String TRANSITION_ANIMATIONS_PREF = "transition_animations";
+    private static final String FANCY_IME_ANIMATIONS_PREF = "fancy_ime_animations";
+    private static final String HAPTIC_FEEDBACK_PREF = "haptic_feedback";
     private static final String FONT_SIZE_PREF = "font_size";
     private static final String END_BUTTON_PREF = "end_button";
-    private static final String ACCELEROMETER_PREF = "accelerometer";
     private static final String MAPS_COMPASS_PREF = "maps_compass";
     
     private final Configuration mCurConfig = new Configuration();
     
     private ListPreference mWindowAnimationsPref;
     private ListPreference mTransitionAnimationsPref;
+    private CheckBoxPreference mFancyImeAnimationsPref;
+    private CheckBoxPreference mHapticFeedbackPref;
     private ListPreference mFontSizePref;
     private ListPreference mEndButtonPref;
-    private CheckBoxPreference mAccelerometerPref;
     private CheckBoxPreference mShowMapsCompassPref;
     
     private IWindowManager mWindowManager;
 
+    public static boolean updatePreferenceToSpecificActivityOrRemove(Context context,
+            PreferenceGroup parentPreferenceGroup, String preferenceKey, int flags) {
+        
+        Preference preference = parentPreferenceGroup.findPreference(preferenceKey);
+        if (preference == null) {
+            return false;
+        }
+        
+        Intent intent = preference.getIntent();
+        if (intent != null) {
+            // Find the activity that is in the system image
+            PackageManager pm = context.getPackageManager();
+            List<ResolveInfo> list = pm.queryIntentActivities(intent, 0);
+            int listSize = list.size();
+            for (int i = 0; i < listSize; i++) {
+                ResolveInfo resolveInfo = list.get(i);
+                if ((resolveInfo.activityInfo.applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM)
+                        != 0) {
+                    
+                    // Replace the intent with this specific activity
+                    preference.setIntent(new Intent().setClassName(
+                            resolveInfo.activityInfo.packageName,
+                            resolveInfo.activityInfo.name));
+                    
+                    return true;
+                }
+            }
+        }
+
+        // Did not find a matching activity, so remove the preference
+        parentPreferenceGroup.removePreference(preference);
+        
+        return true;
+    }
+    
     @Override
     public void onCreate(Bundle icicle) {
         super.onCreate(icicle);
@@ -69,23 +117,35 @@ public class SpareParts extends PreferenceActivity
         mWindowAnimationsPref.setOnPreferenceChangeListener(this);
         mTransitionAnimationsPref = (ListPreference) prefSet.findPreference(TRANSITION_ANIMATIONS_PREF);
         mTransitionAnimationsPref.setOnPreferenceChangeListener(this);
+        mFancyImeAnimationsPref = (CheckBoxPreference) prefSet.findPreference(FANCY_IME_ANIMATIONS_PREF);
+        mHapticFeedbackPref = (CheckBoxPreference) prefSet.findPreference(HAPTIC_FEEDBACK_PREF);
         mFontSizePref = (ListPreference) prefSet.findPreference(FONT_SIZE_PREF);
         mFontSizePref.setOnPreferenceChangeListener(this);
         mEndButtonPref = (ListPreference) prefSet.findPreference(END_BUTTON_PREF);
         mEndButtonPref.setOnPreferenceChangeListener(this);
-        mAccelerometerPref = (CheckBoxPreference) prefSet.findPreference(ACCELEROMETER_PREF);
         mShowMapsCompassPref = (CheckBoxPreference) prefSet.findPreference(MAPS_COMPASS_PREF);
         
         mWindowManager = IWindowManager.Stub.asInterface(ServiceManager.getService("window"));
         
-        getPreferenceScreen().getSharedPreferences().registerOnSharedPreferenceChangeListener(this);
+        final PreferenceGroup parentPreference = getPreferenceScreen();
+        updatePreferenceToSpecificActivityOrRemove(this, parentPreference,
+                BATTERY_HISTORY_PREF, 0);
+        updatePreferenceToSpecificActivityOrRemove(this, parentPreference,
+                BATTERY_INFORMATION_PREF, 0);
+        updatePreferenceToSpecificActivityOrRemove(this, parentPreference,
+                USAGE_STATISTICS_PREF, 0);
+        
+        parentPreference.getSharedPreferences().registerOnSharedPreferenceChangeListener(this);
     }
 
     private void updateToggles() {
         try {
-            mAccelerometerPref.setChecked(Settings.System.getInt(
+            mFancyImeAnimationsPref.setChecked(Settings.System.getInt(
                     getContentResolver(), 
-                    Settings.System.ACCELEROMETER_ROTATION, 0) != 0);
+                    Settings.System.FANCY_IME_ANIMATIONS, 0) != 0);
+            mHapticFeedbackPref.setChecked(Settings.System.getInt(
+                    getContentResolver(), 
+                    Settings.System.HAPTIC_FEEDBACK_ENABLED, 0) != 0);
             Context c = createPackageContext("com.google.android.apps.maps", 0);
             mShowMapsCompassPref.setChecked(c.getSharedPreferences("extra-features", MODE_WORLD_READABLE)
                 .getBoolean("compass", false));
@@ -177,10 +237,14 @@ public class SpareParts extends PreferenceActivity
     }
     
     public void onSharedPreferenceChanged(SharedPreferences preferences, String key) {
-        if (ACCELEROMETER_PREF.equals(key)) {
+        if (FANCY_IME_ANIMATIONS_PREF.equals(key)) {
             Settings.System.putInt(getContentResolver(),
-                    Settings.System.ACCELEROMETER_ROTATION,
-                    mAccelerometerPref.isChecked() ? 1 : 0);
+                    Settings.System.FANCY_IME_ANIMATIONS,
+                    mFancyImeAnimationsPref.isChecked() ? 1 : 0);
+        } else if (HAPTIC_FEEDBACK_PREF.equals(key)) {
+            Settings.System.putInt(getContentResolver(),
+                    Settings.System.HAPTIC_FEEDBACK_ENABLED,
+                    mHapticFeedbackPref.isChecked() ? 1 : 0);
         } else if (MAPS_COMPASS_PREF.equals(key)) {
             try {
                 Context c = createPackageContext("com.google.android.apps.maps", 0);

@@ -86,8 +86,13 @@ public class XmlErrorHandler extends DefaultHandler {
      */
     @Override
     public void warning(SAXParseException exception) throws SAXException {
-        BaseProjectHelper.addMarker(mFile, AndroidConstants.MARKER_XML, exception.getMessage(),
-                exception.getLineNumber(), IMarker.SEVERITY_WARNING);
+        if (mFile != null) {
+            BaseProjectHelper.addMarker(mFile,
+                    AndroidConstants.MARKER_XML,
+                    exception.getMessage(),
+                    exception.getLineNumber(),
+                    IMarker.SEVERITY_WARNING);
+        }
     }
     
     protected final IFile getFile() {
@@ -104,12 +109,19 @@ public class XmlErrorHandler extends DefaultHandler {
             mErrorListener.errorFound();
         }
         
-        if (lineNumber != -1) {
-            BaseProjectHelper.addMarker(mFile, AndroidConstants.MARKER_XML, exception.getMessage(),
-                    lineNumber, IMarker.SEVERITY_ERROR);
-        } else {
-            BaseProjectHelper.addMarker(mFile, AndroidConstants.MARKER_XML, exception.getMessage(),
-                    IMarker.SEVERITY_ERROR);
+        if (mFile != null) {
+            if (lineNumber != -1) {
+                BaseProjectHelper.addMarker(mFile,
+                        AndroidConstants.MARKER_XML,
+                        exception.getMessage(),
+                        lineNumber,
+                        IMarker.SEVERITY_ERROR);
+            } else {
+                BaseProjectHelper.addMarker(mFile,
+                        AndroidConstants.MARKER_XML,
+                        exception.getMessage(),
+                        IMarker.SEVERITY_ERROR);
+            }
         }
     }
 }

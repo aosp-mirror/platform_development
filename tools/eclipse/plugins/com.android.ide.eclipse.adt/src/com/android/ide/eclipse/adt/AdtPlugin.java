@@ -20,8 +20,7 @@ import com.android.ddmuilib.StackTracePanel;
 import com.android.ddmuilib.StackTracePanel.ISourceRevealer;
 import com.android.ddmuilib.console.DdmConsole;
 import com.android.ddmuilib.console.IDdmConsole;
-import com.android.ide.eclipse.adt.build.DexWrapper;
-import com.android.ide.eclipse.adt.debug.launching.AndroidLaunchController;
+import com.android.ide.eclipse.adt.launch.AndroidLaunchController;
 import com.android.ide.eclipse.adt.preferences.BuildPreferencePage;
 import com.android.ide.eclipse.adt.project.ProjectHelper;
 import com.android.ide.eclipse.adt.project.export.ExportWizard;
@@ -29,6 +28,7 @@ import com.android.ide.eclipse.adt.project.internal.AndroidClasspathContainerIni
 import com.android.ide.eclipse.adt.sdk.AndroidTargetParser;
 import com.android.ide.eclipse.adt.sdk.LoadStatus;
 import com.android.ide.eclipse.adt.sdk.Sdk;
+import com.android.ide.eclipse.adt.sdk.Sdk.ITargetChangeListener;
 import com.android.ide.eclipse.common.AndroidConstants;
 import com.android.ide.eclipse.common.EclipseUiHelper;
 import com.android.ide.eclipse.common.SdkStatsHelper;
@@ -166,11 +166,16 @@ public class AdtPlugin extends AbstractUIPlugin {
     /** Load status of the SDK. Any access MUST be in a synchronized(mPostLoadProjects) block */
     private LoadStatus mSdkIsLoaded = LoadStatus.LOADING;
     /** Project to update once the SDK is loaded.
-     * Any access MUST be in a synchronized(mPostLoadProjects) block */
-    private final ArrayList<IJavaProject> mPostLoadProjects = new ArrayList<IJavaProject>();
+     * Any access MUST be in a synchronized(mPostLoadProjectsToResolve) block */
+    private final ArrayList<IJavaProject> mPostLoadProjectsToResolve =
+            new ArrayList<IJavaProject>();
+    /** Project to check validity of cache vs actual once the SDK is loaded.
+     * Any access MUST be in a synchronized(mPostLoadProjectsToResolve) block */
+    private final ArrayList<IJavaProject> mPostLoadProjectsToCheck = new ArrayList<IJavaProject>();
     
     private ResourceMonitor mResourceMonitor;
-    private ArrayList<Runnable> mResourceRefreshListener = new ArrayList<Runnable>();
+    private ArrayList<ITargetChangeListener> mTargetChangeListeners =
+            new ArrayList<ITargetChangeListener>();
 
     /**
      * Custom PrintStream for Dx output. This class overrides the method
@@ -306,12 +311,12 @@ public class AdtPlugin extends AbstractUIPlugin {
                     if (checkSdkLocationAndId()) {
                         // if sdk if valid, reparse it
                         
-                        // add the current Android project to the list of projects to be updated
+                        // add all the opened Android projects to the list of projects to be updated
                         // after the SDK is reloaded
-                        synchronized (mPostLoadProjects) {
+                        synchronized (getSdkLockObject()) {
                             // get the project to refresh.
                             IJavaProject[] androidProjects = BaseProjectHelper.getAndroidProjects();
-                            mPostLoadProjects.addAll(Arrays.asList(androidProjects));
+                            mPostLoadProjectsToResolve.addAll(Arrays.asList(androidProjects));
                         }
     
                         // parse the SDK resources at the new location
@@ -419,8 +424,6 @@ public class AdtPlugin extends AbstractUIPlugin {
         
         stopEditors();
         
-        DexWrapper.unloadDex();
-
         mRed.dispose();
         synchronized (AdtPlugin.class) {
             sPlugin = null;
@@ -461,19 +464,9 @@ public class AdtPlugin extends AbstractUIPlugin {
         return SdkConstants.OS_SDK_TOOLS_FOLDER + AndroidConstants.FN_ADB;
     }
 
-    /** Returns the aapt path relative to the sdk folder */
-    public static String getOsRelativeAapt() {
-        return SdkConstants.OS_SDK_TOOLS_FOLDER + AndroidConstants.FN_AAPT;
-    }
-
     /** Returns the emulator path relative to the sdk folder */
     public static String getOsRelativeEmulator() {
         return SdkConstants.OS_SDK_TOOLS_FOLDER + AndroidConstants.FN_EMULATOR;
-    }
-
-    /** Returns the aidl path relative to the sdk folder */
-    public static String getOsRelativeAidl() {
-        return SdkConstants.OS_SDK_TOOLS_FOLDER + AndroidConstants.FN_AIDL;
     }
 
     /** Returns the absolute adb path */
@@ -487,19 +480,9 @@ public class AdtPlugin extends AbstractUIPlugin {
                 AndroidConstants.FN_TRACEVIEW;
     }
 
-    /** Returns the absolute aapt path */
-    public static String getOsAbsoluteAapt() {
-        return getOsSdkFolder() + getOsRelativeAapt();
-    }
-
     /** Returns the absolute emulator path */
     public static String getOsAbsoluteEmulator() {
         return getOsSdkFolder() + getOsRelativeEmulator();
-    }
-
-    /** Returns the absolute aidl path */
-    public static String getOsAbsoluteAidl() {
-        return getOsSdkFolder() + getOsRelativeAidl();
     }
 
     /**
@@ -869,17 +852,41 @@ public class AdtPlugin extends AbstractUIPlugin {
     }
     
     /**
-     * Returns whether the Sdk has been loaded. If the SDK has not been loaded, the given
-     * <var>project</var> is added to a list of projects to recompile after the SDK is loaded.
+     * Returns whether the Sdk has been loaded.
      */
-    public LoadStatus getSdkLoadStatus(IJavaProject project) {
-        synchronized (mPostLoadProjects) {
-            // only add the project to the list, if we are still loading.
-            if (mSdkIsLoaded == LoadStatus.LOADING && project != null) {
-                mPostLoadProjects.add(project);
-            }
-            
+    public final LoadStatus getSdkLoadStatus() {
+        synchronized (getSdkLockObject()) {
             return mSdkIsLoaded;
+        }
+    }
+    
+    /**
+     * Returns the lock object for SDK loading. If you wish to do things while the SDK is loading,
+     * you must synchronize on this object.
+     */
+    public final Object getSdkLockObject() {
+        return mPostLoadProjectsToResolve;
+    }
+    
+    /**
+     * Sets the given {@link IJavaProject} to have its target resolved again once the SDK finishes
+     * to load.
+     */
+    public final void setProjectToResolve(IJavaProject javaProject) {
+        synchronized (getSdkLockObject()) {
+            mPostLoadProjectsToResolve.add(javaProject);
+        }
+    }
+    
+    /**
+     * Sets the given {@link IJavaProject} to have its target checked for consistency
+     * once the SDK finishes to load. This is used if the target is resolved using cached
+     * information while the SDK is loading.
+     */
+    public final void setProjectToCheck(IJavaProject javaProject) {
+        // only lock on 
+        synchronized (getSdkLockObject()) {
+            mPostLoadProjectsToCheck.add(javaProject);
         }
     }
 
@@ -939,8 +946,6 @@ public class AdtPlugin extends AbstractUIPlugin {
         // check the path to various tools we use
         String[] filesToCheck = new String[] {
                 osSdkLocation + getOsRelativeAdb(),
-                osSdkLocation + getOsRelativeAapt(),
-                osSdkLocation + getOsRelativeAidl(),
                 osSdkLocation + getOsRelativeEmulator()
         };
         for (String file : filesToCheck) {
@@ -982,7 +987,7 @@ public class AdtPlugin extends AbstractUIPlugin {
                             Constants.BUNDLE_VERSION);
                     Version version = new Version(versionString);
                     
-                    SdkStatsHelper.pingUsageServer("editors", version); //$NON-NLS-1$
+                    SdkStatsHelper.pingUsageServer("adt", version); //$NON-NLS-1$
                     
                     return Status.OK_STATUS;
                 } catch (Throwable t) {
@@ -1015,61 +1020,69 @@ public class AdtPlugin extends AbstractUIPlugin {
                         
                         progress.setTaskName(Messages.AdtPlugin_Parsing_Resources);
                         
-                        for (IAndroidTarget target : sdk.getTargets()) {
-                            IStatus status = new AndroidTargetParser(target).run(progress);
-                            if (status.getCode() != IStatus.OK) {
-                                synchronized (mPostLoadProjects) {
-                                    mSdkIsLoaded = LoadStatus.FAILED;
-                                    mPostLoadProjects.clear();
+                        int n = sdk.getTargets().length;
+                        if (n > 0) {
+                            int w = 60 / n;
+                            for (IAndroidTarget target : sdk.getTargets()) {
+                                SubMonitor p2 = progress.newChild(w);
+                                IStatus status = new AndroidTargetParser(target).run(p2);
+                                if (status.getCode() != IStatus.OK) {
+                                    synchronized (getSdkLockObject()) {
+                                        mSdkIsLoaded = LoadStatus.FAILED;
+                                        mPostLoadProjectsToResolve.clear();
+                                    }
+                                    return status;
                                 }
-                                return status;
                             }
                         }
 
-                        // FIXME: move this per platform, or somewhere else.
-                        progress = SubMonitor.convert(monitor,
-                                Messages.AdtPlugin_Parsing_Resources, 20);
-                        DexWrapper.unloadDex();
-
-                        IStatus res = DexWrapper.loadDex(
-                                mOsSdkLocation + AndroidConstants.OS_SDK_LIBS_DX_JAR);
-                        if (res != Status.OK_STATUS) {
-                            synchronized (mPostLoadProjects) {
-                                mSdkIsLoaded = LoadStatus.FAILED;
-                                mPostLoadProjects.clear();
-                            }
-                            return res;
-                        }
-
-                        synchronized (mPostLoadProjects) {
+                        synchronized (getSdkLockObject()) {
                             mSdkIsLoaded = LoadStatus.LOADED;
 
+                            progress.setTaskName("Check Projects");
+
+                            // check the projects that need checking.
+                            // The method modifies the list (it removes the project that
+                            // do not need to be resolved again).
+                            AndroidClasspathContainerInitializer.checkProjectsCache(
+                                    mPostLoadProjectsToCheck);
+                            
+                            mPostLoadProjectsToResolve.addAll(mPostLoadProjectsToCheck);
+                            
                             // update the project that needs recompiling.
-                            if (mPostLoadProjects.size() > 0) {
-                                IJavaProject[] array = mPostLoadProjects.toArray(
-                                        new IJavaProject[mPostLoadProjects.size()]);
+                            if (mPostLoadProjectsToResolve.size() > 0) {
+                                IJavaProject[] array = mPostLoadProjectsToResolve.toArray(
+                                        new IJavaProject[mPostLoadProjectsToResolve.size()]);
                                 AndroidClasspathContainerInitializer.updateProjects(array);
-                                mPostLoadProjects.clear();
+                                mPostLoadProjectsToResolve.clear();
                             }
+                            
+                            progress.worked(10);
                         }
                     }
                         
                     // Notify resource changed listeners
-                    progress.subTask("Refresh UI");
-                    progress.setWorkRemaining(mResourceRefreshListener.size());
+                    progress.setTaskName("Refresh UI");
+                    progress.setWorkRemaining(mTargetChangeListeners.size());
                     
                     // Clone the list before iterating, to avoid Concurrent Modification
                     // exceptions
-                    List<Runnable> listeners = (List<Runnable>)mResourceRefreshListener.clone();
-                    for (Runnable listener : listeners) {
-                        try {
-                            AdtPlugin.getDisplay().syncExec(listener);
-                        } catch (Exception e) {
-                            AdtPlugin.log(e, "ResourceRefreshListener Failed");  //$NON-NLS-1$
-                        } finally {
-                            progress.worked(1);
+                    final List<ITargetChangeListener> listeners =
+                            (List<ITargetChangeListener>)mTargetChangeListeners.clone();
+                    final SubMonitor progress2 = progress;
+                    AdtPlugin.getDisplay().syncExec(new Runnable() {
+                        public void run() {
+                            for (ITargetChangeListener listener : listeners) {
+                                try {
+                                    listener.onTargetsLoaded();
+                                } catch (Exception e) {
+                                    AdtPlugin.log(e, "Failed to update a TargetChangeListener.");  //$NON-NLS-1$
+                                } finally {
+                                    progress2.worked(1);
+                                }
+                            }
                         }
-                    }
+                    });
                 } finally {
                     if (monitor != null) {
                         monitor.done();
@@ -1315,12 +1328,42 @@ public class AdtPlugin extends AbstractUIPlugin {
         }, IResourceDelta.ADDED | IResourceDelta.CHANGED);
     }
 
-    public void addResourceChangedListener(Runnable resourceRefreshListener) {
-        mResourceRefreshListener.add(resourceRefreshListener);
+    /**
+     * Adds a new {@link ITargetChangeListener} to be notified when a new SDK is loaded, or when
+     * a project has its target changed.
+     */
+    public void addTargetListener(ITargetChangeListener listener) {
+        mTargetChangeListeners.add(listener);
     }
 
-    public void removeResourceChangedListener(Runnable resourceRefreshListener) {
-        mResourceRefreshListener.remove(resourceRefreshListener);
+    /**
+     * Removes an existing {@link ITargetChangeListener}.
+     * @see #addTargetListener(ITargetChangeListener)
+     */
+    public void removeTargetListener(ITargetChangeListener listener) {
+        mTargetChangeListeners.remove(listener);
+    }
+
+    /**
+     * Updates all the {@link ITargetChangeListener} that a target has changed for a given project.
+     * <p/>Only editors related to that project should reload.
+     */
+    @SuppressWarnings("unchecked")
+    public void updateTargetListener(final IProject project) {
+        final List<ITargetChangeListener> listeners =
+            (List<ITargetChangeListener>)mTargetChangeListeners.clone();
+
+        AdtPlugin.getDisplay().asyncExec(new Runnable() {
+            public void run() {
+                for (ITargetChangeListener listener : listeners) {
+                    try {
+                        listener.onProjectTargetChange(project);
+                    } catch (Exception e) {
+                        AdtPlugin.log(e, "Failed to update a TargetChangeListener.");  //$NON-NLS-1$
+                    }
+                }
+            }
+        });
     }
     
     public static synchronized OutputStream getErrorStream() {

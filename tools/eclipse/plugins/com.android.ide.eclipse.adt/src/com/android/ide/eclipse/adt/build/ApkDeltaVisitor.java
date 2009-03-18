@@ -192,11 +192,16 @@ public class ApkDeltaVisitor extends BaseDeltaVisitor
                     IPath parentPath = path.removeLastSegments(1);
                     if (mOutputPath.equals(parentPath)) {
                         String resourceName = resource.getName();
+                        // check if classes.dex was removed
                         if (resourceName.equalsIgnoreCase(AndroidConstants.FN_CLASSES_DEX)) {
                             mConvertToDex = true;
                             mMakeFinalPackage = true;
                         } else if (resourceName.equalsIgnoreCase(
-                                AndroidConstants.FN_RESOURCES_AP_)) {
+                                AndroidConstants.FN_RESOURCES_AP_) ||
+                                AndroidConstants.PATTERN_RESOURCES_S_AP_.matcher(
+                                        resourceName).matches()) {
+                            // or if the default resources.ap_ or a configured version
+                            // (resources-###.ap_) was removed.
                             mPackageResources = true;
                             mMakeFinalPackage = true;
                         }

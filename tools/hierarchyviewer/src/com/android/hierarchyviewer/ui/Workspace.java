@@ -27,6 +27,7 @@ import com.android.hierarchyviewer.scene.ViewHierarchyScene;
 import com.android.hierarchyviewer.scene.ViewManager;
 import com.android.hierarchyviewer.scene.ViewNode;
 import com.android.hierarchyviewer.scene.WindowsLoader;
+import com.android.hierarchyviewer.scene.ProfilesLoader;
 import com.android.hierarchyviewer.util.OS;
 import com.android.hierarchyviewer.util.WorkerThread;
 import com.android.hierarchyviewer.ui.action.ShowDevicesAction;
@@ -43,6 +44,7 @@ import com.android.hierarchyviewer.ui.util.PngFileFilter;
 import com.android.hierarchyviewer.ui.util.IconLoader;
 import com.android.hierarchyviewer.ui.model.PropertiesTableModel;
 import com.android.hierarchyviewer.ui.model.ViewsTreeModel;
+import com.android.hierarchyviewer.ui.model.ProfilesTableModel;
 import org.jdesktop.swingworker.SwingWorker;
 import org.netbeans.api.visual.graph.layout.TreeGraphLayout;
 import org.netbeans.api.visual.model.ObjectSceneEvent;
@@ -67,6 +69,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
+import javax.swing.JScrollBar;
 import javax.swing.JSlider;
 import javax.swing.JSplitPane;
 import javax.swing.JTable;
@@ -76,6 +79,9 @@ import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
 import javax.swing.JTree;
 import javax.swing.Box;
+import javax.swing.JTextField;
+import javax.swing.text.Document;
+import javax.swing.text.BadLocationException;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.event.ChangeEvent;
@@ -84,6 +90,8 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.event.TreeSelectionEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.event.DocumentEvent;
 import javax.swing.table.DefaultTableModel;
 import java.awt.image.BufferedImage;
 import java.awt.BorderLayout;
@@ -100,11 +108,15 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 import java.util.concurrent.ExecutionException;
 
 public class Workspace extends JFrame {
@@ -113,6 +125,7 @@ public class Workspace extends JFrame {
     private JSplitPane sideSplitter;
     private JSplitPane mainSplitter;
     private JTable propertiesTable;
+    private JTable profilingTable;
     private JComponent pixelPerfectPanel;
     private JTree pixelPerfectTree;
     private ScreenViewer screenViewer;
@@ -156,6 +169,8 @@ public class Workspace extends JFrame {
     private JTable windows;
     private JLabel minZoomLabel;
     private JLabel maxZoomLabel;
+    private JTextField filterText;
+    private JLabel filterLabel;
 
     public Workspace() {
         super("Hierarchy Viewer");
@@ -164,6 +179,7 @@ public class Workspace extends JFrame {
         add(buildMainPanel());
         setJMenuBar(buildMenuBar());
 
+        devices.changeSelection(0, 0, false, false);
         currentDeviceChanged();
 
         pack();
@@ -261,11 +277,32 @@ public class Workspace extends JFrame {
         JScrollPane tableScroller = new JScrollPane(propertiesTable);
         tableScroller.setBorder(null);
 
+        profilingTable = new JTable();
+        profilingTable.setModel(new DefaultTableModel(new Object[][] {
+                { " " , " " }, { " " , " " }, { " " , " " } },
+                new String[] { "Operation", "Duration (ms)" }));
+        profilingTable.setBorder(null);
+        profilingTable.getTableHeader().setBorder(null);
+
+        JScrollPane firstTableScroller = new JScrollPane(profilingTable);
+        firstTableScroller.setBorder(null);
+
+        setVisibleRowCount(profilingTable, 5);
+        firstTableScroller.setMinimumSize(profilingTable.getPreferredScrollableViewportSize());
+        
+        JSplitPane tablesSplitter = new JSplitPane();
+        tablesSplitter.setBorder(null);
+        tablesSplitter.setOrientation(JSplitPane.VERTICAL_SPLIT);
+        tablesSplitter.setResizeWeight(0);
+        tablesSplitter.setLeftComponent(firstTableScroller);
+        tablesSplitter.setBottomComponent(tableScroller);
+        tablesSplitter.setContinuousLayout(true);
+
         sideSplitter = new JSplitPane();
         sideSplitter.setBorder(null);
         sideSplitter.setOrientation(JSplitPane.VERTICAL_SPLIT);
         sideSplitter.setResizeWeight(0.5);
-        sideSplitter.setLeftComponent(tableScroller);
+        sideSplitter.setLeftComponent(tablesSplitter);
         sideSplitter.setBottomComponent(null);
         sideSplitter.setContinuousLayout(true);
 
@@ -313,10 +350,33 @@ public class Workspace extends JFrame {
 
         graphViewButton.setSelected(true);
 
+        filterText = new JTextField(20);
+        filterText.putClientProperty("JComponent.sizeVariant", "small");
+        filterText.getDocument().addDocumentListener(new DocumentListener() {
+            public void insertUpdate(DocumentEvent e) {
+                updateFilter(e);
+            }
+
+            public void removeUpdate(DocumentEvent e) {
+                updateFilter(e);
+            }
+
+            public void changedUpdate(DocumentEvent e) {
+                updateFilter(e);
+            }
+        });
+
+        filterLabel = new JLabel("Filter by class or id:");
+        filterLabel.putClientProperty("JComponent.sizeVariant", "small");
+        filterLabel.setBorder(BorderFactory.createEmptyBorder(0, 6, 0, 6));
+
+        leftSide.add(filterLabel);
+        leftSide.add(filterText);
+
         minZoomLabel = new JLabel();
         minZoomLabel.setText("20%");
         minZoomLabel.putClientProperty("JComponent.sizeVariant", "small");
-        minZoomLabel.setBorder(BorderFactory.createEmptyBorder(0, 6, 0, 0));
+        minZoomLabel.setBorder(BorderFactory.createEmptyBorder(0, 12, 0, 0));
         leftSide.add(minZoomLabel);
 
         zoomSlider = new JSlider();
@@ -357,12 +417,18 @@ public class Workspace extends JFrame {
 
         statusPanel.add(rightSide, BorderLayout.LINE_END);
 
+        hideStatusBarComponents();
+
+        return statusPanel;
+    }
+
+    private void hideStatusBarComponents() {
         viewCountLabel.setVisible(false);
         zoomSlider.setVisible(false);
         minZoomLabel.setVisible(false);
-        maxZoomLabel.setVisible(false);        
-
-        return statusPanel;
+        maxZoomLabel.setVisible(false);
+        filterLabel.setVisible(false);
+        filterText.setVisible(false);
     }
 
     private JToolBar buildToolBar() {
@@ -513,10 +579,7 @@ public class Workspace extends JFrame {
     }
 
     private void toggleGraphView() {
-        viewCountLabel.setVisible(true);
-        zoomSlider.setVisible(true);
-        minZoomLabel.setVisible(true);
-        maxZoomLabel.setVisible(true);
+        showStatusBarComponents();
 
         screenViewer.stop();
         mainPanel.remove(pixelPerfectPanel);
@@ -524,6 +587,15 @@ public class Workspace extends JFrame {
 
         validate();
         repaint();
+    }
+
+    private void showStatusBarComponents() {
+        viewCountLabel.setVisible(true);
+        zoomSlider.setVisible(true);
+        minZoomLabel.setVisible(true);
+        maxZoomLabel.setVisible(true);
+        filterLabel.setVisible(true);
+        filterText.setVisible(true);
     }
 
     private void togglePixelPerfectView() {
@@ -534,10 +606,7 @@ public class Workspace extends JFrame {
             screenViewer.start();
         }
 
-        viewCountLabel.setVisible(false);
-        zoomSlider.setVisible(false);
-        minZoomLabel.setVisible(false);
-        maxZoomLabel.setVisible(false);
+        hideStatusBarComponents();
 
         mainPanel.remove(mainSplitter);
         mainPanel.add(pixelPerfectPanel, BorderLayout.CENTER);
@@ -556,6 +625,22 @@ public class Workspace extends JFrame {
 
     private void showProperties(ViewNode node) {
         propertiesTable.setModel(new PropertiesTableModel(node));
+    }
+
+    private void updateProfiles(double[] profiles) {
+        profilingTable.setModel(new ProfilesTableModel(profiles));
+        setVisibleRowCount(profilingTable, profiles.length + 1);
+    }
+
+    public static void setVisibleRowCount(JTable table, int rows) {
+        int height = 0;
+        for (int row = 0; row < rows; row++) {
+            height += table.getRowHeight(row);
+        }
+
+        Dimension size = new Dimension(table.getPreferredScrollableViewportSize().width, height);
+        table.setPreferredScrollableViewportSize(size);
+        table.revalidate();
     }
 
     private void showPixelPerfectTree() {
@@ -602,14 +687,12 @@ public class Workspace extends JFrame {
             graphViewButton.setEnabled(true);
             pixelPerfectViewButton.setEnabled(true);
 
-            viewCountLabel.setVisible(true);
-            zoomSlider.setVisible(true);
-            minZoomLabel.setVisible(true);
-            maxZoomLabel.setVisible(true);            
+            showStatusBarComponents();
         }
 
         sceneView = scene.createView();
         sceneView.addMouseListener(new NodeClickListener());
+        sceneView.addMouseWheelListener(new WheelZoomListener());
         sceneScroller.setViewportView(sceneView);
 
         if (extrasPanel != null) {
@@ -640,7 +723,10 @@ public class Workspace extends JFrame {
 
     private JPanel buildExtrasPanel() {
         extrasPanel = new JPanel(new BorderLayout());
-        extrasPanel.add(new JScrollPane(layoutView = new LayoutRenderer(scene)));
+        JScrollPane p = new JScrollPane(layoutView = new LayoutRenderer(scene, sceneView));
+        JScrollBar b = p.getVerticalScrollBar();
+        b.setUnitIncrement(10);
+        extrasPanel.add(p);
         extrasPanel.add(scene.createSatelliteView(), BorderLayout.SOUTH);
         extrasPanel.add(buildLayoutViewControlButtons(), BorderLayout.NORTH);
         return extrasPanel;
@@ -776,10 +862,7 @@ public class Workspace extends JFrame {
             pixelPerfectPanel = mainSplitter = null;
             graphViewButton.setSelected(true);
 
-            viewCountLabel.setVisible(false);
-            zoomSlider.setVisible(false);
-            minZoomLabel.setVisible(false);
-            maxZoomLabel.setVisible(false);
+            hideStatusBarComponents();
 
             saveMenuItem.setEnabled(false);            
             showDevicesMenuItem.setEnabled(false);
@@ -863,6 +946,34 @@ public class Workspace extends JFrame {
                 }
             }
         });
+    }
+
+    private void updateFilter(DocumentEvent e) {
+        final Document document = e.getDocument();
+        try {
+            updateFilteredNodes(document.getText(0, document.getLength()));
+        } catch (BadLocationException e1) {
+            e1.printStackTrace();
+        }
+    }
+
+    private void updateFilteredNodes(String filterText) {
+        final ViewNode root = scene.getRoot();
+        try {
+            final Pattern pattern = Pattern.compile(filterText, Pattern.CASE_INSENSITIVE);
+            filterNodes(pattern, root);
+        } catch (PatternSyntaxException e) {
+            filterNodes(null, root);
+        }
+        repaint();
+    }
+
+    private void filterNodes(Pattern pattern, ViewNode root) {
+        root.filter(pattern);
+
+        for (ViewNode node : root.children) {
+            filterNodes(pattern, node);
+        }
     }
 
     public void beginTask() {
@@ -1063,22 +1174,24 @@ public class Workspace extends JFrame {
         }
     }
 
-    private class LoadGraphTask extends SwingWorker<ViewHierarchyScene, Void> {
+    private class LoadGraphTask extends SwingWorker<double[], Void> {
         public LoadGraphTask() {
             beginTask();
         }
 
         @Override
         @WorkerThread
-        protected ViewHierarchyScene doInBackground() {
+        protected double[] doInBackground() {
             scene = ViewHierarchyLoader.loadScene(currentDevice, currentWindow);
-            return scene;
+            return ProfilesLoader.loadProfiles(currentDevice, currentWindow,
+                    scene.getRoot().toString());
         }
 
         @Override
         protected void done() {
             try {
-                createGraph(get());
+                createGraph(scene);
+                updateProfiles(get());
             } catch (InterruptedException e) {
                 e.printStackTrace();
             } catch (ExecutionException e) {
@@ -1168,6 +1281,15 @@ public class Workspace extends JFrame {
         }
     }
 
+    private class WheelZoomListener implements MouseWheelListener {
+        public void mouseWheelMoved(MouseWheelEvent e) {
+            if (zoomSlider != null) {
+                int val = zoomSlider.getValue();
+                val -= e.getWheelRotation() * 10;
+                zoomSlider.setValue(val);
+            }
+        }
+    }
     private class DevicesTableModel extends DefaultTableModel implements
             AndroidDebugBridge.IDeviceChangeListener {
 

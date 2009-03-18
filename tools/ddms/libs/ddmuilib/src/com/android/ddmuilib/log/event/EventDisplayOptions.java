@@ -23,7 +23,6 @@ import com.android.ddmuilib.DdmUiPreferences;
 import com.android.ddmuilib.IImageLoader;
 import com.android.ddmuilib.log.event.EventDisplay.OccurrenceDisplayDescriptor;
 import com.android.ddmuilib.log.event.EventDisplay.ValueDisplayDescriptor;
-
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
@@ -439,15 +438,19 @@ class EventDisplayOptions  extends Dialog {
         mDisplayTypeCombo.add("Filtered Log");
         mDisplayTypeCombo.add("Graph");
         mDisplayTypeCombo.add("Sync");
-        mDisplayTypeCombo.add("Sync histogram");
+        mDisplayTypeCombo.add("Sync Histogram");
+        mDisplayTypeCombo.add("Sync Performance");
         mDisplayTypeCombo.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
                 EventDisplay eventDisplay = getCurrentEventDisplay();
-                if (eventDisplay != null) {
+                if (eventDisplay != null && eventDisplay.getDisplayType() != mDisplayTypeCombo.getSelectionIndex()) {
+                    /* Replace the EventDisplay object with a different subclass */
                     setModified();
-                    eventDisplay.setDisplayType(mDisplayTypeCombo.getSelectionIndex());
-                    fillUiWith(eventDisplay);
+                    String name = eventDisplay.getName();
+                    EventDisplay newEventDisplay = EventDisplay.eventDisplayFactory(mDisplayTypeCombo.getSelectionIndex(), name);
+                    setCurrentEventDisplay(newEventDisplay);
+                    fillUiWith(newEventDisplay);
                 }
             }
         });
@@ -693,7 +696,7 @@ class EventDisplayOptions  extends Dialog {
     
     private void duplicateEventDisplay(ArrayList<EventDisplay> displayList) {
         for (EventDisplay eventDisplay : displayList) {
-            mDisplayList.add(new EventDisplay(eventDisplay));
+            mDisplayList.add(EventDisplay.clone(eventDisplay));
         }
     }
     
@@ -744,7 +747,7 @@ class EventDisplayOptions  extends Dialog {
         
         String name = String.format("display %1$d", count + 1);
         
-        EventDisplay eventDisplay = new EventDisplay(name);
+        EventDisplay eventDisplay = EventDisplay.eventDisplayFactory(0 /* type*/, name);
         
         mDisplayList.add(eventDisplay);
         mEventDisplayList.add(name);
@@ -778,6 +781,13 @@ class EventDisplayOptions  extends Dialog {
         }
         
         return null;
+    }
+
+    private void setCurrentEventDisplay(EventDisplay eventDisplay) {
+        int selection = mEventDisplayList.getSelectionIndex();
+        if (selection != -1) {
+            mDisplayList.set(selection, eventDisplay);
+        }
     }
     
     private void handleEventDisplaySelection() {

@@ -55,7 +55,7 @@ public class LayoutEditor extends AndroidEditor implements IShowEditorInput, IPa
     /** Root node of the UI element hierarchy */
     private UiDocumentNode mUiRootNode;
     
-    private GraphicalLayoutEditor mGraphicalEditor;
+    private AbstractGraphicalLayoutEditor mGraphicalEditor;
     private int mGraphicalEditorIndex;
     /** Implementation of the {@link IContentOutlinePage} for this editor */
     private UiContentOutlinePage mOutline;
@@ -269,8 +269,12 @@ public class LayoutEditor extends AndroidEditor implements IShowEditorInput, IPa
     protected void pageChange(int newPageIndex) {
         super.pageChange(newPageIndex);
         
-        if (mGraphicalEditor != null && newPageIndex == mGraphicalEditorIndex) {
-            mGraphicalEditor.activated();
+        if (mGraphicalEditor != null) {
+            if (newPageIndex == mGraphicalEditorIndex) {
+                mGraphicalEditor.activated();
+            } else {
+                mGraphicalEditor.deactivated();
+            }
         }
     }
     
@@ -278,8 +282,12 @@ public class LayoutEditor extends AndroidEditor implements IShowEditorInput, IPa
     
     public void partActivated(IWorkbenchPart part) {
         if (part == this) {
-            if (mGraphicalEditor != null && getActivePage() == mGraphicalEditorIndex) {
-                mGraphicalEditor.activated();
+            if (mGraphicalEditor != null) {
+                if (getActivePage() == mGraphicalEditorIndex) {
+                    mGraphicalEditor.activated();
+                } else {
+                    mGraphicalEditor.deactivated();
+                }
             }
         }
     }
@@ -334,23 +342,23 @@ public class LayoutEditor extends AndroidEditor implements IShowEditorInput, IPa
     // ---- Local Methods ----
     
     /**
-     * Returns true if the Graphics editor page is visible.
-     * This <b>must</b> be called from the UI thread.
+     * Returns true if the Graphics editor page is visible. This <b>must</b> be
+     * called from the UI thread.
      */
     boolean isGraphicalEditorActive() {
         IWorkbenchPartSite workbenchSite = getSite();
         IWorkbenchPage workbenchPage = workbenchSite.getPage();
-        
+
         // check if the editor is visible in the workbench page
-        if (workbenchPage.isPartVisible(this)) {
+        if (workbenchPage.isPartVisible(this) && workbenchPage.getActiveEditor() == this) {
             // and then if the page of the editor is visible (not to be confused with
             // the workbench page)
             return mGraphicalEditorIndex == getActivePage();
         }
-        
-        return false;
-    }
 
+        return false;
+    }   
+    
     @Override
     protected void initUiRootNode(boolean force) {
         // The root UI node is always created, even if there's no corresponding XML node.

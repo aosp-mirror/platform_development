@@ -94,7 +94,7 @@ public class Client {
      * is only used for data generated within Client.
      */
     private static final int INITIAL_BUF_SIZE = 2*1024;
-    private static final int MAX_BUF_SIZE = 2*1024*1024;
+    private static final int MAX_BUF_SIZE = 200*1024*1024;
     private ByteBuffer mReadBuffer;
 
     private static final int WRITE_BUF_SIZE = 256;

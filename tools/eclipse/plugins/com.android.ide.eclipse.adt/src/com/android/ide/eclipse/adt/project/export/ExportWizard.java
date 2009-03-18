@@ -18,14 +18,20 @@ package com.android.ide.eclipse.adt.project.export;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.project.ProjectHelper;
+import com.android.ide.eclipse.common.project.BaseProjectHelper;
 import com.android.jarutils.KeystoreHelper;
 import com.android.jarutils.SignedJarBuilder;
 import com.android.jarutils.DebugKeyProvider.IKeyGenOutput;
 import com.android.jarutils.DebugKeyProvider.KeytoolException;
 
+import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.IncrementalProjectBuilder;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IAdaptable;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.Wizard;
@@ -35,12 +41,14 @@ import org.eclipse.swt.events.VerifyListener;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IExportWizard;
 import org.eclipse.ui.IWorkbench;
+import org.eclipse.ui.PlatformUI;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
@@ -49,6 +57,9 @@ import java.security.KeyStore.PrivateKeyEntry;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.Map.Entry;
 
 /**
  * Export wizard to export an apk signed with a release key/certificate. 
@@ -66,7 +77,12 @@ public final class ExportWizard extends Wizard implements IExportWizard {
     static final String PROPERTY_KEYSTORE = "keystore"; //$NON-NLS-1$
     static final String PROPERTY_ALIAS = "alias"; //$NON-NLS-1$
     static final String PROPERTY_DESTINATION = "destination"; //$NON-NLS-1$
+    static final String PROPERTY_FILENAME = "baseFilename"; //$NON-NLS-1$
     
+    static final int APK_FILE_SOURCE = 0;
+    static final int APK_FILE_DEST = 1;
+    static final int APK_COUNT = 2;
+
     /**
      * Base page class for the ExportWizard page. This class add the {@link #onShow()} callback.
      */
@@ -131,7 +147,7 @@ public final class ExportWizard extends Wizard implements IExportWizard {
          * Calls {@link #setErrorMessage(String)} and {@link #setPageComplete(boolean)} based on a
          * {@link Throwable} object.
          */
-        protected final void onException(Throwable t) {
+        protected void onException(Throwable t) {
             String message = getExceptionMessage(t);
             
             setErrorMessage(message);
@@ -155,9 +171,7 @@ public final class ExportWizard extends Wizard implements IExportWizard {
     private PrivateKey mPrivateKey;
     private X509Certificate mCertificate;
 
-    private String mDestinationPath;
-    private String mApkFilePath;
-    private String mApkFileName;
+    private File mDestinationParentFolder;
 
     private ExportWizardPage mKeystoreSelectionPage;
     private ExportWizardPage mKeyCreationPage;
@@ -167,6 +181,8 @@ public final class ExportWizard extends Wizard implements IExportWizard {
     private boolean mKeyCreationMode;
 
     private List<String> mExistingAliases;
+
+    private Map<String, String[]> mApkMap;
 
     public ExportWizard() {
         setHelpAvailable(false); // TODO have help
@@ -186,24 +202,51 @@ public final class ExportWizard extends Wizard implements IExportWizard {
 
     @Override
     public boolean performFinish() {
-        // first we make sure export is fine if the destination file already exists
-        File f = new File(mDestinationPath);
-        if (f.isFile()) {
-            if (AdtPlugin.displayPrompt("Export Wizard",
-                    "File already exists. Do you want to overwrite it?") == false) {
-                return false;
-            }
-        }
-        
         // save the properties
         ProjectHelper.saveStringProperty(mProject, PROPERTY_KEYSTORE, mKeystore);
         ProjectHelper.saveStringProperty(mProject, PROPERTY_ALIAS, mKeyAlias);
-        ProjectHelper.saveStringProperty(mProject, PROPERTY_DESTINATION, mDestinationPath);
+        ProjectHelper.saveStringProperty(mProject, PROPERTY_DESTINATION,
+                mDestinationParentFolder.getAbsolutePath());
+        ProjectHelper.saveStringProperty(mProject, PROPERTY_FILENAME,
+                mApkMap.get(null)[APK_FILE_DEST]);
         
+        // run the export in an UI runnable.
+        IWorkbench workbench = PlatformUI.getWorkbench();
+        final boolean[] result = new boolean[1];
         try {
+            workbench.getProgressService().busyCursorWhile(new IRunnableWithProgress() {
+                /**
+                 * Run the export.
+                 * @throws InvocationTargetException
+                 * @throws InterruptedException
+                 */
+                public void run(IProgressMonitor monitor) throws InvocationTargetException,
+                        InterruptedException {
+                    try {
+                        result[0] = doExport(monitor);
+                    } finally {
+                        monitor.done();
+                    }
+                }
+            });
+        } catch (InvocationTargetException e) {
+            return false;
+        } catch (InterruptedException e) {
+            return false;
+        }
+        
+        return result[0];
+    }
+    
+    private boolean doExport(IProgressMonitor monitor) {
+        try {
+            // first we make sure the project is built
+            mProject.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, monitor);
+
+            // if needed, create the keystore and/or key.
             if (mKeystoreCreationMode || mKeyCreationMode) {
                 final ArrayList<String> output = new ArrayList<String>();
-                if (KeystoreHelper.createNewStore(
+                boolean createdStore = KeystoreHelper.createNewStore(
                         mKeystore,
                         null /*storeType*/,
                         mKeystorePassword,
@@ -218,7 +261,9 @@ public final class ExportWizard extends Wizard implements IExportWizard {
                             public void out(String message) {
                                 output.add(message);
                             }
-                        }) == false) {
+                        });
+                
+                if (createdStore == false) {
                     // keystore creation error!
                     displayError(output.toArray(new String[output.size()]));
                     return false;
@@ -245,20 +290,42 @@ public final class ExportWizard extends Wizard implements IExportWizard {
             
             // check the private key/certificate again since it may have been created just above.
             if (mPrivateKey != null && mCertificate != null) {
-                FileOutputStream fos = new FileOutputStream(mDestinationPath);
-                SignedJarBuilder builder = new SignedJarBuilder(fos, mPrivateKey, mCertificate);
-                
-                // get the input file.
-                FileInputStream fis = new FileInputStream(mApkFilePath);
-                try {
-                    builder.writeZip(fis, null /* filter */);
-                } finally {
-                    fis.close();
+                // get the output folder of the project to export.
+                // this is where we'll find the built apks to resign and export.
+                IFolder outputIFolder = BaseProjectHelper.getOutputFolder(mProject);
+                if (outputIFolder == null) {
+                    return false;
                 }
-    
-                builder.close();
-                fos.close();
+                String outputOsPath =  outputIFolder.getLocation().toOSString();
                 
+                // now generate the packages.
+                Set<Entry<String, String[]>> set = mApkMap.entrySet();
+                for (Entry<String, String[]> entry : set) {
+                    String[] defaultApk = entry.getValue();
+                    String srcFilename = defaultApk[APK_FILE_SOURCE];
+                    String destFilename = defaultApk[APK_FILE_DEST];
+
+                    FileOutputStream fos = new FileOutputStream(
+                            new File(mDestinationParentFolder, destFilename));
+                    SignedJarBuilder builder = new SignedJarBuilder(fos, mPrivateKey, mCertificate);
+                    
+                    // get the input file.
+                    FileInputStream fis = new FileInputStream(new File(outputOsPath, srcFilename));
+                    
+                    // add the content of the source file to the output file, and sign it at
+                    // the same time.
+                    try {
+                        builder.writeZip(fis, null /* filter */);
+                        // close the builder: write the final signature files, and close the archive.
+                        builder.close();
+                    } finally {
+                        try {
+                            fis.close();
+                        } finally {
+                            fos.close();
+                        }
+                    }
+                }
                 return true;
             }
         } catch (FileNotFoundException e) {
@@ -271,6 +338,8 @@ public final class ExportWizard extends Wizard implements IExportWizard {
             displayError(e);
         } catch (KeytoolException e) {
             displayError(e);
+        } catch (CoreException e) {
+            displayError(e);
         }
 
         return false;
@@ -282,10 +351,10 @@ public final class ExportWizard extends Wizard implements IExportWizard {
         // a private key/certificate or the creation mode. In creation mode, unless
         // all the key/keystore info is valid, the user cannot reach the last page, so there's
         // no need to check them again here.
-        return mApkFilePath != null &&
+        return mApkMap != null && mApkMap.size() > 0 &&
                 ((mPrivateKey != null && mCertificate != null)
                         || mKeystoreCreationMode || mKeyCreationMode) &&
-                mDestinationPath != null;
+                mDestinationParentFolder != null;
     }
     
     /*
@@ -334,16 +403,10 @@ public final class ExportWizard extends Wizard implements IExportWizard {
         return mProject;
     }
     
-    void setProject(IProject project, String apkFilePath, String filename) {
+    void setProject(IProject project) {
         mProject = project;
-        mApkFilePath = apkFilePath;
-        mApkFileName = filename;
         
         updatePageOnChange(ExportWizardPage.DATA_PROJECT);
-    }
-    
-    String getApkFilename() {
-        return mApkFileName;
     }
     
     void setKeystore(String path) {
@@ -444,10 +507,16 @@ public final class ExportWizard extends Wizard implements IExportWizard {
         mCertificate = certificate;
     }
 
-    void setDestination(String path) {
-        mDestinationPath = path;
+    void setDestination(File parentFolder, Map<String, String[]> apkMap) {
+        mDestinationParentFolder = parentFolder;
+        mApkMap = apkMap;
     }
-    
+
+    void resetDestination() {
+        mDestinationParentFolder = null;
+        mApkMap = null;
+    }
+
     void updatePageOnChange(int changeMask) {
         for (ExportWizardPage page : mPages) {
             page.projectDataChanged(changeMask);
@@ -484,7 +553,7 @@ public final class ExportWizard extends Wizard implements IExportWizard {
      * <p/>If no Throwable in the chain has a valid message, the canonical name of the first
      * exception is returned.
      */
-    private static String getExceptionMessage(Throwable t) {
+    static String getExceptionMessage(Throwable t) {
         String message = t.getMessage();
         if (message == null) {
             Throwable cause = t.getCause();

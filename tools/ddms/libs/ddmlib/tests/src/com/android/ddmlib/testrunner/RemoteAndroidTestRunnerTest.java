@@ -31,16 +31,16 @@ import java.io.IOException;
 import java.util.Map;
 
 /**
- * Test RemoteAndroidTestRunner. 
+ * Tests RemoteAndroidTestRunner.
  */
 public class RemoteAndroidTestRunnerTest extends TestCase {
 
     private RemoteAndroidTestRunner mRunner;
     private MockDevice mMockDevice;
-    
+
     private static final String TEST_PACKAGE = "com.test";
     private static final String TEST_RUNNER = "com.test.InstrumentationTestRunner";
-    
+
     /**
      * @see junit.framework.TestCase#setUp()
      */
@@ -49,40 +49,40 @@ public class RemoteAndroidTestRunnerTest extends TestCase {
         mMockDevice = new MockDevice();
         mRunner = new RemoteAndroidTestRunner(TEST_PACKAGE, TEST_RUNNER, mMockDevice);
     }
-    
+
     /**
-     * Test the basic case building of the instrumentation runner command with no arguments
+     * Test the basic case building of the instrumentation runner command with no arguments.
      */
     public void testRun() {
         mRunner.run(new EmptyListener());
-        assertStringsEquals(String.format("am instrument -w -r %s/%s", TEST_PACKAGE, TEST_RUNNER), 
+        assertStringsEquals(String.format("am instrument -w -r %s/%s", TEST_PACKAGE, TEST_RUNNER),
                 mMockDevice.getLastShellCommand());
     }
 
     /**
-     * Test the building of the instrumentation runner command with log set
+     * Test the building of the instrumentation runner command with log set.
      */
     public void testRunWithLog() {
         mRunner.setLogOnly(true);
         mRunner.run(new EmptyListener());
-        assertStringsEquals(String.format("am instrument -w -r -e log true %s/%s", TEST_PACKAGE, 
+        assertStringsEquals(String.format("am instrument -w -r -e log true %s/%s", TEST_PACKAGE,
                 TEST_RUNNER), mMockDevice.getLastShellCommand());
     }
 
     /**
-     * Test the building of the instrumentation runner command with method set
+     * Test the building of the instrumentation runner command with method set.
      */
     public void testRunWithMethod() {
         final String className = "FooTest";
         final String testName = "fooTest";
         mRunner.setMethodName(className, testName);
         mRunner.run(new EmptyListener());
-        assertStringsEquals(String.format("am instrument -w -r -e class %s#%s %s/%s", className, 
+        assertStringsEquals(String.format("am instrument -w -r -e class %s#%s %s/%s", className,
                 testName, TEST_PACKAGE, TEST_RUNNER), mMockDevice.getLastShellCommand());
     }
-    
+
     /**
-     * Test the building of the instrumentation runner command with extra args set
+     * Test the building of the instrumentation runner command with extra args set.
      */
     public void testRunWithExtraArgs() {
         final String extraArgs = "blah";
@@ -94,37 +94,37 @@ public class RemoteAndroidTestRunnerTest extends TestCase {
 
 
     /**
-     * Assert two strings are equal ignoring whitespace
+     * Assert two strings are equal ignoring whitespace.
      */
     private void assertStringsEquals(String str1, String str2) {
         String strippedStr1 = str1.replaceAll(" ", "");
         String strippedStr2 = str2.replaceAll(" ", "");
         assertEquals(strippedStr1, strippedStr2);
     }
-    
+
     /**
-     * A dummy device that does nothing except store the provided executed shell command for 
-     * later retrieval
+     * A dummy device that does nothing except store the provided executed shell command for
+     * later retrieval.
      */
     private static class MockDevice implements IDevice {
 
         private String mLastShellCommand;
-        
+
         /**
-         * Stores the provided command for later retrieval from getLastShellCommand
+         * Stores the provided command for later retrieval from getLastShellCommand.
          */
         public void executeShellCommand(String command,
                 IShellOutputReceiver receiver) throws IOException {
             mLastShellCommand = command;
         }
-        
+
         /**
-         * Get the last command provided to executeShellCommand
+         * Get the last command provided to executeShellCommand.
          */
         public String getLastShellCommand() {
             return mLastShellCommand;
         }
-        
+
         public boolean createForward(int localPort, int remotePort) {
             throw new UnsupportedOperationException();
         }
@@ -201,22 +201,26 @@ public class RemoteAndroidTestRunnerTest extends TestCase {
             throw new UnsupportedOperationException();
         }
 
-        public String getVmName() {
+        public void runLogService(String logname, LogReceiver receiver) throws IOException {
+            throw new UnsupportedOperationException();
+        }
+
+        public String getAvdName() {
             return "";
         }
 
     }
-    
-    /** An empty implementation of TestRunListener
+
+    /**
+     * An empty implementation of ITestRunListener.
      */
     private static class EmptyListener implements ITestRunListener {
 
-        public void testEnded(String className, String testName) {
+        public void testEnded(TestIdentifier test) {
             // ignore
         }
 
-        public void testFailed(int status, String className, String testName,
-                String trace) {
+        public void testFailed(TestFailure status, TestIdentifier test, String trace) {
             // ignore
         }
 
@@ -236,9 +240,9 @@ public class RemoteAndroidTestRunnerTest extends TestCase {
             // ignore
         }
 
-        public void testStarted(String className, String testName) {
+        public void testStarted(TestIdentifier test) {
             // ignore
         }
-        
+
     }
 }

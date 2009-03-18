@@ -19,6 +19,35 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
     <PreferenceCategory
+        android:title="@string/device_info_title">
+
+        <PreferenceScreen android:key="battery_history_settings"
+                android:title="@string/title_battery_history" 
+                android:summary="@string/summary_battery_history">
+            <intent android:action="android.intent.action.MAIN"
+                    android:targetPackage="com.android.settings"
+                    android:targetClass="com.android.settings.battery_history.BatteryHistory" />
+        </PreferenceScreen>
+        
+        <PreferenceScreen android:key="battery_information_settings"
+                android:title="@string/title_battery_information" 
+                android:summary="@string/summary_battery_information">
+            <intent android:action="android.intent.action.MAIN"
+                    android:targetPackage="com.android.settings"
+                    android:targetClass="com.android.settings.BatteryInfo" />
+        </PreferenceScreen>
+        
+        <PreferenceScreen android:key="usage_statistics_settings"
+                android:title="@string/title_usage_statistics" 
+                android:summary="@string/summary_usage_statistics">
+            <intent android:action="android.intent.action.MAIN"
+                    android:targetPackage="com.android.settings"
+                    android:targetClass="com.android.settings.UsageStats" />
+        </PreferenceScreen>
+        
+    </PreferenceCategory>
+            
+    <PreferenceCategory
         android:title="@string/general_title">
         
         <ListPreference
@@ -37,6 +66,12 @@
                 android:entryValues="@array/entryvalues_animations"
                 android:dialogTitle="@string/dialog_title_transition_animations" />
         
+        <CheckBoxPreference 
+            android:key="fancy_ime_animations" 
+            android:title="@string/title_fancy_ime_animations" 
+            android:summaryOn="@string/summary_on_fancy_ime_animations"
+            android:summaryOff="@string/summary_off_fancy_ime_animations"/>
+        
         <ListPreference
                 android:key="font_size"
                 android:title="@string/title_font_size"
@@ -54,10 +89,10 @@
                 android:dialogTitle="@string/dialog_title_end_button" />
         
         <CheckBoxPreference 
-            android:key="accelerometer" 
-            android:title="@string/title_accelerometer" 
-            android:summaryOn="@string/summary_on_accelerometer"
-            android:summaryOff="@string/summary_off_accelerometer"/>
+            android:key="haptic_feedback" 
+            android:title="@string/title_haptic_feedback" 
+            android:summaryOn="@string/summary_on_haptic_feedback"
+            android:summaryOff="@string/summary_off_haptic_feedback"/>
         
     </PreferenceCategory>
             

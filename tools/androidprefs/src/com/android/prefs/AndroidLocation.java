@@ -22,19 +22,10 @@ import java.io.File;
  * Manages the location of the android files (including emulator files, ddms config, debug keystore)
  */
 public final class AndroidLocation {
-    
     /**
-     * Used to know where to store the user data image.
-     * <p/>
-     * This <em>must</em> match the constant ANDROID_SDK_VERSION used by the emulator
-     * to find its own emulator images. It is defined in tools/qemu/android.h
+     * Virtual Device folder inside the path returned by {@link #getFolder()}
      */
-    private static final String ANDROID_SDK_VERSION = "SDK-1.0";
-
-    /**
-     * VM folder inside the path returned by {@link #getFolder()}
-     */
-    public static final String FOLDER_VMS = "vm";
+    public static final String FOLDER_AVD = "avd";
 
     /**
      * Throw when the location of the android folder couldn't be found.
@@ -56,7 +47,7 @@ public final class AndroidLocation {
      */
     public final static String getFolder() throws AndroidLocationException {
         if (sPrefsLocation == null) {
-            String home = findValidPath("user.home", "HOME");
+            String home = findValidPath("ANDROID_SDK_HOME", "user.home", "HOME");
             
             // if the above failed, we throw an exception.
             if (home == null) {
@@ -77,25 +68,6 @@ public final class AndroidLocation {
         }
 
         return sPrefsLocation;
-    }
-
-    /**
-     * Returns the folder where the emulator is going to find its android related files.
-     * @return an OS specific path, terminated by a separator.
-     * @throws AndroidLocationException 
-     */
-    public final static String getEmulatorFolder() throws AndroidLocationException {
-        String path = getFolder() + ANDROID_SDK_VERSION + File.separator;
-        
-        File f = new File(path);
-        if (f.exists() == false) {
-            f.mkdir();
-        } else if (f.isFile()) {
-            throw new AndroidLocationException(path +
-                    " is not a directory! This is required to run Android tools.");
-        }
-
-        return path;
     }
 
     /**

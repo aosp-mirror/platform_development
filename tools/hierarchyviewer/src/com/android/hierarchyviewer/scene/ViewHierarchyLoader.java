@@ -32,6 +32,7 @@ import java.net.Socket;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Stack;
+import java.util.regex.Pattern;
 
 public class ViewHierarchyLoader {
     @SuppressWarnings("empty-statement")
@@ -109,7 +110,9 @@ public class ViewHierarchyLoader {
                     parent.children.add(lastNode);
                 }
             }
-            
+
+            updateIndices(scene.getRoot());
+
         } catch (IOException ex) {
             Exceptions.printStackTrace(ex);
         } finally {
@@ -127,10 +130,20 @@ public class ViewHierarchyLoader {
         }
         
         System.out.println("==> DONE");
-        
+
         return scene;
     }
-    
+
+    private static void updateIndices(ViewNode root) {
+        if (root == null) return;
+
+        root.computeIndex();
+
+        for (ViewNode node : root.children) {
+            updateIndices(node);
+        }
+    }
+
     private static int countFrontWhitespace(String line) {
         int count = 0;
         while (line.charAt(count) == ' ') {

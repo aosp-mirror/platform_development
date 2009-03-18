@@ -28,7 +28,7 @@ import java.util.HashMap;
 import junit.framework.TestCase;
 
 /**
- * Unit Test for {@link FrameworkClassLoader}.
+ * Unit Test for {@link AndroidJarLoader}.
  * 
  * Uses the classes jar.example.Class1/Class2 stored in tests/data/jar_example.jar.
  */
@@ -36,7 +36,7 @@ public class AndroidJarLoaderTest extends TestCase {
 
     private AndroidJarLoader mFrameworkClassLoader;
 
-    /** Creates an instance of {@link FrameworkClassLoader} on our test data JAR */ 
+    /** Creates an instance of {@link AndroidJarLoader} on our test data JAR */ 
     @Override
     public void setUp() throws Exception {
         String jarfilePath = AdtTestData.getInstance().getTestFilePath("jar_example.jar");  //$NON-NLS-1$

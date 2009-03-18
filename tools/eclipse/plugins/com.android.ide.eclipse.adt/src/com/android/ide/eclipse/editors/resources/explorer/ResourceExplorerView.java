@@ -160,6 +160,13 @@ public class ResourceExplorerView extends ViewPart implements ISelectionListener
         // set up the resource manager to send us resource change notification
         AdtPlugin.getDefault().getResourceMonitor().addResourceEventListener(this);
     }
+    
+    @Override
+    public void dispose() {
+        AdtPlugin.getDefault().getResourceMonitor().removeResourceEventListener(this);
+
+        super.dispose();
+    }
 
     @Override
     public void setFocus() {

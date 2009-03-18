@@ -22,6 +22,10 @@
     android:hint="@string/search_hint" 
     android:searchMode="showSearchLabelAsBadge"
     
+    android:voiceSearchMode="showVoiceSearchButton|launchRecognizer"
+    android:voiceLanguageModel="free_form"
+    android:voicePromptText="@string/search_invoke"
+
     android:searchSuggestAuthority="com.example.android.apis.SuggestionProvider"
     android:searchSuggestSelection=" ? "
 />

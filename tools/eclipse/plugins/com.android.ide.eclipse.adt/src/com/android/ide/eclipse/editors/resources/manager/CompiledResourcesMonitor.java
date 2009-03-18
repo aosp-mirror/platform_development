@@ -18,7 +18,7 @@ package com.android.ide.eclipse.editors.resources.manager;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.common.AndroidConstants;
-import com.android.ide.eclipse.common.project.AndroidManifestHelper;
+import com.android.ide.eclipse.common.project.AndroidManifestParser;
 import com.android.ide.eclipse.common.resources.ResourceType;
 import com.android.ide.eclipse.editors.resources.manager.ResourceMonitor.IFileListener;
 import com.android.ide.eclipse.editors.resources.manager.ResourceMonitor.IProjectListener;
@@ -28,6 +28,7 @@ import org.eclipse.core.resources.IMarkerDelta;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResourceDelta;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IStatus;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -120,7 +121,14 @@ public final class CompiledResourcesMonitor implements IFileListener, IProjectLi
             if (projectResources != null) {
                 // create the classname
                 String className = getRClassName(project);
-        
+                if (className == null) {
+                    // We need to abort.
+                    AdtPlugin.log(IStatus.ERROR,
+                            "loadAndParseRClass: failed to find manifest package for project %1$s", //$NON-NLS-1$
+                            project.getName());
+                    return;
+                }
+
                 // create a temporary class loader to load it. 
                 ProjectClassLoader loader = new ProjectClassLoader(null /* parentClassLoader */,
                         project);
@@ -199,13 +207,30 @@ public final class CompiledResourcesMonitor implements IFileListener, IProjectLi
         }
         return false;
     }
-    
+
+    /**
+     * Returns the class name of the R class, based on the project's manifest's package.
+     * 
+     * @return A class name (e.g. "my.app.R") or null if there's no valid package in the manifest.
+     */
     private String getRClassName(IProject project) {
-        // create the classname
-        AndroidManifestHelper manifest = new AndroidManifestHelper(project);
-        String javaPackage = manifest.getPackageName();
-        
-        return javaPackage + ".R"; //$NON-NLS-1$
+        try {
+            IFile manifestFile = AndroidManifestParser.getManifest(project);
+            AndroidManifestParser data = AndroidManifestParser.parseForData(manifestFile);
+            if (data != null) {
+                String javaPackage = data.getPackage();
+                return javaPackage + ".R"; //$NON-NLS-1$
+            }
+        } catch (CoreException e) {
+            // This will typically happen either because the manifest file is not present
+            // and/or the workspace needs to be refreshed.
+            AdtPlugin.logAndPrintError(e,
+                    "Android Resources",
+                    "Failed to find the package of the AndroidManifest of project %1$s. Reason: %2$s",
+                    project.getName(),
+                    e.getMessage());
+        }
+        return null;
     }
     
 }

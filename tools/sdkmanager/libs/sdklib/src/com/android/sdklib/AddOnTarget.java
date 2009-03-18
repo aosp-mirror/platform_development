@@ -69,6 +69,7 @@ final class AddOnTarget implements IAndroidTarget {
     private final String mVendor;
     private final String mDescription;
     private String[] mSkins;
+    private String mDefaultSkin;
     private IOptionalLibrary[] mLibraries;
 
     /**
@@ -141,6 +142,10 @@ final class AddOnTarget implements IAndroidTarget {
         return false;
     }
     
+    public IAndroidTarget getParent() {
+        return mBasePlatform;
+    }
+    
     public String getPath(int pathId) {
         switch (pathId) {
             case IMAGES:
@@ -156,6 +161,10 @@ final class AddOnTarget implements IAndroidTarget {
 
     public String[] getSkins() {
         return mSkins;
+    }
+    
+    public String getDefaultSkin() {
+        return mDefaultSkin;
     }
 
     public IOptionalLibrary[] getOptionalLibraries() {
@@ -236,7 +245,9 @@ final class AddOnTarget implements IAndroidTarget {
     // ---- local methods.
 
 
-    public void setSkins(String[] skins) {
+    public void setSkins(String[] skins, String defaultSkin) {
+        mDefaultSkin = defaultSkin;
+
         // we mix the add-on and base platform skins
         HashSet<String> skinSet = new HashSet<String>();
         skinSet.addAll(Arrays.asList(skins));

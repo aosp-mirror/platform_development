@@ -4,7 +4,8 @@
         <activity android:name="Term"
                 android:theme="@style/Theme"
                 android:launchMode="singleInstance"
-                android:configChanges="keyboard|keyboardHidden|orientation">
+                android:configChanges="keyboard|keyboardHidden|orientation"
+                android:windowSoftInputMode="adjustResize|stateVisible">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.TEST" />

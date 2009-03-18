@@ -70,9 +70,13 @@ public class UiTextAttributeNode extends UiAbstractTextAttributeNode {
         setTextWidget(text);
     }
 
-    /** No completion values for this UI attribute. */
+    /**
+     * No completion values for this UI attribute.
+     * 
+     * {@inheritDoc}
+     */
     @Override
-    public String[] getPossibleValues() {
+    public String[] getPossibleValues(String prefix) {
         return null;
     }
     

@@ -266,7 +266,7 @@ final class ProjectCheckPage extends ExportWizardPage {
         }
         
         // update the wizard with the new project
-        mWizard.setProject(null, null, null);
+        mWizard.setProject(null);
 
         //test the project name first!
         String text = mProjectText.getText().trim();
@@ -289,7 +289,7 @@ final class ProjectCheckPage extends ExportWizardPage {
                 setErrorMessage(null);
                 
                 // update the wizard with the new project
-                setApkFilePathInWizard(found);
+                mWizard.setProject(found);
 
                 // now rebuild the error ui.
                 buildErrorUi(found);
@@ -299,24 +299,4 @@ final class ProjectCheckPage extends ExportWizardPage {
             }
         }
     }
-    
-    private void setApkFilePathInWizard(IProject project) {
-        if (project != null) {
-            IFolder outputIFolder = BaseProjectHelper.getOutputFolder(project);
-            if (outputIFolder != null) {
-                String outputOsPath =  outputIFolder.getLocation().toOSString();
-                String apkFilePath =  outputOsPath + File.separator + project.getName() +
-                        AndroidConstants.DOT_ANDROID_PACKAGE;
-                
-                File f = new File(apkFilePath);
-                if (f.isFile()) {
-                    mWizard.setProject(project, apkFilePath, f.getName());
-                    return;
-                }
-            }
-        }
-
-        mWizard.setProject(null, null, null);
-    }
-
 }

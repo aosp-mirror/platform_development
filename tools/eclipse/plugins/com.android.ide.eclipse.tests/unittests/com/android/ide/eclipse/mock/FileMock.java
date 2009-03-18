@@ -37,6 +37,7 @@ import org.eclipse.core.runtime.jobs.ISchedulingRule;
 
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.Reader;
 import java.net.URI;
@@ -44,22 +45,43 @@ import java.util.Map;
 
 /**
  * Mock implementation of {@link IFile}.
+ * 
+ * Optionally backed by an in-memory byte array
+ * 
  * <p/>Supported methods:
  * <ul>
+ *     <li>getName()</li>
+ *     <li>getContents()</li>
+ *     <li>getContents(boolean force)</li>
  * </ul>
  */
 public class FileMock implements IFile {
 
     private String mName;
+    private byte[] mContentData; 
 
     public FileMock(String name) {
+        this(name, new byte[0]);
+    }
+    
+    public FileMock(String name, byte[] fileData) {
         mName = name;
+        mContentData = fileData;
     }
 
     // -------- MOCKED METHODS ----------------
 
     public String getName() {
         return mName;
+    }
+    
+    public InputStream getContents() throws CoreException {
+        return new ByteArrayInputStream(mContentData);
+    }
+
+    public InputStream getContents(boolean force) throws CoreException {
+        // ignore force
+        return getContents();
     }
     
     // -------- UNIMPLEMENTED METHODS ----------------
@@ -115,14 +137,6 @@ public class FileMock implements IFile {
         throw new NotImplementedException();
     }
 
-    public InputStream getContents() throws CoreException {
-        throw new NotImplementedException();
-    }
-
-    public InputStream getContents(boolean force) throws CoreException {
-        throw new NotImplementedException();
-    }
-
     public int getEncoding() throws CoreException {
         throw new NotImplementedException();
     }
@@ -139,7 +153,8 @@ public class FileMock implements IFile {
         throw new NotImplementedException();
     }
 
-    public void move(IPath destination, boolean force, boolean keepHistory, IProgressMonitor monitor)
+    public void move(IPath destination, boolean force, boolean keepHistory, 
+            IProgressMonitor monitor)
             throws CoreException {
         throw new NotImplementedException();
     }
@@ -229,7 +244,8 @@ public class FileMock implements IFile {
         throw new NotImplementedException();
     }
 
-    public void deleteMarkers(String type, boolean includeSubtypes, int depth) throws CoreException {
+    public void deleteMarkers(String type, boolean includeSubtypes, int depth) 
+    throws CoreException {
         throw new NotImplementedException();
     }
 
@@ -424,24 +440,26 @@ public class FileMock implements IFile {
         throw new NotImplementedException();
     }
 
-	public Map getPersistentProperties() throws CoreException {
+    @SuppressWarnings("unchecked")
+    public Map getPersistentProperties() throws CoreException {
         throw new NotImplementedException();
-	}
+    }
 
-	public Map getSessionProperties() throws CoreException {
+    @SuppressWarnings("unchecked")
+    public Map getSessionProperties() throws CoreException {
         throw new NotImplementedException();
-	}
+    }
 
-	public boolean isDerived(int options) {
+    public boolean isDerived(int options) {
         throw new NotImplementedException();
-	}
+    }
 
-	public boolean isHidden() {
+    public boolean isHidden() {
         throw new NotImplementedException();
-	}
+    }
 
-	public void setHidden(boolean isHidden) throws CoreException {
+    public void setHidden(boolean isHidden) throws CoreException {
         throw new NotImplementedException();
-	}
-
+    }
 }
+

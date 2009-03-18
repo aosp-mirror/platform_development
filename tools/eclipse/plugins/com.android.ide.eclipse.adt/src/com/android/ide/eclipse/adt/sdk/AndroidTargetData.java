@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.adt.sdk;
 
+import com.android.ide.eclipse.adt.build.DexWrapper;
 import com.android.ide.eclipse.common.resources.IResourceRepository;
 import com.android.ide.eclipse.editors.descriptors.IDescriptorProvider;
 import com.android.ide.eclipse.editors.layout.descriptors.LayoutDescriptors;
@@ -26,6 +27,7 @@ import com.android.ide.eclipse.editors.resources.manager.ProjectResources;
 import com.android.ide.eclipse.editors.xml.descriptors.XmlDescriptors;
 import com.android.layoutlib.api.ILayoutBridge;
 import com.android.sdklib.IAndroidTarget;
+import com.android.sdklib.IAndroidTarget.IOptionalLibrary;
 
 import java.util.Hashtable;
 import java.util.Map;
@@ -42,6 +44,7 @@ public class AndroidTargetData {
     public final static int DESCRIPTOR_RESOURCES = 5;
     public final static int DESCRIPTOR_SEARCHABLE = 6;
     public final static int DESCRIPTOR_PREFERENCES = 7;
+    public final static int DESCRIPTOR_APPWIDGET_PROVIDER = 8;
     
     public final static class LayoutBridge {
         /** Link to the layout bridge */
@@ -50,9 +53,13 @@ public class AndroidTargetData {
         public LoadStatus status = LoadStatus.LOADING;
         
         public ClassLoader classLoader;
+        
+        public int apiLevel;
     }
 
     private final IAndroidTarget mTarget;
+
+    private DexWrapper mDexWrapper;
 
     /**
      * mAttributeValues is a map { key => list [ values ] }.
@@ -64,27 +71,35 @@ public class AndroidTargetData {
      * This is used for attributes that do not have a unique name, but still need to be populated
      * with values in the UI. Uniquely named attributes have their values in {@link #mEnumValueMap}.
      */
-    private final Hashtable<String, String[]> mAttributeValues = new Hashtable<String, String[]>();
+    private Hashtable<String, String[]> mAttributeValues = new Hashtable<String, String[]>();
     
     private IResourceRepository mSystemResourceRepository;
 
-    private final AndroidManifestDescriptors mManifestDescriptors;
-    private final LayoutDescriptors mLayoutDescriptors;
-    private final MenuDescriptors mMenuDescriptors;
-    private final XmlDescriptors mXmlDescriptors;
+    private AndroidManifestDescriptors mManifestDescriptors;
+    private LayoutDescriptors mLayoutDescriptors;
+    private MenuDescriptors mMenuDescriptors;
+    private XmlDescriptors mXmlDescriptors;
 
-    private final Map<String, Map<String, Integer>> mEnumValueMap;
+    private Map<String, Map<String, Integer>> mEnumValueMap;
 
-    private final ProjectResources mFrameworkResources;
-    private final LayoutBridge mLayoutBridge;
+    private ProjectResources mFrameworkResources;
+    private LayoutBridge mLayoutBridge;
 
     private boolean mLayoutBridgeInit = false;
 
+    AndroidTargetData(IAndroidTarget androidTarget) {
+        mTarget = androidTarget;
+    }
+    
+    void setDexWrapper(DexWrapper wrapper) {
+        mDexWrapper = wrapper;
+    }
+    
     /**
      * Creates an AndroidTargetData object.
+     * @param optionalLibraries 
      */
-    AndroidTargetData(IAndroidTarget androidTarget,
-            IResourceRepository systemResourceRepository,
+    void setExtraData(IResourceRepository systemResourceRepository,
             AndroidManifestDescriptors manifestDescriptors,
             LayoutDescriptors layoutDescriptors,
             MenuDescriptors menuDescriptors,
@@ -95,10 +110,10 @@ public class AndroidTargetData {
             String[] broadcastIntentActionValues,
             String[] serviceIntentActionValues,
             String[] intentCategoryValues,
+            IOptionalLibrary[] optionalLibraries,
             ProjectResources resources,
             LayoutBridge layoutBridge) {
         
-        mTarget = androidTarget;
         mSystemResourceRepository = systemResourceRepository;
         mManifestDescriptors = manifestDescriptors;
         mLayoutDescriptors = layoutDescriptors;
@@ -111,6 +126,11 @@ public class AndroidTargetData {
         setPermissions(permissionValues);
         setIntentFilterActionsAndCategories(activityIntentActionValues, broadcastIntentActionValues,
                 serviceIntentActionValues, intentCategoryValues);
+        setOptionalLibraries(optionalLibraries);
+    }
+
+    public DexWrapper getDexWrapper() {
+        return mDexWrapper;
     }
     
     public IResourceRepository getSystemResources() {
@@ -138,6 +158,8 @@ public class AndroidTargetData {
                 return ResourcesDescriptors.getInstance();
             case DESCRIPTOR_PREFERENCES:
                 return mXmlDescriptors.getPreferencesProvider();
+            case DESCRIPTOR_APPWIDGET_PROVIDER:
+                return mXmlDescriptors.getAppWidgetProvider();
             case DESCRIPTOR_SEARCHABLE:
                 return mXmlDescriptors.getSearchableProvider();
             default :
@@ -269,6 +291,20 @@ public class AndroidTargetData {
         setValues("(receiver,action,android:name)", broadcastIntentActions); //$NON-NLS-1$
         setValues("(service,action,android:name)", serviceIntentActions); //$NON-NLS-1$
         setValues("(category,android:name)", intentCategoryValues); //$NON-NLS-1$
+    }
+    
+    private void setOptionalLibraries(IOptionalLibrary[] optionalLibraries) {
+        String[] values;
+        
+        if (optionalLibraries == null) {
+            values = new String[0];
+        } else {
+            values = new String[optionalLibraries.length];
+            for (int i = 0; i < optionalLibraries.length; i++) {
+                values[i] = optionalLibraries[i].getName();
+            }
+        }
+        setValues("(uses-library,android:name)", values);
     }
 
     /**

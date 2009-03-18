@@ -23,7 +23,7 @@ import com.android.ddmlib.Log;
 import java.io.IOException;
 
 /**
- * Runs a Android test command remotely and reports results
+ * Runs a Android test command remotely and reports results.
  */
 public class RemoteAndroidTestRunner  {
 
@@ -43,11 +43,12 @@ public class RemoteAndroidTestRunner  {
         "android.test.InstrumentationTestRunner";
     
     /**
-     * Creates a remote android test runner.
-     * @param packageName - the Android application package that contains the tests to run 
-     * @param runnerName - the instrumentation test runner to execute. If null, will use default
+     * Creates a remote Android test runner.
+     * 
+     * @param packageName the Android application package that contains the tests to run 
+     * @param runnerName the instrumentation test runner to execute. If null, will use default
      *   runner 
-     * @param remoteDevice - the Android device to execute tests on
+     * @param remoteDevice the Android device to execute tests on
      */
     public RemoteAndroidTestRunner(String packageName, 
                                    String runnerName,
@@ -62,9 +63,10 @@ public class RemoteAndroidTestRunner  {
     }
     
     /**
-     * Alternate constructor. Uses default instrumentation runner
-     * @param packageName - the Android application package that contains the tests to run 
-     * @param remoteDevice - the Android device to execute tests on
+     * Alternate constructor. Uses default instrumentation runner.
+     * 
+     * @param packageName the Android application package that contains the tests to run 
+     * @param remoteDevice the Android device to execute tests on
      */
     public RemoteAndroidTestRunner(String packageName, 
                                    IDevice remoteDevice) {
@@ -72,14 +74,14 @@ public class RemoteAndroidTestRunner  {
     }
     
     /**
-     * Returns the application package name
+     * Returns the application package name.
      */
     public String getPackageName() {
         return mPackageName;
     }
 
     /**
-     * Returns the runnerName
+     * Returns the runnerName.
      */
     public String getRunnerName() {
         if (mRunnerName == null) {
@@ -89,7 +91,7 @@ public class RemoteAndroidTestRunner  {
     }
     
     /**
-     * Returns the complete instrumentation component path 
+     * Returns the complete instrumentation component path.
      */
     private String getRunnerPath() {
         return getPackageName() + RUNNER_SEPARATOR + getRunnerName();
@@ -97,8 +99,9 @@ public class RemoteAndroidTestRunner  {
     
     /**
      * Sets to run only tests in this class
-     * Must be called before 'run'
-     * @param className - fully qualified class name (eg x.y.z)
+     * Must be called before 'run'.
+     * 
+     * @param className fully qualified class name (eg x.y.z)
      */
     public void setClassName(String className) {
         mClassArg = className;
@@ -106,10 +109,12 @@ public class RemoteAndroidTestRunner  {
 
     /**
      * Sets to run only tests in the provided classes
-     * Must be called before 'run'
+     * Must be called before 'run'.
+     * <p>
      * If providing more than one class, requires a InstrumentationTestRunner that supports 
-     * the multiple class argument syntax 
-     * @param classNames - array of fully qualified class name (eg x.y.z)
+     * the multiple class argument syntax.
+     * 
+     * @param classNames array of fully qualified class names (eg x.y.z)
      */
     public void setClassNames(String[] classNames) {
         StringBuilder classArgBuilder = new StringBuilder();
@@ -125,9 +130,10 @@ public class RemoteAndroidTestRunner  {
     
     /**
      * Sets to run only specified test method
-     * Must be called before 'run'
-     * @param className - fully qualified class name (eg x.y.z)
-     * @param testName - method name
+     * Must be called before 'run'.
+     * 
+     * @param className fully qualified class name (eg x.y.z)
+     * @param testName method name
      */
     public void setMethodName(String className, String testName) {
         mClassArg = className + METHOD_SEPARATOR + testName;
@@ -135,8 +141,9 @@ public class RemoteAndroidTestRunner  {
     
     /**
      * Sets extra arguments to include in instrumentation command.
-     * Must be called before 'run'
-     * @param instrumentationArgs - must not be null
+     * Must be called before 'run'.
+     * 
+     * @param instrumentationArgs must not be null
      */
     public void setExtraArgs(String instrumentationArgs) {
         if (instrumentationArgs == null) {
@@ -146,23 +153,23 @@ public class RemoteAndroidTestRunner  {
     }
     
     /**
-     * Returns the extra instrumentation arguments
+     * Returns the extra instrumentation arguments.
      */
     public String getExtraArgs() {
         return mExtraArgs;
     }
     
     /**
-     * Sets this test run to log only mode - skips test execution
+     * Sets this test run to log only mode - skips test execution.
      */
     public void setLogOnly(boolean logOnly) {
         mLogOnlyMode = logOnly;
     }
     
     /**
-     * Execute this test run
+     * Execute this test run.
      * 
-     * @param listener - listener to report results to
+     * @param listener listens for test results
      */
     public void run(ITestRunListener listener) {
         final String runCaseCommandStr = "am instrument -w -r "
@@ -179,7 +186,7 @@ public class RemoteAndroidTestRunner  {
     }
     
     /**
-     * Requests cancellation of this test run
+     * Requests cancellation of this test run.
      */
     public void cancel() {
         if (mParser != null) {
@@ -188,7 +195,7 @@ public class RemoteAndroidTestRunner  {
     }
     
     /**
-     * Returns the test class argument
+     * Returns the test class argument.
      */
     private String getClassArg() {
         return mClassArg;
@@ -196,7 +203,7 @@ public class RemoteAndroidTestRunner  {
     
     /**
      * Returns the full instrumentation command which specifies the test classes to execute. 
-     * Returns an empty string if no classes were specified
+     * Returns an empty string if no classes were specified.
      */
     private String getClassCmd() {
         String classArg = getClassArg();
@@ -208,7 +215,7 @@ public class RemoteAndroidTestRunner  {
 
     /**
      * Returns the full command to enable log only mode - if specified. Otherwise returns an 
-     * empty string
+     * empty string.
      */
     private String getLogCmd() {
         if (mLogOnlyMode) {

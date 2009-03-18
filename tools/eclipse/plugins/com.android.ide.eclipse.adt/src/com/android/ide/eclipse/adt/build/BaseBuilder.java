@@ -19,6 +19,7 @@ package com.android.ide.eclipse.adt.build;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.project.ProjectHelper;
+import com.android.ide.eclipse.adt.sdk.LoadStatus;
 import com.android.ide.eclipse.common.AndroidConstants;
 import com.android.ide.eclipse.common.project.BaseProjectHelper;
 import com.android.ide.eclipse.common.project.XmlErrorHandler;
@@ -26,6 +27,7 @@ import com.android.ide.eclipse.common.project.XmlErrorHandler.XmlErrorListener;
 
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
@@ -34,6 +36,10 @@ import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.SubProgressMonitor;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
@@ -143,6 +149,15 @@ abstract class BaseBuilder extends IncrementalProjectBuilder {
     
     private final static Pattern sPattern8Line1 = Pattern.compile(
             "^(invalid resource directory name): (.*)$"); //$NON-NLS-1$
+
+    /**
+     * 2 line aapt error<br>
+     * "ERROR: Invalid configuration: foo"<br>
+     * "                              ^^^"<br>
+     * There's no need to parse the 2nd line.
+     */
+    private final static Pattern sPattern9Line1 = Pattern.compile(
+            "^Invalid configuration: (.+)$"); //$NON-NLS-1$
 
     /** SAX Parser factory. */
     private SAXParserFactory mParserFactory;
@@ -435,8 +450,8 @@ abstract class BaseBuilder extends IncrementalProjectBuilder {
                 String location = m.group(1);
 
                 // check the values and attempt to mark the file.
-                if (checkAndMark(location, lineStr, msg, osRoot,
-                        project, IMarker.SEVERITY_ERROR) == false) {
+                if (checkAndMark(location, lineStr, msg, osRoot, project,
+                        AndroidConstants.MARKER_AAPT_COMPILE, IMarker.SEVERITY_ERROR) == false) {
                     return true;
                 }
                 continue;
@@ -460,7 +475,7 @@ abstract class BaseBuilder extends IncrementalProjectBuilder {
 
                 // display the error
                 if (checkAndMark(location, null, msg, osRoot, project,
-                        IMarker.SEVERITY_ERROR) == false) {
+                        AndroidConstants.MARKER_AAPT_COMPILE, IMarker.SEVERITY_ERROR) == false) {
                     return true;
                 }
 
@@ -483,8 +498,8 @@ abstract class BaseBuilder extends IncrementalProjectBuilder {
                 String lineStr = m.group(2);
 
                 // check the values and attempt to mark the file.
-                if (checkAndMark(location, lineStr, msg, osRoot,
-                        project, IMarker.SEVERITY_ERROR) == false) {
+                if (checkAndMark(location, lineStr, msg, osRoot, project,
+                        AndroidConstants.MARKER_AAPT_COMPILE, IMarker.SEVERITY_ERROR) == false) {
                     return true;
                 }
                 continue;
@@ -497,8 +512,8 @@ abstract class BaseBuilder extends IncrementalProjectBuilder {
                 String msg = m.group(3);
 
                 // check the values and attempt to mark the file.
-                if (checkAndMark(location, lineStr, msg, osRoot,
-                        project, IMarker.SEVERITY_ERROR) == false) {
+                if (checkAndMark(location, lineStr, msg, osRoot, project,
+                        AndroidConstants.MARKER_AAPT_COMPILE, IMarker.SEVERITY_ERROR) == false) {
                     return true;
                 }
 
@@ -521,8 +536,8 @@ abstract class BaseBuilder extends IncrementalProjectBuilder {
                 String lineStr = m.group(2);
 
                 // check the values and attempt to mark the file.
-                if (checkAndMark(location, lineStr, msg, osRoot,
-                        project, IMarker.SEVERITY_ERROR) == false) {
+                if (checkAndMark(location, lineStr, msg, osRoot, project,
+                        AndroidConstants.MARKER_AAPT_COMPILE, IMarker.SEVERITY_ERROR) == false) {
                     return true;
                 }
 
@@ -537,8 +552,8 @@ abstract class BaseBuilder extends IncrementalProjectBuilder {
                 String msg = m.group(3);
 
                 // check the values and attempt to mark the file.
-                if (checkAndMark(location, lineStr, msg, osRoot,
-                        project,IMarker.SEVERITY_WARNING) == false) {
+                if (checkAndMark(location, lineStr, msg, osRoot, project,
+                        AndroidConstants.MARKER_AAPT_COMPILE, IMarker.SEVERITY_WARNING) == false) {
                     return true;
                 }
 
@@ -553,8 +568,8 @@ abstract class BaseBuilder extends IncrementalProjectBuilder {
                 String msg = m.group(3);
 
                 // check the values and attempt to mark the file.
-                if (checkAndMark(location, lineStr, msg, osRoot,
-                        project, IMarker.SEVERITY_ERROR) == false) {
+                if (checkAndMark(location, lineStr, msg, osRoot, project,
+                        AndroidConstants.MARKER_AAPT_COMPILE, IMarker.SEVERITY_ERROR) == false) {
                     return true;
                 }
 
@@ -569,7 +584,25 @@ abstract class BaseBuilder extends IncrementalProjectBuilder {
 
                 // check the values and attempt to mark the file.
                 if (checkAndMark(location, null, msg, osRoot, project,
-                        IMarker.SEVERITY_ERROR) == false) {
+                        AndroidConstants.MARKER_AAPT_COMPILE, IMarker.SEVERITY_ERROR) == false) {
+                    return true;
+                }
+
+                // success, go to the next line
+                continue;
+            }
+
+            m = sPattern9Line1.matcher(p);
+            if (m.matches()) {
+                String badConfig = m.group(1);
+                String msg = String.format("APK Configuration filter '%1$s' is invalid", badConfig);
+                
+                // skip the next line
+                i++;
+
+                // check the values and attempt to mark the file.
+                if (checkAndMark(null /*location*/, null, msg, osRoot, project,
+                        AndroidConstants.MARKER_AAPT_PACKAGE, IMarker.SEVERITY_ERROR) == false) {
                     return true;
                 }
 
@@ -654,23 +687,25 @@ abstract class BaseBuilder extends IncrementalProjectBuilder {
     /**
      * Check if the parameters gotten from the error output are valid, and mark
      * the file with an AAPT marker.
-     * @param location
+     * @param location the full OS path of the error file. If null, the project is marked
      * @param lineStr
      * @param message
      * @param root The root directory of the project, in OS specific format.
      * @param project
+     * @param markerId The marker id to put.
      * @param severity The severity of the marker to put (IMarker.SEVERITY_*)
-     * @return true if the parameters were valid and the file was marked
-     * sucessfully.
+     * @return true if the parameters were valid and the file was marked successfully.
      *
      * @see IMarker
      */
     private final  boolean checkAndMark(String location, String lineStr,
-            String message, String root, IProject project, int severity) {
+            String message, String root, IProject project, String markerId, int severity) {
         // check this is in fact a file
-        File f = new File(location);
-        if (f.exists() == false) {
-            return false;
+        if (location != null) {
+            File f = new File(location);
+            if (f.exists() == false) {
+                return false;
+            }
         }
 
         // get the line number
@@ -687,16 +722,18 @@ abstract class BaseBuilder extends IncrementalProjectBuilder {
         }
 
         // add the marker
-        IResource f2 = getResourceFromFullPath(location, root, project);
-        if (f2 == null) {
-            return false;
+        IResource f2 = project;
+        if (location != null) {
+            f2 = getResourceFromFullPath(location, root, project);
+            if (f2 == null) {
+                return false;
+            }
         }
 
         // check if there's a similar marker already, since aapt is launched twice
         boolean markerAlreadyExists = false;
         try {
-            IMarker[] markers = f2.findMarkers(AndroidConstants.MARKER_AAPT, true,
-                    IResource.DEPTH_ZERO);
+            IMarker[] markers = f2.findMarkers(markerId, true, IResource.DEPTH_ZERO);
 
             for (IMarker marker : markers) {
                 int tmpLine = marker.getAttribute(IMarker.LINE_NUMBER, -1);
@@ -727,10 +764,10 @@ abstract class BaseBuilder extends IncrementalProjectBuilder {
 
         if (markerAlreadyExists == false) {
             if (line != -1) {
-                BaseProjectHelper.addMarker(f2, AndroidConstants.MARKER_AAPT, message, line,
+                BaseProjectHelper.addMarker(f2, markerId, message, line,
                         severity);
             } else {
-                BaseProjectHelper.addMarker(f2, AndroidConstants.MARKER_AAPT, message, severity);
+                BaseProjectHelper.addMarker(f2, markerId, message, severity);
             }
         }
 
@@ -840,5 +877,65 @@ abstract class BaseBuilder extends IncrementalProjectBuilder {
         }
 
         return oslibraryList.toArray(new String[oslibraryList.size()]);
+    }
+    
+    /**
+     * Aborts the build if the SDK/project setups are broken. This does not
+     * display any errors.
+     * 
+     * @param project The {@link IJavaProject} being compiled.
+     * @throws CoreException
+     */
+    protected final void abortOnBadSetup(IProject project) throws CoreException {
+        // check if we have finished loading the SDK.
+        if (AdtPlugin.getDefault().getSdkLoadStatus() != LoadStatus.LOADED) {
+            // we exit silently
+            stopBuild("SDK is not loaded yet");
+        }
+
+        // abort if there are TARGET or ADT type markers
+        IMarker[] markers = project.findMarkers(AdtConstants.MARKER_TARGET,
+                false /*includeSubtypes*/, IResource.DEPTH_ZERO);
+        
+        if (markers.length > 0) {
+            stopBuild("");
+        }
+        
+        markers = project.findMarkers(AdtConstants.MARKER_ADT, false /*includeSubtypes*/,
+                IResource.DEPTH_ZERO);
+        
+        if (markers.length > 0) {
+            stopBuild("");
+        }
+    }
+    
+    /**
+     * Throws an exception to cancel the build.
+     * 
+     * @param error the error message
+     * @param args the printf-style arguments to the error message.
+     * @throws CoreException
+     */
+    protected final void stopBuild(String error, Object... args) throws CoreException {
+        throw new CoreException(new Status(IStatus.CANCEL, AdtPlugin.PLUGIN_ID,
+                String.format(error, args)));
+    }
+    
+    /**
+     * Recursively delete all the derived resources.
+     */
+    protected void removeDerivedResources(IResource resource, IProgressMonitor monitor)
+            throws CoreException {
+        if (resource.exists()) {
+            if (resource.isDerived()) {
+                resource.delete(true, new SubProgressMonitor(monitor, 10));
+            } else if (resource.getType() == IResource.FOLDER) {
+                IFolder folder = (IFolder)resource;
+                IResource[] members = folder.members();
+                for (IResource member : members) {
+                    removeDerivedResources(member, monitor);
+                }
+            }
+        }
     }
 }

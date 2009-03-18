@@ -96,9 +96,13 @@ public class UiSeparatorAttributeNode extends UiAttributeNode {
         sep.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
     }
     
-    /** No completion values for this UI attribute. */
+    /**
+     * No completion values for this UI attribute.
+     * 
+     * {@inheritDoc}
+     */
     @Override
-    public String[] getPossibleValues() {
+    public String[] getPossibleValues(String prefix) {
         return null;
     }
     

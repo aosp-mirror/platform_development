@@ -75,8 +75,13 @@ final class PlatformTarget implements IAndroidTarget {
                 SdkConstants.FN_INTENT_ACTIONS_SERVICE);
         mPaths.put(CATEGORIES, mLocation + SdkConstants.OS_PLATFORM_DATA_FOLDER +
                 SdkConstants.FN_INTENT_CATEGORIES);
+        mPaths.put(AAPT, mLocation + SdkConstants.OS_SDK_TOOLS_FOLDER + SdkConstants.FN_AAPT);
+        mPaths.put(AIDL, mLocation + SdkConstants.OS_SDK_TOOLS_FOLDER + SdkConstants.FN_AIDL);
+        mPaths.put(DX, mLocation + SdkConstants.OS_SDK_TOOLS_FOLDER + SdkConstants.FN_DX);
+        mPaths.put(DX_JAR, mLocation + SdkConstants.OS_SDK_TOOLS_LIB_FOLDER +
+                SdkConstants.FN_DX_JAR);
     }
-
+    
     public String getLocation() {
         return mLocation;
     }
@@ -123,12 +128,21 @@ final class PlatformTarget implements IAndroidTarget {
         return true;
     }
     
+    public IAndroidTarget getParent() {
+        return null;
+    }
+    
     public String getPath(int pathId) {
         return mPaths.get(pathId);
     }
     
     public String[] getSkins() {
         return mSkins;
+    }
+    
+    public String getDefaultSkin() {
+        // at this time, this is the default skin for all the platform.
+        return "HVGA";
     }
 
     /*

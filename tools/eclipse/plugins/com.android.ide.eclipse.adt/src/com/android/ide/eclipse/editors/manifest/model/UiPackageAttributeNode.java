@@ -311,7 +311,7 @@ public class UiPackageAttributeNode extends UiTextAttributeNode {
     }
     
     @Override
-    public String[] getPossibleValues() {
+    public String[] getPossibleValues(String prefix) {
         // TODO: compute a list of existing packages for content assist completion
         return null;
     }

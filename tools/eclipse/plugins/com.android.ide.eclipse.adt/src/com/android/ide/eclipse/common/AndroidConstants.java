@@ -19,6 +19,7 @@ package com.android.ide.eclipse.common;
 import com.android.sdklib.SdkConstants;
 
 import java.io.File;
+import java.util.regex.Pattern;
 
 /**
  * Constant definition class.<br>
@@ -48,17 +49,6 @@ public class AndroidConstants {
 
     /** Nature of android projects */
     public final static String NATURE = "com.android.ide.eclipse.adt.AndroidNature"; //$NON-NLS-1$
-
-    public final static int PLATFORM_UNKNOWN = 0;
-    public final static int PLATFORM_LINUX = 1;
-    public final static int PLATFORM_WINDOWS = 2;
-    public final static int PLATFORM_DARWIN = 3;
-
-    /**
-     * Returns current platform, one of {@link #PLATFORM_WINDOWS}, {@link #PLATFORM_DARWIN},
-     * {@link #PLATFORM_LINUX} or {@link #PLATFORM_UNKNOWN}.
-     */
-    public final static int CURRENT_PLATFORM = currentPlatform();
 
     /** Separator for workspace path, i.e. "/". */
     public final static String WS_SEP = "/"; //$NON-NLS-1$
@@ -97,10 +87,7 @@ public class AndroidConstants {
 
     /** Name of the manifest file, i.e. "AndroidManifest.xml". */
     public static final String FN_ANDROID_MANIFEST = "AndroidManifest.xml"; //$NON-NLS-1$
-    public static final String FN_PROJECT_AIDL = "project.aidl"; //$NON-NLS-1$
 
-    /** dex.jar file */
-    public static final String FN_DX_JAR = "dx.jar"; //$NON-NLS-1$
     /** Name of the android sources directory */
     public static final String FD_ANDROID_SOURCES = "sources"; //$NON-NLS-1$
 
@@ -114,20 +101,21 @@ public class AndroidConstants {
     public final static String FN_CLASSES_DEX = "classes.dex"; //$NON-NLS-1$
     /** Temporary packaged resources file name, i.e. "resources.ap_" */
     public final static String FN_RESOURCES_AP_ = "resources.ap_"; //$NON-NLS-1$
+    /** Temporary packaged resources file name for a specific set of configuration */
+    public final static String FN_RESOURCES_S_AP_ = "resources-%s.ap_"; //$NON-NLS-1$
+    public final static Pattern PATTERN_RESOURCES_S_AP_ =
+        Pattern.compile("resources-.*\\.ap_", Pattern.CASE_INSENSITIVE);
 
-    public final static String FN_ADB = (CURRENT_PLATFORM == PLATFORM_WINDOWS) ?
+    public final static String FN_ADB =
+        (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) ?
             "adb.exe" : "adb"; //$NON-NLS-1$ //$NON-NLS-2$
 
-    public final static String FN_AAPT = (CURRENT_PLATFORM == PLATFORM_WINDOWS) ?
-            "aapt.exe" : "aapt"; //$NON-NLS-1$ //$NON-NLS-2$
-
-    public final static String FN_AIDL = (CURRENT_PLATFORM == PLATFORM_WINDOWS) ?
-            "aidl.exe" : "aidl"; //$NON-NLS-1$ //$NON-NLS-2$
-
-    public final static String FN_EMULATOR = (CURRENT_PLATFORM == PLATFORM_WINDOWS) ?
+    public final static String FN_EMULATOR =
+        (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) ?
             "emulator.exe" : "emulator"; //$NON-NLS-1$ //$NON-NLS-2$
 
-    public final static String FN_TRACEVIEW = (CURRENT_PLATFORM == PLATFORM_WINDOWS) ?
+    public final static String FN_TRACEVIEW =
+        (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) ?
             "traceview.exe" : "traceview"; //$NON-NLS-1$ //$NON-NLS-2$
 
     /** Absolute path of the workspace root, i.e. "/" */
@@ -147,11 +135,6 @@ public class AndroidConstants {
      *  FIXME: remove once the NPW is fixed. */
     public final static String OS_SDK_SAMPLES_FOLDER = SdkConstants.FD_SAMPLES + File.separator;
 
-    /** Path of the dx.jar file relative to the sdk folder. */
-    public final static String OS_SDK_LIBS_DX_JAR =
-        SdkConstants.OS_SDK_TOOLS_LIB_FOLDER + FN_DX_JAR;
-
-    /** Regexp for single dot */
     public final static String RE_DOT = "\\."; //$NON-NLS-1$
     /** Regexp for java extension, i.e. "\.java$" */
     public final static String RE_JAVA_EXT = "\\.java$"; //$NON-NLS-1$
@@ -164,8 +147,11 @@ public class AndroidConstants {
     /** The old common plug-in ID. Please do not use for new features. */
     public static final String COMMON_PLUGIN_ID = "com.android.ide.eclipse.common"; //$NON-NLS-1$
 
-    /** aapt marker error. */
-    public final static String MARKER_AAPT = COMMON_PLUGIN_ID + ".aaptProblem"; //$NON-NLS-1$
+    /** aapt marker error when running the compile command */
+    public final static String MARKER_AAPT_COMPILE = COMMON_PLUGIN_ID + ".aaptProblem"; //$NON-NLS-1$
+
+    /** aapt marker error when running the package command */
+    public final static String MARKER_AAPT_PACKAGE = COMMON_PLUGIN_ID + ".aapt2Problem"; //$NON-NLS-1$
 
     /** XML marker error. */
     public final static String MARKER_XML = COMMON_PLUGIN_ID + ".xmlProblem"; //$NON-NLS-1$
@@ -229,22 +215,4 @@ public class AndroidConstants {
     /** The base URL where to find the Android class & manifest documentation */
     public static final String CODESITE_BASE_URL = "http://code.google.com/android";  //$NON-NLS-1$
     
-    /**
-     * Returns current platform
-     * 
-     * @return one of {@link #PLATFORM_WINDOWS}, {@link #PLATFORM_DARWIN},
-     * {@link #PLATFORM_LINUX} or {@link #PLATFORM_UNKNOWN}.
-     */
-    private static int currentPlatform() {
-        String os = System.getProperty("os.name");          //$NON-NLS-1$
-        if (os.startsWith("Mac OS")) {                      //$NON-NLS-1$
-            return PLATFORM_DARWIN;
-        } else if (os.startsWith("Windows")) {              //$NON-NLS-1$
-            return PLATFORM_WINDOWS;
-        } else if (os.startsWith("Linux")) {                //$NON-NLS-1$
-            return PLATFORM_LINUX;
-        }
-
-        return PLATFORM_UNKNOWN;
-    }
 }
