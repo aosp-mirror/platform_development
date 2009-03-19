@@ -72,6 +72,8 @@ public class AndroidManifestParser {
     private final static String ACTION_MAIN = "android.intent.action.MAIN"; //$NON-NLS-1$
     private final static String CATEGORY_LAUNCHER = "android.intent.category.LAUNCHER"; //$NON-NLS-1$
     
+    public final static int INVALID_MIN_SDK = -1;
+    
     /**
      * XML error & data handler used when parsing the AndroidManifest.xml file.
      * <p/>
@@ -92,8 +94,9 @@ public class AndroidManifestParser {
         private Set<String> mProcesses = null;
         /** debuggable attribute value. If null, the attribute is not present. */
         private Boolean mDebuggable = null;
-        /** API level requirement. if 0 the attribute was not present. */
-        private int mApiLevelRequirement = 0;
+        /** API level requirement. if {@link AndroidManifestParser#INVALID_MIN_SDK}
+         * the attribute was not present. */
+        private int mApiLevelRequirement = INVALID_MIN_SDK;
         /** List of all instrumentations declared by the manifest */
         private final ArrayList<String> mInstrumentations = new ArrayList<String>();
         /** List of all libraries in use declared by the manifest */
@@ -171,7 +174,8 @@ public class AndroidManifestParser {
         }
         
         /**
-         * Returns the <code>minSdkVersion</code> attribute, or 0 if it's not set. 
+         * Returns the <code>minSdkVersion</code> attribute, or
+         * {@link AndroidManifestParser#INVALID_MIN_SDK} if it's not set. 
          */
         int getApiLevelRequirement() {
             return mApiLevelRequirement;
@@ -750,7 +754,8 @@ public class AndroidManifestParser {
     }
     
     /**
-     * Returns the <code>minSdkVersion</code> attribute, or 0 if it's not set. 
+     * Returns the <code>minSdkVersion</code> attribute, or {@link #INVALID_MIN_SDK}
+     * if it's not set. 
      */
     public int getApiLevelRequirement() {
         return mApiLevelRequirement;

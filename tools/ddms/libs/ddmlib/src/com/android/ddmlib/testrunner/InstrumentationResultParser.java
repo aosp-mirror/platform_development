@@ -27,7 +27,14 @@ import com.android.ddmlib.MultiLineReceiver;
  * <p>Expects the following output:
  * 
  * <p>If fatal error occurred when attempted to run the tests:
- * <pre> INSTRUMENTATION_FAILED: </pre>  
+ * <pre>
+ * INSTRUMENTATION_STATUS: Error=error Message
+ * INSTRUMENTATION_FAILED: 
+ * </pre>
+ * <p>or
+ * <pre>
+ * INSTRUMENTATION_RESULT: shortMsg=error Message
+ * </pre>
  * 
  * <p>Otherwise, expect a series of test results, each one containing a set of status key/value
  * pairs, delimited by a start(1)/pass(0)/fail(-2)/error(-1) status code result. At end of test 
@@ -56,6 +63,8 @@ public class InstrumentationResultParser extends MultiLineReceiver {
         private static final String CLASS = "class";
         private static final String STACK = "stack";
         private static final String NUMTESTS = "numtests";
+        private static final String ERROR = "Error";
+        private static final String SHORTMSG = "shortMsg";
     }
     
     /** Test result status codes. */
@@ -71,6 +80,8 @@ public class InstrumentationResultParser extends MultiLineReceiver {
         private static final String STATUS = "INSTRUMENTATION_STATUS: ";
         private static final String STATUS_CODE = "INSTRUMENTATION_STATUS_CODE: ";
         private static final String STATUS_FAILED = "INSTRUMENTATION_FAILED: ";
+        private static final String CODE = "INSTRUMENTATION_CODE: ";
+        private static final String RESULT = "INSTRUMENTATION_RESULT: ";
         private static final String TIME_REPORT = "Time: ";
     }
     
@@ -89,6 +100,23 @@ public class InstrumentationResultParser extends MultiLineReceiver {
         /** Returns true if all expected values have been parsed */
         boolean isComplete() {
             return mCode != null && mTestName != null && mTestClass != null;
+        }
+        
+        /** Provides a more user readable string for TestResult, if possible */
+        @Override
+        public String toString() {
+            StringBuilder output = new StringBuilder();
+            if (mTestClass != null ) {
+                output.append(mTestClass);
+                output.append('#');
+            }    
+            if (mTestName != null) {
+                output.append(mTestName);
+            }
+            if (output.length() > 0) {
+                return output.toString();
+            }    
+            return "unknown result";
         }
     }
     
@@ -130,6 +158,8 @@ public class InstrumentationResultParser extends MultiLineReceiver {
     public void processNewLines(String[] lines) {
         for (String line : lines) {
             parse(line);
+            // in verbose mode, dump all adb output to log
+            Log.v(LOG_TAG, line);
         }
     }
     
@@ -160,9 +190,15 @@ public class InstrumentationResultParser extends MultiLineReceiver {
             // Previous status key-value has been collected. Store it.
             submitCurrentKeyValue();
             parseKey(line, Prefixes.STATUS.length());
-        } else if (line.startsWith(Prefixes.STATUS_FAILED)) {
-            Log.e(LOG_TAG, "test run failed " + line);
-            mTestListener.testRunFailed(line);
+        } else if (line.startsWith(Prefixes.RESULT)) {
+            // Previous status key-value has been collected. Store it.
+            submitCurrentKeyValue();
+            parseKey(line, Prefixes.RESULT.length());  
+        } else if (line.startsWith(Prefixes.STATUS_FAILED) || 
+                   line.startsWith(Prefixes.CODE)) {
+            // Previous status key-value has been collected. Store it.
+            submitCurrentKeyValue();
+            // just ignore the remaining data on this line            
         } else if (line.startsWith(Prefixes.TIME_REPORT)) {
             parseTime(line, Prefixes.TIME_REPORT.length());
         } else {
@@ -186,19 +222,19 @@ public class InstrumentationResultParser extends MultiLineReceiver {
 
             if (mCurrentKey.equals(StatusKeys.CLASS)) {
                 testInfo.mTestClass = statusValue.trim();
-            }
-            else if (mCurrentKey.equals(StatusKeys.TEST)) {
+            } else if (mCurrentKey.equals(StatusKeys.TEST)) {
                 testInfo.mTestName = statusValue.trim();
-            }
-            else if (mCurrentKey.equals(StatusKeys.NUMTESTS)) {
+            } else if (mCurrentKey.equals(StatusKeys.NUMTESTS)) {
                 try {
                     testInfo.mNumTests = Integer.parseInt(statusValue);
-                }
-                catch (NumberFormatException e) {
+                } catch (NumberFormatException e) {
                     Log.e(LOG_TAG, "Unexpected integer number of tests, received " + statusValue);
                 }
-            }
-            else if (mCurrentKey.equals(StatusKeys.STACK)) {
+            } else if (mCurrentKey.equals(StatusKeys.ERROR) || 
+                    mCurrentKey.equals(StatusKeys.SHORTMSG)) {
+                // test run must have failed
+                handleTestRunFailed(statusValue); 
+            } else if (mCurrentKey.equals(StatusKeys.STACK)) {
                 testInfo.mStackTrace = statusValue;
             }
 
@@ -229,7 +265,7 @@ public class InstrumentationResultParser extends MultiLineReceiver {
         int endKeyPos = line.indexOf('=', keyStartPos);
         if (endKeyPos != -1) {
             mCurrentKey = line.substring(keyStartPos, endKeyPos).trim();
-            parseValue(line, endKeyPos+1);
+            parseValue(line, endKeyPos + 1);
         }
     }
     
@@ -252,8 +288,7 @@ public class InstrumentationResultParser extends MultiLineReceiver {
         TestResult testInfo = getCurrentTestInfo();
         try {
             testInfo.mCode = Integer.parseInt(value);    
-        }
-        catch (NumberFormatException e) {
+        } catch (NumberFormatException e) {
             Log.e(LOG_TAG, "Expected integer status code, received: " + value);
         }
         
@@ -286,7 +321,7 @@ public class InstrumentationResultParser extends MultiLineReceiver {
      */
     private void reportResult(TestResult testInfo) {
         if (!testInfo.isComplete()) {
-            Log.e(LOG_TAG, "invalid instrumentation status bundle " + testInfo.toString());
+            Log.w(LOG_TAG, "invalid instrumentation status bundle " + testInfo.toString());
             return;
         }
         reportTestRunStarted(testInfo);
@@ -337,8 +372,7 @@ public class InstrumentationResultParser extends MultiLineReceiver {
     private String getTrace(TestResult testInfo) {
         if (testInfo.mStackTrace != null) {
             return testInfo.mStackTrace;    
-        }
-        else {
+        } else {
             Log.e(LOG_TAG, "Could not find stack trace for failed test ");
             return new Throwable("Unknown failure").toString();
         }
@@ -351,11 +385,17 @@ public class InstrumentationResultParser extends MultiLineReceiver {
         String timeString = line.substring(startPos);
         try {
             float timeSeconds = Float.parseFloat(timeString);
-            mTestTime = (long)(timeSeconds * 1000); 
-        }
-        catch (NumberFormatException e) {
+            mTestTime = (long) (timeSeconds * 1000); 
+        } catch (NumberFormatException e) {
             Log.e(LOG_TAG, "Unexpected time format " + timeString);
         }
+    }
+    
+    /**
+     * Process a instrumentation run failure
+     */
+    private void handleTestRunFailed(String errorMsg) {
+        mTestListener.testRunFailed(errorMsg == null ? "Unknown error" : errorMsg);
     }
     
     /**

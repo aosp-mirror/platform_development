@@ -307,7 +307,8 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
      *      <code>DEBUG_MODE</code>.
      * @param apk the resource to the apk to launch.
      * @param debuggable the debuggable value of the app, or null if not set.
-     * @param requiredApiVersionNumber the api version required by the app, or -1 if none.
+     * @param requiredApiVersionNumber the api version required by the app, or
+     * {@link AndroidManifestParser#INVALID_MIN_SDK} if none.
      * @param launchAction the action to perform after app sync
      * @param config the launch configuration
      * @param launch the launch object
@@ -638,20 +639,21 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
             
             String deviceApiVersionName = device.getProperty(IDevice.PROP_BUILD_VERSION);
             String value = device.getProperty(IDevice.PROP_BUILD_VERSION_NUMBER);
-            int deviceApiVersionNumber = 0;
+            int deviceApiVersionNumber = AndroidManifestParser.INVALID_MIN_SDK;
             try {
                 deviceApiVersionNumber = Integer.parseInt(value);
             } catch (NumberFormatException e) {
                 // pass, we'll keep the deviceVersionNumber value at 0.
             }
             
-            if (launchInfo.getRequiredApiVersionNumber() == 0) {
+            if (launchInfo.getRequiredApiVersionNumber() == AndroidManifestParser.INVALID_MIN_SDK) {
                 // warn the API level requirement is not set.
                 AdtPlugin.printErrorToConsole(launchInfo.getProject(),
                         "WARNING: Application does not specify an API level requirement!");
 
                 // and display the target device API level (if known)
-                if (deviceApiVersionName == null || deviceApiVersionNumber == 0) {
+                if (deviceApiVersionName == null ||
+                        deviceApiVersionNumber == AndroidManifestParser.INVALID_MIN_SDK) {
                     AdtPlugin.printErrorToConsole(launchInfo.getProject(),
                             "WARNING: Unknown device API version!");
                 } else {
@@ -660,7 +662,8 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
                             deviceApiVersionName));
                 }
             } else { // app requires a specific API level
-                if (deviceApiVersionName == null || deviceApiVersionNumber == 0) {
+                if (deviceApiVersionName == null ||
+                        deviceApiVersionNumber == AndroidManifestParser.INVALID_MIN_SDK) {
                     AdtPlugin.printToConsole(launchInfo.getProject(),
                             "WARNING: Unknown device API version!");
                 } else if (deviceApiVersionNumber < launchInfo.getRequiredApiVersionNumber()) {

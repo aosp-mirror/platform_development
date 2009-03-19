@@ -16,8 +16,7 @@
 
 package com.android.ide.eclipse.common.project;
 
-import com.android.ide.eclipse.common.project.BaseProjectHelper;
-
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.jdt.core.IJavaModel;
@@ -82,7 +81,7 @@ public class ProjectChooserHelper {
 
         // open the dialog and return the object selected if OK was clicked, or null otherwise
         if (dialog.open() == Window.OK) {
-            return (IJavaProject)dialog.getFirstResult();
+            return (IJavaProject) dialog.getFirstResult();
         }
         return null;
     }
@@ -106,5 +105,25 @@ public class ProjectChooserHelper {
         }
         
         return mAndroidProjects;
+    }
+    
+    /**
+     * Helper method to get the Android project with the given name
+     * 
+     * @param projectName the name of the project to find
+     * @return the {@link IProject} for the Android project. <code>null</code> if not found.
+     */
+    public IProject getAndroidProject(String projectName) {
+        IProject iproject = null;
+        IJavaProject[] javaProjects = getAndroidProjects(null);
+        if (javaProjects != null) {
+            for (IJavaProject javaProject : javaProjects) {
+                if (javaProject.getElementName().equals(projectName)) {
+                    iproject = javaProject.getProject();
+                    break;
+                }
+            }
+        }    
+        return iproject;
     }
 }

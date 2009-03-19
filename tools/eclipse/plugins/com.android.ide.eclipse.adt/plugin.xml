@@ -510,4 +510,59 @@
              type="org.eclipse.jdt.junit.launchconfig">
        </launchDelegate>
    </extension>
+   <extension
+         point="org.eclipse.debug.core.launchConfigurationTypes">
+      <launchConfigurationType
+            delegate="com.android.ide.eclipse.adt.launch.junit.AndroidJUnitLaunchConfigDelegate"
+            id="com.android.ide.eclipse.adt.junit.launchConfigurationType"
+            modes="run,debug"
+            name="Android Instrumentation"
+            public="true"
+            sourceLocatorId="org.eclipse.jdt.launching.sourceLocator.JavaSourceLookupDirector"
+            sourcePathComputerId="org.eclipse.jdt.launching.sourceLookup.javaSourcePathComputer">
+      </launchConfigurationType>
+   </extension>
+   <extension
+         point="org.eclipse.debug.ui.launchConfigurationTypeImages">
+      <launchConfigurationTypeImage
+            configTypeID="com.android.ide.eclipse.adt.junit.launchConfigurationType"
+            icon="icons/android.png"
+            id="com.android.ide.eclipse.adt.junit.launchConfigurationTypeImage">
+      </launchConfigurationTypeImage>
+   </extension>
+   <extension
+         point="org.eclipse.debug.ui.launchConfigurationTabGroups">
+      <launchConfigurationTabGroup
+            class="com.android.ide.eclipse.adt.launch.junit.AndroidJUnitTabGroup"
+            description="Android Instrumentation"
+            id="com.android.ide.eclipse.adt.junit.AndroidJUnitLaunchConfigTabGroup"
+            type="com.android.ide.eclipse.adt.junit.launchConfigurationType"/>
+   </extension>
+   <extension
+         point="org.eclipse.debug.ui.launchShortcuts">
+      <shortcut
+            class="com.android.ide.eclipse.adt.launch.junit.AndroidJUnitLaunchShortcut"
+            icon="icons/android.png"
+            id="com.android.ide.eclipse.adt.junit.launchShortcut"
+            label="Android Instrumentation"
+            modes="run,debug">
+          <contextualLaunch>
+            <enablement>
+               <with variable="selection">
+                  <count value="1"/>
+                  <iterate>
+                      <adapt type="org.eclipse.jdt.core.IJavaElement">
+                        <test property="org.eclipse.jdt.core.isInJavaProjectWithNature" value="com.android.ide.eclipse.adt.AndroidNature"/>
+                        <test property="org.eclipse.jdt.core.hasTypeOnClasspath" value="junit.framework.Test"/>
+                        <test property="org.eclipse.jdt.junit.canLaunchAsJUnit" forcePluginActivation="true"/>
+                     </adapt>
+                  </iterate>
+               </with>
+            </enablement>
+         </contextualLaunch>
+         <configurationType
+             id="com.android.ide.eclipse.adt.junit.launchConfigurationType">
+         </configurationType>
+      </shortcut>
+   </extension>
 </plugin>

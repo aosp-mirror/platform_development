@@ -103,9 +103,43 @@ public class InstrumentationResultParserTest extends TestCase {
         injectTestString(timeString);
         assertEquals(4900, mTestResult.mTestTime);
     }
+    
+    /**
+     * Test basic parsing of a test run failure.
+     */
+    public void testRunFailed() {
+        StringBuilder output = new StringBuilder();        
+        final String errorMessage = "Unable to find instrumentation info";
+        addStatusKey(output, "Error", errorMessage);
+        addStatusCode(output, "-1");
+        output.append("INSTRUMENTATION_FAILED: com.dummy/android.test.InstrumentationTestRunner");
+        addLineBreak(output);
+        
+        injectTestString(output.toString());
+        
+        assertEquals(errorMessage, mTestResult.mRunFailedMessage);
+    }
+    
+    /**
+     * Test parsing of a test run failure, where an instrumentation component failed to load
+     * Parsing input takes the from of INSTRUMENTATION_RESULT: fff
+     */
+    public void testRunFailedResult() {
+        StringBuilder output = new StringBuilder();        
+        final String errorMessage = "Unable to instantiate instrumentation";
+        output.append("INSTRUMENTATION_RESULT: shortMsg=");
+        output.append(errorMessage);
+        addLineBreak(output);
+        output.append("INSTRUMENTATION_CODE: 0");
+        addLineBreak(output);
+        
+        injectTestString(output.toString());
+        
+        assertEquals(errorMessage, mTestResult.mRunFailedMessage);
+    }
 
     /**
-     * builds a common test result using TEST_NAME and TEST_CLASS.
+     * Builds a common test result using TEST_NAME and TEST_CLASS.
      */
     private StringBuilder buildCommonResult() {
         StringBuilder output = new StringBuilder();
@@ -146,6 +180,13 @@ public class InstrumentationResultParserTest extends TestCase {
         outputBuilder.append(key);
         outputBuilder.append('=');
         outputBuilder.append(value);
+        addLineBreak(outputBuilder);
+    }
+
+    /**
+     * Append line break characters to output
+     */
+    private void addLineBreak(StringBuilder outputBuilder) {
         outputBuilder.append("\r\n");
     }
 
@@ -164,7 +205,7 @@ public class InstrumentationResultParserTest extends TestCase {
     private void addStatusCode(StringBuilder outputBuilder, String value) {
         outputBuilder.append("INSTRUMENTATION_STATUS_CODE: ");
         outputBuilder.append(value);
-        outputBuilder.append("\r\n");
+        addLineBreak(outputBuilder);
     }
 
     /**
@@ -197,11 +238,14 @@ public class InstrumentationResultParserTest extends TestCase {
         TestFailure mTestStatus;
         String mTrace;
         boolean mStopped;
+        /** stores the error message provided to testRunFailed */
+        String mRunFailedMessage;
 
         VerifyingTestResult() {
             mNumTestsRun = 0;
             mTestStatus = null;
             mStopped = false;
+            mRunFailedMessage = null;
         }
 
         public void testEnded(TestIdentifier test) {
@@ -238,8 +282,7 @@ public class InstrumentationResultParserTest extends TestCase {
         }
 
         public void testRunFailed(String errorMessage) {
-            // ignored
+            mRunFailedMessage = errorMessage;
         }
     }
-
 }

@@ -1040,6 +1040,16 @@ public class AdtPlugin extends AbstractUIPlugin {
                             mSdkIsLoaded = LoadStatus.LOADED;
 
                             progress.setTaskName("Check Projects");
+                            
+                            ArrayList<IJavaProject> list = new ArrayList<IJavaProject>();
+                            for (IJavaProject javaProject : mPostLoadProjectsToResolve) {
+                                if (javaProject.getProject().isOpen()) {
+                                    list.add(javaProject);
+                                }
+                            }
+
+                            // done with this list.
+                            mPostLoadProjectsToResolve.clear();
 
                             // check the projects that need checking.
                             // The method modifies the list (it removes the project that
@@ -1047,14 +1057,13 @@ public class AdtPlugin extends AbstractUIPlugin {
                             AndroidClasspathContainerInitializer.checkProjectsCache(
                                     mPostLoadProjectsToCheck);
                             
-                            mPostLoadProjectsToResolve.addAll(mPostLoadProjectsToCheck);
+                            list.addAll(mPostLoadProjectsToCheck);
                             
                             // update the project that needs recompiling.
-                            if (mPostLoadProjectsToResolve.size() > 0) {
-                                IJavaProject[] array = mPostLoadProjectsToResolve.toArray(
-                                        new IJavaProject[mPostLoadProjectsToResolve.size()]);
+                            if (list.size() > 0) {
+                                IJavaProject[] array = list.toArray(
+                                        new IJavaProject[list.size()]);
                                 AndroidClasspathContainerInitializer.updateProjects(array);
-                                mPostLoadProjectsToResolve.clear();
                             }
                             
                             progress.worked(10);

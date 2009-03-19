@@ -461,5 +461,13 @@ public class FileMock implements IFile {
     public void setHidden(boolean isHidden) throws CoreException {
         throw new NotImplementedException();
     }
+
+    public boolean isHidden(int options) {
+        throw new NotImplementedException();
+    }
+
+    public boolean isTeamPrivateMember(int options) {
+        throw new NotImplementedException();
+    }
 }
 

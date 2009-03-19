@@ -55,6 +55,11 @@ import org.eclipse.swt.widgets.Text;
  */
 public class MainLaunchConfigTab extends AbstractLaunchConfigurationTab {
 
+    /**
+     * 
+     */
+    public static final String LAUNCH_TAB_IMAGE = "mainLaunchTab.png";
+
     protected static final String EMPTY_STRING = ""; //$NON-NLS-1$
     
     protected Text mProjText;
@@ -194,7 +199,7 @@ public class MainLaunchConfigTab extends AbstractLaunchConfigurationTab {
 
     @Override
     public Image getImage() {
-        return AdtPlugin.getImageLoader().loadImage("mainLaunchTab.png", null);
+        return AdtPlugin.getImageLoader().loadImage(LAUNCH_TAB_IMAGE, null);
     }
 
 
@@ -310,21 +315,8 @@ public class MainLaunchConfigTab extends AbstractLaunchConfigurationTab {
         }
         mProjText.setText(projectName);
 
-        // get the list of projects
-        IJavaProject[] projects = mProjectChooserHelper.getAndroidProjects(null);
-
-        if (projects != null) {
-            // look for the currently selected project
-            IProject proj = null;
-            for (IJavaProject p : projects) {
-                if (p.getElementName().equals(projectName)) {
-                    proj = p.getProject();
-                    break;
-                }
-            }
-
-            loadActivities(proj);
-        }
+        IProject proj = mProjectChooserHelper.getAndroidProject(projectName);
+        loadActivities(proj);
         
         // load the launch action.
         mLaunchAction = LaunchConfigDelegate.DEFAULT_LAUNCH_ACTION;
