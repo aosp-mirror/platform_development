@@ -67,6 +67,9 @@ FakedPath fakedpaths[] =
     { "/dev/input/*",           NULL },
     { "/dev/log/*",             wsOpenDevLog },
     { "/sys/class/power_supply/*", wsOpenDevPower },
+    { "/sys/power/state",       wsOpenSysPower },
+    { "/sys/power/wake_lock",   wsOpenSysPower },
+    { "/sys/power/wake_unlock", wsOpenSysPower },
     { "/sys/devices/platform/android-vibrator/enable",  wsOpenDevVibrator },
     { "/sys/qemu_trace/*",      NULL },
     { NULL,                     NULL }

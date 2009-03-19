@@ -108,6 +108,7 @@ FakeDev* wsOpenDevEvent(const char* pathName, int flags);
 FakeDev* wsOpenDevFb(const char* pathName, int flags);
 FakeDev* wsOpenDevLog(const char* pathName, int flags);
 FakeDev* wsOpenDevPower(const char* pathName, int flags);
+FakeDev* wsOpenSysPower(const char* pathName, int flags);
 FakeDev* wsOpenDevVibrator(const char* pathName, int flags);
 
 /*
