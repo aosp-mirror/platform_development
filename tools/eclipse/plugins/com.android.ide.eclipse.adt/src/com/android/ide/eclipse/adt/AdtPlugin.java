@@ -1282,7 +1282,7 @@ public class AdtPlugin extends AbstractUIPlugin {
                                 AdtPlugin.PLUGIN_ID,
                                 UNKNOWN_EDITOR);
                         try {
-                            file.setPersistentProperty(qname, "1");
+                            file.setPersistentProperty(qname, "1"); //$NON-NLS-1$
                         } catch (CoreException e) {
                             // pass
                         }

@@ -17,6 +17,7 @@
 package com.android.ide.eclipse.adt.launch;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.launch.AndroidLaunchConfiguration.TargetMode;
 import com.android.ide.eclipse.adt.sdk.Sdk;
 import com.android.ide.eclipse.common.project.BaseProjectHelper;
 import com.android.ide.eclipse.ddms.DdmsPlugin;
@@ -292,14 +293,15 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
     public void initializeFrom(ILaunchConfiguration configuration) {
         AvdManager avdManager = Sdk.getCurrent().getAvdManager();
 
-        boolean value = LaunchConfigDelegate.DEFAULT_TARGET_MODE; // true == automatic
+        TargetMode mode = LaunchConfigDelegate.DEFAULT_TARGET_MODE; // true == automatic
         try {
-            value = configuration.getAttribute(LaunchConfigDelegate.ATTR_TARGET_MODE, value);
+            mode = TargetMode.getMode(configuration.getAttribute(
+                    LaunchConfigDelegate.ATTR_TARGET_MODE, mode.getValue()));
         } catch (CoreException e) {
             // let's not do anything here, we'll use the default value
         }
-        mAutoTargetButton.setSelection(value);
-        mManualTargetButton.setSelection(!value);
+        mAutoTargetButton.setSelection(mode.getValue());
+        mManualTargetButton.setSelection(!mode.getValue());
         
         // look for the project name to get its target.
         String stringValue = "";
@@ -354,7 +356,7 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
             mPreferredAvdSelector.setSelection(null);
         }
 
-        value = LaunchConfigDelegate.DEFAULT_WIPE_DATA;
+        boolean value = LaunchConfigDelegate.DEFAULT_WIPE_DATA;
         try {
             value = configuration.getAttribute(LaunchConfigDelegate.ATTR_WIPE_DATA, value);
         } catch (CoreException e) {
@@ -440,7 +442,7 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
      */
     public void setDefaults(ILaunchConfigurationWorkingCopy configuration) {
         configuration.setAttribute(LaunchConfigDelegate.ATTR_TARGET_MODE,
-                LaunchConfigDelegate.DEFAULT_TARGET_MODE);
+                LaunchConfigDelegate.DEFAULT_TARGET_MODE.getValue());
         configuration.setAttribute(LaunchConfigDelegate.ATTR_SPEED,
                 LaunchConfigDelegate.DEFAULT_SPEED);
         configuration.setAttribute(LaunchConfigDelegate.ATTR_DELAY,

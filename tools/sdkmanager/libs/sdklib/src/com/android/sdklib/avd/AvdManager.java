@@ -177,7 +177,7 @@ public final class AvdManager {
     public AvdManager(SdkManager sdk, ISdkLog sdkLog) throws AndroidLocationException {
         mSdk = sdk;
         mSdkLog = sdkLog;
-        buildAvdList();
+        buildAvdList(mAvdList);
     }
 
     /**
@@ -200,6 +200,20 @@ public final class AvdManager {
         }
         
         return null;
+    }
+    
+    /**
+     * Reloads the AVD list.
+     * @throws AndroidLocationException if there was an error finding the location of the
+     * AVD folder.
+     */
+    public void reloadAvds() throws AndroidLocationException {
+        // build the list in a temp list first, in case the method throws an exception.
+        // It's better than deleting the whole list before reading the new one.
+        ArrayList<AvdInfo> list = new ArrayList<AvdInfo>();
+        buildAvdList(list);
+        mAvdList.clear();
+        mAvdList.addAll(list);
     }
 
     /**
@@ -620,7 +634,7 @@ public final class AvdManager {
         }
     }
 
-    private void buildAvdList() throws AndroidLocationException {
+    private void buildAvdList(ArrayList<AvdInfo> list) throws AndroidLocationException {
         // get the Android prefs location.
         String avdRoot = AndroidLocation.getFolder() + AndroidLocation.FOLDER_AVD;
 
@@ -664,7 +678,7 @@ public final class AvdManager {
         for (File avd : avds) {
             AvdInfo info = parseAvdInfo(avd);
             if (info != null) {
-                mAvdList.add(info);
+                list.add(info);
                 if (avdListDebug) {
                     mSdkLog.printf("[AVD LIST DEBUG] Added AVD '%s'\n", info.getPath());
                 }
