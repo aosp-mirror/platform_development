@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.common.project;
 
+import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.common.AndroidConstants;
 import com.android.ide.eclipse.common.project.XmlErrorHandler.XmlErrorListener;
 import com.android.sdklib.SdkConstants;
@@ -579,7 +580,6 @@ public class AndroidManifestParser {
 
             ManifestHandler manifestHandler = new ManifestHandler(manifestFile,
                     errorListener, gatherData, javaProject, markErrors);
-
             parser.parse(new InputSource(manifestFile.getContents()), manifestHandler);
             
             // get the result from the handler
@@ -590,10 +590,15 @@ public class AndroidManifestParser {
                     manifestHandler.getApiLevelRequirement(), manifestHandler.getInstrumentations(),
                     manifestHandler.getUsesLibraries());
         } catch (ParserConfigurationException e) {
+            AdtPlugin.logAndPrintError(e, AndroidManifestParser.class.getCanonicalName(), 
+                    "Bad parser configuration for %s", manifestFile.getFullPath());
         } catch (SAXException e) {
+            AdtPlugin.logAndPrintError(e, AndroidManifestParser.class.getCanonicalName(), 
+                    "Parser exception for %s", manifestFile.getFullPath());
         } catch (IOException e) {
-        } finally {
-        }
+            AdtPlugin.logAndPrintError(e, AndroidManifestParser.class.getCanonicalName(), 
+                    "I/O error for %s", manifestFile.getFullPath());
+        } 
 
         return null;
     }
@@ -633,11 +638,15 @@ public class AndroidManifestParser {
                     manifestHandler.getApiLevelRequirement(), manifestHandler.getInstrumentations(),
                     manifestHandler.getUsesLibraries());
         } catch (ParserConfigurationException e) {
+            AdtPlugin.logAndPrintError(e, AndroidManifestParser.class.getCanonicalName(), 
+                    "Bad parser configuration for %s", manifestFile.getAbsolutePath());
         } catch (SAXException e) {
+            AdtPlugin.logAndPrintError(e, AndroidManifestParser.class.getCanonicalName(), 
+                    "Parser exception for %s", manifestFile.getAbsolutePath());
         } catch (IOException e) {
-        } finally {
-        }
-
+            AdtPlugin.logAndPrintError(e, AndroidManifestParser.class.getCanonicalName(), 
+                    "I/O error for %s", manifestFile.getAbsolutePath());
+        } 
         return null;
     }
 
@@ -660,10 +669,12 @@ public class AndroidManifestParser {
                 boolean gatherData,
                 boolean markErrors)
             throws CoreException {
+        
+        IFile manifestFile = getManifest(javaProject.getProject());
+        
         try {
             SAXParser parser = sParserFactory.newSAXParser();
-            
-            IFile manifestFile = getManifest(javaProject.getProject());
+
             if (manifestFile != null) {
                 ManifestHandler manifestHandler = new ManifestHandler(manifestFile,
                         errorListener, gatherData, javaProject, markErrors);
@@ -678,10 +689,15 @@ public class AndroidManifestParser {
                         manifestHandler.getInstrumentations(), manifestHandler.getUsesLibraries());
             }
         } catch (ParserConfigurationException e) {
+            AdtPlugin.logAndPrintError(e, AndroidManifestParser.class.getCanonicalName(), 
+                    "Bad parser configuration for %s", manifestFile.getFullPath());
         } catch (SAXException e) {
+            AdtPlugin.logAndPrintError(e, AndroidManifestParser.class.getCanonicalName(), 
+                    "Parser exception for %s", manifestFile.getFullPath());
         } catch (IOException e) {
-        } finally {
-        }
+            AdtPlugin.logAndPrintError(e, AndroidManifestParser.class.getCanonicalName(), 
+                    "I/O error for %s", manifestFile.getFullPath());
+        } 
         
         return null;
     }
