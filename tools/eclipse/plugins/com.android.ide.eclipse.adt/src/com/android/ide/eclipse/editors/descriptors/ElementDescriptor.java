@@ -24,6 +24,7 @@ import com.android.sdklib.SdkConstants;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.graphics.Image;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -219,6 +220,18 @@ public class ElementDescriptor {
     /** Sets the list of allowed children. */
     public void setChildren(ElementDescriptor[] newChildren) {
         mChildren = newChildren;
+    }
+
+    /** Sets the list of allowed children.
+     * <p/>
+     * This is just a convenience method that converts a Collection into an array and
+     * calls {@link #setChildren(ElementDescriptor[])}.
+     * <p/>
+     * This means a <em>copy</em> of the collection is made. The collection is not
+     * stored by the recipient and can thus be altered by the caller.
+     */
+    public void setChildren(Collection<ElementDescriptor> newChildren) {
+        setChildren(newChildren.toArray(new ElementDescriptor[newChildren.size()]));
     }
 
     /**
