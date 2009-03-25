@@ -17,6 +17,7 @@
 
 package com.android.ide.eclipse.editors.wizards;
 
+import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.sdk.AndroidTargetData;
 import com.android.ide.eclipse.adt.sdk.Sdk;
 import com.android.ide.eclipse.common.AndroidConstants;
@@ -39,6 +40,7 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -745,8 +747,35 @@ class NewXmlFileCreationPage extends WizardPage {
                 // cleared above.
                 
                 // get the AndroidTargetData from the project
-                IAndroidTarget target = Sdk.getCurrent().getTarget(mProject);
-                AndroidTargetData data = Sdk.getCurrent().getTargetData(target);
+                IAndroidTarget target = null;
+                AndroidTargetData data = null;
+
+                target = Sdk.getCurrent().getTarget(mProject);
+                if (target == null) {
+                    // A project should have a target. The target can be missing if the project
+                    // is an old project for which a target hasn't been affected or if the
+                    // target no longer exists in this SDK. Simply log the error and dismiss.
+                    
+                    AdtPlugin.log(IStatus.INFO,
+                            "NewXmlFile wizard: no platform target for project %s",  //$NON-NLS-1$
+                            mProject.getName());
+                    continue;
+                } else {
+                    data = Sdk.getCurrent().getTargetData(target);
+
+                    if (data == null) {
+                        // We should have both a target and its data.
+                        // However if the wizard is invoked whilst the platform is still being
+                        // loaded we can end up in a weird case where we have a target but it
+                        // doesn't have any data yet.
+                        // Lets log a warning and silently ignore this root.
+                        
+                        AdtPlugin.log(IStatus.INFO,
+                              "NewXmlFile wizard: no data for target %s, project %s",  //$NON-NLS-1$
+                              target.getName(), mProject.getName());
+                        continue;
+                    }
+                }
                 
                 IDescriptorProvider provider = data.getDescriptorProvider((Integer)rootSeed);
                 ElementDescriptor descriptor = provider.getDescriptor();
