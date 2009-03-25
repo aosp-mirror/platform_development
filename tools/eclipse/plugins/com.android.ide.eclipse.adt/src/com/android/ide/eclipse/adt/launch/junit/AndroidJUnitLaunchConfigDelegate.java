@@ -32,23 +32,21 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
-import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.internal.junit.launcher.JUnitLaunchConfigurationConstants;
 import org.eclipse.jdt.internal.junit.launcher.TestKindRegistry;
 
 /**
- * Run configuration that can execute JUnit tests on an Android platform
+ * Run configuration that can execute JUnit tests on an Android platform.
  * <p/>
- * Will deploy apps on target Android platform by reusing functionality from ADT 
- * LaunchConfigDelegate, and then run JUnits tests by reusing functionality from JDT 
+ * Will deploy apps on target Android platform by reusing functionality from ADT
+ * LaunchConfigDelegate, and then run JUnits tests by reusing functionality from JDT
  * JUnitLaunchConfigDelegate.
  */
-@SuppressWarnings("restriction") //$NON-NLS-1$
+@SuppressWarnings("restriction")
 public class AndroidJUnitLaunchConfigDelegate extends LaunchConfigDelegate {
 
-    /** Launch config attribute that stores instrumentation runner */
+    /** Launch config attribute that stores instrumentation runner. */
     static final String ATTR_INSTR_NAME = AdtPlugin.PLUGIN_ID + ".instrumentation"; //$NON-NLS-1$
-    static final String INSTRUMENTATION_OK = null;
     private static final String EMPTY_STRING = ""; //$NON-NLS-1$
 
     @Override
@@ -58,7 +56,7 @@ public class AndroidJUnitLaunchConfigDelegate extends LaunchConfigDelegate {
             IFile applicationPackage, AndroidManifestParser manifestParser) {
 
         String testPackage = manifestParser.getPackage();        
-        String runner = getRunnerFromConfig(configuration);
+        String runner = getRunner(project, configuration, manifestParser);
         if (runner == null) {
             AdtPlugin.displayError("Android Launch",
                     "An instrumention test runner is not specified!");
@@ -72,43 +70,55 @@ public class AndroidJUnitLaunchConfigDelegate extends LaunchConfigDelegate {
                 manifestParser.getDebuggable(), manifestParser.getApiLevelRequirement(),
                 junitLaunch, config, androidLaunch, monitor);
     }
-
-    private String getRunnerFromConfig(ILaunchConfiguration configuration) {
-        String runner = EMPTY_STRING;
+    
+    /**
+     * Gets a instrumentation runner for the launch. 
+     * <p/>
+     * If a runner is stored in the given <code>configuration</code>, will return that.
+     * Otherwise, will try to find the first valid runner for the project.
+     * If a runner can still not be found, will return <code>null</code>.
+     * 
+     * @param project the {@link IProject} for the app 
+     * @param configuration the {@link ILaunchConfiguration} for the launch
+     * @param manifestParser the {@link AndroidManifestParser} for the project
+     * 
+     * @return <code>null</code> if no instrumentation runner can be found, otherwise return
+     *   the fully qualified runner name.
+     */
+    private String getRunner(IProject project, ILaunchConfiguration configuration,
+            AndroidManifestParser manifestParser) {
         try {
-            runner = configuration.getAttribute(ATTR_INSTR_NAME, EMPTY_STRING);
+            String runner = getRunnerFromConfig(configuration);
+            if (runner != null) {
+                return runner;
+            }
+            final InstrumentationRunnerValidator instrFinder = new InstrumentationRunnerValidator(
+                    BaseProjectHelper.getJavaProject(project), manifestParser);
+            runner = instrFinder.getValidInstrumentationTestRunner();
+            if (runner != null) {
+                AdtPlugin.printErrorToConsole(project,
+                        String.format("Warning: No instrumentation runner found for the launch, " +
+                                "using %1$s", runner));
+                return runner;
+            }
+            AdtPlugin.printErrorToConsole(project,
+                    String.format("ERROR: Application does not specify a %1$s instrumentation or does not declare uses-library %2$s",
+                    AndroidConstants.CLASS_INSTRUMENTATION_RUNNER, 
+                    AndroidConstants.LIBRARY_TEST_RUNNER));
+            return null;
         } catch (CoreException e) {
-            AdtPlugin.log(e, "Error when retrieving instrumentation info from launch config"); //$NON-NLS-1$           
+            AdtPlugin.log(e, "Error when retrieving instrumentation info"); //$NON-NLS-1$           
         }
+        return null;
+
+    }
+
+    private String getRunnerFromConfig(ILaunchConfiguration configuration) throws CoreException {
+        String runner = configuration.getAttribute(ATTR_INSTR_NAME, EMPTY_STRING);
         if (runner.length() < 1) {
             return null;
         }
         return runner;
-    }
-
-    /**
-     * Helper method to return the set of instrumentations for the Android project
-     * 
-     * @param project the {@link IProject} to get instrumentations for
-     * @return null if error occurred parsing instrumentations, otherwise returns array of
-     * instrumentation class names
-     */
-    static String[] getInstrumentationsForProject(IProject project) {
-        if (project != null) {
-            try {
-                // parse the manifest for the list of instrumentations
-                AndroidManifestParser manifestParser = AndroidManifestParser.parse(
-                        BaseProjectHelper.getJavaProject(project), null /* errorListener */,
-                        true /* gatherData */, false /* markErrors */);
-                if (manifestParser != null) {
-                    return manifestParser.getInstrumentations(); 
-                }
-            } catch (CoreException e) {
-                AdtPlugin.log(e, "%s: Error parsing AndroidManifest.xml",  //$NON-NLS-1$ 
-                        project.getName());
-            }
-        }
-        return null;
     }
 
     /**
@@ -120,57 +130,5 @@ public class AndroidJUnitLaunchConfigDelegate extends LaunchConfigDelegate {
         // set the test runner to JUnit3 to placate JDT JUnit runner logic
         config.setAttribute(JUnitLaunchConfigurationConstants.ATTR_TEST_RUNNER_KIND, 
                 TestKindRegistry.JUNIT3_TEST_KIND_ID);
-    }
-    
-    /**
-     * Helper method to determine if specified instrumentation can be used as a test runner
-     * 
-     * @param project the {@link IJavaProject} to validate
-     * @param instrumentation the instrumentation class name to validate
-     * @return <code>INSTRUMENTATION_OK</code> if valid, otherwise returns error message
-     */
-    static String validateInstrumentationRunner(IJavaProject project, String instrumentation) {
-        AndroidManifestParser manifestParser;
-        try {
-            manifestParser = AndroidManifestParser.parse(
-                    project, null /* errorListener */,
-                    true /* gatherData */, false /* markErrors */);
-            // check if this instrumentation is the standard test runner
-            if (!instrumentation.equals(AndroidConstants.CLASS_INSTRUMENTATION_RUNNER)) {
-                // check if it extends the standard test runner
-                String result = BaseProjectHelper.testClassForManifest(project,
-                        instrumentation, AndroidConstants.CLASS_INSTRUMENTATION_RUNNER, true);
-                if (result != BaseProjectHelper.TEST_CLASS_OK) {
-                    return String.format("The instrumentation runner must be of type %s", 
-                            AndroidConstants.CLASS_INSTRUMENTATION_RUNNER);
-                }
-            }
-            if (!hasTestRunnerLibrary(manifestParser)) {
-                return String.format("%s does not not use the %s library", 
-                        project.getProject().getName(), AndroidConstants.LIBRARY_TEST_RUNNER);
-            }
-        } catch (CoreException e) {
-            String err = String.format("Error parsing AndroidManifest for %s", 
-                    project.getProject().getName());
-            AdtPlugin.log(e, err);
-            return err;
-        }  
-        return INSTRUMENTATION_OK;
-    }
- 
-    /**
-     * Helper method to determine if given manifest has a <code>AndroidConstants.LIBRARY_TEST_RUNNER
-     * </code> library reference
-     *
-     * @param manifestParser the {@link AndroidManifestParser} to search
-     * @return true if test runner library found, false otherwise
-     */
-    static boolean hasTestRunnerLibrary(AndroidManifestParser manifestParser) {
-       for (String lib : manifestParser.getUsesLibraries()) {
-           if (lib.equals(AndroidConstants.LIBRARY_TEST_RUNNER)) {
-               return true;
-           }
-       }
-       return false;
     }
 }

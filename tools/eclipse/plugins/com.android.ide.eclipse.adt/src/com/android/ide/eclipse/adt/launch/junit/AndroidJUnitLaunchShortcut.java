@@ -16,10 +16,6 @@
 
 package com.android.ide.eclipse.adt.launch.junit;
 
-import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.common.AndroidConstants;
-
-import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 import org.eclipse.jdt.core.IJavaElement;
@@ -43,33 +39,18 @@ public class AndroidJUnitLaunchShortcut extends JUnitLaunchShortcut {
     protected ILaunchConfigurationWorkingCopy createLaunchConfiguration(IJavaElement element)
             throws CoreException {
         ILaunchConfigurationWorkingCopy config = super.createLaunchConfiguration(element);
-        IProject project = element.getResource().getProject();
-        String[] instrumentations = 
-            AndroidJUnitLaunchConfigDelegate.getInstrumentationsForProject(project);
-        boolean runnerFound = false;
-        if (instrumentations != null) {
-            // just pick the first valid runner
-            for (String instr : instrumentations) {
-                if (AndroidJUnitLaunchConfigDelegate.validateInstrumentationRunner(
-                        element.getJavaProject(),  instr) == 
-                            AndroidJUnitLaunchConfigDelegate.INSTRUMENTATION_OK) {
+        // just get first valid instrumentation runner
+        String instrumentation = new InstrumentationRunnerValidator(element.getJavaProject()).
+                getValidInstrumentationTestRunner();
+        if (instrumentation != null) {
+            config.setAttribute(AndroidJUnitLaunchConfigDelegate.ATTR_INSTR_NAME, 
+                    instrumentation);
+        }
+        // if a valid runner is not found, rely on launch delegate to log error.
+        // This method is called without explicit user action to launch Android JUnit, so avoid
+        // logging an error here.
 
-                    config.setAttribute(AndroidJUnitLaunchConfigDelegate.ATTR_INSTR_NAME, 
-                        instr);
-                    runnerFound = true;
-                    break;
-                }
-            }
-        }
-        if (!runnerFound) {
-            // TODO: put this in a string properties
-            String msg = String.format("ERROR: Application does not specify a %s instrumentation or does not declare uses-library %s",
-                    AndroidConstants.CLASS_INSTRUMENTATION_RUNNER, 
-                    AndroidConstants.LIBRARY_TEST_RUNNER);
-            AdtPlugin.printErrorToConsole(project, msg);           
-        }
         AndroidJUnitLaunchConfigDelegate.setJUnitDefaults(config);
-
         return config;
     }
 }
