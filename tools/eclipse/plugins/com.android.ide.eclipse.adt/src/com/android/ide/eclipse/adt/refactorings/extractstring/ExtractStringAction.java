@@ -22,9 +22,7 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.ICompilationUnit;
-import org.eclipse.jdt.core.ITypeRoot;
 import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.ui.JavaUI;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.jface.viewers.ISelection;
@@ -122,7 +120,7 @@ public class ExtractStringAction implements IWorkbenchWindowActionDelegate {
     public void run(IAction action) {
         if (mSelection != null && mFile != null) {
             ExtractStringRefactoring ref = new ExtractStringRefactoring(mFile, mSelection);
-            RefactoringWizard wizard = new ExtractStringWizard(ref, "Extract Android String");
+            RefactoringWizard wizard = new ExtractStringWizard(ref, mFile.getProject());
             RefactoringWizardOpenOperation op = new RefactoringWizardOpenOperation(wizard);
             try {
                 op.run(mWindow.getShell(), wizard.getDefaultPageTitle());

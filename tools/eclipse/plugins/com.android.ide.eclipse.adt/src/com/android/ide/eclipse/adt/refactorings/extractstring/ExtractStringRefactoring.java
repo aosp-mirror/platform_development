@@ -177,7 +177,7 @@ class ExtractStringRefactoring extends Refactoring {
     public ExtractStringRefactoring(IFile file, ITextSelection selection) {
         mFile = file;
         mSelectionStart = selection.getOffset();
-        mSelectionEnd = mSelectionStart + selection.getLength();
+        mSelectionEnd = mSelectionStart + Math.max(0, selection.getLength() - 1);
     }
 
     /**
@@ -906,9 +906,8 @@ class ExtractStringRefactoring extends Refactoring {
      * compilation unit. The resource may not exist.
      */
     private IResource getTargetXmlResource(String xmlFileWsPath) {
-        IProject proj = mUnit.getPrimary().getResource().getProject();
-        Path path = new Path(xmlFileWsPath);
-        IResource resource = proj.findMember(path);
+        IProject proj = mFile.getProject();
+        IResource resource = proj.getFile(xmlFileWsPath);
         return resource;
     }
 
