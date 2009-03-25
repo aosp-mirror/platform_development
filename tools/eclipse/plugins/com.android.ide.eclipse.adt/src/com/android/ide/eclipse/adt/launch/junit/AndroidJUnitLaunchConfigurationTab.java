@@ -118,7 +118,9 @@ public class AndroidJUnitLaunchConfigurationTab extends AbstractLaunchConfigurat
     private Image mTabIcon = null;
     private Combo mInstrumentationCombo;
     private static final String EMPTY_STRING = ""; //$NON-NLS-1$
+    private static final String TAG = "AndroidJUnitLaunchConfigurationTab"; //$NON-NLS-1$
     private String[] mInstrumentations = null;
+    private InstrumentationRunnerValidator mInstrValidator = null;
     private ProjectChooserHelper mProjectChooserHelper;
 
     /* (non-Javadoc)
@@ -349,7 +351,7 @@ public class AndroidJUnitLaunchConfigurationTab extends AbstractLaunchConfigurat
                        break;
                     }
                 }
-            }    
+            }
         } catch (CoreException ce) {
             // ignore
         }
@@ -454,7 +456,7 @@ public class AndroidJUnitLaunchConfigurationTab extends AbstractLaunchConfigurat
             mapResources(config);
         } catch (CoreException e) {
             // TODO: does the real error need to be extracted out of CoreException
-            AdtPlugin.log(e, "Error occurred saving configuration");
+            AdtPlugin.log(e, "Error occurred saving configuration"); //$NON-NLS-1$
         }
         AndroidJUnitLaunchConfigDelegate.setJUnitDefaults(config);
         
@@ -486,7 +488,7 @@ public class AndroidJUnitLaunchConfigurationTab extends AbstractLaunchConfigurat
     public Image getImage() {
         // reuse icon from the Android App Launch config tab
         if (mTabIcon == null) {
-            mTabIcon= AdtPlugin.getImageLoader().loadImage(MainLaunchConfigTab.LAUNCH_TAB_IMAGE,
+            mTabIcon = AdtPlugin.getImageLoader().loadImage(MainLaunchConfigTab.LAUNCH_TAB_IMAGE,
                     null);
         }
         return mTabIcon;
@@ -514,7 +516,7 @@ public class AndroidJUnitLaunchConfigurationTab extends AbstractLaunchConfigurat
             setErrorMessage(e.getMessage());
             return;
         } catch (InvocationTargetException e) {
-            AdtPlugin.log(e.getTargetException(), "Error finding test types");
+            AdtPlugin.log(e.getTargetException(), "Error finding test types"); //$NON-NLS-1$
             return;
         } finally {
             mTestRadioButton.setSelection(radioSetting[0]);
@@ -675,10 +677,10 @@ public class AndroidJUnitLaunchConfigurationTab extends AbstractLaunchConfigurat
                 return;
             }          
         } catch (CoreException e) {
-            AdtPlugin.log(e, "validatePage failed");
+            AdtPlugin.log(e, "validatePage failed"); //$NON-NLS-1$
         }
 
-        validateInstrumentation(javaProject);
+        validateInstrumentation();
     }
 
     private void validateJavaProject(IJavaProject javaProject) {
@@ -688,19 +690,14 @@ public class AndroidJUnitLaunchConfigurationTab extends AbstractLaunchConfigurat
         }
     }
 
-    private void validateInstrumentation(IJavaProject javaProject) {
-        if (mInstrumentations == null || mInstrumentations.length < 1) {
-            setErrorMessage("Specified project has no defined instrumentations");
-            return;
-        }
+    private void validateInstrumentation() {
         String instrumentation = getSelectedInstrumentation();
         if (instrumentation == null) {
-            setErrorMessage("Instrumentation not specified");
+            setErrorMessage("Instrumentation runner not specified");
             return;
         }
-        String result = AndroidJUnitLaunchConfigDelegate.validateInstrumentationRunner(
-                javaProject, instrumentation);
-        if (result != AndroidJUnitLaunchConfigDelegate.INSTRUMENTATION_OK) {
+        String result = mInstrValidator.validateInstrumentationRunner(instrumentation);
+        if (result != InstrumentationRunnerValidator.INSTRUMENTATION_OK) {
             setErrorMessage(result);
             return;
         }
@@ -949,14 +946,15 @@ public class AndroidJUnitLaunchConfigurationTab extends AbstractLaunchConfigurat
 
     /**
      * Loads the UI with the instrumentations of the specified project, and stores the
-     * activities in <code>mActivities</code>.
-     * <p/>
-     * First activity is selected by default if present.
+     * instrumentations in <code>mInstrumentations</code>.
      * 
      * @param project the {@link IProject} to load the instrumentations from.
      */
     private void loadInstrumentations(IProject project) {
-        mInstrumentations = AndroidJUnitLaunchConfigDelegate.getInstrumentationsForProject(project);
+        try {
+        mInstrValidator = new InstrumentationRunnerValidator(project);
+        mInstrumentations = (mInstrValidator == null ? null : 
+            mInstrValidator.getInstrumentations());
         if (mInstrumentations != null) {
             mInstrumentationCombo.removeAll();
             for (String instrumentation : mInstrumentations) {
@@ -966,9 +964,13 @@ public class AndroidJUnitLaunchConfigurationTab extends AbstractLaunchConfigurat
             // config object.
             return;
         }
-
+        } catch (CoreException e) {
+            AdtPlugin.logAndPrintError(e, TAG, "ERROR: Failed to get instrumentations for %1$s",
+                    project.getName());
+        }
         // if we reach this point, either project is null, or we got an exception during
         // the parsing. In either case, we empty the instrumentation list.
+        mInstrValidator = null;
         mInstrumentations = null;
         mInstrumentationCombo.removeAll();
     }
