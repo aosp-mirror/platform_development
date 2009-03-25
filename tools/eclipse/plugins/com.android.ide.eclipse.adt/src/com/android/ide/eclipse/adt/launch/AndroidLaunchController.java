@@ -34,8 +34,10 @@ import com.android.ide.eclipse.adt.launch.DelayedLaunchInfo.InstallRetryMode;
 import com.android.ide.eclipse.adt.launch.DeviceChooserDialog.DeviceChooserResponse;
 import com.android.ide.eclipse.adt.project.ProjectHelper;
 import com.android.ide.eclipse.adt.sdk.Sdk;
+import com.android.ide.eclipse.common.AndroidConstants;
 import com.android.ide.eclipse.common.project.AndroidManifestParser;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
+import com.android.ide.eclipse.common.project.BaseProjectHelper;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.avd.AvdManager;
@@ -54,6 +56,9 @@ import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 import org.eclipse.debug.core.ILaunchManager;
 import org.eclipse.debug.core.model.IDebugTarget;
 import org.eclipse.debug.ui.DebugUITools;
+import org.eclipse.jdt.core.IJavaModel;
+import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
 import org.eclipse.jdt.launching.IVMConnector;
 import org.eclipse.jdt.launching.JavaRuntime;
@@ -66,6 +71,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -807,6 +813,14 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
                 return false;
             }
             
+            // The app is now installed, now try the dependent projects
+            for (DelayedLaunchInfo dependentLaunchInfo : getDependenciesLaunchInfo(launchInfo)) {
+                String msg = String.format("Project dependency found, syncing: %s",
+                        dependentLaunchInfo.getProject().getName());
+                AdtPlugin.printToConsole(launchInfo.getProject(), msg);
+                syncApp(dependentLaunchInfo, device);
+            }
+            
             return installResult;
         }
 
@@ -817,6 +831,81 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
 
         return false;
     }
+
+    /**
+     * For the current launchInfo, create additional DelayedLaunchInfo that should be used to
+     * sync APKs that we are dependent on to the device.
+     * 
+     * @param launchInfo the original launch info that we want to find the 
+     * @return a list of DelayedLaunchInfo (may be empty if no dependencies were found or error)
+     */
+    public List<DelayedLaunchInfo> getDependenciesLaunchInfo(DelayedLaunchInfo launchInfo) {
+        List<DelayedLaunchInfo> dependencies = new ArrayList<DelayedLaunchInfo>();
+
+        // Convert to equivalent JavaProject
+        IJavaProject javaProject;
+        try {
+            //assuming this is an Android (and Java) project since it is attached to the launchInfo.
+            javaProject = BaseProjectHelper.getJavaProject(launchInfo.getProject());
+        } catch (CoreException e) {
+            // return empty dependencies
+            AdtPlugin.printErrorToConsole(launchInfo.getProject(), e);
+            return dependencies;
+        }
+        
+        // Get all projects that this depends on
+        List<IJavaProject> androidProjectList;
+        try {
+            androidProjectList = ProjectHelper.getAndroidProjectDependencies(javaProject);
+        } catch (JavaModelException e) {
+            // return empty dependencies
+            AdtPlugin.printErrorToConsole(launchInfo.getProject(), e);
+            return dependencies;
+        }
+        
+        // for each project, parse manifest and create launch information
+        for (IJavaProject androidProject : androidProjectList) {
+            // Parse the Manifest to get various required information
+            // copied from LaunchConfigDelegate
+            AndroidManifestParser manifestParser;
+            try {
+                manifestParser = AndroidManifestParser.parse(
+                        androidProject, null /* errorListener */,
+                        true /* gatherData */, false /* markErrors */);
+            } catch (CoreException e) {
+                AdtPlugin.printErrorToConsole(
+                        launchInfo.getProject(), 
+                        String.format("Error parsing manifest of %s", 
+                                androidProject.getElementName()));
+                continue;
+            }
+            
+            // Get the APK location (can return null)
+            IFile apk = ProjectHelper.getApplicationPackage(androidProject.getProject());
+            if (apk == null) {
+                // getApplicationPackage will have logged an error message
+                continue;      
+            }
+            
+            // Create new launchInfo as an hybrid between parent and dependency information
+            DelayedLaunchInfo delayedLaunchInfo = new DelayedLaunchInfo(
+                    androidProject.getProject(), 
+                    manifestParser.getPackage(),
+                    launchInfo.getLaunchAction(), 
+                    apk, 
+                    manifestParser.getDebuggable(), 
+                    manifestParser.getApiLevelRequirement(), 
+                    launchInfo.getLaunch(), 
+                    launchInfo.getMonitor());
+            
+            // Add to the list
+            dependencies.add(delayedLaunchInfo);
+        }
+        
+        return dependencies;
+    }
+
+
 
     /**
      * Installs the application package that was pushed to a temporary location on the device.
