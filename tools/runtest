@@ -37,8 +37,8 @@ optUserTests=${HOME}/.android/runtest.rc
 # TODO error messages on once-only or mutually-exclusive options
 #
 function processOptions() {
-  while getopts "l b n a r d e s: v w c:t:u:" opt ; do  
-    case ${opt} in  
+  while getopts "l b n a r d e s: v w c:t:u:" opt ; do
+    case ${opt} in
       l ) optListTests=1 ;;
       b ) optSkipBuild=1 ;;
       n ) optPreview=1 ;;
@@ -113,6 +113,7 @@ knownTests=(
 
   # system-wide tests
   "framework  frameworks/base/tests/FrameworkTest # com.android.frameworktest.AllTests com.android.frameworktest.tests #"
+  "account    frameworks/base/tests/AndroidTests  # com.android.unit_tests.accounts.AccountManagerServiceTest com.android.unit_tests #"
   "android    frameworks/base/tests/AndroidTests  com.android.unit_tests AndroidTests # #"
   "smoke      frameworks/base/tests/SmokeTest     com.android.smoketest # com.android.smoketest.tests #"
   "core       frameworks/base/tests/CoreTests     # android.core.CoreTests android.core #"
@@ -126,7 +127,7 @@ knownTests=(
   "deadlock  tests/Deadlock                       com.android.deadlock # com.android.deadlock.tests #"
   "syncadapter vendor/google/tests/AbstractGDataSyncAdapterTest # # com.google.android.providers.abstractgdatasyncadaptertests #"
   "tablemerger frameworks/base/tests/FrameworkTest # android.content.AbstractTableMergerTest com.android.frameworktest.tests #"
-  
+
   # selected app tests
   "browser    packages/apps/Browser            com.android.browser # # .BrowserTestRunner"
   "browserfunc packages/apps/Browser           com.android.browser # # .BrowserFunctionalTestRunner"
@@ -308,7 +309,10 @@ if [[ ${#testInfo[@]} -eq 5 ]] ; then
       # finally, sleep a bit.  this is a hack.  it gives the package manager time to
       # install the package(s) that were just synced.  this causes a reduction in the number
       # of false failures, but it's not a perfect solution.
-      sleep 2
+      if [ ${optPreview} -eq 0 ] ; then
+        echo "sleeping..."
+        sleep 2
+      fi
     fi
   fi
 
@@ -328,6 +332,7 @@ if [[ ${#testInfo[@]} -eq 5 ]] ; then
   if [[ ${optWaitForDebugger} -ne 0 ]] ; then
     debugOptions="-e debug true"
   fi
+      fi
   if [[ ${optSuiteAssignmentMode} -ne 0 ]] ; then
     debugOptions="-e suiteAssignment true "${debugOptions}
   fi
@@ -337,8 +342,11 @@ if [[ ${#testInfo[@]} -eq 5 ]] ; then
 
   # "prevent" a race condition where we try to run the tests before they're
   # actually installed
-  sleep 2
-  
+  if [ ${optPreview} -eq 0 ] ; then
+    echo "sleeping..."
+    sleep 2
+  fi
+
   # now run the command
   if [[ $optVerbose -ne 0 || ${optPreview} -ne 0 ]] ; then
     echo adb ${optAdbTarget} shell am instrument -w \
