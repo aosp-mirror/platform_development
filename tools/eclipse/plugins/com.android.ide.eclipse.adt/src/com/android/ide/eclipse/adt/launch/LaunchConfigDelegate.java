@@ -18,6 +18,7 @@ package com.android.ide.eclipse.adt.launch;
 
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.launch.AndroidLaunchConfiguration.TargetMode;
 import com.android.ide.eclipse.adt.project.ProjectHelper;
 import com.android.ide.eclipse.common.AndroidConstants;
 import com.android.ide.eclipse.common.project.AndroidManifestParser;
@@ -51,7 +52,7 @@ public class LaunchConfigDelegate extends LaunchConfigurationDelegate {
 
     /** Target mode parameters: true is automatic, false is manual */
     public static final String ATTR_TARGET_MODE = AdtPlugin.PLUGIN_ID + ".target"; //$NON-NLS-1$
-    public static final boolean DEFAULT_TARGET_MODE = true; //automatic mode
+    public static final TargetMode DEFAULT_TARGET_MODE = TargetMode.AUTO;
 
     /**
      * Launch action:
