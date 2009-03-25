@@ -181,11 +181,14 @@ public final class AaptExecLoopTask extends Task {
         task.createArg().setValue("-M");
         task.createArg().setValue(mManifest);
 
-        // resources location
-        task.createArg().setValue("-S");
-        task.createArg().setValue(mResources);
+        // resources location. This may not exists, and aapt doesn't like it, so we check first.
+        File res = new File(mResources);
+        if (res.isDirectory()) {
+            task.createArg().setValue("-S");
+            task.createArg().setValue(mResources);
+        }
         
-        // assets location. this may not exists, and aapt doesn't like it, so we check first.
+        // assets location. This may not exists, and aapt doesn't like it, so we check first.
         File assets = new File(mAssets);
         if (assets.isDirectory()) {
             task.createArg().setValue("-A");
