@@ -1106,6 +1106,13 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".view.Animation3" android:label="Views/Animation/Interpolators">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
         <activity android:name=".view.LayoutAnimation1" android:label="Views/Layout Animation/1. Grid Fade">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
