@@ -16,7 +16,11 @@
 
 package com.android.ide.eclipse.adt.refactorings.extractstring;
 
+import com.android.ide.eclipse.common.AndroidConstants;
+
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.ITypeRoot;
 import org.eclipse.jdt.core.JavaCore;
@@ -32,6 +36,7 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.part.FileEditorInput;
 
 /*
  * Quick Reference Link:
@@ -71,7 +76,7 @@ public class ExtractStringAction implements IWorkbenchWindowActionDelegate {
     /** Keep track of the current workbench window. */
     private IWorkbenchWindow mWindow;
     private ITextSelection mSelection;
-    private ICompilationUnit mUnit;
+    private IFile mFile;
 
     /**
      * Keep track of the current workbench window.
@@ -99,30 +104,24 @@ public class ExtractStringAction implements IWorkbenchWindowActionDelegate {
         // runs since we don't have access to the AST yet.
 
         mSelection = null;
-        mUnit = null;
+        mFile = null;
         
         if (selection instanceof ITextSelection) {
             mSelection = (ITextSelection) selection;
             if (mSelection.getLength() > 0) {
-                mUnit = getCompilationUnit();
+                mFile = getSelectedFile();
             }
-
-            // Keep for debugging purposes
-            //System.out.println(String.format("-- Selection: %d + %d = %s",
-            //        mSelection.getOffset(),
-            //        mSelection.getLength(),
-            //        mSelection.getText()));
         }
 
-        action.setEnabled(mSelection != null && mUnit != null);
+        action.setEnabled(mSelection != null && mFile != null);
     }
 
     /**
      * Create a new instance of our refactoring and a wizard to configure it.
      */
     public void run(IAction action) {
-        if (mSelection != null && mUnit != null) {
-            ExtractStringRefactoring ref = new ExtractStringRefactoring(mUnit, mSelection);
+        if (mSelection != null && mFile != null) {
+            ExtractStringRefactoring ref = new ExtractStringRefactoring(mFile, mSelection);
             RefactoringWizard wizard = new ExtractStringWizard(ref, "Extract Android String");
             RefactoringWizardOpenOperation op = new RefactoringWizardOpenOperation(wizard);
             try {
@@ -134,9 +133,14 @@ public class ExtractStringAction implements IWorkbenchWindowActionDelegate {
     }
 
     /**
-     * Returns the active {@link ICompilationUnit} or null.
+     * Returns the active {@link IFile} (hopefully matching our selection) or null.
+     * The file is only returned if it's a file from a project with an Android nature.
+     * <p/>
+     * At that point we do not try to analyze if the selection nor the file is suitable
+     * for the refactoring. This check is performed when the refactoring is invoked since
+     * it can then produce meaningful error messages as needed.
      */
-    private ICompilationUnit getCompilationUnit() {
+    private IFile getSelectedFile() {
         IWorkbenchWindow wwin = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
         if (wwin != null) {
             IWorkbenchPage page = wwin.getActivePage();
@@ -144,12 +148,19 @@ public class ExtractStringAction implements IWorkbenchWindowActionDelegate {
                 IEditorPart editor = page.getActiveEditor();
                 if (editor != null) {
                     IEditorInput input = editor.getEditorInput();
-                    if (input != null) {
-                        ITypeRoot typeRoot = JavaUI.getEditorInputTypeRoot(input);
-                        // The type root can be either a .class or a .java (aka compilation unit).
-                        // We want the compilation unit kind.
-                        if (typeRoot instanceof ICompilationUnit) {
-                            return (ICompilationUnit) typeRoot;
+                    
+                    if (input instanceof FileEditorInput) {
+                        FileEditorInput fi = (FileEditorInput) input;
+                        IFile file = fi.getFile();
+                        if (file.exists()) {
+                            IProject proj = file.getProject();
+                            try {
+                                if (proj != null && proj.hasNature(AndroidConstants.NATURE)) {
+                                    return file;
+                                }
+                            } catch (CoreException e) {
+                                // ignore
+                            }
                         }
                     }
                 }

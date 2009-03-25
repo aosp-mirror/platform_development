@@ -24,7 +24,9 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ResourceAttributes;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Path;
@@ -126,46 +128,54 @@ import javax.xml.xpath.XPathExpressionException;
  */
 class ExtractStringRefactoring extends Refactoring {
 
-    /** The compilation unit, a.k.a. the Java file model. */
-    private final ICompilationUnit mUnit;
+    /** The file model being manipulated. */
+    private final IFile mFile;
+    /** The start of the selection in {@link #mFile}. */
     private final int mSelectionStart;
+    /** The end of the selection in {@link #mFile}. */
     private final int mSelectionEnd;
+
+    /** The compilation unit, only defined if {@link #mFile} points to a usable Java source file. */
+    private ICompilationUnit mUnit;
     /** The actual string selected, after UTF characters have been escaped, good for display. */
     private String mTokenString;
-    /** Start position of the string token in the source buffer. */
-    private int mTokenStart;
-    /** End position of the string token in the source buffer. */
-    private int mTokenEnd;
+
+    /** The XML string ID selected by the user in the wizard. */
     private String mXmlStringId;
+    /** The path of the XML file that will define {@link #mXmlStringId}, selected by the user
+     *  in the wizard. */
     private String mTargetXmlFileWsPath;
+
+    /** A temporary cache of R.string IDs defined by a given xml file. The key is the
+     * project path of the file, the data is a set of known string Ids for that file. */
     private HashMap<String,HashSet<String>> mResIdCache;
+    /** An instance of XPath, created lazily on demand. */
     private XPath mXPath;
+    /** The list of changes computed by {@link #checkFinalConditions(IProgressMonitor)} and
+     *  used by {@link #createChange(IProgressMonitor)}. */
     private ArrayList<Change> mChanges;
 
     public ExtractStringRefactoring(Map<String, String> arguments)
             throws NullPointerException {
-        mUnit = (ICompilationUnit) JavaCore.create(arguments.get("CU"));    //$NON-NLS-1$
+
+        IPath path = Path.fromPortableString(arguments.get("file"));        //$NON-NLS-1$
+        mFile = (IFile) ResourcesPlugin.getWorkspace().getRoot().findMember(path);
         mSelectionStart = Integer.parseInt(arguments.get("sel-start"));     //$NON-NLS-1$
         mSelectionEnd   = Integer.parseInt(arguments.get("sel-end"));       //$NON-NLS-1$
-        mTokenStart     = Integer.parseInt(arguments.get("tok-start"));     //$NON-NLS-1$
-        mTokenEnd       = Integer.parseInt(arguments.get("tok-end"));       //$NON-NLS-1$
         mTokenString    = arguments.get("tok-esc");                         //$NON-NLS-1$
     }
     
     private Map<String, String> createArgumentMap() {
         HashMap<String, String> args = new HashMap<String, String>();
-        args.put("CU",        mUnit.getHandleIdentifier());                 //$NON-NLS-1$
+        args.put("file",      mFile.getFullPath().toPortableString());      //$NON-NLS-1$
         args.put("sel-start", Integer.toString(mSelectionStart));           //$NON-NLS-1$
         args.put("sel-end",   Integer.toString(mSelectionEnd));             //$NON-NLS-1$
-        args.put("tok-start", Integer.toString(mTokenStart));               //$NON-NLS-1$
-        args.put("tok-end",   Integer.toString(mTokenEnd));                 //$NON-NLS-1$
         args.put("tok-esc",   mTokenString);                                //$NON-NLS-1$
         return args;
     }
 
-    public ExtractStringRefactoring(ICompilationUnit unit, ITextSelection selection) {
-        mUnit = unit;
-
+    public ExtractStringRefactoring(IFile file, ITextSelection selection) {
+        mFile = file;
         mSelectionStart = selection.getOffset();
         mSelectionEnd = mSelectionStart + selection.getLength();
     }
@@ -207,75 +217,42 @@ class ExtractStringRefactoring extends Refactoring {
     public RefactoringStatus checkInitialConditions(IProgressMonitor monitor)
             throws CoreException, OperationCanceledException {
 
+        mUnit = null;
         mTokenString = null;
-        mTokenStart = -1;
-        mTokenEnd = -1;
 
         RefactoringStatus status = new RefactoringStatus();
         
         try {
-            monitor.beginTask("Checking preconditions...", 3);
-
-            if (!extraChecks(monitor, status)) {
+            monitor.beginTask("Checking preconditions...", 5);
+            
+            if (!checkSourceFile(mFile, status, monitor)) {
                 return status;
             }
-            
+
+            // Try to get a compilation unit from this file. If it fails, mUnit is null.
             try {
-                IBuffer buffer = mUnit.getBuffer();
+                mUnit = JavaCore.createCompilationUnitFrom(mFile);
 
-                IScanner scanner = ToolFactory.createScanner(
-                        false, //tokenizeComments
-                        false, //tokenizeWhiteSpace
-                        false, //assertMode
-                        false  //recordLineSeparator
-                        );
-                scanner.setSource(buffer.getCharacters());
-                monitor.worked(1);
-
-                for(int token = scanner.getNextToken();
-                        token != ITerminalSymbols.TokenNameEOF;
-                        token = scanner.getNextToken()) {
-                    if (scanner.getCurrentTokenStartPosition() <= mSelectionStart &&
-                            scanner.getCurrentTokenEndPosition() >= mSelectionEnd) {
-                        // found the token, but only keep of the right type
-                        if (token == ITerminalSymbols.TokenNameStringLiteral) {
-                            mTokenString = new String(scanner.getCurrentTokenSource());
-                            mTokenStart = scanner.getCurrentTokenStartPosition();
-                            mTokenEnd = scanner.getCurrentTokenEndPosition();
-                        }
-                        break;
-                    } else if (scanner.getCurrentTokenStartPosition() > mSelectionEnd) {
-                        // scanner is past the selection, abort.
-                        break;
-                    }
+                // Make sure the unit is not read-only, e.g. it's not a class file or inside a Jar
+                if (mUnit.isReadOnly()) {
+                    status.addFatalError("The file is read-only, please make it writeable first.");
+                    return status;
                 }
-            } catch (JavaModelException e1) {
-                // Error in mUnit.getBuffer. Ignore.
-            } catch (InvalidInputException e2) {
-                // Error in scanner.getNextToken. Ignore.
-            } finally {
-                monitor.worked(1);
-            }
-
-            if (mTokenString != null) {
-                // As a literal string, the token should have surrounding quotes. Remove them.
-                int len = mTokenString.length();
-                if (len > 0 &&
-                        mTokenString.charAt(0) == '"' &&
-                        mTokenString.charAt(len - 1) == '"') {
-                    mTokenString = mTokenString.substring(1, len - 1);
+                
+                // This is a Java file. Check if it contains the selection we want.
+                if (!findSelectionInJavaUnit(mUnit, status, monitor)) {
+                    return status;
                 }
-                // We need a non-empty string literal
-                if (mTokenString.length() == 0) {
-                    mTokenString = null;
-                }
+                
+            } catch (Exception e) {
+                // That was not a Java file. Ignore.
             }
             
-            if (mTokenString == null) {
-                status.addFatalError("Please select a Java string literal.");
+            if (mUnit == null) {
+                // Check this an XML file and get the selection and its context.
+                // TODO
+                status.addFatalError("Selection must be inside a Java source file.");
             }
-            
-            monitor.worked(1);
         } finally {
             monitor.done();
         }
@@ -284,30 +261,93 @@ class ExtractStringRefactoring extends Refactoring {
     }
 
     /**
+     * Try to find the selected Java element in the compilation unit.
+     * 
+     * If selection matches a string literal, capture it, otherwise add a fatal error
+     * to the status.
+     * 
+     * On success, advance the monitor by 3.
+     */
+    private boolean findSelectionInJavaUnit(ICompilationUnit unit,
+            RefactoringStatus status, IProgressMonitor monitor) {
+        try {
+            IBuffer buffer = unit.getBuffer();
+
+            IScanner scanner = ToolFactory.createScanner(
+                    false, //tokenizeComments
+                    false, //tokenizeWhiteSpace
+                    false, //assertMode
+                    false  //recordLineSeparator
+                    );
+            scanner.setSource(buffer.getCharacters());
+            monitor.worked(1);
+
+            for(int token = scanner.getNextToken();
+                    token != ITerminalSymbols.TokenNameEOF;
+                    token = scanner.getNextToken()) {
+                if (scanner.getCurrentTokenStartPosition() <= mSelectionStart &&
+                        scanner.getCurrentTokenEndPosition() >= mSelectionEnd) {
+                    // found the token, but only keep of the right type
+                    if (token == ITerminalSymbols.TokenNameStringLiteral) {
+                        mTokenString = new String(scanner.getCurrentTokenSource());
+                    }
+                    break;
+                } else if (scanner.getCurrentTokenStartPosition() > mSelectionEnd) {
+                    // scanner is past the selection, abort.
+                    break;
+                }
+            }
+        } catch (JavaModelException e1) {
+            // Error in unit.getBuffer. Ignore.
+        } catch (InvalidInputException e2) {
+            // Error in scanner.getNextToken. Ignore.
+        } finally {
+            monitor.worked(1);
+        }
+
+        if (mTokenString != null) {
+            // As a literal string, the token should have surrounding quotes. Remove them.
+            int len = mTokenString.length();
+            if (len > 0 &&
+                    mTokenString.charAt(0) == '"' &&
+                    mTokenString.charAt(len - 1) == '"') {
+                mTokenString = mTokenString.substring(1, len - 1);
+            }
+            // We need a non-empty string literal
+            if (mTokenString.length() == 0) {
+                mTokenString = null;
+            }
+        }
+        
+        if (mTokenString == null) {
+            status.addFatalError("Please select a Java string literal.");
+        }
+        
+        monitor.worked(1);
+        return status.isOK();
+    }
+
+    /**
      * Tests from org.eclipse.jdt.internal.corext.refactoringChecks#validateEdit()
      * Might not be useful.
      * 
+     * On success, advance the monitor by 2.
+     * 
      * @return False if caller should abort, true if caller should continue.
      */
-    private boolean extraChecks(IProgressMonitor monitor, RefactoringStatus status) {
-        // 
-        IResource res = mUnit.getPrimary().getResource();
-        if (res == null || res.getType() != IResource.FILE) {
-            status.addFatalError("Cannot access resource; only regular files can be used.");
-            return false;
-        }
-        monitor.worked(1);
-
+    private boolean checkSourceFile(IFile file,
+            RefactoringStatus status,
+            IProgressMonitor monitor) {
         // check whether the source file is in sync
-        if (!res.isSynchronized(IResource.DEPTH_ZERO)) {
+        if (!file.isSynchronized(IResource.DEPTH_ZERO)) {
             status.addFatalError("The file is not synchronized. Please save it first.");
             return false;
         }
         monitor.worked(1);
         
         // make sure we can write to it.
-        ResourceAttributes resAttr = res.getResourceAttributes();
-        if (mUnit.isReadOnly() || resAttr == null || resAttr.isReadOnly()) {
+        ResourceAttributes resAttr = file.getResourceAttributes();
+        if (resAttr == null || resAttr.isReadOnly()) {
             status.addFatalError("The file is read-only, please make it writeable first.");
             return false;
         }
