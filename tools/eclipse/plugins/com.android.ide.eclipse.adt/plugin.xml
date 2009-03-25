@@ -506,7 +506,7 @@
              delegateDescription="Removes the Android JAR from the Bootstrap Classpath"
              id="com.android.ide.eclipse.adt.launch.JUnitLaunchConfigDelegate.launchAndroidJunit"
              modes="run,debug"
-             name="Android JUnit"
+             name="Android JUnit Test"
              type="org.eclipse.jdt.junit.launchconfig">
        </launchDelegate>
    </extension>
@@ -516,7 +516,7 @@
             delegate="com.android.ide.eclipse.adt.launch.junit.AndroidJUnitLaunchConfigDelegate"
             id="com.android.ide.eclipse.adt.junit.launchConfigurationType"
             modes="run,debug"
-            name="Android Instrumentation"
+            name="Android JUnit Test"
             public="true"
             sourceLocatorId="org.eclipse.jdt.launching.sourceLocator.JavaSourceLookupDirector"
             sourcePathComputerId="org.eclipse.jdt.launching.sourceLookup.javaSourcePathComputer">
@@ -534,7 +534,7 @@
          point="org.eclipse.debug.ui.launchConfigurationTabGroups">
       <launchConfigurationTabGroup
             class="com.android.ide.eclipse.adt.launch.junit.AndroidJUnitTabGroup"
-            description="Android Instrumentation"
+            description="Android JUnit Test"
             id="com.android.ide.eclipse.adt.junit.AndroidJUnitLaunchConfigTabGroup"
             type="com.android.ide.eclipse.adt.junit.launchConfigurationType"/>
    </extension>
@@ -544,7 +544,7 @@
             class="com.android.ide.eclipse.adt.launch.junit.AndroidJUnitLaunchShortcut"
             icon="icons/android.png"
             id="com.android.ide.eclipse.adt.junit.launchShortcut"
-            label="Android Instrumentation"
+            label="Android JUnit Test"
             modes="run,debug">
           <contextualLaunch>
             <enablement>
