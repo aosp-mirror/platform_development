@@ -57,6 +57,7 @@ import org.eclipse.ltk.core.refactoring.CompositeChange;
 import org.eclipse.ltk.core.refactoring.Refactoring;
 import org.eclipse.ltk.core.refactoring.RefactoringChangeDescriptor;
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
+import org.eclipse.ltk.core.refactoring.TextEditChangeGroup;
 import org.eclipse.ltk.core.refactoring.TextFileChange;
 import org.eclipse.text.edits.InsertEdit;
 import org.eclipse.text.edits.MultiTextEdit;
@@ -413,28 +414,23 @@ class ExtractStringRefactoring extends Refactoring {
             
             
             // Prepare the change for the XML file.
-            
+
             if (!isResIdDuplicate(mTargetXmlFileWsPath, mXmlStringId)) {
                 // We actually change it only if the ID doesn't exist yet
-                TextFileChange xmlChange = new TextFileChange(getName(), (IFile) targetXml);
-                xmlChange.setTextType("xml");   //$NON-NLS-1$
-                TextEdit edit = createXmlEdit((IFile) targetXml, mXmlStringId, mTokenString);
-                if (edit == null) {
-                    status.addFatalError(String.format("Failed to modify file %1$s",
-                            mTargetXmlFileWsPath));
+                Change change = createXmlChange((IFile) targetXml, mXmlStringId, mTokenString,
+                        status, SubMonitor.convert(monitor, 1));
+                if (change != null) {
+                    mChanges.add(change);
                 }
-                xmlChange.setEdit(edit);
-                mChanges.add(xmlChange);
             }
-            monitor.worked(1);
-    
+
             if (status.hasError()) {
                 return status;
             }
             
             // Prepare the change to the Java compilation unit
-            List<Change> changes = computeJavaChanges(mUnit, mXmlStringId, mTokenString, status,
-                    SubMonitor.convert(monitor, 1));
+            List<Change> changes = computeJavaChanges(mUnit, mXmlStringId, mTokenString,
+                    status, SubMonitor.convert(monitor, 1));
             if (changes != null) {
                 mChanges.addAll(changes);
             }
@@ -448,72 +444,94 @@ class ExtractStringRefactoring extends Refactoring {
     }
 
     /**
-     * Internal helper that actually prepares the {@link TextEdit} that adds the given
+     * Internal helper that actually prepares the {@link Change} that adds the given
      * ID to the given XML File.
      * <p/>
      * This does not actually modify the file.
      *  
-     * @param xmlFile The file resource to modify.
-     * @param replacementStringId The new ID to insert.
-     * @param oldString The old string, which will be the value in the XML string.
+     * @param targetXml The file resource to modify.
+     * @param xmlStringId The new ID to insert.
+     * @param tokenString The old string, which will be the value in the XML string.
      * @return A new {@link TextEdit} that describes how to change the file.
      */
-    private TextEdit createXmlEdit(IFile xmlFile, String replacementStringId, String oldString) {
+    private Change createXmlChange(IFile targetXml,
+            String xmlStringId,
+            String tokenString,
+            RefactoringStatus status,
+            SubMonitor subMonitor) {
 
-        if (!xmlFile.exists()) {
+        TextFileChange xmlChange = new TextFileChange(getName(), targetXml);
+        xmlChange.setTextType("xml");   //$NON-NLS-1$
+        
+        TextEdit edit = null;
+        TextEditGroup editGroup = null;
+
+        if (!targetXml.exists()) {
             // The XML file does not exist. Simply create it.
             StringBuilder content = new StringBuilder();
             content.append("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"); //$NON-NLS-1$
             content.append("<resources>\n");                                //$NON-NLS-1$
             content.append("    <string name=\"").                          //$NON-NLS-1$
-                        append(replacementStringId).
+                        append(xmlStringId).
                         append("\">").                                      //$NON-NLS-1$
-                        append(oldString).
+                        append(tokenString).
                         append("</string>\n");                              //$NON-NLS-1$
             content.append("<resources>\n");                                //$NON-NLS-1$
 
-            return new InsertEdit(0, content.toString());
-        }
+            edit = new InsertEdit(0, content.toString());
+            editGroup = new TextEditGroup("Create ID in new XML file", edit);
+        } else {
+            // The file exist. Attempt to parse it as a valid XML document.
+            try {
+                int[] indices = new int[2];
+                if (findXmlOpeningTagPos(targetXml.getContents(), "resources", indices)) {  //$NON-NLS-1$
+                    // Indices[1] indicates whether we found > or />. It can only be 1 or 2.
+                    // Indices[0] is the position of the first character of either > or />.
+                    //
+                    // Note: we don't even try to adapt our formatting to the existing structure (we
+                    // could by capturing whatever whitespace is after the closing bracket and
+                    // applying it here before our tag, unless we were dealing with an empty
+                    // resource tag.)
+                    
+                    int offset = indices[0];
+                    int len = indices[1];
+                    StringBuilder content = new StringBuilder();
+                    content.append(">\n");                                      //$NON-NLS-1$
+                    content.append("    <string name=\"").                      //$NON-NLS-1$
+                                append(xmlStringId).
+                                append("\">").                                  //$NON-NLS-1$
+                                append(tokenString).
+                                append("</string>");                            //$NON-NLS-1$
+                    if (len == 2) {
+                        content.append("\n</resources>");                       //$NON-NLS-1$
+                    }
 
-        // The file exist. Attempt to parse it as a valid XML document.
-        try {
-            int[] indices = new int[2];
-            if (findXmlOpeningTagPos(xmlFile.getContents(), "resources", indices)) {  //$NON-NLS-1$
-                // Indices[1] indicates whether we found > or />. It can only be 1 or 2.
-                // Indices[0] is the position of the first character of either > or />.
-                //
-                // Note: we don't even try to adapt our formatting to the existing structure (we
-                // could by capturing whatever whitespace is after the closing bracket and
-                // applying it here before our tag, unless we were dealing with an empty
-                // resource tag.)
-                
-                int offset = indices[0];
-                int len = indices[1];
-                StringBuilder content = new StringBuilder();
-                content.append(">\n");                                      //$NON-NLS-1$
-                content.append("    <string name=\"").                      //$NON-NLS-1$
-                            append(replacementStringId).
-                            append("\">").                                  //$NON-NLS-1$
-                            append(oldString).
-                            append("</string>");                            //$NON-NLS-1$
-                if (len == 2) {
-                    content.append("\n</resources>");                       //$NON-NLS-1$
+                    edit = new ReplaceEdit(offset, len, content.toString());
+                    editGroup = new TextEditGroup("Insert ID in XML file", edit);
                 }
-
-                return new ReplaceEdit(offset, len, content.toString());
+            } catch (CoreException e) {
+                // Failed to read file. Ignore. Will return null below.
             }
-            
-        } catch (CoreException e) {
-            // Failed to read file. Ignore. Will return null below.
         }
-        
-        return null;
+
+        if (edit == null) {
+            status.addFatalError(String.format("Failed to modify file %1$s",
+                    mTargetXmlFileWsPath));
+            return null;
+        }
+
+        xmlChange.setEdit(edit);
+        // The TextEditChangeGroup let the user toggle this change on and off later.
+        xmlChange.addTextEditChangeGroup(new TextEditChangeGroup(xmlChange, editGroup));
+
+        subMonitor.worked(1);
+        return xmlChange;
     }
 
     /**
      * Parse an XML input stream, looking for an opening tag.
      * <p/>
-     * If found, returns the character offet in the buffer of the closing bracket of that
+     * If found, returns the character offest in the buffer of the closing bracket of that
      * tag, e.g. the position of > in "<resources>". The first character is at offset 0.
      * <p/>
      * The implementation here relies on a simple character-based parser. No DOM nor SAX
@@ -622,6 +640,9 @@ class ExtractStringRefactoring extends Refactoring {
         return false;
     }
 
+    /**
+     * Computes the changes to be made to Java file(s) and returns a list of {@link Change}.
+     */
     private List<Change> computeJavaChanges(ICompilationUnit unit,
             String xmlStringId,
             String tokenString,
@@ -700,29 +721,31 @@ class ExtractStringRefactoring extends Refactoring {
 
         // ImportRewrite will allow us to add the new type to the imports and will resolve
         // what the Java source must reference, e.g. the FQCN or just the simple name.
-        ImportRewrite ir = ImportRewrite.create((CompilationUnit) node, true);
+        ImportRewrite importRewrite = ImportRewrite.create((CompilationUnit) node, true);
         String Rqualifier = packageName + ".R"; //$NON-NLS-1$
-        Rqualifier = ir.addImport(Rqualifier);
+        Rqualifier = importRewrite.addImport(Rqualifier);
 
         // Rewrite the AST itself via an ASTVisitor
         AST ast = node.getAST();
-        ASTRewrite ar = ASTRewrite.create(ast);
-        ReplaceStringsVisitor visitor = new ReplaceStringsVisitor(ast, ar,
+        ASTRewrite astRewrite = ASTRewrite.create(ast);
+        ArrayList<TextEditGroup> astEditGroups = new ArrayList<TextEditGroup>();
+        ReplaceStringsVisitor visitor = new ReplaceStringsVisitor(
+                ast, astRewrite, astEditGroups,
                 tokenString, Rqualifier, xmlStringId);
         node.accept(visitor);
-        
+
         // Finally prepare the change set
         try {
             MultiTextEdit edit = new MultiTextEdit();
 
             // Create the edit to change the imports, only if anything changed
-            TextEdit subEdit = ir.rewriteImports(subMonitor.newChild(1));
+            TextEdit subEdit = importRewrite.rewriteImports(subMonitor.newChild(1));
             if (subEdit.hasChildren()) {
                 edit.addChild(subEdit);
             }
 
             // Create the edit to change the Java source, only if anything changed
-            subEdit = ar.rewriteAST();
+            subEdit = astRewrite.rewriteAST();
             if (subEdit.hasChildren()) {
                 edit.addChild(subEdit);
             }
@@ -730,6 +753,13 @@ class ExtractStringRefactoring extends Refactoring {
             // Only create a change set if any edit was collected
             if (edit.hasChildren()) {
                 change.setEdit(edit);
+                
+                // Create TextEditChangeGroups which let the user turn changes on or off
+                // individually. This must be done after the change.setEdit() call above.
+                for (TextEditGroup editGroup : astEditGroups) {
+                    change.addTextEditChangeGroup(new TextEditChangeGroup(change, editGroup));
+                }
+                
                 changes.add(change);
             }
             
@@ -740,7 +770,9 @@ class ExtractStringRefactoring extends Refactoring {
             if (changes.size() > 0) {
                 return changes;
             }
-            
+
+            subMonitor.worked(1);
+
         } catch (CoreException e) {
             // ImportRewrite.rewriteImports failed.
             status.addFatalError(e.getMessage());
@@ -755,14 +787,17 @@ class ExtractStringRefactoring extends Refactoring {
         private final String mOldString;
         private final String mRQualifier;
         private final String mXmlId;
+        private final ArrayList<TextEditGroup> mEditGroups;
 
         public ReplaceStringsVisitor(AST ast,
                 ASTRewrite astRewrite,
+                ArrayList<TextEditGroup> editGroups,
                 String oldString,
                 String rQualifier,
                 String xmlId) {
             mAst = ast;
             mRewriter = astRewrite;
+            mEditGroups = editGroups;
             mOldString = oldString;
             mRQualifier = rQualifier;
             mXmlId = xmlId;
@@ -776,7 +811,8 @@ class ExtractStringRefactoring extends Refactoring {
                 SimpleName idName = mAst.newSimpleName(mXmlId);
                 QualifiedName newNode = mAst.newQualifiedName(qualifierName, idName);
                 
-                TextEditGroup editGroup = new TextEditGroup(getName());
+                TextEditGroup editGroup = new TextEditGroup("Replace string by ID");                
+                mEditGroups.add(editGroup);
                 mRewriter.replace(node, newNode, editGroup);
             }
             return super.visit(node);
