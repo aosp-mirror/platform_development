@@ -32,8 +32,30 @@ public class AndroidLaunchConfiguration {
      */
     public int mLaunchAction = LaunchConfigDelegate.DEFAULT_LAUNCH_ACTION;
     
-    public static final boolean AUTO_TARGET_MODE = true;
+    public enum TargetMode {
+        AUTO(true), MANUAL(false);
+        
+        private boolean mValue;
 
+        TargetMode(boolean value) {
+            mValue = value;
+        }
+        
+        public boolean getValue() {
+            return mValue;
+        }
+        
+        public static TargetMode getMode(boolean value) {
+            for (TargetMode mode : values()) {
+                if (mode.mValue == value) {
+                    return mode;
+                }
+            }
+            
+            return null;
+        }
+    }
+    
     /**
      * Target selection mode.
      * <ul>
@@ -41,7 +63,7 @@ public class AndroidLaunchConfiguration {
      * <li><code>false</code>: manual mode</li>
      * </ul>
      */
-    public boolean mTargetMode = LaunchConfigDelegate.DEFAULT_TARGET_MODE;
+    public TargetMode mTargetMode = LaunchConfigDelegate.DEFAULT_TARGET_MODE;
 
     /**
      * Indicates whether the emulator should be called with -wipe-data
@@ -81,8 +103,9 @@ public class AndroidLaunchConfiguration {
         }
 
         try {
-            mTargetMode = config.getAttribute(LaunchConfigDelegate.ATTR_TARGET_MODE,
-                    mTargetMode);
+            boolean value = config.getAttribute(LaunchConfigDelegate.ATTR_TARGET_MODE,
+                    mTargetMode.getValue());
+            mTargetMode = TargetMode.getMode(value);
         } catch (CoreException e) {
             // nothing to be done here, we'll use the default value
         }

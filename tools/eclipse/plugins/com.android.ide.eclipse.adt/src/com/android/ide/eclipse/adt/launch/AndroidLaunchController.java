@@ -29,11 +29,13 @@ import com.android.ddmlib.MultiLineReceiver;
 import com.android.ddmlib.SyncService;
 import com.android.ddmlib.SyncService.SyncResult;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.launch.AndroidLaunchConfiguration.TargetMode;
 import com.android.ide.eclipse.adt.launch.DelayedLaunchInfo.InstallRetryMode;
 import com.android.ide.eclipse.adt.launch.DeviceChooserDialog.DeviceChooserResponse;
 import com.android.ide.eclipse.adt.project.ProjectHelper;
 import com.android.ide.eclipse.adt.sdk.Sdk;
 import com.android.ide.eclipse.common.project.AndroidManifestParser;
+import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.avd.AvdManager;
@@ -236,7 +238,7 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
 
                 // set default target mode
                 wc.setAttribute(LaunchConfigDelegate.ATTR_TARGET_MODE,
-                        LaunchConfigDelegate.DEFAULT_TARGET_MODE);
+                        LaunchConfigDelegate.DEFAULT_TARGET_MODE.getValue());
 
                 // default AVD: None
                 wc.setAttribute(LaunchConfigDelegate.ATTR_AVD_NAME, (String) null);
@@ -332,6 +334,16 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
         Sdk currentSdk = Sdk.getCurrent();
         AvdManager avdManager = currentSdk.getAvdManager();
         
+        // reload the AVDs to make sure we are up to date
+        try {
+            avdManager.reloadAvds();
+        } catch (AndroidLocationException e1) {
+            // this happens if the AVD Manager failed to find the folder in which the AVDs are
+            // stored. This is unlikely to happen, but if it does, we should force to go manual
+            // to allow using physical devices.
+            config.mTargetMode = TargetMode.MANUAL;
+        }
+
         // get the project target
         final IAndroidTarget projectTarget = currentSdk.getTarget(project);
         
@@ -356,7 +368,7 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
          *           If == 1, launch the application on this AVD/device.
          */
         
-        if (config.mTargetMode == AndroidLaunchConfiguration.AUTO_TARGET_MODE) {
+        if (config.mTargetMode == TargetMode.AUTO) {
             // if we are in automatic target mode, we need to find the current devices
             IDevice[] devices = AndroidDebugBridge.getBridge().getDevices();
             
