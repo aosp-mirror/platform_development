@@ -89,16 +89,6 @@ public class CompassActivity extends Activity implements Renderer, SensorEventLi
         mSensorManager.unregisterListener(this);
     }
 
-    public int[] getConfigSpec() {
-        // We want a depth buffer, don't care about the
-        // details of the color buffer.
-        int[] configSpec = {
-                EGL10.EGL_DEPTH_SIZE,   16,
-                EGL10.EGL_NONE
-        };
-        return configSpec;
-    }
-
     public void onDrawFrame(GL10 gl) {
         /*
          * Usually, the first thing one might want to do is to clear
