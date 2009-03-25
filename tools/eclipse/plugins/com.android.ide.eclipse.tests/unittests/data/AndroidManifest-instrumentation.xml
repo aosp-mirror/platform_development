@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.android.AndroidProject.tests">
+
+    <!--
+    This declares that this app uses the instrumentation test runner targeting
+    the package of com.android.samples.  To run the tests use the command:
+    "adb shell am instrument -w com.android.samples.tests/android.test.InstrumentationTestRunner"
+    -->
+    <instrumentation android:name="android.test.InstrumentationTestRunner"
+                     android:targetPackage="com.android.AndroidProject"
+                     android:label="Sample test for deployment."/>
+
+    <application>
+        <uses-library android:name="android.test.runner" />
+    </application>
+
+</manifest>

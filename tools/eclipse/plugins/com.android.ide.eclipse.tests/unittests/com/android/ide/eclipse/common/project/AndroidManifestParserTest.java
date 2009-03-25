@@ -16,17 +16,20 @@
 
 package com.android.ide.eclipse.common.project;
 
-import junit.framework.TestCase;
+import com.android.ide.eclipse.tests.AdtTestData;
 
-import com.android.ide.eclipse.mock.FileMock;
+import junit.framework.TestCase;
 
 /**
  * Tests for {@link AndroidManifestParser}
  */
 public class AndroidManifestParserTest extends TestCase {
-    private AndroidManifestParser mManifest;
+    private AndroidManifestParser mManifestTestApp;
+    private AndroidManifestParser mManifestInstrumentation;
     
-    private static final String PACKAGE_NAME = "com.android.testapp"; //$NON-NLS-1$
+    private static final String INSTRUMENTATION_XML = "AndroidManifest-instrumentation.xml";  //$NON-NLS-1$
+    private static final String TESTAPP_XML = "AndroidManifest-testapp.xml";  //$NON-NLS-1$
+    private static final String PACKAGE_NAME =  "com.android.testapp"; //$NON-NLS-1$
     private static final String ACTIVITY_NAME = "com.android.testapp.MainActivity"; //$NON-NLS-1$
     private static final String LIBRARY_NAME = "android.test.runner"; //$NON-NLS-1$
     private static final String INSTRUMENTATION_NAME = "android.test.InstrumentationTestRunner"; //$NON-NLS-1$
@@ -35,60 +38,46 @@ public class AndroidManifestParserTest extends TestCase {
     protected void setUp() throws Exception {
         super.setUp();
         
-        // create the test data
-        StringBuilder sb = new StringBuilder();
-        sb.append("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");  //$NON-NLS-1$
-        sb.append("<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n");  //$NON-NLS-1$
-        sb.append("          package=\""); //$NON-NLS-1$
-        sb.append(PACKAGE_NAME);
-        sb.append("\">\n");  //$NON-NLS-1$
-        sb.append("  <application android:icon=\"@drawable/icon\">\n");  //$NON-NLS-1$
-        sb.append("    <activity android:name=\"");  //$NON-NLS-1$
-        sb.append(ACTIVITY_NAME);
-        sb.append("\" android:label=\"@string/app_name\">\n");  //$NON-NLS-1$
-        sb.append("      <intent-filter>\n");  //$NON-NLS-1$
-        sb.append("        <action android:name=\"android.intent.action.MAIN\" />\n");  //$NON-NLS-1$
-        sb.append("          <category android:name=\"android.intent.category.LAUNCHER\" />\"\n");  //$NON-NLS-1$
-        sb.append("          <category android:name=\"android.intent.category.DEFAULT\" />\n");  //$NON-NLS-1$
-        sb.append("      </intent-filter>\n");  //$NON-NLS-1$
-        sb.append("    </activity>\n");  //$NON-NLS-1$
-        sb.append("    <uses-library android:name=\""); //$NON-NLS-1$
-        sb.append(LIBRARY_NAME);
-        sb.append("\" />\n");  //$NON-NLS-1$
-        sb.append("  </application>"); //$NON-NLS-1$
-        sb.append("  <instrumentation android:name=\""); //$NON-NLS-1$
-        sb.append(INSTRUMENTATION_NAME);
-        sb.append("\"\n");
-        sb.append("                   android:targetPackage=\"com.example.android.apis\"\n");
-        sb.append("                   android:label=\"Tests for Api Demos.\"/>\n");
-        sb.append("</manifest>\n");  //$NON-NLS-1$
-
-        FileMock mockFile = new FileMock("AndroidManifest.xml", sb.toString().getBytes());
+        String testFilePath = AdtTestData.getInstance().getTestFilePath(
+                TESTAPP_XML);
+        mManifestTestApp = AndroidManifestParser.parseForData(testFilePath);
+        assertNotNull(mManifestTestApp);
         
-        mManifest = AndroidManifestParser.parseForData(mockFile);
-        assertNotNull(mManifest);
+        testFilePath = AdtTestData.getInstance().getTestFilePath(
+                INSTRUMENTATION_XML);
+        mManifestInstrumentation = AndroidManifestParser.parseForData(testFilePath);
+        assertNotNull(mManifestInstrumentation);
     }
 
+    public void testGetInstrumentationInformation() {
+        assertEquals(1, mManifestInstrumentation.getInstrumentations().length);
+        assertEquals(INSTRUMENTATION_NAME, mManifestTestApp.getInstrumentations()[0]); 
+    }
+    
     public void testGetPackage() {
-        assertEquals("com.android.testapp", mManifest.getPackage());
+        assertEquals(PACKAGE_NAME, mManifestTestApp.getPackage());
     }
 
     public void testGetActivities() {
-        assertEquals(1, mManifest.getActivities().length);
-        assertEquals(ACTIVITY_NAME, mManifest.getActivities()[0]); 
+        assertEquals(1, mManifestTestApp.getActivities().length);
+        assertEquals(ACTIVITY_NAME, mManifestTestApp.getActivities()[0]); 
     }
 
     public void testGetLauncherActivity() {
-        assertEquals(ACTIVITY_NAME, mManifest.getLauncherActivity()); 
+        assertEquals(ACTIVITY_NAME, mManifestTestApp.getLauncherActivity()); 
     }
     
     public void testGetUsesLibraries() {
-        assertEquals(1, mManifest.getUsesLibraries().length);
-        assertEquals(LIBRARY_NAME, mManifest.getUsesLibraries()[0]); 
+        assertEquals(1, mManifestTestApp.getUsesLibraries().length);
+        assertEquals(LIBRARY_NAME, mManifestTestApp.getUsesLibraries()[0]); 
     }
     
     public void testGetInstrumentations() {
-        assertEquals(1, mManifest.getInstrumentations().length);
-        assertEquals(INSTRUMENTATION_NAME, mManifest.getInstrumentations()[0]); 
+        assertEquals(1, mManifestTestApp.getInstrumentations().length);
+        assertEquals(INSTRUMENTATION_NAME, mManifestTestApp.getInstrumentations()[0]); 
+    }
+    
+    public void testGetPackageName() {
+        assertEquals(PACKAGE_NAME, mManifestTestApp.getPackage());
     }
 }
