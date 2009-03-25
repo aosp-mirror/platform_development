@@ -535,7 +535,7 @@
          point="org.eclipse.debug.ui.launchConfigurationTypeImages">
       <launchConfigurationTypeImage
             configTypeID="com.android.ide.eclipse.adt.junit.launchConfigurationType"
-            icon="icons/android.png"
+            icon="icons/androidjunit.png"
             id="com.android.ide.eclipse.adt.junit.launchConfigurationTypeImage">
       </launchConfigurationTypeImage>
    </extension>
