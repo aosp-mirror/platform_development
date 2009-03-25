@@ -16,16 +16,17 @@
 
 package com.example.android.apis.app;
 
+import com.example.android.apis.R;
+
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.speech.RecognizerIntent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
-
-import com.example.android.apis.R;
 
 import java.util.ArrayList;
 
@@ -71,9 +72,10 @@ public class VoiceRecognition extends Activity implements OnClickListener {
      */
     private void startVoiceRecognitionActivity() {
         //TODO Get these values from constants
-        Intent intent = new Intent("android.speech.action.RECOGNIZE_SPEECH");
-        intent.putExtra("language_model", "free_form");
-        intent.putExtra("prompt", "Speech recognition demo");
+        Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+        intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Speech recognition demo");
         startActivityForResult(intent, VOICE_RECOGNITION_REQUEST_CODE);
     }
 
@@ -83,8 +85,8 @@ public class VoiceRecognition extends Activity implements OnClickListener {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == VOICE_RECOGNITION_REQUEST_CODE && resultCode == RESULT_OK) {
-            //TODO get the value from a constant
-            ArrayList<String>matches = data.getStringArrayListExtra("results");
+            ArrayList<String> matches = data.getStringArrayListExtra(
+                    RecognizerIntent.EXTRA_RESULTS);
             mList.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1,
                     matches));
         }
