@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.adt.refactorings.extractstring;
 
+import org.eclipse.core.resources.IProject;
 import org.eclipse.ltk.ui.refactoring.RefactoringWizard;
 
 /**
@@ -26,17 +27,24 @@ import org.eclipse.ltk.ui.refactoring.RefactoringWizard;
  */
 class ExtractStringWizard extends RefactoringWizard {
 
+    private final IProject mProject;
+
     /**
      * Create a wizard for ExtractString based on a simple dialog with one page.
+     * 
+     * @param ref The instance of {@link ExtractStringRefactoring} to associate to the wizard.
+     * @param project The project where the wizard was invoked from (e.g. where the user selection
+     *                happened, so that we can retrieve project resources.)
      */
-    public ExtractStringWizard(ExtractStringRefactoring ref, String title) {
+    public ExtractStringWizard(ExtractStringRefactoring ref, IProject project) {
         super(ref, DIALOG_BASED_USER_INTERFACE | PREVIEW_EXPAND_FIRST_NODE);
-        setDefaultPageTitle(title);
+        mProject = project;
+        setDefaultPageTitle(ref.getName());
     }
 
     @Override
     protected void addUserInputPages() {
-        addPage(new ExtractStringInputPage());
+        addPage(new ExtractStringInputPage(mProject));
     }
 
 }
