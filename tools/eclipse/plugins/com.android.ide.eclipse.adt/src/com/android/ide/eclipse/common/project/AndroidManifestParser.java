@@ -255,12 +255,8 @@ public class AndroidManifestParser {
                                 } catch (NumberFormatException e) {
                                     handleError(e, -1 /* lineNumber */);
                                 }
-                            }  else if (NODE_INSTRUMENTATION.equals(localName)) {
-                                value = getAttributeValue(attributes, ATTRIBUTE_NAME,
-                                        true /* hasNamespace */);
-                                if (value != null) {
-                                    mInstrumentations.add(value);
-                                }
+                            } else if (NODE_INSTRUMENTATION.equals(localName)) {
+                                processInstrumentationNode(attributes);
                             }    
                             break;
                         case LEVEL_ACTIVITY:
@@ -449,6 +445,25 @@ public class AndroidManifestParser {
                 addProcessName(processName);
             }
         }
+        
+        /**
+         * Processes the instrumentation nodes.
+         * @param attributes the attributes for the activity node.
+         * node is representing
+         */
+        private void processInstrumentationNode(Attributes attributes) {
+            // lets get the class name, and check it if required.
+            String instrumentationName = getAttributeValue(attributes, ATTRIBUTE_NAME,
+                    true /* hasNamespace */);
+            if (instrumentationName != null) {
+                String instrClassName = combinePackageAndClassName(mPackage, instrumentationName);
+                mInstrumentations.add(instrClassName);
+                if (mMarkErrors) {
+                    checkClass(instrClassName, AndroidConstants.CLASS_INSTRUMENTATION,
+                            true /* testVisibility */);
+                }
+            }
+        }
 
         /**
          * Checks that a class is valid and can be used in the Android Manifest.
@@ -484,8 +499,7 @@ public class AndroidManifestParser {
                     } catch (CoreException e) {
                     }
                 }
-            }
-            
+            }           
         }
 
         /**
@@ -583,7 +597,7 @@ public class AndroidManifestParser {
 
         return null;
     }
-    
+
     /**
      * Parses the Android Manifest, and returns an object containing the result of the parsing.
      * <p/>
