@@ -16,29 +16,74 @@
 
 package com.android.ide.eclipse.adt.refactorings.extractstring;
 
+
+import com.android.ide.eclipse.common.AndroidConstants;
+import com.android.ide.eclipse.editors.resources.configurations.FolderConfiguration;
+import com.android.ide.eclipse.editors.resources.manager.ResourceFolderType;
+import com.android.ide.eclipse.editors.wizards.ConfigurationSelector;
+import com.android.sdklib.SdkConstants;
+
+import org.eclipse.core.resources.IFolder;
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.wizard.IWizardPage;
+import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.ltk.ui.refactoring.UserInputWizardPage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
+
+import java.util.HashMap;
+import java.util.TreeSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @see ExtractStringRefactoring
  */
 class ExtractStringInputPage extends UserInputWizardPage implements IWizardPage {
 
-    public ExtractStringInputPage() {
-        super("ExtractStringInputPage");  //$NON-NLS-1$
-    }
+    /** Last res file path used, shared across the session instances but specific to the
+     *  current project. The default for unknown projects is {@link #DEFAULT_RES_FILE_PATH}. */
+    private static HashMap<String, String> sLastResFilePath = new HashMap<String, String>();
 
+    /** The project where the user selection happened. */
+    private final IProject mProject;
+
+    /** Field displaying the user-selected string to be replaced. */
     private Label mStringLabel;
+    /** Test field where the user enters the new ID to be generated or replaced with. */ 
     private Text mNewIdTextField;
-    private Label mFileLabel;
+    /** The configuration selector, to select the resource path of the XML file. */
+    private ConfigurationSelector mConfigSelector;
+    /** The combo to display the existing XML files or enter a new one. */
+    private Combo mResFileCombo;
+
+    /** Regex pattern to read a valid res XML file path. It checks that the are 2 folders and
+     *  a leaf file name ending with .xml */
+    private static final Pattern RES_XML_FILE_REGEX = Pattern.compile(
+                                     "/res/[a-z][a-zA-Z0-9_-]+/[^.]+\\.xml");  //$NON-NLS-1$
+    /** Absolute destination folder root, e.g. "/res/" */
+    private static final String RES_FOLDER_ABS =
+        AndroidConstants.WS_RESOURCES + AndroidConstants.WS_SEP;
+    /** Relative destination folder root, e.g. "res/" */
+    private static final String RES_FOLDER_REL =
+        SdkConstants.FD_RESOURCES + AndroidConstants.WS_SEP;
+
+    private static final String DEFAULT_RES_FILE_PATH = "/res/values/strings.xml";
+    
+    public ExtractStringInputPage(IProject project) {
+        super("ExtractStringInputPage");  //$NON-NLS-1$
+        mProject = project;
+    }
 
     /**
      * Create the UI for the refactoring wizard.
@@ -48,34 +93,57 @@ class ExtractStringInputPage extends UserInputWizardPage implements IWizardPage 
      */
     public void createControl(Composite parent) {
         
-        final ExtractStringRefactoring ref = getOurRefactoring();
-        
         Composite content = new Composite(parent, SWT.NONE);
 
         GridLayout layout = new GridLayout();
-        layout.numColumns = 2;
+        layout.numColumns = 1;
         content.setLayout(layout);
-
-        // line 1: String found in selection
         
-        Label label = new Label(content, SWT.NONE);
+        createStringReplacementGroup(content);
+        createResFileGroup(content);
+
+        validatePage();
+        setControl(content);
+    }
+
+    /**
+     * Creates the top group with the field to replace which string and by what
+     * and by which options.
+     * 
+     * @param content A composite with a 1-column grid layout
+     */
+    private void createStringReplacementGroup(Composite content) {
+
+        final ExtractStringRefactoring ref = getOurRefactoring();
+        
+        Group group = new Group(content, SWT.NONE);
+        group.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        group.setText("String Replacement");
+
+        GridLayout layout = new GridLayout();
+        layout.numColumns = 2;
+        group.setLayout(layout);
+
+        // line: String found in selection
+        
+        Label label = new Label(group, SWT.NONE);
         label.setText("String:");
 
         String selectedString = ref.getTokenString();
         
-        mStringLabel = new Label(content, SWT.NONE);
+        mStringLabel = new Label(group, SWT.NONE);
         mStringLabel.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         mStringLabel.setText(selectedString != null ? selectedString : "");
         
         // TODO provide an option to replace all occurences of this string instead of
         // just the one.
 
-        // line 2 : Textfield for new ID
+        // line : Textfield for new ID
         
-        label = new Label(content, SWT.NONE);
+        label = new Label(group, SWT.NONE);
         label.setText("Replace by R.string.");
 
-        mNewIdTextField = new Text(content, SWT.SINGLE | SWT.LEFT | SWT.BORDER);
+        mNewIdTextField = new Text(group, SWT.SINGLE | SWT.LEFT | SWT.BORDER);
         mNewIdTextField.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         mNewIdTextField.setText(guessId(selectedString));
 
@@ -83,37 +151,65 @@ class ExtractStringInputPage extends UserInputWizardPage implements IWizardPage 
 
         mNewIdTextField.addModifyListener(new ModifyListener() {
             public void modifyText(ModifyEvent e) {
-                if (validatePage(ref)) {
+                if (validatePage()) {
                     ref.setReplacementStringId(mNewIdTextField.getText().trim());
                 }
             }
         });
-
-        // line 3: selection of the output file
-        // TODO add a file field/chooser combo to let the user select the file to edit.
-
-        label = new Label(content, SWT.NONE);
-        label.setText("Resource file:");
-
-        mFileLabel = new Label(content, SWT.NONE);
-        mFileLabel.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-        mFileLabel.setText("/res/values/strings.xml");
-        ref.setTargetFile(mFileLabel.getText());
-
-        // line 4: selection of the res config
-        // TODO add the Configuration Selector to decide with strings.xml to change
-
-        label = new Label(content, SWT.NONE);
-        label.setText("Configuration:");
-
-        label = new Label(content, SWT.NONE);
-        label.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-        label.setText("default");
-        
-        validatePage(ref);
-        setControl(content);
     }
 
+    /**
+     * Creates the lower group with the fields to choose the resource confirmation and
+     * the target XML file.
+     * 
+     * @param content A composite with a 1-column grid layout
+     */
+    private void createResFileGroup(Composite content) {
+
+        Group group = new Group(content, SWT.NONE);
+        group.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        group.setText("XML resource to edit");
+
+        GridLayout layout = new GridLayout();
+        layout.numColumns = 2;
+        group.setLayout(layout);
+        
+        // line: selection of the res config
+
+        Label label;
+        label = new Label(group, SWT.NONE);
+        label.setText("Configuration:");
+
+        mConfigSelector = new ConfigurationSelector(group);
+        GridData gd = new GridData(2, GridData.GRAB_HORIZONTAL | GridData.GRAB_VERTICAL);
+        gd.widthHint = ConfigurationSelector.WIDTH_HINT;
+        gd.heightHint = ConfigurationSelector.HEIGHT_HINT;
+        mConfigSelector.setLayoutData(gd);
+        OnConfigSelectorUpdated onConfigSelectorUpdated = new OnConfigSelectorUpdated();
+        mConfigSelector.setOnChangeListener(onConfigSelectorUpdated);
+        
+        // line: selection of the output file
+
+        label = new Label(group, SWT.NONE);
+        label.setText("Resource file:");
+
+        mResFileCombo = new Combo(group, SWT.DROP_DOWN);
+        mResFileCombo.select(0);
+        mResFileCombo.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        mResFileCombo.addModifyListener(onConfigSelectorUpdated);
+
+        // set output file name to the last one used
+        
+        String projPath = mProject.getFullPath().toPortableString();
+        String filePath = sLastResFilePath.get(projPath);
+        
+        mResFileCombo.setText(filePath != null ? filePath : DEFAULT_RES_FILE_PATH);
+        onConfigSelectorUpdated.run();
+    }
+
+    /**
+     * Utility method to guess a suitable new XML ID based on the selected string.
+     */
     private String guessId(String text) {
         // make lower case
         text = text.toLowerCase();
@@ -128,16 +224,25 @@ class ExtractStringInputPage extends UserInputWizardPage implements IWizardPage 
         return text;
     }
 
+    /**
+     * Returns the {@link ExtractStringRefactoring} instance used by this wizard page.
+     */
     private ExtractStringRefactoring getOurRefactoring() {
         return (ExtractStringRefactoring) getRefactoring();
     }
 
-    private boolean validatePage(ExtractStringRefactoring ref) {
-        String text = mNewIdTextField.getText().trim();
+    /**
+     * Validates fields of the wizard input page. Displays errors as appropriate and
+     * enable the "Next" button (or not) by calling {@link #setPageComplete(boolean)}.
+     * 
+     * @return True if the page has been positively validated. It may still have warnings.
+     */
+    private boolean validatePage() {
         boolean success = true;
 
         // Analyze fatal errors.
         
+        String text = mNewIdTextField.getText().trim();
         if (text == null || text.length() < 1) {
             setErrorMessage("Please provide a resource ID to replace with.");
             success = false;
@@ -157,21 +262,216 @@ class ExtractStringInputPage extends UserInputWizardPage implements IWizardPage 
             }
         }
 
+        String resFile = mResFileCombo.getText();
+        if (success) {           
+            if (resFile == null || resFile.length() == 0) {
+                setErrorMessage("A resource file name is required.");
+                success = false;
+            } else if (!RES_XML_FILE_REGEX.matcher(resFile).matches()) {
+                setErrorMessage("The XML file name is not valid.");
+                success = false;
+            }
+        }
+        
         // Analyze info & warnings.
         
         if (success) {
-            if (ref.isResIdDuplicate(mFileLabel.getText(), text)) {
-                setErrorMessage(null);
+            setErrorMessage(null);
+
+            ExtractStringRefactoring ref = getOurRefactoring();
+
+            ref.setTargetFile(resFile);
+            sLastResFilePath.put(mProject.getFullPath().toPortableString(), resFile);
+
+            if (ref.isResIdDuplicate(resFile, text)) {
                 setMessage(
-                    String.format("Warning: There's already a string item called '%1$s' in %2$s.",
-                        text, mFileLabel.getText()));
+                        String.format("There's already a string item called '%1$s' in %2$s.",
+                                      text, resFile),
+                        WizardPage.WARNING);
+            } else if (mProject.findMember(resFile) == null) {
+                setMessage(
+                        String.format("File %2$s does not exist and will be created.",
+                                      text, resFile),
+                        WizardPage.INFORMATION);
             } else {
                 setMessage(null);
-                setErrorMessage(null);
             }
         }
 
         setPageComplete(success);
         return success;
     }
+
+    public class OnConfigSelectorUpdated implements Runnable, ModifyListener {
+        
+        /** Regex pattern to parse a valid res path: it reads (/res/folder-name/)+(filename). */
+        private final Pattern mPathRegex = Pattern.compile(
+            "(/res/[a-z][a-zA-Z0-9_-]+/)(.+)");  //$NON-NLS-1$
+
+        /** Temporary config object used to retrieve the Config Selector value. */
+        private FolderConfiguration mTempConfig = new FolderConfiguration();
+
+        private HashMap<String, TreeSet<String>> mFolderCache =
+            new HashMap<String, TreeSet<String>>();
+        private String mLastFolderUsedInCombo = null;
+        private boolean mInternalConfigChange;
+        private boolean mInternalFileComboChange;
+
+        /**
+         * Callback invoked when the {@link ConfigurationSelector} has been changed.
+         * <p/>
+         * The callback does the following:
+         * <ul>
+         * <li> Examine the current file name to retrieve the XML filename, if any.
+         * <li> Recompute the path based on the configuration selector (e.g. /res/values-fr/).
+         * <li> Examine the path to retrieve all the files in it. Keep those in a local cache.
+         * <li> If the XML filename from step 1 is not in the file list, it's a custom file name.
+         *      Insert it and sort it.
+         * <li> Re-populate the file combo with all the choices.
+         * <li> Select the original XML file. 
+         */
+        public void run() {
+            if (mInternalConfigChange) {
+                return;
+            }
+            
+            // get current leafname, if any
+            String leafName = "";
+            String currPath = mResFileCombo.getText();
+            Matcher m = mPathRegex.matcher(currPath);
+            if (m.matches()) {
+                // Note: groups 1 and 2 cannot be null.
+                leafName = m.group(2);
+                currPath = m.group(1);
+            } else {
+                // There was a path but it was invalid. Ignore it.
+                currPath = "";
+            }
+
+            // recreate the res path from the current configuration
+            mConfigSelector.getConfiguration(mTempConfig);
+            StringBuffer sb = new StringBuffer(RES_FOLDER_ABS);
+            sb.append(mTempConfig.getFolderName(ResourceFolderType.VALUES));
+            sb.append('/');
+
+            String newPath = sb.toString();
+            if (newPath.equals(currPath) && newPath.equals(mLastFolderUsedInCombo)) {
+                // Path has not changed. No need to reload.
+                return;
+            }
+            
+            // Get all the files at the new path
+
+            TreeSet<String> filePaths = mFolderCache.get(newPath);
+            
+            if (filePaths == null) {
+                filePaths = new TreeSet<String>();
+
+                IFolder folder = mProject.getFolder(newPath);
+                if (folder != null && folder.exists()) {
+                    try {
+                        for (IResource res : folder.members()) {
+                            String name = res.getName();
+                            if (res.getType() == IResource.FILE && name.endsWith(".xml")) {
+                                filePaths.add(newPath + name);
+                            }
+                        }
+                    } catch (CoreException e) {
+                        // Ignore.
+                    }
+                }
+                
+                mFolderCache.put(newPath, filePaths);
+            }
+
+            currPath = newPath + leafName;
+            if (leafName.length() > 0 && !filePaths.contains(currPath)) {
+                filePaths.add(currPath);
+            }
+            
+            // Fill the combo
+            try {
+                mInternalFileComboChange = true;
+                
+                mResFileCombo.removeAll();
+                
+                for (String filePath : filePaths) {
+                    mResFileCombo.add(filePath);
+                }
+
+                int index = -1;
+                if (leafName.length() > 0) {
+                    index = mResFileCombo.indexOf(currPath);
+                    if (index >= 0) {
+                        mResFileCombo.select(index);
+                    }
+                }
+                
+                if (index == -1) {
+                    mResFileCombo.setText(currPath);
+                }
+                
+                mLastFolderUsedInCombo = newPath;
+                
+            } finally {
+                mInternalFileComboChange = false;
+            }
+
+            // finally validate the whole page
+            validatePage();
+        }
+
+        /**
+         * Callback invoked when {@link ExtractStringInputPage#mResFileCombo} has been
+         * modified.
+         */
+        public void modifyText(ModifyEvent e) {
+            if (mInternalFileComboChange) {
+                return;
+            }
+
+            String wsFolderPath = mResFileCombo.getText();
+
+            // This is a custom path, we need to sanitize it.
+            // First it should start with "/res/". Then we need to make sure there are no
+            // relative paths, things like "../" or "./" or even "//".
+            wsFolderPath = wsFolderPath.replaceAll("/+\\.\\./+|/+\\./+|//+|\\\\+|^/+", "/");  //$NON-NLS-1$ //$NON-NLS-2$
+            wsFolderPath = wsFolderPath.replaceAll("^\\.\\./+|^\\./+", "");                   //$NON-NLS-1$ //$NON-NLS-2$
+            wsFolderPath = wsFolderPath.replaceAll("/+\\.\\.$|/+\\.$|/+$", "");               //$NON-NLS-1$ //$NON-NLS-2$
+
+            // We get "res/foo" from selections relative to the project when we want a "/res/foo" path.
+            if (wsFolderPath.startsWith(RES_FOLDER_REL)) {
+                wsFolderPath = RES_FOLDER_ABS + wsFolderPath.substring(RES_FOLDER_REL.length());
+                
+                mInternalFileComboChange = true;
+                mResFileCombo.setText(wsFolderPath);
+                mInternalFileComboChange = false;
+            }
+
+            if (wsFolderPath.startsWith(RES_FOLDER_ABS)) {
+                wsFolderPath = wsFolderPath.substring(RES_FOLDER_ABS.length());
+                
+                int pos = wsFolderPath.indexOf(AndroidConstants.WS_SEP_CHAR);
+                if (pos >= 0) {
+                    wsFolderPath = wsFolderPath.substring(0, pos);
+                }
+
+                String[] folderSegments = wsFolderPath.split(FolderConfiguration.QUALIFIER_SEP);
+
+                if (folderSegments.length > 0) {
+                    String folderName = folderSegments[0];
+
+                    if (folderName != null && !folderName.equals(wsFolderPath)) {
+                        // update config selector
+                        mInternalConfigChange = true;
+                        mConfigSelector.setConfiguration(folderSegments);
+                        mInternalConfigChange = false;
+                    }
+                }
+            }
+
+            validatePage();
+        }
+    }
+
 }

@@ -501,7 +501,7 @@
                class="com.android.ide.eclipse.adt.refactorings.extractstring.ExtractStringAction"
                definitionId="com.android.ide.eclipse.adt.refactoring.extract.string"
                id="com.android.ide.eclipse.adt.actions.ExtractString"
-               label="Extract Android String"
+               label="Extract Android String..."
                menubarPath="org.eclipse.jdt.ui.refactoring.menu/codingGroup"
                style="push"
                tooltip="Extracts a string into Android resource string">

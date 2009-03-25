@@ -271,9 +271,9 @@ class NewXmlFileCreationPage extends WizardPage {
     final static int NUM_COL = 4;
 
     /** Absolute destination folder root, e.g. "/res/" */
-    private static String sResFolderAbs = AndroidConstants.WS_RESOURCES + AndroidConstants.WS_SEP;
+    private static final String RES_FOLDER_ABS = AndroidConstants.WS_RESOURCES + AndroidConstants.WS_SEP;
     /** Relative destination folder root, e.g. "res/" */
-    private static String sResFolderRel = SdkConstants.FD_RESOURCES + AndroidConstants.WS_SEP;
+    private static final String RES_FOLDER_REL = SdkConstants.FD_RESOURCES + AndroidConstants.WS_SEP;
     
     private IProject mProject;
     private Text mProjectTextField;
@@ -856,16 +856,16 @@ class NewXmlFileCreationPage extends WizardPage {
         ArrayList<TypeInfo> matches = new ArrayList<TypeInfo>();
 
         // We get "res/foo" from selections relative to the project when we want a "/res/foo" path.
-        if (wsFolderPath.startsWith(sResFolderRel)) {
-            wsFolderPath = sResFolderAbs + wsFolderPath.substring(sResFolderRel.length());
+        if (wsFolderPath.startsWith(RES_FOLDER_REL)) {
+            wsFolderPath = RES_FOLDER_ABS + wsFolderPath.substring(RES_FOLDER_REL.length());
             
             mInternalWsFolderPathUpdate = true;
             mWsFolderPathTextField.setText(wsFolderPath);
             mInternalWsFolderPathUpdate = false;
         }
 
-        if (wsFolderPath.startsWith(sResFolderAbs)) {
-            wsFolderPath = wsFolderPath.substring(sResFolderAbs.length());
+        if (wsFolderPath.startsWith(RES_FOLDER_ABS)) {
+            wsFolderPath = wsFolderPath.substring(RES_FOLDER_ABS.length());
             
             int pos = wsFolderPath.indexOf(AndroidConstants.WS_SEP_CHAR);
             if (pos >= 0) {
@@ -952,16 +952,16 @@ class NewXmlFileCreationPage extends WizardPage {
             // The configuration is valid. Reformat the folder path using the canonical
             // value from the configuration.
             
-            newPath = sResFolderAbs + mTempConfig.getFolderName(type.getResFolderType());
+            newPath = RES_FOLDER_ABS + mTempConfig.getFolderName(type.getResFolderType());
         } else {
             // The configuration is invalid. We still update the path but this time
             // do it manually on the string.
-            if (wsFolderPath.startsWith(sResFolderAbs)) {
+            if (wsFolderPath.startsWith(RES_FOLDER_ABS)) {
                 wsFolderPath.replaceFirst(
-                        "^(" + sResFolderAbs +")[^-]*(.*)",         //$NON-NLS-1$ //$NON-NLS-2$
+                        "^(" + RES_FOLDER_ABS +")[^-]*(.*)",         //$NON-NLS-1$ //$NON-NLS-2$
                         "\\1" + type.getResFolderName() + "\\2");   //$NON-NLS-1$ //$NON-NLS-2$
             } else {
-                newPath = sResFolderAbs + mTempConfig.getFolderName(type.getResFolderType());
+                newPath = RES_FOLDER_ABS + mTempConfig.getFolderName(type.getResFolderType());
             }
         }
 
@@ -1018,7 +1018,7 @@ class NewXmlFileCreationPage extends WizardPage {
             
             if (type != null) {
                 mConfigSelector.getConfiguration(mTempConfig);
-                StringBuffer sb = new StringBuffer(sResFolderAbs);
+                StringBuffer sb = new StringBuffer(RES_FOLDER_ABS);
                 sb.append(mTempConfig.getFolderName(type.getResFolderType()));
                 
                 mInternalWsFolderPathUpdate = true;
@@ -1131,8 +1131,8 @@ class NewXmlFileCreationPage extends WizardPage {
         // -- validate generated path
         if (error == null) {
             String wsFolderPath = getWsFolderPath();
-            if (!wsFolderPath.startsWith(sResFolderAbs)) {
-                error = String.format("Target folder must start with %1$s.", sResFolderAbs);
+            if (!wsFolderPath.startsWith(RES_FOLDER_ABS)) {
+                error = String.format("Target folder must start with %1$s.", RES_FOLDER_ABS);
             }
         }
 
