@@ -34,6 +34,10 @@ public class TranslucentGLSurfaceViewActivity extends Activity {
         // Create our Preview view and set it as the content of our
         // Activity
         mGLSurfaceView = new GLSurfaceView(this);
+        // We want an 8888 pixel format because that's required for
+        // a translucent window.
+        // And we want a depth buffer.
+        mGLSurfaceView.setEGLConfigChooser(8, 8, 8, 8, 16, 0);
         // Tell the cube renderer that we want to render a translucent version
         // of the cube:
         mGLSurfaceView.setRenderer(new CubeRenderer(true));
