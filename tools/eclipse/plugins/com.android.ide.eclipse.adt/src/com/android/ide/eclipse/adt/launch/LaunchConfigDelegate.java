@@ -25,9 +25,7 @@ import com.android.ide.eclipse.common.project.AndroidManifestParser;
 import com.android.ide.eclipse.common.project.BaseProjectHelper;
 
 import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
@@ -153,7 +151,7 @@ public class LaunchConfigDelegate extends LaunchConfigurationDelegate {
         AdtPlugin.printToConsole(project, "Android Launch!");
 
         // check if the project is using the proper sdk.
-        // if that throws an exception, we simply let it propage to the caller.
+        // if that throws an exception, we simply let it propagate to the caller.
         if (checkAndroidProject(project) == false) {
             AdtPlugin.printErrorToConsole(project, "Project is not an Android Project. Aborting!");
             androidLaunch.stopLaunch();
@@ -216,7 +214,7 @@ public class LaunchConfigDelegate extends LaunchConfigurationDelegate {
         AndroidLaunchController controller = AndroidLaunchController.getInstance();
 
         // get the application package
-        IFile applicationPackage = getApplicationPackage(project);
+        IFile applicationPackage = ProjectHelper.getApplicationPackage(project);
         if (applicationPackage == null) {
             androidLaunch.stopLaunch();
             return;
@@ -387,39 +385,6 @@ public class LaunchConfigDelegate extends LaunchConfigurationDelegate {
         return true;
     }
 
-
-    /**
-     * Returns the android package file as an IFile object for the specified
-     * project.
-     * @param project The project
-     * @return The android package as an IFile object or null if not found.
-     */
-    private IFile getApplicationPackage(IProject project) {
-        // get the output folder
-        IFolder outputLocation = BaseProjectHelper.getOutputFolder(project);
-
-        if (outputLocation == null) {
-            AdtPlugin.printErrorToConsole(project,
-                    "Failed to get the output location of the project. Check build path properties"
-                    );
-            return null;
-        }
-        
-
-        // get the package path
-        String packageName = project.getName() + AndroidConstants.DOT_ANDROID_PACKAGE;
-        IResource r = outputLocation.findMember(packageName);
-
-        // check the package is present
-        if (r instanceof IFile && r.exists()) {
-            return (IFile)r;
-        }
-
-        String msg = String.format("Could not find %1$s!", packageName);
-        AdtPlugin.printErrorToConsole(project, msg);
-
-        return null;
-    }
 
     /**
      * Returns the name of the activity.
