@@ -58,7 +58,7 @@ public class MainLaunchConfigTab extends AbstractLaunchConfigurationTab {
     /**
      * 
      */
-    public static final String LAUNCH_TAB_IMAGE = "mainLaunchTab.png";
+    public static final String LAUNCH_TAB_IMAGE = "mainLaunchTab.png"; //$NON-NLS-1$
 
     protected static final String EMPTY_STRING = ""; //$NON-NLS-1$
     

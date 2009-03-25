@@ -55,7 +55,7 @@ public class ResourceManagerBuilder extends BaseBuilder {
     }
 
     // build() returns a list of project from which this project depends for future compilation.
-    @SuppressWarnings("unchecked") //$NON-NLS-1$
+    @SuppressWarnings("unchecked")
     @Override
     protected IProject[] build(int kind, Map args, IProgressMonitor monitor)
             throws CoreException {
