@@ -1233,8 +1233,9 @@ public class UiElementNode implements IPropertySource {
                 Node attr = attrs.item(n);
                 if ("xmlns".equals(attr.getPrefix())) {  //$NON-NLS-1$
                     String uri = attr.getNodeValue();
-                    String nsPrefix = attr.getLocalName(); 
-                    if (SdkConstants.NS_RESOURCES.equals(uri)) {
+                    String nsPrefix = attr.getLocalName();
+                    // Is this the URI we are looking for? If yes, we found its prefix.
+                    if (nsUri.equals(uri)) {
                         return nsPrefix;
                     }
                     visited.add(nsPrefix);
@@ -1244,7 +1245,8 @@ public class UiElementNode implements IPropertySource {
         
         // Use a sensible default prefix if we can't find one.
         // We need to make sure the prefix is not one that was declared in the scope
-        // visited above.
+        // visited above. Use a default namespace prefix "android" for the Android resource
+        // NS and use "ns" for all other custom namespaces.
         String prefix = SdkConstants.NS_RESOURCES.equals(nsUri) ? "android" : "ns"; //$NON-NLS-1$ //$NON-NLS-2$
         String base = prefix;
         for (int i = 1; visited.contains(prefix); i++) {
@@ -1475,18 +1477,18 @@ public class UiElementNode implements IPropertySource {
                 }
             }
         }
-        
+
         if (attribute != null) {
-            final UiAttributeNode fAttribute = attribute;
 
             // get the current value and compare it to the new value
-            String oldValue = fAttribute.getCurrentValue();
+            String oldValue = attribute.getCurrentValue();
             final String newValue = (String)value;
             
             if (oldValue.equals(newValue)) {
                 return;
             }
-            
+
+            final UiAttributeNode fAttribute = attribute;
             AndroidEditor editor = getEditor();
             editor.editXmlModel(new Runnable() {
                 public void run() {
@@ -1495,6 +1497,4 @@ public class UiElementNode implements IPropertySource {
             });
         }
     }
-
-
 }

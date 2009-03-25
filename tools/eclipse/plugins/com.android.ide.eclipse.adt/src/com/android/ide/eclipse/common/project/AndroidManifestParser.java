@@ -34,6 +34,7 @@ import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -585,19 +586,31 @@ public class AndroidManifestParser {
             // get the result from the handler
             
             return new AndroidManifestParser(manifestHandler.getPackage(),
-                    manifestHandler.getActivities(), manifestHandler.getLauncherActivity(),
-                    manifestHandler.getProcesses(), manifestHandler.getDebuggable(),
-                    manifestHandler.getApiLevelRequirement(), manifestHandler.getInstrumentations(),
+                    manifestHandler.getActivities(),
+                    manifestHandler.getLauncherActivity(),
+                    manifestHandler.getProcesses(),
+                    manifestHandler.getDebuggable(),
+                    manifestHandler.getApiLevelRequirement(),
+                    manifestHandler.getInstrumentations(),
                     manifestHandler.getUsesLibraries());
         } catch (ParserConfigurationException e) {
             AdtPlugin.logAndPrintError(e, AndroidManifestParser.class.getCanonicalName(), 
-                    "Bad parser configuration for %s", manifestFile.getFullPath());
+                    "Bad parser configuration for %s: %s",
+                    manifestFile.getFullPath(),
+                    e.getMessage());
         } catch (SAXException e) {
             AdtPlugin.logAndPrintError(e, AndroidManifestParser.class.getCanonicalName(), 
-                    "Parser exception for %s", manifestFile.getFullPath());
+                    "Parser exception for %s: %s",
+                    manifestFile.getFullPath(),
+                    e.getMessage());
         } catch (IOException e) {
-            AdtPlugin.logAndPrintError(e, AndroidManifestParser.class.getCanonicalName(), 
-                    "I/O error for %s", manifestFile.getFullPath());
+            // Don't log a console error when failing to read a non-existing file
+            if (!(e instanceof FileNotFoundException)) {
+                AdtPlugin.logAndPrintError(e, AndroidManifestParser.class.getCanonicalName(), 
+                        "I/O error for %s: %s",
+                        manifestFile.getFullPath(),
+                        e.getMessage());
+            }
         } 
 
         return null;
@@ -633,20 +646,33 @@ public class AndroidManifestParser {
             // get the result from the handler
             
             return new AndroidManifestParser(manifestHandler.getPackage(),
-                    manifestHandler.getActivities(), manifestHandler.getLauncherActivity(),
-                    manifestHandler.getProcesses(), manifestHandler.getDebuggable(),
-                    manifestHandler.getApiLevelRequirement(), manifestHandler.getInstrumentations(),
+                    manifestHandler.getActivities(),
+                    manifestHandler.getLauncherActivity(),
+                    manifestHandler.getProcesses(),
+                    manifestHandler.getDebuggable(),
+                    manifestHandler.getApiLevelRequirement(),
+                    manifestHandler.getInstrumentations(),
                     manifestHandler.getUsesLibraries());
         } catch (ParserConfigurationException e) {
             AdtPlugin.logAndPrintError(e, AndroidManifestParser.class.getCanonicalName(), 
-                    "Bad parser configuration for %s", manifestFile.getAbsolutePath());
+                    "Bad parser configuration for %s: %s",
+                    manifestFile.getAbsolutePath(),
+                    e.getMessage());
         } catch (SAXException e) {
             AdtPlugin.logAndPrintError(e, AndroidManifestParser.class.getCanonicalName(), 
-                    "Parser exception for %s", manifestFile.getAbsolutePath());
+                    "Parser exception for %s: %s",
+                    manifestFile.getAbsolutePath(),
+                    e.getMessage());
         } catch (IOException e) {
-            AdtPlugin.logAndPrintError(e, AndroidManifestParser.class.getCanonicalName(), 
-                    "I/O error for %s", manifestFile.getAbsolutePath());
-        } 
+            // Don't log a console error when failing to read a non-existing file
+            if (!(e instanceof FileNotFoundException)) {
+                AdtPlugin.logAndPrintError(e, AndroidManifestParser.class.getCanonicalName(), 
+                        "I/O error for %s: %s",
+                        manifestFile.getAbsolutePath(),
+                        e.getMessage());
+            }
+        }
+        
         return null;
     }
 
