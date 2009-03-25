@@ -34,7 +34,7 @@ import org.eclipse.jdt.internal.junit.runner.TestReferenceFailure;
  * @see org.eclipse.jdt.internal.junit.runner.RemoteTestRunner for more details on the protocol
  */
 @SuppressWarnings("restriction")
-public class RemoteADTTestRunner extends RemoteTestRunner {
+public class RemoteAdtTestRunner extends RemoteTestRunner {
 
     private AndroidJUnitLaunchInfo mLaunchInfo;
     private TestExecution mExecution;
@@ -97,6 +97,8 @@ public class RemoteADTTestRunner extends RemoteTestRunner {
             // error occurred during test collection.
             reportError(collector.getErrorMessage());
             // abort here
+            notifyTestRunEnded(0);
+            return;
         }
         notifyTestRunStarted(collector.getTestCaseCount());
         collector.sendTrees(this);

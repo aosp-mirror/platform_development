@@ -20,7 +20,7 @@ import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.launch.DelayedLaunchInfo;
 import com.android.ide.eclipse.adt.launch.IAndroidLaunchAction;
 import com.android.ide.eclipse.adt.launch.junit.runtime.AndroidJUnitLaunchInfo;
-import com.android.ide.eclipse.adt.launch.junit.runtime.RemoteADTTestRunner;
+import com.android.ide.eclipse.adt.launch.junit.runtime.RemoteAdtTestRunner;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -166,7 +166,7 @@ class AndroidJUnitLaunchAction implements IAndroidLaunchAction {
         private final VMRunnerConfiguration mRunConfig;
         private final ILaunch mLaunch;
         private final AndroidJUnitLaunchInfo mJUnitInfo;
-        private RemoteADTTestRunner mTestRunner = null;
+        private RemoteAdtTestRunner mTestRunner = null;
         private boolean mIsTerminated = false;
         
         TestRunnerProcess(VMRunnerConfiguration runConfig, ILaunch launch,
@@ -256,7 +256,7 @@ class AndroidJUnitLaunchAction implements IAndroidLaunchAction {
          */
         @Override
         public void run() {
-            mTestRunner = new RemoteADTTestRunner();
+            mTestRunner = new RemoteAdtTestRunner();
             mTestRunner.runTests(mRunConfig.getProgramArguments(), mJUnitInfo);
         }
     }
