@@ -43,7 +43,7 @@ public final class LayoutDescriptors implements IDescriptorProvider {
     public static final String ID_ATTR = "id"; //$NON-NLS-1$
 
     /** The document descriptor. Contains all layouts and views linked together. */
-    private DocumentDescriptor mDescriptor =
+    private DocumentDescriptor mRootDescriptor =
         new DocumentDescriptor("layout_doc", null); //$NON-NLS-1$
 
     /** The list of all known ViewLayout descriptors. */
@@ -60,7 +60,7 @@ public final class LayoutDescriptors implements IDescriptorProvider {
     
     /** @return the document descriptor. Contains all layouts and views linked together. */
     public DocumentDescriptor getDescriptor() {
-        return mDescriptor;
+        return mRootDescriptor;
     }
     
     /** @return The read-only list of all known ViewLayout descriptors. */
@@ -74,7 +74,7 @@ public final class LayoutDescriptors implements IDescriptorProvider {
     }
     
     public ElementDescriptor[] getRootElementDescriptors() {
-        return mDescriptor.getChildren();
+        return mRootDescriptor.getChildren();
     }
 
     /**
@@ -98,6 +98,10 @@ public final class LayoutDescriptors implements IDescriptorProvider {
             }
         }
 
+        // Create <include> as a synthetic regular view.
+        // Note: ViewStub is already described by attrs.xml
+        insertInclude(newViews);
+
         ArrayList<ElementDescriptor> newLayouts = new ArrayList<ElementDescriptor>();
         if (layouts != null) {
             for (ViewClassInfo info : layouts) {
@@ -109,17 +113,22 @@ public final class LayoutDescriptors implements IDescriptorProvider {
         ArrayList<ElementDescriptor> newDescriptors = new ArrayList<ElementDescriptor>();
         newDescriptors.addAll(newLayouts);
         newDescriptors.addAll(newViews);
-        ElementDescriptor[] newArray = newDescriptors.toArray(
-                new ElementDescriptor[newDescriptors.size()]);
 
         // Link all layouts to everything else here.. recursively
         for (ElementDescriptor layoutDesc : newLayouts) {
-            layoutDesc.setChildren(newArray);
+            layoutDesc.setChildren(newDescriptors);
         }
+
+        // The <merge> tag can only be a root tag, so it is added at the end.
+        // It gets everything else as children but it is not made a child itself.
+        ElementDescriptor mergeTag = createMerge();
+        mergeTag.setChildren(newDescriptors);  // mergeTag makes a copy of the list
+        newDescriptors.add(mergeTag);
+        newLayouts.add(mergeTag);
 
         mViewDescriptors = newViews;
         mLayoutDescriptors  = newLayouts;
-        mDescriptor.setChildren(newArray);
+        mRootDescriptor.setChildren(newDescriptors);
         
         mROLayoutDescriptors = Collections.unmodifiableList(mLayoutDescriptors);
         mROViewDescriptors = Collections.unmodifiableList(mViewDescriptors);
@@ -217,4 +226,91 @@ public final class LayoutDescriptors implements IDescriptorProvider {
                 false /* mandatory */);
     }
 
+    /**
+     * Creates a new <include> descriptor and adds it to the list of view descriptors.
+     * 
+     * @param newViews A list of view descriptors being populated. Also used to find the
+     *   View description and extract its layout attributes.
+     */
+    private void insertInclude(ArrayList<ElementDescriptor> newViews) {
+        String xml_name = "include";  //$NON-NLS-1$
+
+        // Create the include custom attributes
+        ArrayList<AttributeDescriptor> attributes = new ArrayList<AttributeDescriptor>();
+        
+        // Note that the "layout" attribute does NOT have the Android namespace
+        DescriptorsUtils.appendAttribute(attributes,
+                null, //elementXmlName
+                null, //nsUri
+                new AttributeInfo(
+                        "layout",       //$NON-NLS-1$
+                        new AttributeInfo.Format[] { AttributeInfo.Format.REFERENCE }
+                        ),
+                true,  //required
+                null); //overrides
+
+        DescriptorsUtils.appendAttribute(attributes,
+                null, //elementXmlName
+                SdkConstants.NS_RESOURCES, //nsUri
+                new AttributeInfo(
+                        "id",           //$NON-NLS-1$
+                        new AttributeInfo.Format[] { AttributeInfo.Format.REFERENCE }
+                        ),
+                true,  //required
+                null); //overrides
+
+        // Find View and inherit all its layout attributes
+        AttributeDescriptor[] viewLayoutAttribs = findViewLayoutAttributes(newViews);
+
+        // Create the include descriptor
+        ViewElementDescriptor desc = new ViewElementDescriptor(xml_name,  // xml_name
+                xml_name, // ui_name
+                null,     // canonical class name, we don't have one
+                "Lets you statically include XML layouts inside other XML layouts.",  // tooltip
+                null, // sdk_url
+                attributes.toArray(new AttributeDescriptor[attributes.size()]),
+                viewLayoutAttribs,  // layout attributes
+                null, // children
+                false /* mandatory */);
+        
+        newViews.add(desc);
+    }
+
+    /**
+     * Finds the View descriptor and retrieves all its layout attributes.
+     */
+    private AttributeDescriptor[] findViewLayoutAttributes(
+            ArrayList<ElementDescriptor> newViews) {
+
+        for (ElementDescriptor desc : newViews) {
+            if (desc instanceof ViewElementDescriptor) {
+                ViewElementDescriptor viewDesc = (ViewElementDescriptor) desc;
+                if (AndroidConstants.CLASS_VIEW.equals(viewDesc.getCanonicalClassName())) {
+                    return viewDesc.getLayoutAttributes();
+                }
+            }
+        }
+        
+        return null;
+    }
+
+    /**
+     * Creates and return a new <merge> descriptor.
+     */
+    private ElementDescriptor createMerge() {
+        String xml_name = "merge";  //$NON-NLS-1$
+
+        // Create the include descriptor
+        ViewElementDescriptor desc = new ViewElementDescriptor(xml_name,  // xml_name
+                xml_name, // ui_name
+                null,     // canonical class name, we don't have one
+                "A root tag useful for XML layouts inflated using a ViewStub.",  // tooltip
+                null,  // sdk_url
+                null,  // attributes
+                null,  // layout attributes
+                null,  // children
+                false  /* mandatory */);
+
+        return desc;
+    }
 }
