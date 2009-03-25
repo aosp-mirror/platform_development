@@ -691,10 +691,18 @@ public class AndroidJUnitLaunchConfigurationTab extends AbstractLaunchConfigurat
     private void validateInstrumentation(IJavaProject javaProject) {
         if (mInstrumentations == null || mInstrumentations.length < 1) {
             setErrorMessage("Specified project has no defined instrumentations");
+            return;
         }
         String instrumentation = getSelectedInstrumentation();
         if (instrumentation == null) {
             setErrorMessage("Instrumentation not specified");
+            return;
+        }
+        String result = AndroidJUnitLaunchConfigDelegate.validateInstrumentationRunner(
+                javaProject, instrumentation);
+        if (result != AndroidJUnitLaunchConfigDelegate.INSTRUMENTATION_OK) {
+            setErrorMessage(result);
+            return;
         }
     }
 

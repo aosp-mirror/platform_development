@@ -180,6 +180,8 @@ public class AndroidConstants {
     public final static String CLASS_BROADCASTRECEIVER = "android.content.BroadcastReceiver"; //$NON-NLS-1$ 
     public final static String CLASS_CONTENTPROVIDER = "android.content.ContentProvider"; //$NON-NLS-1$
     public final static String CLASS_INSTRUMENTATION = "android.app.Instrumentation"; //$NON-NLS-1$
+    public final static String CLASS_INSTRUMENTATION_RUNNER =
+        "android.test.InstrumentationTestRunner"; //$NON-NLS-1$
     public final static String CLASS_BUNDLE = "android.os.Bundle"; //$NON-NLS-1$
     public final static String CLASS_R = "android.R"; //$NON-NLS-1$
     public final static String CLASS_MANIFEST_PERMISSION = "android.Manifest$permission"; //$NON-NLS-1$
@@ -215,4 +217,5 @@ public class AndroidConstants {
     /** The base URL where to find the Android class & manifest documentation */
     public static final String CODESITE_BASE_URL = "http://code.google.com/android";  //$NON-NLS-1$
     
+    public static final String LIBRARY_TEST_RUNNER = "android.test.runner"; // $NON-NLS-1$
 }
