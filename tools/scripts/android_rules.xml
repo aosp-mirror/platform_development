@@ -72,6 +72,7 @@
     <!-- Create the output directories if they don't exist yet. -->
     <target name="dirs">
         <echo>Creating output directories if needed...</echo>
+        <mkdir dir="${resource-folder}" />
         <mkdir dir="${external-libs-folder}" />
         <mkdir dir="${gen-folder}" />
         <mkdir dir="${out-folder}" />
