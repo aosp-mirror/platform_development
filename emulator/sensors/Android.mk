@@ -24,5 +24,6 @@ LOCAL_MODULE_PATH := $(TARGET_OUT_SHARED_LIBRARIES)/hw
 LOCAL_SHARED_LIBRARIES := liblog libcutils
 LOCAL_SRC_FILES := sensors_qemu.c
 LOCAL_MODULE := sensors.goldfish
+LOCAL_MODULE_TAGS := debug
 include $(BUILD_SHARED_LIBRARY)
 endif
