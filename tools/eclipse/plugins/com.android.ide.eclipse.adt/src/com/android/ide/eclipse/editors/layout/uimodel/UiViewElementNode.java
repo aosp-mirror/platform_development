@@ -81,7 +81,7 @@ public class UiViewElementNode extends UiElementNode {
             if (layoutDescriptors != null) {
                 for (ElementDescriptor desc : layoutDescriptors) {
                     if (desc instanceof ViewElementDescriptor &&
-                            desc.getXmlName().equals(AndroidConstants.CLASS_FRAMELAYOUT)) {
+                            desc.getXmlName().equals(AndroidConstants.CLASS_NAME_FRAMELAYOUT)) {
                         layout_attrs = ((ViewElementDescriptor) desc).getLayoutAttributes();
                         need_xmlns = true;
                         break;

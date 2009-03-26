@@ -121,7 +121,7 @@ public final class LayoutDescriptors implements IDescriptorProvider {
 
         // The <merge> tag can only be a root tag, so it is added at the end.
         // It gets everything else as children but it is not made a child itself.
-        ElementDescriptor mergeTag = createMerge();
+        ElementDescriptor mergeTag = createMerge(newLayouts);
         mergeTag.setChildren(newDescriptors);  // mergeTag makes a copy of the list
         newDescriptors.add(mergeTag);
         newLayouts.add(mergeTag);
@@ -195,7 +195,7 @@ public final class LayoutDescriptors implements IDescriptorProvider {
                 if (need_separator) {
                     String title;
                     if (layoutParams.getShortClassName().equals(
-                            AndroidConstants.CLASS_LAYOUTPARAMS)) {
+                            AndroidConstants.CLASS_NAME_LAYOUTPARAMS)) {
                         title = String.format("Layout Attributes from %1$s",
                                     layoutParams.getViewLayoutClass().getShortClassName());
                     } else {
@@ -229,10 +229,10 @@ public final class LayoutDescriptors implements IDescriptorProvider {
     /**
      * Creates a new <include> descriptor and adds it to the list of view descriptors.
      * 
-     * @param newViews A list of view descriptors being populated. Also used to find the
-     *   View description and extract its layout attributes.
+     * @param knownViews A list of view descriptors being populated. Also used to find the
+     *   View descriptor and extract its layout attributes.
      */
-    private void insertInclude(ArrayList<ElementDescriptor> newViews) {
+    private void insertInclude(ArrayList<ElementDescriptor> knownViews) {
         String xml_name = "include";  //$NON-NLS-1$
 
         // Create the include custom attributes
@@ -260,7 +260,8 @@ public final class LayoutDescriptors implements IDescriptorProvider {
                 null); //overrides
 
         // Find View and inherit all its layout attributes
-        AttributeDescriptor[] viewLayoutAttribs = findViewLayoutAttributes(newViews);
+        AttributeDescriptor[] viewLayoutAttribs = findViewLayoutAttributes(
+                AndroidConstants.CLASS_VIEW, knownViews);
 
         // Create the include descriptor
         ViewElementDescriptor desc = new ViewElementDescriptor(xml_name,  // xml_name
@@ -273,32 +274,20 @@ public final class LayoutDescriptors implements IDescriptorProvider {
                 null, // children
                 false /* mandatory */);
         
-        newViews.add(desc);
-    }
-
-    /**
-     * Finds the View descriptor and retrieves all its layout attributes.
-     */
-    private AttributeDescriptor[] findViewLayoutAttributes(
-            ArrayList<ElementDescriptor> newViews) {
-
-        for (ElementDescriptor desc : newViews) {
-            if (desc instanceof ViewElementDescriptor) {
-                ViewElementDescriptor viewDesc = (ViewElementDescriptor) desc;
-                if (AndroidConstants.CLASS_VIEW.equals(viewDesc.getCanonicalClassName())) {
-                    return viewDesc.getLayoutAttributes();
-                }
-            }
-        }
-        
-        return null;
+        knownViews.add(desc);
     }
 
     /**
      * Creates and return a new <merge> descriptor.
+     * @param knownLayouts  A list of all known layout view descriptors, used to find the
+     *   FrameLayout descriptor and extract its layout attributes.
      */
-    private ElementDescriptor createMerge() {
+    private ElementDescriptor createMerge(ArrayList<ElementDescriptor> knownLayouts) {
         String xml_name = "merge";  //$NON-NLS-1$
+
+        // Find View and inherit all its layout attributes
+        AttributeDescriptor[] viewLayoutAttribs = findViewLayoutAttributes(
+                AndroidConstants.CLASS_FRAMELAYOUT, knownLayouts);
 
         // Create the include descriptor
         ViewElementDescriptor desc = new ViewElementDescriptor(xml_name,  // xml_name
@@ -307,10 +296,29 @@ public final class LayoutDescriptors implements IDescriptorProvider {
                 "A root tag useful for XML layouts inflated using a ViewStub.",  // tooltip
                 null,  // sdk_url
                 null,  // attributes
-                null,  // layout attributes
+                viewLayoutAttribs,  // layout attributes
                 null,  // children
                 false  /* mandatory */);
 
         return desc;
+    }
+
+    /**
+     * Finds the descriptor and retrieves all its layout attributes.
+     */
+    private AttributeDescriptor[] findViewLayoutAttributes(
+            String viewFqcn,
+            ArrayList<ElementDescriptor> knownViews) {
+
+        for (ElementDescriptor desc : knownViews) {
+            if (desc instanceof ViewElementDescriptor) {
+                ViewElementDescriptor viewDesc = (ViewElementDescriptor) desc;
+                if (viewFqcn.equals(viewDesc.getCanonicalClassName())) {
+                    return viewDesc.getLayoutAttributes();
+                }
+            }
+        }
+        
+        return null;
     }
 }
