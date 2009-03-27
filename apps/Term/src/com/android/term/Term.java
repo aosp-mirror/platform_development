@@ -548,16 +548,6 @@ public class Term extends Activity {
                     + controlKey + " 6 ==> Control-^").
             show();
      }
-
-    private void print(String msg) {
-        char[] chars = msg.toCharArray();
-        int len = chars.length;
-        byte[] bytes = new byte[len];
-        for (int i = 0; i < len; i++) {
-            bytes[i] = (byte) chars[i];
-        }
-        mEmulatorView.append(bytes, 0, len);
-    }
 }
 
 
@@ -2707,8 +2697,13 @@ class EmulatorView extends View implements GestureDetector.OnGestureListener {
                 return null;
             }
 
-            public boolean hideStatusIcon() {
-                return true;
+            public boolean performEditorAction(int actionCode) {
+                if(actionCode == EditorInfo.IME_ACTION_UNSPECIFIED) {
+                    // The "return" key has been pressed on the IME.
+                    sendText("\n");
+                    return true;
+                }
+                return false;
             }
 
             public boolean performContextMenuAction(int id) {
@@ -2720,13 +2715,12 @@ class EmulatorView extends View implements GestureDetector.OnGestureListener {
             }
 
             public boolean sendKeyEvent(KeyEvent event) {
-                switch(event.getKeyCode()) {
-                case KeyEvent.KEYCODE_ENTER:
-                    sendChar('\r');
-                    break;
-                case KeyEvent.KEYCODE_DEL:
-                    sendChar(127);
-                    break;
+                if (event.getAction() == KeyEvent.ACTION_DOWN) {
+                    switch(event.getKeyCode()) {
+                    case KeyEvent.KEYCODE_DEL:
+                        sendChar(127);
+                        break;
+                    }
                 }
                 return true;
             }
@@ -2736,10 +2730,6 @@ class EmulatorView extends View implements GestureDetector.OnGestureListener {
             }
 
             public boolean setSelection(int start, int end) {
-                return true;
-            }
-
-            public boolean showStatusIcon(String packageName, int resId) {
                 return true;
             }
 
