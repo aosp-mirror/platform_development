@@ -189,14 +189,16 @@ public class AndroidConstants {
     public final static String CLASS_CONTEXT = "android.content.Context"; //$NON-NLS-1$
     public final static String CLASS_VIEW = "android.view.View"; //$NON-NLS-1$
     public final static String CLASS_VIEWGROUP = "android.view.ViewGroup"; //$NON-NLS-1$
-    public final static String CLASS_LAYOUTPARAMS = "LayoutParams"; //$NON-NLS-1$
+    public final static String CLASS_NAME_LAYOUTPARAMS = "LayoutParams"; //$NON-NLS-1$
     public final static String CLASS_VIEWGROUP_LAYOUTPARAMS =
-        CLASS_VIEWGROUP + "$" + CLASS_LAYOUTPARAMS; //$NON-NLS-1$
-    public final static String CLASS_FRAMELAYOUT = "FrameLayout"; //$NON-NLS-1$
+        CLASS_VIEWGROUP + "$" + CLASS_NAME_LAYOUTPARAMS; //$NON-NLS-1$
+    public final static String CLASS_NAME_FRAMELAYOUT = "FrameLayout"; //$NON-NLS-1$
+    public final static String CLASS_FRAMELAYOUT =
+        "android.widget." + CLASS_NAME_FRAMELAYOUT; //$NON-NLS-1$
     public final static String CLASS_PREFERENCE = "android.preference.Preference"; //$NON-NLS-1$
-    public final static String CLASS_PREFERENCE_SCREEN = "PreferenceScreen"; //$NON-NLS-1$
+    public final static String CLASS_NAME_PREFERENCE_SCREEN = "PreferenceScreen"; //$NON-NLS-1$
     public final static String CLASS_PREFERENCES =
-        "android.preference." + CLASS_PREFERENCE_SCREEN; //$NON-NLS-1$
+        "android.preference." + CLASS_NAME_PREFERENCE_SCREEN; //$NON-NLS-1$
     public final static String CLASS_PREFERENCEGROUP = "android.preference.PreferenceGroup"; //$NON-NLS-1$
     public final static String CLASS_PARCELABLE = "android.os.Parcelable"; //$NON-NLS-1$
     
