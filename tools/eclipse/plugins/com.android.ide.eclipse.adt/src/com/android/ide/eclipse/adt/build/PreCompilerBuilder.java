@@ -197,7 +197,7 @@ public class PreCompilerBuilder extends BaseBuilder {
     }
     
     // build() returns a list of project from which this project depends for future compilation.
-    @SuppressWarnings("unchecked") //$NON-NLS-1$
+    @SuppressWarnings("unchecked")
     @Override
     protected IProject[] build(int kind, Map args, IProgressMonitor monitor)
             throws CoreException {
@@ -222,6 +222,7 @@ public class PreCompilerBuilder extends BaseBuilder {
             
             PreCompilerDeltaVisitor dv = null;
             String javaPackage = null;
+            int minSdkVersion = AndroidManifestParser.INVALID_MIN_SDK;
     
             if (kind == FULL_BUILD) {
                 AdtPlugin.printBuildToConsole(AdtConstants.BUILD_VERBOSE, project,
@@ -253,6 +254,7 @@ public class PreCompilerBuilder extends BaseBuilder {
                     
                     // get the java package from the visitor
                     javaPackage = dv.getManifestPackage();
+                    minSdkVersion = dv.getMinSdkVersion();
                 }
             }
     
@@ -276,7 +278,7 @@ public class PreCompilerBuilder extends BaseBuilder {
             if (manifest == null) {
                 String msg = String.format(Messages.s_File_Missing,
                         AndroidConstants.FN_ANDROID_MANIFEST);
-                AdtPlugin.printBuildToConsole(AdtConstants.BUILD_VERBOSE, project, msg);
+                AdtPlugin.printErrorToConsole(project, msg);
                 markProject(AdtConstants.MARKER_ADT, msg, IMarker.SEVERITY_ERROR);
     
                 // This interrupts the build. The next builders will not run.
@@ -304,19 +306,34 @@ public class PreCompilerBuilder extends BaseBuilder {
                 
                 // get the java package from the parser
                 javaPackage = parser.getPackage();
+                minSdkVersion = parser.getApiLevelRequirement();
             }
-    
-            if (javaPackage == null || javaPackage.length() == 0) {
-                // looks like the AndroidManifest file isn't valid.
-                String msg = String.format(Messages.s_Doesnt_Declare_Package_Error,
-                        AndroidConstants.FN_ANDROID_MANIFEST);
-                AdtPlugin.printBuildToConsole(AdtConstants.BUILD_VERBOSE, project,
-                        msg);
+
+            if (minSdkVersion != AndroidManifestParser.INVALID_MIN_SDK &&
+                    minSdkVersion < projectTarget.getApiVersionNumber()) {
+                // check it against the target api level
+                String msg = String.format(
+                        "Manifest min SDK version (%1$d) is lower than project target API level (%2$d)",
+                        minSdkVersion, projectTarget.getApiVersionNumber());
+                AdtPlugin.printErrorToConsole(project, msg);
+                BaseProjectHelper.addMarker(manifest, AdtConstants.MARKER_ADT, msg,
+                        IMarker.SEVERITY_ERROR);
     
                 // This interrupts the build. The next builders will not run.
                 stopBuild(msg);
             }
+
+            if (javaPackage == null || javaPackage.length() == 0) {
+                // looks like the AndroidManifest file isn't valid.
+                String msg = String.format(Messages.s_Doesnt_Declare_Package_Error,
+                        AndroidConstants.FN_ANDROID_MANIFEST);
+                AdtPlugin.printErrorToConsole(project, msg);
+                markProject(AdtConstants.MARKER_ADT, msg, IMarker.SEVERITY_ERROR);
     
+                // This interrupts the build. The next builders will not run.
+                stopBuild(msg);
+            }
+            
             // at this point we have the java package. We need to make sure it's not a different
             // package than the previous one that were built.
             if (javaPackage.equals(mManifestPackage) == false) {

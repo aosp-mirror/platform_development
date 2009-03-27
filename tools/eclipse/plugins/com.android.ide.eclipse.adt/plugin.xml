@@ -470,7 +470,7 @@
          point="org.eclipse.ui.actionSets">
       <actionSet
             description="Android Wizards"
-            id="adt.actionSet1"
+            id="adt.actionSet.wizards"
             label="Android Wizards"
             visible="true">
          <action
@@ -481,12 +481,6 @@
                style="push"
                toolbarPath="android_project"
                tooltip="Opens a wizard to help create a new Android XML file">
-               <enablement>
-                   <objectState
-                        name="projectNature"
-                        value="com.android.ide.eclipse.adt.AndroidNature">
-                   </objectState>
-               </enablement>
          </action>
          <action
                class="com.android.ide.eclipse.adt.wizards.actions.NewProjectAction"
@@ -498,6 +492,21 @@
                tooltip="Opens a wizard to help create a new Android project">
          </action>
       </actionSet>
+      <actionSet
+            description="Refactorings for Android"
+            id="adt.actionSet.refactorings"
+            label="Android Refactorings"
+            visible="true">
+         <action
+               class="com.android.ide.eclipse.adt.refactorings.extractstring.ExtractStringAction"
+               definitionId="com.android.ide.eclipse.adt.refactoring.extract.string"
+               id="com.android.ide.eclipse.adt.actions.ExtractString"
+               label="Extract Android String..."
+               menubarPath="org.eclipse.jdt.ui.refactoring.menu/codingGroup"
+               style="push"
+               tooltip="Extracts a string into Android resource string">
+         </action>
+      </actionSet>
    </extension>
    <extension
          point="org.eclipse.debug.core.launchDelegates">
@@ -506,8 +515,84 @@
              delegateDescription="Removes the Android JAR from the Bootstrap Classpath"
              id="com.android.ide.eclipse.adt.launch.JUnitLaunchConfigDelegate.launchAndroidJunit"
              modes="run,debug"
-             name="Android JUnit"
+             name="Android JUnit Test"
              type="org.eclipse.jdt.junit.launchconfig">
        </launchDelegate>
+   </extension>
+   <extension
+         point="org.eclipse.debug.core.launchConfigurationTypes">
+      <launchConfigurationType
+            delegate="com.android.ide.eclipse.adt.launch.junit.AndroidJUnitLaunchConfigDelegate"
+            id="com.android.ide.eclipse.adt.junit.launchConfigurationType"
+            modes="run,debug"
+            name="Android JUnit Test"
+            public="true"
+            sourceLocatorId="org.eclipse.jdt.launching.sourceLocator.JavaSourceLookupDirector"
+            sourcePathComputerId="org.eclipse.jdt.launching.sourceLookup.javaSourcePathComputer">
+      </launchConfigurationType>
+   </extension>
+   <extension
+         point="org.eclipse.debug.ui.launchConfigurationTypeImages">
+      <launchConfigurationTypeImage
+            configTypeID="com.android.ide.eclipse.adt.junit.launchConfigurationType"
+            icon="icons/androidjunit.png"
+            id="com.android.ide.eclipse.adt.junit.launchConfigurationTypeImage">
+      </launchConfigurationTypeImage>
+   </extension>
+   <extension
+         point="org.eclipse.debug.ui.launchConfigurationTabGroups">
+      <launchConfigurationTabGroup
+            class="com.android.ide.eclipse.adt.launch.junit.AndroidJUnitTabGroup"
+            description="Android JUnit Test"
+            id="com.android.ide.eclipse.adt.junit.AndroidJUnitLaunchConfigTabGroup"
+            type="com.android.ide.eclipse.adt.junit.launchConfigurationType"/>
+   </extension>
+   <extension
+         point="org.eclipse.debug.ui.launchShortcuts">
+      <shortcut
+            class="com.android.ide.eclipse.adt.launch.junit.AndroidJUnitLaunchShortcut"
+            icon="icons/android.png"
+            id="com.android.ide.eclipse.adt.junit.launchShortcut"
+            label="Android JUnit Test"
+            modes="run,debug">
+          <contextualLaunch>
+            <enablement>
+               <with variable="selection">
+                  <count value="1"/>
+                  <iterate>
+                      <adapt type="org.eclipse.jdt.core.IJavaElement">
+                        <test property="org.eclipse.jdt.core.isInJavaProjectWithNature" value="com.android.ide.eclipse.adt.AndroidNature"/>
+                        <test property="org.eclipse.jdt.core.hasTypeOnClasspath" value="junit.framework.Test"/>
+                        <test property="org.eclipse.jdt.junit.canLaunchAsJUnit" forcePluginActivation="true"/>
+                     </adapt>
+                  </iterate>
+               </with>
+            </enablement>
+         </contextualLaunch>
+         <configurationType
+             id="com.android.ide.eclipse.adt.junit.launchConfigurationType">
+         </configurationType>
+      </shortcut>
+   </extension>
+   <extension
+         point="org.eclipse.ui.commands">
+      <category
+            description="Refactorings for Android Projects"
+            id="com.android.ide.eclipse.adt.refactoring.category"
+            name="Android Refactorings">
+      </category>
+      <command
+            categoryId="com.android.ide.eclipse.adt.refactoring.category"
+            description="Extract Strings into Android String Resources"
+            id="com.android.ide.eclipse.adt.refactoring.extract.string"
+            name="Extract Android String">
+      </command>
+   </extension>
+   <extension
+         point="org.eclipse.ltk.core.refactoring.refactoringContributions">
+      <contribution
+            class="com.android.ide.eclipse.adt.refactorings.extractstring.ExtractStringContribution"
+            id="com.android.ide.eclipse.adt.refactoring.extract.string">
+      </contribution>
    </extension>
 </plugin>

@@ -45,6 +45,10 @@
     <string name="summary_on_fancy_ime_animations">Use fancier animations for input method windows</string>
     <string name="summary_off_fancy_ime_animations">Use normal animations for input method windows</string>
     
+    <string name="title_fancy_rotation_animations">Fancy rotation animations</string>
+    <string name="summary_on_fancy_rotation_animations">Use fancier animations for screen rotation</string>
+    <string name="summary_off_fancy_rotation_animations">Use normal animations for screen rotation</string>
+    
     <string name="title_haptic_feedback">Haptic feedback</string>
     <string name="summary_on_haptic_feedback">Use haptic feedback with user interaction</string>
     <string name="summary_off_haptic_feedback">Use haptic feedback with user interaction</string>

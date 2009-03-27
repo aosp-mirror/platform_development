@@ -74,7 +74,8 @@ public final class FolderMock implements IFolder {
 
     // -------- UNIMPLEMENTED METHODS ----------------
 
-    public void create(boolean force, boolean local, IProgressMonitor monitor) throws CoreException {
+    public void create(boolean force, boolean local, IProgressMonitor monitor)
+            throws CoreException {
         throw new NotImplementedException();
     }
 
@@ -106,8 +107,8 @@ public final class FolderMock implements IFolder {
         throw new NotImplementedException();
     }
 
-    public void move(IPath destination, boolean force, boolean keepHistory, IProgressMonitor monitor)
-            throws CoreException {
+    public void move(IPath destination, boolean force, boolean keepHistory,
+            IProgressMonitor monitor) throws CoreException {
         throw new NotImplementedException();
     }
 
@@ -225,7 +226,8 @@ public final class FolderMock implements IFolder {
         throw new NotImplementedException();
     }
 
-    public void deleteMarkers(String type, boolean includeSubtypes, int depth) throws CoreException {
+    public void deleteMarkers(String type, boolean includeSubtypes, int depth)
+            throws CoreException {
         throw new NotImplementedException();
     }
 
@@ -428,24 +430,31 @@ public final class FolderMock implements IFolder {
         throw new NotImplementedException();
     }
 
-	public Map<?,?> getPersistentProperties() throws CoreException {
+    public Map<?,?> getPersistentProperties() throws CoreException {
         throw new NotImplementedException();
-	}
+    }
 
-	public Map<?,?> getSessionProperties() throws CoreException {
+    public Map<?,?> getSessionProperties() throws CoreException {
         throw new NotImplementedException();
-	}
+    }
 
-	public boolean isDerived(int options) {
+    public boolean isDerived(int options) {
         throw new NotImplementedException();
-	}
+    }
 
-	public boolean isHidden() {
+    public boolean isHidden() {
         throw new NotImplementedException();
-	}
+    }
 
-	public void setHidden(boolean isHidden) throws CoreException {
+    public void setHidden(boolean isHidden) throws CoreException {
         throw new NotImplementedException();
-	}
+    }
 
+    public boolean isHidden(int options) {
+        throw new NotImplementedException();
+    }
+
+    public boolean isTeamPrivateMember(int options) {
+        throw new NotImplementedException();
+    }
 }

@@ -42,6 +42,14 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 import java.net.URI;
 import java.util.Map;
 
+/**
+ * Mock implementation of {@link IProject}.
+ * <p/>Supported methods:
+ * <ul>
+ * <li>{@link #build(int kind, IProgressMonitor monitor)}</li>
+ * <li>{@link #members(int kind, String builderName, Map args, IProgressMonitor monitor)}</li>
+ * </ul>
+ */
 @SuppressWarnings("deprecation")
 public class ProjectMock implements IProject {
 
@@ -265,7 +273,8 @@ public class ProjectMock implements IProject {
         throw new NotImplementedException();
     }
 
-    public void deleteMarkers(String type, boolean includeSubtypes, int depth) throws CoreException {
+    public void deleteMarkers(String type, boolean includeSubtypes, int depth)
+            throws CoreException {
         throw new NotImplementedException();
     }
 
@@ -473,29 +482,36 @@ public class ProjectMock implements IProject {
         throw new NotImplementedException();
     }
 
-	public void create(IProjectDescription description, int updateFlags,
-			IProgressMonitor monitor) throws CoreException {
+    public void create(IProjectDescription description, int updateFlags,
+            IProgressMonitor monitor) throws CoreException {
         throw new NotImplementedException();
-	}
+    }
 
-	public Map<?,?> getPersistentProperties() throws CoreException {
+    public Map<?,?> getPersistentProperties() throws CoreException {
         throw new NotImplementedException();
-	}
+    }
 
-	public Map<?,?> getSessionProperties() throws CoreException {
+    public Map<?,?> getSessionProperties() throws CoreException {
         throw new NotImplementedException();
-	}
+    }
 
-	public boolean isDerived(int options) {
+    public boolean isDerived(int options) {
         throw new NotImplementedException();
-	}
+    }
 
-	public boolean isHidden() {
+    public boolean isHidden() {
         throw new NotImplementedException();
-	}
+    }
 
-	public void setHidden(boolean isHidden) throws CoreException {
+    public void setHidden(boolean isHidden) throws CoreException {
         throw new NotImplementedException();
-	}
+    }
 
+    public boolean isHidden(int options) {
+        throw new NotImplementedException();
+    }
+
+    public boolean isTeamPrivateMember(int options) {
+        throw new NotImplementedException();
+    }
 }

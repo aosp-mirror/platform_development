@@ -74,15 +74,6 @@ class KubeRenderer implements GLSurfaceView.Renderer {
         mWorld.draw(gl);
     }
 
-    public int[] getConfigSpec() {
-        // Need a depth buffer, don't care about color depth.
-        int[] configSpec = {
-                EGL10.EGL_DEPTH_SIZE,   16,
-                EGL10.EGL_NONE
-        };
-        return configSpec;
-    }
-
     public void onSurfaceChanged(GL10 gl, int width, int height) {
         gl.glViewport(0, 0, width, height);
 

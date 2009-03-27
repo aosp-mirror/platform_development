@@ -70,6 +70,18 @@ public class DeclareStyleableInfo {
             mFormats = formats;
         }
 
+        /**
+         * @param name The XML Name of the attribute
+         * @param formats The formats of the attribute. Cannot be null.
+         *                Should have at least one format.
+         * @param javadoc Short javadoc (i.e. the first sentence).
+         */
+        public AttributeInfo(String name, Format[] formats, String javadoc) {
+            mName = name;
+            mFormats = formats;
+            mJavaDoc = javadoc;
+        }
+
         public AttributeInfo(AttributeInfo info) {
             mName = info.mName;
             mFormats = info.mFormats;

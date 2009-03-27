@@ -157,7 +157,7 @@ public class LayoutParamsParser {
                 superClasses[2] = paramsClassName;
             }
             HashMap<String, ArrayList<IClassDescriptor>> found =
-                    mClassLoader.findClassesDerivingFrom("android.", superClasses);
+                    mClassLoader.findClassesDerivingFrom("android.", superClasses);  //$NON-NLS-1$
             mTopViewClass = mClassLoader.getClass(rootClassName);
             mTopGroupClass = mClassLoader.getClass(groupClassName);
             if (paramsClassName != null) {
@@ -179,8 +179,7 @@ public class LayoutParamsParser {
             addView(mTopViewClass);
 
             // ViewGroup derives from View
-            mGroupMap.get(groupClassName).setSuperClass(
-                mViewMap.get(rootClassName));
+            mGroupMap.get(groupClassName).setSuperClass(mViewMap.get(rootClassName));
 
             progress.setWorkRemaining(mGroupList.size() + mViewList.size());
             
@@ -346,7 +345,7 @@ public class LayoutParamsParser {
     private IClassDescriptor findLayoutParams(IClassDescriptor groupClass) {
         IClassDescriptor[] innerClasses = groupClass.getDeclaredClasses();
         for (IClassDescriptor innerClass : innerClasses) {
-            if (innerClass.getSimpleName().equals(AndroidConstants.CLASS_LAYOUTPARAMS)) {
+            if (innerClass.getSimpleName().equals(AndroidConstants.CLASS_NAME_LAYOUTPARAMS)) {
                 return innerClass;
             }
         }

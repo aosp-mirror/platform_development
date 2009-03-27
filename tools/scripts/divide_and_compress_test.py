@@ -17,7 +17,7 @@
 
 """Tests for divide_and_compress.py.
 
-TODO: Add tests for module methods.
+TODO(jmatt): Add tests for module methods.
 """
 
 __author__ = 'jmatt@google.com (Justin Mattson)'
@@ -26,10 +26,9 @@ import os
 import stat
 import unittest
 import zipfile
-from zipfile import ZipFile
 
 import divide_and_compress
-from mox import mox
+import mox
 
 
 class BagOfParts(object):
@@ -57,6 +56,10 @@ class ValidAndRemoveTests(unittest.TestCase):
                       'tn;ghf8:89H*hp748FJw80fu9WJFpwf39pujens;fihkhjfk'
                       'sdjfljkgsc n;iself')
     self.files = {'file1': file1, 'file2': file2}
+
+  def tearDown(self):
+    """Remove any stubs we've created."""
+    self.my_mox.UnsetStubs()
 
   def testArchiveIsValid(self):
     """Test the DirectoryZipper.ArchiveIsValid method.
@@ -119,7 +122,7 @@ class ValidAndRemoveTests(unittest.TestCase):
       A configured mocked
     """
     
-    source_zip = self.my_mox.CreateMock(ZipFile)
+    source_zip = self.my_mox.CreateMock(zipfile.ZipFile)
     source_zip.infolist().AndReturn([self.files['file1'], self.files['file1']])
     source_zip.infolist().AndReturn([self.files['file1'], self.files['file1']])
     source_zip.read(self.files['file1'].filename).AndReturn(
@@ -137,15 +140,11 @@ class ValidAndRemoveTests(unittest.TestCase):
       A configured mocked
     """
     
-    dest_zip = mox.MockObject(ZipFile)
+    dest_zip = mox.MockObject(zipfile.ZipFile)
     dest_zip.writestr(self.files['file1'].filename,
                       self.files['file1'].contents)
     dest_zip.close()
     return dest_zip
-
-  def tearDown(self):
-    """Remove any stubs we've created."""
-    self.my_mox.UnsetStubs()
 
 
 class FixArchiveTests(unittest.TestCase):
@@ -157,6 +156,10 @@ class FixArchiveTests(unittest.TestCase):
     self.file1 = BagOfParts()
     self.file1.filename = 'file1.txt'
     self.file1.contents = 'This is a test file'
+
+  def tearDown(self):
+    """Unset any mocks that we've created."""
+    self.my_mox.UnsetStubs()
 
   def _InitMultiFileData(self):
     """Create an array of mock file objects.
@@ -211,7 +214,7 @@ class FixArchiveTests(unittest.TestCase):
     Returns:
       A configured mock object
     """
-    mock_zip = self.my_mox.CreateMock(ZipFile)
+    mock_zip = self.my_mox.CreateMock(zipfile.ZipFile)
     mock_zip.infolist().AndReturn([self.file1])
     mock_zip.infolist().AndReturn([self.file1])
     mock_zip.close()
@@ -250,14 +253,10 @@ class FixArchiveTests(unittest.TestCase):
       A configured mock object
     """
     self._InitMultiFileData()
-    mock_zip = self.my_mox.CreateMock(ZipFile)
+    mock_zip = self.my_mox.CreateMock(zipfile.ZipFile)
     mock_zip.infolist().AndReturn(self.multi_file_dir)
     mock_zip.close()
     return mock_zip
-
-  def tearDown(self):
-    """Unset any mocks that we've created."""
-    self.my_mox.UnsetStubs()
 
 
 class AddFileToArchiveTest(unittest.TestCase):
@@ -269,6 +268,9 @@ class AddFileToArchiveTest(unittest.TestCase):
     self.output_dir = '%s/' % os.getcwd()
     self.file_to_add = 'file.txt'
     self.input_dir = '/foo/bar/baz/'
+
+  def tearDown(self):
+    self.my_mox.UnsetStubs()
 
   def testAddFileToArchive(self):
     """Test the DirectoryZipper.AddFileToArchive method.
@@ -312,14 +314,11 @@ class AddFileToArchiveTest(unittest.TestCase):
     Returns:
       A configured mock object
     """
-    archive_mock = self.my_mox.CreateMock(ZipFile)
+    archive_mock = self.my_mox.CreateMock(zipfile.ZipFile)
     archive_mock.write(''.join([self.input_dir, self.file_to_add]),
                        self.file_to_add)
     archive_mock.close()
     return archive_mock
-
-  def tearDown(self):
-    self.my_mox.UnsetStubs()
 
 
 class CompressDirectoryTest(unittest.TestCase):

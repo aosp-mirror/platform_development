@@ -22,7 +22,9 @@
 
 package com.android.ide.eclipse.adt.wizards.newproject;
 
+import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.sdk.Sdk;
+import com.android.ide.eclipse.adt.sdk.Sdk.ITargetChangeListener;
 import com.android.ide.eclipse.common.AndroidConstants;
 import com.android.ide.eclipse.common.project.AndroidManifestParser;
 import com.android.sdklib.IAndroidTarget;
@@ -122,6 +124,7 @@ public class NewProjectCreationPage extends WizardPage {
     private Button mCreateActivityCheck;
     private Text mMinSdkVersionField;
     private SdkTargetSelector mSdkTargetSelector;
+    private ITargetChangeListener mSdkTargetChangeListener;
 
     private boolean mInternalLocationPathUpdate;
     protected boolean mInternalProjectNameUpdate;
@@ -263,6 +266,17 @@ public class NewProjectCreationPage extends WizardPage {
         // Validate. This will complain about the first empty field.
         setPageComplete(validatePage());
     }
+    
+    @Override
+    public void dispose() {
+        
+        if (mSdkTargetChangeListener != null) {
+            AdtPlugin.getDefault().removeTargetListener(mSdkTargetChangeListener);
+            mSdkTargetChangeListener = null;
+        }
+        
+        super.dispose();
+    }
 
     /**
      * Creates the group for the project name:
@@ -389,18 +403,35 @@ public class NewProjectCreationPage extends WizardPage {
         group.setFont(parent.getFont());
         group.setText("Target");
         
-        // get the targets from the sdk
-        IAndroidTarget[] targets = null;
-        if (Sdk.getCurrent() != null) {
-            targets = Sdk.getCurrent().getTargets();
-        }
+        // The selector is created without targets. They are added below in the change listener.
+        mSdkTargetSelector = new SdkTargetSelector(group, null, false /*multi-selection*/);
 
-        mSdkTargetSelector = new SdkTargetSelector(group, targets, false /*multi-selection*/);
+        mSdkTargetChangeListener = new ITargetChangeListener() {
+            public void onProjectTargetChange(IProject changedProject) {
+                // Ignore
+            }
 
-        // If there's only one target, select it
-        if (targets != null && targets.length == 1) {
-            mSdkTargetSelector.setSelection(targets[0]);
-        }
+            public void onTargetsLoaded() {
+                // Update the sdk target selector with the new targets
+
+                // get the targets from the sdk
+                IAndroidTarget[] targets = null;
+                if (Sdk.getCurrent() != null) {
+                    targets = Sdk.getCurrent().getTargets();
+                }
+                mSdkTargetSelector.setTargets(targets);
+
+                // If there's only one target, select it
+                if (targets != null && targets.length == 1) {
+                    mSdkTargetSelector.setSelection(targets[0]);
+                }
+            }
+        };
+        
+        AdtPlugin.getDefault().addTargetListener(mSdkTargetChangeListener);
+        
+        // Invoke it once to initialize the targets
+        mSdkTargetChangeListener.onTargetsLoaded();
         
         mSdkTargetSelector.setSelectionListener(new SelectionAdapter() {
             @Override
@@ -829,7 +860,7 @@ public class NewProjectCreationPage extends WizardPage {
         
         String packageName = null;
         String activityName = null;
-        int minSdkVersion = 0; // 0 means no minSdkVersion provided in the manifest
+        int minSdkVersion = AndroidManifestParser.INVALID_MIN_SDK;
         try {
             packageName = manifestData.getPackage();
             minSdkVersion = manifestData.getApiLevelRequirement();
@@ -927,7 +958,7 @@ public class NewProjectCreationPage extends WizardPage {
             }
         }
 
-        if (!foundTarget && minSdkVersion > 0) {
+        if (!foundTarget && minSdkVersion != AndroidManifestParser.INVALID_MIN_SDK) {
             try {
                 for (IAndroidTarget target : mSdkTargetSelector.getTargets()) {
                     if (target.getApiVersionNumber() == minSdkVersion) {
@@ -954,7 +985,8 @@ public class NewProjectCreationPage extends WizardPage {
         if (!foundTarget) {
             mInternalMinSdkVersionUpdate = true;
             mMinSdkVersionField.setText(
-                    minSdkVersion <= 0 ? "" : Integer.toString(minSdkVersion)); //$NON-NLS-1$
+                    minSdkVersion == AndroidManifestParser.INVALID_MIN_SDK ? "" :
+                        Integer.toString(minSdkVersion)); //$NON-NLS-1$
             mInternalMinSdkVersionUpdate = false;
         }
     }
@@ -1148,7 +1180,7 @@ public class NewProjectCreationPage extends WizardPage {
             return MSG_NONE;
         }
 
-        int version = -1;
+        int version = AndroidManifestParser.INVALID_MIN_SDK;
         try {
             // If not empty, it must be a valid integer > 0
             version = Integer.parseInt(getMinSdkVersion());

@@ -487,6 +487,15 @@ public class AndroidClasspathContainerInitializer extends ClasspathContainerInit
             IJavaProject javaProject = projects.get(i);
             IProject iProject = javaProject.getProject();
             
+            // check if the project is opened
+            if (iProject.isOpen() == false) {
+                // remove from the list
+                // we do not increment i in this case.
+                projects.remove(i);
+
+                continue;
+            }
+
             // get the target from the project and its paths
             IAndroidTarget target = Sdk.getCurrent().getTarget(javaProject.getProject());
             if (target == null) {

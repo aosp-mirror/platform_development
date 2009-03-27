@@ -108,4 +108,8 @@
     <coverage_target name="TelephonyProvider"
         build_path="packages/providers/telephony" type="APPS" />
 
+    <!-- input methods -->
+    <coverage_target name="LatinIME" build_path="packages/inputmethods/LatinIME"
+        type="APPS" />
+
 </coverage_targets>

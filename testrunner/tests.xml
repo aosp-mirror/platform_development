@@ -87,6 +87,12 @@ These attributes map to the following commands:
     coverage_target="ApiDemos"
     continuous="true" />
 
+<test name="launchperf"
+    build_path="development/apps/launchperf"
+    package="com.android.launchperf"
+    class="com.android.launchperf.SimpleActivityLaunchPerformance"
+    coverage_target="framework" />
+
 <!--  targeted framework tests -->
 <test name="heap"
     build_path="frameworks/base/tests/AndroidTests"
@@ -114,6 +120,11 @@ These attributes map to the following commands:
     class="android.content.AbstractTableMergerTest"
     coverage_target="framework" />
 
+<test name="imf"
+    build_path="frameworks/base/tests/ImfTest"
+    package="com.android.imftest.tests"
+    coverage_target="framework"
+    continuous="true" />
 
 <!--  selected app tests -->
 <test name="browser"
@@ -169,12 +180,19 @@ These attributes map to the following commands:
     runner=".MediaFrameworkTestRunner"
     coverage_target="framework"
     continuous="true" />
-
+    
 <test name="mediaunit"
     build_path="frameworks/base/media/tests/MediaFrameworkTest"
     package="com.android.mediaframeworktest"
     runner=".MediaFrameworkUnitTestRunner"
     coverage_target="framework" />
+    
+<test name="musicplayer"
+    build_path="packages/apps/Music"
+    package="com.android.music.tests"
+    runner=".MusicPlayerFunctionalTestRunner"
+    coverage_target="Music"
+    continuous="true" />
 
 <!-- obsolete?
 <test name="mediaprov"

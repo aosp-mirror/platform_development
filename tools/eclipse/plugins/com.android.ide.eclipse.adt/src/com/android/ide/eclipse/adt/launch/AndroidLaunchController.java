@@ -17,9 +17,6 @@
 package com.android.ide.eclipse.adt.launch;
 
 import com.android.ddmlib.AndroidDebugBridge;
-import com.android.ddmlib.AndroidDebugBridge.IClientChangeListener;
-import com.android.ddmlib.AndroidDebugBridge.IDebugBridgeChangeListener;
-import com.android.ddmlib.AndroidDebugBridge.IDeviceChangeListener;
 import com.android.ddmlib.Client;
 import com.android.ddmlib.ClientData;
 import com.android.ddmlib.Device;
@@ -27,13 +24,19 @@ import com.android.ddmlib.IDevice;
 import com.android.ddmlib.Log;
 import com.android.ddmlib.MultiLineReceiver;
 import com.android.ddmlib.SyncService;
+import com.android.ddmlib.AndroidDebugBridge.IClientChangeListener;
+import com.android.ddmlib.AndroidDebugBridge.IDebugBridgeChangeListener;
+import com.android.ddmlib.AndroidDebugBridge.IDeviceChangeListener;
 import com.android.ddmlib.SyncService.SyncResult;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.launch.AndroidLaunchConfiguration.TargetMode;
 import com.android.ide.eclipse.adt.launch.DelayedLaunchInfo.InstallRetryMode;
 import com.android.ide.eclipse.adt.launch.DeviceChooserDialog.DeviceChooserResponse;
 import com.android.ide.eclipse.adt.project.ProjectHelper;
 import com.android.ide.eclipse.adt.sdk.Sdk;
 import com.android.ide.eclipse.common.project.AndroidManifestParser;
+import com.android.ide.eclipse.common.project.BaseProjectHelper;
+import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.avd.AvdManager;
@@ -52,6 +55,8 @@ import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 import org.eclipse.debug.core.ILaunchManager;
 import org.eclipse.debug.core.model.IDebugTarget;
 import org.eclipse.debug.ui.DebugUITools;
+import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
 import org.eclipse.jdt.launching.IVMConnector;
 import org.eclipse.jdt.launching.JavaRuntime;
@@ -64,6 +69,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -94,8 +100,9 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
 
     /**
      * List of {@link DelayedLaunchInfo} waiting for an emulator to connect.
-     * <p>Once an emulator has connected, {@link DelayedLaunchInfo#mDevice} is set and the
-     * DelayedLaunchInfo object is moved to {@link AndroidLaunchController#mWaitingForReadyEmulatorList}.
+     * <p>Once an emulator has connected, {@link DelayedLaunchInfo#getDevice()} is set and the
+     * DelayedLaunchInfo object is moved to
+     * {@link AndroidLaunchController#mWaitingForReadyEmulatorList}.
      * <b>ALL ACCESS MUST BE INSIDE A <code>synchronized (sListLock)</code> block!</b>
      */
     private final ArrayList<DelayedLaunchInfo> mWaitingForEmulatorLaunches =
@@ -236,7 +243,7 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
 
                 // set default target mode
                 wc.setAttribute(LaunchConfigDelegate.ATTR_TARGET_MODE,
-                        LaunchConfigDelegate.DEFAULT_TARGET_MODE);
+                        LaunchConfigDelegate.DEFAULT_TARGET_MODE.getValue());
 
                 // default AVD: None
                 wc.setAttribute(LaunchConfigDelegate.ATTR_AVD_NAME, (String) null);
@@ -307,7 +314,8 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
      *      <code>DEBUG_MODE</code>.
      * @param apk the resource to the apk to launch.
      * @param debuggable the debuggable value of the app, or null if not set.
-     * @param requiredApiVersionNumber the api version required by the app, or -1 if none.
+     * @param requiredApiVersionNumber the api version required by the app, or
+     * {@link AndroidManifestParser#INVALID_MIN_SDK} if none.
      * @param launchAction the action to perform after app sync
      * @param config the launch configuration
      * @param launch the launch object
@@ -331,6 +339,16 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
         Sdk currentSdk = Sdk.getCurrent();
         AvdManager avdManager = currentSdk.getAvdManager();
         
+        // reload the AVDs to make sure we are up to date
+        try {
+            avdManager.reloadAvds();
+        } catch (AndroidLocationException e1) {
+            // this happens if the AVD Manager failed to find the folder in which the AVDs are
+            // stored. This is unlikely to happen, but if it does, we should force to go manual
+            // to allow using physical devices.
+            config.mTargetMode = TargetMode.MANUAL;
+        }
+
         // get the project target
         final IAndroidTarget projectTarget = currentSdk.getTarget(project);
         
@@ -355,7 +373,7 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
          *           If == 1, launch the application on this AVD/device.
          */
         
-        if (config.mTargetMode == AndroidLaunchConfiguration.AUTO_TARGET_MODE) {
+        if (config.mTargetMode == TargetMode.AUTO) {
             // if we are in automatic target mode, we need to find the current devices
             IDevice[] devices = AndroidDebugBridge.getBridge().getDevices();
             
@@ -468,7 +486,7 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
                     // FIXME: ask the user if he wants to create a AVD.
                     // we found no compatible AVD.
                     AdtPlugin.printErrorToConsole(project, String.format(
-                            "Failed to find a AVD compatible with target '%1$s'. Launch aborted.",
+                            "Failed to find an AVD compatible with target '%1$s'. Launch aborted.",
                             projectTarget.getName()));
                     stopLaunch(launchInfo);
                     return;
@@ -638,20 +656,21 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
             
             String deviceApiVersionName = device.getProperty(IDevice.PROP_BUILD_VERSION);
             String value = device.getProperty(IDevice.PROP_BUILD_VERSION_NUMBER);
-            int deviceApiVersionNumber = 0;
+            int deviceApiVersionNumber = AndroidManifestParser.INVALID_MIN_SDK;
             try {
                 deviceApiVersionNumber = Integer.parseInt(value);
             } catch (NumberFormatException e) {
                 // pass, we'll keep the deviceVersionNumber value at 0.
             }
             
-            if (launchInfo.getRequiredApiVersionNumber() == 0) {
+            if (launchInfo.getRequiredApiVersionNumber() == AndroidManifestParser.INVALID_MIN_SDK) {
                 // warn the API level requirement is not set.
                 AdtPlugin.printErrorToConsole(launchInfo.getProject(),
                         "WARNING: Application does not specify an API level requirement!");
 
                 // and display the target device API level (if known)
-                if (deviceApiVersionName == null || deviceApiVersionNumber == 0) {
+                if (deviceApiVersionName == null ||
+                        deviceApiVersionNumber == AndroidManifestParser.INVALID_MIN_SDK) {
                     AdtPlugin.printErrorToConsole(launchInfo.getProject(),
                             "WARNING: Unknown device API version!");
                 } else {
@@ -660,7 +679,8 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
                             deviceApiVersionName));
                 }
             } else { // app requires a specific API level
-                if (deviceApiVersionName == null || deviceApiVersionNumber == 0) {
+                if (deviceApiVersionName == null ||
+                        deviceApiVersionNumber == AndroidManifestParser.INVALID_MIN_SDK) {
                     AdtPlugin.printToConsole(launchInfo.getProject(),
                             "WARNING: Unknown device API version!");
                 } else if (deviceApiVersionNumber < launchInfo.getRequiredApiVersionNumber()) {
@@ -792,6 +812,14 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
                 return false;
             }
             
+            // The app is now installed, now try the dependent projects
+            for (DelayedLaunchInfo dependentLaunchInfo : getDependenciesLaunchInfo(launchInfo)) {
+                String msg = String.format("Project dependency found, syncing: %s",
+                        dependentLaunchInfo.getProject().getName());
+                AdtPlugin.printToConsole(launchInfo.getProject(), msg);
+                syncApp(dependentLaunchInfo, device);
+            }
+            
             return installResult;
         }
 
@@ -802,6 +830,81 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
 
         return false;
     }
+
+    /**
+     * For the current launchInfo, create additional DelayedLaunchInfo that should be used to
+     * sync APKs that we are dependent on to the device.
+     * 
+     * @param launchInfo the original launch info that we want to find the 
+     * @return a list of DelayedLaunchInfo (may be empty if no dependencies were found or error)
+     */
+    public List<DelayedLaunchInfo> getDependenciesLaunchInfo(DelayedLaunchInfo launchInfo) {
+        List<DelayedLaunchInfo> dependencies = new ArrayList<DelayedLaunchInfo>();
+
+        // Convert to equivalent JavaProject
+        IJavaProject javaProject;
+        try {
+            //assuming this is an Android (and Java) project since it is attached to the launchInfo.
+            javaProject = BaseProjectHelper.getJavaProject(launchInfo.getProject());
+        } catch (CoreException e) {
+            // return empty dependencies
+            AdtPlugin.printErrorToConsole(launchInfo.getProject(), e);
+            return dependencies;
+        }
+        
+        // Get all projects that this depends on
+        List<IJavaProject> androidProjectList;
+        try {
+            androidProjectList = ProjectHelper.getAndroidProjectDependencies(javaProject);
+        } catch (JavaModelException e) {
+            // return empty dependencies
+            AdtPlugin.printErrorToConsole(launchInfo.getProject(), e);
+            return dependencies;
+        }
+        
+        // for each project, parse manifest and create launch information
+        for (IJavaProject androidProject : androidProjectList) {
+            // Parse the Manifest to get various required information
+            // copied from LaunchConfigDelegate
+            AndroidManifestParser manifestParser;
+            try {
+                manifestParser = AndroidManifestParser.parse(
+                        androidProject, null /* errorListener */,
+                        true /* gatherData */, false /* markErrors */);
+            } catch (CoreException e) {
+                AdtPlugin.printErrorToConsole(
+                        launchInfo.getProject(), 
+                        String.format("Error parsing manifest of %s", 
+                                androidProject.getElementName()));
+                continue;
+            }
+            
+            // Get the APK location (can return null)
+            IFile apk = ProjectHelper.getApplicationPackage(androidProject.getProject());
+            if (apk == null) {
+                // getApplicationPackage will have logged an error message
+                continue;      
+            }
+            
+            // Create new launchInfo as an hybrid between parent and dependency information
+            DelayedLaunchInfo delayedLaunchInfo = new DelayedLaunchInfo(
+                    androidProject.getProject(), 
+                    manifestParser.getPackage(),
+                    launchInfo.getLaunchAction(), 
+                    apk, 
+                    manifestParser.getDebuggable(), 
+                    manifestParser.getApiLevelRequirement(), 
+                    launchInfo.getLaunch(), 
+                    launchInfo.getMonitor());
+            
+            // Add to the list
+            dependencies.add(delayedLaunchInfo);
+        }
+        
+        return dependencies;
+    }
+
+
 
     /**
      * Installs the application package that was pushed to a temporary location on the device.

@@ -17,8 +17,10 @@
 
 package com.android.ide.eclipse.editors.wizards;
 
+import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.sdk.AndroidTargetData;
 import com.android.ide.eclipse.adt.sdk.Sdk;
+import com.android.ide.eclipse.adt.sdk.Sdk.ITargetChangeListener;
 import com.android.ide.eclipse.common.AndroidConstants;
 import com.android.ide.eclipse.common.project.ProjectChooserHelper;
 import com.android.ide.eclipse.editors.descriptors.DocumentDescriptor;
@@ -39,6 +41,7 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -235,7 +238,7 @@ class NewXmlFileCreationPage extends WizardPage {
                 "An XML file that describes preferences.",          // tooltip
                 ResourceFolderType.XML,                             // folder type
                 AndroidTargetData.DESCRIPTOR_PREFERENCES,           // root seed
-                AndroidConstants.CLASS_PREFERENCE_SCREEN,           // default root
+                AndroidConstants.CLASS_NAME_PREFERENCE_SCREEN,      // default root
                 SdkConstants.NS_RESOURCES,                          // xmlns
                 null,                                               // default attributes
                 1                                                   // target API level
@@ -271,9 +274,9 @@ class NewXmlFileCreationPage extends WizardPage {
     final static int NUM_COL = 4;
 
     /** Absolute destination folder root, e.g. "/res/" */
-    private static String sResFolderAbs = AndroidConstants.WS_RESOURCES + AndroidConstants.WS_SEP;
+    private static final String RES_FOLDER_ABS = AndroidConstants.WS_RESOURCES + AndroidConstants.WS_SEP;
     /** Relative destination folder root, e.g. "res/" */
-    private static String sResFolderRel = SdkConstants.FD_RESOURCES + AndroidConstants.WS_SEP;
+    private static final String RES_FOLDER_REL = SdkConstants.FD_RESOURCES + AndroidConstants.WS_SEP;
     
     private IProject mProject;
     private Text mProjectTextField;
@@ -288,7 +291,9 @@ class NewXmlFileCreationPage extends WizardPage {
     private boolean mInternalTypeUpdate;
     private boolean mInternalConfigSelectorUpdate;
     private ProjectChooserHelper mProjectChooserHelper;
+    private ITargetChangeListener mSdkTargetChangeListener;
 
+    private TypeInfo mCurrentTypeInfo;
 
     // --- UI creation ---
     
@@ -335,7 +340,42 @@ class NewXmlFileCreationPage extends WizardPage {
         initializeFromSelection(mInitialSelection);
         initializeRootValues();
         enableTypesBasedOnApi();
+        if (mCurrentTypeInfo != null) {
+            updateRootCombo(mCurrentTypeInfo);
+        }
+        installTargetChangeListener();
         validatePage();
+    }
+    
+    private void installTargetChangeListener() {
+        mSdkTargetChangeListener = new ITargetChangeListener() {
+            public void onProjectTargetChange(IProject changedProject) {
+                // If this is the current project, force it to reload its data
+                if (changedProject != null && changedProject == mProject) {
+                    changeProject(mProject);
+                }
+            }
+
+            public void onTargetsLoaded() {
+                // Reload the current project, if any, in case its target has changed.
+                if (mProject != null) {
+                    changeProject(mProject);
+                }
+            }
+        };
+        
+        AdtPlugin.getDefault().addTargetListener(mSdkTargetChangeListener);
+    }
+
+    @Override
+    public void dispose() {
+        
+        if (mSdkTargetChangeListener != null) {
+            AdtPlugin.getDefault().removeTargetListener(mSdkTargetChangeListener);
+            mSdkTargetChangeListener = null;
+        }
+        
+        super.dispose();
     }
 
     /**
@@ -650,7 +690,6 @@ class NewXmlFileCreationPage extends WizardPage {
             return;
         }
 
-        
         // Find the best match in the element list. In case there are multiple selected elements
         // select the one that provides the most information and assign them a score,
         // e.g. project=1 + folder=2 + file=4.
@@ -745,8 +784,35 @@ class NewXmlFileCreationPage extends WizardPage {
                 // cleared above.
                 
                 // get the AndroidTargetData from the project
-                IAndroidTarget target = Sdk.getCurrent().getTarget(mProject);
-                AndroidTargetData data = Sdk.getCurrent().getTargetData(target);
+                IAndroidTarget target = null;
+                AndroidTargetData data = null;
+
+                target = Sdk.getCurrent().getTarget(mProject);
+                if (target == null) {
+                    // A project should have a target. The target can be missing if the project
+                    // is an old project for which a target hasn't been affected or if the
+                    // target no longer exists in this SDK. Simply log the error and dismiss.
+                    
+                    AdtPlugin.log(IStatus.INFO,
+                            "NewXmlFile wizard: no platform target for project %s",  //$NON-NLS-1$
+                            mProject.getName());
+                    continue;
+                } else {
+                    data = Sdk.getCurrent().getTargetData(target);
+
+                    if (data == null) {
+                        // We should have both a target and its data.
+                        // However if the wizard is invoked whilst the platform is still being
+                        // loaded we can end up in a weird case where we have a target but it
+                        // doesn't have any data yet.
+                        // Lets log a warning and silently ignore this root.
+                        
+                        AdtPlugin.log(IStatus.INFO,
+                              "NewXmlFile wizard: no data for target %s, project %s",  //$NON-NLS-1$
+                              target.getName(), mProject.getName());
+                        continue;
+                    }
+                }
                 
                 IDescriptorProvider provider = data.getDescriptorProvider((Integer)rootSeed);
                 ElementDescriptor descriptor = provider.getDescriptor();
@@ -819,6 +885,10 @@ class NewXmlFileCreationPage extends WizardPage {
 
     /**
      * Changes mProject to the given new project and update the UI accordingly.
+     * <p/>
+     * Note that this does not check if the new project is the same as the current one
+     * on purpose, which allows a project to be updated when its target has changed or
+     * when targets are loaded in the background.
      */
     private void changeProject(IProject newProject) {
         mProject = newProject;
@@ -856,16 +926,16 @@ class NewXmlFileCreationPage extends WizardPage {
         ArrayList<TypeInfo> matches = new ArrayList<TypeInfo>();
 
         // We get "res/foo" from selections relative to the project when we want a "/res/foo" path.
-        if (wsFolderPath.startsWith(sResFolderRel)) {
-            wsFolderPath = sResFolderAbs + wsFolderPath.substring(sResFolderRel.length());
+        if (wsFolderPath.startsWith(RES_FOLDER_REL)) {
+            wsFolderPath = RES_FOLDER_ABS + wsFolderPath.substring(RES_FOLDER_REL.length());
             
             mInternalWsFolderPathUpdate = true;
             mWsFolderPathTextField.setText(wsFolderPath);
             mInternalWsFolderPathUpdate = false;
         }
 
-        if (wsFolderPath.startsWith(sResFolderAbs)) {
-            wsFolderPath = wsFolderPath.substring(sResFolderAbs.length());
+        if (wsFolderPath.startsWith(RES_FOLDER_ABS)) {
+            wsFolderPath = wsFolderPath.substring(RES_FOLDER_ABS.length());
             
             int pos = wsFolderPath.indexOf(AndroidConstants.WS_SEP_CHAR);
             if (pos >= 0) {
@@ -952,16 +1022,16 @@ class NewXmlFileCreationPage extends WizardPage {
             // The configuration is valid. Reformat the folder path using the canonical
             // value from the configuration.
             
-            newPath = sResFolderAbs + mTempConfig.getFolderName(type.getResFolderType());
+            newPath = RES_FOLDER_ABS + mTempConfig.getFolderName(type.getResFolderType());
         } else {
             // The configuration is invalid. We still update the path but this time
             // do it manually on the string.
-            if (wsFolderPath.startsWith(sResFolderAbs)) {
+            if (wsFolderPath.startsWith(RES_FOLDER_ABS)) {
                 wsFolderPath.replaceFirst(
-                        "^(" + sResFolderAbs +")[^-]*(.*)",         //$NON-NLS-1$ //$NON-NLS-2$
+                        "^(" + RES_FOLDER_ABS +")[^-]*(.*)",         //$NON-NLS-1$ //$NON-NLS-2$
                         "\\1" + type.getResFolderName() + "\\2");   //$NON-NLS-1$ //$NON-NLS-2$
             } else {
-                newPath = sResFolderAbs + mTempConfig.getFolderName(type.getResFolderType());
+                newPath = RES_FOLDER_ABS + mTempConfig.getFolderName(type.getResFolderType());
             }
         }
 
@@ -1018,7 +1088,7 @@ class NewXmlFileCreationPage extends WizardPage {
             
             if (type != null) {
                 mConfigSelector.getConfiguration(mTempConfig);
-                StringBuffer sb = new StringBuffer(sResFolderAbs);
+                StringBuffer sb = new StringBuffer(RES_FOLDER_ABS);
                 sb.append(mTempConfig.getFolderName(type.getResFolderType()));
                 
                 mInternalWsFolderPathUpdate = true;
@@ -1038,6 +1108,7 @@ class NewXmlFileCreationPage extends WizardPage {
     private void selectType(TypeInfo type) {
         if (type == null || !type.getWidget().getSelection()) {
             mInternalTypeUpdate = true;
+            mCurrentTypeInfo = type;
             for (TypeInfo type2 : sTypes) {
                 type2.getWidget().setSelection(type2 == type);
             }
@@ -1131,8 +1202,8 @@ class NewXmlFileCreationPage extends WizardPage {
         // -- validate generated path
         if (error == null) {
             String wsFolderPath = getWsFolderPath();
-            if (!wsFolderPath.startsWith(sResFolderAbs)) {
-                error = String.format("Target folder must start with %1$s.", sResFolderAbs);
+            if (!wsFolderPath.startsWith(RES_FOLDER_ABS)) {
+                error = String.format("Target folder must start with %1$s.", RES_FOLDER_ABS);
             }
         }
 

@@ -550,7 +550,7 @@ public class SoftKeyboard extends InputMethodService
             boolean typedWordValid) {
         if (suggestions != null && suggestions.size() > 0) {
             setCandidatesViewShown(true);
-        } else if (isFullscreenMode()) {
+        } else if (isExtractViewShown()) {
             setCandidatesViewShown(true);
         }
         if (mCandidateView != null) {

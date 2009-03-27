@@ -10,96 +10,79 @@
 #include <cutils/sockets.h>
 
 /*
- *  the qemud program is only used within the Android emulator as a bridge
+ *  the qemud daemon program is only used within Android as a bridge
  *  between the emulator program and the emulated system. it really works as
  *  a simple stream multiplexer that works as follows:
+ *
+ *    - qemud is started by init following instructions in
+ *      /system/etc/init.goldfish.rc (i.e. it is never started on real devices)
  *
  *    - qemud communicates with the emulator program through a single serial
  *      port, whose name is passed through a kernel boot parameter
  *      (e.g. android.qemud=ttyS1)
  *
- *    - qemud setups one or more unix local stream sockets in the
- *      emulated system each one of these represent a different communication
- *      'channel' between the emulator program and the emulated system.
+ *    - qemud binds one unix local stream socket (/dev/socket/qemud, created
+ *      by init through /system/etc/init.goldfish.rc).
  *
- *      as an example, one channel is used for the emulated GSM modem
- *      (AT command channel), another channel is used for the emulated GPS,
- *      etc...
  *
- *    - the protocol used on the serial connection is pretty simple:
+ *      emulator <==serial==> qemud <---> /dev/socket/qemud <-+--> client1
+ *                                                            |
+ *                                                            +--> client2
  *
- *          offset    size    description
- *              0       4     4-char hex string giving the payload size
- *              4       2     2-char hex string giving the destination or
- *                            source channel
- *              6       n     the message payload
+ *   - the special channel index 0 is used by the emulator and qemud only.
+ *     other channel numbers correspond to clients. More specifically,
+ *     connection are created like this:
  *
- *      for emulator->system messages, the 'channel' index indicates
- *      to which channel the payload must be sent
+ *     * the client connects to /dev/socket/qemud
  *
- *      for system->emulator messages, the 'channel' index indicates from
- *      which channel the payload comes from.
+ *     * the client sends the service name through the socket, as
+ *            <service-name>
  *
- *   - a special channel index (0) is used to communicate with the qemud
- *     program directly from the emulator. this is used for the following
- *     commands:  (content of the payload):
+ *     * qemud creates a "Client" object internally, assigns it an
+ *       internal unique channel number > 0, then sends a connection
+ *       initiation request to the emulator (i.e. through channel 0):
  *
- *        request:  connect:<name>
- *        answer:   ok:connect:<name>:XX       // succesful name lookup
- *        answer:   ko:connect:bad name        // failed lookup
+ *           connect:<hxid>:<name>
  *
- *           the emulator queries the index of a given channel given
- *           its human-readable name. the answer contains a 2-char hex
- *           string for the channel index.
+ *       where <name> is the service name, and <hxid> is a 4-hexchar
+ *       number corresponding to the channel number.
  *
- *           not all emulated systems may need the same communication
- *           channels, so this function may fail.
+ *     * in case of success, the emulator responds through channel 0
+ *       with:
  *
- *     any invalid request will get an answer of:
+ *           ok:connect:<hxid>
+ *
+ *       after this, all messages between the client and the emulator
+ *       are passed in pass-through mode.
+ *
+ *     * if the emulator refuses the service connection, it will
+ *       send the following through channel 0:
+ *
+ *           ko:connect:<hxid>:reason-for-failure
+ *
+ *     * If the client closes the connection, qemud sends the following
+ *       to the emulator:
+ *
+ *           disconnect:<hxid>
+ *
+ *       The same message is the opposite direction if the emulator
+ *       chooses to close the connection.
+ *
+ *     * any command sent through channel 0 to the emulator that is
+ *       not properly recognized will be answered by:
  *
  *           ko:unknown command
  *
  *
- *  here's a diagram of how things work:
- *
- *
- *                                                  _________
- *                        _____________   creates  |         |
- *         ________      |             |==========>| Channel |--*--
- *        |        |---->| Multiplexer |           |_________|
- *   --*--| Serial |     |_____________|               || creates
- *        |________|            |                 _____v___
- *             A                +--------------->|         |
- *             |                                 | Client  |--*--
- *             +---------------------------------|_________|
- *
- *  which really means that:
- *
- *    - the multiplexer creates one Channel object per control socket qemud
- *      handles (e.g. /dev/socket/qemud_gsm, /dev/socket/qemud_gps)
- *
- *    - each Channel object has a numerical index that is >= 1, and waits
- *      for client connection. it will create a Client object when this
- *      happens
- *
- *    - the Serial object receives packets from the serial port and sends them
- *      to the multiplexer
- *
- *    - the multiplexer tries to find a channel the packet is addressed to,
- *      and will send the packet to all clients that correspond to it
- *
- *    - when a Client receives data, it sends it directly to the Serial object
- *
- *    - there are two kinds of Channel objects:
- *
- *         CHANNEL_BROADCAST :: used for emulator -> clients broadcasts only
- *
- *         CHANNEL_DUPLEX    :: used for bidirectional communication with the
- *                              emulator, with only *one* client allowed per
- *                              duplex channel
+ *  Internally, the daemon maintains a "Client" object for each client
+ *  connection (i.e. accepting socket connection).
  */
 
-#define  DEBUG  0
+/* name of the single control socket used by the daemon */
+#define CONTROL_SOCKET_NAME  "qemud"
+
+#define  DEBUG     1
+#define  T_ACTIVE  0  /* set to 1 to dump traffic */
 
 #if DEBUG
 #  define LOG_TAG  "qemud"
@@ -107,6 +90,13 @@
 #  define  D(...)   LOGD(__VA_ARGS__)
 #else
 #  define  D(...)  ((void)0)
+#  define  T(...)  ((void)0)
+#endif
+
+#if T_ACTIVE
+#  define  T(...)   D(__VA_ARGS__)
+#else
+#  define  T(...)   ((void)0)
 #endif
 
 /** UTILITIES
@@ -262,30 +252,84 @@ fd_setnonblock(int  fd)
     }
 }
 
+
+static int
+fd_accept(int  fd)
+{
+    struct sockaddr  from;
+    socklen_t        fromlen = sizeof(from);
+    int              ret;
+
+    do {
+        ret = accept(fd, &from, &fromlen);
+    } while (ret < 0 && errno == EINTR);
+
+    return ret;
+}
+
 /** FD EVENT LOOP
  **/
 
+/* A Looper object is used to monitor activity on one or more
+ * file descriptors (e.g sockets).
+ *
+ * - call looper_add() to register a function that will be
+ *   called when events happen on the file descriptor.
+ *
+ * - call looper_enable() or looper_disable() to enable/disable
+ *   the set of monitored events for a given file descriptor.
+ *
+ * - call looper_del() to unregister a file descriptor.
+ *   this does *not* close the file descriptor.
+ *
+ * Note that you can only provide a single function to handle
+ * all events related to a given file descriptor.
+
+ * You can call looper_enable/_disable/_del within a function
+ * callback.
+ */
+
+/* the current implementation uses Linux's epoll facility
+ * the event mask we use are simply combinations of EPOLLIN
+ * EPOLLOUT, EPOLLHUP and EPOLLERR
+ */
 #include <sys/epoll.h>
 
 #define  MAX_CHANNELS  16
 #define  MAX_EVENTS    (MAX_CHANNELS+1)  /* each channel + the serial fd */
 
+/* the event handler function type, 'user' is a user-specific
+ * opaque pointer passed to looper_add().
+ */
 typedef void (*EventFunc)( void*  user, int  events );
 
+/* bit flags for the LoopHook structure.
+ *
+ * HOOK_PENDING means that an event happened on the
+ * corresponding file descriptor.
+ *
+ * HOOK_CLOSING is used to delay-close monitored
+ * file descriptors.
+ */
 enum {
     HOOK_PENDING = (1 << 0),
     HOOK_CLOSING = (1 << 1),
 };
 
+/* A LoopHook structure is used to monitor a given
+ * file descriptor and record its event handler.
+ */
 typedef struct {
     int        fd;
-    int        wanted;
-    int        events;
-    int        state;
-    void*      ev_user;
-    EventFunc  ev_func;
+    int        wanted;  /* events we are monitoring */
+    int        events;  /* events that occured */
+    int        state;   /* see HOOK_XXX constants */
+    void*      ev_user; /* user-provided handler parameter */
+    EventFunc  ev_func; /* event handler callback */
 } LoopHook;
 
+/* Looper is the main object modeling a looper object
+ */
 typedef struct {
     int                  epoll_fd;
     int                  num_fds;
@@ -294,6 +338,7 @@ typedef struct {
     LoopHook*            hooks;
 } Looper;
 
+/* initialize a looper object */
 static void
 looper_init( Looper*  l )
 {
@@ -304,6 +349,7 @@ looper_init( Looper*  l )
     l->hooks    = NULL;
 }
 
+/* finalize a looper object */
 static void
 looper_done( Looper*  l )
 {
@@ -316,6 +362,9 @@ looper_done( Looper*  l )
     l->epoll_fd  = -1;
 }
 
+/* return the LoopHook corresponding to a given
+ * monitored file descriptor, or NULL if not found
+ */
 static LoopHook*
 looper_find( Looper*  l, int  fd )
 {
@@ -329,6 +378,7 @@ looper_find( Looper*  l, int  fd )
     return NULL;
 }
 
+/* grow the arrays in the looper object */
 static void
 looper_grow( Looper*  l )
 {
@@ -351,6 +401,9 @@ looper_grow( Looper*  l )
     }
 }
 
+/* register a file descriptor and its event handler.
+ * no event mask will be enabled
+ */
 static void
 looper_add( Looper*  l, int  fd, EventFunc  func, void*  user )
 {
@@ -378,6 +431,8 @@ looper_add( Looper*  l, int  fd, EventFunc  func, void*  user )
     l->num_fds += 1;
 }
 
+/* unregister a file descriptor and its event handler
+ */
 static void
 looper_del( Looper*  l, int  fd )
 {
@@ -393,6 +448,10 @@ looper_del( Looper*  l, int  fd )
     epoll_ctl( l->epoll_fd, EPOLL_CTL_DEL, fd, NULL );
 }
 
+/* enable monitoring of certain events for a file
+ * descriptor. This adds 'events' to the current
+ * event mask
+ */
 static void
 looper_enable( Looper*  l, int  fd, int  events )
 {
@@ -414,6 +473,10 @@ looper_enable( Looper*  l, int  fd, int  events )
     }
 }
 
+/* disable monitoring of certain events for a file
+ * descriptor. This ignores events that are not
+ * currently enabled.
+ */
 static void
 looper_disable( Looper*  l, int  fd, int  events )
 {
@@ -435,6 +498,9 @@ looper_disable( Looper*  l, int  fd, int  events )
     }
 }
 
+/* wait until an event occurs on one of the registered file
+ * descriptors. Only returns in case of error !!
+ */
 static void
 looper_loop( Looper*  l )
 {
@@ -448,6 +514,11 @@ looper_loop( Looper*  l )
         if (count < 0) {
             D("%s: error: %s", __FUNCTION__, strerror(errno) );
             return;
+        }
+
+        if (count == 0) {
+            D("%s: huh ? epoll returned count=0", __FUNCTION__);
+            continue;
         }
 
         /* mark all pending hooks */
@@ -483,13 +554,87 @@ looper_loop( Looper*  l )
     }
 }
 
+#if T_ACTIVE
+char*
+quote( const void*  data, int  len )
+{
+    const char*  p   = data;
+    const char*  end = p + len;
+    int          count = 0;
+    int          phase = 0;
+    static char*  buff = NULL;
+
+    for (phase = 0; phase < 2; phase++) {
+        if (phase != 0) {
+            xfree(buff);
+            buff = xalloc(count+1);
+        }
+        count = 0;
+        for (p = data; p < end; p++) {
+            int  c = *p;
+
+            if (c == '\\') {
+                if (phase != 0) {
+                    buff[count] = buff[count+1] = '\\';
+                }
+                count += 2;
+                continue;
+            }
+
+            if (c >= 32 && c < 127) {
+                if (phase != 0)
+                    buff[count] = c;
+                count += 1;
+                continue;
+            }
+
+
+            if (c == '\t') {
+                if (phase != 0) {
+                    memcpy(buff+count, "<TAB>", 5);
+                }
+                count += 5;
+                continue;
+            }
+            if (c == '\n') {
+                if (phase != 0) {
+                    memcpy(buff+count, "<LN>", 4);
+                }
+                count += 4;
+                continue;
+            }
+            if (c == '\r') {
+                if (phase != 0) {
+                    memcpy(buff+count, "<CR>", 4);
+                }
+                count += 4;
+                continue;
+            }
+
+            if (phase != 0) {
+                buff[count+0] = '\\';
+                buff[count+1] = 'x';
+                buff[count+2] = "0123456789abcdef"[(c >> 4) & 15];
+                buff[count+3] = "0123456789abcdef"[     (c) & 15];
+            }
+            count += 4;
+        }
+    }
+    buff[count] = 0;
+    return buff;
+}
+#endif /* T_ACTIVE */
+
 /** PACKETS
+ **
+ ** We need a way to buffer data before it can be sent to the
+ ** corresponding file descriptor. We use linked list of Packet
+ ** objects to do this.
  **/
 
 typedef struct Packet   Packet;
 
-/* we want to ensure that Packet is no more than a single page */
-#define  MAX_PAYLOAD  (4096-16-6)
+#define  MAX_PAYLOAD  4000
 
 struct Packet {
     Packet*   next;
@@ -498,8 +643,13 @@ struct Packet {
     uint8_t   data[ MAX_PAYLOAD ];
 };
 
+/* we expect to alloc/free a lot of packets during
+ * operations so use a single linked list of free packets
+ * to keep things speedy and simple.
+ */
 static Packet*   _free_packets;
 
+/* Allocate a packet */
 static Packet*
 packet_alloc(void)
 {
@@ -509,12 +659,16 @@ packet_alloc(void)
     } else {
         xnew(p);
     }
-    p->next = NULL;
-    p->len  = 0;
+    p->next    = NULL;
+    p->len     = 0;
     p->channel = -1;
     return p;
 }
 
+/* Release a packet. This takes the address of a packet
+ * pointer that will be set to NULL on exit (avoids
+ * referencing dangling pointers in case of bugs)
+ */
 static void
 packet_free( Packet*  *ppacket )
 {
@@ -526,18 +680,15 @@ packet_free( Packet*  *ppacket )
     }
 }
 
-static Packet*
-packet_dup( Packet*  p )
-{
-    Packet*  p2 = packet_alloc();
-
-    p2->len     = p->len;
-    p2->channel = p->channel;
-    memcpy(p2->data, p->data, p->len);
-    return p2;
-}
-
 /** PACKET RECEIVER
+ **
+ ** Simple abstraction for something that can receive a packet
+ ** from a FDHandler (see below) or something else.
+ **
+ ** Send a packet to it with 'receiver_post'
+ **
+ ** Call 'receiver_close' to indicate that the corresponding
+ ** packet source was closed.
  **/
 
 typedef void (*PostFunc) ( void*  user, Packet*  p );
@@ -549,41 +700,130 @@ typedef struct {
     void*      user;
 } Receiver;
 
+/* post a packet to a receiver. Note that this transfers
+ * ownership of the packet to the receiver.
+ */
 static __inline__ void
 receiver_post( Receiver*  r, Packet*  p )
 {
-    r->post( r->user, p );
+    if (r->post)
+        r->post( r->user, p );
+    else
+        packet_free(&p);
 }
 
+/* tell a receiver the packet source was closed.
+ * this will also prevent further posting to the
+ * receiver.
+ */
 static __inline__ void
 receiver_close( Receiver*  r )
 {
-    r->close( r->user );
+    if (r->close) {
+        r->close( r->user );
+        r->close = NULL;
+    }
+    r->post  = NULL;
 }
 
 
 /** FD HANDLERS
  **
  ** these are smart listeners that send incoming packets to a receiver
- ** and can queue one or more outgoing packets and send them when possible
+ ** and can queue one or more outgoing packets and send them when
+ ** possible to the FD.
+ **
+ ** note that we support clean shutdown of file descriptors,
+ ** i.e. we try to send all outgoing packets before destroying
+ ** the FDHandler.
  **/
 
-typedef struct FDHandler {
-    int          fd;
+typedef struct FDHandler      FDHandler;
+typedef struct FDHandlerList  FDHandlerList;
+
+struct FDHandler {
+    int             fd;
+    FDHandlerList*  list;
+    char            closing;
+    Receiver        receiver[1];
+
+    /* queue of outgoing packets */
+    int             out_pos;
+    Packet*         out_first;
+    Packet**        out_ptail;
+
+    FDHandler*      next;
+    FDHandler**     pref;
+
+};
+
+struct FDHandlerList {
+    /* the looper that manages the fds */
     Looper*      looper;
-    Receiver     receiver[1];
-    int          out_pos;
-    Packet*      out_first;
-    Packet**     out_ptail;
 
-} FDHandler;
+    /* list of active FDHandler objects */
+    FDHandler*   active;
 
+    /* list of closing FDHandler objects.
+     * these are waiting to push their
+     * queued packets to the fd before
+     * freeing themselves.
+     */
+    FDHandler*   closing;
 
+};
+
+/* remove a FDHandler from its current list */
 static void
-fdhandler_done( FDHandler*  f )
+fdhandler_remove( FDHandler*  f )
 {
-    /* get rid of unsent packets */
-    if (f->out_first) {
+    f->pref[0] = f->next;
+    if (f->next)
+        f->next->pref = f->pref;
+}
+
+/* add a FDHandler to a given list */
+static void
+fdhandler_prepend( FDHandler*  f, FDHandler**  list )
+{
+    f->next = list[0];
+    f->pref = list;
+    list[0] = f;
+    if (f->next)
+        f->next->pref = &f->next;
+}
+
+/* initialize a FDHandler list */
+static void
+fdhandler_list_init( FDHandlerList*  list, Looper*  looper )
+{
+    list->looper  = looper;
+    list->active  = NULL;
+    list->closing = NULL;
+}
+
+
+/* close a FDHandler (and free it). Note that this will not
+ * perform a graceful shutdown, i.e. all packets in the
+ * outgoing queue will be immediately free.
+ *
+ * this *will* notify the receiver that the file descriptor
+ * was closed.
+ *
+ * you should call fdhandler_shutdown() if you want to
+ * notify the FDHandler that its packet source is closed.
+ */
+static void
+fdhandler_close( FDHandler*  f )
+{
+    /* notify receiver */
+    receiver_close(f->receiver);
+
+    /* remove the handler from its list */
+    fdhandler_remove(f);
+
+    /* get rid of outgoing packet queue */
+    if (f->out_first != NULL) {
         Packet*  p;
         while ((p = f->out_first) != NULL) {
             f->out_first = p->next;
@@ -593,14 +833,41 @@ fdhandler_done( FDHandler*  f )
 
     /* get rid of file descriptor */
     if (f->fd >= 0) {
-        looper_del( f->looper, f->fd );
+        looper_del( f->list->looper, f->fd );
         close(f->fd);
         f->fd = -1;
     }
-    f->looper = NULL;
+
+    f->list = NULL;
+    xfree(f);
 }
 
+/* Ask the FDHandler to cleanly shutdown the connection,
+ * i.e. send any pending outgoing packets then auto-free
+ * itself.
+ */
+static void
+fdhandler_shutdown( FDHandler*  f )
+{
 
+    if (f->out_first != NULL && !f->closing)
+    {
+        /* move the handler to the 'closing' list */
+        f->closing = 1;
+        fdhandler_remove(f);
+        fdhandler_prepend(f, &f->list->closing);
+
+        /* notify the receiver that we're closing */
+        receiver_close(f->receiver);
+        return;
+    }
+
+    fdhandler_close(f);
+}
+
+/* Enqueue a new packet that the FDHandler will
+ * send through its file descriptor.
+ */
 static void
 fdhandler_enqueue( FDHandler*  f, Packet*  p )
 {
@@ -612,15 +879,23 @@ fdhandler_enqueue( FDHandler*  f, Packet*  p )
 
     if (first == NULL) {
         f->out_pos = 0;
-        looper_enable( f->looper, f->fd, EPOLLOUT );
+        looper_enable( f->list->looper, f->fd, EPOLLOUT );
     }
 }
 
 
+/* FDHandler file descriptor event callback for read/write ops */
 static void
 fdhandler_event( FDHandler*  f, int  events )
 {
    int  len;
+
+    /* in certain cases, it's possible to have both EPOLLIN and
+     * EPOLLHUP at the same time. This indicates that there is incoming
+     * data to read, but that the connection was nonetheless closed
+     * by the sender. Be sure to read the data before closing
+     * the receiver to avoid packet loss.
+     */
 
     if (events & EPOLLIN) {
         Packet*  p = packet_alloc();
@@ -629,23 +904,17 @@ fdhandler_event( FDHandler*  f, int  events )
         if ((len = fd_read(f->fd, p->data, MAX_PAYLOAD)) < 0) {
             D("%s: can't recv: %s", __FUNCTION__, strerror(errno));
             packet_free(&p);
-        } else {
+        } else if (len > 0) {
             p->len     = len;
-            p->channel = -101;  /* special debug value */
+            p->channel = -101;  /* special debug value, not used */
             receiver_post( f->receiver, p );
         }
     }
 
-    /* in certain cases, it's possible to have both EPOLLIN and
-     * EPOLLHUP at the same time. This indicates that there is incoming
-     * data to read, but that the connection was nonetheless closed
-     * by the sender. Be sure to read the data before closing
-     * the receiver to avoid packet loss.
-     */
     if (events & (EPOLLHUP|EPOLLERR)) {
         /* disconnection */
         D("%s: disconnect on fd %d", __FUNCTION__, f->fd);
-        receiver_close( f->receiver );
+        fdhandler_close(f);
         return;
     }
 
@@ -664,7 +933,7 @@ fdhandler_event( FDHandler*  f, int  events )
                 packet_free(&p);
                 if (f->out_first == NULL) {
                     f->out_ptail = &f->out_first;
-                    looper_disable( f->looper, f->fd, EPOLLOUT );
+                    looper_disable( f->list->looper, f->fd, EPOLLOUT );
                 }
             }
         }
@@ -672,24 +941,34 @@ fdhandler_event( FDHandler*  f, int  events )
 }
 
 
-static void
-fdhandler_init( FDHandler*      f,
-                int             fd,
-                Looper*         looper,
-                Receiver*       receiver )
+/* Create a new FDHandler that monitors read/writes */
+static FDHandler*
+fdhandler_new( int             fd,
+               FDHandlerList*  list,
+               Receiver*       receiver )
 {
+    FDHandler*  f = xalloc0(sizeof(*f));
+
     f->fd          = fd;
-    f->looper      = looper;
+    f->list        = list;
     f->receiver[0] = receiver[0];
     f->out_first   = NULL;
     f->out_ptail   = &f->out_first;
     f->out_pos     = 0;
 
-    looper_add( looper, fd, (EventFunc) fdhandler_event, f );
-    looper_enable( looper, fd, EPOLLIN );
+    fdhandler_prepend(f, &list->active);
+
+    looper_add( list->looper, fd, (EventFunc) fdhandler_event, f );
+    looper_enable( list->looper, fd, EPOLLIN );
+
+    return f;
 }
 
 
+/* event callback function to monitor accepts() on server sockets.
+ * the convention used here is that the receiver will receive a
+ * dummy packet with the new client socket in p->channel
+ */
 static void
 fdhandler_accept_event( FDHandler*  f, int  events )
 {
@@ -700,296 +979,116 @@ fdhandler_accept_event( FDHandler*  f, int  events )
         D("%s: accepting on fd %d", __FUNCTION__, f->fd);
         p->data[0] = 1;
         p->len     = 1;
+        p->channel = fd_accept(f->fd);
+        if (p->channel < 0) {
+            D("%s: accept failed ?: %s", __FUNCTION__, strerror(errno));
+            packet_free(&p);
+            return;
+        }
         receiver_post( f->receiver, p );
     }
 
     if (events & (EPOLLHUP|EPOLLERR)) {
         /* disconnecting !! */
-        D("%s: closing fd %d", __FUNCTION__, f->fd);
-        receiver_close( f->receiver );
+        D("%s: closing accept fd %d", __FUNCTION__, f->fd);
+        fdhandler_close(f);
         return;
     }
 }
 
 
-static void
-fdhandler_init_accept( FDHandler*  f,
-                       int         fd,
-                       Looper*     looper,
-                       Receiver*   receiver )
+/* Create a new FDHandler used to monitor new connections on a
+ * server socket. The receiver must expect the new connection
+ * fd in the 'channel' field of a dummy packet.
+ */
+static FDHandler*
+fdhandler_new_accept( int             fd,
+                      FDHandlerList*  list,
+                      Receiver*       receiver )
 {
+    FDHandler*  f = xalloc0(sizeof(*f));
+
     f->fd          = fd;
-    f->looper      = looper;
+    f->list        = list;
     f->receiver[0] = receiver[0];
 
-    looper_add( looper, fd, (EventFunc) fdhandler_accept_event, f );
-    looper_enable( looper, fd, EPOLLIN );
-}
+    fdhandler_prepend(f, &list->active);
 
-/** CLIENTS
- **/
-
-typedef struct Client {
-    struct Client*   next;
-    struct Client**  pref;
-    int              channel;
-    FDHandler        fdhandler[1];
-    Receiver         receiver[1];
-} Client;
-
-static Client*   _free_clients;
-
-static void
-client_free( Client*  c )
-{
-    c->pref[0] = c->next;
-    c->next    = NULL;
-    c->pref    = &c->next;
-
-    fdhandler_done( c->fdhandler );
-    free(c);
-}
-
-static void
-client_receive( Client*  c, Packet*  p )
-{
-    p->channel = c->channel;
-    receiver_post( c->receiver, p );
-}
-
-static void
-client_send( Client*  c, Packet*  p )
-{
-    fdhandler_enqueue( c->fdhandler, p );
-}
-
-static void
-client_close( Client*  c )
-{
-    D("disconnecting client on fd %d", c->fdhandler->fd);
-    client_free(c);
-}
-
-static Client*
-client_new( int         fd,
-            int         channel,
-            Looper*     looper,
-            Receiver*   receiver )
-{
-    Client*   c;
-    Receiver  recv;
-
-    xnew(c);
-
-    c->next = NULL;
-    c->pref = &c->next;
-    c->channel = channel;
-    c->receiver[0] = receiver[0];
-
-    recv.user  = c;
-    recv.post  = (PostFunc)  client_receive;
-    recv.close = (CloseFunc) client_close;
-
-    fdhandler_init( c->fdhandler, fd, looper, &recv );
-    return c;
-}
-
-static void
-client_link( Client*  c, Client**  plist )
-{
-    c->next  = plist[0];
-    c->pref  = plist;
-    plist[0] = c;
-}
-
-
-/** CHANNELS
- **/
-
-typedef enum {
-    CHANNEL_BROADCAST = 0,
-    CHANNEL_DUPLEX,
-
-    CHANNEL_MAX  /* do not remove */
-
-} ChannelType;
-
-#define  CHANNEL_CONTROL   0
-
-typedef struct Channel {
-    struct Channel*     next;
-    struct Channel**    pref;
-    FDHandler           fdhandler[1];
-    ChannelType         ctype;
-    const char*         name;
-    int                 index;
-    Receiver            receiver[1];
-    Client*             clients;
-} Channel;
-
-static void
-channel_free( Channel*  c )
-{
-    while (c->clients)
-        client_free(c->clients);
-
-    c->pref[0] = c->next;
-    c->pref    = &c->next;
-    c->next    = NULL;
-
-    fdhandler_done( c->fdhandler );
-    free(c);
-}
-
-static void
-channel_close( Channel*  c )
-{
-    D("closing channel '%s' on fd %d", c->name, c->fdhandler->fd);
-    channel_free(c);
-}
-
-
-static void
-channel_accept( Channel*  c, Packet*  p )
-{
-    int   fd;
-    struct sockaddr  from;
-    socklen_t        fromlen = sizeof(from);
-
-    /* get rid of dummy packet (see fdhandler_event_accept) */
-    packet_free(&p);
-
-    do {
-        fd = accept( c->fdhandler->fd, &from, &fromlen );
-    } while (fd < 0 && errno == EINTR);
-
-    if (fd >= 0) {
-        Client*  client;
-
-        /* DUPLEX channels can only have one client at a time */
-        if (c->ctype == CHANNEL_DUPLEX && c->clients != NULL) {
-            D("refusing client connection on duplex channel '%s'", c->name);
-            close(fd);
-            return;
-        }
-        client = client_new( fd, c->index, c->fdhandler->looper, c->receiver );
-        client_link( client, &c->clients );
-        D("new client for channel '%s' on fd %d", c->name, fd);
-    }
-    else
-        D("could not accept connection: %s", strerror(errno));
-}
-
-
-static Channel*
-channel_new( int          fd,
-             ChannelType  ctype,
-             const char*  name,
-             int          index,
-             Looper*      looper,
-             Receiver*    receiver )
-{
-    Channel*  c;
-    Receiver  recv;
-
-    xnew(c);
-
-    c->next  = NULL;
-    c->pref  = &c->next;
-    c->ctype = ctype;
-    c->name  = name;
-    c->index = index;
-
-    /* saved for future clients */
-    c->receiver[0] = receiver[0];
-
-    recv.user  = c;
-    recv.post  = (PostFunc)  channel_accept;
-    recv.close = (CloseFunc) channel_close;
-
-    fdhandler_init_accept( c->fdhandler, fd, looper, &recv );
+    looper_add( list->looper, fd, (EventFunc) fdhandler_accept_event, f );
+    looper_enable( list->looper, fd, EPOLLIN );
     listen( fd, 5 );
 
-    return c;
+    return f;
 }
 
-static void
-channel_link( Channel*  c, Channel** plist )
-{
-    c->next  = plist[0];
-    c->pref  = plist;
-    plist[0] = c;
-}
-
-static void
-channel_send( Channel*  c, Packet*  p )
-{
-    Client*  client = c->clients;
-    for ( ; client; client = client->next ) {
-        Packet*  q = packet_dup(p);
-        client_send( client, q );
-    }
-    packet_free( &p );
-}
-
+/** SERIAL CONNECTION STATE
+ **
+ ** The following is used to handle the framing protocol
+ ** used on the serial port connection.
+ **/
 
 /* each packet is made of a 6 byte header followed by a payload
  * the header looks like:
  *
  *   offset   size    description
- *       0       4    a 4-char hex string for the size of the payload
- *       4       2    a 2-byte hex string for the channel number
+ *       0       2    a 2-byte hex string for the channel number
+ *       4       4    a 4-char hex string for the size of the payload
  *       6       n    the payload itself
  */
 #define  HEADER_SIZE    6
-#define  LENGTH_OFFSET  0
-#define  LENGTH_SIZE    4
-#define  CHANNEL_OFFSET 4
+#define  CHANNEL_OFFSET 0
+#define  LENGTH_OFFSET  2
 #define  CHANNEL_SIZE   2
+#define  LENGTH_SIZE    4
 
-#define  CHANNEL_INDEX_NONE     0
-#define  CHANNEL_INDEX_CONTROL  1
+#define  CHANNEL_CONTROL  0
 
-#define  TOSTRING(x)   _TOSTRING(x)
-#define  _TOSTRING(x)  #x
-
-/** SERIAL HANDLER
- **/
-
+/* The Serial object receives data from the serial port,
+ * extracts the payload size and channel index, then sends
+ * the resulting messages as a packet to a generic receiver.
+ *
+ * You can also use serial_send to send a packet through
+ * the serial port.
+ */
 typedef struct Serial {
-    FDHandler   fdhandler[1];
-    Receiver    receiver[1];
-    int         in_len;
-    int         in_datalen;
-    int         in_channel;
-    Packet*     in_packet;
+    FDHandler*  fdhandler;   /* used to monitor serial port fd */
+    Receiver    receiver[1]; /* send payload there */
+    int         in_len;      /* current bytes in input packet */
+    int         in_datalen;  /* payload size, or 0 when reading header */
+    int         in_channel;  /* extracted channel number */
+    Packet*     in_packet;   /* used to read incoming packets */
 } Serial;
 
-static void
-serial_done( Serial*  s )
-{
-    packet_free(&s->in_packet);
-    s->in_len     = 0;
-    s->in_datalen = 0;
-    s->in_channel = 0;
-    fdhandler_done(s->fdhandler);
-}
 
+/* a callback called when the serial port's fd is closed */
 static void
-serial_close( Serial*  s )
+serial_fd_close( Serial*  s )
 {
     fatal("unexpected serial port close !!");
 }
 
-/* receive packets from the serial port */
 static void
-serial_receive( Serial*  s, Packet*  p )
+serial_dump( Packet*  p, const char*  funcname )
+{
+    T("%s: %03d bytes: '%s'",
+      funcname, p->len, quote(p->data, p->len));
+}
+
+/* a callback called when a packet arrives from the serial port's FDHandler.
+ *
+ * This will essentially parse the header, extract the channel number and
+ * the payload size and store them in 'in_datalen' and 'in_channel'.
+ *
+ * After that, the payload is sent to the receiver once completed.
+ */
+static void
+serial_fd_receive( Serial*  s, Packet*  p )
 {
     int      rpos  = 0, rcount = p->len;
     Packet*  inp   = s->in_packet;
     int      inpos = s->in_len;
 
-    //D("received from serial: %d bytes: '%.*s'", p->len, p->len, p->data);
+    serial_dump( p, __FUNCTION__ );
 
     while (rpos < rcount)
     {
@@ -1009,8 +1108,11 @@ serial_receive( Serial*  s, Packet*  p )
                 s->in_datalen = hex2int( inp->data + LENGTH_OFFSET,  LENGTH_SIZE );
                 s->in_channel = hex2int( inp->data + CHANNEL_OFFSET, CHANNEL_SIZE );
 
-                if (s->in_datalen <= 0)
-                    D("ignoring empty packet from serial port");
+                if (s->in_datalen <= 0) {
+                    D("ignoring %s packet from serial port",
+                      s->in_datalen ? "empty" : "malformed");
+                    s->in_datalen = 0;
+                }
 
                 //D("received %d bytes packet for channel %d", s->in_datalen, s->in_channel);
                 inpos = 0;
@@ -1047,7 +1149,10 @@ serial_receive( Serial*  s, Packet*  p )
 }
 
 
-/* send a packet to the serial port */
+/* send a packet to the serial port.
+ * this assumes that p->len and p->channel contain the payload's
+ * size and channel and will add the appropriate header.
+ */
 static void
 serial_send( Serial*  s, Packet*  p )
 {
@@ -1060,54 +1165,446 @@ serial_send( Serial*  s, Packet*  p )
     int2hex( p->len,     h->data + LENGTH_OFFSET,  LENGTH_SIZE );
     int2hex( p->channel, h->data + CHANNEL_OFFSET, CHANNEL_SIZE );
 
+    serial_dump( h, __FUNCTION__ );
+    serial_dump( p, __FUNCTION__ );
+
     fdhandler_enqueue( s->fdhandler, h );
     fdhandler_enqueue( s->fdhandler, p );
 }
 
 
+/* initialize serial reader */
 static void
-serial_init( Serial*    s,
-             int        fd,
-             Looper*    looper,
-             Receiver*  receiver )
+serial_init( Serial*         s,
+             int             fd,
+             FDHandlerList*  list,
+             Receiver*       receiver )
 {
     Receiver  recv;
 
     recv.user  = s;
-    recv.post  = (PostFunc)  serial_receive;
-    recv.close = (CloseFunc) serial_close;
+    recv.post  = (PostFunc)  serial_fd_receive;
+    recv.close = (CloseFunc) serial_fd_close;
 
     s->receiver[0] = receiver[0];
 
-    fdhandler_init( s->fdhandler, fd, looper, &recv );
+    s->fdhandler = fdhandler_new( fd, list, &recv );
     s->in_len     = 0;
     s->in_datalen = 0;
     s->in_channel = 0;
     s->in_packet  = packet_alloc();
 }
 
+
+/** CLIENTS
+ **/
+
+typedef struct Client       Client;
+typedef struct Multiplexer  Multiplexer;
+
+/* A Client object models a single qemud client socket
+ * connection in the emulated system.
+ *
+ * the client first sends the name of the system service
+ * it wants to contact (no framing), then waits for a 2
+ * byte answer from qemud.
+ *
+ * the answer is either "OK" or "KO" to indicate
+ * success or failure.
+ *
+ * In case of success, the client can send messages
+ * to the service.
+ *
+ * In case of failure, it can disconnect or try sending
+ * the name of another service.
+ */
+struct Client {
+    Client*       next;
+    Client**      pref;
+    int           channel;
+    char          registered;
+    FDHandler*    fdhandler;
+    Multiplexer*  multiplexer;
+};
+
+struct Multiplexer {
+    Client*        clients;
+    int            last_channel;
+    Serial         serial[1];
+    Looper         looper[1];
+    FDHandlerList  fdhandlers[1];
+};
+
+
+static int   multiplexer_open_channel( Multiplexer*  mult, Packet*  p );
+static void  multiplexer_close_channel( Multiplexer*  mult, int  channel );
+static void  multiplexer_serial_send( Multiplexer* mult, int  channel, Packet*  p );
+
+static void
+client_dump( Client*  c, Packet*  p, const char*  funcname )
+{
+    T("%s: client %p (%d): %3d bytes: '%s'",
+      funcname, c, c->fdhandler->fd,
+      p->len, quote(p->data, p->len));
+}
+
+/* destroy a client */
+static void
+client_free( Client*  c )
+{
+    /* remove from list */
+    c->pref[0] = c->next;
+    if (c->next)
+        c->next->pref = c->pref;
+
+    c->channel    = -1;
+    c->registered = 0;
+
+    /* gently ask the FDHandler to shutdown to
+     * avoid losing queued outgoing packets */
+    if (c->fdhandler != NULL) {
+        fdhandler_shutdown(c->fdhandler);
+        c->fdhandler = NULL;
+    }
+
+    xfree(c);
+}
+
+
+/* a function called when a client socket receives data */
+static void
+client_fd_receive( Client*  c, Packet*  p )
+{
+    client_dump(c, p, __FUNCTION__);
+
+    if (c->registered) {
+        /* the client is registered, just send the
+         * data through the serial port
+         */
+        multiplexer_serial_send(c->multiplexer, c->channel, p);
+        return;
+    }
+
+    if (c->channel > 0) {
+        /* the client is waiting registration results.
+         * this should not happen because the client
+         * should wait for our 'ok' or 'ko'.
+         * close the connection.
+         */
+         D("%s: bad client sending data before end of registration",
+           __FUNCTION__);
+     BAD_CLIENT:
+         packet_free(&p);
+         client_free(c);
+         return;
+    }
+
+    /* the client hasn't registered a service yet,
+     * so this must be the name of a service, call
+     * the multiplexer to start registration for
+     * it.
+     */
+    D("%s: attempting registration for service '%.*s'",
+      __FUNCTION__, p->len, p->data);
+    c->channel = multiplexer_open_channel(c->multiplexer, p);
+    if (c->channel < 0) {
+        D("%s: service name too long", __FUNCTION__);
+        goto BAD_CLIENT;
+    }
+    D("%s:    -> received channel id %d", __FUNCTION__, c->channel);
+    packet_free(&p);
+}
+
+
+/* a function called when the client socket is closed. */
+static void
+client_fd_close( Client*  c )
+{
+    T("%s: client %p (%d)", __FUNCTION__, c, c->fdhandler->fd);
+
+    /* no need to shutdown the FDHandler */
+    c->fdhandler = NULL;
+
+    /* tell the emulator we're out */
+    if (c->channel > 0)
+        multiplexer_close_channel(c->multiplexer, c->channel);
+
+    /* free the client */
+    client_free(c);
+}
+
+/* a function called when the multiplexer received a registration
+ * response from the emulator for a given client.
+ */
+static void
+client_registration( Client*  c, int  registered )
+{
+    Packet*  p = packet_alloc();
+
+    /* sends registration status to client */
+    if (!registered) {
+        D("%s: registration failed for client %d", __FUNCTION__, c->channel);
+        memcpy( p->data, "KO", 2 );
+        p->len = 2;
+    } else {
+        D("%s: registration succeeded for client %d", __FUNCTION__, c->channel);
+        memcpy( p->data, "OK", 2 );
+        p->len = 2;
+    }
+    client_dump(c, p, __FUNCTION__);
+    fdhandler_enqueue(c->fdhandler, p);
+
+    /* now save registration state
+     */
+    c->registered = registered;
+    if (!registered) {
+        /* allow the client to try registering another service */
+        c->channel = -1;
+    }
+}
+
+/* send data to a client */
+static void
+client_send( Client*  c, Packet*  p )
+{
+    client_dump(c, p, __FUNCTION__);
+    fdhandler_enqueue(c->fdhandler, p);
+}
+
+
+/* Create new client socket handler */
+static Client*
+client_new( Multiplexer*    mult,
+            int             fd,
+            FDHandlerList*  pfdhandlers,
+            Client**        pclients )
+{
+    Client*   c;
+    Receiver  recv;
+
+    xnew(c);
+
+    c->multiplexer = mult;
+    c->next        = NULL;
+    c->pref        = &c->next;
+    c->channel     = -1;
+    c->registered  = 0;
+
+    recv.user  = c;
+    recv.post  = (PostFunc)  client_fd_receive;
+    recv.close = (CloseFunc) client_fd_close;
+
+    c->fdhandler = fdhandler_new( fd, pfdhandlers, &recv );
+
+    /* add to client list */
+    c->next   = *pclients;
+    c->pref   = pclients;
+    *pclients = c;
+    if (c->next)
+        c->next->pref = &c->next;
+
+    return c;
+}
+
 /**  GLOBAL MULTIPLEXER
  **/
 
-typedef struct {
-    Looper     looper[1];
-    Serial     serial[1];
-    Channel*   channels;
-    uint16_t   channel_last;
-} Multiplexer;
+/* find a client by its channel */
+static Client*
+multiplexer_find_client( Multiplexer*  mult, int  channel )
+{
+    Client* c = mult->clients;
 
-/* receive a packet from the serial port, send it to the relevant client/channel */
-static void  multiplexer_receive_serial( Multiplexer*  m, Packet*  p );
+    for ( ; c != NULL; c = c->next ) {
+        if (c->channel == channel)
+            return c;
+    }
+    return NULL;
+}
+
+/* handle control messages coming from the serial port
+ * on CONTROL_CHANNEL.
+ */
+static void
+multiplexer_handle_control( Multiplexer*  mult, Packet*  p )
+{
+    /* connection registration success */
+    if (p->len == 15 && !memcmp(p->data, "ok:connect:", 11)) {
+        int      channel = hex2int(p->data+11, 4);
+        Client*  client  = multiplexer_find_client(mult, channel);
+
+        /* note that 'client' can be NULL if the corresponding
+         * socket was closed before the emulator response arrived.
+         */
+        if (client != NULL) {
+            client_registration(client, 1);
+        }
+        goto EXIT;
+    }
+
+    /* connection registration failure */
+    if (p->len >= 15 && !memcmp(p->data, "ko:connect:",11)) {
+        int     channel = hex2int(p->data+11, 4);
+        Client* client  = multiplexer_find_client(mult, channel);
+
+        if (client != NULL)
+            client_registration(client, 0);
+
+        goto EXIT;
+    }
+
+    /* emulator-induced client disconnection */
+    if (p->len == 15 && !memcmp(p->data, "disconnect:",11)) {
+        int      channel = hex2int(p->data+11, 4);
+        Client*  client  = multiplexer_find_client(mult, channel);
+
+        if (client != NULL)
+            client_free(client);
+
+        goto EXIT;
+    }
+
+    D("%s: unknown control message: '%.*s'",
+      __FUNCTION__, p->len, p->data);
+
+EXIT:
+    packet_free(&p);
+}
+
+/* a function called when an incoming packet comes from the serial port */
+static void
+multiplexer_serial_receive( Multiplexer*  mult, Packet*  p )
+{
+    Client*  client;
+
+    if (p->channel == CHANNEL_CONTROL) {
+        multiplexer_handle_control(mult, p);
+        return;
+    }
+
+    client = multiplexer_find_client(mult, p->channel);
+    if (client != NULL) {
+        client_send(client, p);
+        return;
+    }
+
+    D("%s: discarding packet for unknown channel %d", __FUNCTION__, p->channel);
+    packet_free(&p);
+}
+
+/* a function called when the serial reader closes */
+static void
+multiplexer_serial_close( Multiplexer*  mult )
+{
+    fatal("unexpected close of serial reader");
+}
+
+/* a function called to send a packet to the serial port */
+static void
+multiplexer_serial_send( Multiplexer*  mult, int  channel, Packet*  p )
+{
+    p->channel = channel;
+    serial_send( mult->serial, p );
+}
+
+
+
+/* a function used by a client to allocate a new channel id and
+ * ask the emulator to open it. 'service' must be a packet containing
+ * the name of the service in its payload.
+ *
+ * returns -1 if the service name is too long.
+ *
+ * notice that client_registration() will be called later when
+ * the answer arrives.
+ */
+static int
+multiplexer_open_channel( Multiplexer*  mult, Packet*  service )
+{
+    Packet*   p = packet_alloc();
+    int       len, channel;
+
+    /* find a free channel number, assume we don't have many
+     * clients here. */
+    {
+        Client*  c;
+    TRY_AGAIN:
+        channel = (++mult->last_channel) & 0xff;
+
+        for (c = mult->clients; c != NULL; c = c->next)
+            if (c->channel == channel)
+                goto TRY_AGAIN;
+    }
+
+    len = snprintf((char*)p->data, sizeof p->data, "connect:%.*s:%04x", service->len, service->data, channel);
+    if (len >= (int)sizeof(p->data)) {
+        D("%s: weird, service name too long (%d > %d)", __FUNCTION__, len, sizeof(p->data));
+        packet_free(&p);
+        return -1;
+    }
+    p->channel = CHANNEL_CONTROL;
+    p->len     = len;
+
+    serial_send(mult->serial, p);
+    return channel;
+}
+
+/* used to tell the emulator a channel was closed by a client */
+static void
+multiplexer_close_channel( Multiplexer*  mult, int  channel )
+{
+    Packet*  p   = packet_alloc();
+    int      len = snprintf((char*)p->data, sizeof(p->data), "disconnect:%04x", channel);
+
+    if (len > (int)sizeof(p->data)) {
+        /* should not happen */
+        return;
+    }
+
+    p->channel = CHANNEL_CONTROL;
+    p->len     = len;
+
+    serial_send(mult->serial, p);
+}
+
+/* this function is used when a new connection happens on the control
+ * socket.
+ */
+static void
+multiplexer_control_accept( Multiplexer*  m, Packet*  p )
+{
+    /* the file descriptor for the new socket connection is
+     * in p->channel. See fdhandler_accept_event() */
+    int      fd     = p->channel;
+    Client*  client = client_new( m, fd, m->fdhandlers, &m->clients );
+
+    D("created client %p listening on fd %d", client, fd);
+
+    /* free dummy packet */
+    packet_free(&p);
+}
+
+static void
+multiplexer_control_close( Multiplexer*  m )
+{
+    fatal("unexpected multiplexer control close");
+}
 
 static void
 multiplexer_init( Multiplexer*  m, const char*  serial_dev )
 {
-    int       fd;
+    int       fd, control_fd;
     Receiver  recv;
 
+    /* initialize looper and fdhandlers list */
     looper_init( m->looper );
+    fdhandler_list_init( m->fdhandlers, m->looper );
 
-    fd = open(serial_dev, O_RDWR);
+    /* open the serial port */
+    do {
+        fd = open(serial_dev, O_RDWR);
+    } while (fd < 0 && errno == EINTR);
+
     if (fd < 0) {
         fatal( "%s: could not open '%s': %s", __FUNCTION__, serial_dev,
                strerror(errno) );
@@ -1120,140 +1617,33 @@ multiplexer_init( Multiplexer*  m, const char*  serial_dev )
         tcsetattr( fd, TCSANOW, &ios );
     }
 
+    /* initialize the serial reader/writer */
     recv.user  = m;
-    recv.post  = (PostFunc) multiplexer_receive_serial;
-    recv.close = NULL;
+    recv.post  = (PostFunc)  multiplexer_serial_receive;
+    recv.close = (CloseFunc) multiplexer_serial_close;
 
-    serial_init( m->serial, fd, m->looper, &recv );
+    serial_init( m->serial, fd, m->fdhandlers, &recv );
 
-    m->channels     = NULL;
-    m->channel_last = CHANNEL_CONTROL+1;
-}
+    /* open the qemud control socket */
+    recv.user  = m;
+    recv.post  = (PostFunc)  multiplexer_control_accept;
+    recv.close = (CloseFunc) multiplexer_control_close;
 
-static void
-multiplexer_add_channel( Multiplexer*  m, int  fd, const char*  name, ChannelType  ctype )
-{
-    Channel*  c;
-    Receiver  recv;
-
-    /* send channel client data directly to the serial port */
-    recv.user  = m->serial;
-    recv.post  = (PostFunc) serial_send;
-    recv.close = (CloseFunc) client_close;
-
-    /* connect each channel directly to the serial port */
-    c = channel_new( fd, ctype, name, m->channel_last, m->looper, &recv );
-    channel_link( c, &m->channels );
-
-    m->channel_last += 1;
-    if (m->channel_last <= CHANNEL_CONTROL)
-        m->channel_last += 1;
-}
-
-
-static void
-multiplexer_done( Multiplexer*  m )
-{
-    while (m->channels)
-        channel_close(m->channels);
-
-    serial_done( m->serial );
-    looper_done( m->looper );
-}
-
-
-static void
-multiplexer_send_answer( Multiplexer*  m, Packet*  p, const char*  answer )
-{
-    p->len = strlen( answer );
-    if (p->len >= MAX_PAYLOAD)
-        p->len = MAX_PAYLOAD-1;
-
-    memcpy( (char*)p->data, answer, p->len );
-    p->channel = CHANNEL_CONTROL;
-
-    serial_send( m->serial, p );
-}
-
-
-static void
-multiplexer_handle_connect( Multiplexer*  m, Packet*  p, char*  name )
-{
-    int       n;
-    Channel*  c;
-
-    if (p->len >= MAX_PAYLOAD) {
-        multiplexer_send_answer( m, p, "ko:connect:bad name" );
-        return;
-    }
-    p->data[p->len] = 0;
-
-    for (c = m->channels; c != NULL; c = c->next)
-        if ( !strcmp(c->name, name) )
-            break;
-
-    if (c == NULL) {
-        D("can't connect to unknown channel '%s'", name);
-        multiplexer_send_answer( m, p, "ko:connect:bad name" );
-        return;
+    fd = android_get_control_socket(CONTROL_SOCKET_NAME);
+    if (fd < 0) {
+        fatal("couldn't get fd for control socket '%s'", CONTROL_SOCKET_NAME);
     }
 
-    p->channel = CHANNEL_CONTROL;
-    p->len     = snprintf( (char*)p->data, MAX_PAYLOAD,
-                       "ok:connect:%s:%02x", c->name, c->index );
+    fdhandler_new_accept( fd, m->fdhandlers, &recv );
 
-    serial_send( m->serial, p );
+    /* initialize clients list */
+    m->clients = NULL;
 }
-
-
-static void
-multiplexer_receive_serial( Multiplexer*  m, Packet*  p )
-{
-    Channel*  c = m->channels;
-
-    /* check the destination channel index */
-    if (p->channel != CHANNEL_CONTROL) {
-        Channel*  c;
-
-        for (c = m->channels; c; c = c->next ) {
-            if (c->index == p->channel) {
-                channel_send( c, p );
-                break;
-            }
-        }
-        if (c == NULL) {
-            D("ignoring %d bytes packet for unknown channel index %d",
-                p->len, p->channel );
-            packet_free(&p);
-        }
-    }
-    else  /* packet addressed to the control channel */
-    {
-        D("received control message:  '%.*s'", p->len, p->data);
-        if (p->len > 8 && strncmp( (char*)p->data, "connect:", 8) == 0) {
-            multiplexer_handle_connect( m, p, (char*)p->data + 8 );
-        } else {
-            /* unknown command */
-            multiplexer_send_answer( m, p, "ko:unknown command" );
-        }
-        return;
-    }
-}
-
 
 /** MAIN LOOP
  **/
 
 static Multiplexer  _multiplexer[1];
-
-#define  QEMUD_PREFIX  "qemud_"
-
-static const struct { const char* name; ChannelType  ctype; }   default_channels[] = {
-    { "gsm", CHANNEL_DUPLEX },       /* GSM AT command channel, used by commands/rild/rild.c */
-    { "gps", CHANNEL_BROADCAST },    /* GPS NMEA commands, used by libs/hardware_legacy/qemu_gps.c  */
-    { "control", CHANNEL_DUPLEX },   /* Used for power/leds/vibrator/etc... */
-    { NULL, 0 }
-};
 
 int  main( void )
 {
@@ -1301,31 +1691,6 @@ int  main( void )
         snprintf( buff, sizeof(buff), "/dev/%.*s", q-p, p );
 
         multiplexer_init( m, buff );
-    }
-
-    D("multiplexer inited, creating default channels");
-
-    /* now setup all default channels */
-    {
-        int  nn;
-
-        for (nn = 0; default_channels[nn].name != NULL; nn++) {
-            char         control_name[32];
-            int          fd;
-            Channel*     chan;
-            const char*  name  = default_channels[nn].name;
-            ChannelType  ctype = default_channels[nn].ctype;
-
-            snprintf(control_name, sizeof(control_name), "%s%s",
-                     QEMUD_PREFIX, name);
-
-            if ((fd = android_get_control_socket(control_name)) < 0) {
-                D("couldn't get fd for control socket '%s'", name);
-                continue;
-            }
-            D( "got control socket '%s' on fd %d", control_name, fd);
-            multiplexer_add_channel( m, fd, name, ctype );
-        }
     }
 
     D( "entering main loop");

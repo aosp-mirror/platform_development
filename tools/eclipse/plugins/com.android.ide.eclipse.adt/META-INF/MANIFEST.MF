@@ -40,7 +40,10 @@ Require-Bundle: com.android.ide.eclipse.ddms,
  org.eclipse.wst.sse.ui,
  org.eclipse.wst.xml.core,
  org.eclipse.wst.xml.ui,
- org.eclipse.jdt.junit
+ org.eclipse.jdt.junit,
+ org.eclipse.jdt.junit.runtime,
+ org.eclipse.ltk.core.refactoring,
+ org.eclipse.ltk.ui.refactoring
 Eclipse-LazyStart: true
 Export-Package: com.android.ide.eclipse.adt,
  com.android.ide.eclipse.adt.build;x-friends:="com.android.ide.eclipse.tests",

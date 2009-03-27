@@ -17,18 +17,17 @@
 package com.android.ddmlib.testrunner;
 
 import com.android.ddmlib.Client;
+import com.android.ddmlib.Device.DeviceState;
 import com.android.ddmlib.FileListingService;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.IShellOutputReceiver;
+import com.android.ddmlib.log.LogReceiver;
 import com.android.ddmlib.RawImage;
 import com.android.ddmlib.SyncService;
-import com.android.ddmlib.Device.DeviceState;
-import com.android.ddmlib.log.LogReceiver;
-
-import junit.framework.TestCase;
 
 import java.io.IOException;
 import java.util.Map;
+import junit.framework.TestCase;
 
 /**
  * Tests RemoteAndroidTestRunner.
@@ -82,14 +81,15 @@ public class RemoteAndroidTestRunnerTest extends TestCase {
     }
 
     /**
-     * Test the building of the instrumentation runner command with extra args set.
+     * Test the building of the instrumentation runner command with extra argument added.
      */
-    public void testRunWithExtraArgs() {
-        final String extraArgs = "blah";
-        mRunner.setExtraArgs(extraArgs);
+    public void testRunWithAddInstrumentationArg() {
+        final String extraArgName = "blah";
+        final String extraArgValue = "blahValue";
+        mRunner.addInstrumentationArg(extraArgName, extraArgValue);
         mRunner.run(new EmptyListener());
-        assertStringsEquals(String.format("am instrument -w -r %s %s/%s", extraArgs,
-                TEST_PACKAGE, TEST_RUNNER), mMockDevice.getLastShellCommand());
+        assertStringsEquals(String.format("am instrument -w -r -e %s %s %s/%s", extraArgName, 
+                extraArgValue, TEST_PACKAGE, TEST_RUNNER), mMockDevice.getLastShellCommand());
     }
 
 
@@ -243,6 +243,5 @@ public class RemoteAndroidTestRunnerTest extends TestCase {
         public void testStarted(TestIdentifier test) {
             // ignore
         }
-
     }
 }

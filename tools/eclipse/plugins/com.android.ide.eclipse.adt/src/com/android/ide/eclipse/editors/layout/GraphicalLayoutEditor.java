@@ -61,8 +61,10 @@ import com.android.ide.eclipse.editors.wizards.ConfigurationSelector.LanguageReg
 import com.android.ide.eclipse.editors.wizards.ConfigurationSelector.MobileCodeVerifier;
 import com.android.layoutlib.api.ILayoutLog;
 import com.android.layoutlib.api.ILayoutResult;
+import com.android.layoutlib.api.IProjectCallback;
 import com.android.layoutlib.api.IResourceValue;
 import com.android.layoutlib.api.IStyleResourceValue;
+import com.android.layoutlib.api.IXmlPullParser;
 import com.android.layoutlib.api.ILayoutResult.ILayoutViewInfo;
 import com.android.sdklib.IAndroidTarget;
 
@@ -222,7 +224,7 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
             // updateUiFromFramework will reset language/region combo, so we must call
             // setConfiguration after, or the settext on language/region will be lost.
             if (mEditedConfig != null) {
-                setConfiguration(mEditedConfig);
+                setConfiguration(mEditedConfig, false /*force*/);
             }
 
             // make sure we remove the custom view loader, since its parent class loader is the
@@ -867,7 +869,7 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
     @Override
     void editNewFile(FolderConfiguration configuration) {
         // update the configuration UI
-        setConfiguration(configuration);
+        setConfiguration(configuration, true /*force*/);
         
         // enable the create button if the current and edited config are not equals
         mCreateButton.setEnabled(mEditedConfig.equals(mCurrentConfig) == false);
@@ -975,18 +977,14 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
                 int themeIndex = mThemeCombo.getSelectionIndex();
                 if (themeIndex != -1) {
                     String theme = mThemeCombo.getItem(themeIndex);
-                    
-                    // change the string if it's a custom theme to make sure we can
-                    // differentiate them
-                    if (themeIndex >= mPlatformThemeCount) {
-                        theme = "*" + theme; //$NON-NLS-1$
-                    }
 
                     // Render a single object as described by the ViewElementDescriptor.
                     WidgetPullParser parser = new WidgetPullParser(descriptor);
-                    ILayoutResult result = bridge.bridge.computeLayout(parser,
+                    ILayoutResult result = computeLayout(bridge, parser,
                             null /* projectKey */,
-                            300 /* width */, 300 /* height */, theme,
+                            300 /* width */, 300 /* height */, 160 /*density*/,
+                            160.f /*xdpi*/, 160.f /*ydpi*/, theme,
+                            themeIndex >= mPlatformThemeCount /*isProjectTheme*/,
                             configuredProjectResources, frameworkResources, projectCallback,
                             null /* logger */);
 
@@ -1073,11 +1071,14 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
 
     /**
      * Update the UI controls state with a given {@link FolderConfiguration}.
-     * <p/>If a qualifier is not present in the {@link FolderConfiguration} object, the UI control
-     * is not modified. However if the value in the control is not the default value, a warning
-     * icon is showed.
+     * <p/>If <var>force</var> is set to <code>true</code> the UI will be changed to exactly reflect
+     * <var>config</var>, otherwise, if a qualifier is not present in <var>config</var>,
+     * the UI control is not modified. However if the value in the control is not the default value,
+     * a warning icon is shown.
+     * @param config The {@link FolderConfiguration} to set.
+     * @param force Whether the UI should be changed to exactly match the received configuration.
      */
-    void setConfiguration(FolderConfiguration config) {
+    void setConfiguration(FolderConfiguration config, boolean force) {
         mDisableUpdates = true; // we do not want to trigger onXXXChange when setting new values in the widgets.
 
         mEditedConfig = config;
@@ -1088,6 +1089,9 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
         if (countryQualifier != null) {
             mCountry.setText(String.format("%1$d", countryQualifier.getCode()));
             mCurrentConfig.setCountryCodeQualifier(countryQualifier);
+        } else if (force) {
+            mCountry.setText(""); //$NON-NLS-1$
+            mCurrentConfig.setCountryCodeQualifier(null);
         } else if (mCountry.getText().length() > 0) {
             mCountryIcon.setImage(mWarningImage);
         }
@@ -1097,6 +1101,9 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
         if (networkQualifier != null) {
             mNetwork.setText(String.format("%1$d", networkQualifier.getCode()));
             mCurrentConfig.setNetworkCodeQualifier(networkQualifier);
+        } else if (force) {
+            mNetwork.setText(""); //$NON-NLS-1$
+            mCurrentConfig.setNetworkCodeQualifier(null);
         } else if (mNetwork.getText().length() > 0) {
             mNetworkIcon.setImage(mWarningImage);
         }
@@ -1106,6 +1113,9 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
         if (languageQualifier != null) {
             mLanguage.setText(languageQualifier.getValue());
             mCurrentConfig.setLanguageQualifier(languageQualifier);
+        } else if (force) {
+            mLanguage.setText(""); //$NON-NLS-1$
+            mCurrentConfig.setLanguageQualifier(null);
         } else if (mLanguage.getText().length() > 0) {
             mLanguageIcon.setImage(mWarningImage);
         }
@@ -1115,6 +1125,9 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
         if (regionQualifier != null) {
             mRegion.setText(regionQualifier.getValue());
             mCurrentConfig.setRegionQualifier(regionQualifier);
+        } else if (force) {
+            mRegion.setText(""); //$NON-NLS-1$
+            mCurrentConfig.setRegionQualifier(null);
         } else if (mRegion.getText().length() > 0) {
             mRegionIcon.setImage(mWarningImage);
         }
@@ -1125,6 +1138,9 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
             mOrientation.select(
                     ScreenOrientation.getIndex(orientationQualifier.getValue()) + 1);
             mCurrentConfig.setScreenOrientationQualifier(orientationQualifier);
+        } else if (force) {
+            mOrientation.select(0);
+            mCurrentConfig.setScreenOrientationQualifier(null);
         } else if (mOrientation.getSelectionIndex() != 0) {
             mOrientationIcon.setImage(mWarningImage);
         }
@@ -1134,6 +1150,9 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
         if (densityQualifier != null) {
             mDensity.setText(String.format("%1$d", densityQualifier.getValue()));
             mCurrentConfig.setPixelDensityQualifier(densityQualifier);
+        } else if (force) {
+            mDensity.setText(""); //$NON-NLS-1$
+            mCurrentConfig.setPixelDensityQualifier(null);
         } else if (mDensity.getText().length() > 0) {
             mDensityIcon.setImage(mWarningImage);
         }
@@ -1143,6 +1162,9 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
         if (touchQualifier != null) {
             mTouch.select(TouchScreenType.getIndex(touchQualifier.getValue()) + 1);
             mCurrentConfig.setTouchTypeQualifier(touchQualifier);
+        } else if (force) {
+            mTouch.select(0);
+            mCurrentConfig.setTouchTypeQualifier(null);
         } else if (mTouch.getSelectionIndex() != 0) {
             mTouchIcon.setImage(mWarningImage);
         }
@@ -1152,6 +1174,9 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
         if (keyboardQualifier != null) {
             mKeyboard.select(KeyboardState.getIndex(keyboardQualifier.getValue()) + 1);
             mCurrentConfig.setKeyboardStateQualifier(keyboardQualifier);
+        } else if (force) {
+            mKeyboard.select(0);
+            mCurrentConfig.setKeyboardStateQualifier(null);
         } else if (mKeyboard.getSelectionIndex() != 0) {
             mKeyboardIcon.setImage(mWarningImage);
         }
@@ -1161,6 +1186,9 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
         if (inputQualifier != null) {
             mTextInput.select(TextInputMethod.getIndex(inputQualifier.getValue()) + 1);
             mCurrentConfig.setTextInputMethodQualifier(inputQualifier);
+        } else if (force) {
+            mTextInput.select(0);
+            mCurrentConfig.setTextInputMethodQualifier(null);
         } else if (mTextInput.getSelectionIndex() != 0) {
             mTextInputIcon.setImage(mWarningImage);
         }
@@ -1171,6 +1199,9 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
             mNavigation.select(
                     NavigationMethod.getIndex(navigationQualifiter.getValue()) + 1);
             mCurrentConfig.setNavigationMethodQualifier(navigationQualifiter);
+        } else if (force) {
+            mNavigation.select(0);
+            mCurrentConfig.setNavigationMethodQualifier(null);
         } else if (mNavigation.getSelectionIndex() != 0) {
             mNavigationIcon.setImage(mWarningImage);
         }
@@ -1181,6 +1212,10 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
             mSize1.setText(String.format("%1$d", sizeQualifier.getValue1()));
             mSize2.setText(String.format("%1$d", sizeQualifier.getValue2()));
             mCurrentConfig.setScreenDimensionQualifier(sizeQualifier);
+        } else if (force) {
+            mSize1.setText(""); //$NON-NLS-1$
+            mSize2.setText(""); //$NON-NLS-1$
+            mCurrentConfig.setScreenDimensionQualifier(null);
         } else if (mSize1.getText().length() > 0 && mSize2.getText().length() > 0) {
             mSizeIcon.setImage(mWarningImage);
         }
@@ -1607,7 +1642,7 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
             // at this point, we have not opened a new file.
 
             // update the configuration icons with the new edited config.
-            setConfiguration(mEditedConfig);
+            setConfiguration(mEditedConfig, false /*force*/);
             
             // enable the create button if the current and edited config are not equals
             mCreateButton.setEnabled(mEditedConfig.equals(mCurrentConfig) == false);
@@ -1794,45 +1829,16 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
                             // Compute the layout
                             UiElementPullParser parser = new UiElementPullParser(getModel());
                             Rectangle rect = getBounds();
-                            ILayoutResult result = null;
-                            if (bridge.apiLevel >= 3) {
-                                // call the new api with proper theme differentiator and
-                                // density/dpi support.
-                                boolean isProjectTheme = themeIndex >= mPlatformThemeCount;
+                            boolean isProjectTheme = themeIndex >= mPlatformThemeCount;
 
-                                // FIXME pass the density/dpi from somewhere (resource config or skin).
-                                result = bridge.bridge.computeLayout(parser,
-                                        iProject /* projectKey */,
-                                        rect.width, rect.height, 160, 160.f, 160.f, 
-                                        theme, isProjectTheme,
-                                        mConfiguredProjectRes, frameworkResources, mProjectCallback,
-                                        mLogger);
-                            } else if (bridge.apiLevel == 2) {
-                                // api with boolean for separation of project/framework theme
-                                boolean isProjectTheme = themeIndex >= mPlatformThemeCount;
+                            // FIXME pass the density/dpi from somewhere (resource config or skin).
+                            ILayoutResult result = computeLayout(bridge, parser,
+                                    iProject /* projectKey */,
+                                    rect.width, rect.height, 160, 160.f, 160.f, 
+                                    theme, isProjectTheme,
+                                    mConfiguredProjectRes, frameworkResources, mProjectCallback,
+                                    mLogger);
 
-                                result = bridge.bridge.computeLayout(parser,
-                                        iProject /* projectKey */,
-                                        rect.width, rect.height, theme, isProjectTheme,
-                                        mConfiguredProjectRes, frameworkResources, mProjectCallback,
-                                        mLogger);
-                            } else {
-                                // oldest api with no density/dpi, and project theme boolean mixed
-                                // into the theme name.
-
-                                // change the string if it's a custom theme to make sure we can
-                                // differentiate them
-                                if (themeIndex >= mPlatformThemeCount) {
-                                    theme = "*" + theme; //$NON-NLS-1$
-                                }
-        
-                                result = bridge.bridge.computeLayout(parser,
-                                        iProject /* projectKey */,
-                                        rect.width, rect.height, theme,
-                                        mConfiguredProjectRes, frameworkResources, mProjectCallback,
-                                        mLogger);
-                            }
-    
                             // update the UiElementNode with the layout info.
                             if (result.getSuccess() == ILayoutResult.SUCCESS) {
                                 model.setEditData(result.getImage());
@@ -2382,5 +2388,49 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
         }
 
         return null;
+    }
+    
+    /**
+     * Computes a layout by calling the correct computeLayout method of ILayoutBridge based on
+     * the implementation API level.
+     */
+    @SuppressWarnings("deprecation")
+    private ILayoutResult computeLayout(LayoutBridge bridge,
+            IXmlPullParser layoutDescription, Object projectKey,
+            int screenWidth, int screenHeight, int density, float xdpi, float ydpi,
+            String themeName, boolean isProjectTheme,
+            Map<String, Map<String, IResourceValue>> projectResources,
+            Map<String, Map<String, IResourceValue>> frameworkResources,
+            IProjectCallback projectCallback, ILayoutLog logger) {
+        
+        if (bridge.apiLevel >= 3) {
+            // newer api with boolean for separation of project/framework theme,
+            // and density support.
+            return bridge.bridge.computeLayout(layoutDescription,
+                    projectKey, screenWidth, screenHeight, density, xdpi, ydpi, 
+                    themeName, isProjectTheme,
+                    projectResources, frameworkResources, projectCallback,
+                    logger);
+        } else if (bridge.apiLevel == 2) {
+            // api with boolean for separation of project/framework theme
+            return bridge.bridge.computeLayout(layoutDescription,
+                    projectKey, screenWidth, screenHeight, themeName, isProjectTheme,
+                    mConfiguredProjectRes, frameworkResources, mProjectCallback,
+                    mLogger);
+        } else {
+            // oldest api with no density/dpi, and project theme boolean mixed
+            // into the theme name.
+
+            // change the string if it's a custom theme to make sure we can
+            // differentiate them
+            if (isProjectTheme) {
+                themeName = "*" + themeName; //$NON-NLS-1$
+            }
+
+            return bridge.bridge.computeLayout(layoutDescription,
+                    projectKey, screenWidth, screenHeight, themeName,
+                    mConfiguredProjectRes, frameworkResources, mProjectCallback,
+                    mLogger);
+        }
     }
 }

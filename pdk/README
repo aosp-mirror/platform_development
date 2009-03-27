@@ -1,6 +1,9 @@
 Building the pdk (platform development kit)
 
-1) get a cupcake source tree
+1) get a cupcake source tree with all the normal tools... and add doxygen 
+(We currently support version 1.4.6)
+
+  sudo apt-get install doxygen
 
 2) from the root
   . build/envsetup.sh

@@ -16,11 +16,12 @@
 
 package com.android.ide.eclipse.adt.launch;
 
+import com.android.ddmlib.IDevice;
+import com.android.ide.eclipse.common.project.AndroidManifestParser;
+
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IProgressMonitor;
-
-import com.android.ddmlib.IDevice;
 
 /**
  * A delayed launch waiting for a device to be present or ready before the
@@ -50,7 +51,8 @@ public final class DelayedLaunchInfo {
     /** debuggable attribute of the manifest file. */
     private final Boolean mDebuggable;
     
-    /** Required ApiVersionNumber by the app. 0 means no requirements */
+    /** Required ApiVersionNumber by the app. {@link AndroidManifestParser#INVALID_MIN_SDK} means
+     * no requirements */
     private final int mRequiredApiVersionNumber;
     
     private InstallRetryMode mRetryMode = InstallRetryMode.NEVER;
@@ -81,7 +83,8 @@ public final class DelayedLaunchInfo {
      * @param launchAction action to perform after app install
      * @param pack IFile to the package (.apk) file
      * @param debuggable debuggable attribute of the app's manifest file.
-     * @param requiredApiVersionNumber required SDK version by the app. 0 means no requirements.
+     * @param requiredApiVersionNumber required SDK version by the app.
+     * {@link AndroidManifestParser#INVALID_MIN_SDK} means no requirements.
      * @param launch the launch object
      * @param monitor progress monitor for launch
      */

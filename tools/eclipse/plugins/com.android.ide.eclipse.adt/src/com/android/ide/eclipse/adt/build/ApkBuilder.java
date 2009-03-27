@@ -196,7 +196,7 @@ public class ApkBuilder extends BaseBuilder {
     }
 
     // build() returns a list of project from which this project depends for future compilation.
-    @SuppressWarnings("unchecked") //$NON-NLS-1$
+    @SuppressWarnings("unchecked")
     @Override
     protected IProject[] build(int kind, Map args, IProgressMonitor monitor)
             throws CoreException {
@@ -979,7 +979,10 @@ public class ApkBuilder extends BaseBuilder {
         writeStandardProjectResources(jarBuilder, javaProject, wsRoot, list);
         
         for (IJavaProject referencedJavaProject : referencedJavaProjects) {
-            if (referencedJavaProject.getProject().hasNature(AndroidConstants.NATURE)) {
+            // only include output from non android referenced project
+            // (This is to handle the case of reference Android projects in the context of 
+            // instrumentation projects that need to reference the projects to be tested).
+            if (referencedJavaProject.getProject().hasNature(AndroidConstants.NATURE) == false) {
                 writeStandardProjectResources(jarBuilder, referencedJavaProject, wsRoot, list);
             }
         }
@@ -1084,7 +1087,10 @@ public class ApkBuilder extends BaseBuilder {
         IWorkspaceRoot wsRoot = ws.getRoot();
 
         for (IJavaProject javaProject : referencedJavaProjects) {
-            if (javaProject.getProject().hasNature(AndroidConstants.NATURE)) {
+            // only include output from non android referenced project
+            // (This is to handle the case of reference Android projects in the context of 
+            // instrumentation projects that need to reference the projects to be tested).
+            if (javaProject.getProject().hasNature(AndroidConstants.NATURE) == false) {
                 // get the output folder
                 IPath path = null;
                 try {

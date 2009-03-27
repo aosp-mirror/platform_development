@@ -72,8 +72,10 @@ class PreCompilerDeltaVisitor extends BaseDeltaVisitor implements
     /** Manifest check/parsing flag. */
     private boolean mCheckedManifestXml = false;
 
-    /** Application Pacakge, gathered from the parsing of the manifest */
+    /** Application Package, gathered from the parsing of the manifest */
     private String mJavaPackage = null;
+    /** minSDKVersion attribute value, gathered from the parsing of the manifest */
+    private int mMinSdkVersion = AndroidManifestParser.INVALID_MIN_SDK;
 
     // Internal usage fields.
     /**
@@ -137,6 +139,22 @@ class PreCompilerDeltaVisitor extends BaseDeltaVisitor implements
         return mJavaPackage;
     }
 
+    /**
+     * Returns the minSDkVersion attribute from the manifest if it was checked/parsed.
+     * <p/>
+     * This can return {@link AndroidManifestParser#INVALID_MIN_SDK} in two cases:
+     * <ul>
+     * <li>The manifest was not part of the resource change delta, and the manifest was
+     * not checked/parsed ({@link #getCheckedManifestXml()} returns <code>false</code>)</li>
+     * <li>The manifest was parsed ({@link #getCheckedManifestXml()} returns <code>true</code>),
+     * but the package declaration is missing</li>
+     * </ul>
+     * @return the minSdkVersion or {@link AndroidManifestParser#INVALID_MIN_SDK}.
+     */
+    public int getMinSdkVersion() {
+        return mMinSdkVersion;
+    }
+
     /*
      * (non-Javadoc)
      *
@@ -184,6 +202,7 @@ class PreCompilerDeltaVisitor extends BaseDeltaVisitor implements
                     
                     if (parser != null) {
                         mJavaPackage = parser.getPackage();
+                        mMinSdkVersion = parser.getApiLevelRequirement();
                     }
 
                     mCheckedManifestXml = true;
