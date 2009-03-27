@@ -90,7 +90,7 @@ public class AndroidConstants {
 
     /** Name of the android sources directory */
     public static final String FD_ANDROID_SOURCES = "sources"; //$NON-NLS-1$
-
+    
     /** Resource java class  filename, i.e. "R.java" */
     public final static String FN_RESOURCE_CLASS = "R.java"; //$NON-NLS-1$
     /** Resource class file  filename, i.e. "R.class" */
@@ -128,7 +128,8 @@ public class AndroidConstants {
     public final static String WS_ASSETS = WS_SEP + SdkConstants.FD_ASSETS;
 
     /** Leaf of the javaDoc folder. Does not start with a separator. */
-    public final static String WS_JAVADOC_FOLDER_LEAF = SdkConstants.FD_DOCS + "/reference"; //$NON-NLS-1$
+    public final static String WS_JAVADOC_FOLDER_LEAF = SdkConstants.FD_DOCS + "/" +
+            SdkConstants.FD_DOCS_REFERENCE; //$NON-NLS-1$
 
     /** Path of the samples directory relative to the sdk folder.
      *  This is an OS path, ending with a separator.

@@ -153,7 +153,8 @@ final class AddOnTarget implements IAndroidTarget {
             case SKINS:
                 return mLocation + SdkConstants.OS_SKINS_FOLDER;
             case DOCS:
-                return mLocation + SdkConstants.FD_DOCS + File.separator;
+                return mLocation + SdkConstants.FD_DOCS + File.separator
+                        + SdkConstants.FD_DOCS_REFERENCE;
             default :
                 return mBasePlatform.getPath(pathId);
         }
