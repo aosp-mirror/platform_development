@@ -20,6 +20,7 @@ package com.android.ide.eclipse.editors.wizards;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.sdk.AndroidTargetData;
 import com.android.ide.eclipse.adt.sdk.Sdk;
+import com.android.ide.eclipse.adt.sdk.Sdk.ITargetChangeListener;
 import com.android.ide.eclipse.common.AndroidConstants;
 import com.android.ide.eclipse.common.project.ProjectChooserHelper;
 import com.android.ide.eclipse.editors.descriptors.DocumentDescriptor;
@@ -237,7 +238,7 @@ class NewXmlFileCreationPage extends WizardPage {
                 "An XML file that describes preferences.",          // tooltip
                 ResourceFolderType.XML,                             // folder type
                 AndroidTargetData.DESCRIPTOR_PREFERENCES,           // root seed
-                AndroidConstants.CLASS_PREFERENCE_SCREEN,           // default root
+                AndroidConstants.CLASS_NAME_PREFERENCE_SCREEN,      // default root
                 SdkConstants.NS_RESOURCES,                          // xmlns
                 null,                                               // default attributes
                 1                                                   // target API level
@@ -290,7 +291,9 @@ class NewXmlFileCreationPage extends WizardPage {
     private boolean mInternalTypeUpdate;
     private boolean mInternalConfigSelectorUpdate;
     private ProjectChooserHelper mProjectChooserHelper;
+    private ITargetChangeListener mSdkTargetChangeListener;
 
+    private TypeInfo mCurrentTypeInfo;
 
     // --- UI creation ---
     
@@ -337,7 +340,42 @@ class NewXmlFileCreationPage extends WizardPage {
         initializeFromSelection(mInitialSelection);
         initializeRootValues();
         enableTypesBasedOnApi();
+        if (mCurrentTypeInfo != null) {
+            updateRootCombo(mCurrentTypeInfo);
+        }
+        installTargetChangeListener();
         validatePage();
+    }
+    
+    private void installTargetChangeListener() {
+        mSdkTargetChangeListener = new ITargetChangeListener() {
+            public void onProjectTargetChange(IProject changedProject) {
+                // If this is the current project, force it to reload its data
+                if (changedProject != null && changedProject == mProject) {
+                    changeProject(mProject);
+                }
+            }
+
+            public void onTargetsLoaded() {
+                // Reload the current project, if any, in case its target has changed.
+                if (mProject != null) {
+                    changeProject(mProject);
+                }
+            }
+        };
+        
+        AdtPlugin.getDefault().addTargetListener(mSdkTargetChangeListener);
+    }
+
+    @Override
+    public void dispose() {
+        
+        if (mSdkTargetChangeListener != null) {
+            AdtPlugin.getDefault().removeTargetListener(mSdkTargetChangeListener);
+            mSdkTargetChangeListener = null;
+        }
+        
+        super.dispose();
     }
 
     /**
@@ -652,7 +690,6 @@ class NewXmlFileCreationPage extends WizardPage {
             return;
         }
 
-        
         // Find the best match in the element list. In case there are multiple selected elements
         // select the one that provides the most information and assign them a score,
         // e.g. project=1 + folder=2 + file=4.
@@ -848,6 +885,10 @@ class NewXmlFileCreationPage extends WizardPage {
 
     /**
      * Changes mProject to the given new project and update the UI accordingly.
+     * <p/>
+     * Note that this does not check if the new project is the same as the current one
+     * on purpose, which allows a project to be updated when its target has changed or
+     * when targets are loaded in the background.
      */
     private void changeProject(IProject newProject) {
         mProject = newProject;
@@ -1067,6 +1108,7 @@ class NewXmlFileCreationPage extends WizardPage {
     private void selectType(TypeInfo type) {
         if (type == null || !type.getWidget().getSelection()) {
             mInternalTypeUpdate = true;
+            mCurrentTypeInfo = type;
             for (TypeInfo type2 : sTypes) {
                 type2.getWidget().setSelection(type2 == type);
             }

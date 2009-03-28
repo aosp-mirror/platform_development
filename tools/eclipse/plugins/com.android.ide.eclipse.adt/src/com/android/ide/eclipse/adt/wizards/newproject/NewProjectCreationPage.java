@@ -22,7 +22,9 @@
 
 package com.android.ide.eclipse.adt.wizards.newproject;
 
+import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.sdk.Sdk;
+import com.android.ide.eclipse.adt.sdk.Sdk.ITargetChangeListener;
 import com.android.ide.eclipse.common.AndroidConstants;
 import com.android.ide.eclipse.common.project.AndroidManifestParser;
 import com.android.sdklib.IAndroidTarget;
@@ -122,6 +124,7 @@ public class NewProjectCreationPage extends WizardPage {
     private Button mCreateActivityCheck;
     private Text mMinSdkVersionField;
     private SdkTargetSelector mSdkTargetSelector;
+    private ITargetChangeListener mSdkTargetChangeListener;
 
     private boolean mInternalLocationPathUpdate;
     protected boolean mInternalProjectNameUpdate;
@@ -263,6 +266,17 @@ public class NewProjectCreationPage extends WizardPage {
         // Validate. This will complain about the first empty field.
         setPageComplete(validatePage());
     }
+    
+    @Override
+    public void dispose() {
+        
+        if (mSdkTargetChangeListener != null) {
+            AdtPlugin.getDefault().removeTargetListener(mSdkTargetChangeListener);
+            mSdkTargetChangeListener = null;
+        }
+        
+        super.dispose();
+    }
 
     /**
      * Creates the group for the project name:
@@ -389,18 +403,35 @@ public class NewProjectCreationPage extends WizardPage {
         group.setFont(parent.getFont());
         group.setText("Target");
         
-        // get the targets from the sdk
-        IAndroidTarget[] targets = null;
-        if (Sdk.getCurrent() != null) {
-            targets = Sdk.getCurrent().getTargets();
-        }
+        // The selector is created without targets. They are added below in the change listener.
+        mSdkTargetSelector = new SdkTargetSelector(group, null, false /*multi-selection*/);
 
-        mSdkTargetSelector = new SdkTargetSelector(group, targets, false /*multi-selection*/);
+        mSdkTargetChangeListener = new ITargetChangeListener() {
+            public void onProjectTargetChange(IProject changedProject) {
+                // Ignore
+            }
 
-        // If there's only one target, select it
-        if (targets != null && targets.length == 1) {
-            mSdkTargetSelector.setSelection(targets[0]);
-        }
+            public void onTargetsLoaded() {
+                // Update the sdk target selector with the new targets
+
+                // get the targets from the sdk
+                IAndroidTarget[] targets = null;
+                if (Sdk.getCurrent() != null) {
+                    targets = Sdk.getCurrent().getTargets();
+                }
+                mSdkTargetSelector.setTargets(targets);
+
+                // If there's only one target, select it
+                if (targets != null && targets.length == 1) {
+                    mSdkTargetSelector.setSelection(targets[0]);
+                }
+            }
+        };
+        
+        AdtPlugin.getDefault().addTargetListener(mSdkTargetChangeListener);
+        
+        // Invoke it once to initialize the targets
+        mSdkTargetChangeListener.onTargetsLoaded();
         
         mSdkTargetSelector.setSelectionListener(new SelectionAdapter() {
             @Override
