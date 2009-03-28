@@ -96,6 +96,8 @@ class DropFeedback {
         RelativeInfo info = null;
         UiElementEditPart sibling = null;
         
+        // TODO consider merge like a vertical layout
+        // TODO consider TableLayout like a linear
         if (LayoutConstants.LINEAR_LAYOUT.equals(layoutXmlName)) {
             sibling = findLinearTarget(parentPart, where)[1];
             
