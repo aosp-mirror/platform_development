@@ -5,6 +5,7 @@
     * Project properties (right click project in Package Explorer, then "Properties"), lets you edit project target.
     * New Launch configuration option to choose debug deployment target.
 - Ability to export multiple apk from one project, using resource filters. See the 'android' property for Android projects.
+- Support for running JUnit tests on a device/emulator from a new "Android JUnit tests" launch configuration.
 
 0.8.1:
 
