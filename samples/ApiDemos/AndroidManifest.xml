@@ -33,8 +33,6 @@
             android:label="@string/activity_sample_code"
             android:icon="@drawable/app_sample_code" >
 
-        <uses-library android:name="com.google.android.maps" />
-
         <activity android:name="ApiDemos">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -1306,20 +1304,6 @@
         </activity>
 
         <activity android:name=".view.DateWidgets2" android:label="Views/Date Widgets/2. Inline">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.SAMPLE_CODE" />
-            </intent-filter>
-        </activity>
-
-        <activity android:name=".view.MapViewDemo" android:label="Views/MapView">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.SAMPLE_CODE" />
-            </intent-filter>
-        </activity>
-
-        <activity android:name=".view.MapViewCompassDemo" android:label="Views/MapView and Compass">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
