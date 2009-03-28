@@ -32,8 +32,14 @@ public class AndroidLaunchConfiguration {
      */
     public int mLaunchAction = LaunchConfigDelegate.DEFAULT_LAUNCH_ACTION;
     
+    /**
+     * Target selection mode for the configuration: either {@link #AUTO} or {@link #MANUAL}.
+     */
     public enum TargetMode {
-        AUTO(true), MANUAL(false);
+        /** Automatic target selection mode. */
+        AUTO(true),
+        /** Manual target selection mode. */
+        MANUAL(false);
         
         private boolean mValue;
 
@@ -58,10 +64,7 @@ public class AndroidLaunchConfiguration {
     
     /**
      * Target selection mode.
-     * <ul>
-     * <li><code>true</code>: automatic mode, see {@link #AUTO_TARGET_MODE}</li>
-     * <li><code>false</code>: manual mode</li>
-     * </ul>
+     * @see TargetMode
      */
     public TargetMode mTargetMode = LaunchConfigDelegate.DEFAULT_TARGET_MODE;
 
