@@ -32,6 +32,7 @@ import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.launch.AndroidLaunchConfiguration.TargetMode;
 import com.android.ide.eclipse.adt.launch.DelayedLaunchInfo.InstallRetryMode;
 import com.android.ide.eclipse.adt.launch.DeviceChooserDialog.DeviceChooserResponse;
+import com.android.ide.eclipse.adt.project.ApkInstallManager;
 import com.android.ide.eclipse.adt.project.ProjectHelper;
 import com.android.ide.eclipse.adt.sdk.Sdk;
 import com.android.ide.eclipse.common.project.AndroidManifestParser;
@@ -762,13 +763,46 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
 
 
     /**
-     * Syncs the application on the device/emulator.
+     * If needed, syncs the application and all its dependencies on the device/emulator.
      *
      * @param launchInfo The Launch information object.
      * @param device the device on which to sync the application
      * @return true if the install succeeded.
      */
     private boolean syncApp(DelayedLaunchInfo launchInfo, IDevice device) {
+        boolean alreadyInstalled = ApkInstallManager.getInstance().isApplicationInstalled(
+                launchInfo.getProject(), device);
+        
+        if (alreadyInstalled) {
+            AdtPlugin.printToConsole(launchInfo.getProject(),
+            "Application already deployed. No need to reinstall.");
+        } else {
+            if (doSyncApp(launchInfo, device) == false) {
+                return false;
+            }
+        }
+
+        // The app is now installed, now try the dependent projects
+        for (DelayedLaunchInfo dependentLaunchInfo : getDependenciesLaunchInfo(launchInfo)) {
+            String msg = String.format("Project dependency found, installing: %s",
+                    dependentLaunchInfo.getProject().getName());
+            AdtPlugin.printToConsole(launchInfo.getProject(), msg);
+            if (syncApp(dependentLaunchInfo, device) == false) {
+                return false;
+            }
+        }
+        
+        return true;
+    }
+
+    /**
+     * Syncs the application on the device/emulator.
+     *
+     * @param launchInfo The Launch information object.
+     * @param device the device on which to sync the application
+     * @return true if the install succeeded.
+     */
+    private boolean doSyncApp(DelayedLaunchInfo launchInfo, IDevice device) {
         SyncService sync = device.getSyncService();
         if (sync != null) {
             IPath path = launchInfo.getPackageFile().getLocation();
@@ -812,12 +846,10 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
                 return false;
             }
             
-            // The app is now installed, now try the dependent projects
-            for (DelayedLaunchInfo dependentLaunchInfo : getDependenciesLaunchInfo(launchInfo)) {
-                String msg = String.format("Project dependency found, syncing: %s",
-                        dependentLaunchInfo.getProject().getName());
-                AdtPlugin.printToConsole(launchInfo.getProject(), msg);
-                syncApp(dependentLaunchInfo, device);
+            // if the installation succeeded, we register it.
+            if (installResult) {
+                ApkInstallManager.getInstance().registerInstallation(
+                        launchInfo.getProject(), device);
             }
             
             return installResult;

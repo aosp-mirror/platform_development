@@ -18,6 +18,7 @@ package com.android.ide.eclipse.adt.build;
 
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.project.ApkInstallManager;
 import com.android.ide.eclipse.adt.project.ProjectHelper;
 import com.android.ide.eclipse.adt.sdk.AndroidTargetData;
 import com.android.ide.eclipse.adt.sdk.Sdk;
@@ -550,6 +551,9 @@ public class ApkBuilder extends BaseBuilder {
 
             // and store it
             saveProjectBooleanProperty(PROPERTY_BUILD_APK, mBuildFinalPackage);
+            
+            // reset the installation manager to force new installs of this project
+            ApkInstallManager.getInstance().resetInstallationFor(project);
             
             AdtPlugin.printBuildToConsole(AdtConstants.BUILD_VERBOSE, getProject(),
                     "Build Success!");
