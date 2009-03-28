@@ -11,5 +11,6 @@ LOCAL_SHARED_LIBRARIES := \
 	libcutils \
 
 LOCAL_MODULE:= qemud
+LOCAL_MODULE_TAGS := debug
 
 include $(BUILD_EXECUTABLE)
