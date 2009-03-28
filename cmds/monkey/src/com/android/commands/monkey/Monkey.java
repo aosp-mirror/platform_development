@@ -369,7 +369,7 @@ public class Monkey {
             if (mVerbose >= 2) {    // check seeding performance
                 System.out.println("// Seeded: " + mSeed);
             }
-            mEventSource = new MonkeySourceRandom(mSeed, mMainApps);
+            mEventSource = new MonkeySourceRandom(mSeed, mMainApps, mThrottle);
             mEventSource.setVerbose(mVerbose);
             //set any of the factors that has been set
             for (int i = 0; i < MonkeySourceRandom.FACTORZ_COUNT; i++) {
@@ -709,13 +709,6 @@ public class Monkey {
                 }
             }
 
-            try {
-                Thread.sleep(mThrottle);
-            } catch (InterruptedException e1) {
-                System.out.println("** Monkey interrupted in sleep.");
-                return i;
-            }
-
             // In this debugging mode, we never send any events.  This is primarily
             // here so you can manually test the package or category limits, while manually
             // exercising the system.
@@ -730,7 +723,10 @@ public class Monkey {
 
             MonkeyEvent ev = mEventSource.getNextEvent();
             if (ev != null) {
-                i++;
+                // We don't want to count throttling as an event.
+                if (!(ev instanceof MonkeyThrottleEvent)) {
+                    i++;
+                }
                 int injectCode = ev.injectEvent(mWm, mAm, mVerbose);
                 if (injectCode == MonkeyEvent.INJECT_FAIL) {
                     if (ev instanceof MonkeyKeyEvent) {
