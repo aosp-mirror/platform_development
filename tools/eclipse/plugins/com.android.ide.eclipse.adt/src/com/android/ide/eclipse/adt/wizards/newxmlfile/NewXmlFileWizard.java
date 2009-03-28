@@ -16,11 +16,11 @@
 
 
 
-package com.android.ide.eclipse.editors.wizards;
+package com.android.ide.eclipse.adt.wizards.newxmlfile;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.wizards.newxmlfile.NewXmlFileCreationPage.TypeInfo;
 import com.android.ide.eclipse.editors.IconFactory;
-import com.android.ide.eclipse.editors.wizards.NewXmlFileCreationPage.TypeInfo;
 
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;

@@ -15,7 +15,7 @@
  */
 
 
-package com.android.ide.eclipse.editors.wizards;
+package com.android.ide.eclipse.adt.wizards.newxmlfile;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.sdk.AndroidTargetData;
@@ -31,6 +31,7 @@ import com.android.ide.eclipse.editors.resources.configurations.FolderConfigurat
 import com.android.ide.eclipse.editors.resources.configurations.ResourceQualifier;
 import com.android.ide.eclipse.editors.resources.descriptors.ResourcesDescriptors;
 import com.android.ide.eclipse.editors.resources.manager.ResourceFolderType;
+import com.android.ide.eclipse.editors.wizards.ConfigurationSelector;
 import com.android.ide.eclipse.editors.wizards.ConfigurationSelector.ConfigurationState;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkConstants;
