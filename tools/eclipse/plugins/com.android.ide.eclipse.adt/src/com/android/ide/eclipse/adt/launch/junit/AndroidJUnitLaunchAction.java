@@ -57,7 +57,7 @@ class AndroidJUnitLaunchAction implements IAndroidLaunchAction {
      * Launch a instrumentation test run on given Android device. 
      * Reuses JDT JUnit launch delegate so results can be communicated back to JDT JUnit UI.
      * 
-     * @see com.android.ide.eclipse.adt.launch.IAndroidLaunchAction#doLaunchAction(com.android.ide.eclipse.adt.launch.AndroidLaunchController.DelayedLaunchInfo, com.android.ddmlib.Device)
+     * @see IAndroidLaunchAction#doLaunchAction(DelayedLaunchInfo, IDevice)
      */
     public boolean doLaunchAction(DelayedLaunchInfo info, IDevice device) {
         String msg = String.format("Launching instrumentation %s on device %s", mRunner,
@@ -108,7 +108,9 @@ class AndroidJUnitLaunchAction implements IAndroidLaunchAction {
             super.launch(configuration, mode, launch, monitor);
         }
 
-        /* (non-Javadoc)
+        /**
+         * {@inheritDoc}
+         * @throws CoreException
          * @see org.eclipse.jdt.junit.launcher.JUnitLaunchConfigurationDelegate#verifyMainTypeName(org.eclipse.debug.core.ILaunchConfiguration)
          */
         @Override
@@ -119,6 +121,7 @@ class AndroidJUnitLaunchAction implements IAndroidLaunchAction {
         /**
          * Overrides parent to return a VM Runner implementation which launches a thread, rather
          * than a separate VM process
+         * @throws CoreException 
          */
         @Override
         public IVMRunner getVMRunner(ILaunchConfiguration configuration, String mode) 
@@ -127,7 +130,9 @@ class AndroidJUnitLaunchAction implements IAndroidLaunchAction {
                     mTestPackage, mRunner, mLaunchInfo.isDebugMode(), mDevice));
         }
 
-        /* (non-Javadoc)
+        /**
+         * {@inheritDoc}
+         * @throws CoreException 
          * @see org.eclipse.debug.core.model.LaunchConfigurationDelegate#getLaunch(org.eclipse.debug.core.ILaunchConfiguration, java.lang.String)
          */
         @Override
@@ -148,6 +153,10 @@ class AndroidJUnitLaunchAction implements IAndroidLaunchAction {
             mJUnitInfo = info;
         }
 
+        /**
+         * {@inheritDoc}
+         * @throws CoreException
+         */
         public void run(final VMRunnerConfiguration config, ILaunch launch,
                 IProgressMonitor monitor) throws CoreException {
             
@@ -183,7 +192,9 @@ class AndroidJUnitLaunchAction implements IAndroidLaunchAction {
             return null;
         }
 
-        /* (non-Javadoc)
+        /**
+         * {@inheritDoc}
+         * @throws DebugException 
          * @see org.eclipse.debug.core.model.IProcess#getExitValue()
          */
         public int getExitValue() throws DebugException {
@@ -241,7 +252,9 @@ class AndroidJUnitLaunchAction implements IAndroidLaunchAction {
             return mIsTerminated;
         }
 
-        /* (non-Javadoc)
+        /**
+         * {@inheritDoc}
+         * @throws DebugException 
          * @see org.eclipse.debug.core.model.ITerminate#terminate()
          */
         public void terminate() throws DebugException {

@@ -17,9 +17,6 @@
 package com.android.ide.eclipse.adt.launch;
 
 import com.android.ddmlib.AndroidDebugBridge;
-import com.android.ddmlib.AndroidDebugBridge.IClientChangeListener;
-import com.android.ddmlib.AndroidDebugBridge.IDebugBridgeChangeListener;
-import com.android.ddmlib.AndroidDebugBridge.IDeviceChangeListener;
 import com.android.ddmlib.Client;
 import com.android.ddmlib.ClientData;
 import com.android.ddmlib.Device;
@@ -27,6 +24,9 @@ import com.android.ddmlib.IDevice;
 import com.android.ddmlib.Log;
 import com.android.ddmlib.MultiLineReceiver;
 import com.android.ddmlib.SyncService;
+import com.android.ddmlib.AndroidDebugBridge.IClientChangeListener;
+import com.android.ddmlib.AndroidDebugBridge.IDebugBridgeChangeListener;
+import com.android.ddmlib.AndroidDebugBridge.IDeviceChangeListener;
 import com.android.ddmlib.SyncService.SyncResult;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.launch.AndroidLaunchConfiguration.TargetMode;
@@ -34,10 +34,9 @@ import com.android.ide.eclipse.adt.launch.DelayedLaunchInfo.InstallRetryMode;
 import com.android.ide.eclipse.adt.launch.DeviceChooserDialog.DeviceChooserResponse;
 import com.android.ide.eclipse.adt.project.ProjectHelper;
 import com.android.ide.eclipse.adt.sdk.Sdk;
-import com.android.ide.eclipse.common.AndroidConstants;
 import com.android.ide.eclipse.common.project.AndroidManifestParser;
-import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.ide.eclipse.common.project.BaseProjectHelper;
+import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.avd.AvdManager;
@@ -56,7 +55,6 @@ import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 import org.eclipse.debug.core.ILaunchManager;
 import org.eclipse.debug.core.model.IDebugTarget;
 import org.eclipse.debug.ui.DebugUITools;
-import org.eclipse.jdt.core.IJavaModel;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
@@ -102,8 +100,9 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
 
     /**
      * List of {@link DelayedLaunchInfo} waiting for an emulator to connect.
-     * <p>Once an emulator has connected, {@link DelayedLaunchInfo#mDevice} is set and the
-     * DelayedLaunchInfo object is moved to {@link AndroidLaunchController#mWaitingForReadyEmulatorList}.
+     * <p>Once an emulator has connected, {@link DelayedLaunchInfo#getDevice()} is set and the
+     * DelayedLaunchInfo object is moved to
+     * {@link AndroidLaunchController#mWaitingForReadyEmulatorList}.
      * <b>ALL ACCESS MUST BE INSIDE A <code>synchronized (sListLock)</code> block!</b>
      */
     private final ArrayList<DelayedLaunchInfo> mWaitingForEmulatorLaunches =
@@ -487,7 +486,7 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
                     // FIXME: ask the user if he wants to create a AVD.
                     // we found no compatible AVD.
                     AdtPlugin.printErrorToConsole(project, String.format(
-                            "Failed to find a AVD compatible with target '%1$s'. Launch aborted.",
+                            "Failed to find an AVD compatible with target '%1$s'. Launch aborted.",
                             projectTarget.getName()));
                     stopLaunch(launchInfo);
                     return;
