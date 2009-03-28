@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package com.android.ide.eclipse.adt.project;
+package com.android.ide.eclipse.adt.wizards.actions;
 
-import com.android.ide.eclipse.editors.wizards.NewXmlFileWizard;
+import com.android.ide.eclipse.adt.wizards.newxmlfile.NewXmlFileWizard;
 
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
