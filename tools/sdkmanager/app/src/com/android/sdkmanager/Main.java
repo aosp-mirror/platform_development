@@ -35,6 +35,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 /**
  * Main class for the 'android' application.
@@ -50,6 +51,12 @@ class Main {
     private final static String[] BOOLEAN_YES_REPLIES = new String[] { "yes", "y" };
     private final static String[] BOOLEAN_NO_REPLIES = new String[] { "no", "n" };
 
+    /** Regex used to validate characters that compose an AVD name. */
+    private final static Pattern RE_AVD_NAME = Pattern.compile("[a-zA-Z0-9._-]+");
+    /** List of valid characters for an AVD name. Used for display purposes. */
+    private final static String CHARS_AVD_NAME = "a-z A-Z 0-9 . _ -";
+    
+    
     /** Path to the SDK folder. This is the parent of {@link #TOOLSDIR}. */
     private String mSdkFolder;
     /** Logger object. Use this to print normal output, warnings or errors. */
@@ -239,11 +246,41 @@ class Main {
                 mSdkLog);
 
         String projectDir = getProjectLocation(mSdkCommandLine.getParamLocationPath());
+
+        String projectName = mSdkCommandLine.getParamName();
+        String packageName = mSdkCommandLine.getParamProjectPackage();
+        String activityName = mSdkCommandLine.getParamProjectActivity();
         
+        if (projectName != null &&
+                !ProjectCreator.RE_PROJECT_NAME.matcher(projectName).matches()) {
+            errorAndExit(
+                "Project name '%1$s' contains invalid characters.\nAllowed characters are: %2$s",
+                projectName, ProjectCreator.CHARS_PROJECT_NAME);
+            return;
+        }
+
+        if (activityName != null &&
+                !ProjectCreator.RE_ACTIVITY_NAME.matcher(activityName).matches()) {
+            errorAndExit(
+                "Activity name '%1$s' contains invalid characters.\nAllowed characters are: %2$s",
+                activityName, ProjectCreator.CHARS_ACTIVITY_NAME);
+            return;
+        }
+
+        if (packageName != null &&
+                !ProjectCreator.RE_PACKAGE_NAME.matcher(packageName).matches()) {
+            errorAndExit(
+                "Package name '%1$s' contains invalid characters.\n" +
+                "A package name must be constitued of two Java identifiers.\n" +
+                "Each identifier allowed characters are: %2$s",
+                packageName, ProjectCreator.CHARS_PACKAGE_NAME);
+            return;
+        }
+
         creator.createProject(projectDir,
-                mSdkCommandLine.getParamName(),
-                mSdkCommandLine.getParamProjectPackage(),
-                mSdkCommandLine.getParamProjectActivity(),
+                projectName,
+                activityName,
+                packageName,
                 target,
                 false /* isTestProject*/);
     }
@@ -447,6 +484,14 @@ class Main {
             AvdManager avdManager = new AvdManager(mSdkManager, mSdkLog);
 
             String avdName = mSdkCommandLine.getParamName();
+            
+            if (!RE_AVD_NAME.matcher(avdName).matches()) {
+                errorAndExit(
+                    "AVD name '%1$s' contains invalid characters.\nAllowed characters are: %2$s",
+                    avdName, CHARS_AVD_NAME);
+                return;
+            }
+            
             AvdInfo info = avdManager.getAvd(avdName);
             if (info != null) {
                 if (mSdkCommandLine.getFlagForce()) {
