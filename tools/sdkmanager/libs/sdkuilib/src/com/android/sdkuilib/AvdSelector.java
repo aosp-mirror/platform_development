@@ -89,9 +89,9 @@ public final class AvdSelector {
         final TableColumn column1 = new TableColumn(mTable, SWT.NONE);
         column1.setText("Target Name");
         final TableColumn column2 = new TableColumn(mTable, SWT.NONE);
-        column2.setText("API Level");
+        column2.setText("SDK");
         final TableColumn column3 = new TableColumn(mTable, SWT.NONE);
-        column3.setText("SDK");
+        column3.setText("API Level");
 
         adjustColumnsWidth(mTable, column0, column1, column2, column3);
         setupSelectionListener(mTable);
@@ -235,8 +235,8 @@ public final class AvdSelector {
                 Rectangle r = table.getClientArea();
                 column0.setWidth(r.width * 30 / 100); // 30%  
                 column1.setWidth(r.width * 45 / 100); // 45%
-                column2.setWidth(r.width * 15 / 100); // 15%
-                column3.setWidth(r.width * 10 / 100); // 10%
+                column2.setWidth(r.width * 10 / 100); // 10%
+                column3.setWidth(r.width * 15 / 100); // 15%
             }
         });
     }
