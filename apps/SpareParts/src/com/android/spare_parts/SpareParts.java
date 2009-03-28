@@ -54,6 +54,7 @@ public class SpareParts extends PreferenceActivity
     private static final String WINDOW_ANIMATIONS_PREF = "window_animations";
     private static final String TRANSITION_ANIMATIONS_PREF = "transition_animations";
     private static final String FANCY_IME_ANIMATIONS_PREF = "fancy_ime_animations";
+    private static final String FANCY_ROTATION_ANIMATIONS_PREF = "fancy_rotation_animations";
     private static final String HAPTIC_FEEDBACK_PREF = "haptic_feedback";
     private static final String FONT_SIZE_PREF = "font_size";
     private static final String END_BUTTON_PREF = "end_button";
@@ -64,6 +65,7 @@ public class SpareParts extends PreferenceActivity
     private ListPreference mWindowAnimationsPref;
     private ListPreference mTransitionAnimationsPref;
     private CheckBoxPreference mFancyImeAnimationsPref;
+    private CheckBoxPreference mFancyRotationAnimationsPref;
     private CheckBoxPreference mHapticFeedbackPref;
     private ListPreference mFontSizePref;
     private ListPreference mEndButtonPref;
@@ -118,6 +120,7 @@ public class SpareParts extends PreferenceActivity
         mTransitionAnimationsPref = (ListPreference) prefSet.findPreference(TRANSITION_ANIMATIONS_PREF);
         mTransitionAnimationsPref.setOnPreferenceChangeListener(this);
         mFancyImeAnimationsPref = (CheckBoxPreference) prefSet.findPreference(FANCY_IME_ANIMATIONS_PREF);
+        mFancyRotationAnimationsPref = (CheckBoxPreference) prefSet.findPreference(FANCY_ROTATION_ANIMATIONS_PREF);
         mHapticFeedbackPref = (CheckBoxPreference) prefSet.findPreference(HAPTIC_FEEDBACK_PREF);
         mFontSizePref = (ListPreference) prefSet.findPreference(FONT_SIZE_PREF);
         mFontSizePref.setOnPreferenceChangeListener(this);
@@ -143,6 +146,9 @@ public class SpareParts extends PreferenceActivity
             mFancyImeAnimationsPref.setChecked(Settings.System.getInt(
                     getContentResolver(), 
                     Settings.System.FANCY_IME_ANIMATIONS, 0) != 0);
+            mFancyRotationAnimationsPref.setChecked(Settings.System.getInt(
+                    getContentResolver(), 
+                    "fancy_rotation_anim", 0) != 0);
             mHapticFeedbackPref.setChecked(Settings.System.getInt(
                     getContentResolver(), 
                     Settings.System.HAPTIC_FEEDBACK_ENABLED, 0) != 0);
@@ -241,6 +247,10 @@ public class SpareParts extends PreferenceActivity
             Settings.System.putInt(getContentResolver(),
                     Settings.System.FANCY_IME_ANIMATIONS,
                     mFancyImeAnimationsPref.isChecked() ? 1 : 0);
+        } else if (FANCY_ROTATION_ANIMATIONS_PREF.equals(key)) {
+            Settings.System.putInt(getContentResolver(),
+                    "fancy_rotation_anim",
+                    mFancyRotationAnimationsPref.isChecked() ? 1 : 0);
         } else if (HAPTIC_FEEDBACK_PREF.equals(key)) {
             Settings.System.putInt(getContentResolver(),
                     Settings.System.HAPTIC_FEEDBACK_ENABLED,
