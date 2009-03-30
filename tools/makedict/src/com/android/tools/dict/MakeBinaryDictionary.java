@@ -45,6 +45,10 @@ public class MakeBinaryDictionary {
     public static final String TAG_WORD = "w";
     public static final String ATTR_FREQ = "f";
 
+    private static final int FLAG_ADDRESS_MASK  = 0x400000;
+    private static final int FLAG_TERMINAL_MASK = 0x800000;
+    private static final int ADDRESS_MASK = 0x3FFFFF;
+    
     public static final CharNode EMPTY_NODE = new CharNode();
 
     List<CharNode> roots;
@@ -179,7 +183,7 @@ public class MakeBinaryDictionary {
             parent.children.add(child);
         }
         child.data = data;
-        child.freq += occur;
+        if (child.freq == 0) child.freq = occur;
         if (word.length() > charAt + 1) {
             addWordRec(child, word, charAt + 1, occur);
         } else {
@@ -195,56 +199,76 @@ public class MakeBinaryDictionary {
     static final int ADDR_WIDTH = 23; // Offset to children
     static final int FREQ_WIDTH_BYTES = 1;
     static final int COUNT_WIDTH_BYTES = 1;
-    static final int NODE_SIZE_BYTES =
-            (CHAR_WIDTH + FLAGS_WIDTH + ADDR_WIDTH) / 8 + FREQ_WIDTH_BYTES;
 
     private void addCount(int count) {
         dict[dictSize++] = (byte) (0xFF & count);
     }
     
-    /* TODO: Allow characters to be beyond the 0-255 range. This is required for some latin 
-       language not currently supported */
     private void addNode(CharNode node) {
         int charData = 0xFFFF & node.data;
         if (charData > 254) {
-            System.out.println("WARNING: Non-ASCII character encountered : " + node.data +
-                    ", value = " + charData);
-            dict[dictSize++] = '@';
+            dict[dictSize++] = (byte) 255;
+            dict[dictSize++] = (byte) ((node.data >> 8) & 0xFF);
+            dict[dictSize++] = (byte) (node.data & 0xFF);
         } else {
             dict[dictSize++] = (byte) (0xFF & node.data);
         }
-        dictSize += 3; // Space for children address
-        if ((0xFFFFFF & node.freq) > 255) {
-            node.freq = (byte) 255;
+        if (node.children != null) {
+            dictSize += 3; // Space for children address
+        } else {
+            dictSize += 1; // Space for just the terminal/address flags
         }
-        dict[dictSize++] = (byte) (0xFF & node.freq);
+        if ((0xFFFFFF & node.freq) > 255) {
+            node.freq = 255;
+        }
+        if (node.terminal) {
+            byte freq = (byte) (0xFF & node.freq);
+            dict[dictSize++] = freq;
+        }
     }
+
+    int nullChildrenCount = 0;
+    int notTerminalCount = 0;
 
     private void updateNodeAddress(int nodeAddress, CharNode node,
             int childrenAddress) {
-        childrenAddress = 0x7FFFFF & childrenAddress;
+        if ((dict[nodeAddress] & 0xFF) == 0xFF) { // 3 byte character
+            nodeAddress += 2;
+        }
+        childrenAddress = ADDRESS_MASK & childrenAddress;
+        if (childrenAddress == 0) {
+            nullChildrenCount++;
+        } else {
+            childrenAddress |= FLAG_ADDRESS_MASK;
+        }
         if (node.terminal) {
-            childrenAddress |= 0x800000;
+            childrenAddress |= FLAG_TERMINAL_MASK;
+        } else {
+            notTerminalCount++;
         }
         dict[nodeAddress + 1] = (byte) (childrenAddress >> 16);
-        dict[nodeAddress + 2] = (byte) ((childrenAddress & 0xFF00) >> 8);
-        dict[nodeAddress + 3] = (byte) ((childrenAddress & 0xFF));
+        if ((childrenAddress & FLAG_ADDRESS_MASK) != 0) {
+            dict[nodeAddress + 2] = (byte) ((childrenAddress & 0xFF00) >> 8);
+            dict[nodeAddress + 3] = (byte) ((childrenAddress & 0xFF));
+        }
     }
 
     void writeWordsRec(List<CharNode> children) {
         if (children == null || children.size() == 0) {
             return;
         }
-        addCount(children.size());
-        int childrenStart = dictSize;
-        for (int j = 0; j < children.size(); j++) {
+        final int childCount = children.size();
+        addCount(childCount);
+        //int childrenStart = dictSize;
+        int[] childrenAddresses = new int[childCount];
+        for (int j = 0; j < childCount; j++) {
             CharNode node = children.get(j);
+            childrenAddresses[j] = dictSize;
             addNode(node);
         }
-        for (int j = 0; j < children.size(); j++) {
+        for (int j = 0; j < childCount; j++) {
             CharNode node = children.get(j);
-            // TODO: Fix this when child length becomes variable
-            int nodeAddress = childrenStart + NODE_SIZE_BYTES * j;
+            int nodeAddress = childrenAddresses[j];
             int cacheDictSize = dictSize;
             writeWordsRec(node.children);
             updateNodeAddress(nodeAddress, node, node.children != null
@@ -253,8 +277,8 @@ public class MakeBinaryDictionary {
     }
 
     void writeToDict(String dictFilename) {
-        // 2MB max
-        dict = new byte[2 * 1024 * 1024]; // 2MB upper limit. Actual is probably
+        // 4MB max, 22-bit offsets
+        dict = new byte[4 * 1024 * 1024]; // 4MB upper limit. Actual is probably
                                           // < 1MB in most cases, as there is a limit in the
                                           // resource size in apks.
         dictSize = 0;
@@ -272,19 +296,29 @@ public class MakeBinaryDictionary {
     void traverseDict(int pos, char[] word, int depth) {
         int count = dict[pos++] & 0xFF;
         for (int i = 0; i < count; i++) {
-            char c = (char) (dict[pos] & 0xFF);
-            word[depth] = c;
-            if ((dict[pos + 1] & 0x80) > 0) {
-                showWord(word, depth + 1, dict[pos + 4] & 0xFF);
+            char c = (char) (dict[pos++] & 0xFF);
+            if (c == 0xFF) {
+                c = (char) (((dict[pos] & 0xFF) << 8) | (dict[pos+1] & 0xFF));
+                pos += 2;
             }
-            int address =
-                    ((dict[pos + 1] & 0x7F) << 16)
-                            | ((dict[pos + 2] & 0xFF) << 8)
-                            | ((dict[pos + 3] & 0xFF));
+            word[depth] = c;
+            boolean terminal = (dict[pos] & 0x80) > 0;
+            int address = 0;
+            if ((dict[pos] & (FLAG_ADDRESS_MASK >> 16)) > 0) {
+                address = 
+                    ((dict[pos + 0] & (FLAG_ADDRESS_MASK >> 16)) << 16)
+                    | ((dict[pos + 1] & 0xFF) << 8)
+                    | ((dict[pos + 2] & 0xFF));
+                pos += 2;
+            }
+            pos++;
+            if (terminal) {
+                showWord(word, depth + 1, dict[pos] & 0xFF);
+                pos++;
+            }
             if (address != 0) {
                 traverseDict(address, word, depth + 1);
             }
-            pos += NODE_SIZE_BYTES;
         }
     }
 
