@@ -297,8 +297,7 @@ class AdbInterface:
       WaitForResponseTimedOutError if wait_time elapses and pm still does not
       respond.
     """
-    logger.Log("Waiting for device package manager for %s seconds..."
-               % wait_time)
+    logger.Log("Waiting for device package manager...")
     self.SendCommand("wait-for-device")
     # Now the device is there, but may not be running.
     # Query the package manager with a basic command
@@ -315,7 +314,8 @@ class AdbInterface:
         time.sleep(wait_period)
         attempts += 1
     if not pm_found:
-      raise errors.WaitForResponseTimedOutError
+      raise errors.WaitForResponseTimedOutError(
+          "Package manager did not respond after %s seconds" % wait_time)
     
   def Sync(self, retry_count=3):
     """Perform a adb sync.
@@ -331,13 +331,12 @@ class AdbInterface:
     output = self.SendCommand("sync", retry_count=retry_count)
     if "Read-only file system" in output:
       logger.SilentLog(output) 
-      logger.Log("adb sync failed due to read only fs, retrying")
+      logger.Log("Remounting read-only filesystem")
       self.SendCommand("remount")
       output = self.SendCommand("sync", retry_count=retry_count)
     if "No space left on device" in output:
       logger.SilentLog(output) 
-      logger.Log("adb sync failed due to no space on device, trying shell" + 
-                 " start/stop")
+      logger.Log("Restarting device runtime")
       self.SendShellCommand("stop", retry_count=retry_count)
       output = self.SendCommand("sync", retry_count=retry_count)
       self.SendShellCommand("start", retry_count=retry_count)
@@ -345,3 +344,15 @@ class AdbInterface:
     logger.SilentLog(output)
     self.WaitForDevicePm()
     return output
+  
+  def IsDevicePresent(self):
+    """Check if targeted device is present.
+
+    Returns:
+      True if device is present, False otherwise.
+    """
+    output = self.SendShellCommand("ls", retry_count=0)
+    if output.startswith("error:"):
+      return False
+    else:
+      return True
