@@ -551,7 +551,7 @@
          point="org.eclipse.debug.ui.launchShortcuts">
       <shortcut
             class="com.android.ide.eclipse.adt.launch.junit.AndroidJUnitLaunchShortcut"
-            icon="icons/android.png"
+            icon="icons/androidjunit.png"
             id="com.android.ide.eclipse.adt.junit.launchShortcut"
             label="Android JUnit Test"
             modes="run,debug">
