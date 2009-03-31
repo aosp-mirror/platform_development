@@ -186,21 +186,6 @@ These attributes map to the following commands:
     package="com.android.mediaframeworktest"
     runner=".MediaFrameworkUnitTestRunner"
     coverage_target="framework" />
-    
-<test name="musicplayer"
-    build_path="packages/apps/Music"
-    package="com.android.music.tests"
-    runner=".MusicPlayerFunctionalTestRunner"
-    coverage_target="Music"
-    continuous="true" />
-
-<!-- obsolete?
-<test name="mediaprov"
-    build_path="tests/MediaProvider"
-    package="com.android.mediaprovidertests"
-    runner=".MediaProviderTestsInstrumentation"
-    coverage_target="MediaProvider" />
- -->
 
 <test name="mms"
     build_path="packages/apps/Mms"
@@ -213,14 +198,5 @@ These attributes map to the following commands:
     package="com.android.mms.tests"
     runner="com.android.mms.SmsLaunchPerformance"
     coverage_target="Mms" />
-
-
-<!-- obsolete?
-<test name="ringtone"
-    build_path="tests/RingtoneSettings"
-    package="com.android.ringtonesettingstests"
-    runner=".RingtoneSettingsInstrumentationTestRunner"
-    coverage_target="Settings" />
--->
 
 </test-definitions>
