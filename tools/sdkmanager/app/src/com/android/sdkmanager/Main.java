@@ -459,11 +459,30 @@ class Main {
                     mSdkLog.printf("  Sdcard: %s\n", sdcard);
                 }
             }
+
+            // Are there some unused AVDs?
+            List<AvdInfo> badAvds = avdManager.getUnavailableAvdList();
+
+            if (badAvds == null || badAvds.size() == 0) {
+                return;
+            }
+
+            mSdkLog.printf("\nThe following Android Virtual Devices are no longer available:\n");
+            boolean needSeparator = false;
+            for (AvdInfo info : badAvds) {
+                if (needSeparator) {
+                    mSdkLog.printf("---------\n");
+                }
+                mSdkLog.printf("    Name: %s\n", info.getName()  == null ? "--" : info.getName());
+                mSdkLog.printf("    Path: %s\n", info.getPath()  == null ? "--" : info.getPath());
+                mSdkLog.printf("   Error: %s\n", info.getError() == null ? "--" : info.getError());
+                needSeparator = true;
+            }
         } catch (AndroidLocationException e) {
             errorAndExit(e.getMessage());
         }
     }
-    
+
     /**
      * Creates a new AVD. This is a text based creation with command line prompt.
      */
