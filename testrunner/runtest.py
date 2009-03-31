@@ -41,12 +41,12 @@ class TestRunner(object):
 
   # file path to android core platform tests, relative to android build root
   # TODO move these test data files to another directory
-  _CORE_TEST_PATH = os.path.join("development", "testrunner", "tests.xml")
+  _CORE_TEST_PATH = os.path.join("development", "testrunner", "test_defs.xml")
 
   # vendor glob file path patterns to tests, relative to android
   # build root
   _VENDOR_TEST_PATH = os.path.join("vendor", "*", "tests", "testinfo",
-                                   "tests.xml")
+                                   "test_defs.xml")
 
   _RUNTEST_USAGE = (
       "usage: runtest.py [options] short-test-name[s]\n\n"
@@ -61,7 +61,7 @@ class TestRunner(object):
     """Processes command-line options."""
     # TODO error messages on once-only or mutually-exclusive options.
     user_test_default = os.path.join(os.environ.get("HOME"), ".android",
-                                     "tests.xml")
+                                     "test_defs.xml")
 
     parser = optparse.OptionParser(usage=self._RUNTEST_USAGE)
 
@@ -153,7 +153,7 @@ class TestRunner(object):
     try:
       known_tests = test_defs.TestDefinitions()
       known_tests.Parse(core_test_path)
-      # read all <android root>/vendor/*/tests/testinfo/tests.xml paths
+      # read all <android root>/vendor/*/tests/testinfo/test_defs.xml paths
       vendor_tests_pattern = os.path.join(self._root_path,
                                           self._VENDOR_TEST_PATH)
       test_file_paths = glob.glob(vendor_tests_pattern)
