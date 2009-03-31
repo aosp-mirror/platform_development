@@ -89,7 +89,10 @@ public class ExampleAppWidgetConfigure extends Activity {
             saveTitlePref(ExampleAppWidgetConfigure.this, mAppWidgetId,
                     mAppWidgetPrefix.getText().toString());
 
-            setResult(RESULT_OK);
+            // Make sure we pass back the original appWidgetId
+            Intent resultValue = new Intent();
+            resultValue.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, mAppWidgetId);
+            setResult(RESULT_OK, resultValue);
             finish();
         }
     };
