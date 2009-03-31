@@ -53,6 +53,10 @@ class TestRunner(object):
       "The runtest script works in two ways.  You can query it "
       "for a list of tests, or you can launch one or more tests.")
 
+  def __init__(self):
+    # disable logging of timestamp
+    logger.SetTimestampLogging(False)  
+
   def _ProcessOptions(self):
     """Processes command-line options."""
     # TODO error messages on once-only or mutually-exclusive options.
@@ -178,10 +182,14 @@ class TestRunner(object):
         self._coverage_gen.EnableCoverageBuild()
         self._AddBuildTarget(self._coverage_gen.GetEmmaBuildPath(), target_set)
       target_build_string = " ".join(list(target_set))
-      logger.Log("Building %s" % target_build_string)
+      logger.Log("mmm %s" % target_build_string)
       cmd = 'ONE_SHOT_MAKEFILE="%s" make -C "%s" files' %  (target_build_string,
                                                             self._root_path)
-      if not self._options.preview:
+      if self._options.preview:
+        # in preview mode, just display to the user what command would have been
+        # run
+        logger.Log("adb sync")
+      else:
         run_command.RunCommand(cmd, return_output=False)
         logger.Log("Syncing to device...")
         self._adb.Sync()
@@ -257,6 +265,10 @@ class TestRunner(object):
       self._ProcessOptions()
       if self._options.only_list_tests:
         self._DumpTests()
+        return
+
+      if not self._adb.IsDevicePresent():
+        logger.Log("Error: specified device cannot be found")
         return
 
       if not self._options.skip_build:
