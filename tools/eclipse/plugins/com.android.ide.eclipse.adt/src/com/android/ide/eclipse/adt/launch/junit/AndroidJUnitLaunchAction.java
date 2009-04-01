@@ -24,7 +24,6 @@ import com.android.ide.eclipse.adt.launch.junit.runtime.RemoteAdtTestRunner;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.debug.core.DebugException;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchManager;
@@ -39,18 +38,15 @@ import org.eclipse.jdt.launching.VMRunnerConfiguration;
  */
 class AndroidJUnitLaunchAction implements IAndroidLaunchAction {
 
-    private String mTestPackage;
-    private String mRunner;
+    private final AndroidJUnitLaunchInfo mLaunchInfo;
     
     /**
      * Creates a AndroidJUnitLaunchAction.
      * 
-     * @param testPackage the Android application package that contains the tests to run 
-     * @param runner the InstrumentationTestRunner that will execute the tests
+     * @param launchInfo the {@link AndroidJUnitLaunchInfo} for the JUnit run 
      */
-    public AndroidJUnitLaunchAction(String testPackage, String runner) {
-        mTestPackage = testPackage;
-        mRunner = runner;
+    public AndroidJUnitLaunchAction(AndroidJUnitLaunchInfo launchInfo) {
+        mLaunchInfo = launchInfo;
     }
     
     /**
@@ -60,17 +56,21 @@ class AndroidJUnitLaunchAction implements IAndroidLaunchAction {
      * @see IAndroidLaunchAction#doLaunchAction(DelayedLaunchInfo, IDevice)
      */
     public boolean doLaunchAction(DelayedLaunchInfo info, IDevice device) {
-        String msg = String.format("Launching instrumentation %s on device %s", mRunner,
-                device.getSerialNumber());
+        String msg = String.format("Launching instrumentation %s on device %s",
+                mLaunchInfo.getRunner(), device.getSerialNumber());
         AdtPlugin.printToConsole(info.getProject(), msg);
         
         try {
-           JUnitLaunchDelegate junitDelegate = new JUnitLaunchDelegate(info, device);
+           mLaunchInfo.setDebugMode(info.isDebugMode());
+           mLaunchInfo.setDevice(info.getDevice());
+           mLaunchInfo.setLaunch(info.getLaunch());
+           JUnitLaunchDelegate junitDelegate = new JUnitLaunchDelegate(mLaunchInfo);
            final String mode = info.isDebugMode() ? ILaunchManager.DEBUG_MODE : 
                ILaunchManager.RUN_MODE; 
+
            junitDelegate.launch(info.getLaunch().getLaunchConfiguration(), mode, info.getLaunch(),
                    info.getMonitor());
-           
+
            // TODO: need to add AMReceiver-type functionality somewhere
         } catch (CoreException e) {
             AdtPlugin.printErrorToConsole(info.getProject(), "Failed to launch test");
@@ -82,20 +82,18 @@ class AndroidJUnitLaunchAction implements IAndroidLaunchAction {
      * {@inheritDoc}
      */
     public String getLaunchDescription() {
-        return String.format("%s JUnit launch", mRunner);
+        return String.format("%s JUnit launch", mLaunchInfo.getRunner());
     }
 
     /**
      * Extends the JDT JUnit launch delegate to allow for JUnit UI reuse. 
      */
-    private class JUnitLaunchDelegate extends JUnitLaunchConfigurationDelegate {
+    private static class JUnitLaunchDelegate extends JUnitLaunchConfigurationDelegate {
         
-        private IDevice mDevice;
-        private DelayedLaunchInfo mLaunchInfo;
+        private AndroidJUnitLaunchInfo mLaunchInfo;
 
-        public JUnitLaunchDelegate(DelayedLaunchInfo info, IDevice device) {
-            mLaunchInfo = info;
-            mDevice = device;
+        public JUnitLaunchDelegate(AndroidJUnitLaunchInfo launchInfo) {
+            mLaunchInfo = launchInfo;
         }
 
         /* (non-Javadoc)
@@ -110,34 +108,28 @@ class AndroidJUnitLaunchAction implements IAndroidLaunchAction {
 
         /**
          * {@inheritDoc}
-         * @throws CoreException
          * @see org.eclipse.jdt.junit.launcher.JUnitLaunchConfigurationDelegate#verifyMainTypeName(org.eclipse.debug.core.ILaunchConfiguration)
          */
         @Override
-        public String verifyMainTypeName(ILaunchConfiguration configuration) throws CoreException {
+        public String verifyMainTypeName(ILaunchConfiguration configuration) {
             return "com.android.ide.eclipse.adt.junit.internal.runner.RemoteAndroidTestRunner"; //$NON-NLS-1$
         }
 
         /**
          * Overrides parent to return a VM Runner implementation which launches a thread, rather
          * than a separate VM process
-         * @throws CoreException 
          */
         @Override
-        public IVMRunner getVMRunner(ILaunchConfiguration configuration, String mode) 
-                throws CoreException {
-            return new VMTestRunner(new AndroidJUnitLaunchInfo(mLaunchInfo.getProject(), 
-                    mTestPackage, mRunner, mLaunchInfo.isDebugMode(), mDevice));
+        public IVMRunner getVMRunner(ILaunchConfiguration configuration, String mode) {
+            return new VMTestRunner(mLaunchInfo);
         }
 
         /**
          * {@inheritDoc}
-         * @throws CoreException 
          * @see org.eclipse.debug.core.model.LaunchConfigurationDelegate#getLaunch(org.eclipse.debug.core.ILaunchConfiguration, java.lang.String)
          */
         @Override
-        public ILaunch getLaunch(ILaunchConfiguration configuration, String mode)
-                throws CoreException {
+        public ILaunch getLaunch(ILaunchConfiguration configuration, String mode) {
             return mLaunchInfo.getLaunch();
         }     
     }
@@ -161,7 +153,7 @@ class AndroidJUnitLaunchAction implements IAndroidLaunchAction {
                 IProgressMonitor monitor) throws CoreException {
             
             TestRunnerProcess runnerProcess = 
-                new TestRunnerProcess(config, launch, mJUnitInfo);
+                new TestRunnerProcess(config, mJUnitInfo);
             runnerProcess.start();
             launch.addProcess(runnerProcess);
         }
@@ -173,15 +165,12 @@ class AndroidJUnitLaunchAction implements IAndroidLaunchAction {
     private static class TestRunnerProcess extends Thread implements IProcess  {
 
         private final VMRunnerConfiguration mRunConfig;
-        private final ILaunch mLaunch;
         private final AndroidJUnitLaunchInfo mJUnitInfo;
         private RemoteAdtTestRunner mTestRunner = null;
         private boolean mIsTerminated = false;
         
-        TestRunnerProcess(VMRunnerConfiguration runConfig, ILaunch launch,
-                AndroidJUnitLaunchInfo info) {
+        TestRunnerProcess(VMRunnerConfiguration runConfig, AndroidJUnitLaunchInfo info) {
             mRunConfig = runConfig;
-            mLaunch = launch;
             mJUnitInfo = info;
         }
         
@@ -194,10 +183,9 @@ class AndroidJUnitLaunchAction implements IAndroidLaunchAction {
 
         /**
          * {@inheritDoc}
-         * @throws DebugException 
          * @see org.eclipse.debug.core.model.IProcess#getExitValue()
          */
-        public int getExitValue() throws DebugException {
+        public int getExitValue() {
             return 0;
         }
 
@@ -205,14 +193,14 @@ class AndroidJUnitLaunchAction implements IAndroidLaunchAction {
          * @see org.eclipse.debug.core.model.IProcess#getLabel()
          */
         public String getLabel() {
-            return mLaunch.getLaunchMode();
+            return mJUnitInfo.getLaunch().getLaunchMode();
         }
 
         /* (non-Javadoc)
          * @see org.eclipse.debug.core.model.IProcess#getLaunch()
          */
         public ILaunch getLaunch() {
-            return mLaunch;
+            return mJUnitInfo.getLaunch();
         }
 
         /* (non-Javadoc)
@@ -254,10 +242,9 @@ class AndroidJUnitLaunchAction implements IAndroidLaunchAction {
 
         /**
          * {@inheritDoc}
-         * @throws DebugException 
          * @see org.eclipse.debug.core.model.ITerminate#terminate()
          */
-        public void terminate() throws DebugException {
+        public void terminate() {
             if (mTestRunner != null) {
                 mTestRunner.terminate();
             }    
@@ -274,3 +261,4 @@ class AndroidJUnitLaunchAction implements IAndroidLaunchAction {
         }
     }
 }
+
