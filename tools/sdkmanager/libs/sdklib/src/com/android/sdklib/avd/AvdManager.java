@@ -279,7 +279,7 @@ public final class AvdManager {
                     // AVD shouldn't already exist if removePrevious is false.
                     if (log != null) {
                         log.error(null,
-                                "Folder %s is in the way. Use --force if you want to overwrite.",
+                                "Folder %1$s is in the way. Use --force if you want to overwrite.",
                                 avdFolder.getAbsolutePath());
                     }
                     return null;
@@ -429,9 +429,9 @@ public final class AvdManager {
             
             if (log != null) {
                 if (target.isPlatform()) {
-                    log.printf("Created AVD '%s' based on %s\n", name, target.getName());
+                    log.printf("Created AVD '%1$s' based on %2$s\n", name, target.getName());
                 } else {
-                    log.printf("Created AVD '%s' based on %s (%s)\n", name, target.getName(),
+                    log.printf("Created AVD '%1$s' based on %2$s (%3$s)\n", name, target.getName(),
                                target.getVendor());
                 }
             }
@@ -563,29 +563,49 @@ public final class AvdManager {
      * <p/>
      * This also remove it from the manager's list, The caller does not need to
      * call {@link #removeAvd(AvdInfo)} afterwards.
+     * <p/>
+     * This method is designed to somehow work with an unavailable AVD, that is an AVD that
+     * could not be loaded due to some error. That means this method still tries to remove
+     * the AVD ini file or its folder if it can be found. An error will be output if any of
+     * these operations fail.
      * 
      * @param avdInfo the information on the AVD to delete
      */
     public void deleteAvd(AvdInfo avdInfo, ISdkLog log) {
         try {
+            boolean error = false;
+            
             File f = avdInfo.getIniFile();
-            if (f.exists()) {
-                log.warning("Deleting file %s", f.getCanonicalPath());
+            if (f != null && f.exists()) {
+                log.warning("Deleting file %1$s", f.getCanonicalPath());
                 if (!f.delete()) {
-                    log.error(null, "Failed to delete %s", f.getCanonicalPath());
+                    log.error(null, "Failed to delete %1$s", f.getCanonicalPath());
+                    error = true;
                 }
             }
-            
-            f = new File(avdInfo.getPath());
-            if (f.exists()) {
-                log.warning("Deleting folder %s", f.getCanonicalPath());
-                recursiveDelete(f);
-                if (!f.delete()) {
-                    log.error(null, "Failed to delete %s", f.getCanonicalPath());
+
+            String path = avdInfo.getPath();
+            if (path != null) {
+                f = new File(path);
+                if (f.exists()) {
+                    log.warning("Deleting folder %1$s", f.getCanonicalPath());
+                    recursiveDelete(f);
+                    if (!f.delete()) {
+                        log.error(null, "Failed to delete %1$s", f.getCanonicalPath());
+                        error = true;
+                    }
                 }
             }
 
             removeAvd(avdInfo);
+
+            if (error) {
+                log.printf("AVD '%1$s' deleted with errors. See warnings above.",
+                        avdInfo.getName());
+            } else {
+                log.printf("AVD '%1$s' deleted.", avdInfo.getName());
+            }
+
         } catch (AndroidLocationException e) {
             log.error(e, null);
         } catch (IOException e) {
@@ -611,14 +631,14 @@ public final class AvdManager {
         try {
             if (paramFolderPath != null) {
                 File f = new File(avdInfo.getPath());
-                log.warning("Moving '%s' to '%s'.", avdInfo.getPath(), paramFolderPath);
+                log.warning("Moving '%1$s' to '%2$s'.", avdInfo.getPath(), paramFolderPath);
                 if (!f.renameTo(new File(paramFolderPath))) {
-                    log.error(null, "Failed to move '%s' to '%s'.",
+                    log.error(null, "Failed to move '%1$s' to '%2$s'.",
                             avdInfo.getPath(), paramFolderPath);
                     return false;
                 }
     
-                // update avd info
+                // update AVD info
                 AvdInfo info = new AvdInfo(avdInfo.getName(), paramFolderPath, avdInfo.getTarget(),
                         avdInfo.getProperties());
                 mAvdList.remove(avdInfo);
@@ -633,19 +653,22 @@ public final class AvdManager {
                 File oldIniFile = avdInfo.getIniFile();
                 File newIniFile = AvdInfo.getIniFile(newName);
                 
-                log.warning("Moving '%s' to '%s'.", oldIniFile.getPath(), newIniFile.getPath());
+                log.warning("Moving '%1$s' to '%2$s'.", oldIniFile.getPath(), newIniFile.getPath());
                 if (!oldIniFile.renameTo(newIniFile)) {
-                    log.error(null, "Failed to move '%s' to '%s'.", 
+                    log.error(null, "Failed to move '%1$s' to '%2$s'.", 
                             oldIniFile.getPath(), newIniFile.getPath());
                     return false;
                 }
 
-                // update avd info
+                // update AVD info
                 AvdInfo info = new AvdInfo(newName, avdInfo.getPath(), avdInfo.getTarget(),
                         avdInfo.getProperties());
                 mAvdList.remove(avdInfo);
                 mAvdList.add(info);
             }
+
+            log.printf("AVD '%1$s' moved.", avdInfo.getName());
+
         } catch (AndroidLocationException e) {
             log.error(e, null);
         } catch (IOException e) {
@@ -686,7 +709,8 @@ public final class AvdManager {
         // ensure folder validity.
         File folder = new File(avdRoot);
         if (folder.isFile()) {
-            throw new AndroidLocationException(String.format("%s is not a valid folder.", avdRoot));
+            throw new AndroidLocationException(
+                    String.format("%1$s is not a valid folder.", avdRoot));
         } else if (folder.exists() == false) {
             // folder is not there, we create it and return
             folder.mkdirs();
@@ -727,7 +751,21 @@ public final class AvdManager {
         }
     }
 
-    public List<AvdInfo> getUnavailableAvdList() throws AndroidLocationException {
+    /**
+     * Computes the internal list of <em>not</em> available AVDs.
+     * <p/>
+     * These are the AVDs that failed to load for some reason or another.
+     * You can retrieve the load error using {@link AvdInfo#getError()}.
+     * <p/>
+     * These {@link AvdInfo} must not be used for usual operations (e.g. instanciating
+     * an emulator) or trying to use them for anything else but {@link #deleteAvd(AvdInfo, ISdkLog)}
+     * will have unpredictable results -- that is most likely the operation will fail. 
+     * 
+     * @return A list of unavailable AVDs, all with errors. The list can be null or empty if there
+     *         are no AVDs to return.
+     * @throws AndroidLocationException if there's a problem getting android root directory.
+     */
+    public List<AvdInfo> getUnavailableAvds() throws AndroidLocationException {
         AvdInfo[] avds = getAvds();
         File[] allAvds = buildAvdFilesList();
         if (allAvds == null || allAvds.length == 0) {
@@ -776,7 +814,7 @@ public final class AvdManager {
             target = mSdk.getTargetFromHashString(targetHash);
         }
 
-        // load the avd properties.
+        // load the AVD properties.
         if (avdPath != null) {
             configIniFile = new File(avdPath, CONFIG_INI);
         }
@@ -806,7 +844,7 @@ public final class AvdManager {
             } else if (targetHash == null) {
                 error = String.format("Missing 'target' property in %1$s", name);
             } else if (target == null) {
-                error = String.format("Unknown 'target=%2$s' property in %1$s", name, targetHash);
+                error = String.format("Unknown target '%2$s' in %1$s", name, targetHash);
             } else if (properties == null) {
                 error = String.format("Failed to parse properties from %1$s", avdPath);
             }
@@ -834,7 +872,7 @@ public final class AvdManager {
         FileWriter writer = new FileWriter(iniFile);
         
         for (Entry<String, String> entry : values.entrySet()) {
-            writer.write(String.format("%s=%s\n", entry.getKey(), entry.getValue()));
+            writer.write(String.format("%1$s=%2$s\n", entry.getKey(), entry.getValue()));
         }
         writer.close();
 
@@ -861,26 +899,25 @@ public final class AvdManager {
             ArrayList<String> stdOutput = new ArrayList<String>();
             int status = grabProcessOutput(process, errorOutput, stdOutput,
                     true /* waitForReaders */);
-    
-            if (status != 0) {
-                log.error(null, "Failed to create the SD card.");
+
+            if (status == 0) {
+                return true;
+            } else {
                 for (String error : errorOutput) {
                     log.error(null, error);
                 }
-                
-                return false;
             }
 
-            return true;
         } catch (InterruptedException e) {
-            log.error(null, "Failed to create the SD card.");
+            // pass, print error below
         } catch (IOException e) {
-            log.error(null, "Failed to create the SD card.");
+            // pass, print error below
         }
         
+        log.error(null, "Failed to create the SD card.");
         return false;
     }
-    
+
     /**
      * Gets the stderr/stdout outputs of a process and returns when the process is done.
      * Both <b>must</b> be read or the process will block on windows.
