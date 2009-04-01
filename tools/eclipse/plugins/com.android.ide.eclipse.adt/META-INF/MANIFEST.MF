@@ -43,7 +43,8 @@ Require-Bundle: com.android.ide.eclipse.ddms,
  org.eclipse.jdt.junit,
  org.eclipse.jdt.junit.runtime,
  org.eclipse.ltk.core.refactoring,
- org.eclipse.ltk.ui.refactoring
+ org.eclipse.ltk.ui.refactoring,
+ org.eclipse.core.expressions
 Eclipse-LazyStart: true
 Export-Package: com.android.ide.eclipse.adt;x-friends:="com.android.ide.eclipse.tests",
  com.android.ide.eclipse.adt.build;x-friends:="com.android.ide.eclipse.tests",
@@ -52,6 +53,7 @@ Export-Package: com.android.ide.eclipse.adt;x-friends:="com.android.ide.eclipse.
  com.android.ide.eclipse.adt.project.internal;x-friends:="com.android.ide.eclipse.tests",
  com.android.ide.eclipse.adt.sdk;x-friends:="com.android.ide.eclipse.tests",
  com.android.ide.eclipse.adt.wizards.newproject;x-friends:="com.android.ide.eclipse.tests",
+ com.android.ide.eclipse.adt.ui;x-friends:="com.android.ide.eclipse.tests",
  com.android.ide.eclipse.common;x-friends:="com.android.ide.eclipse.tests",
  com.android.ide.eclipse.common.project;x-friends:="com.android.ide.eclipse.tests",
  com.android.ide.eclipse.common.resources;x-friends:="com.android.ide.eclipse.tests",
@@ -77,7 +79,6 @@ Export-Package: com.android.ide.eclipse.adt;x-friends:="com.android.ide.eclipse.
  com.android.ide.eclipse.editors.ui;x-friends:="com.android.ide.eclipse.tests",
  com.android.ide.eclipse.editors.ui.tree;x-friends:="com.android.ide.eclipse.tests",
  com.android.ide.eclipse.editors.uimodel;x-friends:="com.android.ide.eclipse.tests",
- com.android.ide.eclipse.editors.wizards;x-friends:="com.android.ide.eclipse.tests",
  com.android.ide.eclipse.editors.xml;x-friends:="com.android.ide.eclipse.tests",
  com.android.ide.eclipse.editors.xml.descriptors;x-friends:="com.android.ide.eclipse.tests"
 

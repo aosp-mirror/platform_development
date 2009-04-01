@@ -69,8 +69,9 @@ public class RemoteAdtTestRunner extends RemoteTestRunner {
      * executing the tests,  and send it back to JDT JUnit. The second is the actual test execution,
      * whose results will be communicated back in real-time to JDT JUnit.
      * 
-     * @param testClassNames array of fully qualified test class names to execute. Cannot be empty.
-     * @param testName test to execute. If null, will be ignored.
+     * @param testClassNames ignored - the AndroidJUnitLaunchInfo will be used to determine which
+     *     tests to run.
+     * @param testName ignored
      * @param execution used to report test progress
      */
     @Override
@@ -78,16 +79,21 @@ public class RemoteAdtTestRunner extends RemoteTestRunner {
         // hold onto this execution reference so it can be used to report test progress
         mExecution = execution;
         
-        RemoteAndroidTestRunner runner = new RemoteAndroidTestRunner(mLaunchInfo.getTestPackage(), 
+        RemoteAndroidTestRunner runner = new RemoteAndroidTestRunner(mLaunchInfo.getAppPackage(), 
                 mLaunchInfo.getRunner(), mLaunchInfo.getDevice()); 
 
-        if (testClassNames != null && testClassNames.length > 0) {
-            if (testName != null) {
-                runner.setMethodName(testClassNames[0], testName);
-            } else {
-                runner.setClassNames(testClassNames);
-            }
+        if (mLaunchInfo.getTestClass() != null) {
+            if (mLaunchInfo.getTestMethod() != null) {
+                runner.setMethodName(mLaunchInfo.getTestClass(), mLaunchInfo.getTestMethod());
+            } else {    
+                runner.setClassName(mLaunchInfo.getTestClass());
+            }    
         }
+
+        if (mLaunchInfo.getTestPackage() != null) {
+            runner.setTestPackageName(mLaunchInfo.getTestPackage());
+        }
+
         // set log only to first collect test case info, so Eclipse has correct test case count/
         // tree info
         runner.setLogOnly(true);

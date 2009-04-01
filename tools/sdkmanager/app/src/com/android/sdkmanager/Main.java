@@ -459,11 +459,30 @@ class Main {
                     mSdkLog.printf("  Sdcard: %s\n", sdcard);
                 }
             }
+
+            // Are there some unused AVDs?
+            List<AvdInfo> badAvds = avdManager.getUnavailableAvds();
+
+            if (badAvds == null || badAvds.size() == 0) {
+                return;
+            }
+
+            mSdkLog.printf("\nThe following Android Virtual Devices could not be loaded:\n");
+            boolean needSeparator = false;
+            for (AvdInfo info : badAvds) {
+                if (needSeparator) {
+                    mSdkLog.printf("---------\n");
+                }
+                mSdkLog.printf("    Name: %s\n", info.getName()  == null ? "--" : info.getName());
+                mSdkLog.printf("    Path: %s\n", info.getPath()  == null ? "--" : info.getPath());
+                mSdkLog.printf("   Error: %s\n", info.getError() == null ? "--" : info.getError());
+                needSeparator = true;
+            }
         } catch (AndroidLocationException e) {
             errorAndExit(e.getMessage());
         }
     }
-    
+
     /**
      * Creates a new AVD. This is a text based creation with command line prompt.
      */
@@ -573,7 +592,7 @@ class Main {
                 File dir = new File(oldAvdInfo.getPath());
                 avdManager.recursiveDelete(dir);
                 dir.delete();
-                // Remove old avd info from manager
+                // Remove old AVD info from manager
                 avdManager.removeAvd(oldAvdInfo);
             }
             
@@ -583,13 +602,27 @@ class Main {
     }
 
     /**
-     * Delete an AVD.
+     * Delete an AVD. If the AVD name is not part of the available ones look for an
+     * invalid AVD (one not loaded due to some error) to remove it too.
      */
     private void deleteAvd() {
         try {
             String avdName = mSdkCommandLine.getParamName();
             AvdManager avdManager = new AvdManager(mSdkManager, mSdkLog);
             AvdInfo info = avdManager.getAvd(avdName);
+            
+            if (info == null) {
+                // Look in unavailable AVDs
+                List<AvdInfo> badAvds = avdManager.getUnavailableAvds();
+                if (badAvds != null) {
+                    for (AvdInfo i : badAvds) {
+                        if (i.getName().equals(avdName)) {
+                            info = i;
+                            break;
+                        }
+                    }
+                }
+            }
     
             if (info == null) {
                 errorAndExit("There is no Android Virtual Device named '%s'.", avdName);

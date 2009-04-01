@@ -26,8 +26,10 @@ public interface ISdkLog {
     /**
      * Prints a warning message on stdout.
      * <p/>
+     * The message will be tagged with "Warning" on the output so the caller does not
+     * need to put such a prefix in the format string.
+     * <p/>
      * Implementations should only display warnings in verbose mode.
-     * The message should be prefixed with "Warning:".
      * 
      * @param warningFormat is an optional error format. If non-null, it will be printed
      *          using a {@link Formatter} with the provided arguments.
@@ -38,8 +40,10 @@ public interface ISdkLog {
     /**
      * Prints an error message on stderr.
      * <p/>
+     * The message will be tagged with "Error" on the output so the caller does not
+     * need to put such a prefix in the format string.
+     * <p/>
      * Implementation should always display errors, independent of verbose mode.
-     * The message should be prefixed with "Error:".
      * 
      * @param t is an optional {@link Throwable} or {@link Exception}. If non-null, it's
      *          message will be printed out.

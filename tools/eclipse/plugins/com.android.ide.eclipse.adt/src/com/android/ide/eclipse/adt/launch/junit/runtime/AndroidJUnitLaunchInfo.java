@@ -15,35 +15,38 @@
  */
 package com.android.ide.eclipse.adt.launch.junit.runtime;
 
-import org.eclipse.core.resources.IProject;
-
 import com.android.ddmlib.IDevice;
+
+import org.eclipse.core.resources.IProject;
+import org.eclipse.debug.core.ILaunch;
 
 /**
  * Contains info about Android JUnit launch
  */
 public class AndroidJUnitLaunchInfo {
     private final IProject mProject;
-    private final String mTestPackage;
+    private final String mAppPackage;
     private final String mRunner;
-    private final boolean mDebugMode;
-    private final IDevice mDevice;
-    
-    public AndroidJUnitLaunchInfo(IProject project, String testPackage, String runner,
-            boolean debugMode, IDevice device) {
+
+    private boolean mDebugMode = false;
+    private IDevice mDevice = null;
+    private String mTestPackage = null;
+    private String mTestClass = null;
+    private String mTestMethod = null;
+    private ILaunch mLaunch = null;
+
+    public AndroidJUnitLaunchInfo(IProject project, String appPackage, String runner) {
         mProject = project;
-        mTestPackage = testPackage;
+        mAppPackage = appPackage;
         mRunner = runner;
-        mDebugMode = debugMode;
-        mDevice = device;
     }
-    
+
     public IProject getProject() {
         return mProject;
     }
 
-    public String getTestPackage() {
-        return mTestPackage;
+    public String getAppPackage() {
+        return mAppPackage;
     }
 
     public String getRunner() {
@@ -53,8 +56,80 @@ public class AndroidJUnitLaunchInfo {
     public boolean isDebugMode() {
         return mDebugMode;
     }
+    
+    public void setDebugMode(boolean debugMode) {
+        mDebugMode = debugMode;
+    }
 
     public IDevice getDevice() {
         return mDevice;
+    }
+
+    public void setDevice(IDevice device) {
+        mDevice = device;
+    }
+
+    /**
+     * Specify to run all tests within given package.
+     *
+     * @param testPackage fully qualified java package
+     */
+    public void setTestPackage(String testPackage) {
+        mTestPackage = testPackage;
+    }
+
+    /**
+     * Return the package of tests to run.
+     *
+     * @return fully qualified java package. <code>null</code> if not specified.
+     */
+    public String getTestPackage() {
+        return mTestPackage;       
+    }
+
+    /**
+     * Sets the test class to run.
+     * 
+     * @param testClass fully qualfied test class to run
+     *    Expected format: x.y.x.testclass
+     */
+    public void setTestClass(String testClass) {
+        mTestClass = testClass;
+    }
+
+    /** 
+     * Returns the test class to run.
+     *
+     * @return fully qualfied test class to run.
+     *   <code>null</code> if not specified.
+     */
+    public String getTestClass() {
+        return mTestClass;
+    }
+    
+    /**
+     * Sets the test method to run. testClass must also be set. 
+     * 
+     * @param testMethod test method to run
+     */
+    public void setTestMethod(String testMethod) {
+        mTestMethod = testMethod;
+    }
+
+    /** 
+     * Returns the test method to run.
+     *
+     * @return test method to run. <code>null</code> if not specified.
+     */
+    public String getTestMethod() {
+        return mTestMethod;
+    }
+
+    public ILaunch getLaunch() {
+        return mLaunch;
+    }
+
+    public void setLaunch(ILaunch launch) {
+        mLaunch = launch;
     }
 }
