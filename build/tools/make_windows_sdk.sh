@@ -64,7 +64,8 @@ function build() {
     make -j 4 emulator || die "Build failed"
     # Disable parallel build: it generates "permission denied" issues when
     # multiple "ar.exe" are running in parallel.
-    make prebuilt adb fastboot aidl aapt dexdump dmtracedump mksdcard sqlite3 || die "Build failed"
+    make prebuilt adb fastboot aidl aapt dexdump dmtracedump hprof-conv mksdcard sqlite3 \
+        || die "Build failed"
 }
 
 function package() {
@@ -104,7 +105,7 @@ function package() {
     # Remove obsolete stuff from tools & platform
     TOOLS="$DEST/tools"
     LIB="$DEST/tools/lib"
-    rm -v "$TOOLS"/{adb,emulator,traceview,draw9patch,hierarchyviewer,apkbuilder,ddms,dmtracedump,mksdcard,sqlite3,android}
+    rm -v "$TOOLS"/{adb,emulator,traceview,draw9patch,hierarchyviewer,apkbuilder,ddms,dmtracedump,hprof-conv,mksdcard,sqlite3,android}
     rm -v --force "$LIB"/*.so "$LIB"/*.jnilib
     rm -v "$PLATFORM_TOOLS"/{aapt,aidl,dx,dexdump}
 
