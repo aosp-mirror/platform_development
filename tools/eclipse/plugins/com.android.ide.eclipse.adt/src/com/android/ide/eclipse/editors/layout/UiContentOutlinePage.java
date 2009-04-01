@@ -17,7 +17,7 @@
 
 package com.android.ide.eclipse.editors.layout;
 
-import com.android.ide.eclipse.common.EclipseUiHelper;
+import com.android.ide.eclipse.adt.ui.EclipseUiHelper;
 import com.android.ide.eclipse.editors.IconFactory;
 import com.android.ide.eclipse.editors.layout.parts.UiDocumentTreeEditPart;
 import com.android.ide.eclipse.editors.layout.parts.UiElementTreeEditPart;

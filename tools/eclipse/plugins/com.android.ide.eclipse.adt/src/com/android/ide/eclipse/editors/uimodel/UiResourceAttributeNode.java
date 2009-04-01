@@ -17,6 +17,8 @@
 package com.android.ide.eclipse.editors.uimodel;
 
 import com.android.ide.eclipse.adt.sdk.AndroidTargetData;
+import com.android.ide.eclipse.adt.ui.ReferenceChooserDialog;
+import com.android.ide.eclipse.adt.ui.ResourceChooser;
 import com.android.ide.eclipse.common.resources.IResourceRepository;
 import com.android.ide.eclipse.common.resources.ResourceItem;
 import com.android.ide.eclipse.common.resources.ResourceType;
@@ -26,8 +28,6 @@ import com.android.ide.eclipse.editors.descriptors.DescriptorsUtils;
 import com.android.ide.eclipse.editors.descriptors.TextAttributeDescriptor;
 import com.android.ide.eclipse.editors.resources.manager.ResourceManager;
 import com.android.ide.eclipse.editors.ui.SectionHelper;
-import com.android.ide.eclipse.editors.wizards.ReferenceChooserDialog;
-import com.android.ide.eclipse.editors.wizards.ResourceChooser;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jface.window.Window;

@@ -17,10 +17,10 @@
 package com.android.ide.eclipse.adt.refactorings.extractstring;
 
 
+import com.android.ide.eclipse.adt.ui.ConfigurationSelector;
 import com.android.ide.eclipse.common.AndroidConstants;
 import com.android.ide.eclipse.editors.resources.configurations.FolderConfiguration;
 import com.android.ide.eclipse.editors.resources.manager.ResourceFolderType;
-import com.android.ide.eclipse.editors.wizards.ConfigurationSelector;
 import com.android.sdklib.SdkConstants;
 
 import org.eclipse.core.resources.IFolder;
