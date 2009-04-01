@@ -100,7 +100,7 @@ public class Sdk implements IProjectListener {
         ISdkLog log = new ISdkLog() {
             public void error(Throwable throwable, String errorFormat, Object... arg) {
                 if (errorFormat != null) {
-                    logMessages.add(String.format(errorFormat, arg));
+                    logMessages.add(String.format("Error: " + errorFormat, arg));
                 }
                 
                 if (throwable != null) {
@@ -109,7 +109,7 @@ public class Sdk implements IProjectListener {
             }
 
             public void warning(String warningFormat, Object... arg) {
-                logMessages.add(String.format(warningFormat, arg));
+                logMessages.add(String.format("Warning: " + warningFormat, arg));
             }
             
             public void printf(String msgFormat, Object... arg) {
