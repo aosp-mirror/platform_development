@@ -17,16 +17,17 @@
 package com.android.ddmlib.testrunner;
 
 import com.android.ddmlib.Client;
-import com.android.ddmlib.Device.DeviceState;
 import com.android.ddmlib.FileListingService;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.IShellOutputReceiver;
-import com.android.ddmlib.log.LogReceiver;
 import com.android.ddmlib.RawImage;
 import com.android.ddmlib.SyncService;
+import com.android.ddmlib.Device.DeviceState;
+import com.android.ddmlib.log.LogReceiver;
 
 import java.io.IOException;
 import java.util.Map;
+
 import junit.framework.TestCase;
 
 /**
@@ -78,6 +79,17 @@ public class RemoteAndroidTestRunnerTest extends TestCase {
         mRunner.run(new EmptyListener());
         assertStringsEquals(String.format("am instrument -w -r -e class %s#%s %s/%s", className,
                 testName, TEST_PACKAGE, TEST_RUNNER), mMockDevice.getLastShellCommand());
+    }
+
+    /**
+     * Test the building of the instrumentation runner command with test package set.
+     */
+    public void testRunWithPackage() {
+        final String packageName = "foo.test";
+        mRunner.setTestPackageName(packageName);
+        mRunner.run(new EmptyListener());
+        assertStringsEquals(String.format("am instrument -w -r -e package %s %s/%s", packageName,
+                TEST_PACKAGE, TEST_RUNNER), mMockDevice.getLastShellCommand());
     }
 
     /**

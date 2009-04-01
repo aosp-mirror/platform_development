@@ -563,7 +563,7 @@
                       <adapt type="org.eclipse.jdt.core.IJavaElement">
                         <test property="org.eclipse.jdt.core.isInJavaProjectWithNature" value="com.android.ide.eclipse.adt.AndroidNature"/>
                         <test property="org.eclipse.jdt.core.hasTypeOnClasspath" value="junit.framework.Test"/>
-                        <test property="org.eclipse.jdt.junit.canLaunchAsJUnit" forcePluginActivation="true"/>
+                        <test property="com.android.ide.eclipse.adt.canLaunchAsJUnit"/>
                      </adapt>
                   </iterate>
                </with>
@@ -594,5 +594,15 @@
             class="com.android.ide.eclipse.adt.refactorings.extractstring.ExtractStringContribution"
             id="com.android.ide.eclipse.adt.refactoring.extract.string">
       </contribution>
+   </extension>
+    <extension
+         point="org.eclipse.core.expressions.propertyTesters">
+      <propertyTester
+            properties="isTest,canLaunchAsJUnit"
+            namespace="com.android.ide.eclipse.adt"
+            type="org.eclipse.core.runtime.IAdaptable"
+            class="com.android.ide.eclipse.adt.launch.junit.AndroidJUnitPropertyTester"
+            id="com.android.ide.eclipse.adt.AndroidJUnitPropertyTester">
+      </propertyTester>
    </extension>
 </plugin>
