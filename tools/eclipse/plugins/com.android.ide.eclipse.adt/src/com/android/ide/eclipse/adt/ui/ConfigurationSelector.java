@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.ide.eclipse.editors.wizards;
+package com.android.ide.eclipse.adt.ui;
 
 import com.android.ide.eclipse.editors.resources.configurations.CountryCodeQualifier;
 import com.android.ide.eclipse.editors.resources.configurations.FolderConfiguration;

@@ -16,12 +16,12 @@
 
 package com.android.ide.eclipse.editors.layout;
 
+import com.android.ide.eclipse.adt.ui.ConfigurationSelector;
+import com.android.ide.eclipse.adt.ui.ConfigurationSelector.ConfigurationState;
 import com.android.ide.eclipse.editors.IconFactory;
 import com.android.ide.eclipse.editors.resources.configurations.FolderConfiguration;
 import com.android.ide.eclipse.editors.resources.configurations.ResourceQualifier;
 import com.android.ide.eclipse.editors.resources.manager.ResourceFolderType;
-import com.android.ide.eclipse.editors.wizards.ConfigurationSelector;
-import com.android.ide.eclipse.editors.wizards.ConfigurationSelector.ConfigurationState;
 
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.TrayDialog;
