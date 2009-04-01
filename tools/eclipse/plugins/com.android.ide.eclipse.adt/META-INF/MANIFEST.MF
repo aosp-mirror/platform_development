@@ -43,7 +43,8 @@ Require-Bundle: com.android.ide.eclipse.ddms,
  org.eclipse.jdt.junit,
  org.eclipse.jdt.junit.runtime,
  org.eclipse.ltk.core.refactoring,
- org.eclipse.ltk.ui.refactoring
+ org.eclipse.ltk.ui.refactoring,
+ org.eclipse.core.expressions
 Eclipse-LazyStart: true
 Export-Package: com.android.ide.eclipse.adt;x-friends:="com.android.ide.eclipse.tests",
  com.android.ide.eclipse.adt.build;x-friends:="com.android.ide.eclipse.tests",

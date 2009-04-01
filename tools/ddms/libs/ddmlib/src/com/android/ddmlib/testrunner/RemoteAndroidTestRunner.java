@@ -49,6 +49,7 @@ public class RemoteAndroidTestRunner  {
     private static final String LOG_ARG_NAME = "log";
     private static final String DEBUG_ARG_NAME = "debug";
     private static final String COVERAGE_ARG_NAME = "coverage";
+    private static final String PACKAGE_ARG_NAME = "package";
  
     /**
      * Creates a remote Android test runner.
@@ -143,6 +144,16 @@ public class RemoteAndroidTestRunner  {
      */
     public void setMethodName(String className, String testName) {
         setClassName(className + METHOD_SEPARATOR + testName);
+    }
+
+    /**
+     * Sets to run all tests in specified package
+     * Must be called before 'run'.
+     * 
+     * @param packageName fully qualified package name (eg x.y.z)
+     */
+    public void setTestPackageName(String packageName) {
+        addInstrumentationArg(PACKAGE_ARG_NAME, packageName);
     }
 
     /**
