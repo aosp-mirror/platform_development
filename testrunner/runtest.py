@@ -39,14 +39,17 @@ import test_defs
 class TestRunner(object):
   """Command line utility class for running pre-defined Android test(s)."""
 
+  _TEST_FILE_NAME = "test_defs.xml"
+
   # file path to android core platform tests, relative to android build root
   # TODO move these test data files to another directory
-  _CORE_TEST_PATH = os.path.join("development", "testrunner", "test_defs.xml")
+  _CORE_TEST_PATH = os.path.join("development", "testrunner", 
+                                 _TEST_FILE_NAME)
 
   # vendor glob file path patterns to tests, relative to android
   # build root
   _VENDOR_TEST_PATH = os.path.join("vendor", "*", "tests", "testinfo",
-                                   "test_defs.xml")
+                                   _TEST_FILE_NAME)
 
   _RUNTEST_USAGE = (
       "usage: runtest.py [options] short-test-name[s]\n\n"
@@ -61,7 +64,7 @@ class TestRunner(object):
     """Processes command-line options."""
     # TODO error messages on once-only or mutually-exclusive options.
     user_test_default = os.path.join(os.environ.get("HOME"), ".android",
-                                     "test_defs.xml")
+                                     self._TEST_FILE_NAME)
 
     parser = optparse.OptionParser(usage=self._RUNTEST_USAGE)
 
