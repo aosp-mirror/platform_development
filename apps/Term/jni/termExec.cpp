@@ -215,6 +215,21 @@ static int android_os_Exec_waitFor(JNIEnv *env, jobject clazz,
     return result;
 }
 
+static void android_os_Exec_close(JNIEnv *env, jobject clazz, jobject fileDescriptor)
+{
+    int fd;
+    struct winsize sz;
+
+    fd = env->GetIntField(fileDescriptor, field_fileDescriptor_descriptor);
+
+    if (env->ExceptionOccurred() != NULL) {
+        return;
+    }
+    
+    close(fd);
+}
+
+
 static int register_FileDescriptor(JNIEnv *env)
 {
     class_fileDescriptor = env->FindClass("java/io/FileDescriptor");
@@ -248,7 +263,9 @@ static JNINativeMethod method_table[] = {
     { "setPtyWindowSize", "(Ljava/io/FileDescriptor;IIII)V",
         (void*) android_os_Exec_setPtyWindowSize},
     { "waitFor", "(I)I",
-        (void*) android_os_Exec_waitFor}
+        (void*) android_os_Exec_waitFor},
+    { "close", "(Ljava/io/FileDescriptor;)V",
+        (void*) android_os_Exec_close}
 };
 
 /*
