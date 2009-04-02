@@ -4,78 +4,72 @@ Building the pdk (platform development kit)
 (We currently support version 1.4.6)
 
   sudo apt-get install doxygen
+  
+Make sure that you are using the right version of java
+  
+  sudo update-java-alternatives -s java-1.5.0-sun
+
+If that doesn't work, go through the instructions on
+
+  http://source.android.com/download again.
+
 
 2) from the root
   . build/envsetup.sh
 
-3) run choosecombo
-  Build for the simulator or the device?
-       1. Device
-       2. Simulator
-
-  Which would you like? [1] 1
-
-
-  Build type choices are:
-       1. release
-       2. debug
-
-  Which would you like? [1] 1
-
-
-  Product choices are:
-       0. emulator
-       1. generic
-       2. sim
-       3. surf
-  You can also type the name of a product if you know it.
-  Which would you like? [generic] 1
-
-
-  Variant choices are:
-       1. user
-       2. userdebug
-       3. eng
-  Which would you like? [eng] 3
-
-  ============================================
-  TARGET_PRODUCT=generic
-  TARGET_BUILD_VARIANT=eng
-  TARGET_SIMULATOR=false
-  TARGET_BUILD_TYPE=release
-  TARGET_ARCH=arm
-  HOST_ARCH=x86
-  HOST_OS=linux
-  HOST_BUILD_TYPE=release
-  BUILD_ID=
-  ============================================
 
 4) mkdir dist
    mkdir logs
-   mkpdkcupcake.sh
+   
+then build everything:
 
-(which contains: 
+   time make -j4 pdk pdk_all dist DIST_DIR=dist 2>&1 | tee logs/`date +%y%m%d-%H%M%S`
 
-DT=`date +%y%m%d-%H%M%S`
-time make -j4 pdk pdk_all dist DIST_DIR=dist 2>&1 | tee logs/$DT
+so you can have a record of the build commands in the logs directory.
 
-so you can see the results of the build in the logs directory.)
 
 5) the pdk tar file is put in the dist directory.
 
+6) the pdk-docs are in 
+
+  out/target
+
 
 The build target 'pdk' brings in the pdk/ndk make files into the build system.
- Then there are three targets:
-  pdk_docs - which builds the pdk documentation
-  ndk - which builds the native development kit (native compiler, linker, etc.)
-  pdk_all - which builds the above two targets
+  Then there are three targets:
+    pdk_docs - which builds just the pdk documentation
+    ndk - which builds the native development kit (native compiler, linker, etc.)
+    pdk_all - which builds the above two targets
 
-for doxygen version changing you can pass in the variable:
-doxygen_version='<path/name_of_doxygen_executable>'
+To chnage which version of doxygen runs you can pass in the variable:
+  doxygen_version='<path/name_of_doxygen_executable>'
 on the make line.
 
 --------------------------------------------------------------------------------
-To host the pdk docs on appengine run:
-/home/build/static/projects/apphosting/devtools/appcfg.py update pdk/
-where the pdk directory contains: pdk.py, app.yaml, and the docs directory,
-all of which are tarred up by the Pdk.mk file when using the targer pdk_docs.
+# Testing
+You must install google appengine.  See: http://code.google.com/appengine/downloads.html
+
+Here's the command to run the pdk-docs server locally:
+  python <path_to_appengine_installation>/dev_appserver.py --address 0.0.0.0 \
+    <path_to_cupcake_code>/android/out/target/common/docs/online-pdk
+    
+To verify it is working you can access it with a browser loacally on port 8080:
+
+http://localhost:8080/index.html
+TODO: index.html needs correct links.
+TODO: app.yaml not working for redirecting, getting extra '.' in html names...
+ 
+ --------------------------------------------------------------------------------
+# Deployment
+To host the pdk docs on the interanl appengine run:
+/home/build/static/projects/apphosting/devtools/appcfg.py update <path_to_cupcake_src>/out/common/docs
+where the docs directory contains: pdk.py, app.yaml, and the online-pdk directory,
+all of which are tarred up by the Pdk.mk file when using the target pdk_docs. 
+
+# Deployment
+To host the pdk docs on the external appengine run:
+/home/build/static/projects/apphosting/devtools/appcfg.py -s pdk-docs.appspot.com update <path_to_cupcake_src>/out/common/docs
+where the docs directory contains: pdk.py, app.yaml, and the online-pdk directory,
+all of which are tarred up by the Pdk.mk file when using the target pdk_docs. 
+
+

@@ -1,0 +1,108 @@
+page.title=Power Management
+@jd:body
+
+<a name="toc"/>
+<div style="padding:10px">
+<a href="#androidPowerIntro">Introduction</a><br/>
+<a href="#androidPowerWakeLocks">Wake Locks</a><br/><div style="padding-left:40px">
+
+<a href="#androidPowerWakeLocksDefinitions">Types of Wake Locks</a><br/>
+<a href="#androidPowerWakeLockExample">Exploring a Wake Lock Example</a><br/></div>
+<a href="#androidPowerPowerManagerClass">PowerManager class</a><br/>
+<a href="#androidPowerKernelRegistration">Registering Drivers with the PM Driver</a><br/></div>
+
+<a name="androidPowerIntro"></a><h2>Introduction</h2>
+
+<p>Android supports its own Power Management (on top of the standard Linux Power Management) designed with the premise that the CPU shouldn't consume power if no applications or services require power. For more information regarding standard Linux power management, please see <a href="http://git.kernel.org/?p=linux/kernel/git/stable/linux-2.6.24.y.git;a=blob;f=Documentation/pm.txt">Linux Power Management Support</a> at <a href="http://kernel.org">http://kernel.org</a>.</p>
+<p>Android requires that applications and services request CPU resources with &quot;wake locks&quot; through the Android application framework and native Linux libraries. If there are no active wake locks, Android will shut down the CPU. </p>
+<p>The image below illustrates the Android power management architecture. </p>
+<p><img src='androidPMArchitecture.gif'></p>
+
+<p>Solid elements represent Android blocks and dashed elements represent partner-specific blocks.</p>
+
+
+
+<a name="androidPowerWakeLocks"></a><h2>Wake Locks</h2>
+
+<p>Wake locks are used by applications and services to request CPU resources.</p>
+
+
+<a name="androidPowerWakeLocksDefinitions"></a><h3>Types of Wake Locks</h3>
+
+<table border=1 cellpadding=2 cellspacing=0>
+    <tbody><tr>
+        <th scope="col">Wake Lock </th>
+        <th scope="col">Description</th>
+    </tr>
+    <tr>
+      <td>ACQUIRE_CAUSES_WAKEUP<br/></td>
+        <td>Normally wake locks don't actually wake the device, they just cause it to remain on once it's already on. Think of the video player app as the normal behavior. Notifications that pop up and want the device to be on are the exception; use this flag to be like them.</td>
+    </tr>
+    <tr>
+      <td>FULL_WAKE_LOCK</td>
+      <td>Wake lock that ensures that the screen and keyboard are on at full brightness. </td>
+    </tr>
+    <tr>
+      <td>ON_AFTER_RELEASE</td>
+      <td>When this wake lock is released, poke the user activity timer so the screen stays on for a little longer.</td>
+    </tr>
+    <tr>
+      <td>PARTIAL_WAKE_LOCK</td>
+      <td>Wake lock that ensures that the CPU is running. The screen might not be on.</td>
+    </tr>
+    <tr>
+      <td>SCREEN_BRIGHT_WAKE_LOCK</td>
+      <td>Wake lock that ensures that the screen is on at full brightness; the keyboard backlight will be allowed to go off.</td>
+    </tr>
+    <tr>
+      <td>SCREEN_DIM_WAKE_LOCK</td>
+      <td>Wake lock that ensures that the screen is on, but the keyboard backlight will be allowed to go off, and the screen backlight will be allowed to go dim.</td>
+    </tr>
+</table>
+
+
+<a name="androidPowerWakeLockExample"></a><h3>Exploring a Wake Lock Example</h3>
+
+<p>All power management calls follow the same basic format:</p>
+<p><ol><li>Acquire handle to the <code>PowerManager</code> service.</li>
+<li>Create a wake lock and specify the power management flags for screen, timeout, etc.</li>
+<li>Acquire wake lock.</li>
+<li>Perform operation (play MP3, open HTML page, etc.).</li>
+<li>Release wake lock.</li>
+</ol>
+</p>
+<p>The snippet below illustrates this process.</p>
+<pre class="prettify">
+PowerManager pm = (PowerManager)mContext.getSystemService(
+                                          Context.POWER_SERVICE);
+PowerManager.WakeLock wl = pm.newWakeLock(
+                                      PowerManager.SCREEN_DIM_WAKE_LOCK
+                                      | PowerManager.ON_AFTER_RELEASE,
+                                      TAG);
+wl.acquire();
+ // ...
+wl.release();
+</pre>
+
+
+<a name="androidPowerPowerManagerClass"></a><h2>PowerManager class</h2>
+
+<p>The Android Framework exposes power management to services and applications through the <code>PowerManager</code> class.</p>
+<p>User space native libraries (any hardware function in <code>//device/lib/hardware/</code> meant to serve as supporting libraries for Android runtime) should never call into Android Power Management directly (see the image above). Bypassing the power management policy in the Android runtime will destabilize the system.</p>
+<p>All calls into Power Management should go through the Android runtime PowerManager APIs.</p>
+<p> Please visit 
+<a href="http://code.google.com/android/reference/android/os/PowerManager.html">http://code.google.com/android/reference/android/os/PowerManager.html</a> for a description of the API and examples.</p>
+
+
+<a name="androidPowerKernelRegistration"></a><h2>Registering Drivers with the PM Driver</h2>
+
+<p>You can register Kernel-level drivers with the Android Power Manager driver so that they're notified immediately before power down or after power up. For example, you might set a display driver to completely power down when a request comes in to power down from the user space (see the Android MSM MDDI display driver for a sample implementation).</p>
+<p>To register drivers with the Android PM driver, implement call-back handlers and register them with the Android PM, as illustrated in the snippet below:</p>
+<pre class="prettify">
+android_register_early_suspend(android_early_suspend_t *handler)
+android_register_early_resume(android_early_resume_t *handler)
+</pre>
+<p>It is critical in a drive to return immediately and not wait for anything to happen in the call back.</p>
+
+
+
