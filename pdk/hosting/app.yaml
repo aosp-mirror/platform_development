@@ -4,8 +4,8 @@ runtime: python
 api_version: 1
 
 handlers:
-- url: /docs
-  static_dir: docs
+- url: /online-pdk
+  static_dir: online-pdk
 
 - url: /
   script: pdk.py
