@@ -20,6 +20,10 @@ import com.android.ide.eclipse.common.resources.IResourceRepository;
 import com.android.ide.eclipse.common.resources.ResourceItem;
 import com.android.ide.eclipse.common.resources.ResourceType;
 
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
@@ -39,11 +43,11 @@ public class ResourceChooser extends AbstractElementListSelectionDialog {
 
     private IResourceRepository mProjectResources;
 
-    // TODO: enable when we can display the system resources.
-    // private Pattern mSystemResourcePattern;
-    // private IResourceRepository mSystemResources;
-    // private Button mProjectButton;
-    // private Button mSystemButton;
+    private final static boolean SHOW_SYSTEM_RESOURCE = false;  // TODO re-enable at some point 
+    private Pattern mSystemResourcePattern;
+    private IResourceRepository mSystemResources;
+    private Button mProjectButton;
+    private Button mSystemButton;
     
     private String mCurrentResource;
     
@@ -60,14 +64,15 @@ public class ResourceChooser extends AbstractElementListSelectionDialog {
 
         mResourceType = type;
         mProjectResources = project;
-        // TODO: enable when we can display the system resources.
-        // mSystemResources = system;
         
         mProjectResourcePattern = Pattern.compile(
                 "@" + mResourceType.getName() + "/(.+)"); //$NON-NLS-1$ //$NON-NLS-2$
-        // TODO: enable when we can display the system resources.
-        // mSystemResourcePattern = Pattern.compile(
-        //        "@android:" + mResourceType.getName() + "/(.+)"); //$NON-NLS-1$ //$NON-NLS-2$
+
+        if (SHOW_SYSTEM_RESOURCE) {
+            mSystemResources = system;
+            mSystemResourcePattern = Pattern.compile(
+                    "@android:" + mResourceType.getName() + "/(.+)"); //$NON-NLS-1$ //$NON-NLS-2$
+        }
 
         setTitle("Resource Chooser");
         setMessage(String.format("Choose a %1$s resource",
@@ -89,8 +94,7 @@ public class ResourceChooser extends AbstractElementListSelectionDialog {
             ResourceItem item = (ResourceItem)elements[0];
             
             mCurrentResource = mResourceType.getXmlString(item,
-                    // TODO: enable when we can display the system resources.
-                    false /*mSystemButton.getSelection()*/); 
+                    SHOW_SYSTEM_RESOURCE && mSystemButton.getSelection()); 
         }
     }
 
@@ -100,9 +104,7 @@ public class ResourceChooser extends AbstractElementListSelectionDialog {
 
         createMessageArea(top);
 
-        // TODO: enable when we can display the system resources.
-        // createButtons(top);
-        
+        createButtons(top);
         createFilterText(top);
         createFilteredList(top);
         
@@ -115,8 +117,10 @@ public class ResourceChooser extends AbstractElementListSelectionDialog {
      * Creates the radio button to switch between project and system resources.
      * @param top the parent composite
      */
-    /* TODO: enable when we can display the system resources.
     private void createButtons(Composite top) {
+        if (!SHOW_SYSTEM_RESOURCE) {
+            return;
+        }
         mProjectButton = new Button(top, SWT.RADIO);
         mProjectButton.setText("Project Resources");
         mProjectButton.addSelectionListener(new SelectionAdapter() {
@@ -136,7 +140,6 @@ public class ResourceChooser extends AbstractElementListSelectionDialog {
             }
         });
     }
-    */
     
     /**
      * Setups the current list based on the current resource.
@@ -147,20 +150,22 @@ public class ResourceChooser extends AbstractElementListSelectionDialog {
             ResourceItem[] items = mProjectResources.getResources(mResourceType); 
             setListElements(items);
         }
-        /*
-         * TODO: enable when we can display the system resources.
-        if (setupInitialSelection(mProjectResourcePattern, mProjectResources) == false) {
-            if (setupInitialSelection(mSystemResourcePattern, mSystemResources) == false) {
-                // if we couldn't understand the current value, we default to the project resources
-                IResourceItem[] items = mProjectResources.getResources(mResourceType); 
-                setListElements(items);
-                mProjectButton.setSelection(true);
+
+        if (SHOW_SYSTEM_RESOURCE) {
+            if (setupInitialSelection(mProjectResourcePattern, mProjectResources) == false) {
+                if (setupInitialSelection(mSystemResourcePattern, mSystemResources) == false) {
+                    // if we couldn't understand the current value,
+                    // we default to the project resources
+                    ResourceItem[] items = mProjectResources.getResources(mResourceType); 
+                    setListElements(items);
+                    mProjectButton.setSelection(true);
+                } else {
+                    mSystemButton.setSelection(true);
+                }
             } else {
-                mSystemButton.setSelection(true);
+                mProjectButton.setSelection(true);
             }
-        } else {
-            mProjectButton.setSelection(true);
-        }*/
+        }
     }
     
     /**
