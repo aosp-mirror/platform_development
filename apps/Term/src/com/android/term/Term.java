@@ -184,6 +184,15 @@ public class Term extends Activity {
         updatePrefs();
     }
 
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (mTermFd != null) {
+            Exec.close(mTermFd);
+            mTermFd = null;
+        }
+    }
+
     private void startListening() {
         int[] processId = new int[1];
 

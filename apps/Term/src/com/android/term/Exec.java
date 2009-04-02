@@ -63,5 +63,10 @@ public class Exec
      *
      */
     public static native int waitFor(int processId);
+
+    /**
+     * Close a given file descriptor.
+     */
+    public static native void close(FileDescriptor fd);
 }
 
