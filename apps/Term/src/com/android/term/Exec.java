@@ -19,8 +19,12 @@ package com.android.term;
 import java.io.FileDescriptor;
 
 /**
- * @hide
- * Tools for executing commands.  Not for public consumption.
+ * Utility methods for creating and managing a subprocess.
+ * <p>
+ * Note: The native methods access a package-private
+ * java.io.FileDescriptor field to get and set the raw Linux
+ * file descriptor. This might break if the implementation of
+ * java.io.FileDescriptor is changed.
  */
 
 public class Exec
@@ -30,18 +34,12 @@ public class Exec
     }
 
     /**
-     * @param cmd The command to execute
-     * @param arg0 The first argument to the command, may be null
-     * @param arg1 the second argument to the command, may be null
-     * @return the file descriptor of the started process.
+     * Create a subprocess. Differs from java.lang.ProcessBuilder in
+     * that a pty is used to communicate with the subprocess.
+     * <p>
+     * Callers are responsible for calling Exec.close() on the returned
+     * file descriptor.
      *
-     */
-    public static FileDescriptor createSubprocess(
-        String cmd, String arg0, String arg1) {
-        return createSubprocess(cmd, arg0, arg1, null);
-    }
-
-    /**
      * @param cmd The command to execute
      * @param arg0 The first argument to the command, may be null
      * @param arg1 the second argument to the command, may be null
@@ -50,11 +48,16 @@ public class Exec
      * @return the file descriptor of the started process.
      *
      */
-     public static native FileDescriptor createSubprocess(
+    public static native FileDescriptor createSubprocess(
         String cmd, String arg0, String arg1, int[] processId);
-
-     public static native void setPtyWindowSize(FileDescriptor fd,
+        
+    /**
+     * Set the widow size for a given pty. Allows programs
+     * connected to the pty learn how large their screen is.
+     */
+    public static native void setPtyWindowSize(FileDescriptor fd,
        int row, int col, int xpixel, int ypixel);
+
     /**
      * Causes the calling thread to wait for the process associated with the
      * receiver to finish executing.
