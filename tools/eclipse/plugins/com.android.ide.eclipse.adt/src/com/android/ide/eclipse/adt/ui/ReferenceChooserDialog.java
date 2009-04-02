@@ -17,10 +17,13 @@
 package com.android.ide.eclipse.adt.ui;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.refactorings.extractstring.ExtractStringRefactoring;
+import com.android.ide.eclipse.adt.refactorings.extractstring.ExtractStringWizard;
 import com.android.ide.eclipse.common.resources.IResourceRepository;
 import com.android.ide.eclipse.common.resources.ResourceItem;
 import com.android.ide.eclipse.common.resources.ResourceType;
 
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.dialogs.DialogSettings;
@@ -30,14 +33,20 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.TreePath;
 import org.eclipse.jface.viewers.TreeSelection;
 import org.eclipse.jface.viewers.TreeViewer;
+import org.eclipse.ltk.ui.refactoring.RefactoringWizard;
+import org.eclipse.ltk.ui.refactoring.RefactoringWizardOpenOperation;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Tree;
+import org.eclipse.ui.IWorkbench;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.dialogs.FilteredTree;
 import org.eclipse.ui.dialogs.PatternFilter;
 import org.eclipse.ui.dialogs.SelectionStatusDialog;
@@ -58,21 +67,24 @@ public class ReferenceChooserDialog extends SelectionStatusDialog {
     
     private IResourceRepository mResources;
     private String mCurrentResource;
-
     private FilteredTree mFilteredTree;
+    private Button mNewResButton;
+    private final IProject mProject;
 
     /**
+     * @param project 
      * @param parent
      */
-    public ReferenceChooserDialog(IResourceRepository resources, Shell parent) {
+    public ReferenceChooserDialog(IProject project, IResourceRepository resources, Shell parent) {
         super(parent);
+        mProject = project;
+        mResources = resources;
 
         int shellStyle = getShellStyle();
         setShellStyle(shellStyle | SWT.MAX | SWT.RESIZE);
 
-        setTitle("Reference Dialog");
+        setTitle("Reference Chooser");
         setMessage(String.format("Choose a resource"));
-        mResources = resources;
         
         setDialogBoundsSettings(sDialogSettings, getDialogBoundsStrategy());
     }
@@ -113,11 +125,24 @@ public class ReferenceChooserDialog extends SelectionStatusDialog {
 
         // create the filtered tree
         createFilteredTree(top);
-        
+
         // setup the initial selection
         setupInitialSelection();
         
+        // create the "New Resource" button
+        createNewResButtons(top);
+        
         return top;
+    }
+
+    /**
+     * Creates the "New Resource" button.
+     * @param top the parent composite
+     */
+    private void createNewResButtons(Composite top) {
+        mNewResButton = new Button(top, SWT.NONE);
+        mNewResButton.addSelectionListener(new OnNewResButtonSelected());
+        updateNewResButton();
     }
 
     private void createFilteredTree(Composite parent) {
@@ -154,6 +179,7 @@ public class ReferenceChooserDialog extends SelectionStatusDialog {
 
     protected void handleSelection() {
         validateCurrentSelection();
+        updateNewResButton();
     }
 
     protected void handleDoubleClick() {
@@ -204,6 +230,65 @@ public class ReferenceChooserDialog extends SelectionStatusDialog {
         updateStatus(status);
 
         return status.isOK();
+    }
+
+    /**
+     * Updates the new res button when the list selection changes.
+     * The name of the button changes depending on the resource.
+     */
+    private void updateNewResButton() {
+        ResourceType type = getSelectedResourceType();
+        
+        // We only support adding new strings right now
+        mNewResButton.setEnabled(type == ResourceType.STRING);
+        
+        String title = String.format("New %1$s", type == null ? "Resource" : type.getDisplayName());
+        mNewResButton.setText(title);
+    }
+
+    /**
+     * Callback invoked when the mNewResButton is selected by the user.
+     */
+    private class OnNewResButtonSelected extends SelectionAdapter {
+        @Override
+         public void widgetSelected(SelectionEvent e) {
+             super.widgetSelected(e);
+             
+             ResourceType type = getSelectedResourceType();
+
+             // We currently only support strings
+             if (type == ResourceType.STRING) {
+
+                 ExtractStringRefactoring ref = new ExtractStringRefactoring(true /*enforceNew*/);
+                 RefactoringWizard wizard = new ExtractStringWizard(ref, mProject);
+                 RefactoringWizardOpenOperation op = new RefactoringWizardOpenOperation(wizard);
+                 try {
+                     IWorkbench w = PlatformUI.getWorkbench();
+                     op.run(w.getDisplay().getActiveShell(), wizard.getDefaultPageTitle());
+                     
+                     // TODO Select string
+                 } catch (InterruptedException ex) {
+                     // Interrupted. Pass.
+                 }
+             }
+         } 
+     }
+
+    /**
+     * Returns the {@link ResourceType} of the selected element, if any.
+     * Returns null if nothing suitable is selected.
+     */
+    private ResourceType getSelectedResourceType() {
+        ResourceType type = null;
+
+        TreePath selection = getSelection();
+        if (selection != null && selection.getSegmentCount() > 0) {
+            Object first = selection.getFirstSegment();
+            if (first instanceof ResourceType) {
+                type = (ResourceType) first;
+            }
+        }
+        return type;
     }
     
     /**
