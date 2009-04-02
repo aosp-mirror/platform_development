@@ -144,7 +144,9 @@ public class UiResourceAttributeNode extends UiTextAttributeNode {
                     return dlg.getCurrentResource();
                 }
             } else {
-                ReferenceChooserDialog dlg = new ReferenceChooserDialog(projectRepository,
+                ReferenceChooserDialog dlg = new ReferenceChooserDialog(
+                        project,
+                        projectRepository,
                         shell);
 
                 dlg.setCurrentResource(currentValue);

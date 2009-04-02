@@ -25,7 +25,7 @@ import org.eclipse.ltk.ui.refactoring.RefactoringWizard;
  * @see ExtractStringInputPage
  * @see ExtractStringRefactoring
  */
-class ExtractStringWizard extends RefactoringWizard {
+public class ExtractStringWizard extends RefactoringWizard {
 
     private final IProject mProject;
 
