@@ -33,7 +33,7 @@ public class AndroidManifestParserTest extends TestCase {
     private static final String ACTIVITY_NAME = "com.android.testapp.MainActivity"; //$NON-NLS-1$
     private static final String LIBRARY_NAME = "android.test.runner"; //$NON-NLS-1$
     private static final String INSTRUMENTATION_NAME = "android.test.InstrumentationTestRunner"; //$NON-NLS-1$
-    
+    private static final String INSTRUMENTATION_TARGET = "com.android.AndroidProject"; //$NON-NLS-1$
     @Override
     protected void setUp() throws Exception {
         super.setUp();
@@ -51,7 +51,10 @@ public class AndroidManifestParserTest extends TestCase {
 
     public void testGetInstrumentationInformation() {
         assertEquals(1, mManifestInstrumentation.getInstrumentations().length);
-        assertEquals(INSTRUMENTATION_NAME, mManifestTestApp.getInstrumentations()[0]); 
+        assertEquals(INSTRUMENTATION_NAME, 
+                mManifestInstrumentation.getInstrumentations()[0].getName());
+        assertEquals(INSTRUMENTATION_TARGET, 
+                mManifestInstrumentation.getInstrumentations()[0].getTargetPackage());
     }
     
     public void testGetPackage() {
@@ -66,17 +69,12 @@ public class AndroidManifestParserTest extends TestCase {
     public void testGetLauncherActivity() {
         assertEquals(ACTIVITY_NAME, mManifestTestApp.getLauncherActivity()); 
     }
-    
+
     public void testGetUsesLibraries() {
         assertEquals(1, mManifestTestApp.getUsesLibraries().length);
         assertEquals(LIBRARY_NAME, mManifestTestApp.getUsesLibraries()[0]); 
     }
-    
-    public void testGetInstrumentations() {
-        assertEquals(1, mManifestTestApp.getInstrumentations().length);
-        assertEquals(INSTRUMENTATION_NAME, mManifestTestApp.getInstrumentations()[0]); 
-    }
-    
+
     public void testGetPackageName() {
         assertEquals(PACKAGE_NAME, mManifestTestApp.getPackage());
     }
