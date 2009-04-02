@@ -25,6 +25,7 @@ import com.android.ide.eclipse.adt.launch.LaunchConfigDelegate;
 import com.android.ide.eclipse.adt.launch.junit.runtime.AndroidJUnitLaunchInfo;
 import com.android.ide.eclipse.common.AndroidConstants;
 import com.android.ide.eclipse.common.project.AndroidManifestParser;
+import com.android.ide.eclipse.common.project.AndroidManifestParser.Instrumentation;
 import com.android.ide.eclipse.common.project.BaseProjectHelper;
 
 import org.eclipse.core.resources.IFile;
@@ -60,7 +61,6 @@ public class AndroidJUnitLaunchConfigDelegate extends LaunchConfigDelegate {
             AndroidLaunchConfiguration config, AndroidLaunchController controller,
             IFile applicationPackage, AndroidManifestParser manifestParser) {
 
-        String appPackage = manifestParser.getPackage();        
         String runner = getRunner(project, configuration, manifestParser);
         if (runner == null) {
             AdtPlugin.displayError("Android Launch",
@@ -68,19 +68,46 @@ public class AndroidJUnitLaunchConfigDelegate extends LaunchConfigDelegate {
             androidLaunch.stopLaunch();
             return;
         }
-        AndroidJUnitLaunchInfo junitLaunchInfo = new AndroidJUnitLaunchInfo(project, appPackage, 
-                runner);
+        // get the target app's package
+        String targetAppPackage = getTargetPackage(manifestParser, runner); 
+        if (targetAppPackage == null) {
+            AdtPlugin.displayError("Android Launch",
+                    String.format("A target package for instrumention test runner %1$s could not be found!", 
+                    runner));
+            androidLaunch.stopLaunch();
+            return; 
+        }
+        String testAppPackage = manifestParser.getPackage();
+        AndroidJUnitLaunchInfo junitLaunchInfo = new AndroidJUnitLaunchInfo(project, 
+                testAppPackage, runner);
         junitLaunchInfo.setTestClass(getTestClass(configuration));
         junitLaunchInfo.setTestPackage(getTestPackage(configuration));
         junitLaunchInfo.setTestMethod(getTestMethod(configuration));
-
+        junitLaunchInfo.setLaunch(androidLaunch);
         IAndroidLaunchAction junitLaunch = new AndroidJUnitLaunchAction(junitLaunchInfo);
-
-        controller.launch(project, mode, applicationPackage, manifestParser.getPackage(),
+        
+        controller.launch(project, mode, applicationPackage, testAppPackage, targetAppPackage,
                 manifestParser.getDebuggable(), manifestParser.getApiLevelRequirement(),
                 junitLaunch, config, androidLaunch, monitor);
     }
-    
+
+    /**
+     * Get the target Android application's package for the given instrumentation runner, or 
+     * <code>null</code> if it could not be found.
+     *
+     * @param manifestParser the {@link AndroidManifestParser} for the test project
+     * @param runner the instrumentation runner class name
+     * @return the target package or <code>null</code>
+     */
+    private String getTargetPackage(AndroidManifestParser manifestParser, String runner) {
+        for (Instrumentation instr : manifestParser.getInstrumentations()) {
+            if (instr.getName().equals(runner)) {
+                return instr.getTargetPackage();
+            }
+        }
+        return null;
+    }
+
     /**
      * Returns the test package stored in the launch configuration, or <code>null</code> if not 
      * specified.

@@ -306,9 +306,10 @@ public class LaunchConfigDelegate extends LaunchConfigurationDelegate {
 
         // everything seems fine, we ask the launch controller to handle
         // the rest
-        controller.launch(project, mode, applicationPackage, manifestParser.getPackage(),
-                manifestParser.getDebuggable(), manifestParser.getApiLevelRequirement(),
-                launchAction, config, androidLaunch, monitor);
+        controller.launch(project, mode, applicationPackage,manifestParser.getPackage(),
+                manifestParser.getPackage(), manifestParser.getDebuggable(),
+                manifestParser.getApiLevelRequirement(), launchAction, config, androidLaunch,
+                monitor);
     }
     
     @Override

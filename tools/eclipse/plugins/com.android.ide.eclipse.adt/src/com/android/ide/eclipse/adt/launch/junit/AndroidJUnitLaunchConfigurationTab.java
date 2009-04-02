@@ -955,7 +955,7 @@ public class AndroidJUnitLaunchConfigurationTab extends AbstractLaunchConfigurat
         try {
         mInstrValidator = new InstrumentationRunnerValidator(project);
         mInstrumentations = (mInstrValidator == null ? null : 
-            mInstrValidator.getInstrumentations());
+            mInstrValidator.getInstrumentationNames());
         if (mInstrumentations != null) {
             mInstrumentationCombo.removeAll();
             for (String instrumentation : mInstrumentations) {
