@@ -26,11 +26,9 @@ from google.appengine.ext.webapp.util import run_wsgi_app
 
 class MainPage(webapp.RequestHandler):
   def get(self):
-    self.redirect('docs/index.html')
+    self.redirect('online-pdk/index.html')
 
-application = webapp.WSGIApplication(
-                                     [('/', MainPage)],
-                                     debug=True)
+application = webapp.WSGIApplication([('/', MainPage)], debug=True)
 
 def main():
   run_wsgi_app(application)
@@ -38,6 +36,18 @@ def main():
 if __name__ == "__main__":
   main()
   
+# Testing
+# You must install google appengine.  See: http://code.google.com/appengine/downloads.html
+# 
+# Here's the command to run the pdk-docs server locally:
+#   python <path_to_appengine_installation>/dev_appserver.py --address 0.0.0.0 \
+#     <path_to_cupcake_code>/android/out/target/common/docs
+    
+# To verify it is working you can access it with a browser loacally on port 8080:
+
+# http://localhost:8080/index.html
+
+
 # To upload this application:
 # /home/build/static/projects/apphosting/devtools/appcfg.py update pdk/
 # where the pdk directory contains: pdk.py, app.yaml, and the docs directory.
