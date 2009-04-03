@@ -23,6 +23,7 @@ import com.android.ide.eclipse.adt.project.ProjectHelper;
 import com.android.ide.eclipse.common.AndroidConstants;
 import com.android.ide.eclipse.common.project.AndroidManifestParser;
 import com.android.ide.eclipse.common.project.BaseProjectHelper;
+import com.android.ide.eclipse.common.project.AndroidManifestParser.Activity;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
@@ -247,7 +248,7 @@ public class LaunchConfigDelegate extends LaunchConfigurationDelegate {
             activityName = getActivityName(configuration);
     
             // Get the full activity list and make sure the one we got matches.
-            String[] activities = manifestParser.getActivities();
+            Activity[] activities = manifestParser.getActivities();
     
             // first we check that there are, in fact, activities.
             if (activities.length == 0) {
@@ -261,8 +262,11 @@ public class LaunchConfigDelegate extends LaunchConfigurationDelegate {
                 // if the activity we got is null, we look for the default one.
                 AdtPlugin.printErrorToConsole(project,
                         "No activity specified! Getting the launcher activity.");
-                activityName = manifestParser.getLauncherActivity();
-                
+                Activity launcherActivity = manifestParser.getLauncherActivity();
+                if (launcherActivity != null) {
+                    activityName = launcherActivity.getName();
+                }
+
                 // if there's no default activity. We revert to a sync-only launch.
                 if (activityName == null) {
                     revertToNoActionLaunch(project, config);
@@ -271,8 +275,8 @@ public class LaunchConfigDelegate extends LaunchConfigurationDelegate {
     
                 // check the one we got from the config matches any from the list
                 boolean match = false;
-                for (String a : activities) {
-                    if (a != null && a.equals(activityName)) {
+                for (Activity a : activities) {
+                    if (a != null && a.getName().equals(activityName)) {
                         match = true;
                         break;
                     }
@@ -282,7 +286,10 @@ public class LaunchConfigDelegate extends LaunchConfigurationDelegate {
                 if (match == false) {
                     AdtPlugin.printErrorToConsole(project,
                             "The specified activity does not exist! Getting the launcher activity.");
-                    activityName = manifestParser.getLauncherActivity();
+                    Activity launcherActivity = manifestParser.getLauncherActivity();
+                    if (launcherActivity != null) {
+                        activityName = launcherActivity.getName();
+                    }
             
                     // if there's no default activity. We revert to a sync-only launch.
                     if (activityName == null) {
@@ -291,7 +298,10 @@ public class LaunchConfigDelegate extends LaunchConfigurationDelegate {
                 }
             }
         } else if (config.mLaunchAction == ACTION_DEFAULT) {
-            activityName = manifestParser.getLauncherActivity();
+            Activity launcherActivity = manifestParser.getLauncherActivity();
+            if (launcherActivity != null) {
+                activityName = launcherActivity.getName();
+            }
             
             // if there's no default activity. We revert to a sync-only launch.
             if (activityName == null) {

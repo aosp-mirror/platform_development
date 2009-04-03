@@ -1078,7 +1078,7 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
 
     /**
      * Performs the installation of an application whose package has been uploaded on the device.
-     * <p/>Before doing it, if the application is already running on the device, it is killed. 
+     *
      * @param launchInfo the {@link DelayedLaunchInfo}.
      * @param remotePath the path of the application package in the device tmp folder.
      * @param device the device on which to install the application.
@@ -1088,12 +1088,6 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
      */
     private String doInstall(DelayedLaunchInfo launchInfo, final String remotePath,
             final IDevice device, boolean reinstall) throws IOException {
-        // kill running application
-        Client application = device.getClient(launchInfo.getPackageName());
-        if (application != null) {
-            application.kill();
-        }
-        
         InstallReceiver receiver = new InstallReceiver();
         try {
             String cmd = String.format(
