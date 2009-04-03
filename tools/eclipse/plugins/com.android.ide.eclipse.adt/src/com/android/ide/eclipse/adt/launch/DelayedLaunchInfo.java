@@ -44,6 +44,9 @@ public final class DelayedLaunchInfo {
 
     /** Package name */
     private final String mPackageName;
+    
+    /** Debug package name */
+    private final String mDebugPackageName;
 
     /** IFile to the package (.apk) file */
     private final IFile mPackageFile;
@@ -79,7 +82,8 @@ public final class DelayedLaunchInfo {
      * Basic constructor with activity and package info. 
      * 
      * @param project the eclipse project that corresponds to Android app
-     * @param packageName package name of Android app 
+     * @param packageName package name of Android app
+     * @param debugPackageName the package name of the Andriod app to debug
      * @param launchAction action to perform after app install
      * @param pack IFile to the package (.apk) file
      * @param debuggable debuggable attribute of the app's manifest file.
@@ -88,11 +92,12 @@ public final class DelayedLaunchInfo {
      * @param launch the launch object
      * @param monitor progress monitor for launch
      */
-    public DelayedLaunchInfo(IProject project, String packageName, 
+    public DelayedLaunchInfo(IProject project, String packageName, String debugPackageName,
             IAndroidLaunchAction launchAction, IFile pack, Boolean debuggable, 
             int requiredApiVersionNumber, AndroidLaunch launch, IProgressMonitor monitor) {
         mProject = project;
         mPackageName = packageName;
+        mDebugPackageName = debugPackageName;
         mPackageFile = pack;
         mLaunchAction = launchAction;
         mLaunch = launch;
@@ -127,6 +132,17 @@ public final class DelayedLaunchInfo {
      */
     public String getPackageName() {
         return mPackageName;
+    }
+
+    /**
+     * Returns the Android app process name that the debugger should connect to. Typically this is
+     * the same value as {@link getPackageName} 
+     */
+    public String getDebugPackageName() {
+        if (mDebugPackageName == null) {
+            return getPackageName();
+        }
+        return mDebugPackageName;
     }
 
     /**

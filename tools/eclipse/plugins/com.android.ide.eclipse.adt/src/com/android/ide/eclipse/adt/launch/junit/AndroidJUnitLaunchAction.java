@@ -63,7 +63,6 @@ class AndroidJUnitLaunchAction implements IAndroidLaunchAction {
         try {
            mLaunchInfo.setDebugMode(info.isDebugMode());
            mLaunchInfo.setDevice(info.getDevice());
-           mLaunchInfo.setLaunch(info.getLaunch());
            JUnitLaunchDelegate junitDelegate = new JUnitLaunchDelegate(mLaunchInfo);
            final String mode = info.isDebugMode() ? ILaunchManager.DEBUG_MODE : 
                ILaunchManager.RUN_MODE; 

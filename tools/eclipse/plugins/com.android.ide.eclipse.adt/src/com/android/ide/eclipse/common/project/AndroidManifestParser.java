@@ -52,6 +52,7 @@ public class AndroidManifestParser {
     private final static String ATTRIBUTE_PROCESS = "process"; //$NON-NLS-$
     private final static String ATTRIBUTE_DEBUGGABLE = "debuggable"; //$NON-NLS-$
     private final static String ATTRIBUTE_MIN_SDK_VERSION = "minSdkVersion"; //$NON-NLS-$
+    private final static String ATTRIBUTE_TARGET_PACKAGE = "targetPackage"; //$NON-NLS-1$
     private final static String NODE_MANIFEST = "manifest"; //$NON-NLS-1$
     private final static String NODE_APPLICATION = "application"; //$NON-NLS-1$
     private final static String NODE_ACTIVITY = "activity"; //$NON-NLS-1$
@@ -77,6 +78,33 @@ public class AndroidManifestParser {
     public final static int INVALID_MIN_SDK = -1;
     
     /**
+     * Instrumentation info obtained from manifest
+     */
+    public static class Instrumentation {
+        private final String mName;
+        private final String mTargetPackage;
+        
+        public Instrumentation(String name, String targetPackage) {
+            mName = name;
+            mTargetPackage = targetPackage;
+        }
+        
+        /**
+         * Returns the fully qualified instrumentation class name
+         */
+        public String getName() {
+            return mName;
+        }
+        
+        /**
+         * Returns the Android app package that is the target of this instrumentation
+         */
+        public String getTargetPackage() {
+            return mTargetPackage;
+        }
+    }
+    
+    /**
      * XML error & data handler used when parsing the AndroidManifest.xml file.
      * <p/>
      * This serves both as an {@link XmlErrorHandler} to report errors and as a data repository
@@ -100,7 +128,8 @@ public class AndroidManifestParser {
          * the attribute was not present. */
         private int mApiLevelRequirement = INVALID_MIN_SDK;
         /** List of all instrumentations declared by the manifest */
-        private final ArrayList<String> mInstrumentations = new ArrayList<String>();
+        private final ArrayList<Instrumentation> mInstrumentations =
+            new ArrayList<Instrumentation>();
         /** List of all libraries in use declared by the manifest */
         private final ArrayList<String> mLibraries = new ArrayList<String>();
 
@@ -185,11 +214,11 @@ public class AndroidManifestParser {
         
         /** 
          * Returns the list of instrumentations found in the manifest.
-         * @return An array of instrumentation names, or empty if no instrumentations were 
+         * @return An array of {@link Instrumentation}, or empty if no instrumentations were 
          * found.
          */
-        String[] getInstrumentations() {
-            return mInstrumentations.toArray(new String[mInstrumentations.size()]);
+        Instrumentation[] getInstrumentations() {
+            return mInstrumentations.toArray(new Instrumentation[mInstrumentations.size()]);
         }
         
         /** 
@@ -459,7 +488,9 @@ public class AndroidManifestParser {
                     true /* hasNamespace */);
             if (instrumentationName != null) {
                 String instrClassName = combinePackageAndClassName(mPackage, instrumentationName);
-                mInstrumentations.add(instrClassName);
+                String targetPackage = getAttributeValue(attributes, ATTRIBUTE_TARGET_PACKAGE,
+                        true /* hasNamespace */);
+                mInstrumentations.add(new Instrumentation(instrClassName, targetPackage));
                 if (mMarkErrors) {
                     checkClass(instrClassName, AndroidConstants.CLASS_INSTRUMENTATION,
                             true /* testVisibility */);
@@ -544,7 +575,7 @@ public class AndroidManifestParser {
     private final String[] mProcesses;
     private final Boolean mDebuggable;
     private final int mApiLevelRequirement;
-    private final String[] mInstrumentations;
+    private final Instrumentation[] mInstrumentations;
     private final String[] mLibraries;
 
     static {
@@ -819,9 +850,9 @@ public class AndroidManifestParser {
     
     /**
      * Returns the list of instrumentations found in the manifest.
-     * @return An array of fully qualified class names, or empty if no instrumentations were found.
+     * @return An array of {@link Instrumentation}, or empty if no instrumentations were found.
      */
-    public String[] getInstrumentations() {
+    public Instrumentation[] getInstrumentations() {
         return mInstrumentations;
     }
     
@@ -851,7 +882,7 @@ public class AndroidManifestParser {
      */
     private AndroidManifestParser(String javaPackage, String[] activities,
             String launcherActivity, String[] processes, Boolean debuggable,
-            int apiLevelRequirement, String[] instrumentations, String[] libraries) {
+            int apiLevelRequirement, Instrumentation[] instrumentations, String[] libraries) {
         mJavaPackage = javaPackage;
         mActivities = activities;
         mLauncherActivity = launcherActivity;
