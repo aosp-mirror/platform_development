@@ -17,32 +17,65 @@
 <!-- 
 This file contains standard test definitions for the Android platform
           
-Tests are defined by <test> tags with the following attributes
+Java tests are defined by <test> tags and native ones (C/C++) are defined by
+<test-native> tags.
 
-name package [class runner build_path coverage_target continuous]
+JAVA/application tests:
+=======================
+  The java <test> element has the following attributes
 
-Where:
-name: Self-descriptive name used to uniquely identify the test
-build_path: File system path, relative to Android build root, to this package's
-   Android.mk file. If omitted, build/sync step for this test will be skipped
-package: Android application package that contains the tests
-class: Optional. Fully qualified Java test class to run. 
-runner: Fully qualified InstrumentationTestRunner to execute. If omitted, 
-   will default to android.test.InstrumentationTestRunner
-coverage_target: Build name of Android package this test targets - these targets
-   are defined in the coverage_targets.xml file.  Used as basis for code
-   coverage metrics. If omitted, code coverage will not be supported for this
-   test
-continuous: Optional boolean. Default is false. Set to true if tests are known
-   to be reliable, and should be included in a continuous test system. false if
-   they are under development.
+  name package [class runner build_path coverage_target continuous description]
 
-These attributes map to the following commands:  
-(if class is defined)
-    adb shell am instrument -w <package>/<runner>
-(else)
-    adb shell am instrument -w -e class <class> <package>/<runner>
+  Where:
+  name: Self-descriptive name used to uniquely identify the test
+  build_path: File system path, relative to Android build root, to this
+    package's Android.mk file. If omitted, build/sync step for this test will
+    be skipped.
+  package: Android application package that contains the tests
+  class: Optional. Fully qualified Java test class to run. 
+  runner: Fully qualified InstrumentationTestRunner to execute. If omitted, 
+     will default to android.test.InstrumentationTestRunner.
+  coverage_target: Build name of Android package this test targets - these
+    targets are defined in the coverage_targets.xml file.  Used as basis for
+    code coverage metrics. If omitted, code coverage will not be supported for
+    this test.
+  continuous: Optional boolean. Default is false. Set to true if tests are known
+    to be reliable, and should be included in a continuous test system. false if
+    they are under development.
 
+  description: Optional string. Default is empty. Short description (typically 
+     less than 60 characters) about this test.
+
+  These attributes map to the following commands:  
+  (if class is defined)
+      adb shell am instrument -w <package>/<runner>
+  (else)
+      adb shell am instrument -w -e class <class> <package>/<runner>
+
+Native tests:
+=============
+  The <test-native> element has the following attributes
+
+  name build_path [continuous description]
+
+  Where:
+  name: Self-descriptive name used to uniquely identify the test
+  build_path: File system path, relative to Android build root, to this
+     package's Android.mk file. By convention the name of a test starts with
+     'test_'.
+  continuous: Optional boolean. Default is false. Set to true if tests are known
+     to be reliable, and should be included in a continuous test system.
+     false if they are under development.
+  description: Optional string. Default is empty. Short description (typically
+     less than 60 characters) about this test.
+
+  These attributes map to the following commands:
+    make <build_path>/Android.mk
+    adb sync
+    for test_prog in <tests built>; do
+      adb shell "/system/bin/${test_prog} >/dev/null 2>&1;echo \$?"
+      adb shell "rm /system/bin/${test_prog}"
+    done
 -->
 
 <test-definitions version="1">
@@ -222,5 +255,11 @@ These attributes map to the following commands:
     runner=".RingtoneSettingsInstrumentationTestRunner"
     coverage_target="Settings" />
 -->
+
+<!--  native tests  -->
+<test-native name="libstdcpp"
+    build_path="system/extras/tests/bionic/libstdc++"
+    description="Bionic libstdc++." />
+
 
 </test-definitions>

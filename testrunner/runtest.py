@@ -23,6 +23,7 @@ Based on previous <androidroot>/development/tools/runtest shell script.
 import glob
 import optparse
 import os
+import re
 from sets import Set
 import sys
 
@@ -58,6 +59,7 @@ class TestRunner(object):
 
   def __init__(self):
     # disable logging of timestamp
+    self._root_path = android_build.GetTop()
     logger.SetTimestampLogging(False)  
 
   def _ProcessOptions(self):
@@ -137,8 +139,6 @@ class TestRunner(object):
     if self._options.verbose:
       logger.SetVerbose(True)
 
-    self._root_path = android_build.GetTop()
-
     self._known_tests = self._ReadTests()
 
     self._coverage_gen = coverage.CoverageGenerator(
@@ -172,7 +172,7 @@ class TestRunner(object):
     """Prints out set of defined tests."""
     print "The following tests are currently defined:"
     for test in self._known_tests:
-      print test.GetName()
+      print "%-15s %s" % (test.GetName(), test.GetDescription())
 
   def _DoBuild(self):
     logger.SilentLog("Building tests...")
@@ -261,6 +261,37 @@ class TestRunner(object):
         if coverage_file is not None:
           logger.Log("Coverage report generated at %s" % coverage_file)
 
+  def _RunNativeTest(self, test_suite):
+    """Run the provided *native* test suite.
+
+    The test_suite must contain a build path where the native test files are.
+    Each test's name must start with 'test_' and have a .cc or .cpp extension.
+    A successful test must return 0. Any other value will be considered
+    as an error.
+
+    Args:
+      test_suite: TestSuite to run
+    """
+    # find all test files, convert unicode names to ascii, take the basename
+    # and drop the .cc/.cpp  extension.
+    file_pattern = os.path.join(test_suite.GetBuildPath(), "test_*")
+    file_list = []
+    for f in map(str, glob.glob(file_pattern)):
+      f = os.path.basename(f)
+      f = re.split(".[cp]+$", f)[0]
+      file_list.append(f)
+
+    for f in file_list:
+      full_path = "/system/bin/%s" % f
+
+      # Run
+      status = self._adb.SendShellCommand("%s >/dev/null 2>&1;echo -n $?" %
+                                          full_path)
+      logger.Log("%s... %s" % (f, status == "0" and "ok" or "failed"))
+
+      # Cleanup
+      self._adb.SendShellCommand("rm %s" % full_path)
+
   def RunTests(self):
     """Main entry method - executes the tests according to command line args."""
     try:
@@ -278,7 +309,10 @@ class TestRunner(object):
         self._DoBuild()
 
       for test_suite in self._GetTestsToRun():
-        self._RunTest(test_suite)
+        if test_suite.IsNative():
+          self._RunNativeTest(test_suite)
+        else:
+          self._RunTest(test_suite)
     except KeyboardInterrupt:
       logger.Log("Exiting...")
     except errors.AbortError:

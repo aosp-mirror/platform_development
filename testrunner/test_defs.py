@@ -38,7 +38,14 @@ class TestDefinitions(object):
        [class=""]
        [coverage_target=""]
        [build_path=""]
-       [continuous]
+       [continuous=false]
+       [description=""]
+      />
+     <test-native
+       name=""
+       build_path=""
+       [continuous=false]
+       [description=""]
       />
      <test  ...
    </test-definitions>
@@ -48,13 +55,17 @@ class TestDefinitions(object):
 
   # tag/attribute constants
   _TEST_TAG_NAME = "test"
+  _TEST_NATIVE_TAG_NAME = "test-native"
 
   def __init__(self):
     # dictionary of test name to tests
     self._testname_map = {}
 
   def __iter__(self):
-    return iter(self._testname_map.values())
+    ordered_list = []
+    for k in sorted(self._testname_map):
+      ordered_list.append(self._testname_map[k])
+    return iter(ordered_list)
 
   def Parse(self, file_path):
     """Parse the test suite data from from given file path.
@@ -87,6 +98,12 @@ class TestDefinitions(object):
       test = self._ParseTestSuite(suite_element)
       self._AddTest(test)
 
+    suite_elements = doc.getElementsByTagName(self._TEST_NATIVE_TAG_NAME)
+
+    for suite_element in suite_elements:
+      test = self._ParseNativeTestSuite(suite_element)
+      self._AddTest(test)
+
   def _ParseTestSuite(self, suite_element):
     """Parse the suite element.
     
@@ -94,6 +111,17 @@ class TestDefinitions(object):
       a TestSuite object, populated with parsed data
     """
     test = TestSuite(suite_element)
+    return test
+
+  def _ParseNativeTestSuite(self, suite_element):
+    """Parse the native test element.
+
+    Returns:
+      a TestSuite object, populated with parsed data
+    Raises:
+      ParseError if some required attribute is missing.
+    """
+    test = TestSuite(suite_element, native=True)
     return test
 
   def _AddTest(self, test):
@@ -129,13 +157,27 @@ class TestSuite(object):
   _TARGET_ATTR = "coverage_target"
   _BUILD_ATTR = "build_path"
   _CONTINUOUS_ATTR = "continuous"
+  _DESCRIPTION_ATTR = "description"
 
   _DEFAULT_RUNNER = "android.test.InstrumentationTestRunner"
 
-  def __init__(self, suite_element):
-    """Populates this instance's data from given suite xml element."""
+  def __init__(self, suite_element, native=False):
+    """Populates this instance's data from given suite xml element.
+    Raises:
+      ParseError if some required attribute is missing.
+    """
+    self._native = native
     self._name = suite_element.getAttribute(self._NAME_ATTR)
-    self._package = suite_element.getAttribute(self._PKG_ATTR)
+
+    if self._native:
+      # For native runs, _BUILD_ATTR is required
+      if not suite_element.hasAttribute(self._BUILD_ATTR):
+        logger.Log("Error: %s is missing required build_path attribute" %
+                   self._name)
+        raise errors.ParseError
+    else:
+      self._package = suite_element.getAttribute(self._PKG_ATTR)
+
     if suite_element.hasAttribute(self._RUNNER_ATTR):
       self._runner = suite_element.getAttribute(self._RUNNER_ATTR)
     else:
@@ -156,6 +198,10 @@ class TestSuite(object):
       self._continuous = suite_element.getAttribute(self._CONTINUOUS_ATTR)
     else:
       self._continuous = False
+    if suite_element.hasAttribute(self._DESCRIPTION_ATTR):
+      self._description = suite_element.getAttribute(self._DESCRIPTION_ATTR)
+    else:
+      self._description = ""
 
   def GetName(self):
     return self._name
@@ -183,6 +229,13 @@ class TestSuite(object):
   def IsContinuous(self):
     """Returns true if test is flagged as being part of the continuous tests"""  
     return self._continuous
+
+  def IsNative(self):
+    """Returns true if test is a native one."""
+    return self._native
+
+  def GetDescription(self):
+    return self._description
 
 def Parse(file_path):
   """Parses out a TestDefinitions from given path to xml file.
