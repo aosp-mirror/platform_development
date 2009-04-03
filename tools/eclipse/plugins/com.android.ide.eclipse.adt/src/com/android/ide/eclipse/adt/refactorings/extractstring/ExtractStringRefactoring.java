@@ -16,7 +16,6 @@
 
 package com.android.ide.eclipse.adt.refactorings.extractstring;
 
-import com.android.ide.eclipse.adt.wizards.newstring.NewStringHelper;
 import com.android.ide.eclipse.common.AndroidConstants;
 import com.android.ide.eclipse.common.project.AndroidManifestParser;
 
@@ -98,8 +97,8 @@ import java.util.Map;
  * <li> On success, the wizard is shown, which let the user input the new ID to use.
  * <li> The wizard sets the user input values into this refactoring instance, e.g. the new string
  *      ID, the XML file to update, etc. The wizard does use the utility method
- *      {@link NewStringHelper#isResIdDuplicate(IProject, String, String)} to check whether the new
- *      ID is already defined in the target XML file.
+ *      {@link XmlStringFileHelper#isResIdDuplicate(IProject, String, String)} to check whether
+ *      the new ID is already defined in the target XML file.
  * <li> Once Preview or Finish is selected in the wizard, the
  *      {@link #checkFinalConditions(IProgressMonitor)} is called to double-check the user input
  *      and compute the actual changes.
@@ -122,10 +121,23 @@ import java.util.Map;
  */
 public class ExtractStringRefactoring extends Refactoring {
 
-    private enum Mode {
+    public enum Mode {
+        /**
+         * the Extract String refactoring is called on an <em>existing</em> source file.
+         * Its purpose is then to get the selected string of the source and propose to
+         * change it by an XML id. The XML id may be a new one or an existing one.
+         */
         EDIT_SOURCE,
-        MAKE_ID,
-        MAKE_NEW_ID
+        /**
+         * The Extract String refactoring is called without any source file.
+         * Its purpose is then to create a new XML string ID or select/modify an existing one.
+         */
+        SELECT_ID,
+        /**
+         * The Extract String refactoring is called without any source file.
+         * Its purpose is then to create a new XML string ID. The ID must not already exist.
+         */
+        SELECT_NEW_ID
     }
     
     /** The {@link Mode} of operation of the refactoring. */
@@ -133,6 +145,8 @@ public class ExtractStringRefactoring extends Refactoring {
     /** The file model being manipulated.
      * Value is null when not on {@link Mode#EDIT_SOURCE} mode. */
     private final IFile mFile;
+    /** The project that contains {@link #mFile} and that contains the target XML file to modify. */
+    private final IProject mProject;
     /** The start of the selection in {@link #mFile}.
      * Value is -1 when not on {@link Mode#EDIT_SOURCE} mode. */
     private final int mSelectionStart;
@@ -157,19 +171,30 @@ public class ExtractStringRefactoring extends Refactoring {
     /** The list of changes computed by {@link #checkFinalConditions(IProgressMonitor)} and
      *  used by {@link #createChange(IProgressMonitor)}. */
     private ArrayList<Change> mChanges;
-    
-    private NewStringHelper mHelper = new NewStringHelper();
+
+    private XmlStringFileHelper mXmlHelper = new XmlStringFileHelper();
+
+    private static final String KEY_MODE = "mode";              //$NON-NLS-1$
+    private static final String KEY_FILE = "file";              //$NON-NLS-1$
+    private static final String KEY_PROJECT = "proj";           //$NON-NLS-1$
+    private static final String KEY_SEL_START = "sel-start";    //$NON-NLS-1$
+    private static final String KEY_SEL_END = "sel-end";        //$NON-NLS-1$
+    private static final String KEY_TOK_ESC = "tok-esc";        //$NON-NLS-1$
 
     public ExtractStringRefactoring(Map<String, String> arguments)
             throws NullPointerException {
-        mMode = Mode.valueOf(arguments.get("mode"));                        //$NON-NLS-1$
+        mMode = Mode.valueOf(arguments.get(KEY_MODE));
+
+        IPath path = Path.fromPortableString(arguments.get(KEY_PROJECT));
+        mProject = (IProject) ResourcesPlugin.getWorkspace().getRoot().findMember(path);
         
         if (mMode == Mode.EDIT_SOURCE) {
-            IPath path = Path.fromPortableString(arguments.get("file"));        //$NON-NLS-1$
+            path = Path.fromPortableString(arguments.get(KEY_FILE));
             mFile = (IFile) ResourcesPlugin.getWorkspace().getRoot().findMember(path);
-            mSelectionStart = Integer.parseInt(arguments.get("sel-start"));     //$NON-NLS-1$
-            mSelectionEnd   = Integer.parseInt(arguments.get("sel-end"));       //$NON-NLS-1$
-            mTokenString    = arguments.get("tok-esc");                         //$NON-NLS-1$
+
+            mSelectionStart = Integer.parseInt(arguments.get(KEY_SEL_START));
+            mSelectionEnd   = Integer.parseInt(arguments.get(KEY_SEL_END));
+            mTokenString    = arguments.get(KEY_TOK_ESC);
         } else {
             mFile = null;
             mSelectionStart = mSelectionEnd = -1;
@@ -179,12 +204,13 @@ public class ExtractStringRefactoring extends Refactoring {
     
     private Map<String, String> createArgumentMap() {
         HashMap<String, String> args = new HashMap<String, String>();
-        args.put("mode",      mMode.name());                                //$NON-NLS-1$
+        args.put(KEY_MODE,      mMode.name());
+        args.put(KEY_PROJECT,   mProject.getFullPath().toPortableString());
         if (mMode == Mode.EDIT_SOURCE) {
-            args.put("file",      mFile.getFullPath().toPortableString());      //$NON-NLS-1$
-            args.put("sel-start", Integer.toString(mSelectionStart));           //$NON-NLS-1$
-            args.put("sel-end",   Integer.toString(mSelectionEnd));             //$NON-NLS-1$
-            args.put("tok-esc",   mTokenString);                                //$NON-NLS-1$
+            args.put(KEY_FILE,      mFile.getFullPath().toPortableString());
+            args.put(KEY_SEL_START, Integer.toString(mSelectionStart));
+            args.put(KEY_SEL_END,   Integer.toString(mSelectionEnd));
+            args.put(KEY_TOK_ESC,   mTokenString);
         }
         return args;
     }
@@ -201,6 +227,7 @@ public class ExtractStringRefactoring extends Refactoring {
     public ExtractStringRefactoring(IFile file, ITextSelection selection) {
         mMode = Mode.EDIT_SOURCE;
         mFile = file;
+        mProject = file.getProject();
         mSelectionStart = selection.getOffset();
         mSelectionEnd = mSelectionStart + Math.max(0, selection.getLength() - 1);
     }
@@ -209,23 +236,33 @@ public class ExtractStringRefactoring extends Refactoring {
      * Constructor to use when the Extract String refactoring is called without
      * any source file. Its purpose is then to create a new XML string ID.
      * 
+     * @param project The project where the target XML file to modify is located. Cannot be null.
      * @param enforceNew If true the XML ID must be a new one. If false, an existing ID can be
      *  used.
      */
-    public ExtractStringRefactoring(boolean enforceNew) {
-        mMode = enforceNew ? Mode.MAKE_NEW_ID : Mode.MAKE_ID;
+    public ExtractStringRefactoring(IProject project, boolean enforceNew) {
+        mMode = enforceNew ? Mode.SELECT_NEW_ID : Mode.SELECT_ID;
         mFile = null;
+        mProject = project;
         mSelectionStart = mSelectionEnd = -1;
     }
     
-    
-
     /**
      * @see org.eclipse.ltk.core.refactoring.Refactoring#getName()
      */
     @Override
     public String getName() {
+        if (mMode == Mode.SELECT_ID) {
+            return "Create or USe Android String";
+        } else if (mMode == Mode.SELECT_NEW_ID) {
+            return "Create New Android String";
+        }
+
         return "Extract Android String";
+    }
+    
+    public Mode getMode() {
+        return mMode;
     }
     
     /**
@@ -234,6 +271,10 @@ public class ExtractStringRefactoring extends Refactoring {
      */
     public String getTokenString() {
         return mTokenString;
+    }
+    
+    public String getXmlStringId() {
+        return mXmlStringId;
     }
     
     /**
@@ -459,7 +500,7 @@ public class ExtractStringRefactoring extends Refactoring {
             
             // Prepare the change for the XML file.
 
-            if (!mHelper.isResIdDuplicate(mFile.getProject(), mTargetXmlFileWsPath, mXmlStringId)) {
+            if (!mXmlHelper.isResIdDuplicate(mProject, mTargetXmlFileWsPath, mXmlStringId)) {
                 // We actually change it only if the ID doesn't exist yet
                 Change change = createXmlChange((IFile) targetXml, mXmlStringId, mXmlStringValue,
                         status, SubMonitor.convert(monitor, 1));
@@ -525,7 +566,7 @@ public class ExtractStringRefactoring extends Refactoring {
             content.append("<resources>\n");                                //$NON-NLS-1$
 
             edit = new InsertEdit(0, content.toString());
-            editGroup = new TextEditGroup("Create ID in new XML file", edit);
+            editGroup = new TextEditGroup("Create <string> in new XML file", edit);
         } else {
             // The file exist. Attempt to parse it as a valid XML document.
             try {
@@ -556,7 +597,7 @@ public class ExtractStringRefactoring extends Refactoring {
                     }
 
                     edit = new ReplaceEdit(offset, len, content.toString());
-                    editGroup = new TextEditGroup("Insert ID in XML file", edit);
+                    editGroup = new TextEditGroup("Insert <string> in XML file", edit);
                 }
             } catch (CoreException e) {
                 // Failed to read file. Ignore. Will return null below.
@@ -702,8 +743,7 @@ public class ExtractStringRefactoring extends Refactoring {
         // the FQCN of the R class.
         String packageName = null;
         String error = null;
-        IProject proj = unit.getJavaProject().getProject();
-        IResource manifestFile = proj.findMember(AndroidConstants.FN_ANDROID_MANIFEST);
+        IResource manifestFile = mProject.findMember(AndroidConstants.FN_ANDROID_MANIFEST);
         if (manifestFile == null || manifestFile.getType() != IResource.FILE) {
             error = "File not found";
         } else {
@@ -895,7 +935,7 @@ public class ExtractStringRefactoring extends Refactoring {
                             mXmlStringId);
                     
                     ExtractStringDescriptor desc = new ExtractStringDescriptor(
-                            mUnit.getJavaProject().getElementName(), //project
+                            mProject.getName(), //project
                             comment, //description
                             comment, //comment
                             createArgumentMap());
@@ -919,8 +959,7 @@ public class ExtractStringRefactoring extends Refactoring {
      * compilation unit. The resource may not exist.
      */
     private IResource getTargetXmlResource(String xmlFileWsPath) {
-        IProject proj = mFile.getProject();
-        IResource resource = proj.getFile(xmlFileWsPath);
+        IResource resource = mProject.getFile(xmlFileWsPath);
         return resource;
     }
 
