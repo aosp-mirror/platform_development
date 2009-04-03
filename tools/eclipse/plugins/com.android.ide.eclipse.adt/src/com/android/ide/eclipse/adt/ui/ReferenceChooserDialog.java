@@ -70,6 +70,7 @@ public class ReferenceChooserDialog extends SelectionStatusDialog {
     private FilteredTree mFilteredTree;
     private Button mNewResButton;
     private final IProject mProject;
+    private TreeViewer mTreeViewer;
 
     /**
      * @param project 
@@ -159,8 +160,8 @@ public class ReferenceChooserDialog extends SelectionStatusDialog {
         mFilteredTree.setLayoutData(data);
         mFilteredTree.setFont(parent.getFont());
         
-        TreeViewer treeViewer = mFilteredTree.getViewer();
-        Tree tree = treeViewer.getTree();
+        mTreeViewer = mFilteredTree.getViewer();
+        Tree tree = mTreeViewer.getTree();
         
         tree.addSelectionListener(new SelectionListener() {
             public void widgetDefaultSelected(SelectionEvent e) {
@@ -172,9 +173,9 @@ public class ReferenceChooserDialog extends SelectionStatusDialog {
             }
         });
         
-        treeViewer.setLabelProvider(new ResourceLabelProvider());
-        treeViewer.setContentProvider(new ResourceContentProvider(false /* fullLevels */));
-        treeViewer.setInput(mResources);
+        mTreeViewer.setLabelProvider(new ResourceLabelProvider());
+        mTreeViewer.setContentProvider(new ResourceContentProvider(false /* fullLevels */));
+        mTreeViewer.setInput(mResources);
     }
 
     protected void handleSelection() {
@@ -242,8 +243,10 @@ public class ReferenceChooserDialog extends SelectionStatusDialog {
         // We only support adding new strings right now
         mNewResButton.setEnabled(type == ResourceType.STRING);
         
-        String title = String.format("New %1$s", type == null ? "Resource" : type.getDisplayName());
+        String title = String.format("New %1$s...",
+                type == null ? "Resource" : type.getDisplayName());
         mNewResButton.setText(title);
+        mNewResButton.pack();
     }
 
     /**
@@ -259,14 +262,19 @@ public class ReferenceChooserDialog extends SelectionStatusDialog {
              // We currently only support strings
              if (type == ResourceType.STRING) {
 
-                 ExtractStringRefactoring ref = new ExtractStringRefactoring(true /*enforceNew*/);
+                 ExtractStringRefactoring ref = new ExtractStringRefactoring(
+                         mProject, true /*enforceNew*/);
                  RefactoringWizard wizard = new ExtractStringWizard(ref, mProject);
                  RefactoringWizardOpenOperation op = new RefactoringWizardOpenOperation(wizard);
                  try {
                      IWorkbench w = PlatformUI.getWorkbench();
-                     op.run(w.getDisplay().getActiveShell(), wizard.getDefaultPageTitle());
-                     
-                     // TODO Select string
+                     if (op.run(w.getDisplay().getActiveShell(), wizard.getDefaultPageTitle()) ==
+                             IDialogConstants.OK_ID) {
+                         mTreeViewer.refresh();
+                         
+                         // select it if possible
+                         setupInitialSelection(type, ref.getXmlStringId());
+                     }
                  } catch (InterruptedException ex) {
                      // Interrupted. Pass.
                  }
@@ -335,7 +343,9 @@ public class ReferenceChooserDialog extends SelectionStatusDialog {
             if (resourceName.equals(resourceItem.getName())) {
                 // name of the resource match, we select it,
                 TreePath treePath = new TreePath(new Object[] { resourceType, resourceItem });
-                mFilteredTree.getViewer().setSelection(new TreeSelection(treePath));
+                mFilteredTree.getViewer().setSelection(
+                        new TreeSelection(treePath),
+                        true /*reveal*/);
                 
                 // and we're done.
                 return;
@@ -345,7 +355,9 @@ public class ReferenceChooserDialog extends SelectionStatusDialog {
         // if we get here, the resource type is valid, but the resource is missing.
         // we select and expand the resource type element.
         TreePath treePath = new TreePath(new Object[] { resourceType });
-        mFilteredTree.getViewer().setSelection(new TreeSelection(treePath));
+        mFilteredTree.getViewer().setSelection(
+                new TreeSelection(treePath),
+                true /*reveal*/);
         mFilteredTree.getViewer().setExpandedState(resourceType, true /* expanded */);
     }
 }

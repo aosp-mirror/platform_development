@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.ide.eclipse.adt.wizards.newstring;
+package com.android.ide.eclipse.adt.refactorings.extractstring;
 
 import com.android.ide.eclipse.common.project.AndroidXPathFactory;
 
@@ -35,7 +35,7 @@ import javax.xml.xpath.XPathExpressionException;
 /**
  * 
  */
-public class NewStringHelper {
+class XmlStringFileHelper {
 
     /** A temporary cache of R.string IDs defined by a given xml file. The key is the
      * project path of the file, the data is a set of known string Ids for that file. */
@@ -43,7 +43,7 @@ public class NewStringHelper {
     /** An instance of XPath, created lazily on demand. */
     private XPath mXPath;
 
-    public NewStringHelper() {
+    public XmlStringFileHelper() {
     }
     
     /**
