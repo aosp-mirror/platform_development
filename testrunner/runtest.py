@@ -177,17 +177,20 @@ class TestRunner(object):
   def _DoBuild(self):
     logger.SilentLog("Building tests...")
     target_set = Set()
+    extra_args_set = Set()
     for test_suite in self._GetTestsToRun():
-      self._AddBuildTarget(test_suite.GetBuildPath(), target_set)
+      self._AddBuildTarget(test_suite, target_set, extra_args_set)
 
     if target_set:
       if self._options.coverage:
         self._coverage_gen.EnableCoverageBuild()
         self._AddBuildTarget(self._coverage_gen.GetEmmaBuildPath(), target_set)
       target_build_string = " ".join(list(target_set))
-      logger.Log("mmm %s" % target_build_string)
-      cmd = 'ONE_SHOT_MAKEFILE="%s" make -C "%s" files' %  (target_build_string,
-                                                            self._root_path)
+      extra_args_string = " ".join(list(extra_args_set))
+      cmd = 'ONE_SHOT_MAKEFILE="%s" make -C "%s" files %s' % (
+          target_build_string, self._root_path, extra_args_string)
+      logger.Log(cmd)
+
       if self._options.preview:
         # in preview mode, just display to the user what command would have been
         # run
@@ -197,11 +200,13 @@ class TestRunner(object):
         logger.Log("Syncing to device...")
         self._adb.Sync()
 
-  def _AddBuildTarget(self, build_dir, target_set):
+  def _AddBuildTarget(self, test_suite, target_set, extra_args_set):
+    build_dir = test_suite.GetBuildPath()
     if build_dir is not None:
       build_file_path = os.path.join(build_dir, "Android.mk")
       if os.path.isfile(os.path.join(self._root_path, build_file_path)):
         target_set.add(build_file_path)
+        extra_args_set.add(test_suite.GetExtraMakeArgs())
 
   def _GetTestsToRun(self):
     """Get a list of TestSuite objects to run, based on command line args."""

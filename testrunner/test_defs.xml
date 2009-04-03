@@ -68,9 +68,11 @@ Native tests:
      false if they are under development.
   description: Optional string. Default is empty. Short description (typically
      less than 60 characters) about this test.
+  extra_make_args: Optional string. Default is empty. Some test module require
+     extra make arguments to build. This string is append to the make command.
 
   These attributes map to the following commands:
-    make <build_path>/Android.mk
+    make <build_path>/Android.mk <extra_make_args>
     adb sync
     for test_prog in <tests built>; do
       adb shell "/system/bin/${test_prog} >/dev/null 2>&1;echo \$?"
@@ -259,7 +261,8 @@ Native tests:
 <!--  native tests  -->
 <test-native name="libstdcpp"
     build_path="system/extras/tests/bionic/libstdc++"
-    description="Bionic libstdc++." />
+    description="Bionic libstdc++."
+    extra_make_args="BIONIC_TESTS=1" />
 
 
 </test-definitions>
