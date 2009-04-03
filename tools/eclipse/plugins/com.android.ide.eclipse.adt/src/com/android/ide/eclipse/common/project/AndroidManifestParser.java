@@ -53,6 +53,7 @@ public class AndroidManifestParser {
     private final static String ATTRIBUTE_DEBUGGABLE = "debuggable"; //$NON-NLS-$
     private final static String ATTRIBUTE_MIN_SDK_VERSION = "minSdkVersion"; //$NON-NLS-$
     private final static String ATTRIBUTE_TARGET_PACKAGE = "targetPackage"; //$NON-NLS-1$
+    private final static String ATTRIBUTE_EXPORTED = "exported"; //$NON-NLS-1$
     private final static String NODE_MANIFEST = "manifest"; //$NON-NLS-1$
     private final static String NODE_APPLICATION = "application"; //$NON-NLS-1$
     private final static String NODE_ACTIVITY = "activity"; //$NON-NLS-1$
@@ -84,7 +85,7 @@ public class AndroidManifestParser {
         private final String mName;
         private final String mTargetPackage;
         
-        public Instrumentation(String name, String targetPackage) {
+        Instrumentation(String name, String targetPackage) {
             mName = name;
             mTargetPackage = targetPackage;
         }
@@ -105,6 +106,60 @@ public class AndroidManifestParser {
     }
     
     /**
+     * Activity info obtained from the manifest.
+     */
+    public static class Activity {
+        private final String mName;
+        private final boolean mExported;
+        private boolean mHasAction = false;
+        private boolean mHasMainAction = false;
+        private boolean mHasLauncherCategory = false;
+        
+        public Activity(String name, boolean exported) {
+            mName = name;
+            mExported = exported;
+        }
+        
+        public String getName() {
+            return mName;
+        }
+        
+        public boolean getExported() {
+            return mExported;
+        }
+        
+        public boolean hasAction() {
+            return mHasAction;
+        }
+        
+        public boolean isHomeActivity() {
+            return mHasMainAction && mHasLauncherCategory;
+        }
+        
+        void setHasAction(boolean hasAction) {
+            mHasAction = hasAction;
+        }
+        
+        /** If the activity doesn't yet have a filter set for the launcher, this resets both
+         * flags. This is to handle multiple intent-filters where one could have the valid
+         * action, and another one of the valid category.
+         */
+        void resetIntentFilter() {
+            if (isHomeActivity() == false) {
+                mHasMainAction = mHasLauncherCategory = false;
+            }
+        }
+        
+        void setHasMainAction(boolean hasMainAction) {
+            mHasMainAction = hasMainAction;
+        }
+        
+        void setHasLauncherCategory(boolean hasLauncherCategory) {
+            mHasLauncherCategory = hasLauncherCategory;
+        }
+    }
+    
+    /**
      * XML error & data handler used when parsing the AndroidManifest.xml file.
      * <p/>
      * This serves both as an {@link XmlErrorHandler} to report errors and as a data repository
@@ -117,9 +172,9 @@ public class AndroidManifestParser {
         /** Application package */
         private String mPackage;
         /** List of all activities */
-        private final ArrayList<String> mActivities = new ArrayList<String>();
+        private final ArrayList<Activity> mActivities = new ArrayList<Activity>();
         /** Launcher activity */
-        private String mLauncherActivity = null;
+        private Activity mLauncherActivity = null;
         /** list of process names declared by the manifest */
         private Set<String> mProcesses = null;
         /** debuggable attribute value. If null, the attribute is not present. */
@@ -139,9 +194,7 @@ public class AndroidManifestParser {
         private boolean mMarkErrors = false;
         private int mCurrentLevel = 0;
         private int mValidLevel = 0;
-        private boolean mFoundMainAction = false;
-        private boolean mFoundLauncherCategory = false;
-        private String mCurrentActivity = null;
+        private Activity mCurrentActivity = null;
         private Locator mLocator;
         
         /**
@@ -173,8 +226,8 @@ public class AndroidManifestParser {
          * Returns the list of activities found in the manifest.
          * @return An array of fully qualified class names, or empty if no activity were found.
          */
-        String[] getActivities() {
-            return mActivities.toArray(new String[mActivities.size()]);
+        Activity[] getActivities() {
+            return mActivities.toArray(new Activity[mActivities.size()]);
         }
         
         /**
@@ -182,7 +235,7 @@ public class AndroidManifestParser {
          * up in the HOME screen.  
          * @return the fully qualified name of a HOME activity or null if none were found. 
          */
-        String getLauncherActivity() {
+        Activity getLauncherActivity() {
             return mLauncherActivity;
         }
         
@@ -314,27 +367,26 @@ public class AndroidManifestParser {
                         case LEVEL_INTENT_FILTER:
                             // only process this level if we are in an activity
                             if (mCurrentActivity != null && NODE_INTENT.equals(localName)) {
-                                // if we're at the intent level, lets reset some flag to
-                                // be used when parsing the children
-                                mFoundMainAction = false;
-                                mFoundLauncherCategory = false;
+                                mCurrentActivity.resetIntentFilter();
                                 mValidLevel++;
                             }
                             break;
                         case LEVEL_CATEGORY:
-                            if (mCurrentActivity != null && mLauncherActivity == null) {
+                            if (mCurrentActivity != null) {
                                 if (NODE_ACTION.equals(localName)) {
                                     // get the name attribute
-                                    if (ACTION_MAIN.equals(
-                                            getAttributeValue(attributes, ATTRIBUTE_NAME,
-                                                    true /* hasNamespace */))) {
-                                        mFoundMainAction = true;
+                                    String action = getAttributeValue(attributes, ATTRIBUTE_NAME,
+                                            true /* hasNamespace */);
+                                    if (action != null) {
+                                        mCurrentActivity.setHasAction(true);
+                                        mCurrentActivity.setHasMainAction(
+                                                ACTION_MAIN.equals(action));
                                     }
                                 } else if (NODE_CATEGORY.equals(localName)) {
-                                    if (CATEGORY_LAUNCHER.equals(
-                                            getAttributeValue(attributes, ATTRIBUTE_NAME,
-                                                    true /* hasNamespace */))) {
-                                        mFoundLauncherCategory = true;
+                                    String category = getAttributeValue(attributes, ATTRIBUTE_NAME,
+                                            true /* hasNamespace */);
+                                    if (CATEGORY_LAUNCHER.equals(category)) {
+                                        mCurrentActivity.setHasLauncherCategory(true);
                                     }
                                 }
                                 
@@ -378,8 +430,7 @@ public class AndroidManifestParser {
                         case LEVEL_INTENT_FILTER:
                             // if we found both a main action and a launcher category, this is our
                             // launcher activity!
-                            if (mCurrentActivity != null &&
-                                    mFoundMainAction && mFoundLauncherCategory) {
+                            if (mCurrentActivity != null && mCurrentActivity.isHomeActivity()) {
                                 mLauncherActivity = mCurrentActivity;
                             }
                             break;
@@ -432,17 +483,23 @@ public class AndroidManifestParser {
             String activityName = getAttributeValue(attributes, ATTRIBUTE_NAME,
                     true /* hasNamespace */);
             if (activityName != null) {
-                mCurrentActivity = combinePackageAndClassName(mPackage, activityName);
+                activityName = combinePackageAndClassName(mPackage, activityName);
+                
+                // get the exported flag.
+                String exportedStr = getAttributeValue(attributes, ATTRIBUTE_EXPORTED, true);
+                boolean exported = exportedStr == null ||
+                        exportedStr.toLowerCase().equals("true"); // $NON-NLS-1$
+                mCurrentActivity = new Activity(activityName, exported);
                 mActivities.add(mCurrentActivity);
                 
                 if (mMarkErrors) {
-                    checkClass(mCurrentActivity, AndroidConstants.CLASS_ACTIVITY,
+                    checkClass(activityName, AndroidConstants.CLASS_ACTIVITY,
                             true /* testVisibility */);
                 }
             } else {
                 // no activity found! Aapt will output an error,
                 // so we don't have to do anything
-                mCurrentActivity = activityName;
+                mCurrentActivity = null;
             }
             
             String processName = getAttributeValue(attributes, ATTRIBUTE_PROCESS,
@@ -570,8 +627,8 @@ public class AndroidManifestParser {
     private static SAXParserFactory sParserFactory;
     
     private final String mJavaPackage;
-    private final String[] mActivities;
-    private final String mLauncherActivity;
+    private final Activity[] mActivities;
+    private final Activity mLauncherActivity;
     private final String[] mProcesses;
     private final Boolean mDebuggable;
     private final int mApiLevelRequirement;
@@ -811,18 +868,18 @@ public class AndroidManifestParser {
 
     /** 
      * Returns the list of activities found in the manifest.
-     * @return An array of fully qualified class names, or empty if no activity were found.
+     * @return An array of {@link Activity}, or empty if no activity were found.
      */
-    public String[] getActivities() {
+    public Activity[] getActivities() {
         return mActivities;
     }
 
     /**
      * Returns the name of one activity found in the manifest, that is configured to show
      * up in the HOME screen.  
-     * @return the fully qualified name of a HOME activity or null if none were found. 
+     * @return The {@link Activity} representing a HOME activity or null if none were found. 
      */
-    public String getLauncherActivity() {
+    public Activity getLauncherActivity() {
         return mLauncherActivity;
     }
     
@@ -880,8 +937,8 @@ public class AndroidManifestParser {
      * @param instrumentations the list of instrumentations parsed from the manifest.
      * @param libraries the list of libraries in use parsed from the manifest.
      */
-    private AndroidManifestParser(String javaPackage, String[] activities,
-            String launcherActivity, String[] processes, Boolean debuggable,
+    private AndroidManifestParser(String javaPackage, Activity[] activities,
+            Activity launcherActivity, String[] processes, Boolean debuggable,
             int apiLevelRequirement, Instrumentation[] instrumentations, String[] libraries) {
         mJavaPackage = javaPackage;
         mActivities = activities;

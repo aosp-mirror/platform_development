@@ -27,6 +27,7 @@ import com.android.ide.eclipse.adt.sdk.Sdk;
 import com.android.ide.eclipse.adt.sdk.Sdk.ITargetChangeListener;
 import com.android.ide.eclipse.common.AndroidConstants;
 import com.android.ide.eclipse.common.project.AndroidManifestParser;
+import com.android.ide.eclipse.common.project.AndroidManifestParser.Activity;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.project.ProjectProperties;
@@ -859,6 +860,7 @@ public class NewProjectCreationPage extends WizardPage {
         }
         
         String packageName = null;
+        Activity activity = null;
         String activityName = null;
         int minSdkVersion = AndroidManifestParser.INVALID_MIN_SDK;
         try {
@@ -866,11 +868,11 @@ public class NewProjectCreationPage extends WizardPage {
             minSdkVersion = manifestData.getApiLevelRequirement();
 
             // try to get the first launcher activity. If none, just take the first activity.
-            activityName = manifestData.getLauncherActivity();
-            if (activityName == null) {
-                String[] activities = manifestData.getActivities();
+            activity = manifestData.getLauncherActivity();
+            if (activity == null) {
+                Activity[] activities = manifestData.getActivities();
                 if (activities != null && activities.length > 0) {
-                    activityName = activities[0];
+                    activity = activities[0];
                 }
             }
         } catch (Exception e) {
@@ -881,7 +883,10 @@ public class NewProjectCreationPage extends WizardPage {
             mPackageNameField.setText(packageName);
         }
         
-        activityName = AndroidManifestParser.extractActivityName(activityName, packageName);
+        if (activity != null) {
+            activityName = AndroidManifestParser.extractActivityName(activity.getName(),
+                    packageName);
+        }
 
         if (activityName != null && activityName.length() > 0) {
             mInternalActivityNameUpdate = true;
@@ -1136,7 +1141,7 @@ public class NewProjectCreationPage extends WizardPage {
                         MSG_ERROR);
             }
 
-            String[] activities = manifestData.getActivities();
+            Activity[] activities = manifestData.getActivities();
             if (activities == null || activities.length == 0) {
                 // This is acceptable now as long as no activity needs to be created
                 if (isCreateActivity()) {
