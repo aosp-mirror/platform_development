@@ -21,6 +21,7 @@ import com.android.ide.eclipse.adt.launch.AndroidLaunchConfiguration.TargetMode;
 import com.android.ide.eclipse.adt.sdk.Sdk;
 import com.android.ide.eclipse.common.project.BaseProjectHelper;
 import com.android.ide.eclipse.ddms.DdmsPlugin;
+import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.avd.AvdManager;
 import com.android.sdklib.avd.AvdManager.AvdInfo;
@@ -126,6 +127,14 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
      */
     public void createControl(Composite parent) {
         Font font = parent.getFont();
+        
+        // reload the AVDs to make sure we are up to date
+        try {
+            Sdk.getCurrent().getAvdManager().reloadAvds();
+        } catch (AndroidLocationException e1) {
+            // this happens if the AVD Manager failed to find the folder in which the AVDs are
+            // stored. There isn't much we can do at this point.
+        }
 
         Composite topComp = new Composite(parent, SWT.NONE);
         setControl(topComp);
