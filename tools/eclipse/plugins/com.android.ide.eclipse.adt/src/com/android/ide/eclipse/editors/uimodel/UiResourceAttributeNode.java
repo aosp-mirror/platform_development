@@ -135,8 +135,11 @@ public class UiResourceAttributeNode extends UiTextAttributeNode {
                 IResourceRepository systemRepository = data.getSystemResources();
 
                 // open a resource chooser dialog for specified resource type.
-                ResourceChooser dlg = new ResourceChooser(mType,
-                        projectRepository, systemRepository, shell);
+                ResourceChooser dlg = new ResourceChooser(project,
+                        mType,
+                        projectRepository,
+                        systemRepository,
+                        shell);
 
                 dlg.setCurrentResource(currentValue);
 
