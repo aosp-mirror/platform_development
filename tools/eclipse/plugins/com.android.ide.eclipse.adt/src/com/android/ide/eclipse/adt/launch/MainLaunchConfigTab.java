@@ -20,6 +20,7 @@ import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.common.project.AndroidManifestParser;
 import com.android.ide.eclipse.common.project.BaseProjectHelper;
 import com.android.ide.eclipse.common.project.ProjectChooserHelper;
+import com.android.ide.eclipse.common.project.AndroidManifestParser.Activity;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
@@ -50,6 +51,8 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Text;
 
+import java.util.ArrayList;
+
 /**
  * Class for the main launch configuration tab.
  */
@@ -66,7 +69,7 @@ public class MainLaunchConfigTab extends AbstractLaunchConfigurationTab {
     private Button mProjButton;
 
     private Combo mActivityCombo;
-    private String[] mActivities;
+    private final ArrayList<Activity> mActivities = new ArrayList<Activity>();
 
     private WidgetListener mListener = new WidgetListener();
 
@@ -214,8 +217,9 @@ public class MainLaunchConfigTab extends AbstractLaunchConfigurationTab {
         
         // add the activity
         int selection = mActivityCombo.getSelectionIndex();
-        if (mActivities != null && selection >=0 && selection < mActivities.length) {
-            configuration.setAttribute(LaunchConfigDelegate.ATTR_ACTIVITY, mActivities[selection]);
+        if (mActivities != null && selection >=0 && selection < mActivities.size()) {
+            configuration.setAttribute(LaunchConfigDelegate.ATTR_ACTIVITY,
+                    mActivities.get(selection).getName());
         }
         
         // link the project and the launch config.
@@ -349,11 +353,11 @@ public class MainLaunchConfigTab extends AbstractLaunchConfigurationTab {
             mActivityCombo.setEnabled(true);
             if (activityName == null || activityName.equals(EMPTY_STRING)) {
                 mActivityCombo.clearSelection();
-            } else if (mActivities != null && mActivities.length > 0) {
+            } else if (mActivities != null && mActivities.size() > 0) {
                 // look for the name of the activity in the combo.
                 boolean found = false;
-                for (int i = 0 ; i < mActivities.length ; i++) {
-                    if (activityName.equals(mActivities[i])) {
+                for (int i = 0 ; i < mActivities.size() ; i++) {
+                    if (activityName.equals(mActivities.get(i).getName())) {
                         found = true;
                         mActivityCombo.select(i);
                         break;
@@ -404,16 +408,21 @@ public class MainLaunchConfigTab extends AbstractLaunchConfigurationTab {
                         BaseProjectHelper.getJavaProject(project), null /* errorListener */,
                         true /* gatherData */, false /* markErrors */);
                 if (manifestParser != null) {
-                    mActivities = manifestParser.getActivities();
-    
+                    Activity[] activities = manifestParser.getActivities();
+
+                    mActivities.clear();
                     mActivityCombo.removeAll();
-    
-                    if (mActivities.length > 0) {
+                    
+                    for (Activity activity : activities) {
+                        if (activity.getExported() && activity.hasAction()) {
+                            mActivities.add(activity);
+                            mActivityCombo.add(activity.getName());
+                        }
+                    }
+                    
+                    if (mActivities.size() > 0) {
                         if (mLaunchAction == LaunchConfigDelegate.ACTION_ACTIVITY) {
                             mActivityCombo.setEnabled(true);
-                        }
-                        for (String s : mActivities) {
-                            mActivityCombo.add(s);
                         }
                     } else {
                         mActivityCombo.setEnabled(false);
@@ -435,7 +444,7 @@ public class MainLaunchConfigTab extends AbstractLaunchConfigurationTab {
         // if we reach this point, either project is null, or we got an exception during
         // the parsing. In either case, we empty the activity list.
         mActivityCombo.removeAll();
-        mActivities = null;
+        mActivities.clear();
     }
     
     /**
