@@ -19,41 +19,39 @@
 package com.example.android.jetboy;
 
 import com.example.android.jetboy.JetBoyView.JetBoyThread;
-import com.example.android.jetboy.JetBoyView;
-import com.example.android.jetboy.R;
-
 
 import android.app.Activity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.KeyEvent;
-import android.view.Window;
 import android.view.View;
+import android.view.Window;
 import android.widget.Button;
 import android.widget.TextView;
 
-public class JetBoy extends Activity implements View.OnClickListener{
+public class JetBoy extends Activity implements View.OnClickListener {
 
-      /** A handle to the thread that's actually running the animation. */
+    /** A handle to the thread that's actually running the animation. */
     private JetBoyThread mJetBoyThread;
 
     /** A handle to the View in which the game is running. */
     private JetBoyView mJetBoyView;
 
-    //the play start button
+    // the play start button
     private Button mButton;
 
-    //used to hit retry
+    // used to hit retry
     private Button mButtonRetry;
 
-    //the window for instructions and such
+    // the window for instructions and such
     private TextView mTextView;
 
-    //game window timer
+    // game window timer
     private TextView mTimerView;
 
     /**
      * Required method from parent class
+     * 
      * @param savedInstanceState - The previous instance of this app
      */
     public void onCreate(Bundle savedInstanceState) {
@@ -66,26 +64,25 @@ public class JetBoy extends Activity implements View.OnClickListener{
         setContentView(R.layout.main);
 
         // get handles to the JetView from XML and the JET thread.
-        mJetBoyView = (JetBoyView) findViewById(R.id.JetBoyView);
+        mJetBoyView = (JetBoyView)findViewById(R.id.JetBoyView);
         mJetBoyThread = mJetBoyView.getThread();
 
-        //look up the happy shiny button
+        // look up the happy shiny button
         mButton = (Button)findViewById(R.id.Button01);
         mButton.setOnClickListener(this);
 
         mButtonRetry = (Button)findViewById(R.id.Button02);
         mButtonRetry.setOnClickListener(this);
 
-        //set up handles for instruction text and game timer text
-        mTextView = (TextView) findViewById(R.id.text);
-        mTimerView = (TextView) findViewById(R.id.timer);
+        // set up handles for instruction text and game timer text
+        mTextView = (TextView)findViewById(R.id.text);
+        mTimerView = (TextView)findViewById(R.id.timer);
 
         mJetBoyView.setTimerView(mTimerView);
 
         mJetBoyView.SetButtonView(mButtonRetry);
-        
+
         mJetBoyView.SetTextView(mTextView);
-        
     }
 
     /**
@@ -95,67 +92,64 @@ public class JetBoy extends Activity implements View.OnClickListener{
      */
     public void onClick(View v) {
 
-        //this is the first screen
-        if (mJetBoyThread.getGameState()==mJetBoyThread.STATE_START){
+        // this is the first screen
+        if (mJetBoyThread.getGameState() == mJetBoyThread.STATE_START) {
             mButton.setText("PLAY!");
             mTextView.setVisibility(View.VISIBLE);
-            
+
             mTextView.setText(R.string.helpText);
             mJetBoyThread.setGameState(JetBoyThread.STATE_PLAY);
 
         }
-        //we have entered game play, now we about to start running
-        else if (mJetBoyThread.getGameState()==mJetBoyThread.STATE_PLAY){
+        // we have entered game play, now we about to start running
+        else if (mJetBoyThread.getGameState() == mJetBoyThread.STATE_PLAY) {
             mButton.setVisibility(View.INVISIBLE);
             mTextView.setVisibility(View.INVISIBLE);
             mTimerView.setVisibility(View.VISIBLE);
             mJetBoyThread.setGameState(JetBoyThread.STATE_RUNNING);
-            
+
         }
-        //this is a retry button
-        else if (mButtonRetry.equals(v) ){
+        // this is a retry button
+        else if (mButtonRetry.equals(v)) {
 
             mTextView.setText(R.string.helpText);
 
             mButton.setText("PLAY!");
             mButtonRetry.setVisibility(View.INVISIBLE);
-            //mButtonRestart.setVisibility(View.INVISIBLE);
+            // mButtonRestart.setVisibility(View.INVISIBLE);
 
             mTextView.setVisibility(View.VISIBLE);
             mButton.setText("PLAY!");
             mButton.setVisibility(View.VISIBLE);
 
             mJetBoyThread.setGameState(JetBoyThread.STATE_PLAY);
-            
-        }
-        else
-        {
+
+        } else {
             Log.d("JB VIEW", "unknown click " + v.getId());
-            
+
             Log.d("JB VIEW", "state is  " + mJetBoyThread.mState);
-            
+
         }
-    
     }
 
+    /**
+     * Standard override to get key-press events.
+     */
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent msg) {
 
-       /**
-       * Standard override to get key-press events.
-       */
-      @Override
-      public boolean onKeyDown(int keyCode, KeyEvent msg) {
+        if (keyCode == 4)
+            super.onKeyDown(keyCode, msg);
 
-          if (keyCode == 4) super.onKeyDown(keyCode,msg);
+        return mJetBoyThread.doKeyDown(keyCode, msg);
+    }
 
-          return mJetBoyThread.doKeyDown(keyCode, msg);
-      }
-    
-      /**
-       * Standard override for key-up. We actually care about these, so we can
-       * turn off the engine or stop rotating.
-       */
-      @Override
-      public boolean onKeyUp(int keyCode, KeyEvent msg) {
-          return mJetBoyThread.doKeyUp(keyCode, msg);
-  }
+    /**
+     * Standard override for key-up. We actually care about these, so we can
+     * turn off the engine or stop rotating.
+     */
+    @Override
+    public boolean onKeyUp(int keyCode, KeyEvent msg) {
+        return mJetBoyThread.doKeyUp(keyCode, msg);
+    }
 }
