@@ -158,6 +158,7 @@ class TestSuite(object):
   _BUILD_ATTR = "build_path"
   _CONTINUOUS_ATTR = "continuous"
   _DESCRIPTION_ATTR = "description"
+  _EXTRA_MAKE_ARGS_ATTR = "extra_make_args"
 
   _DEFAULT_RUNNER = "android.test.InstrumentationTestRunner"
 
@@ -202,6 +203,11 @@ class TestSuite(object):
       self._description = suite_element.getAttribute(self._DESCRIPTION_ATTR)
     else:
       self._description = ""
+    if suite_element.hasAttribute(self._EXTRA_MAKE_ARGS_ATTR):
+      self._extra_make_args = suite_element.getAttribute(
+          self._EXTRA_MAKE_ARGS_ATTR)
+    else:
+      self._extra_make_args = ""
 
   def GetName(self):
     return self._name
@@ -235,7 +241,12 @@ class TestSuite(object):
     return self._native
 
   def GetDescription(self):
+    """Returns a description if available, an empty string otherwise."""
     return self._description
+
+  def GetExtraMakeArgs(self):
+    """Returns the extra make args if available, an empty string otherwise."""
+    return self._extra_make_args
 
 def Parse(file_path):
   """Parses out a TestDefinitions from given path to xml file.
