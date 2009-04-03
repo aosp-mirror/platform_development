@@ -314,6 +314,8 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
      *      defined by <code>ILaunchManager</code> - <code>RUN_MODE</code> or
      *      <code>DEBUG_MODE</code>.
      * @param apk the resource to the apk to launch.
+     * @param packageName the Android package name of the app
+     * @param debugPackageName the Android package name to debug
      * @param debuggable the debuggable value of the app, or null if not set.
      * @param requiredApiVersionNumber the api version required by the app, or
      * {@link AndroidManifestParser#INVALID_MIN_SDK} if none.
@@ -322,7 +324,7 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
      * @param launch the launch object
      */
     public void launch(final IProject project, String mode, IFile apk,
-            String packageName, Boolean debuggable, int requiredApiVersionNumber, 
+            String packageName, String debugPackageName, Boolean debuggable, int requiredApiVersionNumber, 
             final IAndroidLaunchAction launchAction, final AndroidLaunchConfiguration config, 
             final AndroidLaunch launch, IProgressMonitor monitor) {
         
@@ -331,7 +333,8 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
 
         // create the launch info
         final DelayedLaunchInfo launchInfo = new DelayedLaunchInfo(project, packageName,
-                launchAction, apk, debuggable, requiredApiVersionNumber, launch, monitor);
+                debugPackageName, launchAction, apk, debuggable, requiredApiVersionNumber, launch,
+                monitor);
 
         // set the debug mode
         launchInfo.setDebugMode(mode.equals(ILaunchManager.DEBUG_MODE));
@@ -921,6 +924,7 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
             // Create new launchInfo as an hybrid between parent and dependency information
             DelayedLaunchInfo delayedLaunchInfo = new DelayedLaunchInfo(
                     androidProject.getProject(), 
+                    manifestParser.getPackage(),
                     manifestParser.getPackage(),
                     launchInfo.getLaunchAction(), 
                     apk, 
@@ -1524,14 +1528,14 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
                 for (int i = 0; i < mWaitingForDebuggerApplications.size(); ) {
                     final DelayedLaunchInfo launchInfo = mWaitingForDebuggerApplications.get(i);
                     if (client.getDevice() == launchInfo.getDevice() &&
-                            applicationName.equals(launchInfo.getPackageName())) {
+                            applicationName.equals(launchInfo.getDebugPackageName())) {
                         // this is a match. We remove the launch info from the list
                         mWaitingForDebuggerApplications.remove(i);
                         
                         // and connect the debugger.
                         String msg = String.format(
                                 "Attempting to connect debugger to '%1$s' on port %2$d",
-                                launchInfo.getPackageName(), client.getDebuggerListenPort());
+                                launchInfo.getDebugPackageName(), client.getDebuggerListenPort());
                         AdtPlugin.printToConsole(launchInfo.getProject(), msg);
                         
                         new Thread("Debugger Connection") { //$NON-NLS-1$
