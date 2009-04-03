@@ -14,16 +14,13 @@
  * limitations under the License.
  */
 
-package com.android.ide.eclipse.adt.refactorings.extractstring;
+package com.android.ide.eclipse.adt.wizards.newstring;
 
-
-import com.android.ide.eclipse.adt.wizards.newstring.NewStringBaseImpl;
 import com.android.ide.eclipse.adt.wizards.newstring.NewStringBaseImpl.INewStringPageCallback;
 import com.android.ide.eclipse.adt.wizards.newstring.NewStringBaseImpl.ValidationStatus;
 
 import org.eclipse.core.resources.IProject;
-import org.eclipse.jface.wizard.IWizardPage;
-import org.eclipse.ltk.ui.refactoring.UserInputWizardPage;
+import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
@@ -35,23 +32,36 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 
 /**
- * @see ExtractStringRefactoring
+ * 
  */
-class ExtractStringInputPage extends UserInputWizardPage
-    implements IWizardPage, INewStringPageCallback {
+class NewStringWizardPage extends WizardPage implements INewStringPageCallback {
 
     private NewStringBaseImpl mImpl;
-    
-    public ExtractStringInputPage(IProject project) {
-        super("ExtractStringInputPage");  //$NON-NLS-1$
+
+    /** Field displaying the user-selected string to be replaced. */
+    private Label mStringValueField;
+
+    private String mNewStringId;
+
+    public NewStringWizardPage(IProject project, String pageName) {
+        super(pageName);
         mImpl = new NewStringBaseImpl(project, this);
+    }
+    
+    public String getNewStringValue() {
+        return mStringValueField.getText();
+    }
+    
+    public String getNewStringId() {
+        return mNewStringId;
+    }
+    
+    public String getResFilePathProjPath() {
+        return mImpl.getResFileProjPath();
     }
 
     /**
-     * Create the UI for the refactoring wizard.
-     * <p/>
-     * Note that at that point the initial conditions have been checked in
-     * {@link ExtractStringRefactoring}.
+     * Create the UI for the new string wizard.
      */
     public void createControl(Composite parent) {
         Composite content = new Composite(parent, SWT.NONE);
@@ -72,40 +82,22 @@ class ExtractStringInputPage extends UserInputWizardPage
      */
     public Text createStringGroup(Composite content) {
 
-        final ExtractStringRefactoring ref = getOurRefactoring();
-        
         Group group = new Group(content, SWT.NONE);
         group.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-        group.setText("String Replacement");
+        group.setText("New String");
 
         GridLayout layout = new GridLayout();
         layout.numColumns = 2;
         group.setLayout(layout);
 
-        // line: Textfield for string value (based on selection, if any)
-        
         Label label = new Label(group, SWT.NONE);
         label.setText("String:");
 
-        String selectedString = ref.getTokenString();
+        mStringValueField = new Label(group, SWT.NONE);
+        mStringValueField.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        mStringValueField.setText("");  //$NON-NLS-1$
         
-        final Text stringValueField = new Text(group, SWT.SINGLE | SWT.LEFT | SWT.BORDER);
-        stringValueField.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-        stringValueField.setText(selectedString != null ? selectedString : "");  //$NON-NLS-1$
-        
-        ref.setNewStringValue(stringValueField.getText());
-
-        stringValueField.addModifyListener(new ModifyListener() {
-            public void modifyText(ModifyEvent e) {
-                if (mImpl.validatePage()) {
-                    ref.setNewStringValue(stringValueField.getText());
-                }
-            }
-        });
-
-        
-        // TODO provide an option to replace all occurences of this string instead of
-        // just the one.
+        // TODO provide an option to refactor all known occurences of this string.
 
         // line : Textfield for new ID
         
@@ -114,14 +106,14 @@ class ExtractStringInputPage extends UserInputWizardPage
 
         final Text stringIdField = new Text(group, SWT.SINGLE | SWT.LEFT | SWT.BORDER);
         stringIdField.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-        stringIdField.setText(guessId(selectedString));
+        stringIdField.setText("");
 
-        ref.setNewStringId(stringIdField.getText().trim());
+        mNewStringId = stringIdField.getText().trim();
 
         stringIdField.addModifyListener(new ModifyListener() {
             public void modifyText(ModifyEvent e) {
                 if (mImpl.validatePage()) {
-                    ref.setNewStringId(stringIdField.getText().trim());
+                    mNewStringId = stringIdField.getText().trim();
                 }
             }
         });
@@ -129,36 +121,7 @@ class ExtractStringInputPage extends UserInputWizardPage
         return stringIdField;
     }
 
-    /**
-     * Utility method to guess a suitable new XML ID based on the selected string.
-     */
-    private String guessId(String text) {
-        if (text == null) {
-            return "";  //$NON-NLS-1$
-        }
-
-        // make lower case
-        text = text.toLowerCase();
-        
-        // everything not alphanumeric becomes an underscore
-        text = text.replaceAll("[^a-zA-Z0-9]+", "_");  //$NON-NLS-1$ //$NON-NLS-2$
-
-        // the id must be a proper Java identifier, so it can't start with a number
-        if (text.length() > 0 && !Character.isJavaIdentifierStart(text.charAt(0))) {
-            text = "_" + text;  //$NON-NLS-1$
-        }
-        return text;
-    }
-
-    /**
-     * Returns the {@link ExtractStringRefactoring} instance used by this wizard page.
-     */
-    private ExtractStringRefactoring getOurRefactoring() {
-        return (ExtractStringRefactoring) getRefactoring();
-    }
-
     public void postValidatePage(ValidationStatus status) {
-        ExtractStringRefactoring ref = getOurRefactoring();
-        ref.setTargetFile(mImpl.getResFileProjPath());
+        // pass
     }
 }
