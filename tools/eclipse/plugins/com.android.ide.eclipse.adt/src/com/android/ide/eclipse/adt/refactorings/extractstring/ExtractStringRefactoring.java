@@ -16,9 +16,9 @@
 
 package com.android.ide.eclipse.adt.refactorings.extractstring;
 
+import com.android.ide.eclipse.adt.wizards.newstring.NewStringHelper;
 import com.android.ide.eclipse.common.AndroidConstants;
 import com.android.ide.eclipse.common.project.AndroidManifestParser;
-import com.android.ide.eclipse.common.project.AndroidXPathFactory;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
@@ -64,8 +64,6 @@ import org.eclipse.text.edits.MultiTextEdit;
 import org.eclipse.text.edits.ReplaceEdit;
 import org.eclipse.text.edits.TextEdit;
 import org.eclipse.text.edits.TextEditGroup;
-import org.w3c.dom.NodeList;
-import org.xml.sax.InputSource;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -73,13 +71,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpressionException;
 
 /**
  * This refactoring extracts a string from a file and replaces it by an Android resource ID
@@ -105,8 +98,8 @@ import javax.xml.xpath.XPathExpressionException;
  * <li> On success, the wizard is shown, which let the user input the new ID to use.
  * <li> The wizard sets the user input values into this refactoring instance, e.g. the new string
  *      ID, the XML file to update, etc. The wizard does use the utility method
- *      {@link #isResIdDuplicate(String, String)} to check whether the new ID is already defined
- *      in the target XML file.
+ *      {@link NewStringHelper#isResIdDuplicate(IProject, String, String)} to check whether the new
+ *      ID is already defined in the target XML file.
  * <li> Once Preview or Finish is selected in the wizard, the
  *      {@link #checkFinalConditions(IProgressMonitor)} is called to double-check the user input
  *      and compute the actual changes.
@@ -127,59 +120,105 @@ import javax.xml.xpath.XPathExpressionException;
  * <li> TODO: Have a pref in the wizard: [x] Change other Java Files
  * </ul>
  */
-class ExtractStringRefactoring extends Refactoring {
+public class ExtractStringRefactoring extends Refactoring {
 
-    /** The file model being manipulated. */
+    private enum Mode {
+        EDIT_SOURCE,
+        MAKE_ID,
+        MAKE_NEW_ID
+    }
+    
+    /** The {@link Mode} of operation of the refactoring. */
+    private final Mode mMode;
+    /** The file model being manipulated.
+     * Value is null when not on {@link Mode#EDIT_SOURCE} mode. */
     private final IFile mFile;
-    /** The start of the selection in {@link #mFile}. */
+    /** The start of the selection in {@link #mFile}.
+     * Value is -1 when not on {@link Mode#EDIT_SOURCE} mode. */
     private final int mSelectionStart;
-    /** The end of the selection in {@link #mFile}. */
+    /** The end of the selection in {@link #mFile}.
+     * Value is -1 when not on {@link Mode#EDIT_SOURCE} mode. */
     private final int mSelectionEnd;
 
     /** The compilation unit, only defined if {@link #mFile} points to a usable Java source file. */
     private ICompilationUnit mUnit;
-    /** The actual string selected, after UTF characters have been escaped, good for display. */
+    /** The actual string selected, after UTF characters have been escaped, good for display.
+     * Value is null when not on {@link Mode#EDIT_SOURCE} mode. */
     private String mTokenString;
 
     /** The XML string ID selected by the user in the wizard. */
     private String mXmlStringId;
+    /** The XML string value. Might be different than the initial selected string. */
+    private String mXmlStringValue;
     /** The path of the XML file that will define {@link #mXmlStringId}, selected by the user
      *  in the wizard. */
     private String mTargetXmlFileWsPath;
 
-    /** A temporary cache of R.string IDs defined by a given xml file. The key is the
-     * project path of the file, the data is a set of known string Ids for that file. */
-    private HashMap<String,HashSet<String>> mResIdCache;
-    /** An instance of XPath, created lazily on demand. */
-    private XPath mXPath;
     /** The list of changes computed by {@link #checkFinalConditions(IProgressMonitor)} and
      *  used by {@link #createChange(IProgressMonitor)}. */
     private ArrayList<Change> mChanges;
+    
+    private NewStringHelper mHelper = new NewStringHelper();
 
     public ExtractStringRefactoring(Map<String, String> arguments)
             throws NullPointerException {
-
-        IPath path = Path.fromPortableString(arguments.get("file"));        //$NON-NLS-1$
-        mFile = (IFile) ResourcesPlugin.getWorkspace().getRoot().findMember(path);
-        mSelectionStart = Integer.parseInt(arguments.get("sel-start"));     //$NON-NLS-1$
-        mSelectionEnd   = Integer.parseInt(arguments.get("sel-end"));       //$NON-NLS-1$
-        mTokenString    = arguments.get("tok-esc");                         //$NON-NLS-1$
+        mMode = Mode.valueOf(arguments.get("mode"));                        //$NON-NLS-1$
+        
+        if (mMode == Mode.EDIT_SOURCE) {
+            IPath path = Path.fromPortableString(arguments.get("file"));        //$NON-NLS-1$
+            mFile = (IFile) ResourcesPlugin.getWorkspace().getRoot().findMember(path);
+            mSelectionStart = Integer.parseInt(arguments.get("sel-start"));     //$NON-NLS-1$
+            mSelectionEnd   = Integer.parseInt(arguments.get("sel-end"));       //$NON-NLS-1$
+            mTokenString    = arguments.get("tok-esc");                         //$NON-NLS-1$
+        } else {
+            mFile = null;
+            mSelectionStart = mSelectionEnd = -1;
+            mTokenString = null;
+        }
     }
     
     private Map<String, String> createArgumentMap() {
         HashMap<String, String> args = new HashMap<String, String>();
-        args.put("file",      mFile.getFullPath().toPortableString());      //$NON-NLS-1$
-        args.put("sel-start", Integer.toString(mSelectionStart));           //$NON-NLS-1$
-        args.put("sel-end",   Integer.toString(mSelectionEnd));             //$NON-NLS-1$
-        args.put("tok-esc",   mTokenString);                                //$NON-NLS-1$
+        args.put("mode",      mMode.name());                                //$NON-NLS-1$
+        if (mMode == Mode.EDIT_SOURCE) {
+            args.put("file",      mFile.getFullPath().toPortableString());      //$NON-NLS-1$
+            args.put("sel-start", Integer.toString(mSelectionStart));           //$NON-NLS-1$
+            args.put("sel-end",   Integer.toString(mSelectionEnd));             //$NON-NLS-1$
+            args.put("tok-esc",   mTokenString);                                //$NON-NLS-1$
+        }
         return args;
     }
 
+    /**
+     * Constructor to use when the Extract String refactoring is called on an
+     * *existing* source file. Its purpose is then to get the selected string of
+     * the source and propose to change it by an XML id. The XML id may be a new one
+     * or an existing one.
+     * 
+     * @param file The source file to process. Cannot be null. File must exist in workspace.
+     * @param selection The selection in the source file. Cannot be null or empty.
+     */
     public ExtractStringRefactoring(IFile file, ITextSelection selection) {
+        mMode = Mode.EDIT_SOURCE;
         mFile = file;
         mSelectionStart = selection.getOffset();
         mSelectionEnd = mSelectionStart + Math.max(0, selection.getLength() - 1);
     }
+
+    /**
+     * Constructor to use when the Extract String refactoring is called without
+     * any source file. Its purpose is then to create a new XML string ID.
+     * 
+     * @param enforceNew If true the XML ID must be a new one. If false, an existing ID can be
+     *  used.
+     */
+    public ExtractStringRefactoring(boolean enforceNew) {
+        mMode = enforceNew ? Mode.MAKE_NEW_ID : Mode.MAKE_ID;
+        mFile = null;
+        mSelectionStart = mSelectionEnd = -1;
+    }
+    
+    
 
     /**
      * @see org.eclipse.ltk.core.refactoring.Refactoring#getName()
@@ -225,6 +264,11 @@ class ExtractStringRefactoring extends Refactoring {
         
         try {
             monitor.beginTask("Checking preconditions...", 5);
+
+            if (mMode != Mode.EDIT_SOURCE) {
+                monitor.worked(5);
+                return status;
+            }
             
             if (!checkSourceFile(mFile, status, monitor)) {
                 return status;
@@ -388,7 +432,7 @@ class ExtractStringRefactoring extends Refactoring {
                 status.addFatalError("Missing target xml file path");
             }
             monitor.worked(1);
-            
+
             // Either that resource must not exist or it must be a writeable file.
             IResource targetXml = getTargetXmlResource(mTargetXmlFileWsPath);
             if (targetXml != null) {
@@ -415,9 +459,9 @@ class ExtractStringRefactoring extends Refactoring {
             
             // Prepare the change for the XML file.
 
-            if (!isResIdDuplicate(mTargetXmlFileWsPath, mXmlStringId)) {
+            if (!mHelper.isResIdDuplicate(mFile.getProject(), mTargetXmlFileWsPath, mXmlStringId)) {
                 // We actually change it only if the ID doesn't exist yet
-                Change change = createXmlChange((IFile) targetXml, mXmlStringId, mTokenString,
+                Change change = createXmlChange((IFile) targetXml, mXmlStringId, mXmlStringValue,
                         status, SubMonitor.convert(monitor, 1));
                 if (change != null) {
                     mChanges.add(change);
@@ -427,12 +471,14 @@ class ExtractStringRefactoring extends Refactoring {
             if (status.hasError()) {
                 return status;
             }
-            
-            // Prepare the change to the Java compilation unit
-            List<Change> changes = computeJavaChanges(mUnit, mXmlStringId, mTokenString,
-                    status, SubMonitor.convert(monitor, 1));
-            if (changes != null) {
-                mChanges.addAll(changes);
+
+            if (mMode == Mode.EDIT_SOURCE) {
+                // Prepare the change to the Java compilation unit
+                List<Change> changes = computeJavaChanges(mUnit, mXmlStringId, mTokenString,
+                        status, SubMonitor.convert(monitor, 1));
+                if (changes != null) {
+                    mChanges.addAll(changes);
+                }
             }
             
             monitor.worked(1);
@@ -484,6 +530,9 @@ class ExtractStringRefactoring extends Refactoring {
             // The file exist. Attempt to parse it as a valid XML document.
             try {
                 int[] indices = new int[2];
+                
+                // TODO case where we replace the value of an existing XML String ID
+                
                 if (findXmlOpeningTagPos(targetXml.getContents(), "resources", indices)) {  //$NON-NLS-1$
                     // Indices[1] indicates whether we found > or />. It can only be 1 or 2.
                     // Indices[0] is the position of the first character of either > or />.
@@ -866,78 +915,6 @@ class ExtractStringRefactoring extends Refactoring {
     }
 
     /**
-     * Utility method used by the wizard to check whether the given string ID is already
-     * defined in the XML file which path is given.
-     * 
-     * @param xmlFileWsPath The project path of the XML file, e.g. "/res/values/strings.xml".
-     *          The given file may or may not exist.
-     * @param stringId The string ID to find.
-     * @return True if such a string ID is already defined.
-     */
-    public boolean isResIdDuplicate(String xmlFileWsPath, String stringId) {
-        // This is going to be called many times on the same file.
-        // Build a cache of the existing IDs for a given file.
-        if (mResIdCache == null) {
-            mResIdCache = new HashMap<String, HashSet<String>>();
-        }
-        HashSet<String> cache = mResIdCache.get(xmlFileWsPath);
-        if (cache == null) {
-            cache = getResIdsForFile(xmlFileWsPath);
-            mResIdCache.put(xmlFileWsPath, cache);
-        }
-        
-        return cache.contains(stringId);
-    }
-
-    /**
-     * Extract all the defined string IDs from a given file using XPath.
-     * 
-     * @param xmlFileWsPath The project path of the file to parse. It may not exist.
-     * @return The set of all string IDs defined in the file. The returned set is always non
-     *   null. It is empty if the file does not exist.
-     */
-    private HashSet<String> getResIdsForFile(String xmlFileWsPath) {
-        HashSet<String> ids = new HashSet<String>();
-        
-        if (mXPath == null) {
-            mXPath = AndroidXPathFactory.newXPath();
-        }
-
-        // Access the project that contains the resource that contains the compilation unit
-        IResource resource = getTargetXmlResource(xmlFileWsPath);
-        
-        if (resource != null && resource.exists() && resource.getType() == IResource.FILE) {
-            InputSource source;
-            try {
-                source = new InputSource(((IFile) resource).getContents());
-
-                // We want all the IDs in an XML structure like this:
-                // <resources>
-                //    <string name="ID">something</string>
-                // </resources>
-                
-                String xpathExpr = "/resources/string/@name";   //$NON-NLS-1$
-                
-                Object result = mXPath.evaluate(xpathExpr, source, XPathConstants.NODESET);
-                if (result instanceof NodeList) {
-                    NodeList list = (NodeList) result;
-                    for (int n = list.getLength() - 1; n >= 0; n--) {
-                        String id = list.item(n).getNodeValue();
-                        ids.add(id);
-                    }
-                }
-                
-            } catch (CoreException e1) {
-                // IFile.getContents failed. Ignore.
-            } catch (XPathExpressionException e) {
-                // mXPath.evaluate failed. Ignore.
-            }
-        }
-        
-        return ids;
-    }
-
-    /**
      * Given a file project path, returns its resource in the same project than the
      * compilation unit. The resource may not exist.
      */
@@ -950,8 +927,15 @@ class ExtractStringRefactoring extends Refactoring {
     /**
      * Sets the replacement string ID. Used by the wizard to set the user input.
      */
-    public void setReplacementStringId(String replacementStringId) {
-        mXmlStringId = replacementStringId;
+    public void setNewStringId(String newStringId) {
+        mXmlStringId = newStringId;
+    }
+
+    /**
+     * Sets the replacement string ID. Used by the wizard to set the user input.
+     */
+    public void setNewStringValue(String newStringValue) {
+        mXmlStringValue = newStringValue;
     }
 
     /**
