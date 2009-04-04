@@ -1,93 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent">
-    
-    <com.example.android.jetboy.JetBoyView
-      android:id="@+id/JetBoyView"
-      android:layout_width="fill_parent"
-      android:layout_height="fill_parent"/>
-      
-       <LinearLayout
-        android:layout_width="fill_parent" android:layout_height="wrap_content"
-        android:layout_gravity="top" android:gravity="center_horizontal"
-        android:orientation="horizontal">
-        
-        <TextView
-          android:id="@+id/text"
-		  android:text="@string/helpText"
-		  style="@style/helpText"
-		  android:visibility="invisible"
-          android:layout_width="300px"
-          android:layout_height="300px"
-          android:layout_centerInParent="true"
-          android:gravity="left"
-          android:background="#88ffffff"
-          />
-        
-        </LinearLayout>
-        
-         <LinearLayout
-        android:layout_width="fill_parent" android:layout_height="wrap_content"
-        android:layout_gravity="bottom" android:gravity="center_horizontal"
-        android:orientation="horizontal">
-        
-			<Button android:id="@+id/Button01" 
-			android:text="@string/start"
-			style="@style/ButtonText"
-			android:layout_width="wrap_content" 
-			android:layout_height="wrap_content" 
-			android:clickable="true" 
-			android:cursorVisible="true">
-			</Button>
-			
-			
-			
+	android:layout_width="fill_parent"
+	android:layout_height="fill_parent">
 
-		</LinearLayout>
-		
-         <LinearLayout
-        android:layout_width="fill_parent" android:layout_height="wrap_content"
-        android:layout_gravity="bottom" android:gravity="center_horizontal"
-        android:orientation="horizontal">
-		<Button android:id="@+id/Button02" 
-			android:text="@string/retry"
-			style="@style/ButtonText"
-			android:visibility="invisible"
-			android:layout_width="wrap_content" 
-			android:layout_height="wrap_content" 
-			android:clickable="true" 
-			android:cursorVisible="true">
-			</Button>
-			
-			<!--Button android:id="@+id/Button03" 
-			android:text="@string/restart"
-			style="@style/ButtonText"
-			android:visibility="invisible"
-			android:layout_width="wrap_content" 
-			android:layout_height="wrap_content" 
-			android:clickable="true" 
-			android:cursorVisible="true">
-			</Button-->
-			
-		</LinearLayout>
-		
-		
-		 <LinearLayout
-        android:layout_width="fill_parent" android:layout_height="wrap_content"
-        android:layout_gravity="top" android:gravity="right"
-        android:orientation="horizontal">
-        
-        <TextView
-          android:id="@+id/timer"
-		  android:text="@string/timer"
-		  style="@style/timerText"
-		  android:visibility="invisible"
-          android:layout_width="wrap_content"
-          android:layout_height="wrap_content"
-          android:gravity="right"
-          android:background="#000000"
-          android:textSize="24sp"/>
-        
-        </LinearLayout>
+	<com.example.android.jetboy.JetBoyView android:id="@+id/JetBoyView"
+		android:layout_width="fill_parent"
+		android:layout_height="fill_parent" />
+
+	<TextView android:id="@+id/text" android:text="@string/helpText"
+		style="@style/helpText" android:visibility="invisible" 
+		android:layout_width="300px" android:layout_height="300px"
+		android:background="#7Fffffff" android:layout_gravity="center" />
+
+	<Button android:id="@+id/Button01" android:text="@string/start"
+		style="@style/ButtonText" android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_gravity="center_horizontal|bottom" />
+
+	<Button android:id="@+id/Button02" android:text="@string/retry"
+		style="@style/ButtonText" android:visibility="invisible"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_gravity="center_horizontal|bottom" />
+
+	<TextView android:id="@+id/timer" android:text="@string/timer"
+		style="@style/timerText" android:visibility="invisible"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_gravity="top|right" android:background="#000000" />
 </FrameLayout>
