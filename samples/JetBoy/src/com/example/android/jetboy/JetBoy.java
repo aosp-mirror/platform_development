@@ -25,7 +25,6 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
-import android.view.Window;
 import android.widget.Button;
 import android.widget.TextView;
 
@@ -55,11 +54,7 @@ public class JetBoy extends Activity implements View.OnClickListener {
      * @param savedInstanceState - The previous instance of this app
      */
     public void onCreate(Bundle savedInstanceState) {
-
         super.onCreate(savedInstanceState);
-
-        // turn off the window's title bar
-        requestWindowFeature(Window.FEATURE_NO_TITLE);
 
         setContentView(R.layout.main);
 
@@ -91,9 +86,8 @@ public class JetBoy extends Activity implements View.OnClickListener {
      * @param v The object which has been clicked
      */
     public void onClick(View v) {
-
         // this is the first screen
-        if (mJetBoyThread.getGameState() == mJetBoyThread.STATE_START) {
+        if (mJetBoyThread.getGameState() == JetBoyThread.STATE_START) {
             mButton.setText("PLAY!");
             mTextView.setVisibility(View.VISIBLE);
 
@@ -102,7 +96,7 @@ public class JetBoy extends Activity implements View.OnClickListener {
 
         }
         // we have entered game play, now we about to start running
-        else if (mJetBoyThread.getGameState() == mJetBoyThread.STATE_PLAY) {
+        else if (mJetBoyThread.getGameState() == JetBoyThread.STATE_PLAY) {
             mButton.setVisibility(View.INVISIBLE);
             mTextView.setVisibility(View.INVISIBLE);
             mTimerView.setVisibility(View.VISIBLE);

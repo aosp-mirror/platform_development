@@ -174,7 +174,6 @@ public class JetBoyView extends SurfaceView implements SurfaceHolder.Callback {
         // in this game 80 is used for sending asteroid
         // 82 is used as game time for 1/4 note beat.
         private final String mSendEvent = "80";
-
         private final String mTimerEvent = "82";
 
         // used to track beat for synch of mute/unmute actions
@@ -1360,38 +1359,41 @@ public class JetBoyView extends SurfaceView implements SurfaceHolder.Callback {
         holder.addCallback(this);
         
         // create thread only; it's started in surfaceCreated()
-        thread = new JetBoyThread(holder, context, new Handler() {
-
-            public void handleMessage(Message m) {
-
-                mTimerView.setText(m.getData().getString("text"));
-
-                //ok so maybe it isn't really a "lose"
-                //this bit was borrowed from lunar lander and then evolved.
-                //too close to deadline to mess with now.
-                if (m.getData().getString("STATE_LOSE") != null) {
-                    //mButtonRestart.setVisibility(View.VISIBLE);
-                    mButtonRetry.setVisibility(View.VISIBLE);
-
-                    mTimerView.setVisibility(View.INVISIBLE);
-
-                    mTextView.setVisibility(View.VISIBLE);
-
-                    Log.d(TAG, "the total was " + mHitTotal);
-
-                    if (mHitTotal >= mSuccessThreshold) {
-                        mTextView.setText(R.string.winText);
-                    } else {
-                        mTextView.setText("Sorry, You Lose! You got " + mHitTotal
-                                + ". You need 50 to win.");
+        // except if used in the layout editor.
+        if (isInEditMode() == false) {
+            thread = new JetBoyThread(holder, context, new Handler() {
+    
+                public void handleMessage(Message m) {
+    
+                    mTimerView.setText(m.getData().getString("text"));
+    
+                    //ok so maybe it isn't really a "lose"
+                    //this bit was borrowed from lunar lander and then evolved.
+                    //too close to deadline to mess with now.
+                    if (m.getData().getString("STATE_LOSE") != null) {
+                        //mButtonRestart.setVisibility(View.VISIBLE);
+                        mButtonRetry.setVisibility(View.VISIBLE);
+    
+                        mTimerView.setVisibility(View.INVISIBLE);
+    
+                        mTextView.setVisibility(View.VISIBLE);
+    
+                        Log.d(TAG, "the total was " + mHitTotal);
+    
+                        if (mHitTotal >= mSuccessThreshold) {
+                            mTextView.setText(R.string.winText);
+                        } else {
+                            mTextView.setText("Sorry, You Lose! You got " + mHitTotal
+                                    + ". You need 50 to win.");
+                        }
+    
+                        mTimerView.setText("1:12");
+                        mTextView.setHeight(20);
+    
                     }
-
-                    mTimerView.setText("1:12");
-                    mTextView.setHeight(20);
-
-                }
-            }//end handle msg
-        });
+                }//end handle msg
+            });
+        }
 
         setFocusable(true); // make sure we get key events
 
