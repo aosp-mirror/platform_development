@@ -42,15 +42,15 @@
  *       internal unique channel number > 0, then sends a connection
  *       initiation request to the emulator (i.e. through channel 0):
  *
- *           connect:<hxid>:<name>
+ *           connect:<id>:<name>
  *
- *       where <name> is the service name, and <hxid> is a 4-hexchar
+ *       where <name> is the service name, and <id> is a 2-hexchar
  *       number corresponding to the channel number.
  *
  *     * in case of success, the emulator responds through channel 0
  *       with:
  *
- *           ok:connect:<hxid>
+ *           ok:connect:<id>
  *
  *       after this, all messages between the client and the emulator
  *       are passed in pass-through mode.
@@ -58,12 +58,12 @@
  *     * if the emulator refuses the service connection, it will
  *       send the following through channel 0:
  *
- *           ko:connect:<hxid>:reason-for-failure
+ *           ko:connect:<id>:reason-for-failure
  *
  *     * If the client closes the connection, qemud sends the following
  *       to the emulator:
  *
- *           disconnect:<hxid>
+ *           disconnect:<id>
  *
  *       The same message is the opposite direction if the emulator
  *       chooses to close the connection.
@@ -1429,8 +1429,8 @@ static void
 multiplexer_handle_control( Multiplexer*  mult, Packet*  p )
 {
     /* connection registration success */
-    if (p->len == 15 && !memcmp(p->data, "ok:connect:", 11)) {
-        int      channel = hex2int(p->data+11, 4);
+    if (p->len == 13 && !memcmp(p->data, "ok:connect:", 11)) {
+        int      channel = hex2int(p->data+11, 2);
         Client*  client  = multiplexer_find_client(mult, channel);
 
         /* note that 'client' can be NULL if the corresponding
@@ -1443,8 +1443,8 @@ multiplexer_handle_control( Multiplexer*  mult, Packet*  p )
     }
 
     /* connection registration failure */
-    if (p->len >= 15 && !memcmp(p->data, "ko:connect:",11)) {
-        int     channel = hex2int(p->data+11, 4);
+    if (p->len >= 13 && !memcmp(p->data, "ko:connect:",11)) {
+        int     channel = hex2int(p->data+11, 2);
         Client* client  = multiplexer_find_client(mult, channel);
 
         if (client != NULL)
@@ -1454,8 +1454,8 @@ multiplexer_handle_control( Multiplexer*  mult, Packet*  p )
     }
 
     /* emulator-induced client disconnection */
-    if (p->len == 15 && !memcmp(p->data, "disconnect:",11)) {
-        int      channel = hex2int(p->data+11, 4);
+    if (p->len == 13 && !memcmp(p->data, "disconnect:",11)) {
+        int      channel = hex2int(p->data+11, 2);
         Client*  client  = multiplexer_find_client(mult, channel);
 
         if (client != NULL)
@@ -1536,7 +1536,7 @@ multiplexer_open_channel( Multiplexer*  mult, Packet*  service )
                 goto TRY_AGAIN;
     }
 
-    len = snprintf((char*)p->data, sizeof p->data, "connect:%.*s:%04x", service->len, service->data, channel);
+    len = snprintf((char*)p->data, sizeof p->data, "connect:%.*s:%02x", service->len, service->data, channel);
     if (len >= (int)sizeof(p->data)) {
         D("%s: weird, service name too long (%d > %d)", __FUNCTION__, len, sizeof(p->data));
         packet_free(&p);
@@ -1554,7 +1554,7 @@ static void
 multiplexer_close_channel( Multiplexer*  mult, int  channel )
 {
     Packet*  p   = packet_alloc();
-    int      len = snprintf((char*)p->data, sizeof(p->data), "disconnect:%04x", channel);
+    int      len = snprintf((char*)p->data, sizeof(p->data), "disconnect:%02x", channel);
 
     if (len > (int)sizeof(p->data)) {
         /* should not happen */
