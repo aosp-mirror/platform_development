@@ -120,6 +120,9 @@ class CoverageTarget:
   
   def _ParsePaths(self, target_element):
     src_elements = target_element.getElementsByTagName(self._SRC_TAG)
+    if len(src_elements) <= 0:
+      # no src tags specified. Assume build_path + src
+      self._paths.append(os.path.join(self.GetBuildPath(), "src"))
     for src_element in src_elements:
       rel_path = src_element.getAttribute(self._PATH_ATTR)
       self._paths.append(os.path.join(self.GetBuildPath(), rel_path))
