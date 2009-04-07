@@ -71,10 +71,11 @@ public class AndroidClasspathContainerInitializer extends ClasspathContainerInit
     private final static String CACHE_VERSION = "01"; //$NON-NLS-1$
     private final static String CACHE_VERSION_SEP = CACHE_VERSION + PATH_SEPARATOR;
     
-    private final static int PATH_ANDROID_JAR = 0;
-    private final static int PATH_ANDROID_SRC = 1;
-    private final static int PATH_ANDROID_DOCS = 2;
-    private final static int PATH_ANDROID_OPT_DOCS = 3;
+    private final static int CACHE_INDEX_JAR = 0;
+    private final static int CACHE_INDEX_SRC = 1;
+    private final static int CACHE_INDEX_DOCS_URI = 2;
+    private final static int CACHE_INDEX_OPT_DOCS_URI = 3;
+    private final static int CACHE_INDEX_ADD_ON_START = CACHE_INDEX_OPT_DOCS_URI;
     
     public AndroidClasspathContainerInitializer() {
         // pass
@@ -172,7 +173,8 @@ public class AndroidClasspathContainerInitializer extends ClasspathContainerInit
 
                 // if we are loaded and the target is non null, we create a valid ClassPathContainer
                 if (sdkIsLoaded && target != null) {
-                    String targetName = target.getFullName();
+                    
+                    String targetName = target.getClasspathName();
 
                     return new AndroidClasspathContainer(
                             createClasspathEntries(iProject, target, targetName),
@@ -385,26 +387,35 @@ public class AndroidClasspathContainerInitializer extends ClasspathContainerInit
         // now we check the paths actually exist.
         // There's an exception: If the source folder for android.jar does not exist, this is
         // not a problem, so we skip it.
-        // Also paths[PATH_ANDROID_DOCS] is a URI to the javadoc, so we test it a bit differently.
+        // Also paths[CACHE_INDEX_DOCS_URI] is a URI to the javadoc, so we test it a
+        // bit differently.
         try {
-            if (new File(paths[PATH_ANDROID_JAR]).exists() == false ||
-                    new File(new URI(paths[PATH_ANDROID_DOCS])).exists() == false) {
+            if (new File(paths[CACHE_INDEX_JAR]).exists() == false ||
+                    new File(new URI(paths[CACHE_INDEX_DOCS_URI])).exists() == false) {
                 return null;
+            }
+        
+            // check the path for the add-ons, if they exist.
+            if (paths.length > CACHE_INDEX_ADD_ON_START) {
+                
+                // check the docs path separately from the rest of the paths as it's a URI.
+                if (new File(new URI(paths[CACHE_INDEX_OPT_DOCS_URI])).exists() == false) {
+                    return null;
+                }
+
+                // now just check the remaining paths.
+                for (int i = CACHE_INDEX_ADD_ON_START + 1; i < paths.length; i++) {
+                    String path = paths[i];
+                    if (path.length() > 0) {
+                        File f = new File(path);
+                        if (f.exists() == false) {
+                            return null;
+                        }
+                    }
+                }
             }
         } catch (URISyntaxException e) {
             return null;
-        } finally {
-            
-        }
-        
-        for (int i = 3 ; i < paths.length; i++) {
-            String path = paths[i];
-            if (path.length() > 0) {
-                File f =  new File(path);
-                if (f.exists() == false) {
-                    return null;
-                }
-            }
         }
 
         IClasspathEntry[] entries = createClasspathEntriesFromPaths(paths);
@@ -423,13 +434,13 @@ public class AndroidClasspathContainerInitializer extends ClasspathContainerInit
         // First, we create the IClasspathEntry for the framework.
         // now add the android framework to the class path.
         // create the path object.
-        IPath android_lib = new Path(paths[PATH_ANDROID_JAR]);
-        IPath android_src = new Path(paths[PATH_ANDROID_SRC]);
+        IPath android_lib = new Path(paths[CACHE_INDEX_JAR]);
+        IPath android_src = new Path(paths[CACHE_INDEX_SRC]);
 
         // create the java doc link.
         IClasspathAttribute cpAttribute = JavaCore.newClasspathAttribute(
                 IClasspathAttribute.JAVADOC_LOCATION_ATTRIBUTE_NAME,
-                paths[PATH_ANDROID_DOCS]);
+                paths[CACHE_INDEX_DOCS_URI]);
         
         // create the access rule to restrict access to classes in com.android.internal
         IAccessRule accessRule = JavaCore.newAccessRule(
@@ -448,7 +459,7 @@ public class AndroidClasspathContainerInitializer extends ClasspathContainerInit
         
         // now deal with optional libraries
         if (paths.length >= 5) {
-            String docPath = paths[PATH_ANDROID_OPT_DOCS];
+            String docPath = paths[CACHE_INDEX_OPT_DOCS_URI];
             int i = 4;
             while (i < paths.length) {
                 Path jarPath = new Path(paths[i++]);
@@ -533,21 +544,21 @@ public class AndroidClasspathContainerInitializer extends ClasspathContainerInit
             }
             
             // compare the main paths (android.jar, main sources, main javadoc)
-            if (new File(targetPaths[PATH_ANDROID_JAR]).equals(
-                            new File(cachedPaths[PATH_ANDROID_JAR])) == false ||
-                    new File(targetPaths[PATH_ANDROID_SRC]).equals(
-                            new File(cachedPaths[PATH_ANDROID_SRC])) == false ||
-                    new File(targetPaths[PATH_ANDROID_DOCS]).equals(
-                            new File(cachedPaths[PATH_ANDROID_DOCS])) == false) {
+            if (new File(targetPaths[CACHE_INDEX_JAR]).equals(
+                            new File(cachedPaths[CACHE_INDEX_JAR])) == false ||
+                    new File(targetPaths[CACHE_INDEX_SRC]).equals(
+                            new File(cachedPaths[CACHE_INDEX_SRC])) == false ||
+                    new File(targetPaths[CACHE_INDEX_DOCS_URI]).equals(
+                            new File(cachedPaths[CACHE_INDEX_DOCS_URI])) == false) {
                 // different paths, force resolve again.
                 i++;
                 continue;
             }
             
-            if (cachedPaths.length > PATH_ANDROID_OPT_DOCS) {
+            if (cachedPaths.length > CACHE_INDEX_OPT_DOCS_URI) {
                 // compare optional libraries javadoc
-                if (new File(targetPaths[PATH_ANDROID_OPT_DOCS]).equals(
-                        new File(cachedPaths[PATH_ANDROID_OPT_DOCS])) == false) {
+                if (new File(targetPaths[CACHE_INDEX_OPT_DOCS_URI]).equals(
+                        new File(cachedPaths[CACHE_INDEX_OPT_DOCS_URI])) == false) {
                     // different paths, force resolve again.
                     i++;
                     continue;
