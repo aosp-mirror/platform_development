@@ -92,6 +92,11 @@ public class MonkeyKeyEvent extends MonkeyEvent {
     }
 
     @Override
+    public boolean isThrottlable() {
+        return (getAction() == KeyEvent.ACTION_UP);
+    }
+    
+    @Override
     public int injectEvent(IWindowManager iwm, IActivityManager iam, int verbose) {
         if (verbose > 1) {
             String note;

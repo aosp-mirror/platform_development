@@ -51,6 +51,14 @@ public abstract class MonkeyEvent {
     }
     
     /**
+     * @return true if it is safe to throttle after this event, and false otherwise.
+     */
+    public boolean isThrottlable() {
+        return true;
+    }
+    
+    
+    /**
      * a method for injecting event
      * @param iwm wires to current window manager
      * @param iam wires to current activity manager
