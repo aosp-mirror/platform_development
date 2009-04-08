@@ -184,12 +184,17 @@ class TestRunner(object):
     if target_set:
       if self._options.coverage:
         self._coverage_gen.EnableCoverageBuild()
-        self._AddBuildTarget(self._coverage_gen.GetEmmaBuildPath(), target_set)
+        self._AddBuildTargetPath(self._coverage_gen.GetEmmaBuildPath(),
+                                 target_set)
       target_build_string = " ".join(list(target_set))
       extra_args_string = " ".join(list(extra_args_set))
+      # log the user-friendly equivalent make command, so developers can
+      # replicate this step
+      logger.Log("mmm %s %s" % (target_build_string, extra_args_string))
+      # mmm cannot be used from python, so perform a similiar operation using
+      # ONE_SHOT_MAKEFILE
       cmd = 'ONE_SHOT_MAKEFILE="%s" make -C "%s" files %s' % (
           target_build_string, self._root_path, extra_args_string)
-      logger.Log(cmd)
 
       if self._options.preview:
         # in preview mode, just display to the user what command would have been
@@ -202,11 +207,16 @@ class TestRunner(object):
 
   def _AddBuildTarget(self, test_suite, target_set, extra_args_set):
     build_dir = test_suite.GetBuildPath()
+    if self._AddBuildTargetPath(build_dir, target_set):
+      extra_args_set.add(test_suite.GetExtraMakeArgs())
+
+  def _AddBuildTargetPath(self, build_dir, target_set):
     if build_dir is not None:
       build_file_path = os.path.join(build_dir, "Android.mk")
       if os.path.isfile(os.path.join(self._root_path, build_file_path)):
         target_set.add(build_file_path)
-        extra_args_set.add(test_suite.GetExtraMakeArgs())
+        return True
+    return False
 
   def _GetTestsToRun(self):
     """Get a list of TestSuite objects to run, based on command line args."""
