@@ -31,7 +31,7 @@ import java.util.Random;
 /**
  * monkey event queue
  */
-public class MonkeySourceRandom implements MonkeyEventSource{    
+public class MonkeySourceRandom implements MonkeyEventSource {    
     /** Key events that move around the UI. */
     private static final int[] NAV_KEYS = {
         KeyEvent.KEYCODE_DPAD_UP, KeyEvent.KEYCODE_DPAD_DOWN,
@@ -168,7 +168,7 @@ public class MonkeySourceRandom implements MonkeyEventSource{
     private float[] mFactors = new float[FACTORZ_COUNT];
     private ArrayList<ComponentName> mMainApps;
     private int mEventCount = 0;  //total number of events generated so far
-    private LinkedList<MonkeyEvent> mQ = new LinkedList<MonkeyEvent>();
+    private MonkeyEventQueue mQ;
     private Random mRandom;    
     private int mVerbose = 0;
     private long mThrottle = 0;
@@ -203,7 +203,7 @@ public class MonkeySourceRandom implements MonkeyEventSource{
         mRandom = new SecureRandom();
         mRandom.setSeed((seed == 0) ? -1 : seed);
         mMainApps = MainApps;
-        mThrottle = throttle;
+        mQ = new MonkeyEventQueue(throttle);
     }
 
     /**
@@ -336,7 +336,6 @@ public class MonkeySourceRandom implements MonkeyEventSource{
                 downAt, MotionEvent.ACTION_UP, x, y, 0);        
         e.setIntermediateNote(false);        
         mQ.addLast(e);
-        addThrottle();
     }
   
     /**
@@ -387,7 +386,6 @@ public class MonkeySourceRandom implements MonkeyEventSource{
             e.setIntermediateNote(false);        
             mQ.addLast(e);
         }        
-        addThrottle();
     }
     
     /** 
@@ -420,13 +418,11 @@ public class MonkeySourceRandom implements MonkeyEventSource{
             MonkeyActivityEvent e = new MonkeyActivityEvent(mMainApps.get(
                     mRandom.nextInt(mMainApps.size())));
             mQ.addLast(e);
-            addThrottle();
             return;
         } else if (cls < mFactors[FACTOR_FLIP]) {
             MonkeyFlipEvent e = new MonkeyFlipEvent(mKeyboardOpen);
             mKeyboardOpen = !mKeyboardOpen;
             mQ.addLast(e);
-            addThrottle();
             return;
         } else {
             lastKey = 1 + mRandom.nextInt(KeyEvent.getMaxKeyCode() - 1);
@@ -437,8 +433,6 @@ public class MonkeySourceRandom implements MonkeyEventSource{
         
         e = new MonkeyKeyEvent(KeyEvent.ACTION_UP, lastKey);
         mQ.addLast(e);
-        
-        addThrottle();
     }
     
     public boolean validate() {
@@ -471,9 +465,5 @@ public class MonkeySourceRandom implements MonkeyEventSource{
         MonkeyEvent e = mQ.getFirst();        
         mQ.removeFirst();        
         return e;
-    }
-    
-    private void addThrottle() {
-        mQ.addLast(new MonkeyThrottleEvent(MonkeyEvent.EVENT_TYPE_THROTTLE, mThrottle));
     }
 }
