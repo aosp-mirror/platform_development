@@ -35,18 +35,19 @@ import java.util.StringTokenizer;
  *      type= raw events
  *      count= 10
  *      speed= 1.0
+ *      start data >>
  *      captureDispatchPointer(5109520,5109520,0,230.75429,458.1814,0.20784314,
  *          0.06666667,0,0.0,0.0,65539,0)
  *      captureDispatchKey(5113146,5113146,0,20,0,0,0,0)
  *      captureDispatchFlip(true)
  *      ...
  */
-public class MonkeySourceScript implements MonkeyEventSource{    
+public class MonkeySourceScript implements MonkeyEventSource {    
     private int mEventCountInScript = 0;  //total number of events in the file
     private int mVerbose = 0;
     private double mSpeed = 1.0;
     private String mScriptFileName; 
-    private LinkedList<MonkeyEvent> mQ = new LinkedList<MonkeyEvent>();
+    private MonkeyEventQueue mQ;
     
     private static final String HEADER_TYPE = "type=";
     private static final String HEADER_COUNT = "count=";
@@ -80,12 +81,14 @@ public class MonkeySourceScript implements MonkeyEventSource{
     // a line at the end of the header
     private static final String STARTING_DATA_LINE = "start data >>";    
     private boolean mFileOpened = false;    
+    
     FileInputStream mFStream;
     DataInputStream mInputStream;
     BufferedReader mBufferReader;
     
-    public MonkeySourceScript(String filename) {
+    public MonkeySourceScript(String filename, long throttle) {
         mScriptFileName = filename;
+        mQ = new MonkeyEventQueue(throttle);
     }
     
     /**

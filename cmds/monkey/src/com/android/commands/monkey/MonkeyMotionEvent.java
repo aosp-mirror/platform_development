@@ -20,6 +20,7 @@ import android.app.IActivityManager;
 import android.os.RemoteException;
 import android.os.SystemClock;
 import android.view.IWindowManager;
+import android.view.KeyEvent;
 import android.view.MotionEvent;
 
 
@@ -123,6 +124,11 @@ public class MonkeyMotionEvent extends MonkeyEvent {
                 mXPrecision, mYPrecision, mDeviceId, mEdgeFlags);
     }
 
+    @Override
+    public boolean isThrottlable() {
+        return (getAction() == KeyEvent.ACTION_UP);
+    }
+    
     @Override
     public int injectEvent(IWindowManager iwm, IActivityManager iam, int verbose) {
         

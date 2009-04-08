@@ -362,7 +362,7 @@ public class Monkey {
         
         if (mScriptFileName != null) {
             // script mode, ignore other options
-            mEventSource = new MonkeySourceScript(mScriptFileName);
+            mEventSource = new MonkeySourceScript(mScriptFileName, mThrottle);
             mEventSource.setVerbose(mVerbose);
         } else {
             // random source by default
