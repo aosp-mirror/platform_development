@@ -104,6 +104,10 @@ final class PlatformTarget implements IAndroidTarget {
     public String getFullName() {
         return mName;
     }
+    
+    public String getClasspathName() {
+        return mName;
+    }
 
     /*
      * (non-Javadoc)
