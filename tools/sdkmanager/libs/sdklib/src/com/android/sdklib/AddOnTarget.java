@@ -124,6 +124,10 @@ final class AddOnTarget implements IAndroidTarget {
         return String.format("%1$s (%2$s)", mName, mVendor);
     }
     
+    public String getClasspathName() {
+        return String.format("%1$s [%2$s]", mName, mBasePlatform.getName());
+    }
+
     public String getDescription() {
         return mDescription;
     }
