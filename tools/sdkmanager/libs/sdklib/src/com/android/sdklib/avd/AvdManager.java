@@ -742,11 +742,12 @@ public final class AvdManager {
     private void buildAvdList(ArrayList<AvdInfo> list) throws AndroidLocationException {
         
         File[] avds = buildAvdFilesList();
-
-        for (File avd : avds) {
-            AvdInfo info = parseAvdInfo(avd, false /*acceptError*/);
-            if (info != null) {
-                list.add(info);
+        if (avds != null) {
+            for (File avd : avds) {
+                AvdInfo info = parseAvdInfo(avd, false /*acceptError*/);
+                if (info != null) {
+                    list.add(info);
+                }
             }
         }
     }
