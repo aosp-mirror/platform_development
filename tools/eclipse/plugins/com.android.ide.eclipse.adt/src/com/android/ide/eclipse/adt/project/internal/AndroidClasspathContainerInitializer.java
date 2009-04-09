@@ -612,7 +612,7 @@ public class AndroidClasspathContainerInitializer extends ClasspathContainerInit
             // all the optional libraries use the same javadoc, so we start with this
             String targetDocPath = target.getPath(IAndroidTarget.DOCS);
             if (targetDocPath != null) {
-                paths.add(targetDocPath);
+                paths.add(ProjectHelper.getJavaDocPath(targetDocPath));
             } else {
                 // we add an empty string, to always have the same count.
                 paths.add("");
