@@ -279,8 +279,8 @@ class Main {
 
         creator.createProject(projectDir,
                 projectName,
-                activityName,
                 packageName,
+                activityName,
                 target,
                 false /* isTestProject*/);
     }
