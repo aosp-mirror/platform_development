@@ -38,7 +38,7 @@ import java.util.Arrays;
 
 /**
  * A selection dialog to select the type of the new element node to
- * created, either in the application node or the selected sub node.
+ * create, either in the application node or the selected sub node.
  */
 public class NewItemSelectionDialog extends AbstractElementListSelectionDialog {
 

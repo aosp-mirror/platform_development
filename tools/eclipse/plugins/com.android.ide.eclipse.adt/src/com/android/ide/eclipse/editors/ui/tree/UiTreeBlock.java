@@ -83,7 +83,8 @@ import java.util.LinkedList;
  * On the left is a details part that displays all the visible UI attributes for a given
  * selected UI element node.
  */
-public final class UiTreeBlock extends MasterDetailsBlock implements ICommitXml {
+public final class UiTreeBlock extends MasterDetailsBlock
+    implements ICommitXml, UiRootNodeProvider {
 
     /** Height hint for the tree view. Helps the grid layout resize properly on smaller screens. */
     private static final int TREE_HEIGHT_HINT = 50;
@@ -181,6 +182,17 @@ public final class UiTreeBlock extends MasterDetailsBlock implements ICommitXml 
         return mMasterPart;
     }
 
+    /**
+     * Returns the {@link UiElementNode} for the current model.
+     * <p/>
+     * This is used by the content provider attached to {@link #mTreeViewer} since
+     * the uiRootNode changes after each call to
+     * {@link #changeRootAndDescriptors(UiElementNode, ElementDescriptor[], boolean)}. 
+     */
+    public UiElementNode getRootNode() {
+        return mUiRootNode;
+    }
+
     @Override
     protected void createMasterPart(final IManagedForm managedForm, Composite parent) {
         FormToolkit toolkit = managedForm.getToolkit();
@@ -239,8 +251,7 @@ public final class UiTreeBlock extends MasterDetailsBlock implements ICommitXml 
         tree.setLayoutData(gd);
 
         mTreeViewer = new TreeViewer(tree);
-        mTreeViewer.setContentProvider(new UiModelTreeContentProvider(
-                mUiRootNode, mDescriptorFilters));
+        mTreeViewer.setContentProvider(new UiModelTreeContentProvider(this, mDescriptorFilters));
         mTreeViewer.setLabelProvider(new UiModelTreeLabelProvider());
         mTreeViewer.setInput("unused"); //$NON-NLS-1$
 
