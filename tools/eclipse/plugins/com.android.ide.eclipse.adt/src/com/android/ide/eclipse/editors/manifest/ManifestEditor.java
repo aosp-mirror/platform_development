@@ -159,9 +159,9 @@ public final class ManifestEditor extends AndroidEditor {
     protected void xmlModelChanged(Document xml_doc) {
         // create the ui root node on demand.
         initUiRootNode(false /*force*/);
-        
+
         loadFromXml(xml_doc);
-        
+
         super.xmlModelChanged(xml_doc);
     }
     
@@ -184,7 +184,7 @@ public final class ManifestEditor extends AndroidEditor {
             }
         }
     }
-    
+
     private void onDescriptorsChanged(UiElementNode oldManifestNode) {
         mUiManifestNode.reloadFromXmlNode(oldManifestNode.getXmlNode());
 
@@ -321,7 +321,6 @@ public final class ManifestEditor extends AndroidEditor {
         if (mUiManifestNode != null && force == false) {
             return;
         }
-
         
         AndroidManifestDescriptors manifestDescriptor = getManifestDescriptors();
         
