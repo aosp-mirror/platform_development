@@ -226,8 +226,7 @@ Native tests:
     build_path="packages/apps/Music"
     package="com.android.music.tests"
     runner=".MusicPlayerFunctionalTestRunner"
-    coverage_target="Music"
-    continuous="true" />
+    coverage_target="Music" />
 
 <!-- obsolete?
 <test name="mediaprov"
