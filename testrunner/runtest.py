@@ -299,8 +299,8 @@ class TestRunner(object):
     for f in file_list:
       full_path = "/system/bin/%s" % f
 
-      # Run
-      status = self._adb.SendShellCommand("%s >/dev/null 2>&1;echo -n $?" %
+      # Single quotes are needed to prevent the shell splitting it.
+      status = self._adb.SendShellCommand("'%s >/dev/null 2>&1;echo -n $?'" %
                                           full_path)
       logger.Log("%s... %s" % (f, status == "0" and "ok" or "failed"))
 
