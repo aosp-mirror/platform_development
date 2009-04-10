@@ -68,6 +68,7 @@ development/samples/ApiDemos platforms/${PLATFORM_NAME}/samples/ApiDemos
 development/samples/SkeletonApp platforms/${PLATFORM_NAME}/samples/SkeletonApp
 development/samples/Snake platforms/${PLATFORM_NAME}/samples/Snake
 development/samples/SoftKeyboard platforms/${PLATFORM_NAME}/samples/SoftKeyboard
+development/samples/JetBoy platforms/${PLATFORM_NAME}/samples/JetBoy
 
 # dx
 bin/dx platforms/${PLATFORM_NAME}/tools/dx
