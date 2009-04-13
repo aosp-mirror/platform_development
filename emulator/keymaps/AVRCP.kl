@@ -1,7 +1,6 @@
-key 164   PLAYPAUSE         WAKE
-key 128   STOP              WAKE
-key 163   NEXTSONG          WAKE
-key 165   PREVIOUSSONG      WAKE
-key 168   REWIND            WAKE
-key 159   FORWARD           WAKE
-
+key 164   MEDIA_PLAY_PAUSE    WAKE
+key 128   MEDIA_STOP          WAKE
+key 163   MEDIA_NEXT          WAKE
+key 165   MEDIA_PREVIOUS      WAKE
+key 168   MEDIA_REWIND        WAKE
+key 159   MEDIA_FAST_FORWARD  WAKE
