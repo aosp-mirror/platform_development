@@ -1,3 +1,8 @@
+V 0.9 MWR Apr 6, 2009
+#####################
+
+* New files for new css files using droiddoc/clearsilver
+
 V 0.3 - June 9, 2008
 ####################
 

@@ -1,4 +1,5 @@
 page.title=Bring Up
+pdk.version=1.0
 @jd:body
 
 <p>Once your code is built and you have verified that all necessary directories exist, power on and test your device with basic bring up, as described below. Bring up tests are typically designed to stress certain aspects of your system and allow you to characterize the device's behavior. </p>
@@ -6,7 +7,6 @@ page.title=Bring Up
 <h3>1. Confirm a Clean Installation of a Basic Linux Kernel </h3>
 <p>Before considering Android-specific modifications to the Linux kernel, verify that you can build, deploy, and boot a core Linux kernel on your target hardware. </p>
 <p>&nbsp;</p>
-
 <h3>2. Modify Your Kernel Configuration to Accommodate Android Drivers</h3>
 <p>Your kernel configuration file should include the following:</p>
 <pre class="prettyprint">
@@ -356,5 +356,3 @@ service akmd /sbin/akmd
   user akmd
   group akmd
 </pre>
-
-

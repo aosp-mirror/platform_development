@@ -1,5 +1,9 @@
 page.title=Power Management
+pdk.version=1.0
 @jd:body
+
+
+
 
 <a name="toc"/>
 <div style="padding:10px">
@@ -9,7 +13,7 @@ page.title=Power Management
 <a href="#androidPowerWakeLocksDefinitions">Types of Wake Locks</a><br/>
 <a href="#androidPowerWakeLockExample">Exploring a Wake Lock Example</a><br/></div>
 <a href="#androidPowerPowerManagerClass">PowerManager class</a><br/>
-<a href="#androidPowerKernelRegistration">Registering Drivers with the PM Driver</a><br/></div>
+<a href="#androidPowerKernelRegistration">Registering Drivers with the PM Driver</a><br/></div></font></div>
 
 <a name="androidPowerIntro"></a><h2>Introduction</h2>
 
@@ -18,7 +22,7 @@ page.title=Power Management
 <p>The image below illustrates the Android power management architecture. </p>
 <p><img src='androidPMArchitecture.gif'></p>
 
-<p>Solid elements represent Android blocks and dashed elements represent partner-specific blocks.</p>
+Solid elements represent Android blocks and dashed elements represent partner-specific blocks.
 
 
 
@@ -103,6 +107,3 @@ android_register_early_suspend(android_early_suspend_t *handler)
 android_register_early_resume(android_early_resume_t *handler)
 </pre>
 <p>It is critical in a drive to return immediately and not wait for anything to happen in the call back.</p>
-
-
-

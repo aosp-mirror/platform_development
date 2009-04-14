@@ -3,7 +3,6 @@ pdk.version=1.0
 @jd:body
 
 <p>While Android is designed to support a wide variety of hardware platforms and configurations, this section provides recommended minimum device requirements.</p>
-
 <table border=1 cellpadding=2 cellspacing=0>
     <tbody><tr>
       <th scope="col">Feature</th>
@@ -58,6 +57,3 @@ pdk.version=1.0
   <li>WiFi</li>
   <li>GPS</li>
 </ul>
-
-
-
