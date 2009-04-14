@@ -1,11 +1,12 @@
 page.title=Wi-Fi
+pdk.version=1.0
 @jd:body
 
 <a name="toc"/>
 <div style="padding:10px">
 <a href="#androidWifiIntroduction">Introduction</a><br/>
 <a href="#androidWifiBuildingDriver">Building a Wi-Fi Library</a><br/>
-<a href="#androidWifiInterface">Interface</a><br/></div>
+<a href="#androidWifiInterface">Interface</a><br/></div></font></div>
 
 <a name="androidWifiIntroduction"></a><h2>Introduction</h2>
 
@@ -28,7 +29,7 @@ page.title=Wi-Fi
 <pre class="prettify">
 LOCAL_SHARED_LIBRARIES += libnetutils
 
-ifeq ($(TARGET_DEVICE),acme)
+ifeq ($(TARGET_PRODUCT),acme)
 LOCAL_SRC_FILES += wifi/wifi_mywifi.c
 else
 LOCAL_SRC_FILES += wifi/wifi.c
@@ -44,6 +45,3 @@ endif
 
 
 <iframe onLoad="resizeDoxFrameHeight();" src="wifi_8h.html" scrolling="no" scroll="no" id="doxygen" marginwidth="0" marginheight="0" frameborder="0" style="width:100%;"></iframe>
-
-
-

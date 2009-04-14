@@ -1,12 +1,15 @@
 page.title=Display Drivers
+pdk.version=1.0
 @jd:body
+
+
 
 <a name="toc"/>
 <div style="padding:10px">
 <a href="#androidDisplayDriverIntroduction">Introduction</a><br/>
 <a href="#androidDisplayDriverFunctionality">Functionality</a><br/>
 <a href="#androidDisplayDriversSourceTemplate">Implementing Your Own Driver (Driver Template)</a><br/>
-<a href="#androidDisplayDriversTroubleshooting">Troubleshooting</a><br/></div></font>
+<a href="#androidDisplayDriversTroubleshooting">Troubleshooting</a><br/></div></font></div>
 
 <a name="androidDisplayDriverIntroduction"></a><h2>Introduction</h2>
 
@@ -335,6 +338,4 @@ MODULE_LICENSE("GPL");
   <li><strong>Arrow keys</strong>: When an arrow key is pressed, the desired icon doesn't get highlighted. For example, if you browse through icons in the Applications menu, you might notice that icons aren't highlighted as expected when you use the arrow key to navigate between options.</li>
 </ul>
 <p>Both problems are caused by an incorrect implementation of the frame buffer's page flipping. Key events are captured, but the graphical interface appears to drop every other frame. </p>
-<p>Android relies on a double buffer to smoothly render page flips (please see <a href="androidDisplayDriverFunctionality">Functionality</a> for details).
-
-
+<p>Android relies on a double buffer to smoothly render page flips (please see <a href="androidDisplayDriverFunctionality">Functionality</a> for details).</p>

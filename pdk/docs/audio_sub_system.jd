@@ -53,4 +53,4 @@ include $(BUILD_SHARED_LIBRARY)
 <p class="note"><strong>Note</strong>: This document relies on some Doxygen-generated content that appears in an iFrame below. To return to the Doxygen default content for this page, <a href="audio_sub_system.html">click here</a>.</p>
 
 
-<iframe onLoad="resizeHeight();" src="_audio_hardware_interface_8h.html" scrolling="no" scroll="no" id="doxygen" marginwidth="0" marginheight="0" frameborder="0" style="width:100%;"></iframe>
+<iframe onLoad="resizeDoxFrameHeight();" src="_audio_hardware_interface_8h.html" scrolling="no" scroll="no" id="doxygen" marginwidth="0" marginheight="0" frameborder="0" style="width:100%;"></iframe>
