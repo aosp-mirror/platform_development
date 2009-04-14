@@ -1,5 +1,7 @@
 page.title=Keymaps and Keyboard Input
+pdk.version=1.0
 @jd:body
+
 
 <a name="toc"/>
 <div style="padding:10px">
@@ -17,7 +19,7 @@ page.title=Keymaps and Keyboard Input
 <a href="#androidKeymapKeyCharMapExample">Example of a Key Character Map File</a><br/>
 <a href="#androidKeymapKeyCharMapResourceBinaryFileFormat">Resource Binary File Format</a><br/></div>
 <a href="#androidKeymapDriverTemplate">Implementing Your Own Driver (Driver Template)</a><br/>
-<a href="#androidKeymapKeyCharMapSampleImplementation">Sample Implementation</a><br/></div>
+<a href="#androidKeymapKeyCharMapSampleImplementation">Sample Implementation</a><br/></div></font></div>
 
 <a name="androidKeymapIntro"></a><h2>Introduction</h2>
 
@@ -505,5 +507,3 @@ I/KeyInputQueue( 1548): Device added: id=0x10000, name=partnerxx_keypad, classes
 I/KeyInputQueue( 1548):   Keymap: partnerxx_keypad.kl
 </pre>
 <p>The snippet above contains artificial line breaks to maintain a print-friendly document.</p>
-
-

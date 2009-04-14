@@ -1,25 +1,15 @@
 page.title=Bluetooth
+pdk.version=1.0
 @jd:body
 
-<div id="qv-wrapper">
-<div id="qv">
 <a name="toc"/>
+<div style="padding:10px">
+<a href="#androidBluetoothIntro">Introduction</a><br/>
+<a href="#androidBluetoothPorting">Porting</a><br/><div style="padding-left:40px">
 
-<h2>In this document</h2>
-
-<ol>
-<li><a href="#androidBluetoothIntro">Introduction</a></li>
-<li><a href="#androidBluetoothPorting">Porting</a>
-	<ol>
-		<li><a href="#androidBluetoothPortingDriver">UART Driver</a></li>
-		<li><a href="#androidBluetoothPortingPowerOnOff">Bluetooth Power On / Off</a></li>
-	</ol>
-</li>
-<li><a href="#androidBluetoothTools">Tools</a></li>
-</ol>
-
-</div>
-</div>
+<a href="#androidBluetoothPortingDriver">UART Driver</a><br/>
+<a href="#androidBluetoothPortingPowerOnOff">Bluetooth Power On / Off</a><br/></div>
+<a href="#androidBluetoothTools">Tools</a><br/></div></font></div>
 
 <a name="androidBluetoothIntro"></a><h2>Introduction</h2>
 
@@ -77,6 +67,3 @@ Solid elements represent Android blocks and dashed elements represent partner-sp
 <li><code>dbus-monitor</code></li>
 </ul>
 </p>
-
-
-
