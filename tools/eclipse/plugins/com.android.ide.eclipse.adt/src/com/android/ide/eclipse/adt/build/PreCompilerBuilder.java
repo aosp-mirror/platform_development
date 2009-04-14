@@ -72,8 +72,10 @@ public class PreCompilerBuilder extends BaseBuilder {
     /**
      * Single line aidl error<br>
      * "&lt;path&gt;:&lt;line&gt;: &lt;error&gt;"
+     * or
+     * "&lt;path&gt;:&lt;line&gt; &lt;error&gt;"
      */
-    private static Pattern sAidlPattern1 = Pattern.compile("^(.+?):(\\d+):\\s(.+)$"); //$NON-NLS-1$
+    private static Pattern sAidlPattern1 = Pattern.compile("^(.+?):(\\d+):?\\s(.+)$"); //$NON-NLS-1$
 
     /**
      * Data to temporarly store aidl source file information
