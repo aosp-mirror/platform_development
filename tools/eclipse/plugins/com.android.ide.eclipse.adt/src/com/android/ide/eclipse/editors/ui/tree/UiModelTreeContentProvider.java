@@ -33,12 +33,12 @@ class UiModelTreeContentProvider implements ITreeContentProvider {
     /** The descriptor of the elements to be displayed as root in this tree view. All elements
      *  of the same type in the root will be displayed. */
     private ElementDescriptor[] mDescriptorFilters;
-    /** Object which provides the uiRootNode */
-    private final UiRootNodeProvider mUiRootNodeProvider;
+    /** The uiRootNode of the model. */
+    private final UiElementNode mUiRootNode;
 
-    public UiModelTreeContentProvider(UiRootNodeProvider rootNodeProvider,
+    public UiModelTreeContentProvider(UiElementNode uiRootNode,
             ElementDescriptor[] descriptorFilters) {
-        mUiRootNodeProvider = rootNodeProvider;
+        mUiRootNode = uiRootNode;
         mDescriptorFilters = descriptorFilters;
     }
     
@@ -86,9 +86,8 @@ class UiModelTreeContentProvider implements ITreeContentProvider {
      */
     public Object[] getElements(Object inputElement) {
         ArrayList<UiElementNode> roots = new ArrayList<UiElementNode>();
-        UiElementNode uiRootNode = mUiRootNodeProvider.getRootNode();
-        if (uiRootNode != null) {
-            for (UiElementNode ui_node : uiRootNode.getUiChildren()) {
+        if (mUiRootNode != null) {
+            for (UiElementNode ui_node : mUiRootNode.getUiChildren()) {
                 if (mDescriptorFilters == null || mDescriptorFilters.length == 0) {
                     roots.add(ui_node);
                 } else {
