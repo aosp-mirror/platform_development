@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.editors.manifest.model;
 
+import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.common.AndroidConstants;
 import com.android.ide.eclipse.common.project.AndroidManifestParser;
 import com.android.ide.eclipse.common.project.BaseProjectHelper;
@@ -31,6 +32,7 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
@@ -63,6 +65,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IFileEditorInput;
@@ -90,20 +93,28 @@ public class UiClassAttributeNode extends UiTextAttributeNode {
     private String mReferenceClass;
     private IPostTypeCreationAction mPostCreationAction;
     private boolean mMandatory;
+    private final boolean mDefaultToProjectOnly;
     
     private class HierarchyTypeSelection extends TypeSelectionExtension {
         
         private IJavaProject mJavaProject;
+        private IType mReferenceType;
+        private Button mProjectOnly;
+        private boolean mUseProjectOnly;
 
-        public HierarchyTypeSelection(IProject project, String referenceClass) {
+        public HierarchyTypeSelection(IProject project, String referenceClass)
+                throws JavaModelException {
             mJavaProject = JavaCore.create(project);
-            mReferenceClass = referenceClass;
+            mReferenceType = mJavaProject.findType(referenceClass);
         }
 
         @Override
         public ITypeInfoFilterExtension getFilterExtension() {
             return new ITypeInfoFilterExtension() {
                 public boolean select(ITypeInfoRequestor typeInfoRequestor) {
+                    
+                    boolean projectOnly = mUseProjectOnly;
+                    
                     String packageName = typeInfoRequestor.getPackageName();
                     String typeName = typeInfoRequestor.getTypeName();
                     String enclosingType = typeInfoRequestor.getEnclosingName();
@@ -121,19 +132,35 @@ public class UiClassAttributeNode extends UiTextAttributeNode {
                     
                     try {
                         IType type = mJavaProject.findType(className);
-                        if (type != null) {
-                            // get the type hierarchy
-                            ITypeHierarchy hierarchy = type.newSupertypeHierarchy(
-                                    new NullProgressMonitor());
-                            
-                            // if the super class is not the reference class, it may inherit from
-                            // it so we get its supertype. At some point it will be null and we
-                            // will return false;
-                            IType superType = type;
-                            while ((superType = hierarchy.getSuperclass(superType)) != null) {
-                                if (mReferenceClass.equals(superType.getFullyQualifiedName())) {
-                                    return true;
-                                }
+
+                        if (type == null) {
+                            return false;
+                        }
+
+                        // don't display abstract classes
+                        if ((type.getFlags() & Flags.AccAbstract) != 0) {
+                            return false;
+                        }
+
+                        // if project-only is selected, make sure the package fragment is
+                        // an actual source (thus "from this project").
+                        if (projectOnly) {
+                            IPackageFragment frag = type.getPackageFragment();
+                            if (frag == null || frag.getKind() != IPackageFragmentRoot.K_SOURCE) {
+                                return false;
+                            }
+                        }
+                        
+                        // get the type hierarchy and reference type is one of the super classes.
+                        ITypeHierarchy hierarchy = type.newSupertypeHierarchy(
+                                new NullProgressMonitor());
+                        
+                        IType[] supertypes = hierarchy.getAllSupertypes(type);
+                        int n = supertypes.length;
+                        for (int i = 0; i < n; i++) {
+                            IType st = supertypes[i];
+                            if (mReferenceType.equals(st)) {
+                                return true;
                             }
                         }
                     } catch (JavaModelException e) {
@@ -142,6 +169,29 @@ public class UiClassAttributeNode extends UiTextAttributeNode {
                     return false;
                 }
             };
+        }
+        
+        @Override
+        public Control createContentArea(Composite parent) {
+
+            mProjectOnly = new Button(parent, SWT.CHECK);
+            mProjectOnly.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+            mProjectOnly.setText(String.format("Display classes from sources of project '%s' only",
+                    mJavaProject.getProject().getName()));
+            
+            mUseProjectOnly = mDefaultToProjectOnly;
+            mProjectOnly.setSelection(mUseProjectOnly);
+            
+            mProjectOnly.addSelectionListener(new SelectionAdapter() {
+                @Override
+                public void widgetSelected(SelectionEvent e) {
+                    super.widgetSelected(e);
+                    mUseProjectOnly = mProjectOnly.getSelection();
+                    getTypeSelectionComponent().triggerSearch();
+                }
+            });
+            
+            return super.createContentArea(parent);
         }
     }
 
@@ -165,14 +215,18 @@ public class UiClassAttributeNode extends UiTextAttributeNode {
      * modification of the class.
      * @param mandatory indicates if the class value is mandatory
      * @param attributeDescriptor the {@link AttributeDescriptor} object linked to the Ui Node.
+     * @param defaultToProjectOnly When true display classes of this project only by default.
+     *         When false any class path will be considered. The user can always toggle this. 
      */
     public UiClassAttributeNode(String referenceClass, IPostTypeCreationAction postCreationAction,
-            boolean mandatory, AttributeDescriptor attributeDescriptor, UiElementNode uiParent) {
+            boolean mandatory, AttributeDescriptor attributeDescriptor, UiElementNode uiParent,
+            boolean defaultToProjectOnly) {
         super(attributeDescriptor, uiParent);
         
         mReferenceClass = referenceClass;
         mPostCreationAction = postCreationAction;
         mMandatory = mandatory;
+        mDefaultToProjectOnly = defaultToProjectOnly;
     }
 
     /* (non-java doc)
@@ -292,8 +346,11 @@ public class UiClassAttributeNode extends UiTextAttributeNode {
             
             // Create a search scope including only the source folder of the current
             // project.
+            IPackageFragmentRoot[] packageFragmentRoots = getPackageFragmentRoots(project,
+                    true /*include_containers*/);
             IJavaSearchScope scope = SearchEngine.createJavaSearchScope(
-                    getPackageFragmentRoots(project), false);
+                    packageFragmentRoots,
+                    false);
 
             try {
                 SelectionDialog dlg = JavaUI.createTypeDialog(text.getShell(),
@@ -301,7 +358,7 @@ public class UiClassAttributeNode extends UiTextAttributeNode {
                     scope,
                     IJavaElementSearchConstants.CONSIDER_CLASSES,  // style
                     false, // no multiple selection
-                    "**", //$NON-NLS-1$ //filter
+                    "**",  //$NON-NLS-1$ //filter
                     new HierarchyTypeSelection(project, mReferenceClass));
                 dlg.setMessage(String.format("Select class name for element %1$s:",
                         getUiParent().getBreadcrumbTrailDescription(false /* include_root */)));
@@ -316,6 +373,7 @@ public class UiClassAttributeNode extends UiTextAttributeNode {
                     }
                 }
             } catch (JavaModelException e1) {
+                AdtPlugin.log(e1, "UiClassAttributeNode HandleBrowser failed");
             }
         }
     }
@@ -363,7 +421,9 @@ public class UiClassAttributeNode extends UiTextAttributeNode {
                     }
                 }
             } catch (JavaModelException e) {
+                AdtPlugin.log(e, "UiClassAttributeNode HandleLabel failed");
             } catch (PartInitException e) {
+                AdtPlugin.log(e, "UiClassAttributeNode HandleLabel failed");
             }
         }
     }
@@ -403,16 +463,20 @@ public class UiClassAttributeNode extends UiTextAttributeNode {
      * Computes and return the {@link IPackageFragmentRoot}s corresponding to the source folders of
      * the specified project.
      * @param project the project
+     * @param b 
      * @return an array of IPackageFragmentRoot.
      */
-    private IPackageFragmentRoot[] getPackageFragmentRoots(IProject project) {
+    private IPackageFragmentRoot[] getPackageFragmentRoots(IProject project,
+            boolean include_containers) {
         ArrayList<IPackageFragmentRoot> result = new ArrayList<IPackageFragmentRoot>();
         try {
             IJavaProject javaProject = JavaCore.create(project);
             IPackageFragmentRoot[] roots = javaProject.getPackageFragmentRoots();
             for (int i = 0; i < roots.length; i++) {
                 IClasspathEntry entry = roots[i].getRawClasspathEntry();
-                if (entry.getEntryKind() == IClasspathEntry.CPE_SOURCE) {
+                if (entry.getEntryKind() == IClasspathEntry.CPE_SOURCE ||
+                        (include_containers &&
+                                entry.getEntryKind() == IClasspathEntry.CPE_CONTAINER)) {
                     result.add(roots[i]);
                 }
             }
@@ -457,7 +521,8 @@ public class UiClassAttributeNode extends UiTextAttributeNode {
         page.setSuperClass(mReferenceClass, true /* canBeModified */);
         
         // get the source folders as java elements.
-        IPackageFragmentRoot[] roots = getPackageFragmentRoots(getProject());
+        IPackageFragmentRoot[] roots = getPackageFragmentRoots(getProject(),
+                true /*include_containers*/);
 
         IPackageFragmentRoot currentRoot = null;
         IPackageFragment currentFragment = null;

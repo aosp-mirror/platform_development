@@ -205,6 +205,7 @@ public final class AndroidManifestDescriptors implements IDescriptorProvider {
         overrideClassName(overrides, "receiver", AndroidConstants.CLASS_BROADCASTRECEIVER);  //$NON-NLS-1$
         overrideClassName(overrides, "service", AndroidConstants.CLASS_SERVICE);             //$NON-NLS-1$
         overrideClassName(overrides, "provider", AndroidConstants.CLASS_CONTENTPROVIDER);    //$NON-NLS-1$
+        overrideClassName(overrides, "instrumentation", AndroidConstants.CLASS_INSTRUMENTATION);    //$NON-NLS-1$
 
         // -- list element nodes already created --
         // These elements are referenced by already opened editors, so we want to update them
@@ -244,27 +245,42 @@ public final class AndroidManifestDescriptors implements IDescriptorProvider {
                 new DescriptorsUtils.ITextAttributeCreator() {
             public TextAttributeDescriptor create(String xmlName, String uiName, String nsUri,
                     String tooltip) {
+                uiName += "*";  //$NON-NLS-1$
                 if (AndroidConstants.CLASS_ACTIVITY.equals(className)) {
                     return new ClassAttributeDescriptor(
                             className,
                             PostActivityCreationAction.getAction(),
-                            xmlName, uiName + "*", //$NON-NLS-1$
+                            xmlName,
+                            uiName,
                             nsUri,
                             tooltip,
-                            true /*mandatory */);
+                            true /*mandatory */,
+                            true /*defaultToProjectOnly*/);
                 } else if (AndroidConstants.CLASS_BROADCASTRECEIVER.equals(className)) {
                     return new ClassAttributeDescriptor(
                             className,
                             PostReceiverCreationAction.getAction(),
-                            xmlName, uiName + "*", //$NON-NLS-1$
+                            xmlName,
+                            uiName,
                             nsUri,
                             tooltip,
-                            true /*mandatory */);
-                    
+                            true /*mandatory */,
+                            true /*defaultToProjectOnly*/);
+                } else if (AndroidConstants.CLASS_INSTRUMENTATION.equals(className)) {
+                    return new ClassAttributeDescriptor(
+                            className,
+                            null, // no post action
+                            xmlName,
+                            uiName,
+                            nsUri,
+                            tooltip,
+                            true /*mandatory */,
+                            false /*defaultToProjectOnly*/);
                 } else {
                     return new ClassAttributeDescriptor(
                             className,
-                            xmlName, uiName + "*", //$NON-NLS-1$
+                            xmlName,
+                            uiName,
                             nsUri,
                             tooltip,
                             true /*mandatory */);
