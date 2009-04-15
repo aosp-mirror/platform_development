@@ -39,6 +39,7 @@ public class ApplicationAttributeDescriptor extends TextAttributeDescriptor {
     @Override
     public UiAttributeNode createUiNode(UiElementNode uiParent) {
         return new UiClassAttributeNode("android.app.Application", //$NON-NLS-1$
-                null /* postCreationAction */, false /* mandatory */, this, uiParent);
+                null /* postCreationAction */, false /* mandatory */, this, uiParent,
+                true /*defaultToProjectOnly*/);
     }
 }
