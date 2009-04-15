@@ -30,16 +30,15 @@ import java.util.ArrayList;
  */
 class UiModelTreeContentProvider implements ITreeContentProvider {
     
-    /** The root {@link UiElementNode} which contains all the elements that are to be 
-     *  manipulated by this tree view. In general this is the manifest UI node. */
-    private UiElementNode mUiRootNode;
     /** The descriptor of the elements to be displayed as root in this tree view. All elements
      *  of the same type in the root will be displayed. */
     private ElementDescriptor[] mDescriptorFilters;
+    /** Object which provides the uiRootNode */
+    private final UiRootNodeProvider mUiRootNodeProvider;
 
-    public UiModelTreeContentProvider(UiElementNode uiRootNode,
+    public UiModelTreeContentProvider(UiRootNodeProvider rootNodeProvider,
             ElementDescriptor[] descriptorFilters) {
-        mUiRootNode = uiRootNode;
+        mUiRootNodeProvider = rootNodeProvider;
         mDescriptorFilters = descriptorFilters;
     }
     
@@ -87,8 +86,9 @@ class UiModelTreeContentProvider implements ITreeContentProvider {
      */
     public Object[] getElements(Object inputElement) {
         ArrayList<UiElementNode> roots = new ArrayList<UiElementNode>();
-        if (mUiRootNode != null) {
-            for (UiElementNode ui_node : mUiRootNode.getUiChildren()) {
+        UiElementNode uiRootNode = mUiRootNodeProvider.getRootNode();
+        if (uiRootNode != null) {
+            for (UiElementNode ui_node : uiRootNode.getUiChildren()) {
                 if (mDescriptorFilters == null || mDescriptorFilters.length == 0) {
                     roots.add(ui_node);
                 } else {

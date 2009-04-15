@@ -18,6 +18,7 @@ package com.android.ide.eclipse.adt.launch.junit;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.common.AndroidConstants;
 import com.android.ide.eclipse.common.project.AndroidManifestParser;
+import com.android.ide.eclipse.common.project.AndroidManifestParser.Instrumentation;
 import com.android.ide.eclipse.common.project.BaseProjectHelper;
 
 import org.eclipse.core.resources.IProject;
@@ -29,7 +30,7 @@ import org.eclipse.jdt.core.IJavaProject;
  */
 class InstrumentationRunnerValidator {
     private final IJavaProject mJavaProject;
-    private String[] mInstrumentations = null;
+    private String[] mInstrumentationNames = null;
     private boolean mHasRunnerLibrary = false;
     
     static final String INSTRUMENTATION_OK = null;
@@ -73,7 +74,11 @@ class InstrumentationRunnerValidator {
     }
     
     private void init(AndroidManifestParser manifestParser) {
-        mInstrumentations = manifestParser.getInstrumentations();
+        Instrumentation[] instrumentations = manifestParser.getInstrumentations();
+        mInstrumentationNames = new String[instrumentations.length];
+        for (int i = 0; i < instrumentations.length; i++) {
+            mInstrumentationNames[i] = instrumentations[i].getName();
+        }
         mHasRunnerLibrary = hasTestRunnerLibrary(manifestParser);
     }
     
@@ -94,13 +99,13 @@ class InstrumentationRunnerValidator {
     }
 
     /**
-     * Return the set of instrumentations for the Android project.
+     * Return the set of instrumentation names for the Android project.
      * 
      * @return <code>null</code if error occurred parsing instrumentations, otherwise returns array
      * of instrumentation class names
      */
-    String[] getInstrumentations() {
-        return mInstrumentations;
+    String[] getInstrumentationNames() {
+        return mInstrumentationNames;
     }
 
     /**
@@ -110,7 +115,7 @@ class InstrumentationRunnerValidator {
      * instrumentation can be found.
      */
     String getValidInstrumentationTestRunner() {
-        for (String instrumentation : getInstrumentations()) {
+        for (String instrumentation : getInstrumentationNames()) {
             if (validateInstrumentationRunner(instrumentation) == INSTRUMENTATION_OK) {
                 return instrumentation;
             }
@@ -122,7 +127,7 @@ class InstrumentationRunnerValidator {
      * Helper method to determine if specified instrumentation can be used as a test runner
      * 
      * @param instrumentation the instrumentation class name to validate. Assumes this
-     *   instrumentation is one of {@link #getInstrumentations()}
+     *   instrumentation is one of {@link #getInstrumentationNames()}
      * @return <code>INSTRUMENTATION_OK</code> if valid, otherwise returns error message
      */
     String validateInstrumentationRunner(String instrumentation) {

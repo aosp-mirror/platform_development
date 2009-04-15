@@ -32,6 +32,7 @@ import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.launch.AndroidLaunchConfiguration.TargetMode;
 import com.android.ide.eclipse.adt.launch.DelayedLaunchInfo.InstallRetryMode;
 import com.android.ide.eclipse.adt.launch.DeviceChooserDialog.DeviceChooserResponse;
+import com.android.ide.eclipse.adt.project.ApkInstallManager;
 import com.android.ide.eclipse.adt.project.ProjectHelper;
 import com.android.ide.eclipse.adt.sdk.Sdk;
 import com.android.ide.eclipse.common.project.AndroidManifestParser;
@@ -313,6 +314,8 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
      *      defined by <code>ILaunchManager</code> - <code>RUN_MODE</code> or
      *      <code>DEBUG_MODE</code>.
      * @param apk the resource to the apk to launch.
+     * @param packageName the Android package name of the app
+     * @param debugPackageName the Android package name to debug
      * @param debuggable the debuggable value of the app, or null if not set.
      * @param requiredApiVersionNumber the api version required by the app, or
      * {@link AndroidManifestParser#INVALID_MIN_SDK} if none.
@@ -321,7 +324,7 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
      * @param launch the launch object
      */
     public void launch(final IProject project, String mode, IFile apk,
-            String packageName, Boolean debuggable, int requiredApiVersionNumber, 
+            String packageName, String debugPackageName, Boolean debuggable, int requiredApiVersionNumber, 
             final IAndroidLaunchAction launchAction, final AndroidLaunchConfiguration config, 
             final AndroidLaunch launch, IProgressMonitor monitor) {
         
@@ -330,7 +333,8 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
 
         // create the launch info
         final DelayedLaunchInfo launchInfo = new DelayedLaunchInfo(project, packageName,
-                launchAction, apk, debuggable, requiredApiVersionNumber, launch, monitor);
+                debugPackageName, launchAction, apk, debuggable, requiredApiVersionNumber, launch,
+                monitor);
 
         // set the debug mode
         launchInfo.setDebugMode(mode.equals(ILaunchManager.DEBUG_MODE));
@@ -762,13 +766,46 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
 
 
     /**
-     * Syncs the application on the device/emulator.
+     * If needed, syncs the application and all its dependencies on the device/emulator.
      *
      * @param launchInfo The Launch information object.
      * @param device the device on which to sync the application
      * @return true if the install succeeded.
      */
     private boolean syncApp(DelayedLaunchInfo launchInfo, IDevice device) {
+        boolean alreadyInstalled = ApkInstallManager.getInstance().isApplicationInstalled(
+                launchInfo.getProject(), device);
+        
+        if (alreadyInstalled) {
+            AdtPlugin.printToConsole(launchInfo.getProject(),
+            "Application already deployed. No need to reinstall.");
+        } else {
+            if (doSyncApp(launchInfo, device) == false) {
+                return false;
+            }
+        }
+
+        // The app is now installed, now try the dependent projects
+        for (DelayedLaunchInfo dependentLaunchInfo : getDependenciesLaunchInfo(launchInfo)) {
+            String msg = String.format("Project dependency found, installing: %s",
+                    dependentLaunchInfo.getProject().getName());
+            AdtPlugin.printToConsole(launchInfo.getProject(), msg);
+            if (syncApp(dependentLaunchInfo, device) == false) {
+                return false;
+            }
+        }
+        
+        return true;
+    }
+
+    /**
+     * Syncs the application on the device/emulator.
+     *
+     * @param launchInfo The Launch information object.
+     * @param device the device on which to sync the application
+     * @return true if the install succeeded.
+     */
+    private boolean doSyncApp(DelayedLaunchInfo launchInfo, IDevice device) {
         SyncService sync = device.getSyncService();
         if (sync != null) {
             IPath path = launchInfo.getPackageFile().getLocation();
@@ -812,12 +849,10 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
                 return false;
             }
             
-            // The app is now installed, now try the dependent projects
-            for (DelayedLaunchInfo dependentLaunchInfo : getDependenciesLaunchInfo(launchInfo)) {
-                String msg = String.format("Project dependency found, syncing: %s",
-                        dependentLaunchInfo.getProject().getName());
-                AdtPlugin.printToConsole(launchInfo.getProject(), msg);
-                syncApp(dependentLaunchInfo, device);
+            // if the installation succeeded, we register it.
+            if (installResult) {
+                ApkInstallManager.getInstance().registerInstallation(
+                        launchInfo.getProject(), device);
             }
             
             return installResult;
@@ -889,6 +924,7 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
             // Create new launchInfo as an hybrid between parent and dependency information
             DelayedLaunchInfo delayedLaunchInfo = new DelayedLaunchInfo(
                     androidProject.getProject(), 
+                    manifestParser.getPackage(),
                     manifestParser.getPackage(),
                     launchInfo.getLaunchAction(), 
                     apk, 
@@ -1042,7 +1078,7 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
 
     /**
      * Performs the installation of an application whose package has been uploaded on the device.
-     * <p/>Before doing it, if the application is already running on the device, it is killed. 
+     *
      * @param launchInfo the {@link DelayedLaunchInfo}.
      * @param remotePath the path of the application package in the device tmp folder.
      * @param device the device on which to install the application.
@@ -1052,12 +1088,6 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
      */
     private String doInstall(DelayedLaunchInfo launchInfo, final String remotePath,
             final IDevice device, boolean reinstall) throws IOException {
-        // kill running application
-        Client application = device.getClient(launchInfo.getPackageName());
-        if (application != null) {
-            application.kill();
-        }
-        
         InstallReceiver receiver = new InstallReceiver();
         try {
             String cmd = String.format(
@@ -1492,14 +1522,14 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
                 for (int i = 0; i < mWaitingForDebuggerApplications.size(); ) {
                     final DelayedLaunchInfo launchInfo = mWaitingForDebuggerApplications.get(i);
                     if (client.getDevice() == launchInfo.getDevice() &&
-                            applicationName.equals(launchInfo.getPackageName())) {
+                            applicationName.equals(launchInfo.getDebugPackageName())) {
                         // this is a match. We remove the launch info from the list
                         mWaitingForDebuggerApplications.remove(i);
                         
                         // and connect the debugger.
                         String msg = String.format(
                                 "Attempting to connect debugger to '%1$s' on port %2$d",
-                                launchInfo.getPackageName(), client.getDebuggerListenPort());
+                                launchInfo.getDebugPackageName(), client.getDebuggerListenPort());
                         AdtPlugin.printToConsole(launchInfo.getProject(), msg);
                         
                         new Thread("Debugger Connection") { //$NON-NLS-1$

@@ -24,6 +24,7 @@ bin/aidl platforms/${PLATFORM_NAME}/tools/aidl
 bin/adb tools/adb
 bin/sqlite3 tools/sqlite3
 bin/dmtracedump tools/dmtracedump
+bin/hprof-conv tools/hprof-conv
 bin/mksdcard tools/mksdcard
 
 # other tools
@@ -67,6 +68,7 @@ development/samples/ApiDemos platforms/${PLATFORM_NAME}/samples/ApiDemos
 development/samples/SkeletonApp platforms/${PLATFORM_NAME}/samples/SkeletonApp
 development/samples/Snake platforms/${PLATFORM_NAME}/samples/Snake
 development/samples/SoftKeyboard platforms/${PLATFORM_NAME}/samples/SoftKeyboard
+development/samples/JetBoy platforms/${PLATFORM_NAME}/samples/JetBoy
 
 # dx
 bin/dx platforms/${PLATFORM_NAME}/tools/dx

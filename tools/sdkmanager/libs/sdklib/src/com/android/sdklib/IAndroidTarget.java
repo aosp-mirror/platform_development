@@ -97,6 +97,11 @@ public interface IAndroidTarget extends Comparable<IAndroidTarget> {
     String getFullName();
     
     /**
+     * Returns the name to be displayed when representing all the libraries this target contains.
+     */
+    String getClasspathName();
+    
+    /**
      * Returns the description of the target.
      */
     String getDescription();

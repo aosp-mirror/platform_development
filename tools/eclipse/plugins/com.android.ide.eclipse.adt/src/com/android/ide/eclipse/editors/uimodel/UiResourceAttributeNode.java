@@ -17,6 +17,8 @@
 package com.android.ide.eclipse.editors.uimodel;
 
 import com.android.ide.eclipse.adt.sdk.AndroidTargetData;
+import com.android.ide.eclipse.adt.ui.ReferenceChooserDialog;
+import com.android.ide.eclipse.adt.ui.ResourceChooser;
 import com.android.ide.eclipse.common.resources.IResourceRepository;
 import com.android.ide.eclipse.common.resources.ResourceItem;
 import com.android.ide.eclipse.common.resources.ResourceType;
@@ -26,8 +28,6 @@ import com.android.ide.eclipse.editors.descriptors.DescriptorsUtils;
 import com.android.ide.eclipse.editors.descriptors.TextAttributeDescriptor;
 import com.android.ide.eclipse.editors.resources.manager.ResourceManager;
 import com.android.ide.eclipse.editors.ui.SectionHelper;
-import com.android.ide.eclipse.editors.wizards.ReferenceChooserDialog;
-import com.android.ide.eclipse.editors.wizards.ResourceChooser;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jface.window.Window;
@@ -135,8 +135,11 @@ public class UiResourceAttributeNode extends UiTextAttributeNode {
                 IResourceRepository systemRepository = data.getSystemResources();
 
                 // open a resource chooser dialog for specified resource type.
-                ResourceChooser dlg = new ResourceChooser(mType,
-                        projectRepository, systemRepository, shell);
+                ResourceChooser dlg = new ResourceChooser(project,
+                        mType,
+                        projectRepository,
+                        systemRepository,
+                        shell);
 
                 dlg.setCurrentResource(currentValue);
 
@@ -144,7 +147,9 @@ public class UiResourceAttributeNode extends UiTextAttributeNode {
                     return dlg.getCurrentResource();
                 }
             } else {
-                ReferenceChooserDialog dlg = new ReferenceChooserDialog(projectRepository,
+                ReferenceChooserDialog dlg = new ReferenceChooserDialog(
+                        project,
+                        projectRepository,
                         shell);
 
                 dlg.setCurrentResource(currentValue);

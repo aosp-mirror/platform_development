@@ -22,8 +22,10 @@ import com.android.ide.eclipse.adt.launch.AndroidLaunchConfiguration;
 import com.android.ide.eclipse.adt.launch.AndroidLaunchController;
 import com.android.ide.eclipse.adt.launch.IAndroidLaunchAction;
 import com.android.ide.eclipse.adt.launch.LaunchConfigDelegate;
+import com.android.ide.eclipse.adt.launch.junit.runtime.AndroidJUnitLaunchInfo;
 import com.android.ide.eclipse.common.AndroidConstants;
 import com.android.ide.eclipse.common.project.AndroidManifestParser;
+import com.android.ide.eclipse.common.project.AndroidManifestParser.Instrumentation;
 import com.android.ide.eclipse.common.project.BaseProjectHelper;
 
 import org.eclipse.core.resources.IFile;
@@ -32,8 +34,11 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
+import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.internal.junit.launcher.JUnitLaunchConfigurationConstants;
 import org.eclipse.jdt.internal.junit.launcher.TestKindRegistry;
+import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
 
 /**
  * Run configuration that can execute JUnit tests on an Android platform.
@@ -47,6 +52,7 @@ public class AndroidJUnitLaunchConfigDelegate extends LaunchConfigDelegate {
 
     /** Launch config attribute that stores instrumentation runner. */
     static final String ATTR_INSTR_NAME = AdtPlugin.PLUGIN_ID + ".instrumentation"; //$NON-NLS-1$
+
     private static final String EMPTY_STRING = ""; //$NON-NLS-1$
 
     @Override
@@ -55,7 +61,6 @@ public class AndroidJUnitLaunchConfigDelegate extends LaunchConfigDelegate {
             AndroidLaunchConfiguration config, AndroidLaunchController controller,
             IFile applicationPackage, AndroidManifestParser manifestParser) {
 
-        String testPackage = manifestParser.getPackage();        
         String runner = getRunner(project, configuration, manifestParser);
         if (runner == null) {
             AdtPlugin.displayError("Android Launch",
@@ -63,14 +68,89 @@ public class AndroidJUnitLaunchConfigDelegate extends LaunchConfigDelegate {
             androidLaunch.stopLaunch();
             return;
         }
-
-        IAndroidLaunchAction junitLaunch = new AndroidJUnitLaunchAction(testPackage, runner);
-
-        controller.launch(project, mode, applicationPackage, manifestParser.getPackage(),
+        // get the target app's package
+        String targetAppPackage = getTargetPackage(manifestParser, runner); 
+        if (targetAppPackage == null) {
+            AdtPlugin.displayError("Android Launch",
+                    String.format("A target package for instrumention test runner %1$s could not be found!", 
+                    runner));
+            androidLaunch.stopLaunch();
+            return; 
+        }
+        String testAppPackage = manifestParser.getPackage();
+        AndroidJUnitLaunchInfo junitLaunchInfo = new AndroidJUnitLaunchInfo(project, 
+                testAppPackage, runner);
+        junitLaunchInfo.setTestClass(getTestClass(configuration));
+        junitLaunchInfo.setTestPackage(getTestPackage(configuration));
+        junitLaunchInfo.setTestMethod(getTestMethod(configuration));
+        junitLaunchInfo.setLaunch(androidLaunch);
+        IAndroidLaunchAction junitLaunch = new AndroidJUnitLaunchAction(junitLaunchInfo);
+        
+        controller.launch(project, mode, applicationPackage, testAppPackage, targetAppPackage,
                 manifestParser.getDebuggable(), manifestParser.getApiLevelRequirement(),
                 junitLaunch, config, androidLaunch, monitor);
     }
+
+    /**
+     * Get the target Android application's package for the given instrumentation runner, or 
+     * <code>null</code> if it could not be found.
+     *
+     * @param manifestParser the {@link AndroidManifestParser} for the test project
+     * @param runner the instrumentation runner class name
+     * @return the target package or <code>null</code>
+     */
+    private String getTargetPackage(AndroidManifestParser manifestParser, String runner) {
+        for (Instrumentation instr : manifestParser.getInstrumentations()) {
+            if (instr.getName().equals(runner)) {
+                return instr.getTargetPackage();
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Returns the test package stored in the launch configuration, or <code>null</code> if not 
+     * specified.
+     * 
+     * @param configuration the {@link ILaunchConfiguration} to retrieve the test package info from
+     * @return the test package or <code>null</code>.
+     */
+    private String getTestPackage(ILaunchConfiguration configuration) {
+        // try to retrieve a package name from the JUnit container attribute
+        String containerHandle = getStringLaunchAttribute(
+                JUnitLaunchConfigurationConstants.ATTR_TEST_CONTAINER, configuration);
+        if (containerHandle != null && containerHandle.length() > 0) {
+            IJavaElement element = JavaCore.create(containerHandle);
+            // containerHandle could be a IProject, check if its a java package
+            if (element.getElementType() == IJavaElement.PACKAGE_FRAGMENT) {
+                return element.getElementName();
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Returns the test class stored in the launch configuration.
+     *
+     * @param configuration the {@link ILaunchConfiguration} to retrieve the test class info from
+     * @return the test class. <code>null</code> if not specified.
+     */
+    private String getTestClass(ILaunchConfiguration configuration) {
+        return getStringLaunchAttribute(IJavaLaunchConfigurationConstants.ATTR_MAIN_TYPE_NAME,
+                configuration);
+    }
     
+    /**
+     * Returns the test method stored in the launch configuration.
+     *
+     * @param configuration the {@link ILaunchConfiguration} to retrieve the test method info from
+     * @return the test method. <code>null</code> if not specified.
+     */
+    private String getTestMethod(ILaunchConfiguration configuration) {
+        return getStringLaunchAttribute(JUnitLaunchConfigurationConstants.ATTR_TEST_METHOD_NAME,
+                configuration);
+    }
+
     /**
      * Gets a instrumentation runner for the launch. 
      * <p/>
@@ -114,11 +194,29 @@ public class AndroidJUnitLaunchConfigDelegate extends LaunchConfigDelegate {
     }
 
     private String getRunnerFromConfig(ILaunchConfiguration configuration) throws CoreException {
-        String runner = configuration.getAttribute(ATTR_INSTR_NAME, EMPTY_STRING);
-        if (runner.length() < 1) {
-            return null;
+        return getStringLaunchAttribute(ATTR_INSTR_NAME, configuration);
+    }
+    
+    /**
+     * Helper method to retrieve a string attribute from the launch configuration
+     * 
+     * @param attributeName name of the launch attribute
+     * @param configuration the {@link ILaunchConfiguration} to retrieve the attribute from
+     * @return the attribute's value. <code>null</code> if not found.
+     */
+    private String getStringLaunchAttribute(String attributeName,
+            ILaunchConfiguration configuration) {
+        try {
+            String attrValue = configuration.getAttribute(attributeName, EMPTY_STRING);
+            if (attrValue.length() < 1) {
+                return null;
+            }
+            return attrValue;
+        } catch (CoreException e) {
+            AdtPlugin.log(e, String.format("Error when retrieving launch info %1$s",  //$NON-NLS-1$
+                    attributeName));
         }
-        return runner;
+        return null;
     }
 
     /**

@@ -315,12 +315,9 @@ public class PreCompilerBuilder extends BaseBuilder {
                 String msg = String.format(
                         "Manifest min SDK version (%1$d) is lower than project target API level (%2$d)",
                         minSdkVersion, projectTarget.getApiVersionNumber());
-                AdtPlugin.printErrorToConsole(project, msg);
+                AdtPlugin.printBuildToConsole(AdtConstants.BUILD_VERBOSE, project, msg);
                 BaseProjectHelper.addMarker(manifest, AdtConstants.MARKER_ADT, msg,
-                        IMarker.SEVERITY_ERROR);
-    
-                // This interrupts the build. The next builders will not run.
-                stopBuild(msg);
+                        IMarker.SEVERITY_WARNING);
             }
 
             if (javaPackage == null || javaPackage.length() == 0) {

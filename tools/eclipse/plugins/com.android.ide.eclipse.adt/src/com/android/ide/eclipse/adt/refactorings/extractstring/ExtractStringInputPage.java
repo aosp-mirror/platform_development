@@ -17,10 +17,10 @@
 package com.android.ide.eclipse.adt.refactorings.extractstring;
 
 
+import com.android.ide.eclipse.adt.ui.ConfigurationSelector;
 import com.android.ide.eclipse.common.AndroidConstants;
 import com.android.ide.eclipse.editors.resources.configurations.FolderConfiguration;
 import com.android.ide.eclipse.editors.resources.manager.ResourceFolderType;
-import com.android.ide.eclipse.editors.wizards.ConfigurationSelector;
 import com.android.sdklib.SdkConstants;
 
 import org.eclipse.core.resources.IFolder;
@@ -58,10 +58,8 @@ class ExtractStringInputPage extends UserInputWizardPage implements IWizardPage 
     /** The project where the user selection happened. */
     private final IProject mProject;
 
-    /** Field displaying the user-selected string to be replaced. */
-    private Label mStringLabel;
     /** Test field where the user enters the new ID to be generated or replaced with. */ 
-    private Text mNewIdTextField;
+    private Text mStringIdField;
     /** The configuration selector, to select the resource path of the XML file. */
     private ConfigurationSelector mConfigSelector;
     /** The combo to display the existing XML files or enter a new one. */
@@ -78,7 +76,9 @@ class ExtractStringInputPage extends UserInputWizardPage implements IWizardPage 
     private static final String RES_FOLDER_REL =
         SdkConstants.FD_RESOURCES + AndroidConstants.WS_SEP;
 
-    private static final String DEFAULT_RES_FILE_PATH = "/res/values/strings.xml";
+    private static final String DEFAULT_RES_FILE_PATH = "/res/values/strings.xml";  //$NON-NLS-1$
+
+    private XmlStringFileHelper mXmlHelper = new XmlStringFileHelper();
     
     public ExtractStringInputPage(IProject project) {
         super("ExtractStringInputPage");  //$NON-NLS-1$
@@ -92,14 +92,12 @@ class ExtractStringInputPage extends UserInputWizardPage implements IWizardPage 
      * {@link ExtractStringRefactoring}.
      */
     public void createControl(Composite parent) {
-        
         Composite content = new Composite(parent, SWT.NONE);
-
         GridLayout layout = new GridLayout();
         layout.numColumns = 1;
         content.setLayout(layout);
         
-        createStringReplacementGroup(content);
+        createStringGroup(content);
         createResFileGroup(content);
 
         validatePage();
@@ -112,28 +110,43 @@ class ExtractStringInputPage extends UserInputWizardPage implements IWizardPage 
      * 
      * @param content A composite with a 1-column grid layout
      */
-    private void createStringReplacementGroup(Composite content) {
+    public void createStringGroup(Composite content) {
 
         final ExtractStringRefactoring ref = getOurRefactoring();
         
         Group group = new Group(content, SWT.NONE);
         group.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-        group.setText("String Replacement");
+        if (ref.getMode() == ExtractStringRefactoring.Mode.EDIT_SOURCE) {
+            group.setText("String Replacement");
+        } else {
+            group.setText("New String");
+        }
 
         GridLayout layout = new GridLayout();
         layout.numColumns = 2;
         group.setLayout(layout);
 
-        // line: String found in selection
+        // line: Textfield for string value (based on selection, if any)
         
         Label label = new Label(group, SWT.NONE);
-        label.setText("String:");
+        label.setText("String");
 
         String selectedString = ref.getTokenString();
         
-        mStringLabel = new Label(group, SWT.NONE);
-        mStringLabel.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-        mStringLabel.setText(selectedString != null ? selectedString : "");
+        final Text stringValueField = new Text(group, SWT.SINGLE | SWT.LEFT | SWT.BORDER);
+        stringValueField.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        stringValueField.setText(selectedString != null ? selectedString : "");  //$NON-NLS-1$
+        
+        ref.setNewStringValue(stringValueField.getText());
+
+        stringValueField.addModifyListener(new ModifyListener() {
+            public void modifyText(ModifyEvent e) {
+                if (validatePage()) {
+                    ref.setNewStringValue(stringValueField.getText());
+                }
+            }
+        });
+
         
         // TODO provide an option to replace all occurences of this string instead of
         // just the one.
@@ -141,18 +154,24 @@ class ExtractStringInputPage extends UserInputWizardPage implements IWizardPage 
         // line : Textfield for new ID
         
         label = new Label(group, SWT.NONE);
-        label.setText("Replace by R.string.");
+        if (ref.getMode() == ExtractStringRefactoring.Mode.EDIT_SOURCE) {
+            label.setText("Replace by R.string.");
+        } else if (ref.getMode() == ExtractStringRefactoring.Mode.SELECT_NEW_ID) {
+            label.setText("New R.string.");
+        } else {
+            label.setText("ID R.string.");
+        }
 
-        mNewIdTextField = new Text(group, SWT.SINGLE | SWT.LEFT | SWT.BORDER);
-        mNewIdTextField.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-        mNewIdTextField.setText(guessId(selectedString));
+        mStringIdField = new Text(group, SWT.SINGLE | SWT.LEFT | SWT.BORDER);
+        mStringIdField.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        mStringIdField.setText(guessId(selectedString));
 
-        ref.setReplacementStringId(mNewIdTextField.getText().trim());
+        ref.setNewStringId(mStringIdField.getText().trim());
 
-        mNewIdTextField.addModifyListener(new ModifyListener() {
+        mStringIdField.addModifyListener(new ModifyListener() {
             public void modifyText(ModifyEvent e) {
                 if (validatePage()) {
-                    ref.setReplacementStringId(mNewIdTextField.getText().trim());
+                    ref.setNewStringId(mStringIdField.getText().trim());
                 }
             }
         });
@@ -211,6 +230,10 @@ class ExtractStringInputPage extends UserInputWizardPage implements IWizardPage 
      * Utility method to guess a suitable new XML ID based on the selected string.
      */
     private String guessId(String text) {
+        if (text == null) {
+            return "";  //$NON-NLS-1$
+        }
+
         // make lower case
         text = text.toLowerCase();
         
@@ -242,9 +265,9 @@ class ExtractStringInputPage extends UserInputWizardPage implements IWizardPage 
 
         // Analyze fatal errors.
         
-        String text = mNewIdTextField.getText().trim();
+        String text = mStringIdField.getText().trim();
         if (text == null || text.length() < 1) {
-            setErrorMessage("Please provide a resource ID to replace with.");
+            setErrorMessage("Please provide a resource ID.");
             success = false;
         } else {
             for (int i = 0; i < text.length(); i++) {
@@ -283,15 +306,19 @@ class ExtractStringInputPage extends UserInputWizardPage implements IWizardPage 
             ref.setTargetFile(resFile);
             sLastResFilePath.put(mProject.getFullPath().toPortableString(), resFile);
 
-            if (ref.isResIdDuplicate(resFile, text)) {
-                setMessage(
-                        String.format("There's already a string item called '%1$s' in %2$s.",
-                                      text, resFile),
-                        WizardPage.WARNING);
+            if (mXmlHelper.isResIdDuplicate(mProject, resFile, text)) {
+                String msg = String.format("There's already a string item called '%1$s' in %2$s.",
+                        text, resFile);
+                if (ref.getMode() == ExtractStringRefactoring.Mode.SELECT_NEW_ID) {
+                    setErrorMessage(msg);
+                    success = false;
+                } else {
+                    setMessage(msg, WizardPage.WARNING);
+                }
             } else if (mProject.findMember(resFile) == null) {
                 setMessage(
                         String.format("File %2$s does not exist and will be created.",
-                                      text, resFile),
+                                text, resFile),
                         WizardPage.INFORMATION);
             } else {
                 setMessage(null);
@@ -336,7 +363,7 @@ class ExtractStringInputPage extends UserInputWizardPage implements IWizardPage 
             }
             
             // get current leafname, if any
-            String leafName = "";
+            String leafName = "";  //$NON-NLS-1$
             String currPath = mResFileCombo.getText();
             Matcher m = mPathRegex.matcher(currPath);
             if (m.matches()) {
@@ -345,7 +372,7 @@ class ExtractStringInputPage extends UserInputWizardPage implements IWizardPage 
                 currPath = m.group(1);
             } else {
                 // There was a path but it was invalid. Ignore it.
-                currPath = "";
+                currPath = "";  //$NON-NLS-1$
             }
 
             // recreate the res path from the current configuration

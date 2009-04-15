@@ -124,6 +124,10 @@ final class AddOnTarget implements IAndroidTarget {
         return String.format("%1$s (%2$s)", mName, mVendor);
     }
     
+    public String getClasspathName() {
+        return String.format("%1$s [%2$s]", mName, mBasePlatform.getName());
+    }
+
     public String getDescription() {
         return mDescription;
     }
@@ -153,7 +157,8 @@ final class AddOnTarget implements IAndroidTarget {
             case SKINS:
                 return mLocation + SdkConstants.OS_SKINS_FOLDER;
             case DOCS:
-                return mLocation + SdkConstants.FD_DOCS + File.separator;
+                return mLocation + SdkConstants.FD_DOCS + File.separator
+                        + SdkConstants.FD_DOCS_REFERENCE;
             default :
                 return mBasePlatform.getPath(pathId);
         }

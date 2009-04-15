@@ -18,6 +18,7 @@ package com.android.ide.eclipse.adt.launch.junit;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.launch.MainLaunchConfigTab;
 import com.android.ide.eclipse.common.AndroidConstants;
+import com.android.ide.eclipse.common.project.BaseProjectHelper;
 import com.android.ide.eclipse.common.project.ProjectChooserHelper;
 
 import org.eclipse.core.resources.IProject;
@@ -241,7 +242,7 @@ public class AndroidJUnitLaunchConfigurationTab extends AbstractLaunchConfigurat
     private void createTestContainerSelectionGroup(Composite comp) {
         mTestContainerRadioButton = new Button(comp, SWT.RADIO);
         mTestContainerRadioButton.setText(
-                JUnitMessages.JUnitLaunchConfigurationTab_label_containerTest); 
+                "Run all tests in the selected project, or package"); 
         GridData gd = new GridData();
         gd.horizontalSpan = 3;
         mTestContainerRadioButton.setLayoutData(gd);
@@ -249,12 +250,12 @@ public class AndroidJUnitLaunchConfigurationTab extends AbstractLaunchConfigurat
             public void widgetSelected(SelectionEvent e) {
                 if (mTestContainerRadioButton.getSelection()) {
                     testModeChanged();
-                }    
+                }
             }
             public void widgetDefaultSelected(SelectionEvent e) {
             }
         });
-        
+
         mContainerText = new Text(comp, SWT.SINGLE | SWT.BORDER | SWT.READ_ONLY);
         gd = new GridData(GridData.FILL_HORIZONTAL);
         gd.horizontalIndent = 25;
@@ -265,7 +266,7 @@ public class AndroidJUnitLaunchConfigurationTab extends AbstractLaunchConfigurat
                 updateLaunchConfigurationDialog();
             }
         });
-        
+
         mContainerSearchButton = new Button(comp, SWT.PUSH);
         mContainerSearchButton.setText(JUnitMessages.JUnitLaunchConfigurationTab_label_search); 
         mContainerSearchButton.addSelectionListener(new SelectionAdapter() {
@@ -821,7 +822,7 @@ public class AndroidJUnitLaunchConfigurationTab extends AbstractLaunchConfigurat
 
     @SuppressWarnings("unchecked")
     private IJavaElement chooseContainer(IJavaElement initElement) {
-        Class[] acceptedClasses = new Class[] { IPackageFragmentRoot.class, IJavaProject.class,
+        Class[] acceptedClasses = new Class[] { IJavaProject.class,
                 IPackageFragment.class };
         TypedElementSelectionValidator validator = new TypedElementSelectionValidator(
                 acceptedClasses, false) {
@@ -839,7 +840,7 @@ public class AndroidJUnitLaunchConfigurationTab extends AbstractLaunchConfigurat
                 if (element instanceof IPackageFragmentRoot && 
                         ((IPackageFragmentRoot) element).isArchive()) {
                     return false;
-                }    
+                }
                 try {
                     if (element instanceof IPackageFragment &&
                             !((IPackageFragment) element).hasChildren()) {
@@ -852,7 +853,7 @@ public class AndroidJUnitLaunchConfigurationTab extends AbstractLaunchConfigurat
             }
         };      
 
-        StandardJavaElementContentProvider provider = new StandardJavaElementContentProvider();
+        AndroidJavaElementContentProvider provider = new AndroidJavaElementContentProvider();
         ILabelProvider labelProvider = new JavaElementLabelProvider(
                 JavaElementLabelProvider.SHOW_DEFAULT); 
         ElementTreeSelectionDialog dialog = new ElementTreeSelectionDialog(getShell(), 
@@ -954,7 +955,7 @@ public class AndroidJUnitLaunchConfigurationTab extends AbstractLaunchConfigurat
         try {
         mInstrValidator = new InstrumentationRunnerValidator(project);
         mInstrumentations = (mInstrValidator == null ? null : 
-            mInstrValidator.getInstrumentations());
+            mInstrValidator.getInstrumentationNames());
         if (mInstrumentations != null) {
             mInstrumentationCombo.removeAll();
             for (String instrumentation : mInstrumentations) {
@@ -973,5 +974,24 @@ public class AndroidJUnitLaunchConfigurationTab extends AbstractLaunchConfigurat
         mInstrValidator = null;
         mInstrumentations = null;
         mInstrumentationCombo.removeAll();
+    }
+
+    /**
+     * Overrides the {@link StandardJavaElementContentProvider} to only display Android projects
+     */
+    private static class AndroidJavaElementContentProvider
+            extends StandardJavaElementContentProvider {
+
+        /**
+         * Override parent to return only Android projects if at the root. Otherwise, use parent 
+         * functionality.
+         */
+        @Override
+        public Object[] getChildren(Object element) {
+            if (element instanceof IJavaModel) {
+                return BaseProjectHelper.getAndroidProjects((IJavaModel) element);
+            }
+            return super.getChildren(element);
+        }
     }
 }

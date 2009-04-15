@@ -143,6 +143,8 @@ public final class SdkConstants {
     public final static String FD_LIB = "lib";
     /** Name of the SDK docs folder. */
     public final static String FD_DOCS = "docs";
+    /** Name of the doc folder containing API reference doc (javadoc) */
+    public static final String FD_DOCS_REFERENCE = "reference";
     /** Name of the SDK images folder. */
     public final static String FD_IMAGES = "images";
     /** Name of the SDK skins folder. */

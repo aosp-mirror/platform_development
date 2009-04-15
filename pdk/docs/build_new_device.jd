@@ -1,0 +1,130 @@
+page.title=Building Android for a new Mobile Device
+pdk.version=1.0
+@jd:body
+
+
+
+<a name="toc"/>
+<div style="padding:10px">
+<a href="#androidOHDPortingDeviceBuildingProcess">Detailed Instructions</a><br/>
+<a href="#androidBuildNewFileTree">New Product File Tree</a><br/></div></font></div>
+
+<a name="androidOHDPortingDeviceBuildingProcess"></a><h2>Detailed Instructions</h2>
+
+<p>The directions below describe how to configure make files for new mobile devices and products.</p>
+<ol>
+  <li>Create a company directory in <code>//device/partner</code>.<br/>
+  <pre class="prettyprint">
+  mkdir device/partner/&lt;company_name&gt;</pre></li>
+  <li>Create a <code>products</code> directory beneath the company directory you created in step 1.<BR>
+  <pre class="prettyprint">
+  mkdir device/partner/&lt;company_name&gt;/products/</pre></li>
+  <li>Create a product-specific make file, called <code>device/partner/&lt;company_name&gt;/products/&lt;first_product_name&gt;.mk</code>, that includes the following code:<BR>
+    <pre class="prettyprint">
+  $(call inherit-product, target/product/generic.mk)
+  #
+  # Overrides
+  PRODUCT_NAME := &lt;first_product_name&gt;
+  PRODUCT_DEVICE := &lt;board_name&gt;</pre></li>  
+  <li>In the <code>products</code> directory, create an <code>AndroidProducts.mk</code> file that point to (and is responsible for finding) the individual product make files.<BR>
+  <pre class="prettyprint">
+  #
+  # This file should set PRODUCT_MAKEFILES to a list of product makefiles
+  # to expose to the build system.  LOCAL_DIR will already be set to
+  # the directory containing this file. 
+  #
+  # This file may not rely on the value of any variable other than
+  # LOCAL_DIR; do not use any conditionals, and do not look up the
+  # value of any variable that isn't set in this file or in a file that
+  # it includes.
+  #
+  
+  PRODUCT_MAKEFILES := \
+    $(LOCAL_DIR)/first_product_name.mk \</pre></li>
+  <li>Create a board-specific directory beneath your company directory that matches the <code>PRODUCT_DEVICE</code> variable <code>&lt;board_name&gt;</code> referenced in the product-specific make file above. This will include a make file that gets accessed by any product using this board.<BR>
+  <pre class="prettyprint">
+  mkdir device/partner/&lt;company_name&gt;/&lt;board_name&gt;</pre></li>
+    <li>Create a <code>product_config.mk</code> file in the directory created in the previous step (<code>device/partner/&lt;company_name&gt;/&lt;board_name&gt;</code>). If this directory does not include a <code>product_config.mk</code> file, the build will fail.<BR>
+  <pre class="prettyprint">
+  # These definitions override the defaults in config/config.make for &lt;board_name&gt;
+  #
+  # TARGET_NO_BOOTLOADER := false
+  # TARGET_HARDWARE_3D := false 
+  #
+  TARGET_USE_GENERIC_AUDIO := true</pre></li>  
+  <li>If you wish to modify system properties, create a <code>system.prop</code> file in your <code>&lt;board_name&gt;</code> directory(<code>device/partner/&lt;company_name&gt;/&lt;board_name&gt;</code>).<BR>
+  <pre class="prettyprint">
+  # system.prop for <board_name>
+  # This overrides settings in the products/generic/system.prop file
+  #
+  # rild.libpath=/system/lib/libreference-ril.so
+  # rild.libargs=-d /dev/ttyS0</pre></li>   
+  <li>Add a pointer to <code>&lt;second_product_name&gt;.mk</code> within <code>products/AndroidProducts.mk</code>.<BR>
+  <pre class="prettypring">
+  PRODUCT_MAKEFILES := \
+    $(LOCAL_DIR)/first_product_name.mk \
+    $(LOCAL_DIR)/second_product_name.mk</pre></li>
+  <li><code>device/partner/&lt;company_name&gt;/&lt;board_name&gt;</code> must include an <code>Android.mk</code> file with at least the following code:<BR><BR>
+  <pre class="prettyprint">
+  # make file for new hardware <board_name> from <company_name>
+  #
+  LOCAL_PATH := $(call my-dir)
+  #
+  # this is here to use the pre-built kernel
+  ifeq ($(TARGET_PREBUILT_KERNEL),)
+  TARGET_PREBUILT_KERNEL := $(LOCAL_PATH)/kernel
+  endif
+  #
+  file := $(INSTALLED_KERNEL_TARGET)
+  ALL_PREBUILT += $(file)
+  $(file): $(TARGET_PREBUILT_KERNEL) | $(ACP)
+		$(transform-prebuilt-to-target)
+  #
+  # no boot loader, so we don't need any of that stuff..  
+  #
+  LOCAL_PATH := partner/&lt;company_name&gt;/&lt;board_name&gt;
+  #
+  include $(CLEAR_VARS)
+  #
+  # include more board specific stuff here? Such as Audio parameters.      
+  #</pre></li>
+<li>To create a second product for the same board, create a second product-specific make file called <code>device/partner/company_name/products/&lt;second_product_name&gt;.mk</code> that includes:<BR>
+<pre class="prettyprint">
+  $(call inherit-product, partner/google/products/generic.mk)
+  #
+  # Overrides
+  PRODUCT_NAME := &lt;second_product_name&gt;
+  PRODUCT_DEVICE := &lt;board_name&gt;</pre></li>   	
+</ol>
+<p>By now, you should have two new products, called <code>&lt;first_product_name&gt;</code> and <code>&lt;second_product_name&gt;</code> associated with <code>&lt;company_name&gt;</code>. To verify that a product is properly configured (<code>&lt;first_product_name&gt;</code>, for example), execute the following:<BR>
+<pre class="prettyprint">
+  cd device
+  . ./envsetup.sh
+  partner_setup &lt;first_product_name&gt;
+  make PRODUCT-&lt;first_product_name&gt;-user
+</pre>
+<p>You should find new build binaries located in <code>device/out/target/product/&lt;board_name&gt;</code>.
+
+
+<a name="androidBuildNewFileTree"></a><h2>New Product File Tree</h2>
+
+<p>The file tree below illustrates what your own system should look like after completing the steps above.</p>
+<p>
+<ul>
+  <li><code>&lt;company_name&gt;</code></li>
+  <ul>
+    <li><code>&lt;board_name&gt;</code></li>
+    <ul>
+      <li><code>Android.mk</code></li>
+      <li><code>product_config.mk</code></li>
+      <li><code>system.prop</code></li>
+    </ul>
+    <li><code>products</code></li>
+    <ul>
+      <li><code>AndroidProducts.mk</code></li>
+      <li><code>&lt;first_product_name&gt;.mk</code></li>
+      <li><code>&lt;second_product_name&gt;.mk</code></li>
+    </ul>
+  </ul>
+</ul>
+</p>

@@ -10,7 +10,7 @@ LOCAL_PATH := $(call my-dir)
 ########################
 include $(CLEAR_VARS)
 
-LOCAL_MODULE := tests.xml
+LOCAL_MODULE := test_defs.xml
 LOCAL_MODULE_TAGS := tests
 LOCAL_MODULE_CLASS := ETC
 LOCAL_MODULE_PATH := $(local_target_dir)

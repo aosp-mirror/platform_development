@@ -16,7 +16,7 @@
 
 # Assemble the Platform Development Kit (PDK)
 # (TODO) Figure out why $(ACP) builds with target ndk but not pdk_docs
-# (TODO) Build doxygen (depend on latest version)
+# (TODO) Build doxygen (depend on latest version)  -> line 25 </div> error
 
 pdk:
 	@echo "Package: $@ has targets ndk, pdk_docs and pdk_all"
@@ -38,6 +38,8 @@ include $(LOCAL_PATH)/ndk/Ndk.mk
 #   Doxygenize the header files to create html docs in the generatedDocs dir.
 #   Copy the appengine files, the template files and the generated html 
 #   to the docs dir and zip everything up to the distribution directory.
+#   Run javadocs/droiddocs/clearsilver on the generatedDocs dir to get the right
+#   styles added to the html.
 
 
 # Workspace directory
@@ -149,13 +151,27 @@ $(pdk_docs_intermediates)/pdk.py: $(pdk_hosting_dir)/pdk.py
 	@echo "PDK: $@"
 	$(copy-file-to-target-with-cp)
 
+# Copy appengine server files for new system
+$(OUT_DOCS)/app.yaml: $(pdk_hosting_dir)/app.yaml
+	@echo "PDK: $@"
+	$(copy-file-to-target-with-cp)
+
+$(OUT_DOCS)/pdk.py: $(pdk_hosting_dir)/pdk.py
+	@echo "PDK: $@"
+	$(copy-file-to-target-with-cp)
+
+# All the files that we depend upon
+all_pdk_docs_files := $(pdk_doxygen_config_override_file) \
+    $(pdk_doxygen_config_file) $(pdk_docs_intermediates)/header.html \
+    $(pdk_docs_intermediates)/footer.html $(pdk_doxy_docsfiles_dir)/groups.dox \
+    $(pdk_doxy_docsfiles_dir)/main.dox all_copied_pdk_templates
 
 # Run doxygen and copy all output and templates to the final destination
 # We replace index.html with a template file so don't use the generated one
 pdk_doxygen: all_copied_pdk_headers $(pdk_doxygen_config_override_file) \
     $(pdk_doxygen_config_file) $(pdk_docs_intermediates)/header.html \
     $(pdk_docs_intermediates)/footer.html $(pdk_doxy_docsfiles_dir)/groups.dox \
-    $(pdk_doxy_docsfiles_dir)/main.dox
+    $(pdk_doxy_docsfiles_dir)/main.dox 
 	@echo "Files for Doxygination: $^"
 	@mkdir -p $(pdk_generated_source_dir)
 	@rm -f $(pdk_generated_source_dir)/*
@@ -164,7 +180,40 @@ pdk_doxygen: all_copied_pdk_headers $(pdk_doxygen_config_override_file) \
 	@cd $(pdk_generated_source_dir) && chmod ug+rx *
 	@rm -f $(pdk_generated_source_dir)/index.html
 	@cp -fp $(pdk_generated_source_dir)/* $(pdk_docs_dest_dir)
-  
+
+
+# ==== docs for the web (on the google app engine server) =======================
+# Run javadoc/droiddoc/clearsilver to get the formatting right
+
+# make droiddocs run after we make our doxygen docs
+$(pdk_docs_intermediates)/pdk-timestamp: pdk_doxygen
+	@touch $(pdk_docs_intermediates)/pdk-timestamp
+
+$(LOCAL_PATH)/pdk-timestamp: $(pdk_docs_intermediates)/pdk-timestamp
+
+include $(CLEAR_VARS)
+
+LOCAL_SRC_FILES := pdk-timestamp samples/samplejni/src/com/example/jniexample/JNIExample.java  
+LOCAL_MODULE_CLASS := development/pdk/ndk/samples/samplejni/src/com/example/jniexample
+LOCAL_DROIDDOC_SOURCE_PATH := $(framework_docs_LOCAL_DROIDDOC_SOURCE_PATH)
+LOCAL_DROIDDOC_HTML_DIR := ../../../$(pdk_docs_dest_dir)
+
+LOCAL_MODULE := online-pdk
+
+LOCAL_DROIDDOC_OPTIONS := \
+        $(framework_docs_LOCAL_DROIDDOC_OPTIONS) \
+        $(web_docs_sample_code_flags) \
+        -toroot /online-pdk/ \
+    -hdf android.whichdoc online-pdk
+
+LOCAL_DROIDDOC_CUSTOM_TEMPLATE_DIR := build/tools/droiddoc/templates-pdk
+LOCAL_DROIDDOC_CUSTOM_ASSET_DIR := assets-pdk
+
+include $(BUILD_DROIDDOC)
+
+# The docs output dir is:  out/target/common/docs/online-pdk
+DOCS_OUT_DIR  := $(OUT_DOCS)/$(LOCAL_MODULE)
+
 # Name the tar files
 name := android_pdk_docs-$(REQUESTED_PRODUCT)
 ifeq ($(TARGET_BUILD_TYPE),debug)
@@ -173,27 +222,38 @@ endif
 name := $(name)-$(BUILD_NUMBER)
 pdk_docs_tarfile := $(pdk_docs_intermediates)/$(name).tar
 pdk_docs_tarfile_zipped := $(pdk_docs_tarfile).gz
+new_pdk_docs_tarfile := $(pdk_docs_intermediates)/new-$(name).tar
+new_pdk_docs_tarfile_zipped := $(new_pdk_docs_tarfile).gz
 
-.PHONY: pdk pdk_docs pdk_doxygen all_copied_pdk_headers all_copied_pdk_templates
+.PHONY: pdk pdk_docs pdk_doxygen all_copied_pdk_headers all_copied_pdk_templates pdk-timestamp
 
-pdk_docs: $(pdk_docs_tarfile_zipped)
+pdk_docs: $(pdk_docs_tarfile_zipped) $(new_pdk_docs_tarfile)
 	@echo "PDK: Docs tarred and zipped"
 
 # Put the pdk_docs zip files in the distribution directory
 $(call dist-for-goals,pdk_docs,$(pdk_docs_tarfile_zipped))
+$(call dist-for-goals,pdk_docs,$(new_pdk_docs_tarfile_zipped))
 
 # zip up tar files
 %.tar.gz: %.tar
-	@echo "PDK: zipped $<"
+	@echo "PDK docs: zipped $<"
 	$(hide) gzip -cf $< > $@
 
 # tar up all the files to make the pdk docs.
+# old version
 $(pdk_docs_tarfile): pdk_doxygen all_copied_pdk_templates \
     $(pdk_docs_intermediates)/pdk.py $(pdk_docs_intermediates)/app.yaml
 	@echo "PDK: $@"
 	@mkdir -p $(dir $@)
 	@rm -f $@
 	$(hide) tar rf $@ -C $(pdk_docs_intermediates) docs pdk.py app.yaml
+
+# new version
+$(new_pdk_docs_tarfile): $(DOCS_OUT_DIR)-timestamp
+	@echo "PDK docs: $@"
+	@mkdir -p $(dir $@)
+	@rm -f $@
+	$(hide) tar rf $@ -C $(OUT_DOCS) $(LOCAL_MODULE)
 
 # Debugging reporting can go here, add it as a target to get output.
 pdk_debug:
