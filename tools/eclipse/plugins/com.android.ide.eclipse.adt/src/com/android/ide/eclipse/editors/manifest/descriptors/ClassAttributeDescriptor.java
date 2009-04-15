@@ -36,6 +36,8 @@ public class ClassAttributeDescriptor extends TextAttributeDescriptor {
     
     /** indicates if the class parameter is mandatory */
     boolean mMandatory;
+
+    private final boolean mDefaultToProjectOnly;
     
     /**
      * Creates a new {@link ClassAttributeDescriptor}
@@ -49,10 +51,14 @@ public class ClassAttributeDescriptor extends TextAttributeDescriptor {
      * @param mandatory indicates if the class attribute is mandatory.
      */
     public ClassAttributeDescriptor(String superClassName,
-            String xmlLocalName, String uiName, String nsUri,
-            String tooltip, boolean mandatory) {
+            String xmlLocalName,
+            String uiName,
+            String nsUri,
+            String tooltip,
+            boolean mandatory) {
         super(xmlLocalName, uiName, nsUri, tooltip);
         mSuperClassName = superClassName;
+        mDefaultToProjectOnly = true;
     }
 
     /**
@@ -67,14 +73,21 @@ public class ClassAttributeDescriptor extends TextAttributeDescriptor {
      *              See {@link SdkConstants#NS_RESOURCES} for a common value.
      * @param tooltip A non-empty tooltip string or null.
      * @param mandatory indicates if the class attribute is mandatory.
+     * @param defaultToProjectOnly True if only classes from the sources of this project should
+     *         be shown by default in the class browser.
      */
     public ClassAttributeDescriptor(String superClassName,
             IPostTypeCreationAction postCreationAction,
-            String xmlLocalName, String uiName, String nsUri,
-            String tooltip, boolean mandatory) {
+            String xmlLocalName,
+            String uiName,
+            String nsUri,
+            String tooltip,
+            boolean mandatory,
+            boolean defaultToProjectOnly) {
         super(xmlLocalName, uiName, nsUri, tooltip);
         mSuperClassName = superClassName;
         mPostCreationAction = postCreationAction;
+        mDefaultToProjectOnly = defaultToProjectOnly;
     }
 
     /**
@@ -83,6 +96,6 @@ public class ClassAttributeDescriptor extends TextAttributeDescriptor {
     @Override
     public UiAttributeNode createUiNode(UiElementNode uiParent) {
         return new UiClassAttributeNode(mSuperClassName, mPostCreationAction,
-                mMandatory, this, uiParent);
+                mMandatory, this, uiParent, mDefaultToProjectOnly);
     }
 }
