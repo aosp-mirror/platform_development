@@ -219,7 +219,7 @@ public class NewProjectCreationPage extends WizardPage {
     
     /** Returns the current sdk target or null if none has been selected yet. */
     public IAndroidTarget getSdkTarget() {
-        return mSdkTargetSelector == null ? null : mSdkTargetSelector.getFirstSelected();
+        return mSdkTargetSelector == null ? null : mSdkTargetSelector.getSelected();
     }
 
     /**
@@ -405,7 +405,7 @@ public class NewProjectCreationPage extends WizardPage {
         group.setText("Target");
         
         // The selector is created without targets. They are added below in the change listener.
-        mSdkTargetSelector = new SdkTargetSelector(group, null, false /*multi-selection*/);
+        mSdkTargetSelector = new SdkTargetSelector(group, null);
 
         mSdkTargetChangeListener = new ITargetChangeListener() {
             public void onProjectTargetChange(IProject changedProject) {
