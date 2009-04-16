@@ -177,6 +177,8 @@ public class AdtPlugin extends AbstractUIPlugin {
     private ArrayList<ITargetChangeListener> mTargetChangeListeners =
             new ArrayList<ITargetChangeListener>();
 
+    protected boolean mSdkIsLoading;
+
     /**
      * Custom PrintStream for Dx output. This class overrides the method
      * <code>println()</code> and adds the standard output tag with the
@@ -1010,7 +1012,15 @@ public class AdtPlugin extends AbstractUIPlugin {
             @SuppressWarnings("unchecked")
             @Override
             protected IStatus run(IProgressMonitor monitor) {
-                try {                    
+                try {
+
+                    if (mSdkIsLoading) {
+                        return new Status(IStatus.WARNING, PLUGIN_ID,
+                                "An Android SDK is already being loaded. Please try again later.");
+                    }
+                    
+                    mSdkIsLoading = true;
+                    
                     SubMonitor progress = SubMonitor.convert(monitor,
                             "Initialize SDK Manager", 100);
                     
@@ -1093,6 +1103,7 @@ public class AdtPlugin extends AbstractUIPlugin {
                         }
                     });
                 } finally {
+                    mSdkIsLoading = false;
                     if (monitor != null) {
                         monitor.done();
                     }
