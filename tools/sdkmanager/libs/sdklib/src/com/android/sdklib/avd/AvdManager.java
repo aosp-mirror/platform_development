@@ -600,10 +600,10 @@ public final class AvdManager {
             removeAvd(avdInfo);
 
             if (error) {
-                log.printf("AVD '%1$s' deleted with errors. See warnings above.",
+                log.printf("AVD '%1$s' deleted with errors. See warnings above.\n",
                         avdInfo.getName());
             } else {
-                log.printf("AVD '%1$s' deleted.", avdInfo.getName());
+                log.printf("AVD '%1$s' deleted.\n", avdInfo.getName());
             }
 
         } catch (AndroidLocationException e) {
@@ -667,7 +667,7 @@ public final class AvdManager {
                 mAvdList.add(info);
             }
 
-            log.printf("AVD '%1$s' moved.", avdInfo.getName());
+            log.printf("AVD '%1$s' moved.\n", avdInfo.getName());
 
         } catch (AndroidLocationException e) {
             log.error(e, null);
