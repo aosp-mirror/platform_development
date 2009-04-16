@@ -661,7 +661,7 @@ public class NewProjectCreationPage extends WizardPage {
                                                  abs_dir.equals(sCustomLocationOsPath);
                     sCustomLocationOsPath = TextProcessor.process(abs_dir);
                 } else  if (sAutoComputeCustomLocation ||
-                            !new File(sCustomLocationOsPath).isDirectory()) {
+                            (!is_new_project && !new File(sCustomLocationOsPath).isDirectory())) {
                     // By default select the samples directory of the current target
                     IAndroidTarget target = getSdkTarget();
                     if (target != null) {
