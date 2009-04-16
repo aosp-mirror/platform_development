@@ -17,6 +17,7 @@
 package com.android.sdklib;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
@@ -159,6 +160,21 @@ final class AddOnTarget implements IAndroidTarget {
             case DOCS:
                 return mLocation + SdkConstants.FD_DOCS + File.separator
                         + SdkConstants.FD_DOCS_REFERENCE;
+            case SAMPLES:
+                // only return the add-on samples folder if there is actually a sample (or more)
+                File sampleLoc = new File(mLocation, SdkConstants.FD_SAMPLES);
+                if (sampleLoc.isDirectory()) {
+                    File[] files = sampleLoc.listFiles(new FileFilter() {
+                        public boolean accept(File pathname) {
+                            return pathname.isDirectory();
+                        }
+                        
+                    });
+                    if (files != null && files.length > 0) {
+                        return sampleLoc.getAbsolutePath();
+                    }
+                }
+                // INTENT FALL-THROUGH
             default :
                 return mBasePlatform.getPath(pathId);
         }
