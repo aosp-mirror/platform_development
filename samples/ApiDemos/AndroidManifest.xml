@@ -1655,6 +1655,12 @@
             </intent-filter>
         </receiver>
 
+        <activity android:name=".appwidget.ExampleAppWidgetConfigure">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+            </intent-filter>
+        </activity>
+
         <receiver android:name=".appwidget.ExampleBroadcastReceiver" android:enabled="false">
             <intent-filter>
                 <action android:name="android.intent.ACTION_TIMEZONE_CHANGED" />
