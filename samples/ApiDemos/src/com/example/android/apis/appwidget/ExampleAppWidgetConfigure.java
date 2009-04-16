@@ -84,10 +84,17 @@ public class ExampleAppWidgetConfigure extends Activity {
 
     View.OnClickListener mOnClickListener = new View.OnClickListener() {
         public void onClick(View v) {
+            final Context context = ExampleAppWidgetConfigure.this;
+
             // When the button is clicked, save the string in our prefs and return that they
             // clicked OK.
-            saveTitlePref(ExampleAppWidgetConfigure.this, mAppWidgetId,
-                    mAppWidgetPrefix.getText().toString());
+            String titlePrefix = mAppWidgetPrefix.getText().toString();
+            saveTitlePref(context, mAppWidgetId, titlePrefix);
+
+            // Push widget update to surface with newly set prefix
+            AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
+            ExampleAppWidgetProvider.updateAppWidget(context, appWidgetManager,
+                    mAppWidgetId, titlePrefix);
 
             // Make sure we pass back the original appWidgetId
             Intent resultValue = new Intent();
@@ -108,7 +115,7 @@ public class ExampleAppWidgetConfigure extends Activity {
     // If there is no preference saved, get the default from a resource
     static String loadTitlePref(Context context, int appWidgetId) {
         SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, 0);
-        String prefix = prefs.getString(PREF_PREFIX_KEY, null);
+        String prefix = prefs.getString(PREF_PREFIX_KEY + appWidgetId, null);
         if (prefix != null) {
             return prefix;
         } else {
