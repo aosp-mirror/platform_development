@@ -27,13 +27,13 @@ import org.objectweb.asm.signature.SignatureReader;
 /**
  * A class visitor that rewrites a java source
  */
-public class JavaSourcer implements ClassVisitor {
+public class ClassSourcer implements ClassVisitor {
 
     private final Output mOutput;
     private final AccessSourcer mAccessSourcer;
     private String mClassName;
 
-    public JavaSourcer(Output output) {
+    public ClassSourcer(Output output) {
         mOutput = output;
         mAccessSourcer = new AccessSourcer(mOutput);
     }
