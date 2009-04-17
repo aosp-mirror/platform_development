@@ -8,3 +8,12 @@ framework/swt.jar tools/lib/swt.jar
 framework/org.eclipse.core.commands_3.2.0.I20060605-1400.jar tools/lib/org.eclipse.core.commands_3.2.0.I20060605-1400.jar
 framework/org.eclipse.equinox.common_3.2.0.v20060603.jar tools/lib/org.eclipse.equinox.common_3.2.0.v20060603.jar
 framework/org.eclipse.jface_3.2.0.I20060605-1400.jar tools/lib/org.eclipse.jface_3.2.0.I20060605-1400.jar
+
+# JetCreator (only available on mac/windows)
+external/sonivox/jet_tools/JetCreator tools/JetCreator
+prebuilt/darwin-x86/jetcreator/libEASLIb.dylib tools/JetCreator/libEASLIb.dylib
+
+external/sonivox/docs/JET_Authoring_Guidelines.html docs/JetCreator/JET_Authoring_Guidelines.html
+external/sonivox/docs/JET_Authoring_Guidelines_files docs/JetCreator/JET_Authoring_Guidelines_files
+external/sonivox/docs/JET_Creator_User_Manual.html docs/JetCreator/JET_Creator_User_Manual.html
+external/sonivox/docs/JET_Creator_User_Manual_files docs/JetCreator/JET_Creator_User_Manual_files

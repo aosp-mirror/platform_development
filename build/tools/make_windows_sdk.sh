@@ -128,6 +128,25 @@ function package() {
     cp -v development/tools/hierarchyviewer/etc/hierarchyviewer.bat "$TOOLS"
     cp -v development/tools/draw9patch/etc/draw9patch.bat "$TOOLS"
     cp -v development/tools/sdkmanager/app/etc/android.bat "$TOOLS"
+    
+    # Put the JetCreator tools (not available in the linux SDK)
+    JETCREATOR="$TOOLS/JetCreator"
+    JETDOC="$DEST/docs/JetCreator"
+
+    # need to rm these folders since a Mac SDK will have them and it would create a conflict
+    rm -rfv "$JETCREATOR"
+    rm -rfv "$JETDOC"
+
+    # now create fresh folders for JetCreator
+    mkdir "$JETCREATOR"
+    mkdir "$JETDOC"
+
+    cp -v external/sonivox/jet_tools/JetCreator "$JETCREATOR"
+    cp -v prebuilt/windows/jetcreator/EASDLL.dll "$JETCREATOR" 
+    cp -v external/sonivox/docs/JET_Authoring_Guidelines.html "$JETDOC"
+    cp -rv external/sonivox/docs/JET_Authoring_Guidelines_files/* docs/JetCreator/JET_Authoring_Guidelines_files
+    cp -v external/sonivox/docs/JET_Creator_User_Manual.html "$JETDOC"
+    cp -rv external/sonivox/docs/JET_Creator_User_Manual_files/* docs/JetCreator/JET_Creator_User_Manual_files
 
     # Copy or move platform specific tools to the default platform.
     cp -v dalvik/dx/etc/dx.bat "$PLATFORM_TOOLS"
