@@ -35,8 +35,6 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 
-import java.util.ArrayList;
-
 
 /**
  * The SDK target selector is a table that is added to the given parent composite.
@@ -102,11 +100,11 @@ public class SdkTargetSelector {
 
         // create the table columns
         final TableColumn column0 = new TableColumn(mTable, SWT.NONE);
-        column0.setText("SDK Target");
+        column0.setText("Target Name");
         final TableColumn column1 = new TableColumn(mTable, SWT.NONE);
         column1.setText("Vendor");
         final TableColumn column2 = new TableColumn(mTable, SWT.NONE);
-        column2.setText("Version");
+        column2.setText("Platform");
         final TableColumn column3 = new TableColumn(mTable, SWT.NONE);
         column3.setText("API Level");
 
