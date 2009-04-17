@@ -79,6 +79,8 @@ public class SdkCommandLine extends CommandLineProcessor {
                 "Moves or renames an Android Virtual Device." },
             { VERB_DELETE, OBJECT_AVD,
                 "Deletes an Android Virtual Device." },
+            { VERB_UPDATE, OBJECT_AVD,
+                "Updates an Android Virtual Device to match the folders of a new SDK." },
     
             { VERB_CREATE, OBJECT_PROJECT,
                 "Creates a new Android Project." },
@@ -127,6 +129,12 @@ public class SdkCommandLine extends CommandLineProcessor {
         define(MODE.STRING, false, 
                 VERB_MOVE, OBJECT_AVD, "p", KEY_PATH,
                 "New location path of the directory where to move the AVD", null);
+
+        // --- update avd ---
+        
+        define(MODE.STRING, true, 
+                VERB_UPDATE, OBJECT_AVD, "n", KEY_NAME,
+                "Name of the AVD to update", null);
 
         // --- create project ---
 
