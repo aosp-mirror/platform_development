@@ -119,6 +119,9 @@ public final class AvdManager {
     private final static Pattern INI_NAME_PATTERN = Pattern.compile("(.+)\\" + INI_EXTENSION + "$",
             Pattern.CASE_INSENSITIVE);
 
+    private final static Pattern IMAGE_NAME_PATTERN = Pattern.compile("(.+)\\.img$",
+            Pattern.CASE_INSENSITIVE);
+
     /**
      * Pattern for matching SD Card sizes, e.g. "4K" or "16M".
      */
@@ -606,13 +609,21 @@ public final class AvdManager {
         }
         
         File folder = new File(imageFullPath);
-        if (folder.isDirectory() && folder.list().length > 0) {
-            imageFullPath = imageFullPath.substring(sdkLocation.length());
-            if (imageFullPath.charAt(0) == File.separatorChar) {
-                imageFullPath = imageFullPath.substring(1);
+        if (folder.isDirectory()) {
+            String[] list = folder.list(new FilenameFilter() {
+                public boolean accept(File dir, String name) {
+                    return IMAGE_NAME_PATTERN.matcher(name).matches();
+                }
+            });
+
+            if (list.length > 0) {
+                imageFullPath = imageFullPath.substring(sdkLocation.length());
+                if (imageFullPath.charAt(0) == File.separatorChar) {
+                    imageFullPath = imageFullPath.substring(1);
+                }
+        
+                return imageFullPath;
             }
-    
-            return imageFullPath;
         }
         
         return null;
