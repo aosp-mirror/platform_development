@@ -68,7 +68,7 @@ public class AndroidPropertyPage extends PropertyPage implements IWorkbenchPrope
         top.setLayout(new GridLayout(1, false));
 
         Label l = new Label(top, SWT.NONE);
-        l.setText("Project Target");
+        l.setText("Project Build Target");
         
         mSelector = new SdkTargetSelector(top, targets);
 
