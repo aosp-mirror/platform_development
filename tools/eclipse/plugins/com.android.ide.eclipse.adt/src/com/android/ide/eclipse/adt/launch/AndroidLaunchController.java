@@ -387,7 +387,7 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
             // not compatible.
             AvdInfo preferredAvd = null;
             if (config.mAvdName != null) {
-                preferredAvd = avdManager.getAvd(config.mAvdName);
+                preferredAvd = avdManager.getAvd(config.mAvdName, true /*validAvdOnly*/);
                 if (projectTarget.isCompatibleBaseFor(preferredAvd.getTarget()) == false) {
                     preferredAvd = null;
 
@@ -434,7 +434,7 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
             for (IDevice d : devices) {
                 String deviceAvd = d.getAvdName();
                 if (deviceAvd != null) { // physical devices return null.
-                    AvdInfo info = avdManager.getAvd(deviceAvd);
+                    AvdInfo info = avdManager.getAvd(deviceAvd, true /*validAvdOnly*/);
                     if (info != null && projectTarget.isCompatibleBaseFor(info.getTarget())) {
                         compatibleRunningAvds.put(d, info);
                     }
@@ -465,7 +465,7 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
                 
                 // we are going to take the closest AVD. ie a compatible AVD that has the API level
                 // closest to the project target.
-                AvdInfo[] avds = avdManager.getAvds();
+                AvdInfo[] avds = avdManager.getValidAvds();
                 AvdInfo defaultAvd = null;
                 for (AvdInfo avd : avds) {
                     if (projectTarget.isCompatibleBaseFor(avd.getTarget())) {

@@ -157,7 +157,8 @@ public class DeviceChooserDialog extends Dialog implements IDeviceChangeListener
                             }
                         } else {
                             // get the AvdInfo
-                            AvdInfo info = mSdk.getAvdManager().getAvd(device.getAvdName());
+                            AvdInfo info = mSdk.getAvdManager().getAvd(device.getAvdName(),
+                                    true /*validAvdOnly*/);
                             if (info == null) {
                                 return mWarningImage;
                             }
@@ -184,7 +185,8 @@ public class DeviceChooserDialog extends Dialog implements IDeviceChangeListener
                         }
                     case 2:
                         if (device.isEmulator()) {
-                            AvdInfo info = mSdk.getAvdManager().getAvd(device.getAvdName());
+                            AvdInfo info = mSdk.getAvdManager().getAvd(device.getAvdName(),
+                                    true /*validAvdOnly*/);
                             if (info == null) {
                                 return "?";
                             }
@@ -263,7 +265,7 @@ public class DeviceChooserDialog extends Dialog implements IDeviceChangeListener
         // get the full list of Android Virtual Devices
         AvdManager avdManager = mSdk.getAvdManager();
         if (avdManager != null) {
-            mFullAvdList = avdManager.getAvds();
+            mFullAvdList = avdManager.getValidAvds();
         } else {
             mFullAvdList = null;
         }
