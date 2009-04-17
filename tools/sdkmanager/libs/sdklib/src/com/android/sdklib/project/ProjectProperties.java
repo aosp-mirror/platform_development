@@ -241,7 +241,9 @@ public final class ProjectProperties {
             if (comment != null) {
                 writer.write(comment);
             }
-            writer.write(String.format("%s=%s\n", entry.getKey(), entry.getValue()));
+            String value = entry.getValue();
+            value = value.replaceAll("\\\\", "\\\\\\\\");
+            writer.write(String.format("%s=%s\n", entry.getKey(), value));
         }
         
         // close the file to flush
