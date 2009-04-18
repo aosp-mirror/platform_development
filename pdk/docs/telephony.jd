@@ -1,4 +1,5 @@
 page.title=Radio Layer Interface
+pdk.version=1.0
 @jd:body
 
 <a name="toc"/>
@@ -15,7 +16,7 @@ page.title=Radio Layer Interface
 <a href="#androidTelephonyRILFunctions">RIL Functions</a><br/><div style="padding-left:40px">
 
 <a href="#androidRilFunctionsSolicited">RIL Solicited Command Requests</a><br/>
-<a href="#androidRilFunctionsUnsolicited">RIL Unsolicited Commands</a><br/></div></div>
+<a href="#androidRilFunctionsUnsolicited">RIL Unsolicited Commands</a><br/></div></div></font></div>
 
 <a name="androidTelephonyIntro"></a><h2>Introduction</h2>
 
@@ -221,4 +222,3 @@ RIL_RadioFunctions;
     </ul></td>
   </tr>
 </table></p>
-
