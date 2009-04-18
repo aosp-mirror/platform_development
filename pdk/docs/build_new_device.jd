@@ -27,7 +27,7 @@ pdk.version=1.0
   PRODUCT_NAME := &lt;first_product_name&gt;
   PRODUCT_DEVICE := &lt;board_name&gt;</pre></li>  
   <li>In the <code>products</code> directory, create an <code>AndroidProducts.mk</code> file that point to (and is responsible for finding) the individual product make files.<BR>
-  <pre class="prettyprint">
+  <pre class="prettypring">
   #
   # This file should set PRODUCT_MAKEFILES to a list of product makefiles
   # to expose to the build system.  LOCAL_DIR will already be set to
