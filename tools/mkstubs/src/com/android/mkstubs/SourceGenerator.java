@@ -26,7 +26,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -41,7 +40,7 @@ class SourceGenerator {
      */
     public void generateSource(File baseDir,
             Map<String, ClassReader> classes,
-            List<String> exclusions) throws IOException {
+            Filter filter) throws IOException {
         
         for (Entry<String, ClassReader> entry : classes.entrySet()) {
             ClassReader cr = entry.getValue();
@@ -51,7 +50,7 @@ class SourceGenerator {
             FileWriter fw = null;
             try {
                 fw = createWriter(baseDir, name);
-                visitClassSource(fw, cr, exclusions);
+                visitClassSource(fw, cr, filter);
             } finally {
                 fw.close();
             }
@@ -79,12 +78,12 @@ class SourceGenerator {
      * Generate a source equivalent to the stubbed version of the class reader,
      * minus all exclusions
      */
-    void visitClassSource(Writer fw, ClassReader cr, List<String> exclusions) {
+    void visitClassSource(Writer fw, ClassReader cr, Filter filter) {
         System.out.println("Dump " + cr.getClassName());
         
         ClassVisitor javaWriter = new ClassSourcer(new Output(fw));
-        ClassVisitor filter = new FilterClassAdapter(javaWriter, exclusions);
-        cr.accept(filter, 0 /*flags*/);
+        ClassVisitor classFilter = new FilterClassAdapter(javaWriter, filter);
+        cr.accept(classFilter, 0 /*flags*/);
     }
 
 }
