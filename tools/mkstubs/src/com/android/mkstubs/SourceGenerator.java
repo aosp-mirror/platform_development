@@ -16,7 +16,7 @@
 
 package com.android.mkstubs;
 
-import com.android.mkstubs.sourcer.JavaSourcer;
+import com.android.mkstubs.sourcer.ClassSourcer;
 import com.android.mkstubs.sourcer.Output;
 
 import org.objectweb.asm.ClassReader;
@@ -33,7 +33,7 @@ import java.util.Map.Entry;
 /**
  * 
  */
-class AsmGenerator {
+class SourceGenerator {
 
     /**
      * Generate source for the stubbed classes, mostly for debug purposes.
@@ -51,7 +51,7 @@ class AsmGenerator {
             FileWriter fw = null;
             try {
                 fw = createWriter(baseDir, name);
-                dumpClass(fw, cr, exclusions);
+                visitClassSource(fw, cr, exclusions);
             } finally {
                 fw.close();
             }
@@ -79,10 +79,10 @@ class AsmGenerator {
      * Generate a source equivalent to the stubbed version of the class reader,
      * minus all exclusions
      */
-    void dumpClass(Writer fw, ClassReader cr, List<String> exclusions) {
+    void visitClassSource(Writer fw, ClassReader cr, List<String> exclusions) {
         System.out.println("Dump " + cr.getClassName());
         
-        ClassVisitor javaWriter = new JavaSourcer(new Output(fw));
+        ClassVisitor javaWriter = new ClassSourcer(new Output(fw));
         ClassVisitor filter = new FilterClassAdapter(javaWriter, exclusions);
         cr.accept(filter, 0 /*flags*/);
     }

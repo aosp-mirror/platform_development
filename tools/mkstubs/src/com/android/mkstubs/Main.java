@@ -146,20 +146,15 @@ public class Main {
      
         aa.filter(classes, p.getInclusions(), p.getExclusions());
 
-        AsmGenerator gen = new AsmGenerator();
-
         // dump as Java source files, mostly for debugging
-        File dst_src_dir = new File(p.getOutputJarPath() + File.separator + "sources");
+        SourceGenerator src_gen = new SourceGenerator();
+        File dst_src_dir = new File(p.getOutputJarPath() + "_sources");
         dst_src_dir.mkdir();
-        gen.generateSource(dst_src_dir, classes, p.getExclusions());
+        src_gen.generateSource(dst_src_dir, classes, p.getExclusions());
         
+        // dump the stubbed jar
+        StubGenerator stub_gen = new StubGenerator();
+        File dst_jar = new File(p.getOutputJarPath());
+        stub_gen.generateStubbedJar(dst_jar, classes, p.getExclusions());
     }
-
-    /** @deprecated debug only */
-    private void displayClasses(Map<String, ClassReader> classes) {
-        for(String className : classes.keySet()) {
-            System.out.println("Found " + className);
-        }
-    }
-
 }
