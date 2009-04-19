@@ -53,6 +53,17 @@ import java.util.ArrayList;
  */
 class PreCompilerDeltaVisitor extends BaseDeltaVisitor implements
         IResourceDeltaVisitor {
+    
+    private enum AidlType {
+        UNKNOWN, INTERFACE, PARCELABLE;
+    }
+
+    // See comment in #getAidlType()
+//    private final static Pattern sParcelablePattern = Pattern.compile(
+//            "^\\s*parcelable\\s+([a-zA-Z_][a-zA-Z0-9_]*)\\s*;\\s*$");
+//
+//    private final static Pattern sInterfacePattern = Pattern.compile(
+//            "^\\s*interface\\s+([a-zA-Z_][a-zA-Z0-9_]*)\\s*(?:\\{.*)?$");
 
     // Result fields.
     /**
@@ -62,6 +73,11 @@ class PreCompilerDeltaVisitor extends BaseDeltaVisitor implements
      * into R.java
      */
     private boolean mCompileResources = false;
+    
+    /**
+     * Aidl force recompilation flag. If true, we'll attempt to recompile all aidl files.
+     */
+    private boolean mForceAidlCompile = false;
 
     /** List of .aidl files found that are modified or new. */
     private final ArrayList<AidlData> mAidlToCompile = new ArrayList<AidlData>();
@@ -107,6 +123,10 @@ class PreCompilerDeltaVisitor extends BaseDeltaVisitor implements
         return mCompileResources;
     }
 
+    public boolean getForceAidlCompile() {
+        return mForceAidlCompile;
+    }
+    
     public ArrayList<AidlData> getAidlToCompile() {
         return mAidlToCompile;
     }
@@ -302,7 +322,6 @@ class PreCompilerDeltaVisitor extends BaseDeltaVisitor implements
                         AdtPlugin.printErrorToConsole(mBuilder.getProject(), msg);
                     }
                 }
-
             } else {
                 // this is another source folder.
                 // We only care about aidl files being added/modified/removed.
@@ -310,12 +329,21 @@ class PreCompilerDeltaVisitor extends BaseDeltaVisitor implements
                 // get the extension of the resource
                 String ext = resource.getFileExtension();
                 if (AndroidConstants.EXT_AIDL.equalsIgnoreCase(ext)) {
-                    if (kind == IResourceDelta.REMOVED) {
-                        // we'll have to remove the generated file.
-                        mAidlToRemove.add(new AidlData(mSourceFolder, file));
+                    // first check whether it's a regular file or a parcelable.
+                    AidlType type = getAidlType(file);
+                    
+                    if (type == AidlType.INTERFACE) {
+                        if (kind == IResourceDelta.REMOVED) {
+                            // we'll have to remove the generated file.
+                            mAidlToRemove.add(new AidlData(mSourceFolder, file));
+                        } else if (mForceAidlCompile == false) {
+                            // add the aidl file to the list of file to (re)compile
+                            mAidlToCompile.add(new AidlData(mSourceFolder, file));
+                        }
                     } else {
-                        // add the aidl file to the list of file to (re)compile
-                        mAidlToCompile.add(new AidlData(mSourceFolder, file));
+                        // force recompilations of all Aidl Files.
+                        mForceAidlCompile = true;
+                        mAidlToCompile.clear();
                     }
                 }
             }
@@ -456,5 +484,57 @@ class PreCompilerDeltaVisitor extends BaseDeltaVisitor implements
         }
         
         return null;
+    }
+    
+    /**
+     * Returns the type of the aidl file. Aidl files can either declare interfaces, or declare
+     * parcelables. This method will attempt to parse the file and return the type. If the type
+     * cannot be determined, then it will return {@link AidlType#UNKNOWN}.
+     * @param file The aidl file
+     * @return the type of the aidl.
+     * @throws CoreException
+     */
+    private AidlType getAidlType(IFile file) throws CoreException {
+        // At this time, parsing isn't available, so we return UNKNOWN. This will force
+        // a recompilation of all aidl file as soon as one is changed.
+        return AidlType.UNKNOWN;
+
+        // TODO: properly parse aidl file to determine type and generate dependency graphs.
+//
+//        String className = file.getName().substring(0,
+//                file.getName().length() - AndroidConstants.DOT_AIDL.length());
+//
+//        InputStream input = file.getContents(true /* force*/);
+//        try {
+//            BufferedReader reader = new BufferedReader(new InputStreamReader(input));
+//            String line;
+//            while ((line = reader.readLine()) != null) {
+//                if (line.length() == 0) {
+//                    continue;
+//                }
+//
+//                Matcher m = sParcelablePattern.matcher(line);
+//                if (m.matches() && m.group(1).equals(className)) {
+//                    return AidlType.PARCELABLE;
+//                }
+//
+//                m = sInterfacePattern.matcher(line);
+//                if (m.matches() && m.group(1).equals(className)) {
+//                    return AidlType.INTERFACE;
+//                }
+//            }
+//        } catch (IOException e) {
+//            throw new CoreException(new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID,
+//                    "Error parsing aidl file", e));
+//        } finally {
+//            try {
+//                input.close();
+//            } catch (IOException e) {
+//                throw new CoreException(new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID,
+//                        "Error parsing aidl file", e));
+//            }
+//        }
+//
+//        return AidlType.UNKNOWN;
     }
 }
