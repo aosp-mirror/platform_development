@@ -1438,12 +1438,14 @@ multiplexer_handle_control( Multiplexer*  mult, Packet*  p )
          */
         if (client != NULL) {
             client_registration(client, 1);
+        } else {
+            D("%s: NULL client: '%.*s'", __FUNCTION__, p->len, p->data+11);
         }
         goto EXIT;
     }
 
     /* connection registration failure */
-    if (p->len >= 13 && !memcmp(p->data, "ko:connect:",11)) {
+    if (p->len == 13 && !memcmp(p->data, "ko:connect:",11)) {
         int     channel = hex2int(p->data+11, 2);
         Client* client  = multiplexer_find_client(mult, channel);
 
@@ -1464,8 +1466,18 @@ multiplexer_handle_control( Multiplexer*  mult, Packet*  p )
         goto EXIT;
     }
 
-    D("%s: unknown control message: '%.*s'",
-      __FUNCTION__, p->len, p->data);
+    /* A message that begins with "X00" is a probe sent by
+     * the emulator used to detect which version of qemud it runs
+     * against (in order to detect 1.0/1.1 system images. Just
+     * silently ignore it there instead of printing an error
+     * message.
+     */
+    if (p->len >= 3 && !memcmp(p->data,"X00",3)) {
+        goto EXIT;
+    }
+
+    D("%s: unknown control message (%d bytes): '%.*s'",
+      __FUNCTION__, p->len, p->len, p->data);
 
 EXIT:
     packet_free(&p);
@@ -1476,6 +1488,8 @@ static void
 multiplexer_serial_receive( Multiplexer*  mult, Packet*  p )
 {
     Client*  client;
+
+    T("%s: channel=%d '%.*s'", __FUNCTION__, p->channel, p->len, p->data);
 
     if (p->channel == CHANNEL_CONTROL) {
         multiplexer_handle_control(mult, p);
