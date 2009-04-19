@@ -141,7 +141,7 @@ function package() {
     mkdir "$JETCREATOR"
     mkdir "$JETDOC"
 
-    cp -v external/sonivox/jet_tools/JetCreator "$JETCREATOR"
+    cp -rv external/sonivox/jet_tools/JetCreator "$JETCREATOR"
     cp -v prebuilt/windows/jetcreator/EASDLL.dll "$JETCREATOR" 
     cp -v external/sonivox/docs/JET_Authoring_Guidelines.html "$JETDOC"
     cp -rv external/sonivox/docs/JET_Authoring_Guidelines_files/* docs/JetCreator/JET_Authoring_Guidelines_files
