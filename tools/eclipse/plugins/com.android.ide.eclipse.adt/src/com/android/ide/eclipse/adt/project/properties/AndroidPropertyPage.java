@@ -70,7 +70,7 @@ public class AndroidPropertyPage extends PropertyPage implements IWorkbenchPrope
         Label l = new Label(top, SWT.NONE);
         l.setText("Project Target");
         
-        mSelector = new SdkTargetSelector(top, targets, false /*allowMultipleSelection*/);
+        mSelector = new SdkTargetSelector(top, targets);
 
         l = new Label(top, SWT.SEPARATOR | SWT.HORIZONTAL);
         l.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
@@ -98,7 +98,7 @@ public class AndroidPropertyPage extends PropertyPage implements IWorkbenchPrope
             @Override
             public void widgetSelected(SelectionEvent e) {
                 // look for the selection and validate the page if there is a selection
-                IAndroidTarget target = mSelector.getFirstSelected();
+                IAndroidTarget target = mSelector.getSelected();
                 setValid(target != null);
             }
         });
@@ -114,7 +114,7 @@ public class AndroidPropertyPage extends PropertyPage implements IWorkbenchPrope
     public boolean performOk() {
         Sdk currentSdk = Sdk.getCurrent();
         if (currentSdk != null) {
-            currentSdk.setProject(mProject, mSelector.getFirstSelected(),
+            currentSdk.setProject(mProject, mSelector.getSelected(),
                     mApkConfigWidget.getApkConfigs());
         }
         

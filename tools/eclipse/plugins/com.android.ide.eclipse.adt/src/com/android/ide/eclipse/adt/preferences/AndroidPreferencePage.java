@@ -50,6 +50,8 @@ import java.io.File;
 public class AndroidPreferencePage extends FieldEditorPreferencePage implements
         IWorkbenchPreferencePage {
 
+    private SdkDirectoryFieldEditor mDirectoryField;
+
     public AndroidPreferencePage() {
         super(GRID);
         setPreferenceStore(AdtPlugin.getDefault().getPreferenceStore());
@@ -64,8 +66,10 @@ public class AndroidPreferencePage extends FieldEditorPreferencePage implements
     @Override
     public void createFieldEditors() {
 
-        addField(new SdkDirectoryFieldEditor(AdtPlugin.PREFS_SDK_DIR,
-                Messages.AndroidPreferencePage_SDK_Location_, getFieldEditorParent()));
+        mDirectoryField = new SdkDirectoryFieldEditor(AdtPlugin.PREFS_SDK_DIR,
+                Messages.AndroidPreferencePage_SDK_Location_, getFieldEditorParent());
+        
+        addField(mDirectoryField);
     }
 
     /*
@@ -74,6 +78,16 @@ public class AndroidPreferencePage extends FieldEditorPreferencePage implements
      * @see org.eclipse.ui.IWorkbenchPreferencePage#init(org.eclipse.ui.IWorkbench)
      */
     public void init(IWorkbench workbench) {
+    }
+    
+    @Override
+    public void dispose() {
+        super.dispose();
+        
+        if (mDirectoryField != null) {
+            mDirectoryField.dispose();
+            mDirectoryField = null;
+        }
     }
 
     /**
@@ -164,8 +178,7 @@ public class AndroidPreferencePage extends FieldEditorPreferencePage implements
                 
                 mTargetSelector = new SdkTargetSelector(parent,
                         targets,
-                        false, /*allowSelection*/
-                        false /*multipleSelection*/);
+                        false /*allowSelection*/);
                 gd = (GridData) mTargetSelector.getLayoutData();
                 gd.horizontalSpan = numColumns;
                 
