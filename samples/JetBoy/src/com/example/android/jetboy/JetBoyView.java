@@ -15,7 +15,8 @@
  * 
  */
 
-// FIXME: review and cleanup
+// Android JET demonstration code:
+// All inline comments related to the use of the JetPlayer class are preceded by "JET info:"
 
 package com.example.android.jetboy;
 
@@ -119,20 +120,19 @@ public class JetBoyView extends SurfaceView implements SurfaceHolder.Callback {
         public byte value;
     }
 
+    // JET info: the JetBoyThread receives all the events from the JET player
+    // JET info: through the OnJetEventListener interface.
     class JetBoyThread extends Thread implements OnJetEventListener {
 
-        /*
-         * State-tracking constants we don't actually use all of these in
-         * JetBoy, borrowed wholesale from lunar lander.
+        /**
+         * State-tracking constants.
          */
         public static final int STATE_START = -1;
         public static final int STATE_PLAY = 0;
         public static final int STATE_LOSE = 1;
         public static final int STATE_PAUSE = 2;
-        public static final int STATE_READY = 3;
-        public static final int STATE_RUNNING = 4;
-        public static final int STATE_WIN = 5;
-
+        public static final int STATE_RUNNING = 3;
+        
         // how many frames per beat? The basic animation can be changed for
         // instance to 3/4 by changing this to 3.
         // untested is the impact on other parts of game logic for non 4/4 time.
@@ -170,11 +170,11 @@ public class JetBoyView extends SurfaceView implements SurfaceHolder.Callback {
         /** The drawable to use as the close background of the animation canvas */
         private Bitmap mBackgroundImageNear;
 
-        // event ID within JET file. 80,81, 82 are tested to use.
-        // in this game 80 is used for sending asteroid
-        // 82 is used as game time for 1/4 note beat.
-        private final String mSendEvent = "80";
-        private final String mTimerEvent = "82";
+        // JET info: event IDs within the JET file.
+        // JET info: in this game 80 is used for sending asteroid across the screen
+        // JET info: 82 is used as game time for 1/4 note beat.
+        private final byte NEW_ASTEROID_EVENT = 80;
+        private final byte TIMER_EVENT = 82;
 
         // used to track beat for synch of mute/unmute actions
         private int mBeatCount = 1;
@@ -196,8 +196,6 @@ public class JetBoyView extends SurfaceView implements SurfaceHolder.Callback {
         private Bitmap mLaserShot;
 
         // used to save the beat event system time.
-        // right now we use System.currentMillis
-        // should it use android stuff??
         private long mLastBeatTime;
 
         private long mPassedTime;
@@ -209,7 +207,7 @@ public class JetBoyView extends SurfaceView implements SurfaceHolder.Callback {
         // but which land they start in is random.
         private Random mRandom = new Random();
 
-        // the star of our show, a reference to the JetPlayer object.
+        // JET info: the star of our show, a reference to the JetPlayer object.
         private JetPlayer mJet = null;
 
         private boolean mJetPlaying = false;
@@ -260,7 +258,7 @@ public class JetBoyView extends SurfaceView implements SurfaceHolder.Callback {
         private int mBGFarMoveX = 0;
         private int mBGNearMoveX = 0;
 
-        // this is has "high" (close to top) that jet boy can fly
+        // how far up (close to top) jet boy can fly
         private int mJetBoyYMin = 40;
         private int mJetBoyX = 0;
         private int mJetBoyY = 0;
@@ -271,14 +269,11 @@ public class JetBoyView extends SurfaceView implements SurfaceHolder.Callback {
         // how far up asteroid can be painted
         private int mAsteroidMinY = 40;
 
-        // Jet does not pick up volume and pan changes?
-        private boolean mMuteArrayHack = false;
 
         Resources mRes;
 
-        // eight music beds, added a 9th to fix some kind of bug in JET around
-        // pans and volume controls
-        // ask Jenn about this
+        // array to store the mute masks that are applied during game play to respond to
+        // the player's hit streaks
         private boolean muteMask[][] = new boolean[9][32];
 
         /**
@@ -290,15 +285,13 @@ public class JetBoyView extends SurfaceView implements SurfaceHolder.Callback {
          */
         public JetBoyThread(SurfaceHolder surfaceHolder, Context context, Handler handler) {
 
-            // get handles to some important objects
             mSurfaceHolder = surfaceHolder;
             mHandler = handler;
             mContext = context;
             mRes = context.getResources();
 
-            // this are the mute arrays associated with the music beds in the
-            // JET file
-
+            // JET info: this are the mute arrays associated with the music beds in the
+            // JET info: JET file
             for (int ii = 0; ii < 8; ii++) {
                 for (int xx = 0; xx < 32; xx++) {
                     muteMask[ii][xx] = true;
@@ -360,9 +353,7 @@ public class JetBoyView extends SurfaceView implements SurfaceHolder.Callback {
             muteMask[7][17] = false;
             muteMask[7][18] = false;
 
-            // set all tracks to play, do it for one beat and then switch to
-            // mute array zero
-            // hack for jet bug on pan and mutes
+            // set all tracks to play
             for (int xx = 0; xx < 32; xx++) {
                 muteMask[8][xx] = false;
             }
@@ -425,29 +416,36 @@ public class JetBoyView extends SurfaceView implements SurfaceHolder.Callback {
          */
         private void initializeJetPlayer() {
 
-            // if (mJet!=null)
-            // {
-            // mJet.release();
-            // mJet = null;
-            // }
+            // JET info: this is what we do to undesirable instances: we release them!
+            if (mJet != null)
+            {
+                mJet.release();
+                mJet = null;
+            }
 
+            // JET info: let's create our JetPlayer instance using the factory
             mJet = JetPlayer.getJetPlayer();
 
             mJetPlaying = false;
 
-            // make sure we flush the queue
-            // otherwise left over events from previous gameplay
-            // can hang around.
+            // JET info: make sure we flush the queue,
+            // JET info: otherwise left over events from previous gameplay can hang around.
+            // JET info: ok, here we don't really need that but if you ever reuse a JetPlayer
+            // JET info: instance, clear the queue before reusing it, this will also clear any
+            // JET info: trigger clips that have been triggered but not played yet.
             mJet.clearQueue();
 
-            // mJet.setStatusUpdateListener(this);
+            // JET info: we are going to receive in this example all the JET callbacks
+            // JET info: inthis animation thread object. 
             mJet.setEventListener(this);
 
             Log.d(TAG, "opening jet file");
 
-            // mJet.loadJetFile(m_PathToJetFile);
-
+            // JET info: load the actual JET content the game will be playing,
+            // JET info: it's stored as a raw resource in our APK, and is labeled "level1"
             mJet.loadJetFile(mContext.getResources().openRawResourceFd(R.raw.level1));
+            // JET info: if our JET file was stored on the sdcard for instance, we would have used
+            // JET info: mJet.loadJetFile("/sdcard/level1.jet");
 
             Log.d(TAG, "opening jet file DONE");
 
@@ -455,26 +453,34 @@ public class JetBoyView extends SurfaceView implements SurfaceHolder.Callback {
             byte sSegmentID = 0;
 
             Log.d(TAG, " start queuing jet file");
+            
+            // JET info: now we're all set to prepare queuing the JET audio segments for the game.
+            // JET info: in this example, the game uses segment 0 for the duration of the game play,
+            // JET info: and plays segment 1 several times as the "outro" music, so we're going to
+            // JET info: queue everything upfront, but with more complex JET compositions, we could
+            // JET info: also queue the segments during the game play.
 
-            // this is the main game play music
-            // it is located at segment 0
-            // it uses lib #0 this allows DLS to play
-            // -1 would mean no DLS
-            // higher numbers untested
+            // JET info: this is the main game play music
+            // JET info: it is located at segment 0
+            // JET info: it uses the first DLS lib in the .jet resource, which is at index 0
+            // JET info: index -1 means no DLS
             mJet.queueJetSegment(0, 0, 0, 0, 0, sSegmentID);
 
-            // end game music, loop 4 times normal pitch
+            // JET info: end game music, loop 4 times normal pitch
             mJet.queueJetSegment(1, 0, 4, 0, 0, sSegmentID);
 
-            // end game music loop 4 times up an octave
+            // JET info: end game music loop 4 times up an octave
             mJet.queueJetSegment(1, 0, 4, 1, 0, sSegmentID);
 
-            mJet.setMuteArray(muteMask[8], true);
+            // JET info: set the mute mask as designed for the beginning of the game, when the
+            // JET info: the player hasn't scored yet.
+            mJet.setMuteArray(muteMask[0], true);
 
             Log.d(TAG, " start queuing jet file DONE");
 
         }
 
+        
         private void doDraw(Canvas canvas) {
 
             if (mState == STATE_RUNNING) {
@@ -482,18 +488,14 @@ public class JetBoyView extends SurfaceView implements SurfaceHolder.Callback {
             } else if (mState == STATE_START) {
                 doDrawReady(canvas);
             } else if (mState == STATE_PLAY || mState == STATE_LOSE) {
-
                 if (mTitleBG2 == null) {
-
                     mTitleBG2 = BitmapFactory.decodeResource(mRes, R.drawable.title_bg_hori);
-
                 }
-
                 doDrawPlay(canvas);
-
             }// end state play block
         }
 
+        
         /**
          * Draws current state of the game Canvas.
          */
@@ -542,8 +544,7 @@ public class JetBoyView extends SurfaceView implements SurfaceHolder.Callback {
             if (mShipIndex == 4)
                 mShipIndex = 0;
 
-            // draw the space ship.
-            // This will have code to match asteroid lane
+            // draw the space ship in the same lane as the next asteroid
             canvas.drawBitmap(mShipFlying[mShipIndex], mJetBoyX, mJetBoyY, null);
 
             if (mLaserOn) {
@@ -561,8 +562,6 @@ public class JetBoyView extends SurfaceView implements SurfaceHolder.Callback {
 
             mJetBoyY = mJetBoyYMin;
 
-            mMuteArrayHack = false;
-
             // set up jet stuff
             initializeJetPlayer();
 
@@ -576,7 +575,6 @@ public class JetBoyView extends SurfaceView implements SurfaceHolder.Callback {
 
             mHitStreak = 0;
             mHitTotal = 0;
-            // mTimerTotal="1:20";
         }
 
         private void doAsteroidAnimation(Canvas canvas) {
@@ -585,20 +583,10 @@ public class JetBoyView extends SurfaceView implements SurfaceHolder.Callback {
                 return;
 
             // Compute what percentage through a beat we are and adjust
-            // animation and postion
-            // based on that. This assumes 140bpm(428ms/beat), we really should
-            // compute this
-            // based on properties of the music file under ideal circumstances.
-            // This is just
-            // interbeat interpolation, no game state is updated
+            // animation and position based on that. This assumes 140bpm(428ms/beat).
+            // This is just inter-beat interpolation, no game state is updated
             long frameDelta = System.currentTimeMillis() - mLastBeatTime;
-            // mPixelMoveX per beat
-            // This hid the feeling of the asteroids moving to the beat and
-            // caused some issues with
-            // explosions not aligned with asteroids last position, so fix that
-            // if we use this again.
-            // int asteroidDrawOffset = (int)(mPixelMoveX * frameDelta/428L);
-            // animation frames per beat
+
             int animOffset = (int)(ANIMATION_FRAMES_PER_BEAT * frameDelta / 428);
 
             for (int i = (mDangerWillRobinson.size() - 1); i >= 0; i--) {
@@ -631,10 +619,10 @@ public class JetBoyView extends SurfaceView implements SurfaceHolder.Callback {
             canvas.drawBitmap(mTitleBG2, 0, 0, null);
         }
 
+        
         /**
          * the heart of the worker bee
          */
-
         public void run() {
             // while running do stuff in this loop...bzzz!
             while (mRun) {
@@ -671,13 +659,10 @@ public class JetBoyView extends SurfaceView implements SurfaceHolder.Callback {
 
                 }// end of STATE_RUNNING block
                 else if (mState == STATE_PLAY && !mInitialized)
-
                 {
                     setInitialGameState();
                 } else if (mState == STATE_LOSE) {
-
                     mInitialized = false;
-
                 }
 
                 try {
@@ -696,6 +681,7 @@ public class JetBoyView extends SurfaceView implements SurfaceHolder.Callback {
             }// end while mrun block
         }
 
+        
         /**
          * This method handles updating the model of the game state. No
          * rendering is done here only processing of inputs and update of state.
@@ -719,7 +705,7 @@ public class JetBoyView extends SurfaceView implements SurfaceHolder.Callback {
                     mKeyContext = processKeyEvent((KeyGameEvent)event, mKeyContext);
 
                     // Update laser state. Having this here allows the laser to
-                    // be trigered right when the key is
+                    // be triggered right when the key is
                     // pressed. If we comment this out the laser will only be
                     // turned on when updateLaser is called
                     // when processing a timer event below.
@@ -731,7 +717,7 @@ public class JetBoyView extends SurfaceView implements SurfaceHolder.Callback {
                     JetGameEvent jetEvent = (JetGameEvent)event;
 
                     // Only update state on a timer event
-                    if (jetEvent.value == 82) {
+                    if (jetEvent.value == TIMER_EVENT) {
                         // Note the time of the last beat
                         mLastBeatTime = System.currentTimeMillis();
 
@@ -740,7 +726,7 @@ public class JetBoyView extends SurfaceView implements SurfaceHolder.Callback {
                         // on for too long.
                         updateLaser(mKeyContext);
 
-                        // Update explosions before we updated asteroids because
+                        // Update explosions before we update asteroids because
                         // updateAsteroids may add
                         // new explosions that we do not want updated until next
                         // frame
@@ -756,13 +742,14 @@ public class JetBoyView extends SurfaceView implements SurfaceHolder.Callback {
             }
         }
 
+
         /**
          * This method handles the state updates that can be caused by key press
          * events. Key events may mean different things depending on what has
          * come before, to support this concept this method takes an opaque
          * context object as a parameter and returns an updated version. This
          * context should be set to null for the first event then should be set
-         * to the last value returned for subsiquent events.
+         * to the last value returned for subsequent events.
          */
         protected Object processKeyEvent(KeyGameEvent event, Object context) {
             // Log.d(TAG, "key code is " + event.keyCode + " " + (event.up ?
@@ -789,6 +776,7 @@ public class JetBoyView extends SurfaceView implements SurfaceHolder.Callback {
             return context;
         }
 
+
         /**
          * This method updates the laser status based on user input and shot
          * duration
@@ -803,17 +791,14 @@ public class JetBoyView extends SurfaceView implements SurfaceHolder.Callback {
 
             // If the laser has been on too long shut it down
             if (mLaserOn && System.currentTimeMillis() - mLaserFireTime > 400) {
-
                 mLaserOn = false;
-
             }
 
             // trying to tune the laser hit timing
             else if (System.currentTimeMillis() - mLaserFireTime > 300) {
-                // if (mJet!=null)
-                // {
+                // JET info: the laser sound is on track 23, we mute it (true) right away (false)
                 mJet.setMuteFlag(23, true, false);
-                // }
+
             }
 
             // Now check to see if we should turn the laser on. We do this after
@@ -826,7 +811,7 @@ public class JetBoyView extends SurfaceView implements SurfaceHolder.Callback {
                 mLaserOn = true;
                 mLaserFireTime = keyTime;
 
-                // Log.d(TAG, "*** LASER ON ***");
+                // JET info: unmute the laser track (false) right away (false)
                 mJet.setMuteFlag(23, false, false);
             }
         }
@@ -841,14 +826,9 @@ public class JetBoyView extends SurfaceView implements SurfaceHolder.Callback {
             for (int i = (mDangerWillRobinson.size() - 1); i >= 0; i--) {
                 Asteroid asteroid = mDangerWillRobinson.elementAt(i);
 
-                // If the asteroid is within laser ranged but not already missed
-                // check if the
-                // key was pressed close enough to the beat to make a hit
-
-                // there isnt any real logic here. just played with it until the
-                // game "felt right"
+                // If the asteroid is within laser range but not already missed
+                // check if the key was pressed close enough to the beat to make a hit
                 if (asteroid.mDrawX <= mAsteroidMoveLimitX + 20 && !asteroid.mMissed)
-
                 {
                     // If the laser was fired on the beat destroy the asteroid
                     if (mLaserOn) {
@@ -870,9 +850,8 @@ public class JetBoyView extends SurfaceView implements SurfaceHolder.Callback {
                         // This asteroid has been removed process the next one
                         continue;
                     } else {
-                        // Sorry, timing was not good enough, marke the asteroid
-                        // as missed so
-                        // on next frame it cannot be hit even if it is still
+                        // Sorry, timing was not good enough, mark the asteroid
+                        // as missed so on next frame it cannot be hit even if it is still
                         // within range
                         asteroid.mMissed = true;
 
@@ -928,26 +907,16 @@ public class JetBoyView extends SurfaceView implements SurfaceHolder.Callback {
         protected void processJetEvent(JetPlayer player, short segment, byte track, byte channel,
                 byte controller, byte value) {
 
-            Log.d(TAG, "onJetEvent(): seg=" + segment + " track=" + track + " chan=" + channel
-                    + " cntrlr=" + controller + " val=" + value);
+            //Log.d(TAG, "onJetEvent(): seg=" + segment + " track=" + track + " chan=" + channel
+            //        + " cntrlr=" + controller + " val=" + value);
 
-            String eventID = "" + value;
 
             // Check for an event that triggers a new asteroid
-            if (eventID.equalsIgnoreCase(mSendEvent)) {
-                // Log.d(TAG, "~~~~ setting create to true");
-
+            if (value == NEW_ASTEROID_EVENT) {
                 doAsteroidCreation();
             }
 
             mBeatCount++;
-
-            if (!mMuteArrayHack) {
-                mMuteArrayHack = true;
-
-                mJet.setMuteArray(muteMask[0], false);
-
-            }
 
             if (mBeatCount > 4) {
                 mBeatCount = 1;
@@ -958,11 +927,10 @@ public class JetBoyView extends SurfaceView implements SurfaceHolder.Callback {
 
             // it was a game requirement to change the mute array on 1st beat of
             // the next measure when needed
-            // and so we track beat count, after than we track hitStreak to
-            // determine music level
-            // if the level has go gone up, call trigger clip otherwise just
-            // execute rest of change music bed logic.
-            // could probably be a method call here.
+            // and so we track beat count, after that we track hitStreak to
+            // determine the music "intensity"
+            // if the intensity has go gone up, call a corresponding trigger clip, otherwise just
+            // execute the rest of the music bed change logic.
             if (mBeatCount == 1) {
 
                 // do it back wards so you fall into the correct one
@@ -976,18 +944,21 @@ public class JetBoyView extends SurfaceView implements SurfaceHolder.Callback {
                         }
 
                         mCurrentBed = 7;
+                        // JET info: change the mute mask to update the way the music plays based
+                        // JET info: on the player's skills.
                         mJet.setMuteArray(muteMask[7], false);
 
                     }
                 } else if (mHitStreak > 24) {
                     if (mCurrentBed != 6) {
                         if (mCurrentBed < 6) {
+                            // JET info: quite a few asteroids hit, trigger the clip with the guy's
+                            // JET info: voice that encourages the player.
                             mJet.triggerClip(6);
                         }
 
                         mCurrentBed = 6;
                         mJet.setMuteArray(muteMask[6], false);
-                        // mJet.triggerClip(6);
                     }
                 } else if (mHitStreak > 20) {
                     if (mCurrentBed != 5) {
@@ -997,7 +968,6 @@ public class JetBoyView extends SurfaceView implements SurfaceHolder.Callback {
 
                         mCurrentBed = 5;
                         mJet.setMuteArray(muteMask[5], false);
-                        // mJet.triggerClip(5);
                     }
                 } else if (mHitStreak > 16) {
                     if (mCurrentBed != 4) {
@@ -1007,7 +977,6 @@ public class JetBoyView extends SurfaceView implements SurfaceHolder.Callback {
                         }
                         mCurrentBed = 4;
                         mJet.setMuteArray(muteMask[4], false);
-                        // mJet.triggerClip(4);
                     }
                 } else if (mHitStreak > 12) {
                     if (mCurrentBed != 3) {
@@ -1016,7 +985,6 @@ public class JetBoyView extends SurfaceView implements SurfaceHolder.Callback {
                         }
                         mCurrentBed = 3;
                         mJet.setMuteArray(muteMask[3], false);
-                        // mJet.triggerClip(3);
                     }
                 } else if (mHitStreak > 8) {
                     if (mCurrentBed != 2) {
@@ -1026,7 +994,6 @@ public class JetBoyView extends SurfaceView implements SurfaceHolder.Callback {
 
                         mCurrentBed = 2;
                         mJet.setMuteArray(muteMask[2], false);
-                        // mJet.triggerClip(2);
                     }
                 } else if (mHitStreak > 4) {
                     if (mCurrentBed != 1) {
@@ -1036,23 +1003,14 @@ public class JetBoyView extends SurfaceView implements SurfaceHolder.Callback {
                         }
 
                         mJet.setMuteArray(muteMask[1], false);
-                        // mJet.triggerClip(1);
 
                         mCurrentBed = 1;
                     }
                 }
             }
-
-            /*
-             * try { Log.d(TAG,"onJetEvent: segment =" + segment);
-             * Log.d(TAG,"onJetEvent(): track =" + track);
-             * Log.d(TAG,"onJetEvent(): channel =" + channel);
-             * Log.d(TAG,"onJetEvent(): controller =" + controller);
-             * Log.d(TAG,"onJetEvent(): value =" + value); } catch(Exception e1) {
-             * Log.e(TAG,"on Jet Event caught " + e1.toString()); }
-             */
         }
 
+        
         private void doAsteroidCreation() {
             // Log.d(TAG, "asteroid created");
 
@@ -1070,6 +1028,7 @@ public class JetBoyView extends SurfaceView implements SurfaceHolder.Callback {
             mDangerWillRobinson.add(_as);
         }
 
+        
         /**
          * Used to signal the thread whether it should be running or not.
          * Passing true allows the thread to run; passing false will shut it
@@ -1087,6 +1046,7 @@ public class JetBoyView extends SurfaceView implements SurfaceHolder.Callback {
             }
         }
 
+        
         /**
          * returns the current int value of game state as defined by state
          * tracking constants
@@ -1099,6 +1059,7 @@ public class JetBoyView extends SurfaceView implements SurfaceHolder.Callback {
             }
         }
 
+        
         /**
          * Sets the game mode. That is, whether we are running, paused, in the
          * failure state, in the victory state, etc.
@@ -1112,13 +1073,13 @@ public class JetBoyView extends SurfaceView implements SurfaceHolder.Callback {
             }
         }
 
+        
         /**
          * Sets state based on input, optionally also passing in a text message.
          * 
          * @param state
          * @param message
          */
-        // TODO - Modeled from lunar lander Determine if best way to do this.
         public void setGameState(int state, CharSequence message) {
 
             synchronized (mSurfaceHolder) {
@@ -1149,23 +1110,24 @@ public class JetBoyView extends SurfaceView implements SurfaceHolder.Callback {
                     // events in the queue
                     mEventQueue.clear();
 
-                    // And reset the ket state so we dont think a button is pressed that isn't
+                    // And reset the key state so we don't think a button is pressed when it isn't
                     mKeyContext = null;
                 }
 
             }
         }
 
+        
         /**
          * Add key press input to the GameEvent queue
          */
-
         public boolean doKeyDown(int keyCode, KeyEvent msg) {
             mEventQueue.add(new KeyGameEvent(keyCode, false, msg));
 
             return true;
         }
 
+        
         /**
          * Add key press input to the GameEvent queue
          */
@@ -1175,6 +1137,7 @@ public class JetBoyView extends SurfaceView implements SurfaceHolder.Callback {
             return true;
         }
 
+        
         /* Callback invoked when the surface dimensions change. */
         public void setSurfaceSize(int width, int height) {
             // synchronized to make sure these all change atomically
@@ -1192,10 +1155,10 @@ public class JetBoyView extends SurfaceView implements SurfaceHolder.Callback {
             }
         }
 
+        
         /**
          * Pauses the physics update & animation.
          */
-        //TODO should probably add a pause to the menu button
         public void pause() {
             synchronized (mSurfaceHolder) {
                 if (mState == STATE_RUNNING)
@@ -1206,11 +1169,11 @@ public class JetBoyView extends SurfaceView implements SurfaceHolder.Callback {
 
                 if (mJet != null) {
                     mJet.pause();
-                    mJet.release();
                 }
             }
         }
 
+        
         /**
          * Does the work of updating timer
          * 
@@ -1276,27 +1239,21 @@ public class JetBoyView extends SurfaceView implements SurfaceHolder.Callback {
 
         }
 
-        /**
-         * required JetPlayer method. Informs listener of when a queue segement 
-         * event has been generated.
-         * 
-         * @param nbSegments
-         */
-        public void onJetNumQueuedSegmentUpdate(int nbSegments) {
-            Log.i(TAG, "onJetNumQueuedSegmentUpdate(): nbSegments =" + nbSegments);
-        }
 
+        // JET info: JET event listener interface implementation:
         /**
-         * required JetPlayer method. A more specific handler.
+         * required OnJetEventListener method. Notifications for queue updates
          * 
          * @param player
          * @param nbSegments
          */
         public void onJetNumQueuedSegmentUpdate(JetPlayer player, int nbSegments) {
-            Log.i(TAG, "onJetNumQueuedUpdate(): nbSegs =" + nbSegments);
+            //Log.i(TAG, "onJetNumQueuedUpdate(): nbSegs =" + nbSegments);
 
         }
 
+        
+        // JET info: JET event listener interface implementation:
         /**
          * The method which receives notification from event listener.
          * This is where we queue up events 80 and 82.
@@ -1314,20 +1271,23 @@ public class JetBoyView extends SurfaceView implements SurfaceHolder.Callback {
         public void onJetEvent(JetPlayer player, short segment, byte track, byte channel,
                 byte controller, byte value) {
 
-            Log.d(TAG, "jet got event " + value);
+            //Log.d(TAG, "jet got event " + value);
 
             //events fire outside the animation thread. This can cause timing issues.
             //put in queue for processing by animation thread.
             mEventQueue.add(new JetGameEvent(player, segment, track, channel, controller, value));
         }
 
+        
+        // JET info: JET event listener interface implementation:
         public void onJetPauseUpdate(JetPlayer player, int paused) {
-            Log.i(TAG, "onJetPauseUpdate(): paused =" + paused);
+            //Log.i(TAG, "onJetPauseUpdate(): paused =" + paused);
 
         }
 
+        // JET info: JET event listener interface implementation:
         public void onJetUserIdUpdate(JetPlayer player, int userId, int repeatCount) {
-            Log.i(TAG, "onJetUserIdUpdate(): userId =" + userId + " repeatCount=" + repeatCount);
+            //Log.i(TAG, "onJetUserIdUpdate(): userId =" + userId + " repeatCount=" + repeatCount);
 
         }
 
@@ -1367,9 +1327,6 @@ public class JetBoyView extends SurfaceView implements SurfaceHolder.Callback {
     
                     mTimerView.setText(m.getData().getString("text"));
     
-                    //ok so maybe it isn't really a "lose"
-                    //this bit was borrowed from lunar lander and then evolved.
-                    //too close to deadline to mess with now.
                     if (m.getData().getString("STATE_LOSE") != null) {
                         //mButtonRestart.setVisibility(View.VISIBLE);
                         mButtonRetry.setVisibility(View.VISIBLE);
@@ -1400,6 +1357,7 @@ public class JetBoyView extends SurfaceView implements SurfaceHolder.Callback {
         Log.d(TAG, "@@@ done creating view!");
     }
 
+    
     /**
      * Pass in a reference to the timer view widget so we can update it from here.
      * 
@@ -1409,15 +1367,13 @@ public class JetBoyView extends SurfaceView implements SurfaceHolder.Callback {
         mTimerView = tv;
     }
 
+    
     /**
      * Standard window-focus override. Notice focus lost so we can pause on
      * focus lost. e.g. user switches to take a call.
      */
     @Override
     public void onWindowFocusChanged(boolean hasWindowFocus) {
-
-        Log.d(TAG, "@@@FOCUS CHANGED!");
-
         if (!hasWindowFocus) {
             if (thread != null)
                 thread.pause();
@@ -1425,6 +1381,7 @@ public class JetBoyView extends SurfaceView implements SurfaceHolder.Callback {
         }
     }
 
+    
     /**
      * Fetches the animation thread corresponding to this LunarView.
      * 
@@ -1434,11 +1391,13 @@ public class JetBoyView extends SurfaceView implements SurfaceHolder.Callback {
         return thread;
     }
 
+    
     /* Callback invoked when the surface dimensions change. */
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
         thread.setSurfaceSize(width, height);
     }
 
+    
     public void surfaceCreated(SurfaceHolder arg0) {
         // start the thread here so that we don't busy-wait in run()
         // waiting for the surface to be created
@@ -1446,6 +1405,7 @@ public class JetBoyView extends SurfaceView implements SurfaceHolder.Callback {
         thread.start();
     }
 
+    
     public void surfaceDestroyed(SurfaceHolder arg0) {
         boolean retry = true;
         thread.setRunning(false);
@@ -1459,6 +1419,7 @@ public class JetBoyView extends SurfaceView implements SurfaceHolder.Callback {
         }
     }
 
+    
     /**
      * A reference to the button to start game over.
      * 
@@ -1470,6 +1431,7 @@ public class JetBoyView extends SurfaceView implements SurfaceHolder.Callback {
         //  mButtonRestart = _buttonRestart;
     }
 
+    
     //we reuse the help screen from the end game screen.
     public void SetTextView(TextView textView) {
         mTextView = textView;
