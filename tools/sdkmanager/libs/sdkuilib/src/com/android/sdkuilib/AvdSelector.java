@@ -89,7 +89,7 @@ public final class AvdSelector {
         final TableColumn column1 = new TableColumn(mTable, SWT.NONE);
         column1.setText("Target Name");
         final TableColumn column2 = new TableColumn(mTable, SWT.NONE);
-        column2.setText("SDK");
+        column2.setText("Platform");
         final TableColumn column3 = new TableColumn(mTable, SWT.NONE);
         column3.setText("API Level");
 
