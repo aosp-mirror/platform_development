@@ -22,7 +22,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Map;
 
 
@@ -34,12 +33,12 @@ public class Main {
     static class Params {
         private String mInputJarPath;
         private String mOutputJarPath;
-        private ArrayList<String> mInclusions = new ArrayList<String>();
-        private ArrayList<String> mExclusions = new ArrayList<String>();
-
+        private Filter mFilter;
+        
         public Params(String inputJarPath, String outputJarPath) {
             mInputJarPath = inputJarPath;
             mOutputJarPath = outputJarPath;
+            mFilter = new Filter();
         }
         
         public String getInputJarPath() {
@@ -49,13 +48,9 @@ public class Main {
         public String getOutputJarPath() {
             return mOutputJarPath;
         }
-
-        public ArrayList<String> getExclusions() {
-            return mExclusions;
-        }
         
-        public ArrayList<String> getInclusions() {
-            return mInclusions;
+        public Filter getFilter() {
+            return mFilter;
         }
     }
     
@@ -82,17 +77,41 @@ public class Main {
         Params p = new Params(args[0], args[1]);
         
         for (int i = 2; i < args.length; i++) {
-            String s = args[i];
-            if (s.startsWith("@")) {
-                addStringsFromFile(p, s.substring(1));
-            } else if (s.startsWith("-")) {
-                p.getExclusions().add(s.substring(1));
-            } else if (s.startsWith("+")) {
-                p.getInclusions().add(s.substring(1));
-            }
+            addString(p, args[i]);
         }
         
         return p;
+    }
+
+    private void addString(Params p, String s) throws IOException {
+        s = s.trim();
+
+        if (s.length() < 2) {
+            return;
+        }
+        
+        char mode = s.charAt(0);
+        s = s.substring(1).trim();
+
+        if (mode == '@') {
+            addStringsFromFile(p, s);
+            
+        } else if (mode == '-') {
+            s = s.replace('.', '/');  // transform FQCN into ASM internal name
+            if (s.endsWith("*")) {
+                p.getFilter().getExcludePrefix().add(s.substring(0, s.length() - 1));
+            } else {
+                p.getFilter().getExcludeFull().add(s);
+            }
+
+        } else if (mode == '+') {
+            s = s.replace('.', '/');  // transform FQCN into ASM internal name
+            if (s.endsWith("*")) {
+                p.getFilter().getIncludePrefix().add(s.substring(0, s.length() - 1));
+            } else {
+                p.getFilter().getIncludeFull().add(s);
+            }
+        }
     }
 
     private void addStringsFromFile(Params p, String inputFile)
@@ -102,22 +121,7 @@ public class Main {
             br = new BufferedReader(new FileReader(inputFile));
             String line;
             while ((line = br.readLine()) != null) {
-                line = line.trim();
-                if (line.length() == 0) {
-                    continue;
-                }
-                char mode = line.charAt(0);
-                line = line.substring(1).trim();
-                
-                if (line.length() > 0) {
-                    // Keep all class names in ASM path-like format, e.g. android/view/View
-                    line = line.replace('.', '/');
-                    if (mode == '-') {
-                        p.getExclusions().add(line);
-                    } else if (mode == '+') {
-                        p.getInclusions().add(line);
-                    }
-                }
+                addString(p, line);
             }
         } finally {
             br.close();
@@ -143,18 +147,22 @@ public class Main {
     private void process(Params p) throws IOException {
         AsmAnalyzer aa = new AsmAnalyzer();
         Map<String, ClassReader> classes = aa.parseInputJar(p.getInputJarPath());
-     
-        aa.filter(classes, p.getInclusions(), p.getExclusions());
+
+        System.out.println(String.format("Classes loaded: %d", classes.size()));
+        
+        aa.filter(classes, p.getFilter());
+
+        System.out.println(String.format("Classes filtered: %d", classes.size()));
 
         // dump as Java source files, mostly for debugging
         SourceGenerator src_gen = new SourceGenerator();
         File dst_src_dir = new File(p.getOutputJarPath() + "_sources");
         dst_src_dir.mkdir();
-        src_gen.generateSource(dst_src_dir, classes, p.getExclusions());
+        src_gen.generateSource(dst_src_dir, classes, p.getFilter());
         
         // dump the stubbed jar
         StubGenerator stub_gen = new StubGenerator();
         File dst_jar = new File(p.getOutputJarPath());
-        stub_gen.generateStubbedJar(dst_jar, classes, p.getExclusions());
+        stub_gen.generateStubbedJar(dst_jar, classes, p.getFilter());
     }
 }
