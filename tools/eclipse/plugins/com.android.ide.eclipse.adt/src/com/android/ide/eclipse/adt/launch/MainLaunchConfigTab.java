@@ -414,7 +414,7 @@ public class MainLaunchConfigTab extends AbstractLaunchConfigurationTab {
                     mActivityCombo.removeAll();
                     
                     for (Activity activity : activities) {
-                        if (activity.getExported() && activity.hasAction()) {
+                        if (activity.isExported() && activity.hasAction()) {
                             mActivities.add(activity);
                             mActivityCombo.add(activity.getName());
                         }
