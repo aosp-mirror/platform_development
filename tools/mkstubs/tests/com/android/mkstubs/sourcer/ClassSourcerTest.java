@@ -27,7 +27,7 @@ import java.io.StringWriter;
 /**
  * 
  */
-public class JavaSourcerTest extends TestHelper {
+public class ClassSourcerTest extends TestHelper {
 
     /**
      * @throws java.lang.Exception
@@ -48,7 +48,7 @@ public class JavaSourcerTest extends TestHelper {
         StringWriter sw = new StringWriter();
         ClassReader cr = new ClassReader("data/TestBaseClass");
         
-        JavaSourcer jw = new JavaSourcer(new Output(sw));
+        ClassSourcer jw = new ClassSourcer(new Output(sw));
         cr.accept(jw, 0);
         
         assertSourceEquals(
@@ -78,7 +78,7 @@ public class JavaSourcerTest extends TestHelper {
         StringWriter sw = new StringWriter();
         ClassReader cr = new ClassReader("data/TestInnerClass");
         
-        JavaSourcer jw = new JavaSourcer(new Output(sw));
+        ClassSourcer jw = new ClassSourcer(new Output(sw));
         cr.accept(jw, 0);
         
         assertSourceEquals(
@@ -106,7 +106,7 @@ public class JavaSourcerTest extends TestHelper {
         StringWriter sw = new StringWriter();
         ClassReader cr = new ClassReader("data/TestTemplateClass");
         
-        JavaSourcer jw = new JavaSourcer(new Output(sw));
+        ClassSourcer jw = new ClassSourcer(new Output(sw));
         cr.accept(jw, 0);
         
         assertSourceEquals(

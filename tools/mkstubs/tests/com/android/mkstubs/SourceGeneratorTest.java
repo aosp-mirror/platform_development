@@ -29,13 +29,13 @@ import java.util.ArrayList;
 /**
  * 
  */
-public class AsmGeneratorTest {
+public class SourceGeneratorTest {
 
-    private AsmGenerator mGen;
+    private SourceGenerator mGen;
 
     @Before
     public void setUp() throws Exception {
-        mGen = new AsmGenerator();
+        mGen = new SourceGenerator();
     }
 
     @After
@@ -48,7 +48,7 @@ public class AsmGeneratorTest {
         StringWriter sw = new StringWriter();
         ClassReader cr = new ClassReader("data/TestBaseClass");
         
-        mGen.dumpClass(sw, cr, new ArrayList<String>());
+        mGen.visitClassSource(sw, cr, new ArrayList<String>());
         
         String s = sw.toString();
         Assert.assertNotNull(s);
