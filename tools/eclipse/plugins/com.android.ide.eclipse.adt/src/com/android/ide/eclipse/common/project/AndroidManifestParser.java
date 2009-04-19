@@ -110,22 +110,22 @@ public class AndroidManifestParser {
      */
     public static class Activity {
         private final String mName;
-        private final boolean mExported;
+        private final boolean mIsExported;
         private boolean mHasAction = false;
         private boolean mHasMainAction = false;
         private boolean mHasLauncherCategory = false;
         
         public Activity(String name, boolean exported) {
             mName = name;
-            mExported = exported;
+            mIsExported = exported;
         }
         
         public String getName() {
             return mName;
         }
         
-        public boolean getExported() {
-            return mExported;
+        public boolean isExported() {
+            return mIsExported;
         }
         
         public boolean hasAction() {
@@ -430,7 +430,10 @@ public class AndroidManifestParser {
                         case LEVEL_INTENT_FILTER:
                             // if we found both a main action and a launcher category, this is our
                             // launcher activity!
-                            if (mCurrentActivity != null && mCurrentActivity.isHomeActivity()) {
+                            if (mLauncherActivity == null &&
+                                    mCurrentActivity != null &&
+                                    mCurrentActivity.isHomeActivity() &&
+                                    mCurrentActivity.isExported()) {
                                 mLauncherActivity = mCurrentActivity;
                             }
                             break;
