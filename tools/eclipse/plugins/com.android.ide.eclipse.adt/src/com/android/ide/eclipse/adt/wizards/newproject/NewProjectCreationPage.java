@@ -402,7 +402,7 @@ public class NewProjectCreationPage extends WizardPage {
         group.setLayout(new GridLayout());
         group.setLayoutData(new GridData(GridData.FILL_BOTH));
         group.setFont(parent.getFont());
-        group.setText("Target");
+        group.setText("Build Target");
         
         // The selector is created without targets. They are added below in the change listener.
         mSdkTargetSelector = new SdkTargetSelector(group, null);
