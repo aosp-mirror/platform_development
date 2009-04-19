@@ -24,27 +24,24 @@ import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
-import java.util.List;
-
 /**
  * A class visitor that filters out all the referenced exclusions
  */
 class FilterClassAdapter extends ClassAdapter {
 
-    private final List<String> mExclusions;
+    private final Filter mFilter;
+    private String mClassName;
 
-    public FilterClassAdapter(ClassVisitor writer, List<String> exclusions) {
+    public FilterClassAdapter(ClassVisitor writer, Filter filter) {
         super(writer);
-        mExclusions = exclusions;
+        mFilter = filter;
     }
 
     @Override
     public void visit(int version, int access, String name, String signature,
             String superName, String[] interfaces) {
 
-        // TODO filter super type
-        // TODO filter interfaces 
-        
+        mClassName = name;
         super.visit(version, access, name, signature, superName, interfaces);
     }
 
@@ -71,7 +68,15 @@ class FilterClassAdapter extends ClassAdapter {
             return null;
         }
         
-        // TODO filter on name
+        // filter on field name
+        String filterName = String.format("%s#%s", mClassName, name);
+
+        if (!mFilter.accept(filterName)) {
+            System.out.println("- Remove field " + filterName);
+            return null;
+        }
+        
+        // TODO we should produce an error if a filtered desc/signature is being used.
 
         return super.visitField(access, name, desc, signature, value);
     }
@@ -95,9 +100,25 @@ class FilterClassAdapter extends ClassAdapter {
             return null;
         }
         
-        // TODO filter exceptions: error if filtered exception is being used
+        // filter on method name using the non-generic descriptor
+        String filterName = String.format("%s#%s%s", mClassName, name, desc);
 
-        // TODO filter on name; error if filtered desc or signatures is being used
+        if (!mFilter.accept(filterName)) {
+            System.out.println("- Remove method " + filterName);
+            return null;
+        }
+
+        // filter on method name using the generic signature
+        if (signature != null) {
+            filterName = String.format("%s#%s%s", mClassName, name, signature);
+    
+            if (!mFilter.accept(filterName)) {
+                System.out.println("- Remove method " + filterName);
+                return null;
+            }
+        }
+
+        // TODO we should produce an error if a filtered desc/signature/exception is being used.
 
         return super.visitMethod(access, name, desc, signature, exceptions);
     }
@@ -105,7 +126,7 @@ class FilterClassAdapter extends ClassAdapter {
     @Override
     public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
         
-        // Filter on desc type
+        // TODO produce an error if a filtered annotation type is being used
         return super.visitAnnotation(desc, visible);
     }
 
@@ -122,14 +143,17 @@ class FilterClassAdapter extends ClassAdapter {
             return;
         }
 
-        // TODO filter on name
+        // filter on name
+        if (!mFilter.accept(name)) {
+            return;
+        }
 
         super.visitInnerClass(name, outerName, innerName, access);
     }
 
     @Override
     public void visitOuterClass(String owner, String name, String desc) {
-        // TODO Auto-generated method stub
+        // pass
     }
 
     @Override

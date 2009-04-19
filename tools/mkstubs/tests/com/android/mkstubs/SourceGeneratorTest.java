@@ -24,7 +24,6 @@ import org.junit.Test;
 import org.objectweb.asm.ClassReader;
 
 import java.io.StringWriter;
-import java.util.ArrayList;
 
 /**
  * 
@@ -48,7 +47,7 @@ public class SourceGeneratorTest {
         StringWriter sw = new StringWriter();
         ClassReader cr = new ClassReader("data/TestBaseClass");
         
-        mGen.visitClassSource(sw, cr, new ArrayList<String>());
+        mGen.visitClassSource(sw, cr, new Filter());
         
         String s = sw.toString();
         Assert.assertNotNull(s);
