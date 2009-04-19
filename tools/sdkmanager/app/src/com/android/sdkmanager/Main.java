@@ -361,11 +361,13 @@ class Main {
 
         int index = 1;
         for (IAndroidTarget target : mSdkManager.getTargets()) {
+            mSdkLog.printf("id: %d\n", index);
+            mSdkLog.printf("     Name: %s\n", target.getName());
             if (target.isPlatform()) {
-                mSdkLog.printf("[%d] %s\n", index, target.getName());
+                mSdkLog.printf("     Type: Platform\n");
                 mSdkLog.printf("     API level: %d\n", target.getApiVersionNumber());
             } else {
-                mSdkLog.printf("[%d] Add-on: %s\n", index, target.getName());
+                mSdkLog.printf("     Type: Add-On\n");
                 mSdkLog.printf("     Vendor: %s\n", target.getVendor());
                 if (target.getDescription() != null) {
                     mSdkLog.printf("     Description: %s\n", target.getDescription());
@@ -378,10 +380,10 @@ class Main {
                 if (libraries != null) {
                     mSdkLog.printf("     Libraries:\n");
                     for (IOptionalLibrary library : libraries) {
-                        mSdkLog.printf("     * %1$s (%2$s)\n",
+                        mSdkLog.printf("      * %1$s (%2$s)\n",
                                 library.getName(), library.getJarName());
                         mSdkLog.printf(String.format(
-                                "         %1$s\n", library.getDescription()));
+                                "          %1$s\n", library.getDescription()));
                     }
                 }
             }
