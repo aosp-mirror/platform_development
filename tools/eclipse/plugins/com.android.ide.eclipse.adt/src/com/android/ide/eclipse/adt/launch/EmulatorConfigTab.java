@@ -149,7 +149,7 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
         
         // radio button for the target mode
         Group targetModeGroup = new Group(topComp, SWT.NONE);
-        targetModeGroup.setText("Device Target Selection Mode");
+        targetModeGroup.setText("Deployment Target Selection Mode");
         gd = new GridData(GridData.FILL_HORIZONTAL);
         targetModeGroup.setLayoutData(gd);
         layout = new GridLayout();
@@ -186,7 +186,7 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
         offsetComp.setLayout(layout);
 
         mPreferredAvdLabel = new Label(offsetComp, SWT.NONE);
-        mPreferredAvdLabel.setText("Select a preferred Android Virtual Device:");
+        mPreferredAvdLabel.setText("Select a preferred Android Virtual Device for deployment:");
         AvdInfo[] avds = new AvdInfo[0];
         mPreferredAvdSelector = new AvdSelector(offsetComp, avds);
         mPreferredAvdSelector.setTableHeightHint(100);
@@ -338,7 +338,7 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
         // update the AVD list
         AvdInfo[] avds = null;
         if (avdManager != null) {
-            avds = avdManager.getAvds();
+            avds = avdManager.getValidAvds();
         }
 
         IAndroidTarget projectTarget = null;
@@ -359,7 +359,7 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
         }
 
         if (stringValue != null && stringValue.length() > 0 && avdManager != null) {
-            AvdInfo targetAvd = avdManager.getAvd(stringValue);
+            AvdInfo targetAvd = avdManager.getAvd(stringValue, true /*validAvdOnly*/);
             mPreferredAvdSelector.setSelection(targetAvd);
         } else {
             mPreferredAvdSelector.setSelection(null);
