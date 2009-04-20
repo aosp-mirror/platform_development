@@ -239,7 +239,6 @@ Native tests:
 <test name="mms"
     build_path="packages/apps/Mms"
     package="com.android.mms.tests"
-    runner="com.android.mms.ui.MMSInstrumentationTestRunner"
     coverage_target="Mms" />
 
 <test name="mmslaunch"
