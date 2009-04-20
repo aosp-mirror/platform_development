@@ -138,9 +138,13 @@ public class SdkCommandLine extends CommandLineProcessor {
 
         // --- create project ---
 
+        /* Disabled for ADT 0.9 / Cupcake SDK 1.5_r1 release. [bug #1795718].
+           This currently does not work, the alias build rules need to be fixed.
+           
         define(MODE.ENUM, true, 
                 VERB_CREATE, OBJECT_PROJECT, "m", KEY_MODE,
                 "Project mode", new String[] { ARG_ACTIVITY, ARG_ALIAS });
+        */
         define(MODE.STRING, true, 
                 VERB_CREATE, OBJECT_PROJECT,
                 "p", KEY_PATH,
