@@ -152,6 +152,7 @@ public final class AvdManager {
         
         private final String mName;
         private final String mPath;
+        private final String mTargetHash;
         private final IAndroidTarget mTarget;
         private final Map<String, String> mProperties;
         private final AvdStatus mStatus;
@@ -164,12 +165,13 @@ public final class AvdManager {
          * 
          * @param name The name of the AVD (for display or reference)
          * @param path The path to the config.ini file
-         * @param target The target. Cannot be null.
+         * @param targetHash the target hash
+         * @param target The target. Can be null, if the target was not resolved.
          * @param properties The property map. Cannot be null.
          */
-        public AvdInfo(String name, String path, IAndroidTarget target,
+        public AvdInfo(String name, String path, String targetHash, IAndroidTarget target,
                 Map<String, String> properties) {
-            this(name, path, target, properties, AvdStatus.OK);
+            this(name, path, targetHash, target, properties, AvdStatus.OK);
         }
 
         /**
@@ -180,14 +182,16 @@ public final class AvdManager {
          * 
          * @param name The name of the AVD (for display or reference)
          * @param path The path to the config.ini file
-         * @param target The target. Can be null.
+         * @param targetHash the target hash
+         * @param target The target. Can be null, if the target was not resolved.
          * @param properties The property map. Can be null.
          * @param error The error describing why this AVD is invalid. Cannot be null.
          */
-        public AvdInfo(String name, String path, IAndroidTarget target,
+        public AvdInfo(String name, String path, String targetHash, IAndroidTarget target,
                 Map<String, String> properties, AvdStatus status) {
             mName = name;
             mPath = path;
+            mTargetHash = targetHash;
             mTarget = target;
             mProperties = Collections.unmodifiableMap(properties);
             mStatus = status;
@@ -202,8 +206,15 @@ public final class AvdManager {
         public String getPath() {
             return mPath;
         }
+        
+        /**
+         * Returns the target hash string.
+         */
+        public String getTargetHash() {
+            return mTargetHash;
+        }
 
-        /** Returns the target of the AVD. */
+        /** Returns the target of the AVD, or <code>null</code> if it has not been resolved */
         public IAndroidTarget getTarget() {
             return mTarget;
         }
@@ -267,8 +278,7 @@ public final class AvdManager {
                         return String.format("Missing 'target' property in %1$s", getIniFile());
                     case ERROR_TARGET:
                         return String.format("Unknown target '%1$s' in %2$s",
-                                getProperties().get(AvdManager.AVD_INFO_TARGET),
-                                getIniFile());
+                                mTargetHash, getIniFile());
                     case ERROR_PROPERTIES:
                         return String.format("Failed to parse properties from %1$s",
                                 getConfigFile());
@@ -561,7 +571,8 @@ public final class AvdManager {
             }
             
             // create the AvdInfo object, and add it to the list
-            AvdInfo avdInfo = new AvdInfo(name, avdFolder.getAbsolutePath(), target, values);
+            AvdInfo avdInfo = new AvdInfo(name, avdFolder.getAbsolutePath(), target.hashString(),
+                    target, values);
             
             synchronized (mAllAvdList) {
                 mAllAvdList.add(avdInfo);
@@ -782,8 +793,8 @@ public final class AvdManager {
                 }
     
                 // update AVD info
-                AvdInfo info = new AvdInfo(avdInfo.getName(), paramFolderPath, avdInfo.getTarget(),
-                        avdInfo.getProperties());
+                AvdInfo info = new AvdInfo(avdInfo.getName(), paramFolderPath,
+                        avdInfo.getTargetHash(), avdInfo.getTarget(), avdInfo.getProperties());
                 replaceAvd(avdInfo, info);
 
                 // update the ini file
@@ -802,8 +813,8 @@ public final class AvdManager {
                 }
 
                 // update AVD info
-                AvdInfo info = new AvdInfo(newName, avdInfo.getPath(), avdInfo.getTarget(),
-                        avdInfo.getProperties());
+                AvdInfo info = new AvdInfo(newName, avdInfo.getPath(),
+                        avdInfo.getTargetHash(), avdInfo.getTarget(), avdInfo.getProperties());
                 replaceAvd(avdInfo, info);
             }
 
@@ -970,6 +981,7 @@ public final class AvdManager {
         AvdInfo info = new AvdInfo(
                 name,
                 avdPath,
+                targetHash,
                 target,
                 properties,
                 status);
@@ -1195,6 +1207,7 @@ public final class AvdManager {
         AvdInfo newAvd = new AvdInfo(
                 name,
                 avd.getPath(),
+                avd.getTargetHash(),
                 avd.getTarget(),
                 properties,
                 status);
