@@ -132,12 +132,12 @@ function package() {
     cp -v /cygdrive/c/cygwin/bin/mgwz.dll "$TOOLS"
 
     # Update a bunch of bat files
-    cp -v development/tools/apkbuilder/etc/apkbuilder.bat "$TOOLS"
-    cp -v development/tools/ddms/app/etc/ddms.bat "$TOOLS"
-    cp -v development/tools/traceview/etc/traceview.bat "$TOOLS"
+    cp -v development/tools/apkbuilder/etc/apkbuilder.bat           "$TOOLS"
+    cp -v development/tools/ddms/app/etc/ddms.bat                   "$TOOLS"
+    cp -v development/tools/traceview/etc/traceview.bat             "$TOOLS"
     cp -v development/tools/hierarchyviewer/etc/hierarchyviewer.bat "$TOOLS"
-    cp -v development/tools/draw9patch/etc/draw9patch.bat "$TOOLS"
-    cp -v development/tools/sdkmanager/app/etc/android.bat "$TOOLS"
+    cp -v development/tools/draw9patch/etc/draw9patch.bat           "$TOOLS"
+    cp -v development/tools/sdkmanager/app/etc/android.bat          "$TOOLS"
     
     # Put the JetCreator tools, content and docs (not available in the linux SDK)
     JET="$TOOLS/Jet"
@@ -146,24 +146,24 @@ function package() {
     JETLOGICTEMPLATES="$JET/logic_templates"
     JETDOC="$DEST/docs/JetCreator"
 
-    # need to rm these folders since a Mac SDK will have them and it would create a conflict
+    # need to rm these folders since a Mac SDK will have them and it might create a conflict
     rm -rfv "$JET"
     rm -rfv "$JETDOC"
 
     # now create fresh folders for JetCreator
-    mkdir "$JET"
-    mkdir "$JETDOC"
+    mkdir -v "$JET"
+    mkdir -v "$JETDOC"
 
-    cp -rv external/sonivox/jet_tools/JetCreator "$JETCREATOR"
-    cp -v prebuilt/windows/jetcreator/EASDLL.dll "$JETCREATOR"
-    cp -v prebuilt/windows/jetcreator/EASDLL.dll "$JETCREATOR"
+    cp -rv external/sonivox/jet_tools/JetCreator         "$JETCREATOR"
     cp -rv external/sonivox/jet_tools/JetCreator_content "$JETDEMOCONTENT"
-    cp -rv external/sonivox/jet_tools/logic_templates "$JETLOGICTEMPLATES"
+    cp -rv external/sonivox/jet_tools/logic_templates    "$JETLOGICTEMPLATES"
+    chmod -vR u+w "$JETCREATOR"  # fixes an issue where Cygwin might copy the above as u+rx only
+    cp -v prebuilt/windows/jetcreator/EASDLL.dll         "$JETCREATOR"/
     
-    cp -v external/sonivox/docs/JET_Authoring_Guidelines.html "$JETDOC"/
+    cp -v  external/sonivox/docs/JET_Authoring_Guidelines.html  "$JETDOC"/
     cp -rv external/sonivox/docs/JET_Authoring_Guidelines_files "$JETDOC"/
-    cp -v external/sonivox/docs/JET_Creator_User_Manual.html "$JETDOC"/
-    cp -rv external/sonivox/docs/JET_Creator_User_Manual_files "$JETDOC"/
+    cp  -v external/sonivox/docs/JET_Creator_User_Manual.html   "$JETDOC"/
+    cp -rv external/sonivox/docs/JET_Creator_User_Manual_files  "$JETDOC"/
 
     # Copy or move platform specific tools to the default platform.
     cp -v dalvik/dx/etc/dx.bat "$PLATFORM_TOOLS"
