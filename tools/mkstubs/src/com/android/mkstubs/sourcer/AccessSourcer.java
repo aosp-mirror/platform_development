@@ -19,7 +19,11 @@ package com.android.mkstubs.sourcer;
 import org.objectweb.asm.Opcodes;
 
 /**
- * 
+ * Source generator for the access fields of methods, fields and classes.
+ * <p/>
+ * Given an integer access field and a type ({@link #IS_CLASS}, {@link #IS_FIELD} or
+ * {@link #IS_METHOD}), the {@link #write(int, int)} method can generate a string
+ * desribing the access modifiers for a Java source. 
  */
 class AccessSourcer {
 
@@ -81,6 +85,9 @@ class AccessSourcer {
 
     /**
      * Generates a list of access keywords, e.g. "public final".
+     * <p/>
+     * It is up to the caller to filter extra keywords that should not be generated,
+     * e.g. {@link Flag#ACC_SYNTHETIC}.
      *  
      * @param access The access mode, e.g. 33 or 18
      * @param filter One of {@link #IS_CLASS}, {@link #IS_FIELD} or {@link #IS_METHOD}, which

@@ -28,7 +28,10 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 /**
- * 
+ * Analyzes an input Jar to get all the relevant classes according to the given filter.
+ * <p/>
+ * This is mostly a helper extracted for convenience. Callers will want to use
+ * {@link #parseInputJar(String)} followed by {@link #filter(Map, Filter)}.
  */
 class AsmAnalyzer {
 
@@ -66,12 +69,22 @@ class AsmAnalyzer {
         }
     }
 
-    public void filter(Map<String, ClassReader> classes, Filter filter) {
+    /**
+     * Filters the set of classes. Removes all classes that should not be included in the
+     * filter or that should be excluded. This modifies the map in-place.
+     * 
+     * @param classes The in-out map of classes to examine and filter. The map is filtered
+     *                in-place.
+     * @param filter  A filter describing which classes to include and which ones to exclude.
+     */
+    void filter(Map<String, ClassReader> classes, Filter filter) {
 
         Set<String> keys = classes.keySet();
         for(Iterator<String> it = keys.iterator(); it.hasNext(); ) {
             String key = it.next();
 
+            // TODO: We *could* filter out all private classes here: classes.get(key).getAccess().
+            
             // remove if we don't keep it
             if (!filter.accept(key)) {
                 System.out.println("- Remove class " + key);

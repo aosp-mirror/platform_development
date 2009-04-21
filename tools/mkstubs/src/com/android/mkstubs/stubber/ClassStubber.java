@@ -24,7 +24,8 @@ import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.MethodVisitor;
 
 /**
- * 
+ * A class visitor that generates stubs for all methods of the visited class.
+ * Everything else is passed as-is.
  */
 public class ClassStubber extends ClassAdapter {
 
