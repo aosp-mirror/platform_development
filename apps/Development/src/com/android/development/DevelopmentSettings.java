@@ -57,7 +57,6 @@ public class DevelopmentSettings extends Activity {
     private CheckBox mShowUpdatesCB;
     private CheckBox mShowBackgroundCB;
     private CheckBox mShowSleepCB;
-    private CheckBox mShowMapsCompassCB;
     private CheckBox mShowXmppCB;
     private Spinner mMaxProcsSpinner;
     private Spinner mWindowAnimationScaleSpinner;
@@ -69,7 +68,6 @@ public class DevelopmentSettings extends Activity {
     private boolean mAlwaysFinish;
     private int mProcessLimit;
     private boolean mShowSleep;
-    private boolean mShowMapsCompass;
     private boolean mShowXmpp;
     private AnimationScaleSelectedListener mWindowAnimationScale
             = new AnimationScaleSelectedListener(0);
@@ -106,8 +104,6 @@ public class DevelopmentSettings extends Activity {
         mShowBackgroundCB.setOnCheckedChangeListener(new SurfaceFlingerClicker(1003));
         mShowSleepCB = (CheckBox)findViewById(R.id.show_sleep);
         mShowSleepCB.setOnClickListener(mShowSleepClicked);
-        mShowMapsCompassCB = (CheckBox)findViewById(R.id.show_maps_compass);
-        mShowMapsCompassCB.setOnClickListener(mShowMapsCompassClicked);
         mShowXmppCB = (CheckBox)findViewById(R.id.show_xmpp);
         mShowXmppCB.setOnClickListener(mShowXmppClicked);
         mMaxProcsSpinner = (Spinner)findViewById(R.id.max_procs);
@@ -172,7 +168,6 @@ public class DevelopmentSettings extends Activity {
         updateSharedOptions();
         updateFlingerOptions();
         updateSleepOptions();
-        updateMapsCompassOptions();
         updateXmppOptions();        
 
         try {
@@ -293,31 +288,6 @@ public class DevelopmentSettings extends Activity {
         mShowSleepCB.setChecked(mShowSleep);
     }
 
-    private void writeMapsCompassOptions() {
-        try {
-            Context c = createPackageContext("com.google.android.apps.maps", 0);
-            c.getSharedPreferences("extra-features", MODE_WORLD_WRITEABLE)
-                .edit()
-                .putBoolean("compass", mShowMapsCompass)
-                .commit();
-        } catch (NameNotFoundException e) {
-            Log.w(TAG, "Failed setting maps compass");
-            e.printStackTrace();
-        }
-    }
-
-    private void updateMapsCompassOptions() {
-        try {
-            Context c = createPackageContext("com.google.android.apps.maps", 0);
-            mShowMapsCompass = c.getSharedPreferences("extra-features", MODE_WORLD_READABLE)
-                .getBoolean("compass", false);
-        } catch (NameNotFoundException e) {
-            Log.w(TAG, "Failed reading maps compass");
-            e.printStackTrace();
-        }
-        mShowMapsCompassCB.setChecked(mShowMapsCompass);
-    }
-
     private void writeXmppOptions() {
         Settings.System.setShowGTalkServiceStatus(getContentResolver(), mShowXmpp);
     }
@@ -410,16 +380,6 @@ public class DevelopmentSettings extends Activity {
         }
     };
 
-    private View.OnClickListener mShowMapsCompassClicked =
-        new View.OnClickListener() {
-        public void onClick(View v) {
-            mShowMapsCompass = ((CheckBox)v).isChecked();
-            writeMapsCompassOptions();
-            updateMapsCompassOptions();
-        }
-    };
-
-    
     private View.OnClickListener mShowXmppClicked = new View.OnClickListener() {
         public void onClick(View v) {
             mShowXmpp = ((CheckBox)v).isChecked();
