@@ -36,7 +36,6 @@
             android:icon="@drawable/ic_launcher_devtools">
 
         <uses-library android:name="android.test.runner" />
-        <uses-library android:name="com.google.android.maps" />
 
         <activity android:name="Development" android:label="Dev Tools"
             android:icon="@drawable/ic_launcher_devtools">
