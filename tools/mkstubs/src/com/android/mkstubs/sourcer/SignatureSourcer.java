@@ -24,14 +24,22 @@ import org.objectweb.asm.signature.SignatureWriter;
 import java.util.ArrayList;
 
 /**
- * Note: most of the implementation is a duplicate of
- * ASM's SignatureWriter with some slight variations.
+ * A signature visitor that can be used to generate Java source corresponding to
+ * various types of signatures.
  * <p/>
- * Note: When processing a method's signature, the signature order is the
- * reverse of the source order, e.g. it is (parameters)return-type where
- * we want to generate "return-type method-name (parameters)".
- * So in this case the return-type and parameters are not output directly
- * but are instead accumulated in internal variables.
+ * Terminology: a "signature" is a type descriptor for generics. There are different types
+ * of signatures depending on the context where they are used, e.g. method declarations,
+ * method parameters, class declarations, etc..
+ * <p/>
+ * Note: most of the implementation is a duplicate of ASM's SignatureWriter with some
+ * slight variations.
+ * <p/>
+ * Note: When processing a method's signature, the signature order is the reverse of the source
+ * order, e.g. the signature is written as "(parameters)return-type" where we want to generate
+ * "return-type method-name (parameters)". To hanlde this case, the return-type and parameters
+ * are <em>not</em> output directly but are instead accumulated in internal variables that you can
+ * get later using {@link #getReturnType()}, {@link #getParameters()}, {@link #getSuperClass()}
+ * and {@link #formalsToString()}.
  */
 class SignatureSourcer implements SignatureVisitor {
 
@@ -58,10 +66,22 @@ class SignatureSourcer implements SignatureVisitor {
      */
     private int mArgumentStack;
 
+    /**
+     * {@link SignatureSourcer} generated when parsing the return type of <em>this</em>
+     * signature. Initially null.
+     */
     private SignatureSourcer mReturnType;
 
+    /**
+     * {@link SignatureSourcer} generated when parsing the super class of <em>this</em>
+     * signature. Initially null.
+     */
     private SignatureSourcer mSuperClass;
 
+    /**
+     * {@link SignatureSourcer}s for each parameters generated when parsing the method parameters
+     * of <em>this</em> signature. Initially empty but not null.
+     */
     private ArrayList<SignatureSourcer> mParameters = new ArrayList<SignatureSourcer>();
 
 

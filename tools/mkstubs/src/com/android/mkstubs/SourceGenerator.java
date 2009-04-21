@@ -30,7 +30,11 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 /**
- * 
+ * Given a set of already filtered classes, this filters out all private members and then
+ * generates the Java source for the remaining classes.
+ * <p/>
+ * This is an helper extracted for convenience. Callers just need to use
+ * {@link #generateSource(File, Map, Filter)}.
  */
 class SourceGenerator {
 

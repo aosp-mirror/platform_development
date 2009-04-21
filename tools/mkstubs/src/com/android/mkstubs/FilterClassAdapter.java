@@ -25,7 +25,8 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
 /**
- * A class visitor that filters out all the referenced exclusions
+ * A class visitor that filters out all members (fields, methods and inner classes) that are
+ * either private or rejected by the {@link Filter}.
  */
 class FilterClassAdapter extends ClassAdapter {
 
