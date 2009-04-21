@@ -24,6 +24,12 @@ import android.test.ActivityInstrumentationTestCase;
  */
 public class ApiDemosTest extends ActivityInstrumentationTestCase<ApiDemos> {
 
+    /**
+     * The first constructor parameter must refer to the package identifier of the
+     * package hosting the activity to be launched, which is specified in the AndroidManifest.xml
+     * file.  This is not necessarily the same as the java package name of the class - in fact, in
+     * some cases it may not match at all.
+     */
     public ApiDemosTest() {
         super("com.example.android.apis", ApiDemos.class);
     }
