@@ -482,22 +482,29 @@ public class CommandLineProcessor {
             if (arg.getVerb().equals(verb) && arg.getDirectObject().equals(directObject)) {
                 
                 String value = "";
-                if (arg.getDefaultValue() instanceof String[]) {
-                    for (String v : (String[]) arg.getDefaultValue()) {
-                        if (value.length() > 0) {
-                            value += ", ";
+                String required = "";
+                if (arg.isMandatory()) {
+                    required = " [required]";
+                    
+                } else {
+                    if (arg.getDefaultValue() instanceof String[]) {
+                        for (String v : (String[]) arg.getDefaultValue()) {
+                            if (value.length() > 0) {
+                                value += ", ";
+                            }
+                            value += v;
                         }
-                        value += v;
+                    } else if (arg.getDefaultValue() != null) {
+                        Object v = arg.getDefaultValue();
+                        if (arg.getMode() != MODE.BOOLEAN || v.equals(Boolean.TRUE)) {
+                            value = v.toString();
+                        }
                     }
-                } else if (arg.getDefaultValue() != null) {
-                    value = arg.getDefaultValue().toString();
-                }
-                if (value.length() > 0) {
-                    value = " (" + value + ")";
+                    if (value.length() > 0) {
+                        value = " [Default: " + value + "]";
+                    }
                 }
                 
-                String required = arg.isMandatory() ? " [required]" : "";
-
                 stdout("  -%1$s %2$-10s %3$s%4$s%5$s",
                         arg.getShortArg(),
                         "--" + arg.getLongArg(),
