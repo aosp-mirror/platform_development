@@ -19,10 +19,11 @@ package com.android.mkstubs.sourcer;
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.Attribute;
 import org.objectweb.asm.FieldVisitor;
+import org.objectweb.asm.Type;
 import org.objectweb.asm.signature.SignatureReader;
 
 /**
- * 
+ * A field visitor that generates Java source defining a field. 
  */
 class FieldSourcer implements FieldVisitor {
 
@@ -56,7 +57,7 @@ class FieldSourcer implements FieldVisitor {
         as.write(mAccess, AccessSourcer.IS_FIELD);
         
         if (mSignature == null) {
-            mOutput.write(" %s", mOutput.decodeDesc(mDesc));
+            mOutput.write(" %s", Type.getType(mDesc).getClassName());
         } else {
             mOutput.write(" ");
             SignatureReader sigReader = new SignatureReader(mSignature);

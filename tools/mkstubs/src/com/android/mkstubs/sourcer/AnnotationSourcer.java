@@ -19,7 +19,7 @@ package com.android.mkstubs.sourcer;
 import org.objectweb.asm.AnnotationVisitor;
 
 /**
- * 
+ * An annotation visitor that generates Java source for an annotation.
  */
 class AnnotationSourcer implements AnnotationVisitor {
 

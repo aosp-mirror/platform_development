@@ -26,10 +26,15 @@ import java.util.Map;
 
 
 /**
- * 
+ * Main entry point of the MkStubs app.
+ * <p/>
+ * For workflow details, see {@link #process(Params)}.
  */
 public class Main {
     
+    /**
+     * A struct-like class to hold the various input values (e.g. command-line args)
+     */
     static class Params {
         private String mInputJarPath;
         private String mOutputJarPath;
@@ -40,22 +45,25 @@ public class Main {
             mOutputJarPath = outputJarPath;
             mFilter = new Filter();
         }
-        
+
+        /** Returns the name of the input jar, where to read classes from. */
         public String getInputJarPath() {
             return mInputJarPath;
         }
 
+        /** Returns the name of the output jar, where to write classes to. */
         public String getOutputJarPath() {
             return mOutputJarPath;
         }
-        
+
+        /** Returns the current instance of the filter, the include/exclude patterns. */
         public Filter getFilter() {
             return mFilter;
         }
     }
     
     /**
-     * @param args
+     * Main entry point. Processes arguments then performs the "real" work.
      */
     public static void main(String[] args) {
 
@@ -68,6 +76,17 @@ public class Main {
         }
     }
 
+    /**
+     * Grabs command-line arguments.
+     * The expected arguments are:
+     * <ul>
+     * <li> The filename of the input Jar.
+     * <li> The filename of the output Jar.
+     * <li> One or more include/exclude patterns or files containing these patterns.
+     *      See {@link #addString(Params, String)} for syntax.
+     * </ul>
+     * @throws IOException on failure to read a pattern file.
+     */
     private Params processArgs(String[] args) throws IOException {
         
         if (args.length < 2) {
@@ -83,7 +102,26 @@ public class Main {
         return p;
     }
 
+    /**
+     * Adds one pattern string to the current filter.
+     * The syntax must be:
+     * <ul>
+     * <li> +full_include or +prefix_include*
+     * <li> -full_exclude or -prefix_exclude*
+     * <li> @filename
+     * </ul>
+     * The input string is trimmed so any space around the first letter (-/+/@) or
+     * at the end is removed. Empty strings are ignored.
+     * 
+     * @param p The params which filters to edit.
+     * @param s The string to examine.
+     * @throws IOException
+     */
     private void addString(Params p, String s) throws IOException {
+        if (s == null) {
+            return;
+        }
+
         s = s.trim();
 
         if (s.length() < 2) {
@@ -114,11 +152,20 @@ public class Main {
         }
     }
 
-    private void addStringsFromFile(Params p, String inputFile)
+    /**
+     * Adds all the filter strings from the given file.
+     * 
+     * @param p The params which filter to edit.
+     * @param osFilePath The OS path to the file containing the patterns.
+     * @throws IOException
+     * 
+     * @see #addString(Params, String)
+     */
+    private void addStringsFromFile(Params p, String osFilePath)
             throws IOException {
         BufferedReader br = null;
         try {
-            br = new BufferedReader(new FileReader(inputFile));
+            br = new BufferedReader(new FileReader(osFilePath));
             String line;
             while ((line = br.readLine()) != null) {
                 addString(p, line);
@@ -128,6 +175,9 @@ public class Main {
         }
     }
 
+    /**
+     * Prints some help to stdout.
+     */
     private void usage() {
         System.out.println("Usage: mkstub input.jar output.jar [excluded-class @excluded-classes-file ...]");
 
@@ -144,6 +194,17 @@ public class Main {
         System.exit(1);
     }
 
+    /**
+     * Performs the main workflow of this app:
+     * <ul>
+     * <li> Read the input Jar to get all its classes.
+     * <li> Filter out all classes that should not be included or that should be excluded.
+     * <li> Goes thru the classes, filters methods/fields and generate their source
+     *      in a directory called "&lt;outpath_jar_path&gt;_sources"
+     * <li> Does the same filtering on the classes but this time generates the real stubbed
+     *      output jar.
+     * </ul>
+     */
     private void process(Params p) throws IOException {
         AsmAnalyzer aa = new AsmAnalyzer();
         Map<String, ClassReader> classes = aa.parseInputJar(p.getInputJarPath());
