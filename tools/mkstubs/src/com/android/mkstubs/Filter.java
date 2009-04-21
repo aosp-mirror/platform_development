@@ -19,7 +19,15 @@ package com.android.mkstubs;
 import java.util.TreeSet;
 
 /**
- * 
+ * A "filter" holds the various patterns that MkStubs should accept (include)
+ * or reject (exclude). Patterns can be of two kind:
+ * <ul>
+ * <li>Full patterns are simple string matches, similar to a "^pattern$" regex.
+ * <li>Prefix patterns are partial string matches, similar to a "^pattern.*" regex.
+ * </ul>
+ * <p/>
+ * The {@link #accept(String)} method examines a given string against the known
+ * pattern to decide if it should be included.
  */
 class Filter {
     private TreeSet<String> mIncludePrefix = new TreeSet<String>();
@@ -27,22 +35,44 @@ class Filter {
     private TreeSet<String> mExcludePrefix = new TreeSet<String>();
     private TreeSet<String> mExcludeFull   = new TreeSet<String>();
 
+    /**
+     * Returns the set of all full patterns to be included.
+     */
     public TreeSet<String> getIncludeFull() {
         return mIncludeFull;
     }
-    
+
+    /**
+     * Returns the set of all prefix patterns to be included.
+     */
     public TreeSet<String> getIncludePrefix() {
         return mIncludePrefix;
     }
     
+    /**
+     * Returns the set of all full patterns to be excluded.
+     */
     public TreeSet<String> getExcludeFull() {
         return mExcludeFull;
     }
     
+    /**
+     * Returns the set of all prefix patterns to be excluded.
+     */
     public TreeSet<String> getExcludePrefix() {
         return mExcludePrefix;
     }
-    
+
+    /**
+     * Checks if the given string passes the various include/exclude rules.
+     * The matching is done as follows:
+     * <ul>
+     * <li> The string must match either a full include or a prefix include.
+     * <li> The string must not match any full exclude nor any prefix exclude.
+     * </ul>
+     * @param s The string to accept or reject.
+     * @return True if the string can be accepted, false if it must be rejected.
+     */
     public boolean accept(String s) {
         
         // Check if it can be included.
