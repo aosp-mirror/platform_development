@@ -32,7 +32,11 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 
 /**
- * 
+ * Given a set of already filtered classes, this filters out all private members,
+ * stubs the remaining classes and then generates a Jar out of them.
+ * <p/>
+ * This is an helper extracted for convenience. Callers just need to use
+ * {@link #generateStubbedJar(File, Map, Filter)}.
  */
 class StubGenerator {
 
