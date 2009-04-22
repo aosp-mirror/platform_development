@@ -98,7 +98,7 @@
       <wizard
             canFinishEarly="false"
             category="com.android.ide.eclipse.wizards.category"
-            class="com.android.ide.eclipse.editors.wizards.NewXmlFileWizard"
+            class="com.android.ide.eclipse.adt.wizards.newxmlfile.NewXmlFileWizard"
             finalPerspective="org.eclipse.jdt.ui.JavaPerspective"
             hasPages="true"
             icon="icons/android.png"
@@ -220,7 +220,7 @@
                value="com.android.ide.eclipse.adt.AndroidNature">
          </filter>
          <action
-               class="com.android.ide.eclipse.adt.project.NewXmlFileWizardAction"
+               class="com.android.ide.eclipse.adt.wizards.actions.NewXmlFileWizardAction"
                enablesFor="1"
                id="com.android.ide.eclipse.adt.project.NewXmlFileWizardAction"
                label="New Resource File..."
