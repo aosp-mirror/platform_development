@@ -101,7 +101,7 @@ pdk_templates := $(shell find $(pdk_templates_dir) -type f)
 # copy-one-file defines the actual rule.
 $(foreach template,$(pdk_templates), \
   $(eval _chFrom := $(template)) \
-  $(eval _chTo :=  $(pdk_docs_dest_dir)/$(notdir $(template))) \
+  $(eval _chTo :=  $(pdk_docs_dest_dir)/$(patsubst $(pdk_templates_dir)/%,%,$(template))) \
   $(eval $(call copy-one-header,$(_chFrom),$(_chTo))) \
   $(eval all_copied_pdk_templates: $(_chTo)) \
  )
