@@ -416,14 +416,8 @@ public class JetBoyView extends SurfaceView implements SurfaceHolder.Callback {
          */
         private void initializeJetPlayer() {
 
-            // JET info: this is what we do to undesirable instances: we release them!
-            if (mJet != null)
-            {
-                mJet.release();
-                mJet = null;
-            }
-
-            // JET info: let's create our JetPlayer instance using the factory
+            // JET info: let's create our JetPlayer instance using the factory.
+            // JET info: if we already had one, the same singleton is returned.
             mJet = JetPlayer.getJetPlayer();
 
             mJetPlaying = false;
