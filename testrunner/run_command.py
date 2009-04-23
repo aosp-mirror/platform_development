@@ -3,37 +3,37 @@
 #
 # Copyright 2007, The Android Open Source Project
 #
-# Licensed under the Apache License, Version 2.0 (the "License"); 
-# you may not use this file except in compliance with the License. 
-# You may obtain a copy of the License at 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0 
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
-# Unless required by applicable law or agreed to in writing, software 
-# distributed under the License is distributed on an "AS IS" BASIS, 
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
-# See the License for the specific language governing permissions and 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
 # limitations under the License.
 
 # System imports
 import os
 import signal
 import subprocess
-import time
 import threading
+import time
 
 # local imports
-import logger
 import errors
+import logger
 
 _abort_on_error = False
 
 def SetAbortOnError(abort=True):
-  """Sets behavior of RunCommand to throw AbortError if command process returns 
+  """Sets behavior of RunCommand to throw AbortError if command process returns
   a negative error code"""
   global _abort_on_error
   _abort_on_error = abort
-  
+
 def RunCommand(cmd, timeout_time=None, retry_count=3, return_output=True):
   """Spawns a subprocess to run the given shell command, and checks for
   timeout_time. If return_output is True, the output of the command is returned
@@ -42,7 +42,7 @@ def RunCommand(cmd, timeout_time=None, retry_count=3, return_output=True):
   result = None
   while True:
     try:
-      result = RunOnce(cmd, timeout_time=timeout_time, 
+      result = RunOnce(cmd, timeout_time=timeout_time,
                        return_output=return_output)
     except errors.WaitForResponseTimedOutError:
       if retry_count == 0:
@@ -59,13 +59,13 @@ def RunOnce(cmd, timeout_time=None, return_output=True):
   pid = []
   global _abort_on_error
   error_occurred = False
-  
+
   def Run():
     if return_output:
       output_dest = subprocess.PIPE
     else:
       # None means direct to stdout
-      output_dest = None  
+      output_dest = None
     pipe = subprocess.Popen(
         cmd,
         executable='/bin/bash',
@@ -83,9 +83,9 @@ def RunOnce(cmd, timeout_time=None, return_output=True):
       so.append("ERROR")
       error_occurred = True
     if pipe.returncode < 0:
-      logger.SilentLog("Error: %s was terminated by signal %d" %(cmd, 
+      logger.SilentLog("Error: %s was terminated by signal %d" %(cmd,
           pipe.returncode))
-      error_occurred = True  
+      error_occurred = True
 
   t = threading.Thread(target=Run)
   t.start()
@@ -113,5 +113,26 @@ def RunOnce(cmd, timeout_time=None, return_output=True):
 
   if _abort_on_error and error_occurred:
     raise errors.AbortError
-  
+
   return "".join(so)
+
+
+def RunHostCommand(binary, valgrind=False):
+  """Run a command on the host (opt using valgrind).
+
+  Runs the host binary. Does not capture any output but it
+  returns the exit code. The command can be run under valgrind.
+
+  Args:
+    binary: basename of the file to be run. It is expected to be under
+            out/host/linux-x86/bin.
+    valgrind: If True the command will be run under valgrind.
+
+  Returns:
+    The command exit code (int)
+  """
+  full_path = os.path.join("out", "host", "linux-x86", "bin", binary)
+  if not valgrind:
+    return subprocess.call(full_path)
+  else:
+    return subprocess.call(["/usr/bin/valgrind", "-q", full_path])

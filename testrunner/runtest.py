@@ -44,7 +44,7 @@ class TestRunner(object):
 
   # file path to android core platform tests, relative to android build root
   # TODO move these test data files to another directory
-  _CORE_TEST_PATH = os.path.join("development", "testrunner", 
+  _CORE_TEST_PATH = os.path.join("development", "testrunner",
                                  _TEST_FILE_NAME)
 
   # vendor glob file path patterns to tests, relative to android
@@ -60,7 +60,7 @@ class TestRunner(object):
   def __init__(self):
     # disable logging of timestamp
     self._root_path = android_build.GetTop()
-    logger.SetTimestampLogging(False)  
+    logger.SetTimestampLogging(False)
 
   def _ProcessOptions(self):
     """Processes command-line options."""
@@ -290,12 +290,27 @@ class TestRunner(object):
     # find all test files, convert unicode names to ascii, take the basename
     # and drop the .cc/.cpp  extension.
     file_pattern = os.path.join(test_suite.GetBuildPath(), "test_*")
+    logger.SilentLog("Scanning %s" % test_suite.GetBuildPath())
     file_list = []
     for f in map(str, glob.glob(file_pattern)):
       f = os.path.basename(f)
       f = re.split(".[cp]+$", f)[0]
+      logger.SilentLog("Found %s" % f)
       file_list.append(f)
 
+    # Run on the host
+    logger.Log("\nRunning on host")
+    for f in file_list:
+      if run_command.RunHostCommand(f) != 0:
+        logger.Log("%s... failed" % f)
+      else:
+        if run_command.RunHostCommand(f, valgrind=True) == 0:
+          logger.Log("%s... ok\t\t[valgrind: ok]" % f)
+        else:
+          logger.Log("%s... ok\t\t[valgrind: failed]" % f)
+
+    # Run on the device
+    logger.Log("\nRunning on target")
     for f in file_list:
       full_path = "/system/bin/%s" % f
 
