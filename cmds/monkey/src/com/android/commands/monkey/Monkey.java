@@ -130,7 +130,8 @@ public class Monkey {
     
     float[] mFactors = new float[MonkeySourceRandom.FACTORZ_COUNT];    
     MonkeyEventSource mEventSource;
-
+    private MonkeyNetworkMonitor mNetworkMonitor = new MonkeyNetworkMonitor();
+    
     /**
      * Monitor operations happening in the system.
      */
@@ -222,14 +223,14 @@ public class Monkey {
             return 1;
         }
     }
-    
+  
     /**
      * Run the procrank tool to insert system status information into the debug report.
      */
     private void reportProcRank() {
       commandLineReport("procrank", "procrank");
     }
-    
+  
     /**
      * Run "cat /data/anr/traces.txt".  Wait about 5 seconds first, to let the asynchronous
      * report writing complete.
@@ -401,7 +402,9 @@ public class Monkey {
             signalPersistentProcesses();
         }
         
+        mNetworkMonitor.start();
         int crashedAtCycle = runMonkeyCycles();
+        mNetworkMonitor.stop();
 
         synchronized (this) {
             if (mRequestAnrTraces) {
@@ -423,6 +426,7 @@ public class Monkey {
         
         try {
             mAm.setActivityWatcher(null);
+            mNetworkMonitor.unregister(mAm);
         } catch (RemoteException e) {
             // just in case this was latent (after mCount cycles), make sure
             // we report it
@@ -442,6 +446,9 @@ public class Monkey {
             System.out.print(" flips=");
             System.out.println(mDroppedFlipEvents);
         }
+        
+        // report network stats
+        mNetworkMonitor.dump();
 
         if (crashedAtCycle < mCount - 1) {
             System.err.println("** System appears to have crashed at event "
@@ -602,6 +609,7 @@ public class Monkey {
 
         try {
             mAm.setActivityWatcher(new ActivityWatcher());
+            mNetworkMonitor.register(mAm);
         } catch (RemoteException e) {
             System.err.println("** Failed talking with activity manager!");
             return false;
