@@ -27,7 +27,7 @@ public class TriangleActivity extends Activity {
         super.onCreate(savedInstanceState);
         mGLView = new GLSurfaceView(this);
         mGLView.setEGLConfigChooser(false);
-        mGLView.setRenderer(new TriangleRenderer(this));
+        mGLView.setRenderer(new StaticTriangleRenderer(this));
         setContentView(mGLView);
     }
 
