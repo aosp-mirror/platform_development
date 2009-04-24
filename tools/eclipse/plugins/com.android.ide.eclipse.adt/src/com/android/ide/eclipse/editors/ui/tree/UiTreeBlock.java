@@ -83,8 +83,7 @@ import java.util.LinkedList;
  * On the left is a details part that displays all the visible UI attributes for a given
  * selected UI element node.
  */
-public final class UiTreeBlock extends MasterDetailsBlock
-    implements ICommitXml, UiRootNodeProvider {
+public final class UiTreeBlock extends MasterDetailsBlock implements ICommitXml {
 
     /** Height hint for the tree view. Helps the grid layout resize properly on smaller screens. */
     private static final int TREE_HEIGHT_HINT = 50;
@@ -251,7 +250,7 @@ public final class UiTreeBlock extends MasterDetailsBlock
         tree.setLayoutData(gd);
 
         mTreeViewer = new TreeViewer(tree);
-        mTreeViewer.setContentProvider(new UiModelTreeContentProvider(this, mDescriptorFilters));
+        mTreeViewer.setContentProvider(new UiModelTreeContentProvider(mUiRootNode, mDescriptorFilters));
         mTreeViewer.setLabelProvider(new UiModelTreeLabelProvider());
         mTreeViewer.setInput("unused"); //$NON-NLS-1$
 
@@ -379,6 +378,8 @@ public final class UiTreeBlock extends MasterDetailsBlock
         
         mUiRootNode = uiRootNode;
         mDescriptorFilters = descriptorFilters;
+
+        mTreeViewer.setContentProvider(new UiModelTreeContentProvider(mUiRootNode, mDescriptorFilters));
 
         // Listen on structural changes on the root node of the tree
         // If the node has a parent, listen on the parent instead.

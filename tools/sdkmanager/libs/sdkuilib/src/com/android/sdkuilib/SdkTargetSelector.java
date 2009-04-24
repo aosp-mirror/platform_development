@@ -35,22 +35,19 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 
-import java.util.ArrayList;
-
 
 /**
  * The SDK target selector is a table that is added to the given parent composite.
  * <p/>
  * To use, create it using {@link #SdkTargetSelector(Composite, IAndroidTarget[], boolean)} then
  * call {@link #setSelection(IAndroidTarget)}, {@link #setSelectionListener(SelectionListener)}
- * and finally use {@link #getFirstSelected()} or {@link #getAllSelected()} to retrieve the
+ * and finally use {@link #getSelected()} to retrieve the
  * selection.
  */
 public class SdkTargetSelector {
     
     private IAndroidTarget[] mTargets;
     private final boolean mAllowSelection;
-    private final boolean mAllowMultipleSelection;
     private SelectionListener mSelectionListener;
     private Table mTable;
     private Label mDescription;
@@ -62,12 +59,9 @@ public class SdkTargetSelector {
      * @param parent The parent composite where the selector will be added.
      * @param targets The list of targets. This is <em>not</em> copied, the caller must not modify.
      *                Targets can be null or an empty array, in which case the table is disabled.
-     * @param allowMultipleSelection True if more than one SDK target can be selected at the same
-     *        time.
      */
-    public SdkTargetSelector(Composite parent, IAndroidTarget[] targets,
-            boolean allowMultipleSelection) {
-        this(parent, targets, true /*allowSelection*/, allowMultipleSelection);
+    public SdkTargetSelector(Composite parent, IAndroidTarget[] targets) {
+        this(parent, targets, true /*allowSelection*/);
     }
 
     /**
@@ -77,12 +71,8 @@ public class SdkTargetSelector {
      * @param targets The list of targets. This is <em>not</em> copied, the caller must not modify.
      *                Targets can be null or an empty array, in which case the table is disabled.
      * @param allowSelection True if selection is enabled.
-     * @param allowMultipleSelection True if more than one SDK target can be selected at the same
-     *        time. Used only if allowSelection is true.
      */
-    public SdkTargetSelector(Composite parent, IAndroidTarget[] targets,
-            boolean allowSelection,
-            boolean allowMultipleSelection) {
+    public SdkTargetSelector(Composite parent, IAndroidTarget[] targets, boolean allowSelection) {
         // Layout has 1 column
         mInnerGroup = new Composite(parent, SWT.NONE);
         mInnerGroup.setLayout(new GridLayout());
@@ -90,13 +80,9 @@ public class SdkTargetSelector {
         mInnerGroup.setFont(parent.getFont());
         
         mAllowSelection = allowSelection;
-        mAllowMultipleSelection = allowMultipleSelection;
-        int style = SWT.BORDER;
+        int style = SWT.BORDER | SWT.SINGLE | SWT.FULL_SELECTION;
         if (allowSelection) {
-            style |= SWT.CHECK | SWT.FULL_SELECTION;
-        }
-        if (!mAllowMultipleSelection) {
-            style |= SWT.SINGLE;
+            style |= SWT.CHECK;
         }
         mTable = new Table(mInnerGroup, style);
         mTable.setHeaderVisible(true);
@@ -114,11 +100,11 @@ public class SdkTargetSelector {
 
         // create the table columns
         final TableColumn column0 = new TableColumn(mTable, SWT.NONE);
-        column0.setText("SDK Target");
+        column0.setText("Target Name");
         final TableColumn column1 = new TableColumn(mTable, SWT.NONE);
         column1.setText("Vendor");
         final TableColumn column2 = new TableColumn(mTable, SWT.NONE);
-        column2.setText("Version");
+        column2.setText("Platform");
         final TableColumn column3 = new TableColumn(mTable, SWT.NONE);
         column3.setText("API Level");
 
@@ -127,7 +113,7 @@ public class SdkTargetSelector {
         setTargets(targets);
         setupTooltip(mTable);
     }
-    
+
     /**
      * Returns the layout data of the inner composite widget that contains the target selector.
      * By default the layout data is set to a {@link GridData} with a {@link GridData#FILL_BOTH}
@@ -166,8 +152,7 @@ public class SdkTargetSelector {
      * The event's item contains a {@link TableItem}.
      * The {@link TableItem#getData()} contains an {@link IAndroidTarget}.
      * <p/>
-     * It is recommended that the caller uses the {@link #getFirstSelected()} and
-     * {@link #getAllSelected()} methods instead.
+     * It is recommended that the caller uses the {@link #getSelected()} method instead.
      * 
      * @param selectionListener The new listener or null to remove it.
      */
@@ -188,19 +173,22 @@ public class SdkTargetSelector {
         if (!mAllowSelection) {
             return false;
         }
-
+        
         boolean found = false;
         boolean modified = false;
-        for (TableItem i : mTable.getItems()) {
-            if ((IAndroidTarget) i.getData() == target) {
-                found = true;
-                if (!i.getChecked()) {
+
+        if (mTable != null && !mTable.isDisposed()) {
+            for (TableItem i : mTable.getItems()) {
+                if ((IAndroidTarget) i.getData() == target) {
+                    found = true;
+                    if (!i.getChecked()) {
+                        modified = true;
+                        i.setChecked(true);
+                    }
+                } else if (i.getChecked()) {
                     modified = true;
-                    i.setChecked(true);
+                    i.setChecked(false);
                 }
-            } else if (i.getChecked()) {
-                modified = true;
-                i.setChecked(false);
             }
         }
         
@@ -212,30 +200,15 @@ public class SdkTargetSelector {
     }
 
     /**
-     * Returns all selected items.
-     * This is useful when the table is in multiple-selection mode.
+     * Returns the selected item.
      * 
-     * @see #getFirstSelected()
-     * @return An array of selected items. The list can be empty but not null.
+     * @return The selected item or null.
      */
-    public IAndroidTarget[] getAllSelected() {
-        ArrayList<IAndroidTarget> list = new ArrayList<IAndroidTarget>();
-        for (TableItem i : mTable.getItems()) {
-            if (i.getChecked()) {
-                list.add((IAndroidTarget) i.getData());
-            }
+    public IAndroidTarget getSelected() {
+        if (mTable == null || mTable.isDisposed()) {
+            return null;
         }
-        return list.toArray(new IAndroidTarget[list.size()]);
-    }
 
-    /**
-     * Returns the first selected item.
-     * This is useful when the table is in single-selection mode.
-     * 
-     * @see #getAllSelected()
-     * @return The first selected item or null.
-     */
-    public IAndroidTarget getFirstSelected() {
         for (TableItem i : mTable.getItems()) {
             if (i.getChecked()) {
                 return (IAndroidTarget) i.getData();
@@ -311,7 +284,7 @@ public class SdkTargetSelector {
              * items when this one is selected.
              */
             private void enforceSingleSelection(TableItem item) {
-                if (!mAllowMultipleSelection && item.getChecked()) {
+                if (item.getChecked()) {
                     Table parentTable = item.getParent();
                     for (TableItem i2 : parentTable.getItems()) {
                         if (i2 != item && i2.getChecked()) {
@@ -335,7 +308,11 @@ public class SdkTargetSelector {
      * </ul>
      */
     private void fillTable(final Table table) {
-        
+
+        if (table == null || table.isDisposed()) {
+            return;
+        }
+
         table.removeAll();
         
         if (mTargets != null && mTargets.length > 0) {
@@ -366,6 +343,11 @@ public class SdkTargetSelector {
      * display the description in a label under the table.
      */
     private void setupTooltip(final Table table) {
+
+        if (table == null || table.isDisposed()) {
+            return;
+        }
+
         /*
          * Reference: 
          * http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.swt.snippets/src/org/eclipse/swt/snippets/Snippet125.java?view=markup

@@ -27,6 +27,7 @@ import com.android.ide.eclipse.common.project.XmlErrorHandler.BasicXmlErrorListe
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkConstants;
 
+import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IMarker;
@@ -72,8 +73,10 @@ public class PreCompilerBuilder extends BaseBuilder {
     /**
      * Single line aidl error<br>
      * "&lt;path&gt;:&lt;line&gt;: &lt;error&gt;"
+     * or
+     * "&lt;path&gt;:&lt;line&gt; &lt;error&gt;"
      */
-    private static Pattern sAidlPattern1 = Pattern.compile("^(.+?):(\\d+):\\s(.+)$"); //$NON-NLS-1$
+    private static Pattern sAidlPattern1 = Pattern.compile("^(.+?):(\\d+):?\\s(.+)$"); //$NON-NLS-1$
 
     /**
      * Data to temporarly store aidl source file information
@@ -248,9 +251,13 @@ public class PreCompilerBuilder extends BaseBuilder {
                     // record the state
                     mMustCompileResources |= dv.getCompileResources();
                     
-                    // handle aidl modification, and update mMustCompileAidl
-                    mergeAidlFileModifications(dv.getAidlToCompile(),
-                            dv.getAidlToRemove());
+                    if (dv.getForceAidlCompile()) {
+                        buildAidlCompilationList(project, sourceFolderPathList);
+                    } else {
+                        // handle aidl modification, and update mMustCompileAidl
+                        mergeAidlFileModifications(dv.getAidlToCompile(),
+                                dv.getAidlToRemove());
+                    }
                     
                     // get the java package from the visitor
                     javaPackage = dv.getManifestPackage();
@@ -753,10 +760,9 @@ public class PreCompilerBuilder extends BaseBuilder {
         // get an IFolder for this path. It's relative to the 'gen' folder already
         IFolder destinationFolder = mGenFolder.getFolder(destinationPath);
         
-        // create it if needed
+        // create it if needed.
         if (destinationFolder.exists() == false && createFolders) {
-            destinationFolder.create(true /*force*/, true /*local*/,
-                    new SubProgressMonitor(monitor, 10));
+            createFolder(destinationFolder, monitor);
         }
         
         // Build the Java file name from the aidl name.
@@ -766,6 +772,29 @@ public class PreCompilerBuilder extends BaseBuilder {
         // get the resource for the java file.
         IFile javaFile = destinationFolder.getFile(javaName);
         return javaFile;
+    }
+
+    /**
+     * Creates the destination folder. Because
+     * {@link IFolder#create(boolean, boolean, IProgressMonitor)} only works if the parent folder
+     * already exists, this goes and ensure that all the parent folders actually exist, or it 
+     * creates them as well.
+     * @param destinationFolder The folder to create
+     * @param monitor the {@link IProgressMonitor},
+     * @throws CoreException 
+     */
+    private void createFolder(IFolder destinationFolder, IProgressMonitor monitor)
+            throws CoreException {
+        
+        // check the parent exist and create if necessary.
+        IContainer parent = destinationFolder.getParent();
+        if (parent.getType() == IResource.FOLDER && parent.exists() == false) {
+            createFolder((IFolder)parent, monitor);
+        }
+
+        // create the folder.
+        destinationFolder.create(true /*force*/, true /*local*/,
+                new SubProgressMonitor(monitor, 10));
     }
 
     /**

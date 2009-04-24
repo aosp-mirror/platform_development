@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-// FIXME: review and cleanup
+// Android JET demonstration code:
+// See the JetBoyView.java file for examples on the use of the JetPlayer class.
 
 package com.example.android.jetboy;
 
@@ -79,6 +80,7 @@ public class JetBoy extends Activity implements View.OnClickListener {
 
         mJetBoyView.SetTextView(mTextView);
     }
+    
 
     /**
      * Handles component interaction

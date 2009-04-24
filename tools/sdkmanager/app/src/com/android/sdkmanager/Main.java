@@ -214,6 +214,10 @@ class Main {
                 SdkCommandLine.OBJECT_AVD.equals(directObject)) {
             moveAvd();
 
+        } else if (SdkCommandLine.VERB_UPDATE.equals(verb) &&
+                SdkCommandLine.OBJECT_AVD.equals(directObject)) {
+            updateAvd();
+
         } else if (SdkCommandLine.VERB_CREATE.equals(verb) &&
                 SdkCommandLine.OBJECT_PROJECT.equals(directObject)) {
             createProject();
@@ -221,6 +225,7 @@ class Main {
         } else if (SdkCommandLine.VERB_UPDATE.equals(verb) &&
                 SdkCommandLine.OBJECT_PROJECT.equals(directObject)) {
             updateProject();
+
         } else {
             mSdkCommandLine.printHelpAndExit(null);
         }
@@ -356,11 +361,13 @@ class Main {
 
         int index = 1;
         for (IAndroidTarget target : mSdkManager.getTargets()) {
+            mSdkLog.printf("id: %d\n", index);
+            mSdkLog.printf("     Name: %s\n", target.getName());
             if (target.isPlatform()) {
-                mSdkLog.printf("[%d] %s\n", index, target.getName());
+                mSdkLog.printf("     Type: Platform\n");
                 mSdkLog.printf("     API level: %d\n", target.getApiVersionNumber());
             } else {
-                mSdkLog.printf("[%d] Add-on: %s\n", index, target.getName());
+                mSdkLog.printf("     Type: Add-On\n");
                 mSdkLog.printf("     Vendor: %s\n", target.getVendor());
                 if (target.getDescription() != null) {
                     mSdkLog.printf("     Description: %s\n", target.getDescription());
@@ -373,10 +380,10 @@ class Main {
                 if (libraries != null) {
                     mSdkLog.printf("     Libraries:\n");
                     for (IOptionalLibrary library : libraries) {
-                        mSdkLog.printf("     * %1$s (%2$s)\n",
+                        mSdkLog.printf("      * %1$s (%2$s)\n",
                                 library.getName(), library.getJarName());
                         mSdkLog.printf(String.format(
-                                "         %1$s\n", library.getDescription()));
+                                "          %1$s\n", library.getDescription()));
                     }
                 }
             }
@@ -424,7 +431,7 @@ class Main {
 
             mSdkLog.printf("Available Android Virtual Devices:\n");
 
-            AvdInfo[] avds = avdManager.getAvds();
+            AvdInfo[] avds = avdManager.getValidAvds();
             for (int index = 0 ; index < avds.length ; index++) {
                 AvdInfo info = avds[index];
                 if (index > 0) {
@@ -461,9 +468,9 @@ class Main {
             }
 
             // Are there some unused AVDs?
-            List<AvdInfo> badAvds = avdManager.getUnavailableAvds();
+            AvdInfo[] badAvds = avdManager.getBrokenAvds();
 
-            if (badAvds == null || badAvds.size() == 0) {
+            if (badAvds.length == 0) {
                 return;
             }
 
@@ -473,9 +480,11 @@ class Main {
                 if (needSeparator) {
                     mSdkLog.printf("---------\n");
                 }
-                mSdkLog.printf("    Name: %s\n", info.getName()  == null ? "--" : info.getName());
-                mSdkLog.printf("    Path: %s\n", info.getPath()  == null ? "--" : info.getPath());
-                mSdkLog.printf("   Error: %s\n", info.getError() == null ? "--" : info.getError());
+                mSdkLog.printf("    Name: %s\n", info.getName() == null ? "--" : info.getName());
+                mSdkLog.printf("    Path: %s\n", info.getPath() == null ? "--" : info.getPath());
+
+                String error = info.getErrorMessage();
+                mSdkLog.printf("   Error: %s\n", error == null ? "Uknown error" : error);
                 needSeparator = true;
             }
         } catch (AndroidLocationException e) {
@@ -511,7 +520,7 @@ class Main {
                 return;
             }
             
-            AvdInfo info = avdManager.getAvd(avdName);
+            AvdInfo info = avdManager.getAvd(avdName, false /*validAvdOnly*/);
             if (info != null) {
                 if (mSdkCommandLine.getFlagForce()) {
                     removePrevious = true;
@@ -544,7 +553,7 @@ class Main {
 
             AvdInfo oldAvdInfo = null;
             if (removePrevious) {
-                oldAvdInfo = avdManager.getAvd(avdName);
+                oldAvdInfo = avdManager.getAvd(avdName, false /*validAvdOnly*/);
             }
             
             // Validate skin is either default (empty) or NNNxMMM or a valid skin name.
@@ -581,8 +590,7 @@ class Main {
                     skin,
                     mSdkCommandLine.getParamSdCard(),
                     hardwareConfig,
-                    removePrevious,
-                    mSdkLog);
+                    removePrevious);
             
             if (newAvdInfo != null && 
                     oldAvdInfo != null &&
@@ -609,21 +617,8 @@ class Main {
         try {
             String avdName = mSdkCommandLine.getParamName();
             AvdManager avdManager = new AvdManager(mSdkManager, mSdkLog);
-            AvdInfo info = avdManager.getAvd(avdName);
+            AvdInfo info = avdManager.getAvd(avdName, false /*validAvdOnly*/);
             
-            if (info == null) {
-                // Look in unavailable AVDs
-                List<AvdInfo> badAvds = avdManager.getUnavailableAvds();
-                if (badAvds != null) {
-                    for (AvdInfo i : badAvds) {
-                        if (i.getName().equals(avdName)) {
-                            info = i;
-                            break;
-                        }
-                    }
-                }
-            }
-    
             if (info == null) {
                 errorAndExit("There is no Android Virtual Device named '%s'.", avdName);
                 return;
@@ -636,16 +631,16 @@ class Main {
     }
     
     /**
-     * Move an AVD.
+     * Moves an AVD.
      */
     private void moveAvd() {
         try {
             String avdName = mSdkCommandLine.getParamName();
             AvdManager avdManager = new AvdManager(mSdkManager, mSdkLog);
-            AvdInfo info = avdManager.getAvd(avdName);
+            AvdInfo info = avdManager.getAvd(avdName, true /*validAvdOnly*/);
     
             if (info == null) {
-                errorAndExit("There is no Android Virtual Device named '%s'.", avdName);
+                errorAndExit("There is no valid Android Virtual Device named '%s'.", avdName);
                 return;
             }
             
@@ -703,13 +698,8 @@ class Main {
             }
             
             // Check for conflicts
-            
-            if (newName != null && avdManager.getAvd(newName) != null) {
-                errorAndExit("There is already an AVD named '%s'.", newName);
-                return;
-            }
             if (newName != null) {
-                if (avdManager.getAvd(newName) != null) {
+                if (avdManager.getAvd(newName, false /*validAvdOnly*/) != null) {
                     errorAndExit("There is already an AVD named '%s'.", newName);
                     return;
                 }
@@ -728,6 +718,21 @@ class Main {
             }
             
             avdManager.moveAvd(info, newName, paramFolderPath, mSdkLog);
+        } catch (AndroidLocationException e) {
+            errorAndExit(e.getMessage());
+        } catch (IOException e) {
+            errorAndExit(e.getMessage());
+        }
+    }
+    
+    /**
+     * Updates a broken AVD.
+     */
+    private void updateAvd() {
+        try {
+            String avdName = mSdkCommandLine.getParamName();
+            AvdManager avdManager = new AvdManager(mSdkManager, mSdkLog);
+            avdManager.updateAvd(avdName);
         } catch (AndroidLocationException e) {
             errorAndExit(e.getMessage());
         } catch (IOException e) {
