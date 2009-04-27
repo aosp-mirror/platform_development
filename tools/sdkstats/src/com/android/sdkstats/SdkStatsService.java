@@ -110,8 +110,10 @@ public class SdkStatsService {
      *
      * @param app name to report in the ping
      * @param version to report in the ping
+     * @param display an optional {@link Display} object to use, or null, if a new one should be
+     * created.
      */
-    public static void ping(final String app, final String version) {
+    public static void ping(final String app, final String version, final Display display) {
         // Validate the application and version input.
         final String normalVersion = normalizeVersion(app, version);
 
@@ -123,7 +125,7 @@ public class SdkStatsService {
                 prefs.setValue(PING_ID, new Random().nextLong());
     
                 // Also give them a chance to opt out.
-                prefs.setValue(PING_OPT_IN, getUserPermission());
+                prefs.setValue(PING_OPT_IN, getUserPermission(display));
                 try {
                     prefs.save();
                 }
@@ -273,77 +275,90 @@ public class SdkStatsService {
      * Prompt the user for whether they want to opt out of reporting.
      * @return whether the user allows reporting (they do not opt out).
      */
-    private static boolean getUserPermission() {
-        // Use dialog trim for the shell, but without a close button.
-        final Display display = new Display();
-        final Shell shell = new Shell(display, SWT.TITLE | SWT.BORDER);
-        shell.setText(WINDOW_TITLE_TEXT);
-        shell.setLayout(new GridLayout(1, false));  // 1 column
-
-        // Take the default font and scale it up for the title.
-        final Label title = new Label(shell, SWT.CENTER | SWT.WRAP);
-        final FontData[] fontdata = title.getFont().getFontData();
-        for (int i = 0; i < fontdata.length; i++) {
-            fontdata[i].setHeight(fontdata[i].getHeight() * 4 / 3);
-        }
-        title.setFont(new Font(display, fontdata));
-        title.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-        title.setText(HEADER_TEXT);
-
-        final Label notice = new Label(shell, SWT.WRAP);
-        notice.setFont(title.getFont());
-        notice.setForeground(new Color(display, 255, 0, 0));
-        notice.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-        notice.setText(NOTICE_TEXT);
-
-        final Link text = new Link(shell, SWT.WRAP);
-        text.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-        text.setText(BODY_TEXT);
-        text.addSelectionListener(new SelectionAdapter() {
-            @Override
-            public void widgetSelected(SelectionEvent event) {
-                openUrl(event.text);
-            }
-        });
-
-        final Button checkbox = new Button(shell, SWT.CHECK);
-        checkbox.setSelection(true);  // Opt-in by default.
-        checkbox.setText(CHECKBOX_TEXT);
-
-        final Link footer = new Link(shell, SWT.WRAP);
-        footer.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-        footer.setText(FOOTER_TEXT);
-
+    private static boolean getUserPermission(Display display) {
         // Whether the user gave permission (size-1 array for writing to).
         // Initialize to false, set when the user clicks the button.
         final boolean[] permission = new boolean[] { false };
 
-        final Button button = new Button(shell, SWT.PUSH);
-        button.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_CENTER));
-        button.setText(BUTTON_TEXT);
-        button.addSelectionListener(new SelectionAdapter() {
-            @Override
-            public void widgetSelected(SelectionEvent event) {
-                permission[0] = checkbox.getSelection();
-                shell.close();
+        boolean dispose = false;
+        if (display == null) {
+            display = new Display();
+            dispose = true;
+        }
+
+        final Display currentDisplay = display;
+        final boolean disposeDisplay = dispose;
+
+        display.syncExec(new Runnable() {
+            public void run() {
+                final Shell shell = new Shell(currentDisplay, SWT.TITLE | SWT.BORDER);
+                shell.setText(WINDOW_TITLE_TEXT);
+                shell.setLayout(new GridLayout(1, false)); // 1 column
+
+                // Take the default font and scale it up for the title.
+                final Label title = new Label(shell, SWT.CENTER | SWT.WRAP);
+                final FontData[] fontdata = title.getFont().getFontData();
+                for (int i = 0; i < fontdata.length; i++) {
+                    fontdata[i].setHeight(fontdata[i].getHeight() * 4 / 3);
+                }
+                title.setFont(new Font(currentDisplay, fontdata));
+                title.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+                title.setText(HEADER_TEXT);
+
+                final Label notice = new Label(shell, SWT.WRAP);
+                notice.setFont(title.getFont());
+                notice.setForeground(new Color(currentDisplay, 255, 0, 0));
+                notice.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+                notice.setText(NOTICE_TEXT);
+
+                final Link text = new Link(shell, SWT.WRAP);
+                text.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+                text.setText(BODY_TEXT);
+                text.addSelectionListener(new SelectionAdapter() {
+                    @Override
+                    public void widgetSelected(SelectionEvent event) {
+                        openUrl(event.text);
+                    }
+                });
+
+                final Button checkbox = new Button(shell, SWT.CHECK);
+                checkbox.setSelection(true); // Opt-in by default.
+                checkbox.setText(CHECKBOX_TEXT);
+
+                final Link footer = new Link(shell, SWT.WRAP);
+                footer.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+                footer.setText(FOOTER_TEXT);
+
+                final Button button = new Button(shell, SWT.PUSH);
+                button.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_CENTER));
+                button.setText(BUTTON_TEXT);
+                button.addSelectionListener(new SelectionAdapter() {
+                    @Override
+                    public void widgetSelected(SelectionEvent event) {
+                        permission[0] = checkbox.getSelection();
+                        shell.close();
+                    }
+                });
+
+                // Size the window to a fixed width, as high as necessary,
+                // centered.
+                final Point size = shell.computeSize(450, SWT.DEFAULT, true);
+                final Rectangle screen = currentDisplay.getClientArea();
+                shell.setBounds(screen.x + screen.width / 2 - size.x / 2, screen.y + screen.height
+                        / 2 - size.y / 2, size.x, size.y);
+
+                shell.open();
+                while (!shell.isDisposed()) {
+                    if (!currentDisplay.readAndDispatch())
+                        currentDisplay.sleep();
+                }
+
+                if (disposeDisplay) {
+                    currentDisplay.dispose();
+                }
             }
         });
 
-        // Size the window to a fixed width, as high as necessary, centered.
-        final Point size = shell.computeSize(450, SWT.DEFAULT, true);
-        final Rectangle screen = display.getClientArea();
-        shell.setBounds(
-            screen.x + screen.width / 2 - size.x / 2,
-            screen.y + screen.height / 2 - size.y / 2,
-            size.x, size.y);
-
-        shell.open();
-        while (!shell.isDisposed()) {
-            if (!display.readAndDispatch())
-                display.sleep();
-        }
-
-        display.dispose();  // Otherwise ddms' own Display can't be created
         return permission[0];
     }
 

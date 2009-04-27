@@ -5,7 +5,7 @@
 	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
 	<classpathentry kind="lib" path="jarutils.jar"/>
 	<classpathentry kind="lib" path="androidprefs.jar"/>
-	<classpathentry kind="lib" path="sdkstats.jar"/>
+	<classpathentry kind="lib" path="sdkstats.jar" sourcepath="/SdkStatsService"/>
 	<classpathentry kind="lib" path="kxml2-2.3.0.jar"/>
 	<classpathentry kind="lib" path="layoutlib_api.jar"/>
 	<classpathentry kind="lib" path="layoutlib_utils.jar"/>
