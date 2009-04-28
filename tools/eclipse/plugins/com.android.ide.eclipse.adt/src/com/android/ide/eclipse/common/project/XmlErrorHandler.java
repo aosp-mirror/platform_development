@@ -109,17 +109,22 @@ public class XmlErrorHandler extends DefaultHandler {
             mErrorListener.errorFound();
         }
         
+        String message = exception.getMessage();
+        if (message == null) {
+            message = "Unknown error " + exception.getClass().getCanonicalName();
+        }
+        
         if (mFile != null) {
             if (lineNumber != -1) {
                 BaseProjectHelper.addMarker(mFile,
                         AndroidConstants.MARKER_XML,
-                        exception.getMessage(),
+                        message,
                         lineNumber,
                         IMarker.SEVERITY_ERROR);
             } else {
                 BaseProjectHelper.addMarker(mFile,
                         AndroidConstants.MARKER_XML,
-                        exception.getMessage(),
+                        message,
                         IMarker.SEVERITY_ERROR);
             }
         }

@@ -907,6 +907,21 @@ public class ApkBuilder extends BaseBuilder {
             AdtPlugin.printErrorToConsole(javaProject.getProject(), msg);
             markProject(AdtConstants.MARKER_ADT, msg, IMarker.SEVERITY_ERROR);
             return false;
+        } catch (Exception e) {
+            // try to catch other exception to actually display an error. This will be useful
+            // if we get an NPE or something so that we can at least notify the user that something
+            // went wrong (otherwise the build appears to succeed but the zip archive is not closed
+            // and therefore invalid.
+            String msg = e.getMessage();
+            if (msg == null) {
+                msg = e.getClass().getCanonicalName();
+            }
+            
+            msg = String.format("Unknown error: %1$s", msg);
+            AdtPlugin.printErrorToConsole(javaProject.getProject(), msg);
+            markProject(AdtConstants.MARKER_ADT, msg, IMarker.SEVERITY_ERROR);
+            return false;
+            
         } finally {
             if (fos != null) {
                 try {
@@ -943,7 +958,8 @@ public class ApkBuilder extends BaseBuilder {
             IPath path = resource.getFullPath();
 
             // check the extension.
-            if (path.getFileExtension().equalsIgnoreCase(AndroidConstants.EXT_NATIVE_LIB)) {
+            String ext = path.getFileExtension();
+            if (ext != null && ext.equalsIgnoreCase(AndroidConstants.EXT_NATIVE_LIB)) {
                 // remove the first segment to build the path inside the archive.
                 path = path.removeFirstSegments(rootSegmentCount);
                 
@@ -954,7 +970,8 @@ public class ApkBuilder extends BaseBuilder {
                 // writes the file in the apk.
                 jarBuilder.writeFile(resource.getLocation().toFile(), apkPath.toString());
             }
-        } else if (resource.getType() == IResource.FOLDER) {
+        } else if (resource.getType() == IResource.FOLDER &&
+                checkFolderForPackaging((IFolder)resource)) {
             IResource[] members = ((IFolder)resource).members();
             for (IResource member : members) {
                 writeNativeLibraries(rootSegmentCount, jarBuilder, member);

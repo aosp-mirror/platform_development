@@ -334,10 +334,12 @@ public class AndroidManifestParser {
                                 value = getAttributeValue(attributes, ATTRIBUTE_MIN_SDK_VERSION,
                                         true /* hasNamespace */);
                                 
-                                try {
-                                    mApiLevelRequirement = Integer.parseInt(value);
-                                } catch (NumberFormatException e) {
-                                    handleError(e, -1 /* lineNumber */);
+                                if (value != null) {
+                                    try {
+                                        mApiLevelRequirement = Integer.parseInt(value);
+                                    } catch (NumberFormatException e) {
+                                        handleError(e, -1 /* lineNumber */);
+                                    }
                                 }
                             } else if (NODE_INSTRUMENTATION.equals(localName)) {
                                 processInstrumentationNode(attributes);
