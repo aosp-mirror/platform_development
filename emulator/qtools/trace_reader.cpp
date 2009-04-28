@@ -131,7 +131,7 @@ BBReader::~BBReader()
     delete decoder_;
 }
 
-void BBReader::Open(char *filename)
+void BBReader::Open(const char *filename)
 {
     // Initialize the class variables
     memset(&nextrec_, 0, sizeof(TimeRec));
@@ -268,7 +268,7 @@ InsnReader::~InsnReader()
     delete decoder_;
 }
 
-void InsnReader::Open(char *filename)
+void InsnReader::Open(const char *filename)
 {
     prev_time_ = 0;
     time_diff_ = 0;
@@ -310,7 +310,7 @@ AddrReader::~AddrReader()
 }
 
 // Returns true if there is an error opening the file
-bool AddrReader::Open(char *filename, char *suffix)
+bool AddrReader::Open(const char *filename, const char *suffix)
 {
     struct stat stat_buf;
 
@@ -367,7 +367,7 @@ ExcReader::~ExcReader()
     delete decoder_;
 }
 
-void ExcReader::Open(char *filename)
+void ExcReader::Open(const char *filename)
 {
     prev_time_ = 0;
     prev_recnum_ = 0;
@@ -421,7 +421,7 @@ PidReader::~PidReader()
     delete decoder_;
 }
 
-void PidReader::Open(char *filename)
+void PidReader::Open(const char *filename)
 {
     prev_time_ = 0;
 
@@ -561,7 +561,7 @@ MethodReader::~MethodReader()
     delete decoder_;
 }
 
-bool MethodReader::Open(char *filename)
+bool MethodReader::Open(const char *filename)
 {
     struct stat stat_buf;
 
@@ -686,8 +686,8 @@ TraceReaderBase::~TraceReaderBase()
     delete[] static_filename_;
 }
 
-void TraceReaderBase::ReadTraceHeader(FILE *fstream, char *filename,
-                                      char *tracename, TraceHeader *header)
+void TraceReaderBase::ReadTraceHeader(FILE *fstream, const char *filename,
+                                      const char *tracename, TraceHeader *header)
 {
     int rval = fread(header, sizeof(TraceHeader), 1, fstream);
     if (rval != 1) {
@@ -721,7 +721,7 @@ void TraceReaderBase::ReadTraceHeader(FILE *fstream, char *filename,
 }
 
 
-void TraceReaderBase::Open(char *filename)
+void TraceReaderBase::Open(const char *filename)
 {
     char *fname;
     FILE *fstream;
@@ -840,7 +840,7 @@ static void CopyDexSymbolsToArray(DexFileList *dexfile,
     }
 }
 
-void TraceReaderBase::ParseDexList(char *filename)
+void TraceReaderBase::ParseDexList(const char *filename)
 {
     struct stat stat_buf;
     static const int kBufSize = 4096;

@@ -208,7 +208,7 @@ int main(int argc, char **argv)
         if (pStack == NULL) {
             pStack = new CallStackType(event.pid, kNumStackFrames, trace);
             stacks[event.pid] = pStack;
-            char *name = trace->GetProcessName(event.pid);
+            const char *name = trace->GetProcessName(event.pid);
             dmtrace->addThread(event.pid, name);
         }
 
@@ -266,7 +266,6 @@ int main(int argc, char **argv)
             dmtrace->updateName(pid_event.pid, pid_event.path);
         }
     }
-
 
     dmtrace->close();
     delete dmtrace;

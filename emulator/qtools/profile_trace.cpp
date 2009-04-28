@@ -118,7 +118,7 @@ int main(int argc, char **argv)
         double per = 100.0 * sym->elapsed / total;
         double sum_per = 100.0 * sum / total;
         double secs = 1.0 * sym->elapsed / kMHz;
-        char *ksym = " ";
+        const char *ksym = " ";
         if (sym->region->flags & region_type::kIsKernelRegion)
             ksym = "k";
         printf("%12.2f %11lld %6.2f %6.2f  %s %s\n",
