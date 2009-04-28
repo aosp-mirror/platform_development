@@ -271,8 +271,7 @@ public class PreCompilerBuilder extends BaseBuilder {
             // if there was some XML errors, we just return w/o doing
             // anything since we've put some markers in the files anyway.
             if (dv != null && dv.mXmlError) {
-                AdtPlugin.printBuildToConsole(AdtConstants.BUILD_VERBOSE, project,
-                        Messages.Xml_Error);
+                AdtPlugin.printErrorToConsole(project, Messages.Xml_Error);
     
                 // This interrupts the build. The next builders will not run.
                 stopBuild(Messages.Xml_Error);
