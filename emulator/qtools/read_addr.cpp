@@ -20,7 +20,7 @@ int main(int argc, char **argv) {
 
     if (trace->ReadAddr(&time, &addr, &flags))
       break;
-    char *op = "ld";
+    const char *op = "ld";
     if (flags == 1)
         op = "st";
     printf("%lld 0x%08x %s\n", time, addr, op);

@@ -165,7 +165,7 @@ class TraceReader : public TraceReaderBase {
         uint32_t        flags;
         int             argc;
         char            **argv;
-        char            *name;
+        const char      *name;
         int             nregions;        // num regions in use
         int             max_regions;     // max regions allocated
         region_type     **regions;
@@ -189,7 +189,7 @@ class TraceReader : public TraceReaderBase {
     ProcessState        *GetCurrentProcess()            { return current_; }
     ProcessState        *GetProcesses(int *num_procs);
     ProcessState        *GetNextProcess();
-    char                *GetProcessName(int pid);
+    const char          *GetProcessName(int pid);
     void                SetRoot(const char *root)       { root_ = root; }
     void                SetDemangle(bool demangle)      { demangle_ = demangle; }
     bool                ReadMethodSymbol(MethodRec *method_record,
@@ -276,11 +276,14 @@ TraceReader<T>::~TraceReader()
     hash_entry_type *ptr;
     for (ptr = hash_->GetFirst(); ptr; ptr = hash_->GetNext()) {
         region_type *region = ptr->value;
-        int nsymbols = region->nsymbols;
-        for (int ii = 0; ii < nsymbols; ii++) {
-            delete[] region->symbols[ii].name;
+        // If the symbols are not shared with another region, then delete them.
+        if ((region->flags & region_type::kSharedSymbols) == 0) {
+            int nsymbols = region->nsymbols;
+            for (int ii = 0; ii < nsymbols; ii++) {
+                delete[] region->symbols[ii].name;
+            }
+            delete[] region->symbols;
         }
-        delete[] region->symbols;
         delete[] region->path;
 
         // Do not delete the region itself here.  Each region
@@ -422,7 +425,7 @@ TraceReader<T>::GetNextProcess()
 }
 
 template<class T>
-char* TraceReader<T>::GetProcessName(int pid)
+const char* TraceReader<T>::GetProcessName(int pid)
 {
     if (pid < 0 || pid >= kNumPids || processes_[pid] == NULL)
         return "(unknown)";
@@ -1165,8 +1168,6 @@ void TraceReader<T>::HandlePidEvent(PidEvent *event)
                 } else {
                     region->nsymbols = existing_region->nsymbols;
                     region->symbols = existing_region->symbols;
-                    region->path = existing_region->path;
-                    delete[] event->path;
                     region->flags |= region_type::kSharedSymbols;
                 }
 
