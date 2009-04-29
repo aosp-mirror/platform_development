@@ -96,6 +96,7 @@ public class MakeBinaryDictionary {
             parser.parse(new File(filename), new DefaultHandler() {
                 boolean inWord;
                 int freq;
+                StringBuilder wordBuilder = new StringBuilder(48);
 
                 @Override
                 public void startElement(String uri, String localName,
@@ -103,6 +104,7 @@ public class MakeBinaryDictionary {
                     if (qName.equals("w")) {
                         inWord = true;
                         freq = Integer.parseInt(attributes.getValue(0));
+                        wordBuilder.setLength(0);
                     }
                 }
 
@@ -110,18 +112,19 @@ public class MakeBinaryDictionary {
                 public void characters(char[] data, int offset, int length) {
                     // Ignore other whitespace
                     if (!inWord) return;
-                    
-                    // Ignore one letter words
-                    if (length < 2) return;
-                    mWordCount++;
-                    String word = new String(data, offset, length);
-                    addWordTop(word, freq);
+                    wordBuilder.append(data, offset, length);
                 }
 
                 @Override
                 public void endElement(String uri, String localName,
                         String qName) {
-                    if (qName.equals("w")) inWord = false;
+                    if (qName.equals("w")) {
+                        if (wordBuilder.length() > 1) {
+                            addWordTop(wordBuilder.toString(), freq);
+                            mWordCount++;
+                        }
+                        inWord = false;
+                    }
                 }
             });
         } catch (Exception ioe) {
@@ -145,7 +148,6 @@ public class MakeBinaryDictionary {
 
     private void addWordTop(String word, int occur) {
         if (occur > 255) occur = 255;
-
         char firstChar = word.charAt(0);
         int index = indexOf(roots, firstChar);
         if (index == -1) {
