@@ -137,7 +137,7 @@ int main(int argc, char **argv) {
   double insn_per_sec = 0;
   if (elapsed_secs != 0)
     insn_per_sec = num_dynamic_insn / elapsed_secs;
-  char *suffix = "";
+  const char *suffix = "";
   if (insn_per_sec >= 1000000) {
     insn_per_sec /= 1000000.0;
     suffix = "M";

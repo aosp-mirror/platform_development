@@ -76,7 +76,7 @@ int main(int argc, char **argv) {
     sum_time += pstate->cpu_time;
     double per = 100.0 * pstate->cpu_time / total_time;
     double sum_per = 100.0 * sum_time / total_time;
-    char *print_flags = "";
+    const char *print_flags = "";
     if ((pstate->flags & ProcessState::kCalledExec) == 0)
       print_flags = "T";
     if (pstate->name == NULL)
