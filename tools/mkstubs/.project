@@ -3,7 +3,6 @@
 	<name>MkStubs</name>
 	<comment></comment>
 	<projects>
-		<project>asm3</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
