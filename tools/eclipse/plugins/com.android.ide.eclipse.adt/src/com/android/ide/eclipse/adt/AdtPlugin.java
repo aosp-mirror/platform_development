@@ -1386,8 +1386,6 @@ public class AdtPlugin extends AbstractUIPlugin {
 
     /**
      * Pings the usage start server.
-     * @param pluginName the name of the plugin to appear in the stats
-     * @param pluginVersion the {@link Version} of the plugin.
      */
     private void pingUsageServer() {
         // get the version of the plugin

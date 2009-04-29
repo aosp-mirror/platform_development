@@ -164,7 +164,7 @@ public final class AvdSelector {
      * If the selection is actually changed, this will invoke the selection listener
      * (if any) with a null event.
      * 
-     * @param target the target to be selection
+     * @param target the target to be selected. Use null to deselect everything.
      * @return true if the target could be selected, false otherwise.
      */
     public boolean setSelection(AvdInfo target) {
