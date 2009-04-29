@@ -463,7 +463,7 @@ public class UiClassAttributeNode extends UiTextAttributeNode {
      * Computes and return the {@link IPackageFragmentRoot}s corresponding to the source folders of
      * the specified project.
      * @param project the project
-     * @param b 
+     * @param include_containers True to include containers
      * @return an array of IPackageFragmentRoot.
      */
     private IPackageFragmentRoot[] getPackageFragmentRoots(IProject project,

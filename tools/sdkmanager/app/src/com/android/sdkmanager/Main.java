@@ -35,7 +35,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 /**
  * Main class for the 'android' application.
@@ -50,11 +49,6 @@ class Main {
     
     private final static String[] BOOLEAN_YES_REPLIES = new String[] { "yes", "y" };
     private final static String[] BOOLEAN_NO_REPLIES = new String[] { "no", "n" };
-
-    /** Regex used to validate characters that compose an AVD name. */
-    private final static Pattern RE_AVD_NAME = Pattern.compile("[a-zA-Z0-9._-]+");
-    /** List of valid characters for an AVD name. Used for display purposes. */
-    private final static String CHARS_AVD_NAME = "a-z A-Z 0-9 . _ -";
     
     
     /** Path to the SDK folder. This is the parent of {@link #TOOLSDIR}. */
@@ -515,10 +509,10 @@ class Main {
 
             String avdName = mSdkCommandLine.getParamName();
             
-            if (!RE_AVD_NAME.matcher(avdName).matches()) {
+            if (!AvdManager.RE_AVD_NAME.matcher(avdName).matches()) {
                 errorAndExit(
                     "AVD name '%1$s' contains invalid characters.\nAllowed characters are: %2$s",
-                    avdName, CHARS_AVD_NAME);
+                    avdName, AvdManager.CHARS_AVD_NAME);
                 return;
             }
             
@@ -592,18 +586,6 @@ class Main {
                     mSdkCommandLine.getParamSdCard(),
                     hardwareConfig,
                     removePrevious);
-            
-            if (newAvdInfo != null && 
-                    oldAvdInfo != null &&
-                    !oldAvdInfo.getPath().equals(newAvdInfo.getPath())) {
-                mSdkLog.warning("Removing previous AVD directory at %s", oldAvdInfo.getPath());
-                // Remove the old data directory
-                File dir = new File(oldAvdInfo.getPath());
-                avdManager.recursiveDelete(dir);
-                dir.delete();
-                // Remove old AVD info from manager
-                avdManager.removeAvd(oldAvdInfo);
-            }
             
         } catch (AndroidLocationException e) {
             errorAndExit(e.getMessage());
