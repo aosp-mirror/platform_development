@@ -78,7 +78,7 @@ public class Main {
         // the "ping" argument means to check in with the server and exit
         // the application name and version number must also be supplied
         if (args.length >= 3 && args[0].equals("ping")) {
-            SdkStatsService.ping(args[1], args[2]);
+            SdkStatsService.ping(args[1], args[2], null);
             return;
         } else if (args.length > 0) {
             Log.e("ddms", "Unknown argument: " + args[0]);
@@ -86,7 +86,7 @@ public class Main {
         }
 
         // ddms itself is wanted: send a ping for ourselves
-        SdkStatsService.ping("ddms", VERSION);  //$NON-NLS-1$
+        SdkStatsService.ping("ddms", VERSION, null);  //$NON-NLS-1$
 
         DebugPortManager.setProvider(DebugPortProvider.getInstance());
 

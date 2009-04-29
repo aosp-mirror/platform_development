@@ -31,7 +31,6 @@ import com.android.ide.eclipse.adt.sdk.Sdk;
 import com.android.ide.eclipse.adt.sdk.Sdk.ITargetChangeListener;
 import com.android.ide.eclipse.adt.ui.EclipseUiHelper;
 import com.android.ide.eclipse.common.AndroidConstants;
-import com.android.ide.eclipse.common.SdkStatsHelper;
 import com.android.ide.eclipse.common.StreamHelper;
 import com.android.ide.eclipse.common.project.BaseProjectHelper;
 import com.android.ide.eclipse.common.project.ExportHelper;
@@ -51,6 +50,7 @@ import com.android.ide.eclipse.editors.resources.manager.ResourceMonitor.IFileLi
 import com.android.ide.eclipse.editors.xml.XmlEditor;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkConstants;
+import com.android.sdkstats.SdkStatsService;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
@@ -983,13 +983,7 @@ public class AdtPlugin extends AbstractUIPlugin {
             @Override
             protected IStatus run(IProgressMonitor monitor) {
                 try {
-
-                    // get the version of the plugin
-                    String versionString = (String) getBundle().getHeaders().get(
-                            Constants.BUNDLE_VERSION);
-                    Version version = new Version(versionString);
-                    
-                    SdkStatsHelper.pingUsageServer("adt", version); //$NON-NLS-1$
+                    pingUsageServer(); //$NON-NLS-1$
                     
                     return Status.OK_STATUS;
                 } catch (Throwable t) {
@@ -1389,4 +1383,22 @@ public class AdtPlugin extends AbstractUIPlugin {
     public static synchronized OutputStream getErrorStream() {
         return sPlugin.mAndroidConsoleErrorStream;
     }
+
+    /**
+     * Pings the usage start server.
+     * @param pluginName the name of the plugin to appear in the stats
+     * @param pluginVersion the {@link Version} of the plugin.
+     */
+    private void pingUsageServer() {
+        // get the version of the plugin
+        String versionString = (String) getBundle().getHeaders().get(
+                Constants.BUNDLE_VERSION);
+        Version version = new Version(versionString);
+
+        versionString = String.format("%1$d.%2$d.%3$d", version.getMajor(), //$NON-NLS-1$
+                version.getMinor(), version.getMicro());
+
+        SdkStatsService.ping("adt", versionString, getDisplay()); //$NON-NLS-1$
+    }
+
 }
