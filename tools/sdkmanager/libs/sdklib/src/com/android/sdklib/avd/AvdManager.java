@@ -185,7 +185,7 @@ public final class AvdManager {
          * @param targetHash the target hash
          * @param target The target. Can be null, if the target was not resolved.
          * @param properties The property map. Can be null.
-         * @param error The error describing why this AVD is invalid. Cannot be null.
+         * @param status The {@link AvdStatus} of this AVD. Cannot be null.
          */
         public AvdInfo(String name, String path, String targetHash, IAndroidTarget target,
                 Map<String, String> properties, AvdStatus status) {
@@ -193,7 +193,7 @@ public final class AvdManager {
             mPath = path;
             mTargetHash = targetHash;
             mTarget = target;
-            mProperties = Collections.unmodifiableMap(properties);
+            mProperties = properties == null ? null : Collections.unmodifiableMap(properties);
             mStatus = status;
         }
 
@@ -214,7 +214,7 @@ public final class AvdManager {
             return mTargetHash;
         }
 
-        /** Returns the target of the AVD, or <code>null</code> if it has not been resolved */
+        /** Returns the target of the AVD, or <code>null</code> if it has not been resolved. */
         public IAndroidTarget getTarget() {
             return mTarget;
         }
@@ -257,7 +257,7 @@ public final class AvdManager {
         }
 
         /**
-         * Returns a map of properties for the AVD.
+         * Returns an unmodifiable map of properties for the AVD. This can be null.
          */
         public Map<String, String> getProperties() {
             return mProperties;
@@ -1173,7 +1173,9 @@ public final class AvdManager {
 
         // create a new map
         Map<String, String> properties = new HashMap<String, String>();
-        properties.putAll(oldProperties);
+        if (oldProperties != null) {
+            properties.putAll(oldProperties);
+        }
         
         AvdStatus status;
         
