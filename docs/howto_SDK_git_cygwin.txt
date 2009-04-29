@@ -105,11 +105,12 @@ provides a list of projects to ignore:
 
 B- The other issue is that by default repo maintains around 100+ git projects. 
 However most of these are not needed to build the Windows SDK. We can easily
-reduce this list to around 60 projects, which will make your repo syncs a lot
+reduce this list to around 70 projects, which will make your repo syncs a lot
 faster.
 
-Solution: Simply ignore all projects bionic, bootable/*, external/* and
-hardware/*.
+Solution: Simply ignore all projects bionic, bootable/*, hardware/* and most
+external projects. For external, we still need a handful of projects for the
+SDK -- things like the emulator or sqlite can be quite useful :-)
 
 Here's a script that takes care of all these details. It performs the repo
 init, creates the appropriate local_manifest.xml and does a repo sync as
@@ -123,20 +124,22 @@ set -e  # fail on errors
 URL=git://android.git.kernel.org/platform/manifest.git
 BRANCH=donut
 
-if [ ! -d .repo ]; then
-    # repo init if there's no .repo directory
+# repo init if there's no .repo directory
+if [[ ! -d .repo ]]; then
     repo init -u $URL -b $BRANCH
+fi
 
-    # create a local_manifest to exclude projects not useful to the Windows SDK
+# create a local_manifest to exclude projects not useful to the Windows SDK
+L=.repo/local_manifest.xml
+if [[ ! -f $L ]]; then
     M=.repo/manifest.xml
-    L=.repo/local_manifest.xml
 
     cat > $L <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <manifest>
 EOF
 
-    for i in $(grep -E "/(bionic|bootable|external|hardware)" $M | sed -s '/name/s/^.*name="\([^"]\+\)".*/\1/') ; do
+    for i in $(sed -sn '/external\/\(apache\|expat\|g\|libpng\|pr\|qemu\|sqlite\|tag\|zlib\)/d;/\(bionic\|bootable\|cts\|external\|hardware\).* name/s/^.*name="\([^"]\+\)".*/\1/p' $M) ; do
         echo "Ignore project $i"
         echo "  <remove-project name=\"$i\" />" >> $L
     done
