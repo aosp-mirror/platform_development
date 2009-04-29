@@ -133,7 +133,7 @@ public class MainWindow extends ApplicationWindow {
         boolean regression = false;
         
         // ping the usage server
-        SdkStatsService.ping(PING_NAME, PING_VERSION);
+        SdkStatsService.ping(PING_NAME, PING_VERSION, null);
 
         // Process command line arguments
         int argc = 0;
