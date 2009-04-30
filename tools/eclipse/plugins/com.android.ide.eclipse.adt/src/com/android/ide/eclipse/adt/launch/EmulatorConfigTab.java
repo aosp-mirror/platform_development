@@ -19,6 +19,7 @@ package com.android.ide.eclipse.adt.launch;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.launch.AndroidLaunchConfiguration.TargetMode;
 import com.android.ide.eclipse.adt.sdk.Sdk;
+import com.android.ide.eclipse.adt.wizards.actions.AvdManagerAction;
 import com.android.ide.eclipse.common.project.BaseProjectHelper;
 import com.android.ide.eclipse.ddms.DdmsPlugin;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
@@ -91,6 +92,8 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
     private Button mNoBootAnimButton;
 
     private Label mPreferredAvdLabel;
+
+    private IAndroidTarget mProjectTarget;
 
     /**
      * Returns the emulator ready speed option value.
@@ -187,8 +190,15 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
 
         mPreferredAvdLabel = new Label(offsetComp, SWT.NONE);
         mPreferredAvdLabel.setText("Select a preferred Android Virtual Device for deployment:");
-        AvdInfo[] avds = new AvdInfo[0];
-        mPreferredAvdSelector = new AvdSelector(offsetComp, avds);
+        mPreferredAvdSelector = new AvdSelector(offsetComp,
+                null /*avds*/,
+                new Runnable() {
+                    public void run() {
+                        AvdManagerAction action = new AvdManagerAction();
+                        action.run(null);
+                        updateAvdList(null);
+                    }
+        });
         mPreferredAvdSelector.setTableHeightHint(100);
         mPreferredAvdSelector.setSelectionListener(new SelectionAdapter() {
             @Override
@@ -296,6 +306,21 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
         return DdmsPlugin.getImageLoader().loadImage("emulator.png", null); //$NON-NLS-1$
     }
 
+    
+    private void updateAvdList(AvdManager avdManager) {
+        if (avdManager == null) {
+            avdManager = Sdk.getCurrent().getAvdManager();
+        }
+        
+        AvdInfo[] avds = null;
+        // no project? we don't want to display any "compatible" AVDs.
+        if (avdManager != null && mProjectTarget != null) {
+            avds = avdManager.getValidAvds();
+        }
+
+        mPreferredAvdSelector.setAvds(avds, mProjectTarget);
+    }
+
     /* (non-Javadoc)
      * @see org.eclipse.debug.ui.ILaunchConfigurationTab#initializeFrom(org.eclipse.debug.core.ILaunchConfiguration)
      */
@@ -336,19 +361,11 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
         }
 
         // update the AVD list
-        AvdInfo[] avds = null;
-        if (avdManager != null) {
-            avds = avdManager.getValidAvds();
+        if (project != null) {
+            mProjectTarget = Sdk.getCurrent().getTarget(project);
         }
 
-        IAndroidTarget projectTarget = null;
-        if (project != null) {
-            projectTarget = Sdk.getCurrent().getTarget(project);
-        } else {
-            avds = null; // no project? we don't want to display any "compatible" AVDs.
-        }
-        
-        mPreferredAvdSelector.setAvds(avds, projectTarget);
+        updateAvdList(avdManager);
 
         stringValue = "";
         try {

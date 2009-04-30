@@ -136,7 +136,7 @@ public final class DelayedLaunchInfo {
 
     /**
      * Returns the Android app process name that the debugger should connect to. Typically this is
-     * the same value as {@link getPackageName} 
+     * the same value as {@link #getPackageName()}.
      */
     public String getDebugPackageName() {
         if (mDebugPackageName == null) {
