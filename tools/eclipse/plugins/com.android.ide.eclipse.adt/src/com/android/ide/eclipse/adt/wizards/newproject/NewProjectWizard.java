@@ -143,6 +143,8 @@ public class NewProjectWizard extends Wizard implements INewWizard {
     protected static final String MAIN_PAGE_NAME = "newAndroidProjectPage"; //$NON-NLS-1$
 
     private NewProjectCreationPage mMainPage;
+    /** Package name available when the wizard completes. */
+    private String mPackageName;
 
     /**
      * Initializes this creation wizard using the passed workbench and object
@@ -203,6 +205,13 @@ public class NewProjectWizard extends Wizard implements INewWizard {
         return true;
     }
 
+    // -- Public Fields --
+    
+    /** Returns the package name. Only valid once the wizard finishes. */
+    public String getPackageName() {
+        return mPackageName;
+    }
+    
     // -- Custom Methods --
 
     /**
@@ -234,16 +243,20 @@ public class NewProjectWizard extends Wizard implements INewWizard {
         final IProject project = workspace.getRoot().getProject(mMainPage.getProjectName());
         final IProjectDescription description = workspace.newProjectDescription(project.getName());
 
+
+        // keep some variables to make them available once the wizard closes
+        mPackageName = mMainPage.getPackageName();
+
         final Map<String, Object> parameters = new HashMap<String, Object>();
         parameters.put(PARAM_PROJECT, mMainPage.getProjectName());
-        parameters.put(PARAM_PACKAGE, mMainPage.getPackageName());
+        parameters.put(PARAM_PACKAGE, mPackageName);
         parameters.put(PARAM_APPLICATION, STRING_RSRC_PREFIX + STRING_APP_NAME);
         parameters.put(PARAM_SDK_TOOLS_DIR, AdtPlugin.getOsSdkToolsFolder());
         parameters.put(PARAM_IS_NEW_PROJECT, mMainPage.isNewProject());
         parameters.put(PARAM_SRC_FOLDER, mMainPage.getSourceFolder());
         parameters.put(PARAM_SDK_TARGET, mMainPage.getSdkTarget());
         parameters.put(PARAM_MIN_SDK_VERSION, mMainPage.getMinSdkVersion());
-
+        
         if (mMainPage.isCreateActivity()) {
             // An activity name can be of the form ".package.Class" or ".Class".
             // The initial dot is ignored, as it is always added later in the templates.

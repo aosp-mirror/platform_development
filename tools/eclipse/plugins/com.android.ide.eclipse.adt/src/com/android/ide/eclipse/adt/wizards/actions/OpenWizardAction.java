@@ -17,6 +17,7 @@
 package com.android.ide.eclipse.adt.wizards.actions;
 
 import org.eclipse.jface.action.IAction;
+import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.StructuredSelection;
@@ -52,6 +53,21 @@ import org.eclipse.ui.internal.util.Util;
      */
     private static final int SIZING_WIZARD_HEIGHT = 500;
 
+    /** The wizard that was created by {@link #run(IAction)}. */
+    private IWorkbenchWizard mWizard;
+    /** The result from the dialog */
+    private int mDialogResult;
+
+    /** Returns the wizard that was created by {@link #run(IAction)}. */
+    public IWorkbenchWizard getWizard() {
+        return mWizard;
+    }
+
+    /** Returns the result from {@link Dialog#open()}, available after
+     * the completion of {@link #run(IAction)}. */
+    public int getDialogResult() {
+        return mDialogResult;
+    }
     
     /* (non-Javadoc)
      * @see org.eclipse.ui.IWorkbenchWindowActionDelegate#dispose()
@@ -72,6 +88,7 @@ import org.eclipse.ui.internal.util.Util;
      * <p/>
      * Most of this implementation is extracted from {@link NewWizardShortcutAction#run()}.
      * 
+     * @param action The action that got us here. Can be null when used internally.
      * @see org.eclipse.ui.IActionDelegate#run(org.eclipse.jface.action.IAction)
      */
     public void run(IAction action) {
@@ -102,12 +119,12 @@ import org.eclipse.ui.internal.util.Util;
         }
 
         // Create the wizard and initialize it with the selection
-        IWorkbenchWizard wizard = instanciateWizard(action);
-        wizard.init(workbench, selectionToPass);
+        mWizard = instanciateWizard(action);
+        mWizard.init(workbench, selectionToPass);
         
         // It's not visible yet until a dialog is created and opened
         Shell parent = window.getShell();
-        WizardDialog dialog = new WizardDialog(parent, wizard);
+        WizardDialog dialog = new WizardDialog(parent, mWizard);
         dialog.create();
         
         // This code comes straight from NewWizardShortcutAction#run()
@@ -118,13 +135,14 @@ import org.eclipse.ui.internal.util.Util;
         window.getWorkbench().getHelpSystem().setHelp(dialog.getShell(),
                 IWorkbenchHelpContextIds.NEW_WIZARD_SHORTCUT);
         
-        dialog.open();
+        mDialogResult = dialog.open();
     }
 
     /**
      * Called by {@link #run(IAction)} to instantiate the actual wizard.
      * 
      * @param action The action parameter from {@link #run(IAction)}.
+     *               This can be null.
      * @return A new wizard instance. Must not be null.
      */
     protected abstract IWorkbenchWizard instanciateWizard(IAction action);
