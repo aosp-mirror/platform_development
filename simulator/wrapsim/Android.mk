@@ -22,7 +22,8 @@ LOCAL_SRC_FILES := \
 	Init.c \
 	Intercept.c \
 	Log.c \
-	SimMgr.c
+	SimMgr.c \
+	SysPower.c
 
 LOCAL_C_INCLUDES += prebuilt/common/esd
 
