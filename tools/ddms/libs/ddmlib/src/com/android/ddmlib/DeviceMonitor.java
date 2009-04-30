@@ -748,12 +748,13 @@ final class DeviceMonitor {
                 if (AndroidDebugBridge.getClientSupport()) {
                     client.listenForDebugger(debuggerPort);
                 }
-                client.requestAllocationStatus();
             } catch (IOException ioe) {
                 client.getClientData().setDebuggerConnectionStatus(ClientData.DEBUGGER_ERROR);
                 Log.e("ddms", "Can't bind to local " + debuggerPort + " for debugger");
                 // oh well
             }
+
+            client.requestAllocationStatus();
         } else {
             Log.e("ddms", "Handshake with " + client + " failed!");
             /*
