@@ -35,6 +35,7 @@ import com.android.ide.eclipse.adt.launch.DeviceChooserDialog.DeviceChooserRespo
 import com.android.ide.eclipse.adt.project.ApkInstallManager;
 import com.android.ide.eclipse.adt.project.ProjectHelper;
 import com.android.ide.eclipse.adt.sdk.Sdk;
+import com.android.ide.eclipse.adt.wizards.actions.AvdManagerAction;
 import com.android.ide.eclipse.common.project.AndroidManifestParser;
 import com.android.ide.eclipse.common.project.BaseProjectHelper;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
@@ -64,6 +65,9 @@ import org.eclipse.jdt.launching.JavaRuntime;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.window.Window;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Shell;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -465,17 +469,7 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
                 
                 // we are going to take the closest AVD. ie a compatible AVD that has the API level
                 // closest to the project target.
-                AvdInfo[] avds = avdManager.getValidAvds();
-                AvdInfo defaultAvd = null;
-                for (AvdInfo avd : avds) {
-                    if (projectTarget.isCompatibleBaseFor(avd.getTarget())) {
-                        if (defaultAvd == null ||
-                                avd.getTarget().getApiVersionNumber() <
-                                    defaultAvd.getTarget().getApiVersionNumber()) {
-                            defaultAvd = avd;
-                        }
-                    }
-                }
+                AvdInfo defaultAvd = findMatchingAvd(avdManager, projectTarget);
 
                 if (defaultAvd != null) {
                     response.setAvdToLaunch(defaultAvd);
@@ -487,13 +481,48 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
                     continueLaunch(response, project, launch, launchInfo, config);
                     return;
                 } else {
-                    // FIXME: ask the user if he wants to create a AVD.
-                    // we found no compatible AVD.
-                    AdtPlugin.printErrorToConsole(project, String.format(
-                            "Failed to find an AVD compatible with target '%1$s'. Launch aborted.",
+                    AdtPlugin.printToConsole(project, String.format(
+                            "Failed to find an AVD compatible with target '%1$s'.",
                             projectTarget.getName()));
-                    stopLaunch(launchInfo);
-                    return;
+                    
+                    final Display display = AdtPlugin.getDisplay();
+                    final int[] result = new int[] { Window.CANCEL };
+                    // ask the user to create a new one.
+                    display.syncExec(new Runnable() {
+                        public void run() {
+                            Shell shell = display.getActiveShell();
+                            if (MessageDialog.openQuestion(shell, "AVD Error",
+                                    "No Compatible targets were found. Do you wish to create one?")) {
+                                AvdManagerAction action = new AvdManagerAction();
+                                action.run(null /*action*/);
+                                result[0] = action.getDialogResult();
+                            }
+                        }
+                    });
+                    if (result[0] == Window.CANCEL) {
+                        AdtPlugin.printErrorToConsole(project, String.format("Launch aborted."));
+                        stopLaunch(launchInfo);
+                        return;
+                    } else {
+                        // attempt to reload the AVDs and find one compatible.
+                        defaultAvd = findMatchingAvd(avdManager, projectTarget);
+                        
+                        if (defaultAvd == null) {
+                            AdtPlugin.printErrorToConsole(project, String.format(
+                                    "Still no compatible AVDs with target '%1$s': Aborting launch.",
+                                    projectTarget.getName()));
+                            stopLaunch(launchInfo);
+                        } else {
+                            response.setAvdToLaunch(defaultAvd);
+
+                            AdtPlugin.printToConsole(project, String.format(
+                                    "Launching new emulator with compatible AVD '%1$s'",
+                                    defaultAvd.getName()));
+
+                            continueLaunch(response, project, launch, launchInfo, config);
+                            return;
+                        }
+                    }
                 }
             } else if (hasDevice == false && compatibleRunningAvds.size() == 1) {
                 Entry<IDevice, AvdInfo> e = compatibleRunningAvds.entrySet().iterator().next();
@@ -556,6 +585,26 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
                 }
             }
         });
+    }
+
+    /**
+     * @param avdManager
+     * @param projectTarget
+     * @return
+     */
+    private AvdInfo findMatchingAvd(AvdManager avdManager, final IAndroidTarget projectTarget) {
+        AvdInfo[] avds = avdManager.getValidAvds();
+        AvdInfo defaultAvd = null;
+        for (AvdInfo avd : avds) {
+            if (projectTarget.isCompatibleBaseFor(avd.getTarget())) {
+                if (defaultAvd == null ||
+                        avd.getTarget().getApiVersionNumber() <
+                            defaultAvd.getTarget().getApiVersionNumber()) {
+                    defaultAvd = avd;
+                }
+            }
+        }
+        return defaultAvd;
     }
     
     /**

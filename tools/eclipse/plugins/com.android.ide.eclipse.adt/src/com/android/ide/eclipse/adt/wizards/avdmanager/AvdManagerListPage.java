@@ -144,8 +144,6 @@ class AvdManagerListPage extends WizardPage {
      * Creates the AVD selector and refresh & delete buttons.
      */
     private void createAvdGroup(Composite parent) {
-        int col = 0;
-        
         final Composite grid2 = new Composite(parent, SWT.NONE);
         grid2.setLayout(new GridLayout(2,  false /*makeColumnsEqualWidth*/));
         grid2.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
