@@ -55,8 +55,10 @@ import javax.xml.xpath.XPathExpressionException;
  * Multi-page form editor for AndroidManifest.xml. 
  */
 public final class ManifestEditor extends AndroidEditor {
-    private final static String EMPTY = ""; //$NON-NLS-1$
 
+    public static final String ID = AndroidConstants.EDITORS_NAMESPACE + ".manifest.ManifestEditor"; //$NON-NLS-1$
+    
+    private final static String EMPTY = ""; //$NON-NLS-1$
     
     /** Root node of the UI element hierarchy */
     private UiElementNode mUiManifestNode;
