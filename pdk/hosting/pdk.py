@@ -26,7 +26,7 @@ from google.appengine.ext.webapp.util import run_wsgi_app
 
 class MainPage(webapp.RequestHandler):
   def get(self):
-    self.redirect('online-pdk/index.html')
+    self.redirect('online-pdk/guide/index.html')
 
 application = webapp.WSGIApplication([('/', MainPage)], debug=True)
 
