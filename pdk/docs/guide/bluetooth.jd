@@ -1,0 +1,69 @@
+page.title=Bluetooth
+pdk.version=1.0
+@jd:body
+
+<a name="toc"/>
+<div style="padding:10px">
+<a href="#androidBluetoothIntro">Introduction</a><br/>
+<a href="#androidBluetoothPorting">Porting</a><br/><div style="padding-left:40px">
+
+<a href="#androidBluetoothPortingDriver">UART Driver</a><br/>
+<a href="#androidBluetoothPortingPowerOnOff">Bluetooth Power On / Off</a><br/></div>
+<a href="#androidBluetoothTools">Tools</a><br/></div></font></div>
+
+<a name="androidBluetoothIntro"></a><h2>Introduction</h2>
+
+<p>Android's Bluetooth stack uses BlueZ version 3.36 for GAP, SDP, and RFCOMM profiles, and is a SIG-qualified Bluetooth 2.0 host stack.</p>
+
+<p>Bluez is GPL licensed, so the Android framework interacts with userspace bluez code through D-BUS IPC to avoid proprietary code.</p>
+
+<p>Headset and Handsfree (v1.5) profiles are implemented in the Android framework and are both tightly coupled with the Phone App. These profiles are also SIG qualified.</p>
+
+<p>The diagram below offers a library-oriented view of the Bluetooth stack. Click <a href="bluetooth/bluetooth_process.html">Bluetooth Process Diagram</a> for a process-oriented view.</p>
+
+<p><img src="images/androidBluetooth.gif"></p>
+
+Solid elements represent Android blocks and dashed elements represent partner-specific blocks.
+
+
+
+<a name="androidBluetoothPorting"></a><h2>Porting</h2>
+
+<p>BlueZ is Bluetooth 2.0 compatible and should work with any 2.0 chipset. There are two integration points:</p>
+<p><ul>
+<li>UART driver</li>
+<li>Bluetooth Power On / Off</li>
+</ul>
+</p>
+
+
+<a name="androidBluetoothPortingDriver"></a><h3>UART Driver</h3>
+
+<p>The BlueZ kernel sub-system attaches to your hardware-specific UART driver using the <code>hciattach</code> daemon.</p>
+<p>For example, for MSM7201A, this is <code>drivers/serial/msm_serial.c</code>. You may also need to edit command line options to <code>hciattach</code> via <code>init.rc</code>.</p>
+
+
+<a name="androidBluetoothPortingPowerOnOff"></a><h3>Bluetooth Power On / Off</h3>
+
+<p>The method for powering on and off your bluetooth chip varies from Android V 1.0 to post 1.0.</p>
+
+<p><ul>
+<li><b>1.0</b>: Android framework writes a 0 or 1 to <code>/sys/modules/board_[PLATFORM]/parameters/bluetooth_power_on</code>.</li>
+
+<li><b>Post 1.0</b>: Android framework uses the linux <code>rfkill</code> API. See <code>arch/arm/mach-msm/board-trout-rfkill.c</code> for an example.</li>
+</ul>
+</p>
+
+
+<a name="androidBluetoothTools"></a><h2>Tools</h2>
+
+<p>BlueZ provides a rich set of command line tools for debugging and interacting with the Bluetooth sub-system, including:</p>
+<p><ul>
+<li><code>hciconfig</code></li>
+<li><code>hcitool</code></li>
+<li><code>hcidump</code></li>
+<li><code>sdptool</code></li>
+<li><code>dbus-send</code></li>
+<li><code>dbus-monitor</code></li>
+</ul>
+</p>
