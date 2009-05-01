@@ -27,6 +27,7 @@ import com.android.sdklib.ISdkLog;
 import com.android.sdklib.avd.AvdManager;
 import com.android.sdklib.avd.AvdManager.AvdInfo;
 import com.android.sdkuilib.AvdSelector;
+import com.android.sdkuilib.AvdSelector.SelectionMode;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jface.wizard.WizardPage;
@@ -56,7 +57,6 @@ import java.util.TreeMap;
 class AvdManagerListPage extends WizardPage {
 
     private AvdSelector mAvdSelector;
-    private Button mDeleteButton;
     private Button mRefreshButton;
     private Text mCreateName;
     private Combo mCreateTargetCombo;
@@ -162,32 +162,21 @@ class AvdManagerListPage extends WizardPage {
            }
         });
 
-        mAvdSelector = new AvdSelector(parent, null);
-        mAvdSelector.setSelectionListener(new SelectionAdapter() {
-            @Override
-            public void widgetSelected(SelectionEvent e) {
-                super.widgetSelected(e);
-                updateDeleteButton();
-           } 
-        });
+        mAvdSelector = new AvdSelector(parent,
+                SelectionMode.SELECT,
+                new AvdSelector.IExtraAction() {
+                    public String label() {
+                        return "Delete AVD...";
+                    }
 
-        mDeleteButton = new Button(parent, SWT.PUSH);
-        mDeleteButton.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, true, false));
-        mDeleteButton.addSelectionListener(new SelectionAdapter() {
-            @Override
-            public void widgetSelected(SelectionEvent e) {
-                onDelete();
-           }
-        });
-        updateDeleteButton();
-    }
-    
-    private void updateDeleteButton() {
-        AvdInfo selected = mAvdSelector.getFirstSelected();
-        mDeleteButton.setText(String.format("Delete %s...",
-                selected == null ? "" : selected.getName()));  //$NON-NLS-1$
-        mDeleteButton.pack();
-        mDeleteButton.setEnabled(selected != null);
+                    public boolean isEnabled() {
+                        return mAvdSelector != null && mAvdSelector.getSelected() != null;
+                    }
+
+                    public void run() {
+                        onDelete();
+                    }
+            });
     }
     
     /**
@@ -441,19 +430,24 @@ class AvdManagerListPage extends WizardPage {
      * Tries to preserve the selection.
      */
     private void reloadAvdList() {
-        AvdInfo selected = mAvdSelector.getFirstSelected();
+        AvdInfo selected = mAvdSelector.getSelected();
 
         AvdManager avdm = getAvdManager();
+        AvdInfo[] avds = null;
         
         // For the AVD manager to reload the list, in case AVDs where created using the
         // command line tool.
-        try {
-            avdm.reloadAvds();
-        } catch (AndroidLocationException e) {
-            AdtPlugin.log(e, "AVD Manager reload failed");  //$NON-NLS-1$
+        // The AVD manager may not exist yet, typically when loading the SDK.
+        if (avdm != null) {
+            try {
+                avdm.reloadAvds();
+            } catch (AndroidLocationException e) {
+                AdtPlugin.log(e, "AVD Manager reload failed");  //$NON-NLS-1$
+            }
+
+            avds = avdm.getValidAvds();
         }
         
-        AvdInfo[] avds = avdm == null ? null : avdm.getValidAvds();
         mAvdSelector.setAvds(avds, null /*filter*/);
 
         // Keep the list of known AVD names to check if they exist quickly. however
@@ -473,11 +467,11 @@ class AvdManagerListPage extends WizardPage {
     }
 
     /**
-     * Triggered when the user selects the "delete" button.
+     * Triggered when the user selects the "delete" button (the extra action in the selector)
      * Deletes the currently selected AVD, if any.
      */
     private void onDelete() {
-        AvdInfo avdInfo = mAvdSelector.getFirstSelected();
+        AvdInfo avdInfo = mAvdSelector.getSelected();
         AvdManager avdm = getAvdManager();
         if (avdInfo == null || avdm == null) {
             return;
@@ -496,7 +490,6 @@ class AvdManagerListPage extends WizardPage {
         
         log.display(success);
         reloadAvdList();
-        updateDeleteButton();
     }
 
     /**

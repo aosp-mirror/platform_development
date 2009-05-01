@@ -65,7 +65,6 @@ import org.eclipse.jdt.launching.JavaRuntime;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.preference.IPreferenceStore;
-import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 
@@ -484,26 +483,22 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
                     AdtPlugin.printToConsole(project, String.format(
                             "Failed to find an AVD compatible with target '%1$s'.",
                             projectTarget.getName()));
-                    
+
                     final Display display = AdtPlugin.getDisplay();
-                    final int[] result = new int[] { Window.CANCEL };
+                    final boolean[] searchAgain = new boolean[] { false };
                     // ask the user to create a new one.
                     display.syncExec(new Runnable() {
                         public void run() {
                             Shell shell = display.getActiveShell();
-                            if (MessageDialog.openQuestion(shell, "AVD Error",
-                                    "No Compatible targets were found. Do you wish to create one?")) {
+                            if (MessageDialog.openQuestion(shell, "Android AVD Error",
+                                    "No compatible targets were found. Do you wish to a add new Android Virtual Device?")) {
                                 AvdManagerAction action = new AvdManagerAction();
                                 action.run(null /*action*/);
-                                result[0] = action.getDialogResult();
+                                searchAgain[0] = true;
                             }
                         }
                     });
-                    if (result[0] == Window.CANCEL) {
-                        AdtPlugin.printErrorToConsole(project, String.format("Launch aborted."));
-                        stopLaunch(launchInfo);
-                        return;
-                    } else {
+                    if (searchAgain[0]) {
                         // attempt to reload the AVDs and find one compatible.
                         defaultAvd = findMatchingAvd(avdManager, projectTarget);
                         
@@ -588,9 +583,7 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
     }
 
     /**
-     * @param avdManager
-     * @param projectTarget
-     * @return
+     * Find a matching AVD.
      */
     private AvdInfo findMatchingAvd(AvdManager avdManager, final IAndroidTarget projectTarget) {
         AvdInfo[] avds = avdManager.getValidAvds();
