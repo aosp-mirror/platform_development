@@ -23,6 +23,7 @@ import threading
 import time
 
 # local imports
+import android_build
 import errors
 import logger
 
@@ -128,13 +129,13 @@ def RunHostCommand(binary, valgrind=False):
 
   Args:
     binary: basename of the file to be run. It is expected to be under
-            out/host/linux-x86/bin.
+            out/host/<os>-<arch>/bin.
     valgrind: If True the command will be run under valgrind.
 
   Returns:
     The command exit code (int)
   """
-  full_path = os.path.join("out", "host", "linux-x86", "bin", binary)
+  full_path = os.path.join(android_build.GetHostBin(), binary)
   if not valgrind:
     subproc = subprocess.Popen(full_path, stdout=subprocess.PIPE,
                                stderr=subprocess.STDOUT)
