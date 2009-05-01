@@ -27,6 +27,7 @@ import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.avd.AvdManager;
 import com.android.sdklib.avd.AvdManager.AvdInfo;
 import com.android.sdkuilib.AvdSelector;
+import com.android.sdkuilib.AvdSelector.SelectionMode;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
@@ -192,13 +193,22 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
         mPreferredAvdLabel.setText("Select a preferred Android Virtual Device for deployment:");
         mPreferredAvdSelector = new AvdSelector(offsetComp,
                 null /*avds*/,
-                new Runnable() {
+                new AvdSelector.IExtraAction() {
                     public void run() {
                         AvdManagerAction action = new AvdManagerAction();
                         action.run(null);
                         updateAvdList(null);
                     }
-        });
+
+                    public boolean isEnabled() {
+                        return true;
+                    }
+
+                    public String label() {
+                        return "AVD Manager...";
+                    }
+                },
+                SelectionMode.CHECK);
         mPreferredAvdSelector.setTableHeightHint(100);
         mPreferredAvdSelector.setSelectionListener(new SelectionAdapter() {
             @Override
@@ -445,7 +455,7 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
     public void performApply(ILaunchConfigurationWorkingCopy configuration) {
         configuration.setAttribute(LaunchConfigDelegate.ATTR_TARGET_MODE,
                 mAutoTargetButton.getSelection());
-        AvdInfo avd = mPreferredAvdSelector.getFirstSelected();
+        AvdInfo avd = mPreferredAvdSelector.getSelected();
         if (avd != null) {
             configuration.setAttribute(LaunchConfigDelegate.ATTR_AVD_NAME, avd.getName());
         } else {

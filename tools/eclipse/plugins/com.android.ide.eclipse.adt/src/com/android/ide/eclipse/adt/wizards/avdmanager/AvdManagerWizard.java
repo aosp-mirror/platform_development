@@ -18,11 +18,14 @@
 
 package com.android.ide.eclipse.adt.wizards.avdmanager;
 
+import com.android.ide.eclipse.adt.ui.IUpdateWizardDialog;
+import com.android.ide.eclipse.adt.ui.WizardDialogEx;
 import com.android.ide.eclipse.editors.IconFactory;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.Wizard;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.ui.INewWizard;
 import org.eclipse.ui.IWorkbench;
 
@@ -34,7 +37,7 @@ import org.eclipse.ui.IWorkbench;
  * to get something quick out of the door. We'll need to revisit this when we implement
  * the final standalone AVD Manager UI and this Wizard will go away.
  */
-public class AvdManagerWizard extends Wizard implements INewWizard {
+public class AvdManagerWizard extends Wizard implements INewWizard, IUpdateWizardDialog {
 
     private static final String PROJECT_LOGO_LARGE = "android_large"; //$NON-NLS-1$
     
@@ -95,6 +98,17 @@ public class AvdManagerWizard extends Wizard implements INewWizard {
     private void setImageDescriptor() {
         ImageDescriptor desc = IconFactory.getInstance().getImageDescriptor(PROJECT_LOGO_LARGE);
         setDefaultPageImageDescriptor(desc);
+    }
+
+    /**
+     * Invoked once the dialog frame as been created.
+     * We use it to hide the cancel button, which looks odd here.
+     */
+    public void updateWizardDialog(WizardDialogEx dialog) {
+        Button cancel = dialog.getCancelButtonEx();
+        if (cancel != null) {
+            cancel.setVisible(false);
+        }
     }
 
 }

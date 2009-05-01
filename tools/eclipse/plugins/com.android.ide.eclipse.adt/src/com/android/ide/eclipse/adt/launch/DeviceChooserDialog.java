@@ -33,6 +33,7 @@ import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.avd.AvdManager;
 import com.android.sdklib.avd.AvdManager.AvdInfo;
 import com.android.sdkuilib.AvdSelector;
+import com.android.sdkuilib.AvdSelector.SelectionMode;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
@@ -327,7 +328,7 @@ public class DeviceChooserDialog extends Dialog implements IDeviceChangeListener
                 if (deviceMode) {
                     handleDeviceSelection();
                 } else {
-                    mResponse.setAvdToLaunch(mPreferredAvdSelector.getFirstSelected());
+                    mResponse.setAvdToLaunch(mPreferredAvdSelector.getSelected());
                 }
                 
                 enableOkButton();
@@ -417,13 +418,22 @@ public class DeviceChooserDialog extends Dialog implements IDeviceChangeListener
         mPreferredAvdSelector = new AvdSelector(offsetComp,
                 getNonRunningAvds(false /*reloadAvds*/),
                 mProjectTarget,
-                new Runnable() {
+                new AvdSelector.IExtraAction() {
                     public void run() {
                         AvdManagerAction action = new AvdManagerAction();
                         action.run(null);
                         refillAvdList(true /*reloadAvds*/);
                     }
-        });
+
+                    public boolean isEnabled() {
+                        return true;
+                    }
+
+                    public String label() {
+                        return "AVD Manager...";
+                    }
+                },
+                SelectionMode.CHECK);
         mPreferredAvdSelector.setTableHeightHint(100);
         mPreferredAvdSelector.setEnabled(false);
         mPreferredAvdSelector.setSelectionListener(new SelectionAdapter() {
@@ -434,7 +444,7 @@ public class DeviceChooserDialog extends Dialog implements IDeviceChangeListener
             @Override
             public void widgetSelected(SelectionEvent e) {
                 if (mDisableAvdSelectionChange == false) {
-                    mResponse.setAvdToLaunch(mPreferredAvdSelector.getFirstSelected());
+                    mResponse.setAvdToLaunch(mPreferredAvdSelector.getSelected());
                     enableOkButton();
                 }
             }
@@ -735,7 +745,7 @@ public class DeviceChooserDialog extends Dialog implements IDeviceChangeListener
         AvdInfo[] array = getNonRunningAvds(reloadAvds);
         
         // save the current selection
-        AvdInfo selected = mPreferredAvdSelector.getFirstSelected();
+        AvdInfo selected = mPreferredAvdSelector.getSelected();
         
         // disable selection change.
         mDisableAvdSelectionChange = true;

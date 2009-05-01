@@ -16,12 +16,14 @@
 
 package com.android.ide.eclipse.adt.wizards.actions;
 
+import com.android.ide.eclipse.adt.ui.IUpdateWizardDialog;
+import com.android.ide.eclipse.adt.ui.WizardDialogEx;
+
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.StructuredSelection;
-import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IEditorInput;
@@ -124,8 +126,12 @@ import org.eclipse.ui.internal.util.Util;
         
         // It's not visible yet until a dialog is created and opened
         Shell parent = window.getShell();
-        WizardDialog dialog = new WizardDialog(parent, mWizard);
+        WizardDialogEx dialog = new WizardDialogEx(parent, mWizard);
         dialog.create();
+        
+        if (mWizard instanceof IUpdateWizardDialog) {
+            ((IUpdateWizardDialog) mWizard).updateWizardDialog(dialog);
+        }
         
         // This code comes straight from NewWizardShortcutAction#run()
         Point defaultSize = dialog.getShell().getSize();
