@@ -22,12 +22,14 @@ import com.android.sdklib.avd.AvdManager.AvdInfo;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
@@ -51,6 +53,8 @@ public final class AvdSelector {
     private Table mTable;
     private Label mDescription;
 
+    private static int NUM_COL = 2;
+    
     /**
      * Creates a new SDK Target Selector, and fills it with a list of {@link AvdInfo}, filtered
      * by a {@link IAndroidTarget}.
@@ -59,30 +63,44 @@ public final class AvdSelector {
      * 
      * @param parent The parent composite where the selector will be added.
      * @param avds The list of AVDs. This is <em>not</em> copied, the caller must not modify.
+     *             It can be null.
+     * @param filter When non-null, will display only the AVDs matching this target.
+     * @param avdManagerAction A runnable to associate with an "AVD Manager" button. This button
+     *        is hidden if null is passed. The caller's action is responsible for reloading
+     *        the AVD list using {@link #setAvds(AvdInfo[], IAndroidTarget)}.
      */
-    public AvdSelector(Composite parent, AvdInfo[] avds, IAndroidTarget filter) {
+    public AvdSelector(Composite parent,
+            AvdInfo[] avds,
+            IAndroidTarget filter,
+            final Runnable avdManagerAction) {
         mAvds = avds;
 
-        // Layout has 1 column
+        // Layout has 2 columns
         Composite group = new Composite(parent, SWT.NONE);
-        group.setLayout(new GridLayout());
+        group.setLayout(new GridLayout(NUM_COL, false /*makeColumnsEqualWidth*/));
         group.setLayoutData(new GridData(GridData.FILL_BOTH));
         group.setFont(parent.getFont());
         
         mTable = new Table(group, SWT.CHECK | SWT.FULL_SELECTION | SWT.SINGLE | SWT.BORDER);
         mTable.setHeaderVisible(true);
         mTable.setLinesVisible(false);
-
-        GridData data = new GridData();
-        data.grabExcessVerticalSpace = true;
-        data.grabExcessHorizontalSpace = true;
-        data.horizontalAlignment = GridData.FILL;
-        data.verticalAlignment = GridData.FILL;
-        mTable.setLayoutData(data);
+        setTableHeightHint(0);
 
         mDescription = new Label(group, SWT.WRAP);
         mDescription.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
+        if (avdManagerAction != null) {
+            Button avdManagerButton = new Button(group, SWT.PUSH);
+            avdManagerButton.setText("AVD Manager...");
+            avdManagerButton.addSelectionListener(new SelectionAdapter() {
+                @Override
+                public void widgetSelected(SelectionEvent e) {
+                    super.widgetSelected(e);
+                    avdManagerAction.run();
+                } 
+            });
+        }
+        
         // create the table columns
         final TableColumn column0 = new TableColumn(mTable, SWT.NONE);
         column0.setText("AVD Name");
@@ -98,23 +116,45 @@ public final class AvdSelector {
         fillTable(mTable, filter);
         setupTooltip(mTable);
     }
-    
+
     /**
      * Creates a new SDK Target Selector, and fills it with a list of {@link AvdInfo}.
      * 
      * @param parent The parent composite where the selector will be added.
      * @param avds The list of AVDs. This is <em>not</em> copied, the caller must not modify.
+     *             It can be null.
      */
     public AvdSelector(Composite parent, AvdInfo[] avds) {
-        this(parent, avds, null /* filter */);
+        this(parent, avds, null /* filter */, null /* avdManagerAction */);
     }
 
-    
+    /**
+     * Creates a new SDK Target Selector, and fills it with a list of {@link AvdInfo}.
+     * 
+     * @param parent The parent composite where the selector will be added.
+     * @param avds The list of AVDs. This is <em>not</em> copied, the caller must not modify.
+     *             It can be null.
+     * @param avdManagerAction A runnable to associate with an "AVD Manager" button. This button
+     *        is hidden if null is passed. The caller's action is responsible for reloading
+     *        the AVD list using {@link #setAvds(AvdInfo[], IAndroidTarget)}.
+     */
+    public AvdSelector(Composite parent, AvdInfo[] avds, Runnable avdManagerAction) {
+        this(parent, avds, null /* filter */, avdManagerAction);
+    }
+
+    /**
+     * Sets the table grid layout data.
+     *  
+     * @param heightHint If > 0, tthe height hint is set to the requested value.
+     */
     public void setTableHeightHint(int heightHint) {
         GridData data = new GridData();
-        data.heightHint = heightHint;
+        if (heightHint > 0) {
+            data.heightHint = heightHint;
+        }
         data.grabExcessVerticalSpace = true;
         data.grabExcessHorizontalSpace = true;
+        data.horizontalSpan = NUM_COL;
         data.horizontalAlignment = GridData.FILL;
         data.verticalAlignment = GridData.FILL;
         mTable.setLayoutData(data);
@@ -125,6 +165,7 @@ public final class AvdSelector {
      * <p/>This must be called from the UI thread.
      * 
      * @param avds The list of AVDs. This is <em>not</em> copied, the caller must not modify.
+     *             It can be null.
      * @param filter An IAndroidTarget. If non-null, only AVD whose target are compatible with the
      * filter target will displayed an available for selection.
      */
