@@ -21,7 +21,7 @@ pdk.version=1.0
 
 <a href="#androidSourceSetupBuildingKernelCheckingBranch">Checking Out a Branch</a><br/>
 <a href="#androidSourceSetupBuildingKernelBranchLocation">Verifying Location</a><br/>
-<a href="#androidSourceSetupBuildingKernelBuild">Building the Kernel</a><br/></div></div></font>
+<a href="#androidSourceSetupBuildingKernelBuild">Building the Kernel</a><br/></div></div></div>
 
 <a name="androidBuildSystemIntroduction"></a><h2>Introduction</h2>
 
@@ -134,28 +134,14 @@ PRODUCT_NAME := google_generic
 
 <a name="androidSourceSetupBuildingDeviceCodeBase"></a><h3>Device Code</h3>
 
-<p>Of the two options below, the first tends to yield more consistent results.</p>
-
-
-<a name="androidSourceSetupBuildingDeviceCodeBaseOption2"></a><h4>Option 1</h4>
-
-<p>Create a local version of buildspec.mk. The easiest way to do so is to change to your device directory and execute the following:</p>
-<pre class="prettyprint">% cp buildspec.mk.default buildspec.mk ; chmod u=rw buildspec.mk</pre>
-<p>The default <code>buildspec.mk</code>. file is written so that all options appear commented. In order to establish a personal configuration environment, edit <code>buildspec.mk</code> as desired.</p>
-<p>Once you have established your configuration environment, you can build the device code base by executing make in order to build the Android binaries. This may take a long time the first time you issue this command. On a dual-core machine, consider using '-j2' (or even '-j4') to speed up the build.</p>
-<pre class="prettyprint">% make -j2</pre>
-
-
-<a name="androidSourceSetupBuildingDeviceCodeBaseOption1"></a><h4>Option 2</h4>
-
-<p>To do a generic build of android, source <code>//device/envsetup.sh</code>, which contains necessary variable and function definitions, as described below.</p>
+<p>To do a generic build of android, source <code>build/envsetup.sh</code>, which contains necessary variable and function definitions, as described below.</p>
 <pre class="prettyprint">
 % cd $TOP
 
-% . envsetup.sh
+% . build/envsetup.sh
 
-% partner_setup generic
-   //select generic as the product
+# pick a configuration using choosecombo
+% choosecombo
 
 % make -j4 PRODUCT-generic-user
 </pre>
@@ -168,19 +154,19 @@ PRODUCT_NAME := google_generic
 
 <a name="androidBuildingCleaning"></a><h3>Cleaning Up</h3>
 
-<p>Execute <code>% m clean</code> to clean up the binaries you just created. You can also execute <code>% m clobber</code> to get rid of the binaries of all combos. <code>% m clobber</code> is equivalent to removing the <code>//device/out/</code> directory where all generated files are stored.</p>
+<p>Execute <code>% m clean</code> to clean up the binaries you just created. You can also execute <code>% m clobber</code> to get rid of the binaries of all combos. <code>% m clobber</code> is equivalent to removing the <code>//out/</code> directory where all generated files are stored.</p>
 
 
 <a name="androidBuildingSpeeding"></a><h3>Speeding Up Rebuilds</h3>
 
-<p> The binaries of each combo are stored as distinct sub-directories of <code>//device/out/</code>, making it possible to quickly switch between combos without having to recompile all sources each time. </p>
+<p> The binaries of each combo are stored as distinct sub-directories of <code>//out/</code>, making it possible to quickly switch between combos without having to recompile all sources each time. </p>
 <p> However, performing a clean rebuild is necessary if the build system doesn't catch changes to environment variables or makefiles. If this happens often, you should define the <code>USE_CCACHE</code> environment variable as shown below: </p>
 <pre class="prettyprint">
 % export USE_CCACHE=1
 </pre>
 <p>Doing so will force the build system to use the ccache compiler cache tool, which reduces recompiling all sources.</p>
 
-<p><code>ccache</code> binaries are provided in <code>//device/prebuilt/...</code> and don't need to get installed on your system.</p>
+<p><code>ccache</code> binaries are provided in <code>//prebuilt/...</code> and don't need to get installed on your system.</p>
 
 
 <a name="androidBuildingTroubleshooting"></a><h3>Troubleshooting</h3>
@@ -211,7 +197,7 @@ Java HotSpot(TM) Client VM (build 1.5.0_07-87, mixed mode, sharing)
 
 <p>To build the kernel base, switch to the device directory (<code>/home/joe/android/device</code>) in order to establish variables and run:
 <pre class="prettyprint">
-% . envsetup.sh
+% . build/envsetup.sh
 % partner_setup generic
 </pre>
 <p>Then switch to the kernel directory <code>/home/joe/android/kernel</code>.
