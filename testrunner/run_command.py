@@ -120,8 +120,11 @@ def RunOnce(cmd, timeout_time=None, return_output=True):
 def RunHostCommand(binary, valgrind=False):
   """Run a command on the host (opt using valgrind).
 
-  Runs the host binary. Does not capture any output but it
-  returns the exit code. The command can be run under valgrind.
+  Runs the host binary and returns the exit code.
+  If successfull, the output (stdout and stderr) are discarded,
+  but printed in case of error.
+  The command can be run under valgrind in which case all the
+  output are always discarded.
 
   Args:
     binary: basename of the file to be run. It is expected to be under
@@ -133,6 +136,14 @@ def RunHostCommand(binary, valgrind=False):
   """
   full_path = os.path.join("out", "host", "linux-x86", "bin", binary)
   if not valgrind:
-    return subprocess.call(full_path)
+    subproc = subprocess.Popen(full_path, stdout=subprocess.PIPE,
+                               stderr=subprocess.STDOUT)
+    subproc.wait()
+    if subproc.returncode != 0:         # In case of error print the output
+      print subproc.communicate()[0]
+    return subproc.returncode
   else:
-    return subprocess.call(["/usr/bin/valgrind", "-q", full_path])
+    subproc = subprocess.Popen(["/usr/bin/valgrind", "-q", full_path],
+                               stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    subproc.wait()
+    return subproc.returncode
