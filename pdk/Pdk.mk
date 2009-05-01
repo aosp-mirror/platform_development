@@ -186,7 +186,8 @@ LOCAL_MODULE := online-pdk
 
 LOCAL_DROIDDOC_OPTIONS:= \
 		-toroot /online-pdk/ \
-		-hdf android.whichdoc online-pdk
+		-hdf android.whichdoc online
+		-hdf android.whichmodule $(LOCAL_MODULE)
 
 LOCAL_DROIDDOC_CUSTOM_TEMPLATE_DIR := build/tools/droiddoc/templates-pdk
 LOCAL_DROIDDOC_CUSTOM_ASSET_DIR := assets-pdk
