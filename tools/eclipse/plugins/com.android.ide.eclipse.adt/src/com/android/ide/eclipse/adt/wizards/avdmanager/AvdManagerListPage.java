@@ -445,6 +445,14 @@ class AvdManagerListPage extends WizardPage {
 
         AvdManager avdm = getAvdManager();
         
+        // For the AVD manager to reload the list, in case AVDs where created using the
+        // command line tool.
+        try {
+            avdm.reloadAvds();
+        } catch (AndroidLocationException e) {
+            AdtPlugin.log(e, "AVD Manager reload failed");  //$NON-NLS-1$
+        }
+        
         AvdInfo[] avds = avdm == null ? null : avdm.getValidAvds();
         mAvdSelector.setAvds(avds, null /*filter*/);
 
