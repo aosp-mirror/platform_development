@@ -276,11 +276,61 @@ class TestRunner(object):
         if coverage_file is not None:
           logger.Log("Coverage report generated at %s" % coverage_file)
 
+  def _CollectTestSources(self, test_list, dirname, files):
+    """For each directory, find tests source file and add them to the list.
+
+    Test files must match one of the following pattern:
+      - test_*.[cc|cpp]
+      - *_test.[cc|cpp]
+      - *_unittest.[cc|cpp]
+
+    This method is a callback for os.path.walk.
+
+    Args:
+      test_list: Where new tests should be inserted.
+      dirname: Current directory.
+      files: List of files in the current directory.
+    """
+    for f in files:
+      (name, ext) = os.path.splitext(f)
+      if ext == ".cc" or ext == ".cpp":
+        if re.search("_test$|_test_$|_unittest$|_unittest_$|^test_", name):
+          logger.SilentLog("Found %s" % f)
+          test_list.append(str(os.path.join(dirname, f)))
+
+  def _FilterOutMissing(self, path, sources):
+    """Filter out from the sources list missing tests.
+
+    Sometimes some test source are not built for the target, i.e there
+    is no binary corresponding to the source file. We need to filter
+    these out.
+
+    Args:
+      path: Where the binaries should be.
+      sources: List of tests source path.
+    Returns:
+      A list of test binaries built from the sources.
+    """
+    binaries = []
+    for f in sources:
+      binary = os.path.basename(f)
+      binary = os.path.splitext(binary)[0]
+      full_path = os.path.join(path, binary)
+      if os.path.exists(full_path):
+        binaries.append(binary)
+    return binaries
+
   def _RunNativeTest(self, test_suite):
     """Run the provided *native* test suite.
 
-    The test_suite must contain a build path where the native test files are.
-    Each test's name must start with 'test_' and have a .cc or .cpp extension.
+    The test_suite must contain a build path where the native test
+    files are. Subdirectories are automatically scanned as well.
+
+    Each test's name must have a .cc or .cpp extension and match one
+    of the following patterns:
+      - test_*
+      - *_test.[cc|cpp]
+      - *_unittest.[cc|cpp]
     A successful test must return 0. Any other value will be considered
     as an error.
 
@@ -289,18 +339,23 @@ class TestRunner(object):
     """
     # find all test files, convert unicode names to ascii, take the basename
     # and drop the .cc/.cpp  extension.
-    file_pattern = os.path.join(test_suite.GetBuildPath(), "test_*")
-    logger.SilentLog("Scanning %s" % test_suite.GetBuildPath())
-    file_list = []
-    for f in map(str, glob.glob(file_pattern)):
-      f = os.path.basename(f)
-      f = re.split(".[cp]+$", f)[0]
-      logger.SilentLog("Found %s" % f)
-      file_list.append(f)
+    source_list = []
+    build_path = test_suite.GetBuildPath()
+    os.path.walk(build_path, self._CollectTestSources, source_list)
+    logger.SilentLog("Tests source %s" % source_list)
+
+    # Host tests are under out/host/<os>-<arch>/bin.
+    host_list = self._FilterOutMissing(android_build.GetHostBin(), source_list)
+    logger.SilentLog("Host tests %s" % host_list)
+
+    # Target tests are under $ANDROID_PRODUCT_OUT/system/bin.
+    target_list = self._FilterOutMissing(android_build.GetTargetSystemBin(),
+                                         source_list)
+    logger.SilentLog("Target tests %s" % target_list)
 
     # Run on the host
     logger.Log("\nRunning on host")
-    for f in file_list:
+    for f in host_list:
       if run_command.RunHostCommand(f) != 0:
         logger.Log("%s... failed" % f)
       else:
@@ -311,8 +366,8 @@ class TestRunner(object):
 
     # Run on the device
     logger.Log("\nRunning on target")
-    for f in file_list:
-      full_path = "/system/bin/%s" % f
+    for f in target_list:
+      full_path = os.path.join(os.sep, "system", "bin", f)
 
       # Single quotes are needed to prevent the shell splitting it.
       status = self._adb.SendShellCommand("'%s >/dev/null 2>&1;echo -n $?'" %
