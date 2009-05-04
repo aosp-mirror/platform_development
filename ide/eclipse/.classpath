@@ -34,6 +34,7 @@
 	<classpathentry kind="src" path="frameworks/base/cmds/pm/src"/>
 	<classpathentry kind="src" path="frameworks/base/cmds/svc/src"/>
 	<classpathentry kind="src" path="frameworks/base/core/java"/>
+	<classpathentry kind="src" path="frameworks/base/core/config/sdk"/>
 	<classpathentry kind="src" path="frameworks/base/graphics/java"/>
 	<classpathentry kind="src" path="frameworks/base/im/java"/>
 	<classpathentry kind="src" path="frameworks/base/location/java"/>
