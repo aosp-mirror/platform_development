@@ -149,7 +149,14 @@ public interface IAndroidTarget extends Comparable<IAndroidTarget> {
      * @return an array of optional libraries or <code>null</code> if there is none.
      */
     IOptionalLibrary[] getOptionalLibraries();
-    
+
+    /**
+     * Returns the list of libraries available for a given platform.
+     * 
+     * @return an array of libraries provided by the platform or <code>null</code> if there is none.
+     */
+    String[] getPlatformLibraries();
+
     /**
      * Returns whether the given target is compatible with the receiver.
      * <p/>A target is considered compatible if applications developed for the receiver can run on

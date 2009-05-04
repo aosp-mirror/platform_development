@@ -149,14 +149,24 @@ final class PlatformTarget implements IAndroidTarget {
         return "HVGA";
     }
 
-    /*
-     * Always returns null, as a standard platforms have no optional libraries.
+    /**
+     * Always returns null, as a standard platform ha no optional libraries.
      * 
-     * (non-Javadoc)
+     * {@inheritDoc}
      * @see com.android.sdklib.IAndroidTarget#getOptionalLibraries()
      */
     public IOptionalLibrary[] getOptionalLibraries() {
         return null;
+    }
+
+    /**
+     * Currently always return a fixed list with "android.test.runner" in it.
+     * <p/>
+     * TODO change the fixed library list to be build-dependent later.
+     * {@inheritDoc}
+     */
+    public String[] getPlatformLibraries() {
+        return new String[] { SdkConstants.ANDROID_TEST_RUNNER_LIB };
     }
     
     public boolean isCompatibleBaseFor(IAndroidTarget target) {
