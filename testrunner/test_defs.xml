@@ -4,9 +4,9 @@
      Licensed under the Apache License, Version 2.0 (the "License");
      you may not use this file except in compliance with the License.
      You may obtain a copy of the License at
-  
+
           http://www.apache.org/licenses/LICENSE-2.0
-  
+
      Unless required by applicable law or agreed to in writing, software
      distributed under the License is distributed on an "AS IS" BASIS,
      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,9 +14,9 @@
      limitations under the License.
 -->
 
-<!-- 
+<!--
 This file contains standard test definitions for the Android platform
-          
+
 Java tests are defined by <test> tags and native ones (C/C++) are defined by
 <test-native> tags.
 
@@ -32,8 +32,8 @@ JAVA/application tests:
     package's Android.mk file. If omitted, build/sync step for this test will
     be skipped.
   package: Android application package that contains the tests
-  class: Optional. Fully qualified Java test class to run. 
-  runner: Fully qualified InstrumentationTestRunner to execute. If omitted, 
+  class: Optional. Fully qualified Java test class to run.
+  runner: Fully qualified InstrumentationTestRunner to execute. If omitted,
      will default to android.test.InstrumentationTestRunner.
   coverage_target: Build name of Android package this test targets - these
     targets are defined in the coverage_targets.xml file.  Used as basis for
@@ -43,10 +43,10 @@ JAVA/application tests:
     to be reliable, and should be included in a continuous test system. false if
     they are under development.
 
-  description: Optional string. Default is empty. Short description (typically 
+  description: Optional string. Default is empty. Short description (typically
      less than 60 characters) about this test.
 
-  These attributes map to the following commands:  
+  These attributes map to the following commands:
   (if class is defined)
       adb shell am instrument -w <package>/<runner>
   (else)
@@ -61,8 +61,11 @@ Native tests:
   Where:
   name: Self-descriptive name used to uniquely identify the test
   build_path: File system path, relative to Android build root, to this
-     package's Android.mk file. By convention the name of a test starts with
-     'test_'.
+     package's Android.mk file. By convention the name of a test should match:
+      - test_*.[cc|cpp]
+      - *_test.[cc|cpp]
+      - *_unittest.[cc|cpp]
+
   continuous: Optional boolean. Default is false. Set to true if tests are known
      to be reliable, and should be included in a continuous test system.
      false if they are under development.
@@ -115,7 +118,7 @@ Native tests:
     package="android.core"
     class="android.core.JavaTests"
     coverage_target="framework" />
-    
+
 <test name="apidemos"
     build_path="development/samples/ApiDemos"
     package="com.example.android.apis.tests"
@@ -215,13 +218,13 @@ Native tests:
     runner=".MediaFrameworkTestRunner"
     coverage_target="framework"
     continuous="true" />
-    
+
 <test name="mediaunit"
     build_path="frameworks/base/media/tests/MediaFrameworkTest"
     package="com.android.mediaframeworktest"
     runner=".MediaFrameworkUnitTestRunner"
     coverage_target="framework" />
-    
+
 <test name="musicplayer"
     build_path="packages/apps/Music"
     package="com.android.music.tests"
@@ -262,5 +265,11 @@ Native tests:
     description="Bionic libstdc++."
     extra_make_args="BIONIC_TESTS=1" />
 
+<!-- pending patch 820
+<test-native name="gtest"
+    build_path="external/gtest"
+    description="Google test."
+    extra_make_args="GTEST_TESTS=1" />
+-->
 
 </test-definitions>
