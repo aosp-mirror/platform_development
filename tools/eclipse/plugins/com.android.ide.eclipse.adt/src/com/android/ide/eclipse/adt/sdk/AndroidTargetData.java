@@ -29,6 +29,7 @@ import com.android.layoutlib.api.ILayoutBridge;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.IAndroidTarget.IOptionalLibrary;
 
+import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Map;
 
@@ -97,6 +98,7 @@ public class AndroidTargetData {
     
     /**
      * Creates an AndroidTargetData object.
+     * @param platformLibraries 
      * @param optionalLibraries 
      */
     void setExtraData(IResourceRepository systemResourceRepository,
@@ -110,6 +112,7 @@ public class AndroidTargetData {
             String[] broadcastIntentActionValues,
             String[] serviceIntentActionValues,
             String[] intentCategoryValues,
+            String[] platformLibraries,
             IOptionalLibrary[] optionalLibraries,
             ProjectResources resources,
             LayoutBridge layoutBridge) {
@@ -126,7 +129,7 @@ public class AndroidTargetData {
         setPermissions(permissionValues);
         setIntentFilterActionsAndCategories(activityIntentActionValues, broadcastIntentActionValues,
                 serviceIntentActionValues, intentCategoryValues);
-        setOptionalLibraries(optionalLibraries);
+        setOptionalLibraries(platformLibraries, optionalLibraries);
     }
 
     public DexWrapper getDexWrapper() {
@@ -276,35 +279,40 @@ public class AndroidTargetData {
      * @param permissionValues the list of permissions
      */
     private void setPermissions(String[] permissionValues) {
-        setValues("(uses-permission,android:name)", permissionValues); //$NON-NLS-1$
+        setValues("(uses-permission,android:name)", permissionValues);   //$NON-NLS-1$
         setValues("(application,android:permission)", permissionValues); //$NON-NLS-1$
-        setValues("(activity,android:permission)", permissionValues); //$NON-NLS-1$
-        setValues("(receiver,android:permission)", permissionValues); //$NON-NLS-1$
-        setValues("(service,android:permission)", permissionValues); //$NON-NLS-1$
-        setValues("(provider,android:permission)", permissionValues); //$NON-NLS-1$
+        setValues("(activity,android:permission)", permissionValues);    //$NON-NLS-1$
+        setValues("(receiver,android:permission)", permissionValues);    //$NON-NLS-1$
+        setValues("(service,android:permission)", permissionValues);     //$NON-NLS-1$
+        setValues("(provider,android:permission)", permissionValues);    //$NON-NLS-1$
     }
     
     private void setIntentFilterActionsAndCategories(String[] activityIntentActions,
             String[] broadcastIntentActions, String[] serviceIntentActions,
             String[] intentCategoryValues) {
-        setValues("(activity,action,android:name)", activityIntentActions); //$NON-NLS-1$
+        setValues("(activity,action,android:name)", activityIntentActions);  //$NON-NLS-1$
         setValues("(receiver,action,android:name)", broadcastIntentActions); //$NON-NLS-1$
-        setValues("(service,action,android:name)", serviceIntentActions); //$NON-NLS-1$
-        setValues("(category,android:name)", intentCategoryValues); //$NON-NLS-1$
+        setValues("(service,action,android:name)", serviceIntentActions);    //$NON-NLS-1$
+        setValues("(category,android:name)", intentCategoryValues);          //$NON-NLS-1$
     }
     
-    private void setOptionalLibraries(IOptionalLibrary[] optionalLibraries) {
-        String[] values;
+    private void setOptionalLibraries(String[] platformLibraries,
+            IOptionalLibrary[] optionalLibraries) {
         
-        if (optionalLibraries == null) {
-            values = new String[0];
-        } else {
-            values = new String[optionalLibraries.length];
-            for (int i = 0; i < optionalLibraries.length; i++) {
-                values[i] = optionalLibraries[i].getName();
+        ArrayList<String> libs = new ArrayList<String>();
+        
+        if (platformLibraries != null) {
+            for (String name : platformLibraries) {
+                libs.add(name);
             }
         }
-        setValues("(uses-library,android:name)", values);
+        
+        if (optionalLibraries != null) {
+            for (int i = 0; i < optionalLibraries.length; i++) {
+                libs.add(optionalLibraries[i].getName());
+            }
+        }
+        setValues("(uses-library,android:name)",  libs.toArray(new String[libs.size()]));
     }
 
     /**

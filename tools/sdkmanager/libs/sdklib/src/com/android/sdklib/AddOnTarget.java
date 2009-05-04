@@ -192,6 +192,15 @@ final class AddOnTarget implements IAndroidTarget {
         return mLibraries;
     }
     
+    /**
+     * Returns the list of libraries of the underlying platform.
+     * 
+     * {@inheritDoc}
+     */
+    public String[] getPlatformLibraries() {
+        return mBasePlatform.getPlatformLibraries();
+    }
+    
     public boolean isCompatibleBaseFor(IAndroidTarget target) {
         // basic test
         if (target == this) {

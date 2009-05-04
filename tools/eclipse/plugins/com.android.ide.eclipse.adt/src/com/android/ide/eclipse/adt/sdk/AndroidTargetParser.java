@@ -267,6 +267,7 @@ public final class AndroidTargetParser {
                     broadcast_actions.toArray(new String[broadcast_actions.size()]),
                     service_actions.toArray(new String[service_actions.size()]),
                     categories.toArray(new String[categories.size()]),
+                    mAndroidTarget.getPlatformLibraries(),
                     mAndroidTarget.getOptionalLibraries(),
                     resources,
                     layoutBridge);

@@ -167,6 +167,9 @@ public final class SdkConstants {
     /** Namespace for the resource XML, i.e. "http://schemas.android.com/apk/res/android" */
     public final static String NS_RESOURCES = "http://schemas.android.com/apk/res/android";
 
+    /** The name of the uses-library that provides "android.test.runner" */
+    public final static String ANDROID_TEST_RUNNER_LIB = "android.test.runner";
+    
     /* Folder path relative to the SDK root */
     /** Path of the documentation directory relative to the sdk folder.
      *  This is an OS path, ending with a separator. */
