@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.common.project;
 
+import com.android.ide.eclipse.common.project.AndroidManifestParser.Activity;
 import com.android.ide.eclipse.tests.AdtTestData;
 
 import junit.framework.TestCase;
@@ -63,11 +64,29 @@ public class AndroidManifestParserTest extends TestCase {
 
     public void testGetActivities() {
         assertEquals(1, mManifestTestApp.getActivities().length);
-        assertEquals(ACTIVITY_NAME, mManifestTestApp.getActivities()[0]); 
+        Activity activity = new AndroidManifestParser.Activity(ACTIVITY_NAME, true);
+        activity.setHasAction(true);
+        activity.setHasLauncherCategory(true);
+        activity.setHasMainAction(true);
+        assertEquals(activity, mManifestTestApp.getActivities()[0]);
     }
 
     public void testGetLauncherActivity() {
-        assertEquals(ACTIVITY_NAME, mManifestTestApp.getLauncherActivity()); 
+        Activity activity = new AndroidManifestParser.Activity(ACTIVITY_NAME, true);
+        activity.setHasAction(true);
+        activity.setHasLauncherCategory(true);
+        activity.setHasMainAction(true);
+        assertEquals(activity, mManifestTestApp.getLauncherActivity()); 
+    }
+    
+    private void assertEquals(Activity lhs, Activity rhs) {
+        assertTrue(lhs == rhs || (lhs != null && rhs != null));
+        if (lhs != null && rhs != null) {
+            assertEquals(lhs.getName(),        rhs.getName());
+            assertEquals(lhs.isExported(),     rhs.isExported());
+            assertEquals(lhs.hasAction(),      rhs.hasAction());
+            assertEquals(lhs.isHomeActivity(), rhs.isHomeActivity());
+        }
     }
 
     public void testGetUsesLibraries() {
