@@ -58,10 +58,11 @@ def RunOnce(cmd, timeout_time=None, return_output=True):
   start_time = time.time()
   so = []
   pid = []
-  global _abort_on_error
+  global _abort_on_error, error_occurred
   error_occurred = False
 
   def Run():
+    global error_occurred
     if return_output:
       output_dest = subprocess.PIPE
     else:
@@ -83,8 +84,8 @@ def RunOnce(cmd, timeout_time=None, return_output=True):
       logger.Log(e)
       so.append("ERROR")
       error_occurred = True
-    if pipe.returncode < 0:
-      logger.SilentLog("Error: %s was terminated by signal %d" %(cmd,
+    if pipe.returncode != 0:
+      logger.SilentLog("Error: %s returned %d error code" %(cmd,
           pipe.returncode))
       error_occurred = True
 
@@ -111,9 +112,9 @@ def RunOnce(cmd, timeout_time=None, return_output=True):
       time.sleep(0.1)
 
   t.join()
-
+  output = "".join(so)
   if _abort_on_error and error_occurred:
-    raise errors.AbortError
+    raise errors.AbortError(msg=output)
 
   return "".join(so)
 
