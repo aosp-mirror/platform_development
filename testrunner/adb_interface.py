@@ -64,7 +64,7 @@ class AdbInterface:
       string output of command
 
     Raises:
-      WaitForResponseTimedOutError if device does not respond to command
+      WaitForResponseTimedOutError if device does not respond to command within time
     """
     adb_cmd = "adb %s %s" % (self._target_arg, command_string)
     logger.SilentLog("about to run %s" % adb_cmd)
@@ -327,32 +327,30 @@ class AdbInterface:
       
     Raises:
       WaitForResponseTimedOutError if package manager does not respond
+      AbortError if unrecoverable error occurred
     """
-    output = self.SendCommand("sync", retry_count=retry_count)
+    output = ""
+    error = None
+    try:
+      output = self.SendCommand("sync", retry_count=retry_count)
+    except errors.AbortError, e:
+      error = e
+      output = e.msg
     if "Read-only file system" in output:
       logger.SilentLog(output) 
       logger.Log("Remounting read-only filesystem")
       self.SendCommand("remount")
       output = self.SendCommand("sync", retry_count=retry_count)
-    if "No space left on device" in output:
+    elif "No space left on device" in output:
       logger.SilentLog(output) 
       logger.Log("Restarting device runtime")
       self.SendShellCommand("stop", retry_count=retry_count)
       output = self.SendCommand("sync", retry_count=retry_count)
       self.SendShellCommand("start", retry_count=retry_count)
-
+    elif error is not None:
+      # exception occurred that cannot be recovered from
+      raise error
     logger.SilentLog(output)
     self.WaitForDevicePm()
     return output
-  
-  def IsDevicePresent(self):
-    """Check if targeted device is present.
 
-    Returns:
-      True if device is present, False otherwise.
-    """
-    output = self.SendShellCommand("ls", retry_count=0)
-    if output.startswith("error:"):
-      return False
-    else:
-      return True

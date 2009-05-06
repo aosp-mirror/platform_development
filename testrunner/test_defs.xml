@@ -100,6 +100,12 @@ Native tests:
     coverage_target="framework"
     continuous="true" />
 
+<test name="account"
+    build_path="frameworks/base/tests/AndroidTests"
+    package="com.android.unit_tests"
+    class="com.android.unit_tests.accounts.AccountManagerServiceTest"
+    coverage_target="framework" />
+
 <test name="smoke"
     build_path="frameworks/base/tests/SmokeTest"
     package="com.android.smoketest.tests"
