@@ -127,6 +127,7 @@ static const char* rewritePath(const char* func, char* pathBuf,
      */
     if (origPath[0] != '/')
         goto skip_rewrite;
+    while (origPath[1] == '/') origPath++; // some apps like to use paths like '//data/data/....'
     if (memcmp(origPath+1, "system", 6) == 0 &&
         (origPath[7] == '/' || origPath[7] == '\0'))
             goto do_rewrite;
