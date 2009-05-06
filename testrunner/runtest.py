@@ -95,6 +95,10 @@ class TestRunner(object):
                       help="Restrict test to a specific class")
     parser.add_option("-m", "--test-method", dest="test_method",
                       help="Restrict test to a specific method")
+    parser.add_option("-p", "--test-package", dest="test_package",
+                      help="Restrict test to a specific java package")
+    parser.add_option("-z", "--size", dest="test_size",
+                      help="Restrict test to a specific test size")
     parser.add_option("-u", "--user-tests-file", dest="user_tests_file",
                       metavar="FILE", default=user_test_default,
                       help="Alternate source of user test definitions")
@@ -252,6 +256,10 @@ class TestRunner(object):
     instrumentation_args = {}
     if test_class is not None:
       instrumentation_args["class"] = test_class
+    if self._options.test_package:
+      instrumentation_args["package"] = self._options.test_package
+    if self._options.test_size:
+      instrumentation_args["size"] = self._options.test_size
     if self._options.wait_for_debugger:
       instrumentation_args["debug"] = "true"
     if self._options.suite_assign_mode:
@@ -386,10 +394,6 @@ class TestRunner(object):
         self._DumpTests()
         return
 
-      if not self._adb.IsDevicePresent():
-        logger.Log("Error: specified device cannot be found")
-        return
-
       if not self._options.skip_build:
         self._DoBuild()
 
@@ -400,7 +404,8 @@ class TestRunner(object):
           self._RunTest(test_suite)
     except KeyboardInterrupt:
       logger.Log("Exiting...")
-    except errors.AbortError:
+    except errors.AbortError, e:
+      logger.Log(e.msg)
       logger.SilentLog("Exiting due to AbortError...")
     except errors.WaitForResponseTimedOutError:
       logger.Log("Timed out waiting for response")

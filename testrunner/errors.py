@@ -34,6 +34,9 @@ class AbortError(Exception):
   """Generic exception that indicates a fatal error has occurred and program
   execution should be aborted."""
 
+  def __init__(self, msg="AbortError"):
+    self.msg = msg
+
 
 class ParseError(Exception):
   """Raised when xml data to parse has unrecognized format."""
