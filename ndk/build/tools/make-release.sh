@@ -21,7 +21,7 @@ PREBUILT_PREFIX=android-ndk-prebuilt-20090323
 PREBUILT_SYSTEMS="linux-x86 linux-x86_64 darwin-x86 windows"
 
 # the list of git files to copy into the archives
-GIT_FILES=`cd $NDK_ROOT_DIR && git-ls-files`
+GIT_FILES=`cd $NDK_ROOT_DIR && git ls-files`
 
 # temporary directory used for packaging
 TMPDIR=/tmp/ndk-release
