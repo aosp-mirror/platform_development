@@ -249,7 +249,9 @@ class TestRunner(object):
 
     test_class = test_suite.GetClassName()
     if self._options.test_class is not None:
-      test_class = self._options.test_class
+      test_class = self._options.test_class.lstrip()
+      if test_class.startswith("."):
+        test_class = test_suite.GetPackageName() + test_class
     if self._options.test_method is not None:
       test_class = "%s#%s" % (test_class, self._options.test_method)
 
