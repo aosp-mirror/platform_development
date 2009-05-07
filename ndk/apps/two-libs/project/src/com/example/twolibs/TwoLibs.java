@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.example.TwoLib;
+package com.example.twolibs;
 
 import android.app.Activity;
 import android.widget.TextView;
 import android.os.Bundle;
 
-public class TwoLib extends Activity
+public class TwoLibs extends Activity
 {
     /** Called when the activity is first created. */
     @Override
