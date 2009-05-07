@@ -56,19 +56,37 @@ for SYSTEM in $PREBUILT_SYSTEMS; do
         echo "Could not copy reference. Aborting."
         exit 2
     fi
+
     echo "Unpacking $PREBUILT.tar.bz2"
-    (cd $DSTDIR && tar xjf $PREBUILT.tar.bz2)
+    (cd $DSTDIR && tar xjf $PREBUILT.tar.bz2) 2>/dev/null 1>&2
     if [ $? != 0 ] ; then
         echo "Could not unpack prebuilt for system $SYSTEM. Aborting."
         exit 1
     fi
-    echo "Creating $BIN_RELEASE.tar.bz2"
-    (cd $TMPDIR && tar cjf $BIN_RELEASE.tar.bz2 $RELEASE_PREFIX && rm -rf $DSTDIR)
-    if [ $? != 0 ] ; then
-        echo "Could not create archive. Aborting."
-        exit 1
-    fi
-    chmod a+r $TMPDIR/$BIN_RELEASE.tar.bz2
+
+    case $SYSTEM in
+        # prefer zip format for windows and darwin
+        windows|darwin-*)
+            ARCHIVE=$BIN_RELEASE.zip
+            echo "Creating $ARCHIVE"
+            (cd $TMPDIR && zip -9qr $ARCHIVE $RELEASE_PREFIX && rm -rf $DSTDIR) 2>/dev/null 1>&2
+            if [ $? != 0 ] ; then
+                echo "Could not create zip archive. Aborting."
+                exit 1
+            fi
+            ;;
+        # or tar.bz2 for others
+        *)
+            ARCHIVE=$BIN_RELEASE.tar.bz2
+            echo "Creating $ARCHIVE"
+            (cd $TMPDIR && tar cjf $ARCHIVE $RELEASE_PREFIX && rm -rf $DSTDIR) 2>/dev/null 1>&2
+            if [ $? != 0 ] ; then
+                echo "Could not create archive. Aborting."
+                exit 1
+            fi
+            ;;
+    esac
+    chmod a+r $TMPDIR/$ARCHIVE
 done
 
 echo "Cleaning up."
