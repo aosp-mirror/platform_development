@@ -34,7 +34,9 @@ rm -rf $TMPDIR && mkdir -p $TMPDIR
 echo "Creating reference from git files"
 REFERENCE=$TMPDIR/reference &&
 mkdir -p $REFERENCE &&
-for ff in $GIT_FILES; do install -pD $ff $REFERENCE/$ff; done &&
+(for ff in $GIT_FILES; do
+  mkdir -p $REFERENCE/`dirname $ff` && cp -pf $NDK_ROOT_DIR/$ff $REFERENCE/$ff;
+done) &&
 rm -f $REFERENCE/Android.mk
 if [ $? != 0 ] ; then
     echo "Could not create git reference. Aborting."
@@ -66,6 +68,7 @@ for SYSTEM in $PREBUILT_SYSTEMS; do
         echo "Could not create archive. Aborting."
         exit 1
     fi
+    chmod a+r $TMPDIR/$BIN_RELEASE.tar.bz2
 done
 
 echo "Cleaning up."
