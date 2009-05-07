@@ -1,0 +1,69 @@
+Android NDK Roadmap
+
+
+This is the list of improvements planned for the NDK, in no
+specific order of preference or priority:
+
+Fix bugs and make things easier in general.
+    Business as usual...
+
+Support x86 target ABI
+    Requires building a corresponding toolchain tree for
+    various supported host platforms, and modify the build
+    system. Biggest challenge at the moment is finding a
+    stable x86 platform to run tests against.
+
+Support for ARMv5TE + FPU
+    Unfortunately, a real FPU mandates that specific floating-point
+    registers be used to passed floating-point values in function
+    call. This results in a new ABI that is not compatible with the
+    one we currently support.
+
+    This new ABI should have a different name (e.g. 'armfpu') and
+    be supported through a different sysroot + toolchain configuration
+    (though it is likely we could reuse the arm-eabi-4.2.1 prebuilt
+    binaries, but with different configuration options).
+
+Easier debugging support
+    Debugging native code is still very rough. We can make it a lot better
+    through a series of tricks, which involve modifying some parts of the
+    system.
+
+Stable native APIs for OpenGL ES.
+    Nuff said...
+
+Stable C-based native API for a simple way to access surface pixels
+    Probably based on a simple lock/unlock paradigm. Would ideally be
+    useful to access both Skia and GL surfaces at the same time, though
+    probably with very different performance characteristics.
+    It will probably be very limited in scope, intentionally.
+
+Stable native APIs for audio.
+    Only something simple that could be used to manage audio buffers in
+    native code in a real-time basis. For now, applications have to
+    pass the buffers from Java to perform signal processing in native code
+    for them.
+
+Stable native APIs from 'libcutils/libutils'
+    The system libraries 'libcutils' and 'libutils' provide a host of
+    useful Android-specific functions that we could certainly expose to
+    native application.
+
+    Not everything in these libraries can be considered stable, so we
+    should probably split their headers into 'stable' and 'unstable'
+    parts, and add them to the NDK's sysroot over time.
+
+C++ Standard Library support
+    Many people are interested in using the STL. The Android system images
+    simply do *not* provide any real libstdc++ due to space/performance
+    constraints. However, we should be able to provide one or more STL
+    implementations as static libraries that can be linked to developer's
+    binaries.
+
+    Note that locales and wchar_t are not supported by the Android C library
+    so these would probably not be supported anyway.
+
+Better C++ exceptions and RTTI support
+    Some of these can be used in limited ways with the NDK, but it's a
+    pretty hard road that is not recommended at the moment. We should be
+    able to make this easier in the future.
