@@ -1,0 +1,1 @@
+../../../../common/include/linux/ipmi_msgdefs.h

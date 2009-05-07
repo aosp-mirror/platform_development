@@ -1,0 +1,72 @@
+Android NDK Installation
+
+Introduction:
+-------------
+
+Please read docs/OVERVIEW.TXT to understand what the Android NDK is and is not.
+This file gives instructions on how to properly setup your NDK.
+
+
+I. Requirements:
+----------------
+
+The Android NDK currently requires a Linux, OS X or Windows host operating system.
+Windows users will need to install Cygwin (http://www.cygwin.com) to use it. Note
+that running the NDK under MSys has not been tested.
+
+You will need to have the Android SDK and its dependencies installed. The NDK
+cannot generate final application packages (.apk files), only the shared library
+files that can go into them.
+
+
+IMPORTANT:
+    The Android NDK can only be used to target system images using
+    the Cupcake (1.5) or later releases of the platform.
+
+    This is due to subtle toolchain and ABI related changed that make
+    it incompatible with 1.0 and 1.1 system images.
+
+The NDK also requires GNU Make 3.81 or later being available on your development
+system. Earlier versions of GNU Make might work but have not been tested.
+
+You can check this by running 'make -v' from the command-line. The output
+should look like:
+
+    GNU Make 3.81
+    Copyright (C) 2006  Free Software Foundation, Inc.
+    ...
+
+On certain systems, GNU Make might be available through a different command like
+'gmake' or 'gnumake'. For these systems, replace 'make' by the appropriate command
+when invoking the NDK build system as described in the documentation.
+
+On Windows, you will need to install a recent release of Cygwin to use the NDK.
+See http://www.cygwin.com for instructions.
+
+
+II. Download prebuilt cross-toolchain binaries:
+-----------------------------------------------
+
+Certain Android NDK packages do not include the host-specific binaries of the
+cross-toolchain(s) required to build ARM binaries on Linux, OS X or Windows.
+
+Check whether build/prebuilt/<system> exists and is populated, where <system>
+is one of the following:
+
+  linux-x86
+  linux-x86_64
+  darwin-x86
+  windows
+
+If not, you might need to download a package named:
+
+  android-ndk-prebuilt-<system>-<date>.tar.bz2
+
+And unpack it in the top-level NDK directory. For example, on 32-bit Linux:
+
+  cd $NDK
+  tar xjf android-ndk-prebuilt-linux-x86-<date>.tar.bz2
+
+Please read docs/PREBUILTS.TXT to lean how to get the prebuilt packages.
+
+
