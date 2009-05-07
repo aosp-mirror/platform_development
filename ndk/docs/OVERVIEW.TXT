@@ -113,7 +113,7 @@ updates and releases of the platform.
 
 If an Android system library is not explicitely supported by the NDK
 headers, then applications should not depend on it being available, or
-they risk breaking after the next off-the-air system update on various
+they risk breaking after the next over-the-air system update on various
 devices.
 
 Selected system libraries will gradually be added to the set of stable NDK
@@ -244,7 +244,7 @@ used to provide the following to the NDK build:
   - The list of NDK modules that is required by your application.
     This should really be a list of 'shared library' modules.
 
-  - Optional information, like wether you want a release or debug
+  - Optional information, like whether you want a release or debug
     build, specific C or C++ compiler flags and others.
 
   - Planned: the list of specific platforms/CPUs you want to explicitely
