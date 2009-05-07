@@ -1,0 +1,104 @@
+Application.mk file syntax specification
+
+Introduction:
+-------------
+
+This document describes the syntax of Application.mk build files
+written to describe the native modules required by your Android
+application. To understand what follows, it is assumed that you have
+read the docs/OVERVIEW.TXT file that explains their role and
+usage.
+
+Readers of this document should have read docs/OVERVIEW.TXT and
+docs/ANDROID-MK.TXT
+
+
+Overview:
+---------
+
+The purpose of Application.mk is to describe which native
+'modules' (i.e. static/shared libraries) are needed by your
+application.
+
+Each Application.mk must be placed under a sub-directory of
+the top-level apps directory, e.g.:
+
+   $NDK/apps/<myapp>/Application.mk
+
+Where <myapp> is a short name used to describe your 'application'
+to the NDK build system (this name doesn't go into your generated
+shared libraries or your final packages).
+
+The Application.mk is really a tiny GNU Makefile fragment that must
+define a few variables:
+
+APP_MODULES
+    This variable is mandatory and lists all the native modules
+    (described through Android.mk files) that your application
+    requires.
+
+    This must be a space-separated list of module names as they
+    appear in the LOCAL_MODULE definitions of Android.mk files
+
+APP_PROJECT_PATH
+    This variable is mandatory and should give the *absolute*
+    path to your Application's project root directory. This is used
+    to copy/install stripped versions of the generated JNI shared
+    libraries to a specific location known to the APK-generating tools.
+
+APP_OPTIM
+    This optional variable can be defined to either 'release' or
+    'debug'. This is used to alter the optimization level when
+    building your application's modules.
+
+    A 'release' mode is the default, and will generate highly
+    optimized binaries. The 'debug' mode will generate un-optimized
+    binaries which are much easier to debug.
+
+    Note that it is possible to debug both 'release' and 'debug'
+    binaries, but the 'release' builds tend to provide less information
+    during debugging sessions: some variables are optimized out and
+    can't be inspected, code re-ordering can make stepping through
+    the code difficult, stack traces may not be reliable, etc...
+
+APP_CFLAGS
+    A set of C compiler flags passed when compiling any C source code
+    of any of the modules. This can be used to change the build of a given
+    module depending on the application that needs it, instead of modifying
+    the Android.mk file itself.
+
+    IMPORTANT WARNING: +++++++++++++++++++++++++++++++++++++++++++++++++++
+    +
+    + All paths in these flags should be relative to the top-level NDK
+    + directory. For example, if you have the following setup:
+    +
+    +    sources/foo/Android.mk
+    +    sources/bar/Android.mk
+    +
+    + To specify in foo/Android.mk that you want to add the path to the
+    + 'bar' sources during compilation, you should use:
+    +
+    +   APP_CFLAGS += -Isources/bar
+    +
+    + Or alternatively:
+    +
+    +   APP_CFLAGS += -I$(LOCAL_PATH)/../bar
+    +
+    + Using '-I../bar' will *NOT* work since it will be equivalent to
+    + '-I$NDK_ROOT/../bar' instead.
+    +
+    +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+APP_CXXFLAGS
+    Same as APP_CFLAGS for C++ sources.
+
+APP_CPPFLAGS
+    Same as APP_CFLAGS but will be passed to both C and C++ sources
+
+A trivial Application.mk file would be:
+
+-------------- cut here -------------------------
+APP_MODULES      := <list of modules>
+APP_PROJECT_PATH := <path to project>
+-------------- cut here -------------------------
+

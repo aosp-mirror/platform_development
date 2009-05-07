@@ -1,0 +1,43 @@
+The Android NDK relies on prebuilt platform-specific binaries of the
+GCC-based cross-toolchain(s) used to generate ARM binaries.
+
+At the moment, only one toolchain, named "arm-eabi-4.2.1" is supported,
+its sources being available in an archive named:
+
+   android-ndk-toolchain-<date>.tar.bz2
+
+XXX: Upload this to a public site like code.google.com/p/android
+     Note: this is over 100MB in size.
+
+Prebuilt versions of the toolchain binaries are available for a variety
+of supported platforms, and are generally named:
+
+   android-ndk-prebuilt-<date>-<system>.tar.bz2
+
+Where <system> can be one of the following:
+
+   linux-x86
+   linux-x86_64
+   darwin-x86
+   windows
+
+XXX: Upload these prebuilt packages to code.google.com/p/android or
+     another similar site. Note: each one is about 30MB in size.
+
+To install them, simply unpack them from the top-level NDK directory.
+For example, under 32-bit Linux:
+
+   cd $NDK
+   tar xjf android-ndk-prebuilt-20090323-linux-x86.tar.bz2
+
+Otherwise, it is possible to rebuild the toolchain from sources with the
+help of the 'build/tools/build-toolchain.sh' script. It can be used to
+generate a complete prebuilt package for other platforms.
+
+NOTE: The uncompressed toolchain sources are over 1 GB and make take
+      several hours to compile, depending on your machine.
+
+Note that, at the moment, the toolchain binaries are the only Android NDK
+files that are platform-specific. The rest being shell scripts and GNU
+Makefiles that should be portable to other Unix-like development
+environments.
