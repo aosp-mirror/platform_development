@@ -90,7 +90,7 @@
             class="com.android.ide.eclipse.adt.wizards.newproject.NewProjectWizard"
             finalPerspective="org.eclipse.jdt.ui.JavaPerspective"
             hasPages="true"
-            icon="icons/android.png"
+            icon="icons/new_adt_project.png"
             id="com.android.ide.eclipse.adt.project.NewProjectWizard"
             name="Android Project"
             preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective"
@@ -98,10 +98,22 @@
       <wizard
             canFinishEarly="false"
             category="com.android.ide.eclipse.wizards.category"
-            class="com.android.ide.eclipse.editors.wizards.NewXmlFileWizard"
+            class="com.android.ide.eclipse.adt.wizards.newproject.NewTestProjectWizard"
             finalPerspective="org.eclipse.jdt.ui.JavaPerspective"
             hasPages="true"
-            icon="icons/android.png"
+            icon="icons/androidjunit.png"
+            id="com.android.ide.eclipse.adt.project.NewTestProjectWizard"
+            name="Android Test Project"
+            preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective"
+            project="true">
+      </wizard>
+      <wizard
+            canFinishEarly="false"
+            category="com.android.ide.eclipse.wizards.category"
+            class="com.android.ide.eclipse.adt.wizards.newxmlfile.NewXmlFileWizard"
+            finalPerspective="org.eclipse.jdt.ui.JavaPerspective"
+            hasPages="true"
+            icon="icons/new_xml.png"
             id="com.android.ide.eclipse.editors.wizards.NewXmlFileWizard"
             name="Android XML File"
             preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective"
@@ -220,11 +232,22 @@
                value="com.android.ide.eclipse.adt.AndroidNature">
          </filter>
          <action
-               class="com.android.ide.eclipse.adt.project.NewXmlFileWizardAction"
+               class="com.android.ide.eclipse.adt.wizards.actions.NewXmlFileAction"
                enablesFor="1"
-               id="com.android.ide.eclipse.adt.project.NewXmlFileWizardAction"
+               icon="icons/new_xml.png"
+               id="com.android.ide.eclipse.adt.wizards.actions.NewXmlFileAction"
                label="New Resource File..."
-               menubarPath="com.android.ide.eclipse.adt.AndroidTools/group1">
+               menubarPath="com.android.ide.eclipse.adt.AndroidTools/group1"
+               tooltip="Opens a wizard to help create a new Android XML Resource file">
+         </action>
+         <action
+               class="com.android.ide.eclipse.adt.wizards.actions.NewTestProjectAction"
+               enablesFor="1"
+               icon="icons/androidjunit.png"
+               id="com.android.ide.eclipse.adt.wizards.actions.NewTestProjectAction"
+               label="New Test Project..."
+               menubarPath="com.android.ide.eclipse.adt.AndroidTools/group1"
+               tooltip="Opens a wizard to help create a new Android Test Project">
          </action>
          <action
                class="com.android.ide.eclipse.adt.project.ExportAction"
@@ -482,6 +505,15 @@
                style="push"
                toolbarPath="android_project"
                tooltip="Opens a wizard to help create a new Android XML file">
+         </action>
+         <action
+               class="com.android.ide.eclipse.adt.wizards.actions.NewTestProjectAction"
+               icon="icons/androidjunit.png"
+               id="com.android.ide.eclipse.adt.wizards.actions.NewTestProjectAction"
+               label="New Android Test Project"
+               style="push"
+               toolbarPath="android_project"
+               tooltip="Opens a wizard to help create a new Android Test Project">
          </action>
          <action
                class="com.android.ide.eclipse.adt.wizards.actions.NewProjectAction"

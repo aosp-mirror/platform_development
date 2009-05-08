@@ -4,7 +4,7 @@
  * Licensed under the Eclipse Public License, Version 1.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.eclipse.org/org/documents/epl-v10.php
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -16,21 +16,19 @@
 
 package com.android.ide.eclipse.adt.wizards.actions;
 
-import com.android.ide.eclipse.adt.wizards.newxmlfile.NewXmlFileWizard;
+import com.android.ide.eclipse.adt.wizards.newproject.NewTestProjectWizard;
 
 import org.eclipse.jface.action.IAction;
 import org.eclipse.ui.IWorkbenchWizard;
 
 /**
- * Delegate for the toolbar action "Android Project" or for the
- * project > Android Project context menu.
- * 
- * It displays the Android New XML file wizard.
+ * Delegate for the toolbar action "Android Test Project".
+ * It displays the Android New Project wizard to create a new Test Project.
  */
-public class NewXmlFileAction extends OpenWizardAction {
+public class NewTestProjectAction extends OpenWizardAction {
 
     @Override
     protected IWorkbenchWizard instanciateWizard(IAction action) {
-        return new NewXmlFileWizard();
+        return new NewTestProjectWizard();
     }
 }

@@ -20,6 +20,8 @@ import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.project.AndroidNature;
 import com.android.ide.eclipse.adt.project.ProjectHelper;
 import com.android.ide.eclipse.adt.sdk.Sdk;
+import com.android.ide.eclipse.adt.wizards.newproject.NewProjectCreationPage.IMainInfo;
+import com.android.ide.eclipse.adt.wizards.newproject.NewTestProjectCreationPage.TestInfo;
 import com.android.ide.eclipse.common.AndroidConstants;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkConstants;
@@ -39,6 +41,8 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.SubProgressMonitor;
+import org.eclipse.jdt.core.IAccessRule;
+import org.eclipse.jdt.core.IClasspathAttribute;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
@@ -71,27 +75,54 @@ import java.util.Map.Entry;
  * Note: this class is public so that it can be accessed from unit tests.
  * It is however an internal class. Its API may change without notice.
  * It should semantically be considered as a private final class.
- * Do not derive from this class. 
+ * Do not derive from this class.
 
  */
 public class NewProjectWizard extends Wizard implements INewWizard {
 
-    private static final String PARAM_SDK_TOOLS_DIR = "ANDROID_SDK_TOOLS"; //$NON-NLS-1$
-    private static final String PARAM_ACTIVITY = "ACTIVITY_NAME"; //$NON-NLS-1$
-    private static final String PARAM_APPLICATION = "APPLICATION_NAME"; //$NON-NLS-1$
-    private static final String PARAM_PACKAGE = "PACKAGE"; //$NON-NLS-1$
-    private static final String PARAM_PROJECT = "PROJECT_NAME"; //$NON-NLS-1$
-    private static final String PARAM_STRING_NAME = "STRING_NAME"; //$NON-NLS-1$
-    private static final String PARAM_STRING_CONTENT = "STRING_CONTENT"; //$NON-NLS-1$
-    private static final String PARAM_IS_NEW_PROJECT = "IS_NEW_PROJECT"; //$NON-NLS-1$
-    private static final String PARAM_SRC_FOLDER = "SRC_FOLDER"; //$NON-NLS-1$
-    private static final String PARAM_SDK_TARGET = "SDK_TARGET"; //$NON-NLS-1$
-    private static final String PARAM_MIN_SDK_VERSION = "MIN_SDK_VERSION"; //$NON-NLS-1$
+    /**
+     * Indicates which pages should be available in the New Project Wizard.
+     */
+    protected enum AvailablePages {
+        /**
+         * Both the usual "Android Project" and the "Android Test Project" pages will
+         * be available. The first page displayed will be the former one and it can depend
+         * on the soon-to-be created normal project.
+         */
+        ANDROID_AND_TEST_PROJECT,
+        /**
+         * Only the "Android Test Project" page will be available. User will have to
+         * select an existing Android Project. If the selection matches such a project,
+         * it will be used as a default.
+         */
+        TEST_PROJECT_ONLY
+    }
 
-    private static final String PH_ACTIVITIES = "ACTIVITIES"; //$NON-NLS-1$
-    private static final String PH_USES_SDK = "USES-SDK"; //$NON-NLS-1$
-    private static final String PH_INTENT_FILTERS = "INTENT_FILTERS"; //$NON-NLS-1$
-    private static final String PH_STRINGS = "STRINGS"; //$NON-NLS-1$
+    private static final String PARAM_SDK_TOOLS_DIR = "ANDROID_SDK_TOOLS";          //$NON-NLS-1$
+    private static final String PARAM_ACTIVITY = "ACTIVITY_NAME";                   //$NON-NLS-1$
+    private static final String PARAM_APPLICATION = "APPLICATION_NAME";             //$NON-NLS-1$
+    private static final String PARAM_PACKAGE = "PACKAGE";                          //$NON-NLS-1$
+    private static final String PARAM_PROJECT = "PROJECT_NAME";                     //$NON-NLS-1$
+    private static final String PARAM_STRING_NAME = "STRING_NAME";                  //$NON-NLS-1$
+    private static final String PARAM_STRING_CONTENT = "STRING_CONTENT";            //$NON-NLS-1$
+    private static final String PARAM_IS_NEW_PROJECT = "IS_NEW_PROJECT";            //$NON-NLS-1$
+    private static final String PARAM_SRC_FOLDER = "SRC_FOLDER";                    //$NON-NLS-1$
+    private static final String PARAM_SDK_TARGET = "SDK_TARGET";                    //$NON-NLS-1$
+    private static final String PARAM_MIN_SDK_VERSION = "MIN_SDK_VERSION";          //$NON-NLS-1$
+    // Warning: The expanded string PARAM_TEST_TARGET_PACKAGE must not contain the
+    // string "PACKAGE" since it collides with the replacement of PARAM_PACKAGE.
+    private static final String PARAM_TEST_TARGET_PACKAGE = "TEST_TARGET_PCKG";     //$NON-NLS-1$
+    private static final String PARAM_TARGET_SELF = "TARGET_SELF";                  //$NON-NLS-1$
+    private static final String PARAM_TARGET_MAIN = "TARGET_MAIN";                  //$NON-NLS-1$
+    private static final String PARAM_TARGET_EXISTING = "TARGET_EXISTING";          //$NON-NLS-1$
+    private static final String PARAM_REFERENCE_PROJECT = "REFERENCE_PROJECT";      //$NON-NLS-1$
+
+    private static final String PH_ACTIVITIES = "ACTIVITIES";                       //$NON-NLS-1$
+    private static final String PH_USES_SDK = "USES-SDK";                           //$NON-NLS-1$
+    private static final String PH_INTENT_FILTERS = "INTENT_FILTERS";               //$NON-NLS-1$
+    private static final String PH_STRINGS = "STRINGS";                             //$NON-NLS-1$
+    private static final String PH_TEST_USES_LIBRARY = "TEST-USES-LIBRARY";         //$NON-NLS-1$
+    private static final String PH_TEST_INSTRUMENTATION = "TEST-INSTRUMENTATION";   //$NON-NLS-1$
 
     private static final String BIN_DIRECTORY =
         SdkConstants.FD_OUTPUT + AndroidConstants.WS_SEP;
@@ -117,6 +148,12 @@ public class NewProjectWizard extends Wizard implements INewWizard {
             + "uses-sdk.template"; //$NON-NLS-1$
     private static final String TEMPLATE_INTENT_LAUNCHER = TEMPLATES_DIRECTORY
             + "launcher_intent_filter.template"; //$NON-NLS-1$
+    private static final String TEMPLATE_TEST_USES_LIBRARY = TEMPLATES_DIRECTORY
+            + "test_uses-library.template"; //$NON-NLS-1$
+    private static final String TEMPLATE_TEST_INSTRUMENTATION = TEMPLATES_DIRECTORY
+            + "test_instrumentation.template"; //$NON-NLS-1$
+
+
 
     private static final String TEMPLATE_STRINGS = TEMPLATES_DIRECTORY
             + "strings.template"; //$NON-NLS-1$
@@ -124,11 +161,11 @@ public class NewProjectWizard extends Wizard implements INewWizard {
             + "string.template"; //$NON-NLS-1$
     private static final String ICON = "icon.png"; //$NON-NLS-1$
 
-    private static final String STRINGS_FILE = "strings.xml"; //$NON-NLS-1$
+    private static final String STRINGS_FILE = "strings.xml";       //$NON-NLS-1$
 
-    private static final String STRING_RSRC_PREFIX = "@string/"; //$NON-NLS-1$
-    private static final String STRING_APP_NAME = "app_name"; //$NON-NLS-1$
-    private static final String STRING_HELLO_WORLD = "hello"; //$NON-NLS-1$
+    private static final String STRING_RSRC_PREFIX = "@string/";    //$NON-NLS-1$
+    private static final String STRING_APP_NAME = "app_name";       //$NON-NLS-1$
+    private static final String STRING_HELLO_WORLD = "hello";       //$NON-NLS-1$
 
     private static final String[] DEFAULT_DIRECTORIES = new String[] {
             BIN_DIRECTORY, RES_DIRECTORY, ASSETS_DIRECTORY };
@@ -136,15 +173,23 @@ public class NewProjectWizard extends Wizard implements INewWizard {
             DRAWABLE_DIRECTORY, LAYOUT_DIRECTORY, VALUES_DIRECTORY};
 
     private static final String PROJECT_LOGO_LARGE = "icons/android_large.png"; //$NON-NLS-1$
-    private static final String JAVA_ACTIVITY_TEMPLATE = "java_file.template"; //$NON-NLS-1$
-    private static final String LAYOUT_TEMPLATE = "layout.template"; //$NON-NLS-1$
-    private static final String MAIN_LAYOUT_XML = "main.xml"; //$NON-NLS-1$
-    
-    protected static final String MAIN_PAGE_NAME = "newAndroidProjectPage"; //$NON-NLS-1$
+    private static final String JAVA_ACTIVITY_TEMPLATE = "java_file.template";  //$NON-NLS-1$
+    private static final String LAYOUT_TEMPLATE = "layout.template";            //$NON-NLS-1$
+    private static final String MAIN_LAYOUT_XML = "main.xml";                   //$NON-NLS-1$
 
     private NewProjectCreationPage mMainPage;
+    private NewTestProjectCreationPage mTestPage;
     /** Package name available when the wizard completes. */
     private String mPackageName;
+    private final AvailablePages mAvailablePages;
+
+    public NewProjectWizard() {
+        this(AvailablePages.ANDROID_AND_TEST_PROJECT);
+    }
+
+    protected NewProjectWizard(AvailablePages availablePages) {
+        mAvailablePages = availablePages;
+    }
 
     /**
      * Initializes this creation wizard using the passed workbench and object
@@ -155,13 +200,14 @@ public class NewProjectWizard extends Wizard implements INewWizard {
         setWindowTitle("New Android Project");
         setImageDescriptor();
 
-        mMainPage = createMainPage();
-        mMainPage.setTitle("New Android Project");
-        mMainPage.setDescription("Creates a new Android Project resource.");
+        if (mAvailablePages == AvailablePages.ANDROID_AND_TEST_PROJECT) {
+            mMainPage = createMainPage();
+        }
+        mTestPage = createTestPage();
     }
-    
+
     /**
-     * Creates the wizard page.
+     * Creates the main wizard page.
      * <p/>
      * Please do NOT override this method.
      * <p/>
@@ -170,7 +216,20 @@ public class NewProjectWizard extends Wizard implements INewWizard {
      * to maintain compatibility between different versions of the plugin.
      */
     protected NewProjectCreationPage createMainPage() {
-        return new NewProjectCreationPage(MAIN_PAGE_NAME);
+        return new NewProjectCreationPage();
+    }
+
+    /**
+     * Creates the test wizard page.
+     * <p/>
+     * Please do NOT override this method.
+     * <p/>
+     * This is protected so that it can be overridden by unit tests.
+     * However the contract of this class is private and NO ATTEMPT will be made
+     * to maintain compatibility between different versions of the plugin.
+     */
+    protected NewTestProjectCreationPage createTestPage() {
+        return new NewTestProjectCreationPage();
     }
 
     // -- Methods inherited from org.eclipse.jface.wizard.Wizard --
@@ -182,7 +241,15 @@ public class NewProjectWizard extends Wizard implements INewWizard {
      */
     @Override
     public void addPages() {
-        addPage(mMainPage);
+        if (mAvailablePages == AvailablePages.ANDROID_AND_TEST_PROJECT) {
+            addPage(mMainPage);
+        }
+        addPage(mTestPage);
+
+        if (mMainPage != null && mTestPage != null) {
+            mTestPage.setMainInfo(mMainPage.getMainInfo());
+            mMainPage.setTestInfo(mTestPage.getTestInfo());
+        }
     }
 
     /**
@@ -195,7 +262,7 @@ public class NewProjectWizard extends Wizard implements INewWizard {
      */
     @Override
     public boolean performFinish() {
-        if (!createAndroidProject()) {
+        if (!createAndroidProjects()) {
             return false;
         }
 
@@ -206,21 +273,21 @@ public class NewProjectWizard extends Wizard implements INewWizard {
     }
 
     // -- Public Fields --
-    
-    /** Returns the package name. Only valid once the wizard finishes. */
+
+    /** Returns the main project package name. Only valid once the wizard finishes. */
     public String getPackageName() {
         return mPackageName;
     }
-    
+
     // -- Custom Methods --
 
     /**
      * Before actually creating the project for a new project (as opposed to using an
      * existing project), we check if the target location is a directory that either does
      * not exist or is empty.
-     * 
+     *
      * If it's not empty, ask the user for confirmation.
-     *  
+     *
      * @param destination The destination folder where the new project is to be created.
      * @return True if the destination doesn't exist yet or is an empty directory or is
      *         accepted by the user.
@@ -235,32 +302,107 @@ public class NewProjectWizard extends Wizard implements INewWizard {
     }
 
     /**
+     * Structure that describes all the information needed to create a project.
+     * This is collected from the pages by {@link NewProjectWizard#createAndroidProjects()}
+     * and then used by
+     * {@link NewProjectWizard#createProjectAsync(IProgressMonitor, ProjectInfo, ProjectInfo)}.
+     */
+    private static class ProjectInfo {
+        private final IProject mProject;
+        private final IProjectDescription mDescription;
+        private final Map<String, Object> mParameters;
+        private final HashMap<String, String> mDictionary;
+
+        public ProjectInfo(IProject project,
+                IProjectDescription description,
+                Map<String, Object> parameters,
+                HashMap<String, String> dictionary) {
+                    mProject = project;
+                    mDescription = description;
+                    mParameters = parameters;
+                    mDictionary = dictionary;
+        }
+
+        public IProject getProject() {
+            return mProject;
+        }
+
+        public IProjectDescription getDescription() {
+            return mDescription;
+        }
+
+        public Map<String, Object> getParameters() {
+            return mParameters;
+        }
+
+        public HashMap<String, String> getDictionary() {
+            return mDictionary;
+        }
+    }
+
+    /**
      * Creates the android project.
      * @return True if the project could be created.
      */
-    private boolean createAndroidProject() {
+    private boolean createAndroidProjects() {
+
+        final ProjectInfo mainData = collectMainPageInfo();
+        if (mMainPage != null && mainData == null) {
+            return false;
+        }
+
+        final ProjectInfo testData = collectTestPageInfo();
+        if (mTestPage != null && testData == null) {
+            return false;
+        }
+
+        // Create a monitored operation to create the actual project
+        WorkspaceModifyOperation op = new WorkspaceModifyOperation() {
+            @Override
+            protected void execute(IProgressMonitor monitor) throws InvocationTargetException {
+                createProjectAsync(monitor, mainData, testData);
+            }
+        };
+
+        // Run the operation in a different thread
+        runAsyncOperation(op);
+        return true;
+    }
+
+    /**
+     * Collects all the parameters needed to create the main project.
+     * @return A new {@link ProjectInfo} on success. Returns null if the project cannot be
+     *    created because parameters are incorrect or should not be created because there
+     *    is no main page.
+     */
+    private ProjectInfo collectMainPageInfo() {
+        if (mMainPage == null) {
+            return null;
+        }
+
+        IMainInfo info = mMainPage.getMainInfo();
+
         IWorkspace workspace = ResourcesPlugin.getWorkspace();
-        final IProject project = workspace.getRoot().getProject(mMainPage.getProjectName());
+        final IProject project = workspace.getRoot().getProject(info.getProjectName());
         final IProjectDescription description = workspace.newProjectDescription(project.getName());
 
-
         // keep some variables to make them available once the wizard closes
-        mPackageName = mMainPage.getPackageName();
+        mPackageName = info.getPackageName();
 
         final Map<String, Object> parameters = new HashMap<String, Object>();
-        parameters.put(PARAM_PROJECT, mMainPage.getProjectName());
+        parameters.put(PARAM_PROJECT, info.getProjectName());
         parameters.put(PARAM_PACKAGE, mPackageName);
         parameters.put(PARAM_APPLICATION, STRING_RSRC_PREFIX + STRING_APP_NAME);
         parameters.put(PARAM_SDK_TOOLS_DIR, AdtPlugin.getOsSdkToolsFolder());
-        parameters.put(PARAM_IS_NEW_PROJECT, mMainPage.isNewProject());
-        parameters.put(PARAM_SRC_FOLDER, mMainPage.getSourceFolder());
-        parameters.put(PARAM_SDK_TARGET, mMainPage.getSdkTarget());
-        parameters.put(PARAM_MIN_SDK_VERSION, mMainPage.getMinSdkVersion());
-        
-        if (mMainPage.isCreateActivity()) {
+        parameters.put(PARAM_IS_NEW_PROJECT, info.isNewProject());
+        parameters.put(PARAM_SRC_FOLDER, info.getSourceFolder());
+        parameters.put(PARAM_SDK_TARGET, info.getSdkTarget());
+        parameters.put(PARAM_MIN_SDK_VERSION, info.getMinSdkVersion());
+
+        if (info.isCreateActivity()) {
             // An activity name can be of the form ".package.Class" or ".Class".
             // The initial dot is ignored, as it is always added later in the templates.
-            String activityName = mMainPage.getActivityName();
+            String activityName = info.getActivityName();
             if (activityName.startsWith(".")) { //$NON-NLS-1$
                 activityName = activityName.substring(1);
             }
@@ -269,31 +411,81 @@ public class NewProjectWizard extends Wizard implements INewWizard {
 
         // create a dictionary of string that will contain name+content.
         // we'll put all the strings into values/strings.xml
-        final HashMap<String, String> stringDictionary = new HashMap<String, String>();
-        stringDictionary.put(STRING_APP_NAME, mMainPage.getApplicationName());
+        final HashMap<String, String> dictionary = new HashMap<String, String>();
+        dictionary.put(STRING_APP_NAME, info.getApplicationName());
 
-        IPath path = mMainPage.getLocationPath();
+        IPath path = info.getLocationPath();
         IPath defaultLocation = Platform.getLocation();
         if (!path.equals(defaultLocation)) {
             description.setLocation(path);
         }
-        
-        if (mMainPage.isNewProject() && !mMainPage.useDefaultLocation() &&
+
+        if (info.isNewProject() && !info.useDefaultLocation() &&
                 !validateNewProjectLocationIsEmpty(path)) {
-            return false;
+            return null;
         }
 
-        // Create a monitored operation to create the actual project
-        WorkspaceModifyOperation op = new WorkspaceModifyOperation() {
-            @Override
-            protected void execute(IProgressMonitor monitor) throws InvocationTargetException {
-                createProjectAsync(project, description, monitor, parameters, stringDictionary);
-            }
-        };
+        return new ProjectInfo(project, description, parameters, dictionary);
+    }
 
-        // Run the operation in a different thread
-        runAsyncOperation(op);
-        return true;
+    /**
+     * Collects all the parameters needed to create the test project.
+     *
+     * @return A new {@link ProjectInfo} on success. Returns null if the project cannot be
+     *    created because parameters are incorrect or should not be created because there
+     *    is no test page.
+     */
+    private ProjectInfo collectTestPageInfo() {
+        if (mTestPage == null) {
+            return null;
+        }
+
+        TestInfo info = mTestPage.getTestInfo();
+
+        IWorkspace workspace = ResourcesPlugin.getWorkspace();
+        final IProject project = workspace.getRoot().getProject(info.getProjectName());
+        final IProjectDescription description = workspace.newProjectDescription(project.getName());
+
+        final Map<String, Object> parameters = new HashMap<String, Object>();
+        parameters.put(PARAM_PROJECT, info.getProjectName());
+        parameters.put(PARAM_PACKAGE, info.getPackageName());
+        parameters.put(PARAM_APPLICATION, STRING_RSRC_PREFIX + STRING_APP_NAME);
+        parameters.put(PARAM_SDK_TOOLS_DIR, AdtPlugin.getOsSdkToolsFolder());
+        parameters.put(PARAM_IS_NEW_PROJECT, true);
+        parameters.put(PARAM_SRC_FOLDER, info.getSourceFolder());
+        parameters.put(PARAM_SDK_TARGET, info.getSdkTarget());
+        parameters.put(PARAM_MIN_SDK_VERSION, info.getMinSdkVersion());
+
+        // Test-specific parameters
+        parameters.put(PARAM_TEST_TARGET_PACKAGE, info.getTargetPackageName());
+
+        if (info.isTestingSelf()) {
+            parameters.put(PARAM_TARGET_SELF, true);
+        }
+        if (info.isTestingMain()) {
+            parameters.put(PARAM_TARGET_MAIN, true);
+        }
+        if (info.isTestingExisting()) {
+            parameters.put(PARAM_TARGET_EXISTING, true);
+            parameters.put(PARAM_REFERENCE_PROJECT, info.getExistingTestedProject());
+        }
+
+        // create a dictionary of string that will contain name+content.
+        // we'll put all the strings into values/strings.xml
+        final HashMap<String, String> dictionary = new HashMap<String, String>();
+        dictionary.put(STRING_APP_NAME, info.getApplicationName());
+
+        IPath path = info.getLocationPath();
+        IPath defaultLocation = Platform.getLocation();
+        if (!path.equals(defaultLocation)) {
+            description.setLocation(path);
+        }
+
+        if (!info.useDefaultLocation() && !validateNewProjectLocationIsEmpty(path)) {
+            return null;
+        }
+
+        return new ProjectInfo(project, description, parameters, dictionary);
     }
 
     /**
@@ -328,81 +520,45 @@ public class NewProjectWizard extends Wizard implements INewWizard {
     }
 
     /**
-     * Creates the actual project, sets its nature and adds the required folders
-     * and files to it. This is run asynchronously in a different thread.
+     * Creates the actual project(s). This is run asynchronously in a different thread.
      *
-     * @param project The project to create.
-     * @param description A description of the project.
      * @param monitor An existing monitor.
-     * @param parameters Template parameters.
-     * @param stringDictionary String definition.
+     * @param mainData Data for main project. Can be null.
      * @throws InvocationTargetException to wrap any unmanaged exception and
      *         return it to the calling thread. The method can fail if it fails
      *         to create or modify the project or if it is canceled by the user.
      */
-    private void createProjectAsync(IProject project, IProjectDescription description,
-            IProgressMonitor monitor, Map<String, Object> parameters,
-            Map<String, String> stringDictionary)
-            throws InvocationTargetException {
+    private void createProjectAsync(IProgressMonitor monitor,
+            ProjectInfo mainData,
+            ProjectInfo testData)
+                throws InvocationTargetException {
         monitor.beginTask("Create Android Project", 100);
         try {
-            // Create project and open it
-            project.create(description, new SubProgressMonitor(monitor, 10));
-            if (monitor.isCanceled()) throw new OperationCanceledException();
-            project.open(IResource.BACKGROUND_REFRESH, new SubProgressMonitor(monitor, 10));
+            IProject mainProject = null;
 
-            // Add the Java and android nature to the project
-            AndroidNature.setupProjectNatures(project, monitor);
-
-            // Create folders in the project if they don't already exist
-            addDefaultDirectories(project, AndroidConstants.WS_ROOT, DEFAULT_DIRECTORIES, monitor);
-            String[] sourceFolders = new String[] {
-                        (String) parameters.get(PARAM_SRC_FOLDER),
-                        GEN_SRC_DIRECTORY
-                    };
-            addDefaultDirectories(project, AndroidConstants.WS_ROOT, sourceFolders, monitor);
-
-            // Create the resource folders in the project if they don't already exist.
-            addDefaultDirectories(project, RES_DIRECTORY, RES_DIRECTORIES, monitor);
-
-            // Setup class path: mark folders as source folders
-            IJavaProject javaProject = JavaCore.create(project);
-            for (String sourceFolder : sourceFolders) {
-                setupSourceFolder(javaProject, sourceFolder, monitor);
-            }
-            
-            // Mark the gen source folder as derived
-            IFolder genSrcFolder = project.getFolder(AndroidConstants.WS_ROOT + GEN_SRC_DIRECTORY);
-            if (genSrcFolder.exists()) {
-                genSrcFolder.setDerived(true);
+            if (mainData != null) {
+                mainProject = createEclipseProject(
+                        new SubProgressMonitor(monitor, 50),
+                        mainData.getProject(),
+                        mainData.getDescription(),
+                        mainData.getParameters(),
+                        mainData.getDictionary());
             }
 
-            if (((Boolean) parameters.get(PARAM_IS_NEW_PROJECT)).booleanValue()) {
-                // Create files in the project if they don't already exist
-                addManifest(project, parameters, stringDictionary, monitor);
+            if (testData != null) {
 
-                // add the default app icon
-                addIcon(project, monitor);
-
-                // Create the default package components
-                addSampleCode(project, sourceFolders[0], parameters, stringDictionary, monitor);
-
-                // add the string definition file if needed
-                if (stringDictionary.size() > 0) {
-                    addStringDictionaryFile(project, stringDictionary, monitor);
+                Map<String, Object> parameters = testData.getParameters();
+                if (parameters.containsKey(PARAM_TARGET_MAIN) && mainProject != null) {
+                    parameters.put(PARAM_REFERENCE_PROJECT, mainProject);
                 }
 
-                // Set output location
-                javaProject.setOutputLocation(project.getFolder(BIN_DIRECTORY).getFullPath(),
-                        monitor);
+                createEclipseProject(
+                        new SubProgressMonitor(monitor, 50),
+                        testData.getProject(),
+                        testData.getDescription(),
+                        parameters,
+                        testData.getDictionary());
             }
-
-            Sdk.getCurrent().setProject(project, (IAndroidTarget) parameters.get(PARAM_SDK_TARGET),
-                    null /* apkConfigMap*/);
-            
-            // Fix the project to make sure all properties are as expected.
-            // Necessary for existing projects and good for new ones to.
-            ProjectHelper.fixProject(project);
 
         } catch (CoreException e) {
             throw new InvocationTargetException(e);
@@ -411,6 +567,111 @@ public class NewProjectWizard extends Wizard implements INewWizard {
         } finally {
             monitor.done();
         }
+    }
+
+    /**
+     * Creates the actual project, sets its nature and adds the required folders
+     * and files to it. This is run asynchronously in a different thread.
+     *
+     * @param monitor An existing monitor.
+     * @param project The project to create.
+     * @param description A description of the project.
+     * @param parameters Template parameters.
+     * @param dictionary String definition.
+     * @return The project newly created
+     */
+    private IProject createEclipseProject(IProgressMonitor monitor,
+            IProject project,
+            IProjectDescription description,
+            Map<String, Object> parameters,
+            Map<String, String> dictionary)
+                throws CoreException, IOException {
+
+        // Create project and open it
+        project.create(description, new SubProgressMonitor(monitor, 10));
+        if (monitor.isCanceled()) throw new OperationCanceledException();
+
+        project.open(IResource.BACKGROUND_REFRESH, new SubProgressMonitor(monitor, 10));
+
+        // Add the Java and android nature to the project
+        AndroidNature.setupProjectNatures(project, monitor);
+
+        // Create folders in the project if they don't already exist
+        addDefaultDirectories(project, AndroidConstants.WS_ROOT, DEFAULT_DIRECTORIES, monitor);
+        String[] sourceFolders = new String[] {
+                    (String) parameters.get(PARAM_SRC_FOLDER),
+                    GEN_SRC_DIRECTORY
+                };
+        addDefaultDirectories(project, AndroidConstants.WS_ROOT, sourceFolders, monitor);
+
+        // Create the resource folders in the project if they don't already exist.
+        addDefaultDirectories(project, RES_DIRECTORY, RES_DIRECTORIES, monitor);
+
+        // Setup class path: mark folders as source folders
+        IJavaProject javaProject = JavaCore.create(project);
+        for (String sourceFolder : sourceFolders) {
+            setupSourceFolder(javaProject, sourceFolder, monitor);
+        }
+
+        // Mark the gen source folder as derived
+        IFolder genSrcFolder = project.getFolder(AndroidConstants.WS_ROOT + GEN_SRC_DIRECTORY);
+        if (genSrcFolder.exists()) {
+            genSrcFolder.setDerived(true);
+        }
+
+        if (((Boolean) parameters.get(PARAM_IS_NEW_PROJECT)).booleanValue()) {
+            // Create files in the project if they don't already exist
+            addManifest(project, parameters, dictionary, monitor);
+
+            // add the default app icon
+            addIcon(project, monitor);
+
+            // Create the default package components
+            addSampleCode(project, sourceFolders[0], parameters, dictionary, monitor);
+
+            // add the string definition file if needed
+            if (dictionary.size() > 0) {
+                addStringDictionaryFile(project, dictionary, monitor);
+            }
+
+            // Set output location
+            javaProject.setOutputLocation(project.getFolder(BIN_DIRECTORY).getFullPath(),
+                    monitor);
+        }
+
+        // Create the reference to the target project
+        if (parameters.containsKey(PARAM_REFERENCE_PROJECT)) {
+            IProject refProject = (IProject) parameters.get(PARAM_REFERENCE_PROJECT);
+            if (refProject != null) {
+                IProjectDescription desc = project.getDescription();
+
+                // Add out reference to the existing project reference.
+                // We just created a project with no references so we don't need to expand
+                // the currently-empty current list.
+                desc.setReferencedProjects(new IProject[] { refProject });
+
+                project.setDescription(desc, IResource.KEEP_HISTORY, new SubProgressMonitor(monitor, 10));
+
+                IClasspathEntry entry = JavaCore.newProjectEntry(
+                        refProject.getFullPath(), //path
+                        new IAccessRule[0], //accessRules
+                        false, //combineAccessRules
+                        new IClasspathAttribute[0], //extraAttributes
+                        false //isExported
+
+                );
+                ProjectHelper.addEntryToClasspath(javaProject, entry);
+            }
+        }
+
+        Sdk.getCurrent().setProject(project, (IAndroidTarget) parameters.get(PARAM_SDK_TARGET),
+                null /* apkConfigMap*/);
+
+        // Fix the project to make sure all properties are as expected.
+        // Necessary for existing projects and good for new ones to.
+        ProjectHelper.fixProject(project);
+
+        return project;
     }
 
     /**
@@ -442,7 +703,7 @@ public class NewProjectWizard extends Wizard implements INewWizard {
      *
      * @param project The Java Project to update.
      * @param parameters Template Parameters.
-     * @param stringDictionary String List to be added to a string definition
+     * @param dictionary String List to be added to a string definition
      *        file. This map will be filled by this method.
      * @param monitor An existing monitor.
      * @throws CoreException if the method fails to update the project.
@@ -450,7 +711,7 @@ public class NewProjectWizard extends Wizard implements INewWizard {
      *         project.
      */
     private void addManifest(IProject project, Map<String, Object> parameters,
-            Map<String, String> stringDictionary, IProgressMonitor monitor)
+            Map<String, String> dictionary, IProgressMonitor monitor)
             throws CoreException, IOException {
 
         // get IFile to the manifest and check if it's not already there.
@@ -466,23 +727,42 @@ public class NewProjectWizard extends Wizard implements INewWizard {
             if (parameters.containsKey(PARAM_ACTIVITY)) {
                 // now get the activity template
                 String activityTemplate = AdtPlugin.readEmbeddedTextFile(TEMPLATE_ACTIVITIES);
-    
+
                 // Replace all keyword parameters to make main activity.
                 String activities = replaceParameters(activityTemplate, parameters);
-    
+
                 // set the intent.
                 String intent = AdtPlugin.readEmbeddedTextFile(TEMPLATE_INTENT_LAUNCHER);
-                
+
                 // set the intent to the main activity
                 activities = activities.replaceAll(PH_INTENT_FILTERS, intent);
-    
+
                 // set the activity(ies) in the manifest
                 manifestTemplate = manifestTemplate.replaceAll(PH_ACTIVITIES, activities);
             } else {
                 // remove the activity(ies) from the manifest
-                manifestTemplate = manifestTemplate.replaceAll(PH_ACTIVITIES, "");
+                manifestTemplate = manifestTemplate.replaceAll(PH_ACTIVITIES, "");  //$NON-NLS-1$
             }
-            
+
+            // Handle the case of the test projects
+            if (parameters.containsKey(PARAM_TEST_TARGET_PACKAGE)) {
+                // Set the uses-library needed by the test project
+                String usesLibrary = AdtPlugin.readEmbeddedTextFile(TEMPLATE_TEST_USES_LIBRARY);
+                manifestTemplate = manifestTemplate.replaceAll(PH_TEST_USES_LIBRARY, usesLibrary);
+
+                // Set the instrumentation element needed by the test project
+                String instru = AdtPlugin.readEmbeddedTextFile(TEMPLATE_TEST_INSTRUMENTATION);
+                manifestTemplate = manifestTemplate.replaceAll(PH_TEST_INSTRUMENTATION, instru);
+
+                // Replace PARAM_TEST_TARGET_PACKAGE itself now
+                manifestTemplate = replaceParameters(manifestTemplate, parameters);
+
+            } else {
+                // remove the unused entries
+                manifestTemplate = manifestTemplate.replaceAll(PH_TEST_USES_LIBRARY, "");     //$NON-NLS-1$
+                manifestTemplate = manifestTemplate.replaceAll(PH_TEST_INSTRUMENTATION, "");  //$NON-NLS-1$
+            }
+
             String minSdkVersion = (String) parameters.get(PARAM_MIN_SDK_VERSION);
             if (minSdkVersion != null && minSdkVersion.length() > 0) {
                 String usesSdkTemplate = AdtPlugin.readEmbeddedTextFile(TEMPLATE_USES_SDK);
@@ -584,7 +864,7 @@ public class NewProjectWizard extends Wizard implements INewWizard {
      *
      * @param project The Java Project to update.
      * @param parameters Template Parameters.
-     * @param stringDictionary String List to be added to a string definition
+     * @param dictionary String List to be added to a string definition
      *        file. This map will be filled by this method.
      * @param monitor An existing monitor.
      * @throws CoreException if the method fails to update the project.
@@ -592,12 +872,12 @@ public class NewProjectWizard extends Wizard implements INewWizard {
      *         project.
      */
     private void addSampleCode(IProject project, String sourceFolder,
-            Map<String, Object> parameters, Map<String, String> stringDictionary,
+            Map<String, Object> parameters, Map<String, String> dictionary,
             IProgressMonitor monitor) throws CoreException, IOException {
         // create the java package directories.
         IFolder pkgFolder = project.getFolder(sourceFolder);
         String packageName = (String) parameters.get(PARAM_PACKAGE);
-        
+
         // The PARAM_ACTIVITY key will be absent if no activity should be created,
         // in which case activityName will be null.
         String activityName = (String) parameters.get(PARAM_ACTIVITY);
@@ -610,7 +890,7 @@ public class NewProjectWizard extends Wizard implements INewWizard {
                 int pos = packageName.lastIndexOf('.');
                 activityName = packageName.substring(pos + 1);
                 packageName = packageName.substring(0, pos);
-                
+
                 // Also update the values used in the JAVA_FILE_TEMPLATE below
                 // (but not the ones from the manifest so don't change the caller's dictionary)
                 java_activity_parameters = new HashMap<String, Object>(parameters);
@@ -643,9 +923,9 @@ public class NewProjectWizard extends Wizard implements INewWizard {
         if (!file.exists()) {
             copyFile(LAYOUT_TEMPLATE, file, parameters, monitor);
             if (activityName != null) {
-                stringDictionary.put(STRING_HELLO_WORLD, "Hello World, " + activityName + "!");
+                dictionary.put(STRING_HELLO_WORLD, "Hello World, " + activityName + "!");
             } else {
-                stringDictionary.put(STRING_HELLO_WORLD, "Hello World!");
+                dictionary.put(STRING_HELLO_WORLD, "Hello World!");
             }
         }
     }

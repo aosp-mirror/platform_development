@@ -15,6 +15,11 @@
  */
 package com.android.ide.eclipse.adt.wizards.newproject;
 
+import com.android.sdklib.IAndroidTarget;
+
+import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.Path;
+
 import java.io.File;
 
 /**
@@ -26,46 +31,60 @@ public class StubSampleProjectCreationPage extends NewProjectCreationPage {
     private String mSampleProjectName;
     private String mOsSdkLocation;
 
-    public StubSampleProjectCreationPage(String pageName,
-            String sampleProjectName, String osSdkLocation) {
-        super(pageName);
+    public StubSampleProjectCreationPage(String sampleProjectName, String osSdkLocation) {
+        super();
         this.mSampleProjectName = sampleProjectName;
         this.mOsSdkLocation = osSdkLocation;
     }
 
     @Override
-    public String getProjectName() {
-        return mSampleProjectName;
-    }
+    public IMainInfo getMainInfo() {
+        return new IMainInfo() {
+            public String getProjectName() {
+                return mSampleProjectName;
+            }
 
-    @Override
-    public String getPackageName() {
-        return "com.android.samples";
-    }
+            public String getPackageName() {
+                return "com.android.samples";
+            }
 
-    @Override
-    public String getActivityName() {
-        return mSampleProjectName;
-    }
+            public String getActivityName() {
+                return mSampleProjectName;
+            }
 
-    @Override
-    public String getApplicationName() {
-        return mSampleProjectName;
-    }
+            public String getApplicationName() {
+                return mSampleProjectName;
+            }
 
-    @Override
-    public boolean isNewProject() {
-        return false;
-    }
+            public boolean isNewProject() {
+                return false;
+            }
 
-    @Override
-    public String getProjectLocation() {
-        return mOsSdkLocation + File.separator + "samples" + File.separator + mSampleProjectName;
-    }
+            public String getSourceFolder() {
+                return "src";
+            }
 
-    @Override
-    public String getSourceFolder() {
-        return "src";
-    }
+            public IPath getLocationPath() {
+                return new Path(mOsSdkLocation + File.separator +
+                        "samples" + File.separator +
+                        mSampleProjectName);
+            }
 
+            public String getMinSdkVersion() {
+                return null;
+            }
+
+            public IAndroidTarget getSdkTarget() {
+                return null;
+            }
+
+            public boolean isCreateActivity() {
+                return false;
+            }
+
+            public boolean useDefaultLocation() {
+                return false;
+            }
+        };
+    }
 }

@@ -4,7 +4,7 @@
  * Licensed under the Eclipse Public License, Version 1.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.eclipse.org/org/documents/epl-v10.php
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -28,6 +28,7 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
+import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
@@ -43,7 +44,8 @@ import org.eclipse.ui.internal.util.Util;
  * An abstract action that displays one of our wizards.
  * Derived classes must provide the actual wizard to display.
  */
-/*package*/ abstract class OpenWizardAction implements IWorkbenchWindowActionDelegate {
+/*package*/ abstract class OpenWizardAction
+    implements IWorkbenchWindowActionDelegate, IObjectActionDelegate {
 
     /**
      * The wizard dialog width, extracted from {@link NewWizardShortcutAction}
@@ -60,6 +62,9 @@ import org.eclipse.ui.internal.util.Util;
     /** The result from the dialog */
     private int mDialogResult;
 
+    private ISelection mSelection;
+    private IWorkbench mWorkbench;
+
     /** Returns the wizard that was created by {@link #run(IAction)}. */
     public IWorkbenchWizard getWizard() {
         return mWizard;
@@ -70,7 +75,7 @@ import org.eclipse.ui.internal.util.Util;
     public int getDialogResult() {
         return mDialogResult;
     }
-    
+
     /* (non-Javadoc)
      * @see org.eclipse.ui.IWorkbenchWindowActionDelegate#dispose()
      */
@@ -89,19 +94,23 @@ import org.eclipse.ui.internal.util.Util;
      * Opens and display the Android New Project Wizard.
      * <p/>
      * Most of this implementation is extracted from {@link NewWizardShortcutAction#run()}.
-     * 
+     *
      * @param action The action that got us here. Can be null when used internally.
      * @see org.eclipse.ui.IActionDelegate#run(org.eclipse.jface.action.IAction)
      */
     public void run(IAction action) {
 
         // get the workbench and the current window
-        IWorkbench workbench = PlatformUI.getWorkbench();
+        IWorkbench workbench = mWorkbench != null ? mWorkbench : PlatformUI.getWorkbench();
         IWorkbenchWindow window = workbench.getActiveWorkbenchWindow();
-        
+
         // This code from NewWizardShortcutAction#run() gets the current window selection
         // and converts it to a workbench structured selection for the wizard, if possible.
-        ISelection selection = window.getSelectionService().getSelection();
+        ISelection selection = mSelection;
+        if (selection == null) {
+            selection = window.getSelectionService().getSelection();
+        }
+
         IStructuredSelection selectionToPass = StructuredSelection.EMPTY;
         if (selection instanceof IStructuredSelection) {
             selectionToPass = (IStructuredSelection) selection;
@@ -123,16 +132,16 @@ import org.eclipse.ui.internal.util.Util;
         // Create the wizard and initialize it with the selection
         mWizard = instanciateWizard(action);
         mWizard.init(workbench, selectionToPass);
-        
+
         // It's not visible yet until a dialog is created and opened
         Shell parent = window.getShell();
         WizardDialogEx dialog = new WizardDialogEx(parent, mWizard);
         dialog.create();
-        
+
         if (mWizard instanceof IUpdateWizardDialog) {
             ((IUpdateWizardDialog) mWizard).updateWizardDialog(dialog);
         }
-        
+
         // This code comes straight from NewWizardShortcutAction#run()
         Point defaultSize = dialog.getShell().getSize();
         dialog.getShell().setSize(
@@ -140,13 +149,13 @@ import org.eclipse.ui.internal.util.Util;
                 Math.max(SIZING_WIZARD_HEIGHT, defaultSize.y));
         window.getWorkbench().getHelpSystem().setHelp(dialog.getShell(),
                 IWorkbenchHelpContextIds.NEW_WIZARD_SHORTCUT);
-        
+
         mDialogResult = dialog.open();
     }
 
     /**
      * Called by {@link #run(IAction)} to instantiate the actual wizard.
-     * 
+     *
      * @param action The action parameter from {@link #run(IAction)}.
      *               This can be null.
      * @return A new wizard instance. Must not be null.
@@ -157,7 +166,13 @@ import org.eclipse.ui.internal.util.Util;
      * @see org.eclipse.ui.IActionDelegate#selectionChanged(org.eclipse.jface.action.IAction, org.eclipse.jface.viewers.ISelection)
      */
     public void selectionChanged(IAction action, ISelection selection) {
-        // pass
+        mSelection = selection;
     }
 
+    /* (non-Javadoc)
+     * @see org.eclipse.ui.IObjectActionDelegate#setActivePart(org.eclipse.jface.action.IAction, org.eclipse.ui.IWorkbenchPart)
+     */
+    public void setActivePart(IAction action, IWorkbenchPart targetPart) {
+        mWorkbench = targetPart.getSite().getWorkbenchWindow().getWorkbench();
+    }
 }

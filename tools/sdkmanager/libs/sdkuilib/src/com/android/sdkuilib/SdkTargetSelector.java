@@ -28,6 +28,7 @@ import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
@@ -397,4 +398,21 @@ public class SdkTargetSelector {
             }
         }
     }
+
+    /** Enables or disables the controls. */
+    public void setEnabled(boolean enabled) {
+        if (mInnerGroup != null && mTable != null && !mTable.isDisposed()) {
+            enableControl(mInnerGroup, enabled);
+        }
+    }
+
+    /** Enables or disables controls; recursive for composite controls. */
+    private void enableControl(Control c, boolean enabled) {
+        c.setEnabled(enabled);
+        if (c instanceof Composite)
+        for (Control c2 : ((Composite) c).getChildren()) {
+            enableControl(c2, enabled);
+        }
+    }
+    
 }

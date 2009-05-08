@@ -71,6 +71,22 @@ public final class ProjectHelper {
     }
 
     /**
+     * Adds the corresponding source folder to the project's class path entries.
+     *
+     * @param javaProject The java project of which path entries to update.
+     * @param new_entry The parent source folder to remove.
+     * @throws JavaModelException 
+     */
+    public static void addEntryToClasspath(
+            IJavaProject javaProject, IClasspathEntry new_entry)
+            throws JavaModelException {
+
+        IClasspathEntry[] entries = javaProject.getRawClasspath();
+        entries = addEntryToClasspath(entries, new_entry);
+        javaProject.setRawClasspath(entries, new NullProgressMonitor());
+    }
+
+    /**
      * Remove a classpath entry from the array.
      * @param entries The class path entries to read. A copy will be returned
      * @param index The index to remove.
@@ -265,6 +281,8 @@ public final class ProjectHelper {
         // If needed, check and fix compiler compliance and source compatibility
         ProjectHelper.checkAndFixCompilerCompliance(javaProject);
     }
+    
+    
     /**
      * Checks the project compiler compliance level is supported.
      * @param javaProject The project to check
