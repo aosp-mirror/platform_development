@@ -44,29 +44,14 @@ On Windows, you will need to install a recent release of Cygwin to use the NDK.
 See http://www.cygwin.com for instructions.
 
 
-II. Download prebuilt cross-toolchain binaries:
+II. Preparing your installation prebuilt cross-toolchain binaries:
 -----------------------------------------------
 
-Certain Android NDK packages do not include the host-specific binaries of the
-cross-toolchain(s) required to build ARM binaries on Linux, OS X or Windows.
+After installing and unarchiving the NDK, you will need to run the following
+command from the root folder:
 
-Check whether build/prebuilt/<system> exists and is populated, where <system>
-is one of the following:
+  build/host-setup.sh
 
-  linux-x86
-  linux-x86_64
-  darwin-x86
-  windows
-
-If not, you might need to download a package named:
-
-  android-ndk-prebuilt-<system>-<date>.tar.bz2
-
-And unpack it in the top-level NDK directory. For example, on 32-bit Linux:
-
-  cd $NDK
-  tar xjf android-ndk-prebuilt-linux-x86-<date>.tar.bz2
-
-Please read docs/PREBUILTS.TXT to lean how to get the prebuilt packages.
+This will test your setup and make sure the NDK can work properly.
 
 

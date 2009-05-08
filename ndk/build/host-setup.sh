@@ -76,7 +76,7 @@ add_config "HOST_ARFLAGS  := $ARFLAGS"
 TOOLCHAINS=arm-eabi-4.2.1
 
 EXT=""
-[[ "$OS" == "Windows_NT" ]] && EXT=".exe"
+[ "Windows_NT" -eq "$OS" ] && EXT=".exe"
 
 for tc in $TOOLCHAINS; do
     echo "Toolchain  : Checking for $tc prebuilt binaries"
@@ -85,10 +85,10 @@ for tc in $TOOLCHAINS; do
     if [ -z $COMPILERS ] ; then
         echo ""
         echo "ERROR:"
-        echo "It seems you do not have the prebuilt $tc toolchain binaries."
+        echo "It seems you do not have the correct $tc toolchain binaries."
         echo "Please go to the official Android NDK web site and download the"
-        echo "appropriate toolchain package for your platform ($HOST_TAG)."
-        echo "See http://developer.android.com/ndk/1.5/index.html"
+        echo "appropriate NDK package for your platform ($HOST_TAG)."
+        echo "See http://developer.android.com/sdk/index.html"
         echo ""
         echo "ABORTING."
         echo ""
