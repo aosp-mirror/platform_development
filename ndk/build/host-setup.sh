@@ -76,7 +76,7 @@ add_config "HOST_ARFLAGS  := $ARFLAGS"
 TOOLCHAINS=arm-eabi-4.2.1
 
 EXT=""
-[ "Windows_NT" -eq "$OS" ] && EXT=".exe"
+[ "Windows_NT" == "$OS" ] && EXT=".exe"
 
 for tc in $TOOLCHAINS; do
     echo "Toolchain  : Checking for $tc prebuilt binaries"
