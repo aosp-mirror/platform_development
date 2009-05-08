@@ -338,7 +338,7 @@ public final class AvdManager {
         synchronized (mAllAvdList) {
             if (mBrokenAvdList == null) {
                 ArrayList<AvdInfo> list = new ArrayList<AvdInfo>();
-                for (AvdInfo avd : mBrokenAvdList) {
+                for (AvdInfo avd : mAllAvdList) {
                     if (avd.getStatus() != AvdStatus.OK) {
                         list.add(avd);
                     }
