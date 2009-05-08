@@ -75,10 +75,12 @@ add_config "HOST_ARFLAGS  := $ARFLAGS"
 
 TOOLCHAINS=arm-eabi-4.2.1
 
+EXT=""
+[[ "$OS" == "Windows_NT" ]] && EXT=".exe"
 
 for tc in $TOOLCHAINS; do
     echo "Toolchain  : Checking for $tc prebuilt binaries"
-    COMPILER_PATTERN=$ANDROID_NDK_ROOT/build/prebuilt/$HOST_TAG/$tc/bin/*-gcc
+    COMPILER_PATTERN=$ANDROID_NDK_ROOT/build/prebuilt/$HOST_TAG/$tc/bin/*-gcc${EXT}
     COMPILERS=`ls $COMPILER_PATTERN 2> /dev/null`
     if [ -z $COMPILERS ] ; then
         echo ""
