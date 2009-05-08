@@ -67,8 +67,6 @@ public class EclipseTestCollector {
     
     /**
      * Returns true if given class should be added to suite
-     * @param testClass
-     * @return
      */
     protected boolean isTestClass(Class<?> testClass) {
         return TestCase.class.isAssignableFrom(testClass) &&
@@ -78,8 +76,6 @@ public class EclipseTestCollector {
     
     /**
      * Returns true if given class has a public constructor
-     * @param testClass
-     * @return
      */
     protected boolean hasPublicConstructor(Class<?> testClass) {
         try {
@@ -94,7 +90,6 @@ public class EclipseTestCollector {
      * Load the class given by the plugin aka bundle file path
      * @param filePath - path of class in bundle
      * @param expectedPackage - expected package of class
-     * @return
      * @throws ClassNotFoundException
      */
     protected Class<?> getClass(String filePath, String expectedPackage) throws ClassNotFoundException {
