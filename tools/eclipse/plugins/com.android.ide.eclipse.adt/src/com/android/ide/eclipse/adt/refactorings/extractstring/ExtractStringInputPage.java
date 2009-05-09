@@ -200,7 +200,8 @@ class ExtractStringInputPage extends UserInputWizardPage implements IWizardPage 
         label.setText("Configuration:");
 
         mConfigSelector = new ConfigurationSelector(group);
-        GridData gd = new GridData(2, GridData.GRAB_HORIZONTAL | GridData.GRAB_VERTICAL);
+        GridData gd = new GridData(GridData.GRAB_HORIZONTAL | GridData.GRAB_VERTICAL);
+        gd.horizontalSpan = 2;
         gd.widthHint = ConfigurationSelector.WIDTH_HINT;
         gd.heightHint = ConfigurationSelector.HEIGHT_HINT;
         mConfigSelector.setLayoutData(gd);

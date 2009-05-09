@@ -49,8 +49,7 @@ public class StubSampleProjectWizard extends NewProjectWizard {
      */
     @Override
     protected NewProjectCreationPage createMainPage() {
-        return new StubSampleProjectCreationPage(MAIN_PAGE_NAME,
-                mSampleProjectName, mOsSdkLocation);
+        return new StubSampleProjectCreationPage(mSampleProjectName, mOsSdkLocation);
     }
 
     /**
