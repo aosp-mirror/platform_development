@@ -5,7 +5,7 @@
 #include "armdis.h"
 #include "opcode.h"
 
-static char *cond_names[] = {
+static const char *cond_names[] = {
     "eq",
     "ne",
     "cs",
@@ -32,7 +32,7 @@ static const char *shift_names[] = {
     "ROR"
 };
 
-static char* cond_to_str(int cond) {
+static const char* cond_to_str(int cond) {
     return cond_names[cond];
 }
 
@@ -180,7 +180,7 @@ char *Arm::disasm_alu(Opcode opcode, uint32_t insn, char *ptr)
         sprintf(rd_str, "r%d, ", rd);
     }
 
-    char *sbit_str = "";
+    const char *sbit_str = "";
     if (bit_s && !(flags & kNoSbit))
         sbit_str = "s";
 
@@ -282,15 +282,15 @@ char *Arm::disasm_memblock(Opcode opcode, uint32_t insn, char *ptr)
 
     const char *opname = opcode_names[opcode];
 
-    char *bang = "";
+    const char *bang = "";
     if (write_back)
         bang = "!";
 
-    char *carret = "";
+    const char *carret = "";
     if (bit_s)
         carret = "^";
 
-    char *comma = "";
+    const char *comma = "";
     tmp_list[0] = 0;
     for (int ii = 0; ii < 16; ++ii) {
         if (reg_list & (1 << ii)) {
@@ -300,7 +300,7 @@ char *Arm::disasm_memblock(Opcode opcode, uint32_t insn, char *ptr)
         }
     }
 
-    char *addr_mode = "";
+    const char *addr_mode = "";
     if (is_pre) {
         if (is_up) {
             addr_mode = "ib";
@@ -333,19 +333,19 @@ char *Arm::disasm_mem(uint32_t insn, char *ptr)
     uint8_t rd = (insn >> 12) & 0xf;
     uint16_t offset = insn & 0xfff;
 
-    char *opname = "ldr";
+    const char *opname = "ldr";
     if (!is_load)
         opname = "str";
 
-    char *bang = "";
+    const char *bang = "";
     if (write_back)
         bang = "!";
 
-    char *minus = "";
+    const char *minus = "";
     if (is_up == 0)
         minus = "-";
 
-    char *byte = "";
+    const char *byte = "";
     if (is_byte)
         byte = "b";
 
@@ -359,7 +359,7 @@ char *Arm::disasm_mem(uint32_t insn, char *ptr)
                         opname, cond_to_str(cond), byte, rd, rn, minus, offset, bang);
             }
         } else {
-            char *transfer = "";
+            const char *transfer = "";
             if (write_back)
                 transfer = "t";
             sprintf(ptr, "%s%s%s%s\tr%d, [r%d], #%s%u",
@@ -394,7 +394,7 @@ char *Arm::disasm_mem(uint32_t insn, char *ptr)
         return ptr;
     }
 
-    char *transfer = "";
+    const char *transfer = "";
     if (write_back)
         transfer = "t";
 
@@ -432,11 +432,11 @@ char *Arm::disasm_memhalf(uint32_t insn, char *ptr)
     uint8_t rm = insn & 0xf;
     uint8_t offset = (((insn >> 8) & 0xf) << 4) | (insn & 0xf);
 
-    char *opname = "ldr";
+    const char *opname = "ldr";
     if (is_load == 0)
         opname = "str";
 
-    char *width = "";
+    const char *width = "";
     if (bits_65 == 1)
         width = "h";
     else if (bits_65 == 2)
@@ -444,10 +444,10 @@ char *Arm::disasm_memhalf(uint32_t insn, char *ptr)
     else
         width = "sh";
 
-    char *bang = "";
+    const char *bang = "";
     if (write_back)
         bang = "!";
-    char *minus = "";
+    const char *minus = "";
     if (is_up == 0)
         minus = "-";
 
@@ -587,7 +587,7 @@ char *Arm::disasm_pld(uint32_t insn, char *ptr)
     uint8_t is_up = (insn >> 23) & 0x1;
     uint8_t rn = (insn >> 16) & 0xf;
 
-    char *minus = "";
+    const char *minus = "";
     if (is_up == 0)
         minus = "-";
 
