@@ -17,11 +17,10 @@ IMPORTANT:
 I. Android NDK Goals:
 ---------------------
 
-The Android VM allows your application's Java source code to call methods
-implemented in native code through the Java Native Interface (JNI). In a
-nutshell, this means that:
+The Android VM allows your application's source code to call methods
+implemented in native code through the JNI. In a nutshell, this means that:
 
-  - Your application's Java source code will declare one or more methods
+  - Your application's source code will declare one or more methods
     with the 'native' keyword to indicate that they are implemented through
     native code. E.g.:
 
@@ -36,7 +35,7 @@ nutshell, this means that:
       libFileLoader.so
 
   - Your application must explicitely load the library. For example, to load
-    it at application startup, simply add the following to its Java source code:
+    it at application startup, simply add the following to its source code:
 
       static {
         System.loadLibrary("FileLoader");
@@ -85,12 +84,12 @@ II. Android NDK Non-Goals:
 
 The NDK is *not* a good way to write generic native code that runs on Android
 devices. In particular, your applications should still be written in the Java
-language, handle Android system events appropriately to avoid the
+programming language, handle Android system events appropriately to avoid the
 "Application Not Responding" dialog or deal with the Android application
 life-cycle.
 
 Note however that is is possible to write a sophisticated application in
-native code with a small "Java application wrapper" used to start/stop it
+native code with a small "application wrapper" used to start/stop it
 appropriately.
 
 A good understanding of JNI is highly recommended, since many operations
@@ -176,7 +175,7 @@ The NDK build system expects your sources to be visible under the top-level
 You are pretty free to organize the content of 'sources' as you want,
 the directory names and structure here will not influence the final
 generated application packages, so you don't have to use pseudo-unique
-names like com.<mycompany>.<myproject> as is the case for Java application
+names like com.<mycompany>.<myproject> as is the case for application
 package names.
 
 For the record, the NDK comes with a 'sources/samples' directory which
@@ -239,7 +238,7 @@ Where <myapp> is a short descriptive name for your application that will
 be used to invoke the NDK build (and not go into final APKs). The file is
 used to provide the following to the NDK build:
 
-  - The location of your Java application's project path
+  - The location of your Android application's project path
 
   - The list of NDK modules that is required by your application.
     This should really be a list of 'shared library' modules.
