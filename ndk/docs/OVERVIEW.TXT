@@ -285,14 +285,5 @@ IV. Debugging support:
 Debugging your native code with this initial release of the NDK is still
 very rough.
 
-XXX: Describe the hairy steps currently required to debug native code here
-
 Note that we plan to make this much easier in a later NDK release, all of
 this without changing your sources, Android.mk and Application.mk files.
-
-
-V. Profiling support:
-- - - - - - - - - - -
-
-XXX: Should work in theory, doesn't work in practice, need to debug this...
-
