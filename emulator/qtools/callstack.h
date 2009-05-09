@@ -44,6 +44,7 @@ class StackFrame {
 template <class FRAME, class BASE = CallStackBase>
 class CallStack : public BASE {
   public:
+    typedef FRAME frame_type;
     typedef typename FRAME::symbol_type symbol_type;
     typedef typename FRAME::symbol_type::region_type region_type;
     typedef BASE base_type;
@@ -64,8 +65,12 @@ class CallStack : public BASE {
     int         getStackLevel() { return mTop; }
 
     uint64_t    getGlobalTime(uint64_t time) { return time + mSkippedTime; }
-    void        showStack();
-    void        showSnapshotStack();
+    void        showStack(FILE *stream);
+    void        showSnapshotStack(FILE *stream);
+
+    int         mNumFrames;
+    FRAME       *mFrames;
+    int         mTop;           // index of the next stack frame to write
 
   private:
     enum Action { NONE, PUSH, POP };
@@ -86,10 +91,6 @@ class CallStack : public BASE {
 
     symbol_type mDummyFunction;
     region_type mDummyRegion;
-
-    int         mNumFrames;
-    FRAME       *mFrames;
-    int         mTop;           // index of the next stack frame to write
 
     int         mJavaTop;
 
@@ -366,8 +367,11 @@ void CallStack<FRAME, BASE>::doPush(BBEvent *event, symbol_type *function)
 
     // Check for stack overflow
     if (mTop >= mNumFrames) {
+        // Don't show the stack by default because this generates a lot
+        // of output and this is seen by users if there is an error when
+        // post-processing the trace. But this is useful for debugging.
 #if 0
-        showStack();
+        showStack(stderr);
 #endif
         fprintf(stderr, "Error: stack overflow (%d frames)\n", mTop);
         exit(1);
@@ -391,17 +395,20 @@ void CallStack<FRAME, BASE>::doPush(BBEvent *event, symbol_type *function)
     }
 
 #if 0
+    // For debugging only.  Show the stack before entering the kernel
+    // exception-handling code.
     if (function->flags & symbol_type::kIsVectorStart) {
         printf("stack before entering exception\n");
-        showStack();
+        showStack(stderr);
     }
 #endif
 
-    // If the previous function was a vector table, then pop it
+    // If the top of stack is a vector table, then pop it
     // off before pushing on the new function.  Also, change the
     // return address for the new function to the return address
     // from the vector table.
-    if ((mPrevFunction->flags & symbol_type::kIsVectorTable) && mTop > 0) {
+    if (mTop > 0
+        && (mFrames[mTop - 1].function->flags & symbol_type::kIsVectorTable)) {
         retAddr = mFrames[mTop - 1].addr;
         doSimplePop(time);
     }
@@ -426,9 +433,10 @@ void CallStack<FRAME, BASE>::doPush(BBEvent *event, symbol_type *function)
         && mTop > 0) {
         // We are switching from kernel mode to user mode.
 #if 0
+        // For debugging.
         printf("  doPush(): popping to user mode, bb_addr: 0x%08x\n",
                event->bb_addr);
-        showStack();
+        showStack(stderr);
 #endif
         do {
             // Pop off the kernel frames until we reach the one that
@@ -445,6 +453,7 @@ void CallStack<FRAME, BASE>::doPush(BBEvent *event, symbol_type *function)
             }
         } while (mTop > 0);
 #if 0
+        // For debugging
         printf("  doPush() popping to level %d, using retAddr 0x%08x\n",
                mTop, retAddr);
 #endif
@@ -465,7 +474,7 @@ void CallStack<FRAME, BASE>::doSimplePush(symbol_type *function,
 {
     // Check for stack overflow
     if (mTop >= mNumFrames) {
-        showStack();
+        showStack(stderr);
         fprintf(stderr, "too many stack frames (%d)\n", mTop);
         exit(1);
     }
@@ -565,7 +574,13 @@ void CallStack<FRAME, BASE>::doPop(BBEvent *event, symbol_type *function,
             // Compare the function with the one in the stack frame.
             if (function == mFrames[stackLevel].function) {
                 // We found a matching function.  We want to pop up to but not
-                // including this frame.
+                // including this frame.  But allow popping this frame if this
+                // method called itself and we have a method pop.
+                if (allowMethodPop && function == mPrevFunction) {
+                    // pop this frame
+                    break;
+                }
+                // do not pop this frame
                 stackLevel += 1;
                 break;
             }
@@ -604,9 +619,11 @@ void CallStack<FRAME, BASE>::doPop(BBEvent *event, symbol_type *function,
         stackLevel = 1;
 
 #if 0
+    // If we are popping off a large number of stack frames, then
+    // we might have a bug.
     if (mTop - stackLevel > 7) {
         printf("popping thru level %d\n", stackLevel);
-        showStack();
+        showStack(stderr);
     }
 #endif
 
@@ -675,7 +692,7 @@ CallStack<FRAME, BASE>::getMethodAction(BBEvent *event, symbol_type *function)
         }
     }
 
-    if (event->time >= sCurrentMethod.time) {
+    if (event->time >= sCurrentMethod.time && event->pid == sCurrentMethod.pid) {
         if (addr == sCurrentMethod.addr || prevAddr == sCurrentMethod.addr) {
             action = (sCurrentMethod.flags == 0) ? PUSH : POP;
             // We found a match, so read the next record.
@@ -733,24 +750,26 @@ void CallStack<FRAME, BASE>::transitionFromJava(uint64_t time)
 }
 
 template<class FRAME, class BASE>
-void CallStack<FRAME, BASE>::showStack()
+void CallStack<FRAME, BASE>::showStack(FILE *stream)
 {
-    fprintf(stderr, "mTop: %d skippedTime: %llu\n", mTop, mSkippedTime);
+    fprintf(stream, "mTop: %d skippedTime: %llu\n", mTop, mSkippedTime);
     for (int ii = 0; ii < mTop; ++ii) {
-        fprintf(stderr, "  %d: t %d gt %d f %x 0x%08x 0x%08x %s\n",
+        uint32_t addr = mFrames[ii].function->addr;
+        addr += mFrames[ii].function->region->vstart;
+        fprintf(stream, "  %d: t %d gt %d f %x 0x%08x 0x%08x %s\n",
                 ii, mFrames[ii].time, mFrames[ii].global_time,
                 mFrames[ii].flags,
-                mFrames[ii].addr, mFrames[ii].function->addr,
+                mFrames[ii].addr, addr,
                 mFrames[ii].function->name);
     }
 }
 
 template<class FRAME, class BASE>
-void CallStack<FRAME, BASE>::showSnapshotStack()
+void CallStack<FRAME, BASE>::showSnapshotStack(FILE *stream)
 {
-    fprintf(stderr, "mSnapshotTop: %d\n", mSnapshotTop);
+    fprintf(stream, "mSnapshotTop: %d\n", mSnapshotTop);
     for (int ii = 0; ii < mSnapshotTop; ++ii) {
-        fprintf(stderr, "  %d: t %d f %x 0x%08x 0x%08x %s\n",
+        fprintf(stream, "  %d: t %d f %x 0x%08x 0x%08x %s\n",
                 ii, mSnapshotFrames[ii].time, mSnapshotFrames[ii].flags,
                 mSnapshotFrames[ii].addr, mSnapshotFrames[ii].function->addr,
                 mSnapshotFrames[ii].function->name);
