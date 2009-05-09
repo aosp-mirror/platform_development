@@ -1,5 +1,3 @@
 android-toolchain-20090323.tar.bz2
 d56abac4df36271ae0c961d21d0847db
-/home/digit/android/ndk/android-toolchain-20090323.tar.bz2
-//Filer/home/digit/android/ndk/android-toolchain-20090323.tar.bz2
-ssh://mounini.par:/home/digit/android/ndk/android-toolchain-20090323.tar.bz2
+http://android.git.kernel.org/pub/android-toolchain-20090323.tar.bz2
