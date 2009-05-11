@@ -149,28 +149,14 @@ for SYSTEM in $PREBUILT_SYSTEMS; do
         exit 1
     fi
 
-    case $SYSTEM in
-        # prefer zip format for windows and darwin
-        windows|darwin-*)
-            ARCHIVE=$BIN_RELEASE.zip
-            echo "Creating $ARCHIVE"
-            (cd $TMPDIR && zip -9qr $ARCHIVE $RELEASE_PREFIX && rm -rf $DSTDIR) 2>/dev/null 1>&2
-            if [ $? != 0 ] ; then
-                echo "Could not create zip archive. Aborting."
-                exit 1
-            fi
-            ;;
-        # or tar.bz2 for others
-        *)
-            ARCHIVE=$BIN_RELEASE.tar.bz2
-            echo "Creating $ARCHIVE"
-            (cd $TMPDIR && tar cjf $ARCHIVE $RELEASE_PREFIX && rm -rf $DSTDIR) 2>/dev/null 1>&2
-            if [ $? != 0 ] ; then
-                echo "Could not create archive. Aborting."
-                exit 1
-            fi
-            ;;
-    esac
+    ARCHIVE=$BIN_RELEASE.zip
+    echo "Creating $ARCHIVE"
+    (cd $TMPDIR && zip -9qr $ARCHIVE $RELEASE_PREFIX && rm -rf $DSTDIR) 2>/dev/null 1>&2
+    if [ $? != 0 ] ; then
+        echo "Could not create zip archive. Aborting."
+        exit 1
+    fi
+
     chmod a+r $TMPDIR/$ARCHIVE
 done
 
