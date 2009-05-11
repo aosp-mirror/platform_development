@@ -201,7 +201,7 @@ TARGET_ARCH
 
 TARGET_PLATFORM
     Name of the target Android platform when this Android.mk is parsed.
-    For now, only 'cupcake' is supported.
+    For now, only 'android-1.5' is supported.
 
 TARGET_ARCH_ABI
     Name of the target CPU+ABI when this Android.mk is parsed.
@@ -219,7 +219,7 @@ TARGET_ABI
     as $(TARGET_PLATFORM)-$(TARGET_ARCH_ABI) and is useful when you want
     to test against a specific target system image for a real device.
 
-    By default, this will be 'cupcake-arm'
+    By default, this will be 'android-1.5-arm'
 
 
 NDK-provided function macros:
