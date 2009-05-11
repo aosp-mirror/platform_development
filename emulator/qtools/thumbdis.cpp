@@ -46,7 +46,7 @@ struct thumb_opcode
 {
     unsigned short value, mask;  /* recognise instruction if (op&mask)==value */
     Opcode opcode;
-    char * assembler;            /* how to disassemble this instruction */
+    const char * assembler;      /* how to disassemble this instruction */
 };
 
 /* format of the assembler string :
@@ -216,7 +216,7 @@ static struct thumb_opcode thumb_opcodes[] =
 #define BDISP23(x,y) ((((((x) & 0x07ff) << 11) | ((y) & 0x07ff)) \
                      ^ 0x200000) - 0x200000) /* 23bit */
 
-static char * arm_conditional[] =
+static const char * arm_conditional[] =
 {"eq", "ne", "cs", "cc", "mi", "pl", "vs", "vc",
  "hi", "ls", "ge", "lt", "gt", "le", "", "nv"};
 
@@ -281,7 +281,7 @@ char *disasm_insn_thumb(uint32_t pc, uint32_t insn1, uint32_t insn2, char *resul
         if ((insn1 & insn->mask) != insn->value)
             continue;
 
-        char * c = insn->assembler;
+        const char * c = insn->assembler;
 
         /* Special processing for Thumb 2-instruction BL sequence:  */
         if (!*c) { /* Check for empty (not NULL) assembler string.  */
