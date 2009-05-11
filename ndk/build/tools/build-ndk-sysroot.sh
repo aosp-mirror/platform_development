@@ -166,7 +166,7 @@ rm -rf $LIB_ROOT
 mkdir -p $LIB_ROOT
 cp -f $CRT_OBJS $STATIC_LIBS $DYNAMIC_LIBS $LIB_ROOT
 
-# Check $TOP/bionic to see if this is new layout in cupcake.
+# Check $TOP/bionic to see if this is new source layout.
 if [ -d $TOP/bionic ] ;then
   BIONIC_ROOT=$TOP/bionic
   LIBC_ROOT=$BIONIC_ROOT/libc
