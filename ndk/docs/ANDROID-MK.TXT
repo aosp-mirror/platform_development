@@ -344,12 +344,6 @@ LOCAL_STATIC_LIBRARIES
     that should be linked to this module. This only makes sense in
     shared library modules. 
 
-LOCAL_STATIC_WHOLE_LIBRARIES
-    A variant of LOCAL_STATIC_LIBRARIES, but which contains a list of
-    static libraries which will be linked into the target module
-    with the --whole-archive GNU ld linker option. If you don't know
-    what this means, you don't need this variable :-)
-
 LOCAL_SHARED_LIBRARIES
     The list of shared libraries *modules* this module depends on at runtime.
     This is necessary at link time and to embed the corresponding information
