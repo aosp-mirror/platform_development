@@ -42,6 +42,14 @@ inline bool IsValidEvent(BBEvent *event, symbol_type *sym)
   return true;
 }
 
+inline bool IsValidPid(int pid) {
+  if (include_some_pids && pid_include_vector.GetBit(pid) == 0)
+    return false;
+  if (exclude_some_pids && pid_exclude_vector.GetBit(pid))
+    return false;
+  return true;
+}
+
 inline symbol_type *GetSymbol(TraceReaderType *trace, int pid, uint32_t addr,
                               uint64_t time)
 {
