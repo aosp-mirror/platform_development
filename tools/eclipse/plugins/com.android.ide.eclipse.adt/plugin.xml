@@ -73,7 +73,7 @@
          name="AndroidNature"
          point="org.eclipse.core.resources.natures">
       <runtime>
-         <run class="com.android.ide.eclipse.adt.project.AndroidNature"/>
+         <run class="com.android.ide.eclipse.adt.internal.project.AndroidNature"/>
       </runtime>
       <builder id="com.android.ide.eclipse.adt.ResourceManagerBuilder"/>
       <builder id="com.android.ide.eclipse.adt.PreCompilerBuilder"/>
@@ -209,7 +209,7 @@
             </not>
          </visibility>
          <action
-               class="com.android.ide.eclipse.adt.project.ConvertToAndroidAction"
+               class="com.android.ide.eclipse.adt.internal.actions.ConvertToAndroidAction"
                enablesFor="1"
                id="com.android.ide.eclipse.adt.ConvertToAndroidAction"
                label="Convert To Android Project"
@@ -250,19 +250,19 @@
                tooltip="Opens a wizard to help create a new Android Test Project">
          </action>
          <action
-               class="com.android.ide.eclipse.adt.project.ExportAction"
+               class="com.android.ide.eclipse.adt.wizards.actions.ExportAction"
                enablesFor="1"
                id="com.android.ide.eclipse.adt.project.ExportAction"
                label="Export Unsigned Application Package..."
                menubarPath="com.android.ide.eclipse.adt.AndroidTools/group2"/>
          <action
-               class="com.android.ide.eclipse.adt.project.ExportWizardAction"
+               class="com.android.ide.eclipse.adt.wizards.actions.ExportWizardAction"
                enablesFor="1"
                id="com.android.ide.eclipse.adt.project.ExportWizardAction"
                label="Export Signed Application Package..."
                menubarPath="com.android.ide.eclipse.adt.AndroidTools/group2"/>
          <action
-               class="com.android.ide.eclipse.adt.project.FixProjectAction"
+               class="com.android.ide.eclipse.adt.internal.actions.FixProjectAction"
                enablesFor="1"
                id="com.android.ide.eclipse.adt.project.FixProjectAction"
                label="Fix Project Properties"
@@ -335,11 +335,11 @@
    <extension
          point="org.eclipse.jdt.core.classpathContainerInitializer">
       <classpathContainerInitializer
-            class="com.android.ide.eclipse.adt.project.internal.AndroidClasspathContainerInitializer"
+            class="com.android.ide.eclipse.adt.internal.project.AndroidClasspathContainerInitializer"
             id="com.android.ide.eclipse.adt.project.AndroidClasspathContainerInitializer">
       </classpathContainerInitializer>
       <classpathContainerInitializer
-            class="com.android.ide.eclipse.adt.project.internal.AndroidClasspathContainerInitializer"
+            class="com.android.ide.eclipse.adt.internal.project.AndroidClasspathContainerInitializer"
             id="com.android.ide.eclipse.adt.ANDROID_FRAMEWORK">
       </classpathContainerInitializer>
    </extension>
@@ -351,7 +351,7 @@
       </category>
       <wizard
             category="com.android.ide.eclipse.wizards.category"
-            class="com.android.ide.eclipse.adt.project.export.ExportWizard"
+            class="com.android.ide.eclipse.adt.wizards.export.ExportWizard"
             icon="icons/android.png"
             id="com.android.ide.eclipse.adt.project.ExportWizard"
             name="Export Android Application">
@@ -388,7 +388,7 @@
          point="org.eclipse.ui.decorators">
       <decorator
             adaptable="true"
-            class="com.android.ide.eclipse.adt.project.FolderDecorator"
+            class="com.android.ide.eclipse.adt.internal.project.FolderDecorator"
             id="com.android.ide.eclipse.adt.project.FolderDecorator"
             label="Android Decorator"
             lightweight="true"
@@ -479,7 +479,7 @@
          point="org.eclipse.ui.propertyPages">
       <page
             adaptable="true"
-            class="com.android.ide.eclipse.adt.project.properties.AndroidPropertyPage"
+            class="com.android.ide.eclipse.adt.internal.properties.AndroidPropertyPage"
             id="com.android.ide.eclipse.adt.project.properties.AndroidPropertyPage"
             name="Android"
             nameFilter="*"
@@ -557,7 +557,7 @@
               <separator name="android"/> 
          </menu> 
          <action
-               class="com.android.ide.eclipse.adt.refactorings.extractstring.ExtractStringAction"
+               class="com.android.ide.eclipse.adt.internal.refactorings.extractstring.ExtractStringAction"
                definitionId="com.android.ide.eclipse.adt.refactoring.extract.string"
                id="com.android.ide.eclipse.adt.actions.ExtractString"
                label="Extract Android String..."
@@ -670,7 +670,7 @@
    <extension
          point="org.eclipse.ltk.core.refactoring.refactoringContributions">
       <contribution
-            class="com.android.ide.eclipse.adt.refactorings.extractstring.ExtractStringContribution"
+            class="com.android.ide.eclipse.adt.internal.refactorings.extractstring.ExtractStringContribution"
             id="com.android.ide.eclipse.adt.refactoring.extract.string">
       </contribution>
    </extension>

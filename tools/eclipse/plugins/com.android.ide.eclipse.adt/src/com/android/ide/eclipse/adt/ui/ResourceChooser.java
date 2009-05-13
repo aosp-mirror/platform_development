@@ -16,8 +16,8 @@
 
 package com.android.ide.eclipse.adt.ui;
 
-import com.android.ide.eclipse.adt.refactorings.extractstring.ExtractStringRefactoring;
-import com.android.ide.eclipse.adt.refactorings.extractstring.ExtractStringWizard;
+import com.android.ide.eclipse.adt.internal.refactorings.extractstring.ExtractStringRefactoring;
+import com.android.ide.eclipse.adt.internal.refactorings.extractstring.ExtractStringWizard;
 import com.android.ide.eclipse.common.resources.IResourceRepository;
 import com.android.ide.eclipse.common.resources.ResourceItem;
 import com.android.ide.eclipse.common.resources.ResourceType;

@@ -17,7 +17,7 @@
 package com.android.ide.eclipse.adt.sdk;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.project.internal.AndroidClasspathContainerInitializer;
+import com.android.ide.eclipse.adt.internal.project.AndroidClasspathContainerInitializer;
 import com.android.ide.eclipse.adt.sdk.AndroidTargetData.LayoutBridge;
 import com.android.ide.eclipse.editors.resources.manager.ResourceMonitor;
 import com.android.ide.eclipse.editors.resources.manager.ResourceMonitor.IProjectListener;
