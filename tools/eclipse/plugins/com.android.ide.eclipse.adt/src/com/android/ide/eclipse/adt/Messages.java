@@ -16,6 +16,10 @@ public class Messages extends NLS {
 
     public static String AdtPlugin_Parsing_Resources;
 
+    public static String Console_Data_Project_Tag;
+
+    public static String Console_Date_Tag;
+
     public static String Could_Not_Find;
 
     public static String Could_Not_Find_Folder;

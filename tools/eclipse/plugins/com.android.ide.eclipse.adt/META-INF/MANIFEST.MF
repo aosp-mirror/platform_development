@@ -54,7 +54,6 @@ Export-Package: com.android.ide.eclipse.adt;x-friends:="com.android.ide.eclipse.
  com.android.ide.eclipse.adt.sdk;x-friends:="com.android.ide.eclipse.tests",
  com.android.ide.eclipse.adt.wizards.newproject;x-friends:="com.android.ide.eclipse.tests",
  com.android.ide.eclipse.adt.ui;x-friends:="com.android.ide.eclipse.tests",
- com.android.ide.eclipse.common;x-friends:="com.android.ide.eclipse.tests",
  com.android.ide.eclipse.common.project;x-friends:="com.android.ide.eclipse.tests",
  com.android.ide.eclipse.common.resources;x-friends:="com.android.ide.eclipse.tests",
  com.android.ide.eclipse.editors;x-friends:="com.android.ide.eclipse.tests",
