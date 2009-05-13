@@ -20,7 +20,7 @@ import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.ISdkLog;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.IAndroidTarget.IOptionalLibrary;
-import com.android.sdklib.project.ProjectProperties;
+import com.android.sdklib.internal.project.ProjectProperties;
 
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;

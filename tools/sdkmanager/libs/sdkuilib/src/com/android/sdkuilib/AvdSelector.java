@@ -17,7 +17,7 @@
 package com.android.sdkuilib;
 
 import com.android.sdklib.IAndroidTarget;
-import com.android.sdklib.avd.AvdManager.AvdInfo;
+import com.android.sdklib.internal.avd.AvdManager.AvdInfo;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ControlAdapter;

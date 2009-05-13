@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package com.android.sdklib.project;
+package com.android.sdklib.internal.project;
 
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.ISdkLog;
 import com.android.sdklib.SdkConstants;
-import com.android.sdklib.project.ProjectProperties.PropertyType;
+import com.android.sdklib.internal.project.ProjectProperties.PropertyType;
 
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;

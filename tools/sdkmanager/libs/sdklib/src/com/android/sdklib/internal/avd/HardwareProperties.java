@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.sdklib.avd;
+package com.android.sdklib.internal.avd;
 
 import com.android.sdklib.ISdkLog;
 
