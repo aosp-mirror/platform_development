@@ -1,0 +1,29 @@
+page.title=Early Suspend
+pdk.version=1.0
+@jd:body
+<p>The early-suspend API allows drivers to get notified when user-space writes to <code>/sys/power/request_state</code> to indicate that the user visible sleep state should change. Suspend handlers are called in order of low to high (4 - 1 below) and resume handlers are called in order of high to low (1 - 4 below).</p>
+<ol>
+  <li><code>EARLY_SUSPEND_LEVEL_BLANK_SCREEN</code>: </li>
+  <ul>
+    <li>on suspend: the screen should be turned off but the framebuffer must still be accessible. </li>
+    <li>on resume: the screen can be turned back on.</li>
+  </ul>
+  <li><code>EARLY_SUSPEND_LEVEL_STOP_DRAWING</code>:
+    <ul>
+      <li>on suspend: this level notifies user-space that it should stop accessing the framebuffer and it waits for it to complete.</li>
+      <li>on resume: it notifies user-space that it should resume screen access. Two methods are provided, console switch or a sysfs interface.</li>
+    </ul>
+  </li>
+  <li><code>EARLY_SUSPEND_LEVEL_DISABLE_FB</code>: Turn off the framebuffer
+    <ul>
+      <li>on suspend: turn off the framebuffer</li>
+      <li>on resume: turn the framebuffer back on. </li>
+    </ul>
+  </li>
+  <li><code>EARLY_SUSPEND_LEVEL_STOP_INPUT</code>:
+    <ul>
+      <li>on suspend: turn off input devices that are not capable of wakeup or where wakeup is disabled. </li>
+      <li>on resume: turn the same devices back on.</li>
+    </ul>
+  </li>
+</ol>
