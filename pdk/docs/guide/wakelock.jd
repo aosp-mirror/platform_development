@@ -1,0 +1,77 @@
+page.title=Wakelocks
+pdk.version=1.0
+@jd:body
+
+
+<a name="toc"/>
+<div style="padding:10px">
+  <a href="#intro">Introduction</a><BR>
+  <a href="#driverAPI">Driver API</a><br/>
+  <a href="#userspaceAPI">User Space API</a><br/>
+</div>
+
+  <a name="userspaceAPI"></a><h2>Introduction</h2>
+<p>A locked wakelock, depending on its type, prevents the system from entering suspend or other low-power states. This document describes how to employ wakelocks. </p>
+<p>There are two settings for a wakelock:</p>
+<ul>
+  <li><code>WAKE_LOCK_SUSPEND</code>: prevents a full system suspend. </li>
+  <li><code></code><code>WAKE_LOCK_IDLE</code>: low-power states, which often cause large interrupt latencies or that disable a set of interrupts, will not be entered from idle until the wakelocks are released. </li>
+</ul>
+<p>Unless the type is specified, this document refers to wakelocks of type <code>WAKE_LOCK_SUSPEND</code>. </p>
+<p>If the suspend operation has already started when locking a wakelock, the system will abort the suspend operation as long it has not already reached the <code>suspend_late</code> stage. This means that locking a wakelock from an interrupt handler or a freezeable thread always works, but if you lock a wakelock from a <code>suspend_late</code> handler, you must also return an error from that handler to abort suspend. You can use wakelocks to allow the user-space to decide which keys should wake the full system and turn on the screen. Use <code>set_irq_wake</code> or a platform-specific API to ensure that the keypad interrupt wakes up the CPU. Once the keypad driver has resumed, the sequence of events can look like this:</p>
+<ol>
+  <li> The Keypad driver receives an interrupt, locks the keypad-scan wakelock,
+    and starts scanning the keypad matrix. </li>
+  <li>The keypad-scan code detects a key change and reports it to the input-event
+    driver. </li>
+  <li>The input-event driver sees the key change, enqueues an event, and locks
+    the input-event-queue wakelock. </li>
+  <li>The keypad-scan code detects that no keys are held and unlocks the
+    keypad-scan wakelock. </li>
+  <li>The user-space input-event thread returns from select/poll, locks the
+    process-input-events wakelock, and calls read in the input-event device. </li>
+  <li>The input-event driver dequeues the key-event and, since the queue is now
+    empty, unlocks the input-event-queue wakelock. </li>
+  <li>The user-space input-event thread returns from read. It determines that the
+    key should not wake up the full system, releases the process-input-events
+    wakelock, and calls select or poll. </li>
+</ol>
+<p>The simple sequence diagram below illustrates these steps:</p>
+    <pre>
+     					Key pressed      Key released
+      					     |		      |
+      keypad-scan       		     ++++++++++++++++++++++
+      input-event-queue 			  +++ 		  +++
+      process-input-events 		            +++ 	    +++
+      </pre>
+
+<a name="driverAPI"></a><h2>Driver API</h2>
+<p>A driver can use the wakelock API by adding a wakelock variable to its state and calling <code>wake_lock_init</code>, as illustrated in the snippet below:</p>
+<pre class="prettify">
+  struct state {
+  struct wakelock wakelock;
+  }
+  init() {
+  wake_lock_init(&amp;state-&gt;wakelock, WAKE_LOCK_SUSPEND, &quot;wakelockname&quot;);
+  }
+  Before freeing the memory, wake_lock_destroy must be called:
+  uninit() {
+  wake_lock_destroy(&amp;state-&gt;wakelock);
+  }
+  </pre>
+<p> When the driver determines that it needs to run (usually in an interrupt handler), it calls <code>wake_lock</code>:</p>
+<pre class="prettify">
+  wake_lock(&amp;state-&gt;wakelock);
+  </pre>
+<p>When it no longer needs to run, it calls <code>wake_unlock</code>:</p>
+<pre class="prettify">
+  wake_unlock(&amp;state-&gt;wakelock);
+  </pre>
+<p> It can also call <code>wake_lock_timeout</code> to release the wakelock after a delay:</p>
+<pre class="prettify">
+  wake_lock_timeout(&amp;state-&gt;wakelock, HZ);
+</pre>
+<p> This works whether or not the wakelock is already held. It is useful if the driver woke up other parts of the system that do not use wakelocks but still need to run. Avoid this when possible, since it will waste power if the timeout is long or may fail to finish needed work if the timeout is short.</p>
+<a name="userspaceAPI"></a><h2>User-space API</h2>
+<p>Write <code>lockname</code> or <code>lockname timeout</code> to <code>/sys/power/wake_lock</code> lock and, if needed, create a wakelock. The timeout here is specified in nanoseconds. Write <code>lockname</code> to <code>/sys/power/wake_unlock</code> to unlock a user wakelock.</p>
+<p> Do not use randomly generated wakelock names as there is no API to free a user-space wakelock.</p>
