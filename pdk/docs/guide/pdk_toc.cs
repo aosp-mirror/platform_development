@@ -34,6 +34,8 @@
 <li> <h2>Power Management</h2> 
   <ul> 
 	<li><a href="<?cs var:toroot ?>guide/power_management.html">Power Management</a></li> 
+	<li><a href="<?cs var:toroot ?>guide/wakelock.html">Wakelocks</a></li> 
+	<li><a href="<?cs var:toroot ?>guide/early_suspend.html">Early Suspend</a></li> 
   </ul> 
 </li> 
 
@@ -47,7 +49,8 @@
 
 <li> <h2>Telephony</h2> 
   <ul> 
-	<li><a href="<?cs var:toroot ?>guide/telephony.html">Radio Interface Layer</a></li> 
+	<li><a href="<?cs var:toroot ?>guide/telephony.html">Radio Interface Layer</a></li>
+        <li><a href="<?cs var:toroot ?>guide/stk.html">SIM Toolkit Application (STK)</a></li>
   </ul> 
 </li> 
 
@@ -63,6 +66,13 @@
     <li><a href="<?cs var:toroot ?>guide/debugging_native.html">Debugging Native Code</a></li>
   </ul>
 </li>
+
+<li> <h2>Customization</h2> 
+  <ul> 
+	<li><a href="<?cs var:toroot ?>guide/customization.html">Customization</a></li> 
+  </ul> 
+</li> 
+
 </ul>
 
 <script type="text/javascript">
