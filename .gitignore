@@ -1,4 +1,5 @@
 *~
+*.bak
 *.pyc
 Thumbs.db
 
