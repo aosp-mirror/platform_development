@@ -24,8 +24,8 @@ import com.android.prefs.AndroidLocation;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.ISdkLog;
-import com.android.sdklib.avd.AvdManager;
-import com.android.sdklib.avd.AvdManager.AvdInfo;
+import com.android.sdklib.internal.avd.AvdManager;
+import com.android.sdklib.internal.avd.AvdManager.AvdInfo;
 import com.android.sdkuilib.AvdSelector;
 import com.android.sdkuilib.AvdSelector.SelectionMode;
 
@@ -67,7 +67,7 @@ class AvdManagerListPage extends WizardPage {
     private HashSet<String> mKnownAvdNames = new HashSet<String>();
     private TreeMap<String, IAndroidTarget> mCurrentTargets = new TreeMap<String, IAndroidTarget>();
     private ITargetChangeListener mSdkTargetChangeListener;
-    
+
     /**
      * Constructs a new {@link AvdManagerListPage}.
      * <p/>
@@ -80,9 +80,9 @@ class AvdManagerListPage extends WizardPage {
 
     /**
      * Called by the parent Wizard to create the UI for this Wizard Page.
-     * 
+     *
      * {@inheritDoc}
-     * 
+     *
      * @see org.eclipse.jface.dialogs.IDialogPage#createControl(org.eclipse.swt.widgets.Composite)
      */
     public void createControl(Composite parent) {
@@ -108,7 +108,7 @@ class AvdManagerListPage extends WizardPage {
         reloadTargetCombo();
         validatePage();
     }
-    
+
     private void registerSdkChangeListener() {
 
         mSdkTargetChangeListener = new ITargetChangeListener() {
@@ -123,9 +123,9 @@ class AvdManagerListPage extends WizardPage {
                 reloadTargetCombo();
                 validatePage();
             }
-        };        
+        };
         AdtPlugin.getDefault().addTargetListener(mSdkTargetChangeListener);
-        
+
     }
 
     @Override
@@ -134,7 +134,7 @@ class AvdManagerListPage extends WizardPage {
             AdtPlugin.getDefault().removeTargetListener(mSdkTargetChangeListener);
             mSdkTargetChangeListener = null;
         }
-        
+
         super.dispose();
     }
 
@@ -147,7 +147,7 @@ class AvdManagerListPage extends WizardPage {
         final Composite grid2 = new Composite(parent, SWT.NONE);
         grid2.setLayout(new GridLayout(2,  false /*makeColumnsEqualWidth*/));
         grid2.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-        
+
         Label label = new Label(grid2, SWT.NONE);
         label.setText("List of existing Android Virtual Devices:");
         label.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, true, false));
@@ -178,12 +178,12 @@ class AvdManagerListPage extends WizardPage {
                     }
             });
     }
-    
+
     /**
      * Creates the "Create" group
      */
     private void createCreateGroup(Composite parent) {
-        
+
         Group grid = new Group(parent, SWT.SHADOW_ETCHED_IN);
         grid.setLayout(new GridLayout(4,  false /*makeColumnsEqualWidth*/));
         grid.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
@@ -194,14 +194,14 @@ class AvdManagerListPage extends WizardPage {
 
         Label label = new Label(grid, SWT.NONE);
         label.setText("Name");
-        
+
         mCreateName = new Text(grid, SWT.BORDER);
         mCreateName.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         mCreateName.addModifyListener(new CreateNameModifyListener());
 
         label = new Label(grid, SWT.NONE);
         label.setText("Target");
-        
+
         mCreateTargetCombo = new Combo(grid, SWT.READ_ONLY | SWT.DROP_DOWN);
         mCreateTargetCombo.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         mCreateTargetCombo.addSelectionListener(new SelectionAdapter() {
@@ -210,30 +210,30 @@ class AvdManagerListPage extends WizardPage {
                 super.widgetSelected(e);
                 reloadSkinCombo();
                 validatePage();
-            } 
+            }
         });
 
         // second line
-        
+
         label = new Label(grid, SWT.NONE);
         label.setText("SDCard");
-        
+
         ValidateListener validateListener = new ValidateListener();
-        
+
         mCreateSdCard = new Text(grid, SWT.BORDER);
         mCreateSdCard.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         mCreateSdCard.addModifyListener(validateListener);
 
         label = new Label(grid, SWT.NONE);
         label.setText("Skin");
-        
+
         mCreateSkinCombo = new Combo(grid, SWT.READ_ONLY | SWT.DROP_DOWN);
         mCreateSkinCombo.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-        
+
         // dummies for alignment
         label = new Label(grid, SWT.NONE);
-        label = new Label(grid, SWT.NONE);        
-        
+        label = new Label(grid, SWT.NONE);
+
         mCreateForce = new Button(grid, SWT.CHECK);
         mCreateForce.setText("Force");
         mCreateForce.setEnabled(false);
@@ -250,7 +250,7 @@ class AvdManagerListPage extends WizardPage {
             }
         });
     }
-    
+
     /**
      * Callback when the AVD name is changed.
      * Enables the force checkbox if the name is a duplicate.
@@ -268,34 +268,34 @@ class AvdManagerListPage extends WizardPage {
             validatePage();
         }
     }
-    
+
     private class ValidateListener extends SelectionAdapter implements ModifyListener {
 
         public void modifyText(ModifyEvent e) {
             validatePage();
         }
-        
+
         @Override
         public void widgetSelected(SelectionEvent e) {
             super.widgetSelected(e);
             validatePage();
         }
     }
-    
+
     private void reloadTargetCombo() {
-        
+
         String selected = null;
         int index = mCreateTargetCombo.getSelectionIndex();
         if (index >= 0) {
             selected = mCreateTargetCombo.getItem(index);
         }
-        
+
         mCurrentTargets.clear();
         mCreateTargetCombo.removeAll();
 
         boolean found = false;
         index = -1;
-        
+
         Sdk sdk = Sdk.getCurrent();
         if (sdk != null) {
             for (IAndroidTarget target : sdk.getTargets()) {
@@ -312,11 +312,11 @@ class AvdManagerListPage extends WizardPage {
         }
 
         mCreateTargetCombo.setEnabled(mCurrentTargets.size() > 0);
-        
+
         if (found) {
             mCreateTargetCombo.select(index);
         }
-        
+
         reloadSkinCombo();
     }
 
@@ -326,13 +326,13 @@ class AvdManagerListPage extends WizardPage {
         if (index >= 0) {
             selected = mCreateSkinCombo.getItem(index);
         }
-        
+
         mCreateSkinCombo.removeAll();
         mCreateSkinCombo.setEnabled(false);
-        
+
         index = mCreateTargetCombo.getSelectionIndex();
         if (index >= 0) {
-            
+
             String targetName = mCreateTargetCombo.getItem(index);
 
             boolean found = false;
@@ -371,7 +371,7 @@ class AvdManagerListPage extends WizardPage {
         String warning = null;
 
 
-        // Validate AVD name 
+        // Validate AVD name
         String avdName = mCreateName.getText().trim();
         boolean hasAvdName = avdName.length() > 0;
         if (hasAvdName && !AvdManager.RE_AVD_NAME.matcher(avdName).matches()) {
@@ -379,7 +379,7 @@ class AvdManagerListPage extends WizardPage {
                 "AVD name '%1$s' contains invalid characters. Allowed characters are: %2$s",
                 avdName, AvdManager.CHARS_AVD_NAME);
         }
-        
+
         // Validate target
         if (hasAvdName && error == null && mCreateTargetCombo.getSelectionIndex() < 0) {
             error = "A target must be selected in order to create an AVD.";
@@ -388,14 +388,14 @@ class AvdManagerListPage extends WizardPage {
         // Validate SDCard path or value
         if (error == null) {
             String sdName = mCreateSdCard.getText().trim();
-            
+
             if (sdName.length() > 0 &&
                     !new File(sdName).isFile() &&
                     !AvdManager.SDCARD_SIZE_PATTERN.matcher(sdName).matches()) {
-                error = "SD Card must be either a file path or a size such as 128K or 64M.";                
+                error = "SD Card must be either a file path or a size such as 128K or 64M.";
             }
         }
-        
+
         // Check for duplicate AVD name
         if (hasAvdName && error == null) {
             if (mKnownAvdNames.contains(avdName) && !mCreateForce.getSelection()) {
@@ -405,7 +405,7 @@ class AvdManagerListPage extends WizardPage {
                         avdName);
             }
         }
-        
+
         // Validate the create button
         boolean can_create = hasAvdName && error == null;
         if (can_create) {
@@ -434,7 +434,7 @@ class AvdManagerListPage extends WizardPage {
 
         AvdManager avdm = getAvdManager();
         AvdInfo[] avds = null;
-        
+
         // For the AVD manager to reload the list, in case AVDs where created using the
         // command line tool.
         // The AVD manager may not exist yet, typically when loading the SDK.
@@ -447,7 +447,7 @@ class AvdManagerListPage extends WizardPage {
 
             avds = avdm.getValidAvds();
         }
-        
+
         mAvdSelector.setAvds(avds, null /*filter*/);
 
         // Keep the list of known AVD names to check if they exist quickly. however
@@ -462,7 +462,7 @@ class AvdManagerListPage extends WizardPage {
                 }
             }
         }
-        
+
         mAvdSelector.setSelection(selected);
     }
 
@@ -476,7 +476,7 @@ class AvdManagerListPage extends WizardPage {
         if (avdInfo == null || avdm == null) {
             return;
         }
-        
+
         // Confirm you want to delete this AVD
         if (!AdtPlugin.displayPrompt("Delete Android Virtual Device",
                 String.format("Please confirm that you want to delete the Android Virtual Device named '%s'. This operation cannot be reverted.",
@@ -485,9 +485,9 @@ class AvdManagerListPage extends WizardPage {
         }
 
         SdkLog log = new SdkLog(String.format("Result of deleting AVD '%s':", avdInfo.getName()));
-        
+
         boolean success = avdm.deleteAvd(avdInfo, log);
-        
+
         log.display(success);
         reloadAvdList();
     }
@@ -514,13 +514,13 @@ class AvdManagerListPage extends WizardPage {
         if (target == null) {
             return;
         }
-        
+
         String skinName = null;
         if (skinIndex > 0) {
             // index 0 is the default, we don't use it
             skinName = mCreateSkinCombo.getItem(skinIndex);
         }
-        
+
         SdkLog log = new SdkLog(String.format("Result of creating AVD '%s':", avdName));
 
         File avdFolder;
@@ -541,9 +541,9 @@ class AvdManagerListPage extends WizardPage {
             // takes a logger argument.
             // TODO revisit this later. See comments in AvdManager#mSdkLog.
             oldLog = avdm.setSdkLog(log);
-            
+
             AvdInfo avdInfo = avdm.createAvd(
-                    avdFolder, 
+                    avdFolder,
                     avdName,
                     target,
                     skinName,
@@ -552,13 +552,13 @@ class AvdManagerListPage extends WizardPage {
                     force);
 
             success = avdInfo != null;
-            
+
         } finally {
             avdm.setSdkLog(oldLog);
         }
-                
+
         log.display(success);
-        
+
         if (success) {
             // clear the name field on success
             mCreateName.setText("");  //$NON-NLS-1$
@@ -571,19 +571,19 @@ class AvdManagerListPage extends WizardPage {
      * Collects all log from the AVD action and displays it in a dialog.
      */
     private class SdkLog implements ISdkLog {
-        
+
         final ArrayList<String> logMessages = new ArrayList<String>();
         private final String mMessage;
 
         public SdkLog(String message) {
             mMessage = message;
         }
-        
+
         public void error(Throwable throwable, String errorFormat, Object... arg) {
             if (errorFormat != null) {
                 logMessages.add(String.format("Error: " + errorFormat, arg));
             }
-            
+
             if (throwable != null) {
                 logMessages.add(throwable.getMessage());
             }
@@ -592,7 +592,7 @@ class AvdManagerListPage extends WizardPage {
         public void warning(String warningFormat, Object... arg) {
             logMessages.add(String.format("Warning: " + warningFormat, arg));
         }
-        
+
         public void printf(String msgFormat, Object... arg) {
             logMessages.add(String.format(msgFormat, arg));
         }
@@ -613,7 +613,7 @@ class AvdManagerListPage extends WizardPage {
                     AdtPlugin.displayError("Android Virtual Devices Manager", sb.toString());
                 }
             }
-        }        
+        }
     }
 
     /**

@@ -31,8 +31,8 @@ import com.android.ide.eclipse.common.project.AndroidManifestParser;
 import com.android.ide.eclipse.common.project.AndroidManifestParser.Activity;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkConstants;
-import com.android.sdklib.project.ProjectProperties;
-import com.android.sdklib.project.ProjectProperties.PropertyType;
+import com.android.sdklib.internal.project.ProjectProperties;
+import com.android.sdklib.internal.project.ProjectProperties.PropertyType;
 import com.android.sdkuilib.SdkTargetSelector;
 
 import org.eclipse.core.filesystem.URIUtil;
