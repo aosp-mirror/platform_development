@@ -17,7 +17,7 @@
 package com.android.ide.eclipse.editors.layout;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.common.AndroidConstants;
+import com.android.ide.eclipse.adt.AndroidConstants;
 import com.android.ide.eclipse.common.project.AndroidManifestParser;
 import com.android.ide.eclipse.editors.resources.manager.ProjectClassLoader;
 import com.android.ide.eclipse.editors.resources.manager.ProjectResources;

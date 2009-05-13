@@ -16,7 +16,7 @@
 
 package com.android.ide.eclipse.editors.layout;
 
-import com.android.ide.eclipse.common.AndroidConstants;
+import com.android.ide.eclipse.adt.AndroidConstants;
 import com.android.ide.eclipse.editors.layout.descriptors.ViewElementDescriptor;
 import com.android.layoutlib.api.IXmlPullParser;
 import com.android.sdklib.SdkConstants;

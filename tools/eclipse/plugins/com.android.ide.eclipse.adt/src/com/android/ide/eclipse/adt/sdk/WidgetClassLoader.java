@@ -16,7 +16,7 @@
 
 package com.android.ide.eclipse.adt.sdk;
 
-import com.android.ide.eclipse.common.AndroidConstants;
+import com.android.ide.eclipse.adt.AndroidConstants;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 

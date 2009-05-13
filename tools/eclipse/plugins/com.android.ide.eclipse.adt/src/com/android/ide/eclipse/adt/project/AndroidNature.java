@@ -16,10 +16,10 @@
 
 package com.android.ide.eclipse.adt.project;
 
-import com.android.ide.eclipse.adt.build.ApkBuilder;
-import com.android.ide.eclipse.adt.build.PreCompilerBuilder;
-import com.android.ide.eclipse.adt.build.ResourceManagerBuilder;
-import com.android.ide.eclipse.common.AndroidConstants;
+import com.android.ide.eclipse.adt.AndroidConstants;
+import com.android.ide.eclipse.adt.internal.build.ApkBuilder;
+import com.android.ide.eclipse.adt.internal.build.PreCompilerBuilder;
+import com.android.ide.eclipse.adt.internal.build.ResourceManagerBuilder;
 
 import org.eclipse.core.resources.ICommand;
 import org.eclipse.core.resources.IProject;

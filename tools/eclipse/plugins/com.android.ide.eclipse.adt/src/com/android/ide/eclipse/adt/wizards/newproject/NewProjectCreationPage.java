@@ -23,10 +23,10 @@
 package com.android.ide.eclipse.adt.wizards.newproject;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.AndroidConstants;
 import com.android.ide.eclipse.adt.sdk.Sdk;
 import com.android.ide.eclipse.adt.sdk.Sdk.ITargetChangeListener;
 import com.android.ide.eclipse.adt.wizards.newproject.NewTestProjectCreationPage.TestInfo;
-import com.android.ide.eclipse.common.AndroidConstants;
 import com.android.ide.eclipse.common.project.AndroidManifestParser;
 import com.android.ide.eclipse.common.project.AndroidManifestParser.Activity;
 import com.android.sdklib.IAndroidTarget;

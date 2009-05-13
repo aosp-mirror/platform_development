@@ -16,7 +16,7 @@
 
 package com.android.ide.eclipse.adt.refactorings.extractstring;
 
-import com.android.ide.eclipse.common.AndroidConstants;
+import com.android.ide.eclipse.adt.AndroidConstants;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
