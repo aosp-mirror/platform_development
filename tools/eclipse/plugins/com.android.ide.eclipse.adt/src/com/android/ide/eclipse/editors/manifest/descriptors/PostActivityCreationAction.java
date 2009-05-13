@@ -16,7 +16,7 @@
 
 package com.android.ide.eclipse.editors.manifest.descriptors;
 
-import com.android.ide.eclipse.common.AndroidConstants;
+import com.android.ide.eclipse.adt.AndroidConstants;
 import com.android.ide.eclipse.editors.manifest.model.UiClassAttributeNode.IPostTypeCreationAction;
 
 import org.eclipse.core.runtime.NullProgressMonitor;

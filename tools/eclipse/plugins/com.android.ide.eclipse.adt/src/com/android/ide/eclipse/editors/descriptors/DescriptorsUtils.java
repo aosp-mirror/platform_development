@@ -16,7 +16,7 @@
 
 package com.android.ide.eclipse.editors.descriptors;
 
-import com.android.ide.eclipse.common.AndroidConstants;
+import com.android.ide.eclipse.adt.AndroidConstants;
 import com.android.ide.eclipse.common.resources.ResourceType;
 import com.android.ide.eclipse.common.resources.DeclareStyleableInfo.AttributeInfo;
 import com.android.ide.eclipse.common.resources.DeclareStyleableInfo.AttributeInfo.Format;

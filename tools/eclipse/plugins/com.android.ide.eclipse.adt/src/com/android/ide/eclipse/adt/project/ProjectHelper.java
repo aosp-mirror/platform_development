@@ -17,8 +17,8 @@
 package com.android.ide.eclipse.adt.project;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.AndroidConstants;
 import com.android.ide.eclipse.adt.project.internal.AndroidClasspathContainerInitializer;
-import com.android.ide.eclipse.common.AndroidConstants;
 import com.android.ide.eclipse.common.project.AndroidManifestParser;
 import com.android.ide.eclipse.common.project.BaseProjectHelper;
 

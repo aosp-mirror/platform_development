@@ -47,7 +47,7 @@
          point="org.eclipse.core.resources.builders">
       <builder
             hasNature="true">
-         <run class="com.android.ide.eclipse.adt.build.ResourceManagerBuilder"/>
+         <run class="com.android.ide.eclipse.adt.internal.build.ResourceManagerBuilder"/>
       </builder>
    </extension>
    <extension
@@ -56,7 +56,7 @@
          point="org.eclipse.core.resources.builders">
       <builder
             hasNature="true">
-         <run class="com.android.ide.eclipse.adt.build.PreCompilerBuilder"/>
+         <run class="com.android.ide.eclipse.adt.internal.build.PreCompilerBuilder"/>
       </builder>
    </extension>
    <extension
@@ -65,7 +65,7 @@
          point="org.eclipse.core.resources.builders">
       <builder
             hasNature="true">
-         <run class="com.android.ide.eclipse.adt.build.ApkBuilder"/>
+         <run class="com.android.ide.eclipse.adt.internal.build.ApkBuilder"/>
       </builder>
    </extension>
    <extension
@@ -123,7 +123,7 @@
    <extension
          point="org.eclipse.debug.core.launchConfigurationTypes">
       <launchConfigurationType
-            delegate="com.android.ide.eclipse.adt.launch.LaunchConfigDelegate"
+            delegate="com.android.ide.eclipse.adt.internal.launch.LaunchConfigDelegate"
             delegateDescription="The Android Application Launcher supports running and debugging remote Android applications on devices or emulators."
             delegateName="Android Launcher"
             id="com.android.ide.eclipse.adt.debug.LaunchConfigType"
@@ -144,7 +144,7 @@
    <extension
          point="org.eclipse.debug.ui.launchConfigurationTabGroups">
       <launchConfigurationTabGroup
-            class="com.android.ide.eclipse.adt.launch.LaunchConfigTabGroup"
+            class="com.android.ide.eclipse.adt.internal.launch.LaunchConfigTabGroup"
             description="Android Application"
             id="com.android.ide.eclipse.adt.debug.LaunchConfigTabGroup"
             type="com.android.ide.eclipse.adt.debug.LaunchConfigType"/>
@@ -153,7 +153,7 @@
          point="org.eclipse.debug.ui.launchShortcuts">
       <shortcut
             category="com.android.ide.eclipse.adt.launch.LaunchConfigType"
-            class="com.android.ide.eclipse.adt.launch.LaunchShortcut"
+            class="com.android.ide.eclipse.adt.internal.launch.LaunchShortcut"
             icon="icons/android.png"
             id="com.android.ide.eclipse.adt.debug.launching.LaunchShortcut"
             label="Android Application"
@@ -273,29 +273,29 @@
    <extension
          point="org.eclipse.ui.preferencePages">
       <page
-            class="com.android.ide.eclipse.adt.preferences.AndroidPreferencePage"
+            class="com.android.ide.eclipse.adt.internal.preferences.AndroidPreferencePage"
             id="com.android.ide.eclipse.preferences.main"
             name="Android"/>
       <page
             category="com.android.ide.eclipse.preferences.main"
-            class="com.android.ide.eclipse.adt.preferences.BuildPreferencePage"
+            class="com.android.ide.eclipse.adt.internal.preferences.BuildPreferencePage"
             id="com.android.ide.eclipse.adt.preferences.BuildPreferencePage"
             name="Build"/>
       <page
             category="com.android.ide.eclipse.preferences.main"
-            class="com.android.ide.eclipse.adt.preferences.LaunchPreferencePage"
+            class="com.android.ide.eclipse.adt.internal.preferences.LaunchPreferencePage"
             id="com.android.ide.eclipse.adt.preferences.LaunchPreferencePage"
             name="Launch"/>
       <page
             category="com.android.ide.eclipse.preferences.main"
-            class="com.android.ide.eclipse.common.preferences.UsagePreferencePage"
+            class="com.android.ide.eclipse.adt.internal.preferences.UsagePreferencePage"
             id="com.android.ide.eclipse.common.preferences.UsagePreferencePage"
             name="Usage Stats">
       </page>
    </extension>
    <extension
          point="org.eclipse.core.runtime.preferences">
-      <initializer class="com.android.ide.eclipse.adt.preferences.PreferenceInitializer"/>
+      <initializer class="com.android.ide.eclipse.adt.internal.preferences.PreferenceInitializer"/>
    </extension>
    <extension
          id="com.android.ide.eclipse.adt.adtProblem"
@@ -590,7 +590,7 @@
    <extension
          point="org.eclipse.debug.core.launchDelegates">
        <launchDelegate
-             delegate="com.android.ide.eclipse.adt.launch.JUnitLaunchConfigDelegate"
+             delegate="com.android.ide.eclipse.adt.internal.launch.JUnitLaunchConfigDelegate"
              delegateDescription="Removes the Android JAR from the Bootstrap Classpath"
              id="com.android.ide.eclipse.adt.launch.JUnitLaunchConfigDelegate.launchAndroidJunit"
              modes="run,debug"
@@ -601,7 +601,7 @@
    <extension
          point="org.eclipse.debug.core.launchConfigurationTypes">
       <launchConfigurationType
-            delegate="com.android.ide.eclipse.adt.launch.junit.AndroidJUnitLaunchConfigDelegate"
+            delegate="com.android.ide.eclipse.adt.internal.launch.junit.AndroidJUnitLaunchConfigDelegate"
             id="com.android.ide.eclipse.adt.junit.launchConfigurationType"
             modes="run,debug"
             name="Android JUnit Test"
@@ -621,7 +621,7 @@
    <extension
          point="org.eclipse.debug.ui.launchConfigurationTabGroups">
       <launchConfigurationTabGroup
-            class="com.android.ide.eclipse.adt.launch.junit.AndroidJUnitTabGroup"
+            class="com.android.ide.eclipse.adt.internal.launch.junit.AndroidJUnitTabGroup"
             description="Android JUnit Test"
             id="com.android.ide.eclipse.adt.junit.AndroidJUnitLaunchConfigTabGroup"
             type="com.android.ide.eclipse.adt.junit.launchConfigurationType"/>
@@ -629,7 +629,7 @@
    <extension
          point="org.eclipse.debug.ui.launchShortcuts">
       <shortcut
-            class="com.android.ide.eclipse.adt.launch.junit.AndroidJUnitLaunchShortcut"
+            class="com.android.ide.eclipse.adt.internal.launch.junit.AndroidJUnitLaunchShortcut"
             icon="icons/androidjunit.png"
             id="com.android.ide.eclipse.adt.junit.launchShortcut"
             label="Android JUnit Test"
@@ -680,7 +680,7 @@
             properties="isTest,canLaunchAsJUnit"
             namespace="com.android.ide.eclipse.adt"
             type="org.eclipse.core.runtime.IAdaptable"
-            class="com.android.ide.eclipse.adt.launch.junit.AndroidJUnitPropertyTester"
+            class="com.android.ide.eclipse.adt.internal.launch.junit.AndroidJUnitPropertyTester"
             id="com.android.ide.eclipse.adt.AndroidJUnitPropertyTester">
       </propertyTester>
    </extension>

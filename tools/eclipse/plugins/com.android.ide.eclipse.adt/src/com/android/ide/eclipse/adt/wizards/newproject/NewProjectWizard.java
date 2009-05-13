@@ -17,12 +17,12 @@
 package com.android.ide.eclipse.adt.wizards.newproject;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.AndroidConstants;
 import com.android.ide.eclipse.adt.project.AndroidNature;
 import com.android.ide.eclipse.adt.project.ProjectHelper;
 import com.android.ide.eclipse.adt.sdk.Sdk;
 import com.android.ide.eclipse.adt.wizards.newproject.NewProjectCreationPage.IMainInfo;
 import com.android.ide.eclipse.adt.wizards.newproject.NewTestProjectCreationPage.TestInfo;
-import com.android.ide.eclipse.common.AndroidConstants;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkConstants;
 

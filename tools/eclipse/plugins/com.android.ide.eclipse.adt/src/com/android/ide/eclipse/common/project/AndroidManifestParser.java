@@ -17,7 +17,7 @@
 package com.android.ide.eclipse.common.project;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.common.AndroidConstants;
+import com.android.ide.eclipse.adt.AndroidConstants;
 import com.android.ide.eclipse.common.project.XmlErrorHandler.XmlErrorListener;
 import com.android.sdklib.SdkConstants;
 

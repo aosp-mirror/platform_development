@@ -16,9 +16,9 @@
 
 package com.android.ide.eclipse.editors.layout.uimodel;
 
+import com.android.ide.eclipse.adt.AndroidConstants;
 import com.android.ide.eclipse.adt.sdk.AndroidTargetData;
 import com.android.ide.eclipse.adt.sdk.Sdk;
-import com.android.ide.eclipse.common.AndroidConstants;
 import com.android.ide.eclipse.editors.descriptors.AttributeDescriptor;
 import com.android.ide.eclipse.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.editors.descriptors.XmlnsAttributeDescriptor;

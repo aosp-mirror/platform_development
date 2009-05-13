@@ -17,7 +17,7 @@
 package com.android.ide.eclipse.adt.project;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.common.AndroidConstants;
+import com.android.ide.eclipse.adt.AndroidConstants;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectDescription;

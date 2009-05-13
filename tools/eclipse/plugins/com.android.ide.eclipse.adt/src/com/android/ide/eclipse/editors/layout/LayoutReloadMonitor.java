@@ -16,7 +16,7 @@
 
 package com.android.ide.eclipse.editors.layout;
 
-import com.android.ide.eclipse.common.AndroidConstants;
+import com.android.ide.eclipse.adt.AndroidConstants;
 import com.android.ide.eclipse.editors.resources.manager.ResourceFolder;
 import com.android.ide.eclipse.editors.resources.manager.ResourceFolderType;
 import com.android.ide.eclipse.editors.resources.manager.ResourceManager;

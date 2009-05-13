@@ -17,7 +17,7 @@
 package com.android.ide.eclipse.adt.project;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.launch.LaunchConfigDelegate;
+import com.android.ide.eclipse.adt.internal.launch.LaunchConfigDelegate;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;

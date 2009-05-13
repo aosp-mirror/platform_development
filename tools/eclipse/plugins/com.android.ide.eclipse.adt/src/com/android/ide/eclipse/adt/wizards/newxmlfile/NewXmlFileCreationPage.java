@@ -18,12 +18,12 @@
 package com.android.ide.eclipse.adt.wizards.newxmlfile;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.AndroidConstants;
 import com.android.ide.eclipse.adt.sdk.AndroidTargetData;
 import com.android.ide.eclipse.adt.sdk.Sdk;
 import com.android.ide.eclipse.adt.sdk.Sdk.ITargetChangeListener;
 import com.android.ide.eclipse.adt.ui.ConfigurationSelector;
 import com.android.ide.eclipse.adt.ui.ConfigurationSelector.ConfigurationState;
-import com.android.ide.eclipse.common.AndroidConstants;
 import com.android.ide.eclipse.common.project.ProjectChooserHelper;
 import com.android.ide.eclipse.editors.descriptors.DocumentDescriptor;
 import com.android.ide.eclipse.editors.descriptors.ElementDescriptor;

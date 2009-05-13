@@ -16,7 +16,6 @@
 
 package com.android.ide.eclipse.adt.sdk;
 
-import com.android.ide.eclipse.adt.build.DexWrapper;
 import com.android.ide.eclipse.common.resources.IResourceRepository;
 import com.android.ide.eclipse.editors.descriptors.IDescriptorProvider;
 import com.android.ide.eclipse.editors.layout.descriptors.LayoutDescriptors;

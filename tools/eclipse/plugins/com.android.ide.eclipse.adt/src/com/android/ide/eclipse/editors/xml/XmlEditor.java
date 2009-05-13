@@ -17,9 +17,9 @@
 package com.android.ide.eclipse.editors.xml;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.AndroidConstants;
 import com.android.ide.eclipse.adt.sdk.AndroidTargetData;
 import com.android.ide.eclipse.adt.sdk.Sdk;
-import com.android.ide.eclipse.common.AndroidConstants;
 import com.android.ide.eclipse.editors.AndroidEditor;
 import com.android.ide.eclipse.editors.FirstElementParser;
 import com.android.ide.eclipse.editors.descriptors.DocumentDescriptor;

@@ -17,9 +17,8 @@
 package com.android.ide.eclipse.adt.sdk;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.build.DexWrapper;
+import com.android.ide.eclipse.adt.AndroidConstants;
 import com.android.ide.eclipse.adt.sdk.AndroidTargetData.LayoutBridge;
-import com.android.ide.eclipse.common.AndroidConstants;
 import com.android.ide.eclipse.common.resources.AttrsXmlParser;
 import com.android.ide.eclipse.common.resources.DeclareStyleableInfo;
 import com.android.ide.eclipse.common.resources.IResourceRepository;
