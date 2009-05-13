@@ -23,12 +23,12 @@ import com.android.sdklib.ISdkLog;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.IAndroidTarget.IOptionalLibrary;
-import com.android.sdklib.avd.AvdManager;
-import com.android.sdklib.avd.HardwareProperties;
-import com.android.sdklib.avd.AvdManager.AvdInfo;
-import com.android.sdklib.avd.HardwareProperties.HardwareProperty;
-import com.android.sdklib.project.ProjectCreator;
-import com.android.sdklib.project.ProjectCreator.OutputLevel;
+import com.android.sdklib.internal.avd.AvdManager;
+import com.android.sdklib.internal.avd.HardwareProperties;
+import com.android.sdklib.internal.avd.AvdManager.AvdInfo;
+import com.android.sdklib.internal.avd.HardwareProperties.HardwareProperty;
+import com.android.sdklib.internal.project.ProjectCreator;
+import com.android.sdklib.internal.project.ProjectCreator.OutputLevel;
 
 import java.io.File;
 import java.io.IOException;

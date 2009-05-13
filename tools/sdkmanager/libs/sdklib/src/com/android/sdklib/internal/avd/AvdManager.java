@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.sdklib.avd;
+package com.android.sdklib.internal.avd;
 
 import com.android.prefs.AndroidLocation;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
@@ -22,7 +22,7 @@ import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.ISdkLog;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
-import com.android.sdklib.avd.AvdManager.AvdInfo.AvdStatus;
+import com.android.sdklib.internal.avd.AvdManager.AvdInfo.AvdStatus;
 
 import java.io.BufferedReader;
 import java.io.File;
