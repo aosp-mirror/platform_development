@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.sdklib.project;
+package com.android.sdklib.internal.project;
 
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkManager;

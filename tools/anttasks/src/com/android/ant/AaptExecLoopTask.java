@@ -16,9 +16,9 @@
 
 package com.android.ant;
 
-import com.android.sdklib.project.ApkConfigurationHelper;
-import com.android.sdklib.project.ProjectProperties;
-import com.android.sdklib.project.ProjectProperties.PropertyType;
+import com.android.sdklib.internal.project.ApkConfigurationHelper;
+import com.android.sdklib.internal.project.ProjectProperties;
+import com.android.sdklib.internal.project.ProjectProperties.PropertyType;
 
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;
