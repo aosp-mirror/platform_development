@@ -24,8 +24,8 @@ import com.android.ide.eclipse.common.project.BaseProjectHelper;
 import com.android.ide.eclipse.ddms.DdmsPlugin;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.IAndroidTarget;
-import com.android.sdklib.avd.AvdManager;
-import com.android.sdklib.avd.AvdManager.AvdInfo;
+import com.android.sdklib.internal.avd.AvdManager;
+import com.android.sdklib.internal.avd.AvdManager.AvdInfo;
 import com.android.sdkuilib.AvdSelector;
 import com.android.sdkuilib.AvdSelector.SelectionMode;
 
@@ -131,7 +131,7 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
      */
     public void createControl(Composite parent) {
         Font font = parent.getFont();
-        
+
         // reload the AVDs to make sure we are up to date
         try {
             Sdk.getCurrent().getAvdManager().reloadAvds();
@@ -150,7 +150,7 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
 
         GridData gd;
         GridLayout layout;
-        
+
         // radio button for the target mode
         Group targetModeGroup = new Group(topComp, SWT.NONE);
         targetModeGroup.setText("Deployment Target Selection Mode");
@@ -175,7 +175,7 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
             @Override
             public void widgetSelected(SelectionEvent e) {
                 updateLaunchConfigurationDialog();
-                
+
                 boolean auto = mAutoTargetButton.getSelection();
                 mPreferredAvdSelector.setEnabled(auto);
                 mPreferredAvdLabel.setEnabled(auto);
@@ -285,7 +285,7 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
                 updateLaunchConfigurationDialog();
             }
         });
-        
+
         // custom command line option for emulator
         Label l = new Label(mEmulatorOptionsGroup, SWT.NONE);
         l.setText("Additional Emulator Command Line Options");
@@ -316,12 +316,12 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
         return DdmsPlugin.getImageLoader().loadImage("emulator.png", null); //$NON-NLS-1$
     }
 
-    
+
     private void updateAvdList(AvdManager avdManager) {
         if (avdManager == null) {
             avdManager = Sdk.getCurrent().getAvdManager();
         }
-        
+
         AvdInfo[] avds = null;
         // no project? we don't want to display any "compatible" AVDs.
         if (avdManager != null && mProjectTarget != null) {
@@ -346,7 +346,7 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
         }
         mAutoTargetButton.setSelection(mode.getValue());
         mManualTargetButton.setSelection(!mode.getValue());
-        
+
         // look for the project name to get its target.
         String stringValue = "";
         try {
@@ -487,7 +487,7 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
                 LaunchConfigDelegate.DEFAULT_WIPE_DATA);
         configuration.setAttribute(LaunchConfigDelegate.ATTR_NO_BOOT_ANIM,
                 LaunchConfigDelegate.DEFAULT_NO_BOOT_ANIM);
-        
+
         IPreferenceStore store = AdtPlugin.getDefault().getPreferenceStore();
         String emuOptions = store.getString(AdtPlugin.PREFS_EMU_OPTIONS);
         configuration.setAttribute(LaunchConfigDelegate.ATTR_COMMANDLINE, emuOptions);
