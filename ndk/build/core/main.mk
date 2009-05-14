@@ -222,7 +222,7 @@ ANDROID_MK_INCLUDED := \
 # generated during the build. It will be updated by build scripts
 # when module definitions are parsed.
 #
-DEPENDENCY_DIRS :=
+ALL_DEPENDENCY_DIRS :=
 
 # this is the list of all generated files that we would need to clean
 ALL_HOST_EXECUTABLES      :=
@@ -290,5 +290,5 @@ clean-config:
 	$(hide) rm -f $(CONFIG_MAKE) $(CONFIG_H)
 
 # include dependency information
-DEPENDENCY_DIRS := $(sort $(DEPENDENCY_DIRS))
--include $(wildcard $(DEPENDENCY_DIRS:%=%/*.d))
+ALL_DEPENDENCY_DIRS := $(sort $(ALL_DEPENDENCY_DIRS))
+-include $(wildcard $(ALL_DEPENDENCY_DIRS:%=%/*.d))

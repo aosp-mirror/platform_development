@@ -120,5 +120,5 @@ $(foreach src,$(c_sources),   $(call compile-c-source,$(src)))
 $(foreach src,$(s_sources),   $(call compile-s-source,$(src)))
 $(foreach src,$(cpp_sources), $(call compile-cpp-source,$(src)))
 
-LOCAL_DEPENDENCY_DIRS := $(sort $(LOCAL_DEPENDENCY_DIRS))
-CLEAN_OBJS_DIRS       += $(LOCAL_OBJS_DIR)
+ALL_DEPENDENCY_DIRS += $(sort $(LOCAL_DEPENDENCY_DIRS))
+CLEAN_OBJS_DIRS     += $(LOCAL_OBJS_DIR)
