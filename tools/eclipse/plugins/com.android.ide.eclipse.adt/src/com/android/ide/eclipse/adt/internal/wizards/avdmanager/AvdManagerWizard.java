@@ -18,9 +18,9 @@
 
 package com.android.ide.eclipse.adt.internal.wizards.avdmanager;
 
+import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.ui.IUpdateWizardDialog;
 import com.android.ide.eclipse.adt.internal.ui.WizardDialogEx;
-import com.android.ide.eclipse.editors.IconFactory;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.IStructuredSelection;

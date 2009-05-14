@@ -19,20 +19,20 @@ package com.android.ide.eclipse.adt.internal.wizards.newxmlfile;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AndroidConstants;
+import com.android.ide.eclipse.adt.internal.editors.descriptors.DocumentDescriptor;
+import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
+import com.android.ide.eclipse.adt.internal.editors.descriptors.IDescriptorProvider;
+import com.android.ide.eclipse.adt.internal.editors.menu.descriptors.MenuDescriptors;
+import com.android.ide.eclipse.adt.internal.editors.resources.configurations.FolderConfiguration;
+import com.android.ide.eclipse.adt.internal.editors.resources.configurations.ResourceQualifier;
+import com.android.ide.eclipse.adt.internal.editors.resources.descriptors.ResourcesDescriptors;
+import com.android.ide.eclipse.adt.internal.editors.resources.manager.ResourceFolderType;
 import com.android.ide.eclipse.adt.internal.project.ProjectChooserHelper;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk.ITargetChangeListener;
 import com.android.ide.eclipse.adt.internal.ui.ConfigurationSelector;
 import com.android.ide.eclipse.adt.internal.ui.ConfigurationSelector.ConfigurationState;
-import com.android.ide.eclipse.editors.descriptors.DocumentDescriptor;
-import com.android.ide.eclipse.editors.descriptors.ElementDescriptor;
-import com.android.ide.eclipse.editors.descriptors.IDescriptorProvider;
-import com.android.ide.eclipse.editors.menu.descriptors.MenuDescriptors;
-import com.android.ide.eclipse.editors.resources.configurations.FolderConfiguration;
-import com.android.ide.eclipse.editors.resources.configurations.ResourceQualifier;
-import com.android.ide.eclipse.editors.resources.descriptors.ResourcesDescriptors;
-import com.android.ide.eclipse.editors.resources.manager.ResourceFolderType;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkConstants;
 

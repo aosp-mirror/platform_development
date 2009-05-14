@@ -16,14 +16,14 @@
 
 package com.android.ide.eclipse.adt.internal.sdk;
 
+import com.android.ide.eclipse.adt.internal.editors.descriptors.IDescriptorProvider;
+import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors;
+import com.android.ide.eclipse.adt.internal.editors.manifest.descriptors.AndroidManifestDescriptors;
+import com.android.ide.eclipse.adt.internal.editors.menu.descriptors.MenuDescriptors;
+import com.android.ide.eclipse.adt.internal.editors.resources.descriptors.ResourcesDescriptors;
+import com.android.ide.eclipse.adt.internal.editors.resources.manager.ProjectResources;
+import com.android.ide.eclipse.adt.internal.editors.xml.descriptors.XmlDescriptors;
 import com.android.ide.eclipse.adt.internal.resources.IResourceRepository;
-import com.android.ide.eclipse.editors.descriptors.IDescriptorProvider;
-import com.android.ide.eclipse.editors.layout.descriptors.LayoutDescriptors;
-import com.android.ide.eclipse.editors.manifest.descriptors.AndroidManifestDescriptors;
-import com.android.ide.eclipse.editors.menu.descriptors.MenuDescriptors;
-import com.android.ide.eclipse.editors.resources.descriptors.ResourcesDescriptors;
-import com.android.ide.eclipse.editors.resources.manager.ProjectResources;
-import com.android.ide.eclipse.editors.xml.descriptors.XmlDescriptors;
 import com.android.layoutlib.api.ILayoutBridge;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.IAndroidTarget.IOptionalLibrary;

@@ -18,6 +18,12 @@ package com.android.ide.eclipse.adt.internal.sdk;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AndroidConstants;
+import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors;
+import com.android.ide.eclipse.adt.internal.editors.manifest.descriptors.AndroidManifestDescriptors;
+import com.android.ide.eclipse.adt.internal.editors.menu.descriptors.MenuDescriptors;
+import com.android.ide.eclipse.adt.internal.editors.resources.manager.ProjectResources;
+import com.android.ide.eclipse.adt.internal.editors.resources.manager.ResourceManager;
+import com.android.ide.eclipse.adt.internal.editors.xml.descriptors.XmlDescriptors;
 import com.android.ide.eclipse.adt.internal.resources.AttrsXmlParser;
 import com.android.ide.eclipse.adt.internal.resources.DeclareStyleableInfo;
 import com.android.ide.eclipse.adt.internal.resources.IResourceRepository;
@@ -25,12 +31,6 @@ import com.android.ide.eclipse.adt.internal.resources.ResourceItem;
 import com.android.ide.eclipse.adt.internal.resources.ResourceType;
 import com.android.ide.eclipse.adt.internal.resources.ViewClassInfo;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData.LayoutBridge;
-import com.android.ide.eclipse.editors.layout.descriptors.LayoutDescriptors;
-import com.android.ide.eclipse.editors.manifest.descriptors.AndroidManifestDescriptors;
-import com.android.ide.eclipse.editors.menu.descriptors.MenuDescriptors;
-import com.android.ide.eclipse.editors.resources.manager.ProjectResources;
-import com.android.ide.eclipse.editors.resources.manager.ResourceManager;
-import com.android.ide.eclipse.editors.xml.descriptors.XmlDescriptors;
 import com.android.layoutlib.api.ILayoutBridge;
 import com.android.sdklib.IAndroidTarget;
 
