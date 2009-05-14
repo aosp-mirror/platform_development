@@ -193,9 +193,11 @@ $(call __ndk_info,Building for application '$(NDK_APPS)')
 # These phony targets are used to control various stages of the build
 .PHONY: all \
         host_libraries host_executables \
+        installed_modules \
         executables libraries static_libraries shared_libraries \
         clean clean-config clean-objs-dir \
-        clean-executables clean-libraries
+        clean-executables clean-libraries \
+        clean-installed-modules
 
 # These macros are used in Android.mk to include the corresponding
 # build script that will parse the LOCAL_XXX variable definitions.
@@ -228,9 +230,10 @@ ALL_HOST_STATIC_LIBRARIES :=
 ALL_STATIC_LIBRARIES      :=
 ALL_SHARED_LIBRARIES      :=
 ALL_EXECUTABLES           :=
+ALL_INSTALLED_MODULES     :=
 
 # the first rule
-all: libraries executables
+all: installed_modules host_libraries host_executables
 
 # ====================================================================
 #
@@ -260,10 +263,11 @@ include build/core/setup-toolchain.mk
 #
 # ====================================================================
 
-clean: clean-intermediates
+clean: clean-intermediates clean-installed-modules
 
 distclean: clean clean-config
 
+installed_modules: libraries $(ALL_INSTALLED_MODULES)
 host_libraries: $(HOST_STATIC_LIBRARIES)
 host_executables: $(HOST_EXECUTABLES)
 
@@ -274,10 +278,13 @@ executables: $(EXECUTABLES)
 libraries: static_libraries shared_libraries
 
 clean-host-intermediates:
-	$(hide) rm -rf $(NDK_HOST_OUT)/objs $(HOST_EXECUTABLES) $(HOST_STATIC_LIBRARIES)
+	$(hide) rm -rf $(HOST_EXECUTABLES) $(HOST_STATIC_LIBRARIES)
 
 clean-intermediates: clean-host-intermediates
-	$(hide) rm -rf $(NDK_HOST_OUT)/objs $(EXECUTABLES) $(STATIC_LIBRARIES) $(SHARED_LIBRARIES)
+	$(hide) rm -rf $(EXECUTABLES) $(STATIC_LIBRARIES) $(SHARED_LIBRARIES)
+
+clean-installed-modules:
+	$(hide) rm -rf $(ALL_INSTALLED_MODULES)
 
 clean-config:
 	$(hide) rm -f $(CONFIG_MAKE) $(CONFIG_H)
