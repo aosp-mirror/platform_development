@@ -369,10 +369,13 @@ class TestRunner(object):
       if run_command.RunHostCommand(f) != 0:
         logger.Log("%s... failed" % f)
       else:
-        if run_command.RunHostCommand(f, valgrind=True) == 0:
-          logger.Log("%s... ok\t\t[valgrind: ok]" % f)
+        if run_command.HasValgrind():
+          if run_command.RunHostCommand(f, valgrind=True) == 0:
+            logger.Log("%s... ok\t\t[valgrind: ok]" % f)
+          else:
+            logger.Log("%s... ok\t\t[valgrind: failed]" % f)
         else:
-          logger.Log("%s... ok\t\t[valgrind: failed]" % f)
+          logger.Log("%s... ok\t\t[valgrind: missing]" % f)
 
     # Run on the device
     logger.Log("\nRunning on target")
@@ -380,9 +383,15 @@ class TestRunner(object):
       full_path = os.path.join(os.sep, "system", "bin", f)
 
       # Single quotes are needed to prevent the shell splitting it.
-      status = self._adb.SendShellCommand("'%s >/dev/null 2>&1;echo -n $?'" %
+      output = self._adb.SendShellCommand("'%s 2>&1;echo -n exit code:$?'" %
                                           full_path)
-      logger.Log("%s... %s" % (f, status == "0" and "ok" or "failed"))
+      success = output.endswith("exit code:0")
+      logger.Log("%s... %s" % (f, success and "ok" or "failed"))
+      # Print the captured output when the test failed.
+      if not success or self._options.verbose:
+        pos = output.rfind("exit code")
+        output = output[0:pos]
+        logger.Log(output)
 
       # Cleanup
       self._adb.SendShellCommand("rm %s" % full_path)
