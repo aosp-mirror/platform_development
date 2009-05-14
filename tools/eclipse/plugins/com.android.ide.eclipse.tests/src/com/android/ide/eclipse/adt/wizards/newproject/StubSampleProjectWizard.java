@@ -15,6 +15,9 @@
  */
 package com.android.ide.eclipse.adt.wizards.newproject;
 
+import com.android.ide.eclipse.adt.internal.wizards.newproject.NewProjectCreationPage;
+import com.android.ide.eclipse.adt.internal.wizards.newproject.NewProjectWizard;
+
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.wizard.IWizardContainer;

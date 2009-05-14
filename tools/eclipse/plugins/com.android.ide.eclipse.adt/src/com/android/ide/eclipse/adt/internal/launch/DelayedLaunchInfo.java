@@ -17,7 +17,7 @@
 package com.android.ide.eclipse.adt.internal.launch;
 
 import com.android.ddmlib.IDevice;
-import com.android.ide.eclipse.common.project.AndroidManifestParser;
+import com.android.ide.eclipse.adt.internal.project.AndroidManifestParser;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;

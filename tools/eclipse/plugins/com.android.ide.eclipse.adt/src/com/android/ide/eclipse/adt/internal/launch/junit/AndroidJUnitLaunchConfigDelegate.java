@@ -24,9 +24,9 @@ import com.android.ide.eclipse.adt.internal.launch.AndroidLaunchController;
 import com.android.ide.eclipse.adt.internal.launch.IAndroidLaunchAction;
 import com.android.ide.eclipse.adt.internal.launch.LaunchConfigDelegate;
 import com.android.ide.eclipse.adt.internal.launch.junit.runtime.AndroidJUnitLaunchInfo;
-import com.android.ide.eclipse.common.project.AndroidManifestParser;
-import com.android.ide.eclipse.common.project.AndroidManifestParser.Instrumentation;
-import com.android.ide.eclipse.common.project.BaseProjectHelper;
+import com.android.ide.eclipse.adt.internal.project.AndroidManifestParser;
+import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
+import com.android.ide.eclipse.adt.internal.project.AndroidManifestParser.Instrumentation;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;

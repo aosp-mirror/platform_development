@@ -16,7 +16,7 @@
 
 package com.android.ide.eclipse.editors.manifest.pages;
 
-import com.android.ide.eclipse.common.project.ExportHelper;
+import com.android.ide.eclipse.adt.internal.project.ExportHelper;
 import com.android.ide.eclipse.editors.manifest.ManifestEditor;
 import com.android.ide.eclipse.editors.ui.SectionHelper.ManifestSectionPart;
 

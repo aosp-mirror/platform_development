@@ -17,7 +17,7 @@
 package com.android.ide.eclipse.editors.uimodel;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.sdk.AndroidTargetData;
+import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.ide.eclipse.editors.AndroidEditor;
 import com.android.ide.eclipse.editors.descriptors.AttributeDescriptor;
 import com.android.ide.eclipse.editors.descriptors.ElementDescriptor;

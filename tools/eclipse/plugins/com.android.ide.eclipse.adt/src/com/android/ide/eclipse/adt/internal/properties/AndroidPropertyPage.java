@@ -16,7 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.properties;
 
-import com.android.ide.eclipse.adt.sdk.Sdk;
+import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdkuilib.ApkConfigWidget;
 import com.android.sdkuilib.SdkTargetSelector;

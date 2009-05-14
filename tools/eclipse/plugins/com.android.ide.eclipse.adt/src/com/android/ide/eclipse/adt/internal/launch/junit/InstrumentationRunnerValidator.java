@@ -17,9 +17,9 @@ package com.android.ide.eclipse.adt.internal.launch.junit;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AndroidConstants;
-import com.android.ide.eclipse.common.project.AndroidManifestParser;
-import com.android.ide.eclipse.common.project.AndroidManifestParser.Instrumentation;
-import com.android.ide.eclipse.common.project.BaseProjectHelper;
+import com.android.ide.eclipse.adt.internal.project.AndroidManifestParser;
+import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
+import com.android.ide.eclipse.adt.internal.project.AndroidManifestParser.Instrumentation;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;

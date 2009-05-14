@@ -15,6 +15,7 @@
  */
 package com.android.ide.eclipse.adt.wizards.newproject;
 
+import com.android.ide.eclipse.adt.internal.wizards.newproject.NewProjectCreationPage;
 import com.android.sdklib.IAndroidTarget;
 
 import org.eclipse.core.runtime.IPath;

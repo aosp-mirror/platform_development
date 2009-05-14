@@ -16,12 +16,12 @@
 
 package com.android.ide.eclipse.editors.uimodel;
 
-import com.android.ide.eclipse.adt.sdk.AndroidTargetData;
-import com.android.ide.eclipse.adt.ui.ReferenceChooserDialog;
-import com.android.ide.eclipse.adt.ui.ResourceChooser;
-import com.android.ide.eclipse.common.resources.IResourceRepository;
-import com.android.ide.eclipse.common.resources.ResourceItem;
-import com.android.ide.eclipse.common.resources.ResourceType;
+import com.android.ide.eclipse.adt.internal.resources.IResourceRepository;
+import com.android.ide.eclipse.adt.internal.resources.ResourceItem;
+import com.android.ide.eclipse.adt.internal.resources.ResourceType;
+import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
+import com.android.ide.eclipse.adt.internal.ui.ReferenceChooserDialog;
+import com.android.ide.eclipse.adt.internal.ui.ResourceChooser;
 import com.android.ide.eclipse.editors.AndroidEditor;
 import com.android.ide.eclipse.editors.descriptors.AttributeDescriptor;
 import com.android.ide.eclipse.editors.descriptors.DescriptorsUtils;

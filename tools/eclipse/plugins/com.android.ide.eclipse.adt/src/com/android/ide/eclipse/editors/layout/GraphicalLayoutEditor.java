@@ -17,16 +17,16 @@
 package com.android.ide.eclipse.editors.layout;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.sdk.AndroidTargetData;
-import com.android.ide.eclipse.adt.sdk.LoadStatus;
-import com.android.ide.eclipse.adt.sdk.Sdk;
-import com.android.ide.eclipse.adt.sdk.AndroidTargetData.LayoutBridge;
-import com.android.ide.eclipse.adt.sdk.Sdk.ITargetChangeListener;
-import com.android.ide.eclipse.adt.ui.ConfigurationSelector.DensityVerifier;
-import com.android.ide.eclipse.adt.ui.ConfigurationSelector.DimensionVerifier;
-import com.android.ide.eclipse.adt.ui.ConfigurationSelector.LanguageRegionVerifier;
-import com.android.ide.eclipse.adt.ui.ConfigurationSelector.MobileCodeVerifier;
-import com.android.ide.eclipse.common.resources.ResourceType;
+import com.android.ide.eclipse.adt.internal.resources.ResourceType;
+import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
+import com.android.ide.eclipse.adt.internal.sdk.LoadStatus;
+import com.android.ide.eclipse.adt.internal.sdk.Sdk;
+import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData.LayoutBridge;
+import com.android.ide.eclipse.adt.internal.sdk.Sdk.ITargetChangeListener;
+import com.android.ide.eclipse.adt.internal.ui.ConfigurationSelector.DensityVerifier;
+import com.android.ide.eclipse.adt.internal.ui.ConfigurationSelector.DimensionVerifier;
+import com.android.ide.eclipse.adt.internal.ui.ConfigurationSelector.LanguageRegionVerifier;
+import com.android.ide.eclipse.adt.internal.ui.ConfigurationSelector.MobileCodeVerifier;
 import com.android.ide.eclipse.editors.IconFactory;
 import com.android.ide.eclipse.editors.layout.LayoutEditor.UiEditorActions;
 import com.android.ide.eclipse.editors.layout.LayoutReloadMonitor.ILayoutReloadListener;

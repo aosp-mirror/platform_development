@@ -18,9 +18,9 @@ package com.android.ide.eclipse.adt.internal.launch;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.launch.AndroidLaunchConfiguration.TargetMode;
-import com.android.ide.eclipse.adt.sdk.Sdk;
-import com.android.ide.eclipse.adt.wizards.actions.AvdManagerAction;
-import com.android.ide.eclipse.common.project.BaseProjectHelper;
+import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
+import com.android.ide.eclipse.adt.internal.sdk.Sdk;
+import com.android.ide.eclipse.adt.internal.wizards.actions.AvdManagerAction;
 import com.android.ide.eclipse.ddms.DdmsPlugin;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.IAndroidTarget;

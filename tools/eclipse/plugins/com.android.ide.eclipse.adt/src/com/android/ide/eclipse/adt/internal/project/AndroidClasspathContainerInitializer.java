@@ -18,9 +18,8 @@ package com.android.ide.eclipse.adt.internal.project;
 
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.sdk.LoadStatus;
-import com.android.ide.eclipse.adt.sdk.Sdk;
-import com.android.ide.eclipse.common.project.BaseProjectHelper;
+import com.android.ide.eclipse.adt.internal.sdk.LoadStatus;
+import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.IAndroidTarget.IOptionalLibrary;
 

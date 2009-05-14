@@ -87,7 +87,7 @@
       <wizard
             canFinishEarly="false"
             category="com.android.ide.eclipse.wizards.category"
-            class="com.android.ide.eclipse.adt.wizards.newproject.NewProjectWizard"
+            class="com.android.ide.eclipse.adt.internal.wizards.newproject.NewProjectWizard"
             finalPerspective="org.eclipse.jdt.ui.JavaPerspective"
             hasPages="true"
             icon="icons/new_adt_project.png"
@@ -98,7 +98,7 @@
       <wizard
             canFinishEarly="false"
             category="com.android.ide.eclipse.wizards.category"
-            class="com.android.ide.eclipse.adt.wizards.newproject.NewTestProjectWizard"
+            class="com.android.ide.eclipse.adt.internal.wizards.newproject.NewTestProjectWizard"
             finalPerspective="org.eclipse.jdt.ui.JavaPerspective"
             hasPages="true"
             icon="icons/androidjunit.png"
@@ -110,7 +110,7 @@
       <wizard
             canFinishEarly="false"
             category="com.android.ide.eclipse.wizards.category"
-            class="com.android.ide.eclipse.adt.wizards.newxmlfile.NewXmlFileWizard"
+            class="com.android.ide.eclipse.adt.internal.wizards.newxmlfile.NewXmlFileWizard"
             finalPerspective="org.eclipse.jdt.ui.JavaPerspective"
             hasPages="true"
             icon="icons/new_xml.png"
@@ -232,7 +232,7 @@
                value="com.android.ide.eclipse.adt.AndroidNature">
          </filter>
          <action
-               class="com.android.ide.eclipse.adt.wizards.actions.NewXmlFileAction"
+               class="com.android.ide.eclipse.adt.internal.wizards.actions.NewXmlFileAction"
                enablesFor="1"
                icon="icons/new_xml.png"
                id="com.android.ide.eclipse.adt.wizards.actions.NewXmlFileAction"
@@ -241,7 +241,7 @@
                tooltip="Opens a wizard to help create a new Android XML Resource file">
          </action>
          <action
-               class="com.android.ide.eclipse.adt.wizards.actions.NewTestProjectAction"
+               class="com.android.ide.eclipse.adt.internal.wizards.actions.NewTestProjectAction"
                enablesFor="1"
                icon="icons/androidjunit.png"
                id="com.android.ide.eclipse.adt.wizards.actions.NewTestProjectAction"
@@ -250,13 +250,13 @@
                tooltip="Opens a wizard to help create a new Android Test Project">
          </action>
          <action
-               class="com.android.ide.eclipse.adt.wizards.actions.ExportAction"
+               class="com.android.ide.eclipse.adt.internal.wizards.actions.ExportAction"
                enablesFor="1"
                id="com.android.ide.eclipse.adt.project.ExportAction"
                label="Export Unsigned Application Package..."
                menubarPath="com.android.ide.eclipse.adt.AndroidTools/group2"/>
          <action
-               class="com.android.ide.eclipse.adt.wizards.actions.ExportWizardAction"
+               class="com.android.ide.eclipse.adt.internal.wizards.actions.ExportWizardAction"
                enablesFor="1"
                id="com.android.ide.eclipse.adt.project.ExportWizardAction"
                label="Export Signed Application Package..."
@@ -351,7 +351,7 @@
       </category>
       <wizard
             category="com.android.ide.eclipse.wizards.category"
-            class="com.android.ide.eclipse.adt.wizards.export.ExportWizard"
+            class="com.android.ide.eclipse.adt.internal.wizards.export.ExportWizard"
             icon="icons/android.png"
             id="com.android.ide.eclipse.adt.project.ExportWizard"
             name="Export Android Application">
@@ -498,7 +498,7 @@
             label="Android Wizards"
             visible="true">
          <action
-               class="com.android.ide.eclipse.adt.wizards.actions.NewXmlFileAction"
+               class="com.android.ide.eclipse.adt.internal.wizards.actions.NewXmlFileAction"
                icon="icons/new_xml.png"
                id="com.android.ide.eclipse.adt.wizards.actions.NewXmlFileAction"
                label="New Android XML File"
@@ -507,7 +507,7 @@
                tooltip="Opens a wizard to help create a new Android XML file">
          </action>
          <action
-               class="com.android.ide.eclipse.adt.wizards.actions.NewTestProjectAction"
+               class="com.android.ide.eclipse.adt.internal.wizards.actions.NewTestProjectAction"
                icon="icons/androidjunit.png"
                id="com.android.ide.eclipse.adt.wizards.actions.NewTestProjectAction"
                label="New Android Test Project"
@@ -516,7 +516,7 @@
                tooltip="Opens a wizard to help create a new Android Test Project">
          </action>
          <action
-               class="com.android.ide.eclipse.adt.wizards.actions.NewProjectAction"
+               class="com.android.ide.eclipse.adt.internal.wizards.actions.NewProjectAction"
                icon="icons/new_adt_project.png"
                id="com.android.ide.eclipse.adt.wizards.actions.NewProjectAction"
                label="New Android Project"
@@ -576,7 +576,7 @@
             label="Android AVD Manager"
             visible="true">
          <action
-               class="com.android.ide.eclipse.adt.wizards.actions.AvdManagerAction"
+               class="com.android.ide.eclipse.adt.internal.wizards.actions.AvdManagerAction"
                icon="icons/avd_manager.png"
                id="com.android.ide.eclipse.adt.ui.avdmanager"
                label="Android AVD Manager"

@@ -16,7 +16,7 @@
 
 package com.android.ide.eclipse.editors.manifest.descriptors;
 
-import com.android.ide.eclipse.common.resources.ResourceType;
+import com.android.ide.eclipse.adt.internal.resources.ResourceType;
 import com.android.ide.eclipse.editors.descriptors.TextAttributeDescriptor;
 import com.android.ide.eclipse.editors.uimodel.UiAttributeNode;
 import com.android.ide.eclipse.editors.uimodel.UiElementNode;

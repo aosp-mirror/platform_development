@@ -19,11 +19,11 @@ package com.android.ide.eclipse.adt.internal.build;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AndroidConstants;
+import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.internal.project.ProjectHelper;
-import com.android.ide.eclipse.adt.sdk.LoadStatus;
-import com.android.ide.eclipse.common.project.BaseProjectHelper;
-import com.android.ide.eclipse.common.project.XmlErrorHandler;
-import com.android.ide.eclipse.common.project.XmlErrorHandler.XmlErrorListener;
+import com.android.ide.eclipse.adt.internal.project.XmlErrorHandler;
+import com.android.ide.eclipse.adt.internal.project.XmlErrorHandler.XmlErrorListener;
+import com.android.ide.eclipse.adt.internal.sdk.LoadStatus;
 
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;

@@ -18,8 +18,8 @@ package com.android.ide.eclipse.editors.resources.manager;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AndroidConstants;
-import com.android.ide.eclipse.common.project.AndroidManifestParser;
-import com.android.ide.eclipse.common.resources.ResourceType;
+import com.android.ide.eclipse.adt.internal.project.AndroidManifestParser;
+import com.android.ide.eclipse.adt.internal.resources.ResourceType;
 import com.android.ide.eclipse.editors.resources.manager.ResourceMonitor.IFileListener;
 import com.android.ide.eclipse.editors.resources.manager.ResourceMonitor.IProjectListener;
 

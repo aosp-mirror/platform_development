@@ -18,8 +18,8 @@ package com.android.ide.eclipse.editors.manifest.descriptors;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AndroidConstants;
-import com.android.ide.eclipse.common.resources.DeclareStyleableInfo;
-import com.android.ide.eclipse.common.resources.ResourceType;
+import com.android.ide.eclipse.adt.internal.resources.DeclareStyleableInfo;
+import com.android.ide.eclipse.adt.internal.resources.ResourceType;
 import com.android.ide.eclipse.editors.descriptors.AttributeDescriptor;
 import com.android.ide.eclipse.editors.descriptors.DescriptorsUtils;
 import com.android.ide.eclipse.editors.descriptors.ElementDescriptor;
