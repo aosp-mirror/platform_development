@@ -1122,22 +1122,6 @@ public class AdtPlugin extends AbstractUIPlugin {
                 "/icons/android.png"); //$NON-NLS-1$
         sAndroidLogo = sAndroidLogoDesc.createImage();
 
-        // get the stream to write in the android console.
-        MessageConsole androidConsole = AdtPlugin.getDefault().getAndroidConsole();
-        mAndroidConsoleStream = androidConsole.newMessageStream();
-
-        mAndroidConsoleErrorStream = androidConsole.newMessageStream();
-        mRed = new Color(getDisplay(), 0xFF, 0x00, 0x00);
-
-        // because this can be run, in some cases, by a non ui thread, and beccause
-        // changing the console properties update the ui, we need to make this change
-        // in the ui thread.
-        getDisplay().asyncExec(new Runnable() {
-            public void run() {
-                mAndroidConsoleErrorStream.setColor(mRed);
-            }
-        });
-
         // Add a resource listener to handle compiled resources.
         IWorkspace ws = ResourcesPlugin.getWorkspace();
         mResourceMonitor = ResourceMonitor.startMonitoring(ws);
