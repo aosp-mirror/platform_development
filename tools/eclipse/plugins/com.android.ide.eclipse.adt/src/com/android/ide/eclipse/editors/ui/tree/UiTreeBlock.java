@@ -17,7 +17,7 @@
 package com.android.ide.eclipse.editors.ui.tree;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.sdk.Sdk.ITargetChangeListener;
+import com.android.ide.eclipse.adt.internal.sdk.Sdk.ITargetChangeListener;
 import com.android.ide.eclipse.editors.AndroidEditor;
 import com.android.ide.eclipse.editors.IconFactory;
 import com.android.ide.eclipse.editors.descriptors.ElementDescriptor;

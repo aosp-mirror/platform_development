@@ -18,8 +18,6 @@ package com.android.ide.eclipse.adt.internal.project;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AndroidConstants;
-import com.android.ide.eclipse.common.project.AndroidManifestParser;
-import com.android.ide.eclipse.common.project.BaseProjectHelper;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;

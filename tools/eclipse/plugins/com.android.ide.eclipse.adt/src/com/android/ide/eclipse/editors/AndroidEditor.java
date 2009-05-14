@@ -17,9 +17,9 @@
 package com.android.ide.eclipse.editors;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.sdk.AndroidTargetData;
-import com.android.ide.eclipse.adt.sdk.Sdk;
-import com.android.ide.eclipse.adt.sdk.Sdk.ITargetChangeListener;
+import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
+import com.android.ide.eclipse.adt.internal.sdk.Sdk;
+import com.android.ide.eclipse.adt.internal.sdk.Sdk.ITargetChangeListener;
 import com.android.ide.eclipse.editors.uimodel.UiElementNode;
 import com.android.sdklib.IAndroidTarget;
 

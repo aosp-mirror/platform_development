@@ -17,7 +17,7 @@
 package com.android.ide.eclipse.editors.manifest.pages;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.sdk.Sdk;
+import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.editors.descriptors.DescriptorsUtils;
 import com.android.ide.eclipse.editors.manifest.ManifestEditor;
 import com.android.ide.eclipse.editors.ui.UiElementPart;

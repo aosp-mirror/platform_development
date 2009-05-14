@@ -17,10 +17,10 @@
 package com.android.ide.eclipse.editors.manifest.model;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.wizards.actions.NewProjectAction;
-import com.android.ide.eclipse.adt.wizards.newproject.NewProjectWizard;
-import com.android.ide.eclipse.common.project.AndroidManifestParser;
-import com.android.ide.eclipse.common.project.BaseProjectHelper;
+import com.android.ide.eclipse.adt.internal.project.AndroidManifestParser;
+import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
+import com.android.ide.eclipse.adt.internal.wizards.actions.NewProjectAction;
+import com.android.ide.eclipse.adt.internal.wizards.newproject.NewProjectWizard;
 import com.android.ide.eclipse.editors.descriptors.AttributeDescriptor;
 import com.android.ide.eclipse.editors.descriptors.TextAttributeDescriptor;
 import com.android.ide.eclipse.editors.manifest.ManifestEditor;

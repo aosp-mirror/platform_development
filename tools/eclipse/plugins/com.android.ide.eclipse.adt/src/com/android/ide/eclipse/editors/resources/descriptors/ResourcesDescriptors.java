@@ -16,7 +16,7 @@
 
 package com.android.ide.eclipse.editors.resources.descriptors;
 
-import com.android.ide.eclipse.common.resources.ResourceType;
+import com.android.ide.eclipse.adt.internal.resources.ResourceType;
 import com.android.ide.eclipse.editors.descriptors.AttributeDescriptor;
 import com.android.ide.eclipse.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.editors.descriptors.FlagAttributeDescriptor;

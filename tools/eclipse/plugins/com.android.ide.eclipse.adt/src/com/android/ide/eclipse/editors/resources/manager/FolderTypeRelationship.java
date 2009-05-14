@@ -16,7 +16,7 @@
 
 package com.android.ide.eclipse.editors.resources.manager;
 
-import com.android.ide.eclipse.common.resources.ResourceType;
+import com.android.ide.eclipse.adt.internal.resources.ResourceType;
 
 import java.util.ArrayList;
 import java.util.HashMap;

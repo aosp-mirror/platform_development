@@ -16,7 +16,7 @@
 
 package com.android.ide.eclipse.editors.resources.manager;
 
-import com.android.ide.eclipse.common.project.BaseProjectHelper;
+import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;

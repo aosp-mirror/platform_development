@@ -16,8 +16,8 @@
 
 package com.android.ide.eclipse.editors.layout;
 
-import com.android.ide.eclipse.adt.ui.ConfigurationSelector;
-import com.android.ide.eclipse.adt.ui.ConfigurationSelector.ConfigurationState;
+import com.android.ide.eclipse.adt.internal.ui.ConfigurationSelector;
+import com.android.ide.eclipse.adt.internal.ui.ConfigurationSelector.ConfigurationState;
 import com.android.ide.eclipse.editors.IconFactory;
 import com.android.ide.eclipse.editors.resources.configurations.FolderConfiguration;
 import com.android.ide.eclipse.editors.resources.configurations.ResourceQualifier;

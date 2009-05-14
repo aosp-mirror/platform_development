@@ -18,8 +18,8 @@ package com.android.ide.eclipse.adt.internal.launch.junit;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AndroidConstants;
 import com.android.ide.eclipse.adt.internal.launch.MainLaunchConfigTab;
-import com.android.ide.eclipse.common.project.BaseProjectHelper;
-import com.android.ide.eclipse.common.project.ProjectChooserHelper;
+import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
+import com.android.ide.eclipse.adt.internal.project.ProjectChooserHelper;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;

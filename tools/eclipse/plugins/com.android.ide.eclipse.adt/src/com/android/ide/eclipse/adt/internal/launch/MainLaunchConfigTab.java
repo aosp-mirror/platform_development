@@ -17,10 +17,10 @@
 package com.android.ide.eclipse.adt.internal.launch;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.common.project.AndroidManifestParser;
-import com.android.ide.eclipse.common.project.BaseProjectHelper;
-import com.android.ide.eclipse.common.project.ProjectChooserHelper;
-import com.android.ide.eclipse.common.project.AndroidManifestParser.Activity;
+import com.android.ide.eclipse.adt.internal.project.AndroidManifestParser;
+import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
+import com.android.ide.eclipse.adt.internal.project.ProjectChooserHelper;
+import com.android.ide.eclipse.adt.internal.project.AndroidManifestParser.Activity;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;

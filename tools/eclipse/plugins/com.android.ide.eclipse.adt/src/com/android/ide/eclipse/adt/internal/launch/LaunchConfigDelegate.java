@@ -20,10 +20,10 @@ import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AndroidConstants;
 import com.android.ide.eclipse.adt.internal.launch.AndroidLaunchConfiguration.TargetMode;
+import com.android.ide.eclipse.adt.internal.project.AndroidManifestParser;
+import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.internal.project.ProjectHelper;
-import com.android.ide.eclipse.common.project.AndroidManifestParser;
-import com.android.ide.eclipse.common.project.BaseProjectHelper;
-import com.android.ide.eclipse.common.project.AndroidManifestParser.Activity;
+import com.android.ide.eclipse.adt.internal.project.AndroidManifestParser.Activity;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;

@@ -17,7 +17,7 @@
 package com.android.ide.eclipse.editors.resources.manager;
 
 import com.android.ide.eclipse.adt.AndroidConstants;
-import com.android.ide.eclipse.common.resources.ResourceType;
+import com.android.ide.eclipse.adt.internal.resources.ResourceType;
 import com.android.ide.eclipse.editors.resources.configurations.FolderConfiguration;
 import com.android.ide.eclipse.editors.resources.configurations.ResourceQualifier;
 import com.android.ide.eclipse.editors.resources.manager.ResourceMonitor.IFileListener;

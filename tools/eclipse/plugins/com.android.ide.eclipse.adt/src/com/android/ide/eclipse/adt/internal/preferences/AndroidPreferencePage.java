@@ -17,8 +17,8 @@
 package com.android.ide.eclipse.adt.internal.preferences;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.sdk.Sdk;
-import com.android.ide.eclipse.adt.sdk.Sdk.ITargetChangeListener;
+import com.android.ide.eclipse.adt.internal.sdk.Sdk;
+import com.android.ide.eclipse.adt.internal.sdk.Sdk.ITargetChangeListener;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdkuilib.SdkTargetSelector;
 

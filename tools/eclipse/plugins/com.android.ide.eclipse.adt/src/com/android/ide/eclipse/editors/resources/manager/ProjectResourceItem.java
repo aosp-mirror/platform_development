@@ -1,7 +1,7 @@
 package com.android.ide.eclipse.editors.resources.manager;
 
-import com.android.ide.eclipse.common.resources.ResourceItem;
-import com.android.ide.eclipse.common.resources.ResourceType;
+import com.android.ide.eclipse.adt.internal.resources.ResourceItem;
+import com.android.ide.eclipse.adt.internal.resources.ResourceType;
 import com.android.ide.eclipse.editors.resources.configurations.FolderConfiguration;
 
 import java.util.ArrayList;

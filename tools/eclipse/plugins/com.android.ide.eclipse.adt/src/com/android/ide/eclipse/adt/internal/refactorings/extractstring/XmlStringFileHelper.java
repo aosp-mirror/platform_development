@@ -16,7 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.refactorings.extractstring;
 
-import com.android.ide.eclipse.common.project.AndroidXPathFactory;
+import com.android.ide.eclipse.adt.internal.project.AndroidXPathFactory;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
