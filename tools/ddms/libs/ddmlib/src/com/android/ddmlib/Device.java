@@ -208,7 +208,7 @@ public final class Device implements IDevice {
      * (non-Javadoc)
      * @see com.android.ddmlib.IDevice#getSyncService()
      */
-    public SyncService getSyncService() {
+    public SyncService getSyncService() throws IOException {
         SyncService syncService = new SyncService(AndroidDebugBridge.sSocketAddr, this);
         if (syncService.openSync()) {
             return syncService;
