@@ -17,9 +17,9 @@
 package com.android.ide.eclipse.adt.internal.sdk;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.internal.editors.resources.manager.ResourceMonitor;
-import com.android.ide.eclipse.adt.internal.editors.resources.manager.ResourceMonitor.IProjectListener;
 import com.android.ide.eclipse.adt.internal.project.AndroidClasspathContainerInitializer;
+import com.android.ide.eclipse.adt.internal.resources.manager.ResourceMonitor;
+import com.android.ide.eclipse.adt.internal.resources.manager.ResourceMonitor.IProjectListener;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData.LayoutBridge;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.IAndroidTarget;

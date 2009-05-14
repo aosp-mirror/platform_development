@@ -18,9 +18,9 @@ package com.android.ide.eclipse.adt.internal.editors.layout;
 
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutReloadMonitor.ILayoutReloadListener;
 import com.android.ide.eclipse.adt.internal.editors.layout.parts.ElementCreateCommand;
-import com.android.ide.eclipse.adt.internal.editors.resources.configurations.FolderConfiguration;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiDocumentNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
+import com.android.ide.eclipse.adt.internal.resources.configurations.FolderConfiguration;
 
 import org.eclipse.gef.DefaultEditDomain;
 import org.eclipse.gef.ui.parts.GraphicalEditorWithPalette;

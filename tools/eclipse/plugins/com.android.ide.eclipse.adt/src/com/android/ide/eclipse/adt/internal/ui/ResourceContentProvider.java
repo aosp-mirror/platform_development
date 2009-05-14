@@ -16,11 +16,11 @@
 
 package com.android.ide.eclipse.adt.internal.ui;
 
-import com.android.ide.eclipse.adt.internal.editors.resources.manager.ConfigurableResourceItem;
-import com.android.ide.eclipse.adt.internal.editors.resources.manager.ResourceFile;
 import com.android.ide.eclipse.adt.internal.resources.IResourceRepository;
 import com.android.ide.eclipse.adt.internal.resources.ResourceItem;
 import com.android.ide.eclipse.adt.internal.resources.ResourceType;
+import com.android.ide.eclipse.adt.internal.resources.manager.ConfigurableResourceItem;
+import com.android.ide.eclipse.adt.internal.resources.manager.ResourceFile;
 
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.Viewer;

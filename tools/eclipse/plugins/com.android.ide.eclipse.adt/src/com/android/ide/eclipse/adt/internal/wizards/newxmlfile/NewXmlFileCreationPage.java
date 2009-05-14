@@ -23,11 +23,11 @@ import com.android.ide.eclipse.adt.internal.editors.descriptors.DocumentDescript
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.IDescriptorProvider;
 import com.android.ide.eclipse.adt.internal.editors.menu.descriptors.MenuDescriptors;
-import com.android.ide.eclipse.adt.internal.editors.resources.configurations.FolderConfiguration;
-import com.android.ide.eclipse.adt.internal.editors.resources.configurations.ResourceQualifier;
 import com.android.ide.eclipse.adt.internal.editors.resources.descriptors.ResourcesDescriptors;
-import com.android.ide.eclipse.adt.internal.editors.resources.manager.ResourceFolderType;
 import com.android.ide.eclipse.adt.internal.project.ProjectChooserHelper;
+import com.android.ide.eclipse.adt.internal.resources.configurations.FolderConfiguration;
+import com.android.ide.eclipse.adt.internal.resources.configurations.ResourceQualifier;
+import com.android.ide.eclipse.adt.internal.resources.manager.ResourceFolderType;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk.ITargetChangeListener;
