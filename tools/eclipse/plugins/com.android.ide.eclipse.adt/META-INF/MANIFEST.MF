@@ -62,7 +62,6 @@ Export-Package: com.android.ide.eclipse.adt;x-friends:="com.android.ide.eclipse.
  com.android.ide.eclipse.adt.internal.editors.menu.descriptors;x-friends:="com.android.ide.eclipse.tests",
  com.android.ide.eclipse.adt.internal.editors.resources;x-friends:="com.android.ide.eclipse.tests",
  com.android.ide.eclipse.adt.internal.editors.resources.descriptors;x-friends:="com.android.ide.eclipse.tests",
- com.android.ide.eclipse.adt.internal.editors.resources.explorer;x-friends:="com.android.ide.eclipse.tests",
  com.android.ide.eclipse.adt.internal.editors.resources.uimodel;x-friends:="com.android.ide.eclipse.tests",
  com.android.ide.eclipse.adt.internal.editors.ui;x-friends:="com.android.ide.eclipse.tests",
  com.android.ide.eclipse.adt.internal.editors.ui.tree;x-friends:="com.android.ide.eclipse.tests",
