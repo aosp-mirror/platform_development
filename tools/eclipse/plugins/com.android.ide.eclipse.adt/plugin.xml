@@ -400,7 +400,7 @@
    <extension
          point="org.eclipse.ui.editors">
       <editor
-            class="com.android.ide.eclipse.editors.manifest.ManifestEditor"
+            class="com.android.ide.eclipse.adt.internal.editors.manifest.ManifestEditor"
             default="true"
             filenames="AndroidManifest.xml"
             icon="icons/android.png"
@@ -408,7 +408,7 @@
             name="Android Manifest Editor">
       </editor>
       <editor
-            class="com.android.ide.eclipse.editors.resources.ResourcesEditor"
+            class="com.android.ide.eclipse.adt.internal.editors.resources.ResourcesEditor"
             default="false"
             extensions="xml"
             icon="icons/android.png"
@@ -416,16 +416,16 @@
             name="Android Resource Editor">
       </editor>
       <editor
-            class="com.android.ide.eclipse.editors.layout.LayoutEditor"
+            class="com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor"
             default="false"
             extensions="xml"
             icon="icons/android.png"
             id="com.android.ide.eclipse.editors.layout.LayoutEditor"
-            matchingStrategy="com.android.ide.eclipse.editors.layout.MatchingStrategy"
+            matchingStrategy="com.android.ide.eclipse.adt.internal.editors.layout.MatchingStrategy"
             name="Android Layout Editor">
       </editor>
       <editor
-            class="com.android.ide.eclipse.editors.menu.MenuEditor"
+            class="com.android.ide.eclipse.adt.internal.editors.menu.MenuEditor"
             default="false"
             extensions="xml"
             icon="icons/android.png"
@@ -433,7 +433,7 @@
             name="Android Menu Editor">
       </editor>
       <editor
-            class="com.android.ide.eclipse.editors.xml.XmlEditor"
+            class="com.android.ide.eclipse.adt.internal.editors.xml.XmlEditor"
             default="false"
             extensions="xml"
             icon="icons/android.png"
@@ -446,7 +446,7 @@
       <view
             allowMultiple="false"
             category="com.android.ide.eclipse.ddms.views.category"
-            class="com.android.ide.eclipse.editors.resources.explorer.ResourceExplorerView"
+            class="com.android.ide.eclipse.adt.internal.editors.resources.explorer.ResourceExplorerView"
             icon="icons/android.png"
             id="com.android.ide.eclipse.editors.resources.explorer.ResourceExplorerView"
             name="Resource Explorer">

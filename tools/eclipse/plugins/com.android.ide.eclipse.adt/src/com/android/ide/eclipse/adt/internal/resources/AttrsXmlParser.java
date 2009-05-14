@@ -17,10 +17,10 @@
 package com.android.ide.eclipse.adt.internal.resources;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.internal.editors.descriptors.DescriptorsUtils;
 import com.android.ide.eclipse.adt.internal.resources.DeclareStyleableInfo.AttributeInfo;
 import com.android.ide.eclipse.adt.internal.resources.DeclareStyleableInfo.AttributeInfo.Format;
 import com.android.ide.eclipse.adt.internal.resources.ViewClassInfo.LayoutParamsInfo;
-import com.android.ide.eclipse.editors.descriptors.DescriptorsUtils;
 
 import org.eclipse.core.runtime.IStatus;
 import org.w3c.dom.Document;

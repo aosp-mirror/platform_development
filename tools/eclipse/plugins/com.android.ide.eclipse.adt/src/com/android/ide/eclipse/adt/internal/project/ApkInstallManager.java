@@ -21,8 +21,8 @@ import com.android.ddmlib.Device;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.AndroidDebugBridge.IDebugBridgeChangeListener;
 import com.android.ddmlib.AndroidDebugBridge.IDeviceChangeListener;
-import com.android.ide.eclipse.editors.resources.manager.ResourceMonitor;
-import com.android.ide.eclipse.editors.resources.manager.ResourceMonitor.IProjectListener;
+import com.android.ide.eclipse.adt.internal.editors.resources.manager.ResourceMonitor;
+import com.android.ide.eclipse.adt.internal.editors.resources.manager.ResourceMonitor.IProjectListener;
 
 import org.eclipse.core.resources.IProject;
 
