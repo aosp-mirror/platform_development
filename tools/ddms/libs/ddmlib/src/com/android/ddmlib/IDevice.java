@@ -118,9 +118,11 @@ public interface IDevice {
 
     /**
      * Returns a {@link SyncService} object to push / pull files to and from the device.
-     * @return <code>null</code> if the SyncService couldn't be created.
+     * @return <code>null</code> if the SyncService couldn't be created. This can happen if abd
+     * refuse to open the connection because the {@link IDevice} is invalid (or got disconnected).
+     * @throws IOException if the connection with adb failed.
      */
-    public SyncService getSyncService();
+    public SyncService getSyncService() throws IOException;
 
     /**
      * Returns a {@link FileListingService} for this device.
