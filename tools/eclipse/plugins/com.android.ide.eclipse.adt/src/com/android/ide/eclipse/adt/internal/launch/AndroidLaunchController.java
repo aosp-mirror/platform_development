@@ -848,62 +848,69 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
      * @return true if the install succeeded.
      */
     private boolean doSyncApp(DelayedLaunchInfo launchInfo, IDevice device) {
-        SyncService sync = device.getSyncService();
-        if (sync != null) {
-            IPath path = launchInfo.getPackageFile().getLocation();
-            String message = String.format("Uploading %1$s onto device '%2$s'",
-                    path.lastSegment(), device.getSerialNumber());
-            AdtPlugin.printToConsole(launchInfo.getProject(), message);
+        try {
+            SyncService sync = device.getSyncService();
+            if (sync != null) {
+                IPath path = launchInfo.getPackageFile().getLocation();
+                String message = String.format("Uploading %1$s onto device '%2$s'",
+                        path.lastSegment(), device.getSerialNumber());
+                AdtPlugin.printToConsole(launchInfo.getProject(), message);
 
-            String osLocalPath = path.toOSString();
-            String apkName = launchInfo.getPackageFile().getName();
-            String remotePath = "/data/local/tmp/" + apkName; //$NON-NLS-1$
+                String osLocalPath = path.toOSString();
+                String apkName = launchInfo.getPackageFile().getName();
+                String remotePath = "/data/local/tmp/" + apkName; //$NON-NLS-1$
 
-            SyncResult result = sync.pushFile(osLocalPath, remotePath,
-                    SyncService.getNullProgressMonitor());
+                SyncResult result = sync.pushFile(osLocalPath, remotePath,
+                        SyncService.getNullProgressMonitor());
 
-            if (result.getCode() != SyncService.RESULT_OK) {
-                String msg = String.format("Failed to upload %1$s on '%2$s': %3$s",
-                        apkName, device.getSerialNumber(), result.getMessage());
+                if (result.getCode() != SyncService.RESULT_OK) {
+                    String msg = String.format("Failed to upload %1$s on '%2$s': %3$s",
+                            apkName, device.getSerialNumber(), result.getMessage());
+                    AdtPlugin.printErrorToConsole(launchInfo.getProject(), msg);
+                    return false;
+                }
+
+                // Now that the package is uploaded, we can install it properly.
+                // This will check that there isn't another apk declaring the same package, or
+                // that another install used a different key.
+                boolean installResult =  installPackage(launchInfo, remotePath, device);
+
+                // now we delete the app we sync'ed
+                try {
+                    device.executeShellCommand("rm " + remotePath, new MultiLineReceiver() { //$NON-NLS-1$
+                        @Override
+                        public void processNewLines(String[] lines) {
+                            // pass
+                        }
+                        public boolean isCancelled() {
+                            return false;
+                        }
+                    });
+                } catch (IOException e) {
+                    AdtPlugin.printErrorToConsole(launchInfo.getProject(), String.format(
+                            "Failed to delete temporary package: %1$s", e.getMessage()));
+                    return false;
+                }
+
+                // if the installation succeeded, we register it.
+                if (installResult) {
+                    ApkInstallManager.getInstance().registerInstallation(
+                            launchInfo.getProject(), device);
+                }
+
+                return installResult;
+            } else {
+                String msg = String.format(
+                        "Failed to upload %1$s on device '%2$s': Unable to open sync connection!",
+                        launchInfo.getPackageFile().getName(), device.getSerialNumber());
                 AdtPlugin.printErrorToConsole(launchInfo.getProject(), msg);
-                return false;
             }
-
-            // Now that the package is uploaded, we can install it properly.
-            // This will check that there isn't another apk declaring the same package, or
-            // that another install used a different key.
-            boolean installResult =  installPackage(launchInfo, remotePath, device);
-
-            // now we delete the app we sync'ed
-            try {
-                device.executeShellCommand("rm " + remotePath, new MultiLineReceiver() { //$NON-NLS-1$
-                    @Override
-                    public void processNewLines(String[] lines) {
-                        // pass
-                    }
-                    public boolean isCancelled() {
-                        return false;
-                    }
-                });
-            } catch (IOException e) {
-                AdtPlugin.printErrorToConsole(launchInfo.getProject(), String.format(
-                        "Failed to delete temporary package: %1$s", e.getMessage()));
-                return false;
-            }
-
-            // if the installation succeeded, we register it.
-            if (installResult) {
-                ApkInstallManager.getInstance().registerInstallation(
-                        launchInfo.getProject(), device);
-            }
-
-            return installResult;
+        } catch (IOException e) {
+            String msg = String.format(
+                    "Failed to upload %1$s on device '%2$s': Unable to open sync connection!",
+                    launchInfo.getPackageFile().getName(), device.getSerialNumber());
+            AdtPlugin.printErrorToConsole(launchInfo.getProject(), msg, e.getMessage());
         }
-
-        String msg = String.format(
-                "Failed to upload %1$s on device '%2$s': Unable to open sync connection!",
-                launchInfo.getPackageFile().getName(), device.getSerialNumber());
-        AdtPlugin.printErrorToConsole(launchInfo.getProject(), msg);
 
         return false;
     }
