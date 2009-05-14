@@ -16,7 +16,7 @@
 
 package com.android.ide.eclipse.adt;
 
-import com.android.ide.eclipse.adt.project.internal.AndroidClasspathContainerInitializer;
+import com.android.ide.eclipse.adt.internal.project.AndroidClasspathContainerInitializer;
 
 
 /**
