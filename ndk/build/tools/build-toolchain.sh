@@ -154,13 +154,6 @@ ANDROID_GDBSERVER_OUT=$OUT/gdbserver
 ANDROID_GDBSERVER_BUILD=$ANDROID_GDBSERVER_OUT/build
 ANDROID_GDBSERVER_DEST=$ANDROID_SYSROOT/usr/bin
 
-# checks, we need more checks..
-mkdir -p $PACKAGE_OUT
-if [ $? != 0 ] ; then
-    echo "Can't create download/archive directory for toolchain tarballs"
-    exit 2
-fi
-
 # Let's check that we have a working md5sum here
 A_MD5=`echo "A" | md5sum | cut -d' ' -f1`
 if [ "$A_MD5" != "bf072e9119077b4e76437a93986787ef" ] ; then
@@ -182,7 +175,7 @@ download_file ()
     echo $1 | grep -q -e "^\(http\|https\):.*"
     if [ $? = 0 ] ; then
         if [ -n "$WGET" ] ; then
-            $WGET -o $2 $1 
+            $WGET -O $2 $1 
         elif [ -n "$CURL" ] ; then
             $CURL -o $2 $1
         else
@@ -352,7 +345,7 @@ unpack_package ()
 }
 
 if [ $OPTION_FORCE_DOWNLOAD ] ; then
-    rm -rf $ANDROID_TOOLCHAIN_SRC
+    rm -rf $PACKAGE_OUT $ANDROID_TOOLCHAIN_SRC
     timestamp_force toolchain unpack
     timestamp_force toolchain verify
 fi
@@ -361,6 +354,13 @@ if [ $OPTION_FORCE_BUILD ] ; then
     rm -rf $ANDROID_TOOLCHAIN_BUILD
     timestamp_clear toolchain
     timestamp_clear gdbserver
+fi
+
+# checks, we need more checks..
+mkdir -p $PACKAGE_OUT
+if [ $? != 0 ] ; then
+    echo "Can't create download/archive directory for toolchain tarballs"
+    exit 2
 fi
 
 download_package toolchain
