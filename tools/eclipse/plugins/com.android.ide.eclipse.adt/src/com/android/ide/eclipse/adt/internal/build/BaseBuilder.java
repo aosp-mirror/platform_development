@@ -146,7 +146,7 @@ abstract class BaseBuilder extends IncrementalProjectBuilder {
      */
     private final static Pattern sPattern7Line1 = Pattern.compile(
             "^ERROR:\\s+9-patch\\s+image\\s+(.+)\\s+malformed\\.$"); //$NON-NLS-1$
-    
+
     private final static Pattern sPattern8Line1 = Pattern.compile(
             "^(invalid resource directory name): (.*)$"); //$NON-NLS-1$
 
@@ -179,7 +179,7 @@ abstract class BaseBuilder extends IncrementalProjectBuilder {
         public BaseDeltaVisitor(BaseBuilder builder) {
             mBuilder = builder;
         }
-        
+
         /**
          * Finds a matching Source folder for the current path. This checkds if the current path
          * leads to, or is a source folder.
@@ -189,18 +189,18 @@ abstract class BaseBuilder extends IncrementalProjectBuilder {
          */
         protected static String[] findMatchingSourceFolder(ArrayList<IPath> sourceFolders,
                 String[] pathSegments) {
-        
+
             for (IPath p : sourceFolders) {
                 // check if we are inside one of those source class path
-    
+
                 // get the segments
                 String[] srcSegments = p.segments();
-    
+
                 // compare segments. We want the path of the resource
                 // we're visiting to be
                 boolean valid = true;
                 int segmentCount = pathSegments.length;
-    
+
                 for (int i = 0 ; i < segmentCount; i++) {
                     String s1 = pathSegments[i];
                     String s2 = srcSegments[i];
@@ -210,7 +210,7 @@ abstract class BaseBuilder extends IncrementalProjectBuilder {
                         break;
                     }
                 }
-    
+
                 if (valid) {
                     // this folder, or one of this children is a source
                     // folder!
@@ -218,7 +218,7 @@ abstract class BaseBuilder extends IncrementalProjectBuilder {
                     return srcSegments;
                 }
             }
-            
+
             return null;
         }
 
@@ -278,7 +278,7 @@ abstract class BaseBuilder extends IncrementalProjectBuilder {
 
     /**
      * Adds a marker to the current project.
-     * 
+     *
      * @param markerId The id of the marker to add.
      * @param message the message associated with the mark
      * @param severity the severity of the marker.
@@ -350,9 +350,9 @@ abstract class BaseBuilder extends IncrementalProjectBuilder {
     protected final int grabProcessOutput(final Process process,
             final ArrayList<String> results)
             throws InterruptedException {
-    	// Due to the limited buffer size on windows for the standard io (stderr, stdout), we
-    	// *need* to read both stdout and stderr all the time. If we don't and a process output
-    	// a large amount, this could deadlock the process.
+        // Due to the limited buffer size on windows for the standard io (stderr, stdout), we
+        // *need* to read both stdout and stderr all the time. If we don't and a process output
+        // a large amount, this could deadlock the process.
 
         // read the lines as they come. if null is returned, it's
         // because the process finished
@@ -576,7 +576,7 @@ abstract class BaseBuilder extends IncrementalProjectBuilder {
                 // success, go to the next line
                 continue;
             }
-            
+
             m = sPattern8Line1.matcher(p);
             if (m.matches()) {
                 String location = m.group(2);
@@ -596,7 +596,7 @@ abstract class BaseBuilder extends IncrementalProjectBuilder {
             if (m.matches()) {
                 String badConfig = m.group(1);
                 String msg = String.format("APK Configuration filter '%1$s' is invalid", badConfig);
-                
+
                 // skip the next line
                 i++;
 
@@ -825,7 +825,7 @@ abstract class BaseBuilder extends IncrementalProjectBuilder {
 
         // get a java project from it
         IJavaProject javaProject = JavaCore.create(project);
-        
+
         IWorkspaceRoot wsRoot = ResourcesPlugin.getWorkspace().getRoot();
 
         ArrayList<String> oslibraryList = new ArrayList<String>();
@@ -836,7 +836,7 @@ abstract class BaseBuilder extends IncrementalProjectBuilder {
                         e.getEntryKind() == IClasspathEntry.CPE_VARIABLE) {
                     // if this is a classpath variable reference, we resolve it.
                     if (e.getEntryKind() == IClasspathEntry.CPE_VARIABLE) {
-                        e = JavaCore.getResolvedClasspathEntry(e); 
+                        e = JavaCore.getResolvedClasspathEntry(e);
                     }
 
                     // get the IPath
@@ -878,15 +878,15 @@ abstract class BaseBuilder extends IncrementalProjectBuilder {
 
         return oslibraryList.toArray(new String[oslibraryList.size()]);
     }
-    
+
     /**
      * Aborts the build if the SDK/project setups are broken. This does not
      * display any errors.
-     * 
+     *
      * @param project The {@link IJavaProject} being compiled.
      * @throws CoreException
      */
-    protected final void abortOnBadSetup(IProject project) throws CoreException {
+    protected void abortOnBadSetup(IProject project) throws CoreException {
         // check if we have finished loading the SDK.
         if (AdtPlugin.getDefault().getSdkLoadStatus() != LoadStatus.LOADED) {
             // we exit silently
@@ -896,22 +896,22 @@ abstract class BaseBuilder extends IncrementalProjectBuilder {
         // abort if there are TARGET or ADT type markers
         IMarker[] markers = project.findMarkers(AdtConstants.MARKER_TARGET,
                 false /*includeSubtypes*/, IResource.DEPTH_ZERO);
-        
+
         if (markers.length > 0) {
             stopBuild("");
         }
-        
+
         markers = project.findMarkers(AdtConstants.MARKER_ADT, false /*includeSubtypes*/,
                 IResource.DEPTH_ZERO);
-        
+
         if (markers.length > 0) {
             stopBuild("");
         }
     }
-    
+
     /**
      * Throws an exception to cancel the build.
-     * 
+     *
      * @param error the error message
      * @param args the printf-style arguments to the error message.
      * @throws CoreException
@@ -920,7 +920,7 @@ abstract class BaseBuilder extends IncrementalProjectBuilder {
         throw new CoreException(new Status(IStatus.CANCEL, AdtPlugin.PLUGIN_ID,
                 String.format(error, args)));
     }
-    
+
     /**
      * Recursively delete all the derived resources.
      */
