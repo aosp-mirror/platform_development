@@ -59,6 +59,6 @@ $(LOCAL_BUILT_MODULE): $(LOCAL_OBJECTS)
 	$(hide) rm -rf $@
 	$(hide) $(cmd-build-static-library)
 
-ALL_EXECUTABLES += $(LOCAL_BUILT_MODULE)
+ALL_STATIC_LIBRARIES += $(LOCAL_BUILT_MODULE)
 
 endif # filter LOCAL_MODULE in NDK_APP_MODULES
