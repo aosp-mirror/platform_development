@@ -446,7 +446,7 @@
       <view
             allowMultiple="false"
             category="com.android.ide.eclipse.ddms.views.category"
-            class="com.android.ide.eclipse.adt.internal.editors.resources.explorer.ResourceExplorerView"
+            class="com.android.ide.eclipse.adt.internal.ui.ResourceExplorerView"
             icon="icons/android.png"
             id="com.android.ide.eclipse.editors.resources.explorer.ResourceExplorerView"
             name="Resource Explorer">

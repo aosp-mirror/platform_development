@@ -16,8 +16,8 @@
 
 package com.android.ide.eclipse.adt.internal.editors.resources.configurations;
 
-import com.android.ide.eclipse.adt.internal.editors.resources.configurations.FolderConfiguration;
-import com.android.ide.eclipse.adt.internal.editors.resources.configurations.RegionQualifier;
+import com.android.ide.eclipse.adt.internal.resources.configurations.FolderConfiguration;
+import com.android.ide.eclipse.adt.internal.resources.configurations.RegionQualifier;
 
 import junit.framework.TestCase;
 

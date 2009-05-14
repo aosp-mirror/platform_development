@@ -18,9 +18,9 @@ package com.android.ide.eclipse.adt.internal.editors.layout;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AndroidConstants;
-import com.android.ide.eclipse.adt.internal.editors.resources.manager.ProjectClassLoader;
-import com.android.ide.eclipse.adt.internal.editors.resources.manager.ProjectResources;
 import com.android.ide.eclipse.adt.internal.project.AndroidManifestParser;
+import com.android.ide.eclipse.adt.internal.resources.manager.ProjectClassLoader;
+import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
 import com.android.layoutlib.api.IProjectCallback;
 
 import org.eclipse.core.resources.IFile;

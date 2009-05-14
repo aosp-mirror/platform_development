@@ -16,22 +16,22 @@
 
 package com.android.ide.eclipse.adt.internal.editors.resources.manager;
 
-import com.android.ide.eclipse.adt.internal.editors.resources.configurations.FolderConfiguration;
-import com.android.ide.eclipse.adt.internal.editors.resources.configurations.ResourceQualifier;
-import com.android.ide.eclipse.adt.internal.editors.resources.configurations.KeyboardStateQualifier.KeyboardState;
-import com.android.ide.eclipse.adt.internal.editors.resources.configurations.NavigationMethodQualifier.NavigationMethod;
-import com.android.ide.eclipse.adt.internal.editors.resources.configurations.ScreenOrientationQualifier.ScreenOrientation;
-import com.android.ide.eclipse.adt.internal.editors.resources.configurations.TextInputMethodQualifier.TextInputMethod;
-import com.android.ide.eclipse.adt.internal.editors.resources.configurations.TouchScreenQualifier.TouchScreenType;
-import com.android.ide.eclipse.adt.internal.editors.resources.manager.ProjectResources;
-import com.android.ide.eclipse.adt.internal.editors.resources.manager.ResourceFile;
-import com.android.ide.eclipse.adt.internal.editors.resources.manager.ResourceFolder;
-import com.android.ide.eclipse.adt.internal.editors.resources.manager.ResourceFolderType;
-import com.android.ide.eclipse.adt.internal.editors.resources.manager.ResourceManager;
-import com.android.ide.eclipse.adt.internal.editors.resources.manager.SingleResourceFile;
-import com.android.ide.eclipse.adt.internal.editors.resources.manager.files.IAbstractFolder;
-import com.android.ide.eclipse.adt.internal.editors.resources.manager.files.IFileWrapper;
-import com.android.ide.eclipse.adt.internal.editors.resources.manager.files.IFolderWrapper;
+import com.android.ide.eclipse.adt.internal.resources.configurations.FolderConfiguration;
+import com.android.ide.eclipse.adt.internal.resources.configurations.ResourceQualifier;
+import com.android.ide.eclipse.adt.internal.resources.configurations.KeyboardStateQualifier.KeyboardState;
+import com.android.ide.eclipse.adt.internal.resources.configurations.NavigationMethodQualifier.NavigationMethod;
+import com.android.ide.eclipse.adt.internal.resources.configurations.ScreenOrientationQualifier.ScreenOrientation;
+import com.android.ide.eclipse.adt.internal.resources.configurations.TextInputMethodQualifier.TextInputMethod;
+import com.android.ide.eclipse.adt.internal.resources.configurations.TouchScreenQualifier.TouchScreenType;
+import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
+import com.android.ide.eclipse.adt.internal.resources.manager.ResourceFile;
+import com.android.ide.eclipse.adt.internal.resources.manager.ResourceFolder;
+import com.android.ide.eclipse.adt.internal.resources.manager.ResourceFolderType;
+import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
+import com.android.ide.eclipse.adt.internal.resources.manager.SingleResourceFile;
+import com.android.ide.eclipse.adt.internal.resources.manager.files.IAbstractFolder;
+import com.android.ide.eclipse.adt.internal.resources.manager.files.IFileWrapper;
+import com.android.ide.eclipse.adt.internal.resources.manager.files.IFolderWrapper;
 import com.android.ide.eclipse.mock.FileMock;
 import com.android.ide.eclipse.mock.FolderMock;
 

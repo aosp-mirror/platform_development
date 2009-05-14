@@ -16,9 +16,9 @@
 
 package com.android.ide.eclipse.adt.internal.editors.resources.manager;
 
-import com.android.ide.eclipse.adt.internal.editors.resources.configurations.FolderConfiguration;
-import com.android.ide.eclipse.adt.internal.editors.resources.configurations.ResourceQualifier;
-import com.android.ide.eclipse.adt.internal.editors.resources.manager.ResourceManager;
+import com.android.ide.eclipse.adt.internal.resources.configurations.FolderConfiguration;
+import com.android.ide.eclipse.adt.internal.resources.configurations.ResourceQualifier;
+import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 
 import java.lang.reflect.Field;
 

@@ -17,10 +17,10 @@
 package com.android.ide.eclipse.adt.internal.editors.resources;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.internal.editors.resources.manager.ResourceFolder;
-import com.android.ide.eclipse.adt.internal.editors.resources.manager.ResourceManager;
 import com.android.ide.eclipse.adt.internal.editors.ui.tree.UiTreeBlock;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
+import com.android.ide.eclipse.adt.internal.resources.manager.ResourceFolder;
+import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.ui.IEditorInput;

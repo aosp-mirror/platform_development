@@ -17,12 +17,12 @@
 package com.android.ide.eclipse.adt.internal.editors.layout;
 
 import com.android.ide.eclipse.adt.AndroidConstants;
-import com.android.ide.eclipse.adt.internal.editors.resources.manager.ResourceFolder;
-import com.android.ide.eclipse.adt.internal.editors.resources.manager.ResourceFolderType;
-import com.android.ide.eclipse.adt.internal.editors.resources.manager.ResourceManager;
-import com.android.ide.eclipse.adt.internal.editors.resources.manager.ResourceMonitor;
-import com.android.ide.eclipse.adt.internal.editors.resources.manager.ResourceMonitor.IFileListener;
-import com.android.ide.eclipse.adt.internal.editors.resources.manager.ResourceMonitor.IResourceEventListener;
+import com.android.ide.eclipse.adt.internal.resources.manager.ResourceFolder;
+import com.android.ide.eclipse.adt.internal.resources.manager.ResourceFolderType;
+import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
+import com.android.ide.eclipse.adt.internal.resources.manager.ResourceMonitor;
+import com.android.ide.eclipse.adt.internal.resources.manager.ResourceMonitor.IFileListener;
+import com.android.ide.eclipse.adt.internal.resources.manager.ResourceMonitor.IResourceEventListener;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarkerDelta;

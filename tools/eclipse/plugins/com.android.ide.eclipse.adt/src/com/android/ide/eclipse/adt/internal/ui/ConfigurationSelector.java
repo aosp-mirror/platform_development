@@ -16,25 +16,25 @@
 
 package com.android.ide.eclipse.adt.internal.ui;
 
-import com.android.ide.eclipse.adt.internal.editors.resources.configurations.CountryCodeQualifier;
-import com.android.ide.eclipse.adt.internal.editors.resources.configurations.FolderConfiguration;
-import com.android.ide.eclipse.adt.internal.editors.resources.configurations.KeyboardStateQualifier;
-import com.android.ide.eclipse.adt.internal.editors.resources.configurations.LanguageQualifier;
-import com.android.ide.eclipse.adt.internal.editors.resources.configurations.NavigationMethodQualifier;
-import com.android.ide.eclipse.adt.internal.editors.resources.configurations.NetworkCodeQualifier;
-import com.android.ide.eclipse.adt.internal.editors.resources.configurations.PixelDensityQualifier;
-import com.android.ide.eclipse.adt.internal.editors.resources.configurations.RegionQualifier;
-import com.android.ide.eclipse.adt.internal.editors.resources.configurations.ResourceQualifier;
-import com.android.ide.eclipse.adt.internal.editors.resources.configurations.ScreenDimensionQualifier;
-import com.android.ide.eclipse.adt.internal.editors.resources.configurations.ScreenOrientationQualifier;
-import com.android.ide.eclipse.adt.internal.editors.resources.configurations.TextInputMethodQualifier;
-import com.android.ide.eclipse.adt.internal.editors.resources.configurations.TouchScreenQualifier;
-import com.android.ide.eclipse.adt.internal.editors.resources.configurations.KeyboardStateQualifier.KeyboardState;
-import com.android.ide.eclipse.adt.internal.editors.resources.configurations.NavigationMethodQualifier.NavigationMethod;
-import com.android.ide.eclipse.adt.internal.editors.resources.configurations.ScreenOrientationQualifier.ScreenOrientation;
-import com.android.ide.eclipse.adt.internal.editors.resources.configurations.TextInputMethodQualifier.TextInputMethod;
-import com.android.ide.eclipse.adt.internal.editors.resources.configurations.TouchScreenQualifier.TouchScreenType;
-import com.android.ide.eclipse.adt.internal.editors.resources.manager.ResourceManager;
+import com.android.ide.eclipse.adt.internal.resources.configurations.CountryCodeQualifier;
+import com.android.ide.eclipse.adt.internal.resources.configurations.FolderConfiguration;
+import com.android.ide.eclipse.adt.internal.resources.configurations.KeyboardStateQualifier;
+import com.android.ide.eclipse.adt.internal.resources.configurations.LanguageQualifier;
+import com.android.ide.eclipse.adt.internal.resources.configurations.NavigationMethodQualifier;
+import com.android.ide.eclipse.adt.internal.resources.configurations.NetworkCodeQualifier;
+import com.android.ide.eclipse.adt.internal.resources.configurations.PixelDensityQualifier;
+import com.android.ide.eclipse.adt.internal.resources.configurations.RegionQualifier;
+import com.android.ide.eclipse.adt.internal.resources.configurations.ResourceQualifier;
+import com.android.ide.eclipse.adt.internal.resources.configurations.ScreenDimensionQualifier;
+import com.android.ide.eclipse.adt.internal.resources.configurations.ScreenOrientationQualifier;
+import com.android.ide.eclipse.adt.internal.resources.configurations.TextInputMethodQualifier;
+import com.android.ide.eclipse.adt.internal.resources.configurations.TouchScreenQualifier;
+import com.android.ide.eclipse.adt.internal.resources.configurations.KeyboardStateQualifier.KeyboardState;
+import com.android.ide.eclipse.adt.internal.resources.configurations.NavigationMethodQualifier.NavigationMethod;
+import com.android.ide.eclipse.adt.internal.resources.configurations.ScreenOrientationQualifier.ScreenOrientation;
+import com.android.ide.eclipse.adt.internal.resources.configurations.TextInputMethodQualifier.TextInputMethod;
+import com.android.ide.eclipse.adt.internal.resources.configurations.TouchScreenQualifier.TouchScreenType;
+import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 
 import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.jface.viewers.ISelection;
