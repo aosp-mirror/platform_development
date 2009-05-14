@@ -145,7 +145,20 @@ def RunHostCommand(binary, valgrind=False):
       print subproc.communicate()[0]
     return subproc.returncode
   else:
+    # Need the full path to valgrind to avoid other versions on the system.
     subproc = subprocess.Popen(["/usr/bin/valgrind", "-q", full_path],
                                stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     subproc.wait()
     return subproc.returncode
+
+
+def HasValgrind():
+  """Check that /usr/bin/valgrind exists.
+
+  We look for the fullpath to avoid picking up 'alternative' valgrind
+  on the system.
+
+  Returns:
+    True if a system valgrind was found.
+  """
+  return os.path.exists("/usr/bin/valgrind")
