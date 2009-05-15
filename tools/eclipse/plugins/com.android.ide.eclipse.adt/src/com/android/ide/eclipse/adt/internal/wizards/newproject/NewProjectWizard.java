@@ -352,9 +352,6 @@ public class NewProjectWizard extends Wizard implements INewWizard {
         }
 
         final ProjectInfo testData = collectTestPageInfo();
-        if (mTestPage != null && testData == null) {
-            return false;
-        }
 
         // Create a monitored operation to create the actual project
         WorkspaceModifyOperation op = new WorkspaceModifyOperation() {
@@ -439,8 +436,11 @@ public class NewProjectWizard extends Wizard implements INewWizard {
         if (mTestPage == null) {
             return null;
         }
-
         TestInfo info = mTestPage.getTestInfo();
+
+        if (!info.getCreateTestProject()) {
+            return null;
+        }
 
         IWorkspace workspace = ResourcesPlugin.getWorkspace();
         final IProject project = workspace.getRoot().getProject(info.getProjectName());
