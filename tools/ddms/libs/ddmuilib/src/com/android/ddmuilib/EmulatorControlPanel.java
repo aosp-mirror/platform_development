@@ -16,7 +16,7 @@
 
 package com.android.ddmuilib;
 
-import com.android.ddmlib.Device;
+import com.android.ddmlib.IDevice;
 import com.android.ddmlib.EmulatorConsole;
 import com.android.ddmlib.EmulatorConsole.GsmMode;
 import com.android.ddmlib.EmulatorConsole.GsmStatus;
@@ -75,7 +75,7 @@ public class EmulatorControlPanel extends SelectionDependentPanel {
     // default location: Patio outside Charlie's
     private final static double DEFAULT_LONGITUDE = -122.084095;
     private final static double DEFAULT_LATITUDE = 37.422006;
-    
+
     private final static String SPEED_FORMAT = "Speed: %1$dX";
 
 
@@ -106,7 +106,7 @@ public class EmulatorControlPanel extends SelectionDependentPanel {
         "EDGE",
         "UMTS",
     };
-    
+
     private final static int[] PLAY_SPEEDS = new int[] { 1, 2, 5, 10, 20, 50 };
 
     private final static String RE_PHONE_NUMBER = "^[+#0-9]+$"; //$NON-NLS-1$
@@ -149,7 +149,7 @@ public class EmulatorControlPanel extends SelectionDependentPanel {
     private Button mCancelButton;
 
     private TabFolder mLocationFolders;
-    
+
     private Button mDecimalButton;
     private Button mSexagesimalButton;
     private CoordinateControls mLongitudeControls;
@@ -177,7 +177,7 @@ public class EmulatorControlPanel extends SelectionDependentPanel {
     private int mPlayDirection = 1;
     private int mSpeed;
     private int mSpeedIndex;
-    
+
     private final SelectionAdapter mDirectionButtonAdapter = new SelectionAdapter() {
         @Override
         public void widgetSelected(SelectionEvent e) {
@@ -188,7 +188,7 @@ public class EmulatorControlPanel extends SelectionDependentPanel {
                 b.setSelection(true);
                 return;
             }
-            
+
             // now handle selection change.
             if (b == mGpxForwardButton || b == mKmlForwardButton) {
                 mGpxBackwardButton.setSelection(false);
@@ -196,7 +196,7 @@ public class EmulatorControlPanel extends SelectionDependentPanel {
                 mKmlBackwardButton.setSelection(false);
                 mKmlForwardButton.setSelection(true);
                 mPlayDirection = 1;
-                
+
             } else {
                 mGpxBackwardButton.setSelection(true);
                 mGpxForwardButton.setSelection(false);
@@ -206,27 +206,27 @@ public class EmulatorControlPanel extends SelectionDependentPanel {
             }
         }
     };
-    
+
     private final SelectionAdapter mSpeedButtonAdapter = new SelectionAdapter() {
         @Override
         public void widgetSelected(SelectionEvent e) {
             mSpeedIndex = (mSpeedIndex+1) % PLAY_SPEEDS.length;
             mSpeed = PLAY_SPEEDS[mSpeedIndex];
-            
+
             mGpxSpeedButton.setText(String.format(SPEED_FORMAT, mSpeed));
             mGpxPlayControls.pack();
             mKmlSpeedButton.setText(String.format(SPEED_FORMAT, mSpeed));
             mKmlPlayControls.pack();
-            
+
             if (mPlayingThread != null) {
                 mPlayingThread.interrupt();
             }
-        } 
+        }
      };
     private Composite mKmlPlayControls;
     private Composite mGpxPlayControls;
 
-    
+
     public EmulatorControlPanel(IImageLoader imageLoader) {
         mImageLoader = imageLoader;
     }
@@ -274,11 +274,11 @@ public class EmulatorControlPanel extends SelectionDependentPanel {
                 scollingParent.setMinSize(top.computeSize(r.width, SWT.DEFAULT));
             }
         });
-        
+
         createRadioControls(top);
 
         createCallControls(top);
-        
+
         createLocationControls(top);
 
         doEnable(false);
@@ -379,7 +379,7 @@ public class EmulatorControlPanel extends SelectionDependentPanel {
         Label l = new Label(g1, SWT.NONE);
         l.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
     }
-    
+
     /**
      * Create Voice/SMS call/hang up controls
      * @param top
@@ -517,7 +517,7 @@ public class EmulatorControlPanel extends SelectionDependentPanel {
             }
         });
     }
-    
+
     /**
      * Create Location controls.
      * @param top
@@ -526,15 +526,15 @@ public class EmulatorControlPanel extends SelectionDependentPanel {
         Label l = new Label(top, SWT.NONE);
         l.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         l.setText("Location Controls");
-        
+
         mLocationFolders = new TabFolder(top, SWT.NONE);
         mLocationFolders.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-        
+
         Composite manualLocationComp = new Composite(mLocationFolders, SWT.NONE);
         TabItem item = new TabItem(mLocationFolders, SWT.NONE);
         item.setText("Manual");
         item.setControl(manualLocationComp);
-        
+
         createManualLocationControl(manualLocationComp);
 
         mPlayImage = mImageLoader.loadImage("play.png", mParent.getDisplay()); // $NON-NLS-1$
@@ -544,7 +544,7 @@ public class EmulatorControlPanel extends SelectionDependentPanel {
         item = new TabItem(mLocationFolders, SWT.NONE);
         item.setText("GPX");
         item.setControl(gpxLocationComp);
-        
+
         createGpxLocationControl(gpxLocationComp);
 
         Composite kmlLocationComp = new Composite(mLocationFolders, SWT.NONE);
@@ -552,7 +552,7 @@ public class EmulatorControlPanel extends SelectionDependentPanel {
         item = new TabItem(mLocationFolders, SWT.NONE);
         item.setText("KML");
         item.setControl(kmlLocationComp);
-        
+
         createKmlLocationControl(kmlLocationComp);
     }
 
@@ -572,63 +572,63 @@ public class EmulatorControlPanel extends SelectionDependentPanel {
         // composite to hold and switching between the 2 modes.
         final Composite content = new Composite(manualLocationComp, SWT.NONE);
         content.setLayout(sl = new StackLayout());
-        
+
         // decimal display
         final Composite decimalContent = new Composite(content, SWT.NONE);
         decimalContent.setLayout(gl = new GridLayout(2, false));
         gl.marginHeight = gl.marginWidth = 0;
-        
+
         mLongitudeControls = new CoordinateControls();
         mLatitudeControls = new CoordinateControls();
-        
+
         label = new Label(decimalContent, SWT.NONE);
         label.setText("Longitude");
-        
+
         mLongitudeControls.createDecimalText(decimalContent);
-        
+
         label = new Label(decimalContent, SWT.NONE);
         label.setText("Latitude");
-        
+
         mLatitudeControls.createDecimalText(decimalContent);
 
         // sexagesimal content
         final Composite sexagesimalContent = new Composite(content, SWT.NONE);
         sexagesimalContent.setLayout(gl = new GridLayout(7, false));
         gl.marginHeight = gl.marginWidth = 0;
-        
+
         label = new Label(sexagesimalContent, SWT.NONE);
         label.setText("Longitude");
-        
+
         mLongitudeControls.createSexagesimalDegreeText(sexagesimalContent);
-        
+
         label = new Label(sexagesimalContent, SWT.NONE);
         label.setText("\u00B0"); // degree character
-        
+
         mLongitudeControls.createSexagesimalMinuteText(sexagesimalContent);
-        
+
         label = new Label(sexagesimalContent, SWT.NONE);
         label.setText("'");
 
         mLongitudeControls.createSexagesimalSecondText(sexagesimalContent);
-        
+
         label = new Label(sexagesimalContent, SWT.NONE);
         label.setText("\"");
 
         label = new Label(sexagesimalContent, SWT.NONE);
         label.setText("Latitude");
-        
+
         mLatitudeControls.createSexagesimalDegreeText(sexagesimalContent);
-        
+
         label = new Label(sexagesimalContent, SWT.NONE);
         label.setText("\u00B0");
-        
+
         mLatitudeControls.createSexagesimalMinuteText(sexagesimalContent);
-        
+
         label = new Label(sexagesimalContent, SWT.NONE);
         label.setText("'");
 
         mLatitudeControls.createSexagesimalSecondText(sexagesimalContent);
-        
+
         label = new Label(sexagesimalContent, SWT.NONE);
         label.setText("\"");
 
@@ -647,7 +647,7 @@ public class EmulatorControlPanel extends SelectionDependentPanel {
                 content.layout();
             }
         });
-        
+
         Button sendButton = new Button(manualLocationComp, SWT.PUSH);
         sendButton.setText("Send");
         sendButton.addSelectionListener(new SelectionAdapter() {
@@ -659,7 +659,7 @@ public class EmulatorControlPanel extends SelectionDependentPanel {
                 }
             }
         });
-        
+
         mLongitudeControls.setValue(DEFAULT_LONGITUDE);
         mLatitudeControls.setValue(DEFAULT_LATITUDE);
     }
@@ -681,7 +681,7 @@ public class EmulatorControlPanel extends SelectionDependentPanel {
         gd.heightHint = 100;
         mGpxWayPointTable.setHeaderVisible(true);
         mGpxWayPointTable.setLinesVisible(true);
-        
+
         TableHelper.createTableColumn(mGpxWayPointTable, "Name", SWT.LEFT,
                 "Some Name",
                 PREFS_WAYPOINT_COL_NAME, store);
@@ -701,7 +701,7 @@ public class EmulatorControlPanel extends SelectionDependentPanel {
         final TableViewer gpxWayPointViewer = new TableViewer(mGpxWayPointTable);
         gpxWayPointViewer.setContentProvider(new WayPointContentProvider());
         gpxWayPointViewer.setLabelProvider(new WayPointLabelProvider());
-        
+
         gpxWayPointViewer.addSelectionChangedListener(new ISelectionChangedListener() {
             public void selectionChanged(SelectionChangedEvent event) {
                 ISelection selection = event.getSelection();
@@ -710,7 +710,7 @@ public class EmulatorControlPanel extends SelectionDependentPanel {
                     Object selectedObject = structuredSelection.getFirstElement();
                     if (selectedObject instanceof WayPoint) {
                         WayPoint wayPoint = (WayPoint)selectedObject;
-                        
+
                         if (mEmulatorConsole != null && mPlayingTrack == false) {
                             processCommandResult(mEmulatorConsole.sendLocation(
                                     wayPoint.getLongitude(), wayPoint.getLatitude(),
@@ -748,7 +748,7 @@ public class EmulatorControlPanel extends SelectionDependentPanel {
         final TableViewer gpxTrackViewer = new TableViewer(mGpxTrackTable);
         gpxTrackViewer.setContentProvider(new TrackContentProvider());
         gpxTrackViewer.setLabelProvider(new TrackLabelProvider());
-        
+
         gpxTrackViewer.addSelectionChangedListener(new ISelectionChangedListener() {
             public void selectionChanged(SelectionChangedEvent event) {
                 ISelection selection = event.getSelection();
@@ -757,19 +757,19 @@ public class EmulatorControlPanel extends SelectionDependentPanel {
                     Object selectedObject = structuredSelection.getFirstElement();
                     if (selectedObject instanceof Track) {
                         Track track = (Track)selectedObject;
-                        
+
                         if (mEmulatorConsole != null && mPlayingTrack == false) {
                             TrackPoint[] points = track.getPoints();
                             processCommandResult(mEmulatorConsole.sendLocation(
                                     points[0].getLongitude(), points[0].getLatitude(),
                                     points[0].getElevation()));
                         }
-                        
+
                         mPlayGpxButton.setEnabled(true);
                         mGpxBackwardButton.setEnabled(true);
                         mGpxForwardButton.setEnabled(true);
                         mGpxSpeedButton.setEnabled(true);
-                        
+
                         return;
                     }
                 }
@@ -780,7 +780,7 @@ public class EmulatorControlPanel extends SelectionDependentPanel {
                 mGpxSpeedButton.setEnabled(false);
             }
         });
-        
+
         mGpxUploadButton.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
@@ -799,7 +799,7 @@ public class EmulatorControlPanel extends SelectionDependentPanel {
                 }
             }
         });
-        
+
         mGpxPlayControls = new Composite(gpxLocationComp, SWT.NONE);
         GridLayout gl;
         mGpxPlayControls.setLayout(gl = new GridLayout(5, false));
@@ -828,14 +828,14 @@ public class EmulatorControlPanel extends SelectionDependentPanel {
                        mPlayingThread.interrupt();
                    }
                }
-            } 
+            }
         });
-        
+
         Label separator = new Label(mGpxPlayControls, SWT.SEPARATOR | SWT.VERTICAL);
         separator.setLayoutData(gd = new GridData(
                 GridData.VERTICAL_ALIGN_FILL | GridData.GRAB_VERTICAL));
         gd.heightHint = 0;
-        
+
         mGpxBackwardButton = new Button(mGpxPlayControls, SWT.TOGGLE | SWT.FLAT);
         mGpxBackwardButton.setImage(mImageLoader.loadImage("backward.png", mParent.getDisplay())); // $NON-NLS-1$
         mGpxBackwardButton.setSelection(false);
@@ -852,7 +852,7 @@ public class EmulatorControlPanel extends SelectionDependentPanel {
 
         mGpxSpeedButton.setText(String.format(SPEED_FORMAT, mSpeed));
         mGpxSpeedButton.addSelectionListener(mSpeedButtonAdapter);
-        
+
         mPlayGpxButton.setEnabled(false);
         mGpxBackwardButton.setEnabled(false);
         mGpxForwardButton.setEnabled(false);
@@ -877,7 +877,7 @@ public class EmulatorControlPanel extends SelectionDependentPanel {
         gd.heightHint = 200;
         mKmlWayPointTable.setHeaderVisible(true);
         mKmlWayPointTable.setLinesVisible(true);
-        
+
         TableHelper.createTableColumn(mKmlWayPointTable, "Name", SWT.LEFT,
                 "Some Name",
                 PREFS_WAYPOINT_COL_NAME, store);
@@ -911,7 +911,7 @@ public class EmulatorControlPanel extends SelectionDependentPanel {
                     KmlParser parser = new KmlParser(fileName);
                     if (parser.parse()) {
                         kmlWayPointViewer.setInput(parser.getWayPoints());
-                        
+
                         mPlayKmlButton.setEnabled(true);
                         mKmlBackwardButton.setEnabled(true);
                         mKmlForwardButton.setEnabled(true);
@@ -920,7 +920,7 @@ public class EmulatorControlPanel extends SelectionDependentPanel {
                 }
             }
         });
-        
+
         kmlWayPointViewer.addSelectionChangedListener(new ISelectionChangedListener() {
             public void selectionChanged(SelectionChangedEvent event) {
                 ISelection selection = event.getSelection();
@@ -929,7 +929,7 @@ public class EmulatorControlPanel extends SelectionDependentPanel {
                     Object selectedObject = structuredSelection.getFirstElement();
                     if (selectedObject instanceof WayPoint) {
                         WayPoint wayPoint = (WayPoint)selectedObject;
-                        
+
                         if (mEmulatorConsole != null && mPlayingTrack == false) {
                             processCommandResult(mEmulatorConsole.sendLocation(
                                     wayPoint.getLongitude(), wayPoint.getLatitude(),
@@ -939,9 +939,9 @@ public class EmulatorControlPanel extends SelectionDependentPanel {
                 }
             }
         });
-        
-        
-        
+
+
+
         mKmlPlayControls = new Composite(kmlLocationComp, SWT.NONE);
         GridLayout gl;
         mKmlPlayControls.setLayout(gl = new GridLayout(5, false));
@@ -965,14 +965,14 @@ public class EmulatorControlPanel extends SelectionDependentPanel {
                        mPlayingThread.interrupt();
                    }
                }
-            } 
+            }
         });
-        
+
         Label separator = new Label(mKmlPlayControls, SWT.SEPARATOR | SWT.VERTICAL);
         separator.setLayoutData(gd = new GridData(
                 GridData.VERTICAL_ALIGN_FILL | GridData.GRAB_VERTICAL));
         gd.heightHint = 0;
-        
+
         mKmlBackwardButton = new Button(mKmlPlayControls, SWT.TOGGLE | SWT.FLAT);
         mKmlBackwardButton.setImage(mImageLoader.loadImage("backward.png", mParent.getDisplay())); // $NON-NLS-1$
         mKmlBackwardButton.setSelection(false);
@@ -989,7 +989,7 @@ public class EmulatorControlPanel extends SelectionDependentPanel {
 
         mKmlSpeedButton.setText(String.format(SPEED_FORMAT, mSpeed));
         mKmlSpeedButton.addSelectionListener(mSpeedButtonAdapter);
-        
+
         mPlayKmlButton.setEnabled(false);
         mKmlBackwardButton.setEnabled(false);
         mKmlForwardButton.setEnabled(false);
@@ -1039,7 +1039,7 @@ public class EmulatorControlPanel extends SelectionDependentPanel {
      * Callback on device selection change.
      * @param device the new selected device
      */
-    public void handleNewDevice(Device device) {
+    public void handleNewDevice(IDevice device) {
         if (mParent.isDisposed()) {
             return;
         }
@@ -1061,7 +1061,7 @@ public class EmulatorControlPanel extends SelectionDependentPanel {
                         // get the gsm status
                         gsm = mEmulatorConsole.getGsmStatus();
                         netstatus = mEmulatorConsole.getNetworkStatus();
-                        
+
                         if (gsm == null || netstatus == null) {
                             mEmulatorConsole = null;
                         }
@@ -1073,7 +1073,7 @@ public class EmulatorControlPanel extends SelectionDependentPanel {
                     if (d.isDisposed() == false) {
                         final GsmStatus f_gsm = gsm;
                         final NetworkStatus f_netstatus = netstatus;
-                        
+
                         d.asyncExec(new Runnable() {
                             public void run() {
                                 if (f_gsm.voice != GsmMode.UNKNOWN) {
@@ -1109,7 +1109,7 @@ public class EmulatorControlPanel extends SelectionDependentPanel {
             synchronized (this) {
                 enable = mEmulatorConsole != null;
             }
-            
+
             enable(enable);
         }
     }
@@ -1240,10 +1240,10 @@ public class EmulatorControlPanel extends SelectionDependentPanel {
             } catch (SWTException e) {
                 // we're quitting, just ignore
             }
-            
+
             return false;
         }
-        
+
         return true;
     }
 
@@ -1264,13 +1264,13 @@ public class EmulatorControlPanel extends SelectionDependentPanel {
                     try {
                         TrackPoint[] trackPoints = track.getPoints();
                         int count = trackPoints.length;
-                        
+
                         // get the start index.
                         int start = 0;
                         if (mPlayDirection == -1) {
                             start = count - 1;
                         }
-                        
+
                         for (int p = start; p >= 0 && p < count; p += mPlayDirection) {
                             if (mPlayingTrack == false) {
                                 return;
@@ -1299,7 +1299,7 @@ public class EmulatorControlPanel extends SelectionDependentPanel {
                                 if (delta < 0) {
                                     delta = -delta;
                                 }
-                                
+
                                 long startTime = System.currentTimeMillis();
 
                                 try {
@@ -1308,7 +1308,7 @@ public class EmulatorControlPanel extends SelectionDependentPanel {
                                     if (mPlayingTrack == false) {
                                         return;
                                     }
-                                    
+
                                     // we got interrupted, lets make sure we can play
                                     do {
                                         long waited = System.currentTimeMillis() - startTime;
@@ -1351,7 +1351,7 @@ public class EmulatorControlPanel extends SelectionDependentPanel {
             mPlayingThread.start();
         }
     }
-    
+
     private void playKml(final WayPoint[] trackPoints) {
         // no need to synchronize this check, the worst that can happen, is we start the thread
         // for nothing.
@@ -1365,13 +1365,13 @@ public class EmulatorControlPanel extends SelectionDependentPanel {
                 public void run() {
                     try {
                         int count = trackPoints.length;
-                        
+
                         // get the start index.
                         int start = 0;
                         if (mPlayDirection == -1) {
                             start = count - 1;
                         }
-                        
+
                         for (int p = start; p >= 0 && p < count; p += mPlayDirection) {
                             if (mPlayingTrack == false) {
                                 return;
@@ -1399,7 +1399,7 @@ public class EmulatorControlPanel extends SelectionDependentPanel {
                                 if (delta < 0) {
                                     delta = -delta;
                                 }
-                                
+
                                 long startTime = System.currentTimeMillis();
 
                                 try {
@@ -1408,7 +1408,7 @@ public class EmulatorControlPanel extends SelectionDependentPanel {
                                     if (mPlayingTrack == false) {
                                         return;
                                     }
-                                    
+
                                     // we got interrupted, lets make sure we can play
                                     do {
                                         long waited = System.currentTimeMillis() - startTime;
@@ -1449,6 +1449,6 @@ public class EmulatorControlPanel extends SelectionDependentPanel {
             };
 
             mPlayingThread.start();
-        }        
+        }
     }
 }

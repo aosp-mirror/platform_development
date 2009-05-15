@@ -199,7 +199,7 @@ abstract class ChunkHandler {
     protected static Client checkDebuggerPortForAppName(Client client, String appName) {
         IDebugPortProvider provider = DebugPortManager.getProvider();
         if (provider != null) {
-            Device device = client.getDevice();
+            Device device = client.getDeviceImpl();
             int newPort = provider.getPort(device, appName);
 
             if (newPort != IDebugPortProvider.NO_STATIC_PORT &&

@@ -19,7 +19,6 @@ package com.android.ide.eclipse.adt.internal.launch;
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.Client;
 import com.android.ddmlib.ClientData;
-import com.android.ddmlib.Device;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.Log;
 import com.android.ddmlib.MultiLineReceiver;
@@ -1381,9 +1380,9 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
      * This is sent from a non UI thread.
      * @param device the new device.
      *
-     * @see IDeviceChangeListener#deviceConnected(Device)
+     * @see IDeviceChangeListener#deviceConnected(IDevice)
      */
-    public void deviceConnected(Device device) {
+    public void deviceConnected(IDevice device) {
         synchronized (sListLock) {
             // look if there's an app waiting for a device
             if (mWaitingForEmulatorLaunches.size() > 0) {
@@ -1415,10 +1414,10 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
      * This is sent from a non UI thread.
      * @param device the new device.
      *
-     * @see IDeviceChangeListener#deviceDisconnected(Device)
+     * @see IDeviceChangeListener#deviceDisconnected(IDevice)
      */
     @SuppressWarnings("unchecked")
-    public void deviceDisconnected(Device device) {
+    public void deviceDisconnected(IDevice device) {
         // any pending launch on this device must be canceled.
         String message = "%1$s disconnected! Cancelling '%2$s'!";
         synchronized (sListLock) {
@@ -1451,9 +1450,9 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
      * @param device the device that was updated.
      * @param changeMask the mask indicating what changed.
      *
-     * @see IDeviceChangeListener#deviceChanged(Device, int)
+     * @see IDeviceChangeListener#deviceChanged(IDevice, int)
      */
-    public void deviceChanged(Device device, int changeMask) {
+    public void deviceChanged(IDevice device, int changeMask) {
         // We could check if any starting device we care about is now ready, but we can wait for
         // its home app to show up, so...
     }

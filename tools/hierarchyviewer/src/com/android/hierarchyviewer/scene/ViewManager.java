@@ -16,7 +16,7 @@
 
 package com.android.hierarchyviewer.scene;
 
-import com.android.ddmlib.Device;
+import com.android.ddmlib.IDevice;
 import com.android.hierarchyviewer.device.Window;
 import com.android.hierarchyviewer.device.DeviceBridge;
 
@@ -27,15 +27,15 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 
 public class ViewManager {
-    public static void invalidate(Device device, Window window, String params) {
+    public static void invalidate(IDevice device, Window window, String params) {
         sendCommand("INVALIDATE", device, window, params);
     }
 
-    public static void requestLayout(Device device, Window window, String params) {
+    public static void requestLayout(IDevice device, Window window, String params) {
         sendCommand("REQUEST_LAYOUT", device, window, params);
     }
 
-    private static void sendCommand(String command, Device device, Window window, String params) {
+    private static void sendCommand(String command, IDevice device, Window window, String params) {
         Socket socket = null;
         BufferedWriter out = null;
 

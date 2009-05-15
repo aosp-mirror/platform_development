@@ -107,7 +107,7 @@ public final class AndroidDebugBridge {
 
     /**
      * Classes which implement this interface provide methods that deal
-     * with {@link Device} addition, deletion, and changes.
+     * with {@link IDevice} addition, deletion, and changes.
      */
     public interface IDeviceChangeListener {
         /**
@@ -116,7 +116,7 @@ public final class AndroidDebugBridge {
          * This is sent from a non UI thread.
          * @param device the new device.
          */
-        public void deviceConnected(Device device);
+        public void deviceConnected(IDevice device);
 
         /**
          * Sent when the a device is connected to the {@link AndroidDebugBridge}.
@@ -124,7 +124,7 @@ public final class AndroidDebugBridge {
          * This is sent from a non UI thread.
          * @param device the new device.
          */
-        public void deviceDisconnected(Device device);
+        public void deviceDisconnected(IDevice device);
 
         /**
          * Sent when a device data changed, or when clients are started/terminated on the device.
@@ -132,10 +132,10 @@ public final class AndroidDebugBridge {
          * This is sent from a non UI thread.
          * @param device the device that was updated.
          * @param changeMask the mask describing what changed. It can contain any of the following
-         * values: {@link Device#CHANGE_BUILD_INFO}, {@link Device#CHANGE_STATE},
-         * {@link Device#CHANGE_CLIENT_LIST}
+         * values: {@link IDevice#CHANGE_BUILD_INFO}, {@link IDevice#CHANGE_STATE},
+         * {@link IDevice#CHANGE_CLIENT_LIST}
          */
-        public void deviceChanged(Device device, int changeMask);
+        public void deviceChanged(IDevice device, int changeMask);
     }
 
     /**
@@ -215,7 +215,7 @@ public final class AndroidDebugBridge {
 
     /**
      * Returns whether the ddmlib is setup to support monitoring and interacting with
-     * {@link Client}s running on the {@link Device}s.
+     * {@link Client}s running on the {@link IDevice}s.
      */
     static boolean getClientSupport() {
         return sClientSupport;
@@ -391,7 +391,7 @@ public final class AndroidDebugBridge {
     }
 
     /**
-     * Adds the listener to the collection of listeners who will be notified when a {@link Device}
+     * Adds the listener to the collection of listeners who will be notified when a {@link IDevice}
      * is connected, disconnected, or when its properties or its {@link Client} list changed,
      * by sending it one of the messages defined in the {@link IDeviceChangeListener} interface.
      * @param listener The listener which should be notified.
@@ -406,7 +406,7 @@ public final class AndroidDebugBridge {
 
     /**
      * Removes the listener from the collection of listeners who will be notified when a
-     * {@link Device} is connected, disconnected, or when its properties or its {@link Client}
+     * {@link IDevice} is connected, disconnected, or when its properties or its {@link Client}
      * list changed.
      * @param listener The listener which should no longer be notified.
      */
@@ -446,23 +446,23 @@ public final class AndroidDebugBridge {
      * Returns the devices.
      * @see #hasInitialDeviceList()
      */
-    public Device[] getDevices() {
+    public IDevice[] getDevices() {
         synchronized (sLock) {
             if (mDeviceMonitor != null) {
                 return mDeviceMonitor.getDevices();
             }
         }
 
-        return new Device[0];
+        return new IDevice[0];
     }
 
     /**
      * Returns whether the bridge has acquired the initial list from adb after being created.
      * <p/>Calling {@link #getDevices()} right after {@link #createBridge(String, boolean)} will
      * generally result in an empty list. This is due to the internal asynchronous communication
-     * mechanism with <code>adb</code> that does not guarantee that the {@link Device} list has been
+     * mechanism with <code>adb</code> that does not guarantee that the {@link IDevice} list has been
      * built before the call to {@link #getDevices()}.
-     * <p/>The recommended way to get the list of {@link Device} objects is to create a
+     * <p/>The recommended way to get the list of {@link IDevice} objects is to create a
      * {@link IDeviceChangeListener} object.
      */
     public boolean hasInitialDeviceList() {
@@ -719,19 +719,19 @@ public final class AndroidDebugBridge {
     }
 
     /**
-     * Notify the listener of a new {@link Device}.
+     * Notify the listener of a new {@link IDevice}.
      * <p/>
      * The notification of the listeners is done in a synchronized block. It is important to
-     * expect the listeners to potentially access various methods of {@link Device} as well as
+     * expect the listeners to potentially access various methods of {@link IDevice} as well as
      * {@link #getDevices()} which use internal locks.
      * <p/>
      * For this reason, any call to this method from a method of {@link DeviceMonitor},
-     * {@link Device} which is also inside a synchronized block, should first synchronize on
+     * {@link IDevice} which is also inside a synchronized block, should first synchronize on
      * the {@link AndroidDebugBridge} lock. Access to this lock is done through {@link #getLock()}.
-     * @param device the new <code>Device</code>.
+     * @param device the new <code>IDevice</code>.
      * @see #getLock()
      */
-    void deviceConnected(Device device) {
+    void deviceConnected(IDevice device) {
         // because the listeners could remove themselves from the list while processing
         // their event callback, we make a copy of the list and iterate on it instead of
         // the main list.
@@ -755,19 +755,19 @@ public final class AndroidDebugBridge {
     }
 
     /**
-     * Notify the listener of a disconnected {@link Device}.
+     * Notify the listener of a disconnected {@link IDevice}.
      * <p/>
      * The notification of the listeners is done in a synchronized block. It is important to
-     * expect the listeners to potentially access various methods of {@link Device} as well as
+     * expect the listeners to potentially access various methods of {@link IDevice} as well as
      * {@link #getDevices()} which use internal locks.
      * <p/>
      * For this reason, any call to this method from a method of {@link DeviceMonitor},
-     * {@link Device} which is also inside a synchronized block, should first synchronize on
+     * {@link IDevice} which is also inside a synchronized block, should first synchronize on
      * the {@link AndroidDebugBridge} lock. Access to this lock is done through {@link #getLock()}.
-     * @param device the disconnected <code>Device</code>.
+     * @param device the disconnected <code>IDevice</code>.
      * @see #getLock()
      */
-    void deviceDisconnected(Device device) {
+    void deviceDisconnected(IDevice device) {
         // because the listeners could remove themselves from the list while processing
         // their event callback, we make a copy of the list and iterate on it instead of
         // the main list.
@@ -791,19 +791,19 @@ public final class AndroidDebugBridge {
     }
 
     /**
-     * Notify the listener of a modified {@link Device}.
+     * Notify the listener of a modified {@link IDevice}.
      * <p/>
      * The notification of the listeners is done in a synchronized block. It is important to
-     * expect the listeners to potentially access various methods of {@link Device} as well as
+     * expect the listeners to potentially access various methods of {@link IDevice} as well as
      * {@link #getDevices()} which use internal locks.
      * <p/>
      * For this reason, any call to this method from a method of {@link DeviceMonitor},
-     * {@link Device} which is also inside a synchronized block, should first synchronize on
+     * {@link IDevice} which is also inside a synchronized block, should first synchronize on
      * the {@link AndroidDebugBridge} lock. Access to this lock is done through {@link #getLock()}.
-     * @param device the modified <code>Device</code>.
+     * @param device the modified <code>IDevice</code>.
      * @see #getLock()
      */
-    void deviceChanged(Device device, int changeMask) {
+    void deviceChanged(IDevice device, int changeMask) {
         // because the listeners could remove themselves from the list while processing
         // their event callback, we make a copy of the list and iterate on it instead of
         // the main list.
@@ -830,11 +830,11 @@ public final class AndroidDebugBridge {
      * Notify the listener of a modified {@link Client}.
      * <p/>
      * The notification of the listeners is done in a synchronized block. It is important to
-     * expect the listeners to potentially access various methods of {@link Device} as well as
+     * expect the listeners to potentially access various methods of {@link IDevice} as well as
      * {@link #getDevices()} which use internal locks.
      * <p/>
      * For this reason, any call to this method from a method of {@link DeviceMonitor},
-     * {@link Device} which is also inside a synchronized block, should first synchronize on
+     * {@link IDevice} which is also inside a synchronized block, should first synchronize on
      * the {@link AndroidDebugBridge} lock. Access to this lock is done through {@link #getLock()}.
      * @param device the modified <code>Client</code>.
      * @param changeMask the mask indicating what changed in the <code>Client</code>

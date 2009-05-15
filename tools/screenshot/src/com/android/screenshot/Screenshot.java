@@ -17,7 +17,7 @@
 package com.android.screenshot;
 
 import com.android.ddmlib.AndroidDebugBridge;
-import com.android.ddmlib.Device;
+import com.android.ddmlib.IDevice;
 import com.android.ddmlib.Log;
 import com.android.ddmlib.RawImage;
 import com.android.ddmlib.Log.ILogOutput;
@@ -30,7 +30,7 @@ import java.io.IOException;
 import javax.imageio.ImageIO;
 
 /**
- * Connects to a device using ddmlib and dumps its event log as long as the device is connected. 
+ * Connects to a device using ddmlib and dumps its event log as long as the device is connected.
  */
 public class Screenshot {
 
@@ -40,7 +40,7 @@ public class Screenshot {
         String serial = null;
         String filepath = null;
         boolean landscape = false;
-        
+
         if (args.length == 0) {
             printUsageAndQuit();
         }
@@ -69,7 +69,7 @@ public class Screenshot {
                 if (device || emulator) {
                     printAndExit("-s conflicts with -d and -e", false /* terminate */);
                 }
-                
+
                 serial = args[index++];
             } else if ("-l".equals(argument)) {
                 landscape = true;
@@ -83,11 +83,11 @@ public class Screenshot {
                 }
             }
         } while (index < args.length);
-        
+
         if (filepath == null) {
             printUsageAndQuit();
         }
-        
+
         Log.setLogOutput(new ILogOutput() {
             public void printAndPromptLog(LogLevel logLevel, String tag, String message) {
                 System.err.println(logLevel.getStringValue() + ":" + tag + ":" + message);
@@ -97,7 +97,7 @@ public class Screenshot {
                 System.err.println(logLevel.getStringValue() + ":" + tag + ":" + message);
             }
         });
-        
+
         // init the lib
         // [try to] ensure ADB is running
         String adbLocation = System.getProperty("com.android.screenshot.bindir"); //$NON-NLS-1$
@@ -108,11 +108,11 @@ public class Screenshot {
         }
 
         AndroidDebugBridge.init(false /* debugger support */);
-        
+
         try {
             AndroidDebugBridge bridge = AndroidDebugBridge.createBridge(
                     adbLocation, true /* forceNewBridge */);
-            
+
             // we can't just ask for the device list right away, as the internal thread getting
             // them from ADB may not be done getting the first list.
             // Since we don't really want getDevices() to be blocking, we wait here manually.
@@ -124,7 +124,7 @@ public class Screenshot {
                 } catch (InterruptedException e) {
                     // pass
                 }
-                
+
                 // let's not wait > 10 sec.
                 if (count > 100) {
                     System.err.println("Timeout getting device list!");
@@ -133,16 +133,16 @@ public class Screenshot {
             }
 
             // now get the devices
-            Device[] devices = bridge.getDevices();
-            
+            IDevice[] devices = bridge.getDevices();
+
             if (devices.length == 0) {
                 printAndExit("No devices found!", true /* terminate */);
             }
-            
-            Device target = null;
-            
+
+            IDevice target = null;
+
             if (emulator || device) {
-                for (Device d : devices) {
+                for (IDevice d : devices) {
                     // this test works because emulator and device can't both be true at the same
                     // time.
                     if (d.isEmulator() == emulator) {
@@ -159,7 +159,7 @@ public class Screenshot {
                     }
                 }
             } else if (serial != null) {
-                for (Device d : devices) {
+                for (IDevice d : devices) {
                     if (serial.equals(d.getSerialNumber())) {
                         target = d;
                         break;
@@ -172,7 +172,7 @@ public class Screenshot {
                 }
                 target = devices[0];
             }
-            
+
             if (target != null) {
                 try {
                     System.out.println("Taking screenshot from: " + target.getSerialNumber());
@@ -188,11 +188,11 @@ public class Screenshot {
             AndroidDebugBridge.terminate();
         }
     }
-    
+
     /*
      * Grab an image from an ADB-connected device.
      */
-    private static void getDeviceImage(Device device, String filepath, boolean landscape)
+    private static void getDeviceImage(IDevice device, String filepath, boolean landscape)
             throws IOException {
         RawImage rawImage;
 
@@ -209,28 +209,28 @@ public class Screenshot {
             return;
 
         assert rawImage.bpp == 16;
-        
+
         BufferedImage image;
-        
+
         if (landscape) {
             // convert raw data to an Image
             image = new BufferedImage(rawImage.height, rawImage.width,
                     BufferedImage.TYPE_INT_ARGB);
-            
+
             byte[] buffer = rawImage.data;
             int index = 0;
             for (int y = 0 ; y < rawImage.height ; y++) {
                 for (int x = 0 ; x < rawImage.width ; x++) {
-                    
+
                     int value = buffer[index++] & 0x00FF;
                     value |= (buffer[index++] << 8) & 0x0FF00;
-                    
+
                     int r = ((value >> 11) & 0x01F) << 3;
                     int g = ((value >> 5) & 0x03F) << 2;
                     int b = ((value >> 0) & 0x01F) << 3;
-                    
+
                     value = 0xFF << 24 | r << 16 | g << 8 | b;
-                    
+
                     image.setRGB(y, rawImage.width - x - 1, value);
                 }
             }
@@ -238,31 +238,31 @@ public class Screenshot {
             // convert raw data to an Image
             image = new BufferedImage(rawImage.width, rawImage.height,
                     BufferedImage.TYPE_INT_ARGB);
-            
+
             byte[] buffer = rawImage.data;
             int index = 0;
             for (int y = 0 ; y < rawImage.height ; y++) {
                 for (int x = 0 ; x < rawImage.width ; x++) {
-                    
+
                     int value = buffer[index++] & 0x00FF;
                     value |= (buffer[index++] << 8) & 0x0FF00;
-                    
+
                     int r = ((value >> 11) & 0x01F) << 3;
                     int g = ((value >> 5) & 0x03F) << 2;
                     int b = ((value >> 0) & 0x01F) << 3;
-                    
+
                     value = 0xFF << 24 | r << 16 | g << 8 | b;
-                    
+
                     image.setRGB(x, y, value);
                 }
             }
         }
-        
+
         if (!ImageIO.write(image, "png", new File(filepath))) {
             throw new IOException("Failed to find png writer");
         }
     }
-    
+
     private static void printUsageAndQuit() {
         // 80 cols marker:  01234567890123456789012345678901234567890123456789012345678901234567890123456789
         System.out.println("Usage: screenshot2 [-d | -e | -s SERIAL] [-l] OUT_FILE");
@@ -273,10 +273,10 @@ public class Screenshot {
         System.out.println("");
         System.out.println("    -l      Rotate images for landscape mode.");
         System.out.println("");
-        
+
         System.exit(1);
     }
-    
+
     private static void printAndExit(String message, boolean terminate) {
         System.out.println(message);
         if (terminate) {

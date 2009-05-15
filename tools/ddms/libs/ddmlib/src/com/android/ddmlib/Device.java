@@ -16,7 +16,6 @@
 
 package com.android.ddmlib;
 
-import com.android.ddmlib.Client;
 import com.android.ddmlib.log.LogReceiver;
 
 import java.io.IOException;
@@ -30,50 +29,20 @@ import java.util.Map;
 
 /**
  * A Device. It can be a physical device or an emulator.
- *
- * TODO: make this class package-protected, and shift all callers to use IDevice
  */
-public final class Device implements IDevice {
-    /**
-     * The state of a device.
-     */
-    public static enum DeviceState {
-        BOOTLOADER("bootloader"), //$NON-NLS-1$
-        OFFLINE("offline"), //$NON-NLS-1$
-        ONLINE("device"); //$NON-NLS-1$
-
-        private String mState;
-
-        DeviceState(String state) {
-            mState = state;
-        }
-
-        /**
-         * Returns a {@link DeviceState} from the string returned by <code>adb devices</code>.
-         * @param state the device state.
-         * @return a {@link DeviceState} object or <code>null</code> if the state is unknown.
-         */
-        public static DeviceState getState(String state) {
-            for (DeviceState deviceState : values()) {
-                if (deviceState.mState.equals(state)) {
-                    return deviceState;
-                }
-            }
-            return null;
-        }
-    }
+final class Device implements IDevice {
 
     /** Emulator Serial Number regexp. */
     final static String RE_EMULATOR_SN = "emulator-(\\d+)"; //$NON-NLS-1$
 
     /** Serial number of the device */
-    String serialNumber = null;
+    private String mSerialNumber = null;
 
     /** Name of the AVD */
-    String mAvdName = null;
+    private String mAvdName = null;
 
     /** State of the device. */
-    DeviceState state = null;
+    private DeviceState mState = null;
 
     /** Device properties. */
     private final Map<String, String> mProperties = new HashMap<String, String>();
@@ -91,21 +60,41 @@ public final class Device implements IDevice {
      * @see com.android.ddmlib.IDevice#getSerialNumber()
      */
     public String getSerialNumber() {
-        return serialNumber;
+        return mSerialNumber;
     }
 
+    /** {@inheritDoc} */
     public String getAvdName() {
         return mAvdName;
     }
 
+    /**
+     * Sets the name of the AVD
+     */
+    void setAvdName(String avdName) {
+        if (isEmulator() == false) {
+            throw new IllegalArgumentException(
+                    "Cannot set the AVD name of the device is not an emulator");
+        }
+
+        mAvdName = avdName;
+    }
 
     /*
      * (non-Javadoc)
      * @see com.android.ddmlib.IDevice#getState()
      */
     public DeviceState getState() {
-        return state;
+        return mState;
     }
+
+    /**
+     * Changes the state of the device.
+     */
+    void setState(DeviceState state) {
+        mState = state;
+    }
+
 
     /*
      * (non-Javadoc)
@@ -134,7 +123,7 @@ public final class Device implements IDevice {
 
     @Override
     public String toString() {
-        return serialNumber;
+        return mSerialNumber;
     }
 
     /*
@@ -142,7 +131,7 @@ public final class Device implements IDevice {
      * @see com.android.ddmlib.IDevice#isOnline()
      */
     public boolean isOnline() {
-        return state == DeviceState.ONLINE;
+        return mState == DeviceState.ONLINE;
     }
 
     /*
@@ -150,7 +139,7 @@ public final class Device implements IDevice {
      * @see com.android.ddmlib.IDevice#isEmulator()
      */
     public boolean isEmulator() {
-        return serialNumber.matches(RE_EMULATOR_SN);
+        return mSerialNumber.matches(RE_EMULATOR_SN);
     }
 
     /*
@@ -158,7 +147,7 @@ public final class Device implements IDevice {
      * @see com.android.ddmlib.IDevice#isOffline()
      */
     public boolean isOffline() {
-        return state == DeviceState.OFFLINE;
+        return mState == DeviceState.OFFLINE;
     }
 
     /*
@@ -166,7 +155,7 @@ public final class Device implements IDevice {
      * @see com.android.ddmlib.IDevice#isBootLoader()
      */
     public boolean isBootLoader() {
-        return state == DeviceState.BOOTLOADER;
+        return mState == DeviceState.BOOTLOADER;
     }
 
     /*
@@ -305,8 +294,10 @@ public final class Device implements IDevice {
     }
 
 
-    Device(DeviceMonitor monitor) {
+    Device(DeviceMonitor monitor, String serialNumber, DeviceState deviceState) {
         mMonitor = monitor;
+        mSerialNumber = serialNumber;
+        mState = deviceState;
     }
 
     DeviceMonitor getMonitor() {

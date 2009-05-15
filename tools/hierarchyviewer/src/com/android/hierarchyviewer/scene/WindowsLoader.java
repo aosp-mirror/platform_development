@@ -16,7 +16,7 @@
 
 package com.android.hierarchyviewer.scene;
 
-import com.android.ddmlib.Device;
+import com.android.ddmlib.IDevice;
 import com.android.hierarchyviewer.device.DeviceBridge;
 import com.android.hierarchyviewer.device.Window;
 
@@ -30,7 +30,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 
 public class WindowsLoader {
-    public static Window[] loadWindows(Device device) {
+    public static Window[] loadWindows(IDevice device) {
         Socket socket = null;
         BufferedReader in = null;
         BufferedWriter out = null;
