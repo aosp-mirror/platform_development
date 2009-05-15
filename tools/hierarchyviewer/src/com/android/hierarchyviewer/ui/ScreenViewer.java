@@ -1,6 +1,6 @@
 package com.android.hierarchyviewer.ui;
 
-import com.android.ddmlib.Device;
+import com.android.ddmlib.IDevice;
 import com.android.ddmlib.RawImage;
 import com.android.hierarchyviewer.util.WorkerThread;
 import com.android.hierarchyviewer.scene.ViewNode;
@@ -51,14 +51,14 @@ import java.util.concurrent.ExecutionException;
 
 class ScreenViewer extends JPanel implements ActionListener {
     private final Workspace workspace;
-    private final Device device;
+    private final IDevice device;
 
     private GetScreenshotTask task;
     private BufferedImage image;
     private int[] scanline;
     private volatile boolean isLoading;
 
-    private BufferedImage overlay;    
+    private BufferedImage overlay;
     private AlphaComposite overlayAlpha = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.3f);
 
     private ScreenViewer.LoupeStatus status;
@@ -73,7 +73,7 @@ class ScreenViewer extends JPanel implements ActionListener {
 
     private JSlider zoomSlider;
 
-    ScreenViewer(Workspace workspace, Device device, int spacing) {
+    ScreenViewer(Workspace workspace, IDevice device, int spacing) {
         setLayout(new BorderLayout());
         setOpaque(false);
 
@@ -92,7 +92,7 @@ class ScreenViewer extends JPanel implements ActionListener {
 
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
-                timer.start();                
+                timer.start();
             }
         });
     }
@@ -463,7 +463,7 @@ class ScreenViewer extends JPanel implements ActionListener {
                 g.fillRect(0, 0, getWidth(), getHeight());
 
                 g.setColor(Color.WHITE);
-                g.drawRect(0, 0, getWidth() - 1, getHeight() - 1);                
+                g.drawRect(0, 0, getWidth() - 1, getHeight() - 1);
             }
         }
     }

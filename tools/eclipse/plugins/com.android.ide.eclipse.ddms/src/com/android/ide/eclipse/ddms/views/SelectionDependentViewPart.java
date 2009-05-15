@@ -16,12 +16,13 @@
 
 package com.android.ide.eclipse.ddms.views;
 
+import com.android.ddmlib.Client;
+import com.android.ddmlib.IDevice;
+import com.android.ddmuilib.SelectionDependentPanel;
 import com.android.ide.eclipse.ddms.DdmsPlugin;
 import com.android.ide.eclipse.ddms.DdmsPlugin.ISelectionListener;
-import com.android.ddmlib.Client;
-import com.android.ddmlib.Device;
-import com.android.ddmuilib.SelectionDependentPanel;
 
+import org.eclipse.swt.graphics.Device;
 import org.eclipse.ui.part.ViewPart;
 
 /**
@@ -29,17 +30,17 @@ import org.eclipse.ui.part.ViewPart;
  * from {@link DdmsPlugin} through the {@link ISelectionListener} interface.
  */
 public abstract class SelectionDependentViewPart extends ViewPart implements ISelectionListener {
-    
+
     private SelectionDependentPanel mPanel;
-    
+
     protected final void setSelectionDependentPanel(SelectionDependentPanel panel) {
         // remember the panel
         mPanel = panel;
-        
+
         // and add ourself as listener of selection events.
         DdmsPlugin.getDefault().addSelectionListener(this);
     }
-    
+
     @Override
     public void dispose() {
         DdmsPlugin.getDefault().removeSelectionListener(this);
@@ -49,20 +50,20 @@ public abstract class SelectionDependentViewPart extends ViewPart implements ISe
     /**
      * Sent when a new {@link Client} is selected.
      * @param selectedClient The selected client.
-     * 
+     *
      * @see ISelectionListener
      */
     public final void selectionChanged(Client selectedClient) {
         mPanel.clientSelected(selectedClient);
     }
-    
+
     /**
      * Sent when a new {@link Device} is selected.
      * @param selectedDevice the selected device.
      *
      * @see ISelectionListener
      */
-    public final void selectionChanged(Device selectedDevice) {
+    public final void selectionChanged(IDevice selectedDevice) {
         mPanel.deviceSelected(selectedDevice);
     }
 }

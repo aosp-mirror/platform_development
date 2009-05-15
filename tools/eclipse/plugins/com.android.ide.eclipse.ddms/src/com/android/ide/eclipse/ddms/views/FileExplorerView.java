@@ -17,7 +17,7 @@
 package com.android.ide.eclipse.ddms.views;
 
 import com.android.ddmlib.Client;
-import com.android.ddmlib.Device;
+import com.android.ddmlib.IDevice;
 import com.android.ddmuilib.explorer.DeviceExplorer;
 import com.android.ide.eclipse.ddms.CommonAction;
 import com.android.ide.eclipse.ddms.DdmsPlugin;
@@ -26,6 +26,7 @@ import com.android.ide.eclipse.ddms.DdmsPlugin.ISelectionListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.swt.graphics.Device;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.ISharedImages;
@@ -128,7 +129,7 @@ public class FileExplorerView extends ViewPart implements ISelectionListener {
         toolBarManager.add(pushAction);
         toolBarManager.add(new Separator());
         toolBarManager.add(deleteAction);
-        
+
         mExplorer.createPanel(parent);
 
         DdmsPlugin.getDefault().addSelectionListener(this);
@@ -146,20 +147,20 @@ public class FileExplorerView extends ViewPart implements ISelectionListener {
     public void selectionChanged(Client selectedClient) {
         // pass
     }
-    
+
     /**
      * Sent when a new {@link Device} is selected.
      * @param selectedDevice the selected device.
      */
-    public void selectionChanged(Device selectedDevice) {
+    public void selectionChanged(IDevice selectedDevice) {
         mExplorer.switchDevice(selectedDevice);
     }
-    
+
     /**
      * Sent when there is no current selection.
      */
     public void selectionRemoved() {
-        
+
     }
 
 }

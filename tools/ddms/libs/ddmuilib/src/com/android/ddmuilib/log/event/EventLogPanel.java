@@ -17,7 +17,7 @@
 package com.android.ddmuilib.log.event;
 
 import com.android.ddmlib.Client;
-import com.android.ddmlib.Device;
+import com.android.ddmlib.IDevice;
 import com.android.ddmlib.Log;
 import com.android.ddmlib.Log.LogLevel;
 import com.android.ddmlib.log.EventContainer;
@@ -80,7 +80,7 @@ public class EventLogPanel extends TablePanel implements ILogListener,
 
     private IImageLoader mImageLoader;
 
-    private Device mCurrentLoggedDevice;
+    private IDevice mCurrentLoggedDevice;
     private String mCurrentLogFile;
     private LogReceiver mCurrentLogReceiver;
     private EventLogParser mCurrentEventLogParser;
@@ -94,7 +94,7 @@ public class EventLogPanel extends TablePanel implements ILogListener,
     private final ArrayList<EventContainer> mNewEvents = new ArrayList<EventContainer>();
     /** indicates a pending ui thread display */
     private boolean mPendingDisplay = false;
-    
+
     /** list of all the custom event displays */
     private final ArrayList<EventDisplay> mEventDisplays = new ArrayList<EventDisplay>();
 
@@ -107,7 +107,7 @@ public class EventLogPanel extends TablePanel implements ILogListener,
     private ICommonAction mSaveAction;
     private ICommonAction mLoadAction;
     private ICommonAction mImportAction;
-    
+
     /** file containing the current log raw data. */
     private File mTempFile = null;
 
@@ -209,10 +209,10 @@ public class EventLogPanel extends TablePanel implements ILogListener,
                     // get the new EventDisplay list
                     mEventDisplays.clear();
                     mEventDisplays.addAll(dialog.getEventDisplays());
-                    
+
                     // since the list of EventDisplay changed, we store it.
                     saveEventDisplays();
-                    
+
                     rebuildUi();
                 }
             }
@@ -220,7 +220,7 @@ public class EventLogPanel extends TablePanel implements ILogListener,
             Log.e("EventLog", e); //$NON-NLS-1$
         }
     }
-    
+
     /**
      * Clears the log.
      * <p/>
@@ -240,7 +240,7 @@ public class EventLogPanel extends TablePanel implements ILogListener,
             Log.e("EventLog", e); //$NON-NLS-1$
         }
     }
-    
+
     /**
      * Saves the content of the event log into a file. The log is saved in the same
      * binary format than on the device.
@@ -254,16 +254,16 @@ public class EventLogPanel extends TablePanel implements ILogListener,
             FileInputStream fis = new FileInputStream(mTempFile);
             FileOutputStream fos = new FileOutputStream(destFile);
             byte[] buffer = new byte[1024];
-            
+
             int count;
-            
+
             while ((count = fis.read(buffer)) != -1) {
                 fos.write(buffer, 0, count);
             }
-            
+
             fos.close();
             fis.close();
-            
+
             // now we save the tag file
             filePath = filePath + TAG_FILE_EXT;
             mCurrentEventLogParser.saveTags(filePath);
@@ -293,16 +293,16 @@ public class EventLogPanel extends TablePanel implements ILogListener,
 
         }
     }
-    
+
     public void importBugReport(String filePath) {
         try {
             BugReportImporter importer = new BugReportImporter(filePath);
-            
+
             String[] tags = importer.getTags();
             String[] log = importer.getLog();
-            
+
             startEventLogFromContent(tags, log);
-            
+
         } catch (FileNotFoundException e) {
             Log.logAndDisplay(LogLevel.ERROR, "Import",
                     "Unable to import bug report: " + e.getMessage());
@@ -324,7 +324,7 @@ public class EventLogPanel extends TablePanel implements ILogListener,
     public void deviceSelected() {
         startEventLog(getCurrentDevice());
     }
-    
+
     /*
      * (non-Javadoc)
      * @see com.android.ddmlib.AndroidDebugBridge.IClientChangeListener#clientChanged(com.android.ddmlib.Client, int)
@@ -359,7 +359,7 @@ public class EventLogPanel extends TablePanel implements ILogListener,
         // init some store stuff
         store.setDefault(PREFS_DISPLAY_WIDTH, DEFAULT_DISPLAY_WIDTH);
         store.setDefault(PREFS_DISPLAY_HEIGHT, DEFAULT_DISPLAY_HEIGHT);
-        
+
         mBottomParentPanel = new ScrolledComposite(parent, SWT.V_SCROLL);
         mBottomParentPanel.setLayoutData(new GridData(GridData.FILL_BOTH));
         mBottomParentPanel.setExpandHorizontal(true);
@@ -383,7 +383,7 @@ public class EventLogPanel extends TablePanel implements ILogListener,
 
         // create the ui
         createDisplayUi();
-        
+
         return mBottomParentPanel;
     }
 
@@ -402,12 +402,12 @@ public class EventLogPanel extends TablePanel implements ILogListener,
     public void setFocus() {
         mBottomParentPanel.setFocus();
     }
-    
+
     /**
      * Starts a new logcat and set mCurrentLogCat as the current receiver.
      * @param device the device to connect logcat to.
      */
-    private void startEventLog(final Device device) {
+    private void startEventLog(final IDevice device) {
         if (device == mCurrentLoggedDevice) {
             return;
         }
@@ -448,10 +448,10 @@ public class EventLogPanel extends TablePanel implements ILogListener,
                             mCurrentEventLogParser = new EventLogParser();
                             mCurrentEventLogParser.init(device);
                         }
-                        
+
                         // update the event display with the new parser.
                         updateEventDisplays();
-                        
+
                         // prepare the temp file that will contain the raw data
                         mTempFile = File.createTempFile("android-event-", ".log");
 
@@ -464,7 +464,7 @@ public class EventLogPanel extends TablePanel implements ILogListener,
             }.start();
         }
     }
-    
+
     private void startEventLogFromFiles(final String fileName) {
         // if we have a logcat already running
         if (mCurrentLogReceiver != null) {
@@ -475,7 +475,7 @@ public class EventLogPanel extends TablePanel implements ILogListener,
 
         // create a new output receiver
         mCurrentLogReceiver = new LogReceiver(this);
-        
+
         mSaveAction.setEnabled(false);
 
         // start the logcat in a different thread
@@ -493,10 +493,10 @@ public class EventLogPanel extends TablePanel implements ILogListener,
                             return;
                         }
                     }
-                    
+
                     // update the event display with the new parser.
                     updateEventDisplays();
-                    
+
                     runLocalEventLogService(fileName, mCurrentLogReceiver);
                 } catch (Exception e) {
                     Log.e("EventLog", e);
@@ -516,7 +516,7 @@ public class EventLogPanel extends TablePanel implements ILogListener,
 
         // create a new output receiver
         mCurrentLogReceiver = new LogReceiver(this);
-        
+
         mSaveAction.setEnabled(false);
 
         // start the logcat in a different thread
@@ -531,10 +531,10 @@ public class EventLogPanel extends TablePanel implements ILogListener,
                             return;
                         }
                     }
-                    
+
                     // update the event display with the new parser.
                     updateEventDisplays();
-                    
+
                     runLocalEventLogService(log, mCurrentLogReceiver);
                 } catch (Exception e) {
                     Log.e("EventLog", e);
@@ -563,7 +563,7 @@ public class EventLogPanel extends TablePanel implements ILogListener,
 
             resetUI(inUiThread);
         }
-        
+
         if (mTempFile != null) {
             mTempFile.delete();
             mTempFile = null;
@@ -593,7 +593,7 @@ public class EventLogPanel extends TablePanel implements ILogListener,
             }
         }
     }
-    
+
     private void resetUiFromUiThread() {
         synchronized(mLock) {
             for (EventDisplay eventDisplay : mEventDisplays) {
@@ -618,11 +618,11 @@ public class EventLogPanel extends TablePanel implements ILogListener,
         rowLayout.fill = true;
         rowLayout.type = SWT.HORIZONTAL;
         mBottomPanel.setLayout(rowLayout);
-        
+
         IPreferenceStore store = DdmUiPreferences.getStore();
         int displayWidth = store.getInt(PREFS_DISPLAY_WIDTH);
         int displayHeight = store.getInt(PREFS_DISPLAY_HEIGHT);
-        
+
         for (EventDisplay eventDisplay : mEventDisplays) {
             Control c = eventDisplay.createComposite(mBottomPanel, mCurrentEventLogParser, this);
             if (c != null) {
@@ -631,7 +631,7 @@ public class EventLogPanel extends TablePanel implements ILogListener,
                 rd.width = displayWidth;
                 c.setLayoutData(rd);
             }
-            
+
             Table table = eventDisplay.getTable();
             if (table != null) {
                 addTableToFocusListener(table);
@@ -642,7 +642,7 @@ public class EventLogPanel extends TablePanel implements ILogListener,
         mBottomParentPanel.setMinSize(mBottomPanel.computeSize(SWT.DEFAULT, SWT.DEFAULT));
         mBottomParentPanel.layout();
     }
-    
+
     /**
      * Rebuild the display ui.
      */
@@ -652,26 +652,26 @@ public class EventLogPanel extends TablePanel implements ILogListener,
             // we need to rebuild the ui. First we get rid of it.
             mBottomPanel.dispose();
             mBottomPanel = null;
-            
+
             prepareDisplayUi();
             createDisplayUi();
-            
+
             // and fill it
-            
+
             boolean start_event = false;
             synchronized (mNewEvents) {
                 mNewEvents.addAll(0, mEvents);
-                
+
                 if (mPendingDisplay == false) {
                     mPendingDisplay = true;
                     start_event = true;
                 }
             }
-            
+
             if (start_event) {
                 scheduleUIEventHandler();
             }
-            
+
             Rectangle r = mBottomParentPanel.getClientArea();
             mBottomParentPanel.setMinSize(mBottomPanel.computeSize(r.width,
                 SWT.DEFAULT));
@@ -682,7 +682,7 @@ public class EventLogPanel extends TablePanel implements ILogListener,
     /**
      * Processes a new {@link LogEntry} by parsing it with {@link EventLogParser} and displaying it.
      * @param entry The new log entry
-     * @see LogReceiver.ILogListener#newEntry(LogEntry) 
+     * @see LogReceiver.ILogListener#newEntry(LogEntry)
      */
     @WorkerThread
     public void newEntry(LogEntry entry) {
@@ -695,24 +695,24 @@ public class EventLogPanel extends TablePanel implements ILogListener,
             }
         }
     }
-    
+
     @WorkerThread
     private void handleNewEvent(EventContainer event) {
         // add the event to the generic list
         mEvents.add(event);
-        
+
         // add to the list of events that needs to be displayed, and trigger a
         // new display if needed.
         boolean start_event = false;
         synchronized (mNewEvents) {
             mNewEvents.add(event);
-            
+
             if (mPendingDisplay == false) {
                 mPendingDisplay = true;
                 start_event = true;
             }
         }
-        
+
         if (start_event == false) {
             // we're done
             return;
@@ -737,7 +737,7 @@ public class EventLogPanel extends TablePanel implements ILogListener,
                 }
             });
         } catch (SWTException e) {
-            // if the ui is disposed, do nothing 
+            // if the ui is disposed, do nothing
         }
     }
 
@@ -766,7 +766,7 @@ public class EventLogPanel extends TablePanel implements ILogListener,
         for (EventDisplay eventDisplay : mEventDisplays) {
             eventDisplay.startMultiEventDisplay();
         }
-        
+
         // display the new events
         EventContainer event = null;
         boolean need_to_reloop = false;
@@ -803,7 +803,7 @@ public class EventLogPanel extends TablePanel implements ILogListener,
         for (EventDisplay eventDisplay : mEventDisplays) {
             eventDisplay.endMultiEventDisplay();
         }
-        
+
         // if needed, ask the UI thread to re-run this method.
         if (need_to_reloop) {
             scheduleUIEventHandler();
@@ -816,10 +816,10 @@ public class EventLogPanel extends TablePanel implements ILogListener,
     private void loadEventDisplays() {
         IPreferenceStore store = DdmUiPreferences.getStore();
         String storage = store.getString(PREFS_EVENT_DISPLAY);
-        
+
         if (storage.length() > 0) {
             String[] values = storage.split(Pattern.quote(EVENT_DISPLAY_STORAGE_SEPARATOR));
-            
+
             for (String value : values) {
                 EventDisplay eventDisplay = EventDisplay.load(value);
                 if (eventDisplay != null) {
@@ -834,10 +834,10 @@ public class EventLogPanel extends TablePanel implements ILogListener,
      */
     private void saveEventDisplays() {
         IPreferenceStore store = DdmUiPreferences.getStore();
-        
+
         boolean first = true;
         StringBuilder sb = new StringBuilder();
-        
+
         for (EventDisplay eventDisplay : mEventDisplays) {
             String storage = eventDisplay.getStorageString();
             if (storage != null) {
@@ -846,7 +846,7 @@ public class EventLogPanel extends TablePanel implements ILogListener,
                 } else {
                     first = false;
                 }
-                
+
                 sb.append(storage);
             }
         }
@@ -870,7 +870,7 @@ public class EventLogPanel extends TablePanel implements ILogListener,
                         for (EventDisplay eventDisplay : mEventDisplays) {
                             eventDisplay.setNewLogParser(mCurrentEventLogParser);
                         }
-                        
+
                         mOptionsAction.setEnabled(true);
                         mClearAction.setEnabled(true);
                         if (mCurrentLogFile == null) {
@@ -897,21 +897,21 @@ public class EventLogPanel extends TablePanel implements ILogListener,
      * Runs an event log service out of a local file.
      * @param fileName the full file name of the local file containing the event log.
      * @param logReceiver the receiver that will handle the log
-     * @throws IOException 
+     * @throws IOException
      */
     @WorkerThread
     private void runLocalEventLogService(String fileName, LogReceiver logReceiver)
             throws IOException {
         byte[] buffer = new byte[256];
-        
+
         FileInputStream fis = new FileInputStream(fileName);
-        
+
         int count;
         while ((count = fis.read(buffer)) != -1) {
             logReceiver.parseNewData(buffer, 0, count);
         }
     }
-    
+
     @WorkerThread
     private void runLocalEventLogService(String[] log, LogReceiver currentLogReceiver) {
         synchronized (mLock) {

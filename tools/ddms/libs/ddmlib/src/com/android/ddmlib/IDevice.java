@@ -16,7 +16,6 @@
 
 package com.android.ddmlib;
 
-import com.android.ddmlib.Device.DeviceState;
 import com.android.ddmlib.log.LogReceiver;
 
 import java.io.IOException;
@@ -39,6 +38,35 @@ public interface IDevice {
     public static final int CHANGE_CLIENT_LIST = 0x0002;
     /** Device change bit mask: build info change. */
     public static final int CHANGE_BUILD_INFO = 0x0004;
+
+    /**
+     * The state of a device.
+     */
+    public static enum DeviceState {
+        BOOTLOADER("bootloader"), //$NON-NLS-1$
+        OFFLINE("offline"), //$NON-NLS-1$
+        ONLINE("device"); //$NON-NLS-1$
+
+        private String mState;
+
+        DeviceState(String state) {
+            mState = state;
+        }
+
+        /**
+         * Returns a {@link DeviceState} from the string returned by <code>adb devices</code>.
+         * @param state the device state.
+         * @return a {@link DeviceState} object or <code>null</code> if the state is unknown.
+         */
+        public static DeviceState getState(String state) {
+            for (DeviceState deviceState : values()) {
+                if (deviceState.mState.equals(state)) {
+                    return deviceState;
+                }
+            }
+            return null;
+        }
+    }
 
     /**
      * Returns the serial number of the device.

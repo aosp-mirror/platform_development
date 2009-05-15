@@ -18,7 +18,7 @@ package com.android.ddms;
 
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.Client;
-import com.android.ddmlib.Device;
+import com.android.ddmlib.IDevice;
 import com.android.ddmlib.Log;
 import com.android.ddmlib.Log.ILogOutput;
 import com.android.ddmlib.Log.LogLevel;
@@ -90,7 +90,7 @@ import java.util.ArrayList;
 /**
  * This acts as the UI builder. This cannot be its own thread since this prevent using AWT in an
  * SWT application. So this class mainly builds the ui, and manages communication between the panels
- * when {@link Device} / {@link Client} selection changes.
+ * when {@link IDevice} / {@link Client} selection changes.
  */
 public class UIThread implements IUiSelectionListener {
     /*
@@ -153,7 +153,7 @@ public class UIThread implements IUiSelectionListener {
     // the table we show in the left-hand pane
     private DevicePanel mDevicePanel;
 
-    private Device mCurrentDevice = null;
+    private IDevice mCurrentDevice = null;
     private Client mCurrentClient = null;
 
     // status line at the bottom of the app window
@@ -166,7 +166,7 @@ public class UIThread implements IUiSelectionListener {
     private ToolItem mTBCauseGc;
 
     private ImageLoader mDdmsImageLoader;
-    private ImageLoader mDdmuiLibImageLoader; 
+    private ImageLoader mDdmuiLibImageLoader;
 
     private final class FilterStorage implements ILogFilterStorageManager {
 
@@ -238,7 +238,7 @@ public class UIThread implements IUiSelectionListener {
     private Shell mExplorerShell = null;
 
     private EmulatorControlPanel mEmulatorPanel;
-    
+
     private EventLogPanel mEventLogPanel;
 
     private class TableFocusListener implements ITableFocusListener {
@@ -333,7 +333,7 @@ public class UIThread implements IUiSelectionListener {
         // create the image loaders for DDMS and DDMUILIB
         mDdmsImageLoader = new ImageLoader(this.getClass());
         mDdmuiLibImageLoader = new ImageLoader(DevicePanel.class);
-        
+
         shell.setImage(ImageHelper.loadImage(mDdmsImageLoader, mDisplay,
                 "ddms-icon.png", //$NON-NLS-1$
                 100, 50, null));
@@ -883,7 +883,7 @@ public class UIThread implements IUiSelectionListener {
                 p.setTableFocusListener(mTableListener);
             }
         }
-        
+
         mStatusLine.setText("");
     }
 
@@ -892,7 +892,7 @@ public class UIThread implements IUiSelectionListener {
      */
     private void createDevicePanelToolBar(ToolBar toolBar) {
         Display display = toolBar.getDisplay();
-        
+
         // add "show thread updates" button
         mTBShowThreadUpdates = new ToolItem(toolBar, SWT.CHECK);
         mTBShowThreadUpdates.setImage(ImageHelper.loadImage(mDdmuiLibImageLoader, display,
@@ -949,7 +949,7 @@ public class UIThread implements IUiSelectionListener {
                 mDevicePanel.killSelectedClient();
             }
         });
-        
+
         new ToolItem(toolBar, SWT.SEPARATOR);
 
         // add "cause GC" button
@@ -1130,7 +1130,7 @@ public class UIThread implements IUiSelectionListener {
 
         mClearAction = new ToolItemAction(toolBar, SWT.PUSH);
         mClearAction.item.setToolTipText("Clear Log");
-        
+
         mClearAction.item.setImage(ImageHelper.loadImage(mDdmuiLibImageLoader, mDisplay,
                 "clear.png", //$NON-NLS-1$
                 DevicePanel.ICON_WIDTH, DevicePanel.ICON_WIDTH, null));
@@ -1239,12 +1239,12 @@ public class UIThread implements IUiSelectionListener {
         item = new TabItem(tabFolder, SWT.NONE);
         item.setText("Event Log");
         item.setToolTipText("Event Log");
-        
+
         // create the composite that will hold the toolbar and the event log panel.
         Composite eventLogTopComposite = new Composite(tabFolder, SWT.NONE);
         item.setControl(eventLogTopComposite);
         eventLogTopComposite.setLayout(new GridLayout(1, false));
-        
+
         // create the toolbar and the actions
         ToolBar toolbar = new ToolBar(eventLogTopComposite, SWT.HORIZONTAL);
         toolbar.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
@@ -1260,7 +1260,7 @@ public class UIThread implements IUiSelectionListener {
         clearAction.item.setImage(ImageHelper.loadImage(mDdmuiLibImageLoader, comp.getDisplay(),
                 "clear.png", //$NON-NLS-1$
                 DevicePanel.ICON_WIDTH, DevicePanel.ICON_WIDTH, null));
-        
+
         new ToolItem(toolbar, SWT.SEPARATOR);
 
         ToolItemAction saveAction = new ToolItemAction(toolbar, SWT.PUSH);
@@ -1283,7 +1283,7 @@ public class UIThread implements IUiSelectionListener {
 
         // create the event log panel
         mEventLogPanel = new EventLogPanel(mDdmuiLibImageLoader);
-        
+
         // set the external actions
         mEventLogPanel.setActions(optionsAction, clearAction, saveAction, loadAction,
                 importBugAction);
@@ -1450,13 +1450,13 @@ public class UIThread implements IUiSelectionListener {
     }
 
     /**
-     * Sent when a new {@link Device} and {@link Client} are selected.
+     * Sent when a new {@link IDevice} and {@link Client} are selected.
      * @param selectedDevice the selected device. If null, no devices are selected.
      * @param selectedClient The selected client. If null, no clients are selected.
      *
      * @see IUiSelectionListener
      */
-    public void selectionChanged(Device selectedDevice, Client selectedClient) {
+    public void selectionChanged(IDevice selectedDevice, Client selectedClient) {
         if (mCurrentDevice != selectedDevice) {
             mCurrentDevice = selectedDevice;
             for (TablePanel panel : mPanels) {

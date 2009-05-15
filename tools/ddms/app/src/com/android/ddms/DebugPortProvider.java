@@ -16,7 +16,7 @@
 
 package com.android.ddms;
 
-import com.android.ddmlib.Device;
+import com.android.ddmlib.IDevice;
 import com.android.ddmlib.DebugPortManager.IDebugPortProvider;
 
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -53,15 +53,15 @@ public class DebugPortProvider implements IDebugPortProvider {
 
     /**
          * Returns a static debug port for the specified application running on the
-         * specified {@link Device}.
+         * specified {@link IDevice}.
          * @param device The device the application is running on.
          * @param appName The application name, as defined in the
          *  AndroidManifest.xml package attribute.
          * @return The static debug port or {@link #NO_STATIC_PORT} if there is none setup.
      *
-     * @see IDebugPortProvider#getPort(Device, String)
+     * @see IDebugPortProvider#getPort(IDevice, String)
      */
-    public int getPort(Device device, String appName) {
+    public int getPort(IDevice device, String appName) {
         if (mMap != null) {
             Map<String, Integer> deviceMap = mMap.get(device.getSerialNumber());
             if (deviceMap != null) {
@@ -107,7 +107,7 @@ public class DebugPortProvider implements IDebugPortProvider {
                 if (entry.length == 3) {
                     deviceName = entry[2];
                 } else {
-                    deviceName = Device.FIRST_EMULATOR_SN;
+                    deviceName = IDevice.FIRST_EMULATOR_SN;
                 }
 
                 // get the device map
