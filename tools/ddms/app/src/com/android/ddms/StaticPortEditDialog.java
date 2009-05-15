@@ -16,7 +16,7 @@
 
 package com.android.ddms;
 
-import com.android.ddmlib.Device;
+import com.android.ddmlib.IDevice;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
@@ -75,7 +75,7 @@ public class StaticPortEditDialog extends Dialog {
     public StaticPortEditDialog(Shell parent, ArrayList<Integer> ports) {
         super(parent, SWT.DIALOG_TRIM | SWT.BORDER | SWT.APPLICATION_MODAL);
         mPorts = ports;
-        mDeviceSn = Device.FIRST_EMULATOR_SN;
+        mDeviceSn = IDevice.FIRST_EMULATOR_SN;
     }
 
     /**

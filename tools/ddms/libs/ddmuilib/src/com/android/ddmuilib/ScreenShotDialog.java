@@ -16,7 +16,7 @@
 
 package com.android.ddmuilib;
 
-import com.android.ddmlib.Device;
+import com.android.ddmlib.IDevice;
 import com.android.ddmlib.Log;
 import com.android.ddmlib.RawImage;
 
@@ -47,7 +47,7 @@ public class ScreenShotDialog extends Dialog {
     private Label mBusyLabel;
     private Label mImageLabel;
     private Button mSave;
-    private Device mDevice;
+    private IDevice mDevice;
 
 
     /**
@@ -66,9 +66,9 @@ public class ScreenShotDialog extends Dialog {
 
     /**
      * Prepare and display the dialog.
-     * @param device The {@link Device} from which to get the screenshot.
+     * @param device The {@link IDevice} from which to get the screenshot.
      */
-    public void open(Device device) {
+    public void open(IDevice device) {
         mDevice = device;
 
         Shell parent = getParent();

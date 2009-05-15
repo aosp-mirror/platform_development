@@ -16,7 +16,7 @@
 
 package com.android.hierarchyviewer.scene;
 
-import com.android.ddmlib.Device;
+import com.android.ddmlib.IDevice;
 import com.android.hierarchyviewer.device.DeviceBridge;
 import com.android.hierarchyviewer.device.Window;
 
@@ -36,19 +36,19 @@ import java.util.regex.Pattern;
 
 public class ViewHierarchyLoader {
     @SuppressWarnings("empty-statement")
-    public static ViewHierarchyScene loadScene(Device device, Window window) {
+    public static ViewHierarchyScene loadScene(IDevice device, Window window) {
         ViewHierarchyScene scene = new ViewHierarchyScene();
 
         // Read the views tree
         Socket socket = null;
         BufferedReader in = null;
         BufferedWriter out = null;
-        
+
         String line;
-        
+
         try {
             System.out.println("==> Starting client");
-            
+
             socket = new Socket();
             socket.connect(new InetSocketAddress("127.0.0.1",
                     DeviceBridge.getDeviceLocalPort(device)));
@@ -57,11 +57,11 @@ public class ViewHierarchyLoader {
             in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
             System.out.println("==> DUMP");
-            
+
             out.write("DUMP " + window.encode());
             out.newLine();
             out.flush();
-            
+
             Stack<ViewNode> stack = new Stack<ViewNode>();
 
             boolean setRoot = true;
@@ -72,7 +72,7 @@ public class ViewHierarchyLoader {
                 if ("DONE.".equalsIgnoreCase(line)) {
                     break;
                 }
-                
+
                 int whitespaceCount = countFrontWhitespace(line);
                 if (lastWhitespaceCount < whitespaceCount) {
                     stack.push(lastNode);
@@ -86,7 +86,7 @@ public class ViewHierarchyLoader {
                 lastWhitespaceCount = whitespaceCount;
                 line = line.trim();
                 int index = line.indexOf(' ');
-                
+
                 lastNode = new ViewNode();
                 lastNode.name = line.substring(0, index);
 
@@ -94,12 +94,12 @@ public class ViewHierarchyLoader {
                 loadProperties(lastNode, line);
 
                 scene.addNode(lastNode);
-                
+
                 if (setRoot) {
                     scene.setRoot(lastNode);
                     setRoot = false;
                 }
-                
+
                 if (!stack.isEmpty()) {
                     final ViewNode parent = stack.peek();
                     final String edge = parent.name + lastNode.name;
@@ -128,7 +128,7 @@ public class ViewHierarchyLoader {
                 Exceptions.printStackTrace(ex);
             }
         }
-        
+
         System.out.println("==> DONE");
 
         return scene;
@@ -165,7 +165,7 @@ public class ViewHierarchyLoader {
             int length = Integer.parseInt(data.substring(index + 1, index2));
             start = index2 + 1 + length;
             property.value = data.substring(index2 + 1, index2 + 1 + length);
-            
+
             node.properties.add(property);
             node.namedProperties.put(property.name, property);
 

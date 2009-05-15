@@ -41,7 +41,7 @@ import java.util.regex.Pattern;
  * code removes <code>\r</code> and waits for <code>\n</code>.
  * <p/>However this means you <i>may</i> receive <code>\r\n</code> when reading from the console.
  * <p/>
- * <b>This API will change in the near future.</b> 
+ * <b>This API will change in the near future.</b>
  */
 public final class EmulatorConsole {
 
@@ -65,7 +65,7 @@ public final class EmulatorConsole {
     private final static String COMMAND_NETWORK_STATUS = "network status\r\n"; //$NON-NLS-1$
     private final static String COMMAND_NETWORK_SPEED = "network speed %1$s\r\n"; //$NON-NLS-1$
     private final static String COMMAND_NETWORK_LATENCY = "network delay %1$s\r\n"; //$NON-NLS-1$
-    private final static String COMMAND_GPS = 
+    private final static String COMMAND_GPS =
         "geo nmea $GPGGA,%1$02d%2$02d%3$02d.%4$03d," + //$NON-NLS-1$
         "%5$03d%6$09.6f,%7$c,%8$03d%9$09.6f,%10$c," + //$NON-NLS-1$
         "1,10,0.0,0.0,0,0.0,0,0.0,0000\r\n"; //$NON-NLS-1$
@@ -202,9 +202,9 @@ public final class EmulatorConsole {
      * @param d The device that the console links to.
      * @return an <code>EmulatorConsole</code> object or <code>null</code> if the connection failed.
      */
-    public static synchronized EmulatorConsole getConsole(Device d) {
+    public static synchronized EmulatorConsole getConsole(IDevice d) {
         // we need to make sure that the device is an emulator
-        Matcher m = sEmulatorRegexp.matcher(d.serialNumber);
+        Matcher m = sEmulatorRegexp.matcher(d.getSerialNumber());
         if (m.matches()) {
             // get the port number. This is the console port.
             int port;
@@ -308,7 +308,7 @@ public final class EmulatorConsole {
             RemoveConsole(mPort);
         }
     }
-    
+
     public synchronized String getAvdName() {
         if (sendCommand(COMMAND_AVD_NAME)) {
             String[] result = readLines();
@@ -323,7 +323,7 @@ public final class EmulatorConsole {
                 }
             }
         }
-        
+
         return null;
     }
 
@@ -517,18 +517,18 @@ public final class EmulatorConsole {
         String command = String.format(COMMAND_NETWORK_LATENCY, NETWORK_LATENCIES[selectionIndex]);
         return processCommand(command);
     }
-    
+
     public synchronized String sendLocation(double longitude, double latitude, double elevation) {
-        
+
         Calendar c = Calendar.getInstance();
-        
+
         double absLong = Math.abs(longitude);
         int longDegree = (int)Math.floor(absLong);
         char longDirection = 'E';
         if (longitude < 0) {
             longDirection = 'W';
         }
-        
+
         double longMinute = (absLong - Math.floor(absLong)) * 60;
 
         double absLat = Math.abs(latitude);
@@ -537,15 +537,15 @@ public final class EmulatorConsole {
         if (latitude < 0) {
             latDirection = 'S';
         }
-        
+
         double latMinute = (absLat - Math.floor(absLat)) * 60;
-        
+
         String command = String.format(COMMAND_GPS,
                 c.get(Calendar.HOUR_OF_DAY), c.get(Calendar.MINUTE),
                 c.get(Calendar.SECOND), c.get(Calendar.MILLISECOND),
                 latDegree, latMinute, latDirection,
                 longDegree, longMinute, longDirection);
-        
+
         return processCommand(command);
     }
 
@@ -617,7 +617,7 @@ public final class EmulatorConsole {
             ByteBuffer buf = ByteBuffer.wrap(mBuffer, 0, mBuffer.length);
             int numWaits = 0;
             boolean stop = false;
-            
+
             while (buf.position() != buf.limit() && stop == false) {
                 int count;
 

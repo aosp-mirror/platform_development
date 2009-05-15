@@ -17,7 +17,6 @@
 package com.android.ide.eclipse.adt.internal.project;
 
 import com.android.ddmlib.AndroidDebugBridge;
-import com.android.ddmlib.Device;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.AndroidDebugBridge.IDebugBridgeChangeListener;
 import com.android.ddmlib.AndroidDebugBridge.IDeviceChangeListener;
@@ -40,15 +39,15 @@ import java.util.ArrayList;
  * always receive new APKs (since the APK could be uninstalled manually).
  * <p/>
  * Manually uninstalling an APK from a connected device will still be a problem, but this should
- * be a limited use case. 
+ * be a limited use case.
  * <p/>
  * This is a singleton. To get the instance, use {@link #getInstance()}
  */
 public class ApkInstallManager implements IDeviceChangeListener, IDebugBridgeChangeListener,
         IProjectListener {
-    
+
     private final static ApkInstallManager sThis = new ApkInstallManager();
-    
+
     /**
      * Internal struct to associate a project and a device.
      */
@@ -60,13 +59,13 @@ public class ApkInstallManager implements IDeviceChangeListener, IDebugBridgeCha
         IProject project;
         IDevice device;
     }
-    
+
     private final ArrayList<ApkInstall> mInstallList = new ArrayList<ApkInstall>();
-    
+
     public static ApkInstallManager getInstance() {
         return sThis;
     }
-    
+
     /**
      * Registers an installation of <var>project</var> onto <var>device</var>
      * @param project The project that was installed.
@@ -77,7 +76,7 @@ public class ApkInstallManager implements IDeviceChangeListener, IDebugBridgeCha
             mInstallList.add(new ApkInstall(project, device));
         }
     }
-    
+
     /**
      * Returns whether a <var>project</var> was installed on the <var>device</var>.
      * @param project the project that may have been installed.
@@ -113,7 +112,7 @@ public class ApkInstallManager implements IDeviceChangeListener, IDebugBridgeCha
             }
         }
     }
-    
+
     private ApkInstallManager() {
         AndroidDebugBridge.addDeviceChangeListener(this);
         AndroidDebugBridge.addDebugBridgeChangeListener(this);
@@ -138,7 +137,7 @@ public class ApkInstallManager implements IDeviceChangeListener, IDebugBridgeCha
      * (non-Javadoc)
      * @see com.android.ddmlib.AndroidDebugBridge.IDeviceChangeListener#deviceDisconnected(com.android.ddmlib.Device)
      */
-    public void deviceDisconnected(Device device) {
+    public void deviceDisconnected(IDevice device) {
         synchronized (mInstallList) {
             for (int i = 0 ; i < mInstallList.size() ;) {
                 ApkInstall install = mInstallList.get(i);
@@ -174,7 +173,7 @@ public class ApkInstallManager implements IDeviceChangeListener, IDebugBridgeCha
      * (non-Javadoc)
      * @see com.android.ddmlib.AndroidDebugBridge.IDeviceChangeListener#deviceChanged(com.android.ddmlib.Device, int)
      */
-    public void deviceChanged(Device device, int changeMask) {
+    public void deviceChanged(IDevice device, int changeMask) {
         // nothing to do.
     }
 
@@ -183,7 +182,7 @@ public class ApkInstallManager implements IDeviceChangeListener, IDebugBridgeCha
      * (non-Javadoc)
      * @see com.android.ddmlib.AndroidDebugBridge.IDeviceChangeListener#deviceConnected(com.android.ddmlib.Device)
      */
-    public void deviceConnected(Device device) {
+    public void deviceConnected(IDevice device) {
         // nothing to do.
     }
 

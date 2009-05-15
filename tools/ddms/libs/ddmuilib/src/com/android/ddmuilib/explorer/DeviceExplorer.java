@@ -16,7 +16,7 @@
 
 package com.android.ddmuilib.explorer;
 
-import com.android.ddmlib.Device;
+import com.android.ddmlib.IDevice;
 import com.android.ddmlib.FileListingService;
 import com.android.ddmlib.IShellOutputReceiver;
 import com.android.ddmlib.SyncService;
@@ -99,7 +99,7 @@ public class DeviceExplorer extends Panel {
     private Image mPackageImage;
     private Image mOtherImage;
 
-    private Device mCurrentDevice;
+    private IDevice mCurrentDevice;
 
     private String mDefaultSave;
 
@@ -631,7 +631,7 @@ public class DeviceExplorer extends Panel {
     /**
      * Sets the new device to explorer
      */
-    public void switchDevice(final Device device) {
+    public void switchDevice(final IDevice device) {
         if (device != mCurrentDevice) {
             mCurrentDevice = device;
             // now we change the input. but we need to do that in the

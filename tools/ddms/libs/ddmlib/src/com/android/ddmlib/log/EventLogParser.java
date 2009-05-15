@@ -16,7 +16,7 @@
 
 package com.android.ddmlib.log;
 
-import com.android.ddmlib.Device;
+import com.android.ddmlib.IDevice;
 import com.android.ddmlib.Log;
 import com.android.ddmlib.MultiLineReceiver;
 import com.android.ddmlib.log.EventContainer.EventValueType;
@@ -55,7 +55,7 @@ public final class EventLogParser {
     private final static int EVENT_TYPE_LONG     = 1;
     private final static int EVENT_TYPE_STRING   = 2;
     private final static int EVENT_TYPE_LIST     = 3;
-    
+
     private final static Pattern PATTERN_SIMPLE_TAG = Pattern.compile(
     "^(\\d+)\\s+([A-Za-z0-9_]+)\\s*$"); //$NON-NLS-1$
     private final static Pattern PATTERN_TAG_WITH_DESC = Pattern.compile(
@@ -67,9 +67,9 @@ public final class EventLogParser {
             "(\\d\\d)-(\\d\\d)\\s(\\d\\d):(\\d\\d):(\\d\\d).(\\d{3})\\s+I/([a-zA-Z0-9_]+)\\s*\\(\\s*(\\d+)\\):\\s+(.*)"); //$NON-NLS-1$
 
     private final TreeMap<Integer, String> mTagMap = new TreeMap<Integer, String>();
-    
+
     private final TreeMap<Integer, EventValueDescription[]> mValueDescriptionMap =
-        new TreeMap<Integer, EventValueDescription[]>(); 
+        new TreeMap<Integer, EventValueDescription[]>();
 
     public EventLogParser() {
     }
@@ -82,7 +82,7 @@ public final class EventLogParser {
      * @param device The device.
      * @return <code>true</code> if success, <code>false</code> if failure or cancellation.
      */
-    public boolean init(Device device) {
+    public boolean init(IDevice device) {
         // read the event tag map file on the device.
         try {
             device.executeShellCommand("cat " + EVENT_TAG_MAP_FILE, //$NON-NLS-1$
@@ -103,7 +103,7 @@ public final class EventLogParser {
 
         return true;
     }
-    
+
     /**
      * Inits the parser with the content of a tag file.
      * @param tagFileContent the lines of a tag file.
@@ -115,7 +115,7 @@ public final class EventLogParser {
         }
         return true;
     }
-    
+
     /**
      * Inits the parser with a specified event-log-tags file.
      * @param filePath
@@ -124,7 +124,7 @@ public final class EventLogParser {
     public boolean init(String filePath)  {
         try {
             BufferedReader reader = new BufferedReader(new FileReader(filePath));
-            
+
             String line = null;
             do {
                 line = reader.readLine();
@@ -132,13 +132,13 @@ public final class EventLogParser {
                     processTagLine(line);
                 }
             } while (line != null);
-            
+
             return true;
         } catch (IOException e) {
             return false;
         }
     }
-    
+
     /**
      * Processes a line from the event-log-tags file.
      * @param line the line to process
@@ -154,7 +154,7 @@ public final class EventLogParser {
                     if (name != null && mTagMap.get(value) == null) {
                         mTagMap.put(value, name);
                     }
-                    
+
                     // special case for the GC tag. We ignore what is in the file,
                     // and take what the custom GcEventContainer class tells us.
                     // This is due to the event encoding several values on 2 longs.
@@ -163,12 +163,12 @@ public final class EventLogParser {
                         mValueDescriptionMap.put(value,
                             GcEventContainer.getValueDescriptions());
                     } else {
-                        
+
                         String description = m.group(3);
                         if (description != null && description.length() > 0) {
                             EventValueDescription[] desc =
                                 processDescription(description);
-                            
+
                             if (desc != null) {
                                 mValueDescriptionMap.put(value, desc);
                             }
@@ -189,12 +189,12 @@ public final class EventLogParser {
             }
         }
     }
-    
+
     private EventValueDescription[] processDescription(String description) {
         String[] descriptions = description.split("\\s*,\\s*"); //$NON-NLS-1$
-        
+
         ArrayList<EventValueDescription> list = new ArrayList<EventValueDescription>();
-        
+
         for (String desc : descriptions) {
             Matcher m = PATTERN_DESCRIPTION.matcher(desc);
             if (m.matches()) {
@@ -208,15 +208,15 @@ public final class EventLogParser {
                         // just ignore this description if the value is not recognized.
                         // TODO: log the error.
                     }
-                    
+
                     typeString = m.group(3);
                     if (typeString != null && typeString.length() > 0) {
                         //skip the |
                         typeString = typeString.substring(1);
-                        
+
                         typeValue = Integer.parseInt(typeString);
                         ValueType valueType = ValueType.getValueType(typeValue);
-                        
+
                         list.add(new EventValueDescription(name, eventValueType, valueType));
                     } else {
                         list.add(new EventValueDescription(name, eventValueType));
@@ -233,15 +233,15 @@ public final class EventLogParser {
                     String.format("Can't parse %1$s", description));  //$NON-NLS-1$
             }
         }
-        
+
         if (list.size() == 0) {
             return null;
         }
-        
+
         return list.toArray(new EventValueDescription[list.size()]);
-        
+
     }
-    
+
     public EventContainer parse(LogEntry entry) {
         if (entry.len < 4) {
             return null;
@@ -251,7 +251,7 @@ public final class EventLogParser {
 
         int tagValue = ArrayHelper.swap32bitFromArray(entry.data, inOffset);
         inOffset += 4;
-        
+
         String tag = mTagMap.get(tagValue);
         if (tag == null) {
             Log.e("EventLogParser", String.format("unknown tag number: %1$d", tagValue));
@@ -275,10 +275,10 @@ public final class EventLogParser {
         } else {
             event = new EventContainer(entry, tagValue, data);
         }
-        
+
         return event;
     }
-    
+
     public EventContainer parse(String textLogLine) {
         // line will look like
         // 04-29 23:16:16.691 I/dvm_gc_info(  427): <data>
@@ -289,7 +289,7 @@ public final class EventLogParser {
         if (textLogLine.length() == 0) {
             return null;
         }
-        
+
         // parse the header first
         Matcher m = TEXT_LOG_LINE.matcher(textLogLine);
         if (m.matches()) {
@@ -300,7 +300,7 @@ public final class EventLogParser {
                 int minutes = Integer.parseInt(m.group(4));
                 int seconds = Integer.parseInt(m.group(5));
                 int milliseconds = Integer.parseInt(m.group(6));
-                
+
                 // convert into seconds since epoch and nano-seconds.
                 Calendar cal = Calendar.getInstance();
                 cal.set(cal.get(Calendar.YEAR), month-1, day, hours, minutes, seconds);
@@ -308,7 +308,7 @@ public final class EventLogParser {
                 int nsec = milliseconds * 1000000;
 
                 String tag = m.group(7);
-                
+
                 // get the numerical tag value
                 int tagValue = -1;
                 Set<Entry<Integer, String>> tagSet = mTagMap.entrySet();
@@ -318,18 +318,18 @@ public final class EventLogParser {
                         break;
                     }
                 }
-                
+
                 if (tagValue == -1) {
                     return null;
                 }
-                
+
                 int pid = Integer.parseInt(m.group(8));
-                
+
                 Object data = parseTextData(m.group(9), tagValue);
                 if (data == null) {
                     return null;
                 }
-                
+
                 // now we can allocate and return the EventContainer
                 EventContainer event = null;
                 if (tagValue == GcEventContainer.GC_EVENT_TAG) {
@@ -337,20 +337,20 @@ public final class EventLogParser {
                 } else {
                     event = new EventContainer(tagValue, pid, -1 /* tid */, sec, nsec, data);
                 }
-                
+
                 return event;
             } catch (NumberFormatException e) {
                 return null;
             }
         }
-        
+
         return null;
     }
-    
+
     public Map<Integer, String> getTagMap() {
         return mTagMap;
     }
-    
+
     public Map<Integer, EventValueDescription[]> getEventInfoMap() {
         return mValueDescriptionMap;
     }
@@ -370,7 +370,7 @@ public final class EventLogParser {
 
         if (eventData.length - dataOffset < 1)
             return -1;
-        
+
         int offset = dataOffset;
 
         int type = eventData[offset++];
@@ -385,7 +385,7 @@ public final class EventLogParser {
                     return -1;
                 ival = ArrayHelper.swap32bitFromArray(eventData, offset);
                 offset += 4;
-                
+
                 list.add(new Integer(ival));
             }
             break;
@@ -396,7 +396,7 @@ public final class EventLogParser {
                     return -1;
                 lval = ArrayHelper.swap64bitFromArray(eventData, offset);
                 offset += 8;
-                
+
                 list.add(new Long(lval));
             }
             break;
@@ -410,7 +410,7 @@ public final class EventLogParser {
 
                 if (eventData.length - offset < strLen)
                     return -1;
-                
+
                 // get the string
                 try {
                     String str = new String(eventData, offset, strLen, "UTF-8"); //$NON-NLS-1$
@@ -434,7 +434,7 @@ public final class EventLogParser {
                     if (result == -1) {
                         return result;
                     }
-                    
+
                     offset += result;
                 }
 
@@ -446,59 +446,59 @@ public final class EventLogParser {
                     String.format("Unknown binary event type %1$d", type));  //$NON-NLS-1$
             return -1;
         }
-        
+
         return offset - dataOffset;
     }
-    
+
     private Object parseTextData(String data, int tagValue) {
         // first, get the description of what we're supposed to parse
         EventValueDescription[] desc = mValueDescriptionMap.get(tagValue);
-        
+
         if (desc == null) {
             // TODO parse and create string values.
             return null;
         }
-        
+
         if (desc.length == 1) {
             return getObjectFromString(data, desc[0].getEventValueType());
         } else if (data.startsWith("[") && data.endsWith("]")) {
             data = data.substring(1, data.length() - 1);
-            
+
             // get each individual values as String
             String[] values = data.split(",");
-            
+
             if (tagValue == GcEventContainer.GC_EVENT_TAG) {
                 // special case for the GC event!
                 Object[] objects = new Object[2];
-                
+
                 objects[0] = getObjectFromString(values[0], EventValueType.LONG);
                 objects[1] = getObjectFromString(values[1], EventValueType.LONG);
-                
+
                 return objects;
             } else {
                 // must be the same number as the number of descriptors.
                 if (values.length != desc.length) {
                     return null;
                 }
-                
+
                 Object[] objects = new Object[values.length];
-                
+
                 for (int i = 0 ; i < desc.length ; i++) {
                     Object obj = getObjectFromString(values[i], desc[i].getEventValueType());
                     if (obj == null) {
                         return null;
                     }
-                    objects[i] = obj; 
+                    objects[i] = obj;
                 }
-                
+
                 return objects;
             }
         }
-        
+
         return null;
     }
 
-    
+
     private Object getObjectFromString(String value, EventValueType type) {
         try {
             switch (type) {
@@ -512,14 +512,14 @@ public final class EventLogParser {
         } catch (NumberFormatException e) {
             // do nothing, we'll return null.
         }
-        
+
         return null;
     }
 
     /**
-     * Recreates the event-log-tags at the specified file path. 
+     * Recreates the event-log-tags at the specified file path.
      * @param filePath the file path to write the file.
-     * @throws IOException 
+     * @throws IOException
      */
     public void saveTags(String filePath) throws IOException {
         File destFile = new File(filePath);
@@ -527,16 +527,16 @@ public final class EventLogParser {
         FileOutputStream fos = null;
 
         try {
-            
+
             fos = new FileOutputStream(destFile);
-            
+
             for (Integer key : mTagMap.keySet()) {
                 // get the tag name
                 String tagName = mTagMap.get(key);
-                
+
                 // get the value descriptions
                 EventValueDescription[] descriptors = mValueDescriptionMap.get(key);
-                
+
                 String line = null;
                 if (descriptors != null) {
                     StringBuilder sb = new StringBuilder();
@@ -557,12 +557,12 @@ public final class EventLogParser {
                         sb.append("|)"); //$NON-NLS-1$
                     }
                     sb.append("\n"); //$NON-NLS-1$
-                    
+
                     line = sb.toString();
                 } else {
                     line = String.format("%1$d %2$s\n", key, tagName); //$NON-NLS-1$
                 }
-    
+
                 byte[] buffer = line.getBytes();
                 fos.write(buffer);
             }

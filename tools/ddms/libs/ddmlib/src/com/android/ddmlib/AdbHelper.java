@@ -29,7 +29,7 @@ import java.nio.channels.SocketChannel;
 /**
  * Helper class to handle requests and connections to adb.
  * <p/>{@link DebugBridgeServer} is the public API to connection to adb, while {@link AdbHelper}
- * does the low level stuff. 
+ * does the low level stuff.
  * <p/>This currently uses spin-wait non-blocking I/O. A Selector would be more efficient,
  * but seems like overkill for what we're doing here.
  */
@@ -272,14 +272,14 @@ final class AdbHelper {
         try {
             adbChan = SocketChannel.open(adbSockAddr);
             adbChan.configureBlocking(false);
-    
+
             // if the device is not -1, then we first tell adb we're looking to talk
             // to a specific device
             setDevice(adbChan, device);
-    
+
             if (write(adbChan, request) == false)
                 throw new IOException("failed asking for frame buffer");
-    
+
             AdbResponse resp = readAdbResponse(adbChan, false /* readDiagString */);
             if (!resp.ioSuccess || !resp.okay) {
                 Log.w("ddms", "Got timeout or unhappy response from ADB fb req: "
@@ -287,7 +287,7 @@ final class AdbHelper {
                 adbChan.close();
                 return null;
             }
-    
+
             reply = new byte[16];
             if (read(adbChan, reply) == false) {
                 Log.w("ddms", "got partial reply from ADB fb:");
@@ -297,19 +297,19 @@ final class AdbHelper {
             }
             ByteBuffer buf = ByteBuffer.wrap(reply);
             buf.order(ByteOrder.LITTLE_ENDIAN);
-    
+
             imageParams.bpp = buf.getInt();
             imageParams.size = buf.getInt();
             imageParams.width = buf.getInt();
             imageParams.height = buf.getInt();
-    
+
             Log.d("ddms", "image params: bpp=" + imageParams.bpp + ", size="
                     + imageParams.size + ", width=" + imageParams.width
                     + ", height=" + imageParams.height);
-    
+
             if (write(adbChan, nudge) == false)
                 throw new IOException("failed nudging");
-    
+
             reply = new byte[imageParams.size];
             if (read(adbChan, reply) == false) {
                 Log.w("ddms", "got truncated reply from ADB fb data");
@@ -416,34 +416,34 @@ final class AdbHelper {
     public static void runLogService(InetSocketAddress adbSockAddr, Device device, String logName,
             LogReceiver rcvr) throws IOException {
         SocketChannel adbChan = null;
-        
+
         try {
             adbChan = SocketChannel.open(adbSockAddr);
             adbChan.configureBlocking(false);
-    
+
             // if the device is not -1, then we first tell adb we're looking to talk
             // to a specific device
             setDevice(adbChan, device);
-    
+
             byte[] request = formAdbRequest("log:" + logName);
             if (write(adbChan, request) == false) {
                 throw new IOException("failed to submit the log command");
             }
-    
+
             AdbResponse resp = readAdbResponse(adbChan, false /* readDiagString */);
             if (!resp.ioSuccess || !resp.okay) {
                 throw new IOException("Device rejected log command: " + resp.message);
             }
-    
+
             byte[] data = new byte[16384];
             ByteBuffer buf = ByteBuffer.wrap(data);
             while (true) {
                 int count;
-    
+
                 if (rcvr != null && rcvr.isCancelled()) {
                     break;
                 }
-    
+
                 count = adbChan.read(buf);
                 if (count < 0) {
                     break;
@@ -465,7 +465,7 @@ final class AdbHelper {
             }
         }
     }
-    
+
     /**
      * Creates a port forwarding between a local and a remote port.
      * @param adbSockAddr the socket address to connect to adb
@@ -473,7 +473,7 @@ final class AdbHelper {
      * @param localPort the local port to forward
      * @param remotePort the remote port.
      * @return <code>true</code> if success.
-     * @throws IOException 
+     * @throws IOException
      */
     public static boolean createForward(InetSocketAddress adbSockAddr, Device device, int localPort,
             int remotePort) throws IOException {
@@ -482,15 +482,15 @@ final class AdbHelper {
         try {
             adbChan = SocketChannel.open(adbSockAddr);
             adbChan.configureBlocking(false);
-    
+
             byte[] request = formAdbRequest(String.format(
                     "host-serial:%1$s:forward:tcp:%2$d;tcp:%3$d", //$NON-NLS-1$
-                    device.serialNumber, localPort, remotePort));
-    
+                    device.getSerialNumber(), localPort, remotePort));
+
             if (write(adbChan, request) == false) {
                 throw new IOException("failed to submit the forward command.");
             }
-            
+
             AdbResponse resp = readAdbResponse(adbChan, false /* readDiagString */);
             if (!resp.ioSuccess || !resp.okay) {
                 throw new IOException("Device rejected command: " + resp.message);
@@ -500,7 +500,7 @@ final class AdbHelper {
                 adbChan.close();
             }
         }
-        
+
         return true;
     }
 
@@ -520,15 +520,15 @@ final class AdbHelper {
         try {
             adbChan = SocketChannel.open(adbSockAddr);
             adbChan.configureBlocking(false);
-    
+
             byte[] request = formAdbRequest(String.format(
                     "host-serial:%1$s:killforward:tcp:%2$d;tcp:%3$d", //$NON-NLS-1$
-                    device.serialNumber, localPort, remotePort));
-    
+                    device.getSerialNumber(), localPort, remotePort));
+
             if (!write(adbChan, request)) {
                 throw new IOException("failed to submit the remove forward command.");
             }
-    
+
             AdbResponse resp = readAdbResponse(adbChan, false /* readDiagString */);
             if (!resp.ioSuccess || !resp.okay) {
                 throw new IOException("Device rejected command: " + resp.message);
@@ -563,7 +563,7 @@ final class AdbHelper {
         }
         return result;
     }
-    
+
     /**
      * Reads from the socket until the array is filled, or no more data is coming (because
      * the socket closed or the timeout expired).
@@ -572,7 +572,7 @@ final class AdbHelper {
      *      mode for timeouts to work
      * @param data the buffer to store the read data into.
      * @return "true" if all data was read.
-     * @throws IOException 
+     * @throws IOException
      */
     static boolean read(SocketChannel chan, byte[] data) {
        try {
@@ -581,7 +581,7 @@ final class AdbHelper {
            Log.d("ddms", "readAll: IOException: " + e.getMessage());
            return false;
        }
-       
+
        return true;
     }
 
@@ -597,7 +597,7 @@ final class AdbHelper {
      * @param data the buffer to store the read data into.
      * @param length the length to read or -1 to fill the data buffer completely
      * @param timeout The timeout value. A timeout of zero means "wait forever".
-     * @throws IOException 
+     * @throws IOException
      */
     static void read(SocketChannel chan, byte[] data, int length, int timeout) throws IOException {
         ByteBuffer buf = ByteBuffer.wrap(data, 0, length != -1 ? length : data.length);
@@ -653,7 +653,7 @@ final class AdbHelper {
      * @param data the buffer to send.
      * @param length the length to write or -1 to send the whole buffer.
      * @param timeout The timeout value. A timeout of zero means "wait forever".
-     * @throws IOException 
+     * @throws IOException
      */
     static void write(SocketChannel chan, byte[] data, int length, int timeout)
             throws IOException {
@@ -697,7 +697,7 @@ final class AdbHelper {
         // if the device is not -1, then we first tell adb we're looking to talk
         // to a specific device
         if (device != null) {
-            String msg = "host:transport:" + device.serialNumber; //$NON-NLS-1$
+            String msg = "host:transport:" + device.getSerialNumber(); //$NON-NLS-1$
             byte[] device_query = formAdbRequest(msg);
 
             if (write(adbChan, device_query) == false)

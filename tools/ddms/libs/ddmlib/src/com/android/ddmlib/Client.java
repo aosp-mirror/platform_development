@@ -133,7 +133,7 @@ public class Client {
         mConnState = ST_INIT;
 
         mClientData = new ClientData(pid);
-        
+
         mThreadUpdateEnabled = DdmPreferences.getInitialThreadUpdate();
         mHeapUpdateEnabled = DdmPreferences.getInitialHeapUpdate();
     }
@@ -147,9 +147,15 @@ public class Client {
     }
 
     /**
-     * Returns the {@link Device} on which this Client is running.
+     * Returns the {@link IDevice} on which this Client is running.
      */
-    public Device getDevice() {
+    public IDevice getDevice() {
+        return mDevice;
+    }
+
+    /** Returns the {@link Device} on which this Client is running.
+     */
+    Device getDeviceImpl() {
         return mDevice;
     }
 
@@ -238,7 +244,7 @@ public class Client {
 
         update(CHANGE_THREAD_MODE);
     }
-    
+
     /**
      * Returns whether the thread update is enabled.
      */
@@ -268,7 +274,7 @@ public class Client {
     public void requestThreadStackTrace(int threadId) {
         HandleThread.requestThreadStackCallRefresh(this, threadId);
     }
-    
+
     /**
      * Enables or disables the heap update.
      * <p/>If <code>true</code>, any GC will cause the client to send its heap information.
@@ -320,7 +326,7 @@ public class Client {
 
         return false;
     }
-    
+
     /**
      * Enables or disables the Allocation tracker for this client.
      * <p/>If enabled, the VM will start tracking allocation informations. A call to
@@ -336,7 +342,7 @@ public class Client {
             Log.e("ddmlib", e);
         }
     }
-    
+
     /**
      * Sends a request to the VM to send the enable status of the allocation tracking.
      * This is asynchronous.
@@ -350,9 +356,9 @@ public class Client {
             HandleHeap.sendREAQ(this);
         } catch (IOException e) {
             Log.e("ddmlib", e);
-        }   
+        }
     }
-    
+
     /**
      * Sends a request to the VM to send the information about all the allocations that have
      * happened since the call to {@link #enableAllocationTracker(boolean)} with <var>enable</var>
@@ -457,7 +463,7 @@ public class Client {
         }
 
         mConnState = ST_AWAIT_SHAKE;
-        
+
         return true;
     }
 
@@ -638,7 +644,7 @@ public class Client {
              */
             Log.e("ddms", "Receiving data in state = " + mConnState);
         }
-        
+
         return null;
     }
 
@@ -753,7 +759,7 @@ public class Client {
 
         mDevice.removeClient(this, notify);
     }
-    
+
     /**
      * Returns whether this {@link Client} has a valid connection to the application VM.
      */

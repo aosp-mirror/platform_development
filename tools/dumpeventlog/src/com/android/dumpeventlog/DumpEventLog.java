@@ -17,7 +17,7 @@
 package com.android.dumpeventlog;
 
 import com.android.ddmlib.AndroidDebugBridge;
-import com.android.ddmlib.Device;
+import com.android.ddmlib.IDevice;
 import com.android.ddmlib.Log;
 import com.android.ddmlib.Log.ILogOutput;
 import com.android.ddmlib.Log.LogLevel;
@@ -30,7 +30,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 /**
- * Connects to a device using ddmlib and dumps its event log as long as the device is connected. 
+ * Connects to a device using ddmlib and dumps its event log as long as the device is connected.
  */
 public class DumpEventLog {
 
@@ -74,7 +74,7 @@ public class DumpEventLog {
             System.out.println("Usage: dumpeventlog <device s/n> <filepath>");
             return;
         }
-        
+
         // redirect the log output to /dev/null
         Log.setLogOutput(new ILogOutput() {
             public void printAndPromptLog(LogLevel logLevel, String tag, String message) {
@@ -85,13 +85,13 @@ public class DumpEventLog {
                 // pass
             }
         });
-        
+
         // init the lib
         AndroidDebugBridge.init(false /* debugger support */);
-        
+
         try {
             AndroidDebugBridge bridge = AndroidDebugBridge.createBridge();
-            
+
             // we can't just ask for the device list right away, as the internal thread getting
             // them from ADB may not be done getting the first list.
             // Since we don't really want getDevices() to be blocking, we wait here manually.
@@ -103,7 +103,7 @@ public class DumpEventLog {
                 } catch (InterruptedException e) {
                     // pass
                 }
-                
+
                 // let's not wait > 10 sec.
                 if (count > 100) {
                     System.err.println("Timeout getting device list!");
@@ -112,9 +112,9 @@ public class DumpEventLog {
             }
 
             // now get the devices
-            Device[] devices = bridge.getDevices();
-            
-            for (Device device : devices) {
+            IDevice[] devices = bridge.getDevices();
+
+            for (IDevice device : devices) {
                 if (device.getSerialNumber().equals(args[0])) {
                     try {
                         grabLogFrom(device, args[1]);
@@ -126,20 +126,20 @@ public class DumpEventLog {
                     return;
                 }
             }
-            
+
             System.err.println("Could not find " + args[0]);
         } finally {
             AndroidDebugBridge.terminate();
         }
     }
 
-    private static void grabLogFrom(Device device, String filePath) throws IOException {
+    private static void grabLogFrom(IDevice device, String filePath) throws IOException {
         LogWriter writer = new LogWriter(filePath);
         LogReceiver receiver = new LogReceiver(writer);
         writer.setReceiver(receiver);
 
         device.runEventLogService(receiver);
-        
+
         writer.done();
     }
 }

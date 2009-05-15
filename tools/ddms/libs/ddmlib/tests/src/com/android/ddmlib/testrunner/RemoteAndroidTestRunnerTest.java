@@ -22,7 +22,6 @@ import com.android.ddmlib.IDevice;
 import com.android.ddmlib.IShellOutputReceiver;
 import com.android.ddmlib.RawImage;
 import com.android.ddmlib.SyncService;
-import com.android.ddmlib.Device.DeviceState;
 import com.android.ddmlib.log.LogReceiver;
 
 import java.io.IOException;
@@ -100,7 +99,7 @@ public class RemoteAndroidTestRunnerTest extends TestCase {
         final String extraArgValue = "blahValue";
         mRunner.addInstrumentationArg(extraArgName, extraArgValue);
         mRunner.run(new EmptyListener());
-        assertStringsEquals(String.format("am instrument -w -r -e %s %s %s/%s", extraArgName, 
+        assertStringsEquals(String.format("am instrument -w -r -e %s %s %s/%s", extraArgName,
                 extraArgValue, TEST_PACKAGE, TEST_RUNNER), mMockDevice.getLastShellCommand());
     }
 

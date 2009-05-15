@@ -17,20 +17,20 @@
 package com.android.ddmuilib;
 
 import com.android.ddmlib.Client;
-import com.android.ddmlib.Device;
+import com.android.ddmlib.IDevice;
 
 /**
  * A Panel that requires {@link Device}/{@link Client} selection notifications.
  */
 public abstract class SelectionDependentPanel extends Panel {
-    private Device mCurrentDevice = null;
+    private IDevice mCurrentDevice = null;
     private Client mCurrentClient = null;
 
     /**
      * Returns the current {@link Device}.
      * @return the current device or null if none are selected.
      */
-    protected final Device getCurrentDevice() {
+    protected final IDevice getCurrentDevice() {
         return mCurrentDevice;
     }
 
@@ -46,7 +46,7 @@ public abstract class SelectionDependentPanel extends Panel {
      * Sent when a new device is selected.
      * @param selectedDevice the selected device.
      */
-    public final void deviceSelected(Device selectedDevice) {
+    public final void deviceSelected(IDevice selectedDevice) {
         if (selectedDevice != mCurrentDevice) {
             mCurrentDevice = selectedDevice;
             deviceSelected();
