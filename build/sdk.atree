@@ -27,9 +27,6 @@ bin/dmtracedump tools/dmtracedump
 bin/hprof-conv tools/hprof-conv
 bin/mksdcard tools/mksdcard
 
-# other tools
-development/tools/scripts/add-accounts-sdk tools/add-accounts.py
-
 # the uper-jar file that apps link against
 out/target/common/obj/PACKAGING/android_jar_intermediates/android.jar platforms/${PLATFORM_NAME}/android.jar
 
