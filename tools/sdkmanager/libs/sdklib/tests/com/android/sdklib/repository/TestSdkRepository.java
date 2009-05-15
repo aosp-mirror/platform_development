@@ -16,15 +16,15 @@
 
 package com.android.sdklib.repository;
 
-import com.android.sdklib.repository.SdkRepositoryConstants;
-
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
 import java.io.InputStream;
+import java.io.StringReader;
 
 import javax.xml.XMLConstants;
+import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
@@ -50,34 +50,10 @@ public class TestSdkRepository extends TestCase {
         super.tearDown();
     }
 
-    public void testValidateLocalRepositoryFile() throws Exception {
-
-        InputStream xsdStream = SdkRepositoryConstants.getXsdStream();
-        InputStream xmlStream = TestSdkRepository.class.getResourceAsStream("repository_sample.xml");
-
-        SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-
-        Schema schema = factory.newSchema(new StreamSource(xsdStream));
-
-        Validator validator = schema.newValidator();
-
-        CaptureErrorHandler handler = new CaptureErrorHandler();
-        validator.setErrorHandler(handler);
-
-        validator.validate(new StreamSource(xmlStream));
-
-        String warnings = handler.getWarnings();
-        if (warnings.length() > 0) {
-            System.err.println(warnings);
-        }
-
-        String errors = handler.getErrors();
-        if (errors.length() > 0) {
-            System.err.println(errors);
-            fail(errors);
-        }
-    }
-
+    /**
+     * A SAX error handler that captures the errors and warnings.
+     * This allows us to capture *all* errors and just not get an exception on the first one.
+     */
     private static class CaptureErrorHandler implements ErrorHandler {
 
         private String mWarnings = "";
@@ -92,15 +68,33 @@ public class TestSdkRepository extends TestCase {
         }
 
         /**
+         * Verifies if the handler captures some errors or warnings.
+         * Prints them on stderr.
+         * Also fails the unit test if any error was generated.
+         */
+        public void verify() {
+            if (mWarnings.length() > 0) {
+                System.err.println(mWarnings);
+            }
+
+            if (mErrors.length() > 0) {
+                System.err.println(mErrors);
+                fail(mErrors);
+            }
+        }
+
+        /**
          * @throws SAXException
          */
         public void error(SAXParseException ex) throws SAXException {
             mErrors += "Error: " + ex.getMessage() + "\n";
         }
 
+        /**
+         * @throws SAXException
+         */
         public void fatalError(SAXParseException ex) throws SAXException {
             mErrors += "Fatal Error: " + ex.getMessage() + "\n";
-            throw ex;
         }
 
         /**
@@ -112,4 +106,143 @@ public class TestSdkRepository extends TestCase {
 
     }
 
+    // --- Helpers ------------
+
+    /** Helper method that returns a validator for our XSD */
+    private Validator getValidator(CaptureErrorHandler handler) throws SAXException {
+        InputStream xsdStream = SdkRepositoryConstants.getXsdStream();
+        SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+        Schema schema = factory.newSchema(new StreamSource(xsdStream));
+        Validator validator = schema.newValidator();
+        if (handler != null) {
+            validator.setErrorHandler(handler);
+        }
+
+        return validator;
+    }
+
+    /** Validate a valid sample using an InputStream */
+    public void testValidateLocalRepositoryFile() throws Exception {
+
+        InputStream xmlStream =
+            TestSdkRepository.class.getResourceAsStream("repository_sample.xml");
+        Source source = new StreamSource(xmlStream);
+
+        CaptureErrorHandler handler = new CaptureErrorHandler();
+        Validator validator = getValidator(handler);
+        validator.validate(source);
+        handler.verify();
+    }
+
+    /** An helper that validates a string against an expected regexp. */
+    private void assertRegex(String expectedRegexp, String actualString) {
+        assertNotNull(actualString);
+        assertTrue(
+                String.format("Regexp Assertion Failed:\nExpected: %s\nActual: %s\n",
+                        expectedRegexp, actualString),
+                actualString.matches(expectedRegexp));
+    }
+
+    // --- Tests ------------
+
+    /** A document should at least have a root to be valid */
+    public void testEmptyXml() throws Exception {
+        String document = "<?xml version=\"1.0\"?>";
+
+        Source source = new StreamSource(new StringReader(document));
+
+        CaptureErrorHandler handler = new CaptureErrorHandler();
+        Validator validator = getValidator(handler);
+
+        try {
+            validator.validate(source);
+        } catch (SAXParseException e) {
+            // We expect to get this specific exception message
+            assertRegex("Premature end of file.*", e.getMessage());
+            return;
+        }
+        // We shouldn't get here
+        handler.verify();
+        fail();
+    }
+
+    /** A document with a root element containing no platform, addon, etc., is valid. */
+    public void testEmptyRootXml() throws Exception {
+        String document = "<?xml version=\"1.0\"?>" +
+            "<r:sdk-repository xmlns:r=\"http://schemas.android.com/sdk/android/repository/1\" />";
+
+        Source source = new StreamSource(new StringReader(document));
+
+        CaptureErrorHandler handler = new CaptureErrorHandler();
+        Validator validator = getValidator(handler);
+        validator.validate(source);
+        handler.verify();
+    }
+
+    /** A document with an unknown element. */
+    public void testUnknownContentXml() throws Exception {
+        String document = "<?xml version=\"1.0\"?>" +
+            "<r:sdk-repository xmlns:r=\"http://schemas.android.com/sdk/android/repository/1\" >" +
+            "<r:unknown />" +
+            "</r:sdk-repository>";
+
+        Source source = new StreamSource(new StringReader(document));
+
+        // don't capture the validator errors, we want it to fail and catch the exception
+        Validator validator = getValidator(null);
+        try {
+            validator.validate(source);
+        } catch (SAXParseException e) {
+            // We expect a parse expression referring to this grammar rule
+            assertRegex("cvc-complex-type.2.4.a: Invalid content was found.*", e.getMessage());
+            return;
+        }
+        // If we get here, the validator has not failed as we expected it to.
+        fail();
+    }
+
+    /** A document with an incomplete element. */
+    public void testIncompleteContentXml() throws Exception {
+        String document = "<?xml version=\"1.0\"?>" +
+            "<r:sdk-repository xmlns:r=\"http://schemas.android.com/sdk/android/repository/1\" >" +
+            "<r:platform> <r:api-level>1</r:api-level> <r:libs /> </r:platform>" +
+            "</r:sdk-repository>";
+
+        Source source = new StreamSource(new StringReader(document));
+
+        // don't capture the validator errors, we want it to fail and catch the exception
+        Validator validator = getValidator(null);
+        try {
+            validator.validate(source);
+        } catch (SAXParseException e) {
+            // We expect a parse error referring to this grammar rule
+            assertRegex("cvc-complex-type.2.4.a: Invalid content was found.*", e.getMessage());
+            return;
+        }
+        // If we get here, the validator has not failed as we expected it to.
+        fail();
+    }
+
+    /** A document with a wrong type element. */
+    public void testWrongTypeContentXml() throws Exception {
+        String document = "<?xml version=\"1.0\"?>" +
+            "<r:sdk-repository xmlns:r=\"http://schemas.android.com/sdk/android/repository/1\" >" +
+            "<r:platform> <r:api-level>NotAnInteger</r:api-level> <r:libs /> </r:platform>" +
+            "</r:sdk-repository>";
+
+        Source source = new StreamSource(new StringReader(document));
+
+        // don't capture the validator errors, we want it to fail and catch the exception
+        Validator validator = getValidator(null);
+        try {
+            validator.validate(source);
+        } catch (SAXParseException e) {
+            // We expect a parse error referring to this grammar rule
+            assertRegex("cvc-datatype-valid.1.2.1: 'NotAnInteger' is not a valid value.*",
+                    e.getMessage());
+            return;
+        }
+        // If we get here, the validator has not failed as we expected it to.
+        fail();
+    }
 }

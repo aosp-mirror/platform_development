@@ -17,12 +17,17 @@
 <sdk:sdk-repository
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xmlns:sdk="http://schemas.android.com/sdk/android/repository/1">
+
+    <!-- Inner elements must be either platform, add-on, doc or tool.
+         There can be 0 or more of each, in any order. -->
+
     <sdk:platform>
         <sdk:version>1.0</sdk:version>
         <sdk:api-level>1</sdk:api-level>
         <sdk:revision>3</sdk:revision>
         <sdk:description>Some optional description</sdk:description>
         <sdk:desc-url>http://www.example.com/platform1.html</sdk:desc-url>
+        <!-- The archives node is mandatory and it cannot be empty. -->
         <sdk:archives>
             <sdk:archive os="any">
                 <sdk:size>65536</sdk:size>
@@ -31,6 +36,48 @@
             </sdk:archive>
         </sdk:archives>
     </sdk:platform>
+
+    <sdk:doc>
+        <sdk:api-level>1</sdk:api-level>
+        <sdk:revision>1</sdk:revision>
+        <sdk:description>Some optional description</sdk:description>
+        <sdk:desc-url>http://www.example.com/docs.html</sdk:desc-url>
+        <sdk:archives>
+            <sdk:archive os="any">
+                <sdk:size>65536</sdk:size>
+                <sdk:checksum type="sha1">2822ae37115ebf13412bbef91339ee0d9454525e</sdk:checksum>
+                <sdk:url>http://www.example.com/docs/docs1.zip</sdk:url>
+            </sdk:archive>
+        </sdk:archives>
+    </sdk:doc>
+
+    <sdk:add-on>
+        <sdk:name>My First add-on</sdk:name>
+        <sdk:api-level>1</sdk:api-level>
+        <sdk:vendor>John Doe</sdk:vendor>
+        <sdk:revision>1</sdk:revision>
+        <sdk:description>Some optional description</sdk:description>
+        <sdk:desc-url>http://www.example.com/myfirstaddon</sdk:desc-url>
+        <sdk:archives>
+            <sdk:archive os="any">
+                <sdk:size>65536</sdk:size>
+                <sdk:checksum type="sha1">2822ae37115ebf13412bbef91339ee0d9454525e</sdk:checksum>
+                <sdk:url>http://www.example.com/add-ons/first.zip</sdk:url>
+            </sdk:archive>
+        </sdk:archives>
+        <!-- The libs node is mandatory, however it can be empty. -->
+        <sdk:libs>
+            <sdk:lib>
+                <sdk:name>android.blah.somelib</sdk:name>
+                <sdk:description>The description for this library.</sdk:description>
+            </sdk:lib>
+            <sdk:lib>
+                <!-- sdk:description is optional, name is not -->
+                <sdk:name>com.android.mymaps</sdk:name>
+            </sdk:lib>
+        </sdk:libs>
+    </sdk:add-on>
+
     <sdk:platform>
         <sdk:version>1.1</sdk:version>
         <sdk:api-level>2</sdk:api-level>
@@ -65,31 +112,7 @@
             </sdk:archive>
         </sdk:archives>
     </sdk:platform>
-    <sdk:add-on>
-        <sdk:name>My First add-on</sdk:name>
-        <sdk:api-level>1</sdk:api-level>
-        <sdk:vendor>John Doe</sdk:vendor>
-        <sdk:revision>1</sdk:revision>
-        <sdk:description>Some optional description</sdk:description>
-        <sdk:desc-url>http://www.example.com/myfirstaddon</sdk:desc-url>
-        <sdk:archives>
-            <sdk:archive os="any">
-                <sdk:size>65536</sdk:size>
-                <sdk:checksum type="sha1">2822ae37115ebf13412bbef91339ee0d9454525e</sdk:checksum>
-                <sdk:url>http://www.example.com/add-ons/first.zip</sdk:url>
-            </sdk:archive>
-        </sdk:archives>
-        <sdk:libs>
-            <sdk:lib>
-                <sdk:name>android.blah.somelib</sdk:name>
-                <sdk:description>The description for this library.</sdk:description>
-            </sdk:lib>
-            <sdk:lib>
-                <!-- sdk:description is optional, name is not -->
-                <sdk:name>com.android.mymaps</sdk:name>
-            </sdk:lib>
-        </sdk:libs>
-    </sdk:add-on>
+
     <sdk:add-on>
         <sdk:name>My Second add-on</sdk:name>
         <sdk:api-level>2</sdk:api-level>
@@ -117,19 +140,20 @@
             </sdk:lib>
         </sdk:libs>
     </sdk:add-on>
-    <sdk:doc>
-        <sdk:api-level>1</sdk:api-level>
+
+    <sdk:tool>
         <sdk:revision>1</sdk:revision>
         <sdk:description>Some optional description</sdk:description>
-        <sdk:desc-url>http://www.example.com/docs.html</sdk:desc-url>
+        <sdk:desc-url>http://www.example.com/tools.html</sdk:desc-url>
         <sdk:archives>
             <sdk:archive os="any">
                 <sdk:size>65536</sdk:size>
                 <sdk:checksum type="sha1">2822ae37115ebf13412bbef91339ee0d9454525e</sdk:checksum>
-                <sdk:url>http://www.example.com/docs/docs1.zip</sdk:url>
+                <sdk:url>http://www.example.com/files/tools1.zip</sdk:url>
             </sdk:archive>
         </sdk:archives>
-    </sdk:doc>
+    </sdk:tool>
+
     <sdk:doc>
         <sdk:api-level>2</sdk:api-level>
         <sdk:revision>42</sdk:revision>
@@ -151,18 +175,7 @@
             </sdk:archive>
         </sdk:archives>
     </sdk:doc>
-    <sdk:tool>
-        <sdk:revision>1</sdk:revision>
-        <sdk:description>Some optional description</sdk:description>
-        <sdk:desc-url>http://www.example.com/tools.html</sdk:desc-url>
-        <sdk:archives>
-            <sdk:archive os="any">
-                <sdk:size>65536</sdk:size>
-                <sdk:checksum type="sha1">2822ae37115ebf13412bbef91339ee0d9454525e</sdk:checksum>
-                <sdk:url>http://www.example.com/files/tools1.zip</sdk:url>
-            </sdk:archive>
-        </sdk:archives>
-    </sdk:tool>
+
     <sdk:tool>
         <sdk:revision>42</sdk:revision>
         <sdk:archives>
@@ -183,4 +196,21 @@
             </sdk:archive>
         </sdk:archives>
     </sdk:tool>
+
+    <sdk:add-on>
+        <sdk:name>This add-on has no libraries</sdk:name>
+        <sdk:api-level>4</sdk:api-level>
+        <sdk:vendor>Joe Bar</sdk:vendor>
+        <sdk:revision>3</sdk:revision>
+        <sdk:archives>
+            <sdk:archive os="any" arch="any">
+                <sdk:size>65536</sdk:size>
+                <sdk:checksum type="sha1">2822ae37115ebf13412bbef91339ee0d9454525e</sdk:checksum>
+                <sdk:url>distrib/imnotanarchiveimadoctorjim.zip</sdk:url>
+            </sdk:archive>
+        </sdk:archives>
+        <!-- The libs node is mandatory, however it can be empty. -->
+        <sdk:libs />
+    </sdk:add-on>
+
 </sdk:sdk-repository>
