@@ -86,9 +86,11 @@
                             <xsd:element name="desc-url"    type="xsd:token"  minOccurs="0" />
                             <xsd:element name="archives"    type="sdk:archivesType" />
 
+                            <!-- An add-on can declare 0 or more libraries. -->
+
                             <xsd:element name="libs">
                                 <xsd:complexType>
-                                    <xsd:sequence maxOccurs="unbounded">
+                                    <xsd:sequence minOccurs="0" maxOccurs="unbounded">
                                         <xsd:element name="lib">
                                             <xsd:complexType>
                                                 <xsd:all>
@@ -135,13 +137,16 @@
         </xsd:complexType>
     </xsd:element>
 
-    <!-- A collection of files that can be downloaded for a given architectures -->
+    <!-- A collection of files that can be downloaded for a given architecture.
+         The <archives> node is mandatory in the repository elements and the
+         collection must have at least one <archive> declared.
+     -->
 
     <xsd:complexType name="archivesType">
         <xsd:annotation>
             <xsd:documentation>A collection of architecture-dependent archives.</xsd:documentation>
         </xsd:annotation>
-        <xsd:sequence maxOccurs="unbounded">
+        <xsd:sequence minOccurs="1" maxOccurs="unbounded">
             <!-- One archive file -->
             <xsd:element name="archive">
                 <xsd:complexType>
