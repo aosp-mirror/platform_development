@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
-package com.android.sdkmanager.repository;
+package com.android.sdklib.repository;
+
+import com.android.sdklib.repository.SdkRepositoryConstants;
 
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
@@ -36,7 +38,7 @@ import junit.framework.TestCase;
  * References:
  * http://www.ibm.com/developerworks/xml/library/x-javaxmlvalidapi.html
  */
-public class TestXml extends TestCase {
+public class TestSdkRepository extends TestCase {
 
     @Override
     protected void setUp() throws Exception {
@@ -51,7 +53,7 @@ public class TestXml extends TestCase {
     public void testValidateLocalRepositoryFile() throws Exception {
 
         InputStream xsdStream = SdkRepositoryConstants.getXsdStream();
-        InputStream xmlStream = TestXml.class.getResourceAsStream("repository_sample.xml");
+        InputStream xmlStream = TestSdkRepository.class.getResourceAsStream("repository_sample.xml");
 
         SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
 

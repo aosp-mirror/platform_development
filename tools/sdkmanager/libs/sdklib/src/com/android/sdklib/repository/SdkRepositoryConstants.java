@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.sdkmanager.repository;
+package com.android.sdklib.repository;
 
 import java.io.InputStream;
 
