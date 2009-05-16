@@ -14,7 +14,6 @@ pdk.version=1.0
   </div>
 </div>
 
-
 <a name="Capturing_logs"></a><h2>Capturing logs</h2>
 
 <p>To capture log output:</p>
@@ -34,10 +33,10 @@ pdk.version=1.0
 </p>
 
 <a name="Crash_but_no_exit_stuck"></a><h3>Crash but no exit...stuck</h3>
-<pre class="prettify">
-&gt;&gt;&gt; gtalk app crashed but did not actually exit or seems stuck
-&gt;&gt;&gt; let's check the debug logs and see if there's anything to see:
 
+<p>In this scenario, the GTalk app crashed but did not actually exit or seems stuck. Check the debug logs to see if there is anything unusual: </p>
+
+<pre class="prettify">
 # logcat &amp;
 
 ...
@@ -56,17 +55,23 @@ I/SurfaceFlinger.HW(  182): About to give-up screen
 I/SurfaceFlinger.HW(  182): screen given-up
 I/SurfaceFlinger.HW(  182): Screen about to return
 ...
+</pre>
 
-&gt;&gt;&gt; looks like the system launched a replacement gtalk process
-&gt;&gt;&gt; but it is stuck somehow
+<p>
+The logs indicate that the system launched a replacement GTalk process but that it got stuck somehow:
+</p>
 
+<pre class="prettify">
 # ps
 PID   PPID  VSIZE RSS   WCHAN    PC         NAME
 257   181   45780 5292  ffffffff 53030cb4 S com.google.andr
+</pre>
 
-&gt;&gt;&gt; gtalk's PC is at 53030cb4
-&gt;&gt;&gt; look at the memory map to find out what lib is 0x53......
+<p>
+GTalk's PC is at 53030cb4. Look at the memory map to find out what lib is 0x53......
+</p>
 
+<pre class="prettify">
 # cat /proc/257/maps
 ...
 51000000-5107c000 rwxp 00000000 1f:03 619        /android/lib/libutils.so
@@ -75,9 +80,13 @@ PID   PPID  VSIZE RSS   WCHAN    PC         NAME
 53039000-53042000 rw-p 53039000 00:00 0
 54000000-54002000 rwxp 00000000 1f:03 658        /android/lib/libstdc++.so
 ...
+</pre>
 
-&gt;&gt;&gt; let's disassemble libc and find out where we are?!
+<p>
+Disassemble <code>libc</code> to figure out what is going on:
+</p>
 
+<pre class="prettify">
 % prebuilt/Linux/toolchain-eabi-4.2.1/bin/arm-elf-objdump -d out/target/product/sooner/symbols/android/lib/libc.so
 
 00030ca4 &lt;__futex_wait&gt;:
@@ -90,14 +99,20 @@ PID   PPID  VSIZE RSS   WCHAN    PC         NAME
 
 <a name="Blocked_in_a_syscall"></a><h4>Blocked in a syscall</h4>
 
+<p>
+In this scenario, the system is blocked in a syscall. To debug using <code>gdb</code>, first tell <code>adb</code> to forward the <code>gdb</code> port:
+</p>
+
 <pre class="prettify">
-&gt;&gt;&gt; we're blocked in a syscall, let's see what gdb can show us
-&gt;&gt;&gt; (we could have done this first if we wanted to)
 
-&gt;&gt;&gt; tell adb to forward the GDB port
 % adb forward tcp:5039 tcp:5039
+</pre>
 
-&gt;&gt;&gt; start gdb server and attach to process 257 (from example above)
+<p>
+Start the <code>gdb</code> server and attach to process 257 (as demonstrated in the previous example):
+</p>
+
+<pre class="prettify">
 # gdbserver :5039 --attach 257 &amp;
 Attached; pid = 257
 Listening on port 5039
@@ -109,14 +124,23 @@ Listening on port 5039
 Remote debugging using :5039
 0x53030cb4 in ?? ()
 Current language:  auto; currently asm
+</pre>
 
-&gt;&gt;&gt; Don't let other threads get scheduled while we're debugging.
-&gt;&gt;&gt; You should "set scheduler-locking off" before issuing a "continue",
-&gt;&gt;&gt; or else your thread may get stuck on a futex or other
-&gt;&gt;&gt; spinlock because no other thread can release it.
+<p>
+Don't let other threads get scheduled while we're debugging.
+You should "set scheduler-locking off" before issuing a "continue", or else your thread may get stuck on a futex or other
+spinlock because no other thread can release it.
+</p>
+
+<pre class="prettify">
 (gdb) set scheduler-locking on
+</pre>
 
-&gt;&gt;&gt; Ignore SIGUSR1 if you're using JamVM.  Shouldn't hurt if you're not.
+<p>
+Ignore SIGUSR1 if you're using JamVM.  Shouldn't hurt if you're not.
+</p>
+
+<pre class="prettify">
 (gdb) handle SIGUSR1 noprint
 
 (gdb) where
@@ -282,5 +306,6 @@ pid: 373, tid: 401  &gt;&gt;&gt; android.content.providers.pim &lt;&lt;&lt;
 </pre>
 
 <p>Or you can run <code>logcat</code> without any parameters and it will read from <code>stdin</code>.  You can then paste output into the terminal or pipe it. Run <code>logcat</code> from the top of the tree in the environment in which you do builds so that the application can determine relative paths to the toolchain to use to decode the object files.
+</p>
 </body>
 </html>
