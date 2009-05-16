@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008 The Android Open Source Project
+ * Copyright (C) 2009 The Android Open Source Project
  *
  * Licensed under the Eclipse Public License, Version 1.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,7 +47,7 @@ import org.eclipse.swt.widgets.TableItem;
  * and finally use {@link #getSelected()} to retrieve the selection.
  */
 public final class AvdSelector {
-    
+
     private AvdInfo[] mAvds;
     private SelectionListener mSelectionListener;
     private Table mTable;
@@ -84,28 +84,28 @@ public final class AvdSelector {
          * This is invoked once when the button is created and cannot be changed later.
          */
         public String label();
-        
+
         /**
          * This is invoked just after the selection has changed to update the "enabled"
          * state of the action. Implementation should use {@link AvdSelector#getSelected()}.
          */
         public boolean isEnabled();
 
-        /** 
+        /**
          * Run the action, invoked when the button is clicked.
-         * 
+         *
          * The caller's action is responsible for reloading the AVD list
          * using {@link AvdSelector#setAvds(AvdInfo[], IAndroidTarget)}.
          */
         public void run();
     }
-    
+
     /**
      * Creates a new SDK Target Selector, and fills it with a list of {@link AvdInfo}, filtered
      * by a {@link IAndroidTarget}.
      * <p/>Only the {@link AvdInfo} able to run application developed for the given
      * {@link IAndroidTarget} will be displayed.
-     * 
+     *
      * @param parent The parent composite where the selector will be added.
      * @param avds The list of AVDs. This is <em>not</em> copied, the caller must not modify.
      *             It can be null.
@@ -149,10 +149,10 @@ public final class AvdSelector {
                 public void widgetSelected(SelectionEvent e) {
                     super.widgetSelected(e);
                     mExtraAction.run();
-                } 
+                }
             });
         }
-        
+
         // create the table columns
         final TableColumn column0 = new TableColumn(mTable, SWT.NONE);
         column0.setText("AVD Name");
@@ -171,7 +171,7 @@ public final class AvdSelector {
 
     /**
      * Creates a new SDK Target Selector, and fills it with a list of {@link AvdInfo}.
-     * 
+     *
      * @param parent The parent composite where the selector will be added.
      * @param avds The list of AVDs. This is <em>not</em> copied, the caller must not modify.
      *             It can be null.
@@ -187,7 +187,7 @@ public final class AvdSelector {
 
     /**
      * Creates a new SDK Target Selector, and fills it with a list of {@link AvdInfo}.
-     * 
+     *
      * @param parent The parent composite where the selector will be added.
      * @param extraAction When non-null, displays an extra action button.
      * @param selectionMode One of {@link SelectionMode#SELECT} or {@link SelectionMode#CHECK}
@@ -200,7 +200,7 @@ public final class AvdSelector {
 
     /**
      * Sets the table grid layout data.
-     *  
+     *
      * @param heightHint If > 0, the height hint is set to the requested value.
      */
     public void setTableHeightHint(int heightHint) {
@@ -215,26 +215,26 @@ public final class AvdSelector {
         data.verticalAlignment = GridData.FILL;
         mTable.setLayoutData(data);
     }
-    
+
     /**
      * Sets a new set of AVD, with an optional filter.
      * Tries to keep the selection.
      * <p/>
      * This must be called from the UI thread.
-     * 
-     * 
+     *
+     *
      * @param avds The list of AVDs. This is <em>not</em> copied, the caller must not modify.
      *             It can be null.
      * @param filter An IAndroidTarget. If non-null, only AVD whose target are compatible with the
      * filter target will displayed an available for selection.
      */
     public void setAvds(AvdInfo[] avds, IAndroidTarget filter) {
-        
+
         AvdInfo selected = getSelected();
-        
+
         mAvds = avds;
         fillTable(mTable, filter);
-        
+
         setSelection(selected);
     }
 
@@ -256,19 +256,19 @@ public final class AvdSelector {
      * The {@link TableItem#getData()} contains an {@link IAndroidTarget}.
      * <p/>
      * It is recommended that the caller uses the {@link #getSelected()} method instead.
-     * 
+     *
      * @param selectionListener The new listener or null to remove it.
      */
     public void setSelectionListener(SelectionListener selectionListener) {
         mSelectionListener = selectionListener;
     }
-    
+
     /**
      * Sets the current target selection.
      * <p/>
      * If the selection is actually changed, this will invoke the selection listener
      * (if any) with a null event.
-     * 
+     *
      * @param target the target to be selected. Use null to deselect everything.
      * @return true if the target could be selected, false otherwise.
      */
@@ -288,7 +288,7 @@ public final class AvdSelector {
                     }
                     break;
                 }
-                
+
                 index++;
 
             } else if (mSelectionMode == SelectionMode.CHECK){
@@ -304,21 +304,21 @@ public final class AvdSelector {
                 }
             }
         }
-        
+
         if (modified && mSelectionListener != null) {
             mSelectionListener.widgetSelected(null);
         }
-        
+
         if (mExtraAction != null && mExtraActionButton != null) {
             mExtraActionButton.setEnabled(mExtraAction.isEnabled());
         }
-        
+
         return found;
     }
 
     /**
      * Returns the currently selected item.
-     * 
+     *
      * @return The currently selected item or null.
      */
     public AvdInfo getSelected() {
@@ -342,7 +342,7 @@ public final class AvdSelector {
      * Enables the receiver if the argument is true, and disables it otherwise.
      * A disabled control is typically not selectable from the user interface
      * and draws with an inactive or "grayed" look.
-     * 
+     *
      * @param enabled the new enabled state.
      */
     public void setEnabled(boolean enabled) {
@@ -366,7 +366,7 @@ public final class AvdSelector {
             @Override
             public void controlResized(ControlEvent e) {
                 Rectangle r = table.getClientArea();
-                column0.setWidth(r.width * 30 / 100); // 30%  
+                column0.setWidth(r.width * 30 / 100); // 30%
                 column1.setWidth(r.width * 45 / 100); // 45%
                 column2.setWidth(r.width * 10 / 100); // 10%
                 column3.setWidth(r.width * 15 / 100); // 15%
@@ -382,7 +382,7 @@ public final class AvdSelector {
     private void setupSelectionListener(final Table table) {
         // Add a selection listener that will check/uncheck items when they are double-clicked
         table.addSelectionListener(new SelectionListener() {
-            
+
             /**
              * Handles single-click selection on the table.
              * {@inheritDoc}
@@ -397,7 +397,7 @@ public final class AvdSelector {
                 if (mSelectionListener != null) {
                     mSelectionListener.widgetSelected(e);
                 }
-                
+
                 if (mExtraAction != null && mExtraActionButton != null) {
                     mExtraActionButton.setEnabled(mExtraAction.isEnabled());
                 }
@@ -406,9 +406,9 @@ public final class AvdSelector {
             /**
              * Handles double-click selection on the table.
              * Note that the single-click handler will probably already have been called.
-             * 
+             *
              * On double-click, <em>always</em> check the table item.
-             * 
+             *
              * {@inheritDoc}
              */
             public void widgetDefaultSelected(SelectionEvent e) {
@@ -424,7 +424,7 @@ public final class AvdSelector {
                 if (mSelectionListener != null) {
                     mSelectionListener.widgetDefaultSelected(e);
                 }
-                
+
                 if (mExtraAction != null && mExtraActionButton != null) {
                     mExtraActionButton.setEnabled(mExtraAction.isEnabled());
                 }
@@ -437,7 +437,7 @@ public final class AvdSelector {
             private void enforceSingleSelection(TableItem item) {
                 if (mSelectionMode == SelectionMode.SELECT) {
                     // pass
-                    
+
                 } else if (mSelectionMode == SelectionMode.CHECK) {
                     if (item.getChecked()) {
                         Table parentTable = item.getParent();
@@ -478,7 +478,7 @@ public final class AvdSelector {
                 }
             }
         }
-        
+
         if (table.getItemCount() == 0) {
             table.setEnabled(false);
             TableItem item = new TableItem(table, SWT.NONE);
@@ -498,36 +498,36 @@ public final class AvdSelector {
      */
     private void setupTooltip(final Table table) {
         /*
-         * Reference: 
+         * Reference:
          * http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.swt.snippets/src/org/eclipse/swt/snippets/Snippet125.java?view=markup
          */
-        
+
         final Listener listener = new Listener() {
             public void handleEvent(Event event) {
-                
+
                 switch(event.type) {
                 case SWT.KeyDown:
                 case SWT.MouseExit:
                 case SWT.MouseDown:
                     return;
-                    
+
                 case SWT.MouseHover:
                     updateDescription(table.getItem(new Point(event.x, event.y)));
                     break;
-                    
+
                 case SWT.Selection:
                     if (event.item instanceof TableItem) {
                         updateDescription((TableItem) event.item);
                     }
                     break;
-                    
+
                 default:
                     return;
                 }
 
             }
         };
-        
+
         table.addListener(SWT.Dispose, listener);
         table.addListener(SWT.KeyDown, listener);
         table.addListener(SWT.MouseMove, listener);
