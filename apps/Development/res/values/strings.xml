@@ -91,9 +91,6 @@
     <string name="monkey_screen_start_text">Start</string>
     <string name="monkey_screen_initial_activity_label">Initial Activity: </string>
 
-    <string name="radio_issue_submit_text">Submit report</string>
-    <string name="radio_issue_instructions_text">Enter a description of the issue.</string>
-
     <string name="show_activity_clear_on_background_label">Clear on Background</string>
     <string name="show_activity_task_affinity_label">Task Affinity</string>
     <string name="show_activity_process_label">Process</string>
