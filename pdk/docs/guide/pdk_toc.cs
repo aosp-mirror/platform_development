@@ -14,6 +14,7 @@ function nothing() {}
      <li><a href="<?cs var:toroot ?>guide/bring_up.html">Bring up</a></li>
      <li><a href="<?cs var:toroot ?>guide/keymaps_keyboard_input.html">Keymaps and Keyboard</a></li>
      <li><a href="<?cs var:toroot ?>guide/display_drivers.html">Display Drivers</a></li>
+     <li><a href="<?cs var:toroot ?>guide/build_cookbook.html">Build Cookbook</a></li>
   </ul>
 </li>
 
