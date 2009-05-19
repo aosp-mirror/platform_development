@@ -1,0 +1,118 @@
+page.title=<my_page_title>
+pdk.version=<current_PDK_version>
+@jd:body
+
+<a name="toc"/>
+<div style="padding:10px">
+<a href="http://wiki.corp.google.com/twiki/bin/view/Main/AndroidBuildCookbook#Building_a_simple_APK">Building a simple APK</a><br>
+    <a href="http://wiki.corp.google.com/twiki/bin/view/Main/AndroidBuildCookbook#Building_a_APK_that_depends_on_a">Building a APK that depends on a static .jar file</a><br>
+    <a href="http://wiki.corp.google.com/twiki/bin/view/Main/AndroidBuildCookbook#Building_a_APK_that_should_be_si">Building a APK that should be signed with the platform key</a><br>
+    <a href="http://wiki.corp.google.com/twiki/bin/view/Main/AndroidBuildCookbook#Building_a_APK_that_should_be_si">Building a APK that should be signed with a specific vendor key</a><br>
+    <a href="http://wiki.corp.google.com/twiki/bin/view/Main/AndroidBuildCookbook#Adding_a_prebuilt_APK">Adding a prebuilt APK</a><br>
+    <a href="http://wiki.corp.google.com/twiki/bin/view/Main/AndroidBuildCookbook#Adding_a_Static_Java_Library">Adding a Static Java Library</a><br>
+    <a href="http://wiki.corp.google.com/twiki/bin/view/Main/AndroidBuildCookbook#LOCAL_MODULE_TAGS">Using LOCAL_MODULE_TAGS</a><br>
+  </div>
+  
+<p>The Android Build Cookbook offers code snippets to help you quickly implement some common build tasks. For additional instruction, please see the other build documents in this section.</p>  
+<h2><a name="Building_a_simple_APK" id="Building_a_simple_APK"></a>Building a simple APK</h2>
+<pre>
+  LOCAL_PATH := $(call my-dir)
+  include $(CLEAR_VARS)
+  &nbsp;
+  # Build all java files in the java subdirectory
+  LOCAL_SRC_FILES := $(call all-subdir-java-files)
+  &nbsp;
+  # Name of the APK to build
+  LOCAL_PACKAGE_NAME := LocalPackage
+  &nbsp;
+  # Tell it to build an APK
+  include $(BUILD_PACKAGE)
+</pre>
+<h2><a name="Building_a_APK_that_depends_on_a" id="Building_a_APK_that_depends_on_a"></a>Building a APK that depends on a static .jar file</h2>
+<pre>
+  LOCAL_PATH := $(call my-dir)
+  include $(CLEAR_VARS)
+  &nbsp;
+  # List of static libraries to include in the package
+  LOCAL_STATIC_JAVA_LIBRARIES := static-library
+  &nbsp;
+  # Build all java files in the java subdirectory
+  LOCAL_SRC_FILES := $(call all-subdir-java-files)
+  &nbsp;
+  # Name of the APK to build
+  LOCAL_PACKAGE_NAME := LocalPackage
+  &nbsp;
+  # Tell it to build an APK
+  include $(BUILD_PACKAGE)
+</pre>
+<h2><a name="Building_a_APK_that_should_be_si" id="Building_a_APK_that_should_be_si">Building a APK that should be signed with the platform key</a></h2>
+<pre>
+  LOCAL_PATH := $(call my-dir)
+  include $(CLEAR_VARS)
+  &nbsp;
+  # Build all java files in the java subdirectory
+  LOCAL_SRC_FILES := $(call all-subdir-java-files)
+  &nbsp;
+  # Name of the APK to build
+  LOCAL_PACKAGE_NAME := LocalPackage
+  &nbsp;
+  LOCAL_CERTIFICATE := platform
+  &nbsp;
+  # Tell it to build an APK
+  include $(BUILD_PACKAGE)
+</pre>
+<h2>Building a APK that should be signed with a specific vendor key</h2>
+<pre>
+  LOCAL_PATH := $(call my-dir)
+  include $(CLEAR_VARS)
+  &nbsp;
+  # Build all java files in the java subdirectory
+  LOCAL_SRC_FILES := $(call all-subdir-java-files)
+  &nbsp;
+  # Name of the APK to build
+  LOCAL_PACKAGE_NAME := LocalPackage
+  &nbsp;
+  LOCAL_CERTIFICATE := vendor/example/certs/app
+  &nbsp;
+  # Tell it to build an APK
+  include $(BUILD_PACKAGE)
+</pre>
+<h2><a name="Adding_a_prebuilt_APK" id="Adding_a_prebuilt_APK"></a>Adding a prebuilt APK</h2>
+<pre>
+  LOCAL_PATH := $(call my-dir)
+  include $(CLEAR_VARS)
+  &nbsp;
+  # Module name should match apk name to be installed.
+  LOCAL_MODULE := LocalModuleName
+  LOCAL_SRC_FILES := $(LOCAL_MODULE).apk
+  LOCAL_MODULE_CLASS := APPS
+  LOCAL_MODULE_SUFFIX := $(COMMON_ANDROID_PACKAGE_SUFFIX)
+  &nbsp;
+  include $(BUILD_PREBUILT)
+</pre>
+<h2><a name="Adding_a_Static_Java_Library" id="Adding_a_Static_Java_Library"></a>Adding a Static Java Library</h2>
+<pre>
+  LOCAL_PATH := $(call my-dir)
+  include $(CLEAR_VARS)
+  &nbsp;
+  # Build all java files in the java subdirectory
+  LOCAL_SRC_FILES := $(call all-subdir-java-files)
+  &nbsp;
+  # Any libraries that this library depends on
+  LOCAL_JAVA_LIBRARIES := android.test.runner
+  &nbsp;
+  # The name of the jar file to create
+  LOCAL_MODULE := sample
+  &nbsp;
+  # Build a static jar file.
+  include $(BUILD_STATIC_JAVA_LIBRARY)
+</pre>
+<h2><a name="Random_other_build_tidbits" id="Random_other_build_tidbits"></a>Random other build tidbits</h2>
+<h3><a name="LOCAL_MODULE_TAGS" id="LOCAL_MODULE_TAGS"></a>LOCAL_MODULE_TAGS</h3>
+<p>This variable controls what build flavors the package gets included in. For example:</p>
+<ul type="disc">
+  <li>user - means include this in user/userdebug builds</li>
+  <li>eng - means include this in eng builds</li>
+  <li>tests - means the target is a testing target and makes it available for tests</li>
+  <li>optional - don't include this</li>
+</ul>
