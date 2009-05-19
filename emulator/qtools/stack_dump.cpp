@@ -22,15 +22,33 @@ class MyFrame : public StackFrame<symbol_type> {
   public:
     void    push(int stackLevel, uint64_t time, CallStackBase *base);
     void    pop(int stackLevel, uint64_t time, CallStackBase *base);
+    void    getFrameType(char *type);
 };
 
 typedef CallStack<MyFrame> CallStackType;
 
+void MyFrame::getFrameType(char *type)
+{
+    strcpy(type, "----");
+    if (flags & kCausedException)
+        type[0] = 'e';
+    if (flags & kInterpreted)
+        type[1] = 'm';
+    if (function->region->flags & region_type::kIsKernelRegion)
+        type[2] = 'k';
+    if (function->flags & symbol_type::kIsVectorTable)
+        type[3] = 'v';
+}
+
 void MyFrame::push(int stackLevel, uint64_t time, CallStackBase *base)
 {
+    char type[5];
+
     if (dumpTime > 0)
         return;
-    printf("%llu en thr %d %3d", time, base->getId(), stackLevel);
+
+    getFrameType(type);
+    printf("%llu en thr %d %s %3d", time, base->getId(), type, stackLevel);
     for (int ii = 0; ii < stackLevel; ++ii)
         printf(".");
     printf(" 0x%08x %s\n", addr, function->name);
@@ -38,9 +56,13 @@ void MyFrame::push(int stackLevel, uint64_t time, CallStackBase *base)
 
 void MyFrame::pop(int stackLevel, uint64_t time, CallStackBase *base)
 {
+    char type[5];
+
     if (dumpTime > 0)
         return;
-    printf("%llu x  thr %d %3d", time, base->getId(), stackLevel);
+
+    getFrameType(type);
+    printf("%llu x  thr %d %s %3d", time, base->getId(), type, stackLevel);
     for (int ii = 0; ii < stackLevel; ++ii)
         printf(".");
     printf(" 0x%08x %s\n", addr, function->name);
@@ -52,7 +74,7 @@ CallStackType *stacks[kMaxThreads];
 
 void Usage(const char *program)
 {
-    fprintf(stderr, "Usage: %s [options] trace_name elf_file\n",
+    fprintf(stderr, "Usage: %s [options] [-- -d dumpTime] trace_name elf_file\n",
             program);
     OptionsUsage();
 }

@@ -13,11 +13,13 @@ struct frame {
     uint64_t    time;
     uint32_t    addr;
     const char  *name;
+    bool        isNative;
 
-    frame(uint64_t time, uint32_t addr, const char *name) {
+    frame(uint64_t time, uint32_t addr, const char *name, bool isNative) {
         this->time = time;
         this->addr = addr;
         this->name = name;
+        this->isNative = isNative;
     }
 };
 
@@ -57,8 +59,9 @@ void Stack::dump() {
 
     for (int ii = 0; ii < top; ii++) {
         pframe = frames[ii];
-        printf("  %d: %llu 0x%x %s\n",
-               ii, pframe->time, pframe->addr,
+        const char *native = pframe->isNative ? "n" : " ";
+        printf(" %s %d: %llu 0x%x %s\n",
+               native, ii, pframe->time, pframe->addr,
                pframe->name == NULL ? "" : pframe->name);
     }
 }
@@ -118,9 +121,11 @@ int main(int argc, char **argv) {
             stacks[proc->pid] = pStack;
         }
 
-        if (method_record.flags == 0) {
+        int flags = method_record.flags;
+        if (flags == kMethodEnter || flags == kNativeEnter) {
             pframe = new frame(method_record.time, method_record.addr,
-                               sym == NULL ? NULL: sym->name);
+                               sym == NULL ? NULL: sym->name,
+                               method_record.flags == kNativeEnter);
             pStack->push(pframe);
         } else {
             pframe = pStack->pop();
