@@ -55,6 +55,14 @@ else
 endif
 
 #
+# If LOCAL_ALLOW_UNDEFINED_SYMBOLS, the linker will allow the generation
+# of a binary that uses undefined symbols.
+#
+ifeq ($(strip $(LOCAL_ALLOW_UNDEFINED_SYMBOLS)),)
+  LOCAL_LDFLAGS := $(LOCAL_LDFLAGS) $($(my)NO_UNDEFINED_LDFLAGS)
+endif
+
+#
 # The original Android build system allows you to use the .arm prefix
 # to a source file name to indicate that it should be defined in either
 # 'thumb' or 'arm' mode, depending on the value of LOCAL_ARM_MODE
