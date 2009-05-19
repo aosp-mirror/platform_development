@@ -50,6 +50,7 @@ pdk_templates_dir := development/pdk/docs
 pdk_config_dir := development/pdk/doxygen_config
 pdk_docsfile_dir := $(pdk_config_dir)/docsfiles
 pdk_legacy_hardware_dir := hardware/libhardware_legacy/include/hardware_legacy
+pdk_hardware_dir := hardware/libhardware/include/hardware
 pdk_camera_dir := frameworks/base/include/ui
 
 # Destination directory for docs (templates + doxygenated headers)
@@ -78,7 +79,8 @@ pdk_headers := \
     $(pdk_legacy_hardware_dir)/AudioHardwareInterface.h \
     $(pdk_legacy_hardware_dir)/gps.h \
     $(pdk_legacy_hardware_dir)/wifi.h \
-    $(pdk_camera_dir)/CameraHardwareInterface.h
+    $(pdk_camera_dir)/CameraHardwareInterface.h \
+    $(pdk_hardware_dir)/sensors.h
 
 # Create a rule to copy the list of PDK headers to be doxyginated.
 # copy-one-header defines the actual rule.
