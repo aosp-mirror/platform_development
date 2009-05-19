@@ -19,7 +19,7 @@ Build Steps:
 	Choose Next
 	Enter "JNIExample" into the Project name: field.
 	Choose "Create project from existing source"
-	Click the Browse button and browse to the ndk/samplejni directory
+	Click the Browse button and browse to the pndk/samplejni directory
 	
 	Click Finish
 
