@@ -246,18 +246,28 @@ arch_headers ()
     done
 }
 
+# ZLib headers
+common_header  $TOP/external/zlib zlib.h
+common_header  $TOP/external/zlib zconf.h
+
+# Jni header
 common_header  $TOP/dalvik/libnativehelper/include/nativehelper jni.h
+
+# libthread_db headers, not sure if this is needed for the NDK
 common_headers $BIONIC_ROOT/libthread_db/include
 
 # for libm, just copy math.h and fenv.h
 common_header $BIONIC_ROOT/libm/include math.h
 arch_header   $BIONIC_ROOT/libm/include $ARCH/fenv.h
 
+# our tiny C++ standard library
 common_headers $BIONIC_ROOT/libstdc++/include
 
+# C library kernel headers
 common_headers $LIBC_ROOT/kernel/common
 arch_headers   $LIBC_ROOT/kernel/arch-arm
 
+# C library headers
 common_headers $LIBC_ROOT/include
 arch_headers   $LIBC_ROOT/arch-$ARCH/include
 
