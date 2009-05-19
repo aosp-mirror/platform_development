@@ -352,3 +352,12 @@ LOCAL_SHARED_LIBRARIES
     Note that this does not append the listed modules to the build graph,
     i.e. you should still add them to your application's required modules
     in your Application.mk
+
+LOCAL_ALLOW_UNDEFINED_SYMBOLS
+    By default, any undefined reference encountered when trying to build
+    a shared library will result in an "undefined symbol" error. This is a
+    great help to catch bugs in your source code.
+
+    However, if for some reason you need to disable this check, set this
+    variable to 'true'. Note that the corresponding shared library may fail
+    to load at runtime.

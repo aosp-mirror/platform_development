@@ -76,6 +76,10 @@ TARGET_ARFLAGS := crs
 TARGET_LIBGCC := $(shell $(TARGET_CC) -mthumb-interwork -print-libgcc-file-name)
 TARGET_LDLIBS := -Wl,-rpath-link=$(SYSROOT)/usr/lib $(TARGET_LIBGCC)
 
+# These flags are used to ensure that a binary doesn't reference undefined
+# flags.
+TARGET_NO_UNDEFINED_LDFLAGS := -Wl,--no-undefined
+
 # The ABI-specific sub-directory that the SDK tools recognize for
 # this toolchain's generated binaries
 TARGET_ABI_SUBDIR := armeabi
