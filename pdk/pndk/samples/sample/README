@@ -10,9 +10,9 @@ Building an application.
 where you type in the actual path to the android source in place of <path_to_android_src>
 and the platform you are using instead of <platform>: either linux-x86 or darwin-x86
 
-1) Test the ndk install by building the hello world sample application:
+1) Test the pndk install by building the hello world sample application:
 
-  cd <your_ndk_base>/samples/sample
+  cd <your_pndk_base>/samples/sample
   make clean
   make
 
@@ -21,7 +21,7 @@ can load and run on the ARM device. To achieve proper runtime behavior, verify
 that:
   * crtbegin_dynamic.o is the first linked object file
   * crtend_android.o is last linked object.
-Both are set by the config.mk file in ndk/config.
+Both are set by the config.mk file in pndk/config.
 
 2) Test that this works correctly by attaching your ARM-based device to the USB 
 port and installing the application (hello) you just made by (in the commands
@@ -59,7 +59,7 @@ STEP 2
 Building and using a library 
 -------
 
-Makefile.lib in ndk/sample shows how to make either a shared library or a 
+Makefile.lib in pndk/sample shows how to make either a shared library or a 
 static library from the hellolibrary.c source.  The example makes the libraries
 libhello-shared.so and libhello-static.a .
 

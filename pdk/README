@@ -28,7 +28,7 @@ then build everything:
 so you can have a record of the build commands in the logs directory.
 
 
-5) the pdk and ndk tar file is put in the dist directory.
+5) the pdk and pndk tar file is put in the dist directory.
 
 6) the pdk-docs are in 
 
@@ -38,10 +38,10 @@ so you can have a record of the build commands in the logs directory.
 --------------------------------------------------------------------------------
 # Build Notes
 
-The build target 'pdk' brings in the pdk/ndk make files into the build system.
+The build target 'pdk' brings in the pdk/pndk make files into the build system.
   Then there are three targets:
     pdk_docs - which builds just the pdk documentation
-    ndk - which builds the native development kit (native compiler, linker, etc.)
+    pndk - which builds the platform's native development kit (native compiler, linker, etc.)
     pdk_all - which builds the above two targets
 
 To change which version of doxygen runs you can pass in the variable:
@@ -90,13 +90,13 @@ To add port forwarding
 --------------------------------------------------------------------------------
 # Deployment
 
-To host the pdk docs on the interanl appengine run:
-/home/build/static/projects/apphosting/devtools/appcfg.py update <path_to_cupcake_src>/out/common/docs
+To host the pdk docs on the internal appengine run:
+/home/build/static/projects/apphosting/devtools/appcfg.py update <path_to_cupcake_src>/out/target/common/docs
 where the docs directory contains: pdk.py, app.yaml, and the online-pdk directory,
 all of which are tarred up by the Pdk.mk file when using the target pdk_docs. 
 
 To host the pdk docs on the external appengine run:
-/home/build/static/projects/apphosting/devtools/appcfg.py -s pdk-docs.appspot.com update <path_to_cupcake_src>/out/common/docs
+/home/build/static/projects/apphosting/devtools/appcfg.py -s pdk-docs.appspot.com update <path_to_cupcake_src>/out/target/common/docs
 where the docs directory contains: pdk.py, app.yaml, and the online-pdk directory,
 all of which are tarred up by the Pdk.mk file when using the target pdk_docs. 
 
