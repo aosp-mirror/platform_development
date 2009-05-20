@@ -53,7 +53,7 @@ class Main {
 
 
     /** Path to the SDK folder. This is the parent of {@link #TOOLSDIR}. */
-    private String mSdkFolder;
+    private String mOsSdkFolder;
     /** Logger object. Use this to print normal output, warnings or errors. */
     private ISdkLog mSdkLog;
     /** The SDK manager parses the SDK folder and gives access to the content. */
@@ -131,18 +131,18 @@ class Main {
             File tools;
             if (toolsDirProp.length() > 0) {
                 tools = new File(toolsDirProp);
-                mSdkFolder = tools.getParent();
+                mOsSdkFolder = tools.getParent();
             } else {
                 try {
                     tools = new File(".").getCanonicalFile();
-                    mSdkFolder = tools.getParent();
+                    mOsSdkFolder = tools.getParent();
                 } catch (IOException e) {
                     // Will print an error below since mSdkFolder is not defined
                 }
             }
         }
 
-        if (mSdkFolder == null) {
+        if (mOsSdkFolder == null) {
             errorAndExit("The tools directory property is not set, please make sure you are executing %1$s",
                 SdkConstants.androidCmdName());
         }
@@ -172,7 +172,7 @@ class Main {
      * Does the basic SDK parsing required for all actions
      */
     private void parseSdk() {
-        mSdkManager = SdkManager.createManager(mSdkFolder, mSdkLog);
+        mSdkManager = SdkManager.createManager(mOsSdkFolder, mSdkLog);
 
         if (mSdkManager == null) {
             errorAndExit("Unable to parse SDK content.");
@@ -234,7 +234,9 @@ class Main {
      */
     private void showMainWindow() {
         try {
-            UpdaterWindow window = new UpdaterWindow();
+            UpdaterWindow window = new UpdaterWindow(
+                    mOsSdkFolder,
+                    false /*userCanChangeSdkRoot*/);
             window.open();
         } catch (Exception e) {
             e.printStackTrace();
@@ -254,7 +256,7 @@ class Main {
         }
         IAndroidTarget target = targets[targetId - 1];
 
-        ProjectCreator creator = new ProjectCreator(mSdkFolder,
+        ProjectCreator creator = new ProjectCreator(mOsSdkFolder,
                 mSdkCommandLine.isVerbose() ? OutputLevel.VERBOSE :
                     mSdkCommandLine.isSilent() ? OutputLevel.SILENT :
                         OutputLevel.NORMAL,
@@ -316,7 +318,7 @@ class Main {
             target = targets[targetId - 1];
         }
 
-        ProjectCreator creator = new ProjectCreator(mSdkFolder,
+        ProjectCreator creator = new ProjectCreator(mOsSdkFolder,
                 mSdkCommandLine.isVerbose() ? OutputLevel.VERBOSE :
                     mSdkCommandLine.isSilent() ? OutputLevel.SILENT :
                         OutputLevel.NORMAL,
@@ -766,7 +768,7 @@ class Main {
         mSdkLog.printf("\n"); // empty line
 
         // get the list of possible hardware properties
-        File hardwareDefs = new File (mSdkFolder + File.separator +
+        File hardwareDefs = new File (mOsSdkFolder + File.separator +
                 SdkConstants.OS_SDK_TOOLS_LIB_FOLDER, SdkConstants.FN_HARDWARE_INI);
         List<HardwareProperty> list = HardwareProperties.parseHardwareDefinitions(hardwareDefs,
                 null /*sdkLog*/);
