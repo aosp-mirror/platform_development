@@ -32,11 +32,13 @@ struct frame {
     uint64_t    time;
     uint32_t    addr;
     const char  *name;
+    bool        isNative;
 
-    frame(uint64_t time, uint32_t addr, const char *name) {
+    frame(uint64_t time, uint32_t addr, const char *name, bool isNative) {
         this->time = time;
         this->addr = addr;
         this->name = name;
+        this->isNative = isNative;
     }
 };
 
@@ -125,9 +127,11 @@ int main(int argc, char **argv)
             mStacks[proc->pid] = mStack;
         }
 
-        if (method_record.flags == 0) {
+        int flags = method_record.flags;
+        if (flags == kMethodEnter || flags == kNativeEnter) {
             pframe = new frame(method_record.time, method_record.addr,
-                               sym == NULL ? NULL: sym->name);
+                               sym == NULL ? NULL: sym->name,
+                               method_record.flags == kNativeEnter);
             mStack->push(pframe);
         } else {
             pframe = mStack->pop();
@@ -171,11 +175,21 @@ int main(int argc, char **argv)
 void compareStacks(uint64_t time, int pid) {
     CallStackType *eStack = eStacks[pid];
     Stack *mStack = mStacks[pid];
+    frame **mFrames = mStack->frames;
     frame *mframe;
 
     int mTop = mStack->top;
     int eTop = eStack->mTop;
     CallStackType::frame_type *eFrames = eStack->mFrames;
+
+    // Count the number of non-native methods (ie, Java methods) on the
+    // Java method stack
+    int numNonNativeMethods = 0;
+    for (int ii = 0; ii < mTop; ++ii) {
+        if (!mFrames[ii]->isNative) {
+            numNonNativeMethods += 1;
+        }
+    }
 
     // Count the number of Java methods on the native stack
     int numMethods = 0;
@@ -188,9 +202,9 @@ void compareStacks(uint64_t time, int pid) {
     // Verify that the number of Java methods on both stacks are the same.
     // Allow the native stack to have one less Java method because the
     // native stack might be pushing a native function first.
-    if (mTop != numMethods && mTop != numMethods + 1) {
-        printf("\nDiff at time %llu pid %d: mtop %d numMethods %d\n",
-               time, pid, mTop, numMethods);
+    if (numNonNativeMethods != numMethods && numNonNativeMethods != numMethods + 1) {
+        printf("\nDiff at time %llu pid %d: non-native %d numMethods %d\n",
+               time, pid, numNonNativeMethods, numMethods);
         dumpStacks(pid);
         numErrors += 1;
         if (numErrors >= kMaxErrors)
@@ -206,7 +220,12 @@ void compareStacks(uint64_t time, int pid) {
             continue;
         uint32_t addr = eFrames[ii].function->addr;
         addr += eFrames[ii].function->region->vstart;
-        if (addr != mStack->frames[mIndex]->addr) {
+        while (mIndex < mTop && mFrames[mIndex]->isNative) {
+            mIndex += 1;
+        }
+        if (mIndex >= mTop)
+            break;
+        if (addr != mFrames[mIndex]->addr) {
             printf("\nDiff at time %llu pid %d: frame %d\n", time, pid, ii);
             dumpStacks(pid);
             exit(1);
@@ -224,8 +243,9 @@ void dumpStacks(int pid) {
     printf("\nJava method stack\n");
     for (int ii = 0; ii < mTop; ii++) {
         mframe = mStack->frames[ii];
-        printf("   %d: %llu 0x%x %s\n",
-               ii, mframe->time, mframe->addr,
+        const char *native = mframe->isNative ? "n" : " ";
+        printf("  %s %d: %llu 0x%x %s\n",
+               native, ii, mframe->time, mframe->addr,
                mframe->name == NULL ? "" : mframe->name);
     }
 
