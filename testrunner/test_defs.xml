@@ -195,10 +195,17 @@ Native tests:
     coverage_target="CalendarProvider"
     continuous="true" />
 
+<test name="camerastress"
+    build_path="packages/apps/Camera/tests"
+    package="com.android.camera.tests"
+    class="com.android.camera.StressTests"
+    coverage_target="Camera" />
+
 <test name="camera"
     build_path="packages/apps/Camera/tests"
-    package="com.android.cameratests"
-    runner="CameraInstrumentationTestRunner"
+    package="com.android.camera.tests"
+    class="com.android.camera.UnitTests"
+    continuous="true"
     coverage_target="Camera" />
 
 <test name="contactsprov"
