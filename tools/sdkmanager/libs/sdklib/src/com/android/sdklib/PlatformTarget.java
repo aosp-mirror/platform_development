@@ -22,12 +22,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Represents a platform target in the SDK. 
+ * Represents a platform target in the SDK.
  */
 final class PlatformTarget implements IAndroidTarget {
     /** String used to get a hash to the platform target */
     private final static String PLATFORM_HASH = "android-%d";
-    
+
     private final static String PLATFORM_VENDOR = "Android Open Source Project";
     private final static String PLATFORM_NAME = "Android %s";
 
@@ -38,7 +38,7 @@ final class PlatformTarget implements IAndroidTarget {
     private final Map<String, String> mProperties;
     private final Map<Integer, String> mPaths = new HashMap<Integer, String>();
     private String[] mSkins;
-    
+
     PlatformTarget(String location, Map<String, String> properties,
             int apiNumber, String apiName) {
         mName = String.format(PLATFORM_NAME, apiName);
@@ -49,7 +49,7 @@ final class PlatformTarget implements IAndroidTarget {
         mProperties = Collections.unmodifiableMap(properties);
         mApiVersionNumber = apiNumber;
         mApiVersionName = apiName;
-        
+
         // pre-build the path to the platform components
         mPaths.put(ANDROID_JAR, mLocation + SdkConstants.FN_FRAMEWORK_LIBRARY);
         mPaths.put(SOURCES, mLocation + SdkConstants.FD_ANDROID_SOURCES);
@@ -81,16 +81,16 @@ final class PlatformTarget implements IAndroidTarget {
         mPaths.put(DX_JAR, mLocation + SdkConstants.OS_SDK_TOOLS_LIB_FOLDER +
                 SdkConstants.FN_DX_JAR);
     }
-    
+
     public String getLocation() {
         return mLocation;
     }
-    
+
     /*
      * (non-Javadoc)
-     * 
+     *
      * For Platform, the vendor name is always "Android".
-     * 
+     *
      * @see com.android.sdklib.IAndroidTarget#getVendor()
      */
     public String getVendor() {
@@ -100,50 +100,50 @@ final class PlatformTarget implements IAndroidTarget {
     public String getName() {
         return mName;
     }
-    
+
     public String getFullName() {
         return mName;
     }
-    
+
     public String getClasspathName() {
         return mName;
     }
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * Description for the Android platform is dynamically generated.
-     * 
+     *
      * @see com.android.sdklib.IAndroidTarget#getDescription()
      */
     public String getDescription() {
         return String.format("Standard Android platform %s", mApiVersionName);
     }
-    
+
     public int getApiVersionNumber(){
         return mApiVersionNumber;
     }
-    
+
     public String getApiVersionName() {
         return mApiVersionName;
     }
-    
+
     public boolean isPlatform() {
         return true;
     }
-    
+
     public IAndroidTarget getParent() {
         return null;
     }
-    
+
     public String getPath(int pathId) {
         return mPaths.get(pathId);
     }
-    
+
     public String[] getSkins() {
         return mSkins;
     }
-    
+
     public String getDefaultSkin() {
         // at this time, this is the default skin for all the platform.
         return "HVGA";
@@ -151,7 +151,7 @@ final class PlatformTarget implements IAndroidTarget {
 
     /**
      * Always returns null, as a standard platform ha no optional libraries.
-     * 
+     *
      * {@inheritDoc}
      * @see com.android.sdklib.IAndroidTarget#getOptionalLibraries()
      */
@@ -168,7 +168,15 @@ final class PlatformTarget implements IAndroidTarget {
     public String[] getPlatformLibraries() {
         return new String[] { SdkConstants.ANDROID_TEST_RUNNER_LIB };
     }
-    
+
+    /**
+     * The platform has no USB Vendor Id: always return {@link IAndroidTarget#NO_USB_ID}.
+     * {@inheritDoc}
+     */
+    public int getUsbVendorId() {
+        return NO_USB_ID;
+    }
+
     public boolean isCompatibleBaseFor(IAndroidTarget target) {
         // basic test
         if (target == this) {
@@ -179,7 +187,7 @@ final class PlatformTarget implements IAndroidTarget {
         // equal.
         return target.getApiVersionNumber() >= mApiVersionNumber;
     }
-    
+
     public String hashString() {
         return String.format(PLATFORM_HASH, mApiVersionNumber);
     }
@@ -188,13 +196,13 @@ final class PlatformTarget implements IAndroidTarget {
     public int hashCode() {
         return hashString().hashCode();
     }
-    
+
     @Override
     public boolean equals(Object obj) {
         if (obj instanceof PlatformTarget) {
             return mApiVersionNumber == ((PlatformTarget)obj).mApiVersionNumber;
         }
-        
+
         return super.equals(obj);
     }
 
@@ -213,11 +221,11 @@ final class PlatformTarget implements IAndroidTarget {
     }
 
     // ---- platform only methods.
-    
+
     public String getProperty(String name) {
         return mProperties.get(name);
     }
-    
+
     public Map<String, String> getProperties() {
         return mProperties; // mProperties is unmodifiable.
     }
