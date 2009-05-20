@@ -16,10 +16,14 @@
 
 package com.android.sdkuilib.repository;
 
+import com.android.sdkuilib.repository.ProgressTask.ThreadTask;
+
 import org.eclipse.jface.viewers.CheckboxTreeViewer;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.TableTree;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -39,40 +43,54 @@ import org.eclipse.swt.widgets.TreeColumn;
 
 public class UpdaterWindow {
 
-    protected Shell mshlAndroidSdkUpdater;
-    private TabFolder tabFolder;
-    private TabItem mtbtmInstalledPackages;
-    private Composite compositeInst;
-    private TabItem mtbtmAvailablePackages;
-    private Composite compositeAvail;
-    private Text text;
-    private Button mbtnBrowse;
-    private Label mlblSdkLocation;
-    private Group mgrpDescription;
-    private Composite composite_3;
-    private Button mbtnUpdate;
-    private Button mbtnDelete;
-    private Button mbtnHomePage;
-    private Label placeholder1;
-    private Label placeholder2;
-    private Label mlblInstalledPackages;
+    private final String mOsSdkRoot;
+    private final boolean mUserCanChangeSdkRoot;
+
+    private RepoSources mSources = new RepoSources();
+
+    // --- UI members ---
+
+    protected Shell mAndroidSdkUpdater;
+    private TabFolder mTabFolder;
+    private TabItem mTabInstalledPkg;
+    private Composite mRootInst;
+    private TabItem mTabAvailPkg;
+    private Composite mRootAvail;
+    private Text mSdkLocText;
+    private Button mSdkLocBrowse;
+    private Label mSdkLocLabel;
+    private Group mInstDescription;
+    private Composite mInstButtons;
+    private Button mInstUpdate;
+    private Button mInstDelete;
+    private Button mInstHomePage;
+    private Label mPlaceholder1;
+    private Label mPlaceholder2;
+    private Label mInstalledPkgLabel;
     private TableTree tableTree;
-    private Tree tree;
-    private Button mbtnRemoveSite;
-    private Button mbtnAddSite;
-    private Label placeholder3;
-    private Button mbtnRefresh;
-    private Button mbtnInstallSelected;
-    private Group mgrpDescription_1;
-    private Table table;
-    private TableColumn mtblclmnSummary;
-    private TableColumn mtblclmnApiLevel;
-    private TableColumn mtblclmnRevision;
-    private TreeColumn mtrclmnSummary;
-    private TreeColumn mtrclmnApiLevel;
-    private TreeColumn mtrclmnRevision;
-    private TreeColumn mtrclmnOs;
-    private TreeColumn mtrclmnInstalled;
+    private Tree mTreeAvailPkg;
+    private Button mAvailRemoveSite;
+    private Button mAvailAddSite;
+    private Label mPlaceholder3;
+    private Button mAvailRefresh;
+    private Button mAvailInstallSelected;
+    private Group mAvailDescription;
+    private Table mTableInstPkg;
+    private TableColumn mColumnInstSummary;
+    private TableColumn mColumnInstApiLevel;
+    private TableColumn mColumnInstRevision;
+    private TreeColumn mColumnAvailSummary;
+    private TreeColumn mColumnAvailApiLevel;
+    private TreeColumn mColumnAvailRevision;
+    private TreeColumn mColumnAvailOs;
+    private TreeColumn mColumnAvailInstalled;
+    private CheckboxTreeViewer mTreeViewAvailPkg;
+    private TableViewer mTableViewerInstPkg;
+
+    public UpdaterWindow(String osSdkRoot, boolean userCanChangeSdkRoot) {
+        mOsSdkRoot = osSdkRoot;
+        mUserCanChangeSdkRoot = userCanChangeSdkRoot;
+    }
 
     /**
      * Open the window.
@@ -81,9 +99,10 @@ public class UpdaterWindow {
     public void open() {
         Display display = Display.getDefault();
         createContents();
-        mshlAndroidSdkUpdater.open();
-        mshlAndroidSdkUpdater.layout();
-        while (!mshlAndroidSdkUpdater.isDisposed()) {
+        mAndroidSdkUpdater.open();
+        mAndroidSdkUpdater.layout();
+        firstInit();
+        while (!mAndroidSdkUpdater.isDisposed()) {
             if (!display.readAndDispatch()) {
                 display.sleep();
             }
@@ -94,129 +113,212 @@ public class UpdaterWindow {
      * Create contents of the window.
      */
     protected void createContents() {
-        mshlAndroidSdkUpdater = new Shell();
-        mshlAndroidSdkUpdater.setMinimumSize(new Point(200, 50));
-        mshlAndroidSdkUpdater.setLayout(new GridLayout(1, false));
-        mshlAndroidSdkUpdater.setSize(633, 433);
-        mshlAndroidSdkUpdater.setText("Android SDK Updater");
+        mAndroidSdkUpdater = new Shell();
+        mAndroidSdkUpdater.setMinimumSize(new Point(200, 50));
+        mAndroidSdkUpdater.setLayout(new GridLayout(1, false));
+        mAndroidSdkUpdater.setSize(633, 433);
+        mAndroidSdkUpdater.setText("Android SDK Updater");
 
-        tabFolder = new TabFolder(mshlAndroidSdkUpdater, SWT.NONE);
-        tabFolder.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
+        mTabFolder = new TabFolder(mAndroidSdkUpdater, SWT.NONE);
+        mTabFolder.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
 
-        mtbtmInstalledPackages = new TabItem(tabFolder, SWT.NONE);
-        mtbtmInstalledPackages.setText("Installed Packages");
+        createInstalledPackagesTab();
+        createAvailablePackagesTab();
+    }
 
-        compositeInst = new Composite(tabFolder, SWT.NONE);
-        compositeInst.setLayout(new GridLayout(3, false));
-        mtbtmInstalledPackages.setControl(compositeInst);
+    private void createInstalledPackagesTab() {
+        mTabInstalledPkg = new TabItem(mTabFolder, SWT.NONE);
+        mTabInstalledPkg.setText("Installed Packages");
 
-        mlblSdkLocation = new Label(compositeInst, SWT.NONE);
-        mlblSdkLocation.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
-        mlblSdkLocation.setText("SDK Location:");
+        mRootInst = new Composite(mTabFolder, SWT.NONE);
+        mRootInst.setLayout(new GridLayout(3, false));
+        mTabInstalledPkg.setControl(mRootInst);
 
-        text = new Text(compositeInst, SWT.BORDER);
-        text.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
+        createSdkLocation();
 
-        mbtnBrowse = new Button(compositeInst, SWT.NONE);
-        mbtnBrowse.setText("Browse...");
+        mInstalledPkgLabel = new Label(mRootInst, SWT.NONE);
+        mInstalledPkgLabel.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 3, 1));
+        mInstalledPkgLabel.setText("Installed Packages:");
 
-        mlblInstalledPackages = new Label(compositeInst, SWT.NONE);
-        mlblInstalledPackages.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 3, 1));
-        mlblInstalledPackages.setText("Installed Packages:");
+        mTableViewerInstPkg = new TableViewer(mRootInst, SWT.BORDER | SWT.FULL_SELECTION);
+        mTableInstPkg = mTableViewerInstPkg.getTable();
+        mTableInstPkg.setHeaderVisible(true);
+        mTableInstPkg.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 3, 1));
 
-        TableViewer tableInstalledPackage = new TableViewer(compositeInst, SWT.BORDER | SWT.FULL_SELECTION);
-        table = tableInstalledPackage.getTable();
-        table.setHeaderVisible(true);
-        table.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 3, 1));
+        mColumnInstSummary = new TableColumn(mTableInstPkg, SWT.NONE);
+        mColumnInstSummary.setWidth(377);
+        mColumnInstSummary.setText("Summary");
 
-        mtblclmnSummary = new TableColumn(table, SWT.NONE);
-        mtblclmnSummary.setWidth(377);
-        mtblclmnSummary.setText("Summary");
+        mColumnInstApiLevel = new TableColumn(mTableInstPkg, SWT.NONE);
+        mColumnInstApiLevel.setWidth(100);
+        mColumnInstApiLevel.setText("API Level");
 
-        mtblclmnApiLevel = new TableColumn(table, SWT.NONE);
-        mtblclmnApiLevel.setWidth(100);
-        mtblclmnApiLevel.setText("API Level");
+        mColumnInstRevision = new TableColumn(mTableInstPkg, SWT.NONE);
+        mColumnInstRevision.setWidth(100);
+        mColumnInstRevision.setText("Revision");
 
-        mtblclmnRevision = new TableColumn(table, SWT.NONE);
-        mtblclmnRevision.setWidth(100);
-        mtblclmnRevision.setText("Revision");
+        mInstDescription = new Group(mRootInst, SWT.NONE);
+        mInstDescription.setText("Description");
+        mInstDescription.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 3, 1));
 
-        mgrpDescription = new Group(compositeInst, SWT.NONE);
-        mgrpDescription.setText("Description");
-        mgrpDescription.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 3, 1));
+        mInstButtons = new Composite(mRootInst, SWT.NONE);
+        mInstButtons.setLayout(new GridLayout(5, false));
+        mInstButtons.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 3, 1));
 
-        composite_3 = new Composite(compositeInst, SWT.NONE);
-        composite_3.setLayout(new GridLayout(5, false));
-        composite_3.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 3, 1));
+        mInstUpdate = new Button(mInstButtons, SWT.NONE);
+        mInstUpdate.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                onUpdateInstalledPackage();
+            }
+        });
+        mInstUpdate.setText("Update...");
 
-        mbtnUpdate = new Button(composite_3, SWT.NONE);
-        mbtnUpdate.setText("Update...");
+        mPlaceholder1 = new Label(mInstButtons, SWT.NONE);
+        mPlaceholder1.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, true, false, 1, 1));
 
-        placeholder1 = new Label(composite_3, SWT.NONE);
-        placeholder1.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, true, false, 1, 1));
+        mInstDelete = new Button(mInstButtons, SWT.NONE);
+        mInstDelete.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, false, false, 1, 1));
+        mInstDelete.setText("Delete...");
 
-        mbtnDelete = new Button(composite_3, SWT.NONE);
-        mbtnDelete.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, false, false, 1, 1));
-        mbtnDelete.setText("Delete...");
+        mPlaceholder2 = new Label(mInstButtons, SWT.NONE);
+        mPlaceholder2.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, true, false, 1, 1));
 
-        placeholder2 = new Label(composite_3, SWT.NONE);
-        placeholder2.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, true, false, 1, 1));
+        mInstHomePage = new Button(mInstButtons, SWT.NONE);
+        mInstHomePage.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
+        mInstHomePage.setText("Home Page...");
+    }
 
-        mbtnHomePage = new Button(composite_3, SWT.NONE);
-        mbtnHomePage.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
-        mbtnHomePage.setText("Home Page...");
+    private void createSdkLocation() {
+        mSdkLocLabel = new Label(mRootInst, SWT.NONE);
+        mSdkLocLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
+        mSdkLocLabel.setText("SDK Location:");
 
-        mtbtmAvailablePackages = new TabItem(tabFolder, SWT.NONE);
-        mtbtmAvailablePackages.setText("Available Packages");
+        // If the sdk path is not user-customizable, do not create
+        // the browse button and use horizSpan=2 on the text field.
 
-        compositeAvail = new Composite(tabFolder, SWT.NONE);
-        compositeAvail.setLayout(new GridLayout(5, false));
-        mtbtmAvailablePackages.setControl(compositeAvail);
+        mSdkLocText = new Text(mRootInst, SWT.BORDER);
+        mSdkLocText.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
 
-        CheckboxTreeViewer checkboxTreeAvailablePackages = new CheckboxTreeViewer(compositeAvail, SWT.BORDER);
-        tree = checkboxTreeAvailablePackages.getTree();
-        tree.setHeaderVisible(true);
-        tree.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 5, 1));
+        if (mUserCanChangeSdkRoot) {
+            mSdkLocBrowse = new Button(mRootInst, SWT.NONE);
+            mSdkLocBrowse.setText("Browse...");
+        } else {
+            mSdkLocText.setEditable(false);
+            ((GridData)mSdkLocText.getLayoutData()).horizontalSpan++;
+        }
 
-        mtrclmnSummary = new TreeColumn(tree, SWT.NONE);
-        mtrclmnSummary.setWidth(289);
-        mtrclmnSummary.setText("Summary");
+        mSdkLocText.setText(mOsSdkRoot);
+    }
 
-        mtrclmnApiLevel = new TreeColumn(tree, SWT.NONE);
-        mtrclmnApiLevel.setWidth(66);
-        mtrclmnApiLevel.setText("API Level");
+    private void createAvailablePackagesTab() {
+        mTabAvailPkg = new TabItem(mTabFolder, SWT.NONE);
+        mTabAvailPkg.setText("Available Packages");
 
-        mtrclmnRevision = new TreeColumn(tree, SWT.NONE);
-        mtrclmnRevision.setWidth(63);
-        mtrclmnRevision.setText("Revision");
+        mRootAvail = new Composite(mTabFolder, SWT.NONE);
+        mRootAvail.setLayout(new GridLayout(5, false));
+        mTabAvailPkg.setControl(mRootAvail);
 
-        mtrclmnOs = new TreeColumn(tree, SWT.NONE);
-        mtrclmnOs.setWidth(100);
-        mtrclmnOs.setText("OS/Arch");
+        mTreeViewAvailPkg = new CheckboxTreeViewer(mRootAvail, SWT.BORDER);
+        mTreeViewAvailPkg.setContentProvider(mSources.getContentProvider());
+        mTreeViewAvailPkg.setLabelProvider(mSources.getLabelProvider());
+        mTreeAvailPkg = mTreeViewAvailPkg.getTree();
+        mTreeAvailPkg.setHeaderVisible(true);
+        mTreeAvailPkg.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 5, 1));
 
-        mtrclmnInstalled = new TreeColumn(tree, SWT.NONE);
-        mtrclmnInstalled.setWidth(59);
-        mtrclmnInstalled.setText("Installed");
+        mColumnAvailSummary = new TreeColumn(mTreeAvailPkg, SWT.NONE);
+        mColumnAvailSummary.setWidth(289);
+        mColumnAvailSummary.setText("Summary");
 
-        mgrpDescription_1 = new Group(compositeAvail, SWT.NONE);
-        mgrpDescription_1.setText("Description");
-        mgrpDescription_1.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 5, 1));
+        mColumnAvailApiLevel = new TreeColumn(mTreeAvailPkg, SWT.NONE);
+        mColumnAvailApiLevel.setWidth(66);
+        mColumnAvailApiLevel.setText("API Level");
 
-        mbtnAddSite = new Button(compositeAvail, SWT.NONE);
-        mbtnAddSite.setText("Add Site...");
+        mColumnAvailRevision = new TreeColumn(mTreeAvailPkg, SWT.NONE);
+        mColumnAvailRevision.setWidth(63);
+        mColumnAvailRevision.setText("Revision");
 
-        mbtnRemoveSite = new Button(compositeAvail, SWT.NONE);
-        mbtnRemoveSite.setText("Delete Site...");
+        mColumnAvailOs = new TreeColumn(mTreeAvailPkg, SWT.NONE);
+        mColumnAvailOs.setWidth(100);
+        mColumnAvailOs.setText("OS/Arch");
 
-        placeholder3 = new Label(compositeAvail, SWT.NONE);
-        placeholder3.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, false, 1, 1));
+        mColumnAvailInstalled = new TreeColumn(mTreeAvailPkg, SWT.NONE);
+        mColumnAvailInstalled.setWidth(59);
+        mColumnAvailInstalled.setText("Installed");
 
-        mbtnRefresh = new Button(compositeAvail, SWT.NONE);
-        mbtnRefresh.setText("Refresh");
+        mAvailDescription = new Group(mRootAvail, SWT.NONE);
+        mAvailDescription.setText("Description");
+        mAvailDescription.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 5, 1));
 
-        mbtnInstallSelected = new Button(compositeAvail, SWT.NONE);
-        mbtnInstallSelected.setText("Install Selected");
+        mAvailAddSite = new Button(mRootAvail, SWT.NONE);
+        mAvailAddSite.setText("Add Site...");
 
+        mAvailRemoveSite = new Button(mRootAvail, SWT.NONE);
+        mAvailRemoveSite.setText("Delete Site...");
+
+        mPlaceholder3 = new Label(mRootAvail, SWT.NONE);
+        mPlaceholder3.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, false, 1, 1));
+
+        mAvailRefresh = new Button(mRootAvail, SWT.NONE);
+        mAvailRefresh.setText("Refresh");
+
+        mAvailInstallSelected = new Button(mRootAvail, SWT.NONE);
+        mAvailInstallSelected.setText("Install Selected");
+    }
+
+    // --- UI Callbacks -----------
+
+    protected void onUpdateInstalledPackage() {
+        ProgressTask.start(getShell(), "Test", new ThreadTask() {
+            public void PerformTask(ITaskMonitor monitor) {
+                monitor.setDescription("Test");
+                monitor.setProgressMax(100);
+                int n = 0;
+                int d = 1;
+                while(!monitor.cancelRequested()) {
+                    monitor.incProgress(d);
+                    n += d;
+                    if (n == 0 || n == 100) d = -d;
+                    try {
+                        Thread.sleep(5);
+                    } catch (InterruptedException e) {
+                    }
+                }
+            }
+        });
+    }
+
+
+    // --------------
+
+    private Shell getShell() {
+        return mAndroidSdkUpdater;
+    }
+
+    /**
+     * Once the UI has been created, initialize the content
+     */
+    private void firstInit() {
+
+        setupSources();
+        scanLocalSdkFolders();
+    }
+
+    private void setupSources() {
+        mSources.setShell(getShell());
+
+        mSources.add(new RepoSource(
+                "https://dl.google.com/android/eclipse/repository/index.xml",          //$NON-NLS-1$
+                false /* addonOnly */));
+        mSources.add(new RepoSource(
+                "http://www.corp.google.com/~raphael/android/sdk-repo/repository.xml", //$NON-NLS-1$
+                false /* addonOnly */));
+
+        mTreeViewAvailPkg.setInput(mSources);
+    }
+
+    private void scanLocalSdkFolders() {
+        // TODO Auto-generated method stub
 
     }
 }
