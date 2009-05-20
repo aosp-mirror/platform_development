@@ -110,7 +110,7 @@ public class TestSdkRepository extends TestCase {
 
     /** Helper method that returns a validator for our XSD */
     private Validator getValidator(CaptureErrorHandler handler) throws SAXException {
-        InputStream xsdStream = SdkRepositoryConstants.getXsdStream();
+        InputStream xsdStream = SdkRepository.getXsdStream();
         SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
         Schema schema = factory.newSchema(new StreamSource(xsdStream));
         Validator validator = schema.newValidator();
