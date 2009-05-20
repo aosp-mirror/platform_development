@@ -67,6 +67,13 @@ if [ `uname` = "Darwin" ]; then
     os_opts="-XstartOnFirstThread"
     #because Java 1.6 is 64 bits only and SWT doesn't support this, we force the usage of java 1.5
     java_cmd="/System/Library/Frameworks/JavaVM.framework/Versions/1.5/Commands/java"
+elif [[ `uname -s` = 'Linux' && `uname -m` = 'x86_64' ]]; then
+#   Use 32-bit Java on x86_64 Linux.
+    java_cmd="/usr/lib/jvm/ia32-java-6-sun/jre/bin/java"
+    if [ ! -x $java_cmd ]; then
+        echo `basename "$prog"`": missing 32-bit JVM. Please install ia32-sun-java6-bin."
+        exit 1
+    fi
 else
     os_opts=
     java_cmd="java"
