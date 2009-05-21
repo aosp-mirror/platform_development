@@ -56,7 +56,7 @@ Native tests:
 =============
   The <test-native> element has the following attributes
 
-  name build_path [continuous description]
+  name build_path [continuous description extra_make_args]
 
   Where:
   name: Self-descriptive name used to uniquely identify the test
@@ -83,7 +83,9 @@ Native tests:
     done
 -->
 
-<test-definitions version="1">
+<test-definitions xmlns="http://schemas.android.com/testrunner/test_defs/1.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://schemas.android.com/testrunner/test_defs/1.0 test_defs.xsd">
 
 <!-- system-wide tests -->
 <test name="framework"

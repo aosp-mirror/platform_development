@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+        targetNamespace="http://schemas.android.com/testrunner/test_defs/1.0"
+        xmlns="http://schemas.android.com/testrunner/test_defs/1.0"
+        elementFormDefault="qualified">
+
+    <xs:element name="test-definitions">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:choice minOccurs="0" maxOccurs="unbounded">
+                    <xs:element name="test" type="javaTestType"/>
+                    <xs:element name="test-native" type="nativeTestType"/>
+                </xs:choice>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:complexType name="javaTestType">
+        <xs:attribute name="name" type="xs:string" use="required"/>
+        <xs:attribute name="package" type="xs:string" use="required"/>
+        <xs:attribute name="build_path" type="xs:string" use="optional"/>
+        <xs:attribute name="class" type="xs:string" use="optional"/>
+        <xs:attribute name="runner" type="xs:string" use="optional"
+                      default="android.test.InstrumentationTestRunner"/>
+        <xs:attribute name="coverage_target" type="xs:string" use="optional"/>
+        <xs:attribute name="continuous" type="xs:boolean" use="optional" default="false"/>
+    </xs:complexType>
+
+    <xs:complexType name="nativeTestType">
+        <xs:attribute name="name" type="xs:string" use="required"/>
+        <xs:attribute name="build_path" type="xs:string" use="required"/>
+        <xs:attribute name="extra_make_args" type="xs:string" use="optional"/>
+        <xs:attribute name="description" type="xs:string" use="optional"/>
+        <xs:attribute name="continuous" type="xs:boolean" use="optional" default="false"/>
+    </xs:complexType>
+</xs:schema>
