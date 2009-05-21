@@ -17,11 +17,12 @@
 package com.android.sdklib;
 
 
+
 /**
- * A version of Android that application can target when building. 
+ * A version of Android that applications can target when building.
  */
 public interface IAndroidTarget extends Comparable<IAndroidTarget> {
-    
+
     /** OS Path to the "android.jar" file. */
     public static int ANDROID_JAR         = 1;
     /** OS Path to the "framework.aidl" file. */
@@ -30,7 +31,7 @@ public interface IAndroidTarget extends Comparable<IAndroidTarget> {
     public static int IMAGES              = 3;
     /** OS Path to the "samples" folder which contains sample projects. */
     public static int SAMPLES             = 4;
-    /** OS Path to the "skins" folder which contains the emulator skins. */ 
+    /** OS Path to the "skins" folder which contains the emulator skins. */
     public static int SKINS               = 5;
     /** OS Path to the "templates" folder which contains the templates for new projects. */
     public static int TEMPLATES           = 6;
@@ -68,7 +69,13 @@ public interface IAndroidTarget extends Comparable<IAndroidTarget> {
     public static int DX                  = 22;
     /** OS Path to the target's version of the dx.jar file. */
     public static int DX_JAR              = 23;
-    
+
+    /**
+     * Return value for {@link #getUsbVendorId()} meaning no USB vendor IDs are defined by the
+     * Android target.
+     */
+    public static int NO_USB_ID = 0;
+
     public interface IOptionalLibrary {
         String getName();
         String getJarName();
@@ -90,22 +97,22 @@ public interface IAndroidTarget extends Comparable<IAndroidTarget> {
      * Returns the name of the target.
      */
     String getName();
-    
+
     /**
      * Returns the full name of the target, possibly including vendor name.
      */
     String getFullName();
-    
+
     /**
      * Returns the name to be displayed when representing all the libraries this target contains.
      */
     String getClasspathName();
-    
+
     /**
      * Returns the description of the target.
      */
     String getDescription();
-    
+
     /**
      * Returns the api version as an integer.
      */
@@ -115,35 +122,35 @@ public interface IAndroidTarget extends Comparable<IAndroidTarget> {
      * Returns the platform version as a readable string.
      */
     String getApiVersionName();
-    
+
     /**
      * Returns true if the target is a standard Android platform.
      */
     boolean isPlatform();
-    
+
     /**
      * Returns the parent target. This is likely to only be non <code>null</code> if
      * {@link #isPlatform()} returns <code>false</code>
      */
     IAndroidTarget getParent();
-    
+
     /**
      * Returns the path of a platform component.
      * @param pathId the id representing the path to return. Any of the constants defined in the
      * {@link IAndroidTarget} interface can be used.
      */
     String getPath(int pathId);
-    
+
     /**
      * Returns the available skins for this target.
      */
     String[] getSkins();
-    
+
     /**
      * Returns the default skin for this target.
      */
     String getDefaultSkin();
-    
+
     /**
      * Returns the available optional libraries for this target.
      * @return an array of optional libraries or <code>null</code> if there is none.
@@ -152,10 +159,16 @@ public interface IAndroidTarget extends Comparable<IAndroidTarget> {
 
     /**
      * Returns the list of libraries available for a given platform.
-     * 
+     *
      * @return an array of libraries provided by the platform or <code>null</code> if there is none.
      */
     String[] getPlatformLibraries();
+
+    /**
+     * Returns the USB Vendor ID for the vendor of this target.
+     * <p/>If the target defines no USB Vendor ID, then the method return 0.
+     */
+    int getUsbVendorId();
 
     /**
      * Returns whether the given target is compatible with the receiver.
@@ -165,7 +178,7 @@ public interface IAndroidTarget extends Comparable<IAndroidTarget> {
      * @param target the IAndroidTarget to test.
      */
     boolean isCompatibleBaseFor(IAndroidTarget target);
-    
+
     /**
      * Returns a string able to uniquely identify a target.
      * Typically the target will encode information such as api level, whether it's a platform
