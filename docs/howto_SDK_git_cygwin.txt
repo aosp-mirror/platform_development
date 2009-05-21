@@ -15,7 +15,7 @@ limitations under the License.
 
 Subject: How to get the android source code using Cygwin and Git
 Date:    2009/04/27
-
+Updated: 2009/05/21
 
 
 Table of content:
@@ -82,9 +82,9 @@ some "mux/ssh" errors. In this case try this:
 4- Advanced Tricks
 ------------------
 
-There are two remaining issues with the default repo/git options:
+There is one remaining issue with the default repo/git options:
 
-A- If you plan on contributing, you will notice that even after a fresh "repo
+If you plan on contributing, you will notice that even after a fresh "repo
 sync" some projects are marked as having modified files. This happens on the
 "bionic" and the "external/iptables" project. The issue is that they have files
 which have the same name yet differ only by their case-sensitivity. Since the
@@ -98,61 +98,73 @@ provides a list of projects to ignore:
 
 <?xml version="1.0" encoding="UTF-8"?>
 <manifest>
-  <remove-project name="platform/bionic" />
   <remove-project name="platform/external/iptables" />
 </manifest>
 
+The other thing we can do is tell git not to track the files that cause
+problems:
 
-B- The other issue is that by default repo maintains around 100+ git projects. 
-However most of these are not needed to build the Windows SDK. We can easily
-reduce this list to around 70 projects, which will make your repo syncs a lot
-faster.
+  cd bionic
+  git update-index --assume-unchanged \
+    libc/kernel/common/linux/netfilter/xt_CONNMARK.h \
+    libc/kernel/common/linux/netfilter/xt_MARK.h \
+    libc/kernel/common/linux/netfilter_ipv6/ip6t_HL.h
 
-Solution: Simply ignore all projects bionic, bootable/*, hardware/* and most
-external projects. For external, we still need a handful of projects for the
-SDK -- things like the emulator or sqlite can be quite useful :-)
+  cd external/tcpdump;
+  git update-index --assume-unchanged \
+    tests/print-X.new \
+    tests/print-XX.new
+
 
 Here's a script that takes care of all these details. It performs the repo
-init, creates the appropriate local_manifest.xml and does a repo sync as
-needed:
+init, creates the appropriate local_manifest.xml, does a repo sync as
+needed and tell git to ignore the offending files:
 
 ------------
 #!/bin/bash
 
 set -e  # fail on errors
 
-URL=git://android.git.kernel.org/platform/manifest.git
+URL=ssh://android-git.corp.google.com:29418/platform/manifest.git
 BRANCH=donut
+if [ "$1" == "-b" ]; then shift; BRANCH=$1; shift; fi
 
 # repo init if there's no .repo directory
 if [[ ! -d .repo ]]; then
     repo init -u $URL -b $BRANCH
 fi
 
-# create a local_manifest to exclude projects not useful to the Windows SDK
+# create a local_manifest to exclude projects that cause problems under Windows
+# due to the case-insenstivines of the file system.
 L=.repo/local_manifest.xml
 if [[ ! -f $L ]]; then
-    M=.repo/manifest.xml
 
     cat > $L <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <manifest>
-EOF
-
-    for i in $(sed -sn '/external\/\(apache\|expat\|g\|libpng\|pr\|qemu\|sqlite\|tag\|zlib\)/d;/\(bionic\|bootable\|cts\|external\|hardware\).* name/s/^.*name="\([^"]\+\)".*/\1/p' $M) ; do
-        echo "Ignore project $i"
-        echo "  <remove-project name=\"$i\" />" >> $L
-    done
-
-    cat >> $L <<EOF2
+<remove-project name="platform/external/iptables" />
 </manifest>
-EOF2
+EOF
 fi
 
+# sync using the native ssh client if necessary
 [[ $URL != ${URL/ssh/} ]] && export GIT_SSH=ssh
-repo sync
-------------
+repo sync $@
 
+
+# These files cause trouble too, we need to ignore them
+(cd bionic;
+git update-index --assume-unchanged \
+    libc/kernel/common/linux/netfilter/xt_CONNMARK.h \
+    libc/kernel/common/linux/netfilter/xt_MARK.h \
+    libc/kernel/common/linux/netfilter_ipv6/ip6t_HL.h
+)
+(cd external/tcpdump;
+git update-index --assume-unchanged \
+    tests/print-X.new \
+    tests/print-XX.new
+)
+------------
 
 Simply extract this to a "my_sync.sh" file and try the following:
   $ mkdir android_src
