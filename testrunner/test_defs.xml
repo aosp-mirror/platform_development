@@ -158,6 +158,12 @@ Native tests:
  -->
 
 
+<test name="contentprovideroperation"
+    build_path="frameworks/base/tests/FrameworkTest"
+    package="com.android.frameworktest.tests"
+    class="android.content.ContentProviderOperationTest"
+    coverage_target="framework" />
+
 <test name="tablemerger"
     build_path="frameworks/base/tests/FrameworkTest"
     package="com.android.frameworktest.tests"
