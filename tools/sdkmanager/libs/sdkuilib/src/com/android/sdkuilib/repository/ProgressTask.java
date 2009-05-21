@@ -231,5 +231,6 @@ class ProgressTask extends Dialog
         }
     }
 
+    // End of hiding from SWT Designer
     //$hide<<$
 }
