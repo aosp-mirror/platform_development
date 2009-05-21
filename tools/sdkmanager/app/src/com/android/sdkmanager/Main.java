@@ -32,8 +32,10 @@ import com.android.sdklib.internal.project.ProjectCreator.OutputLevel;
 import com.android.sdkuilib.repository.UpdaterWindow;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -51,6 +53,8 @@ class Main {
     private final static String[] BOOLEAN_YES_REPLIES = new String[] { "yes", "y" };
     private final static String[] BOOLEAN_NO_REPLIES = new String[] { "no", "n" };
 
+    /** Preference file containing the usb ids for adb */
+    private final static String ADB_INI = "adb_usb.ini";
 
     /** Path to the SDK folder. This is the parent of {@link #TOOLSDIR}. */
     private String mOsSdkFolder;
@@ -223,6 +227,10 @@ class Main {
 
         } else if (verb == null && directObject == null) {
             showMainWindow();
+
+        } else if (SdkCommandLine.VERB_UPDATE.equals(verb) &&
+                SdkCommandLine.OBJECT_ADB.equals(directObject)) {
+            updateAdb();
 
         } else {
             mSdkCommandLine.printHelpAndExit(null);
@@ -402,6 +410,11 @@ class Main {
 
             // get the target skins
             displaySkinList(target, "     Skins: ");
+
+            if (target.getUsbVendorId() != IAndroidTarget.NO_USB_ID) {
+                mSdkLog.printf("     Adds USB support for devices (Vendor: 0x%04X)\n",
+                        target.getUsbVendorId());
+            }
 
             index++;
         }
@@ -738,6 +751,50 @@ class Main {
             errorAndExit(e.getMessage());
         } catch (IOException e) {
             errorAndExit(e.getMessage());
+        }
+    }
+
+    /**
+     * Updates adb with the USB devices declared in the SDK add-ons.
+     */
+    private void updateAdb() {
+        FileWriter writer = null;
+        try {
+            // get the android prefs location to know where to write the file.
+            File adbIni = new File(AndroidLocation.getFolder(), ADB_INI);
+            writer = new FileWriter(adbIni);
+
+            // first, put all the vendor id in an HashSet to remove duplicate.
+            HashSet<Integer> set = new HashSet<Integer>();
+            IAndroidTarget[] targets = mSdkManager.getTargets();
+            for (IAndroidTarget target : targets) {
+                if (target.getUsbVendorId() != IAndroidTarget.NO_USB_ID) {
+                    set.add(target.getUsbVendorId());
+                }
+            }
+
+            // now write the Id in a text file, one per line.
+            for (Integer i : set) {
+                writer.write(i.toString());
+                writer.write("\n");
+            }
+
+            mSdkLog.printf(
+                    "adb has been updated. You must restart adb with the following commands\n" +
+                    "\tadb kill-server\n" +
+                    "\tadb start-server\n");
+        } catch (AndroidLocationException e) {
+            errorAndExit(e.getMessage());
+        } catch (IOException e) {
+            errorAndExit(e.getMessage());
+        } finally {
+            if (writer != null) {
+                try {
+                    writer.close();
+                } catch (IOException e) {
+                    // ignore
+                }
+            }
         }
     }
 

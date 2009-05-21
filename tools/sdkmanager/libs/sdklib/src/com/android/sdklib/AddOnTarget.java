@@ -33,7 +33,7 @@ final class AddOnTarget implements IAndroidTarget {
      * Format is vendor:name:apiVersion
      * */
     private final static String ADD_ON_FORMAT = "%s:%s:%d"; //$NON-NLS-1$
-    
+
     private final static class OptionalLibrary implements IOptionalLibrary {
         private final String mJarName;
         private final String mJarPath;
@@ -58,12 +58,12 @@ final class AddOnTarget implements IAndroidTarget {
         public String getName() {
             return mName;
         }
-        
+
         public String getDescription() {
             return mDescription;
         }
     }
-    
+
     private final String mLocation;
     private final PlatformTarget mBasePlatform;
     private final String mName;
@@ -72,6 +72,7 @@ final class AddOnTarget implements IAndroidTarget {
     private String[] mSkins;
     private String mDefaultSkin;
     private IOptionalLibrary[] mLibraries;
+    private int mVendorId = NO_USB_ID;
 
     /**
      * Creates a new add-on
@@ -94,7 +95,7 @@ final class AddOnTarget implements IAndroidTarget {
         mVendor = vendor;
         mDescription = description;
         mBasePlatform = basePlatform;
-        
+
         // handle the optional libraries.
         if (libMap != null) {
             mLibraries = new IOptionalLibrary[libMap.size()];
@@ -108,23 +109,23 @@ final class AddOnTarget implements IAndroidTarget {
             }
         }
     }
-    
+
     public String getLocation() {
         return mLocation;
     }
-    
+
     public String getName() {
         return mName;
     }
-    
+
     public String getVendor() {
         return mVendor;
     }
-    
+
     public String getFullName() {
         return String.format("%1$s (%2$s)", mName, mVendor);
     }
-    
+
     public String getClasspathName() {
         return String.format("%1$s [%2$s]", mName, mBasePlatform.getName());
     }
@@ -142,15 +143,15 @@ final class AddOnTarget implements IAndroidTarget {
         // this is always defined by the base platform
         return mBasePlatform.getApiVersionNumber();
     }
-    
+
     public boolean isPlatform() {
         return false;
     }
-    
+
     public IAndroidTarget getParent() {
         return mBasePlatform;
     }
-    
+
     public String getPath(int pathId) {
         switch (pathId) {
             case IMAGES:
@@ -168,7 +169,7 @@ final class AddOnTarget implements IAndroidTarget {
                         public boolean accept(File pathname) {
                             return pathname.isDirectory();
                         }
-                        
+
                     });
                     if (files != null && files.length > 0) {
                         return sampleLoc.getAbsolutePath();
@@ -183,7 +184,7 @@ final class AddOnTarget implements IAndroidTarget {
     public String[] getSkins() {
         return mSkins;
     }
-    
+
     public String getDefaultSkin() {
         return mDefaultSkin;
     }
@@ -191,16 +192,20 @@ final class AddOnTarget implements IAndroidTarget {
     public IOptionalLibrary[] getOptionalLibraries() {
         return mLibraries;
     }
-    
+
     /**
      * Returns the list of libraries of the underlying platform.
-     * 
+     *
      * {@inheritDoc}
      */
     public String[] getPlatformLibraries() {
         return mBasePlatform.getPlatformLibraries();
     }
-    
+
+    public int getUsbVendorId() {
+        return mVendorId;
+    }
+
     public boolean isCompatibleBaseFor(IAndroidTarget target) {
         // basic test
         if (target == this) {
@@ -222,28 +227,28 @@ final class AddOnTarget implements IAndroidTarget {
 
         return false;
     }
-    
+
     public String hashString() {
         return String.format(ADD_ON_FORMAT, mVendor, mName, mBasePlatform.getApiVersionNumber());
     }
-    
+
     @Override
     public int hashCode() {
         return hashString().hashCode();
     }
-    
+
     @Override
     public boolean equals(Object obj) {
         if (obj instanceof AddOnTarget) {
             AddOnTarget addon = (AddOnTarget)obj;
-            
+
             return mVendor.equals(addon.mVendor) && mName.equals(addon.mName) &&
                 mBasePlatform.getApiVersionNumber() == addon.mBasePlatform.getApiVersionNumber();
         }
 
         return super.equals(obj);
     }
-    
+
     /*
      * Always return +1 if the object we compare to is a platform.
      * Otherwise, do vendor then name then api version comparison.
@@ -254,7 +259,7 @@ final class AddOnTarget implements IAndroidTarget {
         if (target.isPlatform()) {
             return +1;
         }
-        
+
         // vendor
         int value = mVendor.compareTo(target.getVendor());
 
@@ -262,27 +267,36 @@ final class AddOnTarget implements IAndroidTarget {
         if (value == 0) {
             value = mName.compareTo(target.getName());
         }
-        
+
         // api version
         if (value == 0) {
             value = getApiVersionNumber() - target.getApiVersionNumber();
         }
-        
+
         return value;
     }
 
-    
     // ---- local methods.
 
-
-    public void setSkins(String[] skins, String defaultSkin) {
+    void setSkins(String[] skins, String defaultSkin) {
         mDefaultSkin = defaultSkin;
 
         // we mix the add-on and base platform skins
         HashSet<String> skinSet = new HashSet<String>();
         skinSet.addAll(Arrays.asList(skins));
         skinSet.addAll(Arrays.asList(mBasePlatform.getSkins()));
-        
+
         mSkins = skinSet.toArray(new String[skinSet.size()]);
+    }
+
+    /**
+     * Sets the USB vendor id in the add-on.
+     */
+    void setUsbVendorId(int vendorId) {
+        if (vendorId == 0) {
+            throw new IllegalArgumentException( "VendorId must be > 0");
+        }
+
+        mVendorId = vendorId;
     }
 }
