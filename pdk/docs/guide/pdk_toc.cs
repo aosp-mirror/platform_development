@@ -46,6 +46,14 @@ function nothing() {}
       <li><a href="<?cs var:toroot ?>guide/bluetooth.html">Bluetooth</a></li>
     </ul>
   </li>
+
+  <li class="toggle-list">
+    <div><a href="javascript:nothing()">Misc</a></div>
+    <ul>
+      <li><a href="<?cs var:toroot ?>guide/lights.html">LEDs</a></li>
+    </ul>
+  </li>
+
 </ul>
 </li>
 
