@@ -19,23 +19,63 @@ package com.android.sdklib.repository;
 import java.io.InputStream;
 
 /**
- * Constants for the sdk-repository XML Schema
+ * Public constants for the sdk-repository XML Schema.
  */
 public class SdkRepository {
 
+    /** The XML namespace of the sdk-repository XML. */
     public static final String NS_SDK_REPOSITORY =
         "http://schemas.android.com/sdk/android/repository/1";                  //$NON-NLS-1$
 
-    public static final String NODE_VERSION = "version";                        //$NON-NLS-1$
-    public static final String NODE_REVISION = "revision";                      //$NON-NLS-1$
-    public static final String NODE_API_LEVEL = "api-level";                    //$NON-NLS-1$
-    public static final String NODE_VENDOR = "vendor";                          //$NON-NLS-1$
-    public static final String NODE_NAME = "name";                              //$NON-NLS-1$
-    public static final String NODE_TOOL = "tool";                              //$NON-NLS-1$
-    public static final String NODE_DOC = "doc";                                //$NON-NLS-1$
-    public static final String NODE_PLATFORM = "platform";                      //$NON-NLS-1$
-    public static final String NODE_ADD_ON = "add-on";                          //$NON-NLS-1$
+    /** The root sdk-repository element */
     public static final String NODE_SDK_REPOSITORY = "sdk-repository";          //$NON-NLS-1$
+
+    /** A platform package. */
+    public static final String NODE_PLATFORM = "platform";                      //$NON-NLS-1$
+    /** An add-on package. */
+    public static final String NODE_ADD_ON   = "add-on";                        //$NON-NLS-1$
+    /** A tool package. */
+    public static final String NODE_TOOL     = "tool";                          //$NON-NLS-1$
+    /** A doc package. */
+    public static final String NODE_DOC      = "doc";                           //$NON-NLS-1$
+
+    /** The revision, an int > 0, for all packages (platform, add-on, tool, doc). */
+    public static final String NODE_REVISION    = "revision";                   //$NON-NLS-1$
+    /** The optional description for all packages (platform, add-on, tool, doc) or for a lib. */
+    public static final String NODE_DESCRIPTION = "description";                //$NON-NLS-1$
+    /** The optional description URL for all packages (platform, add-on, tool, doc). */
+    public static final String NODE_DESC_URL    = "desc-url";                   //$NON-NLS-1$
+
+    /** The version, a string, for platform packages. */
+    public static final String NODE_VERSION   = "version";                      //$NON-NLS-1$
+    /** The api-level, an int > 0, for platform, add-on and doc packages. */
+    public static final String NODE_API_LEVEL = "api-level";                    //$NON-NLS-1$
+    /** The vendor, a string, for add-on packages. */
+    public static final String NODE_VENDOR    = "vendor";                       //$NON-NLS-1$
+    /** The name, a string, for add-on packages or for libraries. */
+    public static final String NODE_NAME      = "name";                         //$NON-NLS-1$
+
+    /** The libs container, optional for an add-on. */
+    public static final String NODE_LIBS      = "libs";                         //$NON-NLS-1$
+    /** A lib element in a libs container. */
+    public static final String NODE_LIB       = "lib";                          //$NON-NLS-1$
+
+    /** The archives container, for all packages. */
+    public static final String NODE_ARCHVIES = "archives";                      //$NON-NLS-1$
+    /** An archive element, for the archives container. */
+    public static final String NODE_ARCHVIE  = "archive";                       //$NON-NLS-1$
+
+    /** An archive size, an int > 0. */
+    public static final String NODE_SIZE     = "size";                          //$NON-NLS-1$
+    /** A sha1 archive checksum, as a 40-char hex. */
+    public static final String NODE_CHECKSUM = "checksum";                      //$NON-NLS-1$
+    /** A download archive URL, either absolute or relative to the repository xml. */
+    public static final String NODE_URL      = "url";                           //$NON-NLS-1$
+
+    /** An archive OS attribute, mandatory. */
+    public static final String NODE_OS   = "os";                                //$NON-NLS-1$
+    /** An optional archive Architecture attribute. */
+    public static final String NODE_ARCH = "arch";                              //$NON-NLS-1$
 
     public static InputStream getXsdStream() {
         return SdkRepository.class.getResourceAsStream("sdk-repository.xsd");   //$NON-NLS-1$

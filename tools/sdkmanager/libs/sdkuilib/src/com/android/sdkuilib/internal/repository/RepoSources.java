@@ -1,11 +1,11 @@
 /*
  * Copyright (C) 2009 The Android Open Source Project
  *
- * Licensed under the Eclipse Public License, Version 1.0 (the "License");
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.eclipse.org/org/documents/epl-v10.php
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,7 +14,11 @@
  * limitations under the License.
  */
 
-package com.android.sdkuilib.repository;
+package com.android.sdkuilib.internal.repository;
+
+import com.android.sdklib.internal.repository.IDescription;
+import com.android.sdklib.internal.repository.ITaskFactory;
+import com.android.sdklib.internal.repository.RepoSource;
 
 import org.eclipse.jface.viewers.IContentProvider;
 import org.eclipse.jface.viewers.ILabelProvider;
@@ -22,23 +26,24 @@ import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.widgets.Shell;
 
 import java.util.ArrayList;
 
 /**
+ * A list of sdk-repository sources.
  *
+ * This implementation is UI dependent.
  */
 class RepoSources {
 
-    private Shell mShell;
     private ArrayList<RepoSource> mSources = new ArrayList<RepoSource>();
+    private ITaskFactory mTaskFactory;
 
     public RepoSources() {
     }
 
-    public void setShell(Shell shell) {
-        mShell = shell;
+    public void setTaskFactory(ITaskFactory taskFactory) {
+        mTaskFactory = taskFactory;
     }
 
     public void add(RepoSource source) {
@@ -66,6 +71,9 @@ class RepoSources {
         /** Returns the toString of the element. */
         @Override
         public String getText(Object element) {
+            if (element instanceof IDescription) {
+                return ((IDescription) element).getShortDescription();
+            }
             return super.getText(element);
         }
     }
@@ -112,7 +120,7 @@ class RepoSources {
                 ArrayList<String> pkgs = source.getPackages();
 
                 if (pkgs == null) {
-                    source.load(mShell);
+                    source.load(mTaskFactory);
                     pkgs = source.getPackages();
                 }
                 if (pkgs != null) {
