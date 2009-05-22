@@ -112,6 +112,9 @@ class TestRunner(object):
                       default=False, action="store_true",
                       help="Run all tests defined as part of the continuous "
                       "test set")
+    parser.add_option("--timeout", dest="timeout",
+                      default=300, help="Set a timeout limit (in sec) for "
+                      "running native tests on a device (default: 300 secs)")
 
     group = optparse.OptionGroup(
         parser, "Targets", "Use these options to direct tests to a specific "
@@ -384,7 +387,8 @@ class TestRunner(object):
 
       # Single quotes are needed to prevent the shell splitting it.
       output = self._adb.SendShellCommand("'%s 2>&1;echo -n exit code:$?'" %
-                                          full_path)
+                                          full_path,
+                                          int(self._options.timeout))
       success = output.endswith("exit code:0")
       logger.Log("%s... %s" % (f, success and "ok" or "failed"))
       # Print the captured output when the test failed.
