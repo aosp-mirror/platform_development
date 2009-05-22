@@ -16,15 +16,20 @@
 
 package com.android.sdklib;
 
+import com.android.prefs.AndroidLocation;
+import com.android.prefs.AndroidLocation.AndroidLocationException;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -67,6 +72,16 @@ public final class SdkManager {
         SdkConstants.OS_SDK_TOOLS_FOLDER + SdkConstants.FN_DX,
         SdkConstants.OS_SDK_TOOLS_LIB_FOLDER + SdkConstants.FN_DX_JAR,
     };
+
+    /** Preference file containing the usb ids for adb */
+    private final static String ADB_INI_FILE = "adb_usb.ini";
+       //0--------90--------90--------90--------90--------90--------90--------90--------9
+    private final static String ADB_INI_COMMENT1 =
+        "# ANDROID 3RD PARTY USB VENDOR ID LIST -- DO NOT EDIT\n" +
+        "# USE 'android update adb' TO GENERATE\n" +
+        "# FIRST NUMBER IS VENDOR ID COUNT\n";
+    private final static String ADB_INI_COMMENT2 =
+        "# FOLLOWING NUMBERS ARE VENDOR ID IN DECIMAL\n";
 
     /** the location of the SDK */
     private final String mSdkLocation;
@@ -132,6 +147,46 @@ public final class SdkManager {
         return null;
     }
 
+    /**
+     * Updates adb with the USB devices declared in the SDK add-ons.
+     * @throws AndroidLocationException
+     * @throws IOException
+     */
+    public void updateAdb() throws AndroidLocationException, IOException {
+        FileWriter writer = null;
+        try {
+            // get the android prefs location to know where to write the file.
+            File adbIni = new File(AndroidLocation.getFolder(), ADB_INI_FILE);
+            writer = new FileWriter(adbIni);
+
+            // first, put all the vendor id in an HashSet to remove duplicate.
+            HashSet<Integer> set = new HashSet<Integer>();
+            IAndroidTarget[] targets = getTargets();
+            for (IAndroidTarget target : targets) {
+                if (target.getUsbVendorId() != IAndroidTarget.NO_USB_ID) {
+                    set.add(target.getUsbVendorId());
+                }
+            }
+
+            // write the file header
+            writer.write(ADB_INI_COMMENT1);
+
+            // write the ID count
+            writer.write(Integer.toString(set.size()));
+            writer.write("\n");
+
+            // write header for 2nd section
+            writer.write(ADB_INI_COMMENT2);
+
+            // now write the Id in a text file, one per line.
+            for (Integer i : set) {
+                writer.write(i.toString());
+                writer.write("\n");
+            }
+        } finally {
+            writer.close();
+        }
+    }
 
     private SdkManager(String sdkLocation) {
         mSdkLocation = sdkLocation;
