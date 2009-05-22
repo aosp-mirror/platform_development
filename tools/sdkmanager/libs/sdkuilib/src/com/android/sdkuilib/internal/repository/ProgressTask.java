@@ -1,11 +1,11 @@
 /*
  * Copyright (C) 2009 The Android Open Source Project
  *
- * Licensed under the Eclipse Public License, Version 1.0 (the "License");
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.eclipse.org/org/documents/epl-v10.php
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
-package com.android.sdkuilib.repository;
+package com.android.sdkuilib.internal.repository;
+
+import com.android.sdklib.internal.repository.ITask;
+import com.android.sdklib.internal.repository.ITaskMonitor;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -29,6 +32,13 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.ProgressBar;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
+
+/*
+ * TODO:
+ * - trap window.close and treat it as a cancel request
+ * - on cancel as been clicked *and* the task finished,, change it to a "close" button
+ */
+
 
 class ProgressTask extends Dialog
     implements ITaskMonitor             //$hide$ (hide from SWT designer)
@@ -72,6 +82,9 @@ class ProgressTask extends Dialog
                 display.sleep();
             }
         }
+
+        mCancelRequested = true;
+
         if (!mDialogShell.isDisposed()) {
             mDialogShell.close();
         }
@@ -119,11 +132,7 @@ class ProgressTask extends Dialog
     // Hide everything down-below from SWT designer
     //$hide>>$
 
-    public interface ThreadTask {
-        public abstract void PerformTask(ITaskMonitor monitor);
-    }
-
-    private ThreadTask mTask;
+    private ITask mTask;
 
     /**
      * Creates a new {@link ProgressTask} with the given title.
@@ -131,7 +140,7 @@ class ProgressTask extends Dialog
      *
      * This blocks till the thread ends.
      */
-    public static ProgressTask start(Shell parent, String title, ThreadTask task) {
+    public static ProgressTask start(Shell parent, String title, ITask task) {
         ProgressTask t = new ProgressTask(parent);
         t.setText(title);
         t.setTask(task);
@@ -159,14 +168,16 @@ class ProgressTask extends Dialog
      */
     public void setResult(final String result) {
         mAutomaticallyCloseOnTaskCompletion = false;
-        mDialogShell.getDisplay().asyncExec(new Runnable() {
-            public void run() {
-                if (!mResultText.isDisposed()) {
-                    mResultText.setVisible(true);
-                    mResultText.setText(result);
+        if (!mDialogShell.isDisposed()) {
+            mDialogShell.getDisplay().asyncExec(new Runnable() {
+                public void run() {
+                    if (!mResultText.isDisposed()) {
+                        mResultText.setVisible(true);
+                        mResultText.setText(result);
+                    }
                 }
-            }
-        });
+            });
+        }
     }
 
     /**
@@ -176,13 +187,15 @@ class ProgressTask extends Dialog
      * @see ProgressBar#setMaximum(int)
      */
     public void setProgressMax(final int max) {
-        mDialogShell.getDisplay().asyncExec(new Runnable() {
-            public void run() {
-                if (!mProgressBar.isDisposed()) {
-                    mProgressBar.setMaximum(max);
+        if (!mDialogShell.isDisposed()) {
+            mDialogShell.getDisplay().asyncExec(new Runnable() {
+                public void run() {
+                    if (!mProgressBar.isDisposed()) {
+                        mProgressBar.setMaximum(max);
+                    }
                 }
-            }
-        });
+            });
+        }
     }
 
     /**
@@ -191,13 +204,15 @@ class ProgressTask extends Dialog
      * This method can be invoked from a non-UI thread.
      */
     public void incProgress(final int delta) {
-        mDialogShell.getDisplay().asyncExec(new Runnable() {
-            public void run() {
-                if (!mProgressBar.isDisposed()) {
-                    mProgressBar.setSelection(mProgressBar.getSelection() + delta);
+        if (!mDialogShell.isDisposed()) {
+            mDialogShell.getDisplay().asyncExec(new Runnable() {
+                public void run() {
+                    if (!mProgressBar.isDisposed()) {
+                        mProgressBar.setSelection(mProgressBar.getSelection() + delta);
+                    }
                 }
-            }
-        });
+            });
+        }
     }
 
     /**
@@ -209,12 +224,12 @@ class ProgressTask extends Dialog
     }
 
     /** Sets the task that will execute in a separate thread. */
-    private void setTask(ThreadTask task) {
+    private void setTask(ITask task) {
         mTask = task;
     }
 
     /**
-     * Starts the task from {@link #setTask(ThreadTask)} in a separate thread.
+     * Starts the task from {@link #setTask(ITask)} in a separate thread.
      * When the task completes, set {@link #mCloseRequested} to end the dialog loop.
      */
     private void startTask() {
@@ -222,7 +237,7 @@ class ProgressTask extends Dialog
             new Thread(getText()) {
                 @Override
                 public void run() {
-                    mTask.PerformTask(ProgressTask.this);
+                    mTask.run(ProgressTask.this);
                     if (mAutomaticallyCloseOnTaskCompletion) {
                         mCloseRequested = true;
                     }

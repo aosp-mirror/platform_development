@@ -1,11 +1,11 @@
 /*
  * Copyright (C) 2009 The Android Open Source Project
  *
- * Licensed under the Eclipse Public License, Version 1.0 (the "License");
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.eclipse.org/org/documents/epl-v10.php
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,12 +14,10 @@
  * limitations under the License.
  */
 
-package com.android.sdkuilib.repository;
+package com.android.sdklib.internal.repository;
 
 import com.android.sdklib.repository.SdkRepository;
-import com.android.sdkuilib.repository.ProgressTask.ThreadTask;
 
-import org.eclipse.swt.widgets.Shell;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
@@ -43,9 +41,9 @@ import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
 
 /**
- *
+ * An sdk-repository source. It may be a full repository or an add-on only repository.
  */
-class RepoSource {
+public class RepoSource implements IDescription {
 
     private final String mUrl;
     private final boolean mAddonOnly;
@@ -59,11 +57,7 @@ class RepoSource {
     public RepoSource(String url, boolean addonOnly) {
         mUrl = url;
         mAddonOnly = addonOnly;
-    }
-
-    @Override
-    public String toString() {
-        return mUrl;
+        setDefaultDescription();
     }
 
     /** Returns the URL of the source repository. */
@@ -78,18 +72,24 @@ class RepoSource {
         return mPackages;
     }
 
-    public String getDescription() {
+    public String getShortDescription() {
+        return mUrl;
+    }
+
+    public String getLongDescription() {
         return mDescription == null ? "" : mDescription;  //$NON-NLS-1$
     }
 
     /**
      * Tries to fetch the repository index for the given URL.
      */
-    public void load(Shell shell) {
+    public void load(ITaskFactory taskFactory) {
 
-        ProgressTask.start(shell, "Init SDK Updater", new ThreadTask() {
-            public void PerformTask(ITaskMonitor monitor) {
+        taskFactory.start("Init SDK Updater", new ITask() {
+            public void run(ITaskMonitor monitor) {
                 monitor.setProgressMax(4);
+
+                setDefaultDescription();
 
                 monitor.setDescription(String.format("Fetching %1$s", mUrl));
                 monitor.incProgress(1);
@@ -97,7 +97,7 @@ class RepoSource {
                 String xml = fetchUrl(mUrl, monitor);
 
                 if (xml == null) {
-                    mDescription = String.format("Failed to fetch URL %1$s", mUrl);
+                    mDescription += String.format("\nFailed to fetch URL %1$s", mUrl);
                     return;
                 }
 
@@ -105,18 +105,33 @@ class RepoSource {
                 monitor.incProgress(1);
 
                 if (!validateXml(xml, monitor)) {
-                    mDescription = String.format("Failed to validate XML at %1$s", mUrl);
+                    mDescription += String.format("\nFailed to validate XML at %1$s", mUrl);
                     return;
                 }
 
                 monitor.setDescription("Parse XML");
                 monitor.incProgress(1);
                 parsePackages(xml, monitor);
+                if (mPackages.size() == 0) {
+                    mDescription += "\nNo packages found.";
+                } else if (mPackages.size() == 1) {
+                    mDescription += "\nOne package found.";
+                } else {
+                    mDescription += String.format("\n%1$d packages found.", mPackages.size());
+                }
 
                 // done
                 monitor.incProgress(1);
             }
         });
+    }
+
+    private void setDefaultDescription() {
+        if (mAddonOnly) {
+            mDescription = String.format("Add-on Source: %1$s", mUrl);
+        } else {
+            mDescription = String.format("SDK Source: %1$s", mUrl);
+        }
     }
 
     /*
