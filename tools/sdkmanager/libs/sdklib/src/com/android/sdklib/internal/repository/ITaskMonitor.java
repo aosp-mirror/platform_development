@@ -1,11 +1,11 @@
 /*
  * Copyright (C) 2009 The Android Open Source Project
  *
- * Licensed under the Eclipse Public License, Version 1.0 (the "License");
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.eclipse.org/org/documents/epl-v10.php
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,18 +14,25 @@
  * limitations under the License.
  */
 
-package com.android.sdkuilib.repository;
+package com.android.sdklib.internal.repository;
 
-import org.eclipse.swt.widgets.ProgressBar;
 
 /**
- * A monitor interface for a {@link ProgressTask}
+ * A monitor interface for a {@link ITask}.
+ * <p/>
+ * Depending on the task factory that created the task, there might not be any UI
+ * or it might not implement all the methods, in which case calling them would be
+ * a no-op but is guaranteed not to crash.
+ * <p/>
+ * If the task runs in a non-UI worker thread, the task factory implementation
+ * will take care of the update the UI in the correct thread. The task itself
+ * must not have to deal with it.
  */
-interface ITaskMonitor {
+public interface ITaskMonitor {
 
     /**
      * Sets the description in the current task dialog.
-     * This method can be invoke from a non-UI thread.
+     * This method can be invoked from a non-UI thread.
      */
     public void setDescription(String description);
 
@@ -37,24 +44,20 @@ interface ITaskMonitor {
 
     /**
      * Sets the max value of the progress bar.
-     * This method can be invoke from a non-UI thread.
-     *
-     * @see ProgressBar#setMaximum(int)
+     * This method can be invoked from a non-UI thread.
      */
     public void setProgressMax(int max);
 
     /**
      * Increments the current value of the progress bar.
-     *
      * This method can be invoked from a non-UI thread.
      */
     public void incProgress(int delta);
 
     /**
-     * Returns true if the "Cancel" button was selected.
-     * It is up to the task thread to pool this and exit.
+     * Returns true if the user requested to cancel the operation.
+     * It is up to the task thread to pool this and exit as soon
+     * as possible.
      */
     public boolean cancelRequested();
-
-
 }

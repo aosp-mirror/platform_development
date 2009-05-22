@@ -1,11 +1,11 @@
 /*
- * Copyright (C) 2008 The Android Open Source Project
+ * Copyright (C) 2009 The Android Open Source Project
  *
- * Licensed under the Eclipse Public License, Version 1.0 (the "License");
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.eclipse.org/org/documents/epl-v10.php
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -46,17 +46,17 @@ import org.eclipse.swt.widgets.TableItem;
  * selection.
  */
 public class SdkTargetSelector {
-    
+
     private IAndroidTarget[] mTargets;
     private final boolean mAllowSelection;
     private SelectionListener mSelectionListener;
     private Table mTable;
     private Label mDescription;
     private Composite mInnerGroup;
-    
+
     /**
      * Creates a new SDK Target Selector.
-     * 
+     *
      * @param parent The parent composite where the selector will be added.
      * @param targets The list of targets. This is <em>not</em> copied, the caller must not modify.
      *                Targets can be null or an empty array, in which case the table is disabled.
@@ -67,7 +67,7 @@ public class SdkTargetSelector {
 
     /**
      * Creates a new SDK Target Selector.
-     * 
+     *
      * @param parent The parent composite where the selector will be added.
      * @param targets The list of targets. This is <em>not</em> copied, the caller must not modify.
      *                Targets can be null or an empty array, in which case the table is disabled.
@@ -79,7 +79,7 @@ public class SdkTargetSelector {
         mInnerGroup.setLayout(new GridLayout());
         mInnerGroup.setLayoutData(new GridData(GridData.FILL_BOTH));
         mInnerGroup.setFont(parent.getFont());
-        
+
         mAllowSelection = allowSelection;
         int style = SWT.BORDER | SWT.SINGLE | SWT.FULL_SELECTION;
         if (allowSelection) {
@@ -137,7 +137,7 @@ public class SdkTargetSelector {
 
     /**
      * Changes the targets of the SDK Target Selector.
-     * 
+     *
      * @param targets The list of targets. This is <em>not</em> copied, the caller must not modify.
      */
     public void setTargets(IAndroidTarget[] targets) {
@@ -154,19 +154,19 @@ public class SdkTargetSelector {
      * The {@link TableItem#getData()} contains an {@link IAndroidTarget}.
      * <p/>
      * It is recommended that the caller uses the {@link #getSelected()} method instead.
-     * 
+     *
      * @param selectionListener The new listener or null to remove it.
      */
     public void setSelectionListener(SelectionListener selectionListener) {
         mSelectionListener = selectionListener;
     }
-    
+
     /**
      * Sets the current target selection.
      * <p/>
      * If the selection is actually changed, this will invoke the selection listener
      * (if any) with a null event.
-     * 
+     *
      * @param target the target to be selection
      * @return true if the target could be selected, false otherwise.
      */
@@ -174,7 +174,7 @@ public class SdkTargetSelector {
         if (!mAllowSelection) {
             return false;
         }
-        
+
         boolean found = false;
         boolean modified = false;
 
@@ -192,17 +192,17 @@ public class SdkTargetSelector {
                 }
             }
         }
-        
+
         if (modified && mSelectionListener != null) {
             mSelectionListener.widgetSelected(null);
         }
-        
+
         return found;
     }
 
     /**
      * Returns the selected item.
-     * 
+     *
      * @return The selected item or null.
      */
     public IAndroidTarget getSelected() {
@@ -234,7 +234,7 @@ public class SdkTargetSelector {
             @Override
             public void controlResized(ControlEvent e) {
                 Rectangle r = table.getClientArea();
-                column0.setWidth(r.width * 30 / 100); // 30%  
+                column0.setWidth(r.width * 30 / 100); // 30%
                 column1.setWidth(r.width * 45 / 100); // 45%
                 column2.setWidth(r.width * 15 / 100); // 15%
                 column3.setWidth(r.width * 10 / 100); // 10%
@@ -267,7 +267,7 @@ public class SdkTargetSelector {
                     mSelectionListener.widgetDefaultSelected(e);
                 }
             }
-            
+
             public void widgetSelected(SelectionEvent e) {
                 if (e.item instanceof TableItem) {
                     TableItem i = (TableItem) e.item;
@@ -315,7 +315,7 @@ public class SdkTargetSelector {
         }
 
         table.removeAll();
-        
+
         if (mTargets != null && mTargets.length > 0) {
             table.setEnabled(true);
             for (IAndroidTarget target : mTargets) {
@@ -350,36 +350,36 @@ public class SdkTargetSelector {
         }
 
         /*
-         * Reference: 
+         * Reference:
          * http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.swt.snippets/src/org/eclipse/swt/snippets/Snippet125.java?view=markup
          */
-        
+
         final Listener listener = new Listener() {
             public void handleEvent(Event event) {
-                
+
                 switch(event.type) {
                 case SWT.KeyDown:
                 case SWT.MouseExit:
                 case SWT.MouseDown:
                     return;
-                    
+
                 case SWT.MouseHover:
                     updateDescription(table.getItem(new Point(event.x, event.y)));
                     break;
-                    
+
                 case SWT.Selection:
                     if (event.item instanceof TableItem) {
                         updateDescription((TableItem) event.item);
                     }
                     break;
-                    
+
                 default:
                     return;
                 }
 
             }
         };
-        
+
         table.addListener(SWT.Dispose, listener);
         table.addListener(SWT.KeyDown, listener);
         table.addListener(SWT.MouseMove, listener);
@@ -414,5 +414,5 @@ public class SdkTargetSelector {
             enableControl(c2, enabled);
         }
     }
-    
+
 }

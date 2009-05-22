@@ -1,7 +1,23 @@
-package com.android.sdkuilib.repository;
+/*
+ * Copyright (C) 2009 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-import com.android.sdkuilib.repository.ProgressTask.ThreadTask;
-import com.android.sdkuilib.repository.UpdaterWindow.UpdaterData;
+package com.android.sdkuilib.internal.repository;
+
+import com.android.sdklib.internal.repository.ITask;
+import com.android.sdklib.internal.repository.ITaskMonitor;
 
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.SWT;
@@ -17,6 +33,17 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.Text;
 
+/*
+ * TODO list
+ * - parse local repo
+ * - create entries
+ * - select => update desc, enable update + delete, enable home page if url
+ * - home page callback
+ * - update callback
+ * - delete callback
+ * - refresh callback
+ */
+
 public class InstalledPackagesPage extends Composite {
     private UpdaterData mUpdaterData;
 
@@ -29,24 +56,25 @@ public class InstalledPackagesPage extends Composite {
     private TableColumn mColumnInstSummary;
     private TableColumn mColumnInstApiLevel;
     private TableColumn mColumnInstRevision;
-    private Group mInstDescription;
+    private Group mDescriptionContainer;
     private Composite mInstButtons;
     private Button mInstUpdate;
     private Label mPlaceholder1;
     private Button mInstDelete;
     private Label mPlaceholder2;
     private Button mInstHomePage;
+    private Label mDescriptionLabel;
 
     /**
      * Create the composite.
      * @param parent The parent of the composite.
-     * @param updaterData An instance of {@link UpdaterWindow.UpdaterData}. If null, a local
+     * @param updaterData An instance of {@link UpdaterData}. If null, a local
      *        one will be allocated just to help with the SWT Designer.
      */
     public InstalledPackagesPage(Composite parent, UpdaterData updaterData) {
         super(parent, SWT.BORDER);
 
-        mUpdaterData = updaterData != null ? updaterData : new UpdaterWindow.UpdaterData();
+        mUpdaterData = updaterData != null ? updaterData : new UpdaterData();
 
         createContents(this);
     }
@@ -77,9 +105,14 @@ public class InstalledPackagesPage extends Composite {
         mColumnInstRevision.setWidth(100);
         mColumnInstRevision.setText("Revision");
 
-        mInstDescription = new Group(parent, SWT.NONE);
-        mInstDescription.setText("Description");
-        mInstDescription.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 3, 1));
+        mDescriptionContainer = new Group(parent, SWT.NONE);
+        mDescriptionContainer.setLayout(new GridLayout(1, false));
+        mDescriptionContainer.setText("Description");
+        mDescriptionContainer.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 3, 1));
+
+        mDescriptionLabel = new Label(mDescriptionContainer, SWT.NONE);
+        mDescriptionLabel.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, true, 1, 1));
+        mDescriptionLabel.setText("Line1\nLine2\nLine3");
 
         mInstButtons = new Composite(parent, SWT.NONE);
         mInstButtons.setLayout(new GridLayout(5, false));
@@ -143,8 +176,8 @@ public class InstalledPackagesPage extends Composite {
     //$hide>>$
 
     protected void onUpdateInstalledPackage() {
-        ProgressTask.start(getShell(), "Test", new ThreadTask() {
-            public void PerformTask(ITaskMonitor monitor) {
+        ProgressTask.start(getShell(), "Test", new ITask() {
+            public void run(ITaskMonitor monitor) {
                 monitor.setDescription("Test");
                 monitor.setProgressMax(100);
                 int n = 0;
@@ -161,7 +194,6 @@ public class InstalledPackagesPage extends Composite {
             }
         });
     }
-
 
     // End of hiding from SWT Designer
     //$hide<<$
