@@ -61,9 +61,9 @@ public class SdkRepository {
     public static final String NODE_LIB       = "lib";                          //$NON-NLS-1$
 
     /** The archives container, for all packages. */
-    public static final String NODE_ARCHVIES = "archives";                      //$NON-NLS-1$
+    public static final String NODE_ARCHIVES = "archives";                      //$NON-NLS-1$
     /** An archive element, for the archives container. */
-    public static final String NODE_ARCHVIE  = "archive";                       //$NON-NLS-1$
+    public static final String NODE_ARCHIVE  = "archive";                       //$NON-NLS-1$
 
     /** An archive size, an int > 0. */
     public static final String NODE_SIZE     = "size";                          //$NON-NLS-1$
@@ -72,10 +72,12 @@ public class SdkRepository {
     /** A download archive URL, either absolute or relative to the repository xml. */
     public static final String NODE_URL      = "url";                           //$NON-NLS-1$
 
+    /** An archive checksum type, mandatory. */
+    public static final String ATTR_TYPE = "type";                              //$NON-NLS-1$
     /** An archive OS attribute, mandatory. */
-    public static final String NODE_OS   = "os";                                //$NON-NLS-1$
+    public static final String ATTR_OS   = "os";                                //$NON-NLS-1$
     /** An optional archive Architecture attribute. */
-    public static final String NODE_ARCH = "arch";                              //$NON-NLS-1$
+    public static final String ATTR_ARCH = "arch";                              //$NON-NLS-1$
 
     public static InputStream getXsdStream() {
         return SdkRepository.class.getResourceAsStream("sdk-repository.xsd");   //$NON-NLS-1$
