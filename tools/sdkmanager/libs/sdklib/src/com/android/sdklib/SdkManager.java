@@ -76,12 +76,10 @@ public final class SdkManager {
     /** Preference file containing the usb ids for adb */
     private final static String ADB_INI_FILE = "adb_usb.ini";
        //0--------90--------90--------90--------90--------90--------90--------90--------9
-    private final static String ADB_INI_COMMENT1 =
+    private final static String ADB_INI_HEADER =
         "# ANDROID 3RD PARTY USB VENDOR ID LIST -- DO NOT EDIT.\n" +
         "# USE 'android update adb' TO GENERATE.\n" +
-        "# FIRST NUMBER IS VENDOR ID COUNT.\n";
-    private final static String ADB_INI_COMMENT2 =
-        "# FOLLOWING NUMBERS ARE VENDOR ID.\n";
+        "# 1 USB VENDOR ID PER LINE.\n";
 
     /** the location of the SDK */
     private final String mSdkLocation;
@@ -168,15 +166,8 @@ public final class SdkManager {
                 }
             }
 
-            // write the file header
-            writer.write(ADB_INI_COMMENT1);
-
-            // write the ID count
-            writer.write(Integer.toString(set.size()));
-            writer.write("\n");
-
-            // write header for 2nd section
-            writer.write(ADB_INI_COMMENT2);
+            // write file header.
+            writer.write(ADB_INI_HEADER);
 
             // now write the Id in a text file, one per line.
             for (Integer i : set) {
