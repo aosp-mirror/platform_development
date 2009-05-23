@@ -41,14 +41,16 @@ import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
 
 /**
- * An sdk-repository source. It may be a full repository or an add-on only repository.
+ * An sdk-repository source, i.e. a download site.
+ * It may be a full repository or an add-on only repository.
+ * A repository describes one or {@link Package}s available for download.
  */
 public class RepoSource implements IDescription {
 
     private final String mUrl;
     private final boolean mAddonOnly;
 
-    private ArrayList<String> mPackages;
+    private Package[] mPackages;
     private String mDescription;
 
     /**
@@ -68,7 +70,7 @@ public class RepoSource implements IDescription {
     /**
      * Returns the list of known packages. This is null when the source hasn't been loaded yet.
      */
-    public ArrayList<String> getPackages() {
+    public Package[] getPackages() {
         return mPackages;
     }
 
@@ -112,12 +114,12 @@ public class RepoSource implements IDescription {
                 monitor.setDescription("Parse XML");
                 monitor.incProgress(1);
                 parsePackages(xml, monitor);
-                if (mPackages.size() == 0) {
+                if (mPackages.length == 0) {
                     mDescription += "\nNo packages found.";
-                } else if (mPackages.size() == 1) {
+                } else if (mPackages.length == 1) {
                     mDescription += "\nOne package found.";
                 } else {
-                    mDescription += String.format("\n%1$d packages found.", mPackages.size());
+                    mDescription += String.format("\n%1$d packages found.", mPackages.length);
                 }
 
                 // done
@@ -223,31 +225,42 @@ public class RepoSource implements IDescription {
             Node root = getFirstChild(doc, SdkRepository.NODE_SDK_REPOSITORY);
             if (root != null) {
 
-                mPackages = new ArrayList<String>();
+                ArrayList<Package> packages = new ArrayList<Package>();
 
                 for (Node child = root.getFirstChild();
                      child != null;
                      child = child.getNextSibling()) {
                     if (child.getNodeType() == Node.ELEMENT_NODE &&
-                            child.getNamespaceURI().equals(SdkRepository.NS_SDK_REPOSITORY)) {
+                            SdkRepository.NS_SDK_REPOSITORY.equals(child.getNamespaceURI())) {
                         String name = child.getLocalName();
-                        if (SdkRepository.NODE_ADD_ON.equals(name)) {
-                            parseAddon(child, mPackages, monitor);
+                        Package p = null;
 
-                        } else if (!mAddonOnly) {
-                            if (SdkRepository.NODE_PLATFORM.equals(name)) {
-                                parsePlatform(child, mPackages, monitor);
+                        try {
+                            if (SdkRepository.NODE_ADD_ON.equals(name)) {
+                                p = new AddonPackage(child);
 
-                            } else if (SdkRepository.NODE_DOC.equals(name)) {
-                                parseDoc(child, mPackages, monitor);
-
-                            } else if (SdkRepository.NODE_TOOL.equals(name)) {
-                                parseTool(child, mPackages, monitor);
-
+                            } else if (!mAddonOnly) {
+                                if (SdkRepository.NODE_PLATFORM.equals(name)) {
+                                    p = new PlatformPackage(child);
+                                } else if (SdkRepository.NODE_DOC.equals(name)) {
+                                    p = new DocPackage(child);
+                                } else if (SdkRepository.NODE_TOOL.equals(name)) {
+                                    p = new ToolPackage(child);
+                                }
                             }
+
+                            if (p != null) {
+                                packages.add(p);
+                                monitor.setDescription(
+                                        String.format("Found %1$s", p.getShortDescription()));
+                            }
+                        } catch (Exception e) {
+                            // Ignore invalid packages
                         }
                     }
                 }
+
+                mPackages = packages.toArray(new Package[packages.size()]);
 
                 return true;
             }
@@ -269,7 +282,7 @@ public class RepoSource implements IDescription {
 
         for(Node child = node.getFirstChild(); child != null; child = child.getNextSibling()) {
             if (child.getNodeType() == Node.ELEMENT_NODE &&
-                    child.getNamespaceURI().equals(SdkRepository.NS_SDK_REPOSITORY)) {
+                    SdkRepository.NS_SDK_REPOSITORY.equals(child.getNamespaceURI())) {
                 if (xmlLocalName == null || child.getLocalName().equals(xmlLocalName)) {
                     return child;
                 }
@@ -289,43 +302,5 @@ public class RepoSource implements IDescription {
         Document doc = builder.parse(new InputSource(new StringReader(xml)));
 
         return doc;
-    }
-
-    private void parseAddon(Node addon, ArrayList<String> packages, ITaskMonitor monitor) {
-        // TODO Auto-generated method stub
-        String s = String.format("addon %1$s by %2$s, api %3$s, rev %4$s",
-                getFirstChild(addon, SdkRepository.NODE_NAME).getTextContent(),
-                getFirstChild(addon, SdkRepository.NODE_VENDOR).getTextContent(),
-                getFirstChild(addon, SdkRepository.NODE_API_LEVEL).getTextContent(),
-                getFirstChild(addon, SdkRepository.NODE_REVISION).getTextContent()
-                );
-        packages.add(s);
-    }
-
-    private void parsePlatform(Node platform, ArrayList<String> packages, ITaskMonitor monitor) {
-        // TODO Auto-generated method stub
-        String s = String.format("platform %1$s, api %2$s, rev %3$s",
-                getFirstChild(platform, SdkRepository.NODE_VERSION).getTextContent(),
-                getFirstChild(platform, SdkRepository.NODE_API_LEVEL).getTextContent(),
-                getFirstChild(platform, SdkRepository.NODE_REVISION).getTextContent()
-                );
-        packages.add(s);
-    }
-
-    private void parseDoc(Node doc, ArrayList<String> packages, ITaskMonitor monitor) {
-        // TODO Auto-generated method stub
-        String s = String.format("doc for api %1$s, rev %2$s",
-                getFirstChild(doc, SdkRepository.NODE_API_LEVEL).getTextContent(),
-                getFirstChild(doc, SdkRepository.NODE_REVISION).getTextContent()
-                );
-        packages.add(s);
-    }
-
-    private void parseTool(Node tool, ArrayList<String> packages, ITaskMonitor monitor) {
-        // TODO Auto-generated method stub
-        String s = String.format("tool, rev %1$s",
-                getFirstChild(tool, SdkRepository.NODE_REVISION).getTextContent()
-                );
-        packages.add(s);
     }
 }

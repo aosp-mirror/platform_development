@@ -16,8 +16,10 @@
 
 package com.android.sdkuilib.internal.repository;
 
+import com.android.sdklib.internal.repository.Archive;
 import com.android.sdklib.internal.repository.IDescription;
 import com.android.sdklib.internal.repository.ITaskFactory;
+import com.android.sdklib.internal.repository.Package;
 import com.android.sdklib.internal.repository.RepoSource;
 
 import org.eclipse.jface.viewers.IContentProvider;
@@ -108,8 +110,9 @@ class RepoSources {
          * Get the children of the given parent. This is requested on-demand as
          * nodes are expanded.
          *
-         * For a {@link RepoSources} object, returns an array of {@link RepoSource}.
-         * For a {@link RepoSource}, returns an array of packages.
+         * For a {@link RepoSources} object, returns an array of {@link RepoSource}s.
+         * For a {@link RepoSource}, returns an array of {@link Package}s.
+         * For a {@link Package}, returns an array of {@link Archive}s.
          */
         public Object[] getChildren(Object parentElement) {
             if (parentElement instanceof RepoSources) {
@@ -117,16 +120,20 @@ class RepoSources {
 
             } else if (parentElement instanceof RepoSource) {
                 RepoSource source = (RepoSource) parentElement;
-                ArrayList<String> pkgs = source.getPackages();
+                Package[] packages = source.getPackages();
 
-                if (pkgs == null) {
+                if (packages == null) {
                     source.load(mTaskFactory);
-                    pkgs = source.getPackages();
+                    packages = source.getPackages();
                 }
-                if (pkgs != null) {
-                    return pkgs.toArray();
+                if (packages != null) {
+                    return packages;
                 }
+
+            } else if (parentElement instanceof Package) {
+                return ((Package) parentElement).getArchives();
             }
+
 
             return new Object[0];
         }
@@ -148,7 +155,7 @@ class RepoSources {
          * All {@link RepoSource} are expandable, whether they actually have any childre or not.
          */
         public boolean hasChildren(Object element) {
-            return element instanceof RepoSource;
+            return element instanceof RepoSource || element instanceof Package;
         }
     }
 
