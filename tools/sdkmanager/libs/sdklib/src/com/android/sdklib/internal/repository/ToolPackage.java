@@ -16,25 +16,33 @@
 
 package com.android.sdklib.internal.repository;
 
-import com.android.sdklib.repository.SdkRepository;
-
 import org.w3c.dom.Node;
 
 /**
- *
+ * Represents a tool XML node in an SDK repository.
  */
 public class ToolPackage extends Package {
 
-    private final String mApiLevel;
-
-    public ToolPackage(Node packageNode) {
+    /**
+     * Creates a new tool package from the attributes and elements of the given XML node.
+     * <p/>
+     * This constructor should throw an exception if the package cannot be created.
+     */
+    ToolPackage(Node packageNode) {
         super(packageNode);
-        mApiLevel = getXmlString(packageNode, SdkRepository.NODE_API_LEVEL);
     }
 
-    public String getApiLevel() {
-        return mApiLevel;
+    /** Returns a short description for an {@link IDescription}. */
+    @Override
+    public String getShortDescription() {
+        return String.format("Android SDK Tools, revision %1$d", getRevision());
     }
 
-
+    /** Returns a long description for an {@link IDescription}. */
+    @Override
+    public String getLongDescription() {
+        return String.format("Android SDK Tools, revision %1$d.\n%2$s",
+                getRevision(),
+                super.getLongDescription());
+    }
 }

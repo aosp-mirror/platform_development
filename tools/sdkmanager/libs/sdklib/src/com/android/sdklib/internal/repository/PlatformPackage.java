@@ -21,26 +21,47 @@ import com.android.sdklib.repository.SdkRepository;
 import org.w3c.dom.Node;
 
 /**
- *
+ * Represents a platform XML node in an SDK repository.
  */
 public class PlatformPackage extends Package {
 
     private final String mVersion;
-    private final String mApiLevel;
+    private final int mApiLevel;
 
-    public PlatformPackage(Node packageNode) {
+    /**
+     * Creates a new platform package from the attributes and elements of the given XML node.
+     * <p/>
+     * This constructor should throw an exception if the package cannot be created.
+     */
+    PlatformPackage(Node packageNode) {
         super(packageNode);
         mVersion  = getXmlString(packageNode, SdkRepository.NODE_VERSION);
-        mApiLevel = getXmlString(packageNode, SdkRepository.NODE_API_LEVEL);
+        mApiLevel = getXmlInt   (packageNode, SdkRepository.NODE_API_LEVEL, 0);
     }
 
+    /** Returns the version, a string, for platform packages. */
     public String getVersion() {
         return mVersion;
     }
 
-    public String getApiLevel() {
+    /** Returns the api-level, an int > 0, for platform, add-on and doc packages. */
+    public int getApiLevel() {
         return mApiLevel;
     }
 
+    /** Returns a short description for an {@link IDescription}. */
+    @Override
+    public String getShortDescription() {
+        return String.format("SDK Platform Android %1$s, API %2$d",
+                getVersion(),
+                getApiLevel());
+    }
 
+    /** Returns a long description for an {@link IDescription}. */
+    @Override
+    public String getLongDescription() {
+        return String.format("%1$s.\n%2$s",
+                getShortDescription(),
+                super.getLongDescription());
+    }
 }
