@@ -34,6 +34,7 @@
 #include <errno.h>
 #include <string.h>
 #include <cutils/log.h>
+#include <cutils/native_handle.h>
 #include <cutils/sockets.h>
 #include <hardware/sensors.h>
 
@@ -123,16 +124,19 @@ typedef struct SensorControl {
 /* this must return a file descriptor that will be used to read
  * the sensors data (it is passed to data__data_open() below
  */
-static int
+static native_handle_t*
 control__open_data_source(struct sensors_control_device_t *dev)
 {
     SensorControl*  ctl = (void*)dev;
+    native_handle_t* handle;
 
     if (ctl->fd < 0) {
         ctl->fd = qemud_channel_open(SENSORS_SERVICE_NAME);
     }
     D("%s: fd=%d", __FUNCTION__, ctl->fd);
-    return ctl->fd;
+    handle = native_handle_create(1, 0);
+    handle->data[0] = ctl->fd;
+    return handle;
 }
 
 static int
@@ -244,7 +248,7 @@ data__now_ns(void)
 }
 
 static int
-data__data_open(struct sensors_data_device_t *dev, int fd)
+data__data_open(struct sensors_data_device_t *dev, native_handle_t* handle)
 {
     SensorData*  data = (void*)dev;
     int i;
@@ -258,7 +262,9 @@ data__data_open(struct sensors_data_device_t *dev, int fd)
     data->timeStart      = 0;
     data->timeOffset     = 0;
 
-    data->events_fd = dup(fd);
+    data->events_fd = dup(handle->data[0]);
+    native_handle_close(handle);
+    native_handle_delete(handle);
     return 0;
 }
 
