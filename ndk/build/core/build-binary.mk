@@ -29,6 +29,10 @@ include $(BUILD_SYSTEM)/build-module.mk
 # list of generated object files
 LOCAL_OBJECTS :=
 
+# always define ANDROID when building binaries
+#
+LOCAL_CFLAGS := -DANDROID $(LOCAL_CFLAGS)
+
 #
 # Add the default system shared libraries to the build
 #
