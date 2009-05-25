@@ -1,0 +1,37 @@
+A simple change log for the Android NDK
+
+-------------------------------------------------------------------------------
+Current version:
+
+- Expose the zlib headers <zlib.h> and <zconf.h> as part of the stable
+  ABIs.
+
+- Use the --no-undefined flag at link time by default when generating
+  binaries. This means that the linker will issue an "undefined symbol"
+  error when trying to build a shared library that references an undefined
+  variable or function. This is to help catch simple bugs, but you can
+  override this by setting LOCAL_ALLOW_UNDEFINED_SYMBOLS to true.
+
+- Fix a typo that prevented APP_CFLAGS, APP_CPPFLAGS, etc.. to work as
+  advertized in the build system.
+
+- Fix auto-dependency computations
+
+- Fix dependency between the generated shared libraries and the copy that
+  is installed in under the application's project path.
+
+- "make APP=<app> clean" now properly cleans the installed binaries.
+
+- Fix the build-toolchain.sh to refer to the proper download location for the
+  toolchain source tarball.
+
+-------------------------------------------------------------------------------
+android-1.5_r1 released.
+
+Initial version.
+
+The only headers that are publicly exposed are for:
+
+- the C library
+- the Math library (<math.h>)
+- the JNI interface  (<jni.h>)
