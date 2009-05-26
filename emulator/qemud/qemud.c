@@ -849,6 +849,10 @@ fdhandler_close( FDHandler*  f )
 static void
 fdhandler_shutdown( FDHandler*  f )
 {
+    /* prevent later fdhandler_close() to
+     * call the receiver's close.
+     */
+    f->receiver->close = NULL;
 
     if (f->out_first != NULL && !f->closing)
     {
@@ -856,11 +860,6 @@ fdhandler_shutdown( FDHandler*  f )
         f->closing = 1;
         fdhandler_remove(f);
         fdhandler_prepend(f, &f->list->closing);
-
-        /* prevent later fdhandler_close() to
-         * call the receiver's close.
-         */
-        f->receiver->close = NULL;
         return;
     }
 
