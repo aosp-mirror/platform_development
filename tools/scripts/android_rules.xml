@@ -205,7 +205,7 @@
         <echo>Uninstalling ${application-package} from the default emulator...</echo>
         <exec executable="${adb}" failonerror="true">
             <arg value="uninstall" />
-            <arg path="${application-package}" />
+            <arg value="${application-package}" />
         </exec>
     </target>
     
