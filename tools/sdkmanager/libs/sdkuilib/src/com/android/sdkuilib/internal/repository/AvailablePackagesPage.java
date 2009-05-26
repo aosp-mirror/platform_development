@@ -23,8 +23,11 @@ import org.eclipse.jface.viewers.CheckboxTreeViewer;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ITreeSelection;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ControlAdapter;
+import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -33,13 +36,16 @@ import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
+import org.eclipse.jface.viewers.ICheckStateListener;
+import org.eclipse.jface.viewers.CheckStateChangedEvent;
+import org.eclipse.jface.viewers.IDoubleClickListener;
+import org.eclipse.jface.viewers.DoubleClickEvent;
 
 /*
  * TODO list
  * - check source => toggle packages: all, none
  * - check package => set source check to tri-state
  * - check callback => install enable if has selection
- * - fill columns (or remove them?)
  * - select tree item: delete site enable if add-on source
  * - select tree item: refresh enable if source
  * - load add-on sites from pref
@@ -54,11 +60,7 @@ public class AvailablePackagesPage extends Composite {
 
     private CheckboxTreeViewer mTreeViewerSources;
     private Tree mTreeSources;
-    private TreeColumn mColumnAvailSummary;
-    private TreeColumn mColumnAvailApiLevel;
-    private TreeColumn mColumnAvailRevision;
-    private TreeColumn mColumnAvailOs;
-    private TreeColumn mColumnAvailInstalled;
+    private TreeColumn mColumnSource;
     private Group mDescriptionContainer;
     private Button mAddSiteButton;
     private Button mRemoveSiteButton;
@@ -80,12 +82,23 @@ public class AvailablePackagesPage extends Composite {
         mUpdaterData = updaterData != null ? updaterData : new UpdaterData();
 
         createContents(this);
+        postCreate();  //$hide$
     }
 
     private void createContents(Composite parent) {
         parent.setLayout(new GridLayout(5, false));
 
         mTreeViewerSources = new CheckboxTreeViewer(parent, SWT.BORDER);
+        mTreeViewerSources.addDoubleClickListener(new IDoubleClickListener() {
+            public void doubleClick(DoubleClickEvent event) {
+                doTreeDoubleClick(event); //$hide$
+            }
+        });
+        mTreeViewerSources.addCheckStateListener(new ICheckStateListener() {
+            public void checkStateChanged(CheckStateChangedEvent event) {
+                doTreeCeckStateChanged(event); //$hide$
+            }
+        });
         mTreeViewerSources.setContentProvider(mUpdaterData.getSources().getContentProvider());
         mTreeViewerSources.setLabelProvider(mUpdaterData.getSources().getLabelProvider());
         mTreeSources = mTreeViewerSources.getTree();
@@ -98,25 +111,9 @@ public class AvailablePackagesPage extends Composite {
         mTreeSources.setHeaderVisible(true);
         mTreeSources.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 5, 1));
 
-        mColumnAvailSummary = new TreeColumn(mTreeSources, SWT.NONE);
-        mColumnAvailSummary.setWidth(289);
-        mColumnAvailSummary.setText("Summary");
-
-        mColumnAvailApiLevel = new TreeColumn(mTreeSources, SWT.NONE);
-        mColumnAvailApiLevel.setWidth(66);
-        mColumnAvailApiLevel.setText("API Level");
-
-        mColumnAvailRevision = new TreeColumn(mTreeSources, SWT.NONE);
-        mColumnAvailRevision.setWidth(63);
-        mColumnAvailRevision.setText("Revision");
-
-        mColumnAvailOs = new TreeColumn(mTreeSources, SWT.NONE);
-        mColumnAvailOs.setWidth(100);
-        mColumnAvailOs.setText("OS/Arch");
-
-        mColumnAvailInstalled = new TreeColumn(mTreeSources, SWT.NONE);
-        mColumnAvailInstalled.setWidth(59);
-        mColumnAvailInstalled.setText("Installed");
+        mColumnSource = new TreeColumn(mTreeSources, SWT.NONE);
+        mColumnSource.setWidth(289);
+        mColumnSource.setText("Sources, Packages and Archives");
 
         mDescriptionContainer = new Group(parent, SWT.NONE);
         mDescriptionContainer.setLayout(new GridLayout(1, false));
@@ -152,6 +149,28 @@ public class AvailablePackagesPage extends Composite {
     // Hide everything down-below from SWT designer
     //$hide>>$
 
+    private void postCreate() {
+        adjustColumnsWidth();
+    }
+
+
+    /**
+     * Adds a listener to adjust the columns width when the parent is resized.
+     * <p/>
+     * If we need something more fancy, we might want to use this:
+     * http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.swt.snippets/src/org/eclipse/swt/snippets/Snippet77.java?view=co
+     */
+    private void adjustColumnsWidth() {
+        // Add a listener to resize the column to the full width of the table
+        mTreeSources.addControlListener(new ControlAdapter() {
+            @Override
+            public void controlResized(ControlEvent e) {
+                Rectangle r = mTreeSources.getClientArea();
+                mColumnSource.setWidth(r.width);
+            }
+        });
+    }
+
     public void setInput(RepoSources sources) {
         mTreeViewerSources.setInput(sources);
         onTreeSelected();
@@ -170,8 +189,15 @@ public class AvailablePackagesPage extends Composite {
         mDescriptionLabel.setText("");  //$NON-NLS1-$
     }
 
+    private void doTreeCeckStateChanged(CheckStateChangedEvent event) {
+        boolean b = event.getChecked();
+        Object elem = event.getElement();
+        Object src = event.getSource();
+    }
+
+    private void doTreeDoubleClick(DoubleClickEvent event) {
+    }
 
     // End of hiding from SWT Designer
     //$hide<<$
-
 }
