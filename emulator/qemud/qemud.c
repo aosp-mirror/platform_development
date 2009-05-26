@@ -857,8 +857,10 @@ fdhandler_shutdown( FDHandler*  f )
         fdhandler_remove(f);
         fdhandler_prepend(f, &f->list->closing);
 
-        /* notify the receiver that we're closing */
-        receiver_close(f->receiver);
+        /* prevent later fdhandler_close() to
+         * call the receiver's close.
+         */
+        f->receiver->close = NULL;
         return;
     }
 
