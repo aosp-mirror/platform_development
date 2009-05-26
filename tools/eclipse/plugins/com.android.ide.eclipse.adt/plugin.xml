@@ -455,23 +455,23 @@
    <extension
          point="org.eclipse.wst.sse.ui.editorConfiguration">
       <sourceViewerConfiguration
-            class="com.android.ide.eclipse.editors.manifest.ManifestSourceViewerConfig"
+            class="com.android.ide.eclipse.adt.internal.editors.manifest.ManifestSourceViewerConfig"
             target="com.android.ide.eclipse.editors.manifest.ManifestEditor">
       </sourceViewerConfiguration>
       <sourceViewerConfiguration
-            class="com.android.ide.eclipse.editors.resources.ResourcesSourceViewerConfig"
+            class="com.android.ide.eclipse.adt.internal.editors.resources.ResourcesSourceViewerConfig"
             target="com.android.ide.eclipse.editors.resources.ResourcesEditor">
       </sourceViewerConfiguration>
       <sourceViewerConfiguration
-            class="com.android.ide.eclipse.editors.layout.LayoutSourceViewerConfig"
+            class="com.android.ide.eclipse.adt.internal.editors.layout.LayoutSourceViewerConfig"
             target="com.android.ide.eclipse.editors.layout.LayoutEditor">
       </sourceViewerConfiguration>
       <sourceViewerConfiguration
-            class="com.android.ide.eclipse.editors.menu.MenuSourceViewerConfig"
+            class="com.android.ide.eclipse.adt.internal.editors.menu.MenuSourceViewerConfig"
             target="com.android.ide.eclipse.editors.menu.MenuEditor">
       </sourceViewerConfiguration>
       <sourceViewerConfiguration
-            class="com.android.ide.eclipse.editors.xml.XmlSourceViewerConfig"
+            class="com.android.ide.eclipse.adt.internal.editors.xml.XmlSourceViewerConfig"
             target="com.android.ide.eclipse.editors.xml.XmlEditor">
       </sourceViewerConfiguration>
    </extension>
@@ -530,9 +530,9 @@
             id="adt.actionSet.refactorings"
             label="Android Refactorings"
             visible="true">
- 
+
          <!-- This duplicates the Refactoring Menu definition from the jdt.ui plugin.xml,
-              which allows us to insert our contribution even if the JDT is not loaded. 
+              which allows us to insert our contribution even if the JDT is not loaded.
               We overload the definition with our new group.-->
          <menu
                label="Refactor"
@@ -550,12 +550,12 @@
             <separator name="scriptGroup"/>
          </menu>
 
-         <menu 
-               label="Android" 
-               path="org.eclipse.jdt.ui.refactoring.menu/androidGroup" 
-               id="com.android.ide.eclipse.adt.refactoring.menu"> 
-              <separator name="android"/> 
-         </menu> 
+         <menu
+               label="Android"
+               path="org.eclipse.jdt.ui.refactoring.menu/androidGroup"
+               id="com.android.ide.eclipse.adt.refactoring.menu">
+              <separator name="android"/>
+         </menu>
          <action
                class="com.android.ide.eclipse.adt.internal.refactorings.extractstring.ExtractStringAction"
                definitionId="com.android.ide.eclipse.adt.refactoring.extract.string"
