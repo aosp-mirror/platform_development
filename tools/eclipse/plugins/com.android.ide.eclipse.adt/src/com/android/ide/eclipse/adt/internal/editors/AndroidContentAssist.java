@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.editors;
 
+import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.AttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DescriptorsUtils;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
@@ -30,6 +31,7 @@ import com.android.ide.eclipse.adt.internal.editors.uimodel.UiFlagAttributeNode;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.sdklib.SdkConstants;
 
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.ITextViewer;
@@ -74,7 +76,7 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
 
     /** Regexp to detect an element tag name */
     private static Pattern sFirstElementWord = Pattern.compile("^[a-zA-Z0-9_:]+"); //$NON-NLS-1$
-    
+
     /** Regexp to detect whitespace */
     private static Pattern sWhitespace = Pattern.compile("\\s+"); //$NON-NLS-1$
 
@@ -86,11 +88,11 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
     private ElementDescriptor mRootDescriptor;
 
     private final int mDescriptorId;
-    
+
     private AndroidEditor mEditor;
 
     /**
-     * Constructor for AndroidContentAssist 
+     * Constructor for AndroidContentAssist
      * @param descriptorId An id for {@link AndroidTargetData#getDescriptorProvider(int)}.
      *      The Id can be one of {@link AndroidTargetData#DESCRIPTOR_MANIFEST},
      *      {@link AndroidTargetData#DESCRIPTOR_LAYOUT},
@@ -110,17 +112,22 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
      * @param viewer the viewer whose document is used to compute the proposals
      * @param offset an offset within the document for which completions should be computed
      * @return an array of completion proposals or <code>null</code> if no proposals are possible
-     * 
+     *
      * @see org.eclipse.jface.text.contentassist.IContentAssistProcessor#computeCompletionProposals(org.eclipse.jface.text.ITextViewer, int)
      */
     public ICompletionProposal[] computeCompletionProposals(ITextViewer viewer, int offset) {
-      
+
         if (mEditor == null) {
             mEditor = getAndroidEditor(viewer);
+            if (mEditor == null) {
+                // This should not happen. Duck and forget.
+                AdtPlugin.log(IStatus.ERROR, "Editor not found during completion");
+                return null;
+            }
         }
 
         UiElementNode rootUiNode = mEditor.getUiRootNode();
-        
+
         Object[] choices = null; /* An array of ElementDescriptor, or AttributeDescriptor
                                     or String or null */
         String parent = "";      //$NON-NLS-1$
@@ -136,7 +143,12 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
         // check to see if we can find a UiElementNode matching this XML node
         UiElementNode currentUiNode =
             rootUiNode == null ? null : rootUiNode.findXmlNode(currentNode);
-        
+
+        if (currentNode == null) {
+            // Should not happen (an XML doc always has at least a doc node). Just give up.
+            return null;
+        }
+
         if (currentNode.getNodeType() == Node.ELEMENT_NODE) {
             parent = currentNode.getNodeName();
 
@@ -154,7 +166,7 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
                     // We're editing attributes in an element node (either the attributes' names
                     // or their values).
                     choices = getChoicesForAttribute(parent, currentNode, currentUiNode, info);
-                    
+
                     if (info.correctedPrefix != null) {
                         wordPrefix = info.correctedPrefix;
                     }
@@ -180,7 +192,7 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
                 needTag = '<';
             }
         }
-        
+
         // get the selection length
         int selectionLength = 0;
         ISelection selection = viewer.getSelectionProvider().getSelection();
@@ -196,7 +208,7 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
     /**
      * Returns the namespace prefix matching the Android Resource URI.
      * If no such declaration is found, returns the default "android" prefix.
-     *  
+     *
      * @param node The current node. Must not be null.
      * @param nsUri The namespace URI of which the prefix is to be found,
      *              e.g. {@link SdkConstants#NS_RESOURCES}
@@ -210,9 +222,9 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
         if (XmlnsAttributeDescriptor.XMLNS_URI.equals(nsUri)) {
             return "xmlns"; //$NON-NLS-1$
         }
-        
+
         HashSet<String> visited = new HashSet<String>();
-        
+
         String prefix = null;
         for (; prefix == null &&
                     node != null &&
@@ -230,7 +242,7 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
                 }
             }
         }
-        
+
         // Use a sensible default prefix if we can't find one.
         // We need to make sure the prefix is not one that was declared in the scope
         // visited above.
@@ -251,7 +263,7 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
      * <p/>
      * Example: <manifest><applic*cursor* => returns the list of all elements that
      * can be found under <manifest>, of which <application> is one of the choices.
-     * 
+     *
      * @return an ElementDescriptor[] or null if no valid element was found.
      */
     private Object[] getChoicesForElement(String parent, Node current_node) {
@@ -287,8 +299,8 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
      *   lenient as suitable for attribute values.
      * - AttribInfo.needTag will be non-zero if we find that the attribute completion proposal
      *   must be double-quoted.
-     * @param currentUiNode 
-     * 
+     * @param currentUiNode
+     *
      * @return an AttributeDescriptor[] if the user is editing an attribute name.
      *         a String[] if the user is editing an attribute value with some known values,
      *         or null if nothing is known about the context.
@@ -309,7 +321,7 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
             } else {
                 attrInfo.needTag = '"';
             }
-            
+
             if (currentUiNode != null) {
                 // look for an UI attribute matching the current attribute name
                 String attrName = attrInfo.name;
@@ -329,7 +341,7 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
 
                 if (currAttrNode != null) {
                     choices = currAttrNode.getPossibleValues(value);
-                    
+
                     if (currAttrNode instanceof UiFlagAttributeNode) {
                         // A "flag" can consist of several values separated by "or" (|).
                         // If the correct prefix contains such a pipe character, we change
@@ -345,7 +357,7 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
 
             if (choices == null) {
                 // fallback on the older descriptor-only based lookup.
-                
+
                 // in order to properly handle the special case of the name attribute in
                 // the action tag, we need the grandparent of the action node, to know
                 // what type of actions we need.
@@ -358,7 +370,7 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
                         greatGrandParentName = greatGrandParent.getLocalName();
                     }
                 }
-                
+
                 AndroidTargetData data = mEditor.getTargetData();
                 if (data != null) {
                     choices = data.getAttributeValues(parent, attrInfo.name, greatGrandParentName);
@@ -382,7 +394,7 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
      * This means the user is editing outside of any XML element or attribute.
      * Simply return the list of XML elements that can be present there, based on the
      * parent of the current node.
-     * 
+     *
      * @return An ElementDescriptor[] or null.
      */
     private Object[] getChoicesForTextNode(Node currentNode) {
@@ -413,7 +425,7 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
      * - AttributeDescriptor: a possible attribute descriptor which XML name should be completed.
      * - String: string values to display as-is to the user. Typically those are possible
      *           values for a given attribute.
-     * 
+     *
      * @return The ICompletionProposal[] to display to the user.
      */
     private ICompletionProposal[] computeProposals(int offset, Node currentNode,
@@ -421,7 +433,7 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
             boolean is_attribute, int selectionLength) {
         ArrayList<CompletionProposal> proposals = new ArrayList<CompletionProposal>();
         HashMap<String, String> nsUriMap = new HashMap<String, String>();
-        
+
         for (Object choice : choices) {
             String keyword = null;
             String nsPrefix = null;
@@ -441,7 +453,7 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
                 if (choice instanceof TextAttributeDescriptor) {
                     tooltip = ((TextAttributeDescriptor) choice).getTooltip();
                 }
-                
+
                 // Get the namespace URI for the attribute. Note that some attributes
                 // do not have a namespace and thus return null here.
                 String nsUri = ((AttributeDescriptor)choice).getNamespaceUri();
@@ -455,13 +467,13 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
                 if (nsPrefix != null) {
                     nsPrefix += ":"; //$NON-NLS-1$
                 }
-                
+
             } else if (choice instanceof String) {
                 keyword = (String) choice;
             } else {
                 continue; // discard unknown choice
             }
-            
+
             String nsKeyword = nsPrefix == null ? keyword : (nsPrefix + keyword);
 
             if (keyword.startsWith(wordPrefix) ||
@@ -499,7 +511,7 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
                 proposals.add(proposal);
             }
         }
-        
+
         return proposals.toArray(new ICompletionProposal[proposals.size()]);
     }
 
@@ -510,7 +522,7 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
      * <p/>
      * Elements can have children if the descriptor has children element descriptors
      * or if one of the attributes is a TextValueDescriptor.
-     * 
+     *
      * @param descriptor An ElementDescriptor or an AttributeDescriptor
      * @return True if the descriptor is an ElementDescriptor that can have children or a text value
      */
@@ -548,7 +560,7 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
     /**
      * Returns the characters which when entered by the user should
      * automatically trigger the presentation of possible completions.
-     * 
+     *
      * In our case, we auto-activate on opening tags and attributes namespace.
      *
      * @return the auto activation characters for completion proposal or <code>null</code>
@@ -569,7 +581,7 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
     public String getErrorMessage() {
         return null;
     }
-    
+
     /**
      * Heuristically extracts the prefix used for determining template relevance
      * from the viewer's document. The default implementation returns the String from
@@ -578,7 +590,7 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
      *
      * The part were we access the docment was extracted from
      * org.eclipse.jface.text.templatesTemplateCompletionProcessor and adapted to our needs.
-     * 
+     *
      * @param viewer the viewer
      * @param offset offset into document
      * @return the prefix to consider
@@ -611,7 +623,7 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
             return ""; //$NON-NLS-1$
         }
     }
-    
+
     /**
      * Extracts the character at the given offset.
      * Returns 0 if the offset is invalid.
@@ -676,7 +688,7 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
                 // text will contain the full string of the current element,
                 // i.e. whatever is after the "<" to the current cursor
                 String text = document.get(offset, n - offset);
-                
+
                 // Normalize whitespace to single spaces
                 text = sWhitespace.matcher(text).replaceAll(" "); //$NON-NLS-1$
 
@@ -684,13 +696,13 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
                 // any whitespace. If there's nothing left, no attribute has been defined yet.
                 // Be sure to keep any whitespace after the initial word if any, as it matters.
                 text = sFirstElementWord.matcher(text).replaceFirst("");  //$NON-NLS-1$
-                
+
                 // There MUST be space after the element name. If not, the cursor is still
                 // defining the element name.
                 if (!text.startsWith(" ")) { //$NON-NLS-1$
                     return null;
                 }
-                
+
                 // Remove full attributes:
                 // Syntax:
                 //    name = "..." quoted string with all but < and "
@@ -709,7 +721,7 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
                 //   merged with the previous one.
                 // - string with an = sign, optionally followed by a quote (' or "): the user is
                 //   writing the value of the attribute.
-                int pos_equal = text.indexOf('='); 
+                int pos_equal = text.indexOf('=');
                 if (pos_equal == -1) {
                     info.isInValue = false;
                     info.name = text.trim();
@@ -749,7 +761,7 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
 
         return node;
     }
-    
+
     /**
      * Computes (if needed) and returns the root descriptor.
      */
@@ -758,17 +770,17 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
             AndroidTargetData data = mEditor.getTargetData();
             if (data != null) {
                 IDescriptorProvider descriptorProvider = data.getDescriptorProvider(mDescriptorId);
-                
+
                 if (descriptorProvider != null) {
                     mRootDescriptor = new ElementDescriptor("",
                             descriptorProvider.getRootElementDescriptors());
                 }
             }
         }
-        
+
         return mRootDescriptor;
     }
-    
+
     /**
      * Returns the active {@link AndroidEditor} matching this source viewer.
      */
@@ -789,7 +801,7 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
 
         return null;
     }
-    
-    
+
+
 
 }
