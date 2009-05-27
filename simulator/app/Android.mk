@@ -24,12 +24,14 @@ LOCAL_SRC_FILES := \
 	PhoneCollection.cpp \
 	PhoneData.cpp \
 	PhoneWindow.cpp \
+	Pipe.cpp \
 	Preferences.cpp \
 	PrefsDialog.cpp \
 	PropertyServer.cpp \
 	Semaphore.cpp \
 	Shmem.cpp \
-	UserEvent.cpp
+	UserEvent.cpp \
+	executablepath_linux.cpp
 
 LOCAL_STATIC_LIBRARIES := \
 	libtinyxml
