@@ -34,6 +34,7 @@ OPTION_HELP=no
 OPTION_PLATFORM=
 OPTION_FORCE_32=no
 OPTION_REBUILD=no
+
 VERBOSE=no
 for opt do
   optarg=`expr "x$opt" : 'x[^=]*=\(.*\)'`
@@ -73,9 +74,7 @@ for opt do
 done
 
 if [ $OPTION_HELP = "yes" ] ; then
-    echo "Collect files from an Android build tree and assembles a sysroot"
-    echo "suitable for building a standalone toolchain or be used by the"
-    echo "Android NDK."
+    echo "Rebuild the prebuilt binaries for the Android NDK toolchain."
     echo ""
     echo "options:"
     echo ""
@@ -90,27 +89,14 @@ if [ $OPTION_HELP = "yes" ] ; then
     exit 0
 fi
 
-# some Linux platforms report 64-bit while they have a 32-bit userland
-# so check that the compiler generates 32-bit binaries
-# if it does, call force_32bit_binaries to change the value of $HOST_TAG
-#
-# note that this also changes HOST_CFLAGS and HOST_LDFLAGS, however, there
-# is no way for the configure script in the toolchain to get these properly.
-#
-if [ $HOST_TAG = linux-x86_64 ] ; then
-    setup_toolchain
-    cat >$TMPC <<EOF
-int main(void)
-{
-    return 0;
-}
-EOF
-    compile_exec_run
-    readelf -h $TMPE | grep -q -e "ELF32"
-    if [ $? = 0 ] ; then
-        force_32bit_binaries
-    fi
-fi
+# Force generation of 32-bit binaries on 64-bit systems
+case $HOST_TAG in
+    *-x86_64)
+        HOST_CFLAGS="$HOST_CFLAGS -m32"
+        HOST_LDFLAGS="$HOST_LDFLAGS -m32"
+        force_32bit_binaries  # to modify HOST_TAG and others
+        ;;
+esac
 
 TMPLOG=/tmp/android-toolchain-build-$$.log
 rm -rf $TMPLOG
@@ -305,6 +291,7 @@ download_package ()
             echo "ERROR: Invalid MD5 Sum for $PACKAGE_TARBALL"
             echo "    Expected $PKGSUM"
             echo "    Computed $SUM"
+            echo "You might want to use the --force-download option."
             exit 2
         fi
 
@@ -378,7 +365,8 @@ if ! timestamp_check toolchain configure; then
     echo "Configure: toolchain build"
     mkdir -p $TOOLCHAIN_BUILD &&
     cd $TOOLCHAIN_BUILD &&
-    CFLAGS="$HOST_CFLAGS" LDFLAGS="$HOST_LDFLAGS" run \
+    export CFLAGS="$HOST_CFLAGS" &&
+    export LDFLAGS="$HOST_LDFLAGS" && run \
     $TOOLCHAIN_SRC/configure --target=arm-eabi \
                              --disable-nls \
                              --prefix=$TOOLCHAIN_PREFIX \
@@ -394,9 +382,11 @@ fi
 
 # build the toolchain
 if ! timestamp_check toolchain build ; then
-    echo "Building : toolchain (this can take a long time)."
+    echo "Building : toolchain [this can take a long time]."
     cd $TOOLCHAIN_BUILD &&
-    CFLAGS="$HOST_CFLAGS" LDFLAGS="$HOST_LDFLAGS" run make -j$JOBS
+    export CFLAGS="$HOST_CFLAGS" &&
+    export LDFLAGS="$HOST_LDFLAGS" &&
+    run make -j$JOBS
     if [ $? != 0 ] ; then
         echo "Error while building toolchain. See $TMPLOG"
         exit 1
@@ -414,8 +404,12 @@ if ! timestamp_check toolchain install ; then
         echo "Error while installing toolchain. See $TMPLOG"
         exit 1
     fi
+    # don't forget to copy the GPL and LGPL license files
+    cp -f $TOOLCHAIN_SRC/COPYING $TOOLCHAIN_SRC/COPYING.LIB $TOOLCHAIN_PREFIX
+    # remove some unneeded files
     rm -f $TOOLCHAIN_PREFIX/bin/*-gccbug
     rm -rf $TOOLCHAIN_PREFIX/man $TOOLCHAIN_PREFIX/info
+    # strip binaries to reduce final package size
     strip $TOOLCHAIN_PREFIX/bin/*
     strip $TOOLCHAIN_PREFIX/arm-eabi/bin/*
     strip $TOOLCHAIN_PREFIX/libexec/gcc/*/*/cc1
@@ -431,6 +425,7 @@ if ! timestamp_check gdbserver configure; then
     mkdir -p $GDBSERVER_BUILD
     cd $GDBSERVER_BUILD &&
     CFLAGS="-g -O2 -static -mandroid -I$ANDROID_SYSROOT/usr/include" \
+    LDFLAGS= \
     CC="$TOOLCHAIN_PREFIX/bin/arm-eabi-gcc" \
     run $TOOLCHAIN_SRC/gdb-6.6/gdb/gdbserver/configure \
     --host=arm-eabi-linux \

@@ -1,7 +1,10 @@
-A simple change log for the Android NDK
+Android NDK ChangeLog:
 
 -------------------------------------------------------------------------------
-Current version:
+Current version (2009-05-27):
+
+- Force the use of 32-bit toolchain binaries on 64-bit hosts. This reduces
+  the number of prebuilt packages needed to be distributed.
 
 - Expose the zlib headers <zlib.h> and <zconf.h> as part of the stable
   ABIs.

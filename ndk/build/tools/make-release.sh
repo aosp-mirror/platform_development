@@ -21,7 +21,7 @@ PREBUILT_DIR=
 PREBUILT_PREFIX=android-ndk-prebuilt-20090323
 
 # the list of supported host development systems
-PREBUILT_SYSTEMS="linux-x86 linux-x86_64 darwin-x86 windows"
+PREBUILT_SYSTEMS="linux-x86 darwin-x86 windows"
 
 
 OPTION_HELP=no
