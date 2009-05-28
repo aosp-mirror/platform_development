@@ -54,6 +54,7 @@ add_config ()
 echo "Detecting host toolchain."
 echo ""
 
+force_32bit_binaries
 setup_toolchain
 
 create_config_mk
