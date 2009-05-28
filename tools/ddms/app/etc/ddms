@@ -67,12 +67,28 @@ if [ `uname` = "Darwin" ]; then
     os_opts="-XstartOnFirstThread"
     #because Java 1.6 is 64 bits only and SWT doesn't support this, we force the usage of java 1.5
     java_cmd="/System/Library/Frameworks/JavaVM.framework/Versions/1.5/Commands/java"
-elif [[ `uname -s` = 'Linux' && `uname -m` = 'x86_64' ]]; then
-#   Use 32-bit Java on x86_64 Linux.
-    java_cmd="/usr/lib/jvm/ia32-java-6-sun/jre/bin/java"
-    if [ ! -x $java_cmd ]; then
-        echo `basename "$prog"`": missing 32-bit JVM. Please install ia32-sun-java6-bin."
-        exit 1
+elif [[ `uname -s` = 'Linux' ]]; then
+    # We need a 32-bit Java on Linux, because our JNI libraries are 32-bit.
+    java_cmd=`which java`
+
+    if [ -x "$java_cmd" ]; then
+        if [[ ! `file -L "$java_cmd"` =~ "ELF 32-bit LSB executable" ]]; then
+            java_cmd=""
+        fi
+    fi
+
+    if [ ! -x "$java_cmd" ]; then
+        # The default JVM is not suitable.
+        # See if we can find a particular known-good JVM
+        java_cmd="/usr/lib/jvm/ia32-java-6-sun/jre/bin/java"
+        if [ ! -x "$java_cmd" ]; then
+            PREFIX=`basename "$prog"`
+            echo "$PREFIX: The default Java VM is not an ELF 32-bit LSB executable."
+            echo "$PREFIX: Please do one of the following:"
+            echo "$PREFIX: 1) Arrange for the default Java VM to be an ELF 32-bit LSB executable."
+            echo "$PREFIX: 2) Install the ia32-sun-java6-bin package."
+            exit 1
+        fi
     fi
 else
     os_opts=
