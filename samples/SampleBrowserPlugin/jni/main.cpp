@@ -363,8 +363,18 @@ int16 NPP_HandleEvent(NPP instance, void* event)
                 browser->invalidaterect(instance, NULL);
             }
             return 1;
+            
+        case kPause_ANPEventType:
+            gLogI.log(instance, kDebug_ANPLogType, "---- %p pause event\n",
+                      instance);
+            break;
 
-        case kTouch_ANPEventType:
+        case kResume_ANPEventType:
+            gLogI.log(instance, kDebug_ANPLogType, "---- %p resume event\n",
+                      instance);
+            break;
+            
+            case kTouch_ANPEventType:
             gLogI.log(instance, kDebug_ANPLogType, "---- %p Touch action=%d [%d %d]",
                       instance, evt->data.touch.action, evt->data.touch.x,
                       evt->data.touch.y);
