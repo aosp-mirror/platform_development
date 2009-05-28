@@ -286,6 +286,10 @@ Native tests:
     description="Bionic libstdc++."
     extra_make_args="BIONIC_TESTS=1" />
 
+<test-native name="libskia"
+    build_path="external/skia/tests"
+    description="Skia tests." />
+
 <!-- pending patch 820
 <test-native name="gtest"
     build_path="external/gtest"
