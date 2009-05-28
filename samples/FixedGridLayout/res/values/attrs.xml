@@ -1,0 +1,7 @@
+<resources>
+    <declare-styleable name="FixedGridLayout">
+        <attr name="cellWidth" format="dimension" />
+        <attr name="cellHeight" format="dimension" />
+    </declare-styleable>
+</resources>
+
