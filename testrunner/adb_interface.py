@@ -157,8 +157,9 @@ class AdbInterface:
     separated into its package and runner components.
     """
     instrumentation_path = "%s/%s" % (package_name, runner_name)
-    return self.StartInstrumentation(self, instrumentation_path, timeout_time,
-                                     no_window_animation, instrumentation_args)
+    return self.StartInstrumentation(instrumentation_path, timeout_time=timeout_time,
+                                     no_window_animation=no_window_animation,
+                                     instrumentation_args=instrumentation_args)
 
   def StartInstrumentation(
       self, instrumentation_path, timeout_time=60*10, no_window_animation=False,
@@ -203,7 +204,7 @@ class AdbInterface:
         instrumentation_path, no_window_animation=no_window_animation,
         profile=profile, raw_mode=True,
         instrumentation_args=instrumentation_args)
-
+    logger.Log(command_string)
     (test_results, inst_finished_bundle) = (
         am_instrument_parser.ParseAmInstrumentOutput(
             self.SendShellCommand(command_string, timeout_time=timeout_time,
@@ -217,7 +218,7 @@ class AdbInterface:
       short_msg_result = "no error message"
       if "shortMsg" in inst_finished_bundle:
         short_msg_result = inst_finished_bundle["shortMsg"]
-        logger.Log(short_msg_result)
+        logger.Log("Error! Test run failed: %s" % short_msg_result)
       raise errors.InstrumentationError(short_msg_result)
 
     if "INSTRUMENTATION_ABORTED" in inst_finished_bundle:

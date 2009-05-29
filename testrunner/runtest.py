@@ -278,16 +278,53 @@ class TestRunner(object):
           raw_mode=self._options.raw_mode,
           instrumentation_args=instrumentation_args)
       logger.Log(adb_cmd)
+    elif self._options.coverage:
+      # need to parse test output to determine path to coverage file
+      logger.Log("Running in coverage mode, suppressing test output")
+      try:
+        (test_results, status_map) = self._adb.StartInstrumentationForPackage(
+          package_name=test_suite.GetPackageName(),
+          runner_name=test_suite.GetRunnerName(),
+          timeout_time=60*60,
+          instrumentation_args=instrumentation_args)
+      except errors.InstrumentationError, errors.DeviceUnresponsiveError:
+        return
+      self._PrintTestResults(test_results)
+      device_coverage_path = status_map.get("coverageFilePath", None)
+      if device_coverage_path is None:
+        logger.Log("Error: could not find coverage data on device")
+        return
+      coverage_file = self._coverage_gen.ExtractReport(test_suite, device_coverage_path)
+      if coverage_file is not None:
+        logger.Log("Coverage report generated at %s" % coverage_file)
     else:
       self._adb.StartInstrumentationNoResults(
           package_name=test_suite.GetPackageName(),
           runner_name=test_suite.GetRunnerName(),
           raw_mode=self._options.raw_mode,
           instrumentation_args=instrumentation_args)
-      if self._options.coverage and test_suite.GetTargetName() is not None:
-        coverage_file = self._coverage_gen.ExtractReport(test_suite)
-        if coverage_file is not None:
-          logger.Log("Coverage report generated at %s" % coverage_file)
+
+  def _PrintTestResults(self, test_results):
+    """Prints a summary of test result data to stdout.
+
+    Args:
+      test_results: a list of am_instrument_parser.TestResult
+    """
+    total_count = 0
+    error_count = 0
+    fail_count = 0
+    for test_result in test_results:
+      if test_result.GetStatusCode() == -1: # error
+        logger.Log("Error in %s: %s" % (test_result.GetTestName(),
+                                        test_result.GetFailureReason()))
+        error_count+=1
+      elif test_result.GetStatusCode() == -2: # failure
+        logger.Log("Failure in %s: %s" % (test_result.GetTestName(),
+                                          test_result.GetFailureReason()))
+        fail_count+=1
+      total_count+=1
+    logger.Log("Tests run: %d, Failures: %d, Errors: %d" %
+               (total_count, fail_count, error_count))
 
   def _CollectTestSources(self, test_list, dirname, files):
     """For each directory, find tests source file and add them to the list.
