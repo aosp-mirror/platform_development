@@ -454,16 +454,18 @@ class Main {
                 
                 // display some extra values.
                 Map<String, String> properties = info.getProperties();
-                String skin = properties.get(AvdManager.AVD_INI_SKIN_NAME);
-                if (skin != null) {
-                    mSdkLog.printf("    Skin: %s\n", skin);
-                }
-                String sdcard = properties.get(AvdManager.AVD_INI_SDCARD_SIZE);
-                if (sdcard == null) {
-                    sdcard = properties.get(AvdManager.AVD_INI_SDCARD_PATH);
-                }
-                if (sdcard != null) {
-                    mSdkLog.printf("  Sdcard: %s\n", sdcard);
+                if (properties != null) {
+                    String skin = properties.get(AvdManager.AVD_INI_SKIN_NAME);
+                    if (skin != null) {
+                        mSdkLog.printf("    Skin: %s\n", skin);
+                    }
+                    String sdcard = properties.get(AvdManager.AVD_INI_SDCARD_SIZE);
+                    if (sdcard == null) {
+                        sdcard = properties.get(AvdManager.AVD_INI_SDCARD_PATH);
+                    }
+                    if (sdcard != null) {
+                        mSdkLog.printf("  Sdcard: %s\n", sdcard);
+                    }
                 }
             }
 
@@ -508,7 +510,7 @@ class Main {
         }
 
         try {
-            boolean removePrevious = false;
+            boolean removePrevious = mSdkCommandLine.getFlagForce();
             AvdManager avdManager = new AvdManager(mSdkManager, mSdkLog);
 
             String avdName = mSdkCommandLine.getParamName();
@@ -522,8 +524,7 @@ class Main {
             
             AvdInfo info = avdManager.getAvd(avdName, false /*validAvdOnly*/);
             if (info != null) {
-                if (mSdkCommandLine.getFlagForce()) {
-                    removePrevious = true;
+                if (removePrevious) {
                     mSdkLog.warning(
                             "Android Virtual Device '%s' already exists and will be replaced.",
                             avdName);
