@@ -1612,6 +1612,20 @@
                 <category android:name="android.intent.category.SAMPLE_CODE" />
             </intent-filter>
         </activity>
+        
+        <activity android:name=".graphics.PurgeableBitmap" android:label="Graphics/PurgeableBitmap/NonPurgeable">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+       <activity-alias android:targetActivity=".graphics.PurgeableBitmap" android:name="Purgeable" android:label="Graphics/PurgeableBitmap/Purgeable">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity-alias>
 
         <!-- ************************************* -->
         <!--             MEDIA SAMPLES             -->
