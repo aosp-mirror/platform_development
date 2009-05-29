@@ -44,16 +44,15 @@ class CoverageGenerator(object):
     # path to EMMA host jar, relative to Android build root
   _EMMA_JAR = os.path.join(_EMMA_BUILD_PATH, "lib", "emma.jar")
   _TEST_COVERAGE_EXT = "ec"
-  # default device-side path to code coverage results file
-  _DEVICE_COVERAGE_PATH = "/sdcard/coverage.ec"
   # root path of generated coverage report files, relative to Android build root
   _COVERAGE_REPORT_PATH = os.path.join("out", "emma")
+  _TARGET_DEF_FILE = "coverage_targets.xml"
   _CORE_TARGET_PATH = os.path.join("development", "testrunner",
-                                   "coverage_targets.xml")
+                                   _TARGET_DEF_FILE)
   # vendor glob file path patterns to tests, relative to android
   # build root
   _VENDOR_TARGET_PATH = os.path.join("vendor", "*", "tests", "testinfo",
-                                     "coverage_targets.xml")
+                                     _TARGET_DEF_FILE)
 
   # path to root of target build intermediates
   _TARGET_INTERMEDIATES_BASE_PATH = os.path.join("out", "target", "common",
@@ -93,7 +92,7 @@ class CoverageGenerator(object):
       return False
 
   def ExtractReport(self, test_suite,
-                    device_coverage_path=_DEVICE_COVERAGE_PATH,
+                    device_coverage_path,
                     output_path=None):
     """Extract runtime coverage data and generate code coverage report.
 
@@ -122,8 +121,14 @@ class CoverageGenerator(object):
       report_path = os.path.join(output_path,
                                  test_suite.GetName())
       target = self._targets_manifest.GetTarget(test_suite.GetTargetName())
-      return self._GenerateReport(report_path, coverage_local_path, [target],
-                                  do_src=True)
+      if target is None:
+        msg = ["Error: test %s references undefined target %s."
+                % (test_suite.GetName(), test_suite.GetTargetName())]
+        msg.append(" Ensure target is defined in %s" % self._TARGET_DEF_FILE)
+        logger.Log("".join(msg))
+      else:
+        return self._GenerateReport(report_path, coverage_local_path, [target],
+                                    do_src=True)
     return None
 
   def _GenerateReport(self, report_path, coverage_file_path, targets,
