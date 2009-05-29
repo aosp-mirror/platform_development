@@ -16,12 +16,17 @@
 
 package com.android.sdklib.repository;
 
+
 import java.io.InputStream;
 
 /**
  * Public constants for the sdk-repository XML Schema.
  */
 public class SdkRepository {
+
+    /** The URL of the official Google sdk-repository site. */
+    public static final String URL_GOOGLE_SDK_REPO_SITE =
+        "https://dl.google.com/android/eclipse/repository/index.xml";           //$NON-NLS-1$
 
     /** The XML namespace of the sdk-repository XML. */
     public static final String NS_SDK_REPOSITORY =

@@ -22,6 +22,7 @@ import com.android.sdklib.repository.SdkRepository;
 
 import org.w3c.dom.Node;
 
+import java.io.File;
 import java.util.ArrayList;
 
 /**
@@ -42,13 +43,15 @@ public abstract class Package implements IDescription {
     private final String mDescription;
     private final String mDescUrl;
     private final Archive[] mArchives;
+    private final RepoSource mSource;
 
     /**
      * Creates a new package from the attributes and elements of the given XML node.
      * <p/>
      * This constructor should throw an exception if the package cannot be created.
      */
-    Package(Node packageNode) {
+    Package(RepoSource source, Node packageNode) {
+        mSource = source;
         mRevision    = getXmlInt   (packageNode, SdkRepository.NODE_REVISION, 0);
         mDescription = getXmlString(packageNode, SdkRepository.NODE_DESCRIPTION);
         mDescUrl     = getXmlString(packageNode, SdkRepository.NODE_DESC_URL);
@@ -56,6 +59,35 @@ public abstract class Package implements IDescription {
         mArchives = parseArchives(getFirstChild(packageNode, SdkRepository.NODE_ARCHIVES));
     }
 
+    /**
+     * Manually create a new package with one archive and the given attributes.
+     * This is used to create packages from local directories.
+     */
+    public Package(RepoSource source,
+            int revision,
+            String description,
+            String descUrl,
+            Os archiveOs,
+            Arch archiveArch,
+            String archiveUrl,
+            long archiveSize,
+            String archiveChecksum) {
+        mSource = source;
+        mRevision = revision;
+        mDescription = description;
+        mDescUrl = descUrl;
+        mArchives = new Archive[1];
+        mArchives[0] = new Archive(this,
+                archiveOs,
+                archiveArch,
+                archiveUrl,
+                archiveSize,
+                archiveChecksum);
+    }
+
+    /**
+     * Parses an XML node to process the <archives> element.
+     */
     private Archive[] parseArchives(Node archivesNode) {
         ArrayList<Archive> archives = new ArrayList<Archive>();
 
@@ -75,52 +107,99 @@ public abstract class Package implements IDescription {
         return archives.toArray(new Archive[archives.size()]);
     }
 
+    /**
+     * Parses one <archive> element from an <archives> container.
+     */
     private Archive parseArchive(Node archiveNode) {
         Archive a = new Archive(
+                    this,
                     (Os)   getEnumAttribute(archiveNode, SdkRepository.ATTR_OS,
                             Os.values(), null),
                     (Arch) getEnumAttribute(archiveNode, SdkRepository.ATTR_ARCH,
                             Arch.values(), Arch.ANY),
                     getXmlString(archiveNode, SdkRepository.NODE_URL),
-                    getXmlInt(archiveNode, SdkRepository.NODE_SIZE, 0),
+                    getXmlLong(archiveNode, SdkRepository.NODE_SIZE, 0),
                     getXmlString(archiveNode, SdkRepository.NODE_CHECKSUM)
                 );
 
         return a;
     }
 
-    /** Returns the revision, an int > 0, for all packages (platform, add-on, tool, doc). */
+    /**
+     * Returns the source that created (and owns) this package. Can be null.
+     */
+    public RepoSource getParentSource() {
+        return mSource;
+    }
+
+    /**
+     * Returns the revision, an int > 0, for all packages (platform, add-on, tool, doc).
+     * Can be 0 if this is a local package of unknown revision.
+     */
     public int getRevision() {
         return mRevision;
     }
 
-    /** Returns the optional description for all packages (platform, add-on, tool, doc) or
-     *  for a lib. */
+    /**
+     * Returns the optional description for all packages (platform, add-on, tool, doc) or
+     * for a lib. Can be empty but not null.
+     */
     public String getDescription() {
         return mDescription;
     }
 
-    /** Returns the optional description URL for all packages (platform, add-on, tool, doc).
-     * Can be empty but not null. */
+    /**
+     * Returns the optional description URL for all packages (platform, add-on, tool, doc).
+     * Can be empty but not null.
+     */
     public String getDescUrl() {
         return mDescUrl;
     }
 
-    /** Returns the archives defined in this package. Can be an empty array but not null. */
+    /**
+     * Returns the archives defined in this package.
+     * Can be an empty array but not null.
+     */
     public Archive[] getArchives() {
         return mArchives;
     }
 
-    /** Returns a short description for an {@link IDescription}. */
+    /**
+     * Returns a short description for an {@link IDescription}.
+     * Can be empty but not null.
+     */
     public abstract String getShortDescription();
 
-    /** Returns a long description for an {@link IDescription}. */
+    /**
+     * Returns a long description for an {@link IDescription}.
+     * Can be empty but not null.
+     */
     public String getLongDescription() {
         return String.format("%1$s\nRevision %2$d", getDescription(), getRevision());
     }
 
+    /**
+     * Computes a potential installation folder if an archive of this package were
+     * to be installed right away in the given SDK root.
+     * <p/>
+     * Some types of packages install in a fix location, for example docs and tools.
+     * In this case the returned folder may already exist with a different archive installed
+     * at the desired location.
+     * For other packages types, such as add-on or platform, the folder name is only partially
+     * relevant to determine the content and thus a real check will be done to provide an
+     * existing or new folder depending on the current content of the SDK.
+     *
+     * @param osSdkRoot The OS path of the SDK root folder.
+     * @return A new {@link File} corresponding to the directory to use to install this package.
+     */
+    public abstract File getInstallFolder(String osSdkRoot);
+
     //---
 
+    /**
+     * Returns the first child element with the given XML local name.
+     * If xmlLocalName is null, returns the very first child element.
+     */
     protected static Node getFirstChild(Node node, String xmlLocalName) {
 
         for(Node child = node.getFirstChild(); child != null; child = child.getNextSibling()) {
@@ -153,6 +232,19 @@ public abstract class Package implements IDescription {
         String s = getXmlString(node, xmlLocalName);
         try {
             return Integer.parseInt(s);
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
+    }
+
+    /**
+     * Retrieves the value of that XML element as a long.
+     * Returns the default value when the element is missing or is not an integer.
+     */
+    protected static long getXmlLong(Node node, String xmlLocalName, long defaultValue) {
+        String s = getXmlString(node, xmlLocalName);
+        try {
+            return Long.parseLong(s);
         } catch (NumberFormatException e) {
             return defaultValue;
         }

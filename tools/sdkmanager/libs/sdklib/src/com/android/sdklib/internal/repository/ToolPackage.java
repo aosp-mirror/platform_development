@@ -16,7 +16,13 @@
 
 package com.android.sdklib.internal.repository;
 
+import com.android.sdklib.SdkConstants;
+import com.android.sdklib.internal.repository.Archive.Arch;
+import com.android.sdklib.internal.repository.Archive.Os;
+
 import org.w3c.dom.Node;
+
+import java.io.File;
 
 /**
  * Represents a tool XML node in an SDK repository.
@@ -28,8 +34,32 @@ public class ToolPackage extends Package {
      * <p/>
      * This constructor should throw an exception if the package cannot be created.
      */
-    ToolPackage(Node packageNode) {
-        super(packageNode);
+    ToolPackage(RepoSource source, Node packageNode) {
+        super(source, packageNode);
+    }
+
+    /**
+     * Manually create a new package with one archive and the given attributes.
+     * This is used to create packages from local directories.
+     */
+    ToolPackage(RepoSource source,
+            int revision,
+            String description,
+            String descUrl,
+            Os archiveOs,
+            Arch archiveArch,
+            String archiveUrl,
+            long archiveSize,
+            String archiveChecksum) {
+        super(source,
+                revision,
+                description,
+                descUrl,
+                archiveOs,
+                archiveArch,
+                archiveUrl,
+                archiveSize,
+                archiveChecksum);
     }
 
     /** Returns a short description for an {@link IDescription}. */
@@ -44,5 +74,19 @@ public class ToolPackage extends Package {
         return String.format("Android SDK Tools, revision %1$d.\n%2$s",
                 getRevision(),
                 super.getLongDescription());
+    }
+
+    /**
+     * Computes a potential installation folder if an archive of this package were
+     * to be installed right away in the given SDK root.
+     * <p/>
+     * A "tool" package should always be located in SDK/tools.
+     *
+     * @param osSdkRoot The OS path of the SDK root folder.
+     * @return A new {@link File} corresponding to the directory to use to install this package.
+     */
+    @Override
+    public File getInstallFolder(String osSdkRoot) {
+        return new File(osSdkRoot, SdkConstants.FD_TOOLS);
     }
 }

@@ -82,17 +82,25 @@ public final class SdkConstants {
     /** dex.jar file */
     public static final String FN_DX_JAR = "dx.jar"; //$NON-NLS-1$
 
-    /** dx executable */
+    /** dx executable (with extension for the current OS)  */
     public final static String FN_DX = (CURRENT_PLATFORM == PLATFORM_WINDOWS) ?
             "dx.bat" : "dx"; //$NON-NLS-1$ //$NON-NLS-2$
 
-    /** aapt executable */
+    /** aapt executable (with extension for the current OS)  */
     public final static String FN_AAPT = (CURRENT_PLATFORM == PLATFORM_WINDOWS) ?
             "aapt.exe" : "aapt"; //$NON-NLS-1$ //$NON-NLS-2$
 
-    /** aidl executable */
+    /** aidl executable (with extension for the current OS)  */
     public final static String FN_AIDL = (CURRENT_PLATFORM == PLATFORM_WINDOWS) ?
             "aidl.exe" : "aidl"; //$NON-NLS-1$ //$NON-NLS-2$
+
+    /** adb executable (with extension for the current OS)  */
+    public final static String FN_ADB = (CURRENT_PLATFORM == PLATFORM_WINDOWS) ?
+            "adb.exe" : "adb"; //$NON-NLS-1$ //$NON-NLS-2$
+
+    /** emulator executable (with extension for the current OS) */
+    public final static String FN_EMULATOR = (CURRENT_PLATFORM == PLATFORM_WINDOWS) ?
+            "emulator.exe" : "emulator"; //$NON-NLS-1$ //$NON-NLS-2$
 
     /* Folder Names for Android Projects . */
 

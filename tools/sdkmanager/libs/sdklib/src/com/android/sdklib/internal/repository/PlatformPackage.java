@@ -16,9 +16,16 @@
 
 package com.android.sdklib.internal.repository;
 
+import com.android.sdklib.IAndroidTarget;
+import com.android.sdklib.SdkConstants;
+import com.android.sdklib.SdkManager;
+import com.android.sdklib.internal.repository.Archive.Arch;
+import com.android.sdklib.internal.repository.Archive.Os;
 import com.android.sdklib.repository.SdkRepository;
 
 import org.w3c.dom.Node;
+
+import java.io.File;
 
 /**
  * Represents a platform XML node in an SDK repository.
@@ -33,10 +40,31 @@ public class PlatformPackage extends Package {
      * <p/>
      * This constructor should throw an exception if the package cannot be created.
      */
-    PlatformPackage(Node packageNode) {
-        super(packageNode);
+    PlatformPackage(RepoSource source, Node packageNode) {
+        super(source, packageNode);
         mVersion  = getXmlString(packageNode, SdkRepository.NODE_VERSION);
         mApiLevel = getXmlInt   (packageNode, SdkRepository.NODE_API_LEVEL, 0);
+    }
+
+    /**
+     * Creates a new platform package based on an actual {@link IAndroidTarget} (with
+     * must have {@link IAndroidTarget#isPlatform()} true) from the {@link SdkManager}.
+     * This is used to list local SDK folders.
+     */
+    PlatformPackage(IAndroidTarget target) {
+        super(  null,                       //source
+                0,                          //revision
+                target.getDescription(),  //description
+                null,                       //descUrl
+                Os.getCurrentOs(),          //archiveOs
+                Arch.getCurrentArch(),      //archiveArch
+                "",                         //archiveUrl   //$NON-NLS-1$
+                0,                          //archiveSize
+                null                        //archiveChecksum
+                );
+
+        mApiLevel = target.getApiVersionNumber();
+        mVersion  = target.getApiVersionName();
     }
 
     /** Returns the version, a string, for platform packages. */
@@ -63,5 +91,24 @@ public class PlatformPackage extends Package {
         return String.format("%1$s.\n%2$s",
                 getShortDescription(),
                 super.getLongDescription());
+    }
+
+    /**
+     * Computes a potential installation folder if an archive of this package were
+     * to be installed right away in the given SDK root.
+     * <p/>
+     * A platform package is typically installed in SDK/platforms/android-"version".
+     * However if we can find a different directory under SDK/platform that already
+     * has this platform version installed, we'll use that one.
+     *
+     * @param osSdkRoot The OS path of the SDK root folder.
+     * @return A new {@link File} corresponding to the directory to use to install this package.
+     */
+    @Override
+    public File getInstallFolder(String osSdkRoot) {
+        File platforms = new File(osSdkRoot, SdkConstants.FD_PLATFORMS);
+        File folder = new File(platforms, String.format("android-%s", getVersion())); //$NON-NLS-1$
+        // TODO find similar existing platform in platforms folder
+        return folder;
     }
 }

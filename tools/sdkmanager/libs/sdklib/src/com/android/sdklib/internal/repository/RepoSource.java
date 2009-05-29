@@ -68,10 +68,19 @@ public class RepoSource implements IDescription {
     }
 
     /**
-     * Returns the list of known packages. This is null when the source hasn't been loaded yet.
+     * Returns the list of known packages found by the last call to {@link #load(ITaskFactory)}.
+     * This is null when the source hasn't been loaded yet.
      */
     public Package[] getPackages() {
         return mPackages;
+    }
+
+    /**
+     * Clear the internal packages list. After this call, {@link #getPackages()} will return
+     * null till {@link #load(ITaskFactory)} is called.
+     */
+    public void clearPackages() {
+        mPackages = null;
     }
 
     public String getShortDescription() {
@@ -93,7 +102,7 @@ public class RepoSource implements IDescription {
 
                 setDefaultDescription();
 
-                monitor.setDescription(String.format("Fetching %1$s", mUrl));
+                monitor.setDescription("Fetching %1$s", mUrl);
                 monitor.incProgress(1);
 
                 String xml = fetchUrl(mUrl, monitor);
@@ -136,7 +145,10 @@ public class RepoSource implements IDescription {
         }
     }
 
-    /*
+    /**
+     * Fetches the document at the given URL and returns it as a string.
+     * Returns null if anything wrong happens and write errors to the monitor.
+     *
      * References:
      * Java URL Connection: http://java.sun.com/docs/books/tutorial/networking/urls/readingWriting.html
      * Java URL Reader: http://java.sun.com/docs/books/tutorial/networking/urls/readingURL.html
@@ -186,6 +198,10 @@ public class RepoSource implements IDescription {
         return null;
     }
 
+    /**
+     * Validates this XML against the SDK Repository schema.
+     * Returns true if the XML was correctly validated.
+     */
     private boolean validateXml(String xml, ITaskMonitor monitor) {
 
         try {
@@ -203,7 +219,9 @@ public class RepoSource implements IDescription {
         return false;
     }
 
-    /** Helper method that returns a validator for our XSD */
+    /**
+     * Helper method that returns a validator for our XSD
+     */
     private Validator getValidator() throws SAXException {
         InputStream xsdStream = SdkRepository.getXsdStream();
         SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
@@ -217,6 +235,10 @@ public class RepoSource implements IDescription {
     }
 
 
+    /**
+     * Parse all packages defined in the SDK Repository XML and creates
+     * a new mPackages array with them.
+     */
     private boolean parsePackages(String xml, ITaskMonitor monitor) {
 
         try {
@@ -237,22 +259,21 @@ public class RepoSource implements IDescription {
 
                         try {
                             if (SdkRepository.NODE_ADD_ON.equals(name)) {
-                                p = new AddonPackage(child);
+                                p = new AddonPackage(this, child);
 
                             } else if (!mAddonOnly) {
                                 if (SdkRepository.NODE_PLATFORM.equals(name)) {
-                                    p = new PlatformPackage(child);
+                                    p = new PlatformPackage(this, child);
                                 } else if (SdkRepository.NODE_DOC.equals(name)) {
-                                    p = new DocPackage(child);
+                                    p = new DocPackage(this, child);
                                 } else if (SdkRepository.NODE_TOOL.equals(name)) {
-                                    p = new ToolPackage(child);
+                                    p = new ToolPackage(this, child);
                                 }
                             }
 
                             if (p != null) {
                                 packages.add(p);
-                                monitor.setDescription(
-                                        String.format("Found %1$s", p.getShortDescription()));
+                                monitor.setDescription("Found %1$s", p.getShortDescription());
                             }
                         } catch (Exception e) {
                             // Ignore invalid packages
@@ -278,6 +299,10 @@ public class RepoSource implements IDescription {
         return false;
     }
 
+    /**
+     * Returns the first child element with the given XML local name.
+     * If xmlLocalName is null, returns the very first child element.
+     */
     private Node getFirstChild(Node node, String xmlLocalName) {
 
         for(Node child = node.getFirstChild(); child != null; child = child.getNextSibling()) {
@@ -292,6 +317,9 @@ public class RepoSource implements IDescription {
         return null;
     }
 
+    /**
+     * Takes an XML document as a string as parameter and returns a DOM for it.
+     */
     private Document getDocument(String xml)
             throws ParserConfigurationException, SAXException, IOException {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();

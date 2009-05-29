@@ -16,13 +16,21 @@
 
 package com.android.sdkuilib.internal.repository;
 
+import com.android.sdklib.internal.repository.LocalSdkParser;
+import com.android.sdklib.internal.repository.RepoSources;
+
 /**
  * Data shared between {@link UpdaterWindowImpl} and its pages.
  */
 class UpdaterData {
     private String mOsSdkRoot;
     private boolean mUserCanChangeSdkRoot;
-    private RepoSources mSources = new RepoSources();
+
+    private final LocalSdkParser mLocalSdkParser = new LocalSdkParser();
+    private final RepoSources mSources = new RepoSources();
+
+    private final LocalSdkAdapter mLocalSdkAdapter = new LocalSdkAdapter(mLocalSdkParser);
+    private final RepoSourcesAdapter mSourcesAdapter = new RepoSourcesAdapter(mSources);
 
     public void setOsSdkRoot(String osSdkRoot) {
         mOsSdkRoot = osSdkRoot;
@@ -40,12 +48,20 @@ class UpdaterData {
         return mUserCanChangeSdkRoot;
     }
 
-    public void setSources(RepoSources sources) {
-        mSources = sources;
-    }
-
     public RepoSources getSources() {
         return mSources;
+    }
+
+    public RepoSourcesAdapter getSourcesAdapter() {
+        return mSourcesAdapter;
+    }
+
+    public LocalSdkParser getLocalSdkParser() {
+        return mLocalSdkParser;
+    }
+
+    public LocalSdkAdapter getLocalSdkAdapter() {
+        return mLocalSdkAdapter;
     }
 
 }

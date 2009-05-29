@@ -90,7 +90,7 @@ public class AndroidConstants {
 
     /** Name of the android sources directory */
     public static final String FD_ANDROID_SOURCES = "sources"; //$NON-NLS-1$
-    
+
     /** Resource java class  filename, i.e. "R.java" */
     public final static String FN_RESOURCE_CLASS = "R.java"; //$NON-NLS-1$
     /** Resource class file  filename, i.e. "R.class" */
@@ -104,15 +104,11 @@ public class AndroidConstants {
     /** Temporary packaged resources file name for a specific set of configuration */
     public final static String FN_RESOURCES_S_AP_ = "resources-%s.ap_"; //$NON-NLS-1$
     public final static Pattern PATTERN_RESOURCES_S_AP_ =
-        Pattern.compile("resources-.*\\.ap_", Pattern.CASE_INSENSITIVE);
+        Pattern.compile("resources-.*\\.ap_", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
 
-    public final static String FN_ADB =
-        (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) ?
-            "adb.exe" : "adb"; //$NON-NLS-1$ //$NON-NLS-2$
+    public final static String FN_ADB = SdkConstants.FN_ADB;
 
-    public final static String FN_EMULATOR =
-        (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) ?
-            "emulator.exe" : "emulator"; //$NON-NLS-1$ //$NON-NLS-2$
+    public final static String FN_EMULATOR = SdkConstants.FN_EMULATOR;
 
     public final static String FN_TRACEVIEW =
         (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) ?
@@ -128,8 +124,8 @@ public class AndroidConstants {
     public final static String WS_ASSETS = WS_SEP + SdkConstants.FD_ASSETS;
 
     /** Leaf of the javaDoc folder. Does not start with a separator. */
-    public final static String WS_JAVADOC_FOLDER_LEAF = SdkConstants.FD_DOCS + "/" +
-            SdkConstants.FD_DOCS_REFERENCE; //$NON-NLS-1$
+    public final static String WS_JAVADOC_FOLDER_LEAF = SdkConstants.FD_DOCS + "/" + //$NON-NLS-1$
+            SdkConstants.FD_DOCS_REFERENCE;
 
     /** Path of the samples directory relative to the sdk folder.
      *  This is an OS path, ending with a separator.
@@ -159,10 +155,10 @@ public class AndroidConstants {
 
     /** aidl marker error. */
     public final static String MARKER_AIDL = COMMON_PLUGIN_ID + ".aidlProblem"; //$NON-NLS-1$
-    
+
     /** android marker error */
     public final static String MARKER_ANDROID = COMMON_PLUGIN_ID + ".androidProblem"; //$NON-NLS-1$
-    
+
     /** Name for the "type" marker attribute */
     public final static String MARKER_ATTR_TYPE = "android.type"; //$NON-NLS-1$
     /** Name for the "class" marker attribute */
@@ -176,9 +172,9 @@ public class AndroidConstants {
     /** provider value for marker attribute "type" */
     public final static String MARKER_ATTR_TYPE_PROVIDER = "provider"; //$NON-NLS-1$
 
-    public final static String CLASS_ACTIVITY = "android.app.Activity"; //$NON-NLS-1$ 
-    public final static String CLASS_SERVICE = "android.app.Service"; //$NON-NLS-1$ 
-    public final static String CLASS_BROADCASTRECEIVER = "android.content.BroadcastReceiver"; //$NON-NLS-1$ 
+    public final static String CLASS_ACTIVITY = "android.app.Activity"; //$NON-NLS-1$
+    public final static String CLASS_SERVICE = "android.app.Service"; //$NON-NLS-1$
+    public final static String CLASS_BROADCASTRECEIVER = "android.content.BroadcastReceiver"; //$NON-NLS-1$
     public final static String CLASS_CONTENTPROVIDER = "android.content.ContentProvider"; //$NON-NLS-1$
     public final static String CLASS_INSTRUMENTATION = "android.app.Instrumentation"; //$NON-NLS-1$
     public final static String CLASS_INSTRUMENTATION_RUNNER =
@@ -202,7 +198,7 @@ public class AndroidConstants {
         "android.preference." + CLASS_NAME_PREFERENCE_SCREEN; //$NON-NLS-1$
     public final static String CLASS_PREFERENCEGROUP = "android.preference.PreferenceGroup"; //$NON-NLS-1$
     public final static String CLASS_PARCELABLE = "android.os.Parcelable"; //$NON-NLS-1$
-    
+
     public final static String CLASS_BRIDGE = "com.android.layoutlib.bridge.Bridge"; //$NON-NLS-1$
 
     /**
@@ -219,6 +215,6 @@ public class AndroidConstants {
 
     /** The base URL where to find the Android class & manifest documentation */
     public static final String CODESITE_BASE_URL = "http://code.google.com/android";  //$NON-NLS-1$
-    
+
     public static final String LIBRARY_TEST_RUNNER = "android.test.runner"; // $NON-NLS-1$
 }
