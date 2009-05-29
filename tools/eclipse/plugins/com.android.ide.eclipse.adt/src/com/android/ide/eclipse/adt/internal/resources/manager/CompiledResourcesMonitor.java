@@ -26,6 +26,7 @@ import com.android.ide.eclipse.adt.internal.resources.manager.ResourceMonitor.IP
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarkerDelta;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceDelta;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IStatus;
@@ -42,7 +43,7 @@ import java.util.Map;
 public final class CompiledResourcesMonitor implements IFileListener, IProjectListener {
 
     private final static CompiledResourcesMonitor sThis = new CompiledResourcesMonitor();
-    
+
     /**
      * Sets up the monitoring system.
      * @param monitor The main Resource Monitor.
@@ -62,12 +63,12 @@ public final class CompiledResourcesMonitor implements IFileListener, IProjectLi
     /* (non-Javadoc)
      * Sent when a file changed : if the file is the R class, then it is parsed again to update
      * the internal data.
-     * 
+     *
      * @param file The file that changed.
      * @param markerDeltas The marker deltas for the file.
      * @param kind The change kind. This is equivalent to
      * {@link IResourceDelta#accept(IResourceDeltaVisitor)}
-     * 
+     *
      * @see IFileListener#fileChanged
      */
     public void fileChanged(IFile file, IMarkerDelta[] markerDeltas, int kind) {
@@ -111,7 +112,7 @@ public final class CompiledResourcesMonitor implements IFileListener, IProjectLi
             // pass
         }
     }
-    
+
     private void loadAndParseRClass(IProject project) {
         try {
             // first check there's a ProjectResources to store the content
@@ -129,13 +130,13 @@ public final class CompiledResourcesMonitor implements IFileListener, IProjectLi
                     return;
                 }
 
-                // create a temporary class loader to load it. 
+                // create a temporary class loader to load it.
                 ProjectClassLoader loader = new ProjectClassLoader(null /* parentClassLoader */,
                         project);
-                
+
                 try {
                     Class<?> clazz = loader.loadClass(className);
-                    
+
                     if (clazz != null) {
                         // create the maps to store the result of the parsing
                         Map<String, Map<String, Integer>> resourceValueMap =
@@ -144,7 +145,7 @@ public final class CompiledResourcesMonitor implements IFileListener, IProjectLi
                             new HashMap<Integer, String[]>();
                         Map<IntArrayWrapper, String> styleableValueToNameMap =
                             new HashMap<IntArrayWrapper, String>();
-                        
+
                         // parse the class
                         if (parseClass(clazz, genericValueToNameMap, styleableValueToNameMap,
                                 resourceValueMap)) {
@@ -180,7 +181,7 @@ public final class CompiledResourcesMonitor implements IFileListener, IProjectLi
 
                 Map<String, Integer> fullMap = new HashMap<String, Integer>();
                 resourceValueMap.put(resType, fullMap);
-                
+
                 for (Field f : inner.getDeclaredFields()) {
                     // only process static final fields.
                     int modifiers = f.getModifiers();
@@ -191,7 +192,7 @@ public final class CompiledResourcesMonitor implements IFileListener, IProjectLi
                             styleableValueToNameMap.put(new IntArrayWrapper((int[]) f.get(null)),
                                     f.getName());
                         } else if (type == int.class) {
-                            Integer value = (Integer) f.get(null); 
+                            Integer value = (Integer) f.get(null);
                             genericValueToNameMap.put(value, new String[] { f.getName(), resType });
                             fullMap.put(f.getName(), value);
                         } else {
@@ -210,16 +211,18 @@ public final class CompiledResourcesMonitor implements IFileListener, IProjectLi
 
     /**
      * Returns the class name of the R class, based on the project's manifest's package.
-     * 
+     *
      * @return A class name (e.g. "my.app.R") or null if there's no valid package in the manifest.
      */
     private String getRClassName(IProject project) {
         try {
             IFile manifestFile = AndroidManifestParser.getManifest(project);
-            AndroidManifestParser data = AndroidManifestParser.parseForData(manifestFile);
-            if (data != null) {
-                String javaPackage = data.getPackage();
-                return javaPackage + ".R"; //$NON-NLS-1$
+            if (manifestFile != null && manifestFile.isSynchronized(IResource.DEPTH_ZERO)) {
+                AndroidManifestParser data = AndroidManifestParser.parseForData(manifestFile);
+                if (data != null) {
+                    String javaPackage = data.getPackage();
+                    return javaPackage + ".R"; //$NON-NLS-1$
+                }
             }
         } catch (CoreException e) {
             // This will typically happen either because the manifest file is not present
@@ -232,5 +235,5 @@ public final class CompiledResourcesMonitor implements IFileListener, IProjectLi
         }
         return null;
     }
-    
+
 }
