@@ -1,7 +1,12 @@
 Android NDK ChangeLog:
 
+Last updated 2009-05-29
+
 -------------------------------------------------------------------------------
-Current version (2009-05-27):
+Current version:
+
+- Expose <android/log.h> containing the stable declarations of liblog.so,
+  which can be used to send log messages to the kernel.
 
 - Force the use of 32-bit toolchain binaries on 64-bit hosts. This reduces
   the number of prebuilt packages needed to be distributed.
