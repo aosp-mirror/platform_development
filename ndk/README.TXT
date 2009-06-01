@@ -23,6 +23,9 @@ Android platform.
 
 See docs/HOWTO.TXT for a few useful tips and tricks when using the NDK.
 
+See docs/SYSTEM-ISSUES.TXT for a list of important issues related to
+the Android system images that all NDK developers should be aware of.
+
 Finally, discussions related to the Android NDK happen on the public
 "android-ndk" forum located at the following address:
 
