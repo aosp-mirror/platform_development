@@ -18,7 +18,7 @@
 // Unidirectional pipe.
 //
 
-#include <utils/Pipe.h>
+#include "Pipe.h"
 #include <utils/Log.h>
 
 #if defined(HAVE_WIN32_IPC)
