@@ -228,6 +228,26 @@ Native tests:
     coverage_target="framework"
     continuous="true" />
 
+<test name="mediaapitest"
+    build_path="frameworks/base/media/tests/MediaFrameworkTest"
+    package="com.android.mediaframeworktest"
+    class="com.android.mediaframeworktest.functional.MediaPlayerApiTest"
+    runner=".MediaFrameworkTestRunner"
+    coverage_target="framework" />
+
+<test name="mediarecordertest"
+    build_path="frameworks/base/media/tests/MediaFrameworkTest"
+    package="com.android.mediaframeworktest"
+    class="com.android.mediaframeworktest.functional.MediaRecorderTest"
+    runner=".MediaFrameworkTestRunner"
+    coverage_target="framework" />
+
+<test name="mediastresstest"
+    build_path="frameworks/base/media/tests/MediaFrameworkTest"
+    package="com.android.mediaframeworktest"
+    runner=".MediaRecorderStressTestRunner"
+    coverage_target="framework" />
+
 <test name="mediaunit"
     build_path="frameworks/base/media/tests/MediaFrameworkTest"
     package="com.android.mediaframeworktest"
