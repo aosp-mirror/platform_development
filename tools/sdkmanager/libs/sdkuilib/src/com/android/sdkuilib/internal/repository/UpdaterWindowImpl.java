@@ -17,6 +17,7 @@
 package com.android.sdkuilib.internal.repository;
 
 
+import com.android.sdklib.ISdkLog;
 import com.android.sdklib.internal.repository.Archive;
 import com.android.sdklib.internal.repository.ITask;
 import com.android.sdklib.internal.repository.ITaskMonitor;
@@ -45,6 +46,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Constructor;
 import java.net.URL;
 import java.security.MessageDigest;
 import java.util.ArrayList;
@@ -57,9 +59,18 @@ public class UpdaterWindowImpl {
 
     private static final int NUM_FETCH_URL_MONITOR_INC = 10;
 
+    /** Internal data shared between the window and its pages. */
     private final UpdaterData mUpdaterData = new UpdaterData();
+    /** The array of pages instances. Only one is visible at a time. */
     private ArrayList<Composite> mPages = new ArrayList<Composite>();
+    /** Indicates a page change is due to an internal request. Prevents callbacks from looping. */
     private boolean mInternalPageChange;
+    /** A list of extra pages to instantiate. Each entry is an object array with 2 elements:
+     *  the string title and the Composite class to instantiate to create the page. */
+    private ArrayList<Object[]> mExtraPages;
+    /** A factory to create progress task dialogs. */
+    private ProgressTaskFactory mTaskFactory;
+
 
     // --- UI members ---
 
@@ -71,9 +82,9 @@ public class UpdaterWindowImpl {
     private RemotePackagesPage mRemotePackagesPage;
     private StackLayout mStackLayout;
     private Image mIconImage;
-    private ProgressTaskFactory mTaskFactory;
 
-    public UpdaterWindowImpl(String osSdkRoot, boolean userCanChangeSdkRoot) {
+    public UpdaterWindowImpl(ISdkLog sdkLog, String osSdkRoot, boolean userCanChangeSdkRoot) {
+        mUpdaterData.setSdkLog(sdkLog);
         mUpdaterData.setOsSdkRoot(osSdkRoot);
         mUpdaterData.setUserCanChangeSdkRoot(userCanChangeSdkRoot);
     }
@@ -140,6 +151,35 @@ public class UpdaterWindowImpl {
 
     // --- UI Callbacks -----------
 
+
+    /**
+     * Registers an extra page for the updater window.
+     * <p/>
+     * Pages must derive from {@link Composite} and implement a constructor that takes
+     * a single parent {@link Composite} argument.
+     * <p/>
+     * All pages must be registered before the call to {@link #open()}.
+     *
+     * @param title The title of the page.
+     * @param pageClass The {@link Composite}-derived class that will implement the page.
+     */
+    public void registerExtraPage(String title, Class<? extends Composite> pageClass) {
+        if (mExtraPages == null) {
+            mExtraPages = new ArrayList<Object[]>();
+        }
+        mExtraPages.add(new Object[]{ title, pageClass });
+    }
+
+    /**
+     * Helper to return the SWT shell.
+     */
+    private Shell getShell() {
+        return mAndroidSdkUpdater;
+    }
+
+    /**
+     * Callback called when the window shell is disposed.
+     */
     private void onAndroidSdkUpdaterDispose() {
         if (mIconImage != null) {
             mIconImage.dispose();
@@ -147,6 +187,10 @@ public class UpdaterWindowImpl {
         }
     }
 
+    /**
+     * Creates the icon of the window shell.
+     * The icon is disposed by {@link #onAndroidSdkUpdaterDispose()}.
+     */
     private void setWindowImage(Shell androidSdkUpdater) {
         InputStream stream = getClass().getResourceAsStream("android_icon_16.png");  //$NON-NLS-1$
         if (stream != null) {
@@ -157,40 +201,84 @@ public class UpdaterWindowImpl {
                         imgData.getTransparencyMask());
                 mAndroidSdkUpdater.setImage(mIconImage);
             } catch (SWTException e) {
-                // ignore
+                mUpdaterData.getSdkLog().error(e, "Failed to set window icon");  //$NON-NLS-1$
             } catch (IllegalArgumentException e) {
-                // ignore
+                mUpdaterData.getSdkLog().error(e, "Failed to set window icon");  //$NON-NLS-1$
             }
         }
     }
 
-    private Shell getShell() {
-        return mAndroidSdkUpdater;
-    }
-
     /**
-     * Once the UI has been created, initialize the content
+     * Once the UI has been created, initializes the content.
+     * This creates the pages, selects the first one, setup sources and scan for local folders.
      */
     private void firstInit() {
         mTaskFactory = new ProgressTaskFactory(getShell());
 
         addPage(mLocalPackagePage, "Installed Packages");
         addPage(mRemotePackagesPage, "Available Packages");
+        addExtraPages();
+
         displayPage(0);
         mPageList.setSelection(0);
 
+        // TODO read and apply settings
+        // TODO read add-on sources from some file
         setupSources();
         scanLocalSdkFolders();
     }
 
     // --- page switching ---
 
+    /**
+     * Adds an instance of a page to the page list.
+     * <p/>
+     * Each page is a {@link Composite}. The title of the page is stored in the
+     * {@link Composite#getData()} field.
+     */
     private void addPage(Composite page, String title) {
         page.setData(title);
         mPages.add(page);
         mPageList.add(title);
     }
 
+    /**
+     * Adds all extra pages. For each page, instantiates an instance of the {@link Composite}
+     * using the constructor that takes a single {@link Composite} argument and then adds it
+     * to the page list.
+     */
+    @SuppressWarnings("unchecked")
+    private void addExtraPages() {
+        for (Object[] extraPage : mExtraPages) {
+            String title = (String) extraPage[0];
+            Class<? extends Composite> clazz = (Class<? extends Composite>) extraPage[1];
+
+            // We want the constructor that takes a single Composite as parameter
+            Constructor<? extends Composite> cons;
+            try {
+                cons = clazz.getConstructor(new Class<?>[] { Composite.class });
+                Composite instance = cons.newInstance(new Object[] { mPagesRootComposite });
+                addPage(instance, title);
+
+            } catch (NoSuchMethodException e) {
+                // There is no such constructor.
+                mUpdaterData.getSdkLog().error(e,
+                        "Failed to add extra page %1$s. Constructor args must be (Composite parent).",  //$NON-NLS-1$
+                        clazz.getSimpleName());
+
+            } catch (Exception e) {
+                // Log this instead of crashing the whole app.
+                mUpdaterData.getSdkLog().error(e,
+                        "Failed to add extra page %1$s.",  //$NON-NLS-1$
+                        clazz.getSimpleName());
+            }
+        }
+    }
+
+    /**
+     * Callback invoked when an item is selected in the page list.
+     * If this is not an internal page change, displays the given page.
+     */
     private void onPageListSelected() {
         if (mInternalPageChange == false) {
             int index = mPageList.getSelectionIndex();
@@ -200,6 +288,11 @@ public class UpdaterWindowImpl {
         }
     }
 
+    /**
+     * Displays the page at the given index.
+     *
+     * @param index An index between 0 and {@link #mPages}'s length - 1.
+     */
     private void displayPage(int index) {
         Composite page = mPages.get(index);
         if (page != null) {
@@ -214,6 +307,9 @@ public class UpdaterWindowImpl {
         }
     }
 
+    /**
+     * Used to initialize the sources.
+     */
     private void setupSources() {
         mUpdaterData.getSources().setTaskFactory(mTaskFactory);
 
@@ -228,12 +324,19 @@ public class UpdaterWindowImpl {
         mRemotePackagesPage.setInput(mUpdaterData.getSourcesAdapter());
     }
 
+    /**
+     * Used to scan the local SDK folders the first time.
+     */
     private void scanLocalSdkFolders() {
         mUpdaterData.getLocalSdkAdapter().setSdkRoot(mUpdaterData.getOsSdkRoot());
 
         mLocalPackagePage.setInput(mUpdaterData.getLocalSdkAdapter());
     }
 
+    /**
+     * Install the list of given {@link Archive}s.
+     * @param archives The archives to install. Incompatible ones will be skipped.
+     */
     public void installArchives(final Collection<Archive> archives) {
         // TODO move most parts to SdkLib, maybe as part of Archive, making archives self-installing.
         mTaskFactory.start("Installing Archives", new ITask() {

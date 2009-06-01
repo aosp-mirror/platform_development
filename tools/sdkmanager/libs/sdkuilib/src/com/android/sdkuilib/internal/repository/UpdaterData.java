@@ -16,6 +16,7 @@
 
 package com.android.sdkuilib.internal.repository;
 
+import com.android.sdklib.ISdkLog;
 import com.android.sdklib.internal.repository.LocalSdkParser;
 import com.android.sdklib.internal.repository.RepoSources;
 
@@ -23,6 +24,7 @@ import com.android.sdklib.internal.repository.RepoSources;
  * Data shared between {@link UpdaterWindowImpl} and its pages.
  */
 class UpdaterData {
+    private ISdkLog mSdkLog;
     private String mOsSdkRoot;
     private boolean mUserCanChangeSdkRoot;
 
@@ -64,4 +66,11 @@ class UpdaterData {
         return mLocalSdkAdapter;
     }
 
+    public void setSdkLog(ISdkLog sdkLog) {
+        mSdkLog = sdkLog;
+    }
+
+    public ISdkLog getSdkLog() {
+        return mSdkLog;
+    }
 }
