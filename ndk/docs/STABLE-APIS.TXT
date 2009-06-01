@@ -1,0 +1,113 @@
+Android NDK Stable APIs:
+========================
+
+This is the list of stable APIs/ABIs exposed by the Android NDK.
+
+I. Purpose:
+-----------
+
+Each API corresponds to a set of headers files, and a shared library file
+that contains the corresponding implementation, and which must be linked
+against by your native code.
+
+For example, to use system library "Foo", you would include a header
+like <foo.h> in your code, then tell the build system that your native
+module needs to link to /system/lib/libfoo.so at load-time by adding
+the following line to your Android.mk file:
+
+  LOCAL_LDLIBS := -lfoo
+
+Note that the build system automatically links the C library, the Math
+library and the C++ support library to your native code, there is no
+need to list them in a LOCAL_LDLIBS line.
+
+
+
+II. Android 1.5 Stable Native APIs:
+-----------------------------------
+
+All the APIs listed below are available for developing native code that
+runs on Android 1.5 system images and above.
+
+The C Library:
+--------------
+
+The C library headers, as they are defined on Android 1.5 are available
+through their standard names (<stdlib.h>, <stdio.h>, etc...). If one header
+is not there at build time, it's because its implementation is not available
+on a 1.5 system image.
+
+The build system automatically links your native modules to the C library,
+you don't need to add it to LOCAL_LDLIBS.
+
+Note that the Android C library includes support for pthread (<pthread.h>),
+so "LOCAL_LIBS := -lpthread" is not needed. The same is true for real-time
+extensions (-lrt on typical Linux distributions).
+
+
+** VERY IMPORTANT NOTE: ******************************************************
+*
+*  The kernel-specific headers in <linux/...> and <asm/...> are not considered
+*  stable at this point. Avoid including them directly because some of them
+*  are likely to change in future releases of the platform. This is especially
+*  true for anything related to specific hardware definitions.
+*
+******************************************************************************
+
+
+The Math Library:
+-----------------
+
+<math.h> is available, and the math library is automatically linked to your
+native modules at build time, so there is no need to list "-lm" through
+LOCAL_LDLIBS.
+
+
+
+C++ Library:
+------------
+
+An *extremely* minimal C++ support API is available. For Android 1.5, this is
+currently limited to the following headers:
+
+   <cstddef>
+   <new>
+   <utility>
+   <stl_pair.h>
+
+They may not contain all definitions required by the standard. Notably, support
+for C++ exceptions and RTTI is not available with Android 1.5 system images.
+
+The C++ support library (-lstdc++) is automatically linked to your native
+modules too, so there is no need to list it through LOCAL_LDLIBS
+
+
+
+Android-specific Log Support:
+-----------------------------
+
+<android/log.h> contains various definitions that can be used to send log messages
+to the kernel from your native code. Please have a look at its content in
+(build/platforms/android-1.5/common/include/android/log.h), which contain many
+informative comments on how to use it.
+
+You should be able to write helpful wrapper macros for your own usage to
+access this facility.
+
+If you use it, your native module should link to /system/lib/liblog.so with:
+
+  LOCAL_LDLIBS := -llog
+
+
+
+ZLib Compression Library:
+-------------------------
+
+<zlib.h> and <zconf.h> are available and can be used to use the ZLib compression
+library available on Android 1.5 system images. Documentation for it is available
+on the ZLib page: http://www.zlib.net/manual.html
+
+If you use it, your native module should link to /system/lib/libz.so with:
+
+  LOCAL_LDLIBS := -lz
+

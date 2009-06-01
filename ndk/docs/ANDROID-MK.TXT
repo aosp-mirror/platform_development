@@ -353,6 +353,17 @@ LOCAL_SHARED_LIBRARIES
     i.e. you should still add them to your application's required modules
     in your Application.mk
 
+LOCAL_LDLIBS
+    The list of additional linker flags to be used when building your
+    module. This is useful to pass the name of specific system libraries
+    with the "-l" prefix. For example, the following will tell the linker
+    to generate a module that links to /system/lib/libz.so at load time:
+
+      LOCAL_LDLIBS := -lz
+
+    See docs/STABLE-APIS.TXT for the list of exposed system libraries you
+    can linked against with this NDK release.
+
 LOCAL_ALLOW_UNDEFINED_SYMBOLS
     By default, any undefined reference encountered when trying to build
     a shared library will result in an "undefined symbol" error. This is a
