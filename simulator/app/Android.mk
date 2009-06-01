@@ -31,7 +31,8 @@ LOCAL_SRC_FILES := \
 	Semaphore.cpp \
 	Shmem.cpp \
 	UserEvent.cpp \
-	executablepath_linux.cpp
+	executablepath_linux.cpp \
+	ported.cpp
 
 LOCAL_STATIC_LIBRARIES := \
 	libtinyxml
