@@ -9,6 +9,10 @@ A high-level overview of the NDK's features and limitations can be found
 in docs/OVERVIEW.TXT. Please read this document as it contains crucial
 information for correct usage.
 
+See docs/STABLE-APIS.TXT for the list of frozen binary APIs exposed by
+this NDK, as well as the corresponding system image versions that support
+them.
+
 Before using the NDK, you will need to follow the steps described by
 docs/INSTALL.TXT which lists the NDK pre-requisites and the steps needed
 to set it up properly on your machine.
