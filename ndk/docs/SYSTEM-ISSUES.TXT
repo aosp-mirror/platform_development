@@ -1,0 +1,113 @@
+Android System Image Issues
+===========================
+
+This document contains a list of known issues in existing Android
+system images that NDK developers should be aware of.
+
+I. Android 1.5 System Issues:
+-----------------------------
+
+The following issues correspond to the official Android 1.5
+system images:
+
+
+No standard C++ library support:
+--------------------------------
+
+The Android 1.5 system does not use any C++ standard library, and does
+not provide one to applicative native code. Instead, a very limited set
+of headers are provided (see docs/STABLE-APIS.TXT) which correspond to
+the C++ support code used to build the Android platform.
+
+It is possible to hack existing C++ STL implementations to work on top
+of this, but this is not supported yet. We recommend trying with uSTL
+and STLport at this point if you really need this.
+
+
+No support for C++ exceptions and RTTI:
+---------------------------------------
+
+The Android 1.5 system image lacks several features necessary to reliably
+implement C++ exceptions and RTTI. C++ code that depends on these features
+will simply not link or run appropriately on Android 1.5
+
+
+C Library limitations:
+----------------------
+
+The C library doesn't try to implement every feature under the sun.
+Most notably, pthread cancellation is not supported. A detailed overview
+of the C library and its design is available in docs/system/libc/OVERVIEW.TXT
+
+
+No SysV IPCs in C library:
+--------------------------
+
+Unix System V Inter-Process Communication APIs (e.g. semget()) are
+intentionally not available from the C library, to avoid denial-of-service
+issues. See docs/system/libc/SYSV-IPC.TXT for details.
+
+
+C Library bug: getservbyname() returns port number in incorrect order:
+----------------------------------------------------------------------
+
+The Android 1.5 C library function getservbyname() returns the port number
+corresponding to a given network service in incorrect order. The function
+stores its result in a 'struct servent' structure, and the port number in
+its 's_port' field.
+
+The standard mandates that this value is stored in network order (and thus
+should be converted to host order through ntohs()). However, the 1.5
+implementation is buggy and returns the number.
+
+This bug will be fixed in future releases of the platform, and applications
+should not depend on the wrong behaviour in the future. Avoid using this
+function if possible; if this is not possible, try to use a small wrapper
+like the following one:
+
+static struct servent*
+my_getservbyname(const char*  name, const char*  proto)
+{
+    static int       has_bug = -1;
+    struct servent*  ret;
+
+    if (has_bug < 0) {
+        ret = getservbyname("http",NULL);
+        has_bug = (ret == NULL || ret->s_port == 80);
+    }
+
+    ret = getservbyname(name, proto);
+    if (has_bug)
+        ret->s_port = htons(ret->s_port);
+}
+
+(the returned struct servent is thread-local and can be modified by the
+ caller. It will be over-written on the next call to the function though).
+
+
+Dynamic Linker limitations:
+---------------------------
+
+The Android dynamic linker in 1.5 has many important limitations:
+
+- No support for LD_LIBRARY_PATH, LD_PRELOAD, RTLD_LOCAL and many
+  other options.
+
+- Static C++ constructors in executables are called twice due to a bug
+  in the C library initialization sequence. However, static C++
+  constructors in shared libraries are only called once.
+
+- Static destructors are never called at the moment, either at program
+  exit, or when dlclose() is called.
+
+- dlerror() reporting is very limited and only provides a few generic
+  error messages that make it difficult to know why a dynamic load/link
+  operation failed. Most of the time, the culprit is a missing symbol.
+
+- A bug prevents one application shared library from depending on another
+  one. For example, if you build both libfoo.so and libbar.so for your
+  application, and list libfoo.so as a dependency for libbar.so in
+  bar/Android.mk (with LOCAL_SHARED_LIBRARIES := foo), then loading
+  libbar.so will always fail, even if you have already loaded libfoo.so
+  in your process.
+
