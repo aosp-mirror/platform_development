@@ -21,8 +21,11 @@ import com.android.sdklib.internal.repository.ITaskMonitor;
 
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ControlAdapter;
+import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -44,25 +47,22 @@ import org.eclipse.swt.widgets.Text;
  * - refresh callback
  */
 
-public class InstalledPackagesPage extends Composite {
+public class LocalPackagesPage extends Composite {
     private UpdaterData mUpdaterData;
 
     private Label mSdkLocLabel;
     private Text mSdkLocText;
     private Button mSdkLocBrowse;
-    private Label mInstalledPkgLabel;
-    private TableViewer mTableViewerInstPkg;
-    private Table mTableInstPkg;
-    private TableColumn mColumnInstSummary;
-    private TableColumn mColumnInstApiLevel;
-    private TableColumn mColumnInstRevision;
+    private TableViewer mTableViewerPackages;
+    private Table mTablePackages;
+    private TableColumn mColumnPackages;
     private Group mDescriptionContainer;
-    private Composite mInstButtons;
-    private Button mInstUpdate;
+    private Composite mContainerButtons;
+    private Button mUpdateButton;
     private Label mPlaceholder1;
-    private Button mInstDelete;
+    private Button mDeleteButton;
     private Label mPlaceholder2;
-    private Button mInstHomePage;
+    private Button mHomePageButton;
     private Label mDescriptionLabel;
 
     /**
@@ -71,12 +71,13 @@ public class InstalledPackagesPage extends Composite {
      * @param updaterData An instance of {@link UpdaterData}. If null, a local
      *        one will be allocated just to help with the SWT Designer.
      */
-    public InstalledPackagesPage(Composite parent, UpdaterData updaterData) {
+    public LocalPackagesPage(Composite parent, UpdaterData updaterData) {
         super(parent, SWT.BORDER);
 
         mUpdaterData = updaterData != null ? updaterData : new UpdaterData();
 
         createContents(this);
+        postCreate();  //$hide$
     }
 
     private void createContents(Composite parent) {
@@ -84,26 +85,14 @@ public class InstalledPackagesPage extends Composite {
 
         createSdkLocation(parent);
 
-        mInstalledPkgLabel = new Label(parent, SWT.NONE);
-        mInstalledPkgLabel.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 3, 1));
-        mInstalledPkgLabel.setText("Installed Packages:");
+        mTableViewerPackages = new TableViewer(parent, SWT.BORDER | SWT.FULL_SELECTION);
+        mTablePackages = mTableViewerPackages.getTable();
+        mTablePackages.setHeaderVisible(true);
+        mTablePackages.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 3, 1));
 
-        mTableViewerInstPkg = new TableViewer(parent, SWT.BORDER | SWT.FULL_SELECTION);
-        mTableInstPkg = mTableViewerInstPkg.getTable();
-        mTableInstPkg.setHeaderVisible(true);
-        mTableInstPkg.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 3, 1));
-
-        mColumnInstSummary = new TableColumn(mTableInstPkg, SWT.NONE);
-        mColumnInstSummary.setWidth(377);
-        mColumnInstSummary.setText("Summary");
-
-        mColumnInstApiLevel = new TableColumn(mTableInstPkg, SWT.NONE);
-        mColumnInstApiLevel.setWidth(100);
-        mColumnInstApiLevel.setText("API Level");
-
-        mColumnInstRevision = new TableColumn(mTableInstPkg, SWT.NONE);
-        mColumnInstRevision.setWidth(100);
-        mColumnInstRevision.setText("Revision");
+        mColumnPackages = new TableColumn(mTablePackages, SWT.NONE);
+        mColumnPackages.setWidth(377);
+        mColumnPackages.setText("Installed Packages");
 
         mDescriptionContainer = new Group(parent, SWT.NONE);
         mDescriptionContainer.setLayout(new GridLayout(1, false));
@@ -114,32 +103,32 @@ public class InstalledPackagesPage extends Composite {
         mDescriptionLabel.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, true, 1, 1));
         mDescriptionLabel.setText("Line1\nLine2\nLine3");
 
-        mInstButtons = new Composite(parent, SWT.NONE);
-        mInstButtons.setLayout(new GridLayout(5, false));
-        mInstButtons.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 3, 1));
+        mContainerButtons = new Composite(parent, SWT.NONE);
+        mContainerButtons.setLayout(new GridLayout(5, false));
+        mContainerButtons.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 3, 1));
 
-        mInstUpdate = new Button(mInstButtons, SWT.NONE);
-        mInstUpdate.addSelectionListener(new SelectionAdapter() {
+        mUpdateButton = new Button(mContainerButtons, SWT.NONE);
+        mUpdateButton.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
                 onUpdateInstalledPackage();  //$hide$ (hide from SWT designer)
             }
         });
-        mInstUpdate.setText("Update...");
+        mUpdateButton.setText("Update...");
 
-        mPlaceholder1 = new Label(mInstButtons, SWT.NONE);
+        mPlaceholder1 = new Label(mContainerButtons, SWT.NONE);
         mPlaceholder1.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, true, false, 1, 1));
 
-        mInstDelete = new Button(mInstButtons, SWT.NONE);
-        mInstDelete.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, false, false, 1, 1));
-        mInstDelete.setText("Delete...");
+        mDeleteButton = new Button(mContainerButtons, SWT.NONE);
+        mDeleteButton.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, false, false, 1, 1));
+        mDeleteButton.setText("Delete...");
 
-        mPlaceholder2 = new Label(mInstButtons, SWT.NONE);
+        mPlaceholder2 = new Label(mContainerButtons, SWT.NONE);
         mPlaceholder2.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, true, false, 1, 1));
 
-        mInstHomePage = new Button(mInstButtons, SWT.NONE);
-        mInstHomePage.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
-        mInstHomePage.setText("Home Page...");
+        mHomePageButton = new Button(mContainerButtons, SWT.NONE);
+        mHomePageButton.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
+        mHomePageButton.setText("Home Page...");
     }
 
     private void createSdkLocation(Composite parent) {
@@ -175,7 +164,36 @@ public class InstalledPackagesPage extends Composite {
     // Hide everything down-below from SWT designer
     //$hide>>$
 
+    private void postCreate() {
+        adjustColumnsWidth();
+    }
+
+
+    /**
+     * Adds a listener to adjust the columns width when the parent is resized.
+     * <p/>
+     * If we need something more fancy, we might want to use this:
+     * http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.swt.snippets/src/org/eclipse/swt/snippets/Snippet77.java?view=co
+     */
+    private void adjustColumnsWidth() {
+        // Add a listener to resize the column to the full width of the table
+        mTablePackages.addControlListener(new ControlAdapter() {
+            @Override
+            public void controlResized(ControlEvent e) {
+                Rectangle r = mTablePackages.getClientArea();
+                mColumnPackages.setWidth(r.width);
+            }
+        });
+    }
+
+    public void setInput(LocalSdkAdapter localSdkAdapter) {
+        mTableViewerPackages.setLabelProvider(  localSdkAdapter.getLabelProvider());
+        mTableViewerPackages.setContentProvider(localSdkAdapter.getContentProvider());
+        mTableViewerPackages.setInput(localSdkAdapter);
+    }
+
     protected void onUpdateInstalledPackage() {
+        // TODO just a test, needs to be removed later.
         ProgressTask.start(getShell(), "Test", new ITask() {
             public void run(ITaskMonitor monitor) {
                 monitor.setDescription("Test");
@@ -189,6 +207,7 @@ public class InstalledPackagesPage extends Composite {
                     try {
                         Thread.sleep(5);
                     } catch (InterruptedException e) {
+                        // ignore
                     }
                 }
             }

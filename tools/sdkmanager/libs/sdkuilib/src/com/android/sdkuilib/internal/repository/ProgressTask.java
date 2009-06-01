@@ -152,11 +152,11 @@ class ProgressTask extends Dialog
      * Sets the description in the current task dialog.
      * This method can be invoke from a non-UI thread.
      */
-    public void setDescription(final String description) {
+    public void setDescription(final String descriptionFormat, final Object...args) {
         mDialogShell.getDisplay().asyncExec(new Runnable() {
             public void run() {
                 if (!mLabel.isDisposed()) {
-                    mLabel.setText(description);
+                    mLabel.setText(String.format(descriptionFormat, args));
                 }
             }
         });
@@ -166,14 +166,14 @@ class ProgressTask extends Dialog
      * Sets the description in the current task dialog.
      * This method can be invoke from a non-UI thread.
      */
-    public void setResult(final String result) {
+    public void setResult(final String resultFormat, final Object...args) {
         mAutomaticallyCloseOnTaskCompletion = false;
         if (!mDialogShell.isDisposed()) {
             mDialogShell.getDisplay().asyncExec(new Runnable() {
                 public void run() {
                     if (!mResultText.isDisposed()) {
                         mResultText.setVisible(true);
-                        mResultText.setText(result);
+                        mResultText.setText(String.format(resultFormat, args));
                     }
                 }
             });

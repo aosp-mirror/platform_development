@@ -17,9 +17,14 @@
 package com.android.sdkuilib.internal.repository;
 
 
+import com.android.sdklib.internal.repository.Archive;
 import com.android.sdklib.internal.repository.IDescription;
 
+import org.eclipse.jface.viewers.CheckStateChangedEvent;
 import org.eclipse.jface.viewers.CheckboxTreeViewer;
+import org.eclipse.jface.viewers.DoubleClickEvent;
+import org.eclipse.jface.viewers.ICheckStateListener;
+import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ITreeSelection;
 import org.eclipse.swt.SWT;
@@ -36,10 +41,8 @@ import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
-import org.eclipse.jface.viewers.ICheckStateListener;
-import org.eclipse.jface.viewers.CheckStateChangedEvent;
-import org.eclipse.jface.viewers.IDoubleClickListener;
-import org.eclipse.jface.viewers.DoubleClickEvent;
+
+import java.util.ArrayList;
 
 /*
  * TODO list
@@ -54,8 +57,9 @@ import org.eclipse.jface.viewers.DoubleClickEvent;
  * - install selected callback
  */
 
-public class AvailablePackagesPage extends Composite {
+public class RemotePackagesPage extends Composite {
 
+    private final UpdaterWindowImpl mUpdaterWindow;
     private final UpdaterData mUpdaterData;
 
     private CheckboxTreeViewer mTreeViewerSources;
@@ -70,14 +74,18 @@ public class AvailablePackagesPage extends Composite {
     private Label mDescriptionLabel;
 
 
+
     /**
      * Create the composite.
      * @param parent The parent of the composite.
      * @param updaterData An instance of {@link UpdaterData}. If null, a local
      *        one will be allocated just to help with the SWT Designer.
      */
-    public AvailablePackagesPage(Composite parent, UpdaterData updaterData) {
+    public RemotePackagesPage(UpdaterWindowImpl updaterWindow,
+            Composite parent,
+            UpdaterData updaterData) {
         super(parent, SWT.BORDER);
+        mUpdaterWindow = updaterWindow;
 
         mUpdaterData = updaterData != null ? updaterData : new UpdaterData();
 
@@ -91,16 +99,14 @@ public class AvailablePackagesPage extends Composite {
         mTreeViewerSources = new CheckboxTreeViewer(parent, SWT.BORDER);
         mTreeViewerSources.addDoubleClickListener(new IDoubleClickListener() {
             public void doubleClick(DoubleClickEvent event) {
-                doTreeDoubleClick(event); //$hide$
+                onTreeDoubleClick(event); //$hide$
             }
         });
         mTreeViewerSources.addCheckStateListener(new ICheckStateListener() {
             public void checkStateChanged(CheckStateChangedEvent event) {
-                doTreeCeckStateChanged(event); //$hide$
+                onTreeCheckStateChanged(event); //$hide$
             }
         });
-        mTreeViewerSources.setContentProvider(mUpdaterData.getSources().getContentProvider());
-        mTreeViewerSources.setLabelProvider(mUpdaterData.getSources().getLabelProvider());
         mTreeSources = mTreeViewerSources.getTree();
         mTreeSources.addSelectionListener(new SelectionAdapter() {
             @Override
@@ -137,6 +143,12 @@ public class AvailablePackagesPage extends Composite {
         mRefreshButton.setText("Refresh");
 
         mInstallSelectedButton = new Button(parent, SWT.NONE);
+        mInstallSelectedButton.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                onInstallSelectedArchives();  //$hide$
+            }
+        });
         mInstallSelectedButton.setText("Install Selected");
     }
 
@@ -171,7 +183,9 @@ public class AvailablePackagesPage extends Composite {
         });
     }
 
-    public void setInput(RepoSources sources) {
+    public void setInput(RepoSourcesAdapter sources) {
+        mTreeViewerSources.setContentProvider(sources.getContentProvider());
+        mTreeViewerSources.setLabelProvider(  sources.getLabelProvider());
         mTreeViewerSources.setInput(sources);
         onTreeSelected();
     }
@@ -189,13 +203,27 @@ public class AvailablePackagesPage extends Composite {
         mDescriptionLabel.setText("");  //$NON-NLS1-$
     }
 
-    private void doTreeCeckStateChanged(CheckStateChangedEvent event) {
+    private void onTreeCheckStateChanged(CheckStateChangedEvent event) {
         boolean b = event.getChecked();
-        Object elem = event.getElement();
+        Object elem = event.getElement(); // Will be Archive or Package or RepoSource
         Object src = event.getSource();
+        // TODO
     }
 
-    private void doTreeDoubleClick(DoubleClickEvent event) {
+    private void onTreeDoubleClick(DoubleClickEvent event) {
+        // TODO
+    }
+
+    private void onInstallSelectedArchives() {
+
+        ArrayList<Archive> archives = new ArrayList<Archive>();
+        for (Object element : mTreeViewerSources.getCheckedElements()) {
+            if (element instanceof Archive) {
+                archives.add((Archive) element);
+            }
+        }
+
+        mUpdaterWindow.installArchives(archives);
     }
 
     // End of hiding from SWT Designer

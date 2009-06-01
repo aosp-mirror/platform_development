@@ -34,13 +34,13 @@ public interface ITaskMonitor {
      * Sets the description in the current task dialog.
      * This method can be invoked from a non-UI thread.
      */
-    public void setDescription(String description);
+    public void setDescription(String descriptionFormat, Object...args);
 
     /**
      * Sets the result text in the current task dialog.
      * This method can be invoked from a non-UI thread.
      */
-    public void setResult(String result);
+    public void setResult(String resultFormat, Object...args);
 
     /**
      * Sets the max value of the progress bar.

@@ -18,9 +18,9 @@ package com.android.sdkuilib.internal.repository;
 
 import com.android.sdklib.internal.repository.Archive;
 import com.android.sdklib.internal.repository.IDescription;
-import com.android.sdklib.internal.repository.ITaskFactory;
 import com.android.sdklib.internal.repository.Package;
 import com.android.sdklib.internal.repository.RepoSource;
+import com.android.sdklib.internal.repository.RepoSources;
 
 import org.eclipse.jface.viewers.IContentProvider;
 import org.eclipse.jface.viewers.ILabelProvider;
@@ -29,27 +29,17 @@ import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.swt.graphics.Image;
 
-import java.util.ArrayList;
-
 /**
  * A list of sdk-repository sources.
  *
  * This implementation is UI dependent.
  */
-class RepoSources {
+class RepoSourcesAdapter {
 
-    private ArrayList<RepoSource> mSources = new ArrayList<RepoSource>();
-    private ITaskFactory mTaskFactory;
+    private final RepoSources mRepoSources;
 
-    public RepoSources() {
-    }
-
-    public void setTaskFactory(ITaskFactory taskFactory) {
-        mTaskFactory = taskFactory;
-    }
-
-    public void add(RepoSource source) {
-        mSources.add(source);
+    public RepoSourcesAdapter(RepoSources repoSources) {
+        mRepoSources = repoSources;
     }
 
     public ILabelProvider getLabelProvider() {
@@ -63,7 +53,7 @@ class RepoSources {
 
     // ------------
 
-    public class ViewerLabelProvider extends LabelProvider {
+    public static class ViewerLabelProvider extends LabelProvider {
         /** Returns null by default */
         @Override
         public Image getImage(Object element) {
@@ -82,9 +72,9 @@ class RepoSources {
 
     // ------------
 
-    private class TreeContentProvider implements ITreeContentProvider {
+    private static class TreeContentProvider implements ITreeContentProvider {
 
-        private Object mInput;
+        private RepoSourcesAdapter mInput;
 
         // Called when the viewer is disposed
         public void dispose() {
@@ -93,13 +83,14 @@ class RepoSources {
 
         // Called when the input is set or changed on the provider
         public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
-            mInput = newInput;
+            assert newInput == null || newInput instanceof RepoSourcesAdapter;
+            mInput = (RepoSourcesAdapter) newInput;
             // pass
         }
 
         /**
          * Called to collect the root elements for the given input.
-         * The input here is a {@link RepoSources} object, this returns an array
+         * The input here is a {@link RepoSourcesAdapter} object, this returns an array
          * of {@link RepoSource}.
          */
         public Object[] getElements(Object inputElement) {
@@ -110,20 +101,20 @@ class RepoSources {
          * Get the children of the given parent. This is requested on-demand as
          * nodes are expanded.
          *
-         * For a {@link RepoSources} object, returns an array of {@link RepoSource}s.
+         * For a {@link RepoSourcesAdapter} object, returns an array of {@link RepoSource}s.
          * For a {@link RepoSource}, returns an array of {@link Package}s.
          * For a {@link Package}, returns an array of {@link Archive}s.
          */
         public Object[] getChildren(Object parentElement) {
-            if (parentElement instanceof RepoSources) {
-                return ((RepoSources) parentElement).mSources.toArray();
+            if (parentElement instanceof RepoSourcesAdapter) {
+                return ((RepoSourcesAdapter) parentElement).mRepoSources.getSources().toArray();
 
             } else if (parentElement instanceof RepoSource) {
                 RepoSource source = (RepoSource) parentElement;
                 Package[] packages = source.getPackages();
 
                 if (packages == null) {
-                    source.load(mTaskFactory);
+                    source.load(mInput.mRepoSources.getTaskFactory());
                     packages = source.getPackages();
                 }
                 if (packages != null) {
@@ -134,17 +125,20 @@ class RepoSources {
                 return ((Package) parentElement).getArchives();
             }
 
-
             return new Object[0];
         }
 
         /**
          * Returns the parent of a given element.
-         * The input {@link RepoSources} is the parent of all {@link RepoSource} elements.
+         * The input {@link RepoSourcesAdapter} is the parent of all {@link RepoSource} elements.
          */
         public Object getParent(Object element) {
+
             if (element instanceof RepoSource) {
                 return mInput;
+
+            } else if (element instanceof Package) {
+                return ((Package) element).getParentSource();
             }
             return null;
         }
@@ -152,7 +146,8 @@ class RepoSources {
         /**
          * Returns true if a given element has children, which is used to display a
          * "+/expand" box next to the tree node.
-         * All {@link RepoSource} are expandable, whether they actually have any childre or not.
+         * All {@link RepoSource} and {@link Package} are expandable, whether they actually
+         * have any children or not.
          */
         public boolean hasChildren(Object element) {
             return element instanceof RepoSource || element instanceof Package;
