@@ -21,8 +21,7 @@ We recommend developers to make themselves familiar with JNI concepts. Also
 note that the NDK is *not* a good way to write non-JNI native code for the
 Android platform.
 
-The document docs/ROADMAP.TXT gives a tentative roadmap for upcoming
-NDK features and improvements.
+See docs/HOWTO.TXT for a few useful tips and tricks when using the NDK.
 
 Finally, discussions related to the Android NDK happen on the public
 "android-ndk" forum located at the following address:
