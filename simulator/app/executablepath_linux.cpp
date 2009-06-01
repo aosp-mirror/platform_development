@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include <utils/executablepath.h>
+#include "executablepath.h"
 #include <sys/types.h>
 #include <unistd.h>
 #include <limits.h>

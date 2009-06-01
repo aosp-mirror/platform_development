@@ -14,18 +14,15 @@
  * limitations under the License.
  */
 
-#include "executablepath.h"
-#import <Carbon/Carbon.h>
-#include <unistd.h>
+#ifndef _SIM_EXECUTABLEPATH_H
+#define _SIM_EXECUTABLEPATH_H
 
-void executablepath(char s[PATH_MAX])
-{
-    ProcessSerialNumber psn;
-    GetCurrentProcess(&psn);
-    CFDictionaryRef dict;
-    dict = ProcessInformationCopyDictionary(&psn, 0xffffffff);
-    CFStringRef value = (CFStringRef)CFDictionaryGetValue(dict,
-                CFSTR("CFBundleExecutable"));
-    CFStringGetCString(value, s, PATH_MAX+1, kCFStringEncodingUTF8);
-}
+#include <limits.h>
 
+// returns the path to this executable
+#if __cplusplus
+extern "C"
+#endif
+void executablepath(char s[PATH_MAX]);
+
+#endif // _SIM_EXECUTABLEPATH_H
