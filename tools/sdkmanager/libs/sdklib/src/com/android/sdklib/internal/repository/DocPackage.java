@@ -16,9 +16,14 @@
 
 package com.android.sdklib.internal.repository;
 
+import com.android.sdklib.SdkConstants;
+import com.android.sdklib.internal.repository.Archive.Arch;
+import com.android.sdklib.internal.repository.Archive.Os;
 import com.android.sdklib.repository.SdkRepository;
 
 import org.w3c.dom.Node;
+
+import java.io.File;
 
 /**
  * Represents a doc XML node in an SDK repository.
@@ -32,12 +37,39 @@ public class DocPackage extends Package {
      * <p/>
      * This constructor should throw an exception if the package cannot be created.
      */
-    DocPackage(Node packageNode) {
-        super(packageNode);
+    DocPackage(RepoSource source, Node packageNode) {
+        super(source, packageNode);
         mApiLevel = getXmlInt(packageNode, SdkRepository.NODE_API_LEVEL, 0);
     }
 
-    /** Returns the api-level, an int > 0, for platform, add-on and doc packages. */
+    /**
+     * Manually create a new package with one archive and the given attributes.
+     * This is used to create packages from local directories.
+     */
+    DocPackage(RepoSource source,
+            int apiLevel,
+            int revision,
+            String description,
+            String descUrl,
+            Os archiveOs,
+            Arch archiveArch,
+            String archiveUrl,
+            long archiveSize,
+            String archiveChecksum) {
+        super(source,
+                revision,
+                description,
+                descUrl,
+                archiveOs,
+                archiveArch,
+                archiveUrl,
+                archiveSize,
+                archiveChecksum);
+        mApiLevel = apiLevel;
+    }
+
+    /** Returns the api-level, an int > 0, for platform, add-on and doc packages.
+     *  Can be 0 if this is a local package of unknown api-level. */
     public int getApiLevel() {
         return mApiLevel;
     }
@@ -45,7 +77,11 @@ public class DocPackage extends Package {
     /** Returns a short description for an {@link IDescription}. */
     @Override
     public String getShortDescription() {
-        return String.format("Documentation for SDK Android API %1$d", getApiLevel());
+        if (mApiLevel != 0) {
+            return String.format("Documentation for Android SDK, API %1$d", mApiLevel);
+        } else {
+            return String.format("Documentation for Android SDK");
+        }
     }
 
     /** Returns a long description for an {@link IDescription}. */
@@ -54,5 +90,19 @@ public class DocPackage extends Package {
         return String.format("%1$s.\n%2$s",
                 getShortDescription(),
                 super.getLongDescription());
+    }
+
+    /**
+     * Computes a potential installation folder if an archive of this package were
+     * to be installed right away in the given SDK root.
+     * <p/>
+     * A "doc" package should always be located in SDK/docs.
+     *
+     * @param osSdkRoot The OS path of the SDK root folder.
+     * @return A new {@link File} corresponding to the directory to use to install this package.
+     */
+    @Override
+    public File getInstallFolder(String osSdkRoot) {
+        return new File(osSdkRoot, SdkConstants.FD_DOCS);
     }
 }

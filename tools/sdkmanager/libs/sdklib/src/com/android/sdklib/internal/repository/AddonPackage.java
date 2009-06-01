@@ -16,10 +16,17 @@
 
 package com.android.sdklib.internal.repository;
 
+import com.android.sdklib.IAndroidTarget;
+import com.android.sdklib.SdkConstants;
+import com.android.sdklib.SdkManager;
+import com.android.sdklib.IAndroidTarget.IOptionalLibrary;
+import com.android.sdklib.internal.repository.Archive.Arch;
+import com.android.sdklib.internal.repository.Archive.Os;
 import com.android.sdklib.repository.SdkRepository;
 
 import org.w3c.dom.Node;
 
+import java.io.File;
 import java.util.ArrayList;
 
 /**
@@ -57,8 +64,8 @@ public class AddonPackage extends Package {
      * <p/>
      * This constructor should throw an exception if the package cannot be created.
      */
-    AddonPackage(Node packageNode) {
-        super(packageNode);
+    AddonPackage(RepoSource source, Node packageNode) {
+        super(source, packageNode);
         mVendor   = getXmlString(packageNode, SdkRepository.NODE_VENDOR);
         mName     = getXmlString(packageNode, SdkRepository.NODE_NAME);
         mApiLevel = getXmlInt   (packageNode, SdkRepository.NODE_API_LEVEL, 0);
@@ -66,6 +73,41 @@ public class AddonPackage extends Package {
         mLibs = parseLibs(getFirstChild(packageNode, SdkRepository.NODE_LIBS));
     }
 
+    /**
+     * Creates a new platform package based on an actual {@link IAndroidTarget} (with
+     * {@link IAndroidTarget#isPlatform()} false) from the {@link SdkManager}.
+     * This is used to list local SDK folders.
+     */
+    AddonPackage(IAndroidTarget target) {
+        super(  null,                       //source
+                0,                          //revision
+                target.getDescription(),  //description
+                null,                       //descUrl
+                Os.getCurrentOs(),          //archiveOs
+                Arch.getCurrentArch(),      //archiveArch
+                "",                         //archiveUrl   //$NON-NLS-1$
+                0,                          //archiveSize
+                null                        //archiveChecksum
+                );
+
+        mApiLevel = target.getApiVersionNumber();
+        mName     = target.getName();
+        mVendor   = target.getVendor();
+
+        IOptionalLibrary[] optLibs = target.getOptionalLibraries();
+        if (optLibs == null || optLibs.length == 0) {
+            mLibs = new Lib[0];
+        } else {
+            mLibs = new Lib[optLibs.length];
+            for (int i = 0; i < optLibs.length; i++) {
+                mLibs[i] = new Lib(optLibs[i].getName(), optLibs[i].getDescription());
+            }
+        }
+    }
+
+    /**
+     * Parses a <libs> element.
+     */
     private Lib[] parseLibs(Node libsNode) {
         ArrayList<Lib> libs = new ArrayList<Lib>();
 
@@ -85,6 +127,9 @@ public class AddonPackage extends Package {
         return libs.toArray(new Lib[libs.size()]);
     }
 
+    /**
+     * Parses a <lib> element from a <libs> container.
+     */
     private Lib parseLib(Node libNode) {
         return new Lib(getXmlString(libNode, SdkRepository.NODE_NAME),
                        getXmlString(libNode, SdkRepository.NODE_DESCRIPTION));
@@ -125,5 +170,32 @@ public class AddonPackage extends Package {
         return String.format("%1$s.\n%2$s",
                 getShortDescription(),
                 super.getLongDescription());
+    }
+
+    /**
+     * Computes a potential installation folder if an archive of this package were
+     * to be installed right away in the given SDK root.
+     * <p/>
+     * An add-on package is typically installed in SDK/add-ons/"addon-name"-"api-level".
+     * The name needs to be sanitized to be acceptable as a directory name.
+     * However if we can find a different directory under SDK/add-ons that already
+     * has this add-ons installed, we'll use that one.
+     *
+     * @param osSdkRoot The OS path of the SDK root folder.
+     * @return A new {@link File} corresponding to the directory to use to install this package.
+     */
+    @Override
+    public File getInstallFolder(String osSdkRoot) {
+        File addons = new File(osSdkRoot, SdkConstants.FD_ADDONS);
+
+        String name = String.format("%s-%d", getName(), getApiLevel()); // $NON-NLS-1$
+
+        name = name.replaceAll("[^a-zA-Z0-9_-]+", "_");                 // $NON-NLS-1$
+        name = name.replaceAll("_+", "_");                              // $NON-NLS-1$
+
+        File folder = new File(addons, name);
+
+        // TODO find similar existing addon in addons folder
+        return folder;
     }
 }
