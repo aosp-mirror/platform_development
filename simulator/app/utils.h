@@ -21,7 +21,7 @@
 #ifndef _SIM_UTILS_H
 #define _SIM_UTILS_H
 
-#include <utils/ported.h>
+#include "ported.h"
 #include <utils/Log.h>
 #include <utils/threads.h>
 #include <utils/Timers.h>
