@@ -29,6 +29,8 @@ import com.android.sdklib.internal.avd.AvdManager.AvdInfo;
 import com.android.sdklib.internal.avd.HardwareProperties.HardwareProperty;
 import com.android.sdklib.internal.project.ProjectCreator;
 import com.android.sdklib.internal.project.ProjectCreator.OutputLevel;
+import com.android.sdkmanager.internal.repository.AboutPage;
+import com.android.sdkmanager.internal.repository.SettingsPage;
 import com.android.sdkuilib.repository.UpdaterWindow;
 
 import java.io.File;
@@ -238,8 +240,11 @@ class Main {
     private void showMainWindow() {
         try {
             UpdaterWindow window = new UpdaterWindow(
+                    mSdkLog,
                     mOsSdkFolder,
                     false /*userCanChangeSdkRoot*/);
+            window.registerPage("Settings", SettingsPage.class);
+            window.registerPage("About", AboutPage.class);
             window.open();
         } catch (Exception e) {
             e.printStackTrace();
