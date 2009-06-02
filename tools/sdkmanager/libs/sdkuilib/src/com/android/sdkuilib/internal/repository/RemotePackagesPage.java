@@ -74,16 +74,16 @@ public class RemotePackagesPage extends Composite {
     private Label mDescriptionLabel;
 
 
-
     /**
      * Create the composite.
      * @param parent The parent of the composite.
      * @param updaterData An instance of {@link UpdaterData}. If null, a local
      *        one will be allocated just to help with the SWT Designer.
+     * @param updaterWindow The parent window.
      */
-    public RemotePackagesPage(UpdaterWindowImpl updaterWindow,
-            Composite parent,
-            UpdaterData updaterData) {
+    RemotePackagesPage(Composite parent,
+            UpdaterData updaterData,
+            UpdaterWindowImpl updaterWindow) {
         super(parent, SWT.BORDER);
         mUpdaterWindow = updaterWindow;
 
@@ -161,10 +161,22 @@ public class RemotePackagesPage extends Composite {
     // Hide everything down-below from SWT designer
     //$hide>>$
 
+    /**
+     * Must be called once to set the adapter input for the sources tree viewer.
+     */
+    public void setInput(RepoSourcesAdapter sources) {
+        mTreeViewerSources.setContentProvider(sources.getContentProvider());
+        mTreeViewerSources.setLabelProvider(  sources.getLabelProvider());
+        mTreeViewerSources.setInput(sources);
+        onTreeSelected();
+    }
+
+    /**
+     * Called by the constructor right after {@link #createContents(Composite)}.
+     */
     private void postCreate() {
         adjustColumnsWidth();
     }
-
 
     /**
      * Adds a listener to adjust the columns width when the parent is resized.
@@ -183,13 +195,12 @@ public class RemotePackagesPage extends Composite {
         });
     }
 
-    public void setInput(RepoSourcesAdapter sources) {
-        mTreeViewerSources.setContentProvider(sources.getContentProvider());
-        mTreeViewerSources.setLabelProvider(  sources.getLabelProvider());
-        mTreeViewerSources.setInput(sources);
-        onTreeSelected();
-    }
-
+    /**
+     * Called when an item in the package table viewer is selected.
+     * If the items is an {@link IDescription} (as it should), this will display its long
+     * description in the description area. Otherwise when the item is not of the expected
+     * type or there is no selection, it empties the description area.
+     */
     private void onTreeSelected() {
         ISelection sel = mTreeViewerSources.getSelection();
         if (sel instanceof ITreeSelection) {

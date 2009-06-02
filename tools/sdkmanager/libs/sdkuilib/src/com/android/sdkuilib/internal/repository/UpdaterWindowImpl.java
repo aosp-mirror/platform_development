@@ -129,7 +129,7 @@ public class UpdaterWindowImpl {
         mPagesRootComposite.setLayout(mStackLayout);
 
         mLocalPackagePage = new LocalPackagesPage(mPagesRootComposite, mUpdaterData);
-        mRemotePackagesPage = new RemotePackagesPage(this, mPagesRootComposite, mUpdaterData);
+        mRemotePackagesPage = new RemotePackagesPage(mPagesRootComposite, mUpdaterData, this);
         mSashForm.setWeights(new int[] {150, 576});
     }
 
