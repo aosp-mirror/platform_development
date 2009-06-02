@@ -10,7 +10,6 @@ pdk.version=1.0
 
 <a href="#androidBuildSystemOverview">Understanding the makefile</a><br/>
 <a href="#androidBuildSystemLayers">Layers</a><br/>
-<a href="#androidBuildSystemProductDefFiles">Product Definition Files</a><br/></div>
 <a href="#androidSourceSetupBuildingCodeBase">Building the Android Platform</a><br/><div style="padding-left:40px">
 
 <a href="#androidSourceSetupBuildingDeviceCodeBase">Device Code</a><br/>
@@ -30,8 +29,6 @@ pdk.version=1.0
 
 
 <a name="androidBuildSystemUnderstanding"></a><h2>Understanding Android's Build System</h2>
-
-
 
 <a name="androidBuildSystemOverview"></a><h3>Understanding the makefile</h3>
 
@@ -94,38 +91,6 @@ include $(BUILD_EXECUTABLE)
     <td valign="top">The arch layer describes the processor running on your board. </td>
   </tr>
 </table>
-
-
-<a name="androidBuildSystemProductDefFiles"></a><h3>Product Definition Files</h3>
-
-<p>Product-specific variables are defined in product definition files. A product definition file can inherit from other product definition files, thus reducing the need to copy and simplifying maintenance.</p>
-<p>Variables maintained in a product definition files include:</p>
-<p><ul>
-<li><code>PRODUCT_DEVICE</code></LI>
-<LI><code>LOCALES</code></LI>
-<LI><code>BRANDING_PARTNER</code></LI>
-<LI><code>PROPERTY_OVERRIDES</code></LI>
-</UL>
-</P>
-<p>The snippet below illustrates a typical product definition file.</p>
-<PRE class="prettyprint">
-//device/target/product/core.mk
-PRODUCT_PACKAGES := Home SettingsProvider ...
-//device/target/product/generic.mk
-PRODUCT_PACKAGES := Calendar Camera SyncProvider ...
-$(call inherit-product, target/product/core.mk)
-PRODUCT_NAME := generic
-//device/partner/google/products/core.mk
-PRODUCT_PACKAGES := Maps GoogleAppsProvider ...
-$(call inherit-product, target/product/core.mk)
-//device/partner/google/products/generic.mk
-PRODUCT_PACKAGES := Gmail GmailProvider ...
-$(call inherit-product, partner/google/products/core.mk)
-$(call inherit-product, target/product/generic.mk)
-PRODUCT_NAME := google_generic
-
-</pre>
-
 
 <a name="androidSourceSetupBuildingCodeBase"></a><h2>Building the Android Platform</h2>
 
