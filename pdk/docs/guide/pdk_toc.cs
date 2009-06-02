@@ -11,25 +11,44 @@ function nothing() {}
      <li><a href="<?cs var:toroot ?>guide/system_requirements.html">Device Requirements</a></li>           
      <li><a href="<?cs var:toroot ?>guide/build_system.html">Build System</a></li>
      <li><a href="<?cs var:toroot ?>guide/build_new_device.html">Building New Device</a></li>
-     <li><a href="<?cs var:toroot ?>guide/bring_up.html">Bring up</a></li>
-     <li><a href="<?cs var:toroot ?>guide/keymaps_keyboard_input.html">Keymaps and Keyboard</a></li>
-     <li><a href="<?cs var:toroot ?>guide/display_drivers.html">Display Drivers</a></li>
      <li><a href="<?cs var:toroot ?>guide/build_cookbook.html">Build Cookbook</a></li>
+     <li><a href="<?cs var:toroot ?>guide/bring_up.html">Bring up</a></li>
   </ul>
 </li>
 
+<li> <h2>Customization</h2>
+  <ul>
+    <li><a href="<?cs var:toroot ?>guide/customization.html">Customization</a></li>
+  </ul>
+</li>
 
 <li> <h2>System</h2>
 
 <ul>
   <li class="toggle-list">
+    <div><a href="javascript:nothing()">Connectivity</a></div>
+    <ul> 
+      <li><a href="<?cs var:toroot ?>guide/bluetooth.html">Bluetooth</a></li>
+      <li><a href="<?cs var:toroot ?>guide/gps.html">GPS</a></li>
+      <li><a href="<?cs var:toroot ?>guide/wifi.html">Wi-Fi</a></li>
+    </ul>
+  </li>
+ 
+  <li><a href="<?cs var:toroot ?>guide/display_drivers.html">Display Drivers</a></li>
+  <li class="toggle-list"> 
+    <div><a href="javascript:nothing()">Input Devices</a></div>
+    <ul>
+      <li><a href="<?cs var:toroot ?>guide/keymaps_keyboard_input.html">Keymaps and Keyboard</a></li>
+    </ul>
+  </li>
+  <li><a href="<?cs var:toroot ?>guide/lights.html">LED</a></li>
+  <li class="toggle-list">
     <div><a href="javascript:nothing()">Multimedia</a></div>
     <ul>
       <li><a href="<?cs var:toroot ?>guide/audio.html">Audio</a></li>
-      <li><a href="<?cs var:toroot ?>guide/camera.html">Camera</a></li>
+      <li><a href="<?cs var:toroot ?>guide/camera.html">Camera/Video</a></li>
     </ul>
   </li>
-
   <li class="toggle-list">
     <div><a href="<?cs var:toroot ?>guide/power_management.html">Power Management</a></div>
     <ul>
@@ -37,13 +56,11 @@ function nothing() {}
       <li><a href="<?cs var:toroot ?>guide/early_suspend.html">Early Suspend</a></li>
     </ul>
   </li>
-
   <li class="toggle-list">
-    <div><a href="javascript:nothing()">Networking</a></div>
+    <div><a href="javascript:nothing()">Telephony</a></div>
     <ul>
-      <li><a href="<?cs var:toroot ?>guide/wifi.html">Wi-Fi</a></li>
-      <li><a href="<?cs var:toroot ?>guide/gps.html">GPS</a></li>
-      <li><a href="<?cs var:toroot ?>guide/bluetooth.html">Bluetooth</a></li>
+      <li><a href="<?cs var:toroot ?>guide/telephony.html">Radio Interface Layer</a></li>
+      <li><a href="<?cs var:toroot ?>guide/stk.html">SIM Toolkit Application (STK)</a></li>
     </ul>
   </li>
 
@@ -57,13 +74,11 @@ function nothing() {}
 </ul>
 </li>
 
-<li> <h2>Telephony</h2>
+<li> <h2>Dalvik Virtual Machine</h2>
   <ul>
-    <li><a href="<?cs var:toroot ?>guide/telephony.html">Radio Interface Layer</a></li>
-    <li><a href="<?cs var:toroot ?>guide/stk.html">SIM Toolkit Application (STK)</a></li>
+    <li><a href="<?cs var:toroot ?>guide/dalvik.html">Porting Dalvik</a></li>
   </ul>
 </li>
-
 <li> <h2>Testing and Debugging</h2>
   <ul>
     <li><a href="<?cs var:toroot ?>guide/instrumentation_testing.html">Instrumentation Testing</a></li>
@@ -72,11 +87,7 @@ function nothing() {}
   </ul>
 </li>
 
-<li> <h2>Customization</h2>
-  <ul>
-    <li><a href="<?cs var:toroot ?>guide/customization.html">Customization</a></li>
-  </ul>
-</li>
+
 
 </ul>
 
