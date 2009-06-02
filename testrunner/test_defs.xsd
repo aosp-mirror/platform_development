@@ -24,6 +24,7 @@
                       default="android.test.InstrumentationTestRunner"/>
         <xs:attribute name="coverage_target" type="xs:string" use="optional"/>
         <xs:attribute name="continuous" type="xs:boolean" use="optional" default="false"/>
+        <xs:attribute name="cts" type="xs:boolean" use="optional" default="false"/>
     </xs:complexType>
 
     <xs:complexType name="nativeTestType">

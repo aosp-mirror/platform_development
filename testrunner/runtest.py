@@ -115,7 +115,10 @@ class TestRunner(object):
     parser.add_option("--timeout", dest="timeout",
                       default=300, help="Set a timeout limit (in sec) for "
                       "running native tests on a device (default: 300 secs)")
-
+    parser.add_option("--cts", dest="cts_tests",
+                      default=False, action="store_true",
+                      help="Run all tests defined as part of the "
+                      "compatibility test suite")
     group = optparse.OptionGroup(
         parser, "Targets", "Use these options to direct tests to a specific "
         "Android target")
@@ -129,8 +132,11 @@ class TestRunner(object):
 
     self._options, self._test_args = parser.parse_args()
 
-    if (not self._options.only_list_tests and not self._options.all_tests
-        and not self._options.continuous_tests and len(self._test_args) < 1):
+    if (not self._options.only_list_tests
+        and not self._options.all_tests
+        and not self._options.continuous_tests
+        and not self._options.cts_tests
+        and len(self._test_args) < 1):
       parser.print_help()
       logger.SilentLog("at least one test name must be specified")
       raise errors.AbortError
@@ -229,8 +235,10 @@ class TestRunner(object):
     """Get a list of TestSuite objects to run, based on command line args."""
     if self._options.all_tests:
       return self._known_tests.GetTests()
-    if self._options.continuous_tests:
+    elif self._options.continuous_tests:
       return self._known_tests.GetContinuousTests()
+    elif self._options.cts_tests:
+      return self._known_tests.GetCtsTests()
     tests = []
     for name in self._test_args:
       test = self._known_tests.GetTest(name)
