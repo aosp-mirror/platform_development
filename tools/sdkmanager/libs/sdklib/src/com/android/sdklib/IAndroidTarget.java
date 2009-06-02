@@ -24,57 +24,57 @@ package com.android.sdklib;
 public interface IAndroidTarget extends Comparable<IAndroidTarget> {
 
     /** OS Path to the "android.jar" file. */
-    public static int ANDROID_JAR         = 1;
+    public final static int ANDROID_JAR         = 1;
     /** OS Path to the "framework.aidl" file. */
-    public static int ANDROID_AIDL        = 2;
+    public final static int ANDROID_AIDL        = 2;
     /** OS Path to "images" folder which contains the emulator system images. */
-    public static int IMAGES              = 3;
+    public final static int IMAGES              = 3;
     /** OS Path to the "samples" folder which contains sample projects. */
-    public static int SAMPLES             = 4;
+    public final static int SAMPLES             = 4;
     /** OS Path to the "skins" folder which contains the emulator skins. */
-    public static int SKINS               = 5;
+    public final static int SKINS               = 5;
     /** OS Path to the "templates" folder which contains the templates for new projects. */
-    public static int TEMPLATES           = 6;
+    public final static int TEMPLATES           = 6;
     /** OS Path to the "data" folder which contains data & libraries for the SDK tools. */
-    public static int DATA                = 7;
+    public final static int DATA                = 7;
     /** OS Path to the "attrs.xml" file. */
-    public static int ATTRIBUTES          = 8;
+    public final static int ATTRIBUTES          = 8;
     /** OS Path to the "attrs_manifest.xml" file. */
-    public static int MANIFEST_ATTRIBUTES = 9;
+    public final static int MANIFEST_ATTRIBUTES = 9;
     /** OS Path to the "data/layoutlib.jar" library. */
-    public static int LAYOUT_LIB          = 10;
+    public final static int LAYOUT_LIB          = 10;
     /** OS Path to the "data/res" folder. */
-    public static int RESOURCES           = 11;
+    public final static int RESOURCES           = 11;
     /** OS Path to the "data/fonts" folder. */
-    public static int FONTS               = 12;
+    public final static int FONTS               = 12;
     /** OS Path to the "data/widgets.txt" file. */
-    public static int WIDGETS             = 13;
+    public final static int WIDGETS             = 13;
     /** OS Path to the "data/activity_actions.txt" file. */
-    public static int ACTIONS_ACTIVITY    = 14;
+    public final static int ACTIONS_ACTIVITY    = 14;
     /** OS Path to the "data/broadcast_actions.txt" file. */
-    public static int ACTIONS_BROADCAST   = 15;
+    public final static int ACTIONS_BROADCAST   = 15;
     /** OS Path to the "data/service_actions.txt" file. */
-    public static int ACTIONS_SERVICE     = 16;
+    public final static int ACTIONS_SERVICE     = 16;
     /** OS Path to the "data/categories.txt" file. */
-    public static int CATEGORIES          = 17;
+    public final static int CATEGORIES          = 17;
     /** OS Path to the "sources" folder. */
-    public static int SOURCES             = 18;
+    public final static int SOURCES             = 18;
     /** OS Path to the target specific docs */
-    public static int DOCS                = 19;
+    public final static int DOCS                = 19;
     /** OS Path to the target's version of the aapt tool. */
-    public static int AAPT                = 20;
+    public final static int AAPT                = 20;
     /** OS Path to the target's version of the aidl tool. */
-    public static int AIDL                = 21;
+    public final static int AIDL                = 21;
     /** OS Path to the target's version of the dx too. */
-    public static int DX                  = 22;
+    public final static int DX                  = 22;
     /** OS Path to the target's version of the dx.jar file. */
-    public static int DX_JAR              = 23;
+    public final static int DX_JAR              = 23;
 
     /**
      * Return value for {@link #getUsbVendorId()} meaning no USB vendor IDs are defined by the
      * Android target.
      */
-    public static int NO_USB_ID = 0;
+    public final static int NO_USB_ID = 0;
 
     public interface IOptionalLibrary {
         String getName();
