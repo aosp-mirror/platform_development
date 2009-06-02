@@ -34,7 +34,7 @@ class AbortError(Exception):
   """Generic exception that indicates a fatal error has occurred and program
   execution should be aborted."""
 
-  def __init__(self, msg="AbortError"):
+  def __init__(self, msg=""):
     self.msg = msg
 
 

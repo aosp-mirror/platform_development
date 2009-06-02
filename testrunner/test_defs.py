@@ -144,6 +144,14 @@ class TestDefinitions(object):
         con_tests.append(test)
     return con_tests
 
+  def GetCtsTests(self):
+    """Return list of cts tests."""
+    cts_tests = []
+    for test in self.GetTests():
+      if test.IsCts():
+        cts_tests.append(test)
+    return cts_tests
+
   def GetTest(self, name):
     return self._testname_map.get(name, None)
   
@@ -157,6 +165,7 @@ class TestSuite(object):
   _TARGET_ATTR = "coverage_target"
   _BUILD_ATTR = "build_path"
   _CONTINUOUS_ATTR = "continuous"
+  _CTS_ATTR = "cts"
   _DESCRIPTION_ATTR = "description"
   _EXTRA_MAKE_ARGS_ATTR = "extra_make_args"
 
@@ -199,6 +208,11 @@ class TestSuite(object):
       self._continuous = suite_element.getAttribute(self._CONTINUOUS_ATTR)
     else:
       self._continuous = False
+    if suite_element.hasAttribute(self._CTS_ATTR):
+      self._cts = suite_element.getAttribute(self._CTS_ATTR)
+    else:
+      self._cts = False
+
     if suite_element.hasAttribute(self._DESCRIPTION_ATTR):
       self._description = suite_element.getAttribute(self._DESCRIPTION_ATTR)
     else:
@@ -235,6 +249,10 @@ class TestSuite(object):
   def IsContinuous(self):
     """Returns true if test is flagged as being part of the continuous tests"""  
     return self._continuous
+
+  def IsCts(self):
+    """Returns true if test is part of the compatibility test suite"""
+    return self._cts
 
   def IsNative(self):
     """Returns true if test is a native one."""

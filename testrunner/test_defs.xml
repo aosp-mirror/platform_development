@@ -42,6 +42,8 @@ JAVA/application tests:
   continuous: Optional boolean. Default is false. Set to true if tests are known
     to be reliable, and should be included in a continuous test system. false if
     they are under development.
+  cts: Optional boolean. Default is false. Set to true if test is included in
+    compatibility test suite.
 
   description: Optional string. Default is empty. Short description (typically
      less than 60 characters) about this test.
@@ -177,6 +179,162 @@ Native tests:
     package="com.android.imftest.tests"
     coverage_target="framework"
     continuous="true" />
+
+<!--  cts tests -->
+
+<test name="cts-permission"
+    build_path="cts/tests"
+    package="com.android.cts.permission"
+    runner="android.test.InstrumentationCtsTestRunner"
+    coverage_target="framework"
+    continuous="true"
+    cts="true" />
+
+<test name="cts-process"
+    build_path="cts/tests"
+    package="com.android.cts.process"
+    coverage_target="framework"
+    cts="true" />
+
+<test name="cts-api-signature"
+    build_path="cts/tests"
+    package="android.tests.sigtest"
+    runner=".InstrumentationRunner"
+    cts="true" />
+
+<test name="cts-api-signature-func"
+    build_path="cts/tests"
+    package="android.tests.sigtest.tests"
+    cts="true" />
+
+<test name="cts-apidemos"
+    build_path="cts/tests"
+    package="android.apidemos.cts"
+    coverage_target="ApiDemos"
+    cts="true" />
+
+<test name="cts-app"
+    build_path="cts/tests"
+    package="com.android.cts.app"
+    runner="android.test.InstrumentationCtsTestRunner"
+    coverage_target="framework"
+    cts="true" />
+
+<test name="cts-content"
+    build_path="cts/tests"
+    package="com.android.cts.content"
+    runner="android.test.InstrumentationCtsTestRunner"
+    coverage_target="framework"
+    cts="true" />
+
+<test name="cts-database"
+    build_path="cts/tests"
+    package="com.android.cts.database"
+    runner="android.test.InstrumentationCtsTestRunner"
+    coverage_target="framework"
+    cts="true" />
+
+<test name="cts-graphics"
+    build_path="cts/tests"
+    package="com.android.cts.graphics"
+    runner="android.test.InstrumentationCtsTestRunner"
+    coverage_target="framework"
+    cts="true" />
+
+<test name="cts-hardware"
+    build_path="cts/tests"
+    package="com.android.cts.hardware"
+    runner="android.test.InstrumentationCtsTestRunner"
+    coverage_target="framework"
+    cts="true" />
+
+<test name="cts-location"
+    build_path="cts/tests"
+    package="com.android.cts.location"
+    runner="android.test.InstrumentationCtsTestRunner"
+    coverage_target="framework"
+    cts="true" />
+
+<test name="cts-net"
+    build_path="cts/tests"
+    package="com.android.cts.net"
+    runner="android.test.InstrumentationCtsTestRunner"
+    coverage_target="framework"
+    cts="true" />
+
+<test name="cts-os"
+    build_path="cts/tests"
+    package="com.android.cts.os"
+    runner="android.test.InstrumentationCtsTestRunner"
+    coverage_target="framework"
+    cts="true" />
+
+<test name="cts-perf1"
+    build_path="cts/tests"
+    package="com.android.cts.performance"
+    runner="android.test.InstrumentationCtsTestRunner"
+    cts="true" />
+
+<test name="cts-perf2"
+    build_path="cts/tests"
+    package="com.android.cts.performance2"
+    runner="android.test.InstrumentationCtsTestRunner"
+    cts="true" />
+
+<test name="cts-perf3"
+    build_path="cts/tests"
+    package="com.android.cts.performance3"
+    runner="android.test.InstrumentationCtsTestRunner"
+    cts="true" />
+
+<test name="cts-perf4"
+    build_path="cts/tests"
+    package="com.android.cts.performance4"
+    runner="android.test.InstrumentationCtsTestRunner"
+    cts="true" />
+
+<test name="cts-perf5"
+    build_path="cts/tests"
+    package="com.android.cts.performance5"
+    runner="android.test.InstrumentationCtsTestRunner"
+    cts="true" />
+
+<test name="cts-provider"
+    build_path="cts/tests"
+    package="com.android.cts.provider"
+    runner="android.test.InstrumentationCtsTestRunner"
+    coverage_target="framework"
+    cts="true" />
+
+<test name="cts-text"
+    build_path="cts/tests"
+    package="com.android.cts.text"
+    runner="android.test.InstrumentationCtsTestRunner"
+    coverage_target="framework"
+    cts="true" />
+
+<test name="cts-util"
+    build_path="cts/tests"
+    package="com.android.cts.util"
+    runner="android.test.InstrumentationCtsTestRunner"
+    coverage_target="framework"
+    cts="true" />
+
+<test name="cts-view"
+    build_path="cts/tests"
+    package="com.android.cts.view"
+    runner="android.test.InstrumentationCtsTestRunner"
+    coverage_target="framework"
+    cts="true" />
+
+<test name="cts-widget"
+    build_path="cts/tests"
+    package="com.android.cts.widget"
+    runner="android.test.InstrumentationCtsTestRunner"
+    coverage_target="framework"
+    cts="true" />
+
+<!--  end of cts tests -->
 
 <!--  selected app tests -->
 <test name="browser"
