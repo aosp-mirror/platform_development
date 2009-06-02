@@ -420,19 +420,18 @@ public final class SdkManager {
 
                 // get the default skin, or take it from the base platform if needed.
                 String defaultSkin = propertyMap.get(ADDON_DEFAULT_SKIN);
-
-                // get the USB ID (if available)
-                int usbVendorId = convertId(propertyMap.get(ADDON_USB_VENDOR));
-                if (usbVendorId != IAndroidTarget.NO_USB_ID) {
-                    target.setUsbVendorId(usbVendorId);
-                }
-
                 if (defaultSkin == null) {
                     if (skins.length == 1) {
                         defaultSkin = skins[1];
                     } else {
                         defaultSkin = baseTarget.getDefaultSkin();
                     }
+                }
+
+                // get the USB ID (if available)
+                int usbVendorId = convertId(propertyMap.get(ADDON_USB_VENDOR));
+                if (usbVendorId != IAndroidTarget.NO_USB_ID) {
+                    target.setUsbVendorId(usbVendorId);
                 }
 
                 target.setSkins(skins, defaultSkin);
