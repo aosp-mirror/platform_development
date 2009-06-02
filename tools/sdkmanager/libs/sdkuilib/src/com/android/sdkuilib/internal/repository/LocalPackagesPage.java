@@ -16,9 +16,12 @@
 
 package com.android.sdkuilib.internal.repository;
 
+import com.android.sdklib.internal.repository.IDescription;
 import com.android.sdklib.internal.repository.ITask;
 import com.android.sdklib.internal.repository.ITaskMonitor;
 
+import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ControlAdapter;
@@ -38,8 +41,6 @@ import org.eclipse.swt.widgets.Text;
 
 /*
  * TODO list
- * - parse local repo
- * - create entries
  * - select => update desc, enable update + delete, enable home page if url
  * - home page callback
  * - update callback
@@ -89,6 +90,12 @@ public class LocalPackagesPage extends Composite {
         mTablePackages = mTableViewerPackages.getTable();
         mTablePackages.setHeaderVisible(true);
         mTablePackages.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 3, 1));
+        mTablePackages.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                onTreeSelected(); //$hide$
+            }
+        });
 
         mColumnPackages = new TableColumn(mTablePackages, SWT.NONE);
         mColumnPackages.setWidth(377);
@@ -164,10 +171,22 @@ public class LocalPackagesPage extends Composite {
     // Hide everything down-below from SWT designer
     //$hide>>$
 
+    /**
+     * Must be called once to set the adapter input for the package table viewer.
+     */
+    public void setInput(LocalSdkAdapter localSdkAdapter) {
+        mTableViewerPackages.setLabelProvider(  localSdkAdapter.getLabelProvider());
+        mTableViewerPackages.setContentProvider(localSdkAdapter.getContentProvider());
+        mTableViewerPackages.setInput(localSdkAdapter);
+        onTreeSelected();
+    }
+
+    /**
+     * Called by the constructor right after {@link #createContents(Composite)}.
+     */
     private void postCreate() {
         adjustColumnsWidth();
     }
-
 
     /**
      * Adds a listener to adjust the columns width when the parent is resized.
@@ -186,13 +205,26 @@ public class LocalPackagesPage extends Composite {
         });
     }
 
-    public void setInput(LocalSdkAdapter localSdkAdapter) {
-        mTableViewerPackages.setLabelProvider(  localSdkAdapter.getLabelProvider());
-        mTableViewerPackages.setContentProvider(localSdkAdapter.getContentProvider());
-        mTableViewerPackages.setInput(localSdkAdapter);
+    /**
+     * Called when an item in the package table viewer is selected.
+     * If the items is an {@link IDescription} (as it should), this will display its long
+     * description in the description area. Otherwise when the item is not of the expected
+     * type or there is no selection, it empties the description area.
+     */
+    private void onTreeSelected() {
+        ISelection sel = mTableViewerPackages.getSelection();
+        if (sel instanceof IStructuredSelection) {
+            Object elem = ((IStructuredSelection) sel).getFirstElement();
+            if (elem instanceof IDescription) {
+                mDescriptionLabel.setText(((IDescription) elem).getLongDescription());
+                mDescriptionContainer.layout(true);
+                return;
+            }
+        }
+        mDescriptionLabel.setText("");  //$NON-NLS1-$
     }
 
-    protected void onUpdateInstalledPackage() {
+    private void onUpdateInstalledPackage() {
         // TODO just a test, needs to be removed later.
         ProgressTask.start(getShell(), "Test", new ITask() {
             public void run(ITaskMonitor monitor) {

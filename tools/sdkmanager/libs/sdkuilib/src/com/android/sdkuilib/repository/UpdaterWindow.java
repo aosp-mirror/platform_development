@@ -16,7 +16,10 @@
 
 package com.android.sdkuilib.repository;
 
+import com.android.sdklib.ISdkLog;
 import com.android.sdkuilib.internal.repository.UpdaterWindowImpl;
+
+import org.eclipse.swt.widgets.Composite;
 
 /**
  * Opens an SDK Updater Window.
@@ -29,12 +32,28 @@ public class UpdaterWindow {
 
     /**
      * Creates a new window. Caller must call open(), which will block.
+     * @param sdkLog
      * @param osSdkRoot The OS path to the SDK root.
      * @param userCanChangeSdkRoot If true, the window lets the user change the SDK path
      *                             being browsed.
      */
-    public UpdaterWindow(String osSdkRoot, boolean userCanChangeSdkRoot) {
-        mWindow = new UpdaterWindowImpl(osSdkRoot, userCanChangeSdkRoot);
+    public UpdaterWindow(ISdkLog sdkLog, String osSdkRoot, boolean userCanChangeSdkRoot) {
+        mWindow = new UpdaterWindowImpl(sdkLog, osSdkRoot, userCanChangeSdkRoot);
+    }
+
+    /**
+     * Registers an extra page for the updater window.
+     * <p/>
+     * Pages must derive from {@link Composite} and implement a constructor that takes
+     * a single parent {@link Composite} argument.
+     * <p/>
+     * All pages must be registered before the call to {@link #open()}.
+     *
+     * @param title The title of the page.
+     * @param pageClass The {@link Composite}-derived class that will implement the page.
+     */
+    public void registerPage(String title, Class<? extends Composite> pageClass) {
+        mWindow.registerExtraPage(title, pageClass);
     }
 
     /**
