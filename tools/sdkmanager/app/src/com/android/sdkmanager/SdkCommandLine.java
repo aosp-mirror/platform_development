@@ -36,6 +36,7 @@ public class SdkCommandLine extends CommandLineProcessor {
     public static final String OBJECT_TARGET   = "target";
     public static final String OBJECT_TARGETS  = "targets";
     public static final String OBJECT_PROJECT  = "project";
+    public static final String OBJECT_ADB      = "adb";
 
     public static final String ARG_ALIAS    = "alias";
     public static final String ARG_ACTIVITY = "activity";
@@ -86,6 +87,9 @@ public class SdkCommandLine extends CommandLineProcessor {
                 "Creates a new Android Project." },
             { VERB_UPDATE, OBJECT_PROJECT,
                 "Updates an Android Project (must have an AndroidManifest.xml)." },
+
+            { VERB_UPDATE, OBJECT_ADB,
+                "Updates adb to support the USB devices declared in the SDK add-ons." },
         };
     
     public SdkCommandLine(ISdkLog logger) {

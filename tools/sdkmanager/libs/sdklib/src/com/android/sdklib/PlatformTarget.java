@@ -158,7 +158,15 @@ final class PlatformTarget implements IAndroidTarget {
     public IOptionalLibrary[] getOptionalLibraries() {
         return null;
     }
-    
+
+    /**
+     * The platform has no USB Vendor Id: always return {@link IAndroidTarget#NO_USB_ID}.
+     * {@inheritDoc}
+     */
+    public int getUsbVendorId() {
+        return NO_USB_ID;
+    }
+
     public boolean isCompatibleBaseFor(IAndroidTarget target) {
         // basic test
         if (target == this) {

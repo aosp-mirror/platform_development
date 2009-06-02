@@ -16,15 +16,20 @@
 
 package com.android.sdklib;
 
+import com.android.prefs.AndroidLocation;
+import com.android.prefs.AndroidLocation.AndroidLocationException;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -45,13 +50,18 @@ public final class SdkManager {
     private final static String ADDON_DESCRIPTION = "description";
     private final static String ADDON_LIBRARIES = "libraries";
     private final static String ADDON_DEFAULT_SKIN = "skin";
-    
+    private final static String ADDON_USB_VENDOR = "usb-vendor";
+
     private final static Pattern PATTERN_PROP = Pattern.compile(
             "^([a-zA-Z0-9._-]+)\\s*=\\s*(.*)\\s*$");
     
     private final static Pattern PATTERN_LIB_DATA = Pattern.compile(
             "^([a-zA-Z0-9._-]+\\.jar);(.*)$", Pattern.CASE_INSENSITIVE);
-    
+
+    // usb ids are 16-bit hexadecimal values.
+    private final static Pattern PATTERN_USB_IDS = Pattern.compile(
+            "^0x[a-f0-9]{4}$", Pattern.CASE_INSENSITIVE);
+
     /** List of items in the platform to check when parsing it. These paths are relative to the
      * platform root folder. */
     private final static String[] sPlatformContentList = new String[] {
@@ -62,6 +72,14 @@ public final class SdkManager {
         SdkConstants.OS_SDK_TOOLS_FOLDER + SdkConstants.FN_DX,
         SdkConstants.OS_SDK_TOOLS_LIB_FOLDER + SdkConstants.FN_DX_JAR,
     };
+
+    /** Preference file containing the usb ids for adb */
+    private final static String ADB_INI_FILE = "adb_usb.ini";
+       //0--------90--------90--------90--------90--------90--------90--------90--------9
+    private final static String ADB_INI_HEADER =
+        "# ANDROID 3RD PARTY USB VENDOR ID LIST -- DO NOT EDIT.\n" +
+        "# USE 'android update adb' TO GENERATE.\n" +
+        "# 1 USB VENDOR ID PER LINE.\n";
 
     /** the location of the SDK */
     private final String mSdkLocation;
@@ -127,6 +145,38 @@ public final class SdkManager {
         return null;
     }
 
+    /**
+     * Updates adb with the USB devices declared in the SDK add-ons.
+     * @throws AndroidLocationException
+     * @throws IOException
+     */
+    public void updateAdb() throws AndroidLocationException, IOException {
+        FileWriter writer = null;
+        try {
+            // get the android prefs location to know where to write the file.
+            File adbIni = new File(AndroidLocation.getFolder(), ADB_INI_FILE);
+            writer = new FileWriter(adbIni);
+
+            // first, put all the vendor id in an HashSet to remove duplicate.
+            HashSet<Integer> set = new HashSet<Integer>();
+            IAndroidTarget[] targets = getTargets();
+            for (IAndroidTarget target : targets) {
+                if (target.getUsbVendorId() != IAndroidTarget.NO_USB_ID) {
+                    set.add(target.getUsbVendorId());
+                }
+            }
+
+            // write file header.
+            writer.write(ADB_INI_HEADER);
+
+            // now write the Id in a text file, one per line.
+            for (Integer i : set) {
+                writer.write(String.format("0x%04x\n", i));
+            }
+        } finally {
+            writer.close();
+        }
+    }
 
     private SdkManager(String sdkLocation) {
         mSdkLocation = sdkLocation;
@@ -370,7 +420,6 @@ public final class SdkManager {
                 
                 // get the default skin, or take it from the base platform if needed.
                 String defaultSkin = propertyMap.get(ADDON_DEFAULT_SKIN);
-                
                 if (defaultSkin == null) {
                     if (skins.length == 1) {
                         defaultSkin = skins[1];
@@ -381,6 +430,12 @@ public final class SdkManager {
                 
                 target.setSkins(skins, defaultSkin);
 
+                // get the USB ID (if available)
+                int usbVendorId = convertId(propertyMap.get(ADDON_USB_VENDOR));
+                if (usbVendorId != IAndroidTarget.NO_USB_ID) {
+                    target.setUsbVendorId(usbVendorId);
+                }
+
                 return target;
             }
         } else if (log != null) {
@@ -390,7 +445,28 @@ public final class SdkManager {
         
         return null;
     }
-    
+
+    /**
+     * Converts a string representation of an hexadecimal ID into an int.
+     * @param value the string to convert.
+     * @return the int value, or {@link IAndroidTarget#NO_USB_ID} if the convertion failed.
+     */
+    private int convertId(String value) {
+        if (value != null && value.length() > 0) {
+            if (PATTERN_USB_IDS.matcher(value).matches()) {
+                String v = value.substring(2);
+                try {
+                    return Integer.parseInt(v, 16);
+                } catch (NumberFormatException e) {
+                    // this shouldn't happen since we check the pattern above, but this is safer.
+                    // the method will return 0 below.
+                }
+            }
+        }
+
+        return IAndroidTarget.NO_USB_ID;
+    }
+
     private void displayAddonManifestError(ISdkLog log, String addonName, String valueName) {
         if (log != null) {
             log.error(null, "Ignoring add-on '%1$s': '%2$s' is missing from %3$s.",

@@ -72,6 +72,7 @@ final class AddOnTarget implements IAndroidTarget {
     private String[] mSkins;
     private String mDefaultSkin;
     private IOptionalLibrary[] mLibraries;
+    private int mVendorId = NO_USB_ID;
 
     /**
      * Creates a new add-on
@@ -191,7 +192,11 @@ final class AddOnTarget implements IAndroidTarget {
     public IOptionalLibrary[] getOptionalLibraries() {
         return mLibraries;
     }
-    
+
+    public int getUsbVendorId() {
+        return mVendorId;
+    }
+
     public boolean isCompatibleBaseFor(IAndroidTarget target) {
         // basic test
         if (target == this) {
@@ -275,5 +280,16 @@ final class AddOnTarget implements IAndroidTarget {
         skinSet.addAll(Arrays.asList(mBasePlatform.getSkins()));
         
         mSkins = skinSet.toArray(new String[skinSet.size()]);
+    }
+
+    /**
+     * Sets the USB vendor id in the add-on.
+     */
+    void setUsbVendorId(int vendorId) {
+        if (vendorId == 0) {
+            throw new IllegalArgumentException( "VendorId must be > 0");
+        }
+
+        mVendorId = vendorId;
     }
 }
