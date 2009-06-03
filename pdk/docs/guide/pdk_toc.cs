@@ -56,6 +56,7 @@ function nothing() {}
       <li><a href="<?cs var:toroot ?>guide/early_suspend.html">Early Suspend</a></li>
     </ul>
   </li>
+  <li><a href="<?cs var:toroot ?>guide/sensors.html">Sensors</a></li>
   <li class="toggle-list">
     <div><a href="javascript:nothing()">Telephony</a></div>
     <ul>

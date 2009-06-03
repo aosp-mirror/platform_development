@@ -126,3 +126,191 @@ pdk.version=1.0
   </ul>
 </ul>
 </p>
+
+<a name="androidBuildSystemProductDefFiles"></a><h2>Product Definition Files</h2>
+
+<p>Product-specific variables are defined in product definition files. A product definition file can inherit from other product definition files, thus reducing the need to copy and simplifying maintenance.</p>
+<p>Variables maintained in a product definition files include:</p>
+<p>
+<table border=1 cellpadding=2 cellspacing=0>
+ <tbody><tr>
+  <th scope="col">Parameter</th>
+  <th scope="col">Description</th>
+  <th scope="col">Example</th>
+ </tr>
+ <tr>
+   <td valign="top">PRODUCT_NAME</td>
+   <td valign="top">End-user-visible name for the overall product. Appears in the "About the phone" info.</td>
+   <td valign="top"></td>
+ </tr>
+ <tr>
+   <td valign="top">PRODUCT_MODEL</td>
+   <td valign="top">End-user-visible name for the end product</td>
+   <td valign="top"></td>
+ </tr>
+ <tr>
+   <td valign="top">PRODUCT_LOCALES</td>
+   <td valign="top">A space-separated list of two-letter language code, two-letter country code pairs that describe several settings for the user, such as the UI language and time, date and currency formatting. The first locale listed in PRODUCT_LOCALES is is used if the locale has never been set before.</td>
+   <td valign="top"><code>en_GB de_DE es_ES fr_CA</code></td>
+ </tr>
+ <tr>
+   <td valign="top">PRODUCT_PACKAGES</td>
+   <td valign="top">Lists the APKs to install.</td>
+   <td valign="top"><code>Calendar Contacts</code></td>
+ </tr>
+ <tr>
+   <td valign="top">PRODUCT_DEVICE</td>
+   <td valign="top">Name of the industrial design</td>
+   <td valign="top"><code>dream</code></td>
+ </tr>
+ <tr>
+   <td valign="top">PRODUCT_MANUFACTURER</td>
+   <td valign="top">Name of the manufacturer</td>
+   <td valign="top"><code>acme</code></td>
+ </tr>
+ <tr>
+   <td valign="top">PRODUCT_BRAND</td>
+   <td valign="top">The brand (e.g., carrier) the software is customized for, if any</td>
+   <td valign="top"></td>
+ </tr>
+ <tr>
+   <td valign="top">PRODUCT_PROPERTY_OVERRIDES</td>
+   <td valign="top">List of property assignments in the format "key=value"</td>
+   <td valign="top"></td>
+ </tr>
+ <tr>
+   <td valign="top">PRODUCT_COPY_FILES</td>
+   <td valign="top">List of words like <code>source_path:destination_path</code>. The file at the source path should be copied to the destination path when building this product. The rules for the copy steps are defined in config/Makefile</td>
+   <td valign="top"></td>
+ </tr>
+ <tr>
+   <td valign="top">PRODUCT_OTA_PUBLIC_KEYS</td>
+   <td valign="top">List of OTA public keys for the product</td>
+   <td valign="top"></td>
+ </tr>
+ <tr>
+   <td valign="top">PRODUCT_POLICY</td>
+   <td valign="top">Indicate which policy this product should use</td>
+   <td valign="top"></td>
+ </tr>
+ <tr>
+   <td valign="top">PRODUCT_PACKAGE_OVERLAYS</td>
+   <td valign="top">Indicate whether to use default resources or add any product specific overlays</td>
+   <td valign="top"><code>vendor/acme/overlay</code></td>
+ </tr>
+ <tr>
+   <td valign="top">PRODUCT_CONTRIBUTORS_FILE</td>
+   <td valign="top">HTML file containing the contributors to the project.</td>
+   <td valign="top"></td>
+ </tr>
+ <tr>
+   <td valign="top">PRODUCT_TAGS</td>
+   <td valign="top">list of space-separated words for a given product</td>
+   <td valign="top"></td>
+ </tr>
+ <tr>
+   <td valign="top">PRODUCT_SDK_ADDON_NAME</td>
+   <td valign="top"></td>
+   <td valign="top"></td>
+ </tr>
+ <tr>
+   <td valign="top">PRODUCT_SDK_ADDON_COPY_FILES</td>
+   <td valign="top"></td>
+   <td valign="top"></td>
+ </tr>
+ <tr>
+   <td valign="top">PRODUCT_SDK_ADDON_COPY_MODULES</td>
+   <td valign="top"></td>
+   <td valign="top"></td>
+ </tr>
+ <tr>
+   <td valign="top">PRODUCT_SDK_ADDON_DOC_MODULE</td>
+   <td valign="top"></td>
+   <td valign="top"></td>
+ </tr>
+</table>
+
+</P>
+<p>The snippet below illustrates a typical product definition file.</p>
+<pre class="prettyprint">
+$(call inherit-product, build/target/product/generic.mk)
+
+#Overrides
+PRODUCT_NAME := MyDevice
+PRODUCT_MANUFACTURER := acme
+PRODUCT_BRAND := acme_us
+PRODUCT_LOCALES := en_GB es_ES fr_FR
+PRODUCT_PACKAGE_OVERLAYS := vendor/acme/overlay
+
+</pre>
+
+<a name="androidBuildVariants"></a><h2>Build Variants</h2>
+
+<p> 
+When building for a particular product, it's often useful to have minor
+variations on what is ultimately the final release build.  These are the
+currently-defined build variants:
+</p> 
+ 
+<table border=1> 
+<tr> 
+    <td> 
+        <code>eng<code> 
+    </td> 
+    <td> 
+        This is the default flavor. A plain "<code>make</code>" is the
+        same as "<code>make eng</code>".  <code>droid</code> is an alias
+        for <code>eng</code>.
+        <ul> 
+        <li>Installs modules tagged with: <code>eng</code>, <code>debug</code>,
+            <code>user</code>, and/or <code>development</code>.
+        <li>Installs non-APK modules that have no tags specified.
+        <li>Installs APKs according to the product definition files, in
+            addition to tagged APKs.
+        <li><code>ro.secure=0</code> 
+        <li><code>ro.debuggable=1</code> 
+        <li><code>ro.kernel.android.checkjni=1</code> 
+        <li><code>adb</code> is enabled by default.
+    </td> 
+</tr> 
+<tr> 
+    <td> 
+        <code>user<code> 
+    </td> 
+    <td> 
+        "<code>make user</code>"
+        <p> 
+        This is the flavor intended to be the final release bits.
+        <ul> 
+        <li>Installs modules tagged with <code>user</code>.
+        <li>Installs non-APK modules that have no tags specified.
+        <li>Installs APKs according to the product definition files; tags
+            are ignored for APK modules.
+        <li><code>ro.secure=1</code> 
+        <li><code>ro.debuggable=0</code> 
+        <li><code>adb</code> is disabled by default.
+    </td> 
+</tr> 
+<tr> 
+    <td> 
+        <code>userdebug<code> 
+    </td> 
+    <td> 
+        "<code>make userdebug</code>"
+        <p> 
+        The same as <code>user</code>, except:
+        <ul> 
+        <li>Also installs modules tagged with <code>debug</code>.
+        <li><code>ro.debuggable=1</code> 
+        <li><code>adb</code> is enabled by default.
+    </td> 
+</tr> 
+</table> 
+ 
+<p> 
+If you build one flavor and then want to build another, you should run
+"<code>make installclean</code>" between the two makes to guarantee that
+you don't pick up files installed by the previous flavor.  "<code>make
+clean</code>" will also suffice, but it takes a lot longer.
+</p> 
+ 
