@@ -57,7 +57,7 @@ import java.util.Collection;
  */
 public class UpdaterWindowImpl {
 
-    private static final int NUM_FETCH_URL_MONITOR_INC = 10;
+    private static final int NUM_FETCH_URL_MONITOR_INC = 100;
 
     /** Internal data shared between the window and its pages. */
     private final UpdaterData mUpdaterData = new UpdaterData();
@@ -342,7 +342,7 @@ public class UpdaterWindowImpl {
         mTaskFactory.start("Installing Archives", new ITask() {
             public void run(ITaskMonitor monitor) {
 
-                monitor.setProgressMax(archives.size() * (NUM_FETCH_URL_MONITOR_INC + 3));
+                monitor.setProgressMax(archives.size() * (NUM_FETCH_URL_MONITOR_INC + 10));
                 monitor.setDescription("Preparing to install archives");
 
                 int num_installed = 0;
@@ -351,20 +351,23 @@ public class UpdaterWindowImpl {
                     if (!archive.isCompatible()) {
                         monitor.setResult("Skipping incompatible archive: %1$s",
                                 archive.getShortDescription());
-                        monitor.incProgress(3);
+                        monitor.incProgress(NUM_FETCH_URL_MONITOR_INC + 10);
                         continue;
                     }
 
                     File archiveFile = null;
                     try {
                         archiveFile = downloadArchive(archive, monitor);
-                        monitor.incProgress(1);
                         if (archiveFile != null) {
                             if (installArchive(archive, archiveFile, monitor)) {
                                 num_installed++;
                             }
                         }
-                        monitor.incProgress(1);
+                        monitor.incProgress(10);
+                    } catch (Throwable t) {
+                        // Display anything unexpected in the monitor.
+                        monitor.setResult("Unexpected Error: %1$s", t.getMessage());
+
                     } finally {
                         if (archiveFile != null) {
                             if (!archiveFile.delete()) {
@@ -387,10 +390,13 @@ public class UpdaterWindowImpl {
      */
     private File downloadArchive(Archive archive, ITaskMonitor monitor) {
 
+        File tmpFileToDelete = null;
         try {
-            File tmpFile = File.createTempFile("sdkupload", "bin"); //$NON-NLS-1$ //$NON-NLS-2$
+            File tmpFile = File.createTempFile("sdkupload", ".bin"); //$NON-NLS-1$ //$NON-NLS-2$
+            tmpFileToDelete = tmpFile;
 
-            monitor.setDescription("Downloading %1$s", archive.getShortDescription());
+            monitor.setDescription("Downloading %1$s",
+                    archive.getParentPackage().getShortDescription());
 
             String link = archive.getUrl();
             if (!link.startsWith("http://")                          //$NON-NLS-1$
@@ -405,18 +411,30 @@ public class UpdaterWindowImpl {
                     return null;
                 }
 
-                String base = src.getUrl();
-                if (!base.endsWith("/") && !link.startsWith("/")) {  //$NON-NLS-1$ //$NON-NLS-2$
-                    base += "/";                                     //$NON-NLS-1$
-                }
+                // take the URL to the repository.xml and remove the last component
+                // to get the base
+                String repoXml = src.getUrl();
+                int pos = repoXml.lastIndexOf('/');
+                String base = repoXml.substring(0, pos + 1);
 
                 link = base + link;
             }
 
-            fetchUrl(tmpFile, archive, link, monitor);
+            if (fetchUrl(tmpFile, archive, link, monitor)) {
+                // Fetching was successful, don't delete the temp file here!
+                tmpFileToDelete = null;
+                return tmpFile;
+            }
 
         } catch (IOException e) {
             monitor.setResult(e.getMessage());
+
+        } finally {
+            if (tmpFileToDelete != null) {
+                if (!tmpFileToDelete.delete()) {
+                    tmpFileToDelete.deleteOnExit();
+                }
+            }
         }
         return null;
     }
@@ -481,7 +499,7 @@ public class UpdaterWindowImpl {
             String hex = "0123456789abcdef";                     //$NON-NLS-1$
             char[] hexDigest = new char[n * 2];
             for (int i = 0; i < n; i++) {
-                byte b = digest[i];
+                int b = digest[i] & 0x0FF;
                 hexDigest[i*2 + 0] = hex.charAt(b >>> 4);
                 hexDigest[i*2 + 1] = hex.charAt(b & 0x0f);
             }

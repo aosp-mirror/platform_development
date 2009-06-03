@@ -62,7 +62,7 @@ public class RepoSource implements IDescription {
         setDefaultDescription();
     }
 
-    /** Returns the URL of the source repository. */
+    /** Returns the URL of the repository.xml file for this source. */
     public String getUrl() {
         return mUrl;
     }
