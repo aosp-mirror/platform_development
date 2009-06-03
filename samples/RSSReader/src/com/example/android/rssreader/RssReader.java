@@ -483,7 +483,7 @@ public class RssReader extends ListActivity {
         // TODO: switch to sax
 
         XmlPullParser xpp = Xml.newPullParser();
-        xpp.setInput(in, null);  // null = parser figures out encoding
+        xpp.setInput(in, null);  // null = default to UTF-8
 
         int eventType;
         String title = "";
