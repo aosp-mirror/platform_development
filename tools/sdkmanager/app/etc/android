@@ -79,6 +79,32 @@ else
     jarpath="$frameworkdir/$jarfile"
 fi
 
+# Figure out the path to the swt.jar for the current architecture.
+# if ANDROID_SWT is defined, then just use this.
+# else, if running in the Android source tree, then look for the correct swt folder in prebuilt
+# else, look for the correct swt folder in the SDK under tools/lib/
+swtpath=""
+if [ -n "$ANDROID_SWT" ]; then
+    swtpath="$ANDROID_SWT"
+else
+    vmarch=`java -jar "${frameworkdir}"/archquery.jar`
+    if [ -n "$ANDROID_BUILD_TOP" ]; then
+        osname=`uname -s | tr A-Z a-z`
+        swtpath="${ANDROID_BUILD_TOP}/prebuilt/${osname}-${vmarch}/swt"
+    else
+        swtpath="${frameworkdir}/${vmarch}"
+    fi
+fi
+
+# Combine the swtpath and the framework dir path.
+if [ -d "$swtpath" ]; then
+    frameworkdir="${swtpath}:${frameworkdir}"
+else
+    echo "SWT folder '${swtpath}' does not exist."
+    echo "Please export ANDROID_SWT to point to the folder containing swt.jar for your platform."
+    exit 1
+fi
+
 # need to use "java.ext.dirs" because "-jar" causes classpath to be ignored
 # might need more memory, e.g. -Xmx128M
-exec "$java_cmd" -Xmx256M $os_opts $java_debug -Djava.ext.dirs="$frameworkdir" -Djava.library.path="$libdir" -Dcom.android.sdkmanager.toolsdir="$progdir" -jar "$jarpath" "$@"
+exec "$java_cmd" -Xmx256M $os_opts $java_debug -Djava.ext.dirs="$frameworkdir" -Dcom.android.sdkmanager.toolsdir="$progdir" -jar "$jarpath" "$@"

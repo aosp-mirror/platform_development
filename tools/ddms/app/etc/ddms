@@ -67,29 +67,6 @@ if [ `uname` = "Darwin" ]; then
     os_opts="-XstartOnFirstThread"
     #because Java 1.6 is 64 bits only and SWT doesn't support this, we force the usage of java 1.5
     java_cmd="/System/Library/Frameworks/JavaVM.framework/Versions/1.5/Commands/java"
-elif [[ `uname -s` = 'Linux' ]]; then
-    # We need a 32-bit Java on Linux, because our JNI libraries are 32-bit.
-    java_cmd=`which java`
-
-    if [ -x "$java_cmd" ]; then
-        if [[ ! `file -L "$java_cmd"` =~ "ELF 32-bit LSB executable" ]]; then
-            java_cmd=""
-        fi
-    fi
-
-    if [ ! -x "$java_cmd" ]; then
-        # The default JVM is not suitable.
-        # See if we can find a particular known-good JVM
-        java_cmd="/usr/lib/jvm/ia32-java-6-sun/jre/bin/java"
-        if [ ! -x "$java_cmd" ]; then
-            PREFIX=`basename "$prog"`
-            echo "$PREFIX: The default Java VM is not an ELF 32-bit LSB executable."
-            echo "$PREFIX: Please do one of the following:"
-            echo "$PREFIX: 1) Arrange for the default Java VM to be an ELF 32-bit LSB executable."
-            echo "$PREFIX: 2) Install the ia32-sun-java6-bin package."
-            exit 1
-        fi
-    fi
 else
     os_opts=
     java_cmd="java"
@@ -102,6 +79,32 @@ else
     jarpath="$frameworkdir/$jarfile"
 fi
 
+# Figure out the path to the swt.jar for the current architecture.
+# if ANDROID_SWT is defined, then just use this.
+# else, if running in the Android source tree, then look for the correct swt folder in prebuilt
+# else, look for the correct swt folder in the SDK under tools/lib/
+swtpath=""
+if [ -n "$ANDROID_SWT" ]; then
+    swtpath="$ANDROID_SWT"
+else
+    vmarch=`java -jar "${frameworkdir}"/archquery.jar`
+    if [ -n "$ANDROID_BUILD_TOP" ]; then
+        osname=`uname -s | tr A-Z a-z`
+        swtpath="${ANDROID_BUILD_TOP}/prebuilt/${osname}-${vmarch}/swt"
+    else
+        swtpath="${frameworkdir}/${vmarch}"
+    fi
+fi
+
+# Combine the swtpath and the framework dir path.
+if [ -d "$swtpath" ]; then
+    frameworkdir="${swtpath}:${frameworkdir}"
+else
+    echo "SWT folder '${swtpath}' does not exist."
+    echo "Please export ANDROID_SWT to point to the folder containing swt.jar for your platform."
+    exit 1
+fi
+
 # need to use "java.ext.dirs" because "-jar" causes classpath to be ignored
 # might need more memory, e.g. -Xmx128M
-exec "$java_cmd" -Xmx256M $os_opts $java_debug -Djava.ext.dirs="$frameworkdir" -Djava.library.path="$libdir" -Dcom.android.ddms.bindir="$progdir" -jar "$jarpath" "$@"
+exec "$java_cmd" -Xmx256M $os_opts $java_debug -Djava.ext.dirs="$frameworkdir" -Dcom.android.ddms.bindir="$progdir" -jar "$jarpath" "$@"
