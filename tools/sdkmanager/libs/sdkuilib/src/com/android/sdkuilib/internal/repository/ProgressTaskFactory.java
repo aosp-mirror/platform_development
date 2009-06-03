@@ -34,6 +34,6 @@ public class ProgressTaskFactory implements ITaskFactory {
     }
 
     public void start(String title, ITask task) {
-        ProgressTask.start(mShell, title, task);
+        new ProgressTask(mShell, title, task);
     }
 }

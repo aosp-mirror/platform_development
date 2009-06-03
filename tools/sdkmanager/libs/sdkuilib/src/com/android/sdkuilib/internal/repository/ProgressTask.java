@@ -19,120 +19,18 @@ package com.android.sdkuilib.internal.repository;
 import com.android.sdklib.internal.repository.ITask;
 import com.android.sdklib.internal.repository.ITaskMonitor;
 
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Dialog;
-import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.ProgressBar;
 import org.eclipse.swt.widgets.Shell;
-import org.eclipse.swt.widgets.Text;
 
-/*
- * TODO:
- * - trap window.close and treat it as a cancel request
- * - on cancel as been clicked *and* the task finished,, change it to a "close" button
+
+/**
+ * An {@link ITaskMonitor} that displays a {@link ProgressDialog}.
  */
+class ProgressTask implements ITaskMonitor {
 
-
-class ProgressTask extends Dialog
-    implements ITaskMonitor             //$hide$ (hide from SWT designer)
-    {
-
-    private boolean mCancelRequested;
-    private boolean mCloseRequested;
+    private ProgressDialog mDialog;
     private boolean mAutomaticallyCloseOnTaskCompletion = true;
 
-
-    // UI fields
-    private Shell mDialogShell;
-    private Composite mRootComposite;
-    private Label mLabel;
-    private ProgressBar mProgressBar;
-    private Button mCancelButton;
-    private Text mResultText;
-
-
-    /**
-     * Create the dialog.
-     * @param parent Parent container
-     */
-    public ProgressTask(Shell parent) {
-        super(parent, SWT.APPLICATION_MODAL);
-    }
-
-    /**
-     * Open the dialog and blocks till it gets closed
-     */
-    public void open() {
-        createContents();
-        mDialogShell.open();
-        mDialogShell.layout();
-        Display display = getParent().getDisplay();
-
-        startTask();    //$hide$ (hide from SWT designer)
-
-        while (!mDialogShell.isDisposed() && !mCloseRequested) {
-            if (!display.readAndDispatch()) {
-                display.sleep();
-            }
-        }
-
-        mCancelRequested = true;
-
-        if (!mDialogShell.isDisposed()) {
-            mDialogShell.close();
-        }
-    }
-
-    /**
-     * Create contents of the dialog.
-     */
-    private void createContents() {
-        mDialogShell = new Shell(getParent(), SWT.DIALOG_TRIM | SWT.APPLICATION_MODAL);
-        mDialogShell.setLayout(new GridLayout(1, false));
-        mDialogShell.setSize(450, 300);
-        mDialogShell.setText(getText());
-
-        mRootComposite = new Composite(mDialogShell, SWT.NONE);
-        mRootComposite.setLayout(new GridLayout(2, false));
-        mRootComposite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
-
-        mLabel = new Label(mRootComposite, SWT.NONE);
-        mLabel.setText("Task");
-        mLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
-
-        mProgressBar = new ProgressBar(mRootComposite, SWT.NONE);
-        mProgressBar.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
-        mCancelButton = new Button(mRootComposite, SWT.NONE);
-        mCancelButton.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
-        mCancelButton.setText("Cancel");
-
-        mCancelButton.addSelectionListener(new SelectionAdapter() {
-            @Override
-            public void widgetSelected(SelectionEvent e) {
-                mCancelRequested = true;
-                mCancelButton.setEnabled(false);
-            }
-        });
-
-        mResultText = new Text(mRootComposite,
-                SWT.BORDER | SWT.READ_ONLY | SWT.V_SCROLL | SWT.MULTI);
-        mResultText.setEditable(true);
-        mResultText.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1));
-        mResultText.setVisible(false);
-    }
-
-    // -- End of UI, Start of internal logic ----------
-    // Hide everything down-below from SWT designer
-    //$hide>>$
-
-    private ITask mTask;
 
     /**
      * Creates a new {@link ProgressTask} with the given title.
@@ -140,12 +38,10 @@ class ProgressTask extends Dialog
      *
      * This blocks till the thread ends.
      */
-    public static ProgressTask start(Shell parent, String title, ITask task) {
-        ProgressTask t = new ProgressTask(parent);
-        t.setText(title);
-        t.setTask(task);
-        t.open();
-        return t;
+    public ProgressTask(Shell parent, String title, ITask task) {
+        mDialog = new ProgressDialog(parent, createTaskThread(title, task));
+        mDialog.setText(title);
+        mDialog.open();
     }
 
     /**
@@ -153,13 +49,7 @@ class ProgressTask extends Dialog
      * This method can be invoke from a non-UI thread.
      */
     public void setDescription(final String descriptionFormat, final Object...args) {
-        mDialogShell.getDisplay().asyncExec(new Runnable() {
-            public void run() {
-                if (!mLabel.isDisposed()) {
-                    mLabel.setText(String.format(descriptionFormat, args));
-                }
-            }
-        });
+        mDialog.setDescription(descriptionFormat, args);
     }
 
     /**
@@ -168,16 +58,7 @@ class ProgressTask extends Dialog
      */
     public void setResult(final String resultFormat, final Object...args) {
         mAutomaticallyCloseOnTaskCompletion = false;
-        if (!mDialogShell.isDisposed()) {
-            mDialogShell.getDisplay().asyncExec(new Runnable() {
-                public void run() {
-                    if (!mResultText.isDisposed()) {
-                        mResultText.setVisible(true);
-                        mResultText.setText(String.format(resultFormat, args));
-                    }
-                }
-            });
-        }
+        mDialog.setResult(resultFormat, args);
     }
 
     /**
@@ -187,15 +68,7 @@ class ProgressTask extends Dialog
      * @see ProgressBar#setMaximum(int)
      */
     public void setProgressMax(final int max) {
-        if (!mDialogShell.isDisposed()) {
-            mDialogShell.getDisplay().asyncExec(new Runnable() {
-                public void run() {
-                    if (!mProgressBar.isDisposed()) {
-                        mProgressBar.setMaximum(max);
-                    }
-                }
-            });
-        }
+        mDialog.setProgressMax(max);
     }
 
     /**
@@ -204,15 +77,7 @@ class ProgressTask extends Dialog
      * This method can be invoked from a non-UI thread.
      */
     public void incProgress(final int delta) {
-        if (!mDialogShell.isDisposed()) {
-            mDialogShell.getDisplay().asyncExec(new Runnable() {
-                public void run() {
-                    if (!mProgressBar.isDisposed()) {
-                        mProgressBar.setSelection(mProgressBar.getSelection() + delta);
-                    }
-                }
-            });
-        }
+        mDialog.incProgress(delta);
     }
 
     /**
@@ -220,32 +85,28 @@ class ProgressTask extends Dialog
      * It is up to the task thread to pool this and exit.
      */
     public boolean cancelRequested() {
-        return mCancelRequested;
-    }
-
-    /** Sets the task that will execute in a separate thread. */
-    private void setTask(ITask task) {
-        mTask = task;
+        return mDialog.isCancelRequested();
     }
 
     /**
-     * Starts the task from {@link #setTask(ITask)} in a separate thread.
-     * When the task completes, set {@link #mCloseRequested} to end the dialog loop.
+     * Creates a thread to run the task. The thread has not been started yet.
+     * When the task completes, requests to close the dialog.
+     * @return A new thread that will run the task. The thread has not been started yet.
      */
-    private void startTask() {
-        if (mTask != null) {
-            new Thread(getText()) {
+    private Thread createTaskThread(String title, final ITask task) {
+        if (task != null) {
+            return new Thread(title) {
                 @Override
                 public void run() {
-                    mTask.run(ProgressTask.this);
+                    task.run(ProgressTask.this);
                     if (mAutomaticallyCloseOnTaskCompletion) {
-                        mCloseRequested = true;
+                        mDialog.setAutoCloseRequested();
+                    } else {
+                        mDialog.setManualCloseRequested();
                     }
                 }
-            }.start();
+            };
         }
+        return null;
     }
-
-    // End of hiding from SWT Designer
-    //$hide<<$
 }
