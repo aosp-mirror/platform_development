@@ -350,7 +350,7 @@ public class UpdaterWindowImpl {
 
                     if (!archive.isCompatible()) {
                         monitor.setResult("Skipping incompatible archive: %1$s",
-                                archive.getShortDescription());
+                                archive.getParentPackage().getShortDescription());
                         monitor.incProgress(NUM_FETCH_URL_MONITOR_INC + 10);
                         continue;
                     }
@@ -360,6 +360,8 @@ public class UpdaterWindowImpl {
                         archiveFile = downloadArchive(archive, monitor);
                         if (archiveFile != null) {
                             if (installArchive(archive, archiveFile, monitor)) {
+                                monitor.setResult("Installed: %1$s",
+                                        archive.getParentPackage().getShortDescription());
                                 num_installed++;
                             }
                         }

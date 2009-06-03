@@ -226,7 +226,7 @@ public class LocalPackagesPage extends Composite {
 
     private void onUpdateInstalledPackage() {
         // TODO just a test, needs to be removed later.
-        ProgressTask.start(getShell(), "Test", new ITask() {
+        new ProgressTask(getShell(), "Test", new ITask() {
             public void run(ITaskMonitor monitor) {
                 monitor.setDescription("Test");
                 monitor.setProgressMax(100);
