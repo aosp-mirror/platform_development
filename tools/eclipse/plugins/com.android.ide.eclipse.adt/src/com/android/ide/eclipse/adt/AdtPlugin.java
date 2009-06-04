@@ -987,9 +987,9 @@ public class AdtPlugin extends AbstractUIPlugin {
 
                     return Status.OK_STATUS;
                 } catch (Throwable t) {
-                    log(t, "pingUsageServer failed"); //$NON-NLS-1$
+                    log(t, "pingUsageServer failed");       //$NON-NLS-1$
                     return new Status(IStatus.ERROR, PLUGIN_ID,
-                            "pingUsageServer failed", t);
+                            "pingUsageServer failed", t);    //$NON-NLS-1$
                 }
             }
         };
@@ -1096,6 +1096,11 @@ public class AdtPlugin extends AbstractUIPlugin {
                             }
                         }
                     });
+                } catch (Throwable t) {
+                    log(t, "Unknown exception in parseSdkContent.");    //$NON-NLS-1$
+                    return new Status(IStatus.ERROR, PLUGIN_ID,
+                            "parseSdkContent failed", t);               //$NON-NLS-1$
+
                 } finally {
                     mSdkIsLoading = false;
                     if (monitor != null) {
