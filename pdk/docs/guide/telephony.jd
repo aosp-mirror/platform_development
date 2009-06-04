@@ -45,7 +45,17 @@ Solid elements represent Android blocks and dashed elements represent partner-sp
 <li>RIL daemon calls <code>RIL_register</code> on the Android telephony stack, providing a reference to the Vendor RIL functions</li></ol>
 </p>
 <p>See the RIL Daemon source code at <code>//device/commands/rild/rild.c</code> for details.</p>
+<p><b>System Properties</b></p>
+<p>The following RIL-related system properties are set by the RIL library:</p>
+<p><ul>
+<li><code>ro.ril.ecclist</code>: list of valid Emergency Call Codes, for example, 911. Values are read from <code>EF_ECC</code> on the SIM and possibly supplmented by tables based on operator, network, or manufacturing code.</li></ul></p>
 
+<p>The following RIL_related system properties are available to the RIL library:</p>
+<p><ul>
+<li><code>ro.ril.hsxpa</code>: inidcates <code>hsxpa</code> support of target network.</li>
+<li><code>ro.ril.gprsclass</code>: inidcates GPRS class of target network.</li>
+<li><code>ro.ril.enable.3g.prefix=1</code>: adds the 3G prefix to the operator name.</li>
+</ul></p>
 
 <a name="androidTelephonyRILIntro"></a><h2>RIL Interaction</h2>
 
