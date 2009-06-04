@@ -232,7 +232,7 @@ public class LocalPackagesPage extends Composite {
                 monitor.setProgressMax(100);
                 int n = 0;
                 int d = 1;
-                while(!monitor.cancelRequested()) {
+                while(!monitor.isCancelRequested()) {
                     monitor.incProgress(d);
                     n += d;
                     if (n == 0 || n == 100) d = -d;

@@ -81,10 +81,20 @@ class ProgressTask implements ITaskMonitor {
     }
 
     /**
+     * Returns the current value of the progress bar,
+     * between 0 and up to {@link #setProgressMax(int)} - 1.
+     *
+     * This method can be invoked from a non-UI thread.
+     */
+    public int getProgress() {
+        return mDialog.getProgress();
+    }
+
+    /**
      * Returns true if the "Cancel" button was selected.
      * It is up to the task thread to pool this and exit.
      */
-    public boolean cancelRequested() {
+    public boolean isCancelRequested() {
         return mDialog.isCancelRequested();
     }
 
