@@ -20,24 +20,39 @@ rem Set up prog to be the path of this script, including following symlinks,
 rem and set up progdir to be the fully-qualified pathname of its directory.
 set prog=%~f0
 
-rem Change current directory and drive to where traceview.bat is, to avoid
+rem Change current directory and drive to where the script is, to avoid
 rem issues with directories containing whitespaces.
 cd /d %~dp0
 
 set jarfile=traceview.jar
 set frameworkdir=
-set libdir=
 
 if exist %frameworkdir%%jarfile% goto JarFileOk
     set frameworkdir=lib\
-    set libdir=lib\
 
 if exist %frameworkdir%%jarfile% goto JarFileOk
     set frameworkdir=..\framework\
-    set libdir=..\lib\
 
 :JarFileOk
 
 set jarpath=%frameworkdir%%jarfile%
 
-java -Djava.ext.dirs=%frameworkdir% -Djava.library.path=%libdir% -jar %jarpath% %*
+if not defined ANDROID_SWT goto QueryArch
+    set swt_path=%ANDROID_SWT%
+    goto SwtDone
+
+:QueryArch
+
+    for /f %%a in ('java -jar %frameworkdir%archquery.jar') do set swt_path=%frameworkdir%%%a
+
+:SwtDone
+
+if exist %swt_path% goto SetPath
+    echo SWT folder '%swt_path%' does not exist.
+    echo Please set ANDROID_SWT to point to the folder containing swt.jar for your platform.
+    exit /B
+
+:SetPath
+set javaextdirs=%swt_path%;%frameworkdir%
+
+call java -Djava.ext.dirs=%javaextdirs% -jar %jarpath% %*

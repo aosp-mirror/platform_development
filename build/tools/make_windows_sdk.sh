@@ -126,14 +126,14 @@ function package() {
     LIB="$TEMP_SDK_DIR/tools/lib"
     rm -v "$TOOLS"/{adb,android,apkbuilder,ddms,dmtracedump,draw9patch,emulator}
     rm -v "$TOOLS"/{hierarchyviewer,hprof-conv,mksdcard,sqlite3,traceview}
-    rm -vf "$LIB"/*.so "$LIB"/*.jnilib
-    rm -v  "$PLATFORM_TOOLS"/{aapt,aidl,dx,dexdump}
-
+    rm -v "$LIB"/*/swt.jar
+    rm -v "$PLATFORM_TOOLS"/{aapt,aidl,dx,dexdump}
 
     # Copy all the new stuff in tools
     # Note: some tools are first copied here and then moved in platforms/<name>/tools/
     cp -v out/host/windows-x86/bin/*.{exe,dll} "$TOOLS"
-    cp -v prebuilt/windows/swt/*.{jar,dll}     "$LIB"
+    cp -v prebuilt/windows/swt/swt.jar         "$LIB"/x86
+    cp -v prebuilt/windows-x86_64/swt/swt.jar  "$LIB"/x86_64
 
     # If you want the emulator NOTICE in the tools dir, uncomment the following line:
     # cp -v external/qemu/NOTICE "$TOOLS"/emulator_NOTICE.txt
@@ -148,7 +148,7 @@ function package() {
     cp -v development/tools/hierarchyviewer/etc/hierarchyviewer.bat "$TOOLS"
     cp -v development/tools/draw9patch/etc/draw9patch.bat           "$TOOLS"
     cp -v development/tools/sdkmanager/app/etc/android.bat          "$TOOLS"
-    
+
     # Put the JetCreator tools, content and docs (not available in the linux SDK)
     JET="$TOOLS/Jet"
     JETCREATOR="$JET/JetCreator"
