@@ -26,7 +26,7 @@
 #include <utils/threads.h>
 #include <utils/Timers.h>
 #include <utils/List.h>
-#include <utils/string_array.h>
+#include <utils/StringArray.h>
 #include <utils/misc.h>
 #include <utils/Errors.h>
 
