@@ -54,6 +54,7 @@ public class AppHwPref extends Activity {
     private static final int TOUCHSCREEN = BASE + 1;
     private static final int KEYBOARD_TYPE = BASE + 2;
     private static final int NAVIGATION = BASE + 3;
+    private static final int GLES_VERSION = BASE + 4;
     
     @Override
     protected void onCreate(Bundle icicle) {
@@ -79,31 +80,32 @@ public class AppHwPref extends Activity {
         
         setContentView(R.layout.application_hw_pref);
         if(appHwPref != null) {
-        	displayTextView(R.id.attr_package, pInfo.applicationInfo.loadLabel(mPm));
-        	displayTextView(R.id.attr_touchscreen, appHwPref, TOUCHSCREEN);
-        	displayTextView(R.id.attr_input_method, appHwPref, KEYBOARD_TYPE);
-        	displayTextView(R.id.attr_navigation, appHwPref, NAVIGATION);
-        	displayFlag(R.id.attr_hard_keyboard, ConfigurationInfo.INPUT_FEATURE_HARD_KEYBOARD, appHwPref);
-        	displayFlag(R.id.attr_five_way_nav, ConfigurationInfo.INPUT_FEATURE_FIVE_WAY_NAV, appHwPref);
+            displayTextView(R.id.attr_package, pInfo.applicationInfo.loadLabel(mPm));
+            displayTextView(R.id.attr_touchscreen, appHwPref, TOUCHSCREEN);
+            displayTextView(R.id.attr_input_method, appHwPref, KEYBOARD_TYPE);
+            displayTextView(R.id.attr_navigation, appHwPref, NAVIGATION);
+            displayFlag(R.id.attr_hard_keyboard, ConfigurationInfo.INPUT_FEATURE_HARD_KEYBOARD, appHwPref);
+            displayFlag(R.id.attr_five_way_nav, ConfigurationInfo.INPUT_FEATURE_FIVE_WAY_NAV, appHwPref);
+           displayTextView(R.id.attr_gles_version, appHwPref, GLES_VERSION);
         }
     }
     
     void displayFlag(int viewId, int flagMask, ConfigurationInfo[] appHwPref) {
-    	if(appHwPref == null) {
-    		return;
-    	}
-    	boolean flag = false;
-    	for (int i = 0; i < appHwPref.length; i++) {
-    		ConfigurationInfo pref = appHwPref[i];
-        	if((pref.reqInputFeatures & flagMask) != 0) {
-        		flag = true;
-        		break;
-        	}
+        if(appHwPref == null) {
+            return;
+        }
+        boolean flag = false;
+        for (int i = 0; i < appHwPref.length; i++) {
+            ConfigurationInfo pref = appHwPref[i];
+            if((pref.reqInputFeatures & flagMask) != 0) {
+                flag = true;
+                break;
+            }
         }
         if(flag) {
             displayTextView(viewId, "true");
         } else {
-        	displayTextView(viewId, "false");
+            displayTextView(viewId, "false");
         }
     }
     
@@ -139,6 +141,9 @@ public class AppHwPref extends Activity {
                 break;
             case NAVIGATION:
                 str = getNavigationStr(config[i]);
+                break;
+            case GLES_VERSION:
+                str = config[i].getGlEsVersion();
                 break;
             }
             if(str != null) {
