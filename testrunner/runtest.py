@@ -287,6 +287,8 @@ class TestRunner(object):
           instrumentation_args=instrumentation_args)
       logger.Log(adb_cmd)
     elif self._options.coverage:
+      self._adb.WaitForInstrumentation(test_suite.GetPackageName(),
+                                       test_suite.GetRunnerName())
       # need to parse test output to determine path to coverage file
       logger.Log("Running in coverage mode, suppressing test output")
       try:
@@ -306,6 +308,8 @@ class TestRunner(object):
       if coverage_file is not None:
         logger.Log("Coverage report generated at %s" % coverage_file)
     else:
+      self._adb.WaitForInstrumentation(test_suite.GetPackageName(),
+                                       test_suite.GetRunnerName())
       self._adb.StartInstrumentationNoResults(
           package_name=test_suite.GetPackageName(),
           runner_name=test_suite.GetRunnerName(),
