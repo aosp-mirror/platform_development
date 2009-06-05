@@ -26,6 +26,8 @@
         <sdk:api-level>1</sdk:api-level>
         <sdk:revision>3</sdk:revision>
         <sdk:description>Some optional description</sdk:description>
+        <sdk:license>This is the license
+        for this platform.</sdk:license>
         <sdk:desc-url>http://www.example.com/platform1.html</sdk:desc-url>
         <!-- The archives node is mandatory and it cannot be empty. -->
         <sdk:archives>
@@ -41,6 +43,7 @@
         <sdk:api-level>1</sdk:api-level>
         <sdk:revision>1</sdk:revision>
         <sdk:description>Some optional description</sdk:description>
+        <!-- the license element is not mandatory. -->
         <sdk:desc-url>http://www.example.com/docs.html</sdk:desc-url>
         <sdk:archives>
             <sdk:archive os="any">
@@ -56,6 +59,8 @@
         <sdk:api-level>1</sdk:api-level>
         <sdk:vendor>John Doe</sdk:vendor>
         <sdk:revision>1</sdk:revision>
+        <!-- license can be empty. -->
+        <sdk:license></sdk:license>
         <sdk:description>Some optional description</sdk:description>
         <sdk:desc-url>http://www.example.com/myfirstaddon</sdk:desc-url>
         <sdk:archives>
@@ -82,6 +87,7 @@
         <sdk:version>1.1</sdk:version>
         <sdk:api-level>2</sdk:api-level>
         <sdk:revision>12</sdk:revision>
+        <sdk:license>This is the license for this package.</sdk:license>
         <!-- sdk:description and sdk:desc-url are optional -->
         <sdk:archives>
             <sdk:archive os="windows">
@@ -139,12 +145,14 @@
                 <sdk:name>com.android.mymaps</sdk:name>
             </sdk:lib>
         </sdk:libs>
+        <sdk:license>This is the license for this package.</sdk:license>
     </sdk:add-on>
 
     <sdk:tool>
         <sdk:revision>1</sdk:revision>
         <sdk:description>Some optional description</sdk:description>
         <sdk:desc-url>http://www.example.com/tools.html</sdk:desc-url>
+        <sdk:license>This is the license for this package.</sdk:license>
         <sdk:archives>
             <sdk:archive os="any">
                 <sdk:size>65536</sdk:size>
@@ -157,6 +165,7 @@
     <sdk:doc>
         <sdk:api-level>2</sdk:api-level>
         <sdk:revision>42</sdk:revision>
+        <sdk:license>This is the license for this package.</sdk:license>
         <sdk:archives>
             <sdk:archive os="windows">
                 <sdk:size>65536</sdk:size>
@@ -178,6 +187,7 @@
 
     <sdk:tool>
         <sdk:revision>42</sdk:revision>
+        <sdk:license>This is the license for this package.</sdk:license>
         <sdk:archives>
             <sdk:archive os="windows">
                 <sdk:size>65536</sdk:size>
@@ -198,6 +208,7 @@
     </sdk:tool>
 
     <sdk:add-on>
+        <sdk:license>This is the license for this package.</sdk:license>
         <sdk:name>This add-on has no libraries</sdk:name>
         <sdk:api-level>4</sdk:api-level>
         <sdk:vendor>Joe Bar</sdk:vendor>

@@ -74,14 +74,15 @@ public class AddonPackage extends Package {
     }
 
     /**
-     * Creates a new platform package based on an actual {@link IAndroidTarget} (with
+     * Creates a new platform package based on an actual {@link IAndroidTarget} (which
      * {@link IAndroidTarget#isPlatform()} false) from the {@link SdkManager}.
      * This is used to list local SDK folders.
      */
     AddonPackage(IAndroidTarget target) {
         super(  null,                       //source
                 0,                          //revision
-                target.getDescription(),  //description
+                null,                       //license
+                target.getDescription(),    //description
                 null,                       //descUrl
                 Os.getCurrentOs(),          //archiveOs
                 Arch.getCurrentArch(),      //archiveArch

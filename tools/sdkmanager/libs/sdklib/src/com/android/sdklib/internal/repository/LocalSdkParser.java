@@ -167,6 +167,7 @@ public class LocalSdkParser {
             pkg = new ToolPackage(
                     null,                       //source
                     0,                          //revision
+                    null,                       //license
                     "Tools",                    //description
                     null,                       //descUrl
                     Os.getCurrentOs(),          //archiveOs
@@ -229,6 +230,7 @@ public class LocalSdkParser {
                         null,                       //source
                         0,                          //apiLevel
                         0,                          //revision
+                        null,                       //license
                         String.format("Documentation for %1$s", found),     //description
                         null,                       //descUrl
                         Os.getCurrentOs(),          //archiveOs
