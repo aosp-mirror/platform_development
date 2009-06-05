@@ -148,7 +148,7 @@ final class ProgressDialog extends Dialog {
         });
 
         mResultText = new Text(mRootComposite,
-                SWT.BORDER | SWT.READ_ONLY | SWT.V_SCROLL | SWT.MULTI);
+                SWT.BORDER | SWT.READ_ONLY | SWT.WRAP | SWT.H_SCROLL | SWT.V_SCROLL | SWT.CANCEL | SWT.MULTI);
         mResultText.setEditable(true);
         mResultText.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1));
     }
@@ -286,7 +286,15 @@ final class ProgressDialog extends Dialog {
                 public void run() {
                     if (!mResultText.isDisposed()) {
                         mResultText.setVisible(true);
-                        mResultText.setText(String.format(resultFormat, args));
+                        String newText = String.format(resultFormat, args);
+                        String lastText = mResultText.getText();
+                        if (lastText != null &&
+                                lastText.length() > 0 &&
+                                !lastText.endsWith("\n") &&
+                                !newText.startsWith("\n")) {
+                            mResultText.append("\n");
+                        }
+                        mResultText.append(newText);
                     }
                 }
             });
@@ -325,6 +333,27 @@ final class ProgressDialog extends Dialog {
                 }
             });
         }
+    }
+
+    /**
+     * Returns the current value of the progress bar,
+     * between 0 and up to {@link #setProgressMax(int)} - 1.
+     * This method can be invoked from a non-UI thread.
+     */
+    public int getProgress() {
+        final int[] result = new int[] { 0 };
+
+        if (!mDialogShell.isDisposed()) {
+            mDialogShell.getDisplay().syncExec(new Runnable() {
+                public void run() {
+                    if (!mProgressBar.isDisposed()) {
+                        result[0] = mProgressBar.getSelection();
+                    }
+                }
+            });
+        }
+
+        return result[0];
     }
 
     /**

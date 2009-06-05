@@ -55,9 +55,15 @@ public interface ITaskMonitor {
     public void incProgress(int delta);
 
     /**
+     * Returns the current value of the progress bar,
+     * between 0 and up to {@link #setProgressMax(int)} - 1.
+     */
+    public int getProgress();
+
+    /**
      * Returns true if the user requested to cancel the operation.
      * It is up to the task thread to pool this and exit as soon
      * as possible.
      */
-    public boolean cancelRequested();
+    public boolean isCancelRequested();
 }
