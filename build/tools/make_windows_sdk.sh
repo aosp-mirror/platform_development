@@ -131,23 +131,25 @@ function package() {
 
     # Copy all the new stuff in tools
     # Note: some tools are first copied here and then moved in platforms/<name>/tools/
-    cp -v out/host/windows-x86/bin/*.{exe,dll} "$TOOLS"
-    cp -v prebuilt/windows/swt/swt.jar         "$LIB"/x86
-    cp -v prebuilt/windows-x86_64/swt/swt.jar  "$LIB"/x86_64
+    cp -v out/host/windows-x86/bin/*.{exe,dll} "$TOOLS"/
+    mkdir -pv "$LIB"/x86
+    cp -v prebuilt/windows/swt/swt.jar         "$LIB"/x86/
+    mkdir -pv "$LIB"/x86_64
+    cp -v prebuilt/windows-x86_64/swt/swt.jar  "$LIB"/x86_64/
 
     # If you want the emulator NOTICE in the tools dir, uncomment the following line:
     # cp -v external/qemu/NOTICE "$TOOLS"/emulator_NOTICE.txt
 
     # We currently need libz from MinGW for aapt
-    cp -v /cygdrive/c/cygwin/bin/mgwz.dll "$TOOLS"
+    cp -v /cygdrive/c/cygwin/bin/mgwz.dll "$TOOLS"/
 
     # Update a bunch of bat files
-    cp -v development/tools/apkbuilder/etc/apkbuilder.bat           "$TOOLS"
-    cp -v development/tools/ddms/app/etc/ddms.bat                   "$TOOLS"
-    cp -v development/tools/traceview/etc/traceview.bat             "$TOOLS"
-    cp -v development/tools/hierarchyviewer/etc/hierarchyviewer.bat "$TOOLS"
-    cp -v development/tools/draw9patch/etc/draw9patch.bat           "$TOOLS"
-    cp -v development/tools/sdkmanager/app/etc/android.bat          "$TOOLS"
+    cp -v development/tools/apkbuilder/etc/apkbuilder.bat           "$TOOLS"/
+    cp -v development/tools/ddms/app/etc/ddms.bat                   "$TOOLS"/
+    cp -v development/tools/traceview/etc/traceview.bat             "$TOOLS"/
+    cp -v development/tools/hierarchyviewer/etc/hierarchyviewer.bat "$TOOLS"/
+    cp -v development/tools/draw9patch/etc/draw9patch.bat           "$TOOLS"/
+    cp -v development/tools/sdkmanager/app/etc/android.bat          "$TOOLS"/
 
     # Put the JetCreator tools, content and docs (not available in the linux SDK)
     JET="$TOOLS/Jet"
@@ -164,9 +166,9 @@ function package() {
     mkdir -v "$JET"
     mkdir -v "$JETDOC"
 
-    cp -rv external/sonivox/jet_tools/JetCreator         "$JETCREATOR"
-    cp -rv external/sonivox/jet_tools/JetCreator_content "$JETDEMOCONTENT"
-    cp -rv external/sonivox/jet_tools/logic_templates    "$JETLOGICTEMPLATES"
+    cp -rv external/sonivox/jet_tools/JetCreator         "$JETCREATOR"/
+    cp -rv external/sonivox/jet_tools/JetCreator_content "$JETDEMOCONTENT"/
+    cp -rv external/sonivox/jet_tools/logic_templates    "$JETLOGICTEMPLATES"/
     chmod -vR u+w "$JETCREATOR"  # fixes an issue where Cygwin might copy the above as u+rx only
     cp -v prebuilt/windows/jetcreator/EASDLL.dll         "$JETCREATOR"/
     
@@ -176,16 +178,16 @@ function package() {
     cp -rv external/sonivox/docs/JET_Creator_User_Manual_files  "$JETDOC"/
 
     # Copy or move platform specific tools to the default platform.
-    cp -v dalvik/dx/etc/dx.bat "$PLATFORM_TOOLS"
+    cp -v dalvik/dx/etc/dx.bat "$PLATFORM_TOOLS"/
     # Note: mgwz.dll must be in same folder than aapt.exe
-    mv -v "$TOOLS"/{aapt.exe,aidl.exe,dexdump.exe,mgwz.dll} "$PLATFORM_TOOLS"
+    mv -v "$TOOLS"/{aapt.exe,aidl.exe,dexdump.exe,mgwz.dll} "$PLATFORM_TOOLS"/
 
     # Fix EOL chars to make window users happy - fix all files at the top level only
     # as well as all batch files including those in platforms/<name>/tools/
     find "$TEMP_SDK_DIR" -maxdepth 1 -type f -writable -print0 | xargs -0 unix2dos -D
     find "$TEMP_SDK_DIR" -maxdepth 3 -name "*.bat" -type f -writable -print0 | xargs -0 unix2dos -D
 
-    # Done.. Zip it. Clean the temp folder ONLY if the zip worked (to easy debugging)
+    # Done.. Zip it. Clean the temp folder ONLY if the zip worked (to ease debugging)
     pushd "$TEMP_DIR" > /dev/null
     [ -e "$DEST_NAME_ZIP" ] && rm -rfv "$DEST_NAME_ZIP"
     zip -9r "$DEST_NAME_ZIP" "$DEST_NAME" && rm -rfv "$DEST_NAME"
