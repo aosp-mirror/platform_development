@@ -44,6 +44,7 @@ public class ToolPackage extends Package {
      */
     ToolPackage(RepoSource source,
             int revision,
+            String license,
             String description,
             String descUrl,
             Os archiveOs,
@@ -53,6 +54,7 @@ public class ToolPackage extends Package {
             String archiveChecksum) {
         super(source,
                 revision,
+                license,
                 description,
                 descUrl,
                 archiveOs,

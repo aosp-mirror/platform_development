@@ -56,6 +56,9 @@
                             <!-- The revision, an int > 0, incremented each time a new
                                  package is generated. -->
                             <xsd:element name="revision"    type="xsd:positiveInteger" />
+                            <!-- The optional license of this package. If present, users will have
+                                 to agree to it before downloading. -->
+                            <xsd:element name="license" type="xsd:string" minOccurs="0" />
                             <!-- The optional description of this package. -->
                             <xsd:element name="description" type="xsd:string" minOccurs="0" />
                             <!-- The optional description URL of this package -->
@@ -84,6 +87,9 @@
                             <!-- The revision, an int > 0, incremented each time a new
                                  package is generated. -->
                             <xsd:element name="revision"    type="xsd:positiveInteger" />
+                            <!-- The optional license of this package. If present, users will have
+                                 to agree to it before downloading. -->
+                            <xsd:element name="license" type="xsd:string" minOccurs="0" />
                             <!-- The optional description of this package. -->
                             <xsd:element name="description" type="xsd:string" minOccurs="0" />
                             <!-- The optional description URL of this package -->
@@ -124,6 +130,9 @@
                             <!-- The revision, an int > 0, incremented each time a new
                                  package is generated. -->
                             <xsd:element name="revision"    type="xsd:positiveInteger" />
+                            <!-- The optional license of this package. If present, users will have
+                                 to agree to it before downloading. -->
+                            <xsd:element name="license" type="xsd:string" minOccurs="0" />
                             <!-- The optional description of this package. -->
                             <xsd:element name="description" type="xsd:string" minOccurs="0" />
                             <!-- The optional description URL of this package -->
@@ -148,6 +157,9 @@
                             <!-- The revision, an int > 0, incremented each time a new
                                  package is generated. -->
                             <xsd:element name="revision"    type="xsd:positiveInteger" />
+                            <!-- The optional license of this package. If present, users will have
+                                 to agree to it before downloading. -->
+                            <xsd:element name="license" type="xsd:string" minOccurs="0" />
                             <!-- The optional description of this package. -->
                             <xsd:element name="description" type="xsd:string" minOccurs="0" />
                             <!-- The optional description URL of this package -->

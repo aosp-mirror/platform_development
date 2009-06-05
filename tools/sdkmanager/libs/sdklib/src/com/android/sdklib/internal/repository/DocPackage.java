@@ -49,6 +49,7 @@ public class DocPackage extends Package {
     DocPackage(RepoSource source,
             int apiLevel,
             int revision,
+            String license,
             String description,
             String descUrl,
             Os archiveOs,
@@ -58,6 +59,7 @@ public class DocPackage extends Package {
             String archiveChecksum) {
         super(source,
                 revision,
+                license,
                 description,
                 descUrl,
                 archiveOs,
