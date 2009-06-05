@@ -2,12 +2,8 @@
 #
 
 # swt
-lib/libswt-carbon-3236.jnilib tools/lib/libswt-carbon-3236.jnilib
-lib/libswt-pi-carbon-3236.jnilib tools/lib/libswt-pi-carbon-3236.jnilib
-framework/swt.jar tools/lib/swt.jar
-framework/org.eclipse.core.commands_3.2.0.I20060605-1400.jar tools/lib/org.eclipse.core.commands_3.2.0.I20060605-1400.jar
-framework/org.eclipse.equinox.common_3.2.0.v20060603.jar tools/lib/org.eclipse.equinox.common_3.2.0.v20060603.jar
-framework/org.eclipse.jface_3.2.0.I20060605-1400.jar tools/lib/org.eclipse.jface_3.2.0.I20060605-1400.jar
+prebuilt/darwin-x86/swt/swt.jar tools/lib/x86/swt.jar
+
 
 # JetCreator (only available on mac/windows)
 external/sonivox/jet_tools/JetCreator tools/Jet/JetCreator

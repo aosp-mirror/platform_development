@@ -11,9 +11,10 @@ LOCAL_JAVA_LIBRARIES := \
 	sdklib \
 	sdkuilib \
 	swt \
-	org.eclipse.jface_3.2.0.I20060605-1400 \
-	org.eclipse.equinox.common_3.2.0.v20060603 \
-	org.eclipse.core.commands_3.2.0.I20060605-1400
+	org.eclipse.jface_3.4.2.M20090107-0800 \
+	org.eclipse.equinox.common_3.4.0.v20080421-2006 \
+	org.eclipse.core.commands_3.4.0.I20080509-2000
+
 LOCAL_MODULE := sdkmanager
 
 include $(BUILD_HOST_JAVA_LIBRARY)
