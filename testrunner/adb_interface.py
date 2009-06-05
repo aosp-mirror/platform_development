@@ -317,7 +317,44 @@ class AdbInterface:
     if not pm_found:
       raise errors.WaitForResponseTimedOutError(
           "Package manager did not respond after %s seconds" % wait_time)
-    
+
+  def WaitForInstrumentation(self, package_name, runner_name, wait_time=120):
+    """Waits for given instrumentation to be present on device
+
+    Args:
+      wait_time: time in seconds to wait
+
+    Raises:
+      WaitForResponseTimedOutError if wait_time elapses and instrumentation
+      still not present.
+    """
+    instrumentation_path = "%s/%s" % (package_name, runner_name)
+    logger.Log("Waiting for instrumentation to be present")
+    # Query the package manager
+    inst_found = False
+    attempts = 0
+    wait_period = 5
+    while not inst_found and (attempts*wait_period) < wait_time:
+      # assume the 'adb shell pm list instrumentation'
+      # return 'instrumentation: something' in the success case
+      try:
+        output = self.SendShellCommand("pm list instrumentation | grep %s"
+                                       % instrumentation_path, retry_count=1)
+        if "instrumentation:" in output:
+          inst_found = True
+      except errors.AbortError, e:
+        # ignore
+        pass
+      if not inst_found:
+        time.sleep(wait_period)
+        attempts += 1
+    if not inst_found:
+      logger.Log(
+          "Could not find instrumentation %s on device. Does the "
+          "instrumentation in test's AndroidManifest.xml match definition"
+          "in test_defs.xml?" % instrumentation_path)
+      raise errors.WaitForResponseTimedOutError()
+
   def Sync(self, retry_count=3):
     """Perform a adb sync.
     
