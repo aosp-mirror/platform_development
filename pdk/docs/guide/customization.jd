@@ -2,21 +2,22 @@ page.title=Customization
 pdk.version=1.0
 @jd:body
 
-<a name="toc"/> 
-<div style="padding:10px"> 
-<a href="#androidBootScreenCustomization">Boot Screen Customization</a><br/> 
-<a href="#androidNetCustPlat">Network Customization Platform</a><br/><div style="padding-left:40px"> 
- 
-<a href="#androidNetCustPlatNetworkConfig">Network Configuration</a><br/> 
-<a href="#androidNetCustPlatAPNConfig">Build-time APN configuration</a><br/> 
-<a href="#androidNetCustPlatAPNRunTime">APN configuration at run time</a><br/></div> 
-<a href="#androidCustomizingPre-LoadedApps">Customizing pre-loaded applications</a><br/> 
-<a href="#androidBrowserBookmarks">Customizing browser bookmarks</a><br/> 
-<a href="#androidEmailProviderCustomization">Email Provider Customization</a><br/> 
-<a href="#androidThemes">Platform Themes</a><br/><div style="padding-left:40px"> 
- 
-<a href="#androidThemesStyles">Themes and Styles</a><br/> 
-<a href="#androidThemesAnimations">Animations</a><br/></div></div></font></div> 
+<div id="qv-wrapper">
+<div id="qv">
+<h2>In this document</h2>
+<a name="toc"/>
+<ul>
+<li><a href="#androidBootScreenCustomization">Boot Screen Customization</a></li>
+<li><a href="#androidNetCustPlat">Network Customization Platform</a></li>
+<li><a href="#androidCustomizingPre-LoadedApps">Customizing pre-loaded applications</a></li> 
+<li><a href="#androidBrowserBookmarks">Customizing browser bookmarks</a></li> 
+<li><a href="#androidEmailProviderCustomization">Email Provider Customization</a></li>
+<li><a href="#androidThemes">Platform Themes</a></li>
+</ul>
+</div>
+</div>
+
+
  
 <a name="androidBootScreenCustomization"></a><h3>Boot Screen Customization</h3> 
  

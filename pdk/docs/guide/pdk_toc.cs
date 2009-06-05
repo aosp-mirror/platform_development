@@ -34,7 +34,7 @@ function nothing() {}
       <li><a href="<?cs var:toroot ?>guide/wifi.html">Wi-Fi</a></li>
     </ul>
   </li>
- 
+
   <li><a href="<?cs var:toroot ?>guide/display_drivers.html">Display Drivers</a></li>
   <li class="toggle-list"> 
     <div><a href="javascript:nothing()">Input Devices</a></div>
@@ -42,7 +42,7 @@ function nothing() {}
       <li><a href="<?cs var:toroot ?>guide/keymaps_keyboard_input.html">Keymaps and Keyboard</a></li>
     </ul>
   </li>
-  <li><a href="<?cs var:toroot ?>guide/lights.html">LED</a></li>
+  <li><a href="<?cs var:toroot ?>guide/lights.html">Lights</a></li>
   <li class="toggle-list">
     <div><a href="javascript:nothing()">Multimedia</a></div>
     <ul>
@@ -63,13 +63,6 @@ function nothing() {}
     <ul>
       <li><a href="<?cs var:toroot ?>guide/telephony.html">Radio Interface Layer</a></li>
       <li><a href="<?cs var:toroot ?>guide/stk.html">SIM Toolkit Application (STK)</a></li>
-    </ul>
-  </li>
-
-  <li class="toggle-list">
-    <div><a href="javascript:nothing()">Misc</a></div>
-    <ul>
-      <li><a href="<?cs var:toroot ?>guide/lights.html">LEDs</a></li>
     </ul>
   </li>
 

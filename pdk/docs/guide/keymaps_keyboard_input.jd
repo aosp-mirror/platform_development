@@ -3,25 +3,19 @@ pdk.version=1.0
 @jd:body
 
 
+<div id="qv-wrapper">
+<div id="qv">
+<h2>In this document</h2>
 <a name="toc"/>
-<div style="padding:10px">
-<a href="#androidKeymapIntro">Introduction</a><br/>
-<a href="#androidKeymapFunctionality">Functionality</a><br/>
-<a href="#androidKeymapKeyLayoutMapTitle">Key Layout Map</a><br/><div style="padding-left:40px">
-
-<a href="#androidKeymapKeyLayoutMapSelection">Selection of a Key Layout Map</a><br/>
-<a href="#androidKeymapKeyLayoutMapFileFormat">File Format</a><br/>
-<a href="#androidKeymapKeyLayoutMapExample">Example of a Key Layout Map File</a><br/></div>
-<a href="#androidKeymapKeyCharMap">Key Character Map</a><br/><div style="padding-left:40px">
-
-<a href="#androidKeymapKeyCharMapSelection">Selection of a Key Character Map</a><br/>
-<a href="#androidKeymapKeyCharMapFileFormat">File Format</a><br/>
-<a href="#androidKeymapKeyCharMapExample">Example of a Key Character Map File</a><br/>
-<a href="#androidKeymapKeyCharMapResourceBinaryFileFormat">Resource Binary File Format</a><br/></div>
-<a href="#androidKeymapDriverTemplate">Implementing Your Own Driver (Driver Template)</a><br/>
-<a href="#androidKeymapKeyCharMapSampleImplementation">Sample Implementation</a><br/></div></font></div>
-
-<a name="androidKeymapIntro"></a><h2>Introduction</h2>
+<ul>
+<li><a href="#androidKeymapFunctionality">Functionality</a></li>
+<li><a href="#androidKeymapKeyLayoutMapTitle">Key Layout Map</a></li>
+<li><a href="#androidKeymapKeyCharMap">Key Character Map</a></li>
+<li><a href="#androidKeymapDriverTemplate">Implementing Your Own Driver (Driver Template)</a></li>
+<li><a href="#androidKeymapKeyCharMapSampleImplementation">Sample Implementation</a></li>
+</ul>
+</div>
+</div>
 
 <p>This document describes how keyboard input gets translated into Android actions and how you can customize key layout and key character maps to match the needs of your own device. </p>
 <p>Android uses the standard Linux input event device (<code>/dev/event0</code>) and driver as described in the <code>linux/input.h</code> kernel header file. For more information regarding standard Linux input drivers, please see <a href="http://git.kernel.org/?p=linux/kernel/git/stable/linux-2.6.24.y.git;a=blob;f=Documentation/input/input.txt">Linux Input drivers</a> at <a href="http://kernel.org">http://kernel.org</a>.</p>
@@ -29,7 +23,7 @@ pdk.version=1.0
 
 
 
-<a name="androidKeymapFunctionality"></a><h2>Functionality</h2>
+<a name="androidKeymapFunctionality"></a><h3>Functionality</h3>
 
 <p>Android's input event device is structured around an interrupt or polling routine that captures the device-specific scancode and converts it to a standard form acceptable to Linux (as defined in <code>input.h</code>) before passing it to the kernel with <code>input_event()</code>.</p>
 <p>The keymap driver's other primary function is to establish a probe function that sets up the interrupt or polling function, handles hardware initialization, and attaches the driver to the input subsystem with <code>input_register_device()</code>.</p>
@@ -60,17 +54,17 @@ pdk.version=1.0
 </table>
 
 
-<a name="androidKeymapKeyLayoutMapTitle"></a><h2>Key Layout Map</h2>
+<a name="androidKeymapKeyLayoutMapTitle"></a><h3>Key Layout Map</h3>
 
 
 
-<a name="androidKeymapKeyLayoutMapSelection"></a><h3>Selection of a Key Layout Map</h3>
+<a name="androidKeymapKeyLayoutMapSelection"></a><h4>Selection of a Key Layout Map</h4>
 
 <p>Key layout maps are installed in <code>/system/usr/keylayout</code> and <code>/data/usr/keylayout</code>.</p>
 <p>For each keyboard device xxx, set the <code>android.keylayout.xxx</code> system property (see <a href="build_new_device.html">Building New Device</a> for help setting system properties). If you don't specify a keylayout file, Android will default to <code>/system/usr/keylayout/qwerty.kl</code>.</p>
 
 
-<a name="androidKeymapKeyLayoutMapFileFormat"></a><h3>File Format</h3>
+<a name="androidKeymapKeyLayoutMapFileFormat"></a><h4>File Format</h4>
 
 <p>Key layout maps are stored on the device as UTF-8 text files and have the following characteristics:</p>
 <p><ul>
@@ -88,7 +82,7 @@ pdk.version=1.0
 </p>
 
 
-<a name="androidKeymapKeyLayoutMapExample"></a><h3>Example of a Key Layout Map File</h3>
+<a name="androidKeymapKeyLayoutMapExample"></a><h4>Example of a Key Layout Map File</h4>
 
 <p>The following code comes from  <code>android/src/device/product/generic/tuttle2.kl</code> and is an example of a complete key layout file:</p>
 <pre class="prettify">
@@ -171,17 +165,17 @@ key 399   GRAVE
 </pre>
 
 
-<a name="androidKeymapKeyCharMap"></a><h2>Key Character Map</h2>
+<a name="androidKeymapKeyCharMap"></a><h3>Key Character Map</h3>
 
 
 
-<a name="androidKeymapKeyCharMapSelection"></a><h3>Selection of a Key Character Map</h3>
+<a name="androidKeymapKeyCharMapSelection"></a><h4>Selection of a Key Character Map</h4>
 
 <p>Key character maps are installed in <code>/system/usr/keychars</code> and <code>/data/usr/keychars</code>.</p>
 <p>For each keyboard device xxx, set the <code>android.keychar.xxx</code> system property to the full path of the desired keychar file. If you don't specify a keychar file, Android will default to <code>/system/usr/keychar/qwerty.kl</code>.
 
 
-<a name="androidKeymapKeyCharMapFileFormat"></a><h3>File Format</h3>
+<a name="androidKeymapKeyCharMapFileFormat"></a><h4>File Format</h4>
 
 <p>Key character maps are stored on the device as binary resources in order to reduce loading time. Key character maps have the following characteristics:</p>
 <p><ul>
@@ -220,7 +214,7 @@ key 399   GRAVE
 </ul></p>
 
 
-<a name="androidKeymapKeyCharMapExample"></a><h3>Example of a Key Character Map File</h3>
+<a name="androidKeymapKeyCharMapExample"></a><h4>Example of a Key Character Map File</h4>
 
 <p>The following code comes from <code>android/src/device/product/generic/tuttle2.kcm</code> and represents a complete key character file:</p>
 <p>The type line indicates what kind of keyboard your device implements. Possible types include:</p>
@@ -299,7 +293,7 @@ PLUS          '+'     '+'     '+'     '+'     '+'     '+'
 </pre>
 
 
-<a name="androidKeymapKeyCharMapResourceBinaryFileFormat"></a><h3>Resource Binary File Format</h3>
+<a name="androidKeymapKeyCharMapResourceBinaryFileFormat"></a><h4>Resource Binary File Format</h4>
 
 <p>The file snippet above gets converted to the following by the <code>makekcharmap</code> tool as part of the build process. You can <code>mmap</code> this file in and share the approximately 4k of memory that it uses between processes to minimize load time.</p>
 <table>
@@ -359,7 +353,7 @@ PLUS          '+'     '+'     '+'     '+'     '+'     '+'
 </tbody></table>
 
 
-<a name="androidKeymapDriverTemplate"></a><h2>Implementing Your Own Driver (Driver Template)</h2>
+<a name="androidKeymapDriverTemplate"></a><h3>Implementing Your Own Driver (Driver Template)</h3>
 
 <p>The following file, <code>pguide_events.c</code>, illustrates how to implement an Android keymap driver.</p>
 <pre class="prettyprint">
@@ -485,7 +479,7 @@ MODULE_LICENSE("GPL");
 </pre>
 
 
-<a name="androidKeymapKeyCharMapSampleImplementation"></a><h2>Sample Implementation</h2>
+<a name="androidKeymapKeyCharMapSampleImplementation"></a><h3>Sample Implementation</h3>
 
 <p>Assume the following for the setup of a new keypad device:</p>
 <pre class="prettify">

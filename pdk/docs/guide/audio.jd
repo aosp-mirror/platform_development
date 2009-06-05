@@ -7,14 +7,12 @@ pdk.version=1.0
 <h2>In this document</h2>
 <a name="toc"/>
 <ul>
-<li><a href="#androidAudioSubSystemIntroduction">Introduction</a></li>
 <li><a href="#androidAudioBuildingDriver">Building an Audio Library</a></li>
 <li><a href="#androidAudioInterface">Interface</a></li>
 </ul>
 </div>
 </div>
 
-<a name="androidAudioSubSystemIntroduction"></a><h2>Introduction</h2>
 
 <p>AudioHardwareInterface serves as the glue between proprietary audio drivers and the Android AudioFlinger service, the core audio service that handles all audio-related requests from applications.</p>
 <p><img src="images/android_audio_architecture.gif"></p>
@@ -23,7 +21,7 @@ Solid elements represent Android blocks and dashed elements represent partner-sp
 
 
 
-<a name="androidAudioBuildingDriver"></a><h2>Building an Audio Library</h2>
+<a name="androidAudioBuildingDriver"></a><h3>Building an Audio Library</h3>
 
 <p>To implement an audio driver, create a shared library that implements the interface defined in <code>AudioHardwareInterface.h</code>. You must name your shared library <code>libaudio.so</code> so that it will get loaded from <code>/system/lib</code> at runtime.  Place libaudio sources and <code>Android.mk</code> in <code>partner/acme/chipset_or_board/libaudio/</code>.</p>
 <p>The following stub <code>Android.mk</code> file ensures that <code>libaudio</code> compiles and links to the appropriate libraries:</p>
@@ -52,7 +50,7 @@ include $(BUILD_SHARED_LIBRARY)
 </pre>
 
 
-<a name="androidAudioInterface"></a><h2>Interface</h2>
+<a name="androidAudioInterface"></a><h3>Interface</h3>
 
 
 

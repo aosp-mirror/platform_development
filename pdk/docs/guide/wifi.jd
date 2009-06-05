@@ -2,18 +2,21 @@ page.title=Wi-Fi
 pdk.version=1.0
 @jd:body
 
+<div id="qv-wrapper">
+<div id="qv">
+<h2>In this document</h2>
 <a name="toc"/>
-<div style="padding:10px">
-<a href="#androidWifiIntroduction">Introduction</a><br/>
-<a href="#androidWifiBuildingDriver">Building a Wi-Fi Library</a><br/>
-<a href="#androidWifiInterface">Interface</a><br/></div>
-
-<a name="androidWifiIntroduction"></a><h2>Introduction</h2>
+<ul>
+<li><a href="#androidWifiBuildingDriver">Building a Wi-Fi Library</a></li>
+<li><a href="#androidWifiInterface">Interface</a></li>
+</ul>
+</div>
+</div>
 
 <p>Android uses wpa_supplicant as the platform interface to the Wi-Fi device. Your Wi-Fi driver must be compatible with the standard wpa_supplicant in addition to extensions added to the supplicant (specifically, the "DRIVER" commands described in <code>wifi.h/wifi_command()</code>).</p>
 
 
-<a name="androidWifiBuildingDriver"></a><h2>Building a Wi-Fi Library</h2>
+<a name="androidWifiBuildingDriver"></a><h3>Building a Wi-Fi Library</h3>
 
 <p>To create a Wi-Fi driver for Android:</p>
 <p><ul>
@@ -37,7 +40,7 @@ endif
 </pre>
 
 
-<a name="androidWifiInterface"></a><h2>Interface</h2>
+<a name="androidWifiInterface"></a><h3>Interface</h3>
 
 
 
