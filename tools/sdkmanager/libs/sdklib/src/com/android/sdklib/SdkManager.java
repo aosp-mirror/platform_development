@@ -43,6 +43,7 @@ public final class SdkManager {
 
     public final static String PROP_VERSION_SDK = "ro.build.version.sdk";
     public final static String PROP_VERSION_RELEASE = "ro.build.version.release";
+    public final static String PROP_VERSION_REVISION = "ro.build.version.incremental";
 
     private final static String ADDON_NAME = "name";
     private final static String ADDON_VENDOR = "vendor";
@@ -51,12 +52,17 @@ public final class SdkManager {
     private final static String ADDON_LIBRARIES = "libraries";
     private final static String ADDON_DEFAULT_SKIN = "skin";
     private final static String ADDON_USB_VENDOR = "usb-vendor";
+    private final static String ADDON_REVISION = "revision";
+    private final static String ADDON_REVISION_OLD = "version";
 
     private final static Pattern PATTERN_PROP = Pattern.compile(
             "^([a-zA-Z0-9._-]+)\\s*=\\s*(.*)\\s*$");
 
     private final static Pattern PATTERN_LIB_DATA = Pattern.compile(
             "^([a-zA-Z0-9._-]+\\.jar);(.*)$", Pattern.CASE_INSENSITIVE);
+
+    private final static Pattern PATTERN_LOCAL_BUILD_PATTERN = Pattern.compile(
+            "^\\S+\\.\\S+\\.(\\d+)\\.\\d+$");
 
      // usb ids are 16-bit hexadecimal values.
     private final static Pattern PATTERN_USB_IDS = Pattern.compile(
@@ -234,36 +240,97 @@ public final class SdkManager {
 
             if (map != null) {
                 // look for some specific values in the map.
-                try {
-                    String apiNumber = map.get(PROP_VERSION_SDK);
-                    String apiName = map.get(PROP_VERSION_RELEASE);
-                    if (apiNumber != null && apiName != null) {
-                        // api number and name looks valid, perform a few more checks
-                        if (checkPlatformContent(platform, log) == false) {
-                            return null;
-                        }
-                        // create the target.
-                        PlatformTarget target = new PlatformTarget(
-                                platform.getAbsolutePath(),
-                                map,
-                                Integer.parseInt(apiNumber),
-                                apiName);
-
-                        // need to parse the skins.
-                        String[] skins = parseSkinFolder(target.getPath(IAndroidTarget.SKINS));
-                        target.setSkins(skins);
-
-                        return target;
-                    }
-                } catch (NumberFormatException e) {
-                    // looks like apiNumber does not parse to a number.
-                    // Ignore this platform.
+                String apiName = map.get(PROP_VERSION_RELEASE);
+                if (apiName == null) {
                     if (log != null) {
                         log.error(null,
-                                "Ignoring platform '%1$s': %2$s is not a valid number in %3$s.",
+                                "Ignoring platform '%1$s': %2$s is missing from '%3$s'",
+                                platform.getName(), PROP_VERSION_RELEASE, SdkConstants.FN_BUILD_PROP);
+                    }
+                    return null;
+                }
+
+                int apiNumber;
+                String stringValue = map.get(PROP_VERSION_SDK);
+                if (stringValue == null) {
+                    if (log != null) {
+                        log.error(null,
+                                "Ignoring platform '%1$s': %2$s is missing from '%3$s'",
                                 platform.getName(), PROP_VERSION_SDK, SdkConstants.FN_BUILD_PROP);
                     }
+                    return null;
+                } else {
+                    try {
+                         apiNumber = Integer.parseInt(stringValue);
+                    } catch (NumberFormatException e) {
+                        // looks like apiNumber does not parse to a number.
+                        // Ignore this platform.
+                        if (log != null) {
+                            log.error(null,
+                                    "Ignoring platform '%1$s': %2$s is not a valid number in %3$s.",
+                                    platform.getName(), PROP_VERSION_SDK, SdkConstants.FN_BUILD_PROP);
+                        }
+                        return null;
+                    }
                 }
+
+                int revision = 1;
+                stringValue = map.get(PROP_VERSION_REVISION);
+                if (stringValue == null) {
+                    if (log != null) {
+                        log.error(null,
+                                "Ignoring platform '%1$s': %2$s is missing from '%3$s'",
+                                platform.getName(), PROP_VERSION_REVISION, SdkConstants.FN_BUILD_PROP);
+                    }
+                    return null;
+                } else {
+                    try {
+                         revision = Integer.parseInt(stringValue);
+                    } catch (NumberFormatException e) {
+                        // looks like the revision does not parse to a number.
+                        // we look if it's a local build in the format
+                        // <buildtype>.<username>.<date>.<time>
+                        Matcher m = PATTERN_LOCAL_BUILD_PATTERN.matcher(stringValue);
+                        boolean valid = false;
+                        if (m.matches()) {
+                            String date = m.group(1);
+                            try {
+                                revision = Integer.parseInt(date);
+                                valid = true;
+                            } catch (NumberFormatException e2) {
+                                // do nothing, we'll display an error and return below
+                            }
+                        }
+
+                        if (valid == false) {
+                            if (log != null) {
+                                log.error(null,
+                                        "Ignoring platform '%1$s': %2$s is not a valid number in %3$s.",
+                                        platform.getName(), PROP_VERSION_SDK,
+                                        SdkConstants.FN_BUILD_PROP);
+                            }
+                            return null;
+                        }
+                    }
+                }
+
+                // api number and name look valid, perform a few more checks
+                if (checkPlatformContent(platform, log) == false) {
+                    return null;
+                }
+                // create the target.
+                PlatformTarget target = new PlatformTarget(
+                        platform.getAbsolutePath(),
+                        map,
+                        apiNumber,
+                        apiName,
+                        revision);
+
+                // need to parse the skins.
+                String[] skins = parseSkinFolder(target.getPath(IAndroidTarget.SKINS));
+                target.setSkins(skins);
+
+                return target;
             }
         } else if (log != null) {
             log.error(null, "Ignoring platform '%1$s': %2$s is missing.", platform.getName(),
@@ -374,6 +441,27 @@ public final class SdkManager {
                 // get the optional description
                 String description = propertyMap.get(ADDON_DESCRIPTION);
 
+                // get the add-on revision
+                int revisionValue = 1;
+                String revision = propertyMap.get(ADDON_REVISION);
+                if (revision == null) {
+                    revision = propertyMap.get(ADDON_REVISION_OLD);
+                }
+                if (revision != null) {
+                    try {
+                        revisionValue = Integer.parseInt(revision);
+                    } catch (NumberFormatException e) {
+                        // looks like apiNumber does not parse to a number.
+                        // Ignore this add-on.
+                        if (log != null) {
+                            log.error(null,
+                                    "Ignoring add-on '%1$s': %2$s is not a valid number in %3$s.",
+                                    addon.getName(), ADDON_REVISION, SdkConstants.FN_BUILD_PROP);
+                        }
+                        return null;
+                    }
+                }
+
                 // get the optional libraries
                 String librariesValue = propertyMap.get(ADDON_LIBRARIES);
                 Map<String, String[]> libMap = null;
@@ -413,7 +501,7 @@ public final class SdkManager {
                 }
 
                 AddOnTarget target = new AddOnTarget(addon.getAbsolutePath(), name, vendor,
-                        description, libMap, baseTarget);
+                        revisionValue, description, libMap, baseTarget);
 
                 // need to parse the skins.
                 String[] skins = parseSkinFolder(target.getPath(IAndroidTarget.SKINS));
