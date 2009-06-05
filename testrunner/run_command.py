@@ -146,10 +146,16 @@ def RunHostCommand(binary, valgrind=False):
     return subproc.returncode
   else:
     # Need the full path to valgrind to avoid other versions on the system.
-    subproc = subprocess.Popen(["/usr/bin/valgrind", "-q", full_path],
+    subproc = subprocess.Popen(["/usr/bin/valgrind", "--tool=memcheck",
+                                "--leak-check=yes", "-q", full_path],
                                stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    subproc.wait()
-    return subproc.returncode
+    # Cannot rely on the retcode of valgrind. Instead look for an empty output.
+    valgrind_out = subproc.communicate()[0].strip()
+    if valgrind_out:
+      print valgrind_out
+      return 1
+    else:
+      return 0
 
 
 def HasValgrind():
