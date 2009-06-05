@@ -22,68 +22,73 @@
     attributeFormDefault="unqualified"
     version="1">
 
-    <!-- The definition of a file checksum -->
+    <!-- The repository contains a collection of downloadable items known as
+         "packages". Each package has a type and various attributes and contains
+         a list of file "archives" that can be downloaded for specific OSes.
 
-    <xsd:simpleType name="sha1Number">
-        <xsd:annotation>
-            <xsd:documentation>A SHA1 checksum.</xsd:documentation>
-        </xsd:annotation>
-        <xsd:restriction base="xsd:string">
-            <xsd:pattern value="([0-9a-fA-F]){40}"/>
-        </xsd:restriction>
-    </xsd:simpleType>
-
-    <xsd:complexType name="checksumType">
-        <xsd:annotation>
-            <xsd:documentation>A file checksum, currently only SHA1.</xsd:documentation>
-        </xsd:annotation>
-        <xsd:simpleContent>
-            <xsd:extension base="sdk:sha1Number">
-                <xsd:attribute name="type" type="xsd:token" fixed="sha1" />
-            </xsd:extension>
-        </xsd:simpleContent>
-    </xsd:complexType>
-
-    <!-- The repository contains a collection of downloadable items -->
+         An Android SDK repository is a web site that contains a "repository.xml"
+         file that conforms to this XML Schema.
+    -->
 
     <xsd:element name="sdk-repository">
         <xsd:annotation>
             <xsd:documentation>
-                The repository contains collections of downloadable items.
+                The repository contains collections of downloadable packages.
             </xsd:documentation>
         </xsd:annotation>
 
         <xsd:complexType>
             <xsd:choice minOccurs="0" maxOccurs="unbounded">
 
-                <!-- The definition of an SDK platform item -->
+                <!-- The definition of an SDK platform package -->
 
                 <xsd:element name="platform">
+                    <xsd:annotation>
+                        <xsd:documentation>An SDK platform package.</xsd:documentation>
+                    </xsd:annotation>
                     <xsd:complexType>
                         <xsd:all>
+                            <!-- The Android platform version. It is string such as "1.0". -->
                             <xsd:element name="version"   type="xsd:normalizedString" />
+                            <!-- The Android API Level for the platform. An int > 0. -->
                             <xsd:element name="api-level" type="xsd:positiveInteger"  />
 
+                            <!-- The revision, an int > 0, incremented each time a new
+                                 package is generated. -->
                             <xsd:element name="revision"    type="xsd:positiveInteger" />
+                            <!-- The optional description of this package. -->
                             <xsd:element name="description" type="xsd:string" minOccurs="0" />
+                            <!-- The optional description URL of this package -->
                             <xsd:element name="desc-url"    type="xsd:token"  minOccurs="0" />
+                            <!-- A list of file archives for this package. -->
                             <xsd:element name="archives"    type="sdk:archivesType" />
                         </xsd:all>
                     </xsd:complexType>
                 </xsd:element>
 
-                <!-- The definition of an SDK Add-on item -->
+                <!-- The definition of an SDK Add-on package -->
 
                 <xsd:element name="add-on">
+                    <xsd:annotation>
+                        <xsd:documentation>An SDK add-on package.</xsd:documentation>
+                    </xsd:annotation>
                     <xsd:complexType>
                         <xsd:all>
+                            <!-- The name of the add-on. -->
                             <xsd:element name="name"      type="xsd:normalizedString" />
+                            <!-- The vendor of the add-on. -->
                             <xsd:element name="vendor"    type="xsd:normalizedString" />
+                            <!-- The Android API Level for the add-on. An int > 0. -->
                             <xsd:element name="api-level" type="xsd:positiveInteger"  />
 
+                            <!-- The revision, an int > 0, incremented each time a new
+                                 package is generated. -->
                             <xsd:element name="revision"    type="xsd:positiveInteger" />
+                            <!-- The optional description of this package. -->
                             <xsd:element name="description" type="xsd:string" minOccurs="0" />
+                            <!-- The optional description URL of this package -->
                             <xsd:element name="desc-url"    type="xsd:token"  minOccurs="0" />
+                            <!-- A list of file archives for this package. -->
                             <xsd:element name="archives"    type="sdk:archivesType" />
 
                             <!-- An add-on can declare 0 or more libraries. -->
@@ -94,7 +99,9 @@
                                         <xsd:element name="lib">
                                             <xsd:complexType>
                                                 <xsd:all>
+                                                    <!-- The name of the library. -->
                                                     <xsd:element name="name" type="xsd:normalizedString" />
+                                                    <!-- The optional description of this add-on library. -->
                                                     <xsd:element name="description" type="xsd:string" minOccurs="0" />
                                                 </xsd:all>
                                             </xsd:complexType>
@@ -106,29 +113,46 @@
                     </xsd:complexType>
                 </xsd:element>
 
-                <!-- The definition of an SDK tool item -->
+                <!-- The definition of an SDK tool package -->
 
                 <xsd:element name="tool">
+                    <xsd:annotation>
+                        <xsd:documentation>An SDK tool package.</xsd:documentation>
+                    </xsd:annotation>
                     <xsd:complexType>
                         <xsd:all>
+                            <!-- The revision, an int > 0, incremented each time a new
+                                 package is generated. -->
                             <xsd:element name="revision"    type="xsd:positiveInteger" />
+                            <!-- The optional description of this package. -->
                             <xsd:element name="description" type="xsd:string" minOccurs="0" />
+                            <!-- The optional description URL of this package -->
                             <xsd:element name="desc-url"    type="xsd:token"  minOccurs="0" />
+                            <!-- A list of file archives for this package. -->
                             <xsd:element name="archives"    type="sdk:archivesType" />
                         </xsd:all>
                     </xsd:complexType>
                 </xsd:element>
 
-                <!-- The definition of an SDK doc item -->
+                <!-- The definition of an SDK doc package -->
 
                 <xsd:element name="doc">
+                    <xsd:annotation>
+                        <xsd:documentation>An SDK doc package.</xsd:documentation>
+                    </xsd:annotation>
                     <xsd:complexType>
                         <xsd:all>
+                            <!-- The Android API Level for the documentation. An int > 0. -->
                             <xsd:element name="api-level" type="xsd:positiveInteger"  />
 
+                            <!-- The revision, an int > 0, incremented each time a new
+                                 package is generated. -->
                             <xsd:element name="revision"    type="xsd:positiveInteger" />
+                            <!-- The optional description of this package. -->
                             <xsd:element name="description" type="xsd:string" minOccurs="0" />
+                            <!-- The optional description URL of this package -->
                             <xsd:element name="desc-url"    type="xsd:token"  minOccurs="0" />
+                            <!-- A list of file archives for this package. -->
                             <xsd:element name="archives"    type="sdk:archivesType" />
                         </xsd:all>
                     </xsd:complexType>
@@ -140,24 +164,37 @@
     <!-- A collection of files that can be downloaded for a given architecture.
          The <archives> node is mandatory in the repository elements and the
          collection must have at least one <archive> declared.
+         Each archive is a zip file that will be unzipped in a location that depends
+         on its package type.
      -->
 
     <xsd:complexType name="archivesType">
         <xsd:annotation>
-            <xsd:documentation>A collection of architecture-dependent archives.</xsd:documentation>
+            <xsd:documentation>
+                A collection of files that can be downloaded for a given architecture.
+                The &lt;archives&gt; node is mandatory in the repository packages and the
+                collection must have at least one &lt;archive&gt; declared.
+                Each archive is a zip file that will be unzipped in a location that depends
+                on its package type.
+            </xsd:documentation>
         </xsd:annotation>
         <xsd:sequence minOccurs="1" maxOccurs="unbounded">
             <!-- One archive file -->
             <xsd:element name="archive">
                 <xsd:complexType>
-                    <!-- Properties of the file -->
+                    <!-- Properties of the archive file -->
                     <xsd:all>
+                        <!-- The size in bytes of the archive to download. -->
                         <xsd:element name="size"     type="xsd:positiveInteger" />
+                        <!-- The checksum of the archive file. -->
                         <xsd:element name="checksum" type="sdk:checksumType" />
+                        <!-- The URL is an absolute URL if it starts with http://, https://
+                             or ftp://. Otherwise it is relative to the parent directory that
+                             contains this repository.xml -->
                         <xsd:element name="url"      type="xsd:token" />
                     </xsd:all>
 
-                    <!-- Attributes that identify the architecture -->
+                    <!-- Attributes that identify the OS and architecture -->
                     <xsd:attribute name="os" use="required">
                         <xsd:simpleType>
                             <xsd:restriction base="xsd:token">
@@ -181,6 +218,28 @@
                 </xsd:complexType>
             </xsd:element>
         </xsd:sequence>
+    </xsd:complexType>
+
+    <!-- The definition of a file checksum -->
+
+    <xsd:simpleType name="sha1Number">
+        <xsd:annotation>
+            <xsd:documentation>A SHA1 checksum.</xsd:documentation>
+        </xsd:annotation>
+        <xsd:restriction base="xsd:string">
+            <xsd:pattern value="([0-9a-fA-F]){40}"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+
+    <xsd:complexType name="checksumType">
+        <xsd:annotation>
+            <xsd:documentation>A file checksum, currently only SHA1.</xsd:documentation>
+        </xsd:annotation>
+        <xsd:simpleContent>
+            <xsd:extension base="sdk:sha1Number">
+                <xsd:attribute name="type" type="xsd:token" fixed="sha1" />
+            </xsd:extension>
+        </xsd:simpleContent>
     </xsd:complexType>
 
 </xsd:schema>
