@@ -68,6 +68,7 @@ final class AddOnTarget implements IAndroidTarget {
     private final PlatformTarget mBasePlatform;
     private final String mName;
     private final String mVendor;
+    private final int mRevision;
     private final String mDescription;
     private String[] mSkins;
     private String mDefaultSkin;
@@ -79,12 +80,13 @@ final class AddOnTarget implements IAndroidTarget {
      * @param location the OS path location of the add-on
      * @param name the name of the add-on
      * @param vendor the vendor name of the add-on
+     * @param revision the revision of the add-on
      * @param description the add-on description
      * @param libMap A map containing the optional libraries. The map key is the fully-qualified
      * library name. The value is a 2 string array with the .jar filename, and the description.
      * @param basePlatform the platform the add-on is extending.
      */
-    AddOnTarget(String location, String name, String vendor, String description,
+    AddOnTarget(String location, String name, String vendor, int revision, String description,
             Map<String, String[]> libMap, PlatformTarget basePlatform) {
         if (location.endsWith(File.separator) == false) {
             location = location + File.separator;
@@ -93,6 +95,7 @@ final class AddOnTarget implements IAndroidTarget {
         mLocation = location;
         mName = name;
         mVendor = vendor;
+        mRevision = revision;
         mDescription = description;
         mBasePlatform = basePlatform;
 
@@ -142,6 +145,10 @@ final class AddOnTarget implements IAndroidTarget {
     public int getApiVersionNumber() {
         // this is always defined by the base platform
         return mBasePlatform.getApiVersionNumber();
+    }
+
+    public int getRevision() {
+        return mRevision;
     }
 
     public boolean isPlatform() {
