@@ -35,12 +35,13 @@ final class PlatformTarget implements IAndroidTarget {
     private final String mName;
     private final int mApiVersionNumber;
     private final String mApiVersionName;
+    private final int mRevision;
     private final Map<String, String> mProperties;
     private final Map<Integer, String> mPaths = new HashMap<Integer, String>();
     private String[] mSkins;
 
     PlatformTarget(String location, Map<String, String> properties,
-            int apiNumber, String apiName) {
+            int apiNumber, String apiName, int revision) {
         mName = String.format(PLATFORM_NAME, apiName);
         if (location.endsWith(File.separator) == false) {
             location = location + File.separator;
@@ -49,6 +50,7 @@ final class PlatformTarget implements IAndroidTarget {
         mProperties = Collections.unmodifiableMap(properties);
         mApiVersionNumber = apiNumber;
         mApiVersionName = apiName;
+        mRevision = revision;
 
         // pre-build the path to the platform components
         mPaths.put(ANDROID_JAR, mLocation + SdkConstants.FN_FRAMEWORK_LIBRARY);
@@ -126,6 +128,10 @@ final class PlatformTarget implements IAndroidTarget {
 
     public String getApiVersionName() {
         return mApiVersionName;
+    }
+
+    public int getRevision() {
+        return mRevision;
     }
 
     public boolean isPlatform() {

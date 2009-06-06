@@ -76,10 +76,15 @@ public interface IAndroidTarget extends Comparable<IAndroidTarget> {
      */
     public final static int NO_USB_ID = 0;
 
+    /** An optional library provided by an Android Target */
     public interface IOptionalLibrary {
+        /** The name of the library, as used in the manifest (&lt;uses-library&gt;). */
         String getName();
+        /** The file name of the jar file. */
         String getJarName();
+        /** Absolute OS path to the jar file. */
         String getJarPath();
+        /** Description of the library. */
         String getDescription();
     }
 
@@ -122,6 +127,9 @@ public interface IAndroidTarget extends Comparable<IAndroidTarget> {
      * Returns the platform version as a readable string.
      */
     String getApiVersionName();
+
+    /** Returns the revision number for the target. */
+    int getRevision();
 
     /**
      * Returns true if the target is a standard Android platform.

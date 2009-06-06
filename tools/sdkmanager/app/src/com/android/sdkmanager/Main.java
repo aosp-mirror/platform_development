@@ -386,9 +386,11 @@ class Main {
             if (target.isPlatform()) {
                 mSdkLog.printf("     Type: Platform\n");
                 mSdkLog.printf("     API level: %d\n", target.getApiVersionNumber());
+                mSdkLog.printf("     Revision: %d\n", target.getRevision());
             } else {
                 mSdkLog.printf("     Type: Add-On\n");
                 mSdkLog.printf("     Vendor: %s\n", target.getVendor());
+                mSdkLog.printf("     Revision: %d\n", target.getRevision());
                 if (target.getDescription() != null) {
                     mSdkLog.printf("     Description: %s\n", target.getDescription());
                 }
