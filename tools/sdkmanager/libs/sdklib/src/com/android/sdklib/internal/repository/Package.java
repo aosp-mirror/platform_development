@@ -40,6 +40,7 @@ import java.util.ArrayList;
 public abstract class Package implements IDescription {
 
     private final int mRevision;
+    private final String mLicense;
     private final String mDescription;
     private final String mDescUrl;
     private final Archive[] mArchives;
@@ -55,7 +56,7 @@ public abstract class Package implements IDescription {
         mRevision    = getXmlInt   (packageNode, SdkRepository.NODE_REVISION, 0);
         mDescription = getXmlString(packageNode, SdkRepository.NODE_DESCRIPTION);
         mDescUrl     = getXmlString(packageNode, SdkRepository.NODE_DESC_URL);
-
+        mLicense     = getXmlString(packageNode, SdkRepository.NODE_LICENSE);
         mArchives = parseArchives(getFirstChild(packageNode, SdkRepository.NODE_ARCHIVES));
     }
 
@@ -65,6 +66,7 @@ public abstract class Package implements IDescription {
      */
     public Package(RepoSource source,
             int revision,
+            String license,
             String description,
             String descUrl,
             Os archiveOs,
@@ -74,6 +76,7 @@ public abstract class Package implements IDescription {
             String archiveChecksum) {
         mSource = source;
         mRevision = revision;
+        mLicense = license;
         mDescription = description;
         mDescUrl = descUrl;
         mArchives = new Archive[1];
@@ -138,6 +141,14 @@ public abstract class Package implements IDescription {
      */
     public int getRevision() {
         return mRevision;
+    }
+
+    /**
+     * Returns the optional description for all packages (platform, add-on, tool, doc) or
+     * for a lib. It is null if the element has not been specified in the repository XML.
+     */
+    public String getLicense() {
+        return mLicense;
     }
 
     /**

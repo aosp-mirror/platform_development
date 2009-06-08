@@ -46,6 +46,8 @@ public class SdkRepository {
 
     /** The revision, an int > 0, for all packages (platform, add-on, tool, doc). */
     public static final String NODE_REVISION    = "revision";                   //$NON-NLS-1$
+    /** The optional license for all packages (platform, add-on, tool, doc) or for a lib. */
+    public static final String NODE_LICENSE = "license";                        //$NON-NLS-1$
     /** The optional description for all packages (platform, add-on, tool, doc) or for a lib. */
     public static final String NODE_DESCRIPTION = "description";                //$NON-NLS-1$
     /** The optional description URL for all packages (platform, add-on, tool, doc). */
