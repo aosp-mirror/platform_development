@@ -110,6 +110,8 @@ void PropertyServer::SetDefaultProperties(void)
         { "ro.EMPTY_APP_MEM", "16384" },
         { "ro.HOME_APP_ADJ", "4" },
         { "ro.HOME_APP_MEM", "4096" },
+        { "ro.BACKUP_APP_ADJ", "2" },
+        { "ro.BACKUP_APP_MEM", "4096" },
         //{ "init.svc.adbd", "running" },       // causes ADB-JDWP
         { "init.svc.usbd", "running" },
         { "init.svc.debuggerd", "running" },
@@ -180,7 +182,7 @@ bool PropertyServer::GetProperty(const char* key, char* valueBuf)
             if (strlen(prop.value) >= PROPERTY_VALUE_MAX) {
                 fprintf(stderr,
                     "GLITCH: properties table holds '%s' '%s' (len=%d)\n",
-                    prop.key, prop.value, strlen(prop.value));
+                    prop.key, prop.value, (int) strlen(prop.value));
                 abort();
             }
             assert(strlen(prop.value) < PROPERTY_VALUE_MAX);
@@ -323,7 +325,7 @@ bool PropertyServer::HandleRequest(int fd)
 
         if (actual != PROPERTY_KEY_MAX) {
             fprintf(stderr, "Bad read on get: %d of %d\n",
-                actual, PROPERTY_KEY_MAX);
+                (int) actual, PROPERTY_KEY_MAX);
             return false;
         }
         if (GetProperty(reqBuf, valueBuf+1))
@@ -340,7 +342,7 @@ bool PropertyServer::HandleRequest(int fd)
         actual = read(fd, reqBuf, PROPERTY_KEY_MAX + PROPERTY_VALUE_MAX);
         if (actual != PROPERTY_KEY_MAX + PROPERTY_VALUE_MAX) {
             fprintf(stderr, "Bad read on set: %d of %d\n",
-                actual, PROPERTY_KEY_MAX + PROPERTY_VALUE_MAX);
+                (int) actual, PROPERTY_KEY_MAX + PROPERTY_VALUE_MAX);
             return false;
         }
         //printf("SET property '%s'\n", reqBuf);
