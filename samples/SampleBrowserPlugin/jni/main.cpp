@@ -34,20 +34,20 @@
 NPNetscapeFuncs* browser;
 #define EXPORT __attribute__((visibility("default")))
 
-NPError NPP_New(NPMIMEType pluginType, NPP instance, uint16 mode, int16 argc, 
+NPError NPP_New(NPMIMEType pluginType, NPP instance, uint16 mode, int16 argc,
         char* argn[], char* argv[], NPSavedData* saved);
 NPError NPP_Destroy(NPP instance, NPSavedData** save);
 NPError NPP_SetWindow(NPP instance, NPWindow* window);
-NPError NPP_NewStream(NPP instance, NPMIMEType type, NPStream* stream, 
+NPError NPP_NewStream(NPP instance, NPMIMEType type, NPStream* stream,
         NPBool seekable, uint16* stype);
 NPError NPP_DestroyStream(NPP instance, NPStream* stream, NPReason reason);
 int32   NPP_WriteReady(NPP instance, NPStream* stream);
-int32   NPP_Write(NPP instance, NPStream* stream, int32 offset, int32 len, 
+int32   NPP_Write(NPP instance, NPStream* stream, int32 offset, int32 len,
         void* buffer);
 void    NPP_StreamAsFile(NPP instance, NPStream* stream, const char* fname);
 void    NPP_Print(NPP instance, NPPrint* platformPrint);
 int16   NPP_HandleEvent(NPP instance, void* event);
-void    NPP_URLNotify(NPP instance, const char* URL, NPReason reason, 
+void    NPP_URLNotify(NPP instance, const char* URL, NPReason reason,
         void* notifyData);
 NPError NPP_GetValue(NPP instance, NPPVariable variable, void *value);
 NPError NPP_SetValue(NPP instance, NPNVariable variable, void *value);
@@ -56,7 +56,7 @@ extern "C" {
 EXPORT NPError NP_Initialize(NPNetscapeFuncs* browserFuncs, NPPluginFuncs* pluginFuncs, void *java_env, void *application_context);
 EXPORT NPError NP_GetValue(NPP instance, NPPVariable variable, void *value);
 EXPORT const char* NP_GetMIMEDescription(void);
-EXPORT void NP_Shutdown(void); 
+EXPORT void NP_Shutdown(void);
 };
 
 ANPAudioTrackInterfaceV0    gSoundI;
@@ -74,11 +74,11 @@ NPError NP_Initialize(NPNetscapeFuncs* browserFuncs, NPPluginFuncs* pluginFuncs,
     if (browserFuncs->size < sizeof(NPNetscapeFuncs)) {
         return NPERR_GENERIC_ERROR;
     }
-    
+
     // Copy the function table (structure)
     browser = (NPNetscapeFuncs*) malloc(sizeof(NPNetscapeFuncs));
     memcpy(browser, browserFuncs, sizeof(NPNetscapeFuncs));
-    
+
     // Build the plugin function table
     pluginFuncs->version = 11;
     pluginFuncs->size = sizeof(pluginFuncs);
@@ -115,7 +115,7 @@ NPError NP_Initialize(NPNetscapeFuncs* browserFuncs, NPPluginFuncs* pluginFuncs,
             return err;
         }
     }
-    
+
     return NPERR_NO_ERROR;
 }
 
@@ -124,7 +124,7 @@ void NP_Shutdown(void)
 
 }
 
-const char *NP_GetMIMEDescription(void) 
+const char *NP_GetMIMEDescription(void)
 {
     return "application/x-testplugin:tst:Test plugin mimetype is application/x-testplugin";
 }
@@ -140,14 +140,14 @@ NPError NPP_New(NPMIMEType pluginType, NPP instance, uint16 mode, int16 argc,
         obj = static_cast<PluginObject*>(instance->pdata);
         bzero(obj, sizeof(*obj));
     }
-    
+
     uint32_t bits;
     NPError err = browser->getvalue(instance, kSupportedDrawingModel_ANPGetValue, &bits);
     if (err) {
         gLogI.log(instance, kError_ANPLogType, "supported model err %d", err);
         return err;
     }
-    
+
     ANPDrawingModel model = kBitmap_ANPDrawingModel;
 
     int count = argc;
@@ -188,7 +188,7 @@ static void timer_oneshot(NPP instance, uint32 timerID) {
 
 static int gTimerRepeatCount;
 static void timer_repeat(NPP instance, uint32 timerID) {
-    
+
     gLogI.log(instance, kDebug_ANPLogType, "-------- repeat timer %d\n",
               gTimerRepeatCount);
     if (--gTimerRepeatCount == 0) {
@@ -214,9 +214,9 @@ static void timer_latency(NPP instance, uint32 timerID) {
     uint32_t expectedDur = obj->mTimerCount * TIMER_INTERVAL;
     int32_t drift = dur - expectedDur;
     int32_t aveDrift = drift / obj->mTimerCount;
-    
+
     obj->mPrevTime = now;
-    
+
     gLogI.log(instance, kDebug_ANPLogType,
               "-------- latency test: [%3d] interval %d expected %d, total %d expected %d, drift %d ave %d\n",
               obj->mTimerCount, interval, TIMER_INTERVAL, dur, expectedDur,
@@ -226,12 +226,12 @@ static void timer_latency(NPP instance, uint32 timerID) {
 NPError NPP_SetWindow(NPP instance, NPWindow* window)
 {
     PluginObject *obj = (PluginObject*) instance->pdata;
-    
+
     // Do nothing if browser didn't support NPN_CreateObject which would have created the PluginObject.
     if (obj != NULL) {
         obj->window = window;
     }
-    
+
     static bool gTestTimers;
     if (!gTestTimers) {
         gTestTimers = true;
@@ -248,18 +248,18 @@ NPError NPP_SetWindow(NPP instance, NPWindow* window)
         // test double unschedlue (should be no-op)
         browser->unscheduletimer(instance, id);
     }
-    
+
     if (obj->mTestTimers) {
         browser->scheduletimer(instance, TIMER_INTERVAL, true, timer_latency);
         obj->mStartTime = obj->mPrevTime = getMSecs();
         obj->mTestTimers = false;
     }
-    
+
     browser->invalidaterect(instance, NULL);
 
     return NPERR_NO_ERROR;
 }
- 
+
 
 NPError NPP_NewStream(NPP instance, NPMIMEType type, NPStream* stream, NPBool seekable, uint16* stype)
 {
@@ -363,18 +363,13 @@ int16 NPP_HandleEvent(NPP instance, void* event)
                 browser->invalidaterect(instance, NULL);
             }
             return 1;
-            
-        case kPause_ANPEventType:
-            gLogI.log(instance, kDebug_ANPLogType, "---- %p pause event\n",
-                      instance);
+
+        case kLifecycle_ANPEventType:
+            gLogI.log(instance, kDebug_ANPLogType, "---- %p Lifecycle action=%d",
+                      instance, evt->data.lifecycle.action);
             break;
 
-        case kResume_ANPEventType:
-            gLogI.log(instance, kDebug_ANPLogType, "---- %p resume event\n",
-                      instance);
-            break;
-            
-            case kTouch_ANPEventType:
+        case kTouch_ANPEventType:
             gLogI.log(instance, kDebug_ANPLogType, "---- %p Touch action=%d [%d %d]",
                       instance, evt->data.touch.action, evt->data.touch.x,
                       evt->data.touch.y);
@@ -412,13 +407,13 @@ EXPORT NPError NP_GetValue(NPP instance, NPPVariable variable, void *value) {
         *str = "Test Plugin";
         return NPERR_NO_ERROR;
     }
-    
+
     if (variable == NPPVpluginDescriptionString) {
         const char **str = (const char **)value;
         *str = "Description of Test Plugin";
         return NPERR_NO_ERROR;
     }
-    
+
     return NPERR_GENERIC_ERROR;
 }
 
@@ -427,14 +422,14 @@ NPError NPP_GetValue(NPP instance, NPPVariable variable, void *value)
     if (variable == NPPVpluginScriptableNPObject) {
         void **v = (void **)value;
         PluginObject *obj = (PluginObject*) instance->pdata;
-        
+
         if (obj)
             browser->retainobject((NPObject*)obj);
-        
+
         *v = obj;
         return NPERR_NO_ERROR;
     }
-    
+
     return NPERR_GENERIC_ERROR;
 }
 
