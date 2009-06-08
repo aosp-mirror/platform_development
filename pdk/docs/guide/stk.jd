@@ -2,26 +2,20 @@ page.title=Sim Toolkit Application (STK)
 pdk.version=1.0
 @jd:body
 
-<a name="toc"/> 
-<div style="padding:10px"> 
-<a href="#androidSTKIntro">Introduction</a><br/>
-<a href="#androidSTKRILRilUp">Communication from the RIL up</a><br/><div style="padding-left:40px">
-<a href="#androidSTKRILRilUpUnsol">RIL_UNSOL_STK_PROACTIVE_COMMAND</a><br/>
-<a href="#androidSTKRILRilUpEvent">RIL_UNSOL_STK_EVENT_NOTIFY</a><br/> 
-<a href="#androidSTKRILRilUpUnsolSim">RIL_UNSOL_SIM_REFRESH</a><br/> 
-<a href="#androidSTKRILRilUpRefresh">REFRESH (6.4.7)</a><br/> 
-<a href="#androidSTKRILRilUpRilUnsol">RIL_UNSOL_STK_SESSION_END</a><br/></div>
+<div id="qv-wrapper">
+<div id="qv">
+<h2>In this document</h2>
+<a name="toc"/>
+<ul>
+<li><a href="#androidSTKRILRilUp">Communication from the RIL up</a></li>
+<li><a href="#androidSTKRILApplciationDown">Communication from the application down</a></li>
+<li><a href="#androidSTKTelephony">Telephony</a></li>
+<li><a href="#androidSTKFeatureList">Feature List</a></li>
+</ul>
+</div>
+</div>
 
-<a href="#androidSTKRILApplciationDown">Communication from the application down</a><br/><div style="padding-left:40px"> 
- 
-<a href="#androidSTKRILApplciationDownTerminal">RIL_REQUEST_STK_SEND_TERMINAL_REPSONSE</a><br/> 
-<a href="#androidSTKRILApplciationDownEnvelope">RIL_REQUEST_STK_SEND_ENVELOPE_COMMAND</a><br/> 
-<a href="#androidSTKRILApplciationDownFromSim">RIL_REQUEST_HANDLE_CALL_SETUP_REQUESTED_FROM_SIM</a><br/></div>
-<a href="#androidSTKTelephony">Telephony</a><br/> 
-<a href="#androidSTKFeatureList">Feature List</a><br/></div>
- 
-<a name="androidSTKIntro"></a><h2>Introduction</h2> 
- 
+
 <p>This document offers a high-level overview of the SIM Toolkit Application for Android 1.0 and is primarily of interest for implementors of the Radio Interface Layer (RIL). The STK is  R96 compatible (3GPP TS 11.14 v5.9.0) and complies partially with R99 (3GPP TS 101.267 v8.17.0). See the <a href="androidSTKFeatureList">STK Feature List</a> for the complete feature list. </p> 
 <p>The Android STK implementation includes three layers:</p> 
 <ul> 
@@ -42,7 +36,7 @@ pdk.version=1.0
 <p>See the <a href="http://pdk-docs.prom.corp.google.com/docs/telephony.html">Android Platform Development Kit</a> for details.</p> 
  
  
-<a name="androidSTKRILRilUp"></a><h3>Communication from the RIL up</h3> 
+<a name="androidSTKRILRilUp"></a><h4>Communication from the RIL up</h4> 
  
 <p>Communication to the upper layers is done using the <code>RIL_UNSOL_xxx</code> family of commands defined in <code>/hardware/ril/include/ril.h</code>. The payload for each command is encoded using BER-TLV. As stated above, it is not necessary to remove extraneous fields. This allows the SIM to pass a complete command to the upper layers and simplifies STK RIL code. Below is the mapping from RIL_UNSOL_xxx commands to the SIM commands.</p> 
  
@@ -182,7 +176,7 @@ pdk.version=1.0
 <p>Sent by SIM to signal end of session. No content and no response.</p> 
  
  
-<a name="androidSTKRILApplciationDown"></a><h3>Communication from the application down</h3> 
+<a name="androidSTKRILApplciationDown"></a><h4>Communication from the application down</h4> 
  
 <p>Communication from the upper layers to the RIL uses the commands below (defined in <code>ril.h</code>):</p> 
  
@@ -218,13 +212,13 @@ pdk.version=1.0
 <p> This should cause the terminal response to be sent to the SIM.</p> 
  
  
-<a name="androidSTKTelephony"></a><h2>Telephony</h2> 
+<a name="androidSTKTelephony"></a><h3>Telephony</h3> 
  
 <p>STK Telephony is a protocol translation layer used to convert messages from BERL-TLV format to Application messages and back. </p> 
 <p>On the STK RIL side, STK Telphony receives raw buffer messages from RIL I/F and decodes them into a command parameters container before passing them on to the application. On the Application side, this layer receives application responses for commands and encodes them into raw buffer messages, which then get sent over the RIL I/F back to the SIM card.</p> 
  
  
-<a name="androidSTKFeatureList"></a><h2>Feature List</h2> 
+<a name="androidSTKFeatureList"></a><h3>Feature List</h3> 
  
 <table border="1" cellspacing="2" cellpadding="2"> 
   <tr> 

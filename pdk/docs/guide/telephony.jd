@@ -2,23 +2,18 @@ page.title=Radio Layer Interface
 pdk.version=1.0
 @jd:body
 
+<div id="qv-wrapper">
+<div id="qv">
+<h2>In this document</h2>
 <a name="toc"/>
-<div style="padding:10px">
-<a href="#androidTelephonyIntro">Introduction</a><br/>
-<a href="#androidTelephonyRILInitialization">RIL Initialization</a><br/>
-<a href="#androidTelephonyRILIntro">RIL Interaction</a><br/><div style="padding-left:40px">
-
-<a href="#androidTelephonyRILSolicited">Solicited</a><br/>
-<a href="#androidTelephonyRILUnsolicited">Unsolicited</a><br/></div>
-<a href="#androidTelephonyRILImplementing">Implementing the RIL</a><br/><div style="padding-left:40px">
-
-<a href="#androidTelephonyRILInit">RIL_Init</a><br/></div>
-<a href="#androidTelephonyRILFunctions">RIL Functions</a><br/><div style="padding-left:40px">
-
-<a href="#androidRilFunctionsSolicited">RIL Solicited Command Requests</a><br/>
-<a href="#androidRilFunctionsUnsolicited">RIL Unsolicited Commands</a><br/></div></div></font></div>
-
-<a name="androidTelephonyIntro"></a><h2>Introduction</h2>
+<ul>
+<li><a href="#androidTelephonyRILInitialization">RIL Initialization</a></li>
+<li><a href="#androidTelephonyRILIntro">RIL Interaction</a></li>
+<li><a href="#androidTelephonyRILImplementing">Implementing the RIL</a></li>
+<li><a href="#androidTelephonyRILFunctions">RIL Functions</a></li>
+</ul>
+</div>
+</div>
 
 <p>Android's Radio Interface Layer (RIL) provides an abstraction layer between Android telephony services (<a href="http://code.google.com/android/reference/android/telephony/package-descr.html">android.telephony</a>) and radio hardware. The RIL is radio agnostic, and includes support for Global System for Mobile communication (GSM)-based radios.&nbsp;</P>
 
@@ -36,7 +31,7 @@ Solid elements represent Android blocks and dashed elements represent partner-sp
 </p>
 
 
-<a name="androidTelephonyRILInitialization"></a><h2>RIL Initialization</h2>
+<a name="androidTelephonyRILInitialization"></a><h3>RIL Initialization</h3>
 
 <p>Android initializes the telephony stack and the Vendor RIL at startup as described in the sequence below:</p>
 <p><ol>
@@ -57,7 +52,7 @@ Solid elements represent Android blocks and dashed elements represent partner-sp
 <li><code>ro.ril.enable.3g.prefix=1</code>: adds the 3G prefix to the operator name.</li>
 </ul></p>
 
-<a name="androidTelephonyRILIntro"></a><h2>RIL Interaction</h2>
+<a name="androidTelephonyRILIntro"></a><h3>RIL Interaction</h3>
 
 <p>There are two forms of communication that the RIL handles:</p>
 <ul>
@@ -66,7 +61,7 @@ Solid elements represent Android blocks and dashed elements represent partner-sp
 </ul>
 
 
-<a name="androidTelephonyRILSolicited"></a><h3>Solicited</h3>
+<a name="androidTelephonyRILSolicited"></a><h4>Solicited</h4>
 
 <p>The following snippet illustrates the interface for solicited commands:</p>
 <pre class="prettify">
@@ -92,7 +87,7 @@ void OnRequestComplete (RIL_Token t, RIL_Error e, void *response, size_t respons
 <p><img src="images/telephony_solicted_example.gif"></p>
 
 
-<a name="androidTelephonyRILUnsolicited"></a><h3>Unsolicited</h3>
+<a name="androidTelephonyRILUnsolicited"></a><h4>Unsolicited</h4>
 
 <p>The following snippet illustrates the interface for unsolicited commands:</p>
 <pre class="prettify">
@@ -111,7 +106,7 @@ void OnUnsolicitedResponse (int unsolResponse, void *data, size_t datalen);
 <p><img src="images/telephony_unsolicted_example.gif"></p>
 
 
-<a name="androidTelephonyRILImplementing"></a><h2>Implementing the RIL</h2>
+<a name="androidTelephonyRILImplementing"></a><h3>Implementing the RIL</h3>
 
 <p>To implement a radio-specific RIL, create a shared library that implements a set of functions required by Android to process radio requests. The required functions are defined in the RIL header (<code>/include/telephony/ril.h</code>).</p>
 <p>The Android radio interface is radio-agnostic and the Vendor RIL can use any protocol to communicate with the radio.&nbsp;Android provides a reference Vendor RIL, using the Hayes AT command set, that you can use as a quick start for telephony testing and a guide for commercial vendor RILs. The source code for the reference RIL is found at <code>/commands/reference-ril/</code>.</p>
@@ -125,7 +120,7 @@ void OnUnsolicitedResponse (int unsolResponse, void *data, size_t datalen);
 </p>
 
 
-<a name="androidTelephonyRILInit"></a><h3>RIL_Init</h3>
+<a name="androidTelephonyRILInit"></a><h4>RIL_Init</h4>
 
 <p>Your Vendor RIL must define a RIL_Init function that provides a handle to the functions which will process all radio requests.  RIL_Init will be called by the Android RIL Daemon at boot time to initialize the RIL.</p>
 
@@ -147,12 +142,12 @@ RIL_RadioFunctions;
 </pre>
 
 
-<a name="androidTelephonyRILFunctions"></a><h2>RIL Functions</h2>
+<a name="androidTelephonyRILFunctions"></a><h3>RIL Functions</h3>
 
 <p><code>ril.h</code> defines RIL states and variables, such as <code>RIL_UNSOL_STK_CALL_SETUP</code>, <code>RIL_SIM_READY</code>, <code>RIL_SIM_NOT_READY</code>, as well as the functions described in the tables below. Skim the header file (<code>/device/include/telephony/ril.h</code>) for details.</p>
 
 
-<a name="androidRilFunctionsSolicited"></a><h3>RIL Solicited Command Requests</h3>
+<a name="androidRilFunctionsSolicited"></a><h4>RIL Solicited Command Requests</h4>
 
 <p>The vendor RIL must provide the functions described in the table below to handle solicited commands. The RIL solicited command request types are defined in <code>ril.h</code> with the <code>RIL_REQUEST_</code> prefix. Check the header file for details.</p>
 <p><table>
@@ -214,7 +209,7 @@ RIL_RadioFunctions;
 </table></p>
 
 
-<a name="androidRilFunctionsUnsolicited"></a><h3>RIL Unsolicited Commands</h3>
+<a name="androidRilFunctionsUnsolicited"></a><h4>RIL Unsolicited Commands</h4>
 
 <p>The functions listed in the table below are call-back functions used by the Vendor RIL to invoke unsolicited commands on the Android platform. See <code>ril.h</code> for details. </p>
 <p>

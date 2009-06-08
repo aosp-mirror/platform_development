@@ -1,16 +1,19 @@
 page.title=Dalvik
 pdk.version=1.0
 @jd:body
- 
-<a name="toc"/> 
-<div style="padding:10px"> 
-<a href="#androidDalvikIntroduction">Introduction</a><br/> 
-<a href="#dalvikCoreLibraries">Core Libraries</a><br/>
-<a href="#dalvikJNICallBridge">JNI Call Bridge</a><br/>
-<a href="#dalvikInterpreter">Interpreter</a><br/></div></font>
- 
-<a name="androidDalvikIntroduction"></a><h2>Introduction</h2> 
- 
+
+<div id="qv-wrapper">
+<div id="qv">
+<h2>In this document</h2>
+<a name="toc"/>
+<ul>
+<li><a href="#dalvikCoreLibraries">Core Libraries</a></li>
+<li><a href="#dalvikJNICallBridge">JNI Call Bridge</a></li>
+<li><a href="#dalvikInterpreter">Interpreter</a></li>
+</ul>
+</div>
+</div>
+
 <p> 
 The Dalvik virtual machine is intended to run on a variety of platforms.
 The baseline system is expected to be a variant of UNIX (Linux, BSD, Mac
@@ -23,7 +26,7 @@ operating system.  This document covers the former.
 </p>
  
  
-<a name="dalvikCoreLibraries"></a><h2>Core Libraries</h2> 
+<a name="dalvikCoreLibraries"></a><h3>Core Libraries</h3> 
  
 <p> 
 The native code in the core libraries (chiefly <code>dalvik/libcore</code>,
@@ -37,7 +40,7 @@ can be used.
 </p> 
  
  
-<a name="dalvikJNICallBridge"></a><h2>JNI Call Bridge</h2> 
+<a name="dalvikJNICallBridge"></a><h3>JNI Call Bridge</h3> 
  
 <p> 
 Most of the Dalvik VM runtime is written in portable C.  The one
@@ -82,7 +85,7 @@ method signature for things like the return value, total argument size,
 or inter-argument 64-bit alignment restrictions.
 </p> 
  
-<a name="dalvikInterpreter"></a><h2>Interpreter</h2> 
+<a name="dalvikInterpreter"></a><h3>Interpreter</h3> 
  
 <p> 
 The Dalvik runtime includes two interpreters, labeled "portable" and "fast".

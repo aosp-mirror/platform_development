@@ -2,20 +2,19 @@ page.title=Bluetooth
 pdk.version=1.0
 @jd:body
 
+<div id="qv-wrapper">
+<div id="qv">
+<h2>In this document</h2>
 <a name="toc"/>
-<div style="padding:10px">
-<a href="#androidBluetoothIntro">Introduction</a><br/>
-<a href="#androidBluetoothPorting">Porting</a><br/><div style="padding-left:40px">
-
-<a href="#androidBluetoothPortingDriver">UART Driver</a><br/>
-<a href="#androidBluetoothPortingPowerOnOff">Bluetooth Power On / Off</a><br/></div>
-<a href="#androidBluetoothCompiling">Compiling</a><br/>
-<a href="#androidBluetoothTroubleshooting">Troubleshooting</a><br/>
-<a href="#androidBluetoothTools">Tools</a><br/>
-<a href="#androidBluetoothFeatures">Feature Support</a><br/>
+<ul>
+<li><a href="#androidBluetoothPorting">Porting</a></li>
+<li><a href="#androidBluetoothCompiling">Compiling</a></li>
+<li><a href="#androidBluetoothTroubleshooting">Troubleshooting</a></li>
+<li><a href="#androidBluetoothTools">Tools</a></li>
+<li><a href="#androidBluetoothFeatures">Feature Support</a></li>
+</ul>
 </div>
-
-<a name="androidBluetoothIntro"></a><h2>Introduction</h2>
+</div>
 
 <p>Android's Bluetooth stack uses BlueZ version 3.36 for GAP, SDP, and RFCOMM profiles, and is a SIG-qualified Bluetooth 2.0 + EDR host stack.</p>
 
@@ -31,7 +30,7 @@ Solid elements represent Android blocks and dashed elements represent partner-sp
 
 
 
-<a name="androidBluetoothPorting"></a><h2>Porting</h2>
+<a name="androidBluetoothPorting"></a><h3>Porting</h3>
 
 <p>BlueZ is Bluetooth 2.0 compatible and should work with any 2.0 chipset. There are two integration points:</p>
 <p><ul>
@@ -41,13 +40,13 @@ Solid elements represent Android blocks and dashed elements represent partner-sp
 </p>
 
 
-<a name="androidBluetoothPortingDriver"></a><h3>UART Driver</h3>
+<a name="androidBluetoothPortingDriver"></a><h4>UART Driver</h4>
 
 <p>The BlueZ kernel sub-system attaches to your hardware-specific UART driver using the <code>hciattach</code> daemon.</p>
 <p>For example, for MSM7201A, this is <code>drivers/serial/msm_serial.c</code>. You may also need to edit command line options to <code>hciattach</code> via <code>init.rc</code>.</p>
 
 
-<a name="androidBluetoothPortingPowerOnOff"></a><h3>Bluetooth Power On / Off</h3>
+<a name="androidBluetoothPortingPowerOnOff"></a><h4>Bluetooth Power On / Off</h4>
 
 <p>The method for powering on and off your bluetooth chip varies from Android V 1.0 to post 1.0.</p>
 
@@ -58,14 +57,14 @@ Solid elements represent Android blocks and dashed elements represent partner-sp
 </ul>
 </p>
 
-<a name="androidBluetoothCompiling">Compiling</a><h3>Compiling</h3>
+<a name="androidBluetoothCompiling"></a><h4>Compiling</h4>
 
 <p>To compile Android with Bluetooth support enabled, add the following line to <code>BoardConfig.mk</code>.
 <pre>
 BOARD_HAVE_BLUETOOTH := true
 </pre>
 
-<a name="androidBluetoothTroubleshooting"></a><h2>Troubleshooting</h2>
+<a name="androidBluetoothTroubleshooting"></a><h3>Troubleshooting</h3>
 <p><strong>Debugging</strong></p>
 <p>To debug your bluetooth implementation, start by reading the logs (<code>adb logcat</code>) and look for ERRROR and WARNING messages regarding Bluetooth. 
   Andoird uses Bluez, which comes with some useful debugging tools. The snippet below provides examples in a suggested order:</p>
@@ -82,7 +81,7 @@ sdptool records ADDRESS # request the SDP records of another BT device.
 <p><strong>hciconfig -a and hcitool</strong></p>
 <p>If you compile your own system.img for Android, and <code>hciconfig -a</code> works but <code>hcitool</code> scan doesn't, try installing the firmware for the Bluetooth chipset. This firmware isn't yet available in the open source codebase, but you can <code>adb pull</code> and then <code>adb push</code>it from a stock T-Mobile G1 (located in <code>/etc/firmware/brf6300.bin</code>).<br />
   <a name="androidBluetoothTools"></a></p>
-<h2>Tools</h2>
+<h3>Tools</h3>
 
 <p>BlueZ provides a rich set of command line tools for debugging and interacting with the Bluetooth sub-system, including:</p>
 <p><ul>
@@ -96,7 +95,7 @@ sdptool records ADDRESS # request the SDP records of another BT device.
 </p>
 
 <a name="androidBluetoothFeatures"></a>
-<h2>Feature Support</h2>
+<h3>Feature Support</h3>
 <p>This section provides a change history of Bluetooth features added in each Android release and provides some rough guidance as to future features. </p>
 <h4>Android 1.0 release</h4>
 <h5>Platform features</h5>

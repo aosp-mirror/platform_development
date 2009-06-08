@@ -4,20 +4,23 @@ pdk.version=1.0
 
 
 
+<div id="qv-wrapper">
+<div id="qv">
+<h2>In this document</h2>
 <a name="toc"/>
-<div style="padding:10px">
-<a href="#androidDisplayDriverIntroduction">Introduction</a><br/>
-<a href="#androidDisplayDriverFunctionality">Functionality</a><br/>
-<a href="#androidDisplayDriversSourceTemplate">Implementing Your Own Driver (Driver Template)</a><br/>
-<a href="#androidDisplayDriversTroubleshooting">Troubleshooting</a><br/></div></font></div>
-
-<a name="androidDisplayDriverIntroduction"></a><h2>Introduction</h2>
+<ul>
+<li><a href="#androidDisplayDriverFunctionality">Functionality</a></li>
+<li><a href="#androidDisplayDriversSourceTemplate">Implementing Your Own Driver (Driver Template)</a></li>
+<li><a href="#androidDisplayDriversTroubleshooting">Troubleshooting</a></li>
+</ul>
+</div>
+</div>
 
 <p>This section describes how the display driver functions and offers a functional template designed to help you build your own device-specific driver.</p>
 <p>Android relies on the standard frame buffer device (<code>/dev/fb0</code> or <code>/dev/graphics/fb0</code>) and driver as described in the <code>linux/fb.h</code> kernel header file. For more information regarding the standard Linux frame buffer, please see <a href="http://git.kernel.org/?p=linux/kernel/git/stable/linux-2.6.24.y.git;a=blob;f=Documentation/fb/framebuffer.txt">The Frame Buffer Device</a> at <a href="http://kernel.org">http://kernel.org</a>.
 
 
-<a name="androidDisplayDriverFunctionality"></a><h2>Functionality</h2>
+<a name="androidDisplayDriverFunctionality"></a><h3>Functionality</h3>
 
 <p>In Android, every window gets implemented with an underlying Surface object, an object that gets placed on the framebuffer by SurfaceFlinger, the system-wide screen composer. Each Surface is double-buffered. The back buffer is where drawing takes place and the front buffer is used for composition. </p>
 <p> When <code>unlockCanvas()</code> is called, the back buffer is posted, which 
@@ -32,7 +35,7 @@ pdk.version=1.0
 <p>To maintain adequate performance, framebuffer memory should be cacheable. If you use write-back, flush the cache before the frame buffer is written from DMA to the LCD. If that isn't possible, you may use write-through. As a last resort, you can also use uncached memory with the write-bugger enabled, but performance will suffer.</p>
 
 
-<a name="androidDisplayDriversSourceTemplate"></a><h2>Implementing Your Own Driver (Driver Template)</h2>
+<a name="androidDisplayDriversSourceTemplate"></a><h3>Implementing Your Own Driver (Driver Template)</h3>
 
 <p>The following sample driver offers a functional example to help you build your own display driver. Modify <code>PGUIDE_FB...</code> macros as desired to match the requirements of your own device hardware.</p>
 <pre class="prettyprint">
@@ -330,7 +333,7 @@ MODULE_LICENSE("GPL");
 </pre>
 
 
-<a name="androidDisplayDriversTroubleshooting"></a><h2>Troubleshooting</h2>
+<a name="androidDisplayDriversTroubleshooting"></a><h3>Troubleshooting</h3>
 
 <p>Both of the following problems have a similar cause:</p>
 <ul>

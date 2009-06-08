@@ -2,37 +2,19 @@ page.title=Instrumentation Testing
 pdk.version=1.0
 @jd:body
 
+<div id="qv-wrapper">
+<div id="qv">
+<h2>In this document</h2>
 <a name="toc"/>
-<div style="padding:10px">
-<a href="#androidInstrumentationFrameworkIntro">Introduction</a><br/>
-<a href="#androidInstrumentationTestingFramework">Instrumentation Framework</a><br/><div style="padding-left:40px">
-
-<a href="#androidInstrumentationTestingClasses">Classes</a><br/>
-<a href="#androidInstrumentationFrameworkamCommand">Understanding the am Command</a><br/></div>
-<a href="#androidInstrumentationFrameworkPlatform">Platform Test Suites</a><br/><div style="padding-left:40px">
-
-<a href="#androidTestingPlatformFramework">Framework Tests</a><br/>
-<a href="#androidTestingPlatformCoreLibrary">Core Library</a><br/></div>
-<a href="#androidInstrumentationFrameworkWritingRunning">Running Tests</a><br/><div style="padding-left:40px">
-
-<a href="#androidInstrumentationTestingRunningAll">All Tests with Default TestRunner behavior</a><br/>
-<a href="#androidTestingTestSinglePakcage">Running all Tests Under Single Package</a><br/>
-<a href="#androidTestingSingleTestSuite">Running a Single Test Suite</a><br/>
-<a href="#androidInstrumentationTestingRunningSingleTestCase">A Single Test Case</a><br/>
-<a href="#androidInstrumentationTestingRunningSingleTest">A Single Test</a><br/>
-<a href="#androidTestingDebugging">Attaching a debugger to your test</a><br/></div>
-<a href="#androidInstrumentationTestingCreating">Writing Tests</a><br/><div style="padding-left:40px">
-
-<a href="#androidTestingLocationFiles">Location of Files</a><br/>
-<a href="#androidTestingContentMakefile">Contents of makefile</a><br/>
-<a href="#androidTestingContentManifest">Content of Manifest</a><br/>
-<a href="#androidInstrumentationTestingCreatingTestRunner">New Instrumentation TestRunner</a><br/>
-<a href="#androidInstrumentationTestingCreatingTestCase">New InstrumentationTestCase</a><br/>
-<a href="#androidInstrumentationFrameworkTestCase">Exploring a Test Case</a><br/>
-<a href="#androidTestingKindsofTests">Deciding Kinds of Tests to Write</a><br/></div>
-<a href="#androidInstrumentationFrameworkTroubleshooting">Troubleshooting</a><br/></div>
-
-<a name="androidInstrumentationFrameworkIntro"></a><h2>Introduction</h2>
+<ul>
+<li><a href="#androidInstrumentationTestingFramework">Instrumentation Framework</a></li>
+<li><a href="#androidInstrumentationFrameworkPlatform">Platform Test Suites</a></li>
+<li><a href="#androidInstrumentationFrameworkWritingRunning">Running Tests</a></li>
+<li><a href="#androidInstrumentationTestingCreating">Writing Tests</a></li>
+<li><a href="#troubleshooting">Troubleshooting</a></li>
+</ul>
+</div>
+</div>
 
 <p>This document describes how to use the Instrumentation Framework to write test cases. Instrumentation testing allows you to verify a particular feature or behavior with an automated JUnit TestCase. You can launch activities and providers within an application, send key events, and make assertions about various UI elements. </p>
 <p>You should have a working knowledge of the following:</p>
@@ -45,11 +27,11 @@ pdk.version=1.0
 <p> Each Android application runs in its own process. Instrumentation kills the application process and  restarts the process with Instrumentation. Instrumentation gives a handle to the application context used to poke around the application to validate test assertions, allowing you to write test cases to test applications at a much lower level than UI screen shot tests. Note that Instrumentation cannot catch UI bugs. </p>
 
 
-<a name="androidInstrumentationTestingFramework"></a><h2>Instrumentation Framework</h2>
+<a name="androidInstrumentationTestingFramework"></a><h3>Instrumentation Framework</h3>
 
 
 
-<a name="androidInstrumentationTestingClasses"></a><h3>Classes</h3>
+<a name="androidInstrumentationTestingClasses"></a><h4>Classes</h4>
 
 <p> The following classes help glue together <code>Instrumentation</code> with JUnit testing. </p>
 <table>
@@ -95,7 +77,7 @@ pdk.version=1.0
 </table>
 
 
-<a name="androidInstrumentationFrameworkamCommand"></a><h3>Understanding the am Command</h3>
+<a name="androidInstrumentationFrameworkamCommand"></a><h4>Understanding the am Command</h4>
 
 <p>The am command is a command-line interface to the ActivityManager (see <a href="http://code.google.com/android/reference/android/app/ActivityManager.html">http://code.google.com/android/reference/android/app/ActivityManager.html</a> for details). <code>am</code> is used to start and instrument activities using the adb shell command, as shown in the snippet below:</p>
 <pre class="prettify">
@@ -112,22 +94,22 @@ For example, to start the Contacts application you can use
 </pre>
 
 
-<a name="androidInstrumentationFrameworkPlatform"></a><h2>Platform Test Suites</h2>
+<a name="androidInstrumentationFrameworkPlatform"></a><h3>Platform Test Suites</h3>
 
 <p>This section provides an overview for various unit and functional test cases that can be executed through the instrumentation framework.</p>
 
 
-<a name="androidTestingPlatformFramework"></a><h3>Framework Tests</h3>
+<a name="androidTestingPlatformFramework"></a><h4>Framework Tests</h4>
 
 <p>Framework test cases test the Android application framework or specific Android application functionality that requires an Android runtime context.  These tests can be found in <code>//device/tests</code> and <code>//device/apps/AndroidTests</code>.</p>
 
 
-<a name="androidTestingPlatformCoreLibrary"></a><h3>Core Library</h3>
+<a name="androidTestingPlatformCoreLibrary"></a><h4>Core Library</h4>
 
 <p>Core library test cases test the Android library functionality that does not require an Android runtime context.  These tests are split into Android library (android.* package space) tests at <code>//device/java/tests</code> and Java library (java.*, javax.*, etc. packages) tests at <code>//device/dalvik/libcore/.../tests</code>.</p>
 
 
-<a name="androidInstrumentationFrameworkWritingRunning"></a><h2>Running Tests</h2>
+<a name="androidInstrumentationFrameworkWritingRunning"></a><h3>Running Tests</h3>
 
 <p>Each instrumentation test case is similar to an Android application with the distinction that it starts another application. For example, have a look in the <code>tests/Contacts</code> directory. </p>
 <ul>
@@ -165,7 +147,7 @@ $
 </pre>
 
 
-<a name="androidInstrumentationTestingRunningAll"></a><h3>All Tests with Default TestRunner behavior</h3>
+<a name="androidInstrumentationTestingRunningAll"></a><h4>All Tests with Default TestRunner behavior</h4>
 
 <p>If no class or package is passed in to run, InstrumentationTestRunner will automatically find and run all tests under the package of the test application (as defined by the <code>android:targetPackage</code> attribute of the instrumentation defined in its manifest file).
 </p> 
@@ -183,7 +165,7 @@ INSTRUMENTATION_CODE: -1
 </pre>
 
 
-<a name="androidTestingTestSinglePakcage"></a><h3>Running all Tests Under Single Package</h3>
+<a name="androidTestingTestSinglePakcage"></a><h4>Running all Tests Under Single Package</h4>
 
 <p>If you have many tests under one package, use the <code>-e package &lt;packagename&gt;</code> option to run all tests under that package without having to manually create a test suite.</p> 
 <pre> 
@@ -197,7 +179,7 @@ OK (8 tests)
 </pre>  
 
 
-<a name="androidTestingSingleTestSuite"></a><h3>Running a Single Test Suite</h3>
+<a name="androidTestingSingleTestSuite"></a><h4>Running a Single Test Suite</h4>
 
 <p>If you prefer to explicitly state which tests comprise all of your tests, you can define a test suite and run that directly. By convention, all test packages in your system should have at least one suite called <code>AllTests</code> (see <code>AllTests.java</code>).  To run all of the tests using the <code>AllTests</code> suite for the api demos test app:</p>
 
@@ -216,7 +198,7 @@ INSTRUMENTATION_CODE: -1
 </pre> 
 
 
-<a name="androidInstrumentationTestingRunningSingleTestCase"></a><h3>A Single Test Case</h3>
+<a name="androidInstrumentationTestingRunningSingleTestCase"></a><h4>A Single Test Case</h4>
 
 <pre> 
 $ adb shell am instrument -w \
@@ -233,7 +215,7 @@ INSTRUMENTATION_CODE: -1
 </pre> 
 
 
-<a name="androidInstrumentationTestingRunningSingleTest"></a><h3>A Single Test</h3>
+<a name="androidInstrumentationTestingRunningSingleTest"></a><h4>A Single Test</h4>
 
 <pre> 
 $ adb shell am instrument -w \
@@ -250,7 +232,7 @@ INSTRUMENTATION_CODE: -1
 </pre> 
 
 
-<a name="androidTestingDebugging"></a><h3>Attaching a debugger to your test</h3>
+<a name="androidTestingDebugging"></a><h4>Attaching a debugger to your test</h4>
 
 <p>In order to debug your test code, instruct the controller to stop and wait for the debugger by adding <code>-e debug true</code> to your
 command line.  This causes the test runner to stop and wait for the debugger just before calling your <code>setUp()</code> method.  For example,</p> 
@@ -262,12 +244,12 @@ $ adb shell am instrument -w \
 </pre> 
 
 
-<a name="androidInstrumentationTestingCreating"></a><h2>Writing Tests</h2>
+<a name="androidInstrumentationTestingCreating"></a><h3>Writing Tests</h3>
 
 <p>When writing tests, refer to the ApiDemos tests as models (located at <code>//device/samples/ApiDemos</code>). This section provides an overview of the test structure with ApiDemos.</p>
 
 
-<a name="androidTestingLocationFiles"></a><h3>Location of Files</h3>
+<a name="androidTestingLocationFiles"></a><h4>Location of Files</h4>
 
 <p>Test packages should use the following structure and include <code>Android.mk</code>, <code>AndroidManifest.xml</code>, <code>AllTests.java</code>, and a src directory that mirrors the src directory of the tested application.</p> 
 <p>Files are located within a <code>tests</code> directory found in the root directory:</p> 
@@ -291,7 +273,7 @@ samples/ApiDemos/tests/src/com/google/android/samples/view/Focus2AndroidTest.jav
 </pre>
 
 
-<a name="androidTestingContentMakefile"></a><h3>Contents of makefile</h3>
+<a name="androidTestingContentMakefile"></a><h4>Contents of makefile</h4>
 
 <p>The contents of the makefile are similar to a normal application with the addition of a <code>LOCAL_INSTRUMENTATION_FOR</code> declaration.<p /> 
 <pre> 
@@ -317,7 +299,7 @@ include $(BUILD_PACKAGE)
 </pre>
 
 
-<a name="androidTestingContentManifest"></a><h3>Content of Manifest</h3>
+<a name="androidTestingContentManifest"></a><h4>Content of Manifest</h4>
 
 <p>Use the following example to create an <code>AndroidManifest.xml</code> file that declares the instrumentation. Specify that the framework supplied Instrumentation TestRunner targest the package of your application, allowing the tests that are run with the instrumentation to get access to all of the classes of your application without having to build the source into the test app. The name of the test application is typically the same as your target application with <code>.tests</code> appended. </p>
 <pre> 
@@ -346,7 +328,7 @@ $ adb shell am instrument -w \
 </pre> 
 
 
-<a name="androidInstrumentationTestingCreatingTestRunner"></a><h3>New Instrumentation TestRunner</h3>
+<a name="androidInstrumentationTestingCreatingTestRunner"></a><h4>New Instrumentation TestRunner</h4>
 
 <p>Create a class that derives from this class. You must override two abstract methods; one that returns the class loader of the target package, and another that defines all of the tests within the package. For example, the snippet below displays the test runner for the framework tests.</p>
 <pre class="prettify">
@@ -378,7 +360,7 @@ public class FrameworkInstrumentationTestRunner extends InstrumentationTestRunne
 </pre>		
 
 
-<a name="androidInstrumentationTestingCreatingTestCase"></a><h3>New InstrumentationTestCase</h3>
+<a name="androidInstrumentationTestingCreatingTestCase"></a><h4>New InstrumentationTestCase</h4>
 
 <p> To create a new test case, write a class that extends <code>InstrumentationTestCase</code> in the same application as your test runner.  The following snippet illustrates an example <code>ActivityTestCase</code> that tests an activity named <code>MyActivity</code>.</p>
 <pre class="prettify">
@@ -409,7 +391,7 @@ public class ButtonPressTest extends ActivityTestCase&lt;MyActivity&gt; {
 </pre>
 
 
-<a name="androidInstrumentationFrameworkTestCase"></a><h3>Exploring a Test Case</h3>
+<a name="androidInstrumentationFrameworkTestCase"></a><h4>Exploring a Test Case</h4>
 
 <p> The test case described in this section adds and tests a new Contact. Note that you can send intents, register intent receivers, etc. </p>
 <p><code>Instrumentation.java</code> has helper functions that send key events and strings, for example: </p>
@@ -481,7 +463,7 @@ private void addNewContact(String name, int star, int phoneType, String number, 
 	</pre>
 
 
-<a name="androidTestingKindsofTests"></a><h3>Deciding Kinds of Tests to Write</h3>
+<a name="androidTestingKindsofTests"></a><h4>Deciding Kinds of Tests to Write</h4>
 
 <p>Once you are bootstrapped with your test application, you can start writing tests.  There are three of types of tests you may wish to write:</p> 
 <p><ul> 
@@ -498,7 +480,7 @@ private void addNewContact(String name, int star, int phoneType, String number, 
 </p>
 
 
-<a name="androidInstrumentationFrameworkTroubleshooting"></a><h2>Troubleshooting</h2>
+<a name="troubleshooting"></a><h3>Troubleshooting</h3>
 
 <p>If you run your test cases and nothing appears to happen, have a look at <code>adb logcat</code>. The following is a common problem:</p>
 <pre class="prettify">
