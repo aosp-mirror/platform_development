@@ -1,15 +1,22 @@
-page.title=Building Android for a new Mobile Device
+page.title=Building Android for a new Device
 pdk.version=1.0
 @jd:body
 
 
 
+<div id="qv-wrapper">
+<div id="qv">
+<h2>In this document</h2>
 <a name="toc"/>
-<div style="padding:10px">
-<a href="#androidOHDPortingDeviceBuildingProcess">Detailed Instructions</a><br/>
-<a href="#androidBuildNewFileTree">New Product File Tree</a><br/></div></font></div>
+<ul>
+<li><a href="#androidOHDPortingDeviceBuildingProcess">Detailed Instructions</a></li>
+<li><a href="#androidBuildNewFileTree">New Product File Tree</a></li>
+</ul>
+</div>
+</div>
 
-<a name="androidOHDPortingDeviceBuildingProcess"></a><h2>Detailed Instructions</h2>
+
+<a name="androidOHDPortingDeviceBuildingProcess"></a><h3>Detailed Instructions</h3>
 
 <p>The directions below describe how to configure make files for new mobile devices and products.</p>
 <ol>
@@ -104,7 +111,7 @@ pdk.version=1.0
 <p>You should find new build binaries located in <code>/out/target/product/&lt;board_name&gt;</code>.
 
 
-<a name="androidBuildNewFileTree"></a><h2>New Product File Tree</h2>
+<a name="androidBuildNewFileTree"></a><h3>New Product File Tree</h3>
 
 <p>The file tree below illustrates what your own system should look like after completing the steps above.</p>
 <p>
@@ -127,7 +134,7 @@ pdk.version=1.0
 </ul>
 </p>
 
-<a name="androidBuildSystemProductDefFiles"></a><h2>Product Definition Files</h2>
+<a name="androidBuildSystemProductDefFiles"></a><h3>Product Definition Files</h3>
 
 <p>Product-specific variables are defined in product definition files. A product definition file can inherit from other product definition files, thus reducing the need to copy and simplifying maintenance.</p>
 <p>Variables maintained in a product definition files include:</p>
@@ -244,7 +251,7 @@ PRODUCT_PACKAGE_OVERLAYS := vendor/acme/overlay
 
 </pre>
 
-<a name="androidBuildVariants"></a><h2>Build Variants</h2>
+<a name="androidBuildVariants"></a><h3>Build Variants</h3>
 
 <p> 
 When building for a particular product, it's often useful to have minor

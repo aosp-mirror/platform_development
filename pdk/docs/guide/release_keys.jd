@@ -2,7 +2,9 @@ page.title=Creating Release Keys and Signing Builds
 pdk.version=1.0
 @jd:body
 <div id="qv-wrapper">
-  <div id ="qv"> <a name="toc"/>
+  <div id ="qv"> 
+<h2>In this document</h2>
+<a name="toc"/>
     <ul>
       <li><a href="#intro">Introduction</a></li>
       <li><a href="#generatingKeys">Generating keys</a></li>

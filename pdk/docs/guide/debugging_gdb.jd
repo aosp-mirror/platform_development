@@ -2,21 +2,23 @@ page.title=Debugging with GDB
 pdk.version=1.0
 @jd:body
 
+<div id="qv-wrapper">
+<div id="qv">
+<h2>In this document</h2>
 <a name="toc"/>
-<div style="padding:10px"> <a href="#intro">Introduction</a><br/>
-  <a href="#gdb">Running gdb on the desktop</a><br/>
-  <div style="padding-left:40px"> <a href="#gdbShort">Short Instructions</a><br/>
-    <a href="#gdbDetailed">Detailed Instructions</a><br/>
-  </div>
-  <a href="#justInTime">Just-In-Time Debug Feature</a><br/>
+<ul>
+<li><a href="#gdb">Debugging</a></li>
+  <li><a href="#justInTime">Just-In-Time Debug Feature</a></li>
+</ul>
 </div>
-<a name="intro"></a>
-<h3>Introduction</h3>
-<p>The current version of <code>envsetup.sh</code> has a <code>gdbclient</code> command that handles much of the setup.  For example, to attach to the
+</div>
+
+<p>The current version of <code>envsetup.sh</code> has a <code>gdbclient</code> command that handles much of the setup.  For example, to attach the
   already-running <code>globaltime</code> application, execute the following, making sure that: 1) you do this from the same window used to build the software on the device you are debugging and 2) verify that the symbols in the object files in the build tree match up with what is installed on the device or emulator.</p>
 <pre class="prettify">
 gdbclient app_process :5039 globaltime
 </pre>
+<a name="gdb"></a><h3>Debugging</h3>
 <a name="gdbShort"></a>
 <h4>Short Instructions</h4>
 <p>Android runs <code>gdbserver</code> on the device and an ARM aware <code>gdb</code>, named <code>arm-eabi-gdb</code>, on the desktop machine.</p>

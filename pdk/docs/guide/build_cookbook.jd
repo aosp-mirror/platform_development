@@ -1,19 +1,26 @@
-page.title=<my_page_title>
-pdk.version=<current_PDK_version>
+page.title=Build Cookbook
+pdk.version=1.0
 @jd:body
 
+<div id="qv-wrapper">
+<div id="qv">
+<h2>In this document</h2>
 <a name="toc"/>
-<div style="padding:10px">
-<a href="http://wiki.corp.google.com/twiki/bin/view/Main/AndroidBuildCookbook#Building_a_simple_APK">Building a simple APK</a><br>
-    <a href="http://wiki.corp.google.com/twiki/bin/view/Main/AndroidBuildCookbook#Building_a_APK_that_depends_on_a">Building a APK that depends on a static .jar file</a><br>
-    <a href="http://wiki.corp.google.com/twiki/bin/view/Main/AndroidBuildCookbook#Building_a_APK_that_should_be_si">Building a APK that should be signed with the platform key</a><br>
-    <a href="http://wiki.corp.google.com/twiki/bin/view/Main/AndroidBuildCookbook#Building_a_APK_that_should_be_si">Building a APK that should be signed with a specific vendor key</a><br>
-    <a href="http://wiki.corp.google.com/twiki/bin/view/Main/AndroidBuildCookbook#Adding_a_prebuilt_APK">Adding a prebuilt APK</a><br>
-    <a href="http://wiki.corp.google.com/twiki/bin/view/Main/AndroidBuildCookbook#Adding_a_Static_Java_Library">Adding a Static Java Library</a><br>
-  </div>
-  
+<ul>
+<li><a href="#simpleAPK">Simple APK</a></li>
+<li><a href="#APKJar">APK Dependent on static .jar file</a></li>
+    <li><a href="#APKPlatform">APK signed with the platform key</a></li>
+    <li><a href="#APKVendor">APK that signed with vendor key</a></li>
+    <li><a href="#prebuiltAPK">Prebuilt APK</a></li>
+    <li><a href="#staticJava">Adding a Static Java Library</a></li>
+    <li><a href="#mkVars">Android.mk variables</a></li>
+</ul>
+</div>
+</div>
+
+
 <p>The Android Build Cookbook offers code snippets to help you quickly implement some common build tasks. For additional instruction, please see the other build documents in this section.</p>  
-<h2><a name="Building_a_simple_APK" id="Building_a_simple_APK"></a>Building a simple APK</h2>
+<h3><a name="simpleAPK"></a>Building a simple APK</h3>
 <pre>
   LOCAL_PATH := $(call my-dir)
   include $(CLEAR_VARS)
@@ -27,7 +34,7 @@ pdk.version=<current_PDK_version>
   # Tell it to build an APK
   include $(BUILD_PACKAGE)
 </pre>
-<h2><a name="Building_a_APK_that_depends_on_a" id="Building_a_APK_that_depends_on_a"></a>Building a APK that depends on a static .jar file</h2>
+<h3><a name="APKJar"></a>Building a APK that depends on a static .jar file</h3>
 <pre>
   LOCAL_PATH := $(call my-dir)
   include $(CLEAR_VARS)
@@ -44,7 +51,7 @@ pdk.version=<current_PDK_version>
   # Tell it to build an APK
   include $(BUILD_PACKAGE)
 </pre>
-<h2><a name="Building_a_APK_that_should_be_si" id="Building_a_APK_that_should_be_si">Building a APK that should be signed with the platform key</a></h2>
+<h3><a name="APKPlatform"></a>Building a APK that should be signed with the platform key</h3>
 <pre>
   LOCAL_PATH := $(call my-dir)
   include $(CLEAR_VARS)
@@ -60,7 +67,7 @@ pdk.version=<current_PDK_version>
   # Tell it to build an APK
   include $(BUILD_PACKAGE)
 </pre>
-<h2>Building a APK that should be signed with a specific vendor key</h2>
+<h3><a name="APKVendor"></a>Building a APK that should be signed with a specific vendor key</h3>
 <pre>
   LOCAL_PATH := $(call my-dir)
   include $(CLEAR_VARS)
@@ -76,7 +83,7 @@ pdk.version=<current_PDK_version>
   # Tell it to build an APK
   include $(BUILD_PACKAGE)
 </pre>
-<h2><a name="Adding_a_prebuilt_APK" id="Adding_a_prebuilt_APK"></a>Adding a prebuilt APK</h2>
+<h3><a name="prebuiltAPK"></a>Adding a prebuilt APK</h3>
 <pre>
   LOCAL_PATH := $(call my-dir)
   include $(CLEAR_VARS)
@@ -89,7 +96,7 @@ pdk.version=<current_PDK_version>
   &nbsp;
   include $(BUILD_PREBUILT)
 </pre>
-<h2><a name="Adding_a_Static_Java_Library" id="Adding_a_Static_Java_Library"></a>Adding a Static Java Library</h2>
+<h3><a name="staticJava"></a>Adding a Static Java Library</h3>
 <pre>
   LOCAL_PATH := $(call my-dir)
   include $(CLEAR_VARS)
@@ -106,7 +113,7 @@ pdk.version=<current_PDK_version>
   # Build a static jar file.
   include $(BUILD_STATIC_JAVA_LIBRARY)
 </pre>
-<h2><a name="Android_mk_variables" id="Android_mk_variables"></a>Android.mk Variables</h2>
+<h3><a name="mkVars"></a>Android.mk Variables</h3>
 
 <p>These are the variables that you'll commonly see in Android.mk files, listed
 alphabetically. First, a note on the variable naming: </p> 

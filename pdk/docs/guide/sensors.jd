@@ -1,14 +1,17 @@
 page.title=Sensors
 pdk.version=1.0
 @jd:body
- 
-<a name="toc"/> 
-<div style="padding:10px"> 
-<a href="#androidSensorsIntroduction">Introduction</a><br/> 
-<a href="#androidSensorsInterface">Interface</a><br/></div></font></div> 
- 
-<a name="androidSensorsIntroduction"></a><h2>Introduction</h2> 
- 
+
+<div id="qv-wrapper">
+<div id="qv">
+<h2>In this document</h2>
+<a name="toc"/>
+<ul>
+<li><a href="#androidSensorsInterface">Interface</a></li>
+</ul>
+</div>
+</div>
+
 <p>Android defines a user space C abstraction interface for sensor hardware. The interface header is defined in 
 <code>hardware/libhardware/include/hardware/sensors.h</code>.
 In order to integrate sensors with Android you need to build a shared library that implements this interface. 
@@ -26,17 +29,17 @@ The types of sensors currently supported by Android include:
 </ul>
 </p> 
  
-<a name="androidSensorBuildingDriver"></a><h2>Building a Sensor Library</h2>
+<a name="androidSensorBuildingDriver"></a><h3>Building a Sensor Library</h3>
 <p> To implement a Sensors driver, create a shared library that implements the interface defined in <code>sensors.h</code>. You must name your shared library 
 <code>libsensors.so</code> so that it will get loaded from <code>/system/lib</code> at runtime. 
 </p
 
  
-<a name="androidSensorsInterface"></a><h2>Interface</h2> 
+<a name="androidSensorsInterface"></a><h3>Interface</h3> 
  
  
  
-<p><span class="lh2"><a name="androidDoxygenNote"></a></span> 
+<p><span class="lh3"><a name="androidDoxygenNote"></a></span> 
  
 <p class="note"><strong>Note</strong>: This document relies on some Doxygen-generated content that appears in an iFrame below. To return to the Doxygen default content for this page, <a href="sensors.html">click here</a>.</p> 
  

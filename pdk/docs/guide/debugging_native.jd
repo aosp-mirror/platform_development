@@ -3,18 +3,18 @@ pdk.version=1.0
 @jd:body
 
 
+<div id="qv-wrapper">
+<div id="qv">
+<h2>In this document</h2>
 <a name="toc"/>
-<div style="padding:10px">
-  <a href="#Capturing_logs">Capturing logs</a><br/>
-  <a href="#Debug_Scenarios">Debug Scenarios</a><br/>
-  <div style="padding-left:40px"> 
-    <a href="#Crash_but_no_exit_stuck">Crash but no exit...stuck</a><br/>
-    <a href="#Blocked_in_a_syscall">Blocked in a syscall</a><br/>
-    <a href="#Crash_in_C_C_code">Crash in C / C++ code</a>
-  </div>
+<ul>
+<li><a href="#Capturing_logs">Capturing logs</a></li>
+<li><a href="#Debug_Scenarios">Debug Scenarios</a></li>
+</ul>
+</div>
 </div>
 
-<a name="Capturing_logs"></a><h2>Capturing logs</h2>
+<a name="Capturing_logs"></a><h3>Capturing logs</h3>
 
 <p>To capture log output:</p>
 <ol>
@@ -24,7 +24,7 @@ pdk.version=1.0
 
 </ol>
 
-<a name="Debug_Scenarios"></a><h2>Debug Scenarios</h2>
+<a name="Debug_Scenarios"></a><h3>Debug Scenarios</h3>
 <pre class="prettify">
   # command to device shell (via adb)
   % command to host pc shell
@@ -32,7 +32,7 @@ pdk.version=1.0
 <p>
 </p>
 
-<a name="Crash_but_no_exit_stuck"></a><h3>Crash but no exit...stuck</h3>
+<a name="Crash_but_no_exit_stuck"></a><h4>Crash but no exit...stuck</h4>
 
 <p>In this scenario, the GTalk app crashed but did not actually exit or seems stuck. Check the debug logs to see if there is anything unusual: </p>
 
@@ -237,7 +237,7 @@ Previous frame identical to this frame (corrupt stack?)
 #2  0x6b022c2c in shell (args=0x51b58) at extlibs/jamvm-1.4.1/src/thread.c:629
 </pre>
 
-<a name="Crash_in_C_C_code"></a><h3>Crash in C / C++ code</h3>
+<a name="Crash_in_C_C_code"></a><h4>Crash in C / C++ code</h4>
 <p>If it crashes, connect with <code>aproto</code> and run <code>logcat</code> on the device. You should see output like this:</p>
 
 <pre class="prettify">
