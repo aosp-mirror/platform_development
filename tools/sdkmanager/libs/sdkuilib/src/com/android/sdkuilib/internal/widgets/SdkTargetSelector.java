@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.sdkuilib;
+package com.android.sdkuilib.internal.widgets;
 
 import com.android.sdklib.IAndroidTarget;
 

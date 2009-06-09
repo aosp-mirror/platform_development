@@ -18,8 +18,8 @@ package com.android.ide.eclipse.adt.internal.properties;
 
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.sdklib.IAndroidTarget;
-import com.android.sdkuilib.ApkConfigWidget;
-import com.android.sdkuilib.SdkTargetSelector;
+import com.android.sdkuilib.internal.widgets.ApkConfigWidget;
+import com.android.sdkuilib.internal.widgets.SdkTargetSelector;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.swt.SWT;
@@ -69,7 +69,7 @@ public class AndroidPropertyPage extends PropertyPage implements IWorkbenchPrope
 
         Label l = new Label(top, SWT.NONE);
         l.setText("Project Build Target");
-        
+
         mSelector = new SdkTargetSelector(top, targets);
 
         l = new Label(top, SWT.SEPARATOR | SWT.HORIZONTAL);
@@ -88,7 +88,7 @@ public class AndroidPropertyPage extends PropertyPage implements IWorkbenchPrope
             if (target != null) {
                 mSelector.setSelection(target);
             }
-            
+
             // get the apk configurations
             Map<String, String> configs = currentSdk.getProjectApkConfigs(mProject);
             mApkConfigWidget.fillTable(configs);
@@ -102,7 +102,7 @@ public class AndroidPropertyPage extends PropertyPage implements IWorkbenchPrope
                 setValid(target != null);
             }
         });
-        
+
         if (mProject.isOpen() == false) {
             // disable the ui.
         }
@@ -117,7 +117,7 @@ public class AndroidPropertyPage extends PropertyPage implements IWorkbenchPrope
             currentSdk.setProject(mProject, mSelector.getSelected(),
                     mApkConfigWidget.getApkConfigs());
         }
-        
+
         return true;
     }
 }

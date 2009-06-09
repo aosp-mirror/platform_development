@@ -20,7 +20,7 @@ import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk.ITargetChangeListener;
 import com.android.sdklib.IAndroidTarget;
-import com.android.sdkuilib.SdkTargetSelector;
+import com.android.sdkuilib.internal.widgets.SdkTargetSelector;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jface.preference.DirectoryFieldEditor;
@@ -68,7 +68,7 @@ public class AndroidPreferencePage extends FieldEditorPreferencePage implements
 
         mDirectoryField = new SdkDirectoryFieldEditor(AdtPlugin.PREFS_SDK_DIR,
                 Messages.AndroidPreferencePage_SDK_Location_, getFieldEditorParent());
-        
+
         addField(mDirectoryField);
     }
 
@@ -79,11 +79,11 @@ public class AndroidPreferencePage extends FieldEditorPreferencePage implements
      */
     public void init(IWorkbench workbench) {
     }
-    
+
     @Override
     public void dispose() {
         super.dispose();
-        
+
         if (mDirectoryField != null) {
             mDirectoryField.dispose();
             mDirectoryField = null;
@@ -120,12 +120,12 @@ public class AndroidPreferencePage extends FieldEditorPreferencePage implements
         protected boolean doCheckState() {
             String fileName = getTextControl().getText();
             fileName = fileName.trim();
-            
+
             if (fileName.indexOf(',') >= 0 || fileName.indexOf(';') >= 0) {
                 setErrorMessage(Messages.AndroidPreferencePage_ERROR_Reserved_Char);
                 return false;  // Apply/OK must be disabled
             }
-            
+
             File file = new File(fileName);
             if (!file.isDirectory()) {
                 setErrorMessage(JFaceResources.getString(
@@ -170,18 +170,18 @@ public class AndroidPreferencePage extends FieldEditorPreferencePage implements
             gd = new GridData(GridData.FILL_HORIZONTAL);
             gd.horizontalSpan = numColumns;
             l.setLayoutData(gd);
-            
+
             try {
                 // We may not have an sdk if the sdk path pref is empty or not valid.
                 Sdk sdk = Sdk.getCurrent();
                 IAndroidTarget[] targets = sdk != null ? sdk.getTargets() : null;
-                
+
                 mTargetSelector = new SdkTargetSelector(parent,
                         targets,
                         false /*allowSelection*/);
                 gd = (GridData) mTargetSelector.getLayoutData();
                 gd.horizontalSpan = numColumns;
-                
+
                 if (mTargetChangeListener == null) {
                     mTargetChangeListener = new TargetChangedListener();
                     AdtPlugin.getDefault().addTargetListener(mTargetChangeListener);
@@ -193,7 +193,7 @@ public class AndroidPreferencePage extends FieldEditorPreferencePage implements
                 AdtPlugin.log(e, "SdkTargetSelector failed");
             }
         }
-        
+
         @Override
         public void dispose() {
             super.dispose();
@@ -202,7 +202,7 @@ public class AndroidPreferencePage extends FieldEditorPreferencePage implements
                 mTargetChangeListener = null;
             }
         }
-        
+
         private class TargetChangedListener implements ITargetChangeListener {
             public void onProjectTargetChange(IProject changedProject) {
                 // do nothing.
