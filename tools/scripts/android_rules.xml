@@ -64,7 +64,7 @@
     <property name="out-debug-package" value="${out-folder}/${ant.project.name}-debug.apk"/>
 
     <!-- Tools -->
-    <condition property="exe" value="exe" else=""><os family="windows"/></condition>
+    <condition property="exe" value=".exe" else=""><os family="windows"/></condition>
     <property name="adb" value="${android-tools}/adb${exe}"/>
 
     <!-- rules -->
