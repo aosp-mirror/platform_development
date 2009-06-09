@@ -279,7 +279,7 @@ public final class SdkConstants {
      * @return one of {@link #PLATFORM_WINDOWS}, {@link #PLATFORM_DARWIN},
      * {@link #PLATFORM_LINUX} or {@link #PLATFORM_UNKNOWN}.
      */
-    private static int currentPlatform() {
+    public static int currentPlatform() {
         String os = System.getProperty("os.name");          //$NON-NLS-1$
         if (os.startsWith("Mac OS")) {                      //$NON-NLS-1$
             return PLATFORM_DARWIN;

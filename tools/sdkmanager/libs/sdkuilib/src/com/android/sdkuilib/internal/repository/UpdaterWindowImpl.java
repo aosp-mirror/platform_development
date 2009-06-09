@@ -18,6 +18,7 @@ package com.android.sdkuilib.internal.repository;
 
 
 import com.android.sdklib.ISdkLog;
+import com.android.sdklib.SdkConstants;
 import com.android.sdklib.internal.repository.Archive;
 import com.android.sdklib.internal.repository.ITask;
 import com.android.sdklib.internal.repository.ITaskMonitor;
@@ -39,6 +40,8 @@ import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.List;
+import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Shell;
 
 import java.io.InputStream;
@@ -86,13 +89,15 @@ public class UpdaterWindowImpl {
      * @wbp.parser.entryPoint
      */
     public void open() {
-        Display display = Display.getDefault();
+        Display.setAppName("Android"); //$hide$ (hide from SWT designer)
+
         createContents();
         mAndroidSdkUpdater.open();
         mAndroidSdkUpdater.layout();
 
         firstInit();    //$hide$ (hide from SWT designer)
 
+        Display display = Display.getDefault();
         while (!mAndroidSdkUpdater.isDisposed()) {
             if (!display.readAndDispatch()) {
                 display.sleep();
@@ -112,7 +117,9 @@ public class UpdaterWindowImpl {
             }
         });
 
-        mAndroidSdkUpdater.setLayout(new FillLayout(SWT.HORIZONTAL));
+        FillLayout fl;
+        mAndroidSdkUpdater.setLayout(fl = new FillLayout(SWT.HORIZONTAL));
+        fl.marginHeight = fl.marginWidth = 5;
         mAndroidSdkUpdater.setMinimumSize(new Point(200, 50));
         mAndroidSdkUpdater.setSize(745, 433);
         mAndroidSdkUpdater.setText("Android SDK Updater");
@@ -135,7 +142,6 @@ public class UpdaterWindowImpl {
         mRemotePackagesPage = new RemotePackagesPage(mPagesRootComposite, mUpdaterData, this);
         mSashForm.setWeights(new int[] {150, 576});
     }
-
 
     // -- Start of internal part ----------
     // Hide everything down-below from SWT designer
@@ -184,7 +190,11 @@ public class UpdaterWindowImpl {
      * The icon is disposed by {@link #onAndroidSdkUpdaterDispose()}.
      */
     private void setWindowImage(Shell androidSdkUpdater) {
-        InputStream stream = getClass().getResourceAsStream("android_icon_16.png");  //$NON-NLS-1$
+        String image = "android_icon_16.png"; //$NON-NLS-1$
+        if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_DARWIN) {
+            image = "android_icon_128.png"; //$NON-NLS-1$
+        }
+        InputStream stream = getClass().getResourceAsStream(image);
         if (stream != null) {
             try {
                 ImageData imgData = new ImageData(stream);
