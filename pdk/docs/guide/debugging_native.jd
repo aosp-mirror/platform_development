@@ -298,13 +298,6 @@ pid: 373, tid: 401  &gt;&gt;&gt; android.content.providers.pim &lt;&lt;&lt;
   5300fc5c  pthread_create                  system/klibc/android/pthread.c:182
 </pre>
 
-<p>If you save the debug spew into a file called <code>out.txt</code>, you can pass that to the tool, like this:
-</p>
-
-<pre class="prettify">
-./tools/stack out.txt
-</pre>
-
 <p>Or you can run <code>logcat</code> without any parameters and it will read from <code>stdin</code>.  You can then paste output into the terminal or pipe it. Run <code>logcat</code> from the top of the tree in the environment in which you do builds so that the application can determine relative paths to the toolchain to use to decode the object files.
 </p>
 </body>
