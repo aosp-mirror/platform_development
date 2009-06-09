@@ -119,4 +119,5 @@
     <string name="hard_keyboard_label">hardKeyboard:</string>
     <string name="navigation_label">navigation:</string>
     <string name="five_way_nav_label">five way nav:</string>
+    <string name="gles_version_label">GLES Version:</string>
 </resources>
