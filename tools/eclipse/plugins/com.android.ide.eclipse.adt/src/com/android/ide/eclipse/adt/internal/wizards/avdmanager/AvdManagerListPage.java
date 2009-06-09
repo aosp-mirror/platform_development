@@ -26,8 +26,8 @@ import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.ISdkLog;
 import com.android.sdklib.internal.avd.AvdManager;
 import com.android.sdklib.internal.avd.AvdManager.AvdInfo;
-import com.android.sdkuilib.AvdSelector;
-import com.android.sdkuilib.AvdSelector.SelectionMode;
+import com.android.sdkuilib.internal.widgets.AvdSelector;
+import com.android.sdkuilib.internal.widgets.AvdSelector.SelectionMode;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jface.wizard.WizardPage;

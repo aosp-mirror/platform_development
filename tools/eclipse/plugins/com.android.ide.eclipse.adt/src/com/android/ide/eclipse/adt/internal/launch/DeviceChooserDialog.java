@@ -31,8 +31,8 @@ import com.android.ide.eclipse.ddms.DdmsPlugin;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.internal.avd.AvdManager;
 import com.android.sdklib.internal.avd.AvdManager.AvdInfo;
-import com.android.sdkuilib.AvdSelector;
-import com.android.sdkuilib.AvdSelector.SelectionMode;
+import com.android.sdkuilib.internal.widgets.AvdSelector;
+import com.android.sdkuilib.internal.widgets.AvdSelector.SelectionMode;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;

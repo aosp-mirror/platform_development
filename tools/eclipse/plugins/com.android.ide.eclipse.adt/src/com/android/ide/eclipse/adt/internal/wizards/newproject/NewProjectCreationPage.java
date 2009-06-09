@@ -33,7 +33,7 @@ import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.internal.project.ProjectProperties;
 import com.android.sdklib.internal.project.ProjectProperties.PropertyType;
-import com.android.sdkuilib.SdkTargetSelector;
+import com.android.sdkuilib.internal.widgets.SdkTargetSelector;
 
 import org.eclipse.core.filesystem.URIUtil;
 import org.eclipse.core.resources.IProject;
