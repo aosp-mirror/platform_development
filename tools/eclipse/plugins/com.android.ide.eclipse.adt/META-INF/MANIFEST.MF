@@ -99,8 +99,8 @@ Export-Package: com.android.ide.eclipse.adt;x-friends:="com.android.ide.eclipse.
  com.android.sdklib.internal.repository;x-friends:="com.android.ide.eclipse.tests",
  com.android.sdklib.repository;x-friends:="com.android.ide.eclipse.tests",
  com.android.sdkstats;x-friends:="com.android.ide.eclipse.tests",
- com.android.sdkuilib;x-friends:="com.android.ide.eclipse.tests",
  com.android.sdkuilib.internal.repository;x-friends:="com.android.ide.eclipse.tests",
+ com.android.sdkuilib.internal.widgets;x-friends:="com.android.ide.eclipse.tests",
  com.android.sdkuilib.repository;x-friends:="com.android.ide.eclipse.tests"
 
 
