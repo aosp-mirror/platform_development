@@ -82,8 +82,8 @@ public class Archive implements IDescription {
             mUiName = uiName;
         }
 
-        @Override
-        public String toString() {
+        /** Returns the UI name of the OS. */
+        public String getUiName() {
             return mUiName;
         }
 
@@ -92,7 +92,7 @@ public class Archive implements IDescription {
          */
         public static Os getCurrentOs() {
             String os = System.getProperty("os.name");          //$NON-NLS-1$
-            if (os.startsWith("Mac OS")) {                      //$NON-NLS-1$
+            if (os.startsWith("Mac")) {                         //$NON-NLS-1$
                 return Os.MACOSX;
 
             } else if (os.startsWith("Windows")) {              //$NON-NLS-1$
@@ -119,8 +119,8 @@ public class Archive implements IDescription {
             mUiName = uiName;
         }
 
-        @Override
-        public String toString() {
+        /** Returns the UI name of the architecture. */
+        public String getUiName() {
             return mUiName;
         }
 
@@ -223,24 +223,34 @@ public class Archive implements IDescription {
     }
 
     /**
-     * Generates a short description for this archive.
+     * Generates a description for this archive of the OS/Arch supported by this archive.
      */
-    public String getShortDescription() {
+    public String getOsDescription() {
         String os;
         if (mOs == null) {
             os = "unknown OS";
         } else if (mOs == Os.ANY) {
             os = "any OS";
         } else {
-            os = mOs.toString();
+            os = mOs.getUiName();
         }
 
-        String arch = "";
+        String arch = "";                               //$NON-NLS-1$
         if (mArch != null && mArch != Arch.ANY) {
-            arch = mArch.toString();
+            arch = mArch.getUiName();
         }
 
-        return String.format("Archive for %1$s %2$s", os, arch);
+        return String.format("%1$s%2$s%3$s",
+                os,
+                arch.length() > 0 ? " " : "",           //$NON-NLS-2$
+                arch);
+    }
+
+    /**
+     * Generates a short description for this archive.
+     */
+    public String getShortDescription() {
+        return String.format("Archive for %1$s", getOsDescription());
     }
 
     /**
@@ -294,7 +304,9 @@ public class Archive implements IDescription {
 
             // TODO: we should not see this test fail if we had the filter UI above.
             if (!isCompatible()) {
-                monitor.setResult("Skipping incompatible archive: %1$s", name);
+                monitor.setResult("Skipping incompatible archive: %1$s for %2$s",
+                        name,
+                        getOsDescription());
                 return false;
             }
 
@@ -602,6 +614,16 @@ public class Archive implements IDescription {
                 // ZipFile entries should have forward slashes, but not all Zip
                 // implementations can be expected to do that.
                 name = name.replace('\\', '/');
+
+                // Zip entries are always packages in a top-level directory
+                // (e.g. docs/index.html). However we want to use our top-level
+                // directory so we drop the first segment of the path name.
+                int pos = name.indexOf('/');
+                if (pos < 0 || pos == name.length() - 1) {
+                    continue;
+                } else {
+                    name = name.substring(pos + 1);
+                }
 
                 File destFile = new File(unzipDestFolder, name);
 
