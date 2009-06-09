@@ -355,6 +355,12 @@ Native tests:
     class="com.android.camera.StressTests"
     coverage_target="Camera" />
 
+<test name="cameralatency"
+    build_path="packages/apps/Camera"
+    package="com.android.camera.tests"
+    class="com.android.camera.stress.CameraLatency"
+    coverage_target="Camera" />
+
 <test name="camera"
     build_path="packages/apps/Camera"
     package="com.android.camera.tests"
@@ -404,6 +410,12 @@ Native tests:
     build_path="frameworks/base/media/tests/MediaFrameworkTest"
     package="com.android.mediaframeworktest"
     runner=".MediaRecorderStressTestRunner"
+    coverage_target="framework" />
+
+<test name="mediamemorystress"
+    build_path="frameworks/base/media/tests/MediaFrameworkTest"
+    package="com.android.mediaframeworktest"
+    runner=".MediaFrameworkPerfTestRunner"
     coverage_target="framework" />
 
 <test name="mediaunit"
