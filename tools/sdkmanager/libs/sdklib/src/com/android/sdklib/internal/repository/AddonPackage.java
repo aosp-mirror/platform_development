@@ -191,6 +191,7 @@ public class AddonPackage extends Package {
 
         String name = String.format("%s-%d", getName(), getApiLevel()); // $NON-NLS-1$
 
+        name = name.toLowerCase();
         name = name.replaceAll("[^a-zA-Z0-9_-]+", "_");                 // $NON-NLS-1$
         name = name.replaceAll("_+", "_");                              // $NON-NLS-1$
 
