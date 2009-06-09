@@ -340,10 +340,10 @@ int16 NPP_HandleEvent(NPP instance, void* event)
 
     switch (evt->eventType) {
         case kDraw_ANPEventType:
-            switch (evt->data.drawContext.model) {
+            switch (evt->data.draw.model) {
                 case kBitmap_ANPDrawingModel:
-                    drawPlugin(instance, evt->data.drawContext.data.bitmap,
-                               evt->data.drawContext.clip);
+                    drawPlugin(instance, evt->data.draw.data.bitmap,
+                               evt->data.draw.clip);
                     return 1;
                 default:
                     break;   // unknown drawing model
