@@ -44,7 +44,8 @@ public class DocPackage extends Package {
 
     /**
      * Manually create a new package with one archive and the given attributes.
-     * This is used to create packages from local directories.
+     * This is used to create packages from local directories in which case there must be
+     * one archive which URL is the actual target location.
      */
     DocPackage(RepoSource source,
             int apiLevel,
@@ -54,9 +55,7 @@ public class DocPackage extends Package {
             String descUrl,
             Os archiveOs,
             Arch archiveArch,
-            String archiveUrl,
-            long archiveSize,
-            String archiveChecksum) {
+            String archiveOsPath) {
         super(source,
                 revision,
                 license,
@@ -64,9 +63,7 @@ public class DocPackage extends Package {
                 descUrl,
                 archiveOs,
                 archiveArch,
-                archiveUrl,
-                archiveSize,
-                archiveChecksum);
+                archiveOsPath);
         mApiLevel = apiLevel;
     }
 

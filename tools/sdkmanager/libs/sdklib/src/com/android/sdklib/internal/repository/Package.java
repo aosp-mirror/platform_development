@@ -62,7 +62,8 @@ public abstract class Package implements IDescription {
 
     /**
      * Manually create a new package with one archive and the given attributes.
-     * This is used to create packages from local directories.
+     * This is used to create packages from local directories in which case there must be
+     * one archive which URL is the actual target location.
      */
     public Package(RepoSource source,
             int revision,
@@ -71,9 +72,7 @@ public abstract class Package implements IDescription {
             String descUrl,
             Os archiveOs,
             Arch archiveArch,
-            String archiveUrl,
-            long archiveSize,
-            String archiveChecksum) {
+            String archiveOsPath) {
         mSource = source;
         mRevision = revision;
         mLicense = license;
@@ -83,9 +82,7 @@ public abstract class Package implements IDescription {
         mArchives[0] = new Archive(this,
                 archiveOs,
                 archiveArch,
-                archiveUrl,
-                archiveSize,
-                archiveChecksum);
+                archiveOsPath);
     }
 
     /**

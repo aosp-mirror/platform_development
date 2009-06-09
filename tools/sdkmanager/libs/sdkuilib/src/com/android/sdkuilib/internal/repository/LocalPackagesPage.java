@@ -16,10 +16,13 @@
 
 package com.android.sdkuilib.internal.repository;
 
+import com.android.sdklib.internal.repository.Archive;
 import com.android.sdklib.internal.repository.IDescription;
 import com.android.sdklib.internal.repository.ITask;
 import com.android.sdklib.internal.repository.ITaskMonitor;
+import com.android.sdklib.internal.repository.Package;
 
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
@@ -39,6 +42,8 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.Text;
 
+import java.io.File;
+
 /*
  * TODO list
  * - select => update desc, enable update + delete, enable home page if url
@@ -49,7 +54,9 @@ import org.eclipse.swt.widgets.Text;
  */
 
 public class LocalPackagesPage extends Composite {
-    private UpdaterData mUpdaterData;
+
+    private final UpdaterWindowImpl mUpdaterWindow;
+    private final UpdaterData mUpdaterData;
 
     private Label mSdkLocLabel;
     private Text mSdkLocText;
@@ -63,17 +70,22 @@ public class LocalPackagesPage extends Composite {
     private Label mPlaceholder1;
     private Button mDeleteButton;
     private Label mPlaceholder2;
-    private Button mHomePageButton;
+    private Button mRefreshButton;
     private Label mDescriptionLabel;
+
 
     /**
      * Create the composite.
      * @param parent The parent of the composite.
      * @param updaterData An instance of {@link UpdaterData}. If null, a local
      *        one will be allocated just to help with the SWT Designer.
+     * @param updaterWindow The parent window.
      */
-    public LocalPackagesPage(Composite parent, UpdaterData updaterData) {
+    public LocalPackagesPage(Composite parent,
+            UpdaterData updaterData,
+            UpdaterWindowImpl updaterWindow) {
         super(parent, SWT.BORDER);
+        mUpdaterWindow = updaterWindow;
 
         mUpdaterData = updaterData != null ? updaterData : new UpdaterData();
 
@@ -127,15 +139,27 @@ public class LocalPackagesPage extends Composite {
         mPlaceholder1.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, true, false, 1, 1));
 
         mDeleteButton = new Button(mContainerButtons, SWT.NONE);
+        mDeleteButton.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                onDeleteSelected();  //$hide$ (hide from SWT designer)
+            }
+        });
         mDeleteButton.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, false, false, 1, 1));
         mDeleteButton.setText("Delete...");
 
         mPlaceholder2 = new Label(mContainerButtons, SWT.NONE);
         mPlaceholder2.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, true, false, 1, 1));
 
-        mHomePageButton = new Button(mContainerButtons, SWT.NONE);
-        mHomePageButton.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
-        mHomePageButton.setText("Home Page...");
+        mRefreshButton = new Button(mContainerButtons, SWT.NONE);
+        mRefreshButton.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                onRefreshSelected();  //$hide$ (hide from SWT designer)
+            }
+        });
+        mRefreshButton.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
+        mRefreshButton.setText("Refresh");
     }
 
     private void createSdkLocation(Composite parent) {
@@ -225,25 +249,57 @@ public class LocalPackagesPage extends Composite {
     }
 
     private void onUpdateInstalledPackage() {
-        // TODO just a test, needs to be removed later.
-        new ProgressTask(getShell(), "Test", new ITask() {
-            public void run(ITaskMonitor monitor) {
-                monitor.setDescription("Test");
-                monitor.setProgressMax(100);
-                int n = 0;
-                int d = 1;
-                while(!monitor.isCancelRequested()) {
-                    monitor.incProgress(d);
-                    n += d;
-                    if (n == 0 || n == 100) d = -d;
-                    try {
-                        Thread.sleep(5);
-                    } catch (InterruptedException e) {
-                        // ignore
+        if (mUpdaterWindow != null) {
+            mUpdaterWindow.updateAll();
+        }
+    }
+
+    private void onDeleteSelected() {
+        ISelection sel = mTableViewerPackages.getSelection();
+        if (sel instanceof IStructuredSelection) {
+            Object elem = ((IStructuredSelection) sel).getFirstElement();
+            if (elem instanceof Package) {
+
+                String title = "Delete SDK Package";
+                String error = null;
+
+                Package p = (Package) elem;
+                Archive[] archives = p.getArchives();
+                if (archives.length == 1 && archives[0] != null && archives[0].isLocal()) {
+                    Archive archive = archives[0];
+                    String osPath = archive.getLocalOsPath();
+
+                    File dir = new File(osPath);
+                    if (dir.isDirectory()) {
+                        String msg = String.format("Are you sure you want to delete '%1$s' at '%2$s'? This cannot be undone.",
+                                p.getShortDescription(), osPath);
+
+                        if (MessageDialog.openQuestion(getShell(), title, msg)) {
+                            archive.deleteLocal();
+
+                            // refresh list
+                            onRefreshSelected();
+                        }
+                    } else {
+                        error = "Directory not found for this package";
                     }
+                } else {
+                    error = "No local archive found for this package";
                 }
+
+                if (error != null) {
+                    MessageDialog.openError(getShell(), title, error);
+                }
+
+                return;
             }
-        });
+        }
+    }
+
+    private void onRefreshSelected() {
+        if (mUpdaterWindow != null) {
+            mUpdaterWindow.scanLocalSdkFolders();
+        }
     }
 
     // End of hiding from SWT Designer

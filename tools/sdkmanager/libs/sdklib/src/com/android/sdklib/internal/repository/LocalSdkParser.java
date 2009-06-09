@@ -35,7 +35,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
-import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
@@ -60,7 +59,7 @@ public class LocalSdkParser {
     private Package[] mPackages;
 
     public LocalSdkParser() {
-        // TODO Auto-generated constructor stub
+        // pass
     }
 
     /**
@@ -172,9 +171,7 @@ public class LocalSdkParser {
                     null,                       //descUrl
                     Os.getCurrentOs(),          //archiveOs
                     Arch.getCurrentArch(),      //archiveArch
-                    "",                         //archiveUrl   //$NON-NLS-1$
-                    0,                          //archiveSize
-                    null                        //archiveChecksum
+                    toolFolder.getPath()        //archiveOsPath
                     );
         }
 
@@ -219,13 +216,6 @@ public class LocalSdkParser {
             // Create a pkg if we don't have one yet.
 
             if (pkg == null) {
-                String url = null;
-                try {
-                    url = docFolder.toURI().toURL().toString();
-                } catch (MalformedURLException e) {
-                    // ignore
-                }
-
                 pkg = new DocPackage(
                         null,                       //source
                         0,                          //apiLevel
@@ -235,9 +225,7 @@ public class LocalSdkParser {
                         null,                       //descUrl
                         Os.getCurrentOs(),          //archiveOs
                         Arch.getCurrentArch(),      //archiveArch
-                        url,                        //archiveUrl
-                        0,                          //archiveSize
-                        null                        //archiveChecksum
+                        docFolder.getPath()         //archiveOsPath
                         );
             }
         }

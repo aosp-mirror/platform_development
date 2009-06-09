@@ -131,15 +131,33 @@ public class RemotePackagesPage extends Composite {
         mDescriptionLabel.setText("Line1\nLine2\nLine3");
 
         mAddSiteButton = new Button(parent, SWT.NONE);
+        mAddSiteButton.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                onAddSiteSelected(); //$hide$
+            }
+        });
         mAddSiteButton.setText("Add Site...");
 
         mRemoveSiteButton = new Button(parent, SWT.NONE);
+        mRemoveSiteButton.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                onRemoveSiteSelected(); //$hide$
+            }
+        });
         mRemoveSiteButton.setText("Delete Site...");
 
         mPlaceholder3 = new Label(parent, SWT.NONE);
         mPlaceholder3.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, false, 1, 1));
 
         mRefreshButton = new Button(parent, SWT.NONE);
+        mRefreshButton.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                onRefreshSelected(); //$hide$
+            }
+        });
         mRefreshButton.setText("Refresh");
 
         mInstallSelectedButton = new Button(parent, SWT.NONE);
@@ -234,7 +252,21 @@ public class RemotePackagesPage extends Composite {
             }
         }
 
-        mUpdaterWindow.installArchives(archives);
+        if (mUpdaterWindow != null) {
+            mUpdaterWindow.installArchives(archives);
+        }
+    }
+
+    private void onAddSiteSelected() {
+    }
+
+    private void onRemoveSiteSelected() {
+    }
+
+    private void onRefreshSelected() {
+        if (mUpdaterWindow != null) {
+            mUpdaterWindow.refreshSources(false /*forceFetching*/);
+        }
     }
 
     // End of hiding from SWT Designer
