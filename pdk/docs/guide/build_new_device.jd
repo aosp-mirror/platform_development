@@ -215,26 +215,6 @@ pdk.version=1.0
    <td valign="top">list of space-separated words for a given product</td>
    <td valign="top"></td>
  </tr>
- <tr>
-   <td valign="top">PRODUCT_SDK_ADDON_NAME</td>
-   <td valign="top"></td>
-   <td valign="top"></td>
- </tr>
- <tr>
-   <td valign="top">PRODUCT_SDK_ADDON_COPY_FILES</td>
-   <td valign="top"></td>
-   <td valign="top"></td>
- </tr>
- <tr>
-   <td valign="top">PRODUCT_SDK_ADDON_COPY_MODULES</td>
-   <td valign="top"></td>
-   <td valign="top"></td>
- </tr>
- <tr>
-   <td valign="top">PRODUCT_SDK_ADDON_DOC_MODULE</td>
-   <td valign="top"></td>
-   <td valign="top"></td>
- </tr>
 </table>
 
 </P>
