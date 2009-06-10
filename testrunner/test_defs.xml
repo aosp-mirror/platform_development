@@ -173,7 +173,7 @@ Native tests:
 <test name="cts-permission"
     build_path="cts/tests"
     package="com.android.cts.permission"
-    runner="android.test.InstrumentationCtsTestRunner"
+    runner="android.test.InstrumentationTestRunner"
     coverage_target="framework"
     continuous="true"
     cts="true" />
