@@ -23,7 +23,6 @@ import com.android.sdklib.internal.repository.Archive;
 import com.android.sdklib.internal.repository.ITask;
 import com.android.sdklib.internal.repository.ITaskMonitor;
 import com.android.sdklib.internal.repository.RepoSource;
-import com.android.sdklib.internal.repository.RepoSources;
 import com.android.sdklib.repository.SdkRepository;
 
 import org.eclipse.swt.SWT;
@@ -227,6 +226,7 @@ public class UpdaterWindowImpl {
         // TODO read add-on sources from some file
         setupSources();
         scanLocalSdkFolders();
+        initializeSettings();
     }
 
     // --- page switching ---
@@ -332,6 +332,22 @@ public class UpdaterWindowImpl {
         mUpdaterData.getLocalSdkAdapter().setSdkRoot(mUpdaterData.getOsSdkRoot());
 
         mLocalPackagePage.setInput(mUpdaterData.getLocalSdkAdapter());
+    }
+
+    /**
+     * Initializes settings.
+     * Thist must be called after addExtraPages(), which created a settings page.
+     * Iterate through all the pages and it one is a setting page, load and apply these
+     * settings.
+     */
+    private void initializeSettings() {
+        for (Object page : mPages) {
+            if (page instanceof ISettingsPage) {
+                ISettingsPage settingsPage = (ISettingsPage) page;
+                settingsPage.loadSettings();
+                settingsPage.applySettings();
+            }
+        }
     }
 
     /**
