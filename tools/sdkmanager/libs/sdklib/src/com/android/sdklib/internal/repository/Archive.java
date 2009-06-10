@@ -154,17 +154,43 @@ public class Archive implements IDescription {
     private final String mChecksum;
     private final ChecksumType mChecksumType = ChecksumType.SHA1;
     private final Package mPackage;
+    private final String mLocalOsPath;
+    private final boolean mIsLocal;
 
     /**
-     * Creates a new archive.
+     * Creates a new remote archive.
      */
     Archive(Package pkg, Os os, Arch arch, String url, long size, String checksum) {
         mPackage = pkg;
         mOs = os;
         mArch = arch;
         mUrl = url;
+        mLocalOsPath = null;
         mSize = size;
         mChecksum = checksum;
+        mIsLocal = false;
+    }
+
+    /**
+     * Creates a new local archive.
+     */
+    Archive(Package pkg, Os os, Arch arch, String localOsPath) {
+        mPackage = pkg;
+        mOs = os;
+        mArch = arch;
+        mUrl = null;
+        mLocalOsPath = localOsPath;
+        mSize = 0;
+        mChecksum = "";
+        mIsLocal = true;
+    }
+
+    /**
+     * Returns true if this is a locally installed archive.
+     * Returns false if this is a remote archive that needs to be downloaded.
+     */
+    public boolean isLocal() {
+        return mIsLocal;
     }
 
     /**
@@ -200,10 +226,20 @@ public class Archive implements IDescription {
 
     /**
      * Returns the download archive URL, either absolute or relative to the repository xml.
-     * For a local installed folder, an URL is frabricated from the folder path.
+     * Always return null for a local installed folder.
+     * @see #getLocalOsPath()
      */
     public String getUrl() {
         return mUrl;
+    }
+
+    /**
+     * Returns the local OS folder where a local archive is installed.
+     * Always return null for remote archives.
+     * @see #getUrl()
+     */
+    public String getLocalOsPath() {
+        return mLocalOsPath;
     }
 
     /**
@@ -291,6 +327,15 @@ public class Archive implements IDescription {
     }
 
     /**
+     * Delete the archive folder if this is a local archive.
+     */
+    public void deleteLocal() {
+        if (isLocal()) {
+            deleteFileOrFolder(new File(getLocalOsPath()));
+        }
+    }
+
+    /**
      * Install this {@link Archive}s.
      * The archive will be skipped if it is incompatible.
      *
@@ -302,7 +347,14 @@ public class Archive implements IDescription {
         try {
             String name = getParentPackage().getShortDescription();
 
-            // TODO: we should not see this test fail if we had the filter UI above.
+            if (isLocal()) {
+                // This should never happen.
+                monitor.setResult("Skipping already installed archive: %1$s for %2$s",
+                        name,
+                        getOsDescription());
+                return false;
+            }
+
             if (!isCompatible()) {
                 monitor.setResult("Skipping incompatible archive: %1$s for %2$s",
                         name,
