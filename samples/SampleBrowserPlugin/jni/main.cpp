@@ -60,6 +60,7 @@ EXPORT void NP_Shutdown(void);
 };
 
 ANPAudioTrackInterfaceV0    gSoundI;
+ANPBitmapInterfaceV0        gBitmapI;
 ANPCanvasInterfaceV0        gCanvasI;
 ANPLogInterfaceV0           gLogI;
 ANPPaintInterfaceV0         gPaintI;
@@ -101,8 +102,9 @@ NPError NP_Initialize(NPNetscapeFuncs* browserFuncs, NPPluginFuncs* pluginFuncs,
         uint32_t        size;
         ANPInterface*   i;
     } gPairs[] = {
-        { kLogInterfaceV0_ANPGetValue,          sizeof(gLogI),      &gLogI },
+        { kBitmapInterfaceV0_ANPGetValue,       sizeof(gBitmapI),   &gBitmapI },
         { kCanvasInterfaceV0_ANPGetValue,       sizeof(gCanvasI),   &gCanvasI },
+        { kLogInterfaceV0_ANPGetValue,          sizeof(gLogI),      &gLogI },
         { kPaintInterfaceV0_ANPGetValue,        sizeof(gPaintI),    &gPaintI },
         { kPathInterfaceV0_ANPGetValue,         sizeof(gPathI),     &gPathI },
         { kTypefaceInterfaceV0_ANPGetValue,     sizeof(gPaintI),    &gTypefaceI },
@@ -253,6 +255,34 @@ NPError NPP_SetWindow(NPP instance, NPWindow* window)
         browser->scheduletimer(instance, TIMER_INTERVAL, true, timer_latency);
         obj->mStartTime = obj->mPrevTime = getMSecs();
         obj->mTestTimers = false;
+    }
+
+    if (true) {
+        static const struct {
+            ANPBitmapFormat fFormat;
+            const char*     fName;
+        } gRecs[] = {
+            { kUnknown_ANPBitmapFormat,   "unknown" },
+            { kRGBA_8888_ANPBitmapFormat, "8888" },
+            { kRGB_565_ANPBitmapFormat,   "565" },
+        };
+
+        ANPPixelPacking packing;
+        for (size_t i = 0; i < ARRAY_COUNT(gRecs); i++) {
+            if (gBitmapI.getPixelPacking(gRecs[i].fFormat, &packing)) {
+                gLogI.log(instance, kDebug_ANPLogType,
+                          "pixel format [%d] %s has packing ARGB [%d %d] [%d %d] [%d %d] [%d %d]\n",
+                          gRecs[i].fFormat, gRecs[i].fName,
+                          packing.AShift, packing.ABits,
+                          packing.RShift, packing.RBits,
+                          packing.GShift, packing.GBits,
+                          packing.BShift, packing.BBits);
+            } else {
+                gLogI.log(instance, kDebug_ANPLogType,
+                          "pixel format [%d] %s has no packing\n",
+                          gRecs[i].fFormat, gRecs[i].fName);
+            }
+        }
     }
 
     browser->invalidaterect(instance, NULL);
