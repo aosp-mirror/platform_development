@@ -32,9 +32,12 @@ import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.util.Properties;
 
@@ -152,22 +155,24 @@ public class SettingsPage extends Composite implements ISettingsPage {
         props.put(JAVA_HTTP_PROXY_HOST, mProxyServerText.getText());
         props.put(JAVA_HTTP_PROXY_PORT, mProxyPortText.getText());
 
-        FileWriter fw = null;
+
+        FileOutputStream fos = null;
         try {
             String folder = AndroidLocation.getFolder();
             File f = new File(folder, SETTINGS_FILENAME);
-            fw = new FileWriter(f);
 
-            props.store(fw, "## Settings for SdkManager");  //$NON-NLS-1$
+            fos = new FileOutputStream(f);
+
+            props.store( fos, "## Settings for Android Tool");  //$NON-NLS-1$
 
         } catch (AndroidLocationException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
-            if (fw != null) {
+            if (fos != null) {
                 try {
-                    fw.close();
+                    fos.close();
                 } catch (IOException e) {
                 }
             }
@@ -178,15 +183,15 @@ public class SettingsPage extends Composite implements ISettingsPage {
      * Load settings and puts them in the UI.
      */
     public void loadSettings() {
-        FileReader fr = null;
+        FileInputStream fis = null;
         try {
             String folder = AndroidLocation.getFolder();
             File f = new File(folder, SETTINGS_FILENAME);
             if (f.exists()) {
-                fr = new FileReader(f);
+                fis = new FileInputStream(f);
 
                 Properties props = new Properties();
-                props.load(fr);
+                props.load(fis);
 
                 mProxyServerText.setText(props.getProperty(JAVA_HTTP_PROXY_HOST, "")); //$NON-NLS-1$
                 mProxyPortText.setText(props.getProperty(JAVA_HTTP_PROXY_PORT, ""));   //$NON-NLS-1$
@@ -197,9 +202,9 @@ public class SettingsPage extends Composite implements ISettingsPage {
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
-            if (fr != null) {
+            if (fis != null) {
                 try {
-                    fr.close();
+                    fis.close();
                 } catch (IOException e) {
                 }
             }
