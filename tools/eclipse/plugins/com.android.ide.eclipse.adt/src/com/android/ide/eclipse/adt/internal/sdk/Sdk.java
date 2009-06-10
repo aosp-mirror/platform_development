@@ -192,7 +192,7 @@ public class Sdk implements IProjectListener {
      */
     public void setProject(IProject project, IAndroidTarget target,
             Map<String, String> apkConfigMap) {
-        synchronized (mProjectTargetMap) {
+        synchronized (AdtPlugin.getDefault().getSdkLockObject()) {
             boolean resolveProject = false;
             boolean compileProject = false;
             boolean cleanProject = false;
@@ -270,7 +270,7 @@ public class Sdk implements IProjectListener {
      * Returns the {@link IAndroidTarget} object associated with the given {@link IProject}.
      */
     public IAndroidTarget getTarget(IProject project) {
-        synchronized (mProjectTargetMap) {
+        synchronized (AdtPlugin.getDefault().getSdkLockObject()) {
             IAndroidTarget target = mProjectTargetMap.get(project);
             if (target == null) {
                 // get the value from the project persistent property.
@@ -313,10 +313,12 @@ public class Sdk implements IProjectListener {
         }
 
         if (sdkStorage != null) {
-            Map<String, String> configMap = ApkConfigurationHelper.getConfigs(properties);
+            synchronized (AdtPlugin.getDefault().getSdkLockObject()) {
+                Map<String, String> configMap = ApkConfigurationHelper.getConfigs(properties);
 
-            if (configMap != null) {
-                sdkStorage.mProjectApkConfigMap.put(project, configMap);
+                if (configMap != null) {
+                    sdkStorage.mProjectApkConfigMap.put(project, configMap);
+                }
             }
         }
 
@@ -368,7 +370,7 @@ public class Sdk implements IProjectListener {
      * Return the {@link AndroidTargetData} for a given {@link IAndroidTarget}.
      */
     public AndroidTargetData getTargetData(IAndroidTarget target) {
-        synchronized (mTargetDataMap) {
+        synchronized (AdtPlugin.getDefault().getSdkLockObject()) {
             return mTargetDataMap.get(target);
         }
     }
@@ -379,7 +381,9 @@ public class Sdk implements IProjectListener {
      * config values. The config value can be passed directly to aapt through the -c option.
      */
     public Map<String, String> getProjectApkConfigs(IProject project) {
-        return mProjectApkConfigMap.get(project);
+        synchronized (AdtPlugin.getDefault().getSdkLockObject()) {
+            return mProjectApkConfigMap.get(project);
+        }
     }
 
     /**
@@ -411,7 +415,7 @@ public class Sdk implements IProjectListener {
     }
 
     void setTargetData(IAndroidTarget target, AndroidTargetData data) {
-        synchronized (mTargetDataMap) {
+        synchronized (AdtPlugin.getDefault().getSdkLockObject()) {
             mTargetDataMap.put(target, data);
         }
     }
@@ -455,7 +459,7 @@ public class Sdk implements IProjectListener {
 
     public void projectClosed(IProject project) {
         // get the target project
-        synchronized (mProjectTargetMap) {
+        synchronized (AdtPlugin.getDefault().getSdkLockObject()) {
             IAndroidTarget target = mProjectTargetMap.get(project);
             if (target != null) {
                 // get the bridge for the target, and clear the cache for this project.
