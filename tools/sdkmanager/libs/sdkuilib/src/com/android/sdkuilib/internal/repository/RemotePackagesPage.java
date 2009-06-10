@@ -21,6 +21,7 @@ import com.android.sdklib.internal.repository.Archive;
 import com.android.sdklib.internal.repository.IDescription;
 import com.android.sdklib.internal.repository.Package;
 import com.android.sdklib.internal.repository.RepoSource;
+import com.android.sdkuilib.internal.repository.UpdaterData.ISdkListener;
 
 import org.eclipse.jface.viewers.CheckStateChangedEvent;
 import org.eclipse.jface.viewers.CheckboxTreeViewer;
@@ -60,9 +61,8 @@ import java.util.ArrayList;
  * - install selected callback
  */
 
-public class RemotePackagesPage extends Composite {
+public class RemotePackagesPage extends Composite implements ISdkListener {
 
-    private final UpdaterWindowImpl mUpdaterWindow;
     private final UpdaterData mUpdaterData;
 
     private CheckboxTreeViewer mTreeViewerSources;
@@ -82,15 +82,13 @@ public class RemotePackagesPage extends Composite {
      * @param parent The parent of the composite.
      * @param updaterData An instance of {@link UpdaterData}. If null, a local
      *        one will be allocated just to help with the SWT Designer.
-     * @param updaterWindow The parent window.
      */
     RemotePackagesPage(Composite parent,
-            UpdaterData updaterData,
-            UpdaterWindowImpl updaterWindow) {
+            UpdaterData updaterData) {
         super(parent, SWT.BORDER);
-        mUpdaterWindow = updaterWindow;
 
         mUpdaterData = updaterData != null ? updaterData : new UpdaterData();
+        mUpdaterData.addListeners(this);
 
         createContents(this);
         postCreate();  //$hide$
@@ -174,6 +172,12 @@ public class RemotePackagesPage extends Composite {
     }
 
     @Override
+    public void dispose() {
+        mUpdaterData.removeListener(this);
+        super.dispose();
+    }
+
+    @Override
     protected void checkSubclass() {
         // Disable the check that prevents subclassing of SWT components
     }
@@ -181,16 +185,6 @@ public class RemotePackagesPage extends Composite {
     // -- Start of internal part ----------
     // Hide everything down-below from SWT designer
     //$hide>>$
-
-    /**
-     * Must be called once to set the adapter input for the sources tree viewer.
-     */
-    public void setInput(RepoSourcesAdapter sources) {
-        mTreeViewerSources.setContentProvider(sources.getContentProvider());
-        mTreeViewerSources.setLabelProvider(  sources.getLabelProvider());
-        mTreeViewerSources.setInput(sources);
-        onTreeSelected();
-    }
 
     /**
      * Called by the constructor right after {@link #createContents(Composite)}.
@@ -289,8 +283,8 @@ public class RemotePackagesPage extends Composite {
             }
         }
 
-        if (mUpdaterWindow != null) {
-            mUpdaterWindow.installArchives(archives);
+        if (mUpdaterData != null) {
+            mUpdaterData.installArchives(archives);
         }
     }
 
@@ -303,9 +297,17 @@ public class RemotePackagesPage extends Composite {
     }
 
     private void onRefreshSelected() {
-        if (mUpdaterWindow != null) {
-            mUpdaterWindow.refreshSources(false /*forceFetching*/, null /*monitor*/);
+        if (mUpdaterData != null) {
+            mUpdaterData.refreshSources(false /*forceFetching*/, null /*monitor*/);
         }
+    }
+
+    public void onSdkChange() {
+        RepoSourcesAdapter sources = mUpdaterData.getSourcesAdapter();
+        mTreeViewerSources.setContentProvider(sources.getContentProvider());
+        mTreeViewerSources.setLabelProvider(  sources.getLabelProvider());
+        mTreeViewerSources.setInput(sources);
+        onTreeSelected();
     }
 
     // End of hiding from SWT Designer

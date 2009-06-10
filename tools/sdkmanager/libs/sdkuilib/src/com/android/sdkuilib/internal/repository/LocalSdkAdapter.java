@@ -33,16 +33,10 @@ import org.eclipse.swt.graphics.Image;
  */
 class LocalSdkAdapter  {
 
-    private final LocalSdkParser mLocalSdkParser;
-    private String mOsSdkRoot;
+    private final UpdaterData mUpdaterData;
 
-    public LocalSdkAdapter(LocalSdkParser localSdkParser) {
-        mLocalSdkParser = localSdkParser;
-    }
-
-    public void setSdkRoot(String osSdkRoot) {
-        mOsSdkRoot = osSdkRoot;
-        mLocalSdkParser.clearPackages();
+    public LocalSdkAdapter(UpdaterData updaterData) {
+        mUpdaterData = updaterData;
     }
 
     public ILabelProvider getLabelProvider() {
@@ -95,13 +89,13 @@ class LocalSdkAdapter  {
         public Object[] getElements(Object inputElement) {
             if (inputElement instanceof LocalSdkAdapter) {
                 LocalSdkAdapter adapter = (LocalSdkAdapter) inputElement;
-                LocalSdkParser parser = adapter.mLocalSdkParser;
+                LocalSdkParser parser = adapter.mUpdaterData.getLocalSdkParser();
 
                 Package[] packages = parser.getPackages();
 
                 if (packages == null) {
                     // load on demand the first time
-                    packages = parser.parseSdk(adapter.mOsSdkRoot);
+                    packages = parser.parseSdk(adapter.mUpdaterData.getOsSdkRoot());
                 }
 
                 if (packages != null) {

@@ -16,30 +16,76 @@
 
 package com.android.sdkuilib.internal.repository;
 
+import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.ISdkLog;
+import com.android.sdklib.SdkManager;
+import com.android.sdklib.internal.avd.AvdManager;
+import com.android.sdklib.internal.repository.Archive;
+import com.android.sdklib.internal.repository.ITask;
+import com.android.sdklib.internal.repository.ITaskFactory;
+import com.android.sdklib.internal.repository.ITaskMonitor;
 import com.android.sdklib.internal.repository.LocalSdkParser;
+import com.android.sdklib.internal.repository.RepoSource;
 import com.android.sdklib.internal.repository.RepoSources;
+
+import org.eclipse.swt.widgets.Display;
+
+import java.util.ArrayList;
+import java.util.Collection;
 
 /**
  * Data shared between {@link UpdaterWindowImpl} and its pages.
  */
 class UpdaterData {
-    private ISdkLog mSdkLog;
     private String mOsSdkRoot;
+
+    private final ISdkLog mSdkLog;
+    private ITaskFactory mTaskFactory;
     private boolean mUserCanChangeSdkRoot;
+
+    private SdkManager mSdkManager;
+    private AvdManager mAvdManager;
 
     private final LocalSdkParser mLocalSdkParser = new LocalSdkParser();
     private final RepoSources mSources = new RepoSources();
 
-    private final LocalSdkAdapter mLocalSdkAdapter = new LocalSdkAdapter(mLocalSdkParser);
+    private final LocalSdkAdapter mLocalSdkAdapter = new LocalSdkAdapter(this);
     private final RepoSourcesAdapter mSourcesAdapter = new RepoSourcesAdapter(mSources);
 
-    public void setOsSdkRoot(String osSdkRoot) {
+    private final ArrayList<ISdkListener> mListeners = new ArrayList<ISdkListener>();
+
+    public interface ISdkListener {
+        void onSdkChange();
+    }
+
+    public UpdaterData(String osSdkRoot, ISdkLog sdkLog) {
         mOsSdkRoot = osSdkRoot;
+        mSdkLog = sdkLog;
+
+        initSdk();
+    }
+
+    /**
+     * default access constructor used by the pages when instantiated by the SWT designer.
+     */
+    UpdaterData() {
+        mOsSdkRoot = null;
+        mSdkLog = null;
+    }
+
+    public void setOsSdkRoot(String osSdkRoot) {
+        if (mOsSdkRoot == null || mOsSdkRoot.equals(osSdkRoot) == false) {
+            mOsSdkRoot = osSdkRoot;
+            initSdk();
+        }
     }
 
     public String getOsSdkRoot() {
         return mOsSdkRoot;
+    }
+
+    public void setTaskFactory(ITaskFactory taskFactory) {
+        mTaskFactory = taskFactory;
     }
 
     public void setUserCanChangeSdkRoot(boolean userCanChangeSdkRoot) {
@@ -66,11 +112,207 @@ class UpdaterData {
         return mLocalSdkAdapter;
     }
 
-    public void setSdkLog(ISdkLog sdkLog) {
-        mSdkLog = sdkLog;
-    }
-
     public ISdkLog getSdkLog() {
         return mSdkLog;
+    }
+
+    public SdkManager getSdkManager() {
+        return mSdkManager;
+    }
+
+    public AvdManager getAvdManager() {
+        return mAvdManager;
+    }
+
+    public void addListeners(ISdkListener listener) {
+        if (mListeners.contains(listener) == false) {
+            mListeners.add(listener);
+        }
+    }
+
+    public void removeListener(ISdkListener listener) {
+        mListeners.remove(listener);
+    }
+
+    /**
+     * Reloads the SDK content (targets).
+     * <p/> This also reloads the AVDs in case their status changed.
+     * <p/>This does not notify the listeners ({@link ISdkListener}).
+     */
+    public void reloadSdk() {
+        // reload SDK
+        mSdkManager.reloadSdk(mSdkLog);
+
+        // reload AVDs
+        if (mAvdManager != null) {
+            try {
+                mAvdManager.reloadAvds();
+            } catch (AndroidLocationException e) {
+                // FIXME
+            }
+        }
+
+        // notify adapters?
+        // TODO
+
+        // notify listeners
+        notifyListeners();
+    }
+
+    /**
+     * Reloads the AVDs.
+     * <p/>This does not notify the listeners.
+     */
+    public void reloadAvds() {
+        // reload AVDs
+        if (mAvdManager != null) {
+            try {
+                mAvdManager.reloadAvds();
+            } catch (AndroidLocationException e) {
+                // FIXME
+            }
+        }
+    }
+
+    /**
+     * Notify the listeners ({@link ISdkListener}) that the SDK was reloaded.
+     * <p/>This can be called from any thread.
+     */
+    public void notifyListeners() {
+        Display display = Display.getCurrent();
+        if (display != null && mListeners.size() > 0) {
+            display.syncExec(new Runnable() {
+                public void run() {
+                    for (ISdkListener listener : mListeners) {
+                        try {
+                            listener.onSdkChange();
+                        } catch (Throwable t) {
+                            // TODO: log error
+                        }
+                    }
+                }
+            });
+        }
+    }
+
+    /**
+     * Install the list of given {@link Archive}s.
+     * @param archives The archives to install. Incompatible ones will be skipped.
+     */
+    public void installArchives(final Collection<Archive> archives) {
+        if (mTaskFactory == null) {
+            throw new IllegalArgumentException("Task Factory is null");
+        }
+
+        // TODO filter the archive list to: a/ display a list of what is going to be installed,
+        // b/ display licenses and c/ check that the selected packages are actually upgrades
+        // or ask user to confirm downgrades. All this should be done in a separate class+window
+        // which will then call this method with the final list.
+
+        // TODO move most parts to SdkLib, maybe as part of Archive, making archives self-installing.
+        mTaskFactory.start("Installing Archives", new ITask() {
+            public void run(ITaskMonitor monitor) {
+
+                final int progressPerArchive = 2 * Archive.NUM_MONITOR_INC;
+                monitor.setProgressMax(archives.size() * progressPerArchive);
+                monitor.setDescription("Preparing to install archives");
+
+                int numInstalled = 0;
+                for (Archive archive : archives) {
+
+                    int nextProgress = monitor.getProgress() + progressPerArchive;
+                    try {
+                        if (monitor.isCancelRequested()) {
+                            break;
+                        }
+
+                        if (archive.install(mOsSdkRoot, monitor)) {
+                            numInstalled++;
+                        }
+
+                    } catch (Throwable t) {
+                        // Display anything unexpected in the monitor.
+                        monitor.setResult("Unexpected Error: %1$s", t.getMessage());
+
+                    } finally {
+
+                        // Always move the progress bar to the desired position.
+                        // This allows internal methods to not have to care in case
+                        // they abort early
+                        monitor.incProgress(nextProgress - monitor.getProgress());
+                    }
+                }
+
+                if (numInstalled == 0) {
+                    monitor.setDescription("Done. Nothing was installed.");
+                } else {
+                    monitor.setDescription("Done. %1$d %2$s installed.",
+                            numInstalled,
+                            numInstalled == 1 ? "package" : "packages");
+                }
+            }
+        });
+    }
+
+    public void updateAll() {
+        if (mTaskFactory == null) {
+            throw new IllegalArgumentException("Task Factory is null");
+        }
+
+        mTaskFactory.start("Update Archives", new ITask() {
+            public void run(ITaskMonitor monitor) {
+                monitor.setProgressMax(3);
+
+                monitor.setDescription("Refresh sources");
+                refreshSources(true, monitor.createSubMonitor(1));
+            }
+        });
+    }
+
+    /**
+     * Refresh sources
+     *
+     * @param forceFetching When true, load sources that haven't been loaded yet. When
+     * false, only refresh sources that have been loaded yet.
+     */
+    public void refreshSources(final boolean forceFetching, ITaskMonitor monitor) {
+        ITask task = new ITask() {
+            public void run(ITaskMonitor monitor) {
+                ArrayList<RepoSource> sources = mSources.getSources();
+                monitor.setProgressMax(sources.size());
+                for (RepoSource source : sources) {
+                    if (forceFetching || source.getPackages() != null) {
+                        source.load(monitor.createSubMonitor(1));
+                    }
+                    monitor.incProgress(1);
+
+                }
+            }
+        };
+
+        if (monitor != null) {
+            task.run(monitor);
+        } else {
+            mTaskFactory.start("Refresh Sources", task);
+        }
+    }
+
+    /**
+     * Initializes the {@link SdkManager} and the {@link AvdManager}.
+     */
+    private void initSdk() {
+        mSdkManager = SdkManager.createManager(mOsSdkRoot, mSdkLog);
+        try {
+            mAvdManager = null; // remove the old one if needed.
+            mAvdManager = new AvdManager(mSdkManager, mSdkLog);
+        } catch (AndroidLocationException e) {
+            mSdkLog.error(e, "Unable to read AVDs");
+        }
+
+        // notify adapters/parsers
+        // TODO
+
+        // notify listeners.
+        notifyListeners();
     }
 }
