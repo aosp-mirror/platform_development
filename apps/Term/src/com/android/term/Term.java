@@ -38,7 +38,6 @@ import android.os.Bundle;
 import android.os.Exec;
 import android.os.Handler;
 import android.os.Message;
-import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -54,7 +53,6 @@ import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.ExtractedText;
 import android.view.inputmethod.ExtractedTextRequest;
 import android.view.inputmethod.InputConnection;
-import android.view.inputmethod.InputMethodManager;
 
 import java.io.FileDescriptor;
 import java.io.FileInputStream;
@@ -104,8 +102,6 @@ public class Term extends Activity {
      * process that we've changed the terminal size.
      */
     private FileDescriptor mTermFd;
-
-    private boolean mShellRunning;
 
     /**
      * Used to send data to the remote process.
@@ -185,7 +181,9 @@ public class Term extends Activity {
         mKeyListener = new TermKeyListener();
 
         mEmulatorView.setFocusable(true);
+        mEmulatorView.setFocusableInTouchMode(true);
         mEmulatorView.requestFocus();
+        mEmulatorView.register(mKeyListener);
 
         updatePrefs();
     }
@@ -194,14 +192,11 @@ public class Term extends Activity {
         int[] processId = new int[1];
 
         createSubprocess(processId);
-        mShellRunning = true;
-
         final int procId = processId[0];
 
         final Handler handler = new Handler() {
             @Override
             public void handleMessage(Message msg) {
-                mShellRunning = false;
             }
         };
 
@@ -1357,7 +1352,7 @@ class TerminalEmulator {
                         printableB = ' ';
                     }
                     Log.w(Term.LOG_TAG, "'" + Character.toString(printableB)
-                            + "' (" + Integer.toString((int) b) + ")");
+                            + "' (" + Integer.toString(b) + ")");
                 }
                 process(b);
                 mProcessedCharCount++;
@@ -2084,7 +2079,7 @@ class TerminalEmulator {
             buf.append(" char: '");
             buf.append((char) b);
             buf.append("' (");
-            buf.append((int) b);
+            buf.append(b);
             buf.append(")");
             boolean firstArg = true;
             for (int i = 0; i <= mArgIndex; i++) {
@@ -2604,6 +2599,7 @@ class EmulatorView extends View implements GestureDetector.OnGestureListener {
 
     private GestureDetector mGestureDetector;
     private float mScrollRemainder;
+    private TermKeyListener mKeyListener;
 
     /**
      * Our message handler class. Implements a periodic callback.
@@ -2615,6 +2611,7 @@ class EmulatorView extends View implements GestureDetector.OnGestureListener {
          *
          * @param msg The callback message.
          */
+        @Override
         public void handleMessage(Message msg) {
             if (msg.what == UPDATE) {
                 update();
@@ -2625,6 +2622,10 @@ class EmulatorView extends View implements GestureDetector.OnGestureListener {
     public EmulatorView(Context context) {
         super(context);
         commonConstructor();
+    }
+
+    public void register(TermKeyListener listener) {
+        mKeyListener = listener;
     }
 
     public void setColors(int foreground, int background) {
@@ -2651,52 +2652,64 @@ class EmulatorView extends View implements GestureDetector.OnGestureListener {
     public InputConnection onCreateInputConnection(EditorInfo outAttrs) {
         return new BaseInputConnection(this, false) {
 
+            @Override
             public boolean beginBatchEdit() {
                 return true;
             }
 
+            @Override
             public boolean clearMetaKeyStates(int states) {
                 return true;
             }
 
+            @Override
             public boolean commitCompletion(CompletionInfo text) {
                 return true;
             }
 
+            @Override
             public boolean commitText(CharSequence text, int newCursorPosition) {
                 sendText(text);
                 return true;
             }
 
+            @Override
             public boolean deleteSurroundingText(int leftLength, int rightLength) {
                 return true;
             }
 
+            @Override
             public boolean endBatchEdit() {
                 return true;
             }
 
+            @Override
             public boolean finishComposingText() {
                 return true;
             }
 
+            @Override
             public int getCursorCapsMode(int reqModes) {
                 return 0;
             }
 
+            @Override
             public ExtractedText getExtractedText(ExtractedTextRequest request,
                     int flags) {
                 return null;
             }
 
+            @Override
             public CharSequence getTextAfterCursor(int n, int flags) {
                 return null;
             }
 
+            @Override
             public CharSequence getTextBeforeCursor(int n, int flags) {
                 return null;
             }
 
+            @Override
             public boolean performEditorAction(int actionCode) {
                 if(actionCode == EditorInfo.IME_ACTION_UNSPECIFIED) {
                     // The "return" key has been pressed on the IME.
@@ -2706,14 +2719,17 @@ class EmulatorView extends View implements GestureDetector.OnGestureListener {
                 return false;
             }
 
+            @Override
             public boolean performContextMenuAction(int id) {
                 return true;
             }
 
+            @Override
             public boolean performPrivateCommand(String action, Bundle data) {
                 return true;
             }
 
+            @Override
             public boolean sendKeyEvent(KeyEvent event) {
                 if (event.getAction() == KeyEvent.ACTION_DOWN) {
                     switch(event.getKeyCode()) {
@@ -2725,17 +2741,19 @@ class EmulatorView extends View implements GestureDetector.OnGestureListener {
                 return true;
             }
 
+            @Override
             public boolean setComposingText(CharSequence text, int newCursorPosition) {
                 return true;
             }
 
+            @Override
             public boolean setSelection(int start, int end) {
                 return true;
             }
 
             private void sendChar(int c) {
                 try {
-                    mTermOut.write(c);
+                    mapAndSend(c);
                 } catch (IOException ex) {
 
                 }
@@ -2745,10 +2763,15 @@ class EmulatorView extends View implements GestureDetector.OnGestureListener {
                 try {
                     for(int i = 0; i < n; i++) {
                         char c = text.charAt(i);
-                        mTermOut.write(c);
+                        mapAndSend(c);
                     }
                 } catch (IOException e) {
                 }
+            }
+
+            private void mapAndSend(int c) throws IOException {
+                mTermOut.write(
+                        mKeyListener.mapControlChar(c));
             }
         };
     }
@@ -3161,6 +3184,35 @@ class TermKeyListener {
         }
     }
 
+    public int mapControlChar(int ch) {
+        int result = ch;
+        if (mControlKey.isActive()) {
+            // Search is the control key.
+            if (result >= 'a' && result <= 'z') {
+                result = (char) (result - 'a' + '\001');
+            } else if (result == ' ') {
+                result = 0;
+            } else if ((result == '[') || (result == '1')) {
+                result = 27;
+            } else if ((result == '\\') || (result == '.')) {
+                result = 28;
+            } else if ((result == ']') || (result == '0')) {
+                result = 29;
+            } else if ((result == '^') || (result == '6')) {
+                result = 30; // control-^
+            } else if ((result == '_') || (result == '5')) {
+                result = 31;
+            }
+        }
+
+        if (result > -1) {
+            mAltKey.adjustAfterKeypress();
+            mCapKey.adjustAfterKeypress();
+            mControlKey.adjustAfterKeypress();
+        }
+        return result;
+    }
+
     /**
      * Handle a keyDown event.
      *
@@ -3201,30 +3253,7 @@ class TermKeyListener {
             }
         }
 
-        if (mControlKey.isActive()) {
-            // Search is the control key.
-            if (result >= 'a' && result <= 'z') {
-                result = (char) (result - 'a' + '\001');
-            } else if (result == ' ') {
-                result = 0;
-            } else if ((result == '[') || (result == '1')) {
-                result = 27;
-            } else if ((result == '\\') || (result == '.')) {
-                result = 28;
-            } else if ((result == ']') || (result == '0')) {
-                result = 29;
-            } else if ((result == '^') || (result == '6')) {
-                result = 30; // control-^
-            } else if ((result == '_') || (result == '5')) {
-                result = 31;
-            }
-        }
-
-        if (result > -1) {
-            mAltKey.adjustAfterKeypress();
-            mCapKey.adjustAfterKeypress();
-            mControlKey.adjustAfterKeypress();
-        }
+        result = mapControlChar(result);
 
         return result;
     }
