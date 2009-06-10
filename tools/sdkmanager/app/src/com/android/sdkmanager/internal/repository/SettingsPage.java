@@ -16,6 +16,10 @@
 
 package com.android.sdkmanager.internal.repository;
 
+import com.android.prefs.AndroidLocation;
+import com.android.prefs.AndroidLocation.AndroidLocationException;
+import com.android.sdkuilib.internal.repository.ISettingsPage;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -24,6 +28,15 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
+
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.net.URL;
+import java.util.Properties;
 
 /*
  * TODO list
@@ -31,7 +44,14 @@ import org.eclipse.swt.widgets.Text;
  * - Actually use the settings.
  */
 
-public class SettingsPage extends Composite {
+public class SettingsPage extends Composite implements ISettingsPage {
+
+    private static final String SETTINGS_FILENAME = "androidtool.cfg"; //$NON-NLS-1$
+
+    /** Java system setting picked up by {@link URL} for http proxy port */
+    private static final String JAVA_HTTP_PROXY_PORT = "http.proxyPort";        //$NON-NLS-1$
+    /** Java system setting picked up by {@link URL} for http proxy host */
+    private static final String JAVA_HTTP_PROXY_HOST = "http.proxyHost";        //$NON-NLS-1$
 
     private Group mProxySettingsGroup;
     private Group mPlaceholderGroup;
@@ -79,8 +99,14 @@ public class SettingsPage extends Composite {
         mSomeMoreSettings.setText("Some more settings here");
 
         mApplyButton = new Button(this, SWT.NONE);
+        mApplyButton.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                onApplySelected(); //$hide$
+            }
+        });
         mApplyButton.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
-        mApplyButton.setText("Apply");
+        mApplyButton.setText("Save && Apply");
 
         postCreate();  //$hide$
     }
@@ -103,6 +129,83 @@ public class SettingsPage extends Composite {
      */
     private void postCreate() {
     }
+
+    private void onApplySelected() {
+        applySettings();
+        saveSettings();
+    }
+
+    /**
+     * Update Java system properties for the HTTP proxy.
+     */
+    public void applySettings() {
+        Properties props = System.getProperties();
+        props.put(JAVA_HTTP_PROXY_HOST, mProxyServerText.getText());
+        props.put(JAVA_HTTP_PROXY_PORT, mProxyPortText.getText());
+    }
+
+    /**
+     * Saves settings.
+     */
+    private void saveSettings() {
+        Properties props = new Properties();
+        props.put(JAVA_HTTP_PROXY_HOST, mProxyServerText.getText());
+        props.put(JAVA_HTTP_PROXY_PORT, mProxyPortText.getText());
+
+        FileWriter fw = null;
+        try {
+            String folder = AndroidLocation.getFolder();
+            File f = new File(folder, SETTINGS_FILENAME);
+            fw = new FileWriter(f);
+
+            props.store(fw, "## Settings for SdkManager");  //$NON-NLS-1$
+
+        } catch (AndroidLocationException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (fw != null) {
+                try {
+                    fw.close();
+                } catch (IOException e) {
+                }
+            }
+        }
+    }
+
+    /**
+     * Load settings and puts them in the UI.
+     */
+    public void loadSettings() {
+        FileReader fr = null;
+        try {
+            String folder = AndroidLocation.getFolder();
+            File f = new File(folder, SETTINGS_FILENAME);
+            if (f.exists()) {
+                fr = new FileReader(f);
+
+                Properties props = new Properties();
+                props.load(fr);
+
+                mProxyServerText.setText(props.getProperty(JAVA_HTTP_PROXY_HOST, "")); //$NON-NLS-1$
+                mProxyPortText.setText(props.getProperty(JAVA_HTTP_PROXY_PORT, ""));   //$NON-NLS-1$
+            }
+
+        } catch (AndroidLocationException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (fr != null) {
+                try {
+                    fr.close();
+                } catch (IOException e) {
+                }
+            }
+        }
+    }
+
 
     // End of hiding from SWT Designer
     //$hide<<$
