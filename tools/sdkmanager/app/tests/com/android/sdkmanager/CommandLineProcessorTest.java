@@ -41,9 +41,9 @@ public class CommandLineProcessorTest extends TestCase {
                     { "verb1", "action1", "Some action" },
                     { "verb1", "action2", "Another action" },
             });
-            define(MODE.STRING, false /*mandatory*/,
+            define(Mode.STRING, false /*mandatory*/,
                     "verb1", "action1", "1", "first", "non-mandatory flag", null);
-            define(MODE.STRING, true /*mandatory*/,
+            define(Mode.STRING, true /*mandatory*/,
                     "verb1", "action1", "2", "second", "mandatory flag", null);
         }
         
