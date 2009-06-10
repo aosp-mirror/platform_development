@@ -40,7 +40,8 @@ public class ToolPackage extends Package {
 
     /**
      * Manually create a new package with one archive and the given attributes.
-     * This is used to create packages from local directories.
+     * This is used to create packages from local directories in which case there must be
+     * one archive which URL is the actual target location.
      */
     ToolPackage(RepoSource source,
             int revision,
@@ -49,9 +50,7 @@ public class ToolPackage extends Package {
             String descUrl,
             Os archiveOs,
             Arch archiveArch,
-            String archiveUrl,
-            long archiveSize,
-            String archiveChecksum) {
+            String archiveOsPath) {
         super(source,
                 revision,
                 license,
@@ -59,9 +58,7 @@ public class ToolPackage extends Package {
                 descUrl,
                 archiveOs,
                 archiveArch,
-                archiveUrl,
-                archiveSize,
-                archiveChecksum);
+                archiveOsPath);
     }
 
     /** Returns a short description for an {@link IDescription}. */

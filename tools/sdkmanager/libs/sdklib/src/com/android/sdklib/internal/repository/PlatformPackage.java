@@ -49,7 +49,8 @@ public class PlatformPackage extends Package {
     /**
      * Creates a new platform package based on an actual {@link IAndroidTarget} (which
      * must have {@link IAndroidTarget#isPlatform()} true) from the {@link SdkManager}.
-     * This is used to list local SDK folders.
+     * This is used to list local SDK folders in which case there is one archive which
+     * URL is the actual target location.
      */
     PlatformPackage(IAndroidTarget target) {
         super(  null,                       //source
@@ -59,9 +60,7 @@ public class PlatformPackage extends Package {
                 null,                       //descUrl
                 Os.getCurrentOs(),          //archiveOs
                 Arch.getCurrentArch(),      //archiveArch
-                "",                         //archiveUrl   //$NON-NLS-1$
-                0,                          //archiveSize
-                null                        //archiveChecksum
+                target.getLocation()        //archiveOsPath
                 );
 
         mApiLevel = target.getApiVersionNumber();

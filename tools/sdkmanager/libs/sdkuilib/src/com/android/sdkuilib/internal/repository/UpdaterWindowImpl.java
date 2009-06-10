@@ -23,6 +23,7 @@ import com.android.sdklib.internal.repository.Archive;
 import com.android.sdklib.internal.repository.ITask;
 import com.android.sdklib.internal.repository.ITaskMonitor;
 import com.android.sdklib.internal.repository.RepoSource;
+import com.android.sdklib.internal.repository.RepoSources;
 import com.android.sdklib.repository.SdkRepository;
 
 import org.eclipse.swt.SWT;
@@ -136,7 +137,7 @@ public class UpdaterWindowImpl {
         mStackLayout = new StackLayout();
         mPagesRootComposite.setLayout(mStackLayout);
 
-        mLocalPackagePage = new LocalPackagesPage(mPagesRootComposite, mUpdaterData);
+        mLocalPackagePage = new LocalPackagesPage(mPagesRootComposite, mUpdaterData, this);
         mRemotePackagesPage = new RemotePackagesPage(mPagesRootComposite, mUpdaterData, this);
         mSashForm.setWeights(new int[] {150, 576});
     }
@@ -327,7 +328,7 @@ public class UpdaterWindowImpl {
     /**
      * Used to scan the local SDK folders the first time.
      */
-    private void scanLocalSdkFolders() {
+    public void scanLocalSdkFolders() {
         mUpdaterData.getLocalSdkAdapter().setSdkRoot(mUpdaterData.getOsSdkRoot());
 
         mLocalPackagePage.setInput(mUpdaterData.getLocalSdkAdapter());
@@ -387,6 +388,54 @@ public class UpdaterWindowImpl {
                 }
             }
         });
+    }
+
+    public void updateAll() {
+        refreshSources(true);
+
+        // TODO have refreshSources reuse the current progress task
+//        mTaskFactory.start("Update Archives", new ITask() {
+//            public void run(ITaskMonitor monitor) {
+//                monitor.setProgressMax(3);
+//
+//                monitor.setDescription("Refresh sources");
+//                refreshSources(true);
+//            }
+//        });
+    }
+
+    /**
+     * Refresh sources
+     *
+     * @param forceFetching When true, load sources that haven't been loaded yet. When
+     * false, only refresh sources that have been loaded yet.
+     */
+    public void refreshSources(final boolean forceFetching) {
+        ArrayList<RepoSource> sources = mUpdaterData.getSources().getSources();
+        for (RepoSource source : sources) {
+            if (forceFetching || source.getPackages() != null) {
+                source.load(mTaskFactory);
+            }
+
+        }
+
+        // TODO have source.load reuse the current progress task
+//        mTaskFactory.start("Refresh sources", new ITask() {
+//            public void run(ITaskMonitor monitor) {
+//                ArrayList<RepoSource> sources = mUpdaterData.getSources().getSources();
+//                monitor.setProgressMax(sources.size());
+//
+//                for (RepoSource source : sources) {
+//                    if (forceFetching || source.getPackages() != null) {
+//                        monitor.setDescription(String.format("Refresh %1$s",
+//                                source.getShortDescription()));
+//                        source.load(mTaskFactory);
+//                    }
+//                    monitor.incProgress(1);
+//                }
+//            }
+//        });
+
     }
 
     // End of hiding from SWT Designer
