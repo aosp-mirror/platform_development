@@ -64,6 +64,7 @@
 	<classpathentry kind="src" path="development/samples/SkeletonApp/tests/src"/>
 	<classpathentry kind="src" path="development/samples/Snake/src"/>
 	<classpathentry kind="src" path="development/samples/Snake/tests/src"/>
+	<classpathentry kind="src" path="development/apps/Term/src"/>
 	<classpathentry kind="src" path="dalvik/libcore/annotation/src/main/java"/>
 	<classpathentry kind="src" path="dalvik/libcore/archive/src/main/java"/>
 	<classpathentry kind="src" path="dalvik/libcore/auth/src/main/java"/>
