@@ -397,6 +397,12 @@ Native tests:
     class="com.android.email.SmallTests"
     coverage_target="Email" />
 
+<test name="globalsearch"
+    build_path="packages/apps/GlobalSearch"
+    package="com.android.globalsearch.tests"
+    coverage_target="GlobalSearch"
+    continuous="true" />
+
 <test name="media"
     build_path="frameworks/base/media/tests/MediaFrameworkTest"
     package="com.android.mediaframeworktest"
