@@ -337,6 +337,33 @@ class Main {
         creator.updateProject(projectDir,
                 target,
                 mSdkCommandLine.getParamName());
+
+        boolean doSubProjects = mSdkCommandLine.getParamSubProject();
+        boolean couldHaveDone = false;
+
+        // If there are any sub-folders with a manifest, try to update them as projects
+        // too. This will take care of updating any underlying test project even if the
+        // user changed the folder name.
+        File[] files = new File(projectDir).listFiles();
+        if (files != null) {
+            for (File dir : files) {
+                if (dir.isDirectory() &&
+                        new File(dir, SdkConstants.FN_ANDROID_MANIFEST_XML).isFile()) {
+                    if (doSubProjects) {
+                        creator.updateProject(dir.getPath(),
+                                target,
+                                mSdkCommandLine.getParamName());
+                    } else {
+                        couldHaveDone = true;
+                    }
+                }
+            }
+        }
+
+        if (couldHaveDone) {
+            mSdkLog.printf("It seems that there are sub-projects. If you want to update them\nplease use the --%1$s parameter.",
+                    SdkCommandLine.KEY_SUBPROJECTS);
+        }
     }
 
     /**

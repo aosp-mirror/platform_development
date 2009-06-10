@@ -85,13 +85,13 @@ public class CommandLineProcessor {
         mLog = logger;
         mActions = actions;
 
-        define(MODE.BOOLEAN, false, GLOBAL_FLAG_VERB, NO_VERB_OBJECT, "v", KEY_VERBOSE,
+        define(Mode.BOOLEAN, false, GLOBAL_FLAG_VERB, NO_VERB_OBJECT, "v", KEY_VERBOSE,
                 "Verbose mode: errors, warnings and informational messages are printed.",
                 false);
-        define(MODE.BOOLEAN, false, GLOBAL_FLAG_VERB, NO_VERB_OBJECT, "s", KEY_SILENT,
+        define(Mode.BOOLEAN, false, GLOBAL_FLAG_VERB, NO_VERB_OBJECT, "s", KEY_SILENT,
                 "Silent mode: only errors are printed out.",
                 false);
-        define(MODE.BOOLEAN, false, GLOBAL_FLAG_VERB, NO_VERB_OBJECT, "h", KEY_HELP,
+        define(Mode.BOOLEAN, false, GLOBAL_FLAG_VERB, NO_VERB_OBJECT, "h", KEY_HELP,
                 "This help.",
                 false);
     }
@@ -507,7 +507,7 @@ public class CommandLineProcessor {
                         }
                     } else if (arg.getDefaultValue() != null) {
                         Object v = arg.getDefaultValue();
-                        if (arg.getMode() != MODE.BOOLEAN || v.equals(Boolean.TRUE)) {
+                        if (arg.getMode() != Mode.BOOLEAN || v.equals(Boolean.TRUE)) {
                             value = v.toString();
                         }
                     }
@@ -537,7 +537,7 @@ public class CommandLineProcessor {
      * The mode of an argument specifies the type of variable it represents,
      * whether an extra parameter is required after the flag and how to parse it.
      */
-    static enum MODE {
+    static enum Mode {
         /** Argument value is a Boolean. Default value is a Boolean. */
         BOOLEAN {
             @Override
@@ -628,7 +628,7 @@ public class CommandLineProcessor {
      * An argument accepted by the command-line, also called "a flag".
      * Arguments must have a short version (one letter), a long version name and a description.
      * They can have a default value, or it can be null.
-     * Depending on the {@link MODE}, the default value can be a Boolean, an Integer, a String
+     * Depending on the {@link Mode}, the default value can be a Boolean, an Integer, a String
      * or a String array (in which case the first item is the current by default.)
      */
     static class Arg {
@@ -645,7 +645,7 @@ public class CommandLineProcessor {
         /** A default value. Can be null. */
         private final Object mDefaultValue;
         /** The argument mode (type + process method). Never null. */
-        private final MODE mMode;
+        private final Mode mMode;
         /** True if this argument is mandatory for this verb/directobject. */
         private final boolean mMandatory;
         /** Current value. Initially set to the default value. */
@@ -656,15 +656,15 @@ public class CommandLineProcessor {
         /**
          * Creates a new argument flag description.
          *
-         * @param mode The {@link MODE} for the argument.
+         * @param mode The {@link Mode} for the argument.
          * @param mandatory True if this argument is mandatory for this action.
          * @param directObject The action name. Can be #NO_VERB_OBJECT or #INTERNAL_FLAG.
          * @param shortName The one-letter short argument name. Cannot be empty nor null.
          * @param longName The long argument name. Cannot be empty nor null.
          * @param description The description. Cannot be null.
-         * @param defaultValue The default value (or values), which depends on the selected {@link MODE}.
+         * @param defaultValue The default value (or values), which depends on the selected {@link Mode}.
          */
-        public Arg(MODE mode,
+        public Arg(Mode mode,
                    boolean mandatory,
                    String verb,
                    String directObject,
@@ -734,7 +734,7 @@ public class CommandLineProcessor {
         }
 
         /** Returns the argument mode (type + process method). Never null. */
-        public MODE getMode() {
+        public Mode getMode() {
             return mMode;
         }
 
@@ -752,21 +752,21 @@ public class CommandLineProcessor {
     /**
      * Internal helper to define a new argument for a give action.
      *
-     * @param mode The {@link MODE} for the argument.
+     * @param mode The {@link Mode} for the argument.
      * @param verb The verb name. Can be #INTERNAL_VERB.
      * @param directObject The action name. Can be #NO_VERB_OBJECT or #INTERNAL_FLAG.
      * @param shortName The one-letter short argument name. Cannot be empty nor null.
      * @param longName The long argument name. Cannot be empty nor null.
      * @param description The description. Cannot be null.
-     * @param defaultValue The default value (or values), which depends on the selected {@link MODE}.
+     * @param defaultValue The default value (or values), which depends on the selected {@link Mode}.
      */
-    protected void define(MODE mode,
+    protected void define(Mode mode,
             boolean mandatory,
             String verb,
             String directObject,
             String shortName, String longName,
             String description, Object defaultValue) {
-        assert(mandatory || mode == MODE.BOOLEAN); // a boolean mode cannot be mandatory
+        assert(mandatory || mode == Mode.BOOLEAN); // a boolean mode cannot be mandatory
 
         if (directObject == null) {
             directObject = NO_VERB_OBJECT;

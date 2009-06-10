@@ -38,20 +38,21 @@ public class SdkCommandLine extends CommandLineProcessor {
     public static final String OBJECT_PROJECT  = "project";
     public static final String OBJECT_ADB      = "adb";
 
-    public static final String ARG_ALIAS    = "alias";
-    public static final String ARG_ACTIVITY = "activity";
+    public static final String ARG_ALIAS       = "alias";
+    public static final String ARG_ACTIVITY    = "activity";
 
-    public static final String KEY_ACTIVITY  = ARG_ACTIVITY;
-    public static final String KEY_PACKAGE   = "package";
-    public static final String KEY_MODE      = "mode";
-    public static final String KEY_TARGET_ID = OBJECT_TARGET;
-    public static final String KEY_NAME      = "name";
-    public static final String KEY_PATH      = "path";
-    public static final String KEY_FILTER    = "filter";
-    public static final String KEY_SKIN      = "skin";
-    public static final String KEY_SDCARD    = "sdcard";
-    public static final String KEY_FORCE     = "force";
-    public static final String KEY_RENAME    = "rename";
+    public static final String KEY_ACTIVITY    = ARG_ACTIVITY;
+    public static final String KEY_PACKAGE     = "package";
+    public static final String KEY_MODE        = "mode";
+    public static final String KEY_TARGET_ID   = OBJECT_TARGET;
+    public static final String KEY_NAME        = "name";
+    public static final String KEY_PATH        = "path";
+    public static final String KEY_FILTER      = "filter";
+    public static final String KEY_SKIN        = "skin";
+    public static final String KEY_SDCARD      = "sdcard";
+    public static final String KEY_FORCE       = "force";
+    public static final String KEY_RENAME      = "rename";
+    public static final String KEY_SUBPROJECTS = "subprojects";
 
     /**
      * Action definitions for SdkManager command line.
@@ -97,46 +98,46 @@ public class SdkCommandLine extends CommandLineProcessor {
 
         // --- create avd ---
 
-        define(MODE.STRING, false,
+        define(Mode.STRING, false,
                 VERB_CREATE, OBJECT_AVD, "p", KEY_PATH,
                 "Location path of the directory where the new AVD will be created", null);
-        define(MODE.STRING, true,
+        define(Mode.STRING, true,
                 VERB_CREATE, OBJECT_AVD, "n", KEY_NAME,
                 "Name of the new AVD", null);
-        define(MODE.INTEGER, true,
+        define(Mode.INTEGER, true,
                 VERB_CREATE, OBJECT_AVD, "t", KEY_TARGET_ID,
                 "Target id of the new AVD", null);
-        define(MODE.STRING, false,
+        define(Mode.STRING, false,
                 VERB_CREATE, OBJECT_AVD, "s", KEY_SKIN,
                 "Skin of the new AVD", null);
-        define(MODE.STRING, false,
+        define(Mode.STRING, false,
                 VERB_CREATE, OBJECT_AVD, "c", KEY_SDCARD,
                 "Path to a shared SD card image, or size of a new sdcard for the new AVD", null);
-        define(MODE.BOOLEAN, false,
+        define(Mode.BOOLEAN, false,
                 VERB_CREATE, OBJECT_AVD, "f", KEY_FORCE,
                 "Force creation (override an existing AVD)", false);
 
         // --- delete avd ---
 
-        define(MODE.STRING, true,
+        define(Mode.STRING, true,
                 VERB_DELETE, OBJECT_AVD, "n", KEY_NAME,
                 "Name of the AVD to delete", null);
 
         // --- move avd ---
 
-        define(MODE.STRING, true,
+        define(Mode.STRING, true,
                 VERB_MOVE, OBJECT_AVD, "n", KEY_NAME,
                 "Name of the AVD to move or rename", null);
-        define(MODE.STRING, false,
+        define(Mode.STRING, false,
                 VERB_MOVE, OBJECT_AVD, "r", KEY_RENAME,
                 "New name of the AVD to rename", null);
-        define(MODE.STRING, false,
+        define(Mode.STRING, false,
                 VERB_MOVE, OBJECT_AVD, "p", KEY_PATH,
                 "New location path of the directory where to move the AVD", null);
 
         // --- update avd ---
 
-        define(MODE.STRING, true,
+        define(Mode.STRING, true,
                 VERB_UPDATE, OBJECT_AVD, "n", KEY_NAME,
                 "Name of the AVD to update", null);
 
@@ -145,41 +146,45 @@ public class SdkCommandLine extends CommandLineProcessor {
         /* Disabled for ADT 0.9 / Cupcake SDK 1.5_r1 release. [bug #1795718].
            This currently does not work, the alias build rules need to be fixed.
 
-        define(MODE.ENUM, true,
+        define(Mode.ENUM, true,
                 VERB_CREATE, OBJECT_PROJECT, "m", KEY_MODE,
                 "Project mode", new String[] { ARG_ACTIVITY, ARG_ALIAS });
         */
-        define(MODE.STRING, true,
+        define(Mode.STRING, true,
                 VERB_CREATE, OBJECT_PROJECT,
                 "p", KEY_PATH,
                 "Location path of new project", null);
-        define(MODE.INTEGER, true,
+        define(Mode.INTEGER, true,
                 VERB_CREATE, OBJECT_PROJECT, "t", KEY_TARGET_ID,
                 "Target id of the new project", null);
-        define(MODE.STRING, true,
+        define(Mode.STRING, true,
                 VERB_CREATE, OBJECT_PROJECT, "k", KEY_PACKAGE,
                 "Package name", null);
-        define(MODE.STRING, true,
+        define(Mode.STRING, true,
                 VERB_CREATE, OBJECT_PROJECT, "a", KEY_ACTIVITY,
                 "Activity name", null);
-        define(MODE.STRING, false,
+        define(Mode.STRING, false,
                 VERB_CREATE, OBJECT_PROJECT, "n", KEY_NAME,
                 "Project name", null);
 
         // --- update project ---
 
-        define(MODE.STRING, true,
+        define(Mode.STRING, true,
                 VERB_UPDATE, OBJECT_PROJECT,
                 "p", KEY_PATH,
                 "Location path of the project", null);
-        define(MODE.INTEGER, true,
+        define(Mode.INTEGER, true,
                 VERB_UPDATE, OBJECT_PROJECT,
                 "t", KEY_TARGET_ID,
                 "Target id to set for the project", -1);
-        define(MODE.STRING, false,
+        define(Mode.STRING, false,
                 VERB_UPDATE, OBJECT_PROJECT,
                 "n", KEY_NAME,
                 "Project name", null);
+        define(Mode.BOOLEAN, false,
+                VERB_UPDATE, OBJECT_PROJECT,
+                "s", KEY_SUBPROJECTS,
+                "Also update any projects in sub-folders, such as test projects.", false);
     }
 
     @Override
@@ -234,8 +239,13 @@ public class SdkCommandLine extends CommandLineProcessor {
         return ((String) getValue(null, OBJECT_PROJECT, KEY_PACKAGE));
     }
 
-    /** Helper to retrieve the --activity for the new project action. */
+    /** Helper to retrieve the --activity for any project action. */
     public String getParamProjectActivity() {
         return ((String) getValue(null, OBJECT_PROJECT, KEY_ACTIVITY));
+    }
+
+    /** Helper to retrieve the --subprojects for any project action. */
+    public boolean getParamSubProject() {
+        return ((Boolean) getValue(null, OBJECT_PROJECT, KEY_SUBPROJECTS)).booleanValue();
     }
 }
