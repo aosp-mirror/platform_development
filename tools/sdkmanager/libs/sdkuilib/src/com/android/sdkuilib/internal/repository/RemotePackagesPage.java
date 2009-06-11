@@ -80,14 +80,12 @@ public class RemotePackagesPage extends Composite implements ISdkListener {
     /**
      * Create the composite.
      * @param parent The parent of the composite.
-     * @param updaterData An instance of {@link UpdaterData}. If null, a local
-     *        one will be allocated just to help with the SWT Designer.
+     * @param updaterData An instance of {@link UpdaterData}.
      */
-    RemotePackagesPage(Composite parent,
-            UpdaterData updaterData) {
+    RemotePackagesPage(Composite parent, UpdaterData updaterData) {
         super(parent, SWT.BORDER);
 
-        mUpdaterData = updaterData != null ? updaterData : new UpdaterData();
+        mUpdaterData = updaterData;
         mUpdaterData.addListeners(this);
 
         createContents(this);

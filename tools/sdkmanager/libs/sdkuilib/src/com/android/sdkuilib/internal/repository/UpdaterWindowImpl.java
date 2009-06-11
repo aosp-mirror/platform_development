@@ -100,7 +100,6 @@ public class UpdaterWindowImpl {
      */
     protected void createContents() {
         mAndroidSdkUpdater = new Shell();
-        setWindowImage(mAndroidSdkUpdater);
         mAndroidSdkUpdater.addDisposeListener(new DisposeListener() {
             public void widgetDisposed(DisposeEvent e) {
                 onAndroidSdkUpdaterDispose();    //$hide$ (hide from SWT designer)
@@ -204,6 +203,8 @@ public class UpdaterWindowImpl {
         mUpdaterData.setTaskFactory(mTaskFactory);
         mUpdaterData.setImageFactory(new ImageFactory(getShell().getDisplay()));
 
+        setWindowImage(mAndroidSdkUpdater);
+
         addPage(mAvdManagerPage, "Virtual Devices");
         addPage(mLocalPackagePage, "Installed Packages");
         addPage(mRemotePackagesPage, "Available Packages");
@@ -212,7 +213,6 @@ public class UpdaterWindowImpl {
         displayPage(0);
         mPageList.setSelection(0);
 
-        // TODO read and apply settings
         // TODO read add-on sources from some file
         setupSources();
         initializeSettings();

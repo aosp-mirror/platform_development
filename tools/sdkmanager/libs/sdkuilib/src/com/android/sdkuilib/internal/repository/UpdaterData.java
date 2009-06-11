@@ -68,14 +68,6 @@ class UpdaterData {
         initSdk();
     }
 
-    /**
-     * default access constructor used by the pages when instantiated by the SWT designer.
-     */
-    UpdaterData() {
-        mOsSdkRoot = null;
-        mSdkLog = null;
-    }
-
     public void setOsSdkRoot(String osSdkRoot) {
         if (mOsSdkRoot == null || mOsSdkRoot.equals(osSdkRoot) == false) {
             mOsSdkRoot = osSdkRoot;
@@ -208,7 +200,9 @@ class UpdaterData {
     }
 
     /**
-     * Install the list of given {@link Archive}s.
+     * Install the list of given {@link Archive}s. This is invoked by the user selecting some
+     * packages in the remote page and then clicking "install selected".
+     *
      * @param archives The archives to install. Incompatible ones will be skipped.
      */
     public void installArchives(final Collection<Archive> archives) {
@@ -221,7 +215,6 @@ class UpdaterData {
         // or ask user to confirm downgrades. All this should be done in a separate class+window
         // which will then call this method with the final list.
 
-        // TODO move most parts to SdkLib, maybe as part of Archive, making archives self-installing.
         mTaskFactory.start("Installing Archives", new ITask() {
             public void run(ITaskMonitor monitor) {
 
@@ -266,10 +259,14 @@ class UpdaterData {
         });
     }
 
+    /**
+     * Tries to update all the *existing* local packages.
+     * This first refreshes all sources, then compares the available remote packages when
+     * the current local ones and suggest updates to be done to the user. Finally all
+     * selected updates are installed.
+     */
     public void updateAll() {
-        if (mTaskFactory == null) {
-            throw new IllegalArgumentException("Task Factory is null");
-        }
+        assert mTaskFactory != null;
 
         mTaskFactory.start("Update Archives", new ITask() {
             public void run(ITaskMonitor monitor) {
@@ -277,17 +274,25 @@ class UpdaterData {
 
                 monitor.setDescription("Refresh sources");
                 refreshSources(true, monitor.createSubMonitor(1));
+
+                // TODO compare available vs local
+                // TODO suggest update packages to user (also validate license click-through)
+                // TODO install selected packages
             }
         });
     }
 
     /**
-     * Refresh sources
+     * Refresh all sources. This is invoked either internally (reusing an existing monitor)
+     * or as a UI callback on the remote page "Refresh" button (in which case the monitor is
+     * null and a new task should be created.)
      *
      * @param forceFetching When true, load sources that haven't been loaded yet. When
      * false, only refresh sources that have been loaded yet.
      */
     public void refreshSources(final boolean forceFetching, ITaskMonitor monitor) {
+        assert mTaskFactory != null;
+
         ITask task = new ITask() {
             public void run(ITaskMonitor monitor) {
                 ArrayList<RepoSource> sources = mSources.getSources();
