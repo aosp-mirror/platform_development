@@ -19,6 +19,8 @@ package com.android.sdkuilib.internal.repository;
 
 import com.android.sdklib.internal.repository.Archive;
 import com.android.sdklib.internal.repository.IDescription;
+import com.android.sdklib.internal.repository.ITask;
+import com.android.sdklib.internal.repository.ITaskMonitor;
 
 import org.eclipse.jface.viewers.CheckStateChangedEvent;
 import org.eclipse.jface.viewers.CheckboxTreeViewer;
@@ -265,7 +267,7 @@ public class RemotePackagesPage extends Composite {
 
     private void onRefreshSelected() {
         if (mUpdaterWindow != null) {
-            mUpdaterWindow.refreshSources(false /*forceFetching*/);
+            mUpdaterWindow.refreshSources(false /*forceFetching*/, null /*monitor*/);
         }
     }
 

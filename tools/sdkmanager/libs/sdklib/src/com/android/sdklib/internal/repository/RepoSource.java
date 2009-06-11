@@ -68,7 +68,7 @@ public class RepoSource implements IDescription {
     }
 
     /**
-     * Returns the list of known packages found by the last call to {@link #load(ITaskFactory)}.
+     * Returns the list of known packages found by the last call to {@link #load(ITaskMonitor)}.
      * This is null when the source hasn't been loaded yet.
      */
     public Package[] getPackages() {
@@ -77,7 +77,7 @@ public class RepoSource implements IDescription {
 
     /**
      * Clear the internal packages list. After this call, {@link #getPackages()} will return
-     * null till {@link #load(ITaskFactory)} is called.
+     * null till {@link #load(ITaskMonitor)} is called.
      */
     public void clearPackages() {
         mPackages = null;
@@ -94,47 +94,43 @@ public class RepoSource implements IDescription {
     /**
      * Tries to fetch the repository index for the given URL.
      */
-    public void load(ITaskFactory taskFactory) {
+    public void load(ITaskMonitor monitor) {
 
-        taskFactory.start("Init SDK Updater", new ITask() {
-            public void run(ITaskMonitor monitor) {
-                monitor.setProgressMax(4);
+        monitor.setProgressMax(4);
 
-                setDefaultDescription();
+        setDefaultDescription();
 
-                monitor.setDescription("Fetching %1$s", mUrl);
-                monitor.incProgress(1);
+        monitor.setDescription("Fetching %1$s", mUrl);
+        monitor.incProgress(1);
 
-                String xml = fetchUrl(mUrl, monitor);
+        String xml = fetchUrl(mUrl, monitor);
 
-                if (xml == null) {
-                    mDescription += String.format("\nFailed to fetch URL %1$s", mUrl);
-                    return;
-                }
+        if (xml == null) {
+            mDescription += String.format("\nFailed to fetch URL %1$s", mUrl);
+            return;
+        }
 
-                monitor.setDescription("Validate XML");
-                monitor.incProgress(1);
+        monitor.setDescription("Validate XML");
+        monitor.incProgress(1);
 
-                if (!validateXml(xml, monitor)) {
-                    mDescription += String.format("\nFailed to validate XML at %1$s", mUrl);
-                    return;
-                }
+        if (!validateXml(xml, monitor)) {
+            mDescription += String.format("\nFailed to validate XML at %1$s", mUrl);
+            return;
+        }
 
-                monitor.setDescription("Parse XML");
-                monitor.incProgress(1);
-                parsePackages(xml, monitor);
-                if (mPackages.length == 0) {
-                    mDescription += "\nNo packages found.";
-                } else if (mPackages.length == 1) {
-                    mDescription += "\nOne package found.";
-                } else {
-                    mDescription += String.format("\n%1$d packages found.", mPackages.length);
-                }
+        monitor.setDescription("Parse XML");
+        monitor.incProgress(1);
+        parsePackages(xml, monitor);
+        if (mPackages.length == 0) {
+            mDescription += "\nNo packages found.";
+        } else if (mPackages.length == 1) {
+            mDescription += "\nOne package found.";
+        } else {
+            mDescription += String.format("\n%1$d packages found.", mPackages.length);
+        }
 
-                // done
-                monitor.incProgress(1);
-            }
-        });
+        // done
+        monitor.incProgress(1);
     }
 
     private void setDefaultDescription() {

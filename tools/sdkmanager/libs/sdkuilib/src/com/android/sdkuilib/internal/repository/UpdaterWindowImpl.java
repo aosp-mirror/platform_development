@@ -407,17 +407,14 @@ public class UpdaterWindowImpl {
     }
 
     public void updateAll() {
-        refreshSources(true);
+        mTaskFactory.start("Update Archives", new ITask() {
+            public void run(ITaskMonitor monitor) {
+                monitor.setProgressMax(3);
 
-        // TODO have refreshSources reuse the current progress task
-//        mTaskFactory.start("Update Archives", new ITask() {
-//            public void run(ITaskMonitor monitor) {
-//                monitor.setProgressMax(3);
-//
-//                monitor.setDescription("Refresh sources");
-//                refreshSources(true);
-//            }
-//        });
+                monitor.setDescription("Refresh sources");
+                refreshSources(true, monitor.createSubMonitor(1));
+            }
+        });
     }
 
     /**
@@ -426,32 +423,26 @@ public class UpdaterWindowImpl {
      * @param forceFetching When true, load sources that haven't been loaded yet. When
      * false, only refresh sources that have been loaded yet.
      */
-    public void refreshSources(final boolean forceFetching) {
-        ArrayList<RepoSource> sources = mUpdaterData.getSources().getSources();
-        for (RepoSource source : sources) {
-            if (forceFetching || source.getPackages() != null) {
-                source.load(mTaskFactory);
+    public void refreshSources(final boolean forceFetching, ITaskMonitor monitor) {
+        ITask task = new ITask() {
+            public void run(ITaskMonitor monitor) {
+                ArrayList<RepoSource> sources = mUpdaterData.getSources().getSources();
+                monitor.setProgressMax(sources.size());
+                for (RepoSource source : sources) {
+                    if (forceFetching || source.getPackages() != null) {
+                        source.load(monitor.createSubMonitor(1));
+                    }
+                    monitor.incProgress(1);
+
+                }
             }
+        };
 
+        if (monitor != null) {
+            task.run(monitor);
+        } else {
+            mTaskFactory.start("Refresh Sources", task);
         }
-
-        // TODO have source.load reuse the current progress task
-//        mTaskFactory.start("Refresh sources", new ITask() {
-//            public void run(ITaskMonitor monitor) {
-//                ArrayList<RepoSource> sources = mUpdaterData.getSources().getSources();
-//                monitor.setProgressMax(sources.size());
-//
-//                for (RepoSource source : sources) {
-//                    if (forceFetching || source.getPackages() != null) {
-//                        monitor.setDescription(String.format("Refresh %1$s",
-//                                source.getShortDescription()));
-//                        source.load(mTaskFactory);
-//                    }
-//                    monitor.incProgress(1);
-//                }
-//            }
-//        });
-
     }
 
     // End of hiding from SWT Designer

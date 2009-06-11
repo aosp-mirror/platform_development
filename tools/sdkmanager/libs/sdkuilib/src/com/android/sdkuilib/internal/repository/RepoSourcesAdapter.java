@@ -18,6 +18,8 @@ package com.android.sdkuilib.internal.repository;
 
 import com.android.sdklib.internal.repository.Archive;
 import com.android.sdklib.internal.repository.IDescription;
+import com.android.sdklib.internal.repository.ITask;
+import com.android.sdklib.internal.repository.ITaskMonitor;
 import com.android.sdklib.internal.repository.Package;
 import com.android.sdklib.internal.repository.RepoSource;
 import com.android.sdklib.internal.repository.RepoSources;
@@ -110,11 +112,17 @@ class RepoSourcesAdapter {
                 return ((RepoSourcesAdapter) parentElement).mRepoSources.getSources().toArray();
 
             } else if (parentElement instanceof RepoSource) {
-                RepoSource source = (RepoSource) parentElement;
+                final RepoSource source = (RepoSource) parentElement;
                 Package[] packages = source.getPackages();
 
                 if (packages == null) {
-                    source.load(mInput.mRepoSources.getTaskFactory());
+
+                    mInput.mRepoSources.getTaskFactory().start("Loading Source", new ITask() {
+                        public void run(ITaskMonitor monitor) {
+                            source.load(monitor);
+                        }
+                    });
+
                     packages = source.getPackages();
                 }
                 if (packages != null) {

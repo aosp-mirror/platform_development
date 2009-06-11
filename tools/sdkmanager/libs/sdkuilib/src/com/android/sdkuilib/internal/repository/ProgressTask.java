@@ -28,8 +28,12 @@ import org.eclipse.swt.widgets.Shell;
  */
 class ProgressTask implements ITaskMonitor {
 
-    private ProgressDialog mDialog;
+    private static final double MAX_COUNT = 10000.0;
+
+    private final ProgressDialog mDialog;
     private boolean mAutomaticallyCloseOnTaskCompletion = true;
+    private double mIncCoef = 0;
+    private double mValue = 0;
 
 
     /**
@@ -46,29 +50,39 @@ class ProgressTask implements ITaskMonitor {
 
     /**
      * Sets the description in the current task dialog.
-     * This method can be invoke from a non-UI thread.
+     * This method can be invoked from a non-UI thread.
      */
-    public void setDescription(final String descriptionFormat, final Object...args) {
+    public void setDescription(String descriptionFormat, Object...args) {
         mDialog.setDescription(descriptionFormat, args);
     }
 
     /**
      * Sets the description in the current task dialog.
-     * This method can be invoke from a non-UI thread.
+     * This method can be invoked from a non-UI thread.
      */
-    public void setResult(final String resultFormat, final Object...args) {
+    public void setResult(String resultFormat, Object...args) {
         mAutomaticallyCloseOnTaskCompletion = false;
         mDialog.setResult(resultFormat, args);
     }
 
     /**
      * Sets the max value of the progress bar.
-     * This method can be invoke from a non-UI thread.
+     * This method can be invoked from a non-UI thread.
+     *
+     * Weird things will happen if setProgressMax is called multiple times
+     * *after* {@link #incProgress(int)}: we don't try to adjust it on the
+     * fly.
      *
      * @see ProgressBar#setMaximum(int)
      */
-    public void setProgressMax(final int max) {
-        mDialog.setProgressMax(max);
+    public void setProgressMax(int max) {
+        assert max > 0;
+        // Always set the dialog's progress max to 10k since it only handles
+        // integers and we want to have a better inner granularity. Instead
+        // we use the max to compute a coefficient for inc deltas.
+        mDialog.setProgressMax((int) MAX_COUNT);
+        mIncCoef = max > 0 ? MAX_COUNT / max : 0;
+        assert mIncCoef > 0;
     }
 
     /**
@@ -76,8 +90,15 @@ class ProgressTask implements ITaskMonitor {
      *
      * This method can be invoked from a non-UI thread.
      */
-    public void incProgress(final int delta) {
-        mDialog.incProgress(delta);
+    public void incProgress(int delta) {
+        assert mIncCoef > 0;
+        assert delta > 0;
+        internalIncProgress(delta * mIncCoef);
+    }
+
+    private void internalIncProgress(double realDelta) {
+        mValue += realDelta;
+        mDialog.setProgress((int)mValue);
     }
 
     /**
@@ -87,7 +108,8 @@ class ProgressTask implements ITaskMonitor {
      * This method can be invoked from a non-UI thread.
      */
     public int getProgress() {
-        return mDialog.getProgress();
+        assert mIncCoef > 0;
+        return mIncCoef > 0 ? (int)(mDialog.getProgress() / mIncCoef) : 0;
     }
 
     /**
@@ -119,4 +141,95 @@ class ProgressTask implements ITaskMonitor {
         }
         return null;
     }
+
+    /**
+     * Creates a sub-monitor that will use up to tickCount on the progress bar.
+     * tickCount must be 1 or more.
+     */
+    public ITaskMonitor createSubMonitor(int tickCount) {
+        assert mIncCoef > 0;
+        assert tickCount > 0;
+        return new SubTaskMonitor(this, null, mValue, tickCount * mIncCoef);
+    }
+
+    private interface ISubTaskMonitor extends ITaskMonitor {
+        public void subIncProgress(double realDelta);
+    }
+
+    private static class SubTaskMonitor implements ISubTaskMonitor {
+
+        private final ProgressTask mRoot;
+        private final ISubTaskMonitor mParent;
+        private final double mStart;
+        private final double mSpan;
+        private double mSubValue;
+        private double mSubCoef;
+
+        /**
+         * Creates a new sub task monitor which will work for the given range [start, start+span]
+         * in its parent.
+         *
+         * @param root The ProgressTask root
+         * @param parent The immediate parent. Can be the null or another sub task monitor.
+         * @param start The start value in the root's coordinates
+         * @param span The span value in the root's coordinates
+         */
+        public SubTaskMonitor(ProgressTask root,
+                ISubTaskMonitor parent,
+                double start,
+                double span) {
+            mRoot = root;
+            mParent = parent;
+            mStart = start;
+            mSpan = span;
+            mSubValue = start;
+        }
+
+        public boolean isCancelRequested() {
+            return mRoot.isCancelRequested();
+        }
+
+        public void setDescription(String descriptionFormat, Object... args) {
+            mRoot.setDescription(descriptionFormat, args);
+        }
+
+        public void setResult(String resultFormat, Object... args) {
+            mRoot.setResult(resultFormat, args);
+        }
+
+        public void setProgressMax(int max) {
+            assert max > 0;
+            mSubCoef = max > 0 ? mSpan / max : 0;
+            assert mSubCoef > 0;
+        }
+
+        public int getProgress() {
+            assert mSubCoef > 0;
+            return mSubCoef > 0 ? (int)((mSubValue - mStart) / mSubCoef) : 0;
+        }
+
+        public void incProgress(int delta) {
+            assert mSubCoef > 0;
+            subIncProgress(delta * mSubCoef);
+        }
+
+        public void subIncProgress(double realDelta) {
+            mSubValue += realDelta;
+            if (mParent != null) {
+                mParent.subIncProgress(realDelta);
+            } else {
+                mRoot.internalIncProgress(realDelta);
+            }
+        }
+
+        public ITaskMonitor createSubMonitor(int tickCount) {
+            assert mSubCoef > 0;
+            assert tickCount > 0;
+            return new SubTaskMonitor(mRoot,
+                    this,
+                    mSubValue,
+                    tickCount * mSubCoef);
+        }
+    }
+
 }
