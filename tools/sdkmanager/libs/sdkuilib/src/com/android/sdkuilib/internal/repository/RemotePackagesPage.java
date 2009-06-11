@@ -19,8 +19,8 @@ package com.android.sdkuilib.internal.repository;
 
 import com.android.sdklib.internal.repository.Archive;
 import com.android.sdklib.internal.repository.IDescription;
-import com.android.sdklib.internal.repository.ITask;
-import com.android.sdklib.internal.repository.ITaskMonitor;
+import com.android.sdklib.internal.repository.Package;
+import com.android.sdklib.internal.repository.RepoSource;
 
 import org.eclipse.jface.viewers.CheckStateChangedEvent;
 import org.eclipse.jface.viewers.CheckboxTreeViewer;
@@ -28,6 +28,7 @@ import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.ICheckStateListener;
 import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.ITreeSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ControlAdapter;
@@ -237,12 +238,46 @@ public class RemotePackagesPage extends Composite {
     private void onTreeCheckStateChanged(CheckStateChangedEvent event) {
         boolean b = event.getChecked();
         Object elem = event.getElement(); // Will be Archive or Package or RepoSource
-        Object src = event.getSource();
-        // TODO
+
+        assert event.getSource() == mTreeViewerSources;
+
+        // when deselecting, we just deselect all children too
+        if (b == false) {
+            mTreeViewerSources.setSubtreeChecked(elem, b);
+            return;
+        }
+
+        ITreeContentProvider provider =
+            (ITreeContentProvider) mTreeViewerSources.getContentProvider();
+
+        // When selecting, we want to only select compatible archives.
+        if (elem instanceof RepoSource) {
+            mTreeViewerSources.setExpandedState(elem, true);
+            for (Object pkg : provider.getChildren(elem)) {
+                mTreeViewerSources.setChecked(pkg, true);
+                selectCompatibleArchives(pkg, provider);
+            }
+        } else if (elem instanceof Package) {
+            selectCompatibleArchives(elem, provider);
+        }
+    }
+
+    private void selectCompatibleArchives(Object pkg, ITreeContentProvider provider) {
+        mTreeViewerSources.setExpandedState(pkg, true);
+        for (Object archive : provider.getChildren(pkg)) {
+            if (archive instanceof Archive) {
+                if (((Archive) archive).isCompatible()) {
+                    mTreeViewerSources.setChecked(archive, true);
+                } else {
+                    mTreeViewerSources.setChecked(archive, false);
+                    // TODO change the item image to mark it incompatible
+                }
+            }
+        }
     }
 
     private void onTreeDoubleClick(DoubleClickEvent event) {
-        // TODO
+        // TODO use or remove
     }
 
     private void onInstallSelectedArchives() {
@@ -260,9 +295,11 @@ public class RemotePackagesPage extends Composite {
     }
 
     private void onAddSiteSelected() {
+        // TODO prompt for new addon site URL, store, refresh
     }
 
     private void onRemoveSiteSelected() {
+        // TODO prompt for removing addon site URL, store, refresh
     }
 
     private void onRefreshSelected() {
