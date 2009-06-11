@@ -11,6 +11,7 @@ pdk.version=1.0
 <ul>
 <li><a href="#androidOHDPortingDeviceBuildingProcess">Detailed Instructions</a></li>
 <li><a href="#androidBuildNewFileTree">New Product File Tree</a></li>
+<li><a href="#androidBuildSystemProductDefFiles">Product Definition Files</a></li>
 </ul>
 </div>
 </div>
@@ -18,7 +19,7 @@ pdk.version=1.0
 
 <a name="androidOHDPortingDeviceBuildingProcess"></a><h3>Detailed Instructions</h3>
 
-<p>The directions below describe how to configure make files for new mobile devices and products.</p>
+<p>The steps below describe how to configure makefiles for new mobile devices and products running Android.</p>
 <ol>
   <li>Create a company directory in <code>//vendor/</code>.<br/>
   <pre class="prettyprint">
@@ -26,13 +27,15 @@ pdk.version=1.0
   <li>Create a <code>products</code> directory beneath the company directory you created in step 1.<BR>
   <pre class="prettyprint">
   mkdir vendor/&lt;company_name&gt;/products/</pre></li>
-  <li>Create a product-specific make file, called <code>vendor/&lt;company_name&gt;/products/&lt;first_product_name&gt;.mk</code>, that includes the following code:<BR>
+  <li>Create a product-specific makefile, called <code>vendor/&lt;company_name&gt;/products/&lt;first_product_name&gt;.mk</code>, that includes at least the following code:<BR>
     <pre class="prettyprint">
   $(call inherit-product, $(SRC_TARGET_DIR)/product/generic.mk)
   #
   # Overrides
   PRODUCT_NAME := &lt;first_product_name&gt;
-  PRODUCT_DEVICE := &lt;board_name&gt;</pre></li>  
+  PRODUCT_DEVICE := &lt;board_name&gt;</pre>
+  Additional product-specific variables can be added to this <a href="#androidBuildSystemProductDefFiles">Product Definition</a> file. 
+  </li>  
   <li>In the <code>products</code> directory, create an <code>AndroidProducts.mk</code> file that point to (and is responsible for finding) the individual product make files.<BR>
   <pre class="prettypring">
   #
@@ -51,7 +54,7 @@ pdk.version=1.0
   <li>Create a board-specific directory beneath your company directory that matches the <code>PRODUCT_DEVICE</code> variable <code>&lt;board_name&gt;</code> referenced in the product-specific make file above. This will include a make file that gets accessed by any product using this board.<BR>
   <pre class="prettyprint">
   mkdir vendor/&lt;company_name&gt;/&lt;board_name&gt;</pre></li>
-    <li>Create a <code>product_config.mk</code> file in the directory created in the previous step (<code>vendor/&lt;company_name&gt;/&lt;board_name&gt;</code>). If this directory does not include a <code>product_config.mk</code> file, the build will fail.<BR>
+    <li>Create a <code>BoardConfig.mk</code> file in the directory created in the previous step (<code>vendor/&lt;company_name&gt;/&lt;board_name&gt;</code>). <BR>
   <pre class="prettyprint">
   # These definitions override the defaults in config/config.make for &lt;board_name&gt;
   #
@@ -71,7 +74,7 @@ pdk.version=1.0
   PRODUCT_MAKEFILES := \
     $(LOCAL_DIR)/first_product_name.mk \
     $(LOCAL_DIR)/second_product_name.mk</pre></li>
-  <li><code>vendor/&lt;company_name&gt;/&lt;board_name&gt;</code> must include an <code>Android.mk</code> file with at least the following code:<BR><BR>
+  <li>An <code>Android.mk</code> file must be included in <code>vendor/&lt;company_name&gt;/&lt;board_name&gt;</code> with at least the following code:<BR>
   <pre class="prettyprint">
   # make file for new hardware <board_name> from <company_name>
   #
@@ -94,7 +97,10 @@ pdk.version=1.0
   include $(CLEAR_VARS)
   #
   # include more board specific stuff here? Such as Audio parameters.      
-  #</pre></li>
+  #</pre>
+  
+  Additional Android.mk parameters 
+  </li>
 <li>To create a second product for the same board, create a second product-specific make file called <code>vendor/company_name/products/&lt;second_product_name&gt;.mk</code> that includes:<BR>
 <pre class="prettyprint">
   $(call inherit-product, $(SRC_TARGET_DIR)/product/generic.mk)
@@ -231,73 +237,4 @@ PRODUCT_PACKAGE_OVERLAYS := vendor/acme/overlay
 
 </pre>
 
-<a name="androidBuildVariants"></a><h3>Build Variants</h3>
 
-<p> 
-When building for a particular product, it's often useful to have minor
-variations on what is ultimately the final release build.  These are the
-currently-defined build variants:
-</p> 
- 
-<table border=1> 
-<tr> 
-    <td> 
-        <code>eng<code> 
-    </td> 
-    <td> 
-        This is the default flavor. A plain "<code>make</code>" is the
-        same as "<code>make eng</code>".  <code>droid</code> is an alias
-        for <code>eng</code>.
-        <ul> 
-        <li>Installs modules tagged with: <code>eng</code>, <code>debug</code>,
-            <code>user</code>, and/or <code>development</code>.
-        <li>Installs non-APK modules that have no tags specified.
-        <li>Installs APKs according to the product definition files, in
-            addition to tagged APKs.
-        <li><code>ro.secure=0</code> 
-        <li><code>ro.debuggable=1</code> 
-        <li><code>ro.kernel.android.checkjni=1</code> 
-        <li><code>adb</code> is enabled by default.
-    </td> 
-</tr> 
-<tr> 
-    <td> 
-        <code>user<code> 
-    </td> 
-    <td> 
-        "<code>make user</code>"
-        <p> 
-        This is the flavor intended to be the final release bits.
-        <ul> 
-        <li>Installs modules tagged with <code>user</code>.
-        <li>Installs non-APK modules that have no tags specified.
-        <li>Installs APKs according to the product definition files; tags
-            are ignored for APK modules.
-        <li><code>ro.secure=1</code> 
-        <li><code>ro.debuggable=0</code> 
-        <li><code>adb</code> is disabled by default.
-    </td> 
-</tr> 
-<tr> 
-    <td> 
-        <code>userdebug<code> 
-    </td> 
-    <td> 
-        "<code>make userdebug</code>"
-        <p> 
-        The same as <code>user</code>, except:
-        <ul> 
-        <li>Also installs modules tagged with <code>debug</code>.
-        <li><code>ro.debuggable=1</code> 
-        <li><code>adb</code> is enabled by default.
-    </td> 
-</tr> 
-</table> 
- 
-<p> 
-If you build one flavor and then want to build another, you should run
-"<code>make installclean</code>" between the two makes to guarantee that
-you don't pick up files installed by the previous flavor.  "<code>make
-clean</code>" will also suffice, but it takes a lot longer.
-</p> 
- 
