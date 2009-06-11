@@ -391,13 +391,18 @@ public class ProjectCreator {
         File buildXml = new File(projectFolder, SdkConstants.FN_BUILD_XML);
         boolean needsBuildXml = projectName != null || !buildXml.exists();
         if (!needsBuildXml) {
-            // Note that "<androidinit" must be followed by either a whitespace, a "/" (for the
+            // Look for for a classname="com.android.ant.SetupTask" attribute
+            needsBuildXml = !checkFileContainsRegexp(buildXml,
+                    "classname=\"com.android.ant.SetupTask\"");  //$NON-NLS-1$
+        }
+        if (!needsBuildXml) {
+            // Note that "<setup" must be followed by either a whitespace, a "/" (for the
             // XML /> closing tag) or an end-of-line. This way we know the XML tag is really this
             // one and later we will be able to use an "androidinit2" tag or such as necessary.
-            needsBuildXml = !checkFileContainsRegexp(buildXml, "<androidinit(?:\\s|/|$)");
-            if (needsBuildXml) {
-                println("File %1$s is too old and needs to be updated.", SdkConstants.FN_BUILD_XML);
-            }
+            needsBuildXml = !checkFileContainsRegexp(buildXml, "<setup(?:\\s|/|$)");  //$NON-NLS-1$
+        }
+        if (needsBuildXml) {
+            println("File %1$s is too old and needs to be updated.", SdkConstants.FN_BUILD_XML);
         }
 
         if (needsBuildXml) {
