@@ -320,15 +320,15 @@ final class ProgressDialog extends Dialog {
     }
 
     /**
-     * Increments the current value of the progress bar.
+     * Sets the current value of the progress bar.
      * This method can be invoked from a non-UI thread.
      */
-    public void incProgress(final int delta) {
+    public void setProgress(final int value) {
         if (!mDialogShell.isDisposed()) {
             mDialogShell.getDisplay().syncExec(new Runnable() {
                 public void run() {
                     if (!mProgressBar.isDisposed()) {
-                        mProgressBar.setSelection(mProgressBar.getSelection() + delta);
+                        mProgressBar.setSelection(value);
                     }
                 }
             });

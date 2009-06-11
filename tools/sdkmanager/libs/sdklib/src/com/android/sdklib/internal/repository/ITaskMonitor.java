@@ -45,18 +45,27 @@ public interface ITaskMonitor {
     /**
      * Sets the max value of the progress bar.
      * This method can be invoked from a non-UI thread.
+     *
+     * This method MUST be invoked once before using {@link #incProgress(int)} or
+     * {@link #getProgress()} or {@link #createSubMonitor(int)}. Callers are
+     * discouraged from using more than once -- implementations can either discard
+     * the next calls or behave incoherently.
      */
     public void setProgressMax(int max);
 
     /**
      * Increments the current value of the progress bar.
      * This method can be invoked from a non-UI thread.
+     *
+     * Callers MUST use setProgressMax before using this method.
      */
     public void incProgress(int delta);
 
     /**
      * Returns the current value of the progress bar,
      * between 0 and up to {@link #setProgressMax(int)} - 1.
+     *
+     * Callers MUST use setProgressMax before using this method.
      */
     public int getProgress();
 
@@ -66,4 +75,10 @@ public interface ITaskMonitor {
      * as possible.
      */
     public boolean isCancelRequested();
+
+    /**
+     * Creates a sub-monitor that will use up to tickCount on the progress bar.
+     * tickCount must be 1 or more.
+     */
+    public ITaskMonitor createSubMonitor(int tickCount);
 }
