@@ -229,6 +229,13 @@ public class RemotePackagesPage extends Composite implements ISdkListener {
         mDescriptionLabel.setText("");  //$NON-NLS1-$
     }
 
+    /**
+     * Handle checking and unchecking of the tree items.
+     *
+     * When unchecking, all sub-tree items checkboxes are cleared too.
+     * When checking a source, all of its packages are checked too.
+     * When checking a package, only its compatible archives are checked.
+     */
     private void onTreeCheckStateChanged(CheckStateChangedEvent event) {
         boolean b = event.getChecked();
         Object elem = event.getElement(); // Will be Archive or Package or RepoSource

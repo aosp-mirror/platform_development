@@ -21,17 +21,15 @@ import com.android.sdklib.ISdkLog;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.internal.repository.RepoSource;
 import com.android.sdklib.repository.SdkRepository;
+import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.SWTException;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.custom.StackLayout;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -39,7 +37,6 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.List;
 import org.eclipse.swt.widgets.Shell;
 
-import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 
@@ -71,7 +68,6 @@ public class UpdaterWindowImpl {
     private RemotePackagesPage mRemotePackagesPage;
     private AvdManagerPage mAvdManagerPage;
     private StackLayout mStackLayout;
-    private Image mIconImage;
 
     public UpdaterWindowImpl(ISdkLog sdkLog, String osSdkRoot, boolean userCanChangeSdkRoot) {
         mUpdaterData = new UpdaterData(osSdkRoot, sdkLog);
@@ -174,33 +170,27 @@ public class UpdaterWindowImpl {
      * Callback called when the window shell is disposed.
      */
     private void onAndroidSdkUpdaterDispose() {
-        if (mIconImage != null) {
-            mIconImage.dispose();
-            mIconImage = null;
+        if (mUpdaterData != null) {
+            ImageFactory imgFactory = mUpdaterData.getImageFactory();
+            if (imgFactory != null) {
+                imgFactory.dispose();
+            }
         }
     }
 
     /**
      * Creates the icon of the window shell.
-     * The icon is disposed by {@link #onAndroidSdkUpdaterDispose()}.
      */
     private void setWindowImage(Shell androidSdkUpdater) {
-        String image = "android_icon_16.png"; //$NON-NLS-1$
+        String imageName = "android_icon_16.png"; //$NON-NLS-1$
         if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_DARWIN) {
-            image = "android_icon_128.png"; //$NON-NLS-1$
+            imageName = "android_icon_128.png"; //$NON-NLS-1$
         }
-        InputStream stream = getClass().getResourceAsStream(image);
-        if (stream != null) {
-            try {
-                ImageData imgData = new ImageData(stream);
-                mIconImage = new Image(mAndroidSdkUpdater.getDisplay(),
-                        imgData,
-                        imgData.getTransparencyMask());
-                mAndroidSdkUpdater.setImage(mIconImage);
-            } catch (SWTException e) {
-                mUpdaterData.getSdkLog().error(e, "Failed to set window icon");  //$NON-NLS-1$
-            } catch (IllegalArgumentException e) {
-                mUpdaterData.getSdkLog().error(e, "Failed to set window icon");  //$NON-NLS-1$
+
+        if (mUpdaterData != null) {
+            ImageFactory imgFactory = mUpdaterData.getImageFactory();
+            if (imgFactory != null) {
+                mAndroidSdkUpdater.setImage(imgFactory.getImage(imageName));
             }
         }
     }
@@ -212,6 +202,7 @@ public class UpdaterWindowImpl {
     private void firstInit() {
         mTaskFactory = new ProgressTaskFactory(getShell());
         mUpdaterData.setTaskFactory(mTaskFactory);
+        mUpdaterData.setImageFactory(new ImageFactory(getShell().getDisplay()));
 
         addPage(mAvdManagerPage, "Virtual Devices");
         addPage(mLocalPackagePage, "Installed Packages");
