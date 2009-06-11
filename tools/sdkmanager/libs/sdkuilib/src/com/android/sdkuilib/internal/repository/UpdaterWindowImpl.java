@@ -317,9 +317,12 @@ public class UpdaterWindowImpl {
         mUpdaterData.getSources().add(
                 new RepoSource(SdkRepository.URL_GOOGLE_SDK_REPO_SITE, false /* addonOnly */));
 
-        String url = System.getenv("TEMP_SDK_URL"); // TODO STOPSHIP temporary remove before shipping
-        if (url != null) {
-            mUpdaterData.getSources().add(new RepoSource(url, false /* addonOnly */));
+        String str = System.getenv("TEMP_SDK_URL"); // TODO STOPSHIP temporary remove before shipping
+        if (str != null) {
+            String[] urls = str.split(";");
+            for (String url : urls) {
+                mUpdaterData.getSources().add(new RepoSource(url, false /* addonOnly */));
+            }
         }
 
         mRemotePackagesPage.setInput(mUpdaterData.getSourcesAdapter());

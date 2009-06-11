@@ -586,12 +586,12 @@ public class Archive implements IDescription {
                             destFolder.getPath());
                     return false;
                 }
+            }
 
-                if (!unzipDestFolder.mkdirs()) {
-                    monitor.setResult("Failed to create temp directory %1$s",
-                            unzipDestFolder.getPath());
-                    return false;
-                }
+            if (!unzipDestFolder.mkdirs()) {
+                monitor.setResult("Failed to create directory %1$s",
+                        unzipDestFolder.getPath());
+                return false;
             }
 
             if (!unzipFolder(archiveFile, getSize(), unzipDestFolder, desc, monitor)) {
