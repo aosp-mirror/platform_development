@@ -101,8 +101,8 @@ public final class SdkManager {
         try {
             SdkManager manager = new SdkManager(sdkLocation);
             ArrayList<IAndroidTarget> list = new ArrayList<IAndroidTarget>();
-            manager.loadPlatforms(list, log);
-            manager.loadAddOns(list, log);
+            loadPlatforms(sdkLocation, list, log);
+            loadAddOns(sdkLocation, list, log);
 
             // sort the targets/add-ons
             Collections.sort(list);
@@ -184,6 +184,25 @@ public final class SdkManager {
         }
     }
 
+    /**
+     * Reloads the content of the SDK.
+     * @param log the ISdkLog object receiving warning/error from the parsing.
+     */
+    public void reloadSdk(ISdkLog log) {
+        // get the current target list.
+        ArrayList<IAndroidTarget> list = new ArrayList<IAndroidTarget>();
+        loadPlatforms(mSdkLocation, list, log);
+        loadAddOns(mSdkLocation, list, log);
+
+        // For now replace the old list with the new one.
+        // In the future we may want to keep the current objects, so that ADT doesn't have to deal
+        // with new IAndroidTarget objects when a target didn't actually change.
+
+        // sort the targets/add-ons
+        Collections.sort(list);
+        setTargets(list.toArray(new IAndroidTarget[list.size()]));
+    }
+
     private SdkManager(String sdkLocation) {
         mSdkLocation = sdkLocation;
     }
@@ -194,11 +213,13 @@ public final class SdkManager {
 
     /**
      * Loads the Platforms from the SDK.
+     * @param location Location of the SDK
      * @param list the list to fill with the platforms.
      * @param log the ISdkLog object receiving warning/error from the parsing.
      */
-    private void loadPlatforms(ArrayList<IAndroidTarget> list, ISdkLog log) {
-        File platformFolder = new File(mSdkLocation, SdkConstants.FD_PLATFORMS);
+    private static void loadPlatforms(String location, ArrayList<IAndroidTarget> list,
+            ISdkLog log) {
+        File platformFolder = new File(location, SdkConstants.FD_PLATFORMS);
         if (platformFolder.isDirectory()) {
             File[] platforms  = platformFolder.listFiles();
 
@@ -232,7 +253,7 @@ public final class SdkManager {
      * @param platform the location of the platform.
      * @param log the ISdkLog object receiving warning/error from the parsing.
      */
-    private PlatformTarget loadPlatform(File platform, ISdkLog log) {
+    private static PlatformTarget loadPlatform(File platform, ISdkLog log) {
         File buildProp = new File(platform, SdkConstants.FN_BUILD_PROP);
 
         if (buildProp.isFile()) {
@@ -342,11 +363,12 @@ public final class SdkManager {
 
     /**
      * Loads the Add-on from the SDK.
+     * @param location Location of the SDK
      * @param list the list to fill with the add-ons.
      * @param log the ISdkLog object receiving warning/error from the parsing.
      */
-    private void loadAddOns(ArrayList<IAndroidTarget> list, ISdkLog log) {
-        File addonFolder = new File(mSdkLocation, SdkConstants.FD_ADDONS);
+    private static void loadAddOns(String location, ArrayList<IAndroidTarget> list, ISdkLog log) {
+        File addonFolder = new File(location, SdkConstants.FD_ADDONS);
         if (addonFolder.isDirectory()) {
             File[] addons  = addonFolder.listFiles();
 
@@ -380,7 +402,8 @@ public final class SdkManager {
      * @param targetList The list of Android target that were already loaded from the SDK.
      * @param log the ISdkLog object receiving warning/error from the parsing.
      */
-    private AddOnTarget loadAddon(File addon, ArrayList<IAndroidTarget> targetList, ISdkLog log) {
+    private static AddOnTarget loadAddon(File addon, ArrayList<IAndroidTarget> targetList,
+            ISdkLog log) {
         File addOnManifest = new File(addon, SdkConstants.FN_MANIFEST_INI);
 
         if (addOnManifest.isFile()) {
@@ -539,7 +562,7 @@ public final class SdkManager {
      * @param value the string to convert.
      * @return the int value, or {@link IAndroidTarget#NO_USB_ID} if the convertion failed.
      */
-    private int convertId(String value) {
+    private static int convertId(String value) {
         if (value != null && value.length() > 0) {
             if (PATTERN_USB_IDS.matcher(value).matches()) {
                 String v = value.substring(2);
@@ -555,7 +578,7 @@ public final class SdkManager {
         return IAndroidTarget.NO_USB_ID;
     }
 
-    private void displayAddonManifestError(ISdkLog log, String addonName, String valueName) {
+    private static void displayAddonManifestError(ISdkLog log, String addonName, String valueName) {
         if (log != null) {
             log.error(null, "Ignoring add-on '%1$s': '%2$s' is missing from %3$s.",
                     addonName, valueName, SdkConstants.FN_MANIFEST_INI);
@@ -568,7 +591,7 @@ public final class SdkManager {
      * <p/>This checks the presence of the following files: android.jar, framework.aidl, aapt(.exe),
      * aidl(.exe), dx(.bat), and dx.jar
      */
-    private boolean checkPlatformContent(File platform, ISdkLog log) {
+    private static boolean checkPlatformContent(File platform, ISdkLog log) {
         for (String relativePath : sPlatformContentList) {
             File f = new File(platform, relativePath);
             if (f.exists() == false) {
@@ -645,7 +668,7 @@ public final class SdkManager {
      * Parses the skin folder and builds the skin list.
      * @param osPath The path of the skin root folder.
      */
-    private String[] parseSkinFolder(String osPath) {
+    private static String[] parseSkinFolder(String osPath) {
         File skinRootFolder = new File(osPath);
 
         if (skinRootFolder.isDirectory()) {
