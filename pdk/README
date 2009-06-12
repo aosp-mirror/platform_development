@@ -58,9 +58,9 @@ Here's the command to run the pdk-docs server locally:
   python <path_to_appengine_installation>/dev_appserver.py --address 0.0.0.0 \
     <path_to_cupcake_code>/android/out/target/common/docs
     
-To verify it is working you can access it with a browser loacally on port 8080:
+To verify it is working you can access it with a browser locally on port 8080:
 
-http://localhost:8080/index.html
+http://localhost:8080/online-pdk/guide/index.html
 
 NOTE: If you are trying to get to the appengine local testing instance remotely
 you will have to ssh tunnel into your linux box as appengine only serves the web
