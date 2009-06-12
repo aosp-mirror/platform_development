@@ -24,17 +24,8 @@ import java.util.ArrayList;
 public class RepoSources {
 
     private ArrayList<RepoSource> mSources = new ArrayList<RepoSource>();
-    private ITaskFactory mTaskFactory;
 
     public RepoSources() {
-    }
-
-    public void setTaskFactory(ITaskFactory taskFactory) {
-        mTaskFactory = taskFactory;
-    }
-
-    public ITaskFactory getTaskFactory() {
-        return mTaskFactory;
     }
 
     public void add(RepoSource source) {

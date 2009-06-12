@@ -51,7 +51,7 @@ class UpdaterData {
     private final RepoSources mSources = new RepoSources();
 
     private final LocalSdkAdapter mLocalSdkAdapter = new LocalSdkAdapter(this);
-    private final RepoSourcesAdapter mSourcesAdapter = new RepoSourcesAdapter(mSources);
+    private final RepoSourcesAdapter mSourcesAdapter = new RepoSourcesAdapter(this);
 
     private ImageFactory mImageFactory;
 
@@ -85,6 +85,10 @@ class UpdaterData {
         mTaskFactory = taskFactory;
     }
 
+    public ITaskFactory getTaskFactory() {
+        return mTaskFactory;
+    }
+
     public void setUserCanChangeSdkRoot(boolean userCanChangeSdkRoot) {
         mUserCanChangeSdkRoot = userCanChangeSdkRoot;
     }
@@ -115,7 +119,6 @@ class UpdaterData {
 
     public void setImageFactory(ImageFactory imageFactory) {
         mImageFactory = imageFactory;
-        mSourcesAdapter.setImageFactory(imageFactory);
     }
 
     public ImageFactory getImageFactory() {
@@ -216,6 +219,8 @@ class UpdaterData {
             throw new IllegalArgumentException("Task Factory is null");
         }
 
+        final boolean forceHttp = getSettingsController().getForceHttp();
+
         // TODO filter the archive list to: a/ display a list of what is going to be installed,
         // b/ display licenses and c/ check that the selected packages are actually upgrades
         // or ask user to confirm downgrades. All this should be done in a separate class+window
@@ -237,7 +242,7 @@ class UpdaterData {
                             break;
                         }
 
-                        if (archive.install(mOsSdkRoot, monitor)) {
+                        if (archive.install(mOsSdkRoot, forceHttp, monitor)) {
                             numInstalled++;
                         }
 
@@ -299,13 +304,15 @@ class UpdaterData {
     public void refreshSources(final boolean forceFetching, ITaskMonitor monitor) {
         assert mTaskFactory != null;
 
+        final boolean forceHttp = getSettingsController().getForceHttp();
+
         ITask task = new ITask() {
             public void run(ITaskMonitor monitor) {
                 ArrayList<RepoSource> sources = mSources.getSources();
                 monitor.setProgressMax(sources.size());
                 for (RepoSource source : sources) {
                     if (forceFetching || source.getPackages() != null) {
-                        source.load(monitor.createSubMonitor(1));
+                        source.load(monitor.createSubMonitor(1), forceHttp);
                     }
                     monitor.incProgress(1);
 

@@ -341,7 +341,7 @@ public class Archive implements IDescription {
      *
      * @return True if the archive was installed, false otherwise.
      */
-    public boolean install(String osSdkRoot, ITaskMonitor monitor) {
+    public boolean install(String osSdkRoot, boolean forceHttp, ITaskMonitor monitor) {
 
         File archiveFile = null;
         try {
@@ -362,7 +362,7 @@ public class Archive implements IDescription {
                 return false;
             }
 
-            archiveFile = downloadFile(monitor);
+            archiveFile = downloadFile(monitor, forceHttp);
             if (archiveFile != null) {
                 if (unarchive(osSdkRoot, archiveFile, monitor)) {
                     monitor.setResult("Installed: %1$s", name);
@@ -382,7 +382,7 @@ public class Archive implements IDescription {
      * Downloads an archive and returns the temp file with it.
      * Caller is responsible with deleting the temp file when done.
      */
-    private File downloadFile(ITaskMonitor monitor) {
+    private File downloadFile(ITaskMonitor monitor, boolean forceHttp) {
 
         File tmpFileToDelete = null;
         try {
@@ -412,6 +412,10 @@ public class Archive implements IDescription {
                 String base = repoXml.substring(0, pos + 1);
 
                 link = base + link;
+            }
+
+            if (forceHttp) {
+                link = link.replaceAll("https://", "http://");  //$NON-NLS-1$ //$NON-NLS-2$
             }
 
             if (fetchUrl(tmpFile, link, desc, monitor)) {

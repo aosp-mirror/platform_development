@@ -19,6 +19,8 @@ package com.android.sdkmanager.internal.repository;
 import com.android.sdkuilib.internal.repository.ISettingsPage;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
@@ -39,13 +41,20 @@ public class SettingsPage extends Composite implements ISettingsPage {
 
     // UI widgets
     private Group mProxySettingsGroup;
-    private Group mPlaceholderGroup;
+    private Group mMiscGroup;
     private Button mApplyButton;
-    private Label mSomeMoreSettings;
     private Label mProxyServerLabel;
     private Label mProxyPortLabel;
     private Text mProxyServerText;
     private Text mProxyPortText;
+    private Button mForceHttpCheck;
+
+    private ModifyListener mSetApplyDirty = new ModifyListener() {
+        public void modifyText(ModifyEvent e) {
+            mApplyButton.setEnabled(true);
+        }
+    };
+
 
     /**
      * Create the composite.
@@ -67,6 +76,7 @@ public class SettingsPage extends Composite implements ISettingsPage {
 
         mProxyServerText = new Text(mProxySettingsGroup, SWT.BORDER);
         mProxyServerText.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
+        mProxyServerText.addModifyListener(mSetApplyDirty);
 
         mProxyPortLabel = new Label(mProxySettingsGroup, SWT.NONE);
         mProxyPortLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
@@ -74,24 +84,31 @@ public class SettingsPage extends Composite implements ISettingsPage {
 
         mProxyPortText = new Text(mProxySettingsGroup, SWT.BORDER);
         mProxyPortText.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
+        mProxyPortText.addModifyListener(mSetApplyDirty);
 
-        mPlaceholderGroup = new Group(this, SWT.NONE);
-        mPlaceholderGroup.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
-        mPlaceholderGroup.setText("Placeholder");
-        mPlaceholderGroup.setLayout(new GridLayout(1, false));
+        mMiscGroup = new Group(this, SWT.NONE);
+        mMiscGroup.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
+        mMiscGroup.setText("Misc");
+        mMiscGroup.setLayout(new GridLayout(2, false));
 
-        mSomeMoreSettings = new Label(mPlaceholderGroup, SWT.NONE);
-        mSomeMoreSettings.setText("Some more settings here");
+        mForceHttpCheck = new Button(mMiscGroup, SWT.CHECK);
+        mForceHttpCheck.setText("Force https://... sources to be fetched using http://...");
+        mForceHttpCheck.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                onForceHttpSelected();  //$hide$
+            }
+        });
 
         mApplyButton = new Button(this, SWT.NONE);
+        mApplyButton.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
+        mApplyButton.setText("Save && Apply");
         mApplyButton.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
                 onApplySelected(); //$hide$
             }
         });
-        mApplyButton.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
-        mApplyButton.setText("Save && Apply");
 
         postCreate();  //$hide$
     }
@@ -105,6 +122,8 @@ public class SettingsPage extends Composite implements ISettingsPage {
         // Disable the check that prevents subclassing of SWT components
     }
 
+
+
     // -- Start of internal part ----------
     // Hide everything down-below from SWT designer
     //$hide>>$
@@ -117,15 +136,21 @@ public class SettingsPage extends Composite implements ISettingsPage {
 
     /** Loads settings from the given {@link Properties} container and update the page UI. */
     public void loadSettings(Properties in_settings) {
-        mProxyServerText.setText(in_settings.getProperty(JAVA_HTTP_PROXY_HOST, "")); //$NON-NLS-1$
-        mProxyPortText.setText(in_settings.getProperty(JAVA_HTTP_PROXY_PORT, ""));   //$NON-NLS-1$
+        mProxyServerText.setText(in_settings.getProperty(KEY_HTTP_PROXY_HOST, ""));  //$NON-NLS-1$
+        mProxyPortText.setText(  in_settings.getProperty(KEY_HTTP_PROXY_PORT, ""));  //$NON-NLS-1$
+        mForceHttpCheck.setSelection(Boolean.parseBoolean(in_settings.getProperty(KEY_FORCE_HTTP)));
+
+        // We loaded fresh settings so there's nothing dirty to apply
+        mApplyButton.setEnabled(false);
     }
 
     /** Called by the application to retrieve settings from the UI and store them in
      * the given {@link Properties} container. */
     public void retrieveSettings(Properties out_settings) {
-        out_settings.put(JAVA_HTTP_PROXY_HOST, mProxyServerText.getText());
-        out_settings.put(JAVA_HTTP_PROXY_PORT, mProxyPortText.getText());
+        out_settings.setProperty(KEY_HTTP_PROXY_HOST, mProxyServerText.getText());
+        out_settings.setProperty(KEY_HTTP_PROXY_PORT, mProxyPortText.getText());
+        out_settings.setProperty(KEY_FORCE_HTTP,
+                Boolean.toString(mForceHttpCheck.getSelection()));
     }
 
     /**
@@ -138,12 +163,21 @@ public class SettingsPage extends Composite implements ISettingsPage {
     }
 
     /**
+     * Callback invoked when user presses the "Save and Apply" button.
      * Notify the application that settings have changed.
      */
     private void onApplySelected() {
         if (mSettingsChangedCallback != null) {
             mSettingsChangedCallback.onSettingsChanged(this);
+            mApplyButton.setEnabled(false);
         }
+    }
+
+    /**
+     * Callback invoked when the users presses the Force HTTPS checkbox.
+     */
+    private void onForceHttpSelected() {
+        mSetApplyDirty.modifyText(null);
     }
 
     // End of hiding from SWT Designer
