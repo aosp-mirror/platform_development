@@ -39,6 +39,14 @@ public class SettingsController {
     public SettingsController() {
     }
 
+    //--- Access to settings ------------
+
+    public boolean getForceHttp() {
+        return Boolean.parseBoolean(mProperties.getProperty(ISettingsPage.KEY_FORCE_HTTP));
+    }
+
+    //--- Controller methods -------------
+
     /**
      * Associate the given {@link ISettingsPage} with this {@link SettingsController}.
      *
@@ -133,10 +141,10 @@ public class SettingsController {
      */
     public void applySettings() {
         Properties props = System.getProperties();
-        props.put(ISettingsPage.JAVA_HTTP_PROXY_HOST,
-                mProperties.getProperty(ISettingsPage.JAVA_HTTP_PROXY_HOST, "")); //$NON-NLS-1$
-        props.put(ISettingsPage.JAVA_HTTP_PROXY_PORT,
-                mProperties.getProperty(ISettingsPage.JAVA_HTTP_PROXY_PORT, ""));   //$NON-NLS-1$
+        props.setProperty(ISettingsPage.KEY_HTTP_PROXY_HOST,
+                mProperties.getProperty(ISettingsPage.KEY_HTTP_PROXY_HOST, "")); //$NON-NLS-1$
+        props.setProperty(ISettingsPage.KEY_HTTP_PROXY_PORT,
+                mProperties.getProperty(ISettingsPage.KEY_HTTP_PROXY_PORT, ""));   //$NON-NLS-1$
     }
 
 }

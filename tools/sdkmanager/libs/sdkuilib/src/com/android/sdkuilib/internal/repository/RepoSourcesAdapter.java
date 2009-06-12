@@ -25,7 +25,6 @@ import com.android.sdklib.internal.repository.ITaskMonitor;
 import com.android.sdklib.internal.repository.Package;
 import com.android.sdklib.internal.repository.PlatformPackage;
 import com.android.sdklib.internal.repository.RepoSource;
-import com.android.sdklib.internal.repository.RepoSources;
 import com.android.sdklib.internal.repository.ToolPackage;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 
@@ -43,18 +42,10 @@ import org.eclipse.swt.graphics.Image;
  */
 class RepoSourcesAdapter {
 
-    private final RepoSources mRepoSources;
-    private ImageFactory mImageFactory;
+    private final UpdaterData mUpdaterData;
 
-    public RepoSourcesAdapter(RepoSources repoSources) {
-        mRepoSources = repoSources;
-    }
-
-    /**
-     * Set the image factory used by the label provider.
-     */
-    public void setImageFactory(ImageFactory imageFactory) {
-        mImageFactory = imageFactory;
+    public RepoSourcesAdapter(UpdaterData updaterData) {
+        mUpdaterData = updaterData;
     }
 
     public ILabelProvider getLabelProvider() {
@@ -74,30 +65,32 @@ class RepoSourcesAdapter {
         @Override
         public Image getImage(Object element) {
 
-            if (mImageFactory != null) {
+            ImageFactory imgFactory = mUpdaterData.getImageFactory();
+
+            if (imgFactory != null) {
                 if (element instanceof RepoSource) {
-                    return mImageFactory.getImage("source_icon16.png");
+                    return imgFactory.getImage("source_icon16.png");
 
                 } else if (element instanceof PlatformPackage) {
-                    return mImageFactory.getImage("red_ball_icon16.png");
+                    return imgFactory.getImage("red_ball_icon16.png");
 
                 } else if (element instanceof AddonPackage) {
-                    return mImageFactory.getImage("green_ball_icon16.png");
+                    return imgFactory.getImage("green_ball_icon16.png");
 
                 } else if (element instanceof ToolPackage) {
-                    return mImageFactory.getImage("blue_ball_icon16.png");
+                    return imgFactory.getImage("blue_ball_icon16.png");
 
                 } else if (element instanceof DocPackage) {
-                    return mImageFactory.getImage("purple_ball_icon16.png");
+                    return imgFactory.getImage("purple_ball_icon16.png");
 
                 } else if (element instanceof Package) {
-                    return mImageFactory.getImage("gray_ball_icon16.png");
+                    return imgFactory.getImage("gray_ball_icon16.png");
 
                 } else if (element instanceof Archive) {
                     if (((Archive) element).isCompatible()) {
-                        return mImageFactory.getImage("archive_icon16.png");
+                        return imgFactory.getImage("archive_icon16.png");
                     } else {
-                        return mImageFactory.getImage("incompat_icon16.png");
+                        return imgFactory.getImage("incompat_icon16.png");
                     }
                 }
             }
@@ -117,9 +110,7 @@ class RepoSourcesAdapter {
 
     // ------------
 
-    private static class TreeContentProvider implements ITreeContentProvider {
-
-        private RepoSourcesAdapter mInput;
+    private class TreeContentProvider implements ITreeContentProvider {
 
         // Called when the viewer is disposed
         public void dispose() {
@@ -128,9 +119,7 @@ class RepoSourcesAdapter {
 
         // Called when the input is set or changed on the provider
         public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
-            assert newInput == null || newInput instanceof RepoSourcesAdapter;
-            mInput = (RepoSourcesAdapter) newInput;
-            // pass
+            assert newInput == RepoSourcesAdapter.this;
         }
 
         /**
@@ -151,8 +140,8 @@ class RepoSourcesAdapter {
          * For a {@link Package}, returns an array of {@link Archive}s.
          */
         public Object[] getChildren(Object parentElement) {
-            if (parentElement instanceof RepoSourcesAdapter) {
-                return ((RepoSourcesAdapter) parentElement).mRepoSources.getSources().toArray();
+            if (parentElement == RepoSourcesAdapter.this) {
+                return mUpdaterData.getSources().getSources().toArray();
 
             } else if (parentElement instanceof RepoSource) {
                 final RepoSource source = (RepoSource) parentElement;
@@ -160,9 +149,11 @@ class RepoSourcesAdapter {
 
                 if (packages == null) {
 
-                    mInput.mRepoSources.getTaskFactory().start("Loading Source", new ITask() {
+                    final boolean forceHttp = mUpdaterData.getSettingsController().getForceHttp();
+
+                    mUpdaterData.getTaskFactory().start("Loading Source", new ITask() {
                         public void run(ITaskMonitor monitor) {
-                            source.load(monitor);
+                            source.load(monitor, forceHttp);
                         }
                     });
 
@@ -186,7 +177,7 @@ class RepoSourcesAdapter {
         public Object getParent(Object element) {
 
             if (element instanceof RepoSource) {
-                return mInput;
+                return RepoSourcesAdapter.this;
 
             } else if (element instanceof Package) {
                 return ((Package) element).getParentSource();

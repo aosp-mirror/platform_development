@@ -302,8 +302,6 @@ public class UpdaterWindowImpl {
      * Used to initialize the sources.
      */
     private void setupSources() {
-        mUpdaterData.getSources().setTaskFactory(mTaskFactory);
-
         mUpdaterData.getSources().add(
                 new RepoSource(SdkRepository.URL_GOOGLE_SDK_REPO_SITE, false /* addonOnly */));
 
@@ -314,7 +312,6 @@ public class UpdaterWindowImpl {
                 mUpdaterData.getSources().add(new RepoSource(url, false /* addonOnly */));
             }
         }
-
 
         mRemotePackagesPage.onSdkChange();
     }
