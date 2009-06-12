@@ -19,9 +19,6 @@ package com.android.sdkuilib.internal.repository;
 
 import com.android.sdklib.ISdkLog;
 import com.android.sdklib.SdkConstants;
-import com.android.sdklib.internal.repository.Archive;
-import com.android.sdklib.internal.repository.ITask;
-import com.android.sdklib.internal.repository.ITaskMonitor;
 import com.android.sdklib.internal.repository.RepoSource;
 import com.android.sdklib.repository.SdkRepository;
 
@@ -45,7 +42,6 @@ import org.eclipse.swt.widgets.Shell;
 import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
-import java.util.Collection;
 
 /**
  * This is the private implementation of the UpdateWindow.
@@ -53,7 +49,7 @@ import java.util.Collection;
 public class UpdaterWindowImpl {
 
     /** Internal data shared between the window and its pages. */
-    private final UpdaterData mUpdaterData = new UpdaterData();
+    private final UpdaterData mUpdaterData;
     /** The array of pages instances. Only one is visible at a time. */
     private ArrayList<Composite> mPages = new ArrayList<Composite>();
     /** Indicates a page change is due to an internal request. Prevents callbacks from looping. */
@@ -73,12 +69,12 @@ public class UpdaterWindowImpl {
     private Composite mPagesRootComposite;
     private LocalPackagesPage mLocalPackagePage;
     private RemotePackagesPage mRemotePackagesPage;
+    private AvdManagerPage mAvdManagerPage;
     private StackLayout mStackLayout;
     private Image mIconImage;
 
     public UpdaterWindowImpl(ISdkLog sdkLog, String osSdkRoot, boolean userCanChangeSdkRoot) {
-        mUpdaterData.setSdkLog(sdkLog);
-        mUpdaterData.setOsSdkRoot(osSdkRoot);
+        mUpdaterData = new UpdaterData(osSdkRoot, sdkLog);
         mUpdaterData.setUserCanChangeSdkRoot(userCanChangeSdkRoot);
     }
 
@@ -136,8 +132,9 @@ public class UpdaterWindowImpl {
         mStackLayout = new StackLayout();
         mPagesRootComposite.setLayout(mStackLayout);
 
-        mLocalPackagePage = new LocalPackagesPage(mPagesRootComposite, mUpdaterData, this);
-        mRemotePackagesPage = new RemotePackagesPage(mPagesRootComposite, mUpdaterData, this);
+        mAvdManagerPage = new AvdManagerPage(mPagesRootComposite, mUpdaterData);
+        mLocalPackagePage = new LocalPackagesPage(mPagesRootComposite, mUpdaterData);
+        mRemotePackagesPage = new RemotePackagesPage(mPagesRootComposite, mUpdaterData);
         mSashForm.setWeights(new int[] {150, 576});
     }
 
@@ -214,7 +211,9 @@ public class UpdaterWindowImpl {
      */
     private void firstInit() {
         mTaskFactory = new ProgressTaskFactory(getShell());
+        mUpdaterData.setTaskFactory(mTaskFactory);
 
+        addPage(mAvdManagerPage, "Virtual Devices");
         addPage(mLocalPackagePage, "Installed Packages");
         addPage(mRemotePackagesPage, "Available Packages");
         addExtraPages();
@@ -225,8 +224,8 @@ public class UpdaterWindowImpl {
         // TODO read and apply settings
         // TODO read add-on sources from some file
         setupSources();
-        scanLocalSdkFolders();
         initializeSettings();
+        mUpdaterData.notifyListeners();
     }
 
     // --- page switching ---
@@ -325,16 +324,8 @@ public class UpdaterWindowImpl {
             }
         }
 
-        mRemotePackagesPage.setInput(mUpdaterData.getSourcesAdapter());
-    }
 
-    /**
-     * Used to scan the local SDK folders the first time.
-     */
-    public void scanLocalSdkFolders() {
-        mUpdaterData.getLocalSdkAdapter().setSdkRoot(mUpdaterData.getOsSdkRoot());
-
-        mLocalPackagePage.setInput(mUpdaterData.getLocalSdkAdapter());
+        mRemotePackagesPage.onSdkChange();
     }
 
     /**
@@ -350,101 +341,6 @@ public class UpdaterWindowImpl {
                 settingsPage.loadSettings();
                 settingsPage.applySettings();
             }
-        }
-    }
-
-    /**
-     * Install the list of given {@link Archive}s.
-     * @param archives The archives to install. Incompatible ones will be skipped.
-     */
-    public void installArchives(final Collection<Archive> archives) {
-
-        // TODO filter the archive list to: a/ display a list of what is going to be installed,
-        // b/ display licenses and c/ check that the selected packages are actually upgrades
-        // or ask user to confirm downgrades. All this should be done in a separate class+window
-        // which will then call this method with the final list.
-
-        // TODO move most parts to SdkLib, maybe as part of Archive, making archives self-installing.
-        mTaskFactory.start("Installing Archives", new ITask() {
-            public void run(ITaskMonitor monitor) {
-
-                final int progressPerArchive = 2 * Archive.NUM_MONITOR_INC;
-                monitor.setProgressMax(archives.size() * progressPerArchive);
-                monitor.setDescription("Preparing to install archives");
-
-                int numInstalled = 0;
-                for (Archive archive : archives) {
-
-                    int nextProgress = monitor.getProgress() + progressPerArchive;
-                    try {
-                        if (monitor.isCancelRequested()) {
-                            break;
-                        }
-
-                        if (archive.install(mUpdaterData.getOsSdkRoot(), monitor)) {
-                            numInstalled++;
-                        }
-
-                    } catch (Throwable t) {
-                        // Display anything unexpected in the monitor.
-                        monitor.setResult("Unexpected Error: %1$s", t.getMessage());
-
-                    } finally {
-
-                        // Always move the progress bar to the desired position.
-                        // This allows internal methods to not have to care in case
-                        // they abort early
-                        monitor.incProgress(nextProgress - monitor.getProgress());
-                    }
-                }
-
-                if (numInstalled == 0) {
-                    monitor.setDescription("Done. Nothing was installed.");
-                } else {
-                    monitor.setDescription("Done. %1$d %2$s installed.",
-                            numInstalled,
-                            numInstalled == 1 ? "package" : "packages");
-                }
-            }
-        });
-    }
-
-    public void updateAll() {
-        mTaskFactory.start("Update Archives", new ITask() {
-            public void run(ITaskMonitor monitor) {
-                monitor.setProgressMax(3);
-
-                monitor.setDescription("Refresh sources");
-                refreshSources(true, monitor.createSubMonitor(1));
-            }
-        });
-    }
-
-    /**
-     * Refresh sources
-     *
-     * @param forceFetching When true, load sources that haven't been loaded yet. When
-     * false, only refresh sources that have been loaded yet.
-     */
-    public void refreshSources(final boolean forceFetching, ITaskMonitor monitor) {
-        ITask task = new ITask() {
-            public void run(ITaskMonitor monitor) {
-                ArrayList<RepoSource> sources = mUpdaterData.getSources().getSources();
-                monitor.setProgressMax(sources.size());
-                for (RepoSource source : sources) {
-                    if (forceFetching || source.getPackages() != null) {
-                        source.load(monitor.createSubMonitor(1));
-                    }
-                    monitor.incProgress(1);
-
-                }
-            }
-        };
-
-        if (monitor != null) {
-            task.run(monitor);
-        } else {
-            mTaskFactory.start("Refresh Sources", task);
         }
     }
 

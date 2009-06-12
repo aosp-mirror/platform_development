@@ -124,7 +124,9 @@ public final class AvdSelector {
 
         // Layout has 2 columns
         Composite group = new Composite(parent, SWT.NONE);
-        group.setLayout(new GridLayout(NUM_COL, false /*makeColumnsEqualWidth*/));
+        GridLayout gl;
+        group.setLayout(gl = new GridLayout(NUM_COL, false /*makeColumnsEqualWidth*/));
+        gl.marginHeight = gl.marginWidth = 0;
         group.setLayoutData(new GridData(GridData.FILL_BOTH));
         group.setFont(parent.getFont());
 

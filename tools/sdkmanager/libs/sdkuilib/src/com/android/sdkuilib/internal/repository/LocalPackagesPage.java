@@ -18,9 +18,8 @@ package com.android.sdkuilib.internal.repository;
 
 import com.android.sdklib.internal.repository.Archive;
 import com.android.sdklib.internal.repository.IDescription;
-import com.android.sdklib.internal.repository.ITask;
-import com.android.sdklib.internal.repository.ITaskMonitor;
 import com.android.sdklib.internal.repository.Package;
+import com.android.sdkuilib.internal.repository.UpdaterData.ISdkListener;
 
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
@@ -53,9 +52,8 @@ import java.io.File;
  * - refresh callback
  */
 
-public class LocalPackagesPage extends Composite {
+public class LocalPackagesPage extends Composite implements ISdkListener {
 
-    private final UpdaterWindowImpl mUpdaterWindow;
     private final UpdaterData mUpdaterData;
 
     private Label mSdkLocLabel;
@@ -79,15 +77,13 @@ public class LocalPackagesPage extends Composite {
      * @param parent The parent of the composite.
      * @param updaterData An instance of {@link UpdaterData}. If null, a local
      *        one will be allocated just to help with the SWT Designer.
-     * @param updaterWindow The parent window.
      */
     public LocalPackagesPage(Composite parent,
-            UpdaterData updaterData,
-            UpdaterWindowImpl updaterWindow) {
+            UpdaterData updaterData) {
         super(parent, SWT.BORDER);
-        mUpdaterWindow = updaterWindow;
 
         mUpdaterData = updaterData != null ? updaterData : new UpdaterData();
+        mUpdaterData.addListeners(this);
 
         createContents(this);
         postCreate();  //$hide$
@@ -187,6 +183,12 @@ public class LocalPackagesPage extends Composite {
     }
 
     @Override
+    public void dispose() {
+        mUpdaterData.removeListener(this);
+        super.dispose();
+    }
+
+    @Override
     protected void checkSubclass() {
         // Disable the check that prevents subclassing of SWT components
     }
@@ -194,16 +196,6 @@ public class LocalPackagesPage extends Composite {
     // -- Start of internal part ----------
     // Hide everything down-below from SWT designer
     //$hide>>$
-
-    /**
-     * Must be called once to set the adapter input for the package table viewer.
-     */
-    public void setInput(LocalSdkAdapter localSdkAdapter) {
-        mTableViewerPackages.setLabelProvider(  localSdkAdapter.getLabelProvider());
-        mTableViewerPackages.setContentProvider(localSdkAdapter.getContentProvider());
-        mTableViewerPackages.setInput(localSdkAdapter);
-        onTreeSelected();
-    }
 
     /**
      * Called by the constructor right after {@link #createContents(Composite)}.
@@ -249,8 +241,8 @@ public class LocalPackagesPage extends Composite {
     }
 
     private void onUpdateInstalledPackage() {
-        if (mUpdaterWindow != null) {
-            mUpdaterWindow.updateAll();
+        if (mUpdaterData != null) {
+            mUpdaterData.reloadSdk();
         }
     }
 
@@ -297,9 +289,15 @@ public class LocalPackagesPage extends Composite {
     }
 
     private void onRefreshSelected() {
-        if (mUpdaterWindow != null) {
-            mUpdaterWindow.scanLocalSdkFolders();
-        }
+        mUpdaterData.reloadSdk();
+    }
+
+    public void onSdkChange() {
+        LocalSdkAdapter localSdkAdapter = mUpdaterData.getLocalSdkAdapter();
+        mTableViewerPackages.setLabelProvider(  localSdkAdapter.getLabelProvider());
+        mTableViewerPackages.setContentProvider(localSdkAdapter.getContentProvider());
+        mTableViewerPackages.setInput(localSdkAdapter);
+        onTreeSelected();
     }
 
     // End of hiding from SWT Designer

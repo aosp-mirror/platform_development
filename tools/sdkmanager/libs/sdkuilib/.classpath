@@ -4,5 +4,6 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry exported="true" kind="con" path="org.eclipse.jdt.USER_LIBRARY/ANDROID_SWT"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/SdkLib"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/AndroidPrefs"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
