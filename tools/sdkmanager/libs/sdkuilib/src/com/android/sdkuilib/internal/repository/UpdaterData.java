@@ -55,6 +55,8 @@ class UpdaterData {
 
     private ImageFactory mImageFactory;
 
+    private final SettingsController mSettingsController = new SettingsController();
+
     private final ArrayList<ISdkListener> mListeners = new ArrayList<ISdkListener>();
 
     public interface ISdkListener {
@@ -126,6 +128,10 @@ class UpdaterData {
 
     public AvdManager getAvdManager() {
         return mAvdManager;
+    }
+
+    public SettingsController getSettingsController() {
+        return mSettingsController;
     }
 
     public void addListeners(ISdkListener listener) {
