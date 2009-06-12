@@ -16,13 +16,18 @@
 
 package com.android.sdkuilib.internal.repository;
 
+import com.android.sdklib.internal.repository.AddonPackage;
 import com.android.sdklib.internal.repository.Archive;
+import com.android.sdklib.internal.repository.DocPackage;
 import com.android.sdklib.internal.repository.IDescription;
 import com.android.sdklib.internal.repository.ITask;
 import com.android.sdklib.internal.repository.ITaskMonitor;
 import com.android.sdklib.internal.repository.Package;
+import com.android.sdklib.internal.repository.PlatformPackage;
 import com.android.sdklib.internal.repository.RepoSource;
 import com.android.sdklib.internal.repository.RepoSources;
+import com.android.sdklib.internal.repository.ToolPackage;
+import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 
 import org.eclipse.jface.viewers.IContentProvider;
 import org.eclipse.jface.viewers.ILabelProvider;
@@ -39,9 +44,17 @@ import org.eclipse.swt.graphics.Image;
 class RepoSourcesAdapter {
 
     private final RepoSources mRepoSources;
+    private ImageFactory mImageFactory;
 
     public RepoSourcesAdapter(RepoSources repoSources) {
         mRepoSources = repoSources;
+    }
+
+    /**
+     * Set the image factory used by the label provider.
+     */
+    public void setImageFactory(ImageFactory imageFactory) {
+        mImageFactory = imageFactory;
     }
 
     public ILabelProvider getLabelProvider() {
@@ -55,10 +68,40 @@ class RepoSourcesAdapter {
 
     // ------------
 
-    public static class ViewerLabelProvider extends LabelProvider {
+    public class ViewerLabelProvider extends LabelProvider {
+
         /** Returns null by default */
         @Override
         public Image getImage(Object element) {
+
+            if (mImageFactory != null) {
+                if (element instanceof RepoSource) {
+                    return mImageFactory.getImage("source_icon16.png");
+
+                } else if (element instanceof PlatformPackage) {
+                    return mImageFactory.getImage("red_ball_icon16.png");
+
+                } else if (element instanceof AddonPackage) {
+                    return mImageFactory.getImage("green_ball_icon16.png");
+
+                } else if (element instanceof ToolPackage) {
+                    return mImageFactory.getImage("blue_ball_icon16.png");
+
+                } else if (element instanceof DocPackage) {
+                    return mImageFactory.getImage("purple_ball_icon16.png");
+
+                } else if (element instanceof Package) {
+                    return mImageFactory.getImage("gray_ball_icon16.png");
+
+                } else if (element instanceof Archive) {
+                    if (((Archive) element).isCompatible()) {
+                        return mImageFactory.getImage("archive_icon16.png");
+                    } else {
+                        return mImageFactory.getImage("incompat_icon16.png");
+                    }
+                }
+            }
+
             return super.getImage(element);
         }
 

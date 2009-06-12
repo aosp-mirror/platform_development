@@ -27,6 +27,7 @@ import com.android.sdklib.internal.repository.ITaskMonitor;
 import com.android.sdklib.internal.repository.LocalSdkParser;
 import com.android.sdklib.internal.repository.RepoSource;
 import com.android.sdklib.internal.repository.RepoSources;
+import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 
 import org.eclipse.swt.widgets.Display;
 
@@ -51,6 +52,8 @@ class UpdaterData {
 
     private final LocalSdkAdapter mLocalSdkAdapter = new LocalSdkAdapter(this);
     private final RepoSourcesAdapter mSourcesAdapter = new RepoSourcesAdapter(mSources);
+
+    private ImageFactory mImageFactory;
 
     private final ArrayList<ISdkListener> mListeners = new ArrayList<ISdkListener>();
 
@@ -114,6 +117,15 @@ class UpdaterData {
 
     public ISdkLog getSdkLog() {
         return mSdkLog;
+    }
+
+    public void setImageFactory(ImageFactory imageFactory) {
+        mImageFactory = imageFactory;
+        mSourcesAdapter.setImageFactory(imageFactory);
+    }
+
+    public ImageFactory getImageFactory() {
+        return mImageFactory;
     }
 
     public SdkManager getSdkManager() {
