@@ -163,7 +163,7 @@ Tools for building and debugging Android (of particular interest for porting are
 
 <p>You can develop Android applications with the same standard tools you use to develop any Java application. The Android core libraries provide the functionality needed to build rich mobile applications and the Android development tools are designed to simplify running, debugging, and testing your applications.</p>
 
-<p>Add project-specific source code to the Android source tree under the <code>partner</code> directory in a directory specific to the application or service you are building. For example, all Google-specific applications would be placed under <code>device/partner/google/</code>.  A Google search application would be placed under <code>device/partner/google/apps/Search</code>.
+<p>Add project-specific source code to the Android source tree under the <code>partner</code> directory in a directory specific to the application or service you are building. For example, all Google-specific applications would be placed under <code>vendor/google/</code>.  A Google search application would be placed under <code>vendor/google/apps/Search</code>.
 <p>See <a href="build_new_device.html">Building Android for a new Mobile Device</a> for detailed instructions.</p>
 
 
