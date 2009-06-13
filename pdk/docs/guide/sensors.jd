@@ -34,7 +34,8 @@ The types of sensors currently supported by Android include:
 <code>libsensors.so</code> so that it will get loaded from <code>/system/lib</code> at runtime. 
 </p>
 
-<p> The following stub <code>Android.mk</code> file ensures that <code>libsensors</code> compiles and links to the appropriate libraries:</p>
+<p> The following stub file, <code>Android.mk</code>, ensures that <code>libsensors</code> compiles and links to the appropriate libraries:</p>
+
 <pre>
 LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
