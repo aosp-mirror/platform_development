@@ -25,14 +25,18 @@ import com.android.sdklib.internal.repository.ITask;
 import com.android.sdklib.internal.repository.ITaskFactory;
 import com.android.sdklib.internal.repository.ITaskMonitor;
 import com.android.sdklib.internal.repository.LocalSdkParser;
+import com.android.sdklib.internal.repository.Package;
 import com.android.sdklib.internal.repository.RepoSource;
 import com.android.sdklib.internal.repository.RepoSources;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Shell;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Data shared between {@link UpdaterWindowImpl} and its pages.
@@ -59,7 +63,8 @@ class UpdaterData {
 
     private final ArrayList<ISdkListener> mListeners = new ArrayList<ISdkListener>();
 
-    private Display mDisplay;
+    /** @deprecated */private Display mDisplay;  // TODO remove
+    private Shell mWindowShell;
 
     public interface ISdkListener {
         void onSdkChange();
@@ -71,6 +76,8 @@ class UpdaterData {
 
         initSdk();
     }
+
+    // ----- getters, setters ----
 
     public void setOsSdkRoot(String osSdkRoot) {
         if (mOsSdkRoot == null || mOsSdkRoot.equals(osSdkRoot) == false) {
@@ -151,6 +158,35 @@ class UpdaterData {
 
     public void removeListener(ISdkListener listener) {
         mListeners.remove(listener);
+    }
+
+    public void setWindowShell(Shell windowShell) {
+        mWindowShell = windowShell;
+    }
+
+    public Shell getWindowShell() {
+        return mWindowShell;
+    }
+
+    // -----
+
+    /**
+     * Initializes the {@link SdkManager} and the {@link AvdManager}.
+     */
+    private void initSdk() {
+        mSdkManager = SdkManager.createManager(mOsSdkRoot, mSdkLog);
+        try {
+            mAvdManager = null; // remove the old one if needed.
+            mAvdManager = new AvdManager(mSdkManager, mSdkLog);
+        } catch (AndroidLocationException e) {
+            mSdkLog.error(e, "Unable to read AVDs");
+        }
+
+        // notify adapters/parsers
+        // TODO
+
+        // notify listeners.
+        notifyListeners();
     }
 
     /**
@@ -288,18 +324,17 @@ class UpdaterData {
     public void updateAll() {
         assert mTaskFactory != null;
 
-        mTaskFactory.start("Update Archives", new ITask() {
-            public void run(ITaskMonitor monitor) {
-                monitor.setProgressMax(3);
+        refreshSources(true);
 
-                monitor.setDescription("Refresh sources");
-                refreshSources(true, monitor.createSubMonitor(1));
+        final Map<Archive, Archive> updates = findUpdates();
 
-                // TODO compare available vs local
-                // TODO suggest update packages to user (also validate license click-through)
-                // TODO install selected packages
-            }
-        });
+        UpdateChooserDialog dialog = new UpdateChooserDialog(getWindowShell(), updates);
+        dialog.open();
+
+        Collection<Archive> result = dialog.getResult();
+        if (result != null && result.size() > 0) {
+            installArchives(result);
+        }
     }
 
     /**
@@ -307,15 +342,15 @@ class UpdaterData {
      * or as a UI callback on the remote page "Refresh" button (in which case the monitor is
      * null and a new task should be created.)
      *
-     * @param forceFetching When true, load sources that haven't been loaded yet. When
-     * false, only refresh sources that have been loaded yet.
+     * @param forceFetching When true, load sources that haven't been loaded yet.
+     *                      When false, only refresh sources that have been loaded yet.
      */
-    public void refreshSources(final boolean forceFetching, ITaskMonitor monitor) {
+    public void refreshSources(final boolean forceFetching) {
         assert mTaskFactory != null;
 
         final boolean forceHttp = getSettingsController().getForceHttp();
 
-        ITask task = new ITask() {
+        mTaskFactory.start("Refresh Sources",new ITask() {
             public void run(ITaskMonitor monitor) {
                 ArrayList<RepoSource> sources = mSources.getSources();
                 monitor.setProgressMax(sources.size());
@@ -324,34 +359,87 @@ class UpdaterData {
                         source.load(monitor.createSubMonitor(1), forceHttp);
                     }
                     monitor.incProgress(1);
-
                 }
             }
-        };
-
-        if (monitor != null) {
-            task.run(monitor);
-        } else {
-            mTaskFactory.start("Refresh Sources", task);
-        }
+        });
     }
 
     /**
-     * Initializes the {@link SdkManager} and the {@link AvdManager}.
+     * Check the local archives vs the remote available packages to find potential updates.
+     * Return a map [remote archive => local archive] of suitable update candidates.
+     * Returns null if there's an unexpected error. Otherwise returns a map that can be
+     * empty but not null.
      */
-    private void initSdk() {
-        mSdkManager = SdkManager.createManager(mOsSdkRoot, mSdkLog);
-        try {
-            mAvdManager = null; // remove the old one if needed.
-            mAvdManager = new AvdManager(mSdkManager, mSdkLog);
-        } catch (AndroidLocationException e) {
-            mSdkLog.error(e, "Unable to read AVDs");
+    private Map<Archive, Archive> findUpdates() {
+        // Map [remote archive => local archive] of suitable update candidates
+        Map<Archive, Archive> result = new HashMap<Archive, Archive>();
+
+        // First go thru all sources and make a local list of all available archives
+        // sorted by package class.
+        HashMap<Class<? extends Package>, ArrayList<Archive>> availPkgs =
+            new HashMap<Class<? extends Package>, ArrayList<Archive>>();
+
+        ArrayList<RepoSource> remoteSources = getSources().getSources();
+
+        for (RepoSource remoteSrc : remoteSources) {
+            Package[] remotePkgs = remoteSrc.getPackages();
+            if (remotePkgs != null) {
+                for (Package remotePkg : remotePkgs) {
+                    Class<? extends Package> clazz = remotePkg.getClass();
+
+                    ArrayList<Archive> list = availPkgs.get(clazz);
+                    if (list == null) {
+                        availPkgs.put(clazz, list = new ArrayList<Archive>());
+                    }
+
+                    for (Archive a : remotePkg.getArchives()) {
+                        // Only add compatible archives
+                        if (a.isCompatible()) {
+                            list.add(a);
+                        }
+                    }
+                }
+            }
         }
 
-        // notify adapters/parsers
-        // TODO
+        Package[] localPkgs = getLocalSdkParser().getPackages();
+        if (localPkgs == null) {
+            // This is unexpected. The local sdk parser should have been called first.
+            return null;
+        }
 
-        // notify listeners.
-        notifyListeners();
+        for (Package localPkg : localPkgs) {
+            // get the available archive list for this package type
+            ArrayList<Archive> list = availPkgs.get(localPkg.getClass());
+
+            // if this list is empty, we'll never find anything that matches
+            if (list == null || list.size() == 0) {
+                continue;
+            }
+
+            // local packages should have one archive at most
+            Archive[] localArchives = localPkg.getArchives();
+            if (localArchives != null && localArchives.length > 0) {
+                Archive localArchive = localArchives[0];
+                // only consider archive compatible with the current platform
+                if (localArchive != null && localArchive.isCompatible()) {
+
+                    // We checked all this archive stuff because that's what eventually gets
+                    // installed, but the "update" mechanism really works on packages. So now
+                    // the real question: is there a remote package that can update this
+                    // local package?
+
+                    for (Archive availArchive : list) {
+                        if (localPkg.canBeUpdatedBy(availArchive.getParentPackage())) {
+                            // Found one!
+                            result.put(availArchive, localArchive);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        return result;
     }
 }

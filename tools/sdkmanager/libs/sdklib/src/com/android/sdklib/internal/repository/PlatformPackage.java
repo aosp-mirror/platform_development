@@ -111,4 +111,28 @@ public class PlatformPackage extends Package {
         // TODO find similar existing platform in platforms folder
         return folder;
     }
+
+    /**
+     * Computes whether the given platform package is a suitable update for the current package.
+     * The base method checks the class type.
+     * The platform package also tests that the version and API level are the same and
+     * the revision number is greater
+     * <p/>
+     * An update is just that: a new package that supersedes the current one. If the new
+     * package has the same revision as the current one, it's not an update.
+     *
+     * @param replacementPackage The potential replacement package.
+     * @return True if the replacement package is a suitable update for this one.
+     */
+    @Override
+    public boolean canBeUpdatedBy(Package replacementPackage) {
+        if (!super.canBeUpdatedBy(replacementPackage)) {
+            return false;
+        }
+
+        PlatformPackage newPkg = (PlatformPackage) replacementPackage;
+        return newPkg.getVersion().equalsIgnoreCase(this.getVersion()) &&
+            newPkg.getApiLevel() == this.getApiLevel() &&
+            newPkg.getRevision() > this.getRevision();
+    }
 }

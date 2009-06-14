@@ -28,10 +28,16 @@ public class RepoSources {
     public RepoSources() {
     }
 
+    /**
+     * Adds a new source to the Sources list.
+     */
     public void add(RepoSource source) {
         mSources.add(source);
     }
 
+    /**
+     * Returns the sources list array. This is never null.
+     */
     public ArrayList<RepoSource> getSources() {
         return mSources;
     }
