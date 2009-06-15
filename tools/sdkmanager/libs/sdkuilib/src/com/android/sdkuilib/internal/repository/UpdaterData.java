@@ -59,6 +59,8 @@ class UpdaterData {
 
     private final ArrayList<ISdkListener> mListeners = new ArrayList<ISdkListener>();
 
+    private Display mDisplay;
+
     public interface ISdkListener {
         void onSdkChange();
     }
@@ -79,6 +81,10 @@ class UpdaterData {
 
     public String getOsSdkRoot() {
         return mOsSdkRoot;
+    }
+
+    public void setDisplay(Display display) {
+        mDisplay = display;
     }
 
     public void setTaskFactory(ITaskFactory taskFactory) {
@@ -166,6 +172,7 @@ class UpdaterData {
         }
 
         // notify adapters?
+        mLocalSdkParser.clearPackages();
         // TODO
 
         // notify listeners
@@ -192,9 +199,8 @@ class UpdaterData {
      * <p/>This can be called from any thread.
      */
     public void notifyListeners() {
-        Display display = Display.getCurrent();
-        if (display != null && mListeners.size() > 0) {
-            display.syncExec(new Runnable() {
+        if (mDisplay != null && mListeners.size() > 0) {
+            mDisplay.syncExec(new Runnable() {
                 public void run() {
                     for (ISdkListener listener : mListeners) {
                         try {
@@ -265,6 +271,9 @@ class UpdaterData {
                     monitor.setDescription("Done. %1$d %2$s installed.",
                             numInstalled,
                             numInstalled == 1 ? "package" : "packages");
+
+                    //notify listeners something was installed, so that they can refresh
+                    reloadSdk();
                 }
             }
         });

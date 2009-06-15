@@ -213,8 +213,8 @@ currently-defined build variants:
         <code>eng<code> 
     </td> 
     <td> 
-        This is the default flavor. A plain "<code>make</code>" is the
-        same as "<code>make eng</code>".
+        This is the default flavor. A plain <code>make</code> is the
+        same as <code>make eng</code>.
         <ul> 
         <li>Installs modules tagged with: <code>eng</code>, <code>debug</code>,
             <code>user</code>, and/or <code>development</code>.
@@ -232,7 +232,7 @@ currently-defined build variants:
         <code>user<code> 
     </td> 
     <td> 
-        "<code>make user</code>"
+        <code>make user</code>
         <p> 
         This is the flavor intended to be the final release bits.
         <ul> 
@@ -250,7 +250,7 @@ currently-defined build variants:
         <code>userdebug<code> 
     </td> 
     <td> 
-        "<code>make userdebug</code>"
+        <code>make userdebug</code>
         <p> 
         The same as <code>user</code>, except:
         <ul> 
@@ -263,7 +263,7 @@ currently-defined build variants:
  
 <p> 
 If you build one flavor and then want to build another, you should run
-"<code>make installclean</code>" between the two makes to guarantee that
-you don't pick up files installed by the previous flavor.  "<code>make
-clean</code>" will also suffice, but it takes a lot longer.
+<code>make installclean</code> between the two makes to guarantee that
+you don't pick up files installed by the previous flavor.  <code>make
+clean</code> will also suffice, but it takes a lot longer.
 </p> 

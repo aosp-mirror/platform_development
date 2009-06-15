@@ -105,6 +105,7 @@ public class UpdaterWindowImpl {
                 onAndroidSdkUpdaterDispose();    //$hide$ (hide from SWT designer)
             }
         });
+        mUpdaterData.setDisplay(mAndroidSdkUpdater.getDisplay());
 
         FillLayout fl;
         mAndroidSdkUpdater.setLayout(fl = new FillLayout(SWT.HORIZONTAL));
