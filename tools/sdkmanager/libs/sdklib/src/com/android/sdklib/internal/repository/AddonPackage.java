@@ -206,7 +206,8 @@ public class AddonPackage extends Package {
     /**
      * Computes whether the given addon package is a suitable update for the current package.
      * The base method checks the class type.
-     * The addon package also tests that the name is the same and the revision number is greater.
+     * The addon package also tests that the name+vendor is the same and
+     * the revision number is greater.
      * <p/>
      * An update is just that: a new package that supersedes the current one. If the new
      * package has the same revision as the current one, it's not an update.
@@ -221,7 +222,11 @@ public class AddonPackage extends Package {
         }
 
         AddonPackage newPkg = (AddonPackage) replacementPackage;
-        return newPkg.getName().equalsIgnoreCase(this.getName()) &&
-        newPkg.getRevision() > this.getRevision();
+
+        String thisId = getName() + "+" + getVendor();                //$NON-NLS-1$
+        String newId  = newPkg.getName() + "+" + newPkg.getVendor();  //$NON-NLS-1$
+
+        return thisId.equalsIgnoreCase(newId) &&
+               newPkg.getRevision() > this.getRevision();
     }
 }
