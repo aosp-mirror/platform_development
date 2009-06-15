@@ -32,11 +32,28 @@ The types of sensors currently supported by Android include:
 <a name="androidSensorBuildingDriver"></a><h3>Building a Sensor Library</h3>
 <p> To implement a Sensors driver, create a shared library that implements the interface defined in <code>sensors.h</code>. You must name your shared library 
 <code>libsensors.so</code> so that it will get loaded from <code>/system/lib</code> at runtime. 
-</p
+</p>
 
+<p> The following stub <code>Android.mk</code> file ensures that <code>libsensors</code> compiles and links to the appropriate libraries:</p>
+<pre>
+LOCAL_PATH := $(call my-dir)
+include $(CLEAR_VARS)
+
+LOCAL_MODULE := sensors
+
+LOCAL_PRELINK_MODULE := false
+
+LOCAL_MODULE_PATH := $(TARGET_OUT_SHARED_LIBRARIES)/hw
+
+LOCAL_SHARED_LIBRARIES := liblog
+# include any shared library dependencies
+
+LOCAL_SRC_FILES := sensors.c
+
+include $(BUILD_SHARED_LIBRARY)
+</pre>
  
 <a name="androidSensorsInterface"></a><h3>Interface</h3> 
- 
  
  
 <p><span class="lh3"><a name="androidDoxygenNote"></a></span> 

@@ -302,8 +302,6 @@ public class UpdaterWindowImpl {
      * Used to initialize the sources.
      */
     private void setupSources() {
-        mUpdaterData.getSources().setTaskFactory(mTaskFactory);
-
         mUpdaterData.getSources().add(
                 new RepoSource(SdkRepository.URL_GOOGLE_SDK_REPO_SITE, false /* addonOnly */));
 
@@ -315,22 +313,26 @@ public class UpdaterWindowImpl {
             }
         }
 
-
         mRemotePackagesPage.onSdkChange();
     }
 
     /**
      * Initializes settings.
-     * Thist must be called after addExtraPages(), which created a settings page.
-     * Iterate through all the pages and it one is a setting page, load and apply these
-     * settings.
+     * This must be called after addExtraPages(), which created a settings page.
+     * Iterate through all the pages to find the first (and supposedly unique) setting page,
+     * and use it to load and apply these settings.
      */
     private void initializeSettings() {
+        SettingsController c = mUpdaterData.getSettingsController();
+        c.loadSettings();
+        c.applySettings();
+
         for (Object page : mPages) {
             if (page instanceof ISettingsPage) {
                 ISettingsPage settingsPage = (ISettingsPage) page;
-                settingsPage.loadSettings();
-                settingsPage.applySettings();
+
+                c.setSettingsPage(settingsPage);
+                break;
             }
         }
     }

@@ -120,4 +120,17 @@
     <string name="navigation_label">navigation:</string>
     <string name="five_way_nav_label">five way nav:</string>
     <string name="gles_version_label">GLES Version:</string>
+
+    <!-- Permission details related string attribtues -->
+    <string name="perm_name_text">Name :  </string>
+    <string name="dialog_title_error">Error</string>
+    <string name="invalid_perm_name">Invalid Permission Name</string>
+    <string name="ok">Ok</string>
+    <string name="perm_desc_text">Desc :  </string>
+    <string name="perm_group_text">Group :  </string>
+    <string name="perm_protection_text">Protection Level :  </string>
+    <string name="perm_source_text">Source package :  </string>
+    <string name="perm_list_header_text">Apps using permission  </string>
+    <string name="source_uid_text">Source uid :  </string>
+    <string name="shared_pkgs_text">Packages accessing via shared uid :  </string>
 </resources>

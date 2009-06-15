@@ -68,7 +68,7 @@ public class RepoSource implements IDescription {
     }
 
     /**
-     * Returns the list of known packages found by the last call to {@link #load(ITaskMonitor)}.
+     * Returns the list of known packages found by the last call to load().
      * This is null when the source hasn't been loaded yet.
      */
     public Package[] getPackages() {
@@ -77,7 +77,7 @@ public class RepoSource implements IDescription {
 
     /**
      * Clear the internal packages list. After this call, {@link #getPackages()} will return
-     * null till {@link #load(ITaskMonitor)} is called.
+     * null till load() is called.
      */
     public void clearPackages() {
         mPackages = null;
@@ -94,19 +94,24 @@ public class RepoSource implements IDescription {
     /**
      * Tries to fetch the repository index for the given URL.
      */
-    public void load(ITaskMonitor monitor) {
+    public void load(ITaskMonitor monitor, boolean forceHttp) {
 
         monitor.setProgressMax(4);
 
         setDefaultDescription();
 
-        monitor.setDescription("Fetching %1$s", mUrl);
+        String url = mUrl;
+        if (forceHttp) {
+            url = url.replaceAll("https://", "http://");  //$NON-NLS-1$ //$NON-NLS-2$
+        }
+
+        monitor.setDescription("Fetching %1$s", url);
         monitor.incProgress(1);
 
-        String xml = fetchUrl(mUrl, monitor);
+        String xml = fetchUrl(url, monitor);
 
         if (xml == null) {
-            mDescription += String.format("\nFailed to fetch URL %1$s", mUrl);
+            mDescription += String.format("\nFailed to fetch URL %1$s", url);
             return;
         }
 
@@ -114,7 +119,7 @@ public class RepoSource implements IDescription {
         monitor.incProgress(1);
 
         if (!validateXml(xml, monitor)) {
-            mDescription += String.format("\nFailed to validate XML at %1$s", mUrl);
+            mDescription += String.format("\nFailed to validate XML at %1$s", url);
             return;
         }
 

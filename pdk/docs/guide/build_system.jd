@@ -12,6 +12,7 @@ pdk.version=1.0
 <li><a href="#androidBuildSystemLayers">Layers</a></li>
 <li><a href="#androidSourceSetupBuildingCodeBase">Building the Android Platform</a></li>
 <li><a href="#androidSourceSetupBuildingKernel">Building the Android Kernel</a></li>
+<li><a href="#androidBuildVariants">Build Variants</a></li>
 </ul>
 </div>
 </div>
@@ -108,6 +109,8 @@ include $(BUILD_EXECUTABLE)
 % make -j4 PRODUCT-generic-eng
 </pre>
 
+<p>These <a href="#androidBuildVariants">Build Variants</a> differ in terms of debug options and packages installed. 
+ 
 
 <a name="androidBuildingCleaning"></a><h4>Cleaning Up</h4>
 
@@ -195,3 +198,72 @@ Java HotSpot(TM) Client VM (build 1.5.0_07-87, mixed mode, sharing)
 <pre class="prettyprint">
 % make -j4
 </pre>
+
+<a name="androidBuildVariants"></a><h3>Build Variants</h3>
+
+<p> 
+When building for a particular product, it's often useful to have minor
+variations on what is ultimately the final release build.  These are the
+currently-defined build variants:
+</p> 
+ 
+<table border=1> 
+<tr> 
+    <td> 
+        <code>eng<code> 
+    </td> 
+    <td> 
+        This is the default flavor. A plain "<code>make</code>" is the
+        same as "<code>make eng</code>".
+        <ul> 
+        <li>Installs modules tagged with: <code>eng</code>, <code>debug</code>,
+            <code>user</code>, and/or <code>development</code>.
+        <li>Installs non-APK modules that have no tags specified.
+        <li>Installs APKs according to the product definition files, in
+            addition to tagged APKs.
+        <li><code>ro.secure=0</code> 
+        <li><code>ro.debuggable=1</code> 
+        <li><code>ro.kernel.android.checkjni=1</code> 
+        <li><code>adb</code> is enabled by default.
+    </td> 
+</tr> 
+<tr> 
+    <td> 
+        <code>user<code> 
+    </td> 
+    <td> 
+        "<code>make user</code>"
+        <p> 
+        This is the flavor intended to be the final release bits.
+        <ul> 
+        <li>Installs modules tagged with <code>user</code>.</li>
+        <li>Installs non-APK modules that have no tags specified.</li>
+        <li>Installs APKs according to the product definition files; tags
+            are ignored for APK modules.</li>
+        <li><code>ro.secure=1</code> </li>
+        <li><code>ro.debuggable=0</code> </li>
+        <li><code>adb</code> is disabled by default.</li>
+    </td> 
+</tr> 
+<tr> 
+    <td> 
+        <code>userdebug<code> 
+    </td> 
+    <td> 
+        "<code>make userdebug</code>"
+        <p> 
+        The same as <code>user</code>, except:
+        <ul> 
+        <li>Also installs modules tagged with <code>debug</code>.
+        <li><code>ro.debuggable=1</code> 
+        <li><code>adb</code> is enabled by default.
+    </td> 
+</tr> 
+</table> 
+ 
+<p> 
+If you build one flavor and then want to build another, you should run
+"<code>make installclean</code>" between the two makes to guarantee that
+you don't pick up files installed by the previous flavor.  "<code>make
+clean</code>" will also suffice, but it takes a lot longer.
+</p> 
