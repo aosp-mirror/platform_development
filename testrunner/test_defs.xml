@@ -168,6 +168,13 @@ Native tests:
     coverage_target="framework"
     continuous="true" />
 
+<test name="framework-permission"
+    build_path="frameworks/base/tests/permission"
+    package="com.android.framework.permission.tests"
+    runner="android.test.InstrumentationTestRunner"
+    coverage_target="framework"
+   />
+
 <!--  cts tests -->
 
 <test name="cts-permission"
