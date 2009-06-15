@@ -86,7 +86,6 @@ public class RemotePackagesPage extends Composite implements ISdkListener {
         super(parent, SWT.BORDER);
 
         mUpdaterData = updaterData;
-        mUpdaterData.addListeners(this);
 
         createContents(this);
         postCreate();  //$hide$
@@ -188,6 +187,7 @@ public class RemotePackagesPage extends Composite implements ISdkListener {
      * Called by the constructor right after {@link #createContents(Composite)}.
      */
     private void postCreate() {
+        mUpdaterData.addListeners(this);
         adjustColumnsWidth();
     }
 
@@ -199,13 +199,16 @@ public class RemotePackagesPage extends Composite implements ISdkListener {
      */
     private void adjustColumnsWidth() {
         // Add a listener to resize the column to the full width of the table
-        mTreeSources.addControlListener(new ControlAdapter() {
+        ControlAdapter resizer = new ControlAdapter() {
             @Override
             public void controlResized(ControlEvent e) {
                 Rectangle r = mTreeSources.getClientArea();
                 mColumnSource.setWidth(r.width);
             }
-        });
+        };
+
+        mTreeSources.addControlListener(resizer);
+        resizer.controlResized(null);
     }
 
     /**
@@ -303,7 +306,7 @@ public class RemotePackagesPage extends Composite implements ISdkListener {
 
     private void onRefreshSelected() {
         if (mUpdaterData != null) {
-            mUpdaterData.refreshSources(false /*forceFetching*/, null /*monitor*/);
+            mUpdaterData.refreshSources(false /*forceFetching*/);
         }
     }
 

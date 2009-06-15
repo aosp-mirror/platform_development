@@ -81,7 +81,6 @@ public class LocalPackagesPage extends Composite implements ISdkListener {
         super(parent, SWT.BORDER);
 
         mUpdaterData = updaterData;
-        mUpdaterData.addListeners(this);
 
         createContents(this);
         postCreate();  //$hide$
@@ -121,39 +120,39 @@ public class LocalPackagesPage extends Composite implements ISdkListener {
         mContainerButtons.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 3, 1));
 
         mUpdateButton = new Button(mContainerButtons, SWT.NONE);
+        mUpdateButton.setText("Update All...");
         mUpdateButton.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
                 onUpdateInstalledPackage();  //$hide$ (hide from SWT designer)
             }
         });
-        mUpdateButton.setText("Update...");
 
         mPlaceholder1 = new Label(mContainerButtons, SWT.NONE);
         mPlaceholder1.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, true, false, 1, 1));
 
         mDeleteButton = new Button(mContainerButtons, SWT.NONE);
+        mDeleteButton.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, false, false, 1, 1));
+        mDeleteButton.setText("Delete...");
         mDeleteButton.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
                 onDeleteSelected();  //$hide$ (hide from SWT designer)
             }
         });
-        mDeleteButton.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, false, false, 1, 1));
-        mDeleteButton.setText("Delete...");
 
         mPlaceholder2 = new Label(mContainerButtons, SWT.NONE);
         mPlaceholder2.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, true, false, 1, 1));
 
         mRefreshButton = new Button(mContainerButtons, SWT.NONE);
+        mRefreshButton.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
+        mRefreshButton.setText("Refresh");
         mRefreshButton.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
                 onRefreshSelected();  //$hide$ (hide from SWT designer)
             }
         });
-        mRefreshButton.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
-        mRefreshButton.setText("Refresh");
     }
 
     private void createSdkLocation(Composite parent) {
@@ -199,6 +198,7 @@ public class LocalPackagesPage extends Composite implements ISdkListener {
      * Called by the constructor right after {@link #createContents(Composite)}.
      */
     private void postCreate() {
+        mUpdaterData.addListeners(this);
         adjustColumnsWidth();
     }
 
@@ -210,13 +210,15 @@ public class LocalPackagesPage extends Composite implements ISdkListener {
      */
     private void adjustColumnsWidth() {
         // Add a listener to resize the column to the full width of the table
-        mTablePackages.addControlListener(new ControlAdapter() {
+        ControlAdapter resizer = new ControlAdapter() {
             @Override
             public void controlResized(ControlEvent e) {
                 Rectangle r = mTablePackages.getClientArea();
                 mColumnPackages.setWidth(r.width);
             }
-        });
+        };
+        mTablePackages.addControlListener(resizer);
+        resizer.controlResized(null);
     }
 
     /**
@@ -239,9 +241,7 @@ public class LocalPackagesPage extends Composite implements ISdkListener {
     }
 
     private void onUpdateInstalledPackage() {
-        if (mUpdaterData != null) {
-            mUpdaterData.reloadSdk();
-        }
+        mUpdaterData.updateAll();
     }
 
     private void onDeleteSelected() {

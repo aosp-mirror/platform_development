@@ -131,6 +131,7 @@ public class UpdaterWindowImpl {
         mAvdManagerPage = new AvdManagerPage(mPagesRootComposite, mUpdaterData);
         mLocalPackagePage = new LocalPackagesPage(mPagesRootComposite, mUpdaterData);
         mRemotePackagesPage = new RemotePackagesPage(mPagesRootComposite, mUpdaterData);
+
         mSashForm.setWeights(new int[] {150, 576});
     }
 
@@ -200,6 +201,7 @@ public class UpdaterWindowImpl {
      * This creates the pages, selects the first one, setup sources and scan for local folders.
      */
     private void firstInit() {
+        mUpdaterData.setWindowShell(getShell());
         mTaskFactory = new ProgressTaskFactory(getShell());
         mUpdaterData.setTaskFactory(mTaskFactory);
         mUpdaterData.setImageFactory(new ImageFactory(getShell().getDisplay()));

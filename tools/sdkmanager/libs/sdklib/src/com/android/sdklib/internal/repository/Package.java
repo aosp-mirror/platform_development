@@ -202,6 +202,23 @@ public abstract class Package implements IDescription {
      */
     public abstract File getInstallFolder(String osSdkRoot);
 
+    /**
+     * Computes whether the given package is a suitable update for the current package.
+     * The base class method only checks that the {@link Package} class type is the same.
+     * Derived classes must add more specific checks, including the revision number.
+     * <p/>
+     * An update is just that: a new package that supersedes the current one. If the new
+     * package has the same revision as the current one, it's not an update.
+     *
+     * @param replacementPackage The potential replacement package.
+     * @return True if the replacement package is a suitable update for this one.
+     */
+    public boolean canBeUpdatedBy(Package replacementPackage) {
+        return replacementPackage != null &&
+            replacementPackage.getClass() == this.getClass() &&
+            replacementPackage.getRevision() > this.getRevision();
+    }
+
     //---
 
     /**

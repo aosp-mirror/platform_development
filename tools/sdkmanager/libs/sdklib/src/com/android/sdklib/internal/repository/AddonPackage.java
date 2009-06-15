@@ -190,6 +190,9 @@ public class AddonPackage extends Package {
 
         String name = String.format("%s-%d", getName(), getApiLevel()); // $NON-NLS-1$
 
+        // FIXME this will fail if the name is not ASCII compatible. This could easily
+        // happen: a Chinese or Japanese name etc for example,
+        // to name a few.
         name = name.toLowerCase();
         name = name.replaceAll("[^a-zA-Z0-9_-]+", "_");                 // $NON-NLS-1$
         name = name.replaceAll("_+", "_");                              // $NON-NLS-1$
@@ -198,5 +201,27 @@ public class AddonPackage extends Package {
 
         // TODO find similar existing addon in addons folder
         return folder;
+    }
+
+    /**
+     * Computes whether the given addon package is a suitable update for the current package.
+     * The base method checks the class type.
+     * The addon package also tests that the name is the same and the revision number is greater.
+     * <p/>
+     * An update is just that: a new package that supersedes the current one. If the new
+     * package has the same revision as the current one, it's not an update.
+     *
+     * @param replacementPackage The potential replacement package.
+     * @return True if the replacement package is a suitable update for this one.
+     */
+    @Override
+    public boolean canBeUpdatedBy(Package replacementPackage) {
+        if (!super.canBeUpdatedBy(replacementPackage)) {
+            return false;
+        }
+
+        AddonPackage newPkg = (AddonPackage) replacementPackage;
+        return newPkg.getName().equalsIgnoreCase(this.getName()) &&
+        newPkg.getRevision() > this.getRevision();
     }
 }
