@@ -1,4 +1,4 @@
-page.title=Building Android for a new Device
+page.title=Configuring a New Product
 pdk.version=1.0
 @jd:body
 
@@ -34,10 +34,12 @@ pdk.version=1.0
   # Overrides
   PRODUCT_NAME := &lt;first_product_name&gt;
   PRODUCT_DEVICE := &lt;board_name&gt;</pre>
-  Additional product-specific variables can be added to this <a href="#androidBuildSystemProductDefFiles">Product Definition</a> file. 
-  </li>  
+  <li>
+  Additional product-specific variables can be added to this <a href="#androidBuildSystemProductDefFiles">Product Definition</a> 
+file.
+  </li>
   <li>In the <code>products</code> directory, create an <code>AndroidProducts.mk</code> file that point to (and is responsible for finding) the individual product make files.<BR>
-  <pre class="prettypring">
+  <pre class="prettyprint">
   #
   # This file should set PRODUCT_MAKEFILES to a list of product makefiles
   # to expose to the build system.  LOCAL_DIR will already be set to
@@ -98,8 +100,7 @@ pdk.version=1.0
   #
   # include more board specific stuff here? Such as Audio parameters.      
   #</pre>
-  
-  Additional Android.mk parameters 
+
   </li>
 <li>To create a second product for the same board, create a second product-specific make file called <code>vendor/company_name/products/&lt;second_product_name&gt;.mk</code> that includes:<BR>
 <pre class="prettyprint">

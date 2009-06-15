@@ -8,11 +8,14 @@ function nothing() {}
 
 <li> <h2>Setup and Building</h2>
   <ul>
-     <li><a href="<?cs var:toroot ?>guide/system_requirements.html">Device Requirements</a></li>           
-     <li><a href="<?cs var:toroot ?>guide/build_system.html">Build System</a></li>
-     <li><a href="<?cs var:toroot ?>guide/build_new_device.html">Building New Device</a></li>
-     <li><a href="<?cs var:toroot ?>guide/build_cookbook.html">Build Cookbook</a></li>
-     <li><a href="<?cs var:toroot ?>guide/bring_up.html">Bring up</a></li>
+     <li class="toggle-list">
+     <div><a href="<?cs var:toroot ?>guide/build_system.html">Build System</a></div>
+     <ul>  
+       <li><a href="<?cs var:toroot ?>guide/build_new_device.html">Configuring a New Product</a></li>
+       <li><a href="<?cs var:toroot ?>guide/build_cookbook.html">Build Cookbook</a></li>
+       <li><a href="<?cs var:toroot ?>guide/bring_up.html">Bring up</a></li>
+     </ul>
+     </li>
      <li><a href="<?cs var:toroot ?>guide/release_keys.html">Release Keys and Signing Builds</a></li> 
  </ul>
 </li>
