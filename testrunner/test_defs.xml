@@ -380,6 +380,11 @@ Native tests:
     package="com.android.providers.contactstests"
     coverage_target="ContactsProvider" />
 
+<test name="downloadprovider-permission"
+    build_path="packages/providers/DownloadProvider/tests/permission"
+    package="com.android.providers.downloads.permission.tests"
+    coverage_target="DownloadProvider" />
+
 <test name="email"
     build_path="packages/apps/Email"
     package="com.android.email.tests"
