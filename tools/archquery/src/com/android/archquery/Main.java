@@ -45,21 +45,28 @@ package com.android.archquery;
  */
 public final class Main {
     public static void main(String[] args) {
-        // Values listed from http://lopica.sourceforge.net/os.html
-        String arch = System.getProperty("os.arch");
 
-        if (arch.equalsIgnoreCase("x86_64") || arch.equalsIgnoreCase("amd64")) {
-            System.out.print("x86_64");
+        for (String arg : args) {
+            System.out.println(String.format("%1$s: %2$s", arg, System.getProperty(arg)));
+        }
 
-        } else if (arch.equalsIgnoreCase("x86")
-                || arch.equalsIgnoreCase("i386")
-                || arch.equalsIgnoreCase("i686")) {
-            System.out.print("x86");
+        if (args.length == 0) {
+            // Values listed from http://lopica.sourceforge.net/os.html
+            String arch = System.getProperty("os.arch");
 
-        } else if (arch.equalsIgnoreCase("ppc") || arch.equalsIgnoreCase("PowerPC")) {
-            System.out.print("ppc");
-        } else {
-            System.out.print(arch);
+            if (arch.equalsIgnoreCase("x86_64") || arch.equalsIgnoreCase("amd64")) {
+                System.out.print("x86_64");
+
+            } else if (arch.equalsIgnoreCase("x86")
+                    || arch.equalsIgnoreCase("i386")
+                    || arch.equalsIgnoreCase("i686")) {
+                System.out.print("x86");
+
+            } else if (arch.equalsIgnoreCase("ppc") || arch.equalsIgnoreCase("PowerPC")) {
+                System.out.print("ppc");
+            } else {
+                System.out.print(arch);
+            }
         }
     }
 }
