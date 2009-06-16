@@ -328,7 +328,7 @@ class UpdaterData {
 
         final Map<Archive, Archive> updates = findUpdates();
 
-        UpdateChooserDialog dialog = new UpdateChooserDialog(getWindowShell(), updates);
+        UpdateChooserDialog dialog = new UpdateChooserDialog(this, updates);
         dialog.open();
 
         Collection<Archive> result = dialog.getResult();
