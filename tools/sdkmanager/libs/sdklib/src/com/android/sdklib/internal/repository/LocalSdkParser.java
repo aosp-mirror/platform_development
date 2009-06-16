@@ -270,7 +270,6 @@ public class LocalSdkParser {
                             SdkRepository.NS_SDK_REPOSITORY.equals(child.getNamespaceURI()) &&
                             elementFilter.equals(child.getLocalName())) {
                         String name = child.getLocalName();
-                        Package p = null;
 
                         try {
                             if (SdkRepository.NODE_ADD_ON.equals(name)) {
