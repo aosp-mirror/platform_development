@@ -489,6 +489,8 @@ Native tests:
 -->
 
 <!--  native tests  -->
+
+<!-- Bionic C++ -->
 <test-native name="libstdcpp"
     build_path="system/extras/tests/bionic/libstdc++"
     description="Bionic libstdc++."
@@ -497,6 +499,12 @@ Native tests:
 <test-native name="libskia"
     build_path="external/skia/tests"
     description="Skia tests." />
+
+<!--  Android STL tests -->
+<test-native name="astl"
+    build_path="external/astl/tests"
+    description="Android STL."
+    extra_make_args="ASTL_TESTS=1" />
 
 <!-- pending patch 820
 <test-native name="gtest"
