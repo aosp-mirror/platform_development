@@ -263,11 +263,6 @@ class UpdaterData {
 
         final boolean forceHttp = getSettingsController().getForceHttp();
 
-        // TODO filter the archive list to: a/ display a list of what is going to be installed,
-        // b/ display licenses and c/ check that the selected packages are actually upgrades
-        // or ask user to confirm downgrades. All this should be done in a separate class+window
-        // which will then call this method with the final list.
-
         mTaskFactory.start("Installing Archives", new ITask() {
             public void run(ITaskMonitor monitor) {
 
@@ -320,13 +315,17 @@ class UpdaterData {
      * This first refreshes all sources, then compares the available remote packages when
      * the current local ones and suggest updates to be done to the user. Finally all
      * selected updates are installed.
+     *
+     * @param selectedArchives The list of remote archive to consider for the update.
+     *  This can be null, in which case a list of remote archive is fetched from all
+     *  available sources.
      */
-    public void updateAll() {
-        assert mTaskFactory != null;
+    public void updateAll(Collection<Archive> selectedArchives) {
+        if (selectedArchives == null) {
+            refreshSources(true);
+        }
 
-        refreshSources(true);
-
-        final Map<Archive, Archive> updates = findUpdates();
+        final Map<Archive, Archive> updates = findUpdates(selectedArchives);
 
         UpdateChooserDialog dialog = new UpdateChooserDialog(this, updates);
         dialog.open();
@@ -369,8 +368,12 @@ class UpdaterData {
      * Return a map [remote archive => local archive] of suitable update candidates.
      * Returns null if there's an unexpected error. Otherwise returns a map that can be
      * empty but not null.
+     *
+     * @param selectedArchives The list of remote archive to consider for the update.
+     *  This can be null, in which case a list of remote archive is fetched from all
+     *  available sources.
      */
-    private Map<Archive, Archive> findUpdates() {
+    private Map<Archive, Archive> findUpdates(Collection<Archive> selectedArchives) {
         // Map [remote archive => local archive] of suitable update candidates
         Map<Archive, Archive> result = new HashMap<Archive, Archive>();
 
@@ -379,23 +382,43 @@ class UpdaterData {
         HashMap<Class<? extends Package>, ArrayList<Archive>> availPkgs =
             new HashMap<Class<? extends Package>, ArrayList<Archive>>();
 
-        ArrayList<RepoSource> remoteSources = getSources().getSources();
+        if (selectedArchives != null) {
+            // Only consider the archives given
 
-        for (RepoSource remoteSrc : remoteSources) {
-            Package[] remotePkgs = remoteSrc.getPackages();
-            if (remotePkgs != null) {
-                for (Package remotePkg : remotePkgs) {
-                    Class<? extends Package> clazz = remotePkg.getClass();
+            for (Archive a : selectedArchives) {
+                // Only add compatible archives
+                if (a.isCompatible()) {
+                    Class<? extends Package> clazz = a.getParentPackage().getClass();
 
                     ArrayList<Archive> list = availPkgs.get(clazz);
                     if (list == null) {
                         availPkgs.put(clazz, list = new ArrayList<Archive>());
                     }
 
-                    for (Archive a : remotePkg.getArchives()) {
-                        // Only add compatible archives
-                        if (a.isCompatible()) {
-                            list.add(a);
+                    list.add(a);
+                }
+            }
+
+        } else {
+            // Get all the available archives from all loaded sources
+            ArrayList<RepoSource> remoteSources = getSources().getSources();
+
+            for (RepoSource remoteSrc : remoteSources) {
+                Package[] remotePkgs = remoteSrc.getPackages();
+                if (remotePkgs != null) {
+                    for (Package remotePkg : remotePkgs) {
+                        Class<? extends Package> clazz = remotePkg.getClass();
+
+                        ArrayList<Archive> list = availPkgs.get(clazz);
+                        if (list == null) {
+                            availPkgs.put(clazz, list = new ArrayList<Archive>());
+                        }
+
+                        for (Archive a : remotePkg.getArchives()) {
+                            // Only add compatible archives
+                            if (a.isCompatible()) {
+                                list.add(a);
+                            }
                         }
                     }
                 }

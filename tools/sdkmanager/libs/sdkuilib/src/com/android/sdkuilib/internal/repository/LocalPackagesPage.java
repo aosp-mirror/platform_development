@@ -241,7 +241,7 @@ public class LocalPackagesPage extends Composite implements ISdkListener {
     }
 
     private void onUpdateInstalledPackage() {
-        mUpdaterData.updateAll();
+        mUpdaterData.updateAll(null /*selectedArchives*/);
     }
 
     private void onDeleteSelected() {
