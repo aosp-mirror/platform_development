@@ -133,4 +133,21 @@
     <string name="perm_list_header_text">Apps using permission  </string>
     <string name="source_uid_text">Source uid :  </string>
     <string name="shared_pkgs_text">Packages accessing via shared uid :  </string>
+
+    <!-- AccountsTester -->
+    <string name="accounts_tester_app_name">Accounts Tester</string>
+    <string name="accounts_tester_get_accounts_by_type">Get Accounts By Type</string>
+    <string name="accounts_tester_get_all_accounts">Get All Accounts</string>
+    <string name="accounts_tester_add_account">Add Account</string>
+    <string name="accounts_tester_select_account_type">Select Account Type</string>
+    <string name="accounts_tester_process_name_header">Process Name:</string>
+    <string name="accounts_tester_remove_account">remove</string>
+    <string name="accounts_tester_get_auth_token">authenticate</string>
+    <string name="accounts_tester_invalidate_auth_token">invalidate token</string>
+    <string name="accounts_tester_account_context_menu_title">account operations</string>
+    <string name="accounts_tester_do_get_auth_token">Ok</string>
+    <string name="accounts_tester_enter_auth_token_type">Enter the authtoken type:</string>
+    <string name="accounts_tester_update_credentials">Update Credentials</string>
+    <string name="accounts_tester_confirm_credentials">Confirm Credentials</string>
+    <string name="accounts_tester_edit_properties">Edit Properties</string>
 </resources>
