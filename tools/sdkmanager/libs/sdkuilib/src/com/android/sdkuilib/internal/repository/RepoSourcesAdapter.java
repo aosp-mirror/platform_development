@@ -72,19 +72,19 @@ class RepoSourcesAdapter {
                     return imgFactory.getImage("source_icon16.png");
 
                 } else if (element instanceof PlatformPackage) {
-                    return imgFactory.getImage("red_ball_icon16.png");
+                    return imgFactory.getImage("android_icon_16.png");
 
                 } else if (element instanceof AddonPackage) {
-                    return imgFactory.getImage("green_ball_icon16.png");
+                    return imgFactory.getImage("addon_icon16.png");
 
                 } else if (element instanceof ToolPackage) {
-                    return imgFactory.getImage("blue_ball_icon16.png");
+                    return imgFactory.getImage("tool_icon16.png");
 
                 } else if (element instanceof DocPackage) {
-                    return imgFactory.getImage("purple_ball_icon16.png");
+                    return imgFactory.getImage("doc_icon16.png");
 
                 } else if (element instanceof Package) {
-                    return imgFactory.getImage("gray_ball_icon16.png");
+                    return imgFactory.getImage("extra_pkg_icon16.png");
 
                 } else if (element instanceof Archive) {
                     if (((Archive) element).isCompatible()) {
