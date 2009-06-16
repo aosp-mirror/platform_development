@@ -85,7 +85,7 @@ public class UpdaterWindowImpl {
         mAndroidSdkUpdater.open();
         mAndroidSdkUpdater.layout();
 
-        firstInit();    //$hide$ (hide from SWT designer)
+        postCreate();    //$hide$ (hide from SWT designer)
 
         Display display = Display.getDefault();
         while (!mAndroidSdkUpdater.isDisposed()) {
@@ -105,7 +105,6 @@ public class UpdaterWindowImpl {
                 onAndroidSdkUpdaterDispose();    //$hide$ (hide from SWT designer)
             }
         });
-        mUpdaterData.setDisplay(mAndroidSdkUpdater.getDisplay());
 
         FillLayout fl;
         mAndroidSdkUpdater.setLayout(fl = new FillLayout(SWT.HORIZONTAL));
@@ -200,7 +199,7 @@ public class UpdaterWindowImpl {
      * Once the UI has been created, initializes the content.
      * This creates the pages, selects the first one, setup sources and scan for local folders.
      */
-    private void firstInit() {
+    private void postCreate() {
         mUpdaterData.setWindowShell(getShell());
         mTaskFactory = new ProgressTaskFactory(getShell());
         mUpdaterData.setTaskFactory(mTaskFactory);
@@ -208,8 +207,8 @@ public class UpdaterWindowImpl {
 
         setWindowImage(mAndroidSdkUpdater);
 
-        addPage(mAvdManagerPage, "Virtual Devices");
-        addPage(mLocalPackagePage, "Installed Packages");
+        addPage(mAvdManagerPage,     "Virtual Devices");
+        addPage(mLocalPackagePage,   "Installed Packages");
         addPage(mRemotePackagesPage, "Available Packages");
         addExtraPages();
 
