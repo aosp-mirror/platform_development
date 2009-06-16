@@ -73,6 +73,14 @@
             </intent-filter>
         </activity>
 
+        <activity android:name="AccountsTester" android:label="AccountsTester"
+                  android:theme="@android:style/Theme.Light">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.TEST" />
+            </intent-filter>
+        </activity>
+
         <activity android:name="DataList">
         </activity>
         <activity android:name="Details">
