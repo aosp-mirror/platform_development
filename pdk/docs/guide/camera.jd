@@ -21,7 +21,7 @@ pdk.version=1.0
 
 <a name="androidCameraBuildingDriver"></a><h3>Building a Camera Library</h3>
 
-<p>To implement a camera driver, create a shared library that implements the interface defined in <code>CameraHardwareInterface.h</code>. You must name your shared library <code>libcamera.so</code> so that it will get loaded from <code>/system/lib</code> at runtime.  Place libcamera sources and <code>Android.mk</code> in <code>partner/acme/chipset_or_board/libcamera/</code>.</p>
+<p>To implement a camera driver, create a shared library that implements the interface defined in <code>CameraHardwareInterface.h</code>. You must name your shared library <code>libcamera.so</code> so that it will get loaded from <code>/system/lib</code> at runtime.  Place libcamera sources and <code>Android.mk</code> in <code>vendor/acme/chipset_or_board/libcamera/</code>.</p>
 <p>The following stub <code>Android.mk</code> file ensures that <code>libcamera</code> compiles and links to the appropriate libraries:</p>
 <pre class="prettify">
 LOCAL_PATH := $(call my-dir)
