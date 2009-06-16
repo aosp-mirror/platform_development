@@ -18,7 +18,7 @@ pdk.version=1.0
 
 <a name="androidGPSBuildingDriver"></a><h3>Building a GPS Library</h3>
 
-<p>To implement a GPS driver, create a shared library that implements the interface defined in <code>gps.h</code>. You must name your shared library <code>libgps.so</code> so that it will get loaded from <code>/system/lib</code> at runtime. Place GPS sources and Android.mk in <code>partner/acme/chipset_or_board/gps/</code> (where "acme" is your product name and "chipset_or_board" is your hardware target).</p>
+<p>To implement a GPS driver, create a shared library that implements the interface defined in <code>gps.h</code>. You must name your shared library <code>libgps.so</code> so that it will get loaded from <code>/system/lib</code> at runtime. Place GPS sources and Android.mk in <code>vendor/acme/chipset_or_board/gps/</code> (where "acme" is your organization name and "chipset_or_board" is your hardware target).</p>
 
 <p>The following stub <code>Android.mk</code> file ensures that <code>libgps</code> compiles and links to the appropriate libraries:</p>
 
