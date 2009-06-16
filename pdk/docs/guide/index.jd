@@ -1,38 +1,27 @@
-page.title=Welcome to the Android Porting Guide
+page.title=Android Platform Developer's Guide
 pdk.version=1.0
 @jd:body
 
 
-<p>The Open Handset Distribution (OHD) is a software distribution for mobile devices, often referred to as Android, developed by members of the <a href="http://www.openhandsetalliance.com">Open Handset Alliance</a>. &nbsp;Android includes an operating system, middleware, and key applications typically required for mobile devices.</p>
-  
-<p>This platform development kit describes the steps necessary to port Android to a new mobile device. &nbsp;Android is designed as a highly-portable, hardware-independent platform based on Linux, and porting the platform to new devices requires little more than porting the Linux kernel and developing the Linux drivers necessary for your device.</p>
-  
-<p>The current version of this guide describes bringing Android up to "PDA-level" functionality; functionality sufficient to support non-multimedia apps that run on unconnected mobile devices through the standard user interface devices such as keypad and display. &nbsp;Future versions of this guide will cover complete telephony, multi-media and peripheral integration to create a complete mobile device.</p>
+<p>Welcome to the <i>Android Platform Dev Guide</i>!  This guide provides an under-the-hood introduction to the Android platform, and is designed for platform developers and manufacturers building Android-powered devices.</p>
 
+<p>If you're a software developer interested in developing applications for Android, please visit the <a href="http://developer.android.com">Android Developers site</a>.</p>
+
+<a name="androidWelcomeAboutThisGuide"></a><h2>About this Guide</h2>
+
+<p>This guide is divided into sections by logical platform component (see the table of contents on the left).  Android is a complex project under constant development, and the level of detail, as well as the rate of change, may vary from section to section.  This guide will be updated regularly as more content becomes available.</p>
 
 <a name="androidWelcomeIntendedAudience"></a><h2>Intended Audience</h2>
 
-<p>This porting guide is intended for engineers proficient with running (and writing drivers for) Linux on embedded devices. 
-<p>The guide also assumes you have a target hardware that matches <a href="system_requirements.html">Device Requirements</a> and that you 
-can boot and run a recent (2.6.x) version of the Linux kernel
-with at least keypad and display drivers properly installed.</p>
-
+<p>This guide is intended for engineers who are proficient with building and running Linux on embedded devices.  It aims to provide explanation of the Android platform rather than Linux or embedded development in general.</p>
 
 <a name="androidWelcomeGettingStarted"></a><h2>Getting Started with Android</h2>
 
-<p>To get started with Android, start with the publicly-available documentation at <a href="http://code.google.com/android/documentation.html">http://code.google.com/android/documentation.html</a>, paying particular attention to <a href="http://code.google.com/android/what-is-android.html">What is Android?</a> and <a href="http://code.google.com/android/intro/index.html">Getting Started with Android</a>.</p>
+<p>If you are new to Android, start with the platform documentation on the following sites:
+<ul>
+<li><a href="http://developer.android.com">Android Developers site</a>:  This site offers high-level platform documentation and architecture concepts.</li>
+<li><a href="http://source.android.com">Android Open Source Project site</a>:  This site provides instructions on how to get the source code, establish a development environment, and perform a simple build.</li>
+</ul>
 
+<p>When you are ready to start customizing the platform or porting to your target hardware, start in this guide with the <a href="build_system.html">Build System overview</a>.</p>
 
-<a name="androidWelcomePorting"></a><h2>Porting Android to Your Device</h2>
-
-<p>Start with the following sections in order to port Android to your target hardware.</p>
-<dl>
-    <dt><a href="system_requirements.html">Device Requirements</a></dt>
-    <dd>What must your device support in order to successfully port Android to it?  </dd>
-    <dt><a href="source_setup_guide.html">Setting up a Development Environment </a></dt>
-
-    <dd>Install necessary packages and retrieve source code through a Git server. <a href="build_system.html">Build System</a> offers a conceptual overview of Android's build system and instructions to affect a simple build.</dd>
-    <dt><a href="bring_up.html">Basic Bring up </a></dt>
-    <dd>Establish core components necessary to your device, such as keymaps / keyboard input and display drivers. </dd>
-    <dt>&nbsp;</dt>
-</dl>
