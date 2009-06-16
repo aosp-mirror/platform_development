@@ -16,16 +16,15 @@
 
 package com.android.sdkuilib.internal.repository;
 
+import com.android.sdklib.SdkConstants;
 import com.android.sdklib.internal.repository.Archive;
+import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 
-import org.eclipse.jface.viewers.CheckStateChangedEvent;
-import org.eclipse.jface.viewers.CheckboxTableViewer;
-import org.eclipse.jface.viewers.ICheckStateListener;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.LabelProvider;
-import org.eclipse.jface.viewers.StructuredSelection;
+import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
@@ -54,6 +53,7 @@ import org.eclipse.swt.widgets.Text;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -69,6 +69,8 @@ final class UpdateChooserDialog extends Dialog {
     private final Map<Archive, Archive> mNewToOldArchiveMap;
     private boolean mLicenseAcceptAll;
     private boolean mInternalLicenseRadioUpdate;
+    private HashSet<Archive> mAccepted = new HashSet<Archive>();
+    private HashSet<Archive> mRejected = new HashSet<Archive>();
     private ArrayList<Archive> mResult = new ArrayList<Archive>();
 
     // UI fields
@@ -77,23 +79,26 @@ final class UpdateChooserDialog extends Dialog {
     private Composite mPackageRootComposite;
     private Button mCancelButton;
     private Button mInstallButton;
-    private CheckboxTableViewer mTableViewPackage;
+    private TableViewer mTableViewPackage;
     private Table mTablePackage;
     private TableColumn mTableColum;
     private Text mPackageText;
     private Button mLicenseRadioAccept;
-    private Button mLicenseRadioRefuse;
+    private Button mLicenseRadioReject;
     private Button mLicenseRadioAcceptAll;
     private Group mPackageTextGroup;
+    private final UpdaterData mUpdaterData;
+    private Group mTableGroup;
 
 
     /**
      * Create the dialog.
-     * @param parent Parent container
+     * @param updaterData The updater data
      * @param newToOldUpdates The map [new archive => old archive] of potential updates
      */
-    public UpdateChooserDialog(Shell parent, Map<Archive, Archive> newToOldUpdates) {
-        super(parent, SWT.APPLICATION_MODAL);
+    public UpdateChooserDialog(UpdaterData updaterData, Map<Archive, Archive> newToOldUpdates) {
+        super(updaterData.getWindowShell(), SWT.APPLICATION_MODAL);
+        mUpdaterData = updaterData;
 
         mNewToOldArchiveMap = new TreeMap<Archive, Archive>(new Comparator<Archive>() {
             public int compare(Archive a1, Archive a2) {
@@ -152,7 +157,7 @@ final class UpdateChooserDialog extends Dialog {
         });
         mDialogShell.setLayout(new GridLayout(3, false/*makeColumnsEqual*/));
         mDialogShell.setSize(600, 400);
-        mDialogShell.setText(getText());
+        mDialogShell.setText("Choose Packages to Install");
 
         // Sash form
         mSashForm = new SashForm(mDialogShell, SWT.NONE);
@@ -161,10 +166,14 @@ final class UpdateChooserDialog extends Dialog {
 
         // Left part of Sash Form
 
-        mTableViewPackage = CheckboxTableViewer.newCheckList(mSashForm,
-                SWT.BORDER | SWT.V_SCROLL | SWT.SINGLE);
+        mTableGroup = new Group(mSashForm, SWT.NONE);
+        mTableGroup.setText("Packages");
+        mTableGroup.setLayout(new GridLayout(1, false/*makeColumnsEqual*/));
+
+        mTableViewPackage = new TableViewer(mTableGroup, SWT.BORDER | SWT.V_SCROLL | SWT.SINGLE);
         mTablePackage = mTableViewPackage.getTable();
         mTablePackage.setHeaderVisible(false);
+        mTablePackage.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
 
         mTablePackage.addSelectionListener(new SelectionAdapter() {
             @Override
@@ -177,12 +186,6 @@ final class UpdateChooserDialog extends Dialog {
             }
         });
 
-        mTableViewPackage.addCheckStateListener(new ICheckStateListener() {
-            public void checkStateChanged(CheckStateChangedEvent event) {
-                onPackageChecked(event);
-            }
-        });
-
         mTableColum = new TableColumn(mTablePackage, SWT.NONE);
         mTableColum.setWidth(100);
         mTableColum.setText("Packages");
@@ -191,6 +194,7 @@ final class UpdateChooserDialog extends Dialog {
         // Right part of Sash form
         mPackageRootComposite = new Composite(mSashForm, SWT.NONE);
         mPackageRootComposite.setLayout(new GridLayout(4, false/*makeColumnsEqual*/));
+        mPackageRootComposite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 
         mPackageTextGroup = new Group(mPackageRootComposite, SWT.NONE);
         mPackageTextGroup.setText("Package Description && License");
@@ -211,10 +215,10 @@ final class UpdateChooserDialog extends Dialog {
             }
         });
 
-        mLicenseRadioRefuse = new Button(mPackageRootComposite, SWT.RADIO);
-        mLicenseRadioRefuse.setText("Refuse");
-        mLicenseRadioRefuse.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 1, 1));
-        mLicenseRadioRefuse.addSelectionListener(new SelectionAdapter() {
+        mLicenseRadioReject = new Button(mPackageRootComposite, SWT.RADIO);
+        mLicenseRadioReject.setText("Reject");
+        mLicenseRadioReject.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 1, 1));
+        mLicenseRadioReject.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
                 onLicenseRadioSelected();
@@ -243,7 +247,7 @@ final class UpdateChooserDialog extends Dialog {
 
         mInstallButton = new Button(mDialogShell, SWT.PUSH);
         mInstallButton.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
-        mInstallButton.setText("Install Selected");
+        mInstallButton.setText("Install Accepted");
         mInstallButton.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
@@ -271,16 +275,38 @@ final class UpdateChooserDialog extends Dialog {
      * This is deferred till the UI is created.
      */
     private void postCreate() {
+        setWindowImage();
+
         // Fill the list with the replacement packages
         mTableViewPackage.setLabelProvider(new NewArchivesLabelProvider());
         mTableViewPackage.setContentProvider(new NewArchivesContentProvider());
         mTableViewPackage.setInput(mNewToOldArchiveMap);
+
+        // TODO automatically accept those with an empty license
 
         adjustColumnsWidth();
 
         // select first item
         mTablePackage.select(0);
         onPackageSelected();
+    }
+
+
+    /**
+     * Creates the icon of the window shell.
+     */
+    private void setWindowImage() {
+        String imageName = "android_icon_16.png"; //$NON-NLS-1$
+        if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_DARWIN) {
+            imageName = "android_icon_128.png"; //$NON-NLS-1$
+        }
+
+        if (mUpdaterData != null) {
+            ImageFactory imgFactory = mUpdaterData.getImageFactory();
+            if (imgFactory != null) {
+                mDialogShell.setImage(imgFactory.getImage(imageName));
+            }
+        }
     }
 
     /**
@@ -343,16 +369,8 @@ final class UpdateChooserDialog extends Dialog {
      * completes the dialog.
      */
     private void onInstallSelected() {
-
-        // get list of checked items
-        Object[] checked = mTableViewPackage.getCheckedElements();
-
-        if (checked != null) {
-            for (Object obj : checked) {
-                mResult.add((Archive) obj);
-            }
-        }
-
+        // get list of accepted items
+        mResult.addAll(mAccepted);
         mCompleted = true;
     }
 
@@ -382,15 +400,6 @@ final class UpdateChooserDialog extends Dialog {
             }
         }
         return null;
-    }
-
-    private void setSelectedAchive(Archive a) {
-        if (a == null) {
-            mTablePackage.deselectAll();
-        } else {
-            IStructuredSelection sel = new StructuredSelection(a);
-            mTableViewPackage.setSelection(sel, true /*reveal*/);
-        }
     }
 
     private void displayInformation(Archive a) {
@@ -428,14 +437,16 @@ final class UpdateChooserDialog extends Dialog {
         if (mLicenseAcceptAll) {
             mLicenseRadioAcceptAll.setSelection(true);
             mLicenseRadioAccept.setSelection(false);
-            mLicenseRadioRefuse.setSelection(false);
+            mLicenseRadioReject.setSelection(false);
         } else {
-            boolean accept = mTableViewPackage.getChecked(a);
-
             mLicenseRadioAcceptAll.setSelection(false);
-            mLicenseRadioAccept.setSelection(accept);
-            mLicenseRadioRefuse.setSelection(!accept);
+            mLicenseRadioAccept.setSelection(mAccepted.contains(a));
+            mLicenseRadioReject.setSelection(mRejected.contains(a));
         }
+
+        // The install button is enabled if there's at least one
+        // package accepted.
+        mInstallButton.setEnabled(mAccepted.size() > 0);
 
         mInternalLicenseRadioUpdate = false;
     }
@@ -453,21 +464,36 @@ final class UpdateChooserDialog extends Dialog {
         mInternalLicenseRadioUpdate = true;
 
         Archive a = getSelectedArchive();
+        boolean needUpdate = true;
 
         if (!mLicenseAcceptAll && mLicenseRadioAcceptAll.getSelection()) {
             // Accept all has been switched on. Mark all packages as accepted
             mLicenseAcceptAll = true;
-            mTableViewPackage.setAllChecked(true);
+            mAccepted.addAll(mNewToOldArchiveMap.keySet());
+            mRejected.clear();
 
         } else if (mLicenseRadioAccept.getSelection()) {
             // Accept only this one
             mLicenseAcceptAll = false;
-            mTableViewPackage.setChecked(a, true);
+            mAccepted.add(a);
+            mRejected.remove(a);
 
-        } else if (mLicenseRadioRefuse.getSelection()) {
-            // Refuse only this one
+        } else if (mLicenseRadioReject.getSelection()) {
+            // Reject only this one
             mLicenseAcceptAll = false;
-            mTableViewPackage.setChecked(a, false);
+            mAccepted.remove(a);
+            mRejected.add(a);
+
+        } else {
+            needUpdate = false;
+        }
+
+        if (needUpdate) {
+            if (mLicenseAcceptAll) {
+                mTableViewPackage.refresh();
+            } else {
+               mTableViewPackage.refresh(a);
+            }
         }
 
         mInternalLicenseRadioUpdate = false;
@@ -479,24 +505,34 @@ final class UpdateChooserDialog extends Dialog {
     private void onPackageDoubleClick() {
         Archive a = getSelectedArchive();
 
-        mTableViewPackage.setChecked(a, !mTableViewPackage.getChecked(a));
-    }
-
-    private void onPackageChecked(CheckStateChangedEvent event) {
-        Object e = event.getElement();
-        if (e instanceof Archive) {
-            Archive a = (Archive) e;
-
-            // select it
-            mLicenseAcceptAll = false;
-            setSelectedAchive(a);
-            updateLicenceRadios(a);
+        if (mAccepted.contains(a)) {
+            // toggle from accepted to rejected
+            mAccepted.remove(a);
+            mRejected.add(a);
+        } else {
+            // toggle from rejected or unknown to accepted
+            mAccepted.add(a);
+            mRejected.remove(a);
         }
+
+        // update state
+        mLicenseAcceptAll = false;
+        mTableViewPackage.refresh(a);
+        updateLicenceRadios(a);
     }
 
     private class NewArchivesLabelProvider extends LabelProvider {
         @Override
         public Image getImage(Object element) {
+            ImageFactory imgFactory = mUpdaterData.getImageFactory();
+            if (imgFactory != null) {
+                if (mAccepted.contains(element)) {
+                    return imgFactory.getImage("accept_icon16.png");
+                } else if (mRejected.contains(element)) {
+                    return imgFactory.getImage("reject_icon16.png");
+                }
+                return imgFactory.getImage("unknown_icon16.png");
+            }
             return super.getImage(element);
         }
 
