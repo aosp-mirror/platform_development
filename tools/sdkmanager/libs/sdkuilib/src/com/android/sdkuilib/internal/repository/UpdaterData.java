@@ -30,7 +30,6 @@ import com.android.sdklib.internal.repository.RepoSource;
 import com.android.sdklib.internal.repository.RepoSources;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 
 import java.util.ArrayList;
@@ -63,7 +62,6 @@ class UpdaterData {
 
     private final ArrayList<ISdkListener> mListeners = new ArrayList<ISdkListener>();
 
-    /** @deprecated */private Display mDisplay;  // TODO remove
     private Shell mWindowShell;
 
     public interface ISdkListener {
@@ -88,10 +86,6 @@ class UpdaterData {
 
     public String getOsSdkRoot() {
         return mOsSdkRoot;
-    }
-
-    public void setDisplay(Display display) {
-        mDisplay = display;
     }
 
     public void setTaskFactory(ITaskFactory taskFactory) {
@@ -235,8 +229,8 @@ class UpdaterData {
      * <p/>This can be called from any thread.
      */
     public void notifyListeners() {
-        if (mDisplay != null && mListeners.size() > 0) {
-            mDisplay.syncExec(new Runnable() {
+        if (mWindowShell != null && mListeners.size() > 0) {
+            mWindowShell.getDisplay().syncExec(new Runnable() {
                 public void run() {
                     for (ISdkListener listener : mListeners) {
                         try {
