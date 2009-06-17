@@ -190,7 +190,7 @@ public class UpdaterWindowImpl {
         if (mUpdaterData != null) {
             ImageFactory imgFactory = mUpdaterData.getImageFactory();
             if (imgFactory != null) {
-                mAndroidSdkUpdater.setImage(imgFactory.getImage(imageName));
+                mAndroidSdkUpdater.setImage(imgFactory.getImageByName(imageName));
             }
         }
     }

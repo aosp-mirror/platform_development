@@ -310,7 +310,7 @@ final class UpdateChooserDialog extends Dialog {
         if (mUpdaterData != null) {
             ImageFactory imgFactory = mUpdaterData.getImageFactory();
             if (imgFactory != null) {
-                mDialogShell.setImage(imgFactory.getImage(imageName));
+                mDialogShell.setImage(imgFactory.getImageByName(imageName));
             }
         }
     }
@@ -533,11 +533,11 @@ final class UpdateChooserDialog extends Dialog {
             ImageFactory imgFactory = mUpdaterData.getImageFactory();
             if (imgFactory != null) {
                 if (mAccepted.contains(element)) {
-                    return imgFactory.getImage("accept_icon16.png");
+                    return imgFactory.getImageByName("accept_icon16.png");
                 } else if (mRejected.contains(element)) {
-                    return imgFactory.getImage("reject_icon16.png");
+                    return imgFactory.getImageByName("reject_icon16.png");
                 }
-                return imgFactory.getImage("unknown_icon16.png");
+                return imgFactory.getImageByName("unknown_icon16.png");
             }
             return super.getImage(element);
         }

@@ -16,16 +16,12 @@
 
 package com.android.sdkuilib.internal.repository;
 
-import com.android.sdklib.internal.repository.AddonPackage;
 import com.android.sdklib.internal.repository.Archive;
-import com.android.sdklib.internal.repository.DocPackage;
 import com.android.sdklib.internal.repository.IDescription;
 import com.android.sdklib.internal.repository.ITask;
 import com.android.sdklib.internal.repository.ITaskMonitor;
 import com.android.sdklib.internal.repository.Package;
-import com.android.sdklib.internal.repository.PlatformPackage;
 import com.android.sdklib.internal.repository.RepoSource;
-import com.android.sdklib.internal.repository.ToolPackage;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 
 import org.eclipse.jface.viewers.IContentProvider;
@@ -61,38 +57,14 @@ class RepoSourcesAdapter {
 
     public class ViewerLabelProvider extends LabelProvider {
 
-        /** Returns null by default */
+        /** Returns an image appropriate for this element. */
         @Override
         public Image getImage(Object element) {
 
             ImageFactory imgFactory = mUpdaterData.getImageFactory();
 
             if (imgFactory != null) {
-                if (element instanceof RepoSource) {
-                    return imgFactory.getImage("source_icon16.png");
-
-                } else if (element instanceof PlatformPackage) {
-                    return imgFactory.getImage("android_icon_16.png");
-
-                } else if (element instanceof AddonPackage) {
-                    return imgFactory.getImage("addon_icon16.png");
-
-                } else if (element instanceof ToolPackage) {
-                    return imgFactory.getImage("tool_icon16.png");
-
-                } else if (element instanceof DocPackage) {
-                    return imgFactory.getImage("doc_icon16.png");
-
-                } else if (element instanceof Package) {
-                    return imgFactory.getImage("extra_pkg_icon16.png");
-
-                } else if (element instanceof Archive) {
-                    if (((Archive) element).isCompatible()) {
-                        return imgFactory.getImage("archive_icon16.png");
-                    } else {
-                        return imgFactory.getImage("incompat_icon16.png");
-                    }
-                }
+                return imgFactory.getImageForObject(element);
             }
 
             return super.getImage(element);
