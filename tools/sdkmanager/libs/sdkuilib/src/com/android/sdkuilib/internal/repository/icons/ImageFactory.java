@@ -53,8 +53,7 @@ public class ImageFactory {
         InputStream stream = getClass().getResourceAsStream(imageName);
         if (stream != null) {
             try {
-                ImageData imgData = new ImageData(stream);
-                image = new Image(mDisplay, imgData, imgData.getTransparencyMask());
+                image = new Image(mDisplay, stream);
             } catch (SWTException e) {
                 // ignore
             } catch (IllegalArgumentException e) {
