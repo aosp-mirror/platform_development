@@ -220,6 +220,30 @@ public class RemoteAndroidTestRunnerTest extends TestCase {
             return "";
         }
 
+        public String installPackage(String packageFilePath, boolean reinstall)
+                throws IOException {
+            throw new UnsupportedOperationException();
+        }
+
+        public String uninstallPackage(String packageName) throws IOException {
+            throw new UnsupportedOperationException();
+        }
+
+        public String installRemotePackage(String remoteFilePath,
+                boolean reinstall) throws IOException {
+            throw new UnsupportedOperationException();
+        }
+
+        public void removeRemotePackage(String remoteFilePath)
+                throws IOException {
+            throw new UnsupportedOperationException();
+        }
+
+        public String syncPackageToDevice(String localFilePath)
+                throws IOException {
+            throw new UnsupportedOperationException();
+        }
+
     }
 
     /**
