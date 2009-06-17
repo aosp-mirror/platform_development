@@ -18,7 +18,6 @@ package com.android.sdkuilib.internal.repository.icons;
 
 import org.eclipse.swt.SWTException;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.widgets.Display;
 
 import java.io.InputStream;
@@ -74,7 +73,7 @@ public class ImageFactory {
         Iterator<Image> it = mImages.values().iterator();
         while(it.hasNext()) {
             Image img = it.next();
-            if (img != null) {
+            if (img != null && img.isDisposed() == false) {
                 img.dispose();
             }
             it.remove();

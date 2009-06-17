@@ -27,7 +27,7 @@ import com.android.sdklib.ISdkLog;
 import com.android.sdklib.internal.avd.AvdManager;
 import com.android.sdklib.internal.avd.AvdManager.AvdInfo;
 import com.android.sdkuilib.internal.widgets.AvdSelector;
-import com.android.sdkuilib.internal.widgets.AvdSelector.SelectionMode;
+import com.android.sdkuilib.internal.widgets.AvdSelector.DisplayMode;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jface.wizard.WizardPage;
@@ -162,21 +162,7 @@ class AvdManagerListPage extends WizardPage {
            }
         });
 
-        mAvdSelector = new AvdSelector(parent,
-                SelectionMode.SELECT,
-                new AvdSelector.IExtraAction() {
-                    public String label() {
-                        return "Delete AVD...";
-                    }
-
-                    public boolean isEnabled() {
-                        return mAvdSelector != null && mAvdSelector.getSelected() != null;
-                    }
-
-                    public void run() {
-                        onDelete();
-                    }
-            });
+        mAvdSelector = new AvdSelector(parent, getAvdManager(), DisplayMode.MANAGER);
     }
 
     /**
@@ -430,29 +416,12 @@ class AvdManagerListPage extends WizardPage {
      * Tries to preserve the selection.
      */
     private void reloadAvdList() {
-        AvdInfo selected = mAvdSelector.getSelected();
-
-        AvdManager avdm = getAvdManager();
-        AvdInfo[] avds = null;
-
-        // For the AVD manager to reload the list, in case AVDs where created using the
-        // command line tool.
-        // The AVD manager may not exist yet, typically when loading the SDK.
-        if (avdm != null) {
-            try {
-                avdm.reloadAvds();
-            } catch (AndroidLocationException e) {
-                AdtPlugin.log(e, "AVD Manager reload failed");  //$NON-NLS-1$
-            }
-
-            avds = avdm.getValidAvds();
-        }
-
-        mAvdSelector.setAvds(avds, null /*filter*/);
+        mAvdSelector.refresh(true /* reload */);
 
         // Keep the list of known AVD names to check if they exist quickly. however
         // use the list of all AVDs, including broken ones (unless we don't know their
         // name).
+        AvdManager avdm = getAvdManager();
         mKnownAvdNames.clear();
         if (avdm != null) {
             for (AvdInfo avd : avdm.getAllAvds()) {
@@ -462,14 +431,15 @@ class AvdManagerListPage extends WizardPage {
                 }
             }
         }
-
-        mAvdSelector.setSelection(selected);
     }
 
     /**
      * Triggered when the user selects the "delete" button (the extra action in the selector)
      * Deletes the currently selected AVD, if any.
+     *
+     * This is obsolete. Kept around to reuse the code later in the AvdSelector itself.
      */
+    @Deprecated
     private void onDelete() {
         AvdInfo avdInfo = mAvdSelector.getSelected();
         AvdManager avdm = getAvdManager();
