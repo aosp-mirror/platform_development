@@ -494,15 +494,16 @@ final class UpdateChooserDialog extends Dialog {
             needUpdate = false;
         }
 
+        mInternalLicenseRadioUpdate = false;
+
         if (needUpdate) {
             if (mLicenseAcceptAll) {
                 mTableViewPackage.refresh();
             } else {
                mTableViewPackage.refresh(a);
             }
+            updateLicenceRadios(a);
         }
-
-        mInternalLicenseRadioUpdate = false;
     }
 
     /**
