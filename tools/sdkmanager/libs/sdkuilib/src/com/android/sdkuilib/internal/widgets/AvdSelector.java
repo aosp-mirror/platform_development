@@ -16,24 +16,28 @@
 
 package com.android.sdkuilib.internal.widgets;
 
+import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.IAndroidTarget;
+import com.android.sdklib.internal.avd.AvdManager;
 import com.android.sdklib.internal.avd.AvdManager.AvdInfo;
+import com.android.sdklib.internal.avd.AvdManager.AvdInfo.AvdStatus;
+import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
-import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
@@ -42,62 +46,96 @@ import org.eclipse.swt.widgets.TableItem;
 /**
  * The AVD selector is a table that is added to the given parent composite.
  * <p/>
- * To use, create it using {@link #AvdSelector(Composite, SelectionMode, IExtraAction)} then
+ * To use, create it using {@link #AvdSelector(Composite, AvdManager, DisplayMode)} then
  * call {@link #setSelection(AvdInfo)}, {@link #setSelectionListener(SelectionListener)}
  * and finally use {@link #getSelected()} to retrieve the selection.
  */
 public final class AvdSelector {
-
-    private AvdInfo[] mAvds;
     private SelectionListener mSelectionListener;
     private Table mTable;
-    private Label mDescription;
 
     private static int NUM_COL = 2;
-    private final SelectionMode mSelectionMode;
-    private final IExtraAction mExtraAction;
-    private Button mExtraActionButton;
+    private final DisplayMode mDisplayMode;
+    private Button mManagerButton;
+    private IAvdFilter mTargetFilter;
+    private AvdManager mManager;
+    private Image mOkImage;
+    private Image mBrokenImage;
+    private ImageFactory mIconFactory;
 
-    /** The selection mode, either {@link #SELECT} or {@link #CHECK} */
-    public enum SelectionMode {
+    /**
+     * The display mode of the AVD Selector.
+     */
+    public static enum DisplayMode {
         /**
+         * Manager mode. Invalid AVDs are displayed. Buttons to create/delete AVDs
+         */
+        MANAGER,
+
+        /**
+         * Non manager mode. Only valid AVDs are displayed. Cannot create/delete AVDs, but
+         * there is a button to open the AVD Manager.
          * In the "check" selection mode, checkboxes are displayed on each line
          * and {@link AvdSelector#getSelected()} returns the line that is checked
          * even if it is not the currently selected line. Only one line can
          * be checked at once.
          */
-        CHECK,
+        SIMPLE_CHECK,
+
         /**
+         * Non manager mode. Only valid AVDs are displayed. Cannot create/delete AVDs, but
+         * there is a button to open the AVD Manager.
          * In the "select" selection mode, there are no checkboxes and
          * {@link AvdSelector#getSelected()} returns the line currently selected.
          * Only one line can be selected at once.
          */
-        SELECT
+        SIMPLE_SELECTION,
     }
 
     /**
-     * Defines an "extra action" button that can be shown under the AVD Selector.
+     * A filter to control the whether or not an AVD should be displayed by the AVD Selector.
      */
-    public interface IExtraAction {
+    public interface IAvdFilter {
         /**
-         * Label of the button that will be created.
-         * This is invoked once when the button is created and cannot be changed later.
+         * Called before {@link #accept(AvdInfo)} is called for any AVD.
          */
-        public String label();
+        void prepare();
 
         /**
-         * This is invoked just after the selection has changed to update the "enabled"
-         * state of the action. Implementation should use {@link AvdSelector#getSelected()}.
+         * Called to decided whether an AVD should be displayed.
+         * @param avd the AVD to test.
+         * @return true if the AVD should be displayed.
          */
-        public boolean isEnabled();
+        boolean accept(AvdInfo avd);
 
         /**
-         * Run the action, invoked when the button is clicked.
-         *
-         * The caller's action is responsible for reloading the AVD list
-         * using {@link AvdSelector#setAvds(AvdInfo[], IAndroidTarget)}.
+         * Called after {@link #accept(AvdInfo)} has been called on all the AVDs.
          */
-        public void run();
+        void cleanup();
+    }
+
+    /**
+     * Internal implementation of {@link IAvdFilter} to filter out the AVDs that are not
+     * running an image compatible with a specific target.
+     */
+    private final static class TargetBasedFilter implements IAvdFilter {
+        private final IAndroidTarget mTarget;
+
+        TargetBasedFilter(IAndroidTarget target) {
+            mTarget = target;
+        }
+
+        public void prepare() {
+            // nothing to prepare
+        }
+
+        public boolean accept(AvdInfo avd) {
+            return mTarget.isCompatibleBaseFor(avd.getTarget());
+        }
+
+        public void cleanup() {
+            // nothing to clean up
+        }
     }
 
     /**
@@ -107,20 +145,18 @@ public final class AvdSelector {
      * {@link IAndroidTarget} will be displayed.
      *
      * @param parent The parent composite where the selector will be added.
-     * @param avds The list of AVDs. This is <em>not</em> copied, the caller must not modify.
-     *             It can be null.
-     * @param filter When non-null, will display only the AVDs matching this target.
+     * @param manager the AVD manager.
+     * @param filter When non-null, will allow filtering the AVDs to display.
      * @param extraAction When non-null, displays an extra action button.
-     * @param selectionMode One of {@link SelectionMode#SELECT} or {@link SelectionMode#CHECK}
+     * @param displayMode The display mode ({@link DisplayMode}).
      */
     public AvdSelector(Composite parent,
-            AvdInfo[] avds,
-            IAndroidTarget filter,
-            IExtraAction extraAction,
-            SelectionMode selectionMode) {
-        mAvds = avds;
-        mExtraAction = extraAction;
-        mSelectionMode = selectionMode;
+            AvdManager manager,
+            IAvdFilter filter,
+            DisplayMode displayMode) {
+        mManager = manager;
+        mTargetFilter = filter;
+        mDisplayMode = displayMode;
 
         // Layout has 2 columns
         Composite group = new Composite(parent, SWT.NONE);
@@ -129,9 +165,14 @@ public final class AvdSelector {
         gl.marginHeight = gl.marginWidth = 0;
         group.setLayoutData(new GridData(GridData.FILL_BOTH));
         group.setFont(parent.getFont());
+        group.addDisposeListener(new DisposeListener() {
+            public void widgetDisposed(DisposeEvent arg0) {
+                mIconFactory.dispose();
+            }
+        });
 
         int style = SWT.FULL_SELECTION | SWT.SINGLE | SWT.BORDER;
-        if (selectionMode == SelectionMode.CHECK) {
+        if (displayMode == DisplayMode.SIMPLE_CHECK) {
             style |= SWT.CHECK;
         }
         mTable = new Table(group, style);
@@ -139,18 +180,53 @@ public final class AvdSelector {
         mTable.setLinesVisible(false);
         setTableHeightHint(0);
 
-        mDescription = new Label(group, SWT.WRAP);
-        mDescription.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        Composite buttons = new Composite(group, SWT.NONE);
+        buttons.setLayout(gl = new GridLayout(1, false /*makeColumnsEqualWidth*/));
+        gl.marginHeight = gl.marginWidth = 0;
+        buttons.setLayoutData(new GridData(GridData.FILL_VERTICAL));
+        buttons.setFont(group.getFont());
 
-        if (extraAction != null) {
-            mExtraActionButton = new Button(group, SWT.PUSH);
-            mExtraActionButton.setText(extraAction.label());
-            mExtraActionButton.setEnabled(extraAction.isEnabled());
-            mExtraActionButton.addSelectionListener(new SelectionAdapter() {
+        if (displayMode == DisplayMode.MANAGER) {
+            Button newButton = new Button(buttons, SWT.PUSH | SWT.FLAT);
+            newButton.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+            newButton.setText("New");
+            // TODO: callback for button
+
+            Button deleteButton = new Button(buttons, SWT.PUSH | SWT.FLAT);
+            deleteButton.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+            deleteButton.setText("Delete");
+            // TODO: callback for button
+
+            Label l = new Label(buttons, SWT.SEPARATOR | SWT.HORIZONTAL);
+            l.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        }
+
+        Button infoButton = new Button(buttons, SWT.PUSH | SWT.FLAT);
+        infoButton.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        infoButton.setText("Info...");
+        // TODO: callback for button
+
+        Composite padding = new Composite(buttons, SWT.NONE);
+        padding.setLayoutData(new GridData(GridData.FILL_VERTICAL));
+
+        Button refreshButton = new Button(buttons, SWT.PUSH | SWT.FLAT);
+        refreshButton.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        refreshButton.setText("Resfresh");
+        refreshButton.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent arg0) {
+                refresh(true);
+            }
+        });
+
+        if (displayMode != DisplayMode.MANAGER) {
+            mManagerButton = new Button(buttons, SWT.PUSH | SWT.FLAT);
+            mManagerButton.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+            mManagerButton.setText("Manager...");
+            mManagerButton.addSelectionListener(new SelectionAdapter() {
                 @Override
                 public void widgetSelected(SelectionEvent e) {
                     super.widgetSelected(e);
-                    mExtraAction.run();
                 }
             });
         }
@@ -165,41 +241,45 @@ public final class AvdSelector {
         final TableColumn column3 = new TableColumn(mTable, SWT.NONE);
         column3.setText("API Level");
 
+        // get some bitmaps.
+        mIconFactory = new ImageFactory(parent.getDisplay());
+        mOkImage = mIconFactory.getImage("accept_icon16.png");
+        mBrokenImage = mIconFactory.getImage("reject_icon16.png");
+
         adjustColumnsWidth(mTable, column0, column1, column2, column3);
         setupSelectionListener(mTable);
-        fillTable(mTable, filter);
-        setupTooltip(mTable);
+        fillTable(mTable);
     }
 
     /**
      * Creates a new SDK Target Selector, and fills it with a list of {@link AvdInfo}.
      *
      * @param parent The parent composite where the selector will be added.
-     * @param avds The list of AVDs. This is <em>not</em> copied, the caller must not modify.
-     *             It can be null.
-     * @param extraAction When non-null, displays an extra action button.
-     * @param selectionMode One of {@link SelectionMode#SELECT} or {@link SelectionMode#CHECK}
+     * @param manager the AVD manager.
+     * @param displayMode The display mode ({@link DisplayMode}).
      */
-    public AvdSelector(Composite parent,
-            AvdInfo[] avds,
-            IExtraAction extraAction,
-            SelectionMode selectionMode) {
-        this(parent, avds, null /* filter */, extraAction, selectionMode);
+    public AvdSelector(Composite parent, AvdManager manager,
+            DisplayMode displayMode) {
+        this(parent, manager, (IAvdFilter)null /* filter */, displayMode);
     }
 
     /**
-     * Creates a new SDK Target Selector, and fills it with a list of {@link AvdInfo}.
+     * Creates a new SDK Target Selector, and fills it with a list of {@link AvdInfo}, filtered
+     * by an {@link IAndroidTarget}.
+     * <p/>Only the {@link AvdInfo} able to run applications developed for the given
+     * {@link IAndroidTarget} will be displayed.
      *
      * @param parent The parent composite where the selector will be added.
-     * @param extraAction When non-null, displays an extra action button.
-     * @param selectionMode One of {@link SelectionMode#SELECT} or {@link SelectionMode#CHECK}
+     * @param manager the AVD manager.
+     * @param filter Only shows the AVDs matching this target (must not be null).
+     * @param displayMode The display mode ({@link DisplayMode}).
      */
     public AvdSelector(Composite parent,
-            SelectionMode selectionMode,
-            IExtraAction extraAction) {
-        this(parent, null /*avds*/, null /* filter */, extraAction, selectionMode);
+            AvdManager manager,
+            IAndroidTarget filter,
+            DisplayMode displayMode) {
+        this(parent, manager, new TargetBasedFilter(filter), displayMode);
     }
-
     /**
      * Sets the table grid layout data.
      *
@@ -212,41 +292,70 @@ public final class AvdSelector {
         }
         data.grabExcessVerticalSpace = true;
         data.grabExcessHorizontalSpace = true;
-        data.horizontalSpan = NUM_COL;
         data.horizontalAlignment = GridData.FILL;
         data.verticalAlignment = GridData.FILL;
         mTable.setLayoutData(data);
     }
 
     /**
-     * Sets a new set of AVD, with an optional filter.
+     * Refresh the display of Android Virtual Devices.
      * Tries to keep the selection.
      * <p/>
      * This must be called from the UI thread.
      *
-     *
-     * @param avds The list of AVDs. This is <em>not</em> copied, the caller must not modify.
-     *             It can be null.
-     * @param filter An IAndroidTarget. If non-null, only AVD whose target are compatible with the
-     * filter target will displayed an available for selection.
+     * @param reload if true, the AVD manager will reload the AVD from the disk.
+     * @throws AndroidLocationException if reload the AVD failed.
+     * @return false if the reloading failed. This is always true if <var>reload</var> is
+     * <code>false</code>.
      */
-    public void setAvds(AvdInfo[] avds, IAndroidTarget filter) {
+    public boolean refresh(boolean reload) {
+        if (reload) {
+            try {
+                mManager.reloadAvds();
+            } catch (AndroidLocationException e) {
+                return false;
+            }
+        }
 
         AvdInfo selected = getSelected();
 
-        mAvds = avds;
-        fillTable(mTable, filter);
+        fillTable(mTable);
 
         setSelection(selected);
+
+        return true;
     }
 
     /**
-     * Returns the list of known AVDs.
-     * <p/>
-     * This is not a copy. Callers must <em>not</em> modify this array.
+     * Sets a new AVD manager
+     * This does not refresh the display. Call {@link #refresh(boolean)} to do so.
+     * @param manager the AVD manager.
      */
-    public AvdInfo[] getAvds() {
-        return mAvds;
+    public void setManager(AvdManager manager) {
+        mManager = manager;
+    }
+
+    /**
+     * Sets a new AVD filter.
+     * This does not refresh the display. Call {@link #refresh(boolean)} to do so.
+     * @param filter An IAvdFilter. If non-null, this will filter out the AVD to not display.
+     */
+    public void setFilter(IAvdFilter filter) {
+        mTargetFilter = filter;
+    }
+
+    /**
+     * Sets a new Android Target-based AVD filter.
+     * This does not refresh the display. Call {@link #refresh(boolean)} to do so.
+     * @param target An IAndroidTarget. If non-null, only AVD whose target are compatible with the
+     * filter target will displayed an available for selection.
+     */
+    public void setFilter(IAndroidTarget target) {
+        if (target != null) {
+            mTargetFilter = new TargetBasedFilter(target);
+        } else {
+            mTargetFilter = null;
+        }
     }
 
     /**
@@ -281,19 +390,7 @@ public final class AvdSelector {
         int selIndex = mTable.getSelectionIndex();
         int index = 0;
         for (TableItem i : mTable.getItems()) {
-            if (mSelectionMode == SelectionMode.SELECT) {
-                if ((AvdInfo) i.getData() == target) {
-                    found = true;
-                    if (index != selIndex) {
-                        mTable.setSelection(index);
-                        modified = true;
-                    }
-                    break;
-                }
-
-                index++;
-
-            } else if (mSelectionMode == SelectionMode.CHECK){
+            if (mDisplayMode == DisplayMode.SIMPLE_CHECK) {
                 if ((AvdInfo) i.getData() == target) {
                     found = true;
                     if (!i.getChecked()) {
@@ -304,15 +401,22 @@ public final class AvdSelector {
                     modified = true;
                     i.setChecked(false);
                 }
+            } else {
+                if ((AvdInfo) i.getData() == target) {
+                    found = true;
+                    if (index != selIndex) {
+                        mTable.setSelection(index);
+                        modified = true;
+                    }
+                    break;
+                }
+
+                index++;
             }
         }
 
         if (modified && mSelectionListener != null) {
             mSelectionListener.widgetSelected(null);
-        }
-
-        if (mExtraAction != null && mExtraActionButton != null) {
-            mExtraActionButton.setEnabled(mExtraAction.isEnabled());
         }
 
         return found;
@@ -324,17 +428,16 @@ public final class AvdSelector {
      * @return The currently selected item or null.
      */
     public AvdInfo getSelected() {
-        if (mSelectionMode == SelectionMode.SELECT) {
-            int selIndex = mTable.getSelectionIndex();
-            if (selIndex >= 0) {
-                return (AvdInfo) mTable.getItem(selIndex).getData();
-            }
-
-        } else if (mSelectionMode == SelectionMode.CHECK) {
+        if (mDisplayMode == DisplayMode.SIMPLE_CHECK) {
             for (TableItem i : mTable.getItems()) {
                 if (i.getChecked()) {
                     return (AvdInfo) i.getData();
                 }
+            }
+        } else {
+            int selIndex = mTable.getSelectionIndex();
+            if (selIndex >= 0) {
+                return (AvdInfo) mTable.getItem(selIndex).getData();
             }
         }
         return null;
@@ -349,7 +452,6 @@ public final class AvdSelector {
      */
     public void setEnabled(boolean enabled) {
         mTable.setEnabled(enabled);
-        mDescription.setEnabled(enabled);
     }
 
     /**
@@ -368,14 +470,13 @@ public final class AvdSelector {
             @Override
             public void controlResized(ControlEvent e) {
                 Rectangle r = table.getClientArea();
-                column0.setWidth(r.width * 30 / 100); // 30%
+                column0.setWidth(r.width * 25 / 100); // 25%
                 column1.setWidth(r.width * 45 / 100); // 45%
-                column2.setWidth(r.width * 10 / 100); // 10%
+                column2.setWidth(r.width * 15 / 100); // 15%
                 column3.setWidth(r.width * 15 / 100); // 15%
             }
         });
     }
-
 
     /**
      * Creates a selection listener that will check or uncheck the whole line when
@@ -393,15 +494,10 @@ public final class AvdSelector {
                 if (e.item instanceof TableItem) {
                     TableItem i = (TableItem) e.item;
                     enforceSingleSelection(i);
-                    updateDescription(i);
                 }
 
                 if (mSelectionListener != null) {
                     mSelectionListener.widgetSelected(e);
-                }
-
-                if (mExtraAction != null && mExtraActionButton != null) {
-                    mExtraActionButton.setEnabled(mExtraAction.isEnabled());
                 }
             }
 
@@ -416,19 +512,14 @@ public final class AvdSelector {
             public void widgetDefaultSelected(SelectionEvent e) {
                 if (e.item instanceof TableItem) {
                     TableItem i = (TableItem) e.item;
-                    if (mSelectionMode == SelectionMode.CHECK) {
+                    if (mDisplayMode == DisplayMode.SIMPLE_CHECK) {
                         i.setChecked(true);
                     }
                     enforceSingleSelection(i);
-                    updateDescription(i);
                 }
 
                 if (mSelectionListener != null) {
                     mSelectionListener.widgetDefaultSelected(e);
-                }
-
-                if (mExtraAction != null && mExtraActionButton != null) {
-                    mExtraActionButton.setEnabled(mExtraAction.isEnabled());
                 }
             }
 
@@ -437,10 +528,7 @@ public final class AvdSelector {
              * This makes the chekboxes act as radio buttons.
              */
             private void enforceSingleSelection(TableItem item) {
-                if (mSelectionMode == SelectionMode.SELECT) {
-                    // pass
-
-                } else if (mSelectionMode == SelectionMode.CHECK) {
+                if (mDisplayMode == DisplayMode.SIMPLE_CHECK) {
                     if (item.getChecked()) {
                         Table parentTable = item.getParent();
                         for (TableItem i2 : parentTable.getItems()) {
@@ -449,6 +537,8 @@ public final class AvdSelector {
                             }
                         }
                     }
+                } else {
+                    // pass
                 }
             }
         });
@@ -464,20 +554,49 @@ public final class AvdSelector {
      * <li>column 3: sdk version
      * </ul>
      */
-    private void fillTable(final Table table, IAndroidTarget filter) {
+    private void fillTable(final Table table) {
         table.removeAll();
-        if (mAvds != null && mAvds.length > 0) {
+
+        // get the AVDs
+        AvdInfo avds[] = null;
+        if (mManager != null) {
+            if (mDisplayMode == DisplayMode.MANAGER) {
+                avds = mManager.getAllAvds();
+            } else {
+                avds = mManager.getValidAvds();
+            }
+        }
+
+        if (avds != null && avds.length > 0) {
             table.setEnabled(true);
-            for (AvdInfo avd : mAvds) {
-                if (filter == null || filter.isCompatibleBaseFor(avd.getTarget())) {
+
+            if (mTargetFilter != null) {
+                mTargetFilter.prepare();
+            }
+
+            for (AvdInfo avd : avds) {
+                if (mTargetFilter == null || mTargetFilter.accept(avd)) {
                     TableItem item = new TableItem(table, SWT.NONE);
                     item.setData(avd);
                     item.setText(0, avd.getName());
+                    if (mDisplayMode == DisplayMode.MANAGER) {
+                        item.setImage(0, avd.getStatus() == AvdStatus.OK ? mOkImage : mBrokenImage);
+                    }
                     IAndroidTarget target = avd.getTarget();
-                    item.setText(1, target.getFullName());
-                    item.setText(2, target.getApiVersionName());
-                    item.setText(3, Integer.toString(target.getApiVersionNumber()));
+                    if (target != null) {
+                        item.setText(1, target.getFullName());
+                        item.setText(2, target.getApiVersionName());
+                        item.setText(3, Integer.toString(target.getApiVersionNumber()));
+                    } else {
+                        item.setText(1, "?");
+                        item.setText(2, "?");
+                        item.setText(3, "?");
+                    }
                 }
+            }
+
+            if (mTargetFilter != null) {
+                mTargetFilter.cleanup();
             }
         }
 
@@ -489,63 +608,6 @@ public final class AvdSelector {
             item.setText(1, "No AVD available");
             item.setText(2, "--");
             item.setText(3, "--");
-        }
-    }
-
-    /**
-     * Sets up a tooltip that displays the current item description.
-     * <p/>
-     * Displaying a tooltip over the table looks kind of odd here. Instead we actually
-     * display the description in a label under the table.
-     */
-    private void setupTooltip(final Table table) {
-        /*
-         * Reference:
-         * http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.swt.snippets/src/org/eclipse/swt/snippets/Snippet125.java?view=markup
-         */
-
-        final Listener listener = new Listener() {
-            public void handleEvent(Event event) {
-
-                switch(event.type) {
-                case SWT.KeyDown:
-                case SWT.MouseExit:
-                case SWT.MouseDown:
-                    return;
-
-                case SWT.MouseHover:
-                    updateDescription(table.getItem(new Point(event.x, event.y)));
-                    break;
-
-                case SWT.Selection:
-                    if (event.item instanceof TableItem) {
-                        updateDescription((TableItem) event.item);
-                    }
-                    break;
-
-                default:
-                    return;
-                }
-
-            }
-        };
-
-        table.addListener(SWT.Dispose, listener);
-        table.addListener(SWT.KeyDown, listener);
-        table.addListener(SWT.MouseMove, listener);
-        table.addListener(SWT.MouseHover, listener);
-    }
-
-    /**
-     * Updates the description label with the path of the item's AVD, if any.
-     */
-    private void updateDescription(TableItem item) {
-        if (item != null) {
-            Object data = item.getData();
-            if (data instanceof AvdInfo) {
-                String newTooltip = ((AvdInfo) data).getPath();
-                mDescription.setText(newTooltip == null ? "" : newTooltip);  //$NON-NLS-1$
-            }
         }
     }
 }
