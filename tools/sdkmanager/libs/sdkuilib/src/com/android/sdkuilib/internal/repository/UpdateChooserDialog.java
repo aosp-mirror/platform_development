@@ -277,12 +277,18 @@ final class UpdateChooserDialog extends Dialog {
     private void postCreate() {
         setWindowImage();
 
+        // Automatically accept those with an empty license
+        for (Archive a : mNewToOldArchiveMap.keySet()) {
+            String license = a.getParentPackage().getLicense().trim();
+            if (license.length() == 0) {
+                mAccepted.add(a);
+            }
+        }
+
         // Fill the list with the replacement packages
         mTableViewPackage.setLabelProvider(new NewArchivesLabelProvider());
         mTableViewPackage.setContentProvider(new NewArchivesContentProvider());
         mTableViewPackage.setInput(mNewToOldArchiveMap);
-
-        // TODO automatically accept those with an empty license
 
         adjustColumnsWidth();
 
