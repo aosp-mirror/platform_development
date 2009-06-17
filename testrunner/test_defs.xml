@@ -173,7 +173,7 @@ Native tests:
     package="com.android.framework.permission.tests"
     runner="android.test.InstrumentationTestRunner"
     coverage_target="framework"
-   />
+    continuous="true" />
 
 <!--  cts tests -->
 
@@ -383,7 +383,8 @@ Native tests:
 <test name="downloadprovider-permission"
     build_path="packages/providers/DownloadProvider/tests/permission"
     package="com.android.providers.downloads.permission.tests"
-    coverage_target="DownloadProvider" />
+    coverage_target="DownloadProvider"
+    continuous="true" />
 
 <test name="email"
     build_path="packages/apps/Email"
@@ -401,6 +402,18 @@ Native tests:
     build_path="packages/apps/GlobalSearch"
     package="com.android.globalsearch.tests"
     coverage_target="GlobalSearch"
+    continuous="true" />
+
+<test name="globalsearch-permission"
+    build_path="packages/apps/GlobalSearch"
+    package="com.android.globalsearch.permission.tests"
+    coverage_target="GlobalSearch"
+    continuous="true" />
+
+<test name="improvider-permission"
+    build_path="packages/providers/ImProvider/tests/permission"
+    package="com.android.providers.im.permission.tests"
+    coverage_target="ImProvider"
     continuous="true" />
 
 <test name="media"
