@@ -314,12 +314,23 @@ class UpdaterData {
      *  This can be null, in which case a list of remote archive is fetched from all
      *  available sources.
      */
-    public void updateAll(Collection<Archive> selectedArchives) {
+    public void updateOrInstallAll(Collection<Archive> selectedArchives) {
         if (selectedArchives == null) {
             refreshSources(true);
         }
 
         final Map<Archive, Archive> updates = findUpdates(selectedArchives);
+
+        if (selectedArchives != null) {
+            // Not only we want to perform updates but we also want to install the
+            // selected archives. If they do not match an update, list them anyway
+            // except they map themselves to null (no "old" archive)
+            for (Archive a : selectedArchives) {
+                if (!updates.containsValue(a)) {
+                    updates.put(a, null);
+                }
+            }
+        }
 
         UpdateChooserDialog dialog = new UpdateChooserDialog(this, updates);
         dialog.open();
