@@ -26,6 +26,7 @@ import com.android.sdklib.repository.SdkRepository;
 import org.w3c.dom.Node;
 
 import java.io.File;
+import java.util.Map;
 
 /**
  * Represents a platform XML node in an SDK repository.
@@ -40,10 +41,10 @@ public class PlatformPackage extends Package {
      * <p/>
      * This constructor should throw an exception if the package cannot be created.
      */
-    PlatformPackage(RepoSource source, Node packageNode) {
-        super(source, packageNode);
-        mVersion  = getXmlString(packageNode, SdkRepository.NODE_VERSION);
-        mApiLevel = getXmlInt   (packageNode, SdkRepository.NODE_API_LEVEL, 0);
+    PlatformPackage(RepoSource source, Node packageNode, Map<String,String> licenses) {
+        super(source, packageNode, licenses);
+        mVersion  = XmlParserUtils.getXmlString(packageNode, SdkRepository.NODE_VERSION);
+        mApiLevel = XmlParserUtils.getXmlInt   (packageNode, SdkRepository.NODE_API_LEVEL, 0);
     }
 
     /**

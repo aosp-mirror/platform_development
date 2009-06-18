@@ -16,6 +16,8 @@
 
 package com.android.sdklib.repository;
 
+import com.android.sdklib.SdkConstants;
+
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
@@ -239,6 +241,59 @@ public class TestSdkRepository extends TestCase {
         } catch (SAXParseException e) {
             // We expect a parse error referring to this grammar rule
             assertRegex("cvc-datatype-valid.1.2.1: 'NotAnInteger' is not a valid value.*",
+                    e.getMessage());
+            return;
+        }
+        // If we get here, the validator has not failed as we expected it to.
+        fail();
+    }
+
+    /** A document an unknown license id. */
+    public void testLicenseIdNotFound() throws Exception {
+        // we define a license named "lic1" and then reference "lic2" instead
+        String document = "<?xml version=\"1.0\"?>" +
+            "<r:sdk-repository xmlns:r=\"http://schemas.android.com/sdk/android/repository/1\" >" +
+            "<r:license id=\"lic1\"> some license </r:license> " +
+            "<r:tool> <r:uses-license ref=\"lic2\" /> <r:revision>1</r:revision> " +
+            "<r:archives> <r:archive os=\"any\"> <r:size>1</r:size> <r:checksum>2822ae37115ebf13412bbef91339ee0d9454525e</r:checksum> " +
+            "<r:url>url</r:url> </r:archive> </r:archives> </r:tool>" +
+            "</r:sdk-repository>";
+
+        Source source = new StreamSource(new StringReader(document));
+
+        // don't capture the validator errors, we want it to fail and catch the exception
+        Validator validator = getValidator(null);
+        try {
+            validator.validate(source);
+        } catch (SAXParseException e) {
+            // We expect a parse error referring to this grammar rule
+            assertRegex("cvc-id.1: There is no ID/IDREF binding for IDREF 'lic2'.*",
+                    e.getMessage());
+            return;
+        }
+        // If we get here, the validator has not failed as we expected it to.
+        fail();
+    }
+
+    /** A document a slash in an extra path. */
+    public void testExtraPathWithSlash() throws Exception {
+        // we define a license named "lic1" and then reference "lic2" instead
+        String document = "<?xml version=\"1.0\"?>" +
+            "<r:sdk-repository xmlns:r=\"http://schemas.android.com/sdk/android/repository/1\" >" +
+            "<r:extra> <r:revision>1</r:revision> <r:path>path/cannot\\contain\\segments</r:path> " +
+            "<r:archives> <r:archive os=\"any\"> <r:size>1</r:size> <r:checksum>2822ae37115ebf13412bbef91339ee0d9454525e</r:checksum> " +
+            "<r:url>url</r:url> </r:archive> </r:archives> </r:extra>" +
+            "</r:sdk-repository>";
+
+        Source source = new StreamSource(new StringReader(document));
+
+        // don't capture the validator errors, we want it to fail and catch the exception
+        Validator validator = getValidator(null);
+        try {
+            validator.validate(source);
+        } catch (SAXParseException e) {
+            // We expect a parse error referring to this grammar rule
+            assertRegex("cvc-pattern-valid: Value 'path/cannot\\\\contain\\\\segments' is not facet-valid with respect to pattern.*",
                     e.getMessage());
             return;
         }
