@@ -16,6 +16,14 @@
 
 package com.android.sdkuilib.internal.repository.icons;
 
+import com.android.sdklib.internal.repository.AddonPackage;
+import com.android.sdklib.internal.repository.Archive;
+import com.android.sdklib.internal.repository.DocPackage;
+import com.android.sdklib.internal.repository.Package;
+import com.android.sdklib.internal.repository.PlatformPackage;
+import com.android.sdklib.internal.repository.RepoSource;
+import com.android.sdklib.internal.repository.ToolPackage;
+
 import org.eclipse.swt.SWTException;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
@@ -41,8 +49,13 @@ public class ImageFactory {
     /**
      * Loads an image given its filename (with its extension).
      * Might return null if the image cannot be loaded.
+     *
+     * @param imageName The filename (with extension) of the image to load.
+     * @return A new or existing {@link Image}. The caller must NOT dispose the image (the
+     *  image will disposed by {@link #dispose()}). The returned image can be null if the
+     *  expected file is missing.
      */
-    public Image getImage(String imageName) {
+    public Image getImageByName(String imageName) {
 
         Image image = mImages.get(imageName);
         if (image != null) {
@@ -64,6 +77,43 @@ public class ImageFactory {
         mImages.put(imageName, image);
 
         return image;
+    }
+
+    /**
+     * Loads and returns the appropriate image for a given package, archive or source object.
+     *
+     * @param object A {@link RepoSource} or {@link Package} or {@link Archive}.
+     * @return A new or existing {@link Image}. The caller must NOT dispose the image (the
+     *  image will disposed by {@link #dispose()}). The returned image can be null if the
+     *  expected file is missing.
+     */
+    public Image getImageForObject(Object object) {
+        if (object instanceof RepoSource) {
+            return getImageByName("source_icon16.png");
+
+        } else if (object instanceof PlatformPackage) {
+            return getImageByName("android_icon_16.png");
+
+        } else if (object instanceof AddonPackage) {
+            return getImageByName("addon_icon16.png");
+
+        } else if (object instanceof ToolPackage) {
+            return getImageByName("tool_icon16.png");
+
+        } else if (object instanceof DocPackage) {
+            return getImageByName("doc_icon16.png");
+
+        } else if (object instanceof Package) {
+            return getImageByName("extra_pkg_icon16.png");
+
+        } else if (object instanceof Archive) {
+            if (((Archive) object).isCompatible()) {
+                return getImageByName("archive_icon16.png");
+            } else {
+                return getImageByName("incompat_icon16.png");
+            }
+        }
+        return null;
     }
 
     /**

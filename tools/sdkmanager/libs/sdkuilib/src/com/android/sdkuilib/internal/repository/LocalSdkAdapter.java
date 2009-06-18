@@ -20,6 +20,7 @@ import com.android.sdklib.internal.repository.IDescription;
 import com.android.sdklib.internal.repository.LocalSdkParser;
 import com.android.sdklib.internal.repository.Package;
 import com.android.sdklib.internal.repository.RepoSource;
+import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 
 import org.eclipse.jface.viewers.IContentProvider;
 import org.eclipse.jface.viewers.ILabelProvider;
@@ -50,10 +51,16 @@ class LocalSdkAdapter  {
 
     // ------------
 
-    public static class ViewerLabelProvider extends LabelProvider {
-        /** Returns null by default */
+    public class ViewerLabelProvider extends LabelProvider {
+        /** Returns an image appropriate for this element. */
         @Override
         public Image getImage(Object element) {
+            ImageFactory imgFactory = mUpdaterData.getImageFactory();
+
+            if (imgFactory != null) {
+                return imgFactory.getImageForObject(element);
+            }
+
             return super.getImage(element);
         }
 
@@ -69,7 +76,7 @@ class LocalSdkAdapter  {
 
     // ------------
 
-    private static class TableContentProvider implements IStructuredContentProvider {
+    private class TableContentProvider implements IStructuredContentProvider {
 
         // Called when the viewer is disposed
         public void dispose() {
@@ -78,7 +85,7 @@ class LocalSdkAdapter  {
 
         // Called when the input is set or changed on the provider
         public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
-            // pass
+            assert newInput == LocalSdkAdapter.this;
         }
 
         /**
@@ -87,15 +94,14 @@ class LocalSdkAdapter  {
          * of {@link RepoSource}.
          */
         public Object[] getElements(Object inputElement) {
-            if (inputElement instanceof LocalSdkAdapter) {
-                LocalSdkAdapter adapter = (LocalSdkAdapter) inputElement;
-                LocalSdkParser parser = adapter.mUpdaterData.getLocalSdkParser();
+            if (inputElement == LocalSdkAdapter.this) {
+                LocalSdkParser parser = mUpdaterData.getLocalSdkParser();
 
                 Package[] packages = parser.getPackages();
 
                 if (packages == null) {
                     // load on demand the first time
-                    packages = parser.parseSdk(adapter.mUpdaterData.getOsSdkRoot());
+                    packages = parser.parseSdk(mUpdaterData.getOsSdkRoot());
                 }
 
                 if (packages != null) {

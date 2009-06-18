@@ -243,8 +243,8 @@ public final class AvdSelector {
 
         // get some bitmaps.
         mIconFactory = new ImageFactory(parent.getDisplay());
-        mOkImage = mIconFactory.getImage("accept_icon16.png");
-        mBrokenImage = mIconFactory.getImage("reject_icon16.png");
+        mOkImage = mIconFactory.getImageByName("accept_icon16.png");
+        mBrokenImage = mIconFactory.getImageByName("reject_icon16.png");
 
         adjustColumnsWidth(mTable, column0, column1, column2, column3);
         setupSelectionListener(mTable);
