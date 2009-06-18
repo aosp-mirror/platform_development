@@ -434,35 +434,6 @@ class AvdManagerListPage extends WizardPage {
     }
 
     /**
-     * Triggered when the user selects the "delete" button (the extra action in the selector)
-     * Deletes the currently selected AVD, if any.
-     *
-     * This is obsolete. Kept around to reuse the code later in the AvdSelector itself.
-     */
-    @Deprecated
-    private void onDelete() {
-        AvdInfo avdInfo = mAvdSelector.getSelected();
-        AvdManager avdm = getAvdManager();
-        if (avdInfo == null || avdm == null) {
-            return;
-        }
-
-        // Confirm you want to delete this AVD
-        if (!AdtPlugin.displayPrompt("Delete Android Virtual Device",
-                String.format("Please confirm that you want to delete the Android Virtual Device named '%s'. This operation cannot be reverted.",
-                        avdInfo.getName()))) {
-            return;
-        }
-
-        SdkLog log = new SdkLog(String.format("Result of deleting AVD '%s':", avdInfo.getName()));
-
-        boolean success = avdm.deleteAvd(avdInfo, log);
-
-        log.display(success);
-        reloadAvdList();
-    }
-
-    /**
      * Triggered when the user selects the "create" button.
      */
     private void onCreate() {

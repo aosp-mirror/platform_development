@@ -783,7 +783,7 @@ public final class AvdManager {
 
             File f = avdInfo.getIniFile();
             if (f != null && f.exists()) {
-                log.warning("Deleting file %1$s", f.getCanonicalPath());
+                log.printf("Deleting file %1$s", f.getCanonicalPath());
                 if (!f.delete()) {
                     log.error(null, "Failed to delete %1$s", f.getCanonicalPath());
                     error = true;
@@ -794,7 +794,7 @@ public final class AvdManager {
             if (path != null) {
                 f = new File(path);
                 if (f.exists()) {
-                    log.warning("Deleting folder %1$s", f.getCanonicalPath());
+                    log.printf("Deleting folder %1$s", f.getCanonicalPath());
                     recursiveDelete(f);
                     if (!f.delete()) {
                         log.error(null, "Failed to delete %1$s", f.getCanonicalPath());
@@ -806,10 +806,10 @@ public final class AvdManager {
             removeAvd(avdInfo);
 
             if (error) {
-                log.printf("AVD '%1$s' deleted with errors. See warnings above.\n",
+                log.printf("\nAVD '%1$s' deleted with errors. See errors above.",
                         avdInfo.getName());
             } else {
-                log.printf("AVD '%1$s' deleted.\n", avdInfo.getName());
+                log.printf("\nAVD '%1$s' deleted.", avdInfo.getName());
                 return true;
             }
 
