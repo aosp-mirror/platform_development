@@ -102,10 +102,23 @@ public class PlatformPackage extends Package {
      * has this platform version installed, we'll use that one.
      *
      * @param osSdkRoot The OS path of the SDK root folder.
+     * @param suggestedDir A suggestion for the installation folder name, based on the root
+     *                     folder used in the zip archive.
+     * @param sdkManager An existing SDK manager to list current platforms and addons.
      * @return A new {@link File} corresponding to the directory to use to install this package.
      */
     @Override
-    public File getInstallFolder(String osSdkRoot) {
+    public File getInstallFolder(String osSdkRoot, String suggestedDir, SdkManager sdkManager) {
+
+        // First find if this add-on is already installed. If so, reuse the same directory.
+        for (IAndroidTarget target : sdkManager.getTargets()) {
+            if (target.isPlatform() &&
+                    target.getApiVersionNumber() == getApiLevel() &&
+                    target.getApiVersionName().equals(getVersion())) {
+                return new File(target.getLocation());
+            }
+        }
+
         File platforms = new File(osSdkRoot, SdkConstants.FD_PLATFORMS);
         File folder = new File(platforms, String.format("android-%s", getVersion())); //$NON-NLS-1$
         // TODO find similar existing platform in platforms folder

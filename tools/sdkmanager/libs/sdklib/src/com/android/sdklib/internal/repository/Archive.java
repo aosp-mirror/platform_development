@@ -16,6 +16,8 @@
 
 package com.android.sdklib.internal.repository;
 
+import com.android.sdklib.SdkManager;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -341,7 +343,10 @@ public class Archive implements IDescription {
      *
      * @return True if the archive was installed, false otherwise.
      */
-    public boolean install(String osSdkRoot, boolean forceHttp, ITaskMonitor monitor) {
+    public boolean install(String osSdkRoot,
+            boolean forceHttp,
+            SdkManager sdkManager,
+            ITaskMonitor monitor) {
 
         File archiveFile = null;
         try {
@@ -364,7 +369,7 @@ public class Archive implements IDescription {
 
             archiveFile = downloadFile(monitor, forceHttp);
             if (archiveFile != null) {
-                if (unarchive(osSdkRoot, archiveFile, monitor)) {
+                if (unarchive(osSdkRoot, archiveFile, sdkManager, monitor)) {
                     monitor.setResult("Installed: %1$s", name);
                     return true;
                 }
@@ -568,48 +573,63 @@ public class Archive implements IDescription {
     /**
      * Install the given archive in the given folder.
      */
-    private boolean unarchive(String osSdkRoot, File archiveFile, ITaskMonitor monitor) {
-        String name = getParentPackage().getShortDescription();
-        String desc = String.format("Installing %1$s", name);
-        monitor.setDescription(desc);
+    private boolean unarchive(String osSdkRoot,
+            File archiveFile,
+            SdkManager sdkManager,
+            ITaskMonitor monitor) {
+        String pkgName = getParentPackage().getShortDescription();
+        String pkgDesc = String.format("Installing %1$s", pkgName);
+        monitor.setDescription(pkgDesc);
 
-        File destFolder = getParentPackage().getInstallFolder(osSdkRoot);
+        // We always unzip in a temp folder which name depends on the package type
+        // (e.g. addon, tools, etc.) and then move the folder to the destination folder.
+        // If the destination folder exists, it will be renamed and deleted at the very
+        // end if everything succeeded.
 
-        File unzipDestFolder = destFolder;
+        String pkgKind = getParentPackage().getClass().getSimpleName();
+
+        File destFolder = null;
+        File unzipDestFolder = null;
         File renamedDestFolder = null;
 
         try {
-            // If this folder already exists, unzip in a temporary folder and then move/unlink.
-            if (destFolder.exists()) {
-                // Find a new temp folder that doesn't exist yet
-                unzipDestFolder = findTempFolder(destFolder, "new");  //$NON-NLS-1$
+            // Find a new temp folder that doesn't exist yet
+            unzipDestFolder = findTempFolder(osSdkRoot, pkgKind, "new");  //$NON-NLS-1$
 
-                if (unzipDestFolder == null) {
-                    // this should not seriously happen.
-                    monitor.setResult("Failed to find a suitable temp directory similar to %1$s.",
-                            destFolder.getPath());
-                    return false;
-                }
+            if (unzipDestFolder == null) {
+                // this should not seriously happen.
+                monitor.setResult("Failed to find a temp directory in %1$s.", osSdkRoot);
+                return false;
             }
 
             if (!unzipDestFolder.mkdirs()) {
-                monitor.setResult("Failed to create directory %1$s",
-                        unzipDestFolder.getPath());
+                monitor.setResult("Failed to create directory %1$s", unzipDestFolder.getPath());
                 return false;
             }
 
-            if (!unzipFolder(archiveFile, getSize(), unzipDestFolder, desc, monitor)) {
+            String[] zipRootFolder = new String[] { null };
+            if (!unzipFolder(archiveFile, getSize(),
+                    unzipDestFolder, pkgDesc,
+                    zipRootFolder, monitor)) {
                 return false;
             }
 
-            if (unzipDestFolder != destFolder) {
-                // Swap the old folder by the new one.
-                // Both original folders will be deleted in the finally clause below.
-                renamedDestFolder = findTempFolder(destFolder, "old");  //$NON-NLS-1$
+            // Compute destination directory
+            destFolder = getParentPackage().getInstallFolder(
+                    osSdkRoot, zipRootFolder[0], sdkManager);
+
+            if (destFolder == null) {
+                // this should not seriously happen.
+                monitor.setResult("Failed to compute installation directory for %1$s.", pkgName);
+                return false;
+            }
+
+            // Swap the old folder by the new one.
+            if (destFolder.isDirectory()) {
+                renamedDestFolder = findTempFolder(osSdkRoot, pkgKind, "old");  //$NON-NLS-1$
                 if (renamedDestFolder == null) {
                     // this should not seriously happen.
-                    monitor.setResult("Failed to find a suitable temp directory similar to %1$s.",
-                            destFolder.getPath());
+                    monitor.setResult("Failed to find a temp directory in %1$s.", osSdkRoot);
                     return false;
                 }
 
@@ -619,28 +639,36 @@ public class Archive implements IDescription {
                     return false;
 
                 }
-                if (!unzipDestFolder.renameTo(destFolder)) {
-                    monitor.setResult("Failed to rename directory %1$s to %2$s",
-                            unzipDestFolder.getPath(), destFolder.getPath());
-                    return false;
-                }
             }
 
+            if (!unzipDestFolder.renameTo(destFolder)) {
+                monitor.setResult("Failed to rename directory %1$s to %2$s",
+                        unzipDestFolder.getPath(), destFolder.getPath());
+                return false;
+            }
+
+            unzipDestFolder = null;
             return true;
 
         } finally {
             // Cleanup if the unzip folder is still set.
             deleteFileOrFolder(renamedDestFolder);
-            if (unzipDestFolder != destFolder) {
-                deleteFileOrFolder(unzipDestFolder);
-            }
+            deleteFileOrFolder(unzipDestFolder);
         }
     }
 
+    /**
+     * Unzips a zip file into the given destination directory.
+     *
+     * The archive file MUST have a unique "root" folder. This root folder is skipped when
+     * unarchiving. However we return that root folder name to the caller, as it can be used
+     * as a template to know what destination directory to use in the Add-on case.
+     */
     private boolean unzipFolder(File archiveFile,
             long compressedSize,
             File unzipDestFolder,
             String description,
+            String[] outZipRootFolder,
             ITaskMonitor monitor) {
 
         description += " (%1$d%%)";
@@ -678,6 +706,9 @@ public class Archive implements IDescription {
                 if (pos < 0 || pos == name.length() - 1) {
                     continue;
                 } else {
+                    if (outZipRootFolder[0] == null && pos > 0) {
+                        outZipRootFolder[0] = name.substring(0, pos);
+                    }
                     name = name.substring(pos + 1);
                 }
 
@@ -762,21 +793,27 @@ public class Archive implements IDescription {
     }
 
     /**
-     * Finds a temp folder which name is similar to the one of the ideal folder
-     * and with a ".tmpN" appended.
+     * Finds a temp folder in the form of osBasePath/temp/prefix.suffixNNN.
      * <p/>
      * This operation is not atomic so there's no guarantee the folder can't get
      * created in between. This is however unlikely and the caller can assume the
      * returned folder does not exist yet.
      * <p/>
-     * Returns null if no such folder can be found (e.g. if all candidates exist),
-     * which is rather unlikely.
+     * Returns null if no such folder can be found (e.g. if all candidates exist,
+     * which is rather unlikely) or if the base temp folder cannot be created.
      */
-    private File findTempFolder(File idealFolder, String suffix) {
-        String basePath = idealFolder.getPath();
+    private File findTempFolder(String osBasePath, String prefix, String suffix) {
+        File baseTempFolder = new File(osBasePath, "temp");
+
+        if (!baseTempFolder.isDirectory()) {
+            if (!baseTempFolder.mkdirs()) {
+                return null;
+            }
+        }
 
         for (int i = 1; i < 100; i++) {
-            File folder = new File(String.format("%1$s.%2$s%3$02d", basePath, suffix, i));  //$NON-NLS-1$
+            File folder = new File(baseTempFolder,
+                    String.format("%1$s.%2$s%3$02d", prefix, suffix, i));  //$NON-NLS-1$
             if (!folder.exists()) {
                 return folder;
             }

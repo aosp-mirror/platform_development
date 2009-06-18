@@ -17,7 +17,6 @@
 package com.android.sdklib.internal.repository;
 
 import com.android.sdklib.IAndroidTarget;
-import com.android.sdklib.ISdkLog;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.repository.Archive.Arch;
@@ -63,7 +62,7 @@ public class LocalSdkParser {
     }
 
     /**
-     * Returns the packages found by the last call to {@link #parseSdk(String)}.
+     * Returns the packages found by the last call to {@link #parseSdk(String, SdkManager)}.
      */
     public Package[] getPackages() {
         return mPackages;
@@ -71,7 +70,7 @@ public class LocalSdkParser {
 
     /**
      * Clear the internal packages list. After this call, {@link #getPackages()} will return
-     * null till {@link #parseSdk(String)} is called.
+     * null till {@link #parseSdk(String, SdkManager)} is called.
      */
     public void clearPackages() {
         mPackages = null;
@@ -84,9 +83,10 @@ public class LocalSdkParser {
      * at any time later.
      *
      * @param osSdkRoot The path to the SDK folder.
+     * @param sdkManager An existing SDK manager to list current platforms and addons.
      * @return The packages found. Can be retrieved later using {@link #getPackages()}.
      */
-    public Package[] parseSdk(String osSdkRoot) {
+    public Package[] parseSdk(String osSdkRoot, SdkManager sdkManager) {
         ArrayList<Package> packages = new ArrayList<Package>();
 
         Package pkg = scanDoc(new File(osSdkRoot, SdkConstants.FD_DOCS));
@@ -100,20 +100,7 @@ public class LocalSdkParser {
         }
 
         // for platforms and add-ons, rely on the SdkManager parser
-        SdkManager sdkman = SdkManager.createManager(osSdkRoot, new ISdkLog() {
-            // A dummy sdk logger that doesn't log anything.
-            public void error(Throwable t, String errorFormat, Object... args) {
-                // pass
-            }
-            public void printf(String msgFormat, Object... args) {
-                // pass
-            }
-            public void warning(String warningFormat, Object... args) {
-                // pass
-            }
-        });
-
-        for(IAndroidTarget target : sdkman.getTargets()) {
+        for(IAndroidTarget target : sdkManager.getTargets()) {
             pkg = null;
 
             if (target.isPlatform()) {

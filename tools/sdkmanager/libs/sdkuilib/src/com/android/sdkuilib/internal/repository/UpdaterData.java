@@ -273,7 +273,7 @@ class UpdaterData {
                             break;
                         }
 
-                        if (archive.install(mOsSdkRoot, forceHttp, monitor)) {
+                        if (archive.install(mOsSdkRoot, forceHttp, mSdkManager, monitor)) {
                             numInstalled++;
                         }
 
