@@ -606,7 +606,7 @@ public final class SdkManager {
 
 
     /**
-     * Parses a property file and returns
+     * Parses a property file (using UTF-8 encoding) and returns
      * @param buildProp the property file to parse
      * @param log the ISdkLog object receiving warning/error from the parsing.
      * @return the map of (key,value) pairs, or null if the parsing failed.
@@ -616,7 +616,7 @@ public final class SdkManager {
         BufferedReader reader = null;
         try {
             fis = new FileInputStream(buildProp);
-            reader = new BufferedReader(new InputStreamReader(fis));
+            reader = new BufferedReader(new InputStreamReader(fis, SdkConstants.INI_CHARSET));
 
             String line = null;
             Map<String, String> map = new HashMap<String, String>();

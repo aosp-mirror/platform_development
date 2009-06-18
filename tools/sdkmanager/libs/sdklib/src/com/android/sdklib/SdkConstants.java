@@ -41,6 +41,11 @@ public final class SdkConstants {
      */
     public final static int CURRENT_PLATFORM = currentPlatform();
 
+    /**
+     * Charset for the ini file handled by the SDK.
+     */
+    public final static String INI_CHARSET = "UTF-8";
+
     /** An SDK Project's AndroidManifest.xml file */
     public static final String FN_ANDROID_MANIFEST_XML= "AndroidManifest.xml";
     /** An SDK Project's build.xml file */
