@@ -18,11 +18,13 @@ package com.android.sdkuilib.internal.widgets;
 
 import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.IAndroidTarget;
+import com.android.sdklib.ISdkLog;
 import com.android.sdklib.internal.avd.AvdManager;
 import com.android.sdklib.internal.avd.AvdManager.AvdInfo;
 import com.android.sdklib.internal.avd.AvdManager.AvdInfo.AvdStatus;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
@@ -37,10 +39,14 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
+
+import java.util.ArrayList;
 
 
 /**
@@ -195,7 +201,12 @@ public final class AvdSelector {
             Button deleteButton = new Button(buttons, SWT.PUSH | SWT.FLAT);
             deleteButton.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
             deleteButton.setText("Delete");
-            // TODO: callback for button
+            deleteButton.addSelectionListener(new SelectionAdapter() {
+                @Override
+                public void widgetSelected(SelectionEvent arg0) {
+                    onDelete();
+                }
+            });
 
             Label l = new Label(buttons, SWT.SEPARATOR | SWT.HORIZONTAL);
             l.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
@@ -610,4 +621,108 @@ public final class AvdSelector {
             item.setText(3, "--");
         }
     }
+
+    private void onDelete() {
+        final AvdInfo avdInfo = getSelected();
+
+        // get the current Display
+        final Display display = mTable.getDisplay();
+
+        // Confirm you want to delete this AVD
+        final boolean[] result = new boolean[1];
+        display.syncExec(new Runnable() {
+            public void run() {
+                Shell shell = display.getActiveShell();
+                result[0] = MessageDialog.openQuestion(shell,
+                        "Delete Android Virtual Device",
+                        String.format(
+                                "Please confirm that you want to delete the Android Virtual Device named '%s'. This operation cannot be reverted.",
+                                avdInfo.getName()));
+            }
+        });
+
+        if (result[0] == false) {
+            return;
+        }
+
+        // log for this action.
+        SdkLog log = new SdkLog(
+                String.format("Result of deleting AVD '%s':", avdInfo.getName()),
+                display);
+
+        // delete the AVD
+        boolean success = mManager.deleteAvd(avdInfo, log);
+
+        // display the result
+        log.displayResult(success);
+
+        if (success) {
+            refresh(false);
+        }
+    }
+
+
+    /**
+     * Collects all log from the AVD action and displays it in a dialog.
+     */
+    private class SdkLog implements ISdkLog {
+
+        final ArrayList<String> logMessages = new ArrayList<String>();
+        private final String mMessage;
+        private final Display mDisplay;
+
+        public SdkLog(String message, Display display) {
+            mMessage = message;
+            mDisplay = display;
+        }
+
+        public void error(Throwable throwable, String errorFormat, Object... arg) {
+            if (errorFormat != null) {
+                logMessages.add(String.format("Error: " + errorFormat, arg));
+            }
+
+            if (throwable != null) {
+                logMessages.add(throwable.getMessage());
+            }
+        }
+
+        public void warning(String warningFormat, Object... arg) {
+            logMessages.add(String.format("Warning: " + warningFormat, arg));
+        }
+
+        public void printf(String msgFormat, Object... arg) {
+            logMessages.add(String.format(msgFormat, arg));
+        }
+
+        /**
+         * Displays the log if anything was captured.
+         */
+        public void displayResult(final boolean success) {
+            if (logMessages.size() > 0) {
+                final StringBuilder sb = new StringBuilder(mMessage + "\n");
+                for (String msg : logMessages) {
+                    sb.append('\n');
+                    sb.append(msg);
+                }
+
+                // display the message
+                // dialog box only run in ui thread..
+                mDisplay.asyncExec(new Runnable() {
+                    public void run() {
+                        Shell shell = mDisplay.getActiveShell();
+                        if (success) {
+                            MessageDialog.openInformation(shell, "Android Virtual Devices Manager",
+                                    sb.toString());
+                        } else {
+                            MessageDialog.openError(shell, "Android Virtual Devices Manager",
+                                    sb.toString());
+
+                        }
+                    }
+                });
+            }
+        }
+    }
+
+
 }

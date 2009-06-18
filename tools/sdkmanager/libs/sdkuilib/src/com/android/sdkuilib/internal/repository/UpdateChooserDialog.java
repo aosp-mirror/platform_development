@@ -245,6 +245,11 @@ final class UpdateChooserDialog extends Dialog {
         placeholder = new Label(mDialogShell, SWT.NONE);
         placeholder.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, true, false, 1, 1));
 
+        // for MacOS, the Cancel button should be left.
+        if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_DARWIN) {
+            mCancelButton = new Button(mDialogShell, SWT.PUSH);
+        }
+
         mInstallButton = new Button(mDialogShell, SWT.PUSH);
         mInstallButton.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
         mInstallButton.setText("Install Accepted");
@@ -255,7 +260,10 @@ final class UpdateChooserDialog extends Dialog {
             }
         });
 
-        mCancelButton = new Button(mDialogShell, SWT.PUSH);
+        // if we haven't created the cancel button yet (macos?), create it now.
+        if (mCancelButton == null) {
+            mCancelButton = new Button(mDialogShell, SWT.PUSH);
+        }
         mCancelButton.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
         mCancelButton.setText("Cancel");
         mCancelButton.addSelectionListener(new SelectionAdapter() {
