@@ -182,25 +182,46 @@ public class AddonPackage extends Package {
      * has this add-ons installed, we'll use that one.
      *
      * @param osSdkRoot The OS path of the SDK root folder.
+     * @param suggestedDir A suggestion for the installation folder name, based on the root
+     *                     folder used in the zip archive.
+     * @param sdkManager An existing SDK manager to list current platforms and addons.
      * @return A new {@link File} corresponding to the directory to use to install this package.
      */
     @Override
-    public File getInstallFolder(String osSdkRoot) {
+    public File getInstallFolder(String osSdkRoot, String suggestedDir, SdkManager sdkManager) {
         File addons = new File(osSdkRoot, SdkConstants.FD_ADDONS);
 
-        String name = String.format("%s-%d", getName(), getApiLevel()); // $NON-NLS-1$
+        // First find if this add-on is already installed. If so, reuse the same directory.
+        for (IAndroidTarget target : sdkManager.getTargets()) {
+            if (!target.isPlatform() &&
+                    target.getApiVersionNumber() == getApiLevel() &&
+                    target.getName().equals(getName()) &&
+                    target.getVendor().equals(getVendor())) {
+                return new File(target.getLocation());
+            }
+        }
 
-        // FIXME this will fail if the name is not ASCII compatible. This could easily
-        // happen: a Chinese or Japanese name etc for example,
-        // to name a few.
-        name = name.toLowerCase();
-        name = name.replaceAll("[^a-zA-Z0-9_-]+", "_");                 // $NON-NLS-1$
-        name = name.replaceAll("_+", "_");                              // $NON-NLS-1$
+        // Otherwise, see about reusing the suggestedDir. It must not be already used or
+        // add some index to it, or we try to make up one.
+        String name = suggestedDir;
 
-        File folder = new File(addons, name);
+        if (suggestedDir == null || suggestedDir.length() == 0) {
+            name = String.format("addon-%s-%s-%d", getName(), getVendor(), getApiLevel()); //$NON-NLS-1$
+            name = name.toLowerCase();
+            name = name.replaceAll("[^a-z0-9_-]+", "_");      //$NON-NLS-1$ //$NON-NLS-2$
+            name = name.replaceAll("_+", "_");                //$NON-NLS-1$ //$NON-NLS-2$
+        }
 
-        // TODO find similar existing addon in addons folder
-        return folder;
+        for (int i = 0; i < 100; i++) {
+            String name2 = i == 0 ? name : String.format("%s-%d", name, i); //$NON-NLS-1$
+            File folder = new File(addons, name2);
+            if (!folder.exists()) {
+                return folder;
+            }
+        }
+
+        // We shouldn't really get here. I mean, seriously, we tried hard enough.
+        return null;
     }
 
     /**
