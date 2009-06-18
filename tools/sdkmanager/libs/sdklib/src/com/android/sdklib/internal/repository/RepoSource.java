@@ -23,11 +23,9 @@ import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
-import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.StringReader;
 import java.net.URL;
 import java.util.ArrayList;
 
@@ -108,7 +106,7 @@ public class RepoSource implements IDescription {
         monitor.setDescription("Fetching %1$s", url);
         monitor.incProgress(1);
 
-        String xml = fetchUrl(url, monitor);
+        ByteArrayInputStream xml = fetchUrl(url, monitor);
 
         if (xml == null) {
             mDescription += String.format("\nFailed to fetch URL %1$s", url);
@@ -155,34 +153,33 @@ public class RepoSource implements IDescription {
      * Java URL Reader: http://java.sun.com/docs/books/tutorial/networking/urls/readingURL.html
      * Java set Proxy: http://java.sun.com/docs/books/tutorial/networking/urls/_setProxy.html
      */
-    private String fetchUrl(String urlString, ITaskMonitor monitor) {
+    private ByteArrayInputStream fetchUrl(String urlString, ITaskMonitor monitor) {
         URL url;
         try {
             url = new URL(urlString);
 
-            StringBuilder xml = new StringBuilder();
             InputStream is = null;
-            BufferedReader br = null;
+
+            int inc = 65536;
+            int curr = 0;
+            byte[] result = new byte[inc];
+
             try {
                 is = url.openStream();
-                br = new BufferedReader(new InputStreamReader(is));
 
-                String line;
-                while ((line = br.readLine()) != null) {
-                    xml.append(line);
-                }
-
-                return xml.toString();
-
-            } finally {
-                if (br != null) {
-                    try {
-                        br.close();
-                    } catch (IOException e) {
-                        // pass
+                int n;
+                while ((n = is.read(result, curr, result.length - curr)) != -1) {
+                    curr += n;
+                    if (curr == result.length) {
+                        byte[] temp = new byte[curr + inc];
+                        System.arraycopy(result, 0, temp, 0, curr);
+                        result = temp;
                     }
                 }
 
+                return new ByteArrayInputStream(result, 0, curr);
+
+            } finally {
                 if (is != null) {
                     try {
                         is.close();
@@ -203,11 +200,12 @@ public class RepoSource implements IDescription {
      * Validates this XML against the SDK Repository schema.
      * Returns true if the XML was correctly validated.
      */
-    private boolean validateXml(String xml, ITaskMonitor monitor) {
+    private boolean validateXml(ByteArrayInputStream xml, ITaskMonitor monitor) {
 
         try {
             Validator validator = getValidator();
-            validator.validate(new StreamSource(new StringReader(xml)));
+            xml.reset();
+            validator.validate(new StreamSource(xml));
             return true;
 
         } catch (SAXException e) {
@@ -240,7 +238,7 @@ public class RepoSource implements IDescription {
      * Parse all packages defined in the SDK Repository XML and creates
      * a new mPackages array with them.
      */
-    private boolean parsePackages(String xml, ITaskMonitor monitor) {
+    private boolean parsePackages(ByteArrayInputStream xml, ITaskMonitor monitor) {
 
         try {
             Document doc = getDocument(xml);
@@ -321,14 +319,15 @@ public class RepoSource implements IDescription {
     /**
      * Takes an XML document as a string as parameter and returns a DOM for it.
      */
-    private Document getDocument(String xml)
+    private Document getDocument(ByteArrayInputStream xml)
             throws ParserConfigurationException, SAXException, IOException {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         factory.setIgnoringComments(true);
         factory.setNamespaceAware(true);
 
         DocumentBuilder builder = factory.newDocumentBuilder();
-        Document doc = builder.parse(new InputSource(new StringReader(xml)));
+        xml.reset();
+        Document doc = builder.parse(new InputSource(xml));
 
         return doc;
     }
