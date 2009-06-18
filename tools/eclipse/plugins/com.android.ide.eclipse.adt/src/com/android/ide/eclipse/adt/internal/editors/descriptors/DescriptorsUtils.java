@@ -57,7 +57,7 @@ public final class DescriptorsUtils {
     public static final String MANIFEST_SDK_URL = "/reference/android/R.styleable.html#";  //$NON-NLS-1$
 
     public static final String IMAGE_KEY = "image"; //$NON-NLS-1$
-    
+
     private static final String CODE  = "$code";  //$NON-NLS-1$
     private static final String LINK  = "$link";  //$NON-NLS-1$
     private static final String ELEM  = "$elem";  //$NON-NLS-1$
@@ -72,7 +72,7 @@ public final class DescriptorsUtils {
         /**
          * Creates a new {@link TextAttributeDescriptor} instance for the given XML name,
          * UI name and tooltip.
-         * 
+         *
          * @param xmlName The XML attribute name.
          * @param uiName The UI attribute name.
          * @param nsUri The URI of the attribute. Can be null if attribute has no namespace.
@@ -86,7 +86,7 @@ public final class DescriptorsUtils {
 
     /**
      * Add all {@link AttributeInfo} to the the array of {@link AttributeDescriptor}.
-     * 
+     *
      * @param attributes The list of {@link AttributeDescriptor} to append to
      * @param elementXmlName Optional XML local name of the element to which attributes are
      *              being added. When not null, this is used to filter overrides.
@@ -120,7 +120,7 @@ public final class DescriptorsUtils {
 
     /**
      * Add an {@link AttributeInfo} to the the array of {@link AttributeDescriptor}.
-     * 
+     *
      * @param attributes The list of {@link AttributeDescriptor} to append to
      * @param elementXmlName Optional XML local name of the element to which attributes are
      *              being added. When not null, this is used to filter overrides.
@@ -145,13 +145,13 @@ public final class DescriptorsUtils {
         if (required) {
             uiName += "*"; //$NON-NLS-1$
         }
-        
+
         String tooltip = null;
         String rawTooltip = info.getJavaDoc();
         if (rawTooltip == null) {
             rawTooltip = "";
         }
-        
+
         String deprecated = info.getDeprecatedDoc();
         if (deprecated != null) {
             if (rawTooltip.length() > 0) {
@@ -172,7 +172,7 @@ public final class DescriptorsUtils {
         if (flen > 0) {
             // Fill the formats in a set for faster access
             HashSet<Format> formats_set = new HashSet<Format>();
-            
+
             StringBuilder sb = new StringBuilder();
             if (rawTooltip != null && rawTooltip.length() > 0) {
                 sb.append(rawTooltip);
@@ -220,7 +220,7 @@ public final class DescriptorsUtils {
                         overrideAttrLocalName = elements[elements.length - 1];
                         elements = elements[0].split(",");       //$NON-NLS-1$
                     }
-                    
+
                     if (overrideAttrLocalName == null ||
                             !overrideAttrLocalName.equals(xmlLocalName)) {
                         continue;
@@ -236,7 +236,7 @@ public final class DescriptorsUtils {
                             }
                         }
                     }
-                    
+
                     if (!ok_element) {
                         continue;
                     }
@@ -247,7 +247,7 @@ public final class DescriptorsUtils {
                             // The override is instance of the class to create, which must
                             // have a constructor compatible with TextAttributeDescriptor.
                             @SuppressWarnings("unchecked") //$NON-NLS-1$
-                            Class<? extends TextAttributeDescriptor> clazz = 
+                            Class<? extends TextAttributeDescriptor> clazz =
                                 (Class<? extends TextAttributeDescriptor>) override;
                             Constructor<? extends TextAttributeDescriptor> cons;
                                 cons = clazz.getConstructor(new Class<?>[] {
@@ -310,7 +310,7 @@ public final class DescriptorsUtils {
      * Indicates the the given {@link AttributeInfo} already exists in the ArrayList of
      * {@link AttributeDescriptor}. This test for the presence of a descriptor with the same
      * XML name.
-     * 
+     *
      * @param attributes The list of {@link AttributeDescriptor} to compare to.
      * @param nsUri The URI of the attribute. Can be null if attribute has no namespace.
      *              See {@link SdkConstants#NS_RESOURCES} for a common value.
@@ -370,9 +370,9 @@ public final class DescriptorsUtils {
                 buf.append(c);
             }
         }
-        
+
         name = buf.toString();
-        
+
         // Replace these acronyms by upper-case versions
         // - (?<=^| ) means "if preceded by a space or beginning of string"
         // - (?=$| )  means "if followed by a space or end of string"
@@ -381,11 +381,11 @@ public final class DescriptorsUtils {
 
         return name;
     }
-    
+
     /**
      * Capitalizes the string, i.e. transforms the initial [a-z] into [A-Z].
      * Returns the string unmodified if the first character is not [a-z].
-     * 
+     *
      * @param str The string to capitalize.
      * @return The capitalized string
      */
@@ -393,7 +393,7 @@ public final class DescriptorsUtils {
         if (str == null || str.length() < 1 || str.charAt(0) < 'a' || str.charAt(0) > 'z') {
             return str;
         }
-        
+
         StringBuilder sb = new StringBuilder();
         sb.append((char)(str.charAt(0) + 'A' - 'a'));
         sb.append(str.substring(1));
@@ -405,7 +405,7 @@ public final class DescriptorsUtils {
      */
     public static String formatTooltip(String javadoc) {
         ArrayList<String> spans = scanJavadoc(javadoc);
-        
+
         StringBuilder sb = new StringBuilder();
         boolean needBreak = false;
 
@@ -430,7 +430,7 @@ public final class DescriptorsUtils {
                 if (text != null) {
                     text = text.trim();
                 }
-                
+
                 // If there's no text, use the anchor if there's one
                 if (text == null || text.length() == 0) {
                     text = anchor;
@@ -441,12 +441,12 @@ public final class DescriptorsUtils {
                         // If we still have no text, use the base as text
                         text = base;
                     }
-                } 
+                }
 
                 if (text != null) {
                     sb.append(text);
                 }
-                
+
             } else if (ELEM.equals(s)) {
                 s = spans.get(++i);
                 if (s != null) {
@@ -462,17 +462,17 @@ public final class DescriptorsUtils {
                 needBreak = false;
             }
         }
-        
+
         return sb.toString();
     }
-    
+
     /**
      * Formats the javadoc tooltip to be usable in a FormText.
      * <p/>
      * If the descriptor can provide an icon, the caller should provide
      * elementsDescriptor.getIcon() as "image" to FormText, e.g.:
      * <code>formText.setImage(IMAGE_KEY, elementsDescriptor.getIcon());</code>
-     * 
+     *
      * @param javadoc The javadoc to format. Cannot be null.
      * @param elementDescriptor The element descriptor parent of the javadoc. Cannot be null.
      * @param androidDocBaseUrl The base URL for the documentation. Cannot be null. Should be
@@ -488,9 +488,9 @@ public final class DescriptorsUtils {
         if (sdkUrl != null && sdkUrl.startsWith(MANIFEST_SDK_URL)) {
             fullSdkUrl = androidDocBaseUrl + sdkUrl;
         }
-        
+
         StringBuilder sb = new StringBuilder();
-        
+
         Image icon = elementDescriptor.getIcon();
         if (icon != null) {
             sb.append("<form><li style=\"image\" value=\"" +        //$NON-NLS-1$
@@ -516,7 +516,7 @@ public final class DescriptorsUtils {
                 String base   = spans.get(++i);
                 String anchor = spans.get(++i);
                 String text   = spans.get(++i);
-                
+
                 if (base != null) {
                     base = base.trim();
                 }
@@ -526,7 +526,7 @@ public final class DescriptorsUtils {
                 if (text != null) {
                     text = text.trim();
                 }
-                
+
                 // If there's no text, use the anchor if there's one
                 if (text == null || text.length() == 0) {
                     text = anchor;
@@ -560,7 +560,7 @@ public final class DescriptorsUtils {
                         // If we still have no text, use the base as text
                         text = base;
                     }
-                } 
+                }
 
                 if (url != null && text != null) {
                     sb.append("<a href=\"");                        //$NON-NLS-1$
@@ -600,15 +600,15 @@ public final class DescriptorsUtils {
 
     private static ArrayList<String> scanJavadoc(String javadoc) {
         ArrayList<String> spans = new ArrayList<String>();
-        
+
         // Standardize all whitespace in the javadoc to single spaces.
         if (javadoc != null) {
             javadoc = javadoc.replaceAll("[ \t\f\r\n]+", " "); //$NON-NLS-1$ //$NON-NLS-2$
         }
-        
+
         // Detects {@link <base>#<name> <text>} where all 3 are optional
         Pattern p_link = Pattern.compile("\\{@link\\s+([^#\\}\\s]*)(?:#([^\\s\\}]*))?(?:\\s*([^\\}]*))?\\}(.*)"); //$NON-NLS-1$
-        // Detects <code>blah</code> 
+        // Detects <code>blah</code>
         Pattern p_code = Pattern.compile("<code>(.+?)</code>(.*)");                 //$NON-NLS-1$
         // Detects @blah@, used in hard-coded tooltip descriptors
         Pattern p_elem = Pattern.compile("@([\\w -]+)@(.*)");                       //$NON-NLS-1$
@@ -621,7 +621,7 @@ public final class DescriptorsUtils {
 
         int currentLength = 0;
         String text = null;
-        
+
         while(javadoc != null && javadoc.length() > 0) {
             Matcher m;
             String s = null;
@@ -665,7 +665,7 @@ public final class DescriptorsUtils {
             }
             if (s != null && s.length() > 0) {
                 s = cleanupJavadocHtml(s);
-                
+
                 if (currentLength >= JAVADOC_BREAK_LENGTH) {
                     spans.add(BREAK);
                     currentLength = 0;
@@ -680,12 +680,12 @@ public final class DescriptorsUtils {
                     currentLength = 0;
                     s = s.substring(pos + 1);
                 }
-                
+
                 spans.add(s);
                 currentLength += s.length();
             }
         }
-        
+
         return spans;
     }
 
@@ -722,15 +722,13 @@ public final class DescriptorsUtils {
                 fill ? LayoutConstants.VALUE_FILL_PARENT : LayoutConstants.VALUE_WRAP_CONTENT,
                 false /* override */);
 
-        String widget_id = getFreeWidgetId(ui_node.getUiRoot(),
-                new Object[] { ui_node.getDescriptor().getXmlLocalName(), null, null, null });
+        String widget_id = getFreeWidgetId(ui_node);
         if (widget_id != null) {
-            ui_node.setAttributeValue(LayoutConstants.ATTR_ID, "@+id/" + widget_id, //$NON-NLS-1$
-                    false /* override */);
+            ui_node.setAttributeValue(LayoutConstants.ATTR_ID, widget_id, false /* override */);
         }
 
         ui_node.setAttributeValue(LayoutConstants.ATTR_TEXT, widget_id, false /*override*/);
-        
+
         if (updateLayout) {
             UiElementNode ui_parent = ui_node.getUiParent();
             if (ui_parent != null &&
@@ -752,19 +750,26 @@ public final class DescriptorsUtils {
     /**
      * Given a UI root node, returns the first available id that matches the
      * pattern "prefix%02d".
-     *  
+     * <p/>TabWidget is a special case and the method will always return "@android:id/tabs".
+     *
      * @param uiNode The UI node that gives the prefix to match.
-     * @return A suitable generated id
+     * @return A suitable generated id in the attribute form needed by the XML id tag
+     * (e.g. "@+id/something")
      */
     public static String getFreeWidgetId(UiElementNode uiNode) {
-        return getFreeWidgetId(uiNode.getUiRoot(),
-                new Object[] { uiNode.getDescriptor().getXmlLocalName(), null, null, null });
+        String name = uiNode.getDescriptor().getXmlLocalName();
+        if ("TabWidget".equals(name)) {                        //$NON-NLS-1$
+            return "@android:id/tabs";                         //$NON-NLS-1$
+        }
+
+        return "@+id/" + getFreeWidgetId(uiNode.getUiRoot(),   //$NON-NLS-1$
+                new Object[] { name, null, null, null });
     }
 
     /**
      * Given a UI root node, returns the first available id that matches the
      * pattern "prefix%02d".
-     * 
+     *
      * For recursion purposes, a "context" is given. Since Java doesn't have in-out parameters
      * in methods and we're not going to do a dedicated type, we just use an object array which
      * must contain one initial item and several are built on the fly just for internal storage:
@@ -775,7 +780,7 @@ public final class DescriptorsUtils {
      * <li> map(Set<String>): A set of the ids collected so far when walking through the widget
      *                        hierarchy. Must start with null.
      * </ul>
-     *  
+     *
      * @param uiRoot The Ui root node where to start searching recursively. For the initial call
      *               you want to pass the document root.
      * @param params An in-out context of parameters used during recursion, as explained above.
@@ -837,9 +842,9 @@ public final class DescriptorsUtils {
         for (UiElementNode uiChild : uiRoot.getUiChildren()) {
             getFreeWidgetId(uiChild, params);
         }
-        
+
         // Note: return params[2] (not "generated") since it could have changed during recursion.
         return (String) params[2];
     }
-    
+
 }
