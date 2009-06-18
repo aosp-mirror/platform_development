@@ -16,6 +16,7 @@
 
 package com.android.sdklib.internal.repository;
 
+import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.repository.Archive.Arch;
 import com.android.sdklib.internal.repository.Archive.Os;
 import com.android.sdklib.repository.SdkRepository;
@@ -198,9 +199,13 @@ public abstract class Package implements IDescription {
      * existing or new folder depending on the current content of the SDK.
      *
      * @param osSdkRoot The OS path of the SDK root folder.
+     * @param suggestedDir A suggestion for the installation folder name, based on the root
+     *                     folder used in the zip archive.
+     * @param sdkManager An existing SDK manager to list current platforms and addons.
      * @return A new {@link File} corresponding to the directory to use to install this package.
      */
-    public abstract File getInstallFolder(String osSdkRoot);
+    public abstract File getInstallFolder(
+            String osSdkRoot, String suggestedDir, SdkManager sdkManager);
 
     /**
      * Computes whether the given package is a suitable update for the current package.

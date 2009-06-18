@@ -17,6 +17,7 @@
 package com.android.sdklib.internal.repository;
 
 import com.android.sdklib.SdkConstants;
+import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.repository.Archive.Arch;
 import com.android.sdklib.internal.repository.Archive.Os;
 
@@ -82,10 +83,13 @@ public class ToolPackage extends Package {
      * A "tool" package should always be located in SDK/tools.
      *
      * @param osSdkRoot The OS path of the SDK root folder.
+     * @param suggestedDir A suggestion for the installation folder name, based on the root
+     *                     folder used in the zip archive.
+     * @param sdkManager An existing SDK manager to list current platforms and addons.
      * @return A new {@link File} corresponding to the directory to use to install this package.
      */
     @Override
-    public File getInstallFolder(String osSdkRoot) {
+    public File getInstallFolder(String osSdkRoot, String suggestedDir, SdkManager sdkManager) {
         return new File(osSdkRoot, SdkConstants.FD_TOOLS);
     }
 
