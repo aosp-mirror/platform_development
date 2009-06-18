@@ -30,10 +30,13 @@ include $(CLEAR_VARS)
 LOCAL_SRC_FILES := \
 	main.cpp \
 	PluginObject.cpp \
-	pluginGraphics.cpp
+	animation/AnimationPlugin.cpp \
+	background/BackgroundPlugin.cpp 
 
 LOCAL_C_INCLUDES += \
 	$(LOCAL_PATH) \
+	$(LOCAL_PATH)/animation \
+	$(LOCAL_PATH)/background \
 	external/webkit/WebCore/bridge \
 	external/webkit/WebCore/plugins \
 	external/webkit/WebCore/platform/android/JavaVM \

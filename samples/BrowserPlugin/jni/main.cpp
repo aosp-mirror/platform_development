@@ -28,7 +28,8 @@
 #include <stdio.h>
 #include "main.h"
 #include "PluginObject.h"
-#include "pluginGraphics.h"
+#include "AnimationPlugin.h"
+#include "BackgroundPlugin.h"
 #include "android_npapi.h"
 
 NPNetscapeFuncs* browser;
@@ -128,101 +129,84 @@ void NP_Shutdown(void)
 
 const char *NP_GetMIMEDescription(void)
 {
-    return "application/x-testplugin:tst:Test plugin mimetype is application/x-testplugin";
+    return "application/x-testbrowserplugin:tst:Test plugin mimetype is application/x-testbrowserplugin";
 }
 
 NPError NPP_New(NPMIMEType pluginType, NPP instance, uint16 mode, int16 argc,
                 char* argn[], char* argv[], NPSavedData* saved)
 {
+
+    /* BEGIN: STANDARD PLUGIN FRAMEWORK */
     PluginObject *obj = NULL;
 
     // Scripting functions appeared in NPAPI version 14
     if (browser->version >= 14) {
-        instance->pdata = browser->createobject (instance, getPluginClass());
-        obj = static_cast<PluginObject*>(instance->pdata);
-        bzero(obj, sizeof(*obj));
+    instance->pdata = browser->createobject (instance, getPluginClass());
+    obj = static_cast<PluginObject*>(instance->pdata);
+    bzero(obj, sizeof(*obj));
     }
+    /* END: STANDARD PLUGIN FRAMEWORK */
 
-    uint32_t bits;
-    NPError err = browser->getvalue(instance, kSupportedDrawingModel_ANPGetValue, &bits);
-    if (err) {
-        gLogI.log(instance, kError_ANPLogType, "supported model err %d", err);
-        return err;
-    }
-
+    // select the drawing model based on user input
     ANPDrawingModel model = kBitmap_ANPDrawingModel;
 
-    int count = argc;
-    for (int i = 0; i < count; i++) {
+    for (int i = 0; i < argc; i++) {
         if (!strcmp(argn[i], "DrawingModel")) {
             if (!strcmp(argv[i], "Bitmap")) {
                 model = kBitmap_ANPDrawingModel;
             }
             if (!strcmp(argv[i], "Canvas")) {
-            //    obj->mTestTimers = true;
+                //TODO support drawing on canvas instead of bitmap
             }
             gLogI.log(instance, kDebug_ANPLogType, "------ %p DrawingModel is %d", instance, model);
             break;
         }
     }
 
-    // comment this out to draw via bitmaps (the default)
-    err = browser->setvalue(instance, kRequestDrawingModel_ANPSetValue,
+    // comment this out to use the default model (bitmaps)
+    NPError err = browser->setvalue(instance, kRequestDrawingModel_ANPSetValue,
                             reinterpret_cast<void*>(model));
     if (err) {
         gLogI.log(instance, kError_ANPLogType, "request model %d err %d", model, err);
+        return err;
     }
-    return err;
+
+    // select the pluginType
+    for (int i = 0; i < argc; i++) {
+        if (!strcmp(argn[i], "PluginType")) {
+            if (!strcmp(argv[i], "Animation")) {
+                obj->pluginType = kAnimation_PluginType;
+                obj->activePlugin = new BallAnimation(instance);
+            }
+            else if (!strcmp(argv[i], "Audio")) {
+                obj->pluginType = kAudio_PluginType;
+                //TODO add audio here
+            }
+            else if (!strcmp(argv[i], "Background")) {
+                obj->pluginType = kBackground_PluginType;
+                obj->activePlugin = new BackgroundPlugin(instance);
+            }
+            gLogI.log(instance, kDebug_ANPLogType, "------ %p PluginType is %d", instance, obj->pluginType);
+            break;
+        }
+    }
+
+    // if no pluginType is specified then default to Animation
+    if (!obj->pluginType) {
+        obj->pluginType = kAnimation_PluginType;
+        obj->activePlugin = new BallAnimation(instance);
+    }
+
+    return NPERR_NO_ERROR;
 }
 
 NPError NPP_Destroy(NPP instance, NPSavedData** save)
 {
     PluginObject *obj = (PluginObject*) instance->pdata;
-    delete obj->anim;
+    delete obj->activePlugin;
     gSoundI.deleteTrack(obj->track);
 
     return NPERR_NO_ERROR;
-}
-
-static void timer_oneshot(NPP instance, uint32 timerID) {
-    gLogI.log(instance, kDebug_ANPLogType, "-------- oneshot timer\n");
-}
-
-static int gTimerRepeatCount;
-static void timer_repeat(NPP instance, uint32 timerID) {
-
-    gLogI.log(instance, kDebug_ANPLogType, "-------- repeat timer %d\n",
-              gTimerRepeatCount);
-    if (--gTimerRepeatCount == 0) {
-        browser->unscheduletimer(instance, timerID);
-    }
-}
-
-static void timer_neverfires(NPP instance, uint32 timerID) {
-    gLogI.log(instance, kError_ANPLogType, "-------- timer_neverfires!!!\n");
-}
-
-#define TIMER_INTERVAL     50
-
-static void timer_latency(NPP instance, uint32 timerID) {
-    PluginObject *obj = (PluginObject*) instance->pdata;
-
-    obj->mTimerCount += 1;
-
-    uint32_t now = getMSecs();
-    uint32_t interval = now - obj->mPrevTime;
-
-    uint32_t dur = now - obj->mStartTime;
-    uint32_t expectedDur = obj->mTimerCount * TIMER_INTERVAL;
-    int32_t drift = dur - expectedDur;
-    int32_t aveDrift = drift / obj->mTimerCount;
-
-    obj->mPrevTime = now;
-
-    gLogI.log(instance, kDebug_ANPLogType,
-              "-------- latency test: [%3d] interval %d expected %d, total %d expected %d, drift %d ave %d\n",
-              obj->mTimerCount, interval, TIMER_INTERVAL, dur, expectedDur,
-              drift, aveDrift);
 }
 
 NPError NPP_SetWindow(NPP instance, NPWindow* window)
@@ -234,62 +218,10 @@ NPError NPP_SetWindow(NPP instance, NPWindow* window)
         obj->window = window;
     }
 
-    static bool gTestTimers;
-    if (!gTestTimers) {
-        gTestTimers = true;
-        // test for bogus timerID
-        browser->unscheduletimer(instance, 999999);
-        // test oneshot
-        browser->scheduletimer(instance, 100, false, timer_oneshot);
-        // test repeat
-        gTimerRepeatCount = 10;
-        browser->scheduletimer(instance, 50, true, timer_repeat);
-        // test unschedule immediately
-        uint32 id = browser->scheduletimer(instance, 100, false, timer_neverfires);
-        browser->unscheduletimer(instance, id);
-        // test double unschedlue (should be no-op)
-        browser->unscheduletimer(instance, id);
-    }
-
-    if (obj->mTestTimers) {
-        browser->scheduletimer(instance, TIMER_INTERVAL, true, timer_latency);
-        obj->mStartTime = obj->mPrevTime = getMSecs();
-        obj->mTestTimers = false;
-    }
-
-    if (true) {
-        static const struct {
-            ANPBitmapFormat fFormat;
-            const char*     fName;
-        } gRecs[] = {
-            { kUnknown_ANPBitmapFormat,   "unknown" },
-            { kRGBA_8888_ANPBitmapFormat, "8888" },
-            { kRGB_565_ANPBitmapFormat,   "565" },
-        };
-
-        ANPPixelPacking packing;
-        for (size_t i = 0; i < ARRAY_COUNT(gRecs); i++) {
-            if (gBitmapI.getPixelPacking(gRecs[i].fFormat, &packing)) {
-                gLogI.log(instance, kDebug_ANPLogType,
-                          "pixel format [%d] %s has packing ARGB [%d %d] [%d %d] [%d %d] [%d %d]\n",
-                          gRecs[i].fFormat, gRecs[i].fName,
-                          packing.AShift, packing.ABits,
-                          packing.RShift, packing.RBits,
-                          packing.GShift, packing.GBits,
-                          packing.BShift, packing.BBits);
-            } else {
-                gLogI.log(instance, kDebug_ANPLogType,
-                          "pixel format [%d] %s has no packing\n",
-                          gRecs[i].fFormat, gRecs[i].fName);
-            }
-        }
-    }
-
     browser->invalidaterect(instance, NULL);
 
     return NPERR_NO_ERROR;
 }
-
 
 NPError NPP_NewStream(NPP instance, NPMIMEType type, NPStream* stream, NPBool seekable, uint16* stype)
 {
@@ -318,7 +250,6 @@ void NPP_StreamAsFile(NPP instance, NPStream* stream, const char* fname)
 
 void NPP_Print(NPP instance, NPPrint* platformPrint)
 {
-
 }
 
 struct SoundPlay {
@@ -370,14 +301,22 @@ int16 NPP_HandleEvent(NPP instance, void* event)
 
     switch (evt->eventType) {
         case kDraw_ANPEventType:
-            switch (evt->data.draw.model) {
-                case kBitmap_ANPDrawingModel:
-                    drawPlugin(instance, evt->data.draw.data.bitmap,
-                               evt->data.draw.clip);
-                    return 1;
-                default:
-                    break;   // unknown drawing model
+
+            if (evt->data.draw.model == kBitmap_ANPDrawingModel) {
+
+                static ANPBitmapFormat currentFormat = -1;
+                if (evt->data.draw.data.bitmap.format != currentFormat) {
+                    currentFormat = evt->data.draw.data.bitmap.format;
+                    gLogI.log(instance, kDebug_ANPLogType, "---- %p Draw (bitmap)"
+                              " clip=%d,%d,%d,%d format=%d", instance,
+                              evt->data.draw.clip.left,
+                              evt->data.draw.clip.top,
+                              evt->data.draw.clip.right,
+                              evt->data.draw.clip.bottom,
+                              evt->data.draw.data.bitmap.format);
+                }
             }
+            break;
 
         case kKey_ANPEventType:
             gLogI.log(instance, kDebug_ANPLogType, "---- %p Key action=%d"
@@ -388,18 +327,14 @@ int16 NPP_HandleEvent(NPP instance, void* event)
                       evt->data.key.unichar,
                       evt->data.key.repeatCount,
                       evt->data.key.modifiers);
-            if (evt->data.key.action == kDown_ANPKeyAction) {
-                obj->mUnichar = evt->data.key.unichar;
-                browser->invalidaterect(instance, NULL);
-            }
-            return 1;
+            break;
 
         case kLifecycle_ANPEventType:
             gLogI.log(instance, kDebug_ANPLogType, "---- %p Lifecycle action=%d",
-                      instance, evt->data.lifecycle.action);
+                                instance, evt->data.lifecycle.action);
             break;
 
-        case kTouch_ANPEventType:
+       case kTouch_ANPEventType:
             gLogI.log(instance, kDebug_ANPLogType, "---- %p Touch action=%d [%d %d]",
                       instance, evt->data.touch.action, evt->data.touch.x,
                       evt->data.touch.y);
@@ -422,7 +357,14 @@ int16 NPP_HandleEvent(NPP instance, void* event)
         default:
             break;
     }
-    return 0;   // unknown or unhandled event
+
+    if(!obj->activePlugin) {
+        gLogI.log(instance, kError_ANPLogType, "the active plugin is null.");
+        return 0; // unknown or unhandled event
+    }
+    else {
+        return obj->activePlugin->handleEvent(evt);
+    }
 }
 
 void NPP_URLNotify(NPP instance, const char* url, NPReason reason, void* notifyData)
