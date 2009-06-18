@@ -22,19 +22,33 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
- 
-#include "main.h" // for NPAPI definitions
+
 #include "PluginObject.h"
+#include "android_npapi.h"
 
 #ifndef pluginGraphics__DEFINED
 #define pluginGraphics__DEFINED
 
-struct ANPBitmap;
-struct ANPCanvas;
-struct ANPRectI;
+class BallAnimation : public SubPlugin {
+public:
+    BallAnimation(NPP inst);
+    virtual ~BallAnimation();
+    virtual void draw(ANPCanvas*);
+    virtual int16 handleEvent(const ANPEvent* evt);
+private:
+    float m_x;
+    float m_y;
+    float m_dx;
+    float m_dy;
 
-void drawPlugin(NPP instance, const ANPBitmap& bitmap, const ANPRectI& clip);
-void drawPlugin(NPP instance, ANPCanvas*);
+    int32_t mUnichar;
+
+    ANPRectF    m_oval;
+    ANPPaint*   m_paint;
+
+    static const float SCALE = 0.1;
+};
+
 uint32_t getMSecs();
 
 #endif // pluginGraphics__DEFINED

@@ -22,10 +22,9 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
- 
-#include "pluginGraphics.h"
 
-#include "android_npapi.h"
+#include "AnimationPlugin.h"
+
 #include <stdio.h>
 #include <sys/time.h>
 #include <time.h>
@@ -63,6 +62,20 @@ static void inval(NPP instance, const ANPRectF& r, bool doAA) {
     browser->invalidaterect(instance, &inval);
 }
 
+static void drawPlugin(SubPlugin* plugin, const ANPBitmap& bitmap, const ANPRectI& clip) {
+    ANPCanvas* canvas = gCanvasI.newCanvas(&bitmap);
+
+    ANPRectF clipR;
+    clipR.left = clip.left;
+    clipR.top = clip.top;
+    clipR.right = clip.right;
+    clipR.bottom = clip.bottom;
+    gCanvasI.clipRect(canvas, &clipR);
+
+    plugin->draw(canvas);
+    gCanvasI.deleteCanvas(canvas);
+}
+
 uint32_t getMSecs() {
     struct timeval tv;
     gettimeofday(&tv, NULL);
@@ -71,38 +84,28 @@ uint32_t getMSecs() {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-class BallAnimation : public Animation {
-public:
-    BallAnimation(NPP inst);
-    virtual ~BallAnimation();
-    virtual void draw(ANPCanvas*);
-private:
-    float m_x;
-    float m_y;
-    float m_dx;
-    float m_dy;
-    
-    ANPRectF    m_oval;
-    ANPPaint*   m_paint;
-    
-    static const float SCALE = 0.1;
-};
-
-BallAnimation::BallAnimation(NPP inst) : Animation(inst) {
+BallAnimation::BallAnimation(NPP inst) : SubPlugin(inst) {
     m_x = m_y = 0;
     m_dx = 7 * SCALE;
     m_dy = 5 * SCALE;
-    
+
     memset(&m_oval, 0, sizeof(m_oval));
 
     m_paint = gPaintI.newPaint();
     gPaintI.setFlags(m_paint, gPaintI.getFlags(m_paint) | kAntiAlias_ANPPaintFlag);
     gPaintI.setColor(m_paint, 0xFFFF0000);
     gPaintI.setTextSize(m_paint, 24);
-    
+
     ANPTypeface* tf = gTypefaceI.createFromName("serif", kItalic_ANPTypefaceStyle);
     gPaintI.setTypeface(m_paint, tf);
     gTypefaceI.unref(tf);
+
+    //register for key and touch events
+    ANPEventFlags flags = kKey_ANPEventFlag | kTouch_ANPEventFlag;
+    NPError err = browser->setvalue(inst, kAcceptEvents_ANPSetValue, &flags);
+    if (err != NPERR_NO_ERROR) {
+        gLogI.log(inst, kError_ANPLogType, "Error selecting input events.");
+    }
 }
 
 BallAnimation::~BallAnimation() {
@@ -166,45 +169,46 @@ void BallAnimation::draw(ANPCanvas* canvas) {
 #endif
         gPathI.deletePath(path);
     }
-    
+
     gPaintI.setColor(m_paint, 0xFFFF0000);
     gCanvasI.drawOval(canvas, &m_oval, m_paint);
-    
+
     bounce(&m_x, &m_dx, obj->window->width - OW);
     bounce(&m_y, &m_dy, obj->window->height - OH);
-    
-    if (obj->mUnichar) {
+
+    if (mUnichar) {
         ANPFontMetrics fm;
         gPaintI.getFontMetrics(m_paint, &fm);
-        
+
         gPaintI.setColor(m_paint, 0xFF0000FF);
-        char c = static_cast<char>(obj->mUnichar);
+        char c = static_cast<char>(mUnichar);
         gCanvasI.drawText(canvas, &c, 1, 10, -fm.fTop, m_paint);
     }
 }
 
-///////////////////////////////////////////////////////////////////////////////
+int16 BallAnimation::handleEvent(const ANPEvent* evt) {
+    NPP instance = this->inst();
 
-void drawPlugin(NPP instance, const ANPBitmap& bitmap, const ANPRectI& clip) {
-    ANPCanvas* canvas = gCanvasI.newCanvas(&bitmap);
-    
-    ANPRectF clipR;
-    clipR.left = clip.left;
-    clipR.top = clip.top;
-    clipR.right = clip.right;
-    clipR.bottom = clip.bottom;
-    gCanvasI.clipRect(canvas, &clipR);
-    
-    drawPlugin(instance, canvas);
-    
-    gCanvasI.deleteCanvas(canvas);
-}
+    switch (evt->eventType) {
+        case kDraw_ANPEventType:
+            switch (evt->data.draw.model) {
+                case kBitmap_ANPDrawingModel:
+                    drawPlugin(this, evt->data.draw.data.bitmap, evt->data.draw.clip);
+                    return 1;
+                default:
+                    break;   // unknown drawing model
+            }
 
-void drawPlugin(NPP instance, ANPCanvas* canvas) {
-    PluginObject *obj = (PluginObject*) instance->pdata;    
-    if (obj->anim == NULL) {
-        obj->anim = new BallAnimation(instance);
+        case kKey_ANPEventType:
+            if (evt->data.key.action == kDown_ANPKeyAction) {
+                mUnichar = evt->data.key.unichar;
+                gLogI.log(instance, kDebug_ANPLogType, "ball downkey event");
+                browser->invalidaterect(instance, NULL);
+            }
+            return 1;
+
+        default:
+            break;
     }
-    obj->anim->draw(canvas);
+    return 0;   // unknown or unhandled event
 }
-
