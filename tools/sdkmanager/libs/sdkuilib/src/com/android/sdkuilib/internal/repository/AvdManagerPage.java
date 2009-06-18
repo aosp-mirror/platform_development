@@ -16,29 +16,19 @@
 
 package com.android.sdkuilib.internal.repository;
 
-import com.android.sdklib.internal.avd.AvdManager;
-import com.android.sdklib.internal.avd.AvdManager.AvdInfo;
 import com.android.sdkuilib.internal.repository.UpdaterData.ISdkListener;
 import com.android.sdkuilib.internal.widgets.AvdSelector;
-import com.android.sdkuilib.internal.widgets.AvdSelector.SelectionMode;
+import com.android.sdkuilib.internal.widgets.AvdSelector.DisplayMode;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 
-import java.util.HashSet;
-
 public class AvdManagerPage extends Composite implements ISdkListener {
 
-    private Button mRefreshButton;
     private AvdSelector mAvdSelector;
 
-    private final HashSet<String> mKnownAvdNames = new HashSet<String>();
     private final UpdaterData mUpdaterData;
 
     /**
@@ -57,43 +47,12 @@ public class AvdManagerPage extends Composite implements ISdkListener {
     }
 
     private void createContents(Composite parent) {
-        parent.setLayout(new GridLayout(3, false));
+        parent.setLayout(new GridLayout(1, false));
 
         Label label = new Label(parent, SWT.NONE);
         label.setText("List of existing Android Virtual Devices:");
-        label.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, true, false, 2, 1));
 
-        mRefreshButton = new Button(parent, SWT.PUSH);
-        mRefreshButton.setText("Refresh");
-        mRefreshButton.setLayoutData(new GridData(SWT.END, SWT.CENTER, false, false));
-        mRefreshButton.addSelectionListener(new SelectionAdapter() {
-            @Override
-            public void widgetSelected(SelectionEvent e) {
-                onRefreshSelected(); //$hide$
-           }
-        });
-
-        Composite group = new Composite(parent, SWT.NONE);
-        group.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 3, 1));
-        GridLayout gl;
-        group.setLayout(gl = new GridLayout(1, false /*makeColumnsEqualWidth*/));
-        gl.marginHeight = gl.marginWidth = 0;
-
-        mAvdSelector = new AvdSelector(group,
-                SelectionMode.SELECT,
-                new AvdSelector.IExtraAction() {
-                    public String label() {
-                        return "Delete AVD...";
-                    }
-
-                    public boolean isEnabled() {
-                        return mAvdSelector != null && mAvdSelector.getSelected() != null;
-                    }
-
-                    public void run() {
-                        //TODO onDelete();
-                    }
-            });
+        mAvdSelector = new AvdSelector(parent, mUpdaterData.getAvdManager(), DisplayMode.MANAGER);
     }
 
     @Override
@@ -115,48 +74,11 @@ public class AvdManagerPage extends Composite implements ISdkListener {
      * Called by the constructor right after {@link #createContents(Composite)}.
      */
     private void postCreate() {
-        reloadAvdList();
-    }
-
-    /**
-     * Reloads the AVD list in the AVD selector.
-     * Tries to preserve the selection.
-     */
-    private void reloadAvdList() {
-        AvdInfo selected = mAvdSelector.getSelected();
-
-        AvdInfo[] avds = null;
-
-        AvdManager manager = mUpdaterData.getAvdManager();
-        if (manager != null) {
-            avds = manager.getValidAvds();
-        }
-
-        mAvdSelector.setAvds(avds, null /*filter*/);
-
-        // Keep the list of known AVD names to check if they exist quickly. however
-        // use the list of all AVDs, including broken ones (unless we don't know their
-        // name).
-        mKnownAvdNames.clear();
-        if (manager != null) {
-            for (AvdInfo avd : manager.getAllAvds()) {
-                String name = avd.getName();
-                if (name != null) {
-                    mKnownAvdNames.add(name);
-                }
-            }
-        }
-
-        mAvdSelector.setSelection(selected);
+        // nothing to be done for now.
     }
 
     public void onSdkChange() {
-        reloadAvdList();
-    }
-
-    private void onRefreshSelected() {
-        mUpdaterData.reloadAvds();
-        reloadAvdList();
+        mAvdSelector.refresh(false /*reload*/);
     }
 
     // End of hiding from SWT Designer
