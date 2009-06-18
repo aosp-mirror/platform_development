@@ -17,7 +17,7 @@
 package com.android.commands.monkey;
 
 import android.app.IActivityManager;
-import android.app.IIntentReceiver;
+import android.content.IIntentReceiver;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.ConnectivityManager;
