@@ -23,7 +23,7 @@ If that doesn't work, go through the instructions on
    
 then build everything:
 
-   time make -j4 pdk pdk_all dist DIST_DIR=dist 2>&1 | tee logs/`date +%y%m%d-%H%M%S`
+   time make -j8 pdk pdk_all dist DIST_DIR=dist 2>&1 | tee logs/`date +%y%m%d-%H%M%S`
 
 so you can have a record of the build commands in the logs directory.
 
@@ -84,7 +84,7 @@ To add port forwarding
 4. Pick an unused port on your laptop (8080, 8888, something like that) and put it in the "source port box"
 5. In the destination box, put localhost:8888 (replace with the actual port number the service is running on)
 6. Hit add.
-7. Go back to "Session" and save your new settings so this configuration will happen everytime you login.
+7. Go back to "Session" and save your new settings so this configuration will happen every time you login.
  
 
 --------------------------------------------------------------------------------
