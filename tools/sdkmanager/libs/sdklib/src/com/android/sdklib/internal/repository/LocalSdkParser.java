@@ -35,6 +35,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -250,6 +251,22 @@ public class LocalSdkParser {
             Node root = getFirstChild(doc, SdkRepository.NODE_SDK_REPOSITORY);
             if (root != null) {
 
+                // Parse license definitions
+                HashMap<String, String> licenses = new HashMap<String, String>();
+                for (Node child = root.getFirstChild();
+                     child != null;
+                     child = child.getNextSibling()) {
+                    if (child.getNodeType() == Node.ELEMENT_NODE &&
+                            SdkRepository.NS_SDK_REPOSITORY.equals(child.getNamespaceURI()) &&
+                            child.getLocalName().equals(SdkRepository.NODE_LICENSE)) {
+                        Node id = child.getAttributes().getNamedItem(SdkRepository.ATTR_ID);
+                        if (id != null) {
+                            licenses.put(id.getNodeValue(), child.getTextContent());
+                        }
+                    }
+                }
+
+                // Parse packages
                 for (Node child = root.getFirstChild();
                      child != null;
                      child = child.getNextSibling()) {
@@ -260,16 +277,16 @@ public class LocalSdkParser {
 
                         try {
                             if (SdkRepository.NODE_ADD_ON.equals(name)) {
-                                return new AddonPackage(null /*source*/, child);
+                                return new AddonPackage(null /*source*/, child, licenses);
 
                             } else if (SdkRepository.NODE_PLATFORM.equals(name)) {
-                                return new PlatformPackage(null /*source*/, child);
+                                return new PlatformPackage(null /*source*/, child, licenses);
 
                             } else if (SdkRepository.NODE_DOC.equals(name)) {
-                                return new DocPackage(null /*source*/, child);
+                                return new DocPackage(null /*source*/, child, licenses);
 
                             } else if (SdkRepository.NODE_TOOL.equals(name)) {
-                                return new ToolPackage(null /*source*/, child);
+                                return new ToolPackage(null /*source*/, child, licenses);
                             }
                         } catch (Exception e) {
                             // Ignore invalid packages

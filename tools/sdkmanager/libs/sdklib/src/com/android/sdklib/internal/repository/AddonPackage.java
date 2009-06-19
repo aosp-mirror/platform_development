@@ -28,6 +28,7 @@ import org.w3c.dom.Node;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Map;
 
 /**
  * Represents an add-on XML node in an SDK repository.
@@ -64,13 +65,13 @@ public class AddonPackage extends Package {
      * <p/>
      * This constructor should throw an exception if the package cannot be created.
      */
-    AddonPackage(RepoSource source, Node packageNode) {
-        super(source, packageNode);
-        mVendor   = getXmlString(packageNode, SdkRepository.NODE_VENDOR);
-        mName     = getXmlString(packageNode, SdkRepository.NODE_NAME);
-        mApiLevel = getXmlInt   (packageNode, SdkRepository.NODE_API_LEVEL, 0);
+    AddonPackage(RepoSource source, Node packageNode, Map<String,String> licenses) {
+        super(source, packageNode, licenses);
+        mVendor   = XmlParserUtils.getXmlString(packageNode, SdkRepository.NODE_VENDOR);
+        mName     = XmlParserUtils.getXmlString(packageNode, SdkRepository.NODE_NAME);
+        mApiLevel = XmlParserUtils.getXmlInt   (packageNode, SdkRepository.NODE_API_LEVEL, 0);
 
-        mLibs = parseLibs(getFirstChild(packageNode, SdkRepository.NODE_LIBS));
+        mLibs = parseLibs(XmlParserUtils.getFirstChild(packageNode, SdkRepository.NODE_LIBS));
     }
 
     /**
@@ -131,8 +132,8 @@ public class AddonPackage extends Package {
      * Parses a <lib> element from a <libs> container.
      */
     private Lib parseLib(Node libNode) {
-        return new Lib(getXmlString(libNode, SdkRepository.NODE_NAME),
-                       getXmlString(libNode, SdkRepository.NODE_DESCRIPTION));
+        return new Lib(XmlParserUtils.getXmlString(libNode, SdkRepository.NODE_NAME),
+                       XmlParserUtils.getXmlString(libNode, SdkRepository.NODE_DESCRIPTION));
     }
 
     /** Returns the vendor, a string, for add-on packages. */

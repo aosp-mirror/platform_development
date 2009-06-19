@@ -40,7 +40,7 @@
         <xsd:complexType>
             <xsd:choice minOccurs="0" maxOccurs="unbounded">
 
-                <!-- The definition of an SDK platform package -->
+                <!-- The definition of an SDK platform package. -->
 
                 <xsd:element name="platform">
                     <xsd:annotation>
@@ -55,21 +55,22 @@
 
                             <!-- The revision, an int > 0, incremented each time a new
                                  package is generated. -->
-                            <xsd:element name="revision"    type="xsd:positiveInteger" />
+                            <xsd:element name="revision"     type="xsd:positiveInteger" />
                             <!-- The optional license of this package. If present, users will have
                                  to agree to it before downloading. -->
-                            <xsd:element name="license" type="xsd:string" minOccurs="0" />
+                            <xsd:element name="uses-license" type="sdk:licenseType" minOccurs="0" />
                             <!-- The optional description of this package. -->
-                            <xsd:element name="description" type="xsd:string" minOccurs="0" />
+                            <xsd:element name="description"  type="xsd:string"      minOccurs="0" />
                             <!-- The optional description URL of this package -->
-                            <xsd:element name="desc-url"    type="xsd:token"  minOccurs="0" />
+                            <xsd:element name="desc-url"     type="xsd:token"       minOccurs="0" />
                             <!-- A list of file archives for this package. -->
-                            <xsd:element name="archives"    type="sdk:archivesType" />
+                            <xsd:element name="archives"     type="sdk:archivesType" />
                         </xsd:all>
                     </xsd:complexType>
                 </xsd:element>
 
-                <!-- The definition of an SDK Add-on package -->
+
+                <!-- The definition of an SDK Add-on package. -->
 
                 <xsd:element name="add-on">
                     <xsd:annotation>
@@ -86,16 +87,16 @@
 
                             <!-- The revision, an int > 0, incremented each time a new
                                  package is generated. -->
-                            <xsd:element name="revision"    type="xsd:positiveInteger" />
+                            <xsd:element name="revision"     type="xsd:positiveInteger" />
                             <!-- The optional license of this package. If present, users will have
                                  to agree to it before downloading. -->
-                            <xsd:element name="license" type="xsd:string" minOccurs="0" />
+                            <xsd:element name="uses-license" type="sdk:licenseType" minOccurs="0" />
                             <!-- The optional description of this package. -->
-                            <xsd:element name="description" type="xsd:string" minOccurs="0" />
+                            <xsd:element name="description"  type="xsd:string"      minOccurs="0" />
                             <!-- The optional description URL of this package -->
-                            <xsd:element name="desc-url"    type="xsd:token"  minOccurs="0" />
+                            <xsd:element name="desc-url"     type="xsd:token"       minOccurs="0" />
                             <!-- A list of file archives for this package. -->
-                            <xsd:element name="archives"    type="sdk:archivesType" />
+                            <xsd:element name="archives"     type="sdk:archivesType" />
 
                             <!-- An add-on can declare 0 or more libraries. -->
 
@@ -119,7 +120,8 @@
                     </xsd:complexType>
                 </xsd:element>
 
-                <!-- The definition of an SDK tool package -->
+
+                <!-- The definition of an SDK tool package. -->
 
                 <xsd:element name="tool">
                     <xsd:annotation>
@@ -129,21 +131,22 @@
                         <xsd:all>
                             <!-- The revision, an int > 0, incremented each time a new
                                  package is generated. -->
-                            <xsd:element name="revision"    type="xsd:positiveInteger" />
+                            <xsd:element name="revision"     type="xsd:positiveInteger" />
                             <!-- The optional license of this package. If present, users will have
                                  to agree to it before downloading. -->
-                            <xsd:element name="license" type="xsd:string" minOccurs="0" />
+                            <xsd:element name="uses-license" type="sdk:licenseType" minOccurs="0" />
                             <!-- The optional description of this package. -->
-                            <xsd:element name="description" type="xsd:string" minOccurs="0" />
+                            <xsd:element name="description"  type="xsd:string"      minOccurs="0" />
                             <!-- The optional description URL of this package -->
-                            <xsd:element name="desc-url"    type="xsd:token"  minOccurs="0" />
+                            <xsd:element name="desc-url"     type="xsd:token"       minOccurs="0" />
                             <!-- A list of file archives for this package. -->
-                            <xsd:element name="archives"    type="sdk:archivesType" />
+                            <xsd:element name="archives"     type="sdk:archivesType" />
                         </xsd:all>
                     </xsd:complexType>
                 </xsd:element>
 
-                <!-- The definition of an SDK doc package -->
+
+                <!-- The definition of an SDK doc package. -->
 
                 <xsd:element name="doc">
                     <xsd:annotation>
@@ -156,22 +159,107 @@
 
                             <!-- The revision, an int > 0, incremented each time a new
                                  package is generated. -->
-                            <xsd:element name="revision"    type="xsd:positiveInteger" />
+                            <xsd:element name="revision"     type="xsd:positiveInteger" />
                             <!-- The optional license of this package. If present, users will have
                                  to agree to it before downloading. -->
-                            <xsd:element name="license" type="xsd:string" minOccurs="0" />
+                            <xsd:element name="uses-license" type="sdk:licenseType" minOccurs="0" />
                             <!-- The optional description of this package. -->
-                            <xsd:element name="description" type="xsd:string" minOccurs="0" />
+                            <xsd:element name="description"  type="xsd:string"      minOccurs="0" />
                             <!-- The optional description URL of this package -->
-                            <xsd:element name="desc-url"    type="xsd:token"  minOccurs="0" />
+                            <xsd:element name="desc-url"     type="xsd:token"       minOccurs="0" />
                             <!-- A list of file archives for this package. -->
-                            <xsd:element name="archives"    type="sdk:archivesType" />
+                            <xsd:element name="archives"     type="sdk:archivesType" />
                         </xsd:all>
+                    </xsd:complexType>
+                </xsd:element>
+
+
+                <!-- The definition of an SDK extra package. This kind of package is for
+                     "free" content and specifies in which fixed root directory it must be
+                     installed.
+                -->
+
+                <xsd:element name="extra">
+                    <xsd:annotation>
+                        <xsd:documentation>
+                            An SDK extra package. This kind of package is for "free"
+                            content and specifies in which fixed root directory it must be
+                            installed.
+                            The paths "add-ons", "platforms", "tools" and "docs" are
+                            reserved and cannot be used.
+                        </xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:complexType>
+                        <xsd:all>
+                            <!-- The install folder name. It must be a single-segment path.
+                                 The paths "add-ons", "platforms", "tools" and "docs" are
+                                 reserved and cannot be used.
+                            -->
+                            <xsd:element name="path">
+                                <xsd:simpleType>
+                                    <xsd:restriction base="xsd:token">
+                                        <xsd:pattern value="[^/\\]+"/>
+                                    </xsd:restriction>
+                                </xsd:simpleType>
+                            </xsd:element>
+
+                            <!-- The revision, an int > 0, incremented each time a new
+                                 package is generated. -->
+                            <xsd:element name="revision"     type="xsd:positiveInteger" />
+                            <!-- The optional license of this package. If present, users will have
+                                 to agree to it before downloading. -->
+                            <xsd:element name="uses-license" type="sdk:licenseType" minOccurs="0" />
+                            <!-- The optional description of this package. -->
+                            <xsd:element name="description"  type="xsd:string"      minOccurs="0" />
+                            <!-- The optional description URL of this package -->
+                            <xsd:element name="desc-url"     type="xsd:token"       minOccurs="0" />
+                            <!-- A list of file archives for this package. -->
+                            <xsd:element name="archives"     type="sdk:archivesType" />
+                        </xsd:all>
+                    </xsd:complexType>
+                </xsd:element>
+
+
+
+                <!-- The definition of a license to be referenced by the uses-license element. -->
+
+                <xsd:element name="license">
+                    <xsd:annotation>
+                        <xsd:documentation>
+                            A license definition. Such a license must be used later as a reference
+                            using a uses-license element in one of the package elements.
+                        </xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:complexType>
+                        <xsd:simpleContent>
+                            <xsd:extension base="xsd:string">
+                                <xsd:attribute name="id"   type="xsd:ID" />
+                                <xsd:attribute name="type" type="xsd:token" fixed="text" />
+                            </xsd:extension>
+                        </xsd:simpleContent>
                     </xsd:complexType>
                 </xsd:element>
             </xsd:choice>
         </xsd:complexType>
     </xsd:element>
+
+
+    <!-- Type describing the license used by a package.
+         The license MUST be defined using a license node and referenced
+         using the ref attribute of the license element inside a package.
+     -->
+
+    <xsd:complexType name="licenseType">
+        <xsd:annotation>
+            <xsd:documentation>
+                Describes the license used by a package. The license MUST be defined
+                using a license node and referenced using the ref attribute of the
+                license element inside a package.
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:attribute name="ref" type="xsd:IDREF" />
+    </xsd:complexType>
+
 
     <!-- A collection of files that can be downloaded for a given architecture.
          The <archives> node is mandatory in the repository elements and the
@@ -232,6 +320,7 @@
         </xsd:sequence>
     </xsd:complexType>
 
+
     <!-- The definition of a file checksum -->
 
     <xsd:simpleType name="sha1Number">
@@ -253,5 +342,6 @@
             </xsd:extension>
         </xsd:simpleContent>
     </xsd:complexType>
+
 
 </xsd:schema>

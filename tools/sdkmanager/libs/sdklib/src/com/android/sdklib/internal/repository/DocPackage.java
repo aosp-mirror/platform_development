@@ -25,6 +25,7 @@ import com.android.sdklib.repository.SdkRepository;
 import org.w3c.dom.Node;
 
 import java.io.File;
+import java.util.Map;
 
 /**
  * Represents a doc XML node in an SDK repository.
@@ -38,9 +39,9 @@ public class DocPackage extends Package {
      * <p/>
      * This constructor should throw an exception if the package cannot be created.
      */
-    DocPackage(RepoSource source, Node packageNode) {
-        super(source, packageNode);
-        mApiLevel = getXmlInt(packageNode, SdkRepository.NODE_API_LEVEL, 0);
+    DocPackage(RepoSource source, Node packageNode, Map<String,String> licenses) {
+        super(source, packageNode, licenses);
+        mApiLevel = XmlParserUtils.getXmlInt(packageNode, SdkRepository.NODE_API_LEVEL, 0);
     }
 
     /**
