@@ -348,9 +348,18 @@ public class Archive implements IDescription {
             SdkManager sdkManager,
             ITaskMonitor monitor) {
 
+        Package pkg = getParentPackage();
+
         File archiveFile = null;
         try {
-            String name = getParentPackage().getShortDescription();
+            String name = pkg.getShortDescription();
+
+            if (pkg instanceof ExtraPackage && !((ExtraPackage) pkg).isPathValid()) {
+                monitor.setResult("Skipping %1$s: %2$s is not a valid install path.",
+                        name,
+                        ((ExtraPackage) pkg).getPath());
+                return false;
+            }
 
             if (isLocal()) {
                 // This should never happen.

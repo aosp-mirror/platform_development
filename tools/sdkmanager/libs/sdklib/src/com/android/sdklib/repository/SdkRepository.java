@@ -43,11 +43,15 @@ public class SdkRepository {
     public static final String NODE_TOOL     = "tool";                          //$NON-NLS-1$
     /** A doc package. */
     public static final String NODE_DOC      = "doc";                           //$NON-NLS-1$
+    /** An extra package. */
+    public static final String NODE_EXTRA    = "extra";                         //$NON-NLS-1$
 
+    /** The license definition. */
+    public static final String NODE_LICENSE = "license";                        //$NON-NLS-1$
+    /** The optional uses-license for all packages (platform, add-on, tool, doc) or for a lib. */
+    public static final String NODE_USES_LICENSE = "uses-license";              //$NON-NLS-1$
     /** The revision, an int > 0, for all packages (platform, add-on, tool, doc). */
     public static final String NODE_REVISION    = "revision";                   //$NON-NLS-1$
-    /** The optional license for all packages (platform, add-on, tool, doc) or for a lib. */
-    public static final String NODE_LICENSE = "license";                        //$NON-NLS-1$
     /** The optional description for all packages (platform, add-on, tool, doc) or for a lib. */
     public static final String NODE_DESCRIPTION = "description";                //$NON-NLS-1$
     /** The optional description URL for all packages (platform, add-on, tool, doc). */
@@ -67,6 +71,9 @@ public class SdkRepository {
     /** A lib element in a libs container. */
     public static final String NODE_LIB       = "lib";                          //$NON-NLS-1$
 
+    /** The path, a string, for extra packages. */
+    public static final String NODE_PATH = "path";                              //$NON-NLS-1$
+
     /** The archives container, for all packages. */
     public static final String NODE_ARCHIVES = "archives";                      //$NON-NLS-1$
     /** An archive element, for the archives container. */
@@ -85,6 +92,12 @@ public class SdkRepository {
     public static final String ATTR_OS   = "os";                                //$NON-NLS-1$
     /** An optional archive Architecture attribute. */
     public static final String ATTR_ARCH = "arch";                              //$NON-NLS-1$
+
+    /** A license definition ID. */
+    public static final String ATTR_ID = "id";                                  //$NON-NLS-1$
+    /** A license reference. */
+    public static final String ATTR_REF = "ref";                                //$NON-NLS-1$
+
 
     public static InputStream getXsdStream() {
         return SdkRepository.class.getResourceAsStream("sdk-repository.xsd");   //$NON-NLS-1$

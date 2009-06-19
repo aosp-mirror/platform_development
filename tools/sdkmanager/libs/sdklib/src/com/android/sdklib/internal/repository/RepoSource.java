@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
@@ -248,6 +249,22 @@ public class RepoSource implements IDescription {
 
                 ArrayList<Package> packages = new ArrayList<Package>();
 
+                // Parse license definitions
+                HashMap<String, String> licenses = new HashMap<String, String>();
+                for (Node child = root.getFirstChild();
+                     child != null;
+                     child = child.getNextSibling()) {
+                    if (child.getNodeType() == Node.ELEMENT_NODE &&
+                            SdkRepository.NS_SDK_REPOSITORY.equals(child.getNamespaceURI()) &&
+                            child.getLocalName().equals(SdkRepository.NODE_LICENSE)) {
+                        Node id = child.getAttributes().getNamedItem(SdkRepository.ATTR_ID);
+                        if (id != null) {
+                            licenses.put(id.getNodeValue(), child.getTextContent());
+                        }
+                    }
+                }
+
+                // Parse packages
                 for (Node child = root.getFirstChild();
                      child != null;
                      child = child.getNextSibling()) {
@@ -258,15 +275,18 @@ public class RepoSource implements IDescription {
 
                         try {
                             if (SdkRepository.NODE_ADD_ON.equals(name)) {
-                                p = new AddonPackage(this, child);
+                                p = new AddonPackage(this, child, licenses);
+
+                            } else if (SdkRepository.NODE_EXTRA.equals(name)) {
+                                p = new ExtraPackage(this, child, licenses);
 
                             } else if (!mAddonOnly) {
                                 if (SdkRepository.NODE_PLATFORM.equals(name)) {
-                                    p = new PlatformPackage(this, child);
+                                    p = new PlatformPackage(this, child, licenses);
                                 } else if (SdkRepository.NODE_DOC.equals(name)) {
-                                    p = new DocPackage(this, child);
+                                    p = new DocPackage(this, child, licenses);
                                 } else if (SdkRepository.NODE_TOOL.equals(name)) {
-                                    p = new ToolPackage(this, child);
+                                    p = new ToolPackage(this, child, licenses);
                                 }
                             }
 

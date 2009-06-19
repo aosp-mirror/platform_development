@@ -19,6 +19,7 @@ package com.android.sdkuilib.internal.repository.icons;
 import com.android.sdklib.internal.repository.AddonPackage;
 import com.android.sdklib.internal.repository.Archive;
 import com.android.sdklib.internal.repository.DocPackage;
+import com.android.sdklib.internal.repository.ExtraPackage;
 import com.android.sdklib.internal.repository.Package;
 import com.android.sdklib.internal.repository.PlatformPackage;
 import com.android.sdklib.internal.repository.RepoSource;
@@ -103,8 +104,8 @@ public class ImageFactory {
         } else if (object instanceof DocPackage) {
             return getImageByName("doc_icon16.png");
 
-        } else if (object instanceof Package) {
-            return getImageByName("extra_pkg_icon16.png");
+        } else if (object instanceof ExtraPackage) {
+            return getImageByName("extra_icon16.png");
 
         } else if (object instanceof Archive) {
             if (((Archive) object).isCompatible()) {

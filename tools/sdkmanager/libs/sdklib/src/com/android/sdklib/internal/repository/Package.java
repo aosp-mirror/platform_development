@@ -25,6 +25,7 @@ import org.w3c.dom.Node;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Map;
 
 /**
  * A {@link Package} is the base class for "something" that can be downloaded from
@@ -52,13 +53,15 @@ public abstract class Package implements IDescription {
      * <p/>
      * This constructor should throw an exception if the package cannot be created.
      */
-    Package(RepoSource source, Node packageNode) {
+    Package(RepoSource source, Node packageNode, Map<String,String> licenses) {
         mSource = source;
-        mRevision    = getXmlInt   (packageNode, SdkRepository.NODE_REVISION, 0);
-        mDescription = getXmlString(packageNode, SdkRepository.NODE_DESCRIPTION);
-        mDescUrl     = getXmlString(packageNode, SdkRepository.NODE_DESC_URL);
-        mLicense     = getXmlString(packageNode, SdkRepository.NODE_LICENSE);
-        mArchives = parseArchives(getFirstChild(packageNode, SdkRepository.NODE_ARCHIVES));
+        mRevision    = XmlParserUtils.getXmlInt   (packageNode, SdkRepository.NODE_REVISION, 0);
+        mDescription = XmlParserUtils.getXmlString(packageNode, SdkRepository.NODE_DESCRIPTION);
+        mDescUrl     = XmlParserUtils.getXmlString(packageNode, SdkRepository.NODE_DESC_URL);
+
+        mLicense  = parseLicense(packageNode, licenses);
+        mArchives = parseArchives(XmlParserUtils.getFirstChild(
+                                  packageNode, SdkRepository.NODE_ARCHIVES));
     }
 
     /**
@@ -84,6 +87,24 @@ public abstract class Package implements IDescription {
                 archiveOs,
                 archiveArch,
                 archiveOsPath);
+    }
+
+    /**
+     * Parses the uses-licence node of this package, if any, and returns the license
+     * definition if there's one. Returns null if there's no uses-license element or no
+     * license of this name defined.
+     */
+    private String parseLicense(Node packageNode, Map<String, String> licenses) {
+        Node usesLicense = XmlParserUtils.getFirstChild(
+                                            packageNode, SdkRepository.NODE_USES_LICENSE);
+        if (usesLicense != null) {
+            Node ref = usesLicense.getAttributes().getNamedItem(SdkRepository.ATTR_REF);
+            if (ref != null) {
+                String licenseRef = ref.getNodeValue();
+                return licenses.get(licenseRef);
+            }
+        }
+        return null;
     }
 
     /**
@@ -114,13 +135,13 @@ public abstract class Package implements IDescription {
     private Archive parseArchive(Node archiveNode) {
         Archive a = new Archive(
                     this,
-                    (Os)   getEnumAttribute(archiveNode, SdkRepository.ATTR_OS,
+                    (Os)   XmlParserUtils.getEnumAttribute(archiveNode, SdkRepository.ATTR_OS,
                             Os.values(), null),
-                    (Arch) getEnumAttribute(archiveNode, SdkRepository.ATTR_ARCH,
+                    (Arch) XmlParserUtils.getEnumAttribute(archiveNode, SdkRepository.ATTR_ARCH,
                             Arch.values(), Arch.ANY),
-                    getXmlString(archiveNode, SdkRepository.NODE_URL),
-                    getXmlLong(archiveNode, SdkRepository.NODE_SIZE, 0),
-                    getXmlString(archiveNode, SdkRepository.NODE_CHECKSUM)
+                    XmlParserUtils.getXmlString(archiveNode, SdkRepository.NODE_URL),
+                    XmlParserUtils.getXmlLong  (archiveNode, SdkRepository.NODE_SIZE, 0),
+                    XmlParserUtils.getXmlString(archiveNode, SdkRepository.NODE_CHECKSUM)
                 );
 
         return a;
@@ -224,85 +245,4 @@ public abstract class Package implements IDescription {
             replacementPackage.getRevision() > this.getRevision();
     }
 
-    //---
-
-    /**
-     * Returns the first child element with the given XML local name.
-     * If xmlLocalName is null, returns the very first child element.
-     */
-    protected static Node getFirstChild(Node node, String xmlLocalName) {
-
-        for(Node child = node.getFirstChild(); child != null; child = child.getNextSibling()) {
-            if (child.getNodeType() == Node.ELEMENT_NODE &&
-                    SdkRepository.NS_SDK_REPOSITORY.equals(child.getNamespaceURI())) {
-                if (xmlLocalName == null || xmlLocalName.equals(child.getLocalName())) {
-                    return child;
-                }
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Retrieves the value of that XML element as a string.
-     * Returns an empty string when the element is missing.
-     */
-    protected static String getXmlString(Node node, String xmlLocalName) {
-        Node child = getFirstChild(node, xmlLocalName);
-
-        return child == null ? "" : child.getTextContent();  //$NON-NLS-1$
-    }
-
-    /**
-     * Retrieves the value of that XML element as an integer.
-     * Returns the default value when the element is missing or is not an integer.
-     */
-    protected static int getXmlInt(Node node, String xmlLocalName, int defaultValue) {
-        String s = getXmlString(node, xmlLocalName);
-        try {
-            return Integer.parseInt(s);
-        } catch (NumberFormatException e) {
-            return defaultValue;
-        }
-    }
-
-    /**
-     * Retrieves the value of that XML element as a long.
-     * Returns the default value when the element is missing or is not an integer.
-     */
-    protected static long getXmlLong(Node node, String xmlLocalName, long defaultValue) {
-        String s = getXmlString(node, xmlLocalName);
-        try {
-            return Long.parseLong(s);
-        } catch (NumberFormatException e) {
-            return defaultValue;
-        }
-    }
-
-    /**
-     * Retrieve an attribute which value must match one of the given enums using a
-     * case-insensitive name match.
-     *
-     * Returns defaultValue if the attribute does not exist or its value does not match
-     * the given enum values.
-     */
-    private Object getEnumAttribute(
-            Node archiveNode,
-            String attrName,
-            Object[] values,
-            Object defaultValue) {
-
-        Node attr = archiveNode.getAttributes().getNamedItem(attrName);
-        if (attr != null) {
-            String found = attr.getNodeValue();
-            for (Object value : values) {
-                if (value.toString().equalsIgnoreCase(found)) {
-                    return value;
-                }
-            }
-        }
-
-        return defaultValue;
-    }
 }
