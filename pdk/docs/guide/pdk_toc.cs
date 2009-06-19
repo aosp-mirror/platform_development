@@ -13,7 +13,6 @@ function nothing() {}
      <ul>  
        <li><a href="<?cs var:toroot ?>guide/build_new_device.html">Configuring a New Product</a></li>
        <li><a href="<?cs var:toroot ?>guide/build_cookbook.html">Build Cookbook</a></li>
-       <li><a href="<?cs var:toroot ?>guide/bring_up.html">Bring up</a></li>
      </ul>
      </li>
      <li><a href="<?cs var:toroot ?>guide/release_keys.html">Release Keys and Signing Builds</a></li> 
@@ -29,6 +28,7 @@ function nothing() {}
 <li> <h2>System</h2>
 
 <ul>
+  <li><a href="<?cs var:toroot ?>guide/bring_up.html">Bring up</a></li>
   <li class="toggle-list">
     <div><a href="javascript:nothing()">Connectivity</a></div>
     <ul> 
