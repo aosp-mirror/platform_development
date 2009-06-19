@@ -94,7 +94,6 @@
 	<classpathentry kind="src" path="dalvik/libcore/x-net/src/main/java"/>
 	<classpathentry kind="src" path="dalvik/libcore/xml/src/main/java"/>
 	<classpathentry kind="src" path="out/target/common/obj/APPS/ApiDemos_intermediates/src/src"/>
-	<classpathentry kind="src" path="out/target/common/obj/APPS/Browser_intermediates/src/src"/>
 	<classpathentry kind="src" path="out/target/common/obj/APPS/IM_intermediates/src/src"/>
 	<classpathentry kind="src" path="out/target/common/obj/APPS/Music_intermediates/src/src"/>
 	<classpathentry kind="src" path="out/target/common/obj/APPS/Phone_intermediates/src/src"/>
@@ -104,7 +103,6 @@
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src/location/java"/>
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src/media/java"/>
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src/telephony/java"/>
-	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src/tts/java"/>
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src/vpn/java"/>
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src/wifi/java"/>
 	<classpathentry kind="src" path="out/target/common/R"/>
