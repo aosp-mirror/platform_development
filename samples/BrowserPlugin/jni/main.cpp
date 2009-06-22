@@ -67,8 +67,10 @@ ANPLogInterfaceV0           gLogI;
 ANPPaintInterfaceV0         gPaintI;
 ANPPathInterfaceV0          gPathI;
 ANPTypefaceInterfaceV0      gTypefaceI;
+ANPWindowInterfaceV0        gWindowI;
 
 #define ARRAY_COUNT(array)      (sizeof(array) / sizeof(array[0]))
+#define DEBUG_PLUGIN_EVENTS     0
 
 NPError NP_Initialize(NPNetscapeFuncs* browserFuncs, NPPluginFuncs* pluginFuncs, void *java_env, void *application_context)
 {
@@ -110,6 +112,7 @@ NPError NP_Initialize(NPNetscapeFuncs* browserFuncs, NPPluginFuncs* pluginFuncs,
         { kPathInterfaceV0_ANPGetValue,         sizeof(gPathI),     &gPathI },
         { kTypefaceInterfaceV0_ANPGetValue,     sizeof(gPaintI),    &gTypefaceI },
         { kAudioTrackInterfaceV0_ANPGetValue,   sizeof(gSoundI),    &gSoundI },
+        { kWindowInterfaceV0_ANPGetValue,       sizeof(gWindowI),    &gWindowI },
     };
     for (size_t i = 0; i < ARRAY_COUNT(gPairs); i++) {
         gPairs[i].i->inSize = gPairs[i].size;
@@ -299,6 +302,7 @@ int16 NPP_HandleEvent(NPP instance, void* event)
     PluginObject *obj = reinterpret_cast<PluginObject*>(instance->pdata);
     const ANPEvent* evt = reinterpret_cast<const ANPEvent*>(event);
 
+#if DEBUG_PLUGIN_EVENTS
     switch (evt->eventType) {
         case kDraw_ANPEventType:
 
@@ -352,11 +356,20 @@ int16 NPP_HandleEvent(NPP instance, void* event)
                     }
                 }
             }
-            return 1;
+            break;
+
+       case kVisibleRect_ANPEventType:
+            gLogI.log(instance, kDebug_ANPLogType, "---- %p VisibleRect [%d %d %d %d]",
+                      instance, evt->data.visibleRect.x, evt->data.visibleRect.y,
+                      evt->data.visibleRect.width, evt->data.visibleRect.height);
+            break;
 
         default:
+            gLogI.log(instance, kError_ANPLogType, "---- %p Unknown Event [%d]",
+                      instance, evt->eventType);
             break;
     }
+#endif
 
     if(!obj->activePlugin) {
         gLogI.log(instance, kError_ANPLogType, "the active plugin is null.");
