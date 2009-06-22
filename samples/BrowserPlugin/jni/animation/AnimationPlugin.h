@@ -47,6 +47,12 @@ private:
     ANPPaint*   m_paint;
 
     static const float SCALE = 0.1;
+
+    void centerPluginOnScreen();
+    int m_scrollX;
+    int m_scrollY;
+    int m_screenH;
+    int m_screenW;
 };
 
 uint32_t getMSecs();
