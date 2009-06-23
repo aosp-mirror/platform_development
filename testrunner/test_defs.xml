@@ -197,6 +197,14 @@ Native tests:
     continuous="true"
     cts="true" />
 
+<test name="cts-permission2"
+    build_path="cts/tests/tests/permission2"
+    package="com.android.cts.permission2"
+    runner="android.test.InstrumentationTestRunner"
+    coverage_target="framework"
+    continuous="true"
+    cts="true" />
+
 <test name="cts-process"
     build_path="cts/tests"
     package="com.android.cts.process"
