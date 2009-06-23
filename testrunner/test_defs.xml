@@ -428,12 +428,6 @@ Native tests:
     coverage_target="ImProvider"
     continuous="true" />
 
-<test name="gtalkservice-permission"
-    build_path="vendor/google/apps/GTalkService/tests/permission"
-    package="com.google.android.apps.gtalkservice.permission.tests"
-    coverage_target="GTalkService"
-    continuous="true" />
-
 <test name="media"
     build_path="frameworks/base/media/tests/MediaFrameworkTest"
     package="com.android.mediaframeworktest"
