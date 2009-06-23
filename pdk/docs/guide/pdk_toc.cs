@@ -53,13 +53,8 @@ function nothing() {}
       <li><a href="<?cs var:toroot ?>guide/camera.html">Camera/Video</a></li>
     </ul>
   </li>
-  <li class="toggle-list">
-    <div><a href="<?cs var:toroot ?>guide/power_management.html">Power Management</a></div>
-    <ul>
-      <li><a href="<?cs var:toroot ?>guide/wakelock.html">Wakelocks</a></li>
-      <li><a href="<?cs var:toroot ?>guide/early_suspend.html">Early Suspend</a></li>
-    </ul>
-  </li>
+  
+  <li><a href="<?cs var:toroot ?>guide/power_management.html">Power Management</a></li>
   <li><a href="<?cs var:toroot ?>guide/sensors.html">Sensors</a></li>
   <li class="toggle-list">
     <div><a href="javascript:nothing()">Telephony</a></div>
