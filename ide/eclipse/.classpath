@@ -94,6 +94,7 @@
 	<classpathentry kind="src" path="dalvik/libcore/x-net/src/main/java"/>
 	<classpathentry kind="src" path="dalvik/libcore/xml/src/main/java"/>
 	<classpathentry kind="src" path="out/target/common/obj/APPS/ApiDemos_intermediates/src/src"/>
+	<classpathentry kind="src" path="out/target/common/obj/APPS/Email_intermediates/src/src"/>
 	<classpathentry kind="src" path="out/target/common/obj/APPS/IM_intermediates/src/src"/>
 	<classpathentry kind="src" path="out/target/common/obj/APPS/Music_intermediates/src/src"/>
 	<classpathentry kind="src" path="out/target/common/obj/APPS/Phone_intermediates/src/src"/>
