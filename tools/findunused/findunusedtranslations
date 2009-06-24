@@ -1,0 +1,103 @@
+#!/usr/bin/perl
+
+sub usage {
+    print STDERR "Usage: findunusedtranslations values/strings.xml\n";
+    print STDERR "\n";
+    print STDERR "Will read values/strings.xml and rewrite\n";
+    print STDERR "values-xx/strings.xml and values-xx-rYY/strings.xml\n";
+    print STDERR "files to remove strings that no longer appear in the\n";
+    print STDERR "base strings file.\n";
+
+    exit 1;
+}
+
+if ($#ARGV != 0) {
+    usage();
+}
+
+unless ($ARGV[0] =~ /^(.*)\/values([^\/]*)\/(.*\.xml)/) {
+    print STDERR "Bad format for $ARGV[0]\n";
+    usage();
+}
+
+unless (-f $ARGV[0]) {
+    print STDERR "$0: $ARGV[0]: No such file\n";
+}
+
+$prefix = $1;
+$values = $2;
+$suffix = $3;
+
+if ($values =~ /^(-mcc[^-]*)*(-mnc[^-]*)*(.*)$/) {
+    $pattern1 = "$prefix/values$1$2-??$3/$suffix";
+    $pattern2 = "$prefix/values$1$2-??-r??$3/$suffix";
+} else {
+    $pattern1 = "$prefix/values-??$values/$suffix";
+    $pattern2 = "$prefix/values-??-r??$values/$suffix";
+}
+
+@matches = (glob($pattern1), glob($pattern2));
+
+open(IN, "<$ARGV[0]");
+while (<IN>) {
+    if (/<string [^>]*name="([^"]*)"/) {
+        $string{$1} = 1;
+    }
+    if (/<string-array [^>]*name="([^"]*)"/) {
+        $stringarray{$1} = 1;
+    }
+    if (/<plurals [^>]*name="([^"]*)"/) {
+        $plurals{$1} = 1;
+    }
+}
+close(IN);
+
+for $match (@matches) {
+    print "Rewriting $match\n";
+    $suppress = 0;
+    $text = "";
+    $changes = 0;
+
+    open(IN, "<$match");
+    while (<IN>) {
+        if (/<string [^>]*name="([^"]*)"/) {
+            if ($string{$1} == 0) {
+                $suppress = 1;
+                $changes = 1;
+            }
+        }
+        if (/<string-array [^>]*name="([^"]*)"/) {
+            if ($stringarray{$1} == 0) {
+                $suppress = 1;
+                $changes = 1;
+            }
+        }
+        if (/<plurals [^>]*name="([^"]*)"/) {
+            if ($plurals{$1} == 0) {
+                $suppress = 1;
+                $changes = 1;
+            }
+        }
+
+        $text .= $_ unless ($suppress);
+
+        if (/<\/string/) {
+            $suppress = 0;
+        }
+        if (/<\/string-array/) {
+            $suppress = 0;
+        }
+        if (/<\/plurals/) {
+            $suppress = 0;
+        }
+    }
+    close(IN);
+
+    if ($changes) {
+        open(OUT, ">$match");
+        print OUT $text;
+        close(OUT);
+    } else {
+        print "(no changes)\n";
+    }
+}
