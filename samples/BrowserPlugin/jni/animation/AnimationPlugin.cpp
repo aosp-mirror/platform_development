@@ -89,6 +89,8 @@ BallAnimation::BallAnimation(NPP inst) : SubPlugin(inst) {
     m_x = m_y = 0;
     m_dx = 7 * SCALE;
     m_dy = 5 * SCALE;
+    m_scrollX = m_scrollY = m_screenW = m_screenH = 0;
+    m_zoom = 1;
 
     memset(&m_oval, 0, sizeof(m_oval));
 
@@ -247,10 +249,12 @@ int16 BallAnimation::handleEvent(const ANPEvent* evt) {
              return 1;
 
         case kVisibleRect_ANPEventType:
-             m_scrollX = evt->data.visibleRect.x;
-             m_scrollY = evt->data.visibleRect.y;
-             m_screenW = evt->data.visibleRect.width;
-             m_screenH = evt->data.visibleRect.height;
+             m_scrollX = evt->data.visibleRect.rect.left;
+             m_scrollY = evt->data.visibleRect.rect.top;
+             m_screenW = evt->data.visibleRect.rect.right - m_scrollX;
+             m_screenH = evt->data.visibleRect.rect.bottom - m_scrollY;
+             m_zoom = evt->data.visibleRect.zoomScale;
+             gLogI.log(instance, kDebug_ANPLogType, "zoom event %g", m_zoom);
              return 1;
         default:
             break;
