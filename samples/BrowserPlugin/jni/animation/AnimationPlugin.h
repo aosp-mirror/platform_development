@@ -53,6 +53,7 @@ private:
     int m_scrollY;
     int m_screenH;
     int m_screenW;
+    float m_zoom;
 };
 
 uint32_t getMSecs();
