@@ -2,5 +2,5 @@
 #
 
 # swt
-framework/swt.jar    tools/lib/x86/swt.jar
-framework/swt_64.jar tools/lib/x86_64/swt.jar
+prebuilt/linux-x86/swt/swt.jar tools/lib/x86/swt.jar
+prebuilt/linux-x86_64/swt/swt.jar tools/lib/x86_64/swt.jar
