@@ -53,15 +53,21 @@ do
 
         # Simplistically process the content of the file to get the names of all the constants,
         # and try to find a reference to each constant.
+
+        # First take all the input files and concatenate them, removing newlines. This allows us to
+        # find expressions that are broken up over multiple lines, i.e. R.drawable.\nsomeconstant
+        find $resources $sources $app/AndroidManifest.xml -name .git -prune -o -type f -print |xargs cat | tr -d '\n ' > /tmp/everything$$
+
+        # Now look for each of the constants in the contatenated file.
         for i in $(cat $rDotJava | grep "\w*=0x\d*" | sed 's/ *public static final int //' | sed 's/=0x.*//')
         do
             # Since periods in the names get translated to underscores in R.java, and you can actually
             # refer to such constants from java by using an underscore instead of a period, we also
             # replace all underscores with a pattern that will match periods and underscores.
             p=$(echo $i | sed 's/_/[\\._]/g')
-            echo $i $(grep -Rw R\\..*\\.$i\\\|@style/$p\\\|@drawable/$p\\\|@anim/$p\\\|@color/$p\\\|@xml/$p\\\|@layout/$p\\\|@menu/$p\\\|@+id/$p\\\|@array/$p\\\|@string/$p\\\|@dimen/$p $resources $sources $app/AndroidManifest.xml | wc -l)
+            echo $i $(grep -cw R\\..*\\.$i\\\|@style/$p\\\|@drawable/$p\\\|@anim/$p\\\|@color/$p\\\|@xml/$p\\\|@layout/$p\\\|@menu/$p\\\|@+id/$p\\\|@array/$p\\\|@string/$p\\\|@dimen/$p < /tmp/everything$$)
         done | grep " 0$" | {
-            # this block gets as its input a list of constants which no references were found, one per line
+            # this block gets as its input a list of constants for which no references were found, one per line
             if [ "$showall" == "yes" ]
             then
                 echo $app
@@ -74,5 +80,6 @@ do
                 fi
             fi
         }
+        rm /tmp/everything$$
     fi
 done
