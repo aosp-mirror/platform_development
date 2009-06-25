@@ -25,9 +25,7 @@ import com.android.sdkuilib.internal.repository.UpdaterData.ISdkListener;
 
 import org.eclipse.jface.viewers.CheckStateChangedEvent;
 import org.eclipse.jface.viewers.CheckboxTreeViewer;
-import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.ICheckStateListener;
-import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.ITreeSelection;
@@ -50,15 +48,8 @@ import java.util.ArrayList;
 
 /*
  * TODO list
- * - check source => toggle packages: all, none
- * - check package => set source check to tri-state
- * - check callback => install enable if has selection
- * - select tree item: delete site enable if add-on source
- * - select tree item: refresh enable if source
  * - load add-on sites from pref
  * - delete site callback, update pref
- * - refresh callback
- * - install selected callback
  */
 
 public class RemotePackagesPage extends Composite implements ISdkListener {
@@ -70,7 +61,7 @@ public class RemotePackagesPage extends Composite implements ISdkListener {
     private TreeColumn mColumnSource;
     private Group mDescriptionContainer;
     private Button mAddSiteButton;
-    private Button mRemoveSiteButton;
+    private Button mDeleteSiteButton;
     private Label mPlaceholder3;
     private Button mRefreshButton;
     private Button mInstallSelectedButton;
@@ -95,11 +86,6 @@ public class RemotePackagesPage extends Composite implements ISdkListener {
         parent.setLayout(new GridLayout(5, false));
 
         mTreeViewerSources = new CheckboxTreeViewer(parent, SWT.BORDER);
-        mTreeViewerSources.addDoubleClickListener(new IDoubleClickListener() {
-            public void doubleClick(DoubleClickEvent event) {
-                onTreeDoubleClick(event); //$hide$
-            }
-        });
         mTreeViewerSources.addCheckStateListener(new ICheckStateListener() {
             public void checkStateChanged(CheckStateChangedEvent event) {
                 onTreeCheckStateChanged(event); //$hide$
@@ -137,14 +123,14 @@ public class RemotePackagesPage extends Composite implements ISdkListener {
         });
         mAddSiteButton.setText("Add Site...");
 
-        mRemoveSiteButton = new Button(parent, SWT.NONE);
-        mRemoveSiteButton.addSelectionListener(new SelectionAdapter() {
+        mDeleteSiteButton = new Button(parent, SWT.NONE);
+        mDeleteSiteButton.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
                 onRemoveSiteSelected(); //$hide$
             }
         });
-        mRemoveSiteButton.setText("Delete Site...");
+        mDeleteSiteButton.setText("Delete Site...");
 
         mPlaceholder3 = new Label(parent, SWT.NONE);
         mPlaceholder3.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, false, 1, 1));
@@ -189,6 +175,7 @@ public class RemotePackagesPage extends Composite implements ISdkListener {
     private void postCreate() {
         mUpdaterData.addListeners(this);
         adjustColumnsWidth();
+        updateButtonsState();
     }
 
     /**
@@ -218,6 +205,8 @@ public class RemotePackagesPage extends Composite implements ISdkListener {
      * type or there is no selection, it empties the description area.
      */
     private void onTreeSelected() {
+        updateButtonsState();
+
         ISelection sel = mTreeViewerSources.getSelection();
         if (sel instanceof ITreeSelection) {
             Object elem = ((ITreeSelection) sel).getFirstElement();
@@ -238,6 +227,8 @@ public class RemotePackagesPage extends Composite implements ISdkListener {
      * When checking a package, only its compatible archives are checked.
      */
     private void onTreeCheckStateChanged(CheckStateChangedEvent event) {
+        updateButtonsState();
+
         boolean b = event.getChecked();
         Object elem = event.getElement(); // Will be Archive or Package or RepoSource
 
@@ -278,10 +269,6 @@ public class RemotePackagesPage extends Composite implements ISdkListener {
         }
     }
 
-    private void onTreeDoubleClick(DoubleClickEvent event) {
-        // TODO use or remove
-    }
-
     private void onInstallSelectedArchives() {
 
         ArrayList<Archive> archives = new ArrayList<Archive>();
@@ -308,6 +295,7 @@ public class RemotePackagesPage extends Composite implements ISdkListener {
         if (mUpdaterData != null) {
             mUpdaterData.refreshSources(false /*forceFetching*/);
         }
+        updateButtonsState();
     }
 
     public void onSdkChange() {
@@ -316,6 +304,38 @@ public class RemotePackagesPage extends Composite implements ISdkListener {
         mTreeViewerSources.setLabelProvider(  sources.getLabelProvider());
         mTreeViewerSources.setInput(sources);
         onTreeSelected();
+    }
+
+    private void updateButtonsState() {
+        // We install archives, so there should be at least one checked archive.
+        // Having sites or packages checked does not count.
+        boolean hasCheckedArchive = false;
+        Object[] checked = mTreeViewerSources.getCheckedElements();
+        if (checked != null) {
+            for (Object c : checked) {
+                if (c instanceof Archive) {
+                    hasCheckedArchive = true;
+                    break;
+                }
+            }
+        }
+
+        // Is there a selected site Source?
+        boolean hasSelectedSource = false;
+        ISelection sel = mTreeViewerSources.getSelection();
+        if (sel instanceof ITreeSelection) {
+            for (Object c : ((ITreeSelection) sel).toList()) {
+                if (c instanceof RepoSource) {
+                    hasSelectedSource = true;
+                    break;
+                }
+            }
+        }
+
+        mAddSiteButton.setEnabled(true);
+        mDeleteSiteButton.setEnabled(hasSelectedSource);
+        mRefreshButton.setEnabled(true);
+        mInstallSelectedButton.setEnabled(hasCheckedArchive);
     }
 
     // End of hiding from SWT Designer

@@ -200,6 +200,7 @@ public class LocalPackagesPage extends Composite implements ISdkListener {
     private void postCreate() {
         mUpdaterData.addListeners(this);
         adjustColumnsWidth();
+        updateButtonsState();
     }
 
     /**
@@ -222,12 +223,26 @@ public class LocalPackagesPage extends Composite implements ISdkListener {
     }
 
     /**
+     * Enable or disable buttons depending on list content and selection
+     */
+    private void updateButtonsState() {
+        ISelection sel = mTableViewerPackages.getSelection();
+        boolean hasSelection = sel != null && !sel.isEmpty();
+
+        mUpdateButton.setEnabled(mTablePackages.getItemCount() > 0);
+        mDeleteButton.setEnabled(hasSelection);
+        mRefreshButton.setEnabled(true);
+    }
+
+    /**
      * Called when an item in the package table viewer is selected.
      * If the items is an {@link IDescription} (as it should), this will display its long
      * description in the description area. Otherwise when the item is not of the expected
      * type or there is no selection, it empties the description area.
      */
     private void onTreeSelected() {
+        updateButtonsState();
+
         ISelection sel = mTableViewerPackages.getSelection();
         if (sel instanceof IStructuredSelection) {
             Object elem = ((IStructuredSelection) sel).getFirstElement();
@@ -288,6 +303,7 @@ public class LocalPackagesPage extends Composite implements ISdkListener {
 
     private void onRefreshSelected() {
         mUpdaterData.reloadSdk();
+        updateButtonsState();
     }
 
     public void onSdkChange() {
