@@ -29,11 +29,16 @@ import org.w3c.dom.Node;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.Properties;
 
 /**
  * Represents an add-on XML node in an SDK repository.
  */
 public class AddonPackage extends Package {
+
+    private static final String PROP_API_LEVEL = "Addon.ApiLevel";  //$NON-NLS-1$
+    private static final String PROP_NAME      = "Addon.Name";      //$NON-NLS-1$
+    private static final String PROP_VENDOR    = "Addon.Vendor";    //$NON-NLS-1$
 
     private final String mVendor;
     private final String mName;
@@ -80,8 +85,9 @@ public class AddonPackage extends Package {
      * This is used to list local SDK folders in which case there is one archive which
      * URL is the actual target location.
      */
-    AddonPackage(IAndroidTarget target) {
+    AddonPackage(IAndroidTarget target, Properties props) {
         super(  null,                       //source
+                props,                      //properties
                 0,                          //revision
                 null,                       //license
                 target.getDescription(),    //description
@@ -104,6 +110,19 @@ public class AddonPackage extends Package {
                 mLibs[i] = new Lib(optLibs[i].getName(), optLibs[i].getDescription());
             }
         }
+    }
+
+    /**
+     * Save the properties of the current packages in the given {@link Properties} object.
+     * These properties will later be give the constructor that takes a {@link Properties} object.
+     */
+    @Override
+    void saveProperties(Properties props) {
+        super.saveProperties(props);
+
+        props.setProperty(PROP_API_LEVEL, Integer.toString(mApiLevel));
+        props.setProperty(PROP_NAME, mName);
+        props.setProperty(PROP_VENDOR, mVendor);
     }
 
     /**

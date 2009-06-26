@@ -27,11 +27,15 @@ import org.w3c.dom.Node;
 
 import java.io.File;
 import java.util.Map;
+import java.util.Properties;
 
 /**
  * Represents a platform XML node in an SDK repository.
  */
 public class PlatformPackage extends Package {
+
+    private static final String PROP_API_LEVEL = "Platform.ApiLevel";  //$NON-NLS-1$
+    private static final String PROP_VERSION   = "Platform.Version";   //$NON-NLS-1$
 
     private final String mVersion;
     private final int mApiLevel;
@@ -53,8 +57,9 @@ public class PlatformPackage extends Package {
      * This is used to list local SDK folders in which case there is one archive which
      * URL is the actual target location.
      */
-    PlatformPackage(IAndroidTarget target) {
+    PlatformPackage(IAndroidTarget target, Properties props) {
         super(  null,                       //source
+                props,                      //properties
                 0,                          //revision
                 null,                       //license
                 target.getDescription(),    //description
@@ -66,6 +71,18 @@ public class PlatformPackage extends Package {
 
         mApiLevel = target.getApiVersionNumber();
         mVersion  = target.getApiVersionName();
+    }
+
+    /**
+     * Save the properties of the current packages in the given {@link Properties} object.
+     * These properties will later be give the constructor that takes a {@link Properties} object.
+     */
+    @Override
+    void saveProperties(Properties props) {
+        super.saveProperties(props);
+
+        props.setProperty(PROP_API_LEVEL, Integer.toString(mApiLevel));
+        props.setProperty(PROP_VERSION, mVersion);
     }
 
     /** Returns the version, a string, for platform packages. */

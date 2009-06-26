@@ -101,8 +101,10 @@ class LocalSdkAdapter  {
 
                 if (packages == null) {
                     // load on demand the first time
-                    packages = parser.parseSdk(mUpdaterData.getOsSdkRoot(),
-                            mUpdaterData.getSdkManager());
+                    packages = parser.parseSdk(
+                            mUpdaterData.getOsSdkRoot(),
+                            mUpdaterData.getSdkManager(),
+                            mUpdaterData.getSdkLog());
                 }
 
                 if (packages != null) {
