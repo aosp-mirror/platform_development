@@ -29,6 +29,7 @@
 #include "main.h"
 #include "PluginObject.h"
 #include "AnimationPlugin.h"
+#include "AudioPlugin.h"
 #include "BackgroundPlugin.h"
 #include "android_npapi.h"
 
@@ -183,7 +184,7 @@ NPError NPP_New(NPMIMEType pluginType, NPP instance, uint16 mode, int16 argc,
             }
             else if (!strcmp(argv[i], "Audio")) {
                 obj->pluginType = kAudio_PluginType;
-                //TODO add audio here
+                obj->activePlugin = new AudioPlugin(instance);
             }
             else if (!strcmp(argv[i], "Background")) {
                 obj->pluginType = kBackground_PluginType;
@@ -207,7 +208,6 @@ NPError NPP_Destroy(NPP instance, NPSavedData** save)
 {
     PluginObject *obj = (PluginObject*) instance->pdata;
     delete obj->activePlugin;
-    gSoundI.deleteTrack(obj->track);
 
     return NPERR_NO_ERROR;
 }
@@ -255,48 +255,6 @@ void NPP_Print(NPP instance, NPPrint* platformPrint)
 {
 }
 
-struct SoundPlay {
-    NPP             instance;
-    ANPAudioTrack*  track;
-    FILE*           file;
-};
-
-static void audioCallback(ANPAudioEvent evt, void* user, ANPAudioBuffer* buffer) {
-    switch (evt) {
-        case kMoreData_ANPAudioEvent: {
-            SoundPlay* play = reinterpret_cast<SoundPlay*>(user);
-            size_t amount = fread(buffer->bufferData, 1, buffer->size, play->file);
-            buffer->size = amount;
-            if (amount == 0) {
-                gSoundI.stop(play->track);
-                fclose(play->file);
-                play->file = NULL;
-                // need to notify our main thread to delete the track now
-            }
-            break;
-        }
-        default:
-            break;
-    }
-}
-
-static ANPAudioTrack* createTrack(NPP instance, const char path[]) {
-    FILE* f = fopen(path, "r");
-    gLogI.log(instance, kWarning_ANPLogType, "--- path %s FILE %p", path, f);
-    if (NULL == f) {
-        return NULL;
-    }
-    SoundPlay* play = new SoundPlay;
-    play->file = f;
-    play->track = gSoundI.newTrack(44100, kPCM16Bit_ANPSampleFormat, 2, audioCallback, play);
-    if (NULL == play->track) {
-        fclose(f);
-        delete play;
-        return NULL;
-    }
-    return play->track;
-}
-
 int16 NPP_HandleEvent(NPP instance, void* event)
 {
     PluginObject *obj = reinterpret_cast<PluginObject*>(instance->pdata);
@@ -342,26 +300,12 @@ int16 NPP_HandleEvent(NPP instance, void* event)
             gLogI.log(instance, kDebug_ANPLogType, "---- %p Touch action=%d [%d %d]",
                       instance, evt->data.touch.action, evt->data.touch.x,
                       evt->data.touch.y);
-            if (kUp_ANPTouchAction == evt->data.touch.action) {
-                if (NULL == obj->track) {
-                    obj->track = createTrack(instance, "/sdcard/sample.snd");
-                }
-                if (obj->track) {
-                    gLogI.log(instance, kDebug_ANPLogType, "track %p %d",
-                              obj->track, gSoundI.isStopped(obj->track));
-                    if (gSoundI.isStopped(obj->track)) {
-                        gSoundI.start(obj->track);
-                    } else {
-                        gSoundI.pause(obj->track);
-                    }
-                }
-            }
             break;
 
        case kVisibleRect_ANPEventType:
             gLogI.log(instance, kDebug_ANPLogType, "---- %p VisibleRect [%d %d %d %d]",
-                      instance, evt->data.visibleRect.x, evt->data.visibleRect.y,
-                      evt->data.visibleRect.width, evt->data.visibleRect.height);
+                      instance, evt->data.visibleRect.rect.left, evt->data.visibleRect.rect.top,
+                      evt->data.visibleRect.rect.right, evt->data.visibleRect.rect.bottom);
             break;
 
         default:
