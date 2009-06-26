@@ -180,7 +180,9 @@ public final class SdkManager {
                 writer.write(String.format("0x%04x\n", i));
             }
         } finally {
-            writer.close();
+            if (writer != null) {
+                writer.close();
+            }
         }
     }
 

@@ -219,7 +219,7 @@ class UpdaterData {
             try {
                 mAvdManager.reloadAvds();
             } catch (AndroidLocationException e) {
-                // FIXME
+                mSdkLog.error(e, null);
             }
         }
     }
@@ -236,7 +236,7 @@ class UpdaterData {
                         try {
                             listener.onSdkChange();
                         } catch (Throwable t) {
-                            // TODO: log error
+                            mSdkLog.error(t, null);
                         }
                     }
                 }

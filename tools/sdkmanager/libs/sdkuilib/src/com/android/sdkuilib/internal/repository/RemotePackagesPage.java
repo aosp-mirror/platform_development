@@ -47,11 +47,6 @@ import org.eclipse.swt.widgets.TreeColumn;
 
 import java.util.ArrayList;
 
-/*
- * TODO list
- * - load add-on sites from pref
- * - delete site callback, update pref
- */
 
 public class RemotePackagesPage extends Composite implements ISdkListener {
 
@@ -260,18 +255,12 @@ public class RemotePackagesPage extends Composite implements ISdkListener {
         mTreeViewerSources.setExpandedState(pkg, true);
         for (Object archive : provider.getChildren(pkg)) {
             if (archive instanceof Archive) {
-                if (((Archive) archive).isCompatible()) {
-                    mTreeViewerSources.setChecked(archive, true);
-                } else {
-                    mTreeViewerSources.setChecked(archive, false);
-                    // TODO change the item image to mark it incompatible
-                }
+                mTreeViewerSources.setChecked(archive, ((Archive) archive).isCompatible());
             }
         }
     }
 
     private void onInstallSelectedArchives() {
-
         ArrayList<Archive> archives = new ArrayList<Archive>();
         for (Object element : mTreeViewerSources.getCheckedElements()) {
             if (element instanceof Archive) {
@@ -292,7 +281,7 @@ public class RemotePackagesPage extends Composite implements ISdkListener {
         boolean changed = false;
 
         ISelection sel = mTreeViewerSources.getSelection();
-        if (sel instanceof ITreeSelection) {
+        if (mUpdaterData != null && sel instanceof ITreeSelection) {
             for (Object c : ((ITreeSelection) sel).toList()) {
                 if (c instanceof RepoSource && ((RepoSource) c).isUserSource()) {
                     RepoSource source = (RepoSource) c;

@@ -18,6 +18,7 @@ package com.android.sdklib.internal.repository;
 
 import com.android.prefs.AndroidLocation;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
+import com.android.sdklib.ISdkLog;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -68,7 +69,7 @@ public class RepoSources {
      * Loads all user sources. This <em>replaces</em> all existing user sources
      * by the ones from the property file.
      */
-    public void loadUserSources() {
+    public void loadUserSources(ISdkLog log) {
 
         // Remove all existing user sources
         for (Iterator<RepoSource> it = mSources.iterator(); it.hasNext(); ) {
@@ -100,14 +101,14 @@ public class RepoSources {
             }
 
         } catch (NumberFormatException e) {
-            // TODO print to log
-            e.printStackTrace();
+            log.error(e, null);
+
         } catch (AndroidLocationException e) {
-            // TODO print to log
-            e.printStackTrace();
+            log.error(e, null);
+
         } catch (IOException e) {
-            // TODO print to log
-            e.printStackTrace();
+            log.error(e, null);
+
         } finally {
             if (fis != null) {
                 try {
@@ -121,8 +122,9 @@ public class RepoSources {
 
     /**
      * Saves all the user sources.
+     * @param log
      */
-    public void saveUserSources() {
+    public void saveUserSources(ISdkLog log) {
         FileOutputStream fos = null;
         try {
             String folder = AndroidLocation.getFolder();
@@ -144,11 +146,11 @@ public class RepoSources {
             props.store( fos, "## User Sources for Android tool");  //$NON-NLS-1$
 
         } catch (AndroidLocationException e) {
-            // TODO print to log
-            e.printStackTrace();
+            log.error(e, null);
+
         } catch (IOException e) {
-            // TODO print to log
-            e.printStackTrace();
+            log.error(e, null);
+
         } finally {
             if (fos != null) {
                 try {
