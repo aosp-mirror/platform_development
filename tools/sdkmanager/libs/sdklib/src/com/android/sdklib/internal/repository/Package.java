@@ -26,6 +26,7 @@ import org.w3c.dom.Node;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.Properties;
 
 /**
  * A {@link Package} is the base class for "something" that can be downloaded from
@@ -41,6 +42,12 @@ import java.util.Map;
  */
 public abstract class Package implements IDescription {
 
+    private static final String PROP_REVISION    = "Pkg.Revision";     //$NON-NLS-1$
+    private static final String PROP_LICENSE     = "Pkg.License";      //$NON-NLS-1$
+    private static final String PROP_DESC        = "Pkg.Desc";         //$NON-NLS-1$
+    private static final String PROP_DESC_URL    = "Pkg.DescUrl";      //$NON-NLS-1$
+    private static final String PROP_SOURCE_URL  = "Pkg.SourceUrl";    //$NON-NLS-1$
+    private static final String PROP_USER_SOURCE = "Pkg.UserSrc";      //$NON-NLS-1$
     private final int mRevision;
     private final String mLicense;
     private final String mDescription;
@@ -68,8 +75,12 @@ public abstract class Package implements IDescription {
      * Manually create a new package with one archive and the given attributes.
      * This is used to create packages from local directories in which case there must be
      * one archive which URL is the actual target location.
+     *
+     * Properties from props are used first when possible, e.g. if props is non null.
      */
-    public Package(RepoSource source,
+    public Package(
+            RepoSource source,
+            Properties props,
             int revision,
             String license,
             String description,
@@ -77,16 +88,56 @@ public abstract class Package implements IDescription {
             Os archiveOs,
             Arch archiveArch,
             String archiveOsPath) {
+
+        mRevision = Integer.parseInt(getProperty(props, PROP_REVISION, Integer.toString(revision)));
+        mLicense     = getProperty(props, PROP_LICENSE,  license);
+        mDescription = getProperty(props, PROP_DESC,     description);
+        mDescUrl     = getProperty(props, PROP_DESC_URL, descUrl);
+
+        // If source is null and we can find a source URL in the properties, generate
+        // a dummy source just to store the URL. This allows us to easily remember where
+        // a package comes from.
+        String srcUrl = getProperty(props, PROP_SOURCE_URL, null);
+        if (props != null && source == null && srcUrl != null) {
+            boolean isUser = Boolean.parseBoolean(props.getProperty(PROP_USER_SOURCE,
+                                                                    Boolean.TRUE.toString()));
+            source = new RepoSource(srcUrl, isUser);
+        }
         mSource = source;
-        mRevision = revision;
-        mLicense = license;
-        mDescription = description;
-        mDescUrl = descUrl;
+
         mArchives = new Archive[1];
         mArchives[0] = new Archive(this,
+                props,
                 archiveOs,
                 archiveArch,
                 archiveOsPath);
+    }
+
+    /**
+     * Utility method that returns a property from a {@link Properties} object.
+     * Returns the default value if props is null or if the property is not defined.
+     */
+    protected String getProperty(Properties props, String propKey, String defaultValue) {
+        if (props == null) {
+            return defaultValue;
+        }
+        return props.getProperty(propKey, defaultValue);
+    }
+
+    /**
+     * Save the properties of the current packages in the given {@link Properties} object.
+     * These properties will later be give the constructor that takes a {@link Properties} object.
+     */
+    void saveProperties(Properties props) {
+        props.setProperty(PROP_REVISION, Integer.toString(mRevision));
+        props.setProperty(PROP_LICENSE, mLicense);
+        props.setProperty(PROP_DESC, mDescription);
+        props.setProperty(PROP_DESC_URL, mDescUrl);
+
+        if (mSource != null) {
+            props.setProperty(PROP_SOURCE_URL,  mSource.getUrl());
+            props.setProperty(PROP_USER_SOURCE, Boolean.toString(mSource.isUserSource()));
+        }
     }
 
     /**

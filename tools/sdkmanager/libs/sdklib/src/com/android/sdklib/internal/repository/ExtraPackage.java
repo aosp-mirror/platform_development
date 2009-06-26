@@ -26,11 +26,14 @@ import org.w3c.dom.Node;
 
 import java.io.File;
 import java.util.Map;
+import java.util.Properties;
 
 /**
  * Represents a extra XML node in an SDK repository.
  */
 public class ExtraPackage extends Package {
+
+    private static final String PROP_PATH = "Extra.Path";  //$NON-NLS-1$
 
     private final String mPath;
 
@@ -45,11 +48,12 @@ public class ExtraPackage extends Package {
     }
 
     /**
-     * Manually create a new package with one archive and the given attributes.
+     * Manually create a new package with one archive and the given attributes or properties.
      * This is used to create packages from local directories in which case there must be
      * one archive which URL is the actual target location.
      */
     ExtraPackage(RepoSource source,
+            Properties props,
             String path,
             int revision,
             String license,
@@ -59,6 +63,7 @@ public class ExtraPackage extends Package {
             Arch archiveArch,
             String archiveOsPath) {
         super(source,
+                props,
                 revision,
                 license,
                 description,
@@ -66,7 +71,19 @@ public class ExtraPackage extends Package {
                 archiveOs,
                 archiveArch,
                 archiveOsPath);
-        mPath = path;
+        // The path argument comes before whatever could be in the properties
+        mPath = path != null ? path : getProperty(props, PROP_PATH, path);
+    }
+
+    /**
+     * Save the properties of the current packages in the given {@link Properties} object.
+     * These properties will later be give the constructor that takes a {@link Properties} object.
+     */
+    @Override
+    void saveProperties(Properties props) {
+        super.saveProperties(props);
+
+        props.setProperty(PROP_PATH, mPath);
     }
 
     /**

@@ -17,45 +17,26 @@
 package com.android.sdklib.internal.repository;
 
 import com.android.sdklib.IAndroidTarget;
+import com.android.sdklib.ISdkLog;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.repository.Archive.Arch;
 import com.android.sdklib.internal.repository.Archive.Os;
-import com.android.sdklib.repository.SdkRepository;
 
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
+import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringReader;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Properties;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import javax.xml.XMLConstants;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.stream.StreamSource;
-import javax.xml.validation.Schema;
-import javax.xml.validation.SchemaFactory;
-import javax.xml.validation.Validator;
 
 /**
  * Scans a local SDK to find which packages are currently installed.
  */
 public class LocalSdkParser {
 
-    private static final String SOURCE_XML = "source.xml";  //$NON-NLS-1$ // TODO move to global constants
+    static final String SOURCE_PROPERTIES = "source.properties";  //$NON-NLS-1$
     private Package[] mPackages;
 
     public LocalSdkParser() {
@@ -63,7 +44,7 @@ public class LocalSdkParser {
     }
 
     /**
-     * Returns the packages found by the last call to {@link #parseSdk(String, SdkManager)}.
+     * Returns the packages found by the last call to {@link #parseSdk(String, SdkManager, ISdkLog)}.
      */
     public Package[] getPackages() {
         return mPackages;
@@ -71,7 +52,7 @@ public class LocalSdkParser {
 
     /**
      * Clear the internal packages list. After this call, {@link #getPackages()} will return
-     * null till {@link #parseSdk(String, SdkManager)} is called.
+     * null till {@link #parseSdk(String, SdkManager, ISdkLog)} is called.
      */
     public void clearPackages() {
         mPackages = null;
@@ -85,57 +66,102 @@ public class LocalSdkParser {
      *
      * @param osSdkRoot The path to the SDK folder.
      * @param sdkManager An existing SDK manager to list current platforms and addons.
+     * @param log An SDK logger object.
      * @return The packages found. Can be retrieved later using {@link #getPackages()}.
      */
-    public Package[] parseSdk(String osSdkRoot, SdkManager sdkManager) {
+    public Package[] parseSdk(String osSdkRoot, SdkManager sdkManager, ISdkLog log) {
         ArrayList<Package> packages = new ArrayList<Package>();
+        HashSet<File> visited = new HashSet<File>();
 
-        Package pkg = scanDoc(new File(osSdkRoot, SdkConstants.FD_DOCS));
+        File dir = new File(osSdkRoot, SdkConstants.FD_DOCS);
+        Package pkg = scanDoc(dir, log);
         if (pkg != null) {
             packages.add(pkg);
+            visited.add(dir);
         }
 
-        pkg = scanTools(new File(osSdkRoot, SdkConstants.FD_TOOLS));
+        dir = new File(osSdkRoot, SdkConstants.FD_TOOLS);
+        pkg = scanTools(dir, log);
         if (pkg != null) {
             packages.add(pkg);
+            visited.add(dir);
         }
 
         // for platforms and add-ons, rely on the SdkManager parser
         for(IAndroidTarget target : sdkManager.getTargets()) {
-            pkg = null;
 
-            if (target.isPlatform()) {
-                pkg = parseXml(new File(target.getLocation(), SOURCE_XML),
-                               SdkRepository.NODE_PLATFORM);
-                if (pkg == null) {
-                    pkg = new PlatformPackage(target);
+            Properties props = parseProperties(new File(target.getLocation(), SOURCE_PROPERTIES));
+
+            try {
+                if (target.isPlatform()) {
+                    pkg = new PlatformPackage(target, props);
+                } else {
+                    pkg = new AddonPackage(target, props);
                 }
-
-            } else {
-                pkg = parseXml(new File(target.getLocation(), SOURCE_XML),
-                                        SdkRepository.NODE_ADD_ON);
-
-                if (pkg == null) {
-                    pkg = new AddonPackage(target);
-                }
+            } catch (Exception e) {
+                log.error(e, null);
             }
 
             if (pkg != null) {
                 packages.add(pkg);
+                visited.add(new File(target.getLocation()));
             }
         }
+
+        scanExtra(osSdkRoot, visited, packages, log);
 
         mPackages = packages.toArray(new Package[packages.size()]);
         return mPackages;
     }
 
     /**
+     * Find any other directory what we haven't successfully visited and
+     * assume they contain extra packages.
+     * @param log
+     */
+    private void scanExtra(String osSdkRoot,
+            HashSet<File> visited,
+            ArrayList<Package> packages,
+            ISdkLog log) {
+        File root = new File(osSdkRoot);
+        for (File dir : root.listFiles()) {
+            if (dir.isDirectory() && !visited.contains(dir)) {
+
+                Properties props = parseProperties(new File(dir, SOURCE_PROPERTIES));
+                if (props != null) {
+                    try {
+                        ExtraPackage pkg = new ExtraPackage(
+                                null,                       //source
+                                props,                      //properties
+                                dir.getName(),              //path
+                                0,                          //revision
+                                null,                       //license
+                                "Tools",                    //description
+                                null,                       //descUrl
+                                Os.getCurrentOs(),          //archiveOs
+                                Arch.getCurrentArch(),      //archiveArch
+                                dir.getPath()               //archiveOsPath
+                                );
+
+                        // We only accept this as an extra package if it has a valid local path.
+                        if (pkg.isPathValid()) {
+                            packages.add(pkg);
+                        }
+                    } catch (Exception e) {
+                        log.error(e, null);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
      * Try to find a tools package at the given location.
      * Returns null if not found.
      */
-    private Package scanTools(File toolFolder) {
-        // Can we find a source.xml?
-        Package pkg = parseXml(new File(toolFolder, SOURCE_XML), SdkRepository.NODE_TOOL);
+    private Package scanTools(File toolFolder, ISdkLog log) {
+        // Can we find some properties?
+        Properties props = parseProperties(new File(toolFolder, SOURCE_PROPERTIES));
 
         // We're not going to check that all tools are present. At the very least
         // we should expect to find adb, android and an emulator adapted to the current OS.
@@ -149,10 +175,11 @@ public class LocalSdkParser {
             return null;
         }
 
-        // if we don't have the package info, make one up
-        if (pkg == null) {
-            pkg = new ToolPackage(
+        // Create are package. use the properties if we found any.
+        try {
+            ToolPackage pkg = new ToolPackage(
                     null,                       //source
+                    props,                      //properties
                     0,                          //revision
                     null,                       //license
                     "Tools",                    //description
@@ -161,77 +188,42 @@ public class LocalSdkParser {
                     Arch.getCurrentArch(),      //archiveArch
                     toolFolder.getPath()        //archiveOsPath
                     );
-        }
 
-        return pkg;
+            return pkg;
+        } catch (Exception e) {
+            log.error(e, null);
+        }
+        return null;
     }
 
     /**
      * Try to find a docs package at the given location.
      * Returns null if not found.
      */
-    private Package scanDoc(File docFolder) {
-        // Can we find a source.xml?
-        Package pkg = parseXml(new File(docFolder, SOURCE_XML), SdkRepository.NODE_DOC);
+    private Package scanDoc(File docFolder, ISdkLog log) {
+        // Can we find some properties?
+        Properties props = parseProperties(new File(docFolder, SOURCE_PROPERTIES));
 
         // To start with, a doc folder should have an "index.html" to be acceptable.
-        String html = readFile(new File(docFolder, "index.html"));
-        if (html != null) {
-            // Try to find something that looks like this line:
-            //   <a href="./sdk/1.5_r1/index.html">
-            // We should find one or more of these and we want the highest version
-            // and release numbers. Note that unfortunately that doesn't give us
-            // the api-level we care about for the doc package.
-
-            String found = null;
-            Pattern re = Pattern.compile(
-                    "<a\\s+href=\"./sdk/(\\d\\.\\d_r\\d)/index.html\">",
-                    Pattern.DOTALL);
-            Matcher m = re.matcher(html);
-            while(m.find()) {
-                String v = m.group(1);
-                if (found == null || v.compareTo(found) == 1) {
-                    found = v;
-                }
-            }
-
-            if (found == null) {
-                // That doesn't look like a doc folder.
-                return null;
-            }
-
-            // We found the line, so it seems like an SDK doc.
-            // Create a pkg if we don't have one yet.
-
-            if (pkg == null) {
-                pkg = new DocPackage(
+        // We don't actually check the content of the file.
+        if (new File(docFolder, "index.html").isFile()) {
+            try {
+                DocPackage pkg = new DocPackage(
                         null,                       //source
+                        props,                      //properties
                         0,                          //apiLevel
                         0,                          //revision
                         null,                       //license
-                        String.format("Documentation for %1$s", found),     //description
+                        null,                       //description
                         null,                       //descUrl
                         Os.getCurrentOs(),          //archiveOs
                         Arch.getCurrentArch(),      //archiveArch
                         docFolder.getPath()         //archiveOsPath
                         );
-            }
-        }
 
-        return pkg;
-    }
-
-    /**
-     * Parses the given XML file for the specific element filter.
-     * The element must one of the package type local names: doc, tool, platform or addon.
-     * Returns null if no such package was found.
-     */
-    private Package parseXml(File sourceXmlFile, String elementFilter) {
-
-        String xml = readFile(sourceXmlFile);
-        if (xml != null) {
-            if (validateXml(xml)) {
-                return parsePackages(xml, elementFilter);
+                return pkg;
+            } catch (Exception e) {
+                log.error(e, null);
             }
         }
 
@@ -239,170 +231,34 @@ public class LocalSdkParser {
     }
 
     /**
-     * Parses the given XML to find the specific element filter.
-     * The element must one of the package type local names: doc, tool, platform or addon.
-     * Returns null if no such package was found.
+     * Parses the given file as properties file if it exists.
+     * Returns null if the file does not exist, cannot be parsed or has no properties.
      */
-    private Package parsePackages(String xml, String elementFilter) {
-
+    private Properties parseProperties(File propsFile) {
+        FileInputStream fis = null;
         try {
-            Document doc = getDocument(xml);
+            if (propsFile.exists()) {
+                fis = new FileInputStream(propsFile);
 
-            Node root = getFirstChild(doc, SdkRepository.NODE_SDK_REPOSITORY);
-            if (root != null) {
+                Properties props = new Properties();
+                props.load(fis);
 
-                // Parse license definitions
-                HashMap<String, String> licenses = new HashMap<String, String>();
-                for (Node child = root.getFirstChild();
-                     child != null;
-                     child = child.getNextSibling()) {
-                    if (child.getNodeType() == Node.ELEMENT_NODE &&
-                            SdkRepository.NS_SDK_REPOSITORY.equals(child.getNamespaceURI()) &&
-                            child.getLocalName().equals(SdkRepository.NODE_LICENSE)) {
-                        Node id = child.getAttributes().getNamedItem(SdkRepository.ATTR_ID);
-                        if (id != null) {
-                            licenses.put(id.getNodeValue(), child.getTextContent());
-                        }
-                    }
-                }
-
-                // Parse packages
-                for (Node child = root.getFirstChild();
-                     child != null;
-                     child = child.getNextSibling()) {
-                    if (child.getNodeType() == Node.ELEMENT_NODE &&
-                            SdkRepository.NS_SDK_REPOSITORY.equals(child.getNamespaceURI()) &&
-                            elementFilter.equals(child.getLocalName())) {
-                        String name = child.getLocalName();
-
-                        try {
-                            if (SdkRepository.NODE_ADD_ON.equals(name)) {
-                                return new AddonPackage(null /*source*/, child, licenses);
-
-                            } else if (SdkRepository.NODE_PLATFORM.equals(name)) {
-                                return new PlatformPackage(null /*source*/, child, licenses);
-
-                            } else if (SdkRepository.NODE_DOC.equals(name)) {
-                                return new DocPackage(null /*source*/, child, licenses);
-
-                            } else if (SdkRepository.NODE_TOOL.equals(name)) {
-                                return new ToolPackage(null /*source*/, child, licenses);
-                            }
-                        } catch (Exception e) {
-                            // Ignore invalid packages
-                        }
-                    }
+                // To be valid, there must be at least one property in it.
+                if (props.size() > 0) {
+                    return props;
                 }
             }
-
-        } catch (Exception e) {
-            // ignore
-        }
-
-        return null;
-    }
-
-    /**
-     * Reads a file as a string.
-     * Returns null if the file could not be read.
-     */
-    private String readFile(File sourceXmlFile) {
-        FileReader fr = null;
-        try {
-            fr = new FileReader(sourceXmlFile);
-            BufferedReader br = new BufferedReader(fr);
-            StringBuilder dest = new StringBuilder();
-            char[] buf = new char[65536];
-            int n;
-            while ((n = br.read(buf)) > 0) {
-                if (n > 0) {
-                    dest.append(buf, 0, n);
-                }
-            }
-            return dest.toString();
 
         } catch (IOException e) {
-            // ignore
-
+            e.printStackTrace();
         } finally {
-            if (fr != null) {
+            if (fis != null) {
                 try {
-                    fr.close();
+                    fis.close();
                 } catch (IOException e) {
-                    // ignore
                 }
             }
         }
-
         return null;
-    }
-
-    /**
-     * Validates this XML against the SDK Repository schema.
-     * Returns true if the XML was correctly validated.
-     */
-    private boolean validateXml(String xml) {
-
-        try {
-            Validator validator = getValidator();
-            validator.validate(new StreamSource(new StringReader(xml)));
-            return true;
-
-        } catch (SAXException e) {
-            // ignore
-
-        } catch (IOException e) {
-            // ignore
-        }
-
-        return false;
-    }
-
-    /**
-     * Helper method that returns a validator for our XSD
-     */
-    private Validator getValidator() throws SAXException {
-        InputStream xsdStream = SdkRepository.getXsdStream();
-        SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-
-        // This may throw a SAX Exception if the schema itself is not a valid XSD
-        Schema schema = factory.newSchema(new StreamSource(xsdStream));
-
-        Validator validator = schema.newValidator();
-
-        return validator;
-    }
-
-    /**
-     * Returns the first child element with the given XML local name.
-     * If xmlLocalName is null, returns the very first child element.
-     */
-    private Node getFirstChild(Node node, String xmlLocalName) {
-
-        for(Node child = node.getFirstChild(); child != null; child = child.getNextSibling()) {
-            if (child.getNodeType() == Node.ELEMENT_NODE &&
-                    SdkRepository.NS_SDK_REPOSITORY.equals(child.getNamespaceURI())) {
-                if (xmlLocalName == null || child.getLocalName().equals(xmlLocalName)) {
-                    return child;
-                }
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Takes an XML document as a string as parameter and returns a DOM for it.
-     */
-    private Document getDocument(String xml)
-            throws ParserConfigurationException, SAXException, IOException {
-        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-        factory.setIgnoringComments(true);
-        factory.setNamespaceAware(true);
-
-        DocumentBuilder builder = factory.newDocumentBuilder();
-        Document doc = builder.parse(new InputSource(new StringReader(xml)));
-
-        return doc;
     }
 }
