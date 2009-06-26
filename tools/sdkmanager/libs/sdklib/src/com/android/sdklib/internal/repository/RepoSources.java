@@ -16,12 +16,27 @@
 
 package com.android.sdklib.internal.repository;
 
+import com.android.prefs.AndroidLocation;
+import com.android.prefs.AndroidLocation.AndroidLocationException;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.Properties;
 
 /**
  * A list of sdk-repository sources.
  */
 public class RepoSources {
+
+    private static final String KEY_COUNT = "count";
+
+    private static final String KEY_SRC = "src";
+
+    private static final String SRC_FILENAME = "repositories.cfg"; //$NON-NLS-1$
 
     private ArrayList<RepoSource> mSources = new ArrayList<RepoSource>();
 
@@ -36,9 +51,112 @@ public class RepoSources {
     }
 
     /**
+     * Removes a source from the Sources list.
+     */
+    public void remove(RepoSource source) {
+        mSources.remove(source);
+    }
+
+    /**
      * Returns the sources list array. This is never null.
      */
-    public ArrayList<RepoSource> getSources() {
-        return mSources;
+    public RepoSource[] getSources() {
+        return mSources.toArray(new RepoSource[mSources.size()]);
+    }
+
+    /**
+     * Loads all user sources. This <em>replaces</em> all existing user sources
+     * by the ones from the property file.
+     */
+    public void loadUserSources() {
+
+        // Remove all existing user sources
+        for (Iterator<RepoSource> it = mSources.iterator(); it.hasNext(); ) {
+            RepoSource s = it.next();
+            if (s.isUserSource()) {
+                it.remove();
+            }
+        }
+
+        // Load new user sources from property file
+        FileInputStream fis = null;
+        try {
+            String folder = AndroidLocation.getFolder();
+            File f = new File(folder, SRC_FILENAME);
+            if (f.exists()) {
+                fis = new FileInputStream(f);
+
+                Properties props = new Properties();
+                props.load(fis);
+
+                int count = Integer.parseInt(props.getProperty(KEY_COUNT, "0"));
+
+                for (int i = 0; i < count; i++) {
+                    String url = props.getProperty(String.format("%s%02d", KEY_SRC, count));  //$NON-NLS-1$
+                    if (url != null) {
+                        mSources.add(new RepoSource(url, true /*userSource*/));
+                    }
+                }
+            }
+
+        } catch (NumberFormatException e) {
+            // TODO print to log
+            e.printStackTrace();
+        } catch (AndroidLocationException e) {
+            // TODO print to log
+            e.printStackTrace();
+        } catch (IOException e) {
+            // TODO print to log
+            e.printStackTrace();
+        } finally {
+            if (fis != null) {
+                try {
+                    fis.close();
+                } catch (IOException e) {
+                }
+            }
+        }
+
+    }
+
+    /**
+     * Saves all the user sources.
+     */
+    public void saveUserSources() {
+        FileOutputStream fos = null;
+        try {
+            String folder = AndroidLocation.getFolder();
+            File f = new File(folder, SRC_FILENAME);
+
+            fos = new FileOutputStream(f);
+
+            Properties props = new Properties();
+
+            int count = 0;
+            for (RepoSource s : mSources) {
+                if (s.isUserSource()) {
+                    count++;
+                    props.setProperty(String.format("%s%02d", KEY_SRC, count), s.getUrl());  //$NON-NLS-1$
+                }
+            }
+            props.setProperty(KEY_COUNT, Integer.toString(count));
+
+            props.store( fos, "## User Sources for Android tool");  //$NON-NLS-1$
+
+        } catch (AndroidLocationException e) {
+            // TODO print to log
+            e.printStackTrace();
+        } catch (IOException e) {
+            // TODO print to log
+            e.printStackTrace();
+        } finally {
+            if (fos != null) {
+                try {
+                    fos.close();
+                } catch (IOException e) {
+                }
+            }
+        }
+
     }
 }

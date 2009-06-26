@@ -23,6 +23,7 @@ import com.android.sdklib.internal.repository.Package;
 import com.android.sdklib.internal.repository.RepoSource;
 import com.android.sdkuilib.internal.repository.UpdaterData.ISdkListener;
 
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.CheckStateChangedEvent;
 import org.eclipse.jface.viewers.CheckboxTreeViewer;
 import org.eclipse.jface.viewers.ICheckStateListener;
@@ -288,7 +289,30 @@ public class RemotePackagesPage extends Composite implements ISdkListener {
     }
 
     private void onRemoveSiteSelected() {
-        // TODO prompt for removing addon site URL, store, refresh
+        boolean changed = false;
+
+        ISelection sel = mTreeViewerSources.getSelection();
+        if (sel instanceof ITreeSelection) {
+            for (Object c : ((ITreeSelection) sel).toList()) {
+                if (c instanceof RepoSource && ((RepoSource) c).isUserSource()) {
+                    RepoSource source = (RepoSource) c;
+
+                    String title = "Delete Site?";
+
+                    String msg = String.format("Are you sure you want to delete the site '%1$s'?",
+                            source.getUrl());
+
+                    if (MessageDialog.openQuestion(getShell(), title, msg)) {
+                        mUpdaterData.getSources().remove(source);
+                        changed = true;
+                    }
+                }
+            }
+        }
+
+        if (changed) {
+            onRefreshSelected();
+        }
     }
 
     private void onRefreshSelected() {
@@ -321,19 +345,20 @@ public class RemotePackagesPage extends Composite implements ISdkListener {
         }
 
         // Is there a selected site Source?
-        boolean hasSelectedSource = false;
+        boolean hasSelectedUserSource = false;
         ISelection sel = mTreeViewerSources.getSelection();
         if (sel instanceof ITreeSelection) {
             for (Object c : ((ITreeSelection) sel).toList()) {
-                if (c instanceof RepoSource) {
-                    hasSelectedSource = true;
+                if (c instanceof RepoSource &&
+                        ((RepoSource) c).isUserSource()) {
+                    hasSelectedUserSource = true;
                     break;
                 }
             }
         }
 
         mAddSiteButton.setEnabled(true);
-        mDeleteSiteButton.setEnabled(hasSelectedSource);
+        mDeleteSiteButton.setEnabled(hasSelectedUserSource);
         mRefreshButton.setEnabled(true);
         mInstallSelectedButton.setEnabled(hasCheckedArchive);
     }

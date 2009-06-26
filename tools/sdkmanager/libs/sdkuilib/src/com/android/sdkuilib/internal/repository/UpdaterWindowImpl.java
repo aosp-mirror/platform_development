@@ -20,6 +20,7 @@ package com.android.sdkuilib.internal.repository;
 import com.android.sdklib.ISdkLog;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.internal.repository.RepoSource;
+import com.android.sdklib.internal.repository.RepoSources;
 import com.android.sdklib.repository.SdkRepository;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 
@@ -93,6 +94,8 @@ public class UpdaterWindowImpl {
                 display.sleep();
             }
         }
+
+        dispose();  //$hide$
     }
 
     /**
@@ -215,10 +218,16 @@ public class UpdaterWindowImpl {
         displayPage(0);
         mPageList.setSelection(0);
 
-        // TODO read add-on sources from some file
         setupSources();
         initializeSettings();
         mUpdaterData.notifyListeners();
+    }
+
+    /**
+     * Called by the main loop when the window has been disposed.
+     */
+    private void dispose() {
+        mUpdaterData.getSources().saveUserSources();
     }
 
     // --- page switching ---
@@ -304,16 +313,19 @@ public class UpdaterWindowImpl {
      * Used to initialize the sources.
      */
     private void setupSources() {
-        mUpdaterData.getSources().add(
-                new RepoSource(SdkRepository.URL_GOOGLE_SDK_REPO_SITE, false /* addonOnly */));
+        RepoSources sources = mUpdaterData.getSources();
+        sources.add(new RepoSource(SdkRepository.URL_GOOGLE_SDK_REPO_SITE, false /*userSource*/));
 
         String str = System.getenv("TEMP_SDK_URL"); // TODO STOPSHIP temporary remove before shipping
         if (str != null) {
             String[] urls = str.split(";");
             for (String url : urls) {
-                mUpdaterData.getSources().add(new RepoSource(url, false /* addonOnly */));
+                sources.add(new RepoSource(url, false /*userSource*/));
             }
         }
+
+        // Load user sources
+        sources.loadUserSources();
 
         mRemotePackagesPage.onSdkChange();
     }
