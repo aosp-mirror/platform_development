@@ -356,8 +356,8 @@ class UpdaterData {
 
         mTaskFactory.start("Refresh Sources",new ITask() {
             public void run(ITaskMonitor monitor) {
-                ArrayList<RepoSource> sources = mSources.getSources();
-                monitor.setProgressMax(sources.size());
+                RepoSource[] sources = mSources.getSources();
+                monitor.setProgressMax(sources.length);
                 for (RepoSource source : sources) {
                     if (forceFetching || source.getPackages() != null) {
                         source.load(monitor.createSubMonitor(1), forceHttp);
@@ -406,7 +406,7 @@ class UpdaterData {
 
         } else {
             // Get all the available archives from all loaded sources
-            ArrayList<RepoSource> remoteSources = getSources().getSources();
+            RepoSource[] remoteSources = getSources().getSources();
 
             for (RepoSource remoteSrc : remoteSources) {
                 Package[] remotePkgs = remoteSrc.getPackages();

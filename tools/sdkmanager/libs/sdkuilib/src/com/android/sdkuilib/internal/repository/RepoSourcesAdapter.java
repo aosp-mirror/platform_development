@@ -113,7 +113,7 @@ class RepoSourcesAdapter {
          */
         public Object[] getChildren(Object parentElement) {
             if (parentElement == RepoSourcesAdapter.this) {
-                return mUpdaterData.getSources().getSources().toArray();
+                return mUpdaterData.getSources().getSources();
 
             } else if (parentElement instanceof RepoSource) {
                 final RepoSource source = (RepoSource) parentElement;

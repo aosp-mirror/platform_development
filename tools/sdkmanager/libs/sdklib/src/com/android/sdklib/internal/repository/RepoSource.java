@@ -47,7 +47,7 @@ import javax.xml.validation.Validator;
 public class RepoSource implements IDescription {
 
     private final String mUrl;
-    private final boolean mAddonOnly;
+    private final boolean mUserSource;
 
     private Package[] mPackages;
     private String mDescription;
@@ -55,10 +55,16 @@ public class RepoSource implements IDescription {
     /**
      * Constructs a new source for the given repository URL.
      */
-    public RepoSource(String url, boolean addonOnly) {
+    public RepoSource(String url, boolean userSource) {
         mUrl = url;
-        mAddonOnly = addonOnly;
+        mUserSource = userSource;
         setDefaultDescription();
+    }
+
+    /** Returns true if this is a user source. We only load addon and extra packages
+     * from a user source and ignore the rest. */
+    public boolean isUserSource() {
+        return mUserSource;
     }
 
     /** Returns the URL of the repository.xml file for this source. */
@@ -138,7 +144,7 @@ public class RepoSource implements IDescription {
     }
 
     private void setDefaultDescription() {
-        if (mAddonOnly) {
+        if (mUserSource) {
             mDescription = String.format("Add-on Source: %1$s", mUrl);
         } else {
             mDescription = String.format("SDK Source: %1$s", mUrl);
@@ -274,13 +280,17 @@ public class RepoSource implements IDescription {
                         Package p = null;
 
                         try {
+                            // We can load addon and extra packages from all sources, either
+                            // internal or user sources.
                             if (SdkRepository.NODE_ADD_ON.equals(name)) {
                                 p = new AddonPackage(this, child, licenses);
 
                             } else if (SdkRepository.NODE_EXTRA.equals(name)) {
                                 p = new ExtraPackage(this, child, licenses);
 
-                            } else if (!mAddonOnly) {
+                            } else if (!mUserSource) {
+                                // We only load platform, doc and tool packages from internal
+                                // sources, never from user sources.
                                 if (SdkRepository.NODE_PLATFORM.equals(name)) {
                                     p = new PlatformPackage(this, child, licenses);
                                 } else if (SdkRepository.NODE_DOC.equals(name)) {
