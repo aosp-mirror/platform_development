@@ -133,3 +133,44 @@ def GetTargetSystemBin():
     logger.Log("Error: Target system bin path could not be found")
     raise errors.AbortError
   return path
+
+def GetHostLibraryPath():
+  """Returns the full pathname to the host java library output directory.
+
+  Typically $ANDROID_BUILD_TOP/out/host/<host_os>/framework.
+
+  Assumes build environment has been properly configured by envsetup &
+  lunch/choosecombo.
+
+  Returns:
+    The absolute file path of the Android host java library directory.
+
+  Raises:
+    AbortError: if Android host java library directory could not be found.
+  """
+  (_, _, os_arch) = GetHostOsArch()
+  path = os.path.join(GetTop(), "out", "host", os_arch, "framework")
+  if not os.path.exists(path):
+    logger.Log("Error: Host library path could not be found %s" % path)
+    raise errors.AbortError
+  return path
+
+def GetTestAppPath():
+  """Returns the full pathname to the test app build output directory.
+
+  Typically $ANDROID_PRODUCT_OUT/data/app
+
+  Assumes build environment has been properly configured by envsetup &
+  lunch/choosecombo.
+
+  Returns:
+    The absolute file path of the Android test app build directory.
+
+  Raises:
+    AbortError: if Android host java library directory could not be found.
+  """
+  path = os.path.join(GetProductOut(), "data", "app")
+  if not os.path.exists(path):
+    logger.Log("Error: app path could not be found %s" % path)
+    raise errors.AbortError
+  return path

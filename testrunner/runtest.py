@@ -34,7 +34,7 @@ import coverage
 import errors
 import logger
 import run_command
-import test_defs
+from test_defs import test_defs
 
 
 class TestRunner(object):
@@ -154,8 +154,8 @@ class TestRunner(object):
 
     self._known_tests = self._ReadTests()
 
-    self._coverage_gen = coverage.CoverageGenerator(
-        android_root_path=self._root_path, adb_interface=self._adb)
+    self._options.host_lib_path = android_build.GetHostLibraryPath()
+    self._options.test_data_path = android_build.GetTestAppPath()
 
   def _ReadTests(self):
     """Parses the set of test definition data.
@@ -196,18 +196,14 @@ class TestRunner(object):
 
     if target_set:
       if self._options.coverage:
-        self._coverage_gen.EnableCoverageBuild()
-        self._AddBuildTargetPath(self._coverage_gen.GetEmmaBuildPath(),
-                                 target_set)
+        coverage.EnableCoverageBuild()
       target_build_string = " ".join(list(target_set))
       extra_args_string = " ".join(list(extra_args_set))
-      # log the user-friendly equivalent make command, so developers can
-      # replicate this step
-      logger.Log("mmm %s %s" % (target_build_string, extra_args_string))
-      # mmm cannot be used from python, so perform a similiar operation using
+      # mmm cannot be used from python, so perform a similar operation using
       # ONE_SHOT_MAKEFILE
       cmd = 'ONE_SHOT_MAKEFILE="%s" make -C "%s" files %s' % (
           target_build_string, self._root_path, extra_args_string)
+      logger.Log(cmd)
 
       if self._options.preview:
         # in preview mode, just display to the user what command would have been
@@ -221,7 +217,9 @@ class TestRunner(object):
   def _AddBuildTarget(self, test_suite, target_set, extra_args_set):
     build_dir = test_suite.GetBuildPath()
     if self._AddBuildTargetPath(build_dir, target_set):
-      extra_args_set.add(test_suite.GetExtraMakeArgs())
+      extra_args_set.add(test_suite.GetExtraBuildArgs())
+    for path in test_suite.GetBuildDependencies(self._options):
+      self._AddBuildTargetPath(path, target_set)
 
   def _AddBuildTargetPath(self, build_dir, target_set):
     if build_dir is not None:
@@ -249,206 +247,6 @@ class TestRunner(object):
       tests.append(test)
     return tests
 
-  def _RunTest(self, test_suite):
-    """Run the provided test suite.
-
-    Builds up an adb instrument command using provided input arguments.
-
-    Args:
-      test_suite: TestSuite to run
-    """
-
-    test_class = test_suite.GetClassName()
-    if self._options.test_class is not None:
-      test_class = self._options.test_class.lstrip()
-      if test_class.startswith("."):
-        test_class = test_suite.GetPackageName() + test_class
-    if self._options.test_method is not None:
-      test_class = "%s#%s" % (test_class, self._options.test_method)
-
-    instrumentation_args = {}
-    if test_class is not None:
-      instrumentation_args["class"] = test_class
-    if self._options.test_package:
-      instrumentation_args["package"] = self._options.test_package
-    if self._options.test_size:
-      instrumentation_args["size"] = self._options.test_size
-    if self._options.wait_for_debugger:
-      instrumentation_args["debug"] = "true"
-    if self._options.suite_assign_mode:
-      instrumentation_args["suiteAssignment"] = "true"
-    if self._options.coverage:
-      instrumentation_args["coverage"] = "true"
-    if self._options.preview:
-      adb_cmd = self._adb.PreviewInstrumentationCommand(
-          package_name=test_suite.GetPackageName(),
-          runner_name=test_suite.GetRunnerName(),
-          raw_mode=self._options.raw_mode,
-          instrumentation_args=instrumentation_args)
-      logger.Log(adb_cmd)
-    elif self._options.coverage:
-      self._adb.WaitForInstrumentation(test_suite.GetPackageName(),
-                                       test_suite.GetRunnerName())
-      # need to parse test output to determine path to coverage file
-      logger.Log("Running in coverage mode, suppressing test output")
-      try:
-        (test_results, status_map) = self._adb.StartInstrumentationForPackage(
-          package_name=test_suite.GetPackageName(),
-          runner_name=test_suite.GetRunnerName(),
-          timeout_time=60*60,
-          instrumentation_args=instrumentation_args)
-      except errors.InstrumentationError, errors.DeviceUnresponsiveError:
-        return
-      self._PrintTestResults(test_results)
-      device_coverage_path = status_map.get("coverageFilePath", None)
-      if device_coverage_path is None:
-        logger.Log("Error: could not find coverage data on device")
-        return
-      coverage_file = self._coverage_gen.ExtractReport(test_suite, device_coverage_path)
-      if coverage_file is not None:
-        logger.Log("Coverage report generated at %s" % coverage_file)
-    else:
-      self._adb.WaitForInstrumentation(test_suite.GetPackageName(),
-                                       test_suite.GetRunnerName())
-      self._adb.StartInstrumentationNoResults(
-          package_name=test_suite.GetPackageName(),
-          runner_name=test_suite.GetRunnerName(),
-          raw_mode=self._options.raw_mode,
-          instrumentation_args=instrumentation_args)
-
-  def _PrintTestResults(self, test_results):
-    """Prints a summary of test result data to stdout.
-
-    Args:
-      test_results: a list of am_instrument_parser.TestResult
-    """
-    total_count = 0
-    error_count = 0
-    fail_count = 0
-    for test_result in test_results:
-      if test_result.GetStatusCode() == -1: # error
-        logger.Log("Error in %s: %s" % (test_result.GetTestName(),
-                                        test_result.GetFailureReason()))
-        error_count+=1
-      elif test_result.GetStatusCode() == -2: # failure
-        logger.Log("Failure in %s: %s" % (test_result.GetTestName(),
-                                          test_result.GetFailureReason()))
-        fail_count+=1
-      total_count+=1
-    logger.Log("Tests run: %d, Failures: %d, Errors: %d" %
-               (total_count, fail_count, error_count))
-
-  def _CollectTestSources(self, test_list, dirname, files):
-    """For each directory, find tests source file and add them to the list.
-
-    Test files must match one of the following pattern:
-      - test_*.[cc|cpp]
-      - *_test.[cc|cpp]
-      - *_unittest.[cc|cpp]
-
-    This method is a callback for os.path.walk.
-
-    Args:
-      test_list: Where new tests should be inserted.
-      dirname: Current directory.
-      files: List of files in the current directory.
-    """
-    for f in files:
-      (name, ext) = os.path.splitext(f)
-      if ext == ".cc" or ext == ".cpp":
-        if re.search("_test$|_test_$|_unittest$|_unittest_$|^test_", name):
-          logger.SilentLog("Found %s" % f)
-          test_list.append(str(os.path.join(dirname, f)))
-
-  def _FilterOutMissing(self, path, sources):
-    """Filter out from the sources list missing tests.
-
-    Sometimes some test source are not built for the target, i.e there
-    is no binary corresponding to the source file. We need to filter
-    these out.
-
-    Args:
-      path: Where the binaries should be.
-      sources: List of tests source path.
-    Returns:
-      A list of test binaries built from the sources.
-    """
-    binaries = []
-    for f in sources:
-      binary = os.path.basename(f)
-      binary = os.path.splitext(binary)[0]
-      full_path = os.path.join(path, binary)
-      if os.path.exists(full_path):
-        binaries.append(binary)
-    return binaries
-
-  def _RunNativeTest(self, test_suite):
-    """Run the provided *native* test suite.
-
-    The test_suite must contain a build path where the native test
-    files are. Subdirectories are automatically scanned as well.
-
-    Each test's name must have a .cc or .cpp extension and match one
-    of the following patterns:
-      - test_*
-      - *_test.[cc|cpp]
-      - *_unittest.[cc|cpp]
-    A successful test must return 0. Any other value will be considered
-    as an error.
-
-    Args:
-      test_suite: TestSuite to run
-    """
-    # find all test files, convert unicode names to ascii, take the basename
-    # and drop the .cc/.cpp  extension.
-    source_list = []
-    build_path = test_suite.GetBuildPath()
-    os.path.walk(build_path, self._CollectTestSources, source_list)
-    logger.SilentLog("Tests source %s" % source_list)
-
-    # Host tests are under out/host/<os>-<arch>/bin.
-    host_list = self._FilterOutMissing(android_build.GetHostBin(), source_list)
-    logger.SilentLog("Host tests %s" % host_list)
-
-    # Target tests are under $ANDROID_PRODUCT_OUT/system/bin.
-    target_list = self._FilterOutMissing(android_build.GetTargetSystemBin(),
-                                         source_list)
-    logger.SilentLog("Target tests %s" % target_list)
-
-    # Run on the host
-    logger.Log("\nRunning on host")
-    for f in host_list:
-      if run_command.RunHostCommand(f) != 0:
-        logger.Log("%s... failed" % f)
-      else:
-        if run_command.HasValgrind():
-          if run_command.RunHostCommand(f, valgrind=True) == 0:
-            logger.Log("%s... ok\t\t[valgrind: ok]" % f)
-          else:
-            logger.Log("%s... ok\t\t[valgrind: failed]" % f)
-        else:
-          logger.Log("%s... ok\t\t[valgrind: missing]" % f)
-
-    # Run on the device
-    logger.Log("\nRunning on target")
-    for f in target_list:
-      full_path = os.path.join(os.sep, "system", "bin", f)
-
-      # Single quotes are needed to prevent the shell splitting it.
-      output = self._adb.SendShellCommand("'%s 2>&1;echo -n exit code:$?'" %
-                                          full_path,
-                                          int(self._options.timeout))
-      success = output.endswith("exit code:0")
-      logger.Log("%s... %s" % (f, success and "ok" or "failed"))
-      # Print the captured output when the test failed.
-      if not success or self._options.verbose:
-        pos = output.rfind("exit code")
-        output = output[0:pos]
-        logger.Log(output)
-
-      # Cleanup
-      self._adb.SendShellCommand("rm %s" % full_path)
-
   def RunTests(self):
     """Main entry method - executes the tests according to command line args."""
     try:
@@ -462,10 +260,8 @@ class TestRunner(object):
         self._DoBuild()
 
       for test_suite in self._GetTestsToRun():
-        if test_suite.IsNative():
-          self._RunNativeTest(test_suite)
-        else:
-          self._RunTest(test_suite)
+        test_suite.Run(self._options, self._adb)
+
     except KeyboardInterrupt:
       logger.Log("Exiting...")
     except errors.AbortError, e:

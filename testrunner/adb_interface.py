@@ -306,7 +306,7 @@ class AdbInterface:
     attempts = 0
     wait_period = 5
     while not pm_found and (attempts*wait_period) < wait_time:
-      # assume the 'adb shell pm path android' command will always 
+      # assume the 'adb shell pm path android' command will always
       # return 'package: something' in the success case
       output = self.SendShellCommand("pm path android", retry_count=1)
       if "package:" in output:
@@ -357,12 +357,12 @@ class AdbInterface:
 
   def Sync(self, retry_count=3):
     """Perform a adb sync.
-    
+
     Blocks until device package manager is responding.
-    
+
     Args:
       retry_count: number of times to retry sync before failing
-      
+
     Raises:
       WaitForResponseTimedOutError if package manager does not respond
       AbortError if unrecoverable error occurred
@@ -375,12 +375,12 @@ class AdbInterface:
       error = e
       output = e.msg
     if "Read-only file system" in output:
-      logger.SilentLog(output) 
+      logger.SilentLog(output)
       logger.Log("Remounting read-only filesystem")
       self.SendCommand("remount")
       output = self.SendCommand("sync", retry_count=retry_count)
     elif "No space left on device" in output:
-      logger.SilentLog(output) 
+      logger.SilentLog(output)
       logger.Log("Restarting device runtime")
       self.SendShellCommand("stop", retry_count=retry_count)
       output = self.SendCommand("sync", retry_count=retry_count)
@@ -391,4 +391,8 @@ class AdbInterface:
     logger.SilentLog(output)
     self.WaitForDevicePm()
     return output
+
+  def GetSerialNumber(self):
+    """Returns the serial number of the targeted device."""
+    return self.SendCommand("get-serialno").strip()
 
