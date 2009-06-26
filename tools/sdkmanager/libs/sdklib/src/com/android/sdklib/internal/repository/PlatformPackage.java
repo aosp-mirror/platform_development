@@ -122,7 +122,7 @@ public class PlatformPackage extends Package {
 
         File platforms = new File(osSdkRoot, SdkConstants.FD_PLATFORMS);
         File folder = new File(platforms, String.format("android-%s", getVersion())); //$NON-NLS-1$
-        // TODO find similar existing platform in platforms folder
+
         return folder;
     }
 

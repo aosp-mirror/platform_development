@@ -227,7 +227,7 @@ public class UpdaterWindowImpl {
      * Called by the main loop when the window has been disposed.
      */
     private void dispose() {
-        mUpdaterData.getSources().saveUserSources();
+        mUpdaterData.getSources().saveUserSources(mUpdaterData.getSdkLog());
     }
 
     // --- page switching ---
@@ -325,7 +325,7 @@ public class UpdaterWindowImpl {
         }
 
         // Load user sources
-        sources.loadUserSources();
+        sources.loadUserSources(mUpdaterData.getSdkLog());
 
         mRemotePackagesPage.onSdkChange();
     }
