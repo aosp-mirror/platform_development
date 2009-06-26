@@ -69,7 +69,6 @@ typedef struct PluginObject {
 
     PluginType pluginType;
     SubPlugin* activePlugin;
-    ANPAudioTrack* track;
 
 } PluginObject;
 

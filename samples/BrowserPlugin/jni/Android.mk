@@ -31,11 +31,13 @@ LOCAL_SRC_FILES := \
 	main.cpp \
 	PluginObject.cpp \
 	animation/AnimationPlugin.cpp \
+	audio/AudioPlugin.cpp \
 	background/BackgroundPlugin.cpp 
 
 LOCAL_C_INCLUDES += \
 	$(LOCAL_PATH) \
 	$(LOCAL_PATH)/animation \
+	$(LOCAL_PATH)/audio \
 	$(LOCAL_PATH)/background \
 	external/webkit/WebCore/bridge \
 	external/webkit/WebCore/plugins \
