@@ -23,6 +23,8 @@ import com.android.sdklib.internal.repository.Package;
 import com.android.sdklib.internal.repository.RepoSource;
 import com.android.sdkuilib.internal.repository.UpdaterData.ISdkListener;
 
+import org.eclipse.jface.dialogs.IInputValidator;
+import org.eclipse.jface.dialogs.InputDialog;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.CheckStateChangedEvent;
 import org.eclipse.jface.viewers.CheckboxTreeViewer;
@@ -30,6 +32,7 @@ import org.eclipse.jface.viewers.ICheckStateListener;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.ITreeSelection;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
@@ -274,7 +277,41 @@ public class RemotePackagesPage extends Composite implements ISdkListener {
     }
 
     private void onAddSiteSelected() {
-        // TODO prompt for new addon site URL, store, refresh
+
+        final RepoSource[] knowSources = mUpdaterData.getSources().getSources();
+        String title = "Add Site URL";
+        String msg = "Please enter the URL of the repository.xml for the new site:";
+
+        InputDialog dlg = new InputDialog(getShell(), title, msg, null, new IInputValidator() {
+            public String isValid(String newText) {
+
+                if (newText == null || newText.length() == 0) {
+                    return "Please enter an URL.";
+                }
+
+                // A URL should have one of the following prefixes
+                if (!newText.startsWith("file://") &&
+                        !newText.startsWith("ftp://") &&
+                        !newText.startsWith("http://") &&
+                        !newText.startsWith("https://")) {
+                    return "The URL must start by one of file://, ftp://, http:// or https://";
+                }
+
+                // Reject URLs that are already in the source list
+                for (RepoSource s : knowSources) {
+                    if (newText.equals(s.getUrl())) {
+                        return "This site is already listed.";
+                    }
+                }
+
+                return null;
+            }
+        });
+
+        if (dlg.open() == Window.OK) {
+            String url = dlg.getValue();
+            mUpdaterData.getSources().add(new RepoSource(url, true /*userSource*/));
+        }
     }
 
     private void onRemoveSiteSelected() {
