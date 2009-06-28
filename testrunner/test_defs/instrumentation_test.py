@@ -88,7 +88,7 @@ class InstrumentationTestSuite(AbstractTestSuite):
     if options.test_class is not None:
       test_class = options.test_class.lstrip()
       if test_class.startswith("."):
-        test_class = test_suite.GetPackageName() + test_class
+        test_class = self.GetPackageName() + test_class
     if options.test_method is not None:
       test_class = "%s#%s" % (test_class, options.test_method)
 
