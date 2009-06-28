@@ -24,6 +24,7 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 import java.io.ByteArrayInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -57,6 +58,15 @@ public class RepoSource implements IDescription {
      * Constructs a new source for the given repository URL.
      */
     public RepoSource(String url, boolean userSource) {
+
+        // if the URL ends with a /, it must be "directory" resource,
+        // in which case we automatically add the default file that will
+        // looked for. This way it will be obvious to the user which
+        // resource we are actually trying to fetch.
+        if (url.endsWith("/")) {  //$NON-NLS-1$
+            url += SdkRepository.URL_DEFAULT_XML_FILE;
+        }
+
         mUrl = url;
         mUserSource = userSource;
         setDefaultDescription();
@@ -124,7 +134,25 @@ public class RepoSource implements IDescription {
         monitor.setDescription("Fetching %1$s", url);
         monitor.incProgress(1);
 
-        ByteArrayInputStream xml = fetchUrl(url, monitor);
+        ByteArrayInputStream xml = null;
+
+        try {
+            xml = fetchUrl(url, monitor);
+        } catch (FileNotFoundException e1) {
+            if (!url.endsWith(SdkRepository.URL_DEFAULT_XML_FILE)) {
+                // Try again by explicitely requesting our default file name
+                if (!url.endsWith("/")) {       //$NON-NLS-1$
+                    url += "/";                 //$NON-NLS-1$
+                }
+                url += SdkRepository.URL_DEFAULT_XML_FILE;
+
+                try {
+                    xml = fetchUrl(url, monitor);
+                } catch (FileNotFoundException e2) {
+                    // pass, xml will be null below
+                }
+            }
+        }
 
         if (xml == null) {
             mDescription += String.format("\nFailed to fetch URL %1$s", url);
@@ -174,8 +202,11 @@ public class RepoSource implements IDescription {
      * Java URL Connection: http://java.sun.com/docs/books/tutorial/networking/urls/readingWriting.html
      * Java URL Reader: http://java.sun.com/docs/books/tutorial/networking/urls/readingURL.html
      * Java set Proxy: http://java.sun.com/docs/books/tutorial/networking/urls/_setProxy.html
+     *
+     * @throws FileNotFoundException if the URL does not match an existing resource.
      */
-    private ByteArrayInputStream fetchUrl(String urlString, ITaskMonitor monitor) {
+    private ByteArrayInputStream fetchUrl(String urlString, ITaskMonitor monitor)
+            throws FileNotFoundException {
         URL url;
         try {
             url = new URL(urlString);
@@ -211,7 +242,15 @@ public class RepoSource implements IDescription {
                 }
             }
 
+        } catch (FileNotFoundException e) {
+            // FNF derives from IOException. We want to be able to report that one
+            // only to the caller so we need to catch before generic IOException and
+            // re-throw it.
+            throw e;
         } catch (IOException e) {
+            // Generic IOException other than FNF are simply listed in the monitor
+            // output and ignored. The method will return null since it hasn't fetched
+            // anything.
             monitor.setResult(e.getMessage());
         }
 
