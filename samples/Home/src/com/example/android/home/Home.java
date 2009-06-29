@@ -255,6 +255,12 @@ public class Home extends Activity {
     private void bindFavorites(boolean isLaunching) {
         if (!isLaunching || mFavorites == null) {
 
+            if (mFavorites == null) {
+                mFavorites = new LinkedList<ApplicationInfo>();
+            } else {
+                mFavorites.clear();
+            }            
+            
             FileReader favReader;
 
             // Environment.getRootDirectory() is a fancy way of saying ANDROID_ROOT or "/system".
@@ -264,12 +270,6 @@ public class Home extends Activity {
             } catch (FileNotFoundException e) {
                 Log.e(LOG_TAG, "Couldn't find or open favorites file " + favFile);
                 return;
-            }
-
-            if (mFavorites == null) {
-                mFavorites = new LinkedList<ApplicationInfo>();
-            } else {
-                mFavorites.clear();
             }
 
             final Intent intent = new Intent(Intent.ACTION_MAIN, null);
