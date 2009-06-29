@@ -4,7 +4,7 @@
  * Licensed under the Eclipse Public License, Version 1.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.eclipse.org/org/documents/epl-v10.php
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -58,8 +58,10 @@ class ExtractStringInputPage extends UserInputWizardPage implements IWizardPage 
     /** The project where the user selection happened. */
     private final IProject mProject;
 
-    /** Test field where the user enters the new ID to be generated or replaced with. */ 
+    /** Text field where the user enters the new ID to be generated or replaced with. */
     private Text mStringIdField;
+    /** Text field where the user enters the new string value. */
+    private Text mStringValueField;
     /** The configuration selector, to select the resource path of the XML file. */
     private ConfigurationSelector mConfigSelector;
     /** The combo to display the existing XML files or enter a new one. */
@@ -79,7 +81,8 @@ class ExtractStringInputPage extends UserInputWizardPage implements IWizardPage 
     private static final String DEFAULT_RES_FILE_PATH = "/res/values/strings.xml";  //$NON-NLS-1$
 
     private XmlStringFileHelper mXmlHelper = new XmlStringFileHelper();
-    
+
+
     public ExtractStringInputPage(IProject project) {
         super("ExtractStringInputPage");  //$NON-NLS-1$
         mProject = project;
@@ -96,7 +99,7 @@ class ExtractStringInputPage extends UserInputWizardPage implements IWizardPage 
         GridLayout layout = new GridLayout();
         layout.numColumns = 1;
         content.setLayout(layout);
-        
+
         createStringGroup(content);
         createResFileGroup(content);
 
@@ -107,13 +110,13 @@ class ExtractStringInputPage extends UserInputWizardPage implements IWizardPage 
     /**
      * Creates the top group with the field to replace which string and by what
      * and by which options.
-     * 
+     *
      * @param content A composite with a 1-column grid layout
      */
     public void createStringGroup(Composite content) {
 
         final ExtractStringRefactoring ref = getOurRefactoring();
-        
+
         Group group = new Group(content, SWT.NONE);
         group.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         if (ref.getMode() == ExtractStringRefactoring.Mode.EDIT_SOURCE) {
@@ -127,32 +130,30 @@ class ExtractStringInputPage extends UserInputWizardPage implements IWizardPage 
         group.setLayout(layout);
 
         // line: Textfield for string value (based on selection, if any)
-        
+
         Label label = new Label(group, SWT.NONE);
         label.setText("String");
 
         String selectedString = ref.getTokenString();
-        
-        final Text stringValueField = new Text(group, SWT.SINGLE | SWT.LEFT | SWT.BORDER);
-        stringValueField.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-        stringValueField.setText(selectedString != null ? selectedString : "");  //$NON-NLS-1$
-        
-        ref.setNewStringValue(stringValueField.getText());
 
-        stringValueField.addModifyListener(new ModifyListener() {
+        mStringValueField = new Text(group, SWT.SINGLE | SWT.LEFT | SWT.BORDER);
+        mStringValueField.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        mStringValueField.setText(selectedString != null ? selectedString : "");  //$NON-NLS-1$
+
+        ref.setNewStringValue(mStringValueField.getText());
+
+        mStringValueField.addModifyListener(new ModifyListener() {
             public void modifyText(ModifyEvent e) {
-                if (validatePage()) {
-                    ref.setNewStringValue(stringValueField.getText());
-                }
+                validatePage();
             }
         });
 
-        
+
         // TODO provide an option to replace all occurences of this string instead of
         // just the one.
 
         // line : Textfield for new ID
-        
+
         label = new Label(group, SWT.NONE);
         if (ref.getMode() == ExtractStringRefactoring.Mode.EDIT_SOURCE) {
             label.setText("Replace by R.string.");
@@ -170,9 +171,7 @@ class ExtractStringInputPage extends UserInputWizardPage implements IWizardPage 
 
         mStringIdField.addModifyListener(new ModifyListener() {
             public void modifyText(ModifyEvent e) {
-                if (validatePage()) {
-                    ref.setNewStringId(mStringIdField.getText().trim());
-                }
+                validatePage();
             }
         });
     }
@@ -180,7 +179,7 @@ class ExtractStringInputPage extends UserInputWizardPage implements IWizardPage 
     /**
      * Creates the lower group with the fields to choose the resource confirmation and
      * the target XML file.
-     * 
+     *
      * @param content A composite with a 1-column grid layout
      */
     private void createResFileGroup(Composite content) {
@@ -192,7 +191,7 @@ class ExtractStringInputPage extends UserInputWizardPage implements IWizardPage 
         GridLayout layout = new GridLayout();
         layout.numColumns = 2;
         group.setLayout(layout);
-        
+
         // line: selection of the res config
 
         Label label;
@@ -207,7 +206,7 @@ class ExtractStringInputPage extends UserInputWizardPage implements IWizardPage 
         mConfigSelector.setLayoutData(gd);
         OnConfigSelectorUpdated onConfigSelectorUpdated = new OnConfigSelectorUpdated();
         mConfigSelector.setOnChangeListener(onConfigSelectorUpdated);
-        
+
         // line: selection of the output file
 
         label = new Label(group, SWT.NONE);
@@ -219,10 +218,10 @@ class ExtractStringInputPage extends UserInputWizardPage implements IWizardPage 
         mResFileCombo.addModifyListener(onConfigSelectorUpdated);
 
         // set output file name to the last one used
-        
+
         String projPath = mProject.getFullPath().toPortableString();
         String filePath = sLastResFilePath.get(projPath);
-        
+
         mResFileCombo.setText(filePath != null ? filePath : DEFAULT_RES_FILE_PATH);
         onConfigSelectorUpdated.run();
     }
@@ -237,7 +236,7 @@ class ExtractStringInputPage extends UserInputWizardPage implements IWizardPage 
 
         // make lower case
         text = text.toLowerCase();
-        
+
         // everything not alphanumeric becomes an underscore
         text = text.replaceAll("[^a-zA-Z0-9]+", "_");  //$NON-NLS-1$ //$NON-NLS-2$
 
@@ -258,14 +257,18 @@ class ExtractStringInputPage extends UserInputWizardPage implements IWizardPage 
     /**
      * Validates fields of the wizard input page. Displays errors as appropriate and
      * enable the "Next" button (or not) by calling {@link #setPageComplete(boolean)}.
-     * 
+     *
+     * If validation succeeds, this udpates the text id & value in the refactoring object.
+     *
      * @return True if the page has been positively validated. It may still have warnings.
      */
     private boolean validatePage() {
         boolean success = true;
 
+        ExtractStringRefactoring ref = getOurRefactoring();
+
         // Analyze fatal errors.
-        
+
         String text = mStringIdField.getText().trim();
         if (text == null || text.length() < 1) {
             setErrorMessage("Please provide a resource ID.");
@@ -284,10 +287,15 @@ class ExtractStringInputPage extends UserInputWizardPage implements IWizardPage 
                     break;
                 }
             }
+
+            // update the field in the refactoring object in case of success
+            if (success) {
+                ref.setNewStringId(text);
+            }
         }
 
         String resFile = mResFileCombo.getText();
-        if (success) {           
+        if (success) {
             if (resFile == null || resFile.length() == 0) {
                 setErrorMessage("A resource file name is required.");
                 success = false;
@@ -296,13 +304,11 @@ class ExtractStringInputPage extends UserInputWizardPage implements IWizardPage 
                 success = false;
             }
         }
-        
+
         // Analyze info & warnings.
-        
+
         if (success) {
             setErrorMessage(null);
-
-            ExtractStringRefactoring ref = getOurRefactoring();
 
             ref.setTargetFile(resFile);
             sLastResFilePath.put(mProject.getFullPath().toPortableString(), resFile);
@@ -326,12 +332,17 @@ class ExtractStringInputPage extends UserInputWizardPage implements IWizardPage 
             }
         }
 
+        if (success) {
+            // Also update the text value in case of success.
+            ref.setNewStringValue(mStringValueField.getText());
+        }
+
         setPageComplete(success);
         return success;
     }
 
     public class OnConfigSelectorUpdated implements Runnable, ModifyListener {
-        
+
         /** Regex pattern to parse a valid res path: it reads (/res/folder-name/)+(filename). */
         private final Pattern mPathRegex = Pattern.compile(
             "(/res/[a-z][a-zA-Z0-9_-]+/)(.+)");  //$NON-NLS-1$
@@ -356,13 +367,13 @@ class ExtractStringInputPage extends UserInputWizardPage implements IWizardPage 
          * <li> If the XML filename from step 1 is not in the file list, it's a custom file name.
          *      Insert it and sort it.
          * <li> Re-populate the file combo with all the choices.
-         * <li> Select the original XML file. 
+         * <li> Select the original XML file.
          */
         public void run() {
             if (mInternalConfigChange) {
                 return;
             }
-            
+
             // get current leafname, if any
             String leafName = "";  //$NON-NLS-1$
             String currPath = mResFileCombo.getText();
@@ -387,11 +398,11 @@ class ExtractStringInputPage extends UserInputWizardPage implements IWizardPage 
                 // Path has not changed. No need to reload.
                 return;
             }
-            
+
             // Get all the files at the new path
 
             TreeSet<String> filePaths = mFolderCache.get(newPath);
-            
+
             if (filePaths == null) {
                 filePaths = new TreeSet<String>();
 
@@ -408,7 +419,7 @@ class ExtractStringInputPage extends UserInputWizardPage implements IWizardPage 
                         // Ignore.
                     }
                 }
-                
+
                 mFolderCache.put(newPath, filePaths);
             }
 
@@ -416,13 +427,13 @@ class ExtractStringInputPage extends UserInputWizardPage implements IWizardPage 
             if (leafName.length() > 0 && !filePaths.contains(currPath)) {
                 filePaths.add(currPath);
             }
-            
+
             // Fill the combo
             try {
                 mInternalFileComboChange = true;
-                
+
                 mResFileCombo.removeAll();
-                
+
                 for (String filePath : filePaths) {
                     mResFileCombo.add(filePath);
                 }
@@ -434,13 +445,13 @@ class ExtractStringInputPage extends UserInputWizardPage implements IWizardPage 
                         mResFileCombo.select(index);
                     }
                 }
-                
+
                 if (index == -1) {
                     mResFileCombo.setText(currPath);
                 }
-                
+
                 mLastFolderUsedInCombo = newPath;
-                
+
             } finally {
                 mInternalFileComboChange = false;
             }
@@ -470,7 +481,7 @@ class ExtractStringInputPage extends UserInputWizardPage implements IWizardPage 
             // We get "res/foo" from selections relative to the project when we want a "/res/foo" path.
             if (wsFolderPath.startsWith(RES_FOLDER_REL)) {
                 wsFolderPath = RES_FOLDER_ABS + wsFolderPath.substring(RES_FOLDER_REL.length());
-                
+
                 mInternalFileComboChange = true;
                 mResFileCombo.setText(wsFolderPath);
                 mInternalFileComboChange = false;
@@ -478,7 +489,7 @@ class ExtractStringInputPage extends UserInputWizardPage implements IWizardPage 
 
             if (wsFolderPath.startsWith(RES_FOLDER_ABS)) {
                 wsFolderPath = wsFolderPath.substring(RES_FOLDER_ABS.length());
-                
+
                 int pos = wsFolderPath.indexOf(AndroidConstants.WS_SEP_CHAR);
                 if (pos >= 0) {
                     wsFolderPath = wsFolderPath.substring(0, pos);
