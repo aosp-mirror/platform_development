@@ -23,7 +23,6 @@ Based on previous <androidroot>/development/tools/runtest shell script.
 import glob
 import optparse
 import os
-import re
 from sets import Set
 import sys
 
@@ -61,6 +60,10 @@ class TestRunner(object):
     # disable logging of timestamp
     self._root_path = android_build.GetTop()
     logger.SetTimestampLogging(False)
+    self._adb = None
+    self._known_tests = None
+    self._options = None
+    self._test_args = None
 
   def _ProcessOptions(self):
     """Processes command-line options."""
@@ -264,8 +267,8 @@ class TestRunner(object):
 
     except KeyboardInterrupt:
       logger.Log("Exiting...")
-    except errors.AbortError, e:
-      logger.Log(e.msg)
+    except errors.AbortError, error:
+      logger.Log(error.msg)
       logger.SilentLog("Exiting due to AbortError...")
     except errors.WaitForResponseTimedOutError:
       logger.Log("Timed out waiting for response")

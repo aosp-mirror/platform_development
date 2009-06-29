@@ -23,7 +23,6 @@ import xml.parsers
 
 # local imports
 import errors
-import logger
 
 
 class AbstractTestSuite(object):
@@ -31,6 +30,9 @@ class AbstractTestSuite(object):
 
   This class will parse the XML attributes common to all TestSuite's.
   """
+
+  # name of xml tag a test suite handles. subclasses must define this.
+  TAG_NAME = "unspecified"
 
   _NAME_ATTR = "name"
   _BUILD_ATTR = "build_path"
