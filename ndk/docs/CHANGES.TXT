@@ -11,5 +11,18 @@ current version
   * ensure that the script is run from $NDKROOT as build/host-setup.sh
   * add --help, --verbose and --no-make-check options
 
+- Properly add sysroot library search path at build time. This makes a line
+  in Android.mk like:
+
+     LOCAL_LDLIBS := -lz
+
+  Actually work correctly, instead of having the linker complaining that it
+  could not find the corresponding libz.so library.
+
+- Generate thumb binaries by default.
+
+- Generate proper unoptimized versions of binaries when APP_OPTIM := debug
+
+
 -------------------------------------------------------------------------------
 android-1.5_r1 released.
