@@ -369,6 +369,7 @@ $$(_OBJ): PRIVATE_ARM_TEXT := $$(LOCAL_ARM_TEXT)
 $$(_OBJ): PRIVATE_CC       := $$($$(my)CC)
 $$(_OBJ): PRIVATE_CFLAGS   := $$($$(my)CFLAGS) \
                               $$($$(my)$(LOCAL_ARM_MODE)_$(LOCAL_BUILD_MODE)_CFLAGS) \
+                              $$(LOCAL_C_INCLUDES:%=-I%) \
                               -I$$(LOCAL_PATH) \
                               $$(LOCAL_CFLAGS) \
                               $$(NDK_APP_CPPFLAGS) \
@@ -427,6 +428,7 @@ $$(_OBJ): PRIVATE_ARM_TEXT := $$(LOCAL_ARM_TEXT)
 $$(_OBJ): PRIVATE_CXX      := $$($$(my)CXX)
 $$(_OBJ): PRIVATE_CXXFLAGS := $$($$(my)CXXFLAGS) \
                               $$($$(my)$(LOCAL_ARM_MODE)_$(LOCAL_BUILD_MODE)_CFLAGS) \
+                              $$(LOCAL_C_INCLUDES:%=-I%) \
                               -I$$(LOCAL_PATH) \
                               $$(LOCAL_CFLAGS) \
                               $$(NDK_APP_CPPFLAGS) \
