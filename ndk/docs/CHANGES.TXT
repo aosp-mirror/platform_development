@@ -28,6 +28,7 @@ current version
 
 - Generate proper unoptimized versions of binaries when APP_OPTIM := debug
 
+- Add support for LOCAL_C_INCLUDES in Android.mk
 
 -------------------------------------------------------------------------------
 android-1.5_r1 released.

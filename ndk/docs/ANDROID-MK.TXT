@@ -319,6 +319,21 @@ LOCAL_CPP_EXTENSION
 
         LOCAL_CPP_EXTENSION := .cxx
 
+LOCAL_C_INCLUDES
+    An optional list of paths, relative to the NDK *root* directory,
+    which will be appended to the include search path when compiling
+    all sources (C, C++ and Assembly). For example:
+
+        LOCAL_C_INCLUDES := sources/foo
+
+    Or even:
+
+        LOCAL_C_INCLUDES := $(LOCAL_PATH)/../foo
+
+    These are placed before any corresponding inclusion flag in
+    LOCAL_CFLAGS / LOCAL_CXXFLAGS / LOCAL_CPPFLAGS
+
+
 LOCAL_CFLAGS
     An optional set of compiler flags that will be passed when building
     C source files (*not* C++ sources).
