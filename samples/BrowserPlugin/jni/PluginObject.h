@@ -54,11 +54,12 @@ private:
 };
 
 enum PluginTypes {
-    kBackground_PluginType = 1,
-    kAnimation_PluginType  = 2,
-    kAudio_PluginType      = 3,
-    kText_PluginType       = 4,
-    kPaint_PluginType      = 5
+    kAnimation_PluginType  = 1,
+    kAudio_PluginType      = 2,
+    kBackground_PluginType = 3,
+    kForm_PluginType       = 4,
+    kText_PluginType       = 5,
+    kPaint_PluginType      = 6
 };
 typedef uint32_t PluginType;
 

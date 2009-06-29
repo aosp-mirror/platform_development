@@ -31,6 +31,7 @@
 #include "AnimationPlugin.h"
 #include "AudioPlugin.h"
 #include "BackgroundPlugin.h"
+#include "FormPlugin.h"
 #include "android_npapi.h"
 
 NPNetscapeFuncs* browser;
@@ -190,6 +191,10 @@ NPError NPP_New(NPMIMEType pluginType, NPP instance, uint16 mode, int16 argc,
                 obj->pluginType = kBackground_PluginType;
                 obj->activePlugin = new BackgroundPlugin(instance);
             }
+            else if (!strcmp(argv[i], "Form")) {
+                obj->pluginType = kForm_PluginType;
+                obj->activePlugin = new FormPlugin(instance);
+            }
             gLogI.log(instance, kDebug_ANPLogType, "------ %p PluginType is %d", instance, obj->pluginType);
             break;
         }
@@ -300,6 +305,12 @@ int16 NPP_HandleEvent(NPP instance, void* event)
             gLogI.log(instance, kDebug_ANPLogType, "---- %p Touch action=%d [%d %d]",
                       instance, evt->data.touch.action, evt->data.touch.x,
                       evt->data.touch.y);
+            break;
+
+       case kMouse_ANPEventType:
+            gLogI.log(instance, kDebug_ANPLogType, "---- %p Mouse action=%d [%d %d]",
+                      instance, evt->data.mouse.action, evt->data.mouse.x,
+                      evt->data.mouse.y);
             break;
 
        case kVisibleRect_ANPEventType:
