@@ -535,7 +535,7 @@ public final class SdkManager {
                 String defaultSkin = propertyMap.get(ADDON_DEFAULT_SKIN);
                 if (defaultSkin == null) {
                     if (skins.length == 1) {
-                        defaultSkin = skins[1];
+                        defaultSkin = skins[0];
                     } else {
                         defaultSkin = baseTarget.getDefaultSkin();
                     }
