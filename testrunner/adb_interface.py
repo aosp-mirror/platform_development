@@ -275,7 +275,7 @@ class AdbInterface:
           (self.DEVICE_TRACE_DIR, instrumentation_path.split(".")[-1]))
 
     for key, value in instrumentation_args.items():
-      command_string += " -e %s %s" % (key, value)
+      command_string += " -e %s '%s'" % (key, value)
     if raw_mode:
       command_string += " -r"
     command_string += " -w %s" % instrumentation_path
