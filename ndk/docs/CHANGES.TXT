@@ -21,6 +21,11 @@ current version
 
 - Generate thumb binaries by default.
 
+- Add support for LOCAL_ARM_MODE in Android.mk.
+
+- Add support for the '.arm' suffix in source file names to force the
+  compilation of a single source in arm (32-bit) mode.
+
 - Generate proper unoptimized versions of binaries when APP_OPTIM := debug
 
 
