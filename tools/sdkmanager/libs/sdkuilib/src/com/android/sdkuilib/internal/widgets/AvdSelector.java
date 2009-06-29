@@ -136,7 +136,11 @@ public final class AvdSelector {
         }
 
         public boolean accept(AvdInfo avd) {
-            return mTarget.isCompatibleBaseFor(avd.getTarget());
+            if (avd != null) {
+                return mTarget.isCompatibleBaseFor(avd.getTarget());
+            }
+
+            return false;
         }
 
         public void cleanup() {
@@ -195,8 +199,7 @@ public final class AvdSelector {
         if (displayMode == DisplayMode.MANAGER) {
             Button newButton = new Button(buttons, SWT.PUSH | SWT.FLAT);
             newButton.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-            newButton.setText("New");
-            // TODO: callback for button
+            newButton.setText("New...");
 
             Button deleteButton = new Button(buttons, SWT.PUSH | SWT.FLAT);
             deleteButton.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
@@ -214,8 +217,13 @@ public final class AvdSelector {
 
         Button infoButton = new Button(buttons, SWT.PUSH | SWT.FLAT);
         infoButton.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-        infoButton.setText("Info...");
-        // TODO: callback for button
+        infoButton.setText("Details...");
+        infoButton.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent arg0) {
+                onDetails();
+            }
+        });
 
         Composite padding = new Composite(buttons, SWT.NONE);
         padding.setLayoutData(new GridData(GridData.FILL_VERTICAL));
@@ -378,6 +386,12 @@ public final class AvdSelector {
      * The {@link TableItem#getData()} contains an {@link IAndroidTarget}.
      * <p/>
      * It is recommended that the caller uses the {@link #getSelected()} method instead.
+     * <p/>
+     * The default behavior for double click (when not in {@link DisplayMode#SIMPLE_CHECK}) is to
+     * display the details of the selected AVD.<br>
+     * To disable it (when you provide your own double click action), set
+     * {@link SelectionEvent#doit} to false in
+     * {@link SelectionListener#widgetDefaultSelected(SelectionEvent)}
      *
      * @param selectionListener The new listener or null to remove it.
      */
@@ -451,6 +465,7 @@ public final class AvdSelector {
                 return (AvdInfo) mTable.getItem(selIndex).getData();
             }
         }
+
         return null;
     }
 
@@ -527,10 +542,19 @@ public final class AvdSelector {
                         i.setChecked(true);
                     }
                     enforceSingleSelection(i);
+
                 }
+
+                //whether or not we display details. default: true when not in SIMPLE_CHECK mode.
+                boolean showDetails = mDisplayMode != DisplayMode.SIMPLE_CHECK;
 
                 if (mSelectionListener != null) {
                     mSelectionListener.widgetDefaultSelected(e);
+                    showDetails &= e.doit; // enforce false in SIMPLE_CHECK
+                }
+
+                if (showDetails) {
+                    onDetails();
                 }
             }
 
@@ -622,6 +646,13 @@ public final class AvdSelector {
         }
     }
 
+    private void onDetails() {
+        final AvdInfo avdInfo = getSelected();
+
+        AvdDetailsDialog dlg = new AvdDetailsDialog(mTable.getShell(), avdInfo);
+        dlg.open();
+    }
+
     private void onDelete() {
         final AvdInfo avdInfo = getSelected();
 
@@ -660,7 +691,6 @@ public final class AvdSelector {
             refresh(false);
         }
     }
-
 
     /**
      * Collects all log from the AVD action and displays it in a dialog.
