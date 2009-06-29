@@ -597,21 +597,8 @@ class Main {
                         avdName + AvdManager.AVD_FOLDER_EXTENSION);
             }
 
-            Map<String, String> hardwareConfig = null;
-            if (target.isPlatform()) {
-                try {
-                    hardwareConfig = promptForHardware(target);
-                } catch (IOException e) {
-                    errorAndExit(e.getMessage());
-                }
-            }
-
-            AvdInfo oldAvdInfo = null;
-            if (removePrevious) {
-                oldAvdInfo = avdManager.getAvd(avdName, false /*validAvdOnly*/);
-            }
-
             // Validate skin is either default (empty) or NNNxMMM or a valid skin name.
+            Map<String, String> skinHardwareConfig = null;
             String skin = mSdkCommandLine.getParamSkin();
             if (skin != null && skin.length() == 0) {
                 skin = null;
@@ -623,6 +610,17 @@ class Main {
                     if (skin.equalsIgnoreCase(s)) {
                         skin = s;  // Make skin names case-insensitive.
                         valid = true;
+
+                        // get the hardware properties for this skin
+                        File skinFile = avdManager.getSkinPath(skin, target);
+                        if (skinFile.isDirectory()) { // this should not fail since we got the skin
+                                                      // name from the target
+                            File skinHardwareFle = new File(skinFile, AvdManager.HARDWARE_INI);
+                            if (skinHardwareFle.isFile()) {
+                                skinHardwareConfig = SdkManager.parsePropertyFile(
+                                        skinHardwareFle, mSdkLog);
+                            }
+                        }
                         break;
                     }
                 }
@@ -637,6 +635,20 @@ class Main {
                     errorAndExit("'%s' is not a valid skin name or size (NNNxMMM)", skin);
                     return;
                 }
+            }
+
+            Map<String, String> hardwareConfig = null;
+            if (target.isPlatform()) {
+                try {
+                    hardwareConfig = promptForHardware(target, skinHardwareConfig);
+                } catch (IOException e) {
+                    errorAndExit(e.getMessage());
+                }
+            }
+
+            AvdInfo oldAvdInfo = null;
+            if (removePrevious) {
+                oldAvdInfo = avdManager.getAvd(avdName, false /*validAvdOnly*/);
             }
 
             AvdInfo newAvdInfo = avdManager.createAvd(avdFolder,
@@ -805,7 +817,8 @@ class Main {
      * Prompts the user to setup a hardware config for a Platform-based AVD.
      * @throws IOException
      */
-    private Map<String, String> promptForHardware(IAndroidTarget createTarget) throws IOException {
+    private Map<String, String> promptForHardware(IAndroidTarget createTarget,
+            Map<String, String> skinHardwareConfig) throws IOException {
         byte[] readLineBuffer = new byte[256];
         String result;
         String defaultAnswer = "no";
@@ -821,8 +834,8 @@ class Main {
         }
 
         if (getBooleanReply(result) == false) {
-            // no custom config.
-            return null;
+            // no custom config, return the skin hardware config in case there is one.
+            return skinHardwareConfig;
         }
 
         mSdkLog.printf("\n"); // empty line
@@ -846,8 +859,12 @@ class Main {
             }
 
             String defaultValue = property.getDefault();
+            String defaultFromSkin = skinHardwareConfig != null ? skinHardwareConfig.get(
+                    property.getName()) : null;
 
-            if (defaultValue != null) {
+            if (defaultFromSkin != null) {
+                mSdkLog.printf("%s [%s (from skin)]:", property.getName(), defaultFromSkin);
+            } else if (defaultValue != null) {
                 mSdkLog.printf("%s [%s]:", property.getName(), defaultValue);
             } else {
                 mSdkLog.printf("%s (%s):", property.getName(), property.getType());
@@ -855,7 +872,12 @@ class Main {
 
             result = readLine(readLineBuffer);
             if (result.length() == 0) {
-                if (defaultValue != null) {
+                if (defaultFromSkin != null || defaultValue != null) {
+                    if (defaultFromSkin != null) {
+                        // we need to write this one in the AVD file
+                        map.put(property.getName(), defaultFromSkin);
+                    }
+
                     mSdkLog.printf("\n"); // empty line
                     i++; // go to the next property if we have a valid default value.
                          // if there's no default, we'll redo this property
