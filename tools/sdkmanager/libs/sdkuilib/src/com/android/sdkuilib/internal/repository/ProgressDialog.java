@@ -46,7 +46,7 @@ import org.eclipse.swt.events.ShellEvent;
  */
 final class ProgressDialog extends Dialog {
 
-    private enum CancelMode {
+    private static enum CancelMode {
         /** Cancel button says "Cancel" and is enabled. Waiting for user to cancel. */
         ACTIVE,
         /** Cancel button has been clicked. Waiting for thread to finish. */
