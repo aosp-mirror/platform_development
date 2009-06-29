@@ -1,4 +1,13 @@
 Android NDK ChangeLog:
 
 -------------------------------------------------------------------------------
+current version
+
+- Fix build/host-setup.sh to:
+  * execute as a bash script
+  * remove unused host gcc dependency
+  * improve Windows host auto-detection
+
+
+-------------------------------------------------------------------------------
 android-1.5_r1 released.
