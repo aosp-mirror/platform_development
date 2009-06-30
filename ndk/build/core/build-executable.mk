@@ -35,38 +35,13 @@ LOCAL_OBJS_DIR     := $(TARGET_OBJS)/$(LOCAL_MODULE)
 
 include $(BUILD_SYSTEM)/build-binary.mk
 
-LOCAL_STATIC_LIBRARIES := $(call strip-lib-prefix,$(LOCAL_STATIC_LIBRARIES))
-LOCAL_SHARED_LIBRARIES := $(call strip-lib-prefix,$(LOCAL_SHARED_LIBRARIES))
-
-static_libraries := $(call map,static-library-path,$(LOCAL_STATIC_LIBRARIES))
-shared_libraries := $(call map,shared-library-path,$(LOCAL_SHARED_LIBRARIES)) \
-                    $(TARGET_PREBUILT_SHARED_LIBRARIES)
-
-$(LOCAL_BUILT_MODULE): $(static_libraries) $(shared_libraries)
-
-LOCAL_LDLIBS := $(_module_libs) $(LOCAL_LDLIBS)
-
-$(LOCAL_BUILT_MODULE): PRIVATE_STATIC_LIBRARIES := $(static_libraries)
-$(LOCAL_BUILT_MODULE): PRIVATE_SHARED_LIBRARIES := $(shared_libraries)
-$(LOCAL_BUILT_MODULE): PRIVATE_OBJECTS          := $(LOCAL_OBJECTS)
-
-$(LOCAL_BUILT_MODULE): PRIVATE_LDFLAGS := $(TARGET_LDFLAGS) $(LOCAL_LDFLAGS)
-$(LOCAL_BUILT_MODULE): PRIVATE_LDLIBS  := $(LOCAL_LDLIBS) $(TARGET_LDLIBS)
-
-$(LOCAL_BUILT_MODULE): PRIVATE_NAME := $(notdir $(LOCAL_BUILT_MODULE))
-$(LOCAL_BUILT_MODULE): PRIVATE_DEST := $(NDK_APP_DEST)
-$(LOCAL_BUILT_MODULE): PRIVATE_SRC  := $(LOCAL_BUILT_MODULE)
-$(LOCAL_BUILT_MODULE): PRIVATE_DST  := $(PRIVATE_DEST)/$(PRIVATE_NAME)
-
 $(LOCAL_BUILT_MODULE): $(LOCAL_OBJECTS)
 	@ mkdir -p $(dir $@)
 	@ echo "Executable     : $(PRIVATE_NAME)"
 	$(hide) $(cmd-build-executable)
-	@ echo "Install        : $(PRIVATE_NAME) => $(PRIVATE_DEST)"
-	$(hide) mkdir -p $(PRIVATE_DEST)
-	$(hide) install -p $(PRIVATE_SRC) $(PRIVATE_DST)
-	$(hide) $(call cmd-strip, $(PRIVATE_DST))
 
 ALL_EXECUTABLES += $(LOCAL_BUILT_MODULE)
+
+include $(BUILD_SYSTEM)/install-binary.mk
 
 endif # filter LOCAL_MODULE in NDK_APP_MODULES

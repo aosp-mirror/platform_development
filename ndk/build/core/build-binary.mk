@@ -53,7 +53,7 @@ ifeq ($(LOCAL_CPP_EXTENSION),)
   LOCAL_CPP_EXTENSION := .cpp
 else
   ifneq ($(words $(LOCAL_CPP_EXTENSION)),1)
-    $(call __ndk_log, LOCAL_CPP_EXTENSION in $(LOCAL_MAKEFILE) must be one word only, not '$(LOCAL_CPP_EXTENSION)')
+    $(call __ndk_info, LOCAL_CPP_EXTENSION in $(LOCAL_MAKEFILE) must be one word only, not '$(LOCAL_CPP_EXTENSION)')
     $(call __ndk_error, Aborting)
   endif
 endif
@@ -79,12 +79,12 @@ ifeq ($(LOCAL_ARM_MODE),)
   LOCAL_ARM_MODE := thumb
 else
   ifneq ($(words $(LOCAL_ARM_MODE)),1)
-      $(call __ndk_log,   LOCAL_ARM_MODE in $(LOCAL_MAKEFILE) must be one word, not '$(LOCAL_ARM_MODE)')
+      $(call __ndk_info,   LOCAL_ARM_MODE in $(LOCAL_MAKEFILE) must be one word, not '$(LOCAL_ARM_MODE)')
       $(call __ndk_error, Aborting)
   endif
   # check that LOCAL_ARM_MODE is defined to either 'arm' or 'thumb'
   $(if $(filter-out thumb arm, $(LOCAL_ARM_MODE)),\
-      $(call __ndk_log,   LOCAL_ARM_MODE must be defined to either 'arm' or 'thumb' in $(LOCAL_MAKEFILE), not '$(LOCAL_ARM_MODE)')\
+      $(call __ndk_info,   LOCAL_ARM_MODE must be defined to either 'arm' or 'thumb' in $(LOCAL_MAKEFILE) not '$(LOCAL_ARM_MODE)')\
       $(call __ndk_error, Aborting)\
   )
 endif
@@ -134,3 +134,32 @@ $(foreach src,$(cpp_sources), $(call compile-cpp-source,$(src)))
 
 ALL_DEPENDENCY_DIRS += $(sort $(LOCAL_DEPENDENCY_DIRS))
 CLEAN_OBJS_DIRS     += $(LOCAL_OBJS_DIR)
+
+#
+# Handle the static and shared libraries this module depends on
+#
+LOCAL_STATIC_LIBRARIES := $(call strip-lib-prefix,$(LOCAL_STATIC_LIBRARIES))
+LOCAL_SHARED_LIBRARIES := $(call strip-lib-prefix,$(LOCAL_SHARED_LIBRARIES))
+
+static_libraries := $(call map,static-library-path,$(LOCAL_STATIC_LIBRARIES))
+shared_libraries := $(call map,shared-library-path,$(LOCAL_SHARED_LIBRARIES)) \
+                    $(TARGET_PREBUILT_SHARED_LIBRARIES)
+
+$(LOCAL_BUILT_MODULE): $(static_libraries) $(shared_libraries)
+
+# If LOCAL_LDLIBS contains anything like -l<library> then
+# prepend a -L$(SYSROOT)/usr/lib to it to ensure that the linker
+# looks in the right location
+#
+ifneq ($(filter -l%,$(LOCAL_LDLIBS)),)
+    LOCAL_LDLIBS := -L$(SYSROOT)/usr/lib $(LOCAL_LDLIBS)
+endif
+
+$(LOCAL_BUILT_MODULE): PRIVATE_STATIC_LIBRARIES := $(static_libraries)
+$(LOCAL_BUILT_MODULE): PRIVATE_SHARED_LIBRARIES := $(shared_libraries)
+$(LOCAL_BUILT_MODULE): PRIVATE_OBJECTS          := $(LOCAL_OBJECTS)
+
+$(LOCAL_BUILT_MODULE): PRIVATE_LDFLAGS := $(TARGET_LDFLAGS) $(LOCAL_LDFLAGS)
+$(LOCAL_BUILT_MODULE): PRIVATE_LDLIBS  := $(LOCAL_LDLIBS) $(TARGET_LDLIBS)
+
+$(LOCAL_BUILT_MODULE): PRIVATE_NAME := $(notdir $(LOCAL_BUILT_MODULE))

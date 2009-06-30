@@ -368,12 +368,11 @@ $$(_OBJ): PRIVATE_ARM_MODE := $$(LOCAL_ARM_MODE)
 $$(_OBJ): PRIVATE_ARM_TEXT := $$(LOCAL_ARM_TEXT)
 $$(_OBJ): PRIVATE_CC       := $$($$(my)CC)
 $$(_OBJ): PRIVATE_CFLAGS   := $$($$(my)CFLAGS) \
-                              $$($$(my)_$(LOCAL_ARM_MODE)_$(LOCAL_BUILD_MODE)_CFLAGS) \
+                              $$($$(my)$(LOCAL_ARM_MODE)_$(LOCAL_BUILD_MODE)_CFLAGS) \
                               -I$$(LOCAL_PATH) \
                               $$(LOCAL_CFLAGS) \
                               $$(NDK_APP_CPPFLAGS) \
-                              $$(NDK_APP_CFLAGS) \
-                              $$(LOCAL_ARM_CFLAGS)
+                              $$(NDK_APP_CFLAGS)
 
 $$(_OBJ): $$(_SRC) $$(LOCAL_MAKEFILE) $$(NDK_APP_APPLICATION_MK)
 	@mkdir -p $$(dir $$(PRIVATE_OBJ))
@@ -427,12 +426,11 @@ $$(_OBJ): PRIVATE_ARM_MODE := $$(LOCAL_ARM_MODE)
 $$(_OBJ): PRIVATE_ARM_TEXT := $$(LOCAL_ARM_TEXT)
 $$(_OBJ): PRIVATE_CXX      := $$($$(my)CXX)
 $$(_OBJ): PRIVATE_CXXFLAGS := $$($$(my)CXXFLAGS) \
-                              $$($$(my)_$(LOCAL_ARM_MODE)_$(LOCAL_BUILD_MODE)_CFLAGS) \
+                              $$($$(my)$(LOCAL_ARM_MODE)_$(LOCAL_BUILD_MODE)_CFLAGS) \
                               -I$$(LOCAL_PATH) \
                               $$(LOCAL_CFLAGS) \
                               $$(NDK_APP_CPPFLAGS) \
                               $$(NDK_APP_CXXFLAGS) \
-                              $$(LOCAL_ARM_CFLAGS)
 
 $$(_OBJ): $$(_SRC) $$(LOCAL_MAKEFILE) $$(NDK_APP_APPLICATION_MK)
 	@mkdir -p $$(dir $$(PRIVATE_OBJ))
