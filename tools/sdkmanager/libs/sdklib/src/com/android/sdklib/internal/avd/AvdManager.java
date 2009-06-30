@@ -134,6 +134,8 @@ public final class AvdManager {
     /** List of valid characters for an AVD name. Used for display purposes. */
     public final static String CHARS_AVD_NAME = "a-z A-Z 0-9 . _ -";
 
+    public final static String HARDWARE_INI = "hardware.ini";
+
     /** An immutable structure describing an Android Virtual Device. */
     public static final class AvdInfo {
 
@@ -587,7 +589,46 @@ public final class AvdManager {
                 }
             }
 
+            // add the hardware config to the config file.
+            // priority order is:
+            // - values provided by the user
+            // - values provided by the skin
+            // - values provided by the target (add-on only).
+            // In order to follow this priority, we'll add the lowest priority values first and then
+            // override by higher priority values.
+            // In the case of a platform with override values from the user, the skin value might
+            // already be there, but it's ok.
+
+            HashMap<String, String> finalHardwareValues = new HashMap<String, String>();
+
+            File targetHardwareFile = new File(target.getLocation(), AvdManager.HARDWARE_INI);
+            if (targetHardwareFile.isFile()) {
+                Map<String, String> targetHardwareConfig = SdkManager.parsePropertyFile(
+                        targetHardwareFile, mSdkLog);
+                if (targetHardwareConfig != null) {
+                    finalHardwareValues.putAll(targetHardwareConfig);
+                    values.putAll(targetHardwareConfig);
+                }
+            }
+
+            // get the hardware properties for this skin
+            File skinFile = getSkinPath(skinName, target);
+            if (skinFile.isDirectory()) { // this should not fail since we got the skin
+                                          // name from the target
+                File skinHardwareFile = new File(skinFile, AvdManager.HARDWARE_INI);
+                if (skinHardwareFile.isFile()) {
+                    Map<String, String> skinHardwareConfig = SdkManager.parsePropertyFile(
+                            skinHardwareFile, mSdkLog);
+                    if (skinHardwareConfig != null) {
+                        finalHardwareValues.putAll(skinHardwareConfig);
+                        values.putAll(skinHardwareConfig);
+                    }
+                }
+            }
+
+            // finally put the hardware provided by the user.
             if (hardwareConfig != null) {
+                finalHardwareValues.putAll(hardwareConfig);
                 values.putAll(hardwareConfig);
             }
 
@@ -596,10 +637,20 @@ public final class AvdManager {
 
             if (mSdkLog != null) {
                 if (target.isPlatform()) {
-                    mSdkLog.printf("Created AVD '%1$s' based on %2$s\n", name, target.getName());
+                    mSdkLog.printf("Created AVD '%1$s' based on %2$s", name, target.getName());
                 } else {
-                    mSdkLog.printf("Created AVD '%1$s' based on %2$s (%3$s)\n", name, target.getName(),
-                               target.getVendor());
+                    mSdkLog.printf("Created AVD '%1$s' based on %2$s (%3$s)", name,
+                            target.getName(), target.getVendor());
+                }
+
+                // display the chosen hardware config
+                if (finalHardwareValues.size() > 0) {
+                    mSdkLog.printf(", with the following hardware config:\n");
+                    for (Entry<String, String> entry : finalHardwareValues.entrySet()) {
+                        mSdkLog.printf("%s=%s\n",entry.getKey(), entry.getValue());
+                    }
+                } else {
+                    mSdkLog.printf("\n");
                 }
             }
 
@@ -694,18 +745,9 @@ public final class AvdManager {
     /**
      * Returns the path to the skin, as a relative path to the SDK.
      */
-    private String getSkinRelativePath(String skinName, IAndroidTarget target) {
+    public String getSkinRelativePath(String skinName, IAndroidTarget target) {
         // first look to see if the skin is in the target
-
-        String path = target.getPath(IAndroidTarget.SKINS);
-        File skin = new File(path, skinName);
-
-        if (skin.exists() == false && target.isPlatform() == false) {
-            target = target.getParent();
-
-            path = target.getPath(IAndroidTarget.SKINS);
-            skin = new File(path, skinName);
-        }
+        File skin = getSkinPath(skinName, target);
 
         // skin really does not exist!
         if (skin.exists() == false) {
@@ -714,7 +756,7 @@ public final class AvdManager {
         }
 
         // get the skin path
-        path = skin.getAbsolutePath();
+        String path = skin.getAbsolutePath();
 
         // make this path relative to the SDK location
         String sdkLocation = mSdk.getLocation();
@@ -730,6 +772,24 @@ public final class AvdManager {
             path = path.substring(1);
         }
         return path;
+    }
+
+    /**
+     * Returns the full absolute OS path to a skin specified by name for a given target.
+     * @return a {@link File} that may or may not actually exist.
+     */
+    public File getSkinPath(String skinName, IAndroidTarget target) {
+        String path = target.getPath(IAndroidTarget.SKINS);
+        File skin = new File(path, skinName);
+
+        if (skin.exists() == false && target.isPlatform() == false) {
+            target = target.getParent();
+
+            path = target.getPath(IAndroidTarget.SKINS);
+            skin = new File(path, skinName);
+        }
+
+        return skin;
     }
 
     /**
@@ -1168,10 +1228,12 @@ public final class AvdManager {
             try {
                 t1.join();
             } catch (InterruptedException e) {
+                // nothing to do here
             }
             try {
                 t2.join();
             } catch (InterruptedException e) {
+                // nothing to do here
             }
         }
 
