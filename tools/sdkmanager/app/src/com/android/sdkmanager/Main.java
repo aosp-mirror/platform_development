@@ -612,14 +612,11 @@ class Main {
                         valid = true;
 
                         // get the hardware properties for this skin
-                        File skinFile = avdManager.getSkinPath(skin, target);
-                        if (skinFile.isDirectory()) { // this should not fail since we got the skin
-                                                      // name from the target
-                            File skinHardwareFle = new File(skinFile, AvdManager.HARDWARE_INI);
-                            if (skinHardwareFle.isFile()) {
-                                skinHardwareConfig = SdkManager.parsePropertyFile(
-                                        skinHardwareFle, mSdkLog);
-                            }
+                        File skinFolder = avdManager.getSkinPath(skin, target);
+                        File skinHardwareFile = new File(skinFolder, AvdManager.HARDWARE_INI);
+                        if (skinHardwareFile.isFile()) {
+                            skinHardwareConfig = SdkManager.parsePropertyFile(
+                                    skinHardwareFile, mSdkLog);
                         }
                         break;
                     }
