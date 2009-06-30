@@ -372,3 +372,24 @@ LOCAL_ALLOW_UNDEFINED_SYMBOLS
     However, if for some reason you need to disable this check, set this
     variable to 'true'. Note that the corresponding shared library may fail
     to load at runtime.
+
+LOCAL_ARM_MODE
+    By default, ARM target binaries will be generated in 'thumb' mode, where
+    each instruction are 16-bit wide. You can define this variable to 'arm'
+    if you want to force the generation of the module's object files in
+    'arm' (32-bit instructions) mode. E.g.:
+
+      LOCAL_ARM_MODE := arm
+
+    Note that you can also instruct the build system to only build specific
+    sources in arm mode by appending an '.arm' suffix to its source file
+    name. For example, with:
+
+       LOCAL_SRC_FILES := foo.c bar.c.arm
+
+    Tells the build system to always compile 'bar.c' in arm mode, and to
+    build foo.c according to the value of LOCAL_ARM_MODE.
+
+    NOTE: Setting APP_OPTIM to 'debug' in your Application.mk will also force
+          the generation of ARM binaries as well. This is due to bugs in the
+          toolchain debugger that don't deal too well with thumb code.

@@ -109,29 +109,37 @@ LOCAL_ARM_TEXT   := $(LOCAL_ARM_TEXT_$(LOCAL_ARM_MODE))
 # Build C source files into .o
 #
 
-# XXX: TODO: support LOCAL_ARM_MODE
+ifeq ($(LOCAL_ARM_MODE),arm)
+    arm_sources   := $(LOCAL_SRC_FILES)
+else
+    arm_sources   := $(filter %.arm,$(LOCAL_SRC_FILES))
+    thumb_sources := $(filter-out %.arm,$(LOCAL_SRC_FILES))
+endif
 
-arm_sources := $(LOCAL_SRC_FILES:%.arm)
+# First, build the 'thumb' sources
+#
+LOCAL_ARM_MODE := thumb
 
-c_sources := $(filter %.c, \
-                 $(LOCAL_SRC_FILES) \
-                 $(arm_sources:%.arm=%))
+$(foreach src,$(filter %.c,$(thumb_sources)), $(call compile-c-source,$(src)))
+$(foreach src,$(filter %.S,$(thumb_sources)), $(call compile-s-source,$(src)))
 
-s_sources := $(filter %.S, \
-                 $(LOCAL_SRC_FILES) \
-                 $(arm_sources:%.arm=%))
+$(foreach src,$(filter %$(LOCAL_CPP_EXTENSION),$(thumb_sources)),\
+    $(call compile-cpp-source,$(src)))
 
-cpp_sources := $(filter %$(LOCAL_CPP_EXTENSION), \
-                   $(LOCAL_SRC_FILES) \
-                   $(arm_sources:%.arm=%))
+# Then, the 'ARM' ones
+#
+LOCAL_ARM_MODE := arm
+arm_sources := $(arm_sources:%.arm=%)
+
+$(foreach src,$(filter %.c,$(arm_sources)), $(call compile-c-source,$(src)))
+$(foreach src,$(filter %.S,$(arm_sources)), $(call compile-s-source,$(src)))
+
+$(foreach src,$(filter %$(LOCAL_CPP_EXTENSION),$(arm_sources)),\
+    $(call compile-cpp-source,$(src)))
 
 #
-# The following will update LOCAL_OBJECTS and LOCAL_DEPENDENCY_DIRS
+# The compile-xxx-source calls updated LOCAL_OBJECTS and LOCAL_DEPENDENCY_DIRS
 #
-$(foreach src,$(c_sources),   $(call compile-c-source,$(src)))
-$(foreach src,$(s_sources),   $(call compile-s-source,$(src)))
-$(foreach src,$(cpp_sources), $(call compile-cpp-source,$(src)))
-
 ALL_DEPENDENCY_DIRS += $(sort $(LOCAL_DEPENDENCY_DIRS))
 CLEAN_OBJS_DIRS     += $(LOCAL_OBJS_DIR)
 
