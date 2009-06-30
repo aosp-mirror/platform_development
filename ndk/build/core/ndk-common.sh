@@ -24,12 +24,21 @@ PROGNAME=`basename $0`
 # perform a tiny amount of sanity check
 #
 if [ -z "$ANDROID_NDK_ROOT" ] ; then
-    if [ ! -f build/core/ndk-common.sh ] ; then
-        echo "Please define ANDROID_NDK_ROOT to point to the root of your"
-        echo "Android NDK installation."
-        exit 1
-    fi
-    ANDROID_NDK_ROOT=.
+    # Try to auto-detect the NDK root by walking up the directory
+    # path to the current script.
+    PROGDIR=`dirname $0`
+    while [ -n "1" ] ; do
+        if [ -d $PROGDIR/build/core ] ; then
+            break
+        fi
+        if [ -z $PROGDIR -o $PROGDIR = '.' ] ; then
+            echo "Please define ANDROID_NDK_ROOT to point to the root of your"
+            echo "Android NDK installation."
+            exit 1
+        fi
+        PROGDIR=`dirname $PROGDIR`
+    done
+    ANDROID_NDK_ROOT=`cd $PROGDIR && pwd`
 fi
 
 if [ ! -d $ANDROID_NDK_ROOT ] ; then

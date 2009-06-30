@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # Copyright (C) 2009 The Android Open Source Project
 #
@@ -51,37 +51,23 @@ add_config ()
     echo "$1" >> $config_mk
 }
 
-echo "Detecting host toolchain."
-echo ""
+echo "Detecting host platform."
 
 force_32bit_binaries
-setup_toolchain
-
 create_config_mk
 
 add_config "HOST_OS       := $HOST_OS"
 add_config "HOST_ARCH     := $HOST_ARCH"
 add_config "HOST_TAG      := $HOST_TAG"
-add_config "HOST_CC       := $CC"
-add_config "HOST_CFLAGS   := $CFLAGS"
-add_config "HOST_CXX      := $CXX"
-add_config "HOST_CXXFLAGS := $CXXFLAGS"
-add_config "HOST_LD       := $LD"
-add_config "HOST_LDFLAGS  := $LDFLAGS"
-add_config "HOST_AR       := $AR"
-add_config "HOST_ARFLAGS  := $ARFLAGS"
 
 ## Check that the toolchains we need are installed
 ## Otherwise, instruct the user to download them from the web site
 
 TOOLCHAINS=arm-eabi-4.2.1
 
-EXT=""
-[ "Windows_NT" == "$OS" ] && EXT=".exe"
-
 for tc in $TOOLCHAINS; do
     echo "Toolchain  : Checking for $tc prebuilt binaries"
-    COMPILER_PATTERN=$ANDROID_NDK_ROOT/build/prebuilt/$HOST_TAG/$tc/bin/*-gcc${EXT}
+    COMPILER_PATTERN=$ANDROID_NDK_ROOT/build/prebuilt/$HOST_TAG/$tc/bin/*-gcc$HOST_EXE
     COMPILERS=`ls $COMPILER_PATTERN 2> /dev/null`
     if [ -z $COMPILERS ] ; then
         echo ""
