@@ -36,9 +36,27 @@ import org.eclipse.swt.graphics.Image;
  *
  * This implementation is UI dependent.
  */
-class RepoSourcesAdapter {
+public class RepoSourcesAdapter {
 
     private final UpdaterData mUpdaterData;
+
+    public static class RepoSourceError implements IDescription {
+
+        private final RepoSource mSource;
+
+        public RepoSourceError(RepoSource source) {
+            mSource = source;
+        }
+
+        public String getLongDescription() {
+            return mSource.getLongDescription();
+        }
+
+        public String getShortDescription() {
+            return mSource.getFetchError();
+        }
+    }
+
 
     public RepoSourcesAdapter(UpdaterData updaterData) {
         mUpdaterData = updaterData;
@@ -55,7 +73,7 @@ class RepoSourcesAdapter {
 
     // ------------
 
-    public class ViewerLabelProvider extends LabelProvider {
+    private class ViewerLabelProvider extends LabelProvider {
 
         /** Returns an image appropriate for this element. */
         @Override
@@ -119,8 +137,7 @@ class RepoSourcesAdapter {
                 final RepoSource source = (RepoSource) parentElement;
                 Package[] packages = source.getPackages();
 
-                if (packages == null) {
-
+                if (packages == null && source.getFetchError() == null) {
                     final boolean forceHttp = mUpdaterData.getSettingsController().getForceHttp();
 
                     mUpdaterData.getTaskFactory().start("Loading Source", new ITask() {
@@ -133,6 +150,9 @@ class RepoSourcesAdapter {
                 }
                 if (packages != null) {
                     return packages;
+                } else if (source.getFetchError() != null) {
+                    // Return a dummy entry to display the fetch error
+                    return new Object[] { new RepoSourceError(source) };
                 }
 
             } else if (parentElement instanceof Package) {

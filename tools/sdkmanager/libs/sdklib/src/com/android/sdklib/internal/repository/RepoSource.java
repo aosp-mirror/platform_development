@@ -51,6 +51,7 @@ public class RepoSource implements IDescription {
 
     private Package[] mPackages;
     private String mDescription;
+    private String mFetchError;
 
     /**
      * Constructs a new source for the given repository URL.
@@ -97,6 +98,14 @@ public class RepoSource implements IDescription {
     }
 
     /**
+     * Returns the last fetch error description.
+     * If there was no error, returns null.
+     */
+    public String getFetchError() {
+        return mFetchError;
+    }
+
+    /**
      * Tries to fetch the repository index for the given URL.
      */
     public void load(ITaskMonitor monitor, boolean forceHttp) {
@@ -104,6 +113,8 @@ public class RepoSource implements IDescription {
         monitor.setProgressMax(4);
 
         setDefaultDescription();
+        mFetchError = null;        // reset fetch error
+
 
         String url = mUrl;
         if (forceHttp) {
@@ -117,6 +128,8 @@ public class RepoSource implements IDescription {
 
         if (xml == null) {
             mDescription += String.format("\nFailed to fetch URL %1$s", url);
+            mFetchError = "Failed to fetch URL";
+            monitor.setResult("Failed to fetch URL %1$s", url);
             return;
         }
 
@@ -125,6 +138,8 @@ public class RepoSource implements IDescription {
 
         if (!validateXml(xml, monitor)) {
             mDescription += String.format("\nFailed to validate XML at %1$s", url);
+            mFetchError = "Failed to validate XML";
+            monitor.setResult("\nFailed to validate XML at %1$s", url);
             return;
         }
 

@@ -24,6 +24,7 @@ import com.android.sdklib.internal.repository.Package;
 import com.android.sdklib.internal.repository.PlatformPackage;
 import com.android.sdklib.internal.repository.RepoSource;
 import com.android.sdklib.internal.repository.ToolPackage;
+import com.android.sdkuilib.internal.repository.RepoSourcesAdapter;
 
 import org.eclipse.swt.SWTException;
 import org.eclipse.swt.graphics.Image;
@@ -91,6 +92,9 @@ public class ImageFactory {
     public Image getImageForObject(Object object) {
         if (object instanceof RepoSource) {
             return getImageByName("source_icon16.png");
+
+        } else if (object instanceof RepoSourcesAdapter.RepoSourceError) {
+            return getImageByName("error_icon16.png");
 
         } else if (object instanceof PlatformPackage) {
             return getImageByName("android_icon_16.png");

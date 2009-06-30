@@ -359,7 +359,9 @@ class UpdaterData {
                 RepoSource[] sources = mSources.getSources();
                 monitor.setProgressMax(sources.length);
                 for (RepoSource source : sources) {
-                    if (forceFetching || source.getPackages() != null) {
+                    if (forceFetching ||
+                            source.getPackages() != null ||
+                            source.getFetchError() != null) {
                         source.load(monitor.createSubMonitor(1), forceHttp);
                     }
                     monitor.incProgress(1);
