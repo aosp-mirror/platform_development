@@ -23,7 +23,6 @@ import threading
 import time
 
 # local imports
-import android_build
 import errors
 import logger
 
@@ -129,16 +128,14 @@ def RunHostCommand(binary, valgrind=False):
   output are always discarded.
 
   Args:
-    binary: basename of the file to be run. It is expected to be under
-            out/host/<os>-<arch>/bin.
+    binary: full path of the file to be run.
     valgrind: If True the command will be run under valgrind.
 
   Returns:
     The command exit code (int)
   """
-  full_path = os.path.join(android_build.GetHostBin(), binary)
   if not valgrind:
-    subproc = subprocess.Popen(full_path, stdout=subprocess.PIPE,
+    subproc = subprocess.Popen(binary, stdout=subprocess.PIPE,
                                stderr=subprocess.STDOUT)
     subproc.wait()
     if subproc.returncode != 0:         # In case of error print the output
