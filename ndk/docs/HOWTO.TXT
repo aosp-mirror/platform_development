@@ -73,22 +73,22 @@ path to the 'foo' module in bar/Android.mk to build it properly.
 
 One is tempted to use the following:
 
-  LOCAL_CPPFLAGS := -I../foo
+  LOCAL_C_INCLUDES := ../foo
 
 However this will not work because all compilation happens from the
 root NDK directory (i.e. $NDK_ROOT), and include files must be relative
 to it. The above line really translates to:
 
-  LOCAL_CPPFLAGS := -I$(NDK_ROOT)/../foo
+  LOCAL_C_INCLUDES := $(NDK_ROOT)/../foo
 
 Which adds a non-existing directory to the C include path. The correct
 line is instead:
 
-  LOCAL_CPPFLAGS := -Isources/foo
+  LOCAL_C_INCLUDES := sources/foo
 
 Or even better:
 
-  LOCAL_CPPFLAGS := $(LOCAL_PATH)/../foo
+  LOCAL_C_INCLUDES := $(LOCAL_PATH)/../foo
 
 Which uses a path relative to $(LOCAL_PATH), in the case where you would
 need to move 'foo' and 'bar' to a deeper level in the 'sources' hierarchy.
