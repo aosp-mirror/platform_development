@@ -200,6 +200,7 @@ public final class AvdSelector {
             Button newButton = new Button(buttons, SWT.PUSH | SWT.FLAT);
             newButton.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
             newButton.setText("New...");
+            // TODO handle 'new' button.
 
             Button deleteButton = new Button(buttons, SWT.PUSH | SWT.FLAT);
             deleteButton.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
@@ -545,7 +546,7 @@ public final class AvdSelector {
 
                 }
 
-                //whether or not we display details. default: true when not in SIMPLE_CHECK mode.
+                // whether or not we display details. default: true when not in SIMPLE_CHECK mode.
                 boolean showDetails = mDisplayMode != DisplayMode.SIMPLE_CHECK;
 
                 if (mSelectionListener != null) {
