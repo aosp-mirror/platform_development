@@ -311,7 +311,7 @@ public final class AvdManager {
     private final ArrayList<AvdInfo> mAllAvdList = new ArrayList<AvdInfo>();
     private AvdInfo[] mValidAvdList;
     private AvdInfo[] mBrokenAvdList;
-    private final SdkManager mSdk;
+    private final SdkManager mSdkManager;
 
     /**
      * TODO remove this field. Each caller should give its own logger to the methods
@@ -323,10 +323,17 @@ public final class AvdManager {
      */
     private ISdkLog mSdkLog;
 
-    public AvdManager(SdkManager sdk, ISdkLog sdkLog) throws AndroidLocationException {
-        mSdk = sdk;
+    public AvdManager(SdkManager sdkManager, ISdkLog sdkLog) throws AndroidLocationException {
+        mSdkManager = sdkManager;
         mSdkLog = sdkLog;
         buildAvdList(mAllAvdList);
+    }
+
+    /**
+     * Returns the {@link SdkManager} associated with the {@link AvdManager}.
+     */
+    public SdkManager getSdkManager() {
+        return mSdkManager;
     }
 
     /**
@@ -407,7 +414,7 @@ public final class AvdManager {
             }
         } else {
             synchronized (mAllAvdList) {
-                for (AvdInfo info : getValidAvds()) {
+                for (AvdInfo info : mAllAvdList) {
                     if (info.getName().equals(name)) {
                         return info;
                     }
@@ -558,7 +565,7 @@ public final class AvdManager {
                         String path = sdcardFile.getAbsolutePath();
 
                         // execute mksdcard with the proper parameters.
-                        File toolsFolder = new File(mSdk.getLocation(), SdkConstants.FD_TOOLS);
+                        File toolsFolder = new File(mSdkManager.getLocation(), SdkConstants.FD_TOOLS);
                         File mkSdCard = new File(toolsFolder, SdkConstants.mkSdCardCmdName());
 
                         if (mkSdCard.isFile() == false) {
@@ -712,7 +719,7 @@ public final class AvdManager {
         String imageFullPath = target.getPath(IAndroidTarget.IMAGES);
 
         // make this path relative to the SDK location
-        String sdkLocation = mSdk.getLocation();
+        String sdkLocation = mSdkManager.getLocation();
         if (imageFullPath.startsWith(sdkLocation) == false) {
             // this really really should not happen.
             assert false;
@@ -757,7 +764,7 @@ public final class AvdManager {
         String path = skin.getAbsolutePath();
 
         // make this path relative to the SDK location
-        String sdkLocation = mSdk.getLocation();
+        String sdkLocation = mSdkManager.getLocation();
         if (path.startsWith(sdkLocation) == false) {
             // this really really should not happen.
             mSdkLog.error(null, "Target location is not inside the SDK.");
@@ -841,9 +848,9 @@ public final class AvdManager {
 
             File f = avdInfo.getIniFile();
             if (f != null && f.exists()) {
-                log.printf("Deleting file %1$s", f.getCanonicalPath());
+                log.printf("Deleting file %1$s\n", f.getCanonicalPath());
                 if (!f.delete()) {
-                    log.error(null, "Failed to delete %1$s", f.getCanonicalPath());
+                    log.error(null, "Failed to delete %1$s\n", f.getCanonicalPath());
                     error = true;
                 }
             }
@@ -852,10 +859,10 @@ public final class AvdManager {
             if (path != null) {
                 f = new File(path);
                 if (f.exists()) {
-                    log.printf("Deleting folder %1$s", f.getCanonicalPath());
+                    log.printf("Deleting folder %1$s\n", f.getCanonicalPath());
                     recursiveDelete(f);
                     if (!f.delete()) {
-                        log.error(null, "Failed to delete %1$s", f.getCanonicalPath());
+                        log.error(null, "Failed to delete %1$s\n", f.getCanonicalPath());
                         error = true;
                     }
                 }
@@ -864,10 +871,10 @@ public final class AvdManager {
             removeAvd(avdInfo);
 
             if (error) {
-                log.printf("\nAVD '%1$s' deleted with errors. See errors above.",
+                log.printf("\nAVD '%1$s' deleted with errors. See errors above.\n",
                         avdInfo.getName());
             } else {
-                log.printf("\nAVD '%1$s' deleted.", avdInfo.getName());
+                log.printf("\nAVD '%1$s' deleted.\n", avdInfo.getName());
                 return true;
             }
 
@@ -1031,7 +1038,7 @@ public final class AvdManager {
         Map<String, String> properties = null;
 
         if (targetHash != null) {
-            target = mSdk.getTargetFromHashString(targetHash);
+            target = mSdkManager.getTargetFromHashString(targetHash);
         }
 
         // load the AVD properties.
@@ -1055,13 +1062,13 @@ public final class AvdManager {
         if (properties != null) {
             String imageSysDir = properties.get(AVD_INI_IMAGES_1);
             if (imageSysDir != null) {
-                File f = new File(mSdk.getLocation() + File.separator + imageSysDir);
+                File f = new File(mSdkManager.getLocation() + File.separator + imageSysDir);
                 if (f.isDirectory() == false) {
                     validImageSysdir = false;
                 } else {
                     imageSysDir = properties.get(AVD_INI_IMAGES_2);
                     if (imageSysDir != null) {
-                        f = new File(mSdk.getLocation() + File.separator + imageSysDir);
+                        f = new File(mSdkManager.getLocation() + File.separator + imageSysDir);
                         if (f.isDirectory() == false) {
                             validImageSysdir = false;
                         }

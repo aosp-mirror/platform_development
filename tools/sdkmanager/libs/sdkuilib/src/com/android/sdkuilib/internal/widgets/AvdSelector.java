@@ -25,6 +25,7 @@ import com.android.sdklib.internal.avd.AvdManager.AvdInfo.AvdStatus;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
@@ -64,10 +65,10 @@ public final class AvdSelector {
     private final DisplayMode mDisplayMode;
     private Button mManagerButton;
     private IAvdFilter mTargetFilter;
-    private AvdManager mManager;
+    private AvdManager mAvdManager;
     private Image mOkImage;
     private Image mBrokenImage;
-    private ImageFactory mIconFactory;
+    private ImageFactory mImageFactory;
 
     /**
      * The display mode of the AVD Selector.
@@ -164,7 +165,7 @@ public final class AvdSelector {
             AvdManager manager,
             IAvdFilter filter,
             DisplayMode displayMode) {
-        mManager = manager;
+        mAvdManager = manager;
         mTargetFilter = filter;
         mDisplayMode = displayMode;
 
@@ -177,7 +178,7 @@ public final class AvdSelector {
         group.setFont(parent.getFont());
         group.addDisposeListener(new DisposeListener() {
             public void widgetDisposed(DisposeEvent arg0) {
-                mIconFactory.dispose();
+                mImageFactory.dispose();
             }
         });
 
@@ -200,7 +201,12 @@ public final class AvdSelector {
             Button newButton = new Button(buttons, SWT.PUSH | SWT.FLAT);
             newButton.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
             newButton.setText("New...");
-            // TODO handle 'new' button.
+            newButton.addSelectionListener(new SelectionAdapter() {
+                @Override
+                public void widgetSelected(SelectionEvent arg0) {
+                    onNew();
+                }
+            });
 
             Button deleteButton = new Button(buttons, SWT.PUSH | SWT.FLAT);
             deleteButton.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
@@ -262,9 +268,9 @@ public final class AvdSelector {
         column3.setText("API Level");
 
         // get some bitmaps.
-        mIconFactory = new ImageFactory(parent.getDisplay());
-        mOkImage = mIconFactory.getImageByName("accept_icon16.png");
-        mBrokenImage = mIconFactory.getImageByName("reject_icon16.png");
+        mImageFactory = new ImageFactory(parent.getDisplay());
+        mOkImage = mImageFactory.getImageByName("accept_icon16.png");
+        mBrokenImage = mImageFactory.getImageByName("reject_icon16.png");
 
         adjustColumnsWidth(mTable, column0, column1, column2, column3);
         setupSelectionListener(mTable);
@@ -331,7 +337,7 @@ public final class AvdSelector {
     public boolean refresh(boolean reload) {
         if (reload) {
             try {
-                mManager.reloadAvds();
+                mAvdManager.reloadAvds();
             } catch (AndroidLocationException e) {
                 return false;
             }
@@ -352,7 +358,7 @@ public final class AvdSelector {
      * @param manager the AVD manager.
      */
     public void setManager(AvdManager manager) {
-        mManager = manager;
+        mAvdManager = manager;
     }
 
     /**
@@ -595,11 +601,11 @@ public final class AvdSelector {
 
         // get the AVDs
         AvdInfo avds[] = null;
-        if (mManager != null) {
+        if (mAvdManager != null) {
             if (mDisplayMode == DisplayMode.MANAGER) {
-                avds = mManager.getAllAvds();
+                avds = mAvdManager.getAllAvds();
             } else {
-                avds = mManager.getValidAvds();
+                avds = mAvdManager.getValidAvds();
             }
         }
 
@@ -647,6 +653,14 @@ public final class AvdSelector {
         }
     }
 
+    private void onNew() {
+        AvdCreationDialog dlg = new AvdCreationDialog(mTable.getShell(), mAvdManager,
+                mImageFactory);
+        if (dlg.open() == Window.OK) {
+            refresh(false /*reload*/);
+        }
+    }
+
     private void onDetails() {
         final AvdInfo avdInfo = getSelected();
 
@@ -683,20 +697,20 @@ public final class AvdSelector {
                 display);
 
         // delete the AVD
-        boolean success = mManager.deleteAvd(avdInfo, log);
+        boolean success = mAvdManager.deleteAvd(avdInfo, log);
 
         // display the result
         log.displayResult(success);
 
         if (success) {
-            refresh(false);
+            refresh(false /*reload*/);
         }
     }
 
     /**
      * Collects all log from the AVD action and displays it in a dialog.
      */
-    private class SdkLog implements ISdkLog {
+    static class SdkLog implements ISdkLog {
 
         final ArrayList<String> logMessages = new ArrayList<String>();
         private final String mMessage;
@@ -730,9 +744,8 @@ public final class AvdSelector {
          */
         public void displayResult(final boolean success) {
             if (logMessages.size() > 0) {
-                final StringBuilder sb = new StringBuilder(mMessage + "\n");
+                final StringBuilder sb = new StringBuilder(mMessage + "\n\n");
                 for (String msg : logMessages) {
-                    sb.append('\n');
                     sb.append(msg);
                 }
 
@@ -754,6 +767,4 @@ public final class AvdSelector {
             }
         }
     }
-
-
 }

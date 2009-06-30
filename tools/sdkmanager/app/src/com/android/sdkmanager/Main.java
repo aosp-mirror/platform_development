@@ -239,6 +239,9 @@ class Main {
      */
     private void showMainWindow() {
         try {
+            // display a message talking about the command line version
+            System.out.printf("No command line parameters provided, launching UI.\n" +
+                    "See 'android --help' for operations from the command line.\n");
             UpdaterWindow window = new UpdaterWindow(
                     mSdkLog,
                     mOsSdkFolder,
