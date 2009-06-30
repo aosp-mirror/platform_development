@@ -25,6 +25,7 @@ import org.w3c.dom.Node;
 
 import java.io.File;
 import java.util.Map;
+import java.util.Properties;
 
 /**
  * Represents a tool XML node in an SDK repository.
@@ -41,11 +42,13 @@ public class ToolPackage extends Package {
     }
 
     /**
-     * Manually create a new package with one archive and the given attributes.
+     * Manually create a new package with one archive and the given attributes or properties.
      * This is used to create packages from local directories in which case there must be
      * one archive which URL is the actual target location.
      */
-    ToolPackage(RepoSource source,
+    ToolPackage(
+            RepoSource source,
+            Properties props,
             int revision,
             String license,
             String description,
@@ -54,6 +57,7 @@ public class ToolPackage extends Package {
             Arch archiveArch,
             String archiveOsPath) {
         super(source,
+                props,
                 revision,
                 license,
                 description,

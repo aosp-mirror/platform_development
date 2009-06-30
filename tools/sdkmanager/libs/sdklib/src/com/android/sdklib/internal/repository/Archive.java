@@ -26,6 +26,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Properties;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -43,6 +44,8 @@ import java.util.zip.ZipInputStream;
 public class Archive implements IDescription {
 
     public static final int NUM_MONITOR_INC = 100;
+    private static final String PROP_OS   = "Archive.Os";       //$NON-NLS-1$
+    private static final String PROP_ARCH = "Archive.Arch";     //$NON-NLS-1$
 
     /** The checksum type. */
     public enum ChecksumType {
@@ -175,16 +178,28 @@ public class Archive implements IDescription {
 
     /**
      * Creates a new local archive.
+     * Uses the properties from props first, if possible. Props can be null.
      */
-    Archive(Package pkg, Os os, Arch arch, String localOsPath) {
+    Archive(Package pkg, Properties props, Os os, Arch arch, String localOsPath) {
         mPackage = pkg;
-        mOs = os;
-        mArch = arch;
+
+        mOs   = props == null ? os   : Os.valueOf(  props.getProperty(PROP_OS,   os.toString()));
+        mArch = props == null ? arch : Arch.valueOf(props.getProperty(PROP_ARCH, arch.toString()));
+
         mUrl = null;
         mLocalOsPath = localOsPath;
         mSize = 0;
         mChecksum = "";
         mIsLocal = true;
+    }
+
+    /**
+     * Save the properties of the current archive in the give {@link Properties} object.
+     * These properties will later be give the constructor that takes a {@link Properties} object.
+     */
+    void saveProperties(Properties props) {
+        props.setProperty(PROP_OS,   mOs.toString());
+        props.setProperty(PROP_ARCH, mArch.toString());
     }
 
     /**
@@ -623,6 +638,10 @@ public class Archive implements IDescription {
                 return false;
             }
 
+            if (!generateSourceProperties(unzipDestFolder)) {
+                return false;
+            }
+
             // Compute destination directory
             destFolder = getParentPackage().getInstallFolder(
                     osSdkRoot, zipRootFolder[0], sdkManager);
@@ -848,5 +867,40 @@ public class Archive implements IDescription {
             }
         }
     }
-}
 
+    /**
+     * Generates a source.properties in the destination folder that contains all the infos
+     * relevant to this archive, this package and the source so that we can reload them
+     * locally later.
+     */
+    private boolean generateSourceProperties(File unzipDestFolder) {
+        Properties props = new Properties();
+
+        saveProperties(props);
+        mPackage.saveProperties(props);
+
+        FileOutputStream fos = null;
+        try {
+            File f = new File(unzipDestFolder, LocalSdkParser.SOURCE_PROPERTIES);
+
+            fos = new FileOutputStream(f);
+
+            props.store( fos, "## Android Tool: Source of this archive.");  //$NON-NLS-1$
+
+            return true;
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (fos != null) {
+                try {
+                    fos.close();
+                } catch (IOException e) {
+                }
+            }
+        }
+
+        return false;
+    }
+
+
+}

@@ -26,11 +26,14 @@ import org.w3c.dom.Node;
 
 import java.io.File;
 import java.util.Map;
+import java.util.Properties;
 
 /**
  * Represents a doc XML node in an SDK repository.
  */
 public class DocPackage extends Package {
+
+    private static final String PROP_API_LEVEL = "Doc.ApiLevel";  //$NON-NLS-1$
 
     private final int mApiLevel;
 
@@ -50,6 +53,7 @@ public class DocPackage extends Package {
      * one archive which URL is the actual target location.
      */
     DocPackage(RepoSource source,
+            Properties props,
             int apiLevel,
             int revision,
             String license,
@@ -59,6 +63,7 @@ public class DocPackage extends Package {
             Arch archiveArch,
             String archiveOsPath) {
         super(source,
+                props,
                 revision,
                 license,
                 description,
@@ -66,7 +71,19 @@ public class DocPackage extends Package {
                 archiveOs,
                 archiveArch,
                 archiveOsPath);
-        mApiLevel = apiLevel;
+        mApiLevel = Integer.parseInt(
+                        getProperty(props, PROP_API_LEVEL, Integer.toString(apiLevel)));
+    }
+
+    /**
+     * Save the properties of the current packages in the given {@link Properties} object.
+     * These properties will later be give the constructor that takes a {@link Properties} object.
+     */
+    @Override
+    void saveProperties(Properties props) {
+        super.saveProperties(props);
+
+        props.setProperty(PROP_API_LEVEL, Integer.toString(mApiLevel));
     }
 
     /** Returns the api-level, an int > 0, for platform, add-on and doc packages.
