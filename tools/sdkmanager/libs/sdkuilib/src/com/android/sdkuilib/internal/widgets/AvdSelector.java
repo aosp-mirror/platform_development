@@ -23,6 +23,7 @@ import com.android.sdklib.internal.avd.AvdManager;
 import com.android.sdklib.internal.avd.AvdManager.AvdInfo;
 import com.android.sdklib.internal.avd.AvdManager.AvdInfo.AvdStatus;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
+import com.android.sdkuilib.repository.UpdaterWindow;
 
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.window.Window;
@@ -252,7 +253,7 @@ public final class AvdSelector {
             mManagerButton.addSelectionListener(new SelectionAdapter() {
                 @Override
                 public void widgetSelected(SelectionEvent e) {
-                    super.widgetSelected(e);
+                    onManager();
                 }
             });
         }
@@ -705,6 +706,16 @@ public final class AvdSelector {
         if (success) {
             refresh(false /*reload*/);
         }
+    }
+
+    private void onManager() {
+        UpdaterWindow window = new UpdaterWindow(
+                mTable.getShell(),
+                null /*sdk log*/,
+                mAvdManager.getSdkManager().getLocation(),
+                false /*userCanChangeSdkRoot*/);
+        window.open();
+        refresh(true /*reload*/); // UpdaterWindow uses its own AVD manager so this one must reload.
     }
 
     /**

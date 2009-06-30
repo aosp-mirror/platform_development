@@ -243,6 +243,7 @@ class Main {
             System.out.printf("No command line parameters provided, launching UI.\n" +
                     "See 'android --help' for operations from the command line.\n");
             UpdaterWindow window = new UpdaterWindow(
+                    null /* parentShell */,
                     mSdkLog,
                     mOsSdkFolder,
                     false /*userCanChangeSdkRoot*/);
