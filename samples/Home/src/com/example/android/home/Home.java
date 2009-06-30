@@ -259,7 +259,8 @@ public class Home extends Activity {
                 mFavorites = new LinkedList<ApplicationInfo>();
             } else {
                 mFavorites.clear();
-            }            
+            }
+            mApplicationsStack.setFavorites(mFavorites);            
             
             FileReader favReader;
 
