@@ -46,6 +46,7 @@ import java.util.ArrayList;
  */
 public class UpdaterWindowImpl {
 
+    private final Shell mParentShell;
     /** Internal data shared between the window and its pages. */
     private final UpdaterData mUpdaterData;
     /** The array of pages instances. Only one is visible at a time. */
@@ -70,7 +71,9 @@ public class UpdaterWindowImpl {
     private AvdManagerPage mAvdManagerPage;
     private StackLayout mStackLayout;
 
-    public UpdaterWindowImpl(ISdkLog sdkLog, String osSdkRoot, boolean userCanChangeSdkRoot) {
+    public UpdaterWindowImpl(Shell parentShell, ISdkLog sdkLog, String osSdkRoot,
+            boolean userCanChangeSdkRoot) {
+        mParentShell = parentShell;
         mUpdaterData = new UpdaterData(osSdkRoot, sdkLog);
         mUpdaterData.setUserCanChangeSdkRoot(userCanChangeSdkRoot);
     }
@@ -80,7 +83,9 @@ public class UpdaterWindowImpl {
      * @wbp.parser.entryPoint
      */
     public void open() {
-        Display.setAppName("Android"); //$hide$ (hide from SWT designer)
+        if (mParentShell == null) {
+            Display.setAppName("Android"); //$hide$ (hide from SWT designer)
+        }
 
         createContents();
         mAndroidSdkUpdater.open();
@@ -102,7 +107,7 @@ public class UpdaterWindowImpl {
      * Create contents of the window.
      */
     protected void createContents() {
-        mAndroidSdkUpdater = new Shell();
+        mAndroidSdkUpdater = new Shell(mParentShell);
         mAndroidSdkUpdater.addDisposeListener(new DisposeListener() {
             public void widgetDisposed(DisposeEvent e) {
                 onAndroidSdkUpdaterDispose();    //$hide$ (hide from SWT designer)
@@ -251,6 +256,10 @@ public class UpdaterWindowImpl {
      */
     @SuppressWarnings("unchecked")
     private void addExtraPages() {
+        if (mExtraPages == null) {
+            return;
+        }
+
         for (Object[] extraPage : mExtraPages) {
             String title = (String) extraPage[0];
             Class<? extends Composite> clazz = (Class<? extends Composite>) extraPage[1];

@@ -20,6 +20,7 @@ import com.android.sdklib.ISdkLog;
 import com.android.sdkuilib.internal.repository.UpdaterWindowImpl;
 
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Shell;
 
 /**
  * Opens an SDK Updater Window.
@@ -37,8 +38,9 @@ public class UpdaterWindow {
      * @param userCanChangeSdkRoot If true, the window lets the user change the SDK path
      *                             being browsed.
      */
-    public UpdaterWindow(ISdkLog sdkLog, String osSdkRoot, boolean userCanChangeSdkRoot) {
-        mWindow = new UpdaterWindowImpl(sdkLog, osSdkRoot, userCanChangeSdkRoot);
+    public UpdaterWindow(Shell parentShell, ISdkLog sdkLog, String osSdkRoot,
+            boolean userCanChangeSdkRoot) {
+        mWindow = new UpdaterWindowImpl(parentShell, sdkLog, osSdkRoot, userCanChangeSdkRoot);
     }
 
     /**
