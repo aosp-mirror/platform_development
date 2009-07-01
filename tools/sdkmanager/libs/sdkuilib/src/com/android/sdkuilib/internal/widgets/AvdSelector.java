@@ -180,6 +180,11 @@ public final class AvdSelector {
         mTargetFilter = filter;
         mDisplayMode = displayMode;
 
+        // get some bitmaps.
+        mImageFactory = new ImageFactory(parent.getDisplay());
+        mOkImage = mImageFactory.getImageByName("accept_icon16.png");
+        mBrokenImage = mImageFactory.getImageByName("reject_icon16.png");
+
         // Layout has 2 columns
         Composite group = new Composite(parent, SWT.NONE);
         GridLayout gl;
@@ -211,7 +216,8 @@ public final class AvdSelector {
         if (displayMode == DisplayMode.MANAGER) {
             mNewButton = new Button(buttons, SWT.PUSH | SWT.FLAT);
             mNewButton.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-            mNewButton.setText("New...");
+            mNewButton.setText("Add...");
+            mNewButton.setToolTipText("Adds a new AVD.");
             mNewButton.addSelectionListener(new SelectionAdapter() {
                 @Override
                 public void widgetSelected(SelectionEvent arg0) {
@@ -222,6 +228,7 @@ public final class AvdSelector {
             mDeleteButton = new Button(buttons, SWT.PUSH | SWT.FLAT);
             mDeleteButton.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
             mDeleteButton.setText("Delete");
+            mDeleteButton.setToolTipText("Deletes the selected AVD.");
             mDeleteButton.addSelectionListener(new SelectionAdapter() {
                 @Override
                 public void widgetSelected(SelectionEvent arg0) {
@@ -236,6 +243,7 @@ public final class AvdSelector {
         mDetailsButton = new Button(buttons, SWT.PUSH | SWT.FLAT);
         mDetailsButton.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         mDetailsButton.setText("Details...");
+        mDetailsButton.setToolTipText("Diplays details of the selected AVD.");
         mDetailsButton.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent arg0) {
@@ -249,6 +257,7 @@ public final class AvdSelector {
         mRefreshButton = new Button(buttons, SWT.PUSH | SWT.FLAT);
         mRefreshButton.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         mRefreshButton.setText("Resfresh");
+        mRefreshButton.setToolTipText("Reloads the list of AVD.\nUse this if you create AVD from the command line.");
         mRefreshButton.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent arg0) {
@@ -260,12 +269,26 @@ public final class AvdSelector {
             mManagerButton = new Button(buttons, SWT.PUSH | SWT.FLAT);
             mManagerButton.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
             mManagerButton.setText("Manager...");
+            mManagerButton.setToolTipText("Launches the AVD manager.");
             mManagerButton.addSelectionListener(new SelectionAdapter() {
                 @Override
                 public void widgetSelected(SelectionEvent e) {
                     onManager();
                 }
             });
+        } else {
+            Composite legend = new Composite(group, SWT.NONE);
+            legend.setLayout(gl = new GridLayout(2, false /*makeColumnsEqualWidth*/));
+            gl.marginHeight = gl.marginWidth = 0;
+            legend.setLayoutData(new GridData(GridData.FILL, GridData.BEGINNING, true, false,
+                    NUM_COL, 1));
+            legend.setFont(group.getFont());
+
+            new Label(legend, SWT.NONE).setImage(mOkImage);
+            new Label(legend, SWT.NONE).setText("A valid Android Virtual Device.");
+            new Label(legend, SWT.NONE).setImage(mBrokenImage);
+            new Label(legend, SWT.NONE).setText(
+                    "An Android Virtual Device that failed to load. Click 'Details' to see the error.");
         }
 
         // create the table columns
@@ -277,11 +300,6 @@ public final class AvdSelector {
         column2.setText("Platform");
         final TableColumn column3 = new TableColumn(mTable, SWT.NONE);
         column3.setText("API Level");
-
-        // get some bitmaps.
-        mImageFactory = new ImageFactory(parent.getDisplay());
-        mOkImage = mImageFactory.getImageByName("accept_icon16.png");
-        mBrokenImage = mImageFactory.getImageByName("reject_icon16.png");
 
         adjustColumnsWidth(mTable, column0, column1, column2, column3);
         setupSelectionListener(mTable);
