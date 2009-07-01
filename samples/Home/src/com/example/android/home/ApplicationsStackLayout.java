@@ -27,10 +27,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.LayoutInflater;
 import android.widget.TextView;
-import android.*;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * The ApplicationsStackLayout is a specialized layout used for the purpose of the home screen
