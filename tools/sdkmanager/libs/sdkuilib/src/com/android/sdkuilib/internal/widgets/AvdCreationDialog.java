@@ -48,7 +48,7 @@ import org.eclipse.swt.widgets.Text;
 import java.io.File;
 import java.util.TreeMap;
 
-public class AvdCreationDialog extends Dialog {
+final class AvdCreationDialog extends Dialog {
 
     private final AvdManager mAvdManager;
     private final TreeMap<String, IAndroidTarget> mCurrentTargets =

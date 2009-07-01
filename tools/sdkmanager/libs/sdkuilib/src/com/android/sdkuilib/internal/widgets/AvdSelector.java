@@ -59,17 +59,27 @@ import java.util.ArrayList;
  * and finally use {@link #getSelected()} to retrieve the selection.
  */
 public final class AvdSelector {
-    private SelectionListener mSelectionListener;
-    private Table mTable;
-
     private static int NUM_COL = 2;
+
     private final DisplayMode mDisplayMode;
-    private Button mManagerButton;
-    private IAvdFilter mTargetFilter;
+
     private AvdManager mAvdManager;
+
+    private Table mTable;
+    private Button mDeleteButton;
+    private Button mDetailsButton;
+    private Button mNewButton;
+    private Button mRefreshButton;
+    private Button mManagerButton;
+
+    private SelectionListener mSelectionListener;
+    private IAvdFilter mTargetFilter;
+
+    private boolean mIsEnabled = true;
+
+    private ImageFactory mImageFactory;
     private Image mOkImage;
     private Image mBrokenImage;
-    private ImageFactory mImageFactory;
 
     /**
      * The display mode of the AVD Selector.
@@ -199,20 +209,20 @@ public final class AvdSelector {
         buttons.setFont(group.getFont());
 
         if (displayMode == DisplayMode.MANAGER) {
-            Button newButton = new Button(buttons, SWT.PUSH | SWT.FLAT);
-            newButton.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-            newButton.setText("New...");
-            newButton.addSelectionListener(new SelectionAdapter() {
+            mNewButton = new Button(buttons, SWT.PUSH | SWT.FLAT);
+            mNewButton.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+            mNewButton.setText("New...");
+            mNewButton.addSelectionListener(new SelectionAdapter() {
                 @Override
                 public void widgetSelected(SelectionEvent arg0) {
                     onNew();
                 }
             });
 
-            Button deleteButton = new Button(buttons, SWT.PUSH | SWT.FLAT);
-            deleteButton.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-            deleteButton.setText("Delete");
-            deleteButton.addSelectionListener(new SelectionAdapter() {
+            mDeleteButton = new Button(buttons, SWT.PUSH | SWT.FLAT);
+            mDeleteButton.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+            mDeleteButton.setText("Delete");
+            mDeleteButton.addSelectionListener(new SelectionAdapter() {
                 @Override
                 public void widgetSelected(SelectionEvent arg0) {
                     onDelete();
@@ -223,10 +233,10 @@ public final class AvdSelector {
             l.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         }
 
-        Button infoButton = new Button(buttons, SWT.PUSH | SWT.FLAT);
-        infoButton.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-        infoButton.setText("Details...");
-        infoButton.addSelectionListener(new SelectionAdapter() {
+        mDetailsButton = new Button(buttons, SWT.PUSH | SWT.FLAT);
+        mDetailsButton.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        mDetailsButton.setText("Details...");
+        mDetailsButton.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent arg0) {
                 onDetails();
@@ -236,10 +246,10 @@ public final class AvdSelector {
         Composite padding = new Composite(buttons, SWT.NONE);
         padding.setLayoutData(new GridData(GridData.FILL_VERTICAL));
 
-        Button refreshButton = new Button(buttons, SWT.PUSH | SWT.FLAT);
-        refreshButton.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-        refreshButton.setText("Resfresh");
-        refreshButton.addSelectionListener(new SelectionAdapter() {
+        mRefreshButton = new Button(buttons, SWT.PUSH | SWT.FLAT);
+        mRefreshButton.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        mRefreshButton.setText("Resfresh");
+        mRefreshButton.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent arg0) {
                 refresh(true);
@@ -452,11 +462,14 @@ public final class AvdSelector {
             mSelectionListener.widgetSelected(null);
         }
 
+        enableActionButtons();
+
         return found;
     }
 
     /**
-     * Returns the currently selected item.
+     * Returns the currently selected item. In {@link DisplayMode#SIMPLE_CHECK} mode this will
+     * return the {@link AvdInfo} that is checked instead of the list selection.
      *
      * @return The currently selected item or null.
      */
@@ -485,7 +498,23 @@ public final class AvdSelector {
      * @param enabled the new enabled state.
      */
     public void setEnabled(boolean enabled) {
-        mTable.setEnabled(enabled);
+        mIsEnabled = enabled;
+
+        mTable.setEnabled(mIsEnabled);
+        mRefreshButton.setEnabled(mIsEnabled);
+
+        if (mNewButton != null) {
+            mNewButton.setEnabled(mIsEnabled);
+        }
+        if (mManagerButton != null) {
+            mManagerButton.setEnabled(mIsEnabled);
+        }
+
+        enableActionButtons();
+    }
+
+    public boolean isEnabled() {
+        return mIsEnabled;
     }
 
     /**
@@ -533,6 +562,8 @@ public final class AvdSelector {
                 if (mSelectionListener != null) {
                     mSelectionListener.widgetSelected(e);
                 }
+
+                enableActionButtons();
             }
 
             /**
@@ -564,6 +595,8 @@ public final class AvdSelector {
                 if (showDetails) {
                     onDetails();
                 }
+
+                enableActionButtons();
             }
 
             /**
@@ -654,6 +687,30 @@ public final class AvdSelector {
         }
     }
 
+    /**
+     * Returns the currently selected AVD in the table.
+     * <p/>
+     * Unlike {@link #getSelected()} this will always return the item being selected
+     * in the list, ignoring the check boxes state in {@link DisplayMode#SIMPLE_CHECK} mode.
+     */
+    private AvdInfo getTableSelection() {
+        int selIndex = mTable.getSelectionIndex();
+        if (selIndex >= 0) {
+            return (AvdInfo) mTable.getItem(selIndex).getData();
+        }
+
+        return null;
+    }
+
+    private void enableActionButtons() {
+        boolean enabled = mIsEnabled == false ? false : getTableSelection() != null;
+
+        mDetailsButton.setEnabled(enabled);
+        if (mDeleteButton != null) {
+            mDeleteButton.setEnabled(enabled);
+        }
+    }
+
     private void onNew() {
         AvdCreationDialog dlg = new AvdCreationDialog(mTable.getShell(), mAvdManager,
                 mImageFactory);
@@ -663,14 +720,14 @@ public final class AvdSelector {
     }
 
     private void onDetails() {
-        final AvdInfo avdInfo = getSelected();
+        final AvdInfo avdInfo = getTableSelection();
 
         AvdDetailsDialog dlg = new AvdDetailsDialog(mTable.getShell(), avdInfo);
         dlg.open();
     }
 
     private void onDelete() {
-        final AvdInfo avdInfo = getSelected();
+        final AvdInfo avdInfo = getTableSelection();
 
         // get the current Display
         final Display display = mTable.getDisplay();
