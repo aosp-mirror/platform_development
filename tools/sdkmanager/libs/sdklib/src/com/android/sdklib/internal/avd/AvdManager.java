@@ -57,10 +57,10 @@ public final class AvdManager {
         }
     }
 
-    public static final String AVD_FOLDER_EXTENSION = ".avd";
+    public static final String AVD_FOLDER_EXTENSION = ".avd";  //$NON-NLS-1$
 
-    public final static String AVD_INFO_PATH = "path";
-    public final static String AVD_INFO_TARGET = "target";
+    public final static String AVD_INFO_PATH = "path";         //$NON-NLS-1$
+    public final static String AVD_INFO_TARGET = "target";     //$NON-NLS-1$
 
     /**
      * AVD/config.ini key name representing the SDK-relative path of the skin folder, if any,
@@ -68,14 +68,14 @@ public final class AvdManager {
      *
      * @see #NUMERIC_SKIN_SIZE
      */
-    public final static String AVD_INI_SKIN_PATH = "skin.path";
+    public final static String AVD_INI_SKIN_PATH = "skin.path"; //$NON-NLS-1$
     /**
      * AVD/config.ini key name representing an UI name for the skin.
      * This config key is ignored by the emulator. It is only used by the SDK manager or
      * tools to give a friendlier name to the skin.
      * If missing, use the {@link #AVD_INI_SKIN_PATH} key instead.
      */
-    public final static String AVD_INI_SKIN_NAME = "skin.name";
+    public final static String AVD_INI_SKIN_NAME = "skin.name"; //$NON-NLS-1$
     /**
      * AVD/config.ini key name representing the path to the sdcard file.
      * If missing, the default name "sdcard.img" will be used for the sdcard, if there's such
@@ -83,14 +83,14 @@ public final class AvdManager {
      *
      * @see #SDCARD_IMG
      */
-    public final static String AVD_INI_SDCARD_PATH = "sdcard.path";
+    public final static String AVD_INI_SDCARD_PATH = "sdcard.path"; //$NON-NLS-1$
     /**
      * AVD/config.ini key name representing the size of the SD card.
      * This property is for UI purposes only. It is not used by the emulator.
      *
      * @see #SDCARD_SIZE_PATTERN
      */
-    public final static String AVD_INI_SDCARD_SIZE = "sdcard.size";
+    public final static String AVD_INI_SDCARD_SIZE = "sdcard.size"; //$NON-NLS-1$
     /**
      * AVD/config.ini key name representing the first path where the emulator looks
      * for system images. Typically this is the path to the add-on system image or
@@ -98,43 +98,44 @@ public final class AvdManager {
      * <p/>
      * The emulator looks at {@link #AVD_INI_IMAGES_1} before {@link #AVD_INI_IMAGES_2}.
      */
-    public final static String AVD_INI_IMAGES_1 = "image.sysdir.1";
+    public final static String AVD_INI_IMAGES_1 = "image.sysdir.1"; //$NON-NLS-1$
     /**
      * AVD/config.ini key name representing the second path where the emulator looks
      * for system images. Typically this is the path to the platform system image.
      *
      * @see #AVD_INI_IMAGES_1
      */
-    public final static String AVD_INI_IMAGES_2 = "image.sysdir.2";
+    public final static String AVD_INI_IMAGES_2 = "image.sysdir.2"; //$NON-NLS-1$
 
     /**
      * Pattern to match pixel-sized skin "names", e.g. "320x480".
      */
-    public final static Pattern NUMERIC_SKIN_SIZE = Pattern.compile("[0-9]{2,}x[0-9]{2,}");
+    public final static Pattern NUMERIC_SKIN_SIZE = Pattern.compile("[0-9]{2,}x[0-9]{2,}"); //$NON-NLS-1$
 
-    private final static String USERDATA_IMG = "userdata.img";
-    private final static String CONFIG_INI = "config.ini";
-    private final static String SDCARD_IMG = "sdcard.img";
+    private final static String USERDATA_IMG = "userdata.img"; //$NON-NLS-1$
+    private final static String CONFIG_INI = "config.ini"; //$NON-NLS-1$
+    private final static String SDCARD_IMG = "sdcard.img"; //$NON-NLS-1$
 
-    private final static String INI_EXTENSION = ".ini";
-    private final static Pattern INI_NAME_PATTERN = Pattern.compile("(.+)\\" + INI_EXTENSION + "$",
+    private final static String INI_EXTENSION = ".ini"; //$NON-NLS-1$
+    private final static Pattern INI_NAME_PATTERN = Pattern.compile("(.+)\\" + //$NON-NLS-1$
+            INI_EXTENSION + "$",                                               //$NON-NLS-1$
             Pattern.CASE_INSENSITIVE);
 
-    private final static Pattern IMAGE_NAME_PATTERN = Pattern.compile("(.+)\\.img$",
+    private final static Pattern IMAGE_NAME_PATTERN = Pattern.compile("(.+)\\.img$", //$NON-NLS-1$
             Pattern.CASE_INSENSITIVE);
 
     /**
      * Pattern for matching SD Card sizes, e.g. "4K" or "16M".
      */
-    public final static Pattern SDCARD_SIZE_PATTERN = Pattern.compile("\\d+[MK]");
+    public final static Pattern SDCARD_SIZE_PATTERN = Pattern.compile("\\d+[MK]"); //$NON-NLS-1$
 
     /** Regex used to validate characters that compose an AVD name. */
-    public final static Pattern RE_AVD_NAME = Pattern.compile("[a-zA-Z0-9._-]+");
+    public final static Pattern RE_AVD_NAME = Pattern.compile("[a-zA-Z0-9._-]+"); //$NON-NLS-1$
 
     /** List of valid characters for an AVD name. Used for display purposes. */
-    public final static String CHARS_AVD_NAME = "a-z A-Z 0-9 . _ -";
+    public final static String CHARS_AVD_NAME = "a-z A-Z 0-9 . _ -"; //$NON-NLS-1$
 
-    public final static String HARDWARE_INI = "hardware.ini";
+    public final static String HARDWARE_INI = "hardware.ini"; //$NON-NLS-1$
 
     /** An immutable structure describing an Android Virtual Device. */
     public static final class AvdInfo {
@@ -612,17 +613,14 @@ public final class AvdManager {
             }
 
             // get the hardware properties for this skin
-            File skinFile = getSkinPath(skinName, target);
-            if (skinFile.isDirectory()) { // this should not fail since we got the skin
-                                          // name from the target
-                File skinHardwareFile = new File(skinFile, AvdManager.HARDWARE_INI);
-                if (skinHardwareFile.isFile()) {
-                    Map<String, String> skinHardwareConfig = SdkManager.parsePropertyFile(
-                            skinHardwareFile, mSdkLog);
-                    if (skinHardwareConfig != null) {
-                        finalHardwareValues.putAll(skinHardwareConfig);
-                        values.putAll(skinHardwareConfig);
-                    }
+            File skinFolder = getSkinPath(skinName, target);
+            File skinHardwareFile = new File(skinFolder, AvdManager.HARDWARE_INI);
+            if (skinHardwareFile.isFile()) {
+                Map<String, String> skinHardwareConfig = SdkManager.parsePropertyFile(
+                        skinHardwareFile, mSdkLog);
+                if (skinHardwareConfig != null) {
+                    finalHardwareValues.putAll(skinHardwareConfig);
+                    values.putAll(skinHardwareConfig);
                 }
             }
 
