@@ -36,6 +36,7 @@ import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.internal.wizards.actions.AvdManagerAction;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.IAndroidTarget;
+import com.android.sdklib.NullSdkLog;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.avd.AvdManager;
 import com.android.sdklib.internal.avd.AvdManager.AvdInfo;
@@ -301,7 +302,7 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
 
         // reload the AVDs to make sure we are up to date
         try {
-            avdManager.reloadAvds();
+            avdManager.reloadAvds(NullSdkLog.getLogger());
         } catch (AndroidLocationException e1) {
             // this happens if the AVD Manager failed to find the folder in which the AVDs are
             // stored. This is unlikely to happen, but if it does, we should force to go manual
