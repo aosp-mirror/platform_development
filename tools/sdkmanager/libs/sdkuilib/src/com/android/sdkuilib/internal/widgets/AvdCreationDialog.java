@@ -441,28 +441,18 @@ final class AvdCreationDialog extends Dialog {
             return false;
         }
 
-        ISdkLog oldLog = null;
         boolean success = false;
-        try {
-            // Temporarily change the AvdManager's logger for ours, since the API no longer
-            // takes a logger argument.
-            // TODO revisit this later. See comments in AvdManager#mSdkLog.
-            oldLog = mAvdManager.setSdkLog(log);
+        AvdInfo avdInfo = mAvdManager.createAvd(
+                avdFolder,
+                avdName,
+                target,
+                skinName,
+                sdName,
+                null, // hardwareConfig,
+                force,
+                log);
 
-            AvdInfo avdInfo = mAvdManager.createAvd(
-                    avdFolder,
-                    avdName,
-                    target,
-                    skinName,
-                    sdName,
-                    null, // hardwareConfig,
-                    force);
-
-            success = avdInfo != null;
-
-        } finally {
-            mAvdManager.setSdkLog(oldLog);
-        }
+        success = avdInfo != null;
 
         log.displayResult(success);
 

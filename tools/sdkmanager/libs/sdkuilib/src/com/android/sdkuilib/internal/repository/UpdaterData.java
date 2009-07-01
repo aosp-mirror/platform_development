@@ -195,7 +195,7 @@ class UpdaterData {
         // reload AVDs
         if (mAvdManager != null) {
             try {
-                mAvdManager.reloadAvds();
+                mAvdManager.reloadAvds(mSdkLog);
             } catch (AndroidLocationException e) {
                 // FIXME
             }
@@ -217,7 +217,7 @@ class UpdaterData {
         // reload AVDs
         if (mAvdManager != null) {
             try {
-                mAvdManager.reloadAvds();
+                mAvdManager.reloadAvds(mSdkLog);
             } catch (AndroidLocationException e) {
                 mSdkLog.error(e, null);
             }

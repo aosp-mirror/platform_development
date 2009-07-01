@@ -658,7 +658,8 @@ class Main {
                     skin,
                     mSdkCommandLine.getParamSdCard(),
                     hardwareConfig,
-                    removePrevious);
+                    removePrevious,
+                    mSdkLog);
 
         } catch (AndroidLocationException e) {
             errorAndExit(e.getMessage());
@@ -788,7 +789,7 @@ class Main {
         try {
             String avdName = mSdkCommandLine.getParamName();
             AvdManager avdManager = new AvdManager(mSdkManager, mSdkLog);
-            avdManager.updateAvd(avdName);
+            avdManager.updateAvd(avdName, mSdkLog);
         } catch (AndroidLocationException e) {
             errorAndExit(e.getMessage());
         } catch (IOException e) {
