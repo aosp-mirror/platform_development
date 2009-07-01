@@ -165,12 +165,5 @@ def GetTestAppPath():
 
   Returns:
     The absolute file path of the Android test app build directory.
-
-  Raises:
-    AbortError: if Android host java library directory could not be found.
   """
-  path = os.path.join(GetProductOut(), "data", "app")
-  if not os.path.exists(path):
-    logger.Log("Error: app path could not be found %s" % path)
-    raise errors.AbortError
-  return path
+  return os.path.join(GetProductOut(), "data", "app")
