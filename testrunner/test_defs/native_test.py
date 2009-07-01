@@ -18,6 +18,7 @@
 """TestSuite for running native Android tests."""
 
 # python imports
+import re
 import os
 
 # local imports
@@ -93,9 +94,9 @@ class NativeTestSuite(AbstractTestSuite):
       full_path = os.path.join(os.sep, "system", "bin", f)
 
       # Single quotes are needed to prevent the shell splitting it.
-      output = self._adb.SendShellCommand("'%s 2>&1;echo -n exit code:$?'" %
-                                          full_path,
-                                          int(self._options.timeout))
+      output = adb.SendShellCommand("'%s 2>&1;echo -n exit code:$?'" %
+                                    full_path,
+                                    int(options.timeout))
       success = output.endswith("exit code:0")
       logger.Log("%s... %s" % (f, success and "ok" or "failed"))
       # Print the captured output when the test failed.
@@ -150,3 +151,23 @@ class NativeTestSuite(AbstractTestSuite):
       if os.path.exists(full_path):
         binaries.append(binary)
     return binaries
+
+  def _RunHostCommand(self, binary, valgrind=False):
+    """Run a command on the host (opt using valgrind).
+
+    Runs the host binary and returns the exit code.
+    If successfull, the output (stdout and stderr) are discarded,
+    but printed in case of error.
+    The command can be run under valgrind in which case all the
+    output are always discarded.
+
+    Args:
+      binary: basename of the file to be run. It is expected to be under
+            out/host/<os>-<arch>/bin.
+      valgrind: If True the command will be run under valgrind.
+
+    Returns:
+      The command exit code (int)
+    """
+    full_path = os.path.join(android_build.GetHostBin(), binary)
+    return run_command.RunHostCommand(full_path, valgrind=valgrind)
