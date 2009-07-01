@@ -84,7 +84,6 @@ Export-Package: com.android.ide.eclipse.adt;x-friends:="com.android.ide.eclipse.
  com.android.ide.eclipse.adt.internal.sdk;x-friends:="com.android.ide.eclipse.tests",
  com.android.ide.eclipse.adt.internal.ui;x-friends:="com.android.ide.eclipse.tests",
  com.android.ide.eclipse.adt.internal.wizards.actions;x-friends:="com.android.ide.eclipse.tests",
- com.android.ide.eclipse.adt.internal.wizards.avdmanager;x-friends:="com.android.ide.eclipse.tests",
  com.android.ide.eclipse.adt.internal.wizards.export;x-friends:="com.android.ide.eclipse.tests",
  com.android.ide.eclipse.adt.internal.wizards.newproject;x-friends:="com.android.ide.eclipse.tests",
  com.android.ide.eclipse.adt.internal.wizards.newxmlfile;x-friends:="com.android.ide.eclipse.tests",
