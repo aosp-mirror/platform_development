@@ -114,7 +114,7 @@ public class UpdaterWindowImpl {
         fl.marginHeight = fl.marginWidth = 5;
         mAndroidSdkUpdater.setMinimumSize(new Point(200, 50));
         mAndroidSdkUpdater.setSize(745, 433);
-        mAndroidSdkUpdater.setText("Android SDK Updater");
+        mAndroidSdkUpdater.setText("Android SDK");
 
         mSashForm = new SashForm(mAndroidSdkUpdater, SWT.NONE);
 

@@ -22,8 +22,6 @@ import com.android.sdklib.internal.avd.AvdManager.AvdInfo;
 import com.android.sdklib.internal.avd.AvdManager.AvdInfo.AvdStatus;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ShellAdapter;
-import org.eclipse.swt.events.ShellEvent;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
@@ -85,12 +83,6 @@ final class AvdDetailsDialog extends Dialog {
      */
     private void createContents() {
         mDialogShell = new Shell(getParent(), SWT.DIALOG_TRIM | SWT.RESIZE);
-        mDialogShell.addShellListener(new ShellAdapter() {
-            @Override
-            public void shellClosed(ShellEvent e) {
-                onShellClosed(e);
-            }
-        });
         mDialogShell.setLayout(new GridLayout(1, false));
         mDialogShell.setSize(450, 300);
         mDialogShell.setText(getText());
@@ -130,7 +122,7 @@ final class AvdDetailsDialog extends Dialog {
                         sdcard = properties.get(AvdManager.AVD_INI_SDCARD_PATH);
                     }
                     if (sdcard != null) {
-                        displayValue(c, "sdcard:", sdcard);
+                        displayValue(c, "SD Card:", sdcard);
                     }
 
                     // display other hardware
@@ -183,10 +175,6 @@ final class AvdDetailsDialog extends Dialog {
         l = new Label(parent, SWT.NONE);
         l.setText(value);
         l.setLayoutData(new GridData(GridData.FILL, GridData.CENTER, true, false));
-    }
-
-    private void onShellClosed(ShellEvent e) {
-        // TODO Auto-generated method stub
     }
 
     /**
