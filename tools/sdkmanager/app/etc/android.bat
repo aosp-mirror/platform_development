@@ -27,28 +27,32 @@ rem Change current directory and drive to where the script is, to avoid
 rem issues with directories containing whitespaces.
 cd /d %~dp0
 
-set jarfile=sdkmanager.jar
-set frameworkdir=
+set jarpath=lib\sdkmanager.jar
 
-if exist %frameworkdir%%jarfile% goto JarFileOk
-    set frameworkdir=lib\
+rem Set SWT.Jar path based on current architecture (x86 or x86_64)
+for /f %%a in ('java -jar lib\archquery.jar') do set swt_path=lib\%%a
 
-if exist %frameworkdir%%jarfile% goto JarFileOk
-    set frameworkdir=..\framework\
+if not "%1"=="" goto EndTempCopy
+    echo Starting Android SDK Updater
 
-:JarFileOk
+    rem We're now going to create a temp dir to hold all the Jar files needed
+    rem to run the android tool, copy them in the temp dir and finally adjust
+    rem the paths accordingly. We do this only when the launcher is run without
+    rem arguments, to display the SDK Updater UI. This allows the updater to
+    rem update the tools directory where the updater itself is located.
 
-set jarpath=%frameworkdir%%jarfile%
+    set tmpdir=%TEMP%\temp-android-tool
+    xcopy lib\x86 %tmpdir%\lib\x86 /I /E /C /G /R /O /Y /Q > nul
+    copy /B /D /Y lib\androidprefs.jar %tmpdir%\lib\       > nul
+    copy /B /D /Y lib\org.eclipse.*    %tmpdir%\lib\       > nul
+    copy /B /D /Y lib\sdk*             %tmpdir%\lib\       > nul
+    set jarpath=%tmpdir%\%jarpath%
+    set swt_path=%tmpdir%\%swt_path%
 
-if not defined ANDROID_SWT goto QueryArch
-    set swt_path=%ANDROID_SWT%
-    goto SwtDone
-
-:QueryArch
-
-    for /f %%a in ('java -jar %frameworkdir%archquery.jar') do set swt_path=%frameworkdir%%%a
-
-:SwtDone
+:EndTempCopy
+    
+rem The global ANDROID_SWT always override the SWT.Jar path
+if defined ANDROID_SWT set swt_path=%ANDROID_SWT%
 
 if exist %swt_path% goto SetPath
     echo SWT folder '%swt_path%' does not exist.
@@ -56,6 +60,6 @@ if exist %swt_path% goto SetPath
     exit /B
 
 :SetPath
-set javaextdirs=%swt_path%;%frameworkdir%
+set javaextdirs=%swt_path%;lib\
 
 call java -Djava.ext.dirs=%javaextdirs% -Dcom.android.sdkmanager.toolsdir= -Dcom.android.sdkmanager.workdir="%workdir%" -jar %jarpath% %*
