@@ -123,8 +123,6 @@ public class RepoSource implements IDescription {
         monitor.setProgressMax(4);
 
         setDefaultDescription();
-        mFetchError = null;        // reset fetch error
-
 
         String url = mUrl;
         if (forceHttp) {
@@ -136,50 +134,68 @@ public class RepoSource implements IDescription {
 
         ByteArrayInputStream xml = null;
 
-        try {
+        for (int tentative = 0; tentative < 2 && xml == null; tentative++) {
+
+            // reset fetch error and fetch
+            mFetchError = null;
             xml = fetchUrl(url, monitor);
-        } catch (FileNotFoundException e1) {
-            if (!url.endsWith(SdkRepository.URL_DEFAULT_XML_FILE)) {
-                // Try again by explicitely requesting our default file name
+
+            if (xml == null) {
+                mDescription += String.format("\nFailed to fetch URL %1$s", url);
+                mFetchError = "Failed to fetch URL";
+                monitor.setResult("Failed to fetch URL %1$s", url);
+            } else {
+                // We got a document. It might not be XML or it might not be valid.
+
+                monitor.setDescription("Validate XML");
+
+                if (validateXml(xml, url, monitor)) {
+                    // We got a valid XML, keep it and use it.
+
+                    if (tentative > 0) {
+                        // If the second tentative succeeded, indicate it in the console,
+                        // otherwise the user will only see the first failure
+                        // message and will think the whole thing failed. This also
+                        // indicates we modifed the URL.
+                        monitor.setResult("Repository found instead at %1$s", url);
+                    }
+                    break;
+                } else {
+                    mDescription += String.format("\nFailed to validate XML at %1$s", url);
+                    mFetchError = "Failed to validate XML";
+                    monitor.setResult("Failed to validate XML at %1$s", url);
+
+                    // forget this XML, it wasn't any good.
+                    xml = null;
+                }
+            }
+
+            // If we failed the first time and the URL doesn't explicitly end with
+            // our filename, make another tentative. Otherwise abort.
+            if (tentative == 0 && !url.endsWith(SdkRepository.URL_DEFAULT_XML_FILE)) {
                 if (!url.endsWith("/")) {       //$NON-NLS-1$
                     url += "/";                 //$NON-NLS-1$
                 }
                 url += SdkRepository.URL_DEFAULT_XML_FILE;
-
-                try {
-                    xml = fetchUrl(url, monitor);
-                } catch (FileNotFoundException e2) {
-                    // pass, xml will be null below
-                }
+            } else {
+                break;
             }
+
         }
 
-        if (xml == null) {
-            mDescription += String.format("\nFailed to fetch URL %1$s", url);
-            mFetchError = "Failed to fetch URL";
-            monitor.setResult("Failed to fetch URL %1$s", url);
-            return;
-        }
-
-        monitor.setDescription("Validate XML");
         monitor.incProgress(1);
 
-        if (!validateXml(xml, monitor)) {
-            mDescription += String.format("\nFailed to validate XML at %1$s", url);
-            mFetchError = "Failed to validate XML";
-            monitor.setResult("\nFailed to validate XML at %1$s", url);
-            return;
-        }
-
-        monitor.setDescription("Parse XML");
-        monitor.incProgress(1);
-        parsePackages(xml, monitor);
-        if (mPackages.length == 0) {
-            mDescription += "\nNo packages found.";
-        } else if (mPackages.length == 1) {
-            mDescription += "\nOne package found.";
-        } else {
-            mDescription += String.format("\n%1$d packages found.", mPackages.length);
+        if (xml != null) {
+            monitor.setDescription("Parse XML");
+            monitor.incProgress(1);
+            parsePackages(xml, monitor);
+            if (mPackages.length == 0) {
+                mDescription += "\nNo packages found.";
+            } else if (mPackages.length == 1) {
+                mDescription += "\nOne package found.";
+            } else {
+                mDescription += String.format("\n%1$d packages found.", mPackages.length);
+            }
         }
 
         // done
@@ -202,11 +218,8 @@ public class RepoSource implements IDescription {
      * Java URL Connection: http://java.sun.com/docs/books/tutorial/networking/urls/readingWriting.html
      * Java URL Reader: http://java.sun.com/docs/books/tutorial/networking/urls/readingURL.html
      * Java set Proxy: http://java.sun.com/docs/books/tutorial/networking/urls/_setProxy.html
-     *
-     * @throws FileNotFoundException if the URL does not match an existing resource.
      */
-    private ByteArrayInputStream fetchUrl(String urlString, ITaskMonitor monitor)
-            throws FileNotFoundException {
+    private ByteArrayInputStream fetchUrl(String urlString, ITaskMonitor monitor) {
         URL url;
         try {
             url = new URL(urlString);
@@ -243,14 +256,10 @@ public class RepoSource implements IDescription {
             }
 
         } catch (FileNotFoundException e) {
-            // FNF derives from IOException. We want to be able to report that one
-            // only to the caller so we need to catch before generic IOException and
-            // re-throw it.
-            throw e;
+            // The FNF message is just the URL. Make it a bit more useful.
+            monitor.setResult("File not found: %1$s", e.getMessage());
+
         } catch (IOException e) {
-            // Generic IOException other than FNF are simply listed in the monitor
-            // output and ignored. The method will return null since it hasn't fetched
-            // anything.
             monitor.setResult(e.getMessage());
         }
 
@@ -261,7 +270,7 @@ public class RepoSource implements IDescription {
      * Validates this XML against the SDK Repository schema.
      * Returns true if the XML was correctly validated.
      */
-    private boolean validateXml(ByteArrayInputStream xml, ITaskMonitor monitor) {
+    private boolean validateXml(ByteArrayInputStream xml, String url, ITaskMonitor monitor) {
 
         try {
             Validator validator = getValidator();
@@ -269,11 +278,10 @@ public class RepoSource implements IDescription {
             validator.validate(new StreamSource(xml));
             return true;
 
-        } catch (SAXException e) {
-            monitor.setResult(e.getMessage());
-
-        } catch (IOException e) {
-            monitor.setResult(e.getMessage());
+        } catch (Exception e) {
+            monitor.setResult("XML verification failed for %1$s.\nError: %2$s",
+                    url,
+                    e.getMessage());
         }
 
         return false;
