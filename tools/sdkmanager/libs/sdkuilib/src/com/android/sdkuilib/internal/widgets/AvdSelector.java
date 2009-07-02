@@ -19,6 +19,7 @@ package com.android.sdkuilib.internal.widgets;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.ISdkLog;
+import com.android.sdklib.NullSdkLog;
 import com.android.sdklib.internal.avd.AvdManager;
 import com.android.sdklib.internal.avd.AvdManager.AvdInfo;
 import com.android.sdklib.internal.avd.AvdManager.AvdInfo.AvdStatus;
@@ -48,6 +49,7 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 
+import java.io.IOException;
 import java.util.ArrayList;
 
 
@@ -71,6 +73,7 @@ public final class AvdSelector {
     private Button mNewButton;
     private Button mRefreshButton;
     private Button mManagerButton;
+    private Button mUpdateButton;
 
     private SelectionListener mSelectionListener;
     private IAvdFilter mTargetFilter;
@@ -227,12 +230,23 @@ public final class AvdSelector {
 
             mDeleteButton = new Button(buttons, SWT.PUSH | SWT.FLAT);
             mDeleteButton.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-            mDeleteButton.setText("Delete");
+            mDeleteButton.setText("Delete...");
             mDeleteButton.setToolTipText("Deletes the selected AVD.");
             mDeleteButton.addSelectionListener(new SelectionAdapter() {
                 @Override
                 public void widgetSelected(SelectionEvent arg0) {
                     onDelete();
+                }
+            });
+
+            mUpdateButton = new Button(buttons, SWT.PUSH | SWT.FLAT);
+            mUpdateButton.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+            mUpdateButton.setText("Update...");
+            mUpdateButton.setToolTipText("Updates the path of the selected AVD.");
+            mUpdateButton.addSelectionListener(new SelectionAdapter() {
+                @Override
+                public void widgetSelected(SelectionEvent arg0) {
+                    onUpdate();
                 }
             });
 
@@ -366,7 +380,7 @@ public final class AvdSelector {
     public boolean refresh(boolean reload) {
         if (reload) {
             try {
-                mAvdManager.reloadAvds();
+                mAvdManager.reloadAvds(NullSdkLog.getLogger());
             } catch (AndroidLocationException e) {
                 return false;
             }
@@ -720,12 +734,29 @@ public final class AvdSelector {
         return null;
     }
 
+    /**
+     * Updates the enable state of the Details, Delete and Update buttons.
+     */
     private void enableActionButtons() {
-        boolean enabled = mIsEnabled == false ? false : getTableSelection() != null;
+        if (mIsEnabled == false) {
+            mDetailsButton.setEnabled(false);
+            if (mDeleteButton != null) {
+                mDeleteButton.setEnabled(false);
+            }
+            if (mUpdateButton != null) {
+                mUpdateButton.setEnabled(false);
+            }
+        } else {
+            AvdInfo selection = getTableSelection();
 
-        mDetailsButton.setEnabled(enabled);
-        if (mDeleteButton != null) {
-            mDeleteButton.setEnabled(enabled);
+            mDetailsButton.setEnabled(selection != null);
+            if (mDeleteButton != null) {
+                mDeleteButton.setEnabled(selection != null);
+            }
+            if (mUpdateButton != null) {
+                mUpdateButton.setEnabled(selection != null &&
+                        selection.getStatus() == AvdStatus.ERROR_IMAGE_DIR);
+            }
         }
     }
 
@@ -780,6 +811,31 @@ public final class AvdSelector {
 
         if (success) {
             refresh(false /*reload*/);
+        }
+    }
+
+    private void onUpdate() {
+        final AvdInfo avdInfo = getTableSelection();
+
+        // get the current Display
+        final Display display = mTable.getDisplay();
+
+        // log for this action.
+        SdkLog log = new SdkLog(
+                String.format("Result of updating AVD '%s':", avdInfo.getName()),
+                display);
+
+        // delete the AVD
+        try {
+            mAvdManager.updateAvd(avdInfo, log);
+
+            // display the result
+            log.displayResult(true /* success */);
+
+            refresh(false /*reload*/);
+        } catch (IOException e) {
+            log.error(e, null);
+            log.displayResult(false /* success */);
         }
     }
 
