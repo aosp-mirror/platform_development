@@ -317,6 +317,10 @@ public final class AvdManager {
      * Creates an AVD Manager for a given SDK represented by a {@link SdkManager}.
      * @param sdkManager The SDK.
      * @param log The log object to receive the log of the initial loading of the AVDs.
+     *            This log object is not kept by this instance of AvdManager and each
+     *            method takes its own logger. The rationale is that the AvdManager
+     *            might be called from a variety of context, each with different
+     *            logging needs.
      * @throws AndroidLocationException
      */
     public AvdManager(SdkManager sdkManager, ISdkLog log) throws AndroidLocationException {
@@ -408,6 +412,7 @@ public final class AvdManager {
 
     /**
      * Reloads the AVD list.
+     * @param log the log object to receive action logs. Cannot be null.
      * @throws AndroidLocationException if there was an error finding the location of the
      * AVD folder.
      */
@@ -727,6 +732,9 @@ public final class AvdManager {
 
     /**
      * Returns the path to the skin, as a relative path to the SDK.
+     * @param skinName The name of the skin to find. Case-sensitive.
+     * @param target The target where to find the skin.
+     * @param log the log object to receive action logs. Cannot be null.
      */
     public String getSkinRelativePath(String skinName, IAndroidTarget target, ISdkLog log) {
         if (log == null) {
@@ -763,6 +771,8 @@ public final class AvdManager {
 
     /**
      * Returns the full absolute OS path to a skin specified by name for a given target.
+     * @param skinName The name of the skin to find. Case-sensitive.
+     * @param target The target where to find the skin.
      * @return a {@link File} that may or may not actually exist.
      */
     public File getSkinPath(String skinName, IAndroidTarget target) {
@@ -822,7 +832,7 @@ public final class AvdManager {
      * these operations fail.
      *
      * @param avdInfo the information on the AVD to delete
-     * @param log the log object to receive action logs.
+     * @param log the log object to receive action logs. Cannot be null.
      * @return True if the AVD was deleted with no error.
      */
     public boolean deleteAvd(AvdInfo avdInfo, ISdkLog log) {
@@ -879,7 +889,7 @@ public final class AvdManager {
      * @param avdInfo the information on the AVD to move.
      * @param newName the new name of the AVD if non null.
      * @param paramFolderPath the new data folder if non null.
-     * @param log the log object to receive action logs.
+     * @param log the log object to receive action logs. Cannot be null.
      * @return True if the move succeeded or there was nothing to do.
      *         If false, this method will have had already output error in the log.
      */
@@ -989,6 +999,7 @@ public final class AvdManager {
     /**
      * Computes the internal list of available AVDs
      * @param allList the list to contain all the AVDs
+     * @param log the log object to receive action logs. Cannot be null.
      *
      * @throws AndroidLocationException if there's a problem getting android root directory.
      */
@@ -1009,6 +1020,7 @@ public final class AvdManager {
      * Parses an AVD .ini file to create an {@link AvdInfo}.
      *
      * @param path The path to the AVD .ini file
+     * @param log the log object to receive action logs. Cannot be null.
      * @return A new {@link AvdInfo} with an {@link AvdStatus} indicating whether this AVD is
      *         valid or not.
      */
@@ -1115,6 +1127,7 @@ public final class AvdManager {
      * @param toolLocation The path to the mksdcard tool.
      * @param size The size of the new SD Card, compatible with {@link #SDCARD_SIZE_PATTERN}.
      * @param location The path of the new sdcard image file to generate.
+     * @param log the log object to receive action logs. Cannot be null.
      * @return True if the sdcard could be created.
      */
     private boolean createSdCard(String toolLocation, String size, String location, ISdkLog log) {
@@ -1251,7 +1264,7 @@ public final class AvdManager {
     /**
      * Updates an AVD with new path to the system image folders.
      * @param name the name of the AVD to update.
-     * @param log the log object to receive action logs.
+     * @param log the log object to receive action logs. Cannot be null.
      * @throws IOException
      */
     public void updateAvd(String name, ISdkLog log) throws IOException {
@@ -1278,8 +1291,8 @@ public final class AvdManager {
 
     /**
      * Updates an AVD with new path to the system image folders.
-     * @param avdInfo the AVD to update.
-     * @param log the log object to receive action logs.
+     * @param avd the AVD to update.
+     * @param log the log object to receive action logs. Cannot be null.
      * @throws IOException
      */
     public void updateAvd(AvdInfo avd, ISdkLog log) throws IOException {
@@ -1337,9 +1350,11 @@ public final class AvdManager {
      * Sets the paths to the system images in a properties map.
      * @param target the target in which to find the system images.
      * @param properties the properties in which to set the paths.
+     * @param log the log object to receive action logs. Cannot be null.
      * @return true if success, false if some path are missing.
      */
-    private boolean setImagePathProperties(IAndroidTarget target, Map<String, String> properties,
+    private boolean setImagePathProperties(IAndroidTarget target,
+            Map<String, String> properties,
             ISdkLog log) {
         properties.remove(AVD_INI_IMAGES_1);
         properties.remove(AVD_INI_IMAGES_2);
