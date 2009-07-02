@@ -81,6 +81,7 @@ static void drawPlugin(SubPlugin* plugin, const ANPBitmap& bitmap, const ANPRect
 
 FormPlugin::FormPlugin(NPP inst) : SubPlugin(inst) {
 
+    m_hasFocus = false;
     m_activeInput = NULL;
 
     memset(&m_usernameInput, 0, sizeof(m_usernameInput));
@@ -133,27 +134,26 @@ void FormPlugin::draw(ANPCanvas* canvas) {
     const int H = obj->window->height;
 
     // color the plugin canvas
-    gCanvasI.drawColor(canvas, 0xFFCDCDCD);
+    gCanvasI.drawColor(canvas, (m_hasFocus) ? 0xFFCDCDCD : 0xFF545454);
 
     // draw the username box (5 px from the top edge)
-    inval(instance, m_usernameInput.rect, true);
     m_usernameInput.rect.left = 5;
     m_usernameInput.rect.top = 5;
     m_usernameInput.rect.right = W - 5;
     m_usernameInput.rect.bottom = m_usernameInput.rect.top + inputHeight;
     gCanvasI.drawRect(canvas, &m_usernameInput.rect, getPaint(&m_usernameInput));
     drawText(canvas, m_usernameInput);
-    inval(instance, m_usernameInput.rect, true);
 
     // draw the password box (5 px from the bottom edge)
-    inval(instance, m_passwordInput.rect, true);
     m_passwordInput.rect.left = 5;
     m_passwordInput.rect.top = H - (inputHeight + 5);
     m_passwordInput.rect.right = W - 5;
     m_passwordInput.rect.bottom = m_passwordInput.rect.top + inputHeight;
     gCanvasI.drawRect(canvas, &m_passwordInput.rect, getPaint(&m_passwordInput));
     drawPassword(canvas, m_passwordInput);
-    inval(instance, m_passwordInput.rect, true);
+
+    //invalidate the canvas
+    //inval(instance);
 }
 
 ANPPaint* FormPlugin::getPaint(TextInput* input) {
@@ -173,7 +173,26 @@ void FormPlugin::drawText(ANPCanvas* canvas, TextInput textInput) {
 
 void FormPlugin::drawPassword(ANPCanvas* canvas, TextInput passwordInput) {
 
-    //TODO draw circles instead of the actual text
+    // get font metrics
+    ANPFontMetrics fontMetrics;
+    gPaintI.getFontMetrics(m_paintText, &fontMetrics);
+
+    // comput the circle dimensions and initial location
+    float initialX = passwordInput.rect.left + 5;
+    float ovalBottom = passwordInput.rect.bottom - 2;
+    float ovalTop = ovalBottom - (fontMetrics.fBottom - fontMetrics.fTop);
+    float ovalWidth = ovalBottom - ovalTop;
+    float ovalSpacing = 3;
+
+    // draw circles instead of the actual text
+    for (uint32_t x = 0; x < passwordInput.charPtr; x++) {
+        ANPRectF oval;
+        oval.left = initialX + ((ovalWidth + ovalSpacing) * (float) x);
+        oval.right = oval.left + ovalWidth;
+        oval.top = ovalTop;
+        oval.bottom = ovalBottom;
+        gCanvasI.drawOval(canvas, &oval, m_paintText);
+    }
 }
 
 int16 FormPlugin::handleEvent(const ANPEvent* evt) {
@@ -192,17 +211,23 @@ int16 FormPlugin::handleEvent(const ANPEvent* evt) {
 
         case kLifecycle_ANPEventType:
             if (evt->data.lifecycle.action == kLooseFocus_ANPLifecycleAction) {
+                gLogI.log(instance, kDebug_ANPLogType, "----%p Loosing Focus", instance);
                 if (m_activeInput) {
-
                     // hide the keyboard
-                    //gWindowI.showKeyboard(instance, false);
-                    gLogI.log(instance, kDebug_ANPLogType, "----%p Hiding Keyboard2", instance);
+                    gWindowI.showKeyboard(instance, false);
 
-                    //inval the plugin
+                    //reset the activeInput
                     m_activeInput = NULL;
-                    inval(instance);
-
                 }
+
+                m_hasFocus = false;
+                inval(instance);
+                return 1;
+            }
+            else if (evt->data.lifecycle.action == kGainFocus_ANPLifecycleAction) {
+                gLogI.log(instance, kDebug_ANPLogType, "----%p Gaining Focus", instance);
+                m_hasFocus = true;
+                inval(instance);
                 return 1;
             }
             break;
@@ -217,21 +242,11 @@ int16 FormPlugin::handleEvent(const ANPEvent* evt) {
 
                 if (currentInput)
                     gWindowI.showKeyboard(instance, true);
-                else if (m_activeInput) {
+                else if (m_activeInput)
                     gWindowI.showKeyboard(instance, false);
-                    gLogI.log(instance, kDebug_ANPLogType, "----%p Hiding Keyboard", instance);
-                }
 
-
-                if (currentInput == m_activeInput)
-                    return 1;
-
-                if (m_activeInput)
-                    inval(instance, m_activeInput->rect, true); // inval the old
-
-                m_activeInput = currentInput; // set the new active input
-                if (m_activeInput)
-                    inval(instance, m_activeInput->rect, true); // inval the new
+                if (currentInput != m_activeInput)
+                    switchActiveInput(currentInput);
 
                 return 1;
             }
@@ -244,8 +259,7 @@ int16 FormPlugin::handleEvent(const ANPEvent* evt) {
                 //handle navigation keys
                 if (evt->data.key.nativeCode >= kDpadUp_ANPKeyCode
                         && evt->data.key.nativeCode <= kDpadCenter_ANPKeyCode) {
-                    gLogI.log(instance, kDebug_ANPLogType, "----%p Recvd Nav Key", instance);
-                    return 0;
+                    return handleNavigation(evt->data.key.nativeCode) ? 1 : 0;
                 }
 
                 if (m_activeInput) {
@@ -277,6 +291,46 @@ int16 FormPlugin::handleEvent(const ANPEvent* evt) {
             break;
     }
     return 0;   // unknown or unhandled event
+}
+
+void FormPlugin::switchActiveInput(TextInput* newInput) {
+    NPP instance = this->inst();
+
+    if (m_activeInput)
+        inval(instance, m_activeInput->rect, true); // inval the old
+
+    m_activeInput = newInput; // set the new active input
+
+    if (m_activeInput)
+        inval(instance, m_activeInput->rect, true); // inval the new
+}
+
+bool FormPlugin::handleNavigation(ANPKeyCode keyCode) {
+    NPP instance = this->inst();
+
+    gLogI.log(instance, kDebug_ANPLogType, "----%p Recvd Nav Key %d", instance, keyCode);
+
+    if (!m_activeInput) {
+        switchActiveInput(&m_usernameInput);
+        scrollIntoView(m_activeInput);
+        return true;
+    }
+    else if (m_activeInput == &m_usernameInput) {
+        if (keyCode == kDpadDown_ANPKeyCode) {
+            switchActiveInput(&m_passwordInput);
+            scrollIntoView(m_activeInput);
+            return true;
+        }
+    }
+    else if (m_activeInput == &m_passwordInput) {
+        if (keyCode == kDpadUp_ANPKeyCode) {
+            switchActiveInput(&m_usernameInput);
+            scrollIntoView(m_activeInput);
+            return true;
+        }
+    }
+
+    return false;
 }
 
 void FormPlugin::handleTextInput(TextInput* input, ANPKeyCode keyCode, int32_t unichar) {
@@ -315,8 +369,6 @@ void FormPlugin::scrollIntoView(TextInput* input) {
     inputRect.top = window->y + input->rect.top;
     inputRect.right = inputRect.left + (input->rect.right - input->rect.left);
     inputRect.bottom = inputRect.top + (input->rect.bottom - input->rect.top);
-
-    gLogI.log(instance, kDebug_ANPLogType, "----%p Checking Rect Visibility", instance);
 
     // if the rect is contained within visible window then do nothing
     if (inputRect.left > m_visibleRect.left
