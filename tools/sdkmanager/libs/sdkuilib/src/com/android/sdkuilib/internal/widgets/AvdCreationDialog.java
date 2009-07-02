@@ -48,6 +48,17 @@ import org.eclipse.swt.widgets.Text;
 import java.io.File;
 import java.util.TreeMap;
 
+/**
+ * AVD creator dialog.
+ *
+ * TODO:
+ * - support custom hardware properties
+ * - use SdkTargetSelector instead of Combo
+ * - Better UI for the sdcard (radio button for K or M, info about what is valid value)
+ * - Support for ###x### skins
+ * - tooltips on widgets.
+ *
+ */
 final class AvdCreationDialog extends Dialog {
 
     private final AvdManager mAvdManager;
@@ -111,7 +122,9 @@ final class AvdCreationDialog extends Dialog {
         super.create();
 
         Point p = getShell().getSize();
-        p.x += 130;
+        if (p.x < 400) {
+            p.x = 400;
+        }
         getShell().setSize(p);
     }
 
@@ -157,6 +170,8 @@ final class AvdCreationDialog extends Dialog {
 
         label = new Label(top, SWT.NONE);
         label.setText("SD Card:");
+        label.setToolTipText("Either a path to an existing SD card image\n" +
+                "or an image size in K or M (e.g. 512K, 10M).");
 
         ValidateListener validateListener = new ValidateListener();
 
@@ -257,9 +272,17 @@ final class AvdCreationDialog extends Dialog {
         SdkManager sdkManager = mAvdManager.getSdkManager();
         if (sdkManager != null) {
             for (IAndroidTarget target : sdkManager.getTargets()) {
-                String name = String.format("%s - %s",
-                        target.getName(),
-                        target.getApiVersionName());
+                String name;
+                if (target.isPlatform()) {
+                    name = String.format("%s - API Level %d",
+                            target.getName(),
+                            target.getApiVersionNumber());
+                } else {
+                    name = String.format("%s (%s) - API Level %d",
+                            target.getName(),
+                            target.getVendor(),
+                            target.getApiVersionNumber());
+                }
                 mCurrentTargets.put(name, target);
                 mTargetCombo.add(name);
                 if (!found) {
