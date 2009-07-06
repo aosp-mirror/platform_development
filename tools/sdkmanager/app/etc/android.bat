@@ -36,8 +36,8 @@ if not "%1"=="" goto EndTempCopy
     echo Starting Android SDK Updater
 
     rem We're now going to create a temp dir to hold all the Jar files needed
-    rem to run the android tool, copy them in the temp dir and finally adjust
-    rem the paths accordingly. We do this only when the launcher is run without
+    rem to run the android tool, copy them in the temp dir and finally execute
+    rem from that path. We do this only when the launcher is run without
     rem arguments, to display the SDK Updater UI. This allows the updater to
     rem update the tools directory where the updater itself is located.
 
@@ -46,8 +46,10 @@ if not "%1"=="" goto EndTempCopy
     copy /B /D /Y lib\androidprefs.jar %tmpdir%\lib\       > nul
     copy /B /D /Y lib\org.eclipse.*    %tmpdir%\lib\       > nul
     copy /B /D /Y lib\sdk*             %tmpdir%\lib\       > nul
-    set jarpath=%tmpdir%\%jarpath%
-    set swt_path=%tmpdir%\%swt_path%
+
+    rem jarpath and swt_path are relative to PWD so we don't need to adjust them, just change dirs.
+    set toolsdir=%cd%
+    cd %tmpdir%
 
 :EndTempCopy
     
@@ -62,4 +64,4 @@ if exist %swt_path% goto SetPath
 :SetPath
 set javaextdirs=%swt_path%;lib\
 
-call java -Djava.ext.dirs=%javaextdirs% -Dcom.android.sdkmanager.toolsdir= -Dcom.android.sdkmanager.workdir="%workdir%" -jar %jarpath% %*
+call java -Djava.ext.dirs=%javaextdirs% -Dcom.android.sdkmanager.toolsdir="%toolsdir%" -Dcom.android.sdkmanager.workdir="%workdir%" -jar %jarpath% %*
