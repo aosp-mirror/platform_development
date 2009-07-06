@@ -20,6 +20,7 @@ import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.ISdkLog;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.avd.AvdManager;
+import com.android.sdklib.internal.repository.AddonPackage;
 import com.android.sdklib.internal.repository.Archive;
 import com.android.sdklib.internal.repository.ITask;
 import com.android.sdklib.internal.repository.ITaskFactory;
@@ -28,6 +29,7 @@ import com.android.sdklib.internal.repository.LocalSdkParser;
 import com.android.sdklib.internal.repository.Package;
 import com.android.sdklib.internal.repository.RepoSource;
 import com.android.sdklib.internal.repository.RepoSources;
+import com.android.sdklib.internal.repository.ToolPackage;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 
 import org.eclipse.swt.widgets.Shell;
@@ -264,6 +266,9 @@ class UpdaterData {
                 monitor.setProgressMax(archives.size() * progressPerArchive);
                 monitor.setDescription("Preparing to install archives");
 
+                boolean installedAddon = false;
+                boolean installedTools = false;
+
                 int numInstalled = 0;
                 for (Archive archive : archives) {
 
@@ -271,6 +276,12 @@ class UpdaterData {
                     try {
                         if (monitor.isCancelRequested()) {
                             break;
+                        }
+
+                        if (archive.getParentPackage() instanceof AddonPackage) {
+                            installedAddon = true;
+                        } else if (archive.getParentPackage() instanceof ToolPackage) {
+                            installedTools = true;
                         }
 
                         if (archive.install(mOsSdkRoot, forceHttp, mSdkManager, monitor)) {
@@ -288,6 +299,26 @@ class UpdaterData {
                         // they abort early
                         monitor.incProgress(nextProgress - monitor.getProgress());
                     }
+                }
+
+                if (installedAddon) {
+                    // Update the USB vendor ids for adb
+                    try {
+                        mSdkManager.updateAdb();
+                    } catch (Exception e) {
+                        mSdkLog.error(e, "Update ADB failed");
+                    }
+                }
+
+                if (installedAddon || installedTools) {
+                    // We need to restart ADB. Actually since we don't know if it's even
+                    // running, maybe we should just kill it and not start it.
+                    // Note: it turns out even under Windows we don't need to kill adb
+                    // before updating the tools folder, as adb.exe is (surprisingly) not
+                    // locked.
+
+                    // TODO either bring in ddmlib and use its existing methods to stop adb
+                    // or use a shell exec to tools/adb.
                 }
 
                 if (numInstalled == 0) {
