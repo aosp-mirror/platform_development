@@ -43,6 +43,8 @@ public:
     virtual int16 handleEvent(const ANPEvent* evt);
 private:
 
+    bool        m_hasFocus;
+
     TextInput*  m_activeInput;
     TextInput   m_usernameInput;
     TextInput   m_passwordInput;
@@ -56,8 +58,10 @@ private:
     void drawText(ANPCanvas*, TextInput);
     void drawPassword(ANPCanvas*, TextInput);
 
+    bool handleNavigation(ANPKeyCode keyCode);
     void handleTextInput(TextInput* input, ANPKeyCode keyCode, int32_t unichar);
     void scrollIntoView(TextInput* input);
+    void switchActiveInput(TextInput* input);
 
     ANPPaint* getPaint(TextInput*);
     TextInput* validTap(int x, int y);
