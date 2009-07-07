@@ -210,8 +210,9 @@ int16 FormPlugin::handleEvent(const ANPEvent* evt) {
             break;
 
         case kLifecycle_ANPEventType:
-            if (evt->data.lifecycle.action == kLooseFocus_ANPLifecycleAction) {
+            if (evt->data.lifecycle.action == kLoseFocus_ANPLifecycleAction) {
                 gLogI.log(instance, kDebug_ANPLogType, "----%p Loosing Focus", instance);
+
                 if (m_activeInput) {
                     // hide the keyboard
                     gWindowI.showKeyboard(instance, false);
