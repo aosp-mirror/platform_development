@@ -268,9 +268,8 @@ int16 FormPlugin::handleEvent(const ANPEvent* evt) {
                                     evt->data.key.unichar);
                     inval(instance, m_activeInput->rect, true);
                 }
-                return 1;
             }
-            break;
+            return 1;
 
         case kVisibleRect_ANPEventType: {
 
@@ -314,24 +313,29 @@ bool FormPlugin::handleNavigation(ANPKeyCode keyCode) {
     if (!m_activeInput) {
         switchActiveInput(&m_usernameInput);
         scrollIntoView(m_activeInput);
-        return true;
     }
     else if (m_activeInput == &m_usernameInput) {
         if (keyCode == kDpadDown_ANPKeyCode) {
             switchActiveInput(&m_passwordInput);
             scrollIntoView(m_activeInput);
-            return true;
         }
+        else if (keyCode == kDpadCenter_ANPKeyCode)
+            gWindowI.showKeyboard(instance, false);
+        else if (keyCode == kDpadUp_ANPKeyCode)
+            return false;
     }
     else if (m_activeInput == &m_passwordInput) {
         if (keyCode == kDpadUp_ANPKeyCode) {
             switchActiveInput(&m_usernameInput);
             scrollIntoView(m_activeInput);
-            return true;
         }
+        else if (keyCode == kDpadCenter_ANPKeyCode)
+            gWindowI.showKeyboard(instance, false);
+        else if (keyCode == kDpadDown_ANPKeyCode)
+            return false;
     }
 
-    return false;
+    return true;
 }
 
 void FormPlugin::handleTextInput(TextInput* input, ANPKeyCode keyCode, int32_t unichar) {
