@@ -12,13 +12,14 @@
 
 typedef struct FakeDev FakeDev;
 
-typedef int     (*Fake_close)(FakeDev* dev, int);
-typedef ssize_t (*Fake_read)(FakeDev* dev, int, void*, size_t);
-typedef ssize_t (*Fake_readv)(FakeDev* dev, int, const struct iovec*, int);
-typedef ssize_t (*Fake_write)(FakeDev* dev, int, const void*, size_t);
-typedef ssize_t (*Fake_writev)(FakeDev* dev, int, const struct iovec*, int);
-typedef void*   (*Fake_mmap)(FakeDev* dev, void*, size_t, int, int, int, __off_t);
-typedef int     (*Fake_ioctl)(FakeDev* dev, int, int, void*);
+typedef int      (*Fake_close)(FakeDev* dev, int);
+typedef FakeDev* (*Fake_dup)(FakeDev* dev, int);
+typedef ssize_t  (*Fake_read)(FakeDev* dev, int, void*, size_t);
+typedef ssize_t  (*Fake_readv)(FakeDev* dev, int, const struct iovec*, int);
+typedef ssize_t  (*Fake_write)(FakeDev* dev, int, const void*, size_t);
+typedef ssize_t  (*Fake_writev)(FakeDev* dev, int, const struct iovec*, int);
+typedef void*    (*Fake_mmap)(FakeDev* dev, void*, size_t, int, int, int, __off_t);
+typedef int      (*Fake_ioctl)(FakeDev* dev, int, int, void*);
 
 /*
  * An open fake device entry.
@@ -42,6 +43,7 @@ struct FakeDev {
      * All other file descriptor operations should fail, usually with EBADF.
      */
     Fake_close  close;
+    Fake_dup  dup;
     Fake_read   read;
     Fake_readv  readv;
     Fake_write  write;

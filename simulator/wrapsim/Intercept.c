@@ -160,7 +160,7 @@ do_rewrite:
     _rtype _fname( __VA_ARGS__ )
 #define PASS_THROUGH_BODY(_fname, _patharg, ...)                            \
     {                                                                       \
-        CALLTRACEV("%s\n", __FUNCTION__);                                   \
+        CALLTRACEV("%s(%s)\n", __FUNCTION__, _patharg);                     \
         char pathBuf[PATH_MAX];                                             \
         return _ws_##_fname(rewritePath(#_fname, pathBuf, _patharg),        \
             ##__VA_ARGS__);                                                 \
@@ -628,6 +628,30 @@ int __open64(const char* pathName, int flags, mode_t mode)
     CALLTRACEV("%s\n", __FUNCTION__);
 
     return open64Common(pathName, flags, mode);
+}
+
+
+int dup(int fd)
+{
+    CALLTRACEV("%s(%d)\n", __FUNCTION__, fd);
+
+    FakeDev* dev = wsFakeDevFromFd(fd);
+    if (dev != NULL) {
+        FakeDev* newDev = dev->dup(dev, fd);
+        if (newDev != NULL) {
+            /*
+             * Now that the device entry is ready, add it to the list.
+             */
+            wsLog("## dup'ed fake dev %d: '%s' %p\n",
+                newDev->fd, newDev->debugName, newDev->state);
+            gWrapSim.fakeFdList[newDev->fd - kFakeFdBase] = newDev;
+            return newDev->fd;
+        }
+        return -1;
+    } else {
+        CALLTRACE("dup(%d)\n", fd);
+        return _ws_dup(fd);
+    }
 }
 
 
