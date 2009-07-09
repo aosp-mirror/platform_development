@@ -195,7 +195,9 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
         // create the selector with no manager, we'll reset the manager every time this is
         // displayed to ensure we have the latest one (dialog is reused but SDK could have
         // been changed in between.
-        mPreferredAvdSelector = new AvdSelector(offsetComp, null /* avd manager */,
+        mPreferredAvdSelector = new AvdSelector(offsetComp,
+                Sdk.getCurrent().getSdkLocation(),
+                null /* avd manager */,
                 DisplayMode.SIMPLE_CHECK);
         mPreferredAvdSelector.setTableHeightHint(100);
         mPreferredAvdSelector.setSelectionListener(new SelectionAdapter() {

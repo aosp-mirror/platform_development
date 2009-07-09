@@ -52,7 +52,10 @@ public class AvdManagerPage extends Composite implements ISdkListener {
         Label label = new Label(parent, SWT.NONE);
         label.setText("List of existing Android Virtual Devices:");
 
-        mAvdSelector = new AvdSelector(parent, mUpdaterData.getAvdManager(), DisplayMode.MANAGER);
+        mAvdSelector = new AvdSelector(parent,
+                mUpdaterData.getOsSdkRoot(),
+                mUpdaterData.getAvdManager(),
+                DisplayMode.MANAGER);
     }
 
     @Override
