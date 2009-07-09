@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.sdkuilib.internal.repository;
+package com.android.sdkuilib.internal.tasks;
 
 import com.android.sdklib.internal.repository.ITaskMonitor;
 

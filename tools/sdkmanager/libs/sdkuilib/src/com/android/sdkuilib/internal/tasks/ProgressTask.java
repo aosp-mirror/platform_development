@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.sdkuilib.internal.repository;
+package com.android.sdkuilib.internal.tasks;
 
 import com.android.sdklib.internal.repository.ITask;
 import com.android.sdklib.internal.repository.ITaskMonitor;
@@ -26,7 +26,7 @@ import org.eclipse.swt.widgets.Shell;
 /**
  * An {@link ITaskMonitor} that displays a {@link ProgressDialog}.
  */
-class ProgressTask implements ITaskMonitor {
+public final class ProgressTask implements ITaskMonitor {
 
     private static final double MAX_COUNT = 10000.0;
 
