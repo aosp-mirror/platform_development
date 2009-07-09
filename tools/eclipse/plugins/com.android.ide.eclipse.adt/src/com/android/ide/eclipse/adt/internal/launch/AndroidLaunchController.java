@@ -1521,7 +1521,7 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
     /**
      * Get the stderr/stdout outputs of a process and return when the process is done.
      * Both <b>must</b> be read or the process will block on windows.
-     * @param process The process to get the ouput from
+     * @param process The process to get the output from
      */
     private void grabEmulatorOutput(final Process process) {
         // read the lines as they come. if null is returned, it's

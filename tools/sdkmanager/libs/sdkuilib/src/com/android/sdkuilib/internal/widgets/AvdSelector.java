@@ -20,10 +20,14 @@ import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.ISdkLog;
 import com.android.sdklib.NullSdkLog;
+import com.android.sdklib.SdkConstants;
 import com.android.sdklib.internal.avd.AvdManager;
 import com.android.sdklib.internal.avd.AvdManager.AvdInfo;
 import com.android.sdklib.internal.avd.AvdManager.AvdInfo.AvdStatus;
+import com.android.sdklib.internal.repository.ITask;
+import com.android.sdklib.internal.repository.ITaskMonitor;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
+import com.android.sdkuilib.internal.tasks.ProgressTask;
 import com.android.sdkuilib.repository.UpdaterWindow;
 
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -49,16 +53,19 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 
+import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 
 
 /**
  * The AVD selector is a table that is added to the given parent composite.
  * <p/>
- * To use, create it using {@link #AvdSelector(Composite, AvdManager, DisplayMode)} then
- * call {@link #setSelection(AvdInfo)}, {@link #setSelectionListener(SelectionListener)}
- * and finally use {@link #getSelected()} to retrieve the selection.
+ * After using one of the constructors, call {@link #setSelection(AvdInfo)},
+ * {@link #setSelectionListener(SelectionListener)} and finally use
+ * {@link #getSelected()} to retrieve the selection.
  */
 public final class AvdSelector {
     private static int NUM_COL = 2;
@@ -66,6 +73,7 @@ public final class AvdSelector {
     private final DisplayMode mDisplayMode;
 
     private AvdManager mAvdManager;
+    private final String mOsSdkPath;
 
     private Table mTable;
     private Button mDeleteButton;
@@ -74,15 +82,19 @@ public final class AvdSelector {
     private Button mRefreshButton;
     private Button mManagerButton;
     private Button mUpdateButton;
+    private Button mStartButton;
 
     private SelectionListener mSelectionListener;
     private IAvdFilter mTargetFilter;
 
+    /** Defaults to true. Changed by the {@link #setEnabled(boolean)} method to represent the
+     * "global" enabled state on this composite. */
     private boolean mIsEnabled = true;
 
     private ImageFactory mImageFactory;
     private Image mOkImage;
     private Image mBrokenImage;
+
 
     /**
      * The display mode of the AVD Selector.
@@ -170,15 +182,20 @@ public final class AvdSelector {
      * {@link IAndroidTarget} will be displayed.
      *
      * @param parent The parent composite where the selector will be added.
+     * @param osSdkPath The SDK root path. When not null, enables the start button to start
+     *                  an emulator on a given AVD.
      * @param manager the AVD manager.
      * @param filter When non-null, will allow filtering the AVDs to display.
-     * @param extraAction When non-null, displays an extra action button.
      * @param displayMode The display mode ({@link DisplayMode}).
+     *
+     * TODO: pass an ISdkLog and use it when reloading, starting the emulator, etc.
      */
     public AvdSelector(Composite parent,
+            String osSdkPath,
             AvdManager manager,
             IAvdFilter filter,
             DisplayMode displayMode) {
+        mOsSdkPath = osSdkPath;
         mAvdManager = manager;
         mTargetFilter = filter;
         mDisplayMode = displayMode;
@@ -265,6 +282,17 @@ public final class AvdSelector {
             }
         });
 
+        mStartButton = new Button(buttons, SWT.PUSH | SWT.FLAT);
+        mStartButton.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        mStartButton.setText("Start...");
+        mStartButton.setToolTipText("Starts the selected AVD.");
+        mStartButton.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent arg0) {
+                onStart();
+            }
+        });
+
         Composite padding = new Composite(buttons, SWT.NONE);
         padding.setLayoutData(new GridData(GridData.FILL_VERTICAL));
 
@@ -327,9 +355,11 @@ public final class AvdSelector {
      * @param manager the AVD manager.
      * @param displayMode The display mode ({@link DisplayMode}).
      */
-    public AvdSelector(Composite parent, AvdManager manager,
+    public AvdSelector(Composite parent,
+            String osSdkPath,
+            AvdManager manager,
             DisplayMode displayMode) {
-        this(parent, manager, (IAvdFilter)null /* filter */, displayMode);
+        this(parent, osSdkPath, manager, (IAvdFilter)null /* filter */, displayMode);
     }
 
     /**
@@ -344,10 +374,11 @@ public final class AvdSelector {
      * @param displayMode The display mode ({@link DisplayMode}).
      */
     public AvdSelector(Composite parent,
+            String osSdkPath,
             AvdManager manager,
             IAndroidTarget filter,
             DisplayMode displayMode) {
-        this(parent, manager, new TargetBasedFilter(filter), displayMode);
+        this(parent, osSdkPath, manager, new TargetBasedFilter(filter), displayMode);
     }
     /**
      * Sets the table grid layout data.
@@ -373,7 +404,6 @@ public final class AvdSelector {
      * This must be called from the UI thread.
      *
      * @param reload if true, the AVD manager will reload the AVD from the disk.
-     * @throws AndroidLocationException if reload the AVD failed.
      * @return false if the reloading failed. This is always true if <var>reload</var> is
      * <code>false</code>.
      */
@@ -735,11 +765,13 @@ public final class AvdSelector {
     }
 
     /**
-     * Updates the enable state of the Details, Delete and Update buttons.
+     * Updates the enable state of the Details, Start, Delete and Update buttons.
      */
     private void enableActionButtons() {
         if (mIsEnabled == false) {
             mDetailsButton.setEnabled(false);
+            mStartButton.setEnabled(false);
+
             if (mDeleteButton != null) {
                 mDeleteButton.setEnabled(false);
             }
@@ -748,13 +780,20 @@ public final class AvdSelector {
             }
         } else {
             AvdInfo selection = getTableSelection();
+            boolean hasSelection = selection != null;
 
-            mDetailsButton.setEnabled(selection != null);
+            mDetailsButton.setEnabled(hasSelection);
+            mStartButton.setEnabled(mOsSdkPath != null &&
+                    hasSelection &&
+                    selection != null &&
+                    selection.getStatus() == AvdStatus.OK);
+
             if (mDeleteButton != null) {
-                mDeleteButton.setEnabled(selection != null);
+                mDeleteButton.setEnabled(hasSelection);
             }
             if (mUpdateButton != null) {
-                mUpdateButton.setEnabled(selection != null &&
+                mUpdateButton.setEnabled(hasSelection &&
+                        selection != null &&
                         selection.getStatus() == AvdStatus.ERROR_IMAGE_DIR);
             }
         }
@@ -847,6 +886,113 @@ public final class AvdSelector {
                 false /*userCanChangeSdkRoot*/);
         window.open();
         refresh(true /*reload*/); // UpdaterWindow uses its own AVD manager so this one must reload.
+    }
+
+    private void onStart() {
+        AvdInfo avdInfo = getTableSelection();
+
+        if (avdInfo == null || mOsSdkPath == null) {
+            return;
+        }
+
+        String path = mOsSdkPath +
+            File.separator +
+            SdkConstants.OS_SDK_TOOLS_FOLDER +
+            SdkConstants.FN_EMULATOR;
+
+        final String avdName = avdInfo.getName();
+
+        // build the command line based on the available parameters.
+        ArrayList<String> list = new ArrayList<String>();
+        list.add(path);
+        list.add("-avd");   //$NON-NLS-1$
+        list.add(avdName);
+
+        // convert the list into an array for the call to exec.
+        final String[] command = list.toArray(new String[list.size()]);
+
+        // launch the emulator
+        new ProgressTask(mTable.getShell(),
+                "Starting Android Emulator",
+                new ITask() {
+                    public void run(ITaskMonitor monitor) {
+                        try {
+                            monitor.setDescription("Starting emualator for AVD '%1$s'", avdName);
+                            int n = 10;
+                            monitor.setProgressMax(n);
+                            Process process = Runtime.getRuntime().exec(command);
+                            grabEmulatorOutput(process, monitor);
+
+                            // This small wait prevents the dialog from closing too fast:
+                            // When it works, the emulator returns immediately, even if no UI
+                            // is shown yet. And when it fails (because the AVD is locked/running)
+                            // if we don't have a wait we don't capture the error for some reason.
+                            for (int i = 0; i < n; i++) {
+                                try {
+                                    Thread.sleep(100);
+                                    monitor.incProgress(1);
+                                } catch (InterruptedException e) {
+                                    // ignore
+                                }
+                            }
+                        } catch (IOException e) {
+                            monitor.setResult("Failed to start emulator: %1$s", e.getMessage());
+                        }
+                    }
+        });
+
+    }
+
+    /**
+     * Get the stderr/stdout outputs of a process and return when the process is done.
+     * Both <b>must</b> be read or the process will block on windows.
+     * @param process The process to get the output from.
+     * @param monitor An {@link ISdkLog} to capture errors.
+     */
+    private void grabEmulatorOutput(final Process process, final ITaskMonitor monitor) {
+        // read the lines as they come. if null is returned, it's because the process finished
+        new Thread("emu-stderr") { //$NON-NLS-1$
+            @Override
+            public void run() {
+                // create a buffer to read the stderr output
+                InputStreamReader is = new InputStreamReader(process.getErrorStream());
+                BufferedReader errReader = new BufferedReader(is);
+
+                try {
+                    while (true) {
+                        String line = errReader.readLine();
+                        if (line != null) {
+                            monitor.setResult("%1$s", line);    //$NON-NLS-1$
+                        } else {
+                            break;
+                        }
+                    }
+                } catch (IOException e) {
+                    // do nothing.
+                }
+            }
+        }.start();
+
+        new Thread("emu-stdout") { //$NON-NLS-1$
+            @Override
+            public void run() {
+                InputStreamReader is = new InputStreamReader(process.getInputStream());
+                BufferedReader outReader = new BufferedReader(is);
+
+                try {
+                    while (true) {
+                        String line = outReader.readLine();
+                        if (line != null) {
+                            monitor.setResult("%1$s", line);    //$NON-NLS-1$
+                        } else {
+                            break;
+                        }
+                    }
+                } catch (IOException e) {
+                    // do nothing.
+                }
+            }
+        }.start();
     }
 
     /**
