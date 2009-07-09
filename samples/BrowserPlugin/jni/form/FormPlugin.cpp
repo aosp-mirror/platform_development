@@ -124,6 +124,10 @@ FormPlugin::~FormPlugin() {
     gPaintI.deletePaint(m_paintText);
 }
 
+bool FormPlugin::supportsDrawingModel(ANPDrawingModel model) {
+    return (model == kBitmap_ANPDrawingModel);
+}
+
 void FormPlugin::draw(ANPCanvas* canvas) {
     NPP instance = this->inst();
     PluginObject *obj = (PluginObject*) instance->pdata;

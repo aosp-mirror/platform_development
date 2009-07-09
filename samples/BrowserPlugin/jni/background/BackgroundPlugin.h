@@ -28,14 +28,11 @@
 #ifndef backgroundPlugin__DEFINED
 #define backgroundPlugin__DEFINED
 
-struct ANPCanvas;
-struct ANPEvent;
-struct ANPPaint;
-
 class BackgroundPlugin : public SubPlugin {
 public:
     BackgroundPlugin(NPP inst);
     virtual ~BackgroundPlugin();
+    virtual bool supportsDrawingModel(ANPDrawingModel);
     virtual void draw(ANPCanvas*);
     virtual int16 handleEvent(const ANPEvent* evt);
 

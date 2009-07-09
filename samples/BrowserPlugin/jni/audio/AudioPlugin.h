@@ -24,15 +24,24 @@
  */
 
 #include "PluginObject.h"
-#include "android_npapi.h"
+#include <stdio.h>
 
 #ifndef audioPlugin__DEFINED
 #define audioPlugin__DEFINED
+
+struct SoundPlay {
+    NPP             instance;
+    ANPAudioTrack*  track;
+    FILE*           file;
+    int             fileSize;
+    int             progress; // value between 0 and 100
+};
 
 class AudioPlugin : public SubPlugin {
 public:
     AudioPlugin(NPP inst);
     virtual ~AudioPlugin();
+    virtual bool supportsDrawingModel(ANPDrawingModel);
     virtual void draw(ANPCanvas*);
     virtual int16 handleEvent(const ANPEvent* evt);
 private:
@@ -46,14 +55,20 @@ private:
     ANPPaint*   m_paintRect;
     ANPPaint*   m_paintText;
 
-    ANPAudioTrack* m_track;
+    ANPPaint*   m_paintTrackProgress;
+    ANPPaint*   m_paintActiveRect;
+
+    SoundPlay*  m_soundPlay;
 
     bool        m_activeTouch;
+    ANPRectF*   m_activeTouchRect;
     ANPRectF*   m_activeRect;
 
+    ANPPaint* getPaint(ANPRectF*);
     ANPRectF* validTouch(int x, int y);
     void handleTouch(int x, int y);
     void invalActiveRect();
+
 
 };
 

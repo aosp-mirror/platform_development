@@ -73,6 +73,10 @@ BackgroundPlugin::BackgroundPlugin(NPP inst) : SubPlugin(inst) {
 BackgroundPlugin::~BackgroundPlugin() {
 }
 
+bool BackgroundPlugin::supportsDrawingModel(ANPDrawingModel model) {
+    return (model == kBitmap_ANPDrawingModel);
+}
+
 void BackgroundPlugin::draw(ANPCanvas* canvas) {
 
     gCanvasI.drawColor(canvas, 0xFFFFFFFF);

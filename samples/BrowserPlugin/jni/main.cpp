@@ -152,30 +152,6 @@ NPError NPP_New(NPMIMEType pluginType, NPP instance, uint16 mode, int16 argc,
     }
     /* END: STANDARD PLUGIN FRAMEWORK */
 
-    // select the drawing model based on user input
-    ANPDrawingModel model = kBitmap_ANPDrawingModel;
-
-    for (int i = 0; i < argc; i++) {
-        if (!strcmp(argn[i], "DrawingModel")) {
-            if (!strcmp(argv[i], "Bitmap")) {
-                model = kBitmap_ANPDrawingModel;
-            }
-            if (!strcmp(argv[i], "Canvas")) {
-                //TODO support drawing on canvas instead of bitmap
-            }
-            gLogI.log(instance, kDebug_ANPLogType, "------ %p DrawingModel is %d", instance, model);
-            break;
-        }
-    }
-
-    // comment this out to use the default model (bitmaps)
-    NPError err = browser->setvalue(instance, kRequestDrawingModel_ANPSetValue,
-                            reinterpret_cast<void*>(model));
-    if (err) {
-        gLogI.log(instance, kError_ANPLogType, "request model %d err %d", model, err);
-        return err;
-    }
-
     // select the pluginType
     for (int i = 0; i < argc; i++) {
         if (!strcmp(argn[i], "PluginType")) {
@@ -204,6 +180,36 @@ NPError NPP_New(NPMIMEType pluginType, NPP instance, uint16 mode, int16 argc,
     if (!obj->pluginType) {
         obj->pluginType = kAnimation_PluginType;
         obj->activePlugin = new BallAnimation(instance);
+    }
+
+    // select the drawing model based on user input
+    ANPDrawingModel model = kBitmap_ANPDrawingModel;
+
+    for (int i = 0; i < argc; i++) {
+        if (!strcmp(argn[i], "DrawingModel")) {
+            if (!strcmp(argv[i], "Bitmap")) {
+                model = kBitmap_ANPDrawingModel;
+            }
+            else if (!strcmp(argv[i], "RasterSurface")) {
+               // model = kRasterSurface_ANPDrawingModel;
+            }
+            gLogI.log(instance, kDebug_ANPLogType, "------ %p DrawingModel is %d", instance, model);
+            break;
+        }
+    }
+
+    // check to ensure the pluginType supports the model
+    if (!obj->activePlugin->supportsDrawingModel(model)) {
+        gLogI.log(instance, kError_ANPLogType, "------ %p Unsupported DrawingModel (%d)", instance, model);
+        return NPERR_GENERIC_ERROR;
+    }
+
+    // notify the plugin API of the drawing model we wish to use
+    NPError err = browser->setvalue(instance, kRequestDrawingModel_ANPSetValue,
+                            reinterpret_cast<void*>(model));
+    if (err) {
+        gLogI.log(instance, kError_ANPLogType, "request model %d err %d", model, err);
+        return err;
     }
 
     return NPERR_NO_ERROR;

@@ -24,7 +24,6 @@
  */
 
 #include "PluginObject.h"
-#include "android_npapi.h"
 
 #ifndef formPlugin__DEFINED
 #define formPlugin__DEFINED
@@ -39,6 +38,7 @@ class FormPlugin : public SubPlugin {
 public:
     FormPlugin(NPP inst);
     virtual ~FormPlugin();
+    virtual bool supportsDrawingModel(ANPDrawingModel);
     virtual void draw(ANPCanvas*);
     virtual int16 handleEvent(const ANPEvent* evt);
 private:

@@ -36,16 +36,13 @@
 
 #include "main.h"
 
-struct ANPEvent;
-struct ANPCanvas;
-struct ANPAudioTrack;
-
 class SubPlugin {
 public:
     SubPlugin(NPP inst) : m_inst(inst) {}
     virtual ~SubPlugin() {}
     virtual void draw(ANPCanvas*) = 0;
     virtual int16 handleEvent(const ANPEvent* evt) = 0;
+    virtual bool supportsDrawingModel(ANPDrawingModel) = 0;
 
     NPP inst() const { return m_inst; }
 

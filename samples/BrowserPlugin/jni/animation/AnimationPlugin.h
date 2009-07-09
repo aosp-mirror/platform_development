@@ -24,7 +24,6 @@
  */
 
 #include "PluginObject.h"
-#include "android_npapi.h"
 
 #ifndef pluginGraphics__DEFINED
 #define pluginGraphics__DEFINED
@@ -33,6 +32,7 @@ class BallAnimation : public SubPlugin {
 public:
     BallAnimation(NPP inst);
     virtual ~BallAnimation();
+    virtual bool supportsDrawingModel(ANPDrawingModel);
     virtual void draw(ANPCanvas*);
     virtual int16 handleEvent(const ANPEvent* evt);
 private:

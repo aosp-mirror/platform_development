@@ -25,7 +25,8 @@
 
 #include "AudioPlugin.h"
 
-#include <stdio.h>
+#include <fcntl.h>
+#include <sys/stat.h>
 #include <sys/time.h>
 #include <time.h>
 #include <math.h>
@@ -77,12 +78,6 @@ static void drawPlugin(SubPlugin* plugin, const ANPBitmap& bitmap, const ANPRect
     gCanvasI.deleteCanvas(canvas);
 }
 
-struct SoundPlay {
-    NPP             instance;
-    ANPAudioTrack*  track;
-    FILE*           file;
-};
-
 static void audioCallback(ANPAudioEvent evt, void* user, ANPAudioBuffer* buffer) {
     switch (evt) {
         case kMoreData_ANPAudioEvent: {
@@ -95,6 +90,14 @@ static void audioCallback(ANPAudioEvent evt, void* user, ANPAudioBuffer* buffer)
                 play->file = NULL;
                 // TODO need to notify our main thread to delete the track now
             }
+
+            if (play->fileSize > 0) {
+                // TODO we need to properly update the progress value
+                play->progress = 1;
+                inval(play->instance);
+            }
+
+
             break;
         }
         default:
@@ -102,28 +105,48 @@ static void audioCallback(ANPAudioEvent evt, void* user, ANPAudioBuffer* buffer)
     }
 }
 
-static ANPAudioTrack* createTrack(NPP instance, const char path[]) {
-    FILE* f = fopen(path, "r");
-    gLogI.log(instance, kWarning_ANPLogType, "--- path %s FILE %p", path, f);
-    if (NULL == f) {
-        return NULL;
-    }
-    SoundPlay* play = new SoundPlay;
-    play->file = f;
-    play->track = gSoundI.newTrack(44100, kPCM16Bit_ANPSampleFormat, 2, audioCallback, play);
-    if (NULL == play->track) {
-        fclose(f);
-        delete play;
-        return NULL;
-    }
-    return play->track;
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 
 AudioPlugin::AudioPlugin(NPP inst) : SubPlugin(inst) {
 
-    m_track = NULL;
+    const char path[] = "/sdcard/sample.raw";
+
+    // open a file stream
+    FILE* f = fopen(path, "r");
+    gLogI.log(inst, kDebug_ANPLogType, "--- path %s FILE %p", path, f);
+
+    // setup our private audio struct's default values
+    m_soundPlay = new SoundPlay;
+    m_soundPlay->instance = inst;
+    m_soundPlay->progress = 0;
+    m_soundPlay->fileSize = 0;
+    m_soundPlay->file = f;
+    m_soundPlay->track = NULL;
+
+    // create the audio track
+    if (f) {
+        m_soundPlay->track = gSoundI.newTrack(44100, kPCM16Bit_ANPSampleFormat, 2, audioCallback, m_soundPlay);
+        if (!m_soundPlay->track) {
+            fclose(f);
+            m_soundPlay->file = NULL;
+        }
+    }
+
+    // get the audio file's size
+    int fileDescriptor = open(path, O_RDONLY);
+    struct stat fileStatus;
+
+    if(fileDescriptor <= 0) {
+        gLogI.log(inst, kError_ANPLogType, "fopen error");
+    }
+    else if (fstat(fileDescriptor, &fileStatus) != 0) {
+        gLogI.log(inst, kDebug_ANPLogType, "File Size: %d", fileStatus.st_size);
+        m_soundPlay->fileSize = fileStatus.st_size;
+    } else {
+        gLogI.log(inst, kError_ANPLogType, "fstat error");
+    }
+
+    // configure the UI elements
     m_activeTouch = false;
 
     memset(&m_trackRect, 0, sizeof(m_trackRect));
@@ -144,6 +167,14 @@ AudioPlugin::AudioPlugin(NPP inst) : SubPlugin(inst) {
     gPaintI.setColor(m_paintText, 0xFF2F4F4F);
     gPaintI.setTextSize(m_paintText, 18);
 
+    m_paintTrackProgress = gPaintI.newPaint();
+    gPaintI.setFlags(m_paintTrackProgress, gPaintI.getFlags(m_paintTrackProgress) | kAntiAlias_ANPPaintFlag);
+    gPaintI.setColor(m_paintTrackProgress, 0xFF545454);
+
+    m_paintActiveRect = gPaintI.newPaint();
+    gPaintI.setFlags(m_paintActiveRect, gPaintI.getFlags(m_paintActiveRect) | kAntiAlias_ANPPaintFlag);
+    gPaintI.setColor(m_paintActiveRect, 0xFF545454);
+
     ANPTypeface* tf = gTypefaceI.createFromName("serif", kItalic_ANPTypefaceStyle);
     gPaintI.setTypeface(m_paintText, tf);
     gTypefaceI.unref(tf);
@@ -160,13 +191,22 @@ AudioPlugin::~AudioPlugin() {
     gPaintI.deletePaint(m_paintTrack);
     gPaintI.deletePaint(m_paintRect);
     gPaintI.deletePaint(m_paintText);
-    if(m_track)
-        gSoundI.deleteTrack(m_track);
+    gPaintI.deletePaint(m_paintTrackProgress);
+    gPaintI.deletePaint(m_paintActiveRect);
+    if(m_soundPlay->track)
+        gSoundI.deleteTrack(m_soundPlay->track);
+    delete m_soundPlay;
+}
+
+bool AudioPlugin::supportsDrawingModel(ANPDrawingModel model) {
+    return (model == kBitmap_ANPDrawingModel);
 }
 
 void AudioPlugin::draw(ANPCanvas* canvas) {
     NPP instance = this->inst();
     PluginObject *obj = (PluginObject*) instance->pdata;
+
+    gLogI.log(instance, kError_ANPLogType, "Drawing");
 
     const float trackHeight = 30;
     const float buttonWidth = 60;
@@ -182,53 +222,54 @@ void AudioPlugin::draw(ANPCanvas* canvas) {
     gPaintI.getFontMetrics(m_paintText, &fontMetrics);
 
     // draw the track box (1 px from the edge)
-    inval(instance, m_trackRect, true);
     m_trackRect.left = 1;
     m_trackRect.top = 1;
     m_trackRect.right = W - 2;
     m_trackRect.bottom = 1 + trackHeight;
     gCanvasI.drawRect(canvas, &m_trackRect, m_paintTrack);
-    inval(instance, m_trackRect, true);
+
+    // draw the progress bar
+    if (m_soundPlay->progress > 0) {
+        // TODO need to draw progress bar to cover the proper percentage of the track bar
+        gCanvasI.drawRect(canvas, &m_trackRect, m_paintTrackProgress);
+    }
 
     // draw the play box (under track box)
-    inval(instance, m_playRect, true);
     m_playRect.left = m_trackRect.left + 5;
     m_playRect.top = m_trackRect.bottom + 10;
     m_playRect.right = m_playRect.left + buttonWidth;
     m_playRect.bottom = m_playRect.top + buttonHeight;
-    gCanvasI.drawRect(canvas, &m_playRect, m_paintRect);
+    gCanvasI.drawRect(canvas, &m_playRect, getPaint(&m_playRect));
     // draw the play box (under track box)
     const char playText[] = "Play";
     gCanvasI.drawText(canvas, playText, sizeof(playText)-1, m_playRect.left + 5,
                       m_playRect.top - fontMetrics.fTop, m_paintText);
-    inval(instance, m_playRect, true);
 
     // draw the pause box (under track box)
-    inval(instance, m_pauseRect, true);
     m_pauseRect.left = m_playRect.right + 20;
     m_pauseRect.top = m_trackRect.bottom + 10;
     m_pauseRect.right = m_pauseRect.left + buttonWidth;
     m_pauseRect.bottom = m_pauseRect.top + buttonHeight;
-    gCanvasI.drawRect(canvas, &m_pauseRect, m_paintRect);
+    gCanvasI.drawRect(canvas, &m_pauseRect, getPaint(&m_pauseRect));
     // draw the text in the pause box
     const char pauseText[] = "Pause";
     gCanvasI.drawText(canvas, pauseText, sizeof(pauseText)-1, m_pauseRect.left + 5,
                       m_pauseRect.top - fontMetrics.fTop, m_paintText);
-    inval(instance, m_pauseRect, true);
 
     // draw the stop box (under track box)
-    inval(instance, m_stopRect, true);
     m_stopRect.left = m_pauseRect.right + 20;
     m_stopRect.top = m_trackRect.bottom + 10;
     m_stopRect.right = m_stopRect.left + buttonWidth;
     m_stopRect.bottom = m_stopRect.top + buttonHeight;
-    gCanvasI.drawRect(canvas, &m_stopRect, m_paintRect);
+    gCanvasI.drawRect(canvas, &m_stopRect, getPaint(&m_stopRect));
     // draw the text in the pause box
     const char stopText[] = "Stop";
     gCanvasI.drawText(canvas, stopText, sizeof(stopText)-1, m_stopRect.left + 5,
                       m_stopRect.top - fontMetrics.fTop, m_paintText);
-    inval(instance, m_stopRect, true);
+}
 
+ANPPaint* AudioPlugin::getPaint(ANPRectF* input) {
+    return (input == m_activeRect) ? m_paintActiveRect : m_paintRect;
 }
 
 int16 AudioPlugin::handleEvent(const ANPEvent* evt) {
@@ -249,19 +290,14 @@ int16 AudioPlugin::handleEvent(const ANPEvent* evt) {
             int y = evt->data.touch.y;
             if (kDown_ANPTouchAction == evt->data.touch.action) {
 
-                if (m_activeTouch)
-                    invalActiveRect();
-
-                m_activeRect = validTouch(x,y);
-                if(m_activeRect) {
+                m_activeTouchRect = validTouch(x,y);
+                if(m_activeTouchRect) {
                     m_activeTouch = true;
-                    // TODO color the rect
                     return 1;
                 }
 
             } else if (kUp_ANPTouchAction == evt->data.touch.action && m_activeTouch) {
                 handleTouch(x, y);
-                invalActiveRect();
                 m_activeTouch = false;
                 return 1;
             } else if (kCancel_ANPTouchAction == evt->data.touch.action) {
@@ -275,7 +311,9 @@ int16 AudioPlugin::handleEvent(const ANPEvent* evt) {
     return 0;   // unknown or unhandled event
 }
 
-void AudioPlugin::invalActiveRect() { }
+void AudioPlugin::invalActiveRect() {
+
+}
 
 ANPRectF* AudioPlugin::validTouch(int x, int y) {
 
@@ -292,12 +330,8 @@ ANPRectF* AudioPlugin::validTouch(int x, int y) {
 void AudioPlugin::handleTouch(int x, int y) {
     NPP instance = this->inst();
 
-    if (NULL == m_track) {
-        m_track = createTrack(instance, "/sdcard/sample.raw");
-    }
-
-    // if the track is still null then return
-    if(NULL == m_track) {
+    // if the track is null then return
+    if (NULL == m_soundPlay->track) {
         gLogI.log(instance, kError_ANPLogType, "---- %p unable to create track",
                   instance);
         return;
@@ -305,34 +339,44 @@ void AudioPlugin::handleTouch(int x, int y) {
 
     // check to make sure the currentRect matches the activeRect
     ANPRectF* currentRect = validTouch(x,y);
-    if(m_activeRect != currentRect)
+    if (m_activeTouchRect != currentRect)
         return;
 
-    if (m_activeRect == &m_playRect) {
+    if (currentRect == &m_playRect) {
 
         gLogI.log(instance, kDebug_ANPLogType, "---- %p starting track (%d)",
-                  m_track, gSoundI.isStopped(m_track));
+                  m_soundPlay->track, gSoundI.isStopped(m_soundPlay->track));
 
-        if (gSoundI.isStopped(m_track)) {
-            gSoundI.start(m_track);
+        if (gSoundI.isStopped(m_soundPlay->track)) {
+            gSoundI.start(m_soundPlay->track);
         }
     }
-    else if (m_activeRect == &m_pauseRect) {
+    else if (currentRect == &m_pauseRect) {
 
         gLogI.log(instance, kDebug_ANPLogType, "---- %p pausing track (%d)",
-                  m_track, gSoundI.isStopped(m_track));
+                  m_soundPlay->track, gSoundI.isStopped(m_soundPlay->track));
 
-        if (!gSoundI.isStopped(m_track)) {
-            gSoundI.pause(m_track);
+        if (!gSoundI.isStopped(m_soundPlay->track)) {
+            gSoundI.pause(m_soundPlay->track);
         }
     }
-    else if (m_activeRect == &m_stopRect) {
+    else if (currentRect == &m_stopRect) {
 
         gLogI.log(instance, kDebug_ANPLogType, "---- %p stopping track (%d)",
-                  m_track, gSoundI.isStopped(m_track));
+                  m_soundPlay->track, gSoundI.isStopped(m_soundPlay->track));
 
-        if (!gSoundI.isStopped(m_track)) {
-            gSoundI.stop(m_track);
+        if (!gSoundI.isStopped(m_soundPlay->track)) {
+            gSoundI.stop(m_soundPlay->track);
+        }
+        if (m_soundPlay->file) {
+            fseek(m_soundPlay->file, 0, SEEK_SET);
         }
     }
+    else {
+        return;
+    }
+
+    // set the currentRect to be the activeRect
+    m_activeRect = currentRect;
+    inval(instance);
 }

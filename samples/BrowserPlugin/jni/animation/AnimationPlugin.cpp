@@ -130,6 +130,10 @@ static void bounce(float* x, float* dx, const float max) {
     }
 }
 
+bool BallAnimation::supportsDrawingModel(ANPDrawingModel model) {
+    return (model == kBitmap_ANPDrawingModel);
+}
+
 void BallAnimation::draw(ANPCanvas* canvas) {
     NPP instance = this->inst();
     PluginObject *obj = (PluginObject*) instance->pdata;
