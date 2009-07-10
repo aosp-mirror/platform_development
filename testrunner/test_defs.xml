@@ -460,10 +460,10 @@ See test_defs.xsd for more information.
 -->
 
 <!-- host java tests -->
-<test-host name="cts-appinstall"
-    build_path="cts/tests/install-tests"
-    class="com.android.cts.install.InstallTests"
-    jar_name="CtsInstallTests.jar"
+<test-host name="cts-appsecurity"
+    build_path="cts/tests/appsecurity-tests"
+    class="com.android.cts.appsecurity.AppSecurityTests"
+    jar_name="CtsAppSecurityTests.jar"
     cts="true" />
 
 </test-definitions>
