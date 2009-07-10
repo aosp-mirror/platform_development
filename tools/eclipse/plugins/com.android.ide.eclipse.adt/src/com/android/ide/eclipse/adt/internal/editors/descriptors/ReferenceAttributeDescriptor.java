@@ -32,8 +32,10 @@ import org.eclipse.swt.widgets.Composite;
  */
 public final class ReferenceAttributeDescriptor extends TextAttributeDescriptor {
 
+    /** The {@link ResourceType} that this reference attribute can accept. It can be null,
+     * in which case any reference type can be used. */
     private ResourceType mResourceType;
-    
+
     /**
      * Creates a reference attributes that can contain any type of resources.
      * @param xmlLocalName The XML name of the attribute (case sensitive)
@@ -46,7 +48,7 @@ public final class ReferenceAttributeDescriptor extends TextAttributeDescriptor 
             String tooltip) {
         super(xmlLocalName, uiName, nsUri, tooltip);
     }
-    
+
     /**
      * Creates a reference attributes that can contain a reference to a specific
      * {@link ResourceType}.
@@ -58,14 +60,20 @@ public final class ReferenceAttributeDescriptor extends TextAttributeDescriptor 
      *              See {@link SdkConstants#NS_RESOURCES} for a common value.
      * @param tooltip A non-empty tooltip string or null
      */
-    public ReferenceAttributeDescriptor(ResourceType resourceType, 
+    public ReferenceAttributeDescriptor(ResourceType resourceType,
             String xmlLocalName, String uiName, String nsUri,
             String tooltip) {
         super(xmlLocalName, uiName, nsUri, tooltip);
         mResourceType = resourceType;
     }
-    
-    
+
+
+    /** Returns the {@link ResourceType} that this reference attribute can accept.
+     * It can be null, in which case any reference type can be used. */
+    public ResourceType getResourceType() {
+        return mResourceType;
+    }
+
     /**
      * @return A new {@link UiResourceAttributeNode} linked to this reference descriptor.
      */
@@ -73,7 +81,7 @@ public final class ReferenceAttributeDescriptor extends TextAttributeDescriptor 
     public UiAttributeNode createUiNode(UiElementNode uiParent) {
         return new UiResourceAttributeNode(mResourceType, this, uiParent);
     }
-    
+
     // ------- IPropertyDescriptor Methods
 
     @Override

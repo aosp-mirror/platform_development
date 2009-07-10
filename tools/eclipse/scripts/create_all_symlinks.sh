@@ -1,5 +1,14 @@
 #!/bin/bash
 
+HOST=`uname`
+if [ "${HOST:0:6}" == "CYGWIN" ]; then
+    if [ "x$1" == "x" ] || [ `basename "$1"` != "layoutlib.jar" ]; then
+        echo "Usage: $0 sdk/platforms/xxx/data/layoutlib.jar"
+        echo "Argument 1 should be the path to the layoutlib.jar that should be updated by create_bridge_symlinks.sh."
+        exit 1
+    fi
+fi
+
 echo "### $0 executing"
 
 function die() {
