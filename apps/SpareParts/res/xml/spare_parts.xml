@@ -72,12 +72,6 @@
             android:summaryOn="@string/summary_on_fancy_ime_animations"
             android:summaryOff="@string/summary_off_fancy_ime_animations"/>
         
-        <CheckBoxPreference 
-            android:key="fancy_rotation_animations" 
-            android:title="@string/title_fancy_rotation_animations" 
-            android:summaryOn="@string/summary_on_fancy_rotation_animations"
-            android:summaryOff="@string/summary_off_fancy_rotation_animations"/>
-        
         <ListPreference
                 android:key="font_size"
                 android:title="@string/title_font_size"
