@@ -33,6 +33,8 @@ import org.eclipse.ltk.ui.refactoring.UserInputWizardPage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
@@ -42,6 +44,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 
 import java.util.HashMap;
+import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -59,7 +62,7 @@ class ExtractStringInputPage extends UserInputWizardPage implements IWizardPage 
     private final IProject mProject;
 
     /** Text field where the user enters the new ID to be generated or replaced with. */
-    private Text mStringIdField;
+    private Combo mStringIdCombo;
     /** Text field where the user enters the new string value. */
     private Text mStringValueField;
     /** The configuration selector, to select the resource path of the XML file. */
@@ -163,15 +166,21 @@ class ExtractStringInputPage extends UserInputWizardPage implements IWizardPage 
             label.setText("ID &R.string.");
         }
 
-        mStringIdField = new Text(group, SWT.SINGLE | SWT.LEFT | SWT.BORDER);
-        mStringIdField.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-        mStringIdField.setText(guessId(selectedString));
-        mStringIdField.forceFocus();
+        mStringIdCombo = new Combo(group, SWT.SINGLE | SWT.LEFT | SWT.BORDER | SWT.DROP_DOWN);
+        mStringIdCombo.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        mStringIdCombo.setText(guessId(selectedString));
+        mStringIdCombo.forceFocus();
 
-        ref.setNewStringId(mStringIdField.getText().trim());
+        ref.setNewStringId(mStringIdCombo.getText().trim());
 
-        mStringIdField.addModifyListener(new ModifyListener() {
+        mStringIdCombo.addModifyListener(new ModifyListener() {
             public void modifyText(ModifyEvent e) {
+                validatePage();
+            }
+        });
+        mStringIdCombo.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
                 validatePage();
             }
         });
@@ -270,7 +279,7 @@ class ExtractStringInputPage extends UserInputWizardPage implements IWizardPage 
 
         // Analyze fatal errors.
 
-        String text = mStringIdField.getText().trim();
+        String text = mStringIdCombo.getText().trim();
         if (text == null || text.length() < 1) {
             setErrorMessage("Please provide a resource ID.");
             success = false;
@@ -340,6 +349,23 @@ class ExtractStringInputPage extends UserInputWizardPage implements IWizardPage 
 
         setPageComplete(success);
         return success;
+    }
+
+    private void updateStringValueCombo() {
+        String resFile = mResFileCombo.getText();
+        Set<String> ids = mXmlHelper.getResIdsForFile(mProject, resFile);
+
+        // get the current text from the combo, to make sure we don't change it
+        String currText = mStringIdCombo.getText();
+
+        // erase the choices and fill with the given ids
+        mStringIdCombo.removeAll();
+        mStringIdCombo.setItems(ids.toArray(new String[ids.size()]));
+
+        // set the current text to preserve it in case it changed
+        if (!currText.equals(mStringIdCombo.getText())) {
+            mStringIdCombo.setText(currText);
+        }
     }
 
     public class OnConfigSelectorUpdated implements Runnable, ModifyListener {
@@ -458,6 +484,7 @@ class ExtractStringInputPage extends UserInputWizardPage implements IWizardPage 
             }
 
             // finally validate the whole page
+            updateStringValueCombo();
             validatePage();
         }
 
@@ -510,6 +537,7 @@ class ExtractStringInputPage extends UserInputWizardPage implements IWizardPage 
                 }
             }
 
+            updateStringValueCombo();
             validatePage();
         }
     }
