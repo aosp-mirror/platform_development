@@ -489,7 +489,7 @@ public class ExtractStringRefactoring extends Refactoring {
             AndroidEditor editor = (AndroidEditor) mEditor;
             IStructuredModel smodel = null;
             Node node = null;
-            String attrName = null;
+            String currAttrName = null;
 
             try {
                 // See the portability note in AndroidEditor#getModelForRead() javadoc.
@@ -538,21 +538,47 @@ public class ExtractStringRefactoring extends Refactoring {
 
                             int nb = region.getNumberOfRegions();
                             ITextRegionList list = region.getRegions();
+                            String currAttrValue = null;
 
                             for (int i = 0; i < nb; i++) {
                                 ITextRegion subRegion = list.get(i);
                                 String type = subRegion.getType();
 
                                 if (DOMRegionContext.XML_TAG_ATTRIBUTE_NAME.equals(type)) {
-                                    attrName = region.getText(subRegion);
+                                    currAttrName = region.getText(subRegion);
+
+                                    // I like to select the attribute definition and invoke
+                                    // the extract string wizard. So if the selection is on
+                                    // the attribute name part, find the value that is just
+                                    // after and use it as if it were the selection.
+
+                                    if (subRegion.getStart() <= startInRegion &&
+                                            startInRegion < subRegion.getTextEnd()) {
+                                        // A well-formed attribute is composed of a name,
+                                        // an equal sign and the value. There can't be any space
+                                        // in between, which makes the parsing a lot easier.
+                                        if (i <= nb - 3 &&
+                                                DOMRegionContext.XML_TAG_ATTRIBUTE_EQUALS.equals(
+                                                                       list.get(i + 1).getType())) {
+                                            subRegion = list.get(i + 2);
+                                            type = subRegion.getType();
+                                            if (DOMRegionContext.XML_TAG_ATTRIBUTE_VALUE.equals(
+                                                    type)) {
+                                                currAttrValue = region.getText(subRegion);
+                                            }
+                                        }
+                                    }
+
+                                } else if (subRegion.getStart() <= startInRegion &&
+                                        startInRegion < subRegion.getTextEnd() &&
+                                        DOMRegionContext.XML_TAG_ATTRIBUTE_VALUE.equals(type)) {
+                                    currAttrValue = region.getText(subRegion);
                                 }
 
-                                if (subRegion.getStart() <= startInRegion &&
-                                        startInRegion <= subRegion.getEnd() &&
-                                        DOMRegionContext.XML_TAG_ATTRIBUTE_VALUE.equals(type)) {
+                                if (currAttrValue != null) {
                                     // We found the value. Only accept it if not empty
                                     // and if we found an attribute name before.
-                                    String text = region.getText(subRegion);
+                                    String text = currAttrValue;
 
                                     // The attribute value will contain the XML quotes. Remove them.
                                     int len = text.length();
@@ -565,7 +591,9 @@ public class ExtractStringRefactoring extends Refactoring {
                                             text.charAt(len - 1) == '\'') {
                                         text = text.substring(1, len - 1);
                                     }
-                                    if (text.length() > 0 && attrName != null) {
+                                    if (text.length() > 0 && currAttrName != null) {
+                                        // Setting mTokenString to non-null marks the fact we
+                                        // accept this attribute.
                                         mTokenString = text;
                                     }
 
@@ -580,7 +608,7 @@ public class ExtractStringRefactoring extends Refactoring {
                         }
                     }
 
-                    if (mTokenString != null && node != null && attrName != null) {
+                    if (mTokenString != null && node != null && currAttrName != null) {
 
                         UiElementNode rootUiNode = editor.getUiRootNode();
                         UiElementNode currentUiNode =
@@ -589,7 +617,7 @@ public class ExtractStringRefactoring extends Refactoring {
 
                         if (currentUiNode != null) {
                             // remove any namespace prefix from the attribute name
-                            String name = attrName;
+                            String name = currAttrName;
                             int pos = name.indexOf(':');
                             if (pos > 0 && pos < name.length() - 1) {
                                 name = name.substring(pos + 1);
@@ -624,7 +652,7 @@ public class ExtractStringRefactoring extends Refactoring {
                                     mTokenString = null;
                                     status.addFatalError(String.format(
                                             "The attribute %1$s already contains a %2$s reference.",
-                                            attrName,
+                                            currAttrName,
                                             kind));
                                 }
                             }
@@ -634,14 +662,14 @@ public class ExtractStringRefactoring extends Refactoring {
                                 // current attribute value. We don't memorize the region nor the
                                 // attribute, however we memorize the textual attribute name so
                                 // that we can offer replacement for all its occurrences.
-                                mXmlAttributeName = attrName;
+                                mXmlAttributeName = currAttrName;
                             }
 
                         } else {
                             mTokenString = null;
                             status.addFatalError(String.format(
                                     "The attribute %1$s does not accept a string reference.",
-                                    attrName));
+                                    currAttrName));
                         }
 
                     } else {
@@ -1039,7 +1067,8 @@ public class ExtractStringRefactoring extends Refactoring {
                                         ResourceFolderType.getFolderType(name);
                                     if (type.equals(t)) {
                                         // recompute the path
-                                        IPath p = res.getProjectRelativePath().append(name).append(filename);
+                                        IPath p = res.getProjectRelativePath().append(name).
+                                                                               append(filename);
                                         IResource f = project.findMember(p);
                                         if (f != null && f instanceof IFile) {
                                             files.add((IFile) f);
