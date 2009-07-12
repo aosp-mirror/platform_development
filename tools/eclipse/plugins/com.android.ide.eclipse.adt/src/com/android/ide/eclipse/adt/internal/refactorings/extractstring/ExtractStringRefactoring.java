@@ -1036,10 +1036,10 @@ public class ExtractStringRefactoring extends Refactoring {
                                 if (!name.equals(initialTypeName)) {
                                     // Only accept the same folder type (e.g. layout-*)
                                     ResourceFolderType t =
-                                        ResourceFolderType.getFolderType(initialTypeName);
-                                    if (t == type) {
+                                        ResourceFolderType.getFolderType(name);
+                                    if (type.equals(t)) {
                                         // recompute the path
-                                        IPath p = res.getFullPath().append(name).append(filename);
+                                        IPath p = res.getProjectRelativePath().append(name).append(filename);
                                         IResource f = project.findMember(p);
                                         if (f != null && f instanceof IFile) {
                                             files.add((IFile) f);

@@ -132,7 +132,7 @@ class ExtractStringInputPage extends UserInputWizardPage implements IWizardPage 
         // line: Textfield for string value (based on selection, if any)
 
         Label label = new Label(group, SWT.NONE);
-        label.setText("String");
+        label.setText("&String");
 
         String selectedString = ref.getTokenString();
 
@@ -156,16 +156,17 @@ class ExtractStringInputPage extends UserInputWizardPage implements IWizardPage 
 
         label = new Label(group, SWT.NONE);
         if (ref.getMode() == ExtractStringRefactoring.Mode.EDIT_SOURCE) {
-            label.setText("Replace by R.string.");
+            label.setText("&Replace by R.string.");
         } else if (ref.getMode() == ExtractStringRefactoring.Mode.SELECT_NEW_ID) {
-            label.setText("New R.string.");
+            label.setText("New &R.string.");
         } else {
-            label.setText("ID R.string.");
+            label.setText("ID &R.string.");
         }
 
         mStringIdField = new Text(group, SWT.SINGLE | SWT.LEFT | SWT.BORDER);
         mStringIdField.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         mStringIdField.setText(guessId(selectedString));
+        mStringIdField.forceFocus();
 
         ref.setNewStringId(mStringIdField.getText().trim());
 
@@ -196,7 +197,7 @@ class ExtractStringInputPage extends UserInputWizardPage implements IWizardPage 
 
         Label label;
         label = new Label(group, SWT.NONE);
-        label.setText("Configuration:");
+        label.setText("&Configuration:");
 
         mConfigSelector = new ConfigurationSelector(group);
         GridData gd = new GridData(GridData.GRAB_HORIZONTAL | GridData.GRAB_VERTICAL);
@@ -210,7 +211,7 @@ class ExtractStringInputPage extends UserInputWizardPage implements IWizardPage 
         // line: selection of the output file
 
         label = new Label(group, SWT.NONE);
-        label.setText("Resource file:");
+        label.setText("Resource &file:");
 
         mResFileCombo = new Combo(group, SWT.DROP_DOWN);
         mResFileCombo.select(0);
