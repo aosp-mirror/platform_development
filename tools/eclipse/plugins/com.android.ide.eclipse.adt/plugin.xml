@@ -666,6 +666,12 @@
             id="com.android.ide.eclipse.adt.refactoring.extract.string"
             name="Extract Android String">
       </command>
+      <keyBinding
+            commandId="com.android.ide.eclipse.adt.refactoring.extract.string"
+            contextId="org.eclipse.ui.globalScope"
+            keyConfigurationId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            keySequence="M3+M2+A S">
+      </keyBinding>
    </extension>
    <extension
          point="org.eclipse.ltk.core.refactoring.refactoringContributions">

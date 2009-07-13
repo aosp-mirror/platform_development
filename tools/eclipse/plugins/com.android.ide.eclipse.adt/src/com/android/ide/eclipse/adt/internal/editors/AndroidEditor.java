@@ -79,7 +79,7 @@ import java.net.URL;
  * source editor. This can be a no-op if desired.
  */
 public abstract class AndroidEditor extends FormEditor implements IResourceChangeListener {
-    
+
     /** Preference name for the current page of this file */
     private static final String PREF_CURRENT_PAGE = "_current_page";
 
@@ -91,7 +91,7 @@ public abstract class AndroidEditor extends FormEditor implements IResourceChang
 
     /** Width hint for text fields. Helps the grid layout resize properly on smaller screens */
     public static final int TEXT_WIDTH_HINT = 50;
-    
+
     /** Page index of the text editor (always the last page) */
     private int mTextPageIndex;
     /** The text editor */
@@ -108,7 +108,7 @@ public abstract class AndroidEditor extends FormEditor implements IResourceChang
     public AndroidEditor() {
         super();
         ResourcesPlugin.getWorkspace().addResourceChangeListener(this);
-        
+
         mTargetListener = new ITargetChangeListener() {
             public void onProjectTargetChange(IProject changedProject) {
                 if (changedProject == getProject()) {
@@ -118,7 +118,7 @@ public abstract class AndroidEditor extends FormEditor implements IResourceChang
 
             public void onTargetsLoaded() {
                 commitPages(false /* onSave */);
-                
+
                 // recreate the ui root node always
                 initUiRootNode(true /*force*/);
             }
@@ -133,14 +133,14 @@ public abstract class AndroidEditor extends FormEditor implements IResourceChang
      * UI node editor.
      */
     abstract public UiElementNode getUiRootNode();
-    
+
     /**
      * Creates the various form pages.
      * <p/>
      * Derived classes must implement this to add their own specific tabs.
      */
     abstract protected void createFormPages();
-    
+
     /**
      * Creates the initial UI Root Node, including the known mandatory elements.
      * @param force if true, a new UiManifestNode is recreated even if it already exists.
@@ -150,9 +150,9 @@ public abstract class AndroidEditor extends FormEditor implements IResourceChang
     /**
      * Subclasses should override this method to process the new XML Model, which XML
      * root node is given.
-     * 
+     *
      * The base implementation is empty.
-     * 
+     *
      * @param xml_doc The XML document, if available, or null if none exists.
      */
     protected void xmlModelChanged(Document xml_doc) {
@@ -169,7 +169,7 @@ public abstract class AndroidEditor extends FormEditor implements IResourceChang
         createAndroidPages();
         selectDefaultPage(null /* defaultPageId */);
     }
-    
+
     /**
      * Creates the page for the Android Editors
      */
@@ -193,7 +193,7 @@ public abstract class AndroidEditor extends FormEditor implements IResourceChang
 
             action = mTextEditor.getAction(ActionFactory.REDO.getId());
             bars.setGlobalActionHandler(ActionFactory.REDO.getId(), action);
-            
+
             bars.updateActionBars();
         }
     }
@@ -207,7 +207,7 @@ public abstract class AndroidEditor extends FormEditor implements IResourceChang
         if (defaultPageId == null) {
             if (getEditorInput() instanceof IFileEditorInput) {
                 IFile file = ((IFileEditorInput) getEditorInput()).getFile();
-    
+
                 QualifiedName qname = new QualifiedName(AdtPlugin.PLUGIN_ID,
                         getClass().getSimpleName() + PREF_CURRENT_PAGE);
                 String pageId;
@@ -234,7 +234,7 @@ public abstract class AndroidEditor extends FormEditor implements IResourceChang
             }
         }
     }
-    
+
     /**
      * Removes all the pages from the editor.
      */
@@ -247,10 +247,10 @@ public abstract class AndroidEditor extends FormEditor implements IResourceChang
 
     /**
      * Overrides the parent's setActivePage to be able to switch to the xml editor.
-     * 
+     *
      * If the special pageId TEXT_EDITOR_ID is given, switches to the mTextPageIndex page.
      * This is needed because the editor doesn't actually derive from IFormPage and thus
-     * doesn't have the get-by-page-id method. In this case, the method returns null since 
+     * doesn't have the get-by-page-id method. In this case, the method returns null since
      * IEditorPart does not implement IFormPage.
      */
     @Override
@@ -262,18 +262,18 @@ public abstract class AndroidEditor extends FormEditor implements IResourceChang
             return super.setActivePage(pageId);
         }
     }
-   
-    
+
+
     /**
      * Notifies this multi-page editor that the page with the given id has been
      * activated. This method is called when the user selects a different tab.
-     * 
+     *
      * @see MultiPageEditorPart#pageChange(int)
      */
     @Override
     protected void pageChange(int newPageIndex) {
         super.pageChange(newPageIndex);
-        
+
         if (getEditorInput() instanceof IFileEditorInput) {
             IFile file = ((IFileEditorInput) getEditorInput()).getFile();
 
@@ -288,9 +288,9 @@ public abstract class AndroidEditor extends FormEditor implements IResourceChang
     }
 
     /**
-     * Notifies this listener that some resource changes 
+     * Notifies this listener that some resource changes
      * are happening, or have already happened.
-     * 
+     *
      * Closes all project files on project close.
      * @see IResourceChangeListener
      */
@@ -318,7 +318,7 @@ public abstract class AndroidEditor extends FormEditor implements IResourceChang
      * Initializes the editor part with a site and input.
      * <p/>
      * Checks that the input is an instance of {@link IFileEditorInput}.
-     * 
+     *
      * @see FormEditor
      */
     @Override
@@ -330,7 +330,7 @@ public abstract class AndroidEditor extends FormEditor implements IResourceChang
 
     /**
      * Removes attached listeners.
-     * 
+     *
      * @see WorkbenchPart
      */
     @Override
@@ -341,7 +341,7 @@ public abstract class AndroidEditor extends FormEditor implements IResourceChang
                 if (mXmlModelStateListener != null) {
                     xml_model.removeModelStateListener(mXmlModelStateListener);
                 }
-        
+
             } finally {
                 xml_model.releaseFromRead();
             }
@@ -355,7 +355,7 @@ public abstract class AndroidEditor extends FormEditor implements IResourceChang
 
         super.dispose();
     }
-    
+
     /**
      * Commit all dirty pages then saves the contents of the text editor.
      * <p/>
@@ -403,7 +403,7 @@ public abstract class AndroidEditor extends FormEditor implements IResourceChang
      * The incorrect casting makes the original implementation crash due
      * to our {@link StructuredTextEditor} not being an {@link IFormPage}
      * so we have to override and duplicate to fix it.
-     * 
+     *
      * @param onSave <code>true</code> if commit is performed as part
      * of the 'save' operation, <code>false</code> otherwise.
      * @since 3.3
@@ -421,7 +421,7 @@ public abstract class AndroidEditor extends FormEditor implements IResourceChang
                     }
                 }
             }
-        }   
+        }
     }
 
     /* (non-Javadoc)
@@ -451,8 +451,8 @@ public abstract class AndroidEditor extends FormEditor implements IResourceChang
      * <li> Links starting with "file:/" are simply sent to a local browser.
      * <li> Links starting with "page:" are expected to be an editor page id to switch to.
      * <li> Other links are ignored.
-     * </ul> 
-     * 
+     * </ul>
+     *
      * @return A new hyper-link listener for FormText to use.
      */
     public final IHyperlinkListener createHyperlinkListener() {
@@ -478,7 +478,7 @@ public abstract class AndroidEditor extends FormEditor implements IResourceChang
 
     /**
      * Open the http link into a browser
-     * 
+     *
      * @param link The URL to open in a browser
      */
     private void openLinkInBrowser(String link) {
@@ -516,7 +516,7 @@ public abstract class AndroidEditor extends FormEditor implements IResourceChang
                         "Error opening the Android XML editor. Is the document an XML file?");
                 throw new RuntimeException("Android XML Editor Error", new CoreException(status));
             }
-            
+
             IStructuredModel xml_model = getModelForRead();
             if (xml_model != null) {
                 try {
@@ -534,9 +534,9 @@ public abstract class AndroidEditor extends FormEditor implements IResourceChang
                     "Android XML Editor Error", null, e.getStatus());
         }
     }
-    
+
     /**
-     * Returns the ISourceViewer associated with the Structured Text editor. 
+     * Returns the ISourceViewer associated with the Structured Text editor.
      */
     public final ISourceViewer getStructuredSourceViewer() {
         if (mTextEditor != null) {
@@ -558,13 +558,18 @@ public abstract class AndroidEditor extends FormEditor implements IResourceChang
         }
         return null;
     }
-    
+
     /**
      * Returns a version of the model that has been shared for read.
      * <p/>
      * Callers <em>must</em> call model.releaseFromRead() when done, typically
      * in a try..finally clause.
-     *  
+     *
+     * Portability note: this uses getModelManager which is part of wst.sse.core; however
+     * the interface returned is part of wst.sse.core.internal.provisional so we can
+     * expect it to change in a distant future if they start cleaning their codebase,
+     * however unlikely that is.
+     *
      * @return The model for the XML document or null if cannot be obtained from the editor
      */
     public final IStructuredModel getModelForRead() {
@@ -576,14 +581,14 @@ public abstract class AndroidEditor extends FormEditor implements IResourceChang
             }
         }
         return null;
-    }    
-    
+    }
+
     /**
      * Returns a version of the model that has been shared for edit.
      * <p/>
      * Callers <em>must</em> call model.releaseFromEdit() when done, typically
      * in a try..finally clause.
-     * 
+     *
      * @return The model for the XML document or null if cannot be obtained from the editor
      */
     public final IStructuredModel getModelForEdit() {
@@ -595,7 +600,7 @@ public abstract class AndroidEditor extends FormEditor implements IResourceChang
             }
         }
         return null;
-    }    
+    }
 
     /**
      * Helper class to perform edits on the XML model whilst making sure the
@@ -609,7 +614,7 @@ public abstract class AndroidEditor extends FormEditor implements IResourceChang
      * <p/>
      * The method is synchronous. As soon as the {@link IStructuredModel#changedModel()} method
      * is called, XML model listeners will be triggered.
-     * 
+     *
      * @param edit_action Something that will change the XML.
      */
     public final void editXmlModel(Runnable edit_action) {
@@ -623,7 +628,7 @@ public abstract class AndroidEditor extends FormEditor implements IResourceChang
             model.releaseFromEdit();
         }
     }
-    
+
     /**
      * Starts an "undo recording" session. This is managed by the underlying undo manager
      * associated to the structured XML model.
@@ -632,7 +637,7 @@ public abstract class AndroidEditor extends FormEditor implements IResourceChang
      * <p/>
      * beginUndoRecording/endUndoRecording calls can be nested (inner calls are ignored, only one
      * undo operation is recorded.)
-     * 
+     *
      * @param label The label for the undo operation. Can be null but we should really try to put
      *              something meaningful if possible.
      * @return True if the undo recording actually started, false if any kind of error occured.
@@ -652,7 +657,7 @@ public abstract class AndroidEditor extends FormEditor implements IResourceChang
         }
         return false;
     }
-    
+
     /**
      * Ends an "undo recording" session.
      * <p/>
@@ -671,14 +676,14 @@ public abstract class AndroidEditor extends FormEditor implements IResourceChang
             }
         }
     }
-    
+
     /**
      * Creates an "undo recording" session by calling the undoableAction runnable
      * using {@link #beginUndoRecording(String)} and {@link #endUndoRecording()}.
      * <p>
      * You can nest several calls to {@link #wrapUndoRecording(String, Runnable)}, only one
      * recording session will be created.
-     * 
+     *
      * @param label The label for the undo operation. Can be null. Ideally we should really try
      *              to put something meaningful if possible.
      */
@@ -693,7 +698,7 @@ public abstract class AndroidEditor extends FormEditor implements IResourceChang
             }
         }
     }
-    
+
     /**
      * Returns the XML {@link Document} or null if we can't get it
      */
@@ -709,7 +714,7 @@ public abstract class AndroidEditor extends FormEditor implements IResourceChang
         }
         return null;
     }
-    
+
     /**
      * Returns the {@link IProject} for the edited file.
      */
@@ -719,16 +724,16 @@ public abstract class AndroidEditor extends FormEditor implements IResourceChang
             if (input instanceof FileEditorInput) {
                 FileEditorInput fileInput = (FileEditorInput)input;
                 IFile inputFile = fileInput.getFile();
-                
+
                 if (inputFile != null) {
                     return inputFile.getProject();
                 }
             }
         }
-        
+
         return null;
     }
-    
+
     /**
      * Returns the {@link AndroidTargetData} for the edited file.
      */
@@ -738,22 +743,22 @@ public abstract class AndroidEditor extends FormEditor implements IResourceChang
             Sdk currentSdk = Sdk.getCurrent();
             if (currentSdk != null) {
                 IAndroidTarget target = currentSdk.getTarget(project);
-                
+
                 if (target != null) {
                     return currentSdk.getTargetData(target);
                 }
             }
         }
-        
+
         return null;
     }
 
-    
+
     /**
      * Listen to changes in the underlying XML model in the structured editor.
      */
     private class XmlModelStateListener implements IModelStateListener {
-    
+
         /**
          * A model is about to be changed. This typically is initiated by one
          * client of the model, to signal a large change and/or a change to the
@@ -765,7 +770,7 @@ public abstract class AndroidEditor extends FormEditor implements IResourceChang
         public void modelAboutToBeChanged(IStructuredModel model) {
             // pass
         }
-    
+
         /**
          * Signals that the changes foretold by modelAboutToBeChanged have been
          * made. A typical use might be to refresh, or to resume processing that
@@ -776,7 +781,7 @@ public abstract class AndroidEditor extends FormEditor implements IResourceChang
         public void modelChanged(IStructuredModel model) {
             xmlModelChanged(getXmlDocument(model));
         }
-    
+
         /**
          * Notifies that a model's dirty state has changed, and passes that state
          * in isDirty. A model becomes dirty when any change is made, and becomes
@@ -787,7 +792,7 @@ public abstract class AndroidEditor extends FormEditor implements IResourceChang
         public void modelDirtyStateChanged(IStructuredModel model, boolean isDirty) {
             // pass
         }
-    
+
         /**
          * A modelDeleted means the underlying resource has been deleted. The
          * model itself is not removed from model management until all have
@@ -799,7 +804,7 @@ public abstract class AndroidEditor extends FormEditor implements IResourceChang
         public void modelResourceDeleted(IStructuredModel model) {
             // pass
         }
-    
+
         /**
          * A model has been renamed or copied (as in saveAs..). In the renamed
          * case, the two paramenters are the same instance, and only contain the
@@ -810,14 +815,14 @@ public abstract class AndroidEditor extends FormEditor implements IResourceChang
         public void modelResourceMoved(IStructuredModel oldModel, IStructuredModel newModel) {
             // pass
         }
-    
+
         /**
          * This AndroidEditor implementation of IModelChangedListener is empty.
          */
         public void modelAboutToBeReinitialized(IStructuredModel structuredModel) {
             // pass
         }
-    
+
         /**
          * This AndroidEditor implementation of IModelChangedListener is empty.
          */

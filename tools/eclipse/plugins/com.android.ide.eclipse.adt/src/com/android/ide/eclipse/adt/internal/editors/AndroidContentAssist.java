@@ -310,12 +310,12 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
         Object[] choices = null;
         if (attrInfo.isInValue) {
             // Editing an attribute's value... Get the attribute name and then the
-            // possible choice for the tuple(parent,attribute)
+            // possible choices for the tuple(parent,attribute)
             String value = attrInfo.value;
             if (value.startsWith("'") || value.startsWith("\"")) {   //$NON-NLS-1$   //$NON-NLS-2$
                 value = value.substring(1);
                 // The prefix that was found at the beginning only scan for characters
-                // valid of tag name. We now know the real prefix for this attribute's
+                // valid for tag name. We now know the real prefix for this attribute's
                 // value, which is needed to generate the completion choices below.
                 attrInfo.correctedPrefix = value;
             } else {
@@ -772,7 +772,7 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
                 IDescriptorProvider descriptorProvider = data.getDescriptorProvider(mDescriptorId);
 
                 if (descriptorProvider != null) {
-                    mRootDescriptor = new ElementDescriptor("",
+                    mRootDescriptor = new ElementDescriptor("",     //$NON-NLS-1$
                             descriptorProvider.getRootElementDescriptors());
                 }
             }

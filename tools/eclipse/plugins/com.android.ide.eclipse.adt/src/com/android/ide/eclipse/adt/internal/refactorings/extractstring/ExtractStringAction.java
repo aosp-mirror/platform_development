@@ -4,7 +4,7 @@
  * Licensed under the Eclipse Public License, Version 1.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.eclipse.org/org/documents/epl-v10.php
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -47,7 +47,7 @@ import org.eclipse.ui.part.FileEditorInput;
  * Action executed when the "Extract String" menu item is invoked.
  * <p/>
  * The intent of the action is to start a refactoring that extracts a source string and
- * replaces it by an Android string resource ID. 
+ * replaces it by an Android string resource ID.
  * <p/>
  * Workflow:
  * <ul>
@@ -74,6 +74,7 @@ public class ExtractStringAction implements IWorkbenchWindowActionDelegate {
     /** Keep track of the current workbench window. */
     private IWorkbenchWindow mWindow;
     private ITextSelection mSelection;
+    private IEditorPart mEditor;
     private IFile mFile;
 
     /**
@@ -103,11 +104,12 @@ public class ExtractStringAction implements IWorkbenchWindowActionDelegate {
 
         mSelection = null;
         mFile = null;
-        
+
         if (selection instanceof ITextSelection) {
             mSelection = (ITextSelection) selection;
             if (mSelection.getLength() > 0) {
-                mFile = getSelectedFile();
+                mEditor = getActiveEditor();
+                mFile = getSelectedFile(mEditor);
             }
         }
 
@@ -119,7 +121,7 @@ public class ExtractStringAction implements IWorkbenchWindowActionDelegate {
      */
     public void run(IAction action) {
         if (mSelection != null && mFile != null) {
-            ExtractStringRefactoring ref = new ExtractStringRefactoring(mFile, mSelection);
+            ExtractStringRefactoring ref = new ExtractStringRefactoring(mFile, mEditor, mSelection);
             RefactoringWizard wizard = new ExtractStringWizard(ref, mFile.getProject());
             RefactoringWizardOpenOperation op = new RefactoringWizardOpenOperation(wizard);
             try {
@@ -131,6 +133,21 @@ public class ExtractStringAction implements IWorkbenchWindowActionDelegate {
     }
 
     /**
+     * Returns the active editor (hopefully matching our selection) or null.
+     */
+    private IEditorPart getActiveEditor() {
+        IWorkbenchWindow wwin = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+        if (wwin != null) {
+            IWorkbenchPage page = wwin.getActivePage();
+            if (page != null) {
+                return page.getActiveEditor();
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Returns the active {@link IFile} (hopefully matching our selection) or null.
      * The file is only returned if it's a file from a project with an Android nature.
      * <p/>
@@ -138,33 +155,26 @@ public class ExtractStringAction implements IWorkbenchWindowActionDelegate {
      * for the refactoring. This check is performed when the refactoring is invoked since
      * it can then produce meaningful error messages as needed.
      */
-    private IFile getSelectedFile() {
-        IWorkbenchWindow wwin = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
-        if (wwin != null) {
-            IWorkbenchPage page = wwin.getActivePage();
-            if (page != null) {
-                IEditorPart editor = page.getActiveEditor();
-                if (editor != null) {
-                    IEditorInput input = editor.getEditorInput();
-                    
-                    if (input instanceof FileEditorInput) {
-                        FileEditorInput fi = (FileEditorInput) input;
-                        IFile file = fi.getFile();
-                        if (file.exists()) {
-                            IProject proj = file.getProject();
-                            try {
-                                if (proj != null && proj.hasNature(AndroidConstants.NATURE)) {
-                                    return file;
-                                }
-                            } catch (CoreException e) {
-                                // ignore
-                            }
+    private IFile getSelectedFile(IEditorPart editor) {
+        if (editor != null) {
+            IEditorInput input = editor.getEditorInput();
+
+            if (input instanceof FileEditorInput) {
+                FileEditorInput fi = (FileEditorInput) input;
+                IFile file = fi.getFile();
+                if (file.exists()) {
+                    IProject proj = file.getProject();
+                    try {
+                        if (proj != null && proj.hasNature(AndroidConstants.NATURE)) {
+                            return file;
                         }
+                    } catch (CoreException e) {
+                        // ignore
                     }
                 }
             }
         }
-        
+
         return null;
     }
 }
