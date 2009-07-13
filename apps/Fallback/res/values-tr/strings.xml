@@ -16,6 +16,6 @@
 <resources xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <string name="appTitle">"Fallback"</string>
-    <string name="title">"Ação não suportada"</string>
-    <string name="error">"Essa ação não é suportada no momento."</string>
+    <string name="title">"Desteklenmeyen işlem"</string>
+    <string name="error">"Bu işlem şu an desteklenmiyor."</string>
 </resources>
