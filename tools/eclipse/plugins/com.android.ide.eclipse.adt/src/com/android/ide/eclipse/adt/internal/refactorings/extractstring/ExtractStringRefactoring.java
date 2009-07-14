@@ -51,11 +51,22 @@ import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.ASTVisitor;
+import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.IMethodBinding;
+import org.eclipse.jdt.core.dom.ITypeBinding;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.Name;
-import org.eclipse.jdt.core.dom.QualifiedName;
 import org.eclipse.jdt.core.dom.SimpleName;
+import org.eclipse.jdt.core.dom.SimpleType;
+import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.StringLiteral;
+import org.eclipse.jdt.core.dom.Type;
+import org.eclipse.jdt.core.dom.TypeDeclaration;
+import org.eclipse.jdt.core.dom.VariableDeclarationExpression;
+import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
+import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.jdt.core.dom.rewrite.ImportRewrite;
 import org.eclipse.jface.text.ITextSelection;
@@ -112,7 +123,7 @@ import java.util.Map;
  * <li> On success, the wizard is shown, which let the user input the new ID to use.
  * <li> The wizard sets the user input values into this refactoring instance, e.g. the new string
  *      ID, the XML file to update, etc. The wizard does use the utility method
- *      {@link XmlStringFileHelper#isResIdDuplicate(IProject, String, String)} to check whether
+ *      {@link XmlStringFileHelper#valueOfStringId(IProject, String, String)} to check whether
  *      the new ID is already defined in the target XML file.
  * <li> Once Preview or Finish is selected in the wizard, the
  *      {@link #checkFinalConditions(IProgressMonitor)} is called to double-check the user input
@@ -779,7 +790,7 @@ public class ExtractStringRefactoring extends Refactoring {
 
             // Prepare the change for the XML file.
 
-            if (!mXmlHelper.isResIdDuplicate(mProject, mTargetXmlFileWsPath, mXmlStringId)) {
+            if (mXmlHelper.valueOfStringId(mProject, mTargetXmlFileWsPath, mXmlStringId) != null) {
                 // We actually change it only if the ID doesn't exist yet
                 Change change = createXmlChange((IFile) targetXml, mXmlStringId, mXmlStringValue,
                         status, SubMonitor.convert(monitor, 1));
@@ -1381,19 +1392,279 @@ public class ExtractStringRefactoring extends Refactoring {
             mXmlId = xmlId;
         }
 
+        @SuppressWarnings("unchecked")
         @Override
         public boolean visit(StringLiteral node) {
             if (node.getLiteralValue().equals(mOldString)) {
 
-                Name qualifierName = mAst.newName(mRQualifier + ".string"); //$NON-NLS-1$
-                SimpleName idName = mAst.newSimpleName(mXmlId);
-                QualifiedName newNode = mAst.newQualifiedName(qualifierName, idName);
+                // We want to analyze the calling context to understand whether we can
+                // just replace the string literal by the named int constant (R.id.foo)
+                // or if we should generate a Context.getResources().getString() call.
+                boolean useGetResource = false;
+                useGetResource = examineVariableDeclaration(node) ||
+                                    examineMethodInvocation(node);
 
-                TextEditGroup editGroup = new TextEditGroup("Replace string by ID");
+                Name qualifierName = mAst.newName(mRQualifier + ".string");     //$NON-NLS-1$
+                SimpleName idName = mAst.newSimpleName(mXmlId);
+                ASTNode newNode = mAst.newQualifiedName(qualifierName, idName);
+                String title = "Replace string by ID";
+
+                if (useGetResource) {
+
+                    MethodInvocation mi1 = mAst.newMethodInvocation();
+                    mi1.setName(mAst.newSimpleName("getResources"));            //$NON-NLS-1$
+
+                    String context = methodHasContextArgument(node);
+                    if (context == null && !isClassDerivedFromContext(node)) {
+                        // if we don't have a class that derives from Context and
+                        // we don't have a Context method argument, then make it
+                        // write Context.getResources(), which is technically invalid
+                        // but makes it a good clue on how to fix it.
+                        context = "Context";                                    //$NON-NLS-1$
+                    }
+                    if (context != null) {
+                        mi1.setExpression(mAst.newSimpleName(context));
+                    }
+
+                    MethodInvocation mi2 = mAst.newMethodInvocation();
+                    mi2.setName(mAst.newSimpleName("getString"));               //$NON-NLS-1$
+                    mi2.setExpression(mi1);
+                    mi2.arguments().add(newNode);
+
+                    newNode = mi2;
+                    title = "Replace string by getResource().getString(ID)";
+                }
+
+                TextEditGroup editGroup = new TextEditGroup(title);
                 mEditGroups.add(editGroup);
                 mRewriter.replace(node, newNode, editGroup);
             }
             return super.visit(node);
+        }
+
+        /**
+         * Examines if the StringLiteral is part of of an assignment to a string,
+         * e.g. String foo = id.
+         *
+         * The parent fragment is of syntax "var = expr" or "var[] = expr".
+         * We want the type of the variable, which is either held by a
+         * VariableDeclarationStatement ("type [fragment]") or by a
+         * VariableDeclarationExpression. In either case, the type can be an array
+         * but for us all that matters is to know whether the type is an int or
+         * a string.
+         */
+        private boolean examineVariableDeclaration(StringLiteral node) {
+            VariableDeclarationFragment fragment = findParentClass(node,
+                    VariableDeclarationFragment.class);
+
+            if (fragment != null) {
+                ASTNode parent = fragment.getParent();
+
+                Type type = null;
+                if (parent instanceof VariableDeclarationStatement) {
+                    type = ((VariableDeclarationStatement) parent).getType();
+                } else if (parent instanceof VariableDeclarationExpression) {
+                    type = ((VariableDeclarationExpression) parent).getType();
+                }
+
+                if (type instanceof SimpleType) {
+                    return isStringType(type.resolveBinding());
+                }
+            }
+
+            return false;
+        }
+
+        /**
+         * If the expression is part of a method invocation (aka a function call) or a
+         * class instance creation (aka a "new SomeClass" constructor call), we try to
+         * find the type of the argument being used. If it is a String (most likely), we
+         * want to return true (to generate a getResources() call). However if there might
+         * be a similar method that takes an int, in which case we don't want to do that.
+         *
+         * This covers the case of Activity.setTitle(int resId) vs setTitle(String str).
+         */
+        @SuppressWarnings("unchecked")
+        private boolean examineMethodInvocation(StringLiteral node) {
+
+            ASTNode parent = null;
+            List arguments = null;
+            IMethodBinding methodBinding = null;
+
+            MethodInvocation invoke = findParentClass(node, MethodInvocation.class);
+            if (invoke != null) {
+                parent = invoke;
+                arguments = invoke.arguments();
+                methodBinding = invoke.resolveMethodBinding();
+            } else {
+                ClassInstanceCreation newclass = findParentClass(node, ClassInstanceCreation.class);
+                if (newclass != null) {
+                    parent = newclass;
+                    arguments = newclass.arguments();
+                    methodBinding = newclass.resolveConstructorBinding();
+                }
+            }
+
+            if (parent != null && arguments != null && methodBinding != null) {
+                // We want to know which argument this is.
+                // Walk up the hierarchy again to find the immediate child of the parent,
+                // which should turn out to be one of the invocation arguments.
+                ASTNode child = null;
+                for (ASTNode n = node; n != parent; ) {
+                    ASTNode p = n.getParent();
+                    if (p == parent) {
+                        child = n;
+                        break;
+                    }
+                    n = p;
+                }
+                if (child == null) {
+                    // This can't happen: a parent of 'node' must be the child of 'parent'.
+                    return false;
+                }
+
+                // Find the index
+                int index = 0;
+                for (Object arg : arguments) {
+                    if (arg == child) {
+                        break;
+                    }
+                    index++;
+                }
+
+                if (index == arguments.size()) {
+                    // This can't happen: one of the arguments of 'invoke' must be 'child'.
+                    return false;
+                }
+
+                // Eventually we want to determine if the parameter is a string type,
+                // in which case a Context.getResources() call must be generated.
+                boolean useStringType = false;
+
+                // Find the type of that argument
+                ITypeBinding[] types = methodBinding.getParameterTypes();
+                if (index < types.length) {
+                    ITypeBinding type = types[index];
+                    useStringType = isStringType(type);
+                }
+
+                // Now that we know that this method takes a String parameter, can we find
+                // a variant that would accept an int for the same parameter position?
+                if (useStringType) {
+                    String name = methodBinding.getName();
+                    ITypeBinding clazz = methodBinding.getDeclaringClass();
+                    nextMethod: for (IMethodBinding mb2 : clazz.getDeclaredMethods()) {
+                        if (methodBinding == mb2 || !mb2.getName().equals(name)) {
+                            continue;
+                        }
+                        // We found a method with the same name. We want the same parameters
+                        // except that the one at 'index' must be an int type.
+                        ITypeBinding[] types2 = mb2.getParameterTypes();
+                        int len2 = types2.length;
+                        if (types.length == len2) {
+                            for (int i = 0; i < len2; i++) {
+                                if (i == index) {
+                                    ITypeBinding type2 = types2[i];
+                                    if (!("int".equals(type2.getQualifiedName()))) {   //$NON-NLS-1$
+                                        // The argument at 'index' is not an int.
+                                        continue nextMethod;
+                                    }
+                                } else if (!types[i].equals(types2[i])) {
+                                    // One of the other arguments do not match our original method
+                                    continue nextMethod;
+                                }
+                            }
+                            // If we got here, we found a perfect match: a method with the same
+                            // arguments except the one at 'index' is an int. In this case we
+                            // don't need to convert our R.id into a string.
+                            useStringType = false;
+                            break;
+                        }
+                    }
+                }
+
+                return useStringType;
+            }
+            return false;
+        }
+
+        /**
+         * Examines if the StringLiteral is part of a method declaration (a.k.a. a function
+         * definition) which takes a Context argument.
+         * If such, it returns the name of the variable.
+         * Otherwise it returns null.
+         */
+        private String methodHasContextArgument(StringLiteral node) {
+            MethodDeclaration decl = findParentClass(node, MethodDeclaration.class);
+            if (decl != null) {
+                for (Object obj : decl.parameters()) {
+                    if (obj instanceof SingleVariableDeclaration) {
+                        SingleVariableDeclaration var = (SingleVariableDeclaration) obj;
+                        if (isAndroidContext(var.getType())) {
+                            return var.getName().getIdentifier();
+                        }
+                    }
+                }
+            }
+            return null;
+        }
+
+        /**
+         * Returns true if this type binding represents a String or CharSequence type.
+         */
+        private boolean isStringType(ITypeBinding type) {
+            if (type == null) {
+                return false;
+            }
+            return
+                "java.lang.String".equals(type.getQualifiedName()) ||       //$NON-NLS-1$
+                "java.lang.CharSequence".equals(type.getQualifiedName());   //$NON-NLS-1$
+        }
+
+        /**
+         * Walks up the node hierarchy and returns the first ASTNode of the requested class.
+         * Only look at parents.
+         *
+         * Implementation note: this is a generic method so that it returns the node already
+         * casted to the requested type.
+         */
+        @SuppressWarnings("unchecked")
+        private <T extends ASTNode> T findParentClass(ASTNode node, Class<T> clazz) {
+            for (node = node.getParent(); node != null; node = node.getParent()) {
+                if (node.getClass().equals(clazz)) {
+                    return (T) node;
+                }
+            }
+            return null;
+        }
+
+        /**
+         * Walks up the node hierarchy to find the class (aka type) where this statement
+         * is used and returns true if this class derives from android.content.Context.
+         */
+        private boolean isClassDerivedFromContext(StringLiteral node) {
+            TypeDeclaration parent = findParentClass(node, TypeDeclaration.class);
+            if (parent != null) {
+                return isAndroidContext(parent.getSuperclassType());
+            }
+            return false;
+        }
+
+        /**
+         * Returns true if the given type is or derives from android.content.Context.
+         */
+        private boolean isAndroidContext(Type type) {
+            if (type != null) {
+                ITypeBinding binding = type.resolveBinding();
+                if (binding != null && binding.isClass()) {
+                    for(; binding != null; binding = binding.getSuperclass()) {
+                        if (binding.getQualifiedName().equals("android.content.Context")) { //$NON-NLS-1$
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
         }
     }
 

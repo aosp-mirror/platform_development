@@ -44,7 +44,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 
 import java.util.HashMap;
-import java.util.Set;
+import java.util.Map;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -323,9 +323,12 @@ class ExtractStringInputPage extends UserInputWizardPage implements IWizardPage 
             ref.setTargetFile(resFile);
             sLastResFilePath.put(mProject.getFullPath().toPortableString(), resFile);
 
-            if (mXmlHelper.isResIdDuplicate(mProject, resFile, text)) {
-                String msg = String.format("There's already a string item called '%1$s' in %2$s.",
-                        text, resFile);
+            String idValue = mXmlHelper.valueOfStringId(mProject, resFile, text);
+            if (idValue != null) {
+                String msg = String.format("%1$s already contains a string ID '%2$s' with value '%3$s'.",
+                        resFile,
+                        text,
+                        idValue);
                 if (ref.getMode() == ExtractStringRefactoring.Mode.SELECT_NEW_ID) {
                     setErrorMessage(msg);
                     success = false;
@@ -353,14 +356,14 @@ class ExtractStringInputPage extends UserInputWizardPage implements IWizardPage 
 
     private void updateStringValueCombo() {
         String resFile = mResFileCombo.getText();
-        Set<String> ids = mXmlHelper.getResIdsForFile(mProject, resFile);
+        Map<String, String> ids = mXmlHelper.getResIdsForFile(mProject, resFile);
 
         // get the current text from the combo, to make sure we don't change it
         String currText = mStringIdCombo.getText();
 
         // erase the choices and fill with the given ids
         mStringIdCombo.removeAll();
-        mStringIdCombo.setItems(ids.toArray(new String[ids.size()]));
+        mStringIdCombo.setItems(ids.keySet().toArray(new String[ids.size()]));
 
         // set the current text to preserve it in case it changed
         if (!currText.equals(mStringIdCombo.getText())) {
