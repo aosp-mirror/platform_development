@@ -1408,7 +1408,7 @@ public class ExtractStringRefactoring extends Refactoring {
 
                 // We want to analyze the calling context to understand whether we can
                 // just replace the string literal by the named int constant (R.id.foo)
-                // or if we should generate a Context.getResources().getString() call.
+                // or if we should generate a Context.getString() call.
                 boolean useGetResource = false;
                 useGetResource = examineVariableDeclaration(node) ||
                                     examineMethodInvocation(node);
@@ -1420,9 +1420,6 @@ public class ExtractStringRefactoring extends Refactoring {
 
                 if (useGetResource) {
 
-                    MethodInvocation mi1 = mAst.newMethodInvocation();
-                    mi1.setName(mAst.newSimpleName("getResources"));            //$NON-NLS-1$
-
                     Expression context = methodHasContextArgument(node);
                     if (context == null && !isClassDerivedFromContext(node)) {
                         // if we don't have a class that derives from Context and
@@ -1431,22 +1428,19 @@ public class ExtractStringRefactoring extends Refactoring {
                         context = findContextFieldOrMethod(node);
 
                         if (context == null) {
-                            // If not, let's  write Context.getResources(), which is technically
+                            // If not, let's  write Context.getString(), which is technically
                             // invalid but makes it a good clue on how to fix it.
                             context = mAst.newSimpleName("Context");            //$NON-NLS-1$
                         }
                     }
-                    if (context != null) {
-                        mi1.setExpression(context);
-                    }
 
                     MethodInvocation mi2 = mAst.newMethodInvocation();
                     mi2.setName(mAst.newSimpleName("getString"));               //$NON-NLS-1$
-                    mi2.setExpression(mi1);
+                    mi2.setExpression(context);
                     mi2.arguments().add(newNode);
 
                     newNode = mi2;
-                    title = "Replace string by getResource().getString(ID)";
+                    title = "Replace string by Context.getString(R.string...)";
                 }
 
                 TextEditGroup editGroup = new TextEditGroup(title);
@@ -1493,7 +1487,7 @@ public class ExtractStringRefactoring extends Refactoring {
          * If the expression is part of a method invocation (aka a function call) or a
          * class instance creation (aka a "new SomeClass" constructor call), we try to
          * find the type of the argument being used. If it is a String (most likely), we
-         * want to return true (to generate a getResources() call). However if there might
+         * want to return true (to generate a getString() call). However if there might
          * be a similar method that takes an int, in which case we don't want to do that.
          *
          * This covers the case of Activity.setTitle(int resId) vs setTitle(String str).
@@ -1552,7 +1546,7 @@ public class ExtractStringRefactoring extends Refactoring {
                 }
 
                 // Eventually we want to determine if the parameter is a string type,
-                // in which case a Context.getResources() call must be generated.
+                // in which case a Context.getString() call must be generated.
                 boolean useStringType = false;
 
                 // Find the type of that argument
