@@ -53,10 +53,13 @@ import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
+import org.eclipse.jdt.core.dom.IVariableBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.eclipse.jdt.core.dom.Modifier;
 import org.eclipse.jdt.core.dom.Name;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.SimpleType;
@@ -103,6 +106,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * This refactoring extracts a string from a file and replaces it by an Android resource ID
@@ -1371,6 +1375,11 @@ public class ExtractStringRefactoring extends Refactoring {
 
     public class ReplaceStringsVisitor extends ASTVisitor {
 
+        private static final String CLASS_ANDROID_CONTEXT    = "android.content.Context"; //$NON-NLS-1$
+        private static final String CLASS_JAVA_CHAR_SEQUENCE = "java.lang.CharSequence";  //$NON-NLS-1$
+        private static final String CLASS_JAVA_STRING        = "java.lang.String";        //$NON-NLS-1$
+
+
         private final AST mAst;
         private final ASTRewrite mRewriter;
         private final String mOldString;
@@ -1392,7 +1401,7 @@ public class ExtractStringRefactoring extends Refactoring {
             mXmlId = xmlId;
         }
 
-        @SuppressWarnings("unchecked")
+        @SuppressWarnings("unchecked")    //$NON-NLS-1$
         @Override
         public boolean visit(StringLiteral node) {
             if (node.getLiteralValue().equals(mOldString)) {
@@ -1414,16 +1423,21 @@ public class ExtractStringRefactoring extends Refactoring {
                     MethodInvocation mi1 = mAst.newMethodInvocation();
                     mi1.setName(mAst.newSimpleName("getResources"));            //$NON-NLS-1$
 
-                    String context = methodHasContextArgument(node);
+                    Expression context = methodHasContextArgument(node);
                     if (context == null && !isClassDerivedFromContext(node)) {
                         // if we don't have a class that derives from Context and
-                        // we don't have a Context method argument, then make it
-                        // write Context.getResources(), which is technically invalid
-                        // but makes it a good clue on how to fix it.
-                        context = "Context";                                    //$NON-NLS-1$
+                        // we don't have a Context method argument, then try a bit harder:
+                        // can we find a method or a field that will give us a context?
+                        context = findContextFieldOrMethod(node);
+
+                        if (context == null) {
+                            // If not, let's  write Context.getResources(), which is technically
+                            // invalid but makes it a good clue on how to fix it.
+                            context = mAst.newSimpleName("Context");            //$NON-NLS-1$
+                        }
                     }
                     if (context != null) {
-                        mi1.setExpression(mAst.newSimpleName(context));
+                        mi1.setExpression(context);
                     }
 
                     MethodInvocation mi2 = mAst.newMethodInvocation();
@@ -1468,7 +1482,7 @@ public class ExtractStringRefactoring extends Refactoring {
                 }
 
                 if (type instanceof SimpleType) {
-                    return isStringType(type.resolveBinding());
+                    return isJavaString(type.resolveBinding());
                 }
             }
 
@@ -1484,7 +1498,7 @@ public class ExtractStringRefactoring extends Refactoring {
          *
          * This covers the case of Activity.setTitle(int resId) vs setTitle(String str).
          */
-        @SuppressWarnings("unchecked")
+        @SuppressWarnings("unchecked")  //$NON-NLS-1$
         private boolean examineMethodInvocation(StringLiteral node) {
 
             ASTNode parent = null;
@@ -1545,7 +1559,7 @@ public class ExtractStringRefactoring extends Refactoring {
                 ITypeBinding[] types = methodBinding.getParameterTypes();
                 if (index < types.length) {
                     ITypeBinding type = types[index];
-                    useStringType = isStringType(type);
+                    useStringType = isJavaString(type);
                 }
 
                 // Now that we know that this method takes a String parameter, can we find
@@ -1591,17 +1605,17 @@ public class ExtractStringRefactoring extends Refactoring {
         /**
          * Examines if the StringLiteral is part of a method declaration (a.k.a. a function
          * definition) which takes a Context argument.
-         * If such, it returns the name of the variable.
+         * If such, it returns the name of the variable as a {@link SimpleName}.
          * Otherwise it returns null.
          */
-        private String methodHasContextArgument(StringLiteral node) {
+        private SimpleName methodHasContextArgument(StringLiteral node) {
             MethodDeclaration decl = findParentClass(node, MethodDeclaration.class);
             if (decl != null) {
                 for (Object obj : decl.parameters()) {
                     if (obj instanceof SingleVariableDeclaration) {
                         SingleVariableDeclaration var = (SingleVariableDeclaration) obj;
                         if (isAndroidContext(var.getType())) {
-                            return var.getName().getIdentifier();
+                            return mAst.newSimpleName(var.getName().getIdentifier());
                         }
                     }
                 }
@@ -1610,15 +1624,112 @@ public class ExtractStringRefactoring extends Refactoring {
         }
 
         /**
-         * Returns true if this type binding represents a String or CharSequence type.
+         * Walks up the node hierarchy to find the class (aka type) where this statement
+         * is used and returns true if this class derives from android.content.Context.
          */
-        private boolean isStringType(ITypeBinding type) {
-            if (type == null) {
-                return false;
+        private boolean isClassDerivedFromContext(StringLiteral node) {
+            TypeDeclaration clazz = findParentClass(node, TypeDeclaration.class);
+            if (clazz != null) {
+                // This is the class that the user is currently writing, so it can't be
+                // a Context by itself, it has to be derived from it.
+                return isAndroidContext(clazz.getSuperclassType());
             }
-            return
-                "java.lang.String".equals(type.getQualifiedName()) ||       //$NON-NLS-1$
-                "java.lang.CharSequence".equals(type.getQualifiedName());   //$NON-NLS-1$
+            return false;
+        }
+
+        private Expression findContextFieldOrMethod(StringLiteral node) {
+            TypeDeclaration clazz = findParentClass(node, TypeDeclaration.class);
+            ITypeBinding clazzType = clazz == null ? null : clazz.resolveBinding();
+            return findContextFieldOrMethod(clazzType);
+        }
+
+        private Expression findContextFieldOrMethod(ITypeBinding clazzType) {
+            TreeMap<Integer, Expression> results = new TreeMap<Integer, Expression>();
+            findContextCandidates(results, clazzType, 0 /*superType*/);
+            if (results.size() > 0) {
+                Integer bestRating = results.keySet().iterator().next();
+                return results.get(bestRating);
+            }
+            return null;
+        }
+
+        /**
+         * Find all method or fields that are candidates for providing a Context.
+         * There can be various choices amongst this class or its super classes.
+         * Sort them by rating in the results map.
+         *
+         * The best ever choice is to find a method with no argument that returns a Context.
+         * The second suitable choice is to find a Context field.
+         * The least desirable choice is to find a method with arguments. It's not really
+         * desirable since we can't generate these arguments automatically.
+         *
+         * Methods and fields from supertypes are ignored if they are private.
+         *
+         * The rating is reversed: the lowest rating integer is used for the best candidate.
+         * Because the superType argument is actually a recursion index, this makes the most
+         * immediate classes more desirable.
+         *
+         * @param results The map that accumulates the rating=>expression results. The lower
+         *                rating number is the best candidate.
+         * @param clazzType The class examined.
+         * @param superType The recursion index.
+         *                  0 for the immediate class, 1 for its super class, etc.
+         */
+        private void findContextCandidates(TreeMap<Integer, Expression> results,
+                ITypeBinding clazzType,
+                int superType) {
+            for (IMethodBinding mb : clazzType.getDeclaredMethods()) {
+                // If we're looking at supertypes, we can't use private methods.
+                if (superType != 0 && Modifier.isPrivate(mb.getModifiers())) {
+                    continue;
+                }
+
+                if (isAndroidContext(mb.getReturnType())) {
+                    // We found a method that returns something derived from Context.
+
+                    int argsLen = mb.getParameterTypes().length;
+                    if (argsLen == 0) {
+                        // We'll favor any method that takes no argument,
+                        // That would be the best candidate ever, so we can stop here.
+                        MethodInvocation mi = mAst.newMethodInvocation();
+                        mi.setName(mAst.newSimpleName(mb.getName()));
+                        results.put(Integer.MIN_VALUE, mi);
+                        return;
+                    } else {
+                        // A method with arguments isn't as interesting since we wouldn't
+                        // know how to populate such arguments. We'll use it if there are
+                        // no other alternatives. We'll favor the one with the less arguments.
+                        Integer rating = Integer.valueOf(10000 + 1000 * superType + argsLen);
+                        if (!results.containsKey(rating)) {
+                            MethodInvocation mi = mAst.newMethodInvocation();
+                            mi.setName(mAst.newSimpleName(mb.getName()));
+                            results.put(rating, mi);
+                        }
+                    }
+                }
+            }
+
+            // A direct Context field would be more interesting than a method with
+            // arguments. Try to find one.
+            for (IVariableBinding var : clazzType.getDeclaredFields()) {
+                // If we're looking at supertypes, we can't use private field.
+                if (superType != 0 && Modifier.isPrivate(var.getModifiers())) {
+                    continue;
+                }
+
+                if (isAndroidContext(var.getType())) {
+                    // We found such a field. Let's use it.
+                    Integer rating = Integer.valueOf(superType);
+                    results.put(rating, mAst.newSimpleName(var.getName()));
+                    break;
+                }
+            }
+
+            // Examine the super class to see if we can locate a better match
+            clazzType = clazzType.getSuperclass();
+            if (clazzType != null) {
+                findContextCandidates(results, clazzType, superType + 1);
+            }
         }
 
         /**
@@ -1639,13 +1750,11 @@ public class ExtractStringRefactoring extends Refactoring {
         }
 
         /**
-         * Walks up the node hierarchy to find the class (aka type) where this statement
-         * is used and returns true if this class derives from android.content.Context.
+         * Returns true if the given type is or derives from android.content.Context.
          */
-        private boolean isClassDerivedFromContext(StringLiteral node) {
-            TypeDeclaration parent = findParentClass(node, TypeDeclaration.class);
-            if (parent != null) {
-                return isAndroidContext(parent.getSuperclassType());
+        private boolean isAndroidContext(Type type) {
+            if (type != null) {
+                return isAndroidContext(type.resolveBinding());
             }
             return false;
         }
@@ -1653,15 +1762,23 @@ public class ExtractStringRefactoring extends Refactoring {
         /**
          * Returns true if the given type is or derives from android.content.Context.
          */
-        private boolean isAndroidContext(Type type) {
-            if (type != null) {
-                ITypeBinding binding = type.resolveBinding();
-                if (binding != null && binding.isClass()) {
-                    for(; binding != null; binding = binding.getSuperclass()) {
-                        if (binding.getQualifiedName().equals("android.content.Context")) { //$NON-NLS-1$
-                            return true;
-                        }
-                    }
+        private boolean isAndroidContext(ITypeBinding type) {
+            for (; type != null; type = type.getSuperclass()) {
+                if (CLASS_ANDROID_CONTEXT.equals(type.getQualifiedName())) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /**
+         * Returns true if this type binding represents a String or CharSequence type.
+         */
+        private boolean isJavaString(ITypeBinding type) {
+            for (; type != null; type = type.getSuperclass()) {
+                if (CLASS_JAVA_STRING.equals(type.getQualifiedName()) ||
+                    CLASS_JAVA_CHAR_SEQUENCE.equals(type.getQualifiedName())) {
+                    return true;
                 }
             }
             return false;
