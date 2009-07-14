@@ -22,12 +22,14 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
 import java.util.HashMap;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.Map;
+import java.util.TreeMap;
 
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
@@ -39,8 +41,12 @@ import javax.xml.xpath.XPathExpressionException;
 class XmlStringFileHelper {
 
     /** A temporary cache of R.string IDs defined by a given xml file. The key is the
-     * project path of the file, the data is a set of known string Ids for that file. */
-    private HashMap<String, Set<String>> mResIdCache = new HashMap<String, Set<String>>();
+     * project path of the file, the data is a set of known string Ids for that file.
+     *
+     * Map type: map [String filename] => map [String id => String value].
+     */
+    private HashMap<String, Map<String, String>> mResIdCache =
+        new HashMap<String, Map<String, String>>();
     /** An instance of XPath, created lazily on demand. */
     private XPath mXPath;
 
@@ -48,18 +54,18 @@ class XmlStringFileHelper {
     }
 
     /**
-     * Utility method used by the wizard to check whether the given string ID is already
-     * defined in the XML file which path is given.
+     * Utility method used by the wizard to retrieve the actual value definition of a given
+     * string ID.
      *
      * @param project The project contain the XML file.
      * @param xmlFileWsPath The project path of the XML file, e.g. "/res/values/strings.xml".
      *          The given file may or may not exist.
      * @param stringId The string ID to find.
-     * @return True if such a string ID is already defined.
+     * @return The value string if the ID is defined, null otherwise.
      */
-    public boolean isResIdDuplicate(IProject project, String xmlFileWsPath, String stringId) {
-        Set<String> cache = getResIdsForFile(project, xmlFileWsPath);
-        return cache.contains(stringId);
+    public String valueOfStringId(IProject project, String xmlFileWsPath, String stringId) {
+        Map<String, String> cache = getResIdsForFile(project, xmlFileWsPath);
+        return cache.get(stringId);
     }
 
     /**
@@ -70,10 +76,10 @@ class XmlStringFileHelper {
      * @param project The project contain the XML file.
      * @param xmlFileWsPath The project path of the XML file, e.g. "/res/values/strings.xml".
      *          The given file may or may not exist.
-     * @return The set of string IDs defined in the given file. Cached. Never null.
+     * @return The map of string IDs => values defined in the given file. Cached. Never null.
      */
-    public Set<String> getResIdsForFile(IProject project, String xmlFileWsPath) {
-        Set<String> cache = mResIdCache.get(xmlFileWsPath);
+    public Map<String, String> getResIdsForFile(IProject project, String xmlFileWsPath) {
+        Map<String, String> cache = mResIdCache.get(xmlFileWsPath);
         if (cache == null) {
             cache = internalGetResIdsForFile(project, xmlFileWsPath);
             mResIdCache.put(xmlFileWsPath, cache);
@@ -85,11 +91,11 @@ class XmlStringFileHelper {
      * Extract all the defined string IDs from a given file using XPath.
      * @param project The project contain the XML file.
      * @param xmlFileWsPath The project path of the file to parse. It may not exist.
-     * @return The set of all string IDs defined in the file. The returned set is always non
-     *   null. It is empty if the file does not exist.
+     * @return The map of all string IDs => values defined in the file.
+     *   The returned set is always non null. It is empty if the file does not exist.
      */
-    private Set<String> internalGetResIdsForFile(IProject project, String xmlFileWsPath) {
-        TreeSet<String> ids = new TreeSet<String>();
+    private Map<String, String> internalGetResIdsForFile(IProject project, String xmlFileWsPath) {
+        TreeMap<String, String> ids = new TreeMap<String, String>();
 
         if (mXPath == null) {
             mXPath = AndroidXPathFactory.newXPath();
@@ -108,20 +114,26 @@ class XmlStringFileHelper {
                 //    <string name="ID">something</string>
                 // </resources>
 
-                String xpathExpr = "/resources/string/@name";   //$NON-NLS-1$
+                String xpathExpr = "/resources/string";                         //$NON-NLS-1$
 
                 Object result = mXPath.evaluate(xpathExpr, source, XPathConstants.NODESET);
                 if (result instanceof NodeList) {
                     NodeList list = (NodeList) result;
                     for (int n = list.getLength() - 1; n >= 0; n--) {
-                        String id = list.item(n).getNodeValue();
-                        ids.add(id);
+                        Node strNode = list.item(n);
+                        NamedNodeMap attrs = strNode.getAttributes();
+                        Node nameAttr = attrs.getNamedItem("name");             //$NON-NLS-1$
+                        if (nameAttr != null) {
+                            String id = nameAttr.getNodeValue();
+                            String text = strNode.getTextContent();
+                            ids.put(id, text);
+                        }
                     }
                 }
 
             } catch (CoreException e1) {
                 // IFile.getContents failed. Ignore.
-            } catch (XPathExpressionException e) {
+            } catch (XPathExpressionException e2) {
                 // mXPath.evaluate failed. Ignore.
             }
         }
