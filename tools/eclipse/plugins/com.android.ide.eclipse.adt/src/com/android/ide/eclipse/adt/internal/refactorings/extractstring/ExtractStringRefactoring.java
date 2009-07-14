@@ -790,7 +790,7 @@ public class ExtractStringRefactoring extends Refactoring {
 
             // Prepare the change for the XML file.
 
-            if (mXmlHelper.valueOfStringId(mProject, mTargetXmlFileWsPath, mXmlStringId) != null) {
+            if (mXmlHelper.valueOfStringId(mProject, mTargetXmlFileWsPath, mXmlStringId) == null) {
                 // We actually change it only if the ID doesn't exist yet
                 Change change = createXmlChange((IFile) targetXml, mXmlStringId, mXmlStringValue,
                         status, SubMonitor.convert(monitor, 1));
