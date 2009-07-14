@@ -15,7 +15,7 @@
 -->
 <resources xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
-    <string name="appTitle">"Fallback"</string>
-    <string name="title">"Действие не поддерживается"</string>
+    <string name="appTitle">"Переход в обходной режим"</string>
+    <string name="title">"Неподдерживаемое действие"</string>
     <string name="error">"В настоящее время это действие не поддерживается."</string>
 </resources>
