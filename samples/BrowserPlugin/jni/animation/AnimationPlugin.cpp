@@ -63,20 +63,6 @@ static void inval(NPP instance, const ANPRectF& r, bool doAA) {
     browser->invalidaterect(instance, &inval);
 }
 
-static void drawPlugin(SubPlugin* plugin, const ANPBitmap& bitmap, const ANPRectI& clip) {
-    ANPCanvas* canvas = gCanvasI.newCanvas(&bitmap);
-
-    ANPRectF clipR;
-    clipR.left = clip.left;
-    clipR.top = clip.top;
-    clipR.right = clip.right;
-    clipR.bottom = clip.bottom;
-    gCanvasI.clipRect(canvas, &clipR);
-
-    plugin->draw(canvas);
-    gCanvasI.deleteCanvas(canvas);
-}
-
 uint32_t getMSecs() {
     struct timeval tv;
     gettimeofday(&tv, NULL);
@@ -132,6 +118,20 @@ static void bounce(float* x, float* dx, const float max) {
 
 bool BallAnimation::supportsDrawingModel(ANPDrawingModel model) {
     return (model == kBitmap_ANPDrawingModel);
+}
+
+void BallAnimation::drawPlugin(const ANPBitmap& bitmap, const ANPRectI& clip) {
+    ANPCanvas* canvas = gCanvasI.newCanvas(&bitmap);
+
+    ANPRectF clipR;
+    clipR.left = clip.left;
+    clipR.top = clip.top;
+    clipR.right = clip.right;
+    clipR.bottom = clip.bottom;
+    gCanvasI.clipRect(canvas, &clipR);
+
+    draw(canvas);
+    gCanvasI.deleteCanvas(canvas);
 }
 
 void BallAnimation::draw(ANPCanvas* canvas) {
@@ -233,7 +233,7 @@ int16 BallAnimation::handleEvent(const ANPEvent* evt) {
         case kDraw_ANPEventType:
             switch (evt->data.draw.model) {
                 case kBitmap_ANPDrawingModel:
-                    drawPlugin(this, evt->data.draw.data.bitmap, evt->data.draw.clip);
+                    drawPlugin(evt->data.draw.data.bitmap, evt->data.draw.clip);
                     return 1;
                 default:
                     break;   // unknown drawing model

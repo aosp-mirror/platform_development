@@ -63,20 +63,6 @@ static void inval(NPP instance, const ANPRectF& r, bool doAA) {
     browser->invalidaterect(instance, &inval);
 }
 
-static void drawPlugin(SubPlugin* plugin, const ANPBitmap& bitmap, const ANPRectI& clip) {
-    ANPCanvas* canvas = gCanvasI.newCanvas(&bitmap);
-
-    ANPRectF clipR;
-    clipR.left = clip.left;
-    clipR.top = clip.top;
-    clipR.right = clip.right;
-    clipR.bottom = clip.bottom;
-    gCanvasI.clipRect(canvas, &clipR);
-
-    plugin->draw(canvas);
-    gCanvasI.deleteCanvas(canvas);
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 
 FormPlugin::FormPlugin(NPP inst) : SubPlugin(inst) {
@@ -126,6 +112,20 @@ FormPlugin::~FormPlugin() {
 
 bool FormPlugin::supportsDrawingModel(ANPDrawingModel model) {
     return (model == kBitmap_ANPDrawingModel);
+}
+
+void FormPlugin::drawPlugin(const ANPBitmap& bitmap, const ANPRectI& clip) {
+    ANPCanvas* canvas = gCanvasI.newCanvas(&bitmap);
+
+    ANPRectF clipR;
+    clipR.left = clip.left;
+    clipR.top = clip.top;
+    clipR.right = clip.right;
+    clipR.bottom = clip.bottom;
+    gCanvasI.clipRect(canvas, &clipR);
+
+    draw(canvas);
+    gCanvasI.deleteCanvas(canvas);
 }
 
 void FormPlugin::draw(ANPCanvas* canvas) {
@@ -206,7 +206,7 @@ int16 FormPlugin::handleEvent(const ANPEvent* evt) {
         case kDraw_ANPEventType:
             switch (evt->data.draw.model) {
                 case kBitmap_ANPDrawingModel:
-                    drawPlugin(this, evt->data.draw.data.bitmap, evt->data.draw.clip);
+                    drawPlugin(evt->data.draw.data.bitmap, evt->data.draw.clip);
                     return 1;
                 default:
                     break;   // unknown drawing model

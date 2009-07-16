@@ -32,6 +32,7 @@
 #include "AudioPlugin.h"
 #include "BackgroundPlugin.h"
 #include "FormPlugin.h"
+#include "SurfacePlugin.h"
 #include "android_npapi.h"
 
 NPNetscapeFuncs* browser;
@@ -68,6 +69,7 @@ ANPCanvasInterfaceV0        gCanvasI;
 ANPLogInterfaceV0           gLogI;
 ANPPaintInterfaceV0         gPaintI;
 ANPPathInterfaceV0          gPathI;
+ANPSurfaceInterfaceV0       gSurfaceI;
 ANPTypefaceInterfaceV0      gTypefaceI;
 ANPWindowInterfaceV0        gWindowI;
 
@@ -107,14 +109,15 @@ NPError NP_Initialize(NPNetscapeFuncs* browserFuncs, NPPluginFuncs* pluginFuncs,
         uint32_t        size;
         ANPInterface*   i;
     } gPairs[] = {
+        { kAudioTrackInterfaceV0_ANPGetValue,   sizeof(gSoundI),    &gSoundI },
         { kBitmapInterfaceV0_ANPGetValue,       sizeof(gBitmapI),   &gBitmapI },
         { kCanvasInterfaceV0_ANPGetValue,       sizeof(gCanvasI),   &gCanvasI },
         { kLogInterfaceV0_ANPGetValue,          sizeof(gLogI),      &gLogI },
         { kPaintInterfaceV0_ANPGetValue,        sizeof(gPaintI),    &gPaintI },
         { kPathInterfaceV0_ANPGetValue,         sizeof(gPathI),     &gPathI },
+        { kSurfaceInterfaceV0_ANPGetValue,      sizeof(gSurfaceI),  &gSurfaceI },
         { kTypefaceInterfaceV0_ANPGetValue,     sizeof(gPaintI),    &gTypefaceI },
-        { kAudioTrackInterfaceV0_ANPGetValue,   sizeof(gSoundI),    &gSoundI },
-        { kWindowInterfaceV0_ANPGetValue,       sizeof(gWindowI),    &gWindowI },
+        { kWindowInterfaceV0_ANPGetValue,       sizeof(gWindowI),   &gWindowI },
     };
     for (size_t i = 0; i < ARRAY_COUNT(gPairs); i++) {
         gPairs[i].i->inSize = gPairs[i].size;
@@ -171,6 +174,10 @@ NPError NPP_New(NPMIMEType pluginType, NPP instance, uint16 mode, int16 argc,
                 obj->pluginType = kForm_PluginType;
                 obj->activePlugin = new FormPlugin(instance);
             }
+            else if (!strcmp(argv[i], "RGBA_Surface")) {
+                obj->pluginType = kSurface_PluginType;
+                obj->activePlugin = new SurfacePlugin(instance, kRGBA_ANPSurfaceType);
+            }
             gLogI.log(instance, kDebug_ANPLogType, "------ %p PluginType is %d", instance, obj->pluginType);
             break;
         }
@@ -190,8 +197,8 @@ NPError NPP_New(NPMIMEType pluginType, NPP instance, uint16 mode, int16 argc,
             if (!strcmp(argv[i], "Bitmap")) {
                 model = kBitmap_ANPDrawingModel;
             }
-            else if (!strcmp(argv[i], "RasterSurface")) {
-               // model = kRasterSurface_ANPDrawingModel;
+            else if (!strcmp(argv[i], "Surface")) {
+               model = kSurface_ANPDrawingModel;
             }
             gLogI.log(instance, kDebug_ANPLogType, "------ %p DrawingModel is %d", instance, model);
             break;

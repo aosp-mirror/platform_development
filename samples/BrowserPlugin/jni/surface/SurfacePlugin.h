@@ -1,5 +1,5 @@
 /*
- * Copyright 2008, The Android Open Source Project
+ * Copyright 2009, The Android Open Source Project
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -25,48 +25,18 @@
 
 #include "PluginObject.h"
 
-#ifndef formPlugin__DEFINED
-#define formPlugin__DEFINED
+#ifndef surfacePlugin__DEFINED
+#define surfacePlugin__DEFINED
 
-struct TextInput {
-    ANPRectF    rect;
-    char        text[30];
-    uint32_t    charPtr;
-};
-
-class FormPlugin : public SubPlugin {
+class SurfacePlugin : public SubPlugin {
 public:
-    FormPlugin(NPP inst);
-    virtual ~FormPlugin();
+    SurfacePlugin(NPP inst, ANPSurfaceType surfaceType);
+    virtual ~SurfacePlugin();
     virtual bool supportsDrawingModel(ANPDrawingModel);
     virtual int16 handleEvent(const ANPEvent* evt);
 private:
-    void draw(ANPCanvas*);
-    void drawPlugin(const ANPBitmap& bitmap, const ANPRectI& clip);
-
-    bool        m_hasFocus;
-
-    TextInput*  m_activeInput;
-    TextInput   m_usernameInput;
-    TextInput   m_passwordInput;
-
-    ANPPaint*   m_paintInput;
-    ANPPaint*   m_paintActive;
-    ANPPaint*   m_paintText;
-
-    ANPRectI    m_visibleRect;
-
-    void drawText(ANPCanvas*, TextInput);
-    void drawPassword(ANPCanvas*, TextInput);
-
-    bool handleNavigation(ANPKeyCode keyCode);
-    void handleTextInput(TextInput* input, ANPKeyCode keyCode, int32_t unichar);
-    void scrollIntoView(TextInput* input);
-    void switchActiveInput(TextInput* input);
-
-    ANPPaint* getPaint(TextInput*);
-    TextInput* validTap(int x, int y);
+    void draw();
+    ANPSurface* m_surface;
 
 };
-
-#endif // formPlugin__DEFINED
+#endif // surfacePlugin__DEFINED
