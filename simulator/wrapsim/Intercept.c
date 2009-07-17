@@ -823,6 +823,16 @@ int setpriority(__priority_which_t which, id_t who, int what)
     return 0;
 }
 
+/*
+ * Pretend to be running as root, so the Android framework
+ * doesn't complain about permission problems all over the
+ * place.
+ */
+uid_t getuid(void)
+{
+    return 0;
+}
+
 #if 0
 /*
  * Create a pipe.  (Only needed for debugging an fd leak.)
