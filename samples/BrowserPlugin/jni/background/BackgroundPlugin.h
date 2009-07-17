@@ -33,7 +33,6 @@ public:
     BackgroundPlugin(NPP inst);
     virtual ~BackgroundPlugin();
     virtual bool supportsDrawingModel(ANPDrawingModel);
-    virtual void draw(ANPCanvas*);
     virtual int16 handleEvent(const ANPEvent* evt);
 
     // Timer Testing Variables
@@ -49,6 +48,8 @@ public:
     bool mFinishedStageThree; // check opaque
 
 private:
+    void draw(ANPCanvas*);
+    void drawPlugin(const ANPBitmap& bitmap, const ANPRectI& clip);
 
     ANPPaint*   m_paint;
 

@@ -33,9 +33,12 @@ public:
     BallAnimation(NPP inst);
     virtual ~BallAnimation();
     virtual bool supportsDrawingModel(ANPDrawingModel);
-    virtual void draw(ANPCanvas*);
     virtual int16 handleEvent(const ANPEvent* evt);
 private:
+    void draw(ANPCanvas*);
+    void drawPlugin(const ANPBitmap& bitmap, const ANPRectI& clip);
+    void centerPluginOnScreen();
+
     float m_x;
     float m_y;
     float m_dx;
@@ -48,7 +51,6 @@ private:
 
     static const float SCALE = 0.1;
 
-    void centerPluginOnScreen();
     int m_scrollX;
     int m_scrollY;
     int m_screenH;

@@ -42,9 +42,15 @@ public:
     AudioPlugin(NPP inst);
     virtual ~AudioPlugin();
     virtual bool supportsDrawingModel(ANPDrawingModel);
-    virtual void draw(ANPCanvas*);
     virtual int16 handleEvent(const ANPEvent* evt);
 private:
+    void draw(ANPCanvas*);
+    void drawPlugin(const ANPBitmap& bitmap, const ANPRectI& clip);
+
+    void handleTouch(int x, int y);
+    void invalActiveRect();
+    ANPPaint* getPaint(ANPRectF*);
+    ANPRectF* validTouch(int x, int y);
 
     ANPRectF    m_trackRect;
     ANPRectF    m_playRect;
@@ -63,13 +69,6 @@ private:
     bool        m_activeTouch;
     ANPRectF*   m_activeTouchRect;
     ANPRectF*   m_activeRect;
-
-    ANPPaint* getPaint(ANPRectF*);
-    ANPRectF* validTouch(int x, int y);
-    void handleTouch(int x, int y);
-    void invalActiveRect();
-
-
 };
 
 #endif // audioPlugin__DEFINED

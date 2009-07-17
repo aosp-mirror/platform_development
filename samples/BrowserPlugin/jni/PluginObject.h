@@ -40,7 +40,6 @@ class SubPlugin {
 public:
     SubPlugin(NPP inst) : m_inst(inst) {}
     virtual ~SubPlugin() {}
-    virtual void draw(ANPCanvas*) = 0;
     virtual int16 handleEvent(const ANPEvent* evt) = 0;
     virtual bool supportsDrawingModel(ANPDrawingModel) = 0;
 
@@ -56,7 +55,8 @@ enum PluginTypes {
     kBackground_PluginType = 3,
     kForm_PluginType       = 4,
     kText_PluginType       = 5,
-    kPaint_PluginType      = 6
+    kPaint_PluginType      = 6,
+    kSurface_PluginType    = 7,
 };
 typedef uint32_t PluginType;
 

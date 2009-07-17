@@ -77,6 +77,20 @@ bool BackgroundPlugin::supportsDrawingModel(ANPDrawingModel model) {
     return (model == kBitmap_ANPDrawingModel);
 }
 
+void BackgroundPlugin::drawPlugin(const ANPBitmap& bitmap, const ANPRectI& clip) {
+    ANPCanvas* canvas = gCanvasI.newCanvas(&bitmap);
+
+    ANPRectF clipR;
+    clipR.left = clip.left;
+    clipR.top = clip.top;
+    clipR.right = clip.right;
+    clipR.bottom = clip.bottom;
+    gCanvasI.clipRect(canvas, &clipR);
+
+    draw(canvas);
+    gCanvasI.deleteCanvas(canvas);
+}
+
 void BackgroundPlugin::draw(ANPCanvas* canvas) {
 
     gCanvasI.drawColor(canvas, 0xFFFFFFFF);
@@ -89,21 +103,6 @@ void BackgroundPlugin::draw(ANPCanvas* canvas) {
     gCanvasI.drawText(canvas, c, sizeof(c)-1, 10, -fm.fTop, m_paint);
 }
 
-static void drawPlugin(SubPlugin* plugin, const ANPBitmap& bitmap, const ANPRectI& clip) {
-
-   ANPCanvas* canvas = gCanvasI.newCanvas(&bitmap);
-
-    ANPRectF clipR;
-    clipR.left = clip.left;
-    clipR.top = clip.top;
-    clipR.right = clip.right;
-    clipR.bottom = clip.bottom;
-    gCanvasI.clipRect(canvas, &clipR);
-
-    plugin->draw(canvas);
-    gCanvasI.deleteCanvas(canvas);
-}
-
 int16 BackgroundPlugin::handleEvent(const ANPEvent* evt) {
     NPP instance = this->inst();
 
@@ -112,7 +111,7 @@ int16 BackgroundPlugin::handleEvent(const ANPEvent* evt) {
             switch (evt->data.draw.model) {
                 case kBitmap_ANPDrawingModel:
                     test_bitmap_transparency(evt);
-                    drawPlugin(this, evt->data.draw.data.bitmap, evt->data.draw.clip);
+                    drawPlugin(evt->data.draw.data.bitmap, evt->data.draw.clip);
                     return 1;
                 default:
                     break;   // unknown drawing model
