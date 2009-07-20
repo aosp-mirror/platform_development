@@ -77,6 +77,7 @@ function nothing() {}
     <li><a href="<?cs var:toroot ?>guide/instrumentation_testing.html">Instrumentation Testing</a></li>
     <li><a href="<?cs var:toroot ?>guide/debugging_gdb.html">Debugging with GDB</a></li>
     <li><a href="<?cs var:toroot ?>guide/debugging_native.html">Debugging Native Code</a></li>
+    <li><a href="<?cs var:toroot ?>guide/tcpdump.html">Debugging with tcpdump</a></li>
   </ul>
 </li>
 
