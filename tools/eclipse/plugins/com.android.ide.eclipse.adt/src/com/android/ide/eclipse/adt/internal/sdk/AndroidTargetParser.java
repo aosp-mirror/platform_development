@@ -66,10 +66,10 @@ import javax.management.InvalidAttributeValueException;
  * <li>Resource ID from <code>android.R</code></li>
  * <li>The list of permissions values from <code>android.Manifest$permission</code></li>
  * <li></li>
- * </ul> 
+ * </ul>
  */
 public final class AndroidTargetParser {
-    
+
     private static final String TAG = "Framework Resource Parser";
     private final IAndroidTarget mAndroidTarget;
 
@@ -79,11 +79,11 @@ public final class AndroidTargetParser {
     public AndroidTargetParser(IAndroidTarget platformTarget) {
         mAndroidTarget = platformTarget;
     }
-    
+
     /**
      * Parses the framework, collects all interesting information and stores them in the
      * {@link IAndroidTarget} given to the constructor.
-     * 
+     *
      * @param monitor A progress monitor. Can be null. Caller is responsible for calling done.
      * @return True if the SDK path was valid and parsing has been attempted.
      */
@@ -92,7 +92,7 @@ public final class AndroidTargetParser {
             SubMonitor progress = SubMonitor.convert(monitor,
                     String.format("Parsing SDK %1$s", mAndroidTarget.getName()),
                     14);
-            
+
             AndroidTargetData targetData = new AndroidTargetData(mAndroidTarget);
 
             // load DX.
@@ -103,22 +103,22 @@ public final class AndroidTargetParser {
                         String.format("dx.jar loading failed for target '%1$s'",
                                 mAndroidTarget.getFullName()));
             }
-            
+
             // we have loaded dx.
             targetData.setDexWrapper(dexWrapper);
             progress.worked(1);
-            
+
             // parse the rest of the data.
 
             AndroidJarLoader classLoader =
                 new AndroidJarLoader(mAndroidTarget.getPath(IAndroidTarget.ANDROID_JAR));
-            
+
             preload(classLoader, progress.newChild(40, SubMonitor.SUPPRESS_NONE));
-            
+
             if (progress.isCanceled()) {
                 return Status.CANCEL_STATUS;
             }
-            
+
             // get the resource Ids.
             progress.subTask("Resource IDs");
             IResourceRepository frameworkRepository = collectResourceIds(classLoader);
@@ -172,7 +172,7 @@ public final class AndroidTargetParser {
             progress.subTask("Widgets and layouts");
             collectLayoutClasses(classLoader, attrsXmlParser, mainList, groupList,
                     progress.newChild(1));
-            
+
             if (progress.isCanceled()) {
                 return Status.CANCEL_STATUS;
             }
@@ -180,7 +180,7 @@ public final class AndroidTargetParser {
             ViewClassInfo[] layoutViewsInfo = mainList.toArray(new ViewClassInfo[mainList.size()]);
             ViewClassInfo[] layoutGroupsInfo = groupList.toArray(
                     new ViewClassInfo[groupList.size()]);
-            
+
             // collect the preferences classes.
             mainList.clear();
             groupList.clear();
@@ -203,17 +203,17 @@ public final class AndroidTargetParser {
             Map<String, Map<String, Integer>> enumValueMap = attrsXmlParser.getEnumFlagValues();
 
             Map<String, DeclareStyleableInfo> xmlAppWidgetMap = null;
-            if (mAndroidTarget.getApiVersionNumber() >= 3) {
+            if (mAndroidTarget.getVersion().getApiLevel() >= 3) {
                 xmlAppWidgetMap = collectAppWidgetDefinitions(attrsXmlParser);
             }
 
             if (progress.isCanceled()) {
                 return Status.CANCEL_STATUS;
             }
-            
+
             // From the information that was collected, create the pieces that will be put in
             // the PlatformData object.
-            AndroidManifestDescriptors manifestDescriptors = new AndroidManifestDescriptors(); 
+            AndroidManifestDescriptors manifestDescriptors = new AndroidManifestDescriptors();
             manifestDescriptors.updateDescriptors(manifestMap);
             progress.worked(1);
 
@@ -244,16 +244,16 @@ public final class AndroidTargetParser {
                     preferencesInfo,
                     preferenceGroupsInfo);
             progress.worked(1);
-            
+
             // load the framework resources.
             ProjectResources resources = ResourceManager.getInstance().loadFrameworkResources(
                     mAndroidTarget);
             progress.worked(1);
-            
+
             // now load the layout lib bridge
             LayoutBridge layoutBridge = loadLayoutBridge();
             progress.worked(1);
-            
+
             // and finally create the PlatformData with all that we loaded.
             targetData.setExtraData(frameworkRepository,
                     manifestDescriptors,
@@ -270,7 +270,7 @@ public final class AndroidTargetParser {
                     mAndroidTarget.getOptionalLibraries(),
                     resources,
                     layoutBridge);
-            
+
             Sdk.getCurrent().setTargetData(mAndroidTarget, targetData);
 
             return Status.OK_STATUS;
@@ -285,7 +285,7 @@ public final class AndroidTargetParser {
      * Preloads all "interesting" classes from the framework SDK jar.
      * <p/>
      * Currently this preloads all classes from the framework jar
-     * 
+     *
      * @param classLoader The framework SDK jar classloader
      * @param monitor A progress monitor. Can be null. Caller is responsible for calling done.
      */
@@ -303,7 +303,7 @@ public final class AndroidTargetParser {
 
     /**
      * Creates an IResourceRepository for the framework resources.
-     * 
+     *
      * @param classLoader The framework SDK jar classloader
      * @return a map of the resources, or null if it failed.
      */
@@ -311,7 +311,7 @@ public final class AndroidTargetParser {
             AndroidJarLoader classLoader) {
         try {
             Class<?> r = classLoader.loadClass(AndroidConstants.CLASS_R);
-            
+
             if (r != null) {
                 Map<ResourceType, List<ResourceItem>> map = parseRClass(r);
                 if (map != null) {
@@ -321,23 +321,23 @@ public final class AndroidTargetParser {
         } catch (ClassNotFoundException e) {
             AdtPlugin.logAndPrintError(e, TAG,
                     "Collect resource IDs failed, class %1$s not found in %2$s", //$NON-NLS-1$
-                    AndroidConstants.CLASS_R, 
+                    AndroidConstants.CLASS_R,
                     mAndroidTarget.getPath(IAndroidTarget.ANDROID_JAR));
         }
-        
+
         return null;
     }
-    
+
     /**
      * Parse the R class and build the resource map.
-     * 
+     *
      * @param rClass the Class object representing the Resources.
      * @return a map of the resource or null
      */
     private Map<ResourceType, List<ResourceItem>> parseRClass(Class<?> rClass) {
         // get the sub classes.
         Class<?>[] classes = rClass.getClasses();
-        
+
         if (classes.length > 0) {
             HashMap<ResourceType, List<ResourceItem>> map =
                 new HashMap<ResourceType, List<ResourceItem>>();
@@ -346,30 +346,30 @@ public final class AndroidTargetParser {
             for (int c = 0 ; c < classes.length ; c++) {
                 Class<?> subClass = classes[c];
                 String name = subClass.getSimpleName();
-                
+
                 // get the matching ResourceType
                 ResourceType type = ResourceType.getEnum(name);
                 if (type != null) {
                     List<ResourceItem> list = new ArrayList<ResourceItem>();
                     map.put(type, list);
-                    
+
                     Field[] fields = subClass.getFields();
-                    
+
                     for (Field f : fields) {
                         list.add(new ResourceItem(f.getName()));
                     }
                 }
             }
-            
+
             return map;
         }
-        
+
         return null;
     }
 
     /**
      * Loads, collects and returns the list of default permissions from the framework.
-     * 
+     *
      * @param classLoader The framework SDK jar classloader
      * @return a non null (but possibly empty) array containing the permission values.
      */
@@ -377,12 +377,12 @@ public final class AndroidTargetParser {
         try {
             Class<?> permissionClass =
                 classLoader.loadClass(AndroidConstants.CLASS_MANIFEST_PERMISSION);
-            
+
             if (permissionClass != null) {
                 ArrayList<String> list = new ArrayList<String>();
 
                 Field[] fields = permissionClass.getFields();
-                
+
                 for (Field f : fields) {
                     int modifiers = f.getModifiers();
                     if (Modifier.isStatic(modifiers) && Modifier.isFinal(modifiers) &&
@@ -403,23 +403,23 @@ public final class AndroidTargetParser {
                         }
                     }
                 }
-                
+
                 return list.toArray(new String[list.size()]);
             }
         } catch (ClassNotFoundException e) {
             AdtPlugin.logAndPrintError(e, TAG,
                     "Collect permissions failed, class %1$s not found in %2$s", //$NON-NLS-1$
-                    AndroidConstants.CLASS_MANIFEST_PERMISSION, 
+                    AndroidConstants.CLASS_MANIFEST_PERMISSION,
                     mAndroidTarget.getPath(IAndroidTarget.ANDROID_JAR));
         }
-        
+
         return new String[0];
     }
-    
+
     /**
      * Loads and collects the action and category default values from the framework.
      * The values are added to the <code>actions</code> and <code>categories</code> lists.
-     * 
+     *
      * @param activityActions the list which will receive the activity action values.
      * @param broadcastActions the list which will receive the broadcast action values.
      * @param serviceActions the list which will receive the service action values.
@@ -481,7 +481,7 @@ public final class AndroidTargetParser {
     /**
      * Collects all layout classes information from the class loader and the
      * attrs.xml and sets the corresponding structures in the resource manager.
-     * 
+     *
      * @param classLoader The framework SDK jar classloader in case we cannot get the widget from
      * the platform directly
      * @param attrsXmlParser The parser of the attrs.xml file
@@ -491,7 +491,7 @@ public final class AndroidTargetParser {
      */
     private void collectLayoutClasses(AndroidJarLoader classLoader,
             AttrsXmlParser attrsXmlParser,
-            Collection<ViewClassInfo> mainList, Collection<ViewClassInfo> groupList, 
+            Collection<ViewClassInfo> mainList, Collection<ViewClassInfo> groupList,
             IProgressMonitor monitor) {
         LayoutParamsParser ldp = null;
         try {
@@ -510,7 +510,7 @@ public final class AndroidTargetParser {
             ldp = new LayoutParamsParser(classLoader, attrsXmlParser);
         }
         ldp.parseLayoutClasses(monitor);
-        
+
         List<ViewClassInfo> views = ldp.getViews();
         List<ViewClassInfo> groups = ldp.getGroups();
 
@@ -523,7 +523,7 @@ public final class AndroidTargetParser {
     /**
      * Collects all preferences definition information from the attrs.xml and
      * sets the corresponding structures in the resource manager.
-     * 
+     *
      * @param classLoader The framework SDK jar classloader
      * @param attrsXmlParser The parser of the attrs.xml file
      * @param mainList the Collection to receive the main list of {@link ViewClassInfo}.
@@ -534,13 +534,13 @@ public final class AndroidTargetParser {
             AttrsXmlParser attrsXmlParser, Collection<ViewClassInfo> mainList,
             Collection<ViewClassInfo> groupList, IProgressMonitor monitor) {
         LayoutParamsParser ldp = new LayoutParamsParser(classLoader, attrsXmlParser);
-        
+
         try {
             ldp.parsePreferencesClasses(monitor);
-            
+
             List<ViewClassInfo> prefs = ldp.getViews();
             List<ViewClassInfo> groups = ldp.getGroups();
-    
+
             if (prefs != null && groups != null) {
                 mainList.addAll(prefs);
                 groupList.addAll(groups);
@@ -548,7 +548,7 @@ public final class AndroidTargetParser {
         } catch (NoClassDefFoundError e) {
             AdtPlugin.logAndPrintError(e, TAG,
                     "Collect preferences failed, class %1$s not found in %2$s",
-                    e.getMessage(), 
+                    e.getMessage(),
                     classLoader.getSource());
         } catch (Throwable e) {
             AdtPlugin.log(e, "Android Framework Parser: failed to collect preference classes"); //$NON-NLS-1$
@@ -559,7 +559,7 @@ public final class AndroidTargetParser {
 
     /**
      * Collects all menu definition information from the attrs.xml and returns it.
-     * 
+     *
      * @param attrsXmlParser The parser of the attrs.xml file
      */
     private Map<String, DeclareStyleableInfo> collectMenuDefinitions(
@@ -575,18 +575,18 @@ public final class AndroidTargetParser {
                 AdtPlugin.log(IStatus.WARNING,
                         "Menu declare-styleable %1$s not found in file %2$s", //$NON-NLS-1$
                         key, attrsXmlParser.getOsAttrsXmlPath());
-                AdtPlugin.printErrorToConsole("Android Framework Parser", 
+                AdtPlugin.printErrorToConsole("Android Framework Parser",
                         String.format("Menu declare-styleable %1$s not found in file %2$s", //$NON-NLS-1$
                         key, attrsXmlParser.getOsAttrsXmlPath()));
             }
         }
-        
+
         return Collections.unmodifiableMap(map2);
     }
 
     /**
      * Collects all searchable definition information from the attrs.xml and returns it.
-     * 
+     *
      * @param attrsXmlParser The parser of the attrs.xml file
      */
     private Map<String, DeclareStyleableInfo> collectSearchableDefinitions(
@@ -612,7 +612,7 @@ public final class AndroidTargetParser {
 
     /**
      * Collects all appWidgetProviderInfo definition information from the attrs.xml and returns it.
-     * 
+     *
      * @param attrsXmlParser The parser of the attrs.xml file
      */
     private Map<String, DeclareStyleableInfo> collectAppWidgetDefinitions(
@@ -657,13 +657,13 @@ public final class AndroidTargetParser {
                 AdtPlugin.log(IStatus.ERROR, "layoutlib.jar is missing!"); //$NON-NLS-1$
             } else {
                 URL url = f.toURL();
-                
+
                 // create a class loader. Because this jar reference interfaces
-                // that are in the editors plugin, it's important to provide 
+                // that are in the editors plugin, it's important to provide
                 // a parent class loader.
                 layoutBridge.classLoader = new URLClassLoader(new URL[] { url },
                         this.getClass().getClassLoader());
-   
+
                 // load the class
                 Class<?> clazz = layoutBridge.classLoader.loadClass(AndroidConstants.CLASS_BRIDGE);
                 if (clazz != null) {
@@ -676,7 +676,7 @@ public final class AndroidTargetParser {
                         }
                     }
                 }
-                
+
                 if (layoutBridge.bridge == null) {
                     layoutBridge.status = LoadStatus.FAILED;
                     AdtPlugin.log(IStatus.ERROR, "Failed to load " + AndroidConstants.CLASS_BRIDGE); //$NON-NLS-1$
@@ -688,7 +688,7 @@ public final class AndroidTargetParser {
                         // the first version of the api did not have this method
                         layoutBridge.apiLevel = 1;
                     }
-                    
+
                     // and mark the lib as loaded.
                     layoutBridge.status = LoadStatus.LOADED;
                 }
@@ -698,7 +698,7 @@ public final class AndroidTargetParser {
             // log the error.
             AdtPlugin.log(t, "Failed to load the LayoutLib");
         }
-        
+
         return layoutBridge;
     }
 }

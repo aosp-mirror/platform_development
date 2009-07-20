@@ -273,14 +273,14 @@ final class AvdCreationDialog extends Dialog {
             for (IAndroidTarget target : sdkManager.getTargets()) {
                 String name;
                 if (target.isPlatform()) {
-                    name = String.format("%s - API Level %d",
+                    name = String.format("%s - API Level %s",
                             target.getName(),
-                            target.getApiVersionNumber());
+                            target.getVersion().getApiString());
                 } else {
-                    name = String.format("%s (%s) - API Level %d",
+                    name = String.format("%s (%s) - API Level %s",
                             target.getName(),
                             target.getVendor(),
-                            target.getApiVersionNumber());
+                            target.getVersion().getApiString());
                 }
                 mCurrentTargets.put(name, target);
                 mTargetCombo.add(name);

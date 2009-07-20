@@ -137,14 +137,13 @@ final class AddOnTarget implements IAndroidTarget {
         return mDescription;
     }
 
-    public String getApiVersionName() {
+    public AndroidVersion getVersion() {
         // this is always defined by the base platform
-        return mBasePlatform.getApiVersionName();
+        return mBasePlatform.getVersion();
     }
 
-    public int getApiVersionNumber() {
-        // this is always defined by the base platform
-        return mBasePlatform.getApiVersionNumber();
+    public String getVersionName() {
+        return mBasePlatform.getVersionName();
     }
 
     public int getRevision() {
@@ -182,7 +181,7 @@ final class AddOnTarget implements IAndroidTarget {
                         return sampleLoc.getAbsolutePath();
                     }
                 }
-                // INTENT FALL-THROUGH
+                // INTENDED FALL-THROUGH
             default :
                 return mBasePlatform.getPath(pathId);
         }
@@ -222,21 +221,22 @@ final class AddOnTarget implements IAndroidTarget {
         // if the receiver has no optional library, then anything with api version number >= to
         // the receiver is compatible.
         if (mLibraries.length == 0) {
-            return target.getApiVersionNumber() >= getApiVersionNumber();
+            return target.getVersion().getApiLevel() >= getVersion().getApiLevel();
         }
 
         // Otherwise, target is only compatible if the vendor and name are equals with the api
         // number greater or equal (ie target is a newer version of this add-on).
         if (target.isPlatform() == false) {
             return (mVendor.equals(target.getVendor()) && mName.equals(target.getName()) &&
-                    target.getApiVersionNumber() >= getApiVersionNumber());
+                    target.getVersion().getApiLevel() >= getVersion().getApiLevel());
         }
 
         return false;
     }
 
     public String hashString() {
-        return String.format(ADD_ON_FORMAT, mVendor, mName, mBasePlatform.getApiVersionNumber());
+        return String.format(ADD_ON_FORMAT, mVendor, mName,
+                mBasePlatform.getVersion().getApiLevel());
     }
 
     @Override
@@ -250,7 +250,7 @@ final class AddOnTarget implements IAndroidTarget {
             AddOnTarget addon = (AddOnTarget)obj;
 
             return mVendor.equals(addon.mVendor) && mName.equals(addon.mName) &&
-                mBasePlatform.getApiVersionNumber() == addon.mBasePlatform.getApiVersionNumber();
+                mBasePlatform.getVersion().getApiLevel() == addon.mBasePlatform.getVersion().getApiLevel();
         }
 
         return super.equals(obj);
@@ -277,7 +277,7 @@ final class AddOnTarget implements IAndroidTarget {
 
         // api version
         if (value == 0) {
-            value = getApiVersionNumber() - target.getApiVersionNumber();
+            value = getVersion().getApiLevel() - target.getVersion().getApiLevel();
         }
 
         return value;

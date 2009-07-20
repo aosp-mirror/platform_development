@@ -16,6 +16,7 @@
 
 package com.android.sdklib.internal.repository;
 
+import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
@@ -34,11 +35,10 @@ import java.util.Properties;
  */
 public class PlatformPackage extends Package {
 
-    private static final String PROP_API_LEVEL = "Platform.ApiLevel";  //$NON-NLS-1$
     private static final String PROP_VERSION   = "Platform.Version";   //$NON-NLS-1$
 
-    private final String mVersion;
-    private final int mApiLevel;
+    private final AndroidVersion mVersion;
+    private final String mVersionName;
 
     /**
      * Creates a new platform package from the attributes and elements of the given XML node.
@@ -47,8 +47,13 @@ public class PlatformPackage extends Package {
      */
     PlatformPackage(RepoSource source, Node packageNode, Map<String,String> licenses) {
         super(source, packageNode, licenses);
-        mVersion  = XmlParserUtils.getXmlString(packageNode, SdkRepository.NODE_VERSION);
-        mApiLevel = XmlParserUtils.getXmlInt   (packageNode, SdkRepository.NODE_API_LEVEL, 0);
+        mVersionName = XmlParserUtils.getXmlString(packageNode, SdkRepository.NODE_VERSION);
+        int apiLevel = XmlParserUtils.getXmlInt   (packageNode, SdkRepository.NODE_API_LEVEL, 0);
+        String codeName = XmlParserUtils.getXmlString(packageNode, SdkRepository.NODE_API_CODENAME);
+        if (codeName.length() == 0) {
+            codeName = null;
+        }
+        mVersion = new AndroidVersion(apiLevel, codeName);
     }
 
     /**
@@ -60,7 +65,7 @@ public class PlatformPackage extends Package {
     PlatformPackage(IAndroidTarget target, Properties props) {
         super(  null,                       //source
                 props,                      //properties
-                0,                          //revision
+                target.getRevision(),       //revision
                 null,                       //license
                 target.getDescription(),    //description
                 null,                       //descUrl
@@ -69,37 +74,43 @@ public class PlatformPackage extends Package {
                 target.getLocation()        //archiveOsPath
                 );
 
-        mApiLevel = target.getApiVersionNumber();
-        mVersion  = target.getApiVersionName();
+        mVersion = target.getVersion();
+        mVersionName  = target.getVersionName();
     }
 
     /**
      * Save the properties of the current packages in the given {@link Properties} object.
-     * These properties will later be give the constructor that takes a {@link Properties} object.
+     * These properties will later be given to a constructor that takes a {@link Properties} object.
      */
     @Override
     void saveProperties(Properties props) {
         super.saveProperties(props);
 
-        props.setProperty(PROP_API_LEVEL, Integer.toString(mApiLevel));
-        props.setProperty(PROP_VERSION, mVersion);
+        mVersion.saveProperties(props);
+        props.setProperty(PROP_VERSION, mVersionName);
     }
 
     /** Returns the version, a string, for platform packages. */
-    public String getVersion() {
-        return mVersion;
+    public String getVersionName() {
+        return mVersionName;
     }
 
     /** Returns the api-level, an int > 0, for platform, add-on and doc packages. */
     public int getApiLevel() {
-        return mApiLevel;
+        // FIXME: return the AndroidVersion instead.
+        return mVersion.getApiLevel();
     }
 
     /** Returns a short description for an {@link IDescription}. */
     @Override
     public String getShortDescription() {
+        if (mVersion.isPreview()) {
+            return String.format("SDK Platform Android %1$s (Preview)",
+                    getVersionName());
+        }
+
         return String.format("SDK Platform Android %1$s, API %2$d",
-                getVersion(),
+                getVersionName(),
                 getApiLevel());
     }
 
@@ -128,17 +139,17 @@ public class PlatformPackage extends Package {
     @Override
     public File getInstallFolder(String osSdkRoot, String suggestedDir, SdkManager sdkManager) {
 
-        // First find if this add-on is already installed. If so, reuse the same directory.
+        // First find if this platform is already installed. If so, reuse the same directory.
         for (IAndroidTarget target : sdkManager.getTargets()) {
             if (target.isPlatform() &&
-                    target.getApiVersionNumber() == getApiLevel() &&
-                    target.getApiVersionName().equals(getVersion())) {
+                    target.getVersion().equals(mVersion) &&
+                    target.getVersionName().equals(getVersionName())) {
                 return new File(target.getLocation());
             }
         }
 
         File platforms = new File(osSdkRoot, SdkConstants.FD_PLATFORMS);
-        File folder = new File(platforms, String.format("android-%s", getVersion())); //$NON-NLS-1$
+        File folder = new File(platforms, String.format("android-%s", getVersionName())); //$NON-NLS-1$
 
         return folder;
     }
@@ -162,7 +173,7 @@ public class PlatformPackage extends Package {
         }
 
         PlatformPackage newPkg = (PlatformPackage) replacementPackage;
-        return newPkg.getVersion().equalsIgnoreCase(this.getVersion()) &&
+        return newPkg.getVersionName().equalsIgnoreCase(this.getVersionName()) &&
             newPkg.getApiLevel() == this.getApiLevel() &&
             newPkg.getRevision() > this.getRevision();
     }

@@ -28,8 +28,11 @@ import java.util.Map;
 public interface IDevice {
 
     public final static String PROP_BUILD_VERSION = "ro.build.version.release";
-    public final static String PROP_BUILD_VERSION_NUMBER = "ro.build.version.sdk";
+    public final static String PROP_BUILD_API_LEVEL = "ro.build.version.sdk";
+    public final static String PROP_BUILD_CODENAME = "ro.build.version.codename";
+
     public final static String PROP_DEBUGGABLE = "ro.debuggable";
+
     /** Serial number of the first connected emulator. */
     public final static String FIRST_EMULATOR_SN = "emulator-5554"; //$NON-NLS-1$
     /** Device change bit mask: {@link DeviceState} change. */
@@ -38,6 +41,9 @@ public interface IDevice {
     public static final int CHANGE_CLIENT_LIST = 0x0002;
     /** Device change bit mask: build info change. */
     public static final int CHANGE_BUILD_INFO = 0x0004;
+
+    /** @deprecated Use {@link #PROP_BUILD_API_LEVEL}. */
+    public final static String PROP_BUILD_VERSION_NUMBER = PROP_BUILD_API_LEVEL;
 
     /**
      * The state of a device.

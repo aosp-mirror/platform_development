@@ -840,25 +840,21 @@ public class NewProjectCreationPage extends WizardPage {
             return;
         }
 
-        try {
-            int version = Integer.parseInt(mInfo.getMinSdkVersion());
+        String minSdkVersion = mInfo.getMinSdkVersion();
 
-            // Before changing, compare with the currently selected one, if any.
-            // There can be multiple targets with the same sdk api version, so don't change
-            // it if it's already at the right version.
-            IAndroidTarget curr_target = mInfo.getSdkTarget();
-            if (curr_target != null && curr_target.getApiVersionNumber() == version) {
-                return;
-            }
+        // Before changing, compare with the currently selected one, if any.
+        // There can be multiple targets with the same sdk api version, so don't change
+        // it if it's already at the right version.
+        IAndroidTarget curr_target = mInfo.getSdkTarget();
+        if (curr_target != null && curr_target.getVersion().equals(minSdkVersion)) {
+            return;
+        }
 
-            for (IAndroidTarget target : mSdkTargetSelector.getTargets()) {
-                if (target.getApiVersionNumber() == version) {
-                    mSdkTargetSelector.setSelection(target);
-                    break;
-                }
+        for (IAndroidTarget target : mSdkTargetSelector.getTargets()) {
+            if (target.getVersion().equals(minSdkVersion)) {
+                mSdkTargetSelector.setSelection(target);
+                break;
             }
-        } catch (NumberFormatException e) {
-            // ignore
         }
     }
 
@@ -873,7 +869,7 @@ public class NewProjectCreationPage extends WizardPage {
 
         if (target != null) {
             mInternalMinSdkVersionUpdate = true;
-            mMinSdkVersionField.setText(Integer.toString(target.getApiVersionNumber()));
+            mMinSdkVersionField.setText(target.getVersion().getApiString());
             mInternalMinSdkVersionUpdate = false;
         }
     }
@@ -932,7 +928,7 @@ public class NewProjectCreationPage extends WizardPage {
         String packageName = null;
         Activity activity = null;
         String activityName = null;
-        int minSdkVersion = AndroidManifestParser.INVALID_MIN_SDK;
+        String minSdkVersion = null;
         try {
             packageName = manifestData.getPackage();
             minSdkVersion = manifestData.getApiLevelRequirement();
@@ -1033,17 +1029,13 @@ public class NewProjectCreationPage extends WizardPage {
             }
         }
 
-        if (!foundTarget && minSdkVersion != AndroidManifestParser.INVALID_MIN_SDK) {
-            try {
-                for (IAndroidTarget target : mSdkTargetSelector.getTargets()) {
-                    if (target.getApiVersionNumber() == minSdkVersion) {
-                        mSdkTargetSelector.setSelection(target);
-                        foundTarget = true;
-                        break;
-                    }
+        if (!foundTarget && minSdkVersion != null) {
+            for (IAndroidTarget target : mSdkTargetSelector.getTargets()) {
+                if (target.getVersion().equals(minSdkVersion)) {
+                    mSdkTargetSelector.setSelection(target);
+                    foundTarget = true;
+                    break;
                 }
-            } catch(NumberFormatException e) {
-                // ignore
             }
         }
 
@@ -1059,9 +1051,9 @@ public class NewProjectCreationPage extends WizardPage {
 
         if (!foundTarget) {
             mInternalMinSdkVersionUpdate = true;
-            mMinSdkVersionField.setText(
-                    minSdkVersion == AndroidManifestParser.INVALID_MIN_SDK ? ""  //$NON-NLS-1$
-                            : Integer.toString(minSdkVersion));
+            if (minSdkVersion != null) {
+                mMinSdkVersionField.setText(minSdkVersion);
+            }
             mInternalMinSdkVersionUpdate = false;
         }
     }
@@ -1269,21 +1261,10 @@ public class NewProjectCreationPage extends WizardPage {
             return MSG_NONE;
         }
 
-        int version = AndroidManifestParser.INVALID_MIN_SDK;
-        try {
-            // If not empty, it must be a valid integer > 0
-            version = Integer.parseInt(mInfo.getMinSdkVersion());
-        } catch (NumberFormatException e) {
-            // ignore
-        }
-
-        if (version < 1) {
-            return setStatus("Min SDK Version must be an integer > 0.", MSG_ERROR);
-        }
-
-        if (mInfo.getSdkTarget() != null && mInfo.getSdkTarget().getApiVersionNumber() != version) {
+        if (mInfo.getSdkTarget() != null &&
+                mInfo.getSdkTarget().getVersion().equals(mInfo.getMinSdkVersion()) == false) {
             return setStatus("The API level for the selected SDK target does not match the Min SDK version.",
-                    MSG_WARNING);
+                    mInfo.getSdkTarget().getVersion().isPreview() ? MSG_ERROR : MSG_WARNING);
         }
 
         return MSG_NONE;

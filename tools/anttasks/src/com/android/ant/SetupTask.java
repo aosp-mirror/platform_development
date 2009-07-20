@@ -44,13 +44,13 @@ import java.util.HashSet;
  * <li>Imports the build rules located in the resolved target so that the build actually does
  * something. This can be disabled with the attribute <var>import</var> set to <code>false</code>
  * </li></ul>
- * 
+ *
  * This is used in build.xml/template.
  *
  */
 public final class SetupTask extends ImportTask {
     private final static String ANDROID_RULES = "android_rules.xml";
-    
+
     // ant property with the path to the android.jar
     private final static String PROPERTY_ANDROID_JAR = "android-jar";
     // ant property with the path to the framework.jar
@@ -63,21 +63,21 @@ public final class SetupTask extends ImportTask {
     private final static String PROPERTY_DX = "dx";
     // ref id to the <path> object containing all the boot classpaths.
     private final static String REF_CLASSPATH = "android.target.classpath";
-    
+
     private boolean mDoImport = true;
 
     @Override
     public void execute() throws BuildException {
         Project antProject = getProject();
-        
+
         // get the SDK location
         String sdkLocation = antProject.getProperty(ProjectProperties.PROPERTY_SDK);
-        
+
         // check if it's valid and exists
         if (sdkLocation == null || sdkLocation.length() == 0) {
             throw new BuildException("SDK Location is not set.");
         }
-        
+
         File sdk = new File(sdkLocation);
         if (sdk.isDirectory() == false) {
             throw new BuildException(String.format("SDK Location '%s' is not valid.", sdkLocation));
@@ -120,20 +120,20 @@ public final class SetupTask extends ImportTask {
 
         // resolve it
         IAndroidTarget androidTarget = manager.getTargetFromHashString(targetHashString);
-        
+
         if (androidTarget == null) {
             throw new BuildException(String.format(
                     "Unable to resolve target '%s'", targetHashString));
         }
-        
+
         // display it
         System.out.println("Project Target: " + androidTarget.getName());
         if (androidTarget.isPlatform() == false) {
             System.out.println("Vendor: " + androidTarget.getVendor());
-            System.out.println("Platform Version: " + androidTarget.getApiVersionName());
+            System.out.println("Platform Version: " + androidTarget.getVersionName());
         }
-        System.out.println("API level: " + androidTarget.getApiVersionNumber());
-        
+        System.out.println("API level: " + androidTarget.getVersion().getApiString());
+
         // sets up the properties to find android.jar/framework.aidl/target tools
         String androidJar = androidTarget.getPath(IAndroidTarget.ANDROID_JAR);
         antProject.setProperty(PROPERTY_ANDROID_JAR, androidJar);
@@ -152,7 +152,7 @@ public final class SetupTask extends ImportTask {
         // create a PathElement for the framework jar
         PathElement element = bootclasspath.createPathElement();
         element.setPath(androidJar);
-        
+
         // create PathElement for each optional library.
         IOptionalLibrary[] libraries = androidTarget.getOptionalLibraries();
         if (libraries != null) {
@@ -167,13 +167,13 @@ public final class SetupTask extends ImportTask {
                 }
             }
         }
-        
+
         // finally sets the path in the project with a reference
         antProject.addReference(REF_CLASSPATH, bootclasspath);
 
         // find the file to import, and import it.
         String templateFolder = androidTarget.getPath(IAndroidTarget.TEMPLATES);
-        
+
         // Now the import section. This is only executed if the task actually has to import a file.
         if (mDoImport) {
             // make sure the file exists.
@@ -182,17 +182,17 @@ public final class SetupTask extends ImportTask {
                 throw new BuildException(String.format("Template directory '%s' is missing.",
                         templateFolder));
             }
-            
+
             // now check the rules file exists.
             File rules = new File(templateFolder, ANDROID_RULES);
             if (rules.isFile() == false) {
                 throw new BuildException(String.format("Build rules file '%s' is missing.",
                         templateFolder));
            }
-            
+
             // set the file location to import
             setFile(rules.getAbsolutePath());
-            
+
             // and import
             super.execute();
         }
