@@ -97,7 +97,7 @@ FormPlugin::FormPlugin(NPP inst) : SubPlugin(inst) {
     gTypefaceI.unref(tf);
 
     //register for key and visibleRect events
-    ANPEventFlags flags = kKey_ANPEventFlag | kVisibleRect_ANPEventFlag;
+    ANPEventFlags flags = kKey_ANPEventFlag;
     NPError err = browser->setvalue(inst, kAcceptEvents_ANPSetValue, &flags);
     if (err != NPERR_NO_ERROR) {
         gLogI.log(inst, kError_ANPLogType, "Error selecting input events.");
@@ -275,22 +275,6 @@ int16 FormPlugin::handleEvent(const ANPEvent* evt) {
             }
             return 1;
 
-        case kVisibleRect_ANPEventType: {
-
-            int oldScreenW = m_visibleRect.right - m_visibleRect.left;
-            int oldScreenH = m_visibleRect.bottom - m_visibleRect.top;
-
-            m_visibleRect = evt->data.visibleRect.rect;
-
-            int newScreenW = m_visibleRect.right - m_visibleRect.left;
-            int newScreenH = m_visibleRect.bottom - m_visibleRect.top;
-
-            if (m_activeInput && (oldScreenW != newScreenW || oldScreenH != newScreenH))
-                scrollIntoView(m_activeInput);
-
-            return 1;
-        }
-
         default:
             break;
     }
@@ -300,13 +284,17 @@ int16 FormPlugin::handleEvent(const ANPEvent* evt) {
 void FormPlugin::switchActiveInput(TextInput* newInput) {
     NPP instance = this->inst();
 
-    if (m_activeInput)
+    if (m_activeInput) {
         inval(instance, m_activeInput->rect, true); // inval the old
+        gWindowI.clearVisibleRects(instance);
+    }
 
     m_activeInput = newInput; // set the new active input
 
-    if (m_activeInput)
+    if (m_activeInput) {
         inval(instance, m_activeInput->rect, true); // inval the new
+        scrollIntoView(m_activeInput);
+    }
 }
 
 bool FormPlugin::handleNavigation(ANPKeyCode keyCode) {
@@ -316,12 +304,10 @@ bool FormPlugin::handleNavigation(ANPKeyCode keyCode) {
 
     if (!m_activeInput) {
         switchActiveInput(&m_usernameInput);
-        scrollIntoView(m_activeInput);
     }
     else if (m_activeInput == &m_usernameInput) {
         if (keyCode == kDpadDown_ANPKeyCode) {
             switchActiveInput(&m_passwordInput);
-            scrollIntoView(m_activeInput);
         }
         else if (keyCode == kDpadCenter_ANPKeyCode)
             gWindowI.showKeyboard(instance, false);
@@ -331,7 +317,6 @@ bool FormPlugin::handleNavigation(ANPKeyCode keyCode) {
     else if (m_activeInput == &m_passwordInput) {
         if (keyCode == kDpadUp_ANPKeyCode) {
             switchActiveInput(&m_usernameInput);
-            scrollIntoView(m_activeInput);
         }
         else if (keyCode == kDpadCenter_ANPKeyCode)
             gWindowI.showKeyboard(instance, false);
@@ -373,44 +358,13 @@ void FormPlugin::scrollIntoView(TextInput* input) {
     NPWindow *window = obj->window;
 
     // find the textInput's global rect coordinates
-    ANPRectI inputRect;
-    inputRect.left = window->x + input->rect.left;
-    inputRect.top = window->y + input->rect.top;
-    inputRect.right = inputRect.left + (input->rect.right - input->rect.left);
-    inputRect.bottom = inputRect.top + (input->rect.bottom - input->rect.top);
+    ANPRectI visibleRects[1];
+    visibleRects[0].left = input->rect.left;
+    visibleRects[0].top = input->rect.top;
+    visibleRects[0].right = input->rect.right;
+    visibleRects[0].bottom = input->rect.bottom;
 
-    // if the rect is contained within visible window then do nothing
-    if (inputRect.left > m_visibleRect.left
-            && inputRect.right < m_visibleRect.right
-            && inputRect.top > m_visibleRect.top
-            && inputRect.bottom < m_visibleRect.bottom) {
-        return;
-    }
-
-    // find the global (x,y) coordinates for center of the textInput
-    int inputCenterX = inputRect.left + ((inputRect.right - inputRect.left)/2);
-    int inputCenterY = inputRect.top + ((inputRect.bottom - inputRect.top)/2);
-
-    gLogI.log(instance, kDebug_ANPLogType, "---- %p Input Center: %d,%d : %d,%d",
-              instance, inputCenterX, inputCenterY, window->x, window->y);
-
-    //find global (x,y) coordinates for center of the visible screen
-    int screenCenterX = m_visibleRect.left + ((m_visibleRect.right - m_visibleRect.left)/2);
-    int screenCenterY = m_visibleRect.top + ((m_visibleRect.bottom - m_visibleRect.top)/2);
-
-    gLogI.log(instance, kDebug_ANPLogType, "---- %p Screen Center: %d,%d : %d,%d",
-              instance, screenCenterX, screenCenterY, m_visibleRect.left, m_visibleRect.top);
-
-    //compute the delta of the two coordinates
-    int deltaX = inputCenterX - screenCenterX;
-    int deltaY = inputCenterY - screenCenterY;
-
-    gLogI.log(instance, kDebug_ANPLogType, "---- %p Centering: %d,%d : %d,%d",
-              instance, deltaX, deltaY, m_visibleRect.left + deltaX, m_visibleRect.top + deltaY);
-
-    //move the visible screen
-    gWindowI.scrollTo(instance, m_visibleRect.left + deltaX, m_visibleRect.top + deltaY);
-
+    gWindowI.setVisibleRects(instance, visibleRects, 1);
 }
 
 TextInput* FormPlugin::validTap(int x, int y) {
