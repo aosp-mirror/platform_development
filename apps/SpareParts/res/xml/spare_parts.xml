@@ -94,6 +94,12 @@
             android:summaryOn="@string/summary_on_haptic_feedback"
             android:summaryOff="@string/summary_off_haptic_feedback"/>
         
+
+        <CheckBoxPreference
+                android:key="compatibility_mode"
+                android:title="@string/compatibility_mode_title"
+                android:summaryOn="@string/compatibility_mode_summary_on"
+                android:summaryOff="@string/compatibility_mode_summary_off" />
     </PreferenceCategory>
             
     <PreferenceCategory
