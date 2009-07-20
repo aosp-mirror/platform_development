@@ -37,7 +37,7 @@ public:
 private:
     void draw(ANPCanvas*);
     void drawPlugin(const ANPBitmap& bitmap, const ANPRectI& clip);
-    void centerPluginOnScreen();
+    void showEntirePluginOnScreen();
 
     float m_x;
     float m_y;
@@ -50,12 +50,6 @@ private:
     ANPPaint*   m_paint;
 
     static const float SCALE = 0.1;
-
-    int m_scrollX;
-    int m_scrollY;
-    int m_screenH;
-    int m_screenW;
-    float m_zoom;
 };
 
 uint32_t getMSecs();

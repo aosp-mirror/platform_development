@@ -75,8 +75,6 @@ BallAnimation::BallAnimation(NPP inst) : SubPlugin(inst) {
     m_x = m_y = 0;
     m_dx = 7 * SCALE;
     m_dy = 5 * SCALE;
-    m_scrollX = m_scrollY = m_screenW = m_screenH = 0;
-    m_zoom = 1;
 
     memset(&m_oval, 0, sizeof(m_oval));
 
@@ -90,7 +88,7 @@ BallAnimation::BallAnimation(NPP inst) : SubPlugin(inst) {
     gTypefaceI.unref(tf);
 
     //register for key and touch events
-    ANPEventFlags flags = kKey_ANPEventFlag | kTouch_ANPEventFlag | kVisibleRect_ANPEventFlag;
+    ANPEventFlags flags = kKey_ANPEventFlag | kTouch_ANPEventFlag;
     NPError err = browser->setvalue(inst, kAcceptEvents_ANPSetValue, &flags);
     if (err != NPERR_NO_ERROR) {
         gLogI.log(inst, kError_ANPLogType, "Error selecting input events.");
@@ -193,37 +191,20 @@ void BallAnimation::draw(ANPCanvas* canvas) {
     }
 }
 
-void BallAnimation::centerPluginOnScreen() {
+void BallAnimation::showEntirePluginOnScreen() {
     NPP instance = this->inst();
     PluginObject *obj = (PluginObject*) instance->pdata;
     NPWindow *window = obj->window;
 
-    //find global (x,y) coordinates for center of the plugin
-    int pluginCenterX = window->x + (window->width / 2);
-    int pluginCenterY = window->y + (window->height / 2);
+    ANPRectI visibleRects[1];
 
-    gLogI.log(instance, kDebug_ANPLogType, "---- %p Plugin Center: %d,%d : %d,%d",
-              instance, pluginCenterX, pluginCenterY, window->x, window->y);
+    visibleRects[0].left = 0;
+    visibleRects[0].top = 0;
+    visibleRects[0].right = window->width;
+    visibleRects[0].bottom = window->height;
 
-    //find global (x,y) coordinates for center of the visible screen
-    int screenCenterX = m_scrollX + (m_screenW / 2);
-    int screenCenterY = m_scrollY + (m_screenH / 2);
-
-    gLogI.log(instance, kDebug_ANPLogType, "---- %p Screen Center: %d,%d : %d,%d",
-              instance, screenCenterX, screenCenterY, m_scrollX, m_scrollY);
-
-    //compute the delta of the two coordinates
-    int deltaX = pluginCenterX - screenCenterX;
-    int deltaY = pluginCenterY - screenCenterY;
-
-    gLogI.log(instance, kDebug_ANPLogType, "---- %p Centering: %d,%d : %d,%d",
-              instance, deltaX, deltaY, m_scrollX + deltaX, m_scrollY + deltaY);
-
-    //move the visible screen
-    //webviewCore...
-    // (m_scrollX + deltaX, m_scrollY + deltaY)
-    gWindowI.scrollTo(instance, m_scrollX + deltaX, m_scrollY + deltaY);
-
+    gWindowI.setVisibleRects(instance, visibleRects, 1);
+    gWindowI.clearVisibleRects(instance);
 }
 
 int16 BallAnimation::handleEvent(const ANPEvent* evt) {
@@ -248,17 +229,8 @@ int16 BallAnimation::handleEvent(const ANPEvent* evt) {
             return 1;
         case kTouch_ANPEventType:
              if (kDown_ANPTouchAction == evt->data.touch.action) {
-                 centerPluginOnScreen();
+                 showEntirePluginOnScreen();
              }
-             return 1;
-
-        case kVisibleRect_ANPEventType:
-             m_scrollX = evt->data.visibleRect.rect.left;
-             m_scrollY = evt->data.visibleRect.rect.top;
-             m_screenW = evt->data.visibleRect.rect.right - m_scrollX;
-             m_screenH = evt->data.visibleRect.rect.bottom - m_scrollY;
-             m_zoom = evt->data.visibleRect.zoomScale;
-             gLogI.log(instance, kDebug_ANPLogType, "zoom event %g", m_zoom);
              return 1;
         default:
             break;
