@@ -30,5 +30,7 @@ current version
 
 - Add support for LOCAL_C_INCLUDES in Android.mk
 
+- Fix compilation of assembler files (e.g. foo.S)
+
 -------------------------------------------------------------------------------
 android-1.5_r1 released.
