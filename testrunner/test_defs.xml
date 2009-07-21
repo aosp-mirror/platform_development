@@ -94,6 +94,13 @@ See test_defs.xsd for more information.
     class="com.android.unit_tests.activity.ActivityTests"
     coverage_target="framework" />
 
+<test name="vpntests"
+    build_path="frameworks/base/tests/AndroidTests"
+    package="com.android.unit_tests"
+    class="com.android.unit_tests.VpnTest"
+    coverage_target="framework"
+    continuous="true" />
+
 <!--  obsolete?
 <test name="deadlock"
     build_path="frameworks/base/tests/Deadlock"
