@@ -58,7 +58,8 @@ public class SpareParts extends PreferenceActivity
     private static final String FONT_SIZE_PREF = "font_size";
     private static final String END_BUTTON_PREF = "end_button";
     private static final String MAPS_COMPASS_PREF = "maps_compass";
-    
+    private static final String KEY_COMPATIBILITY_MODE = "compatibility_mode";
+
     private final Configuration mCurConfig = new Configuration();
     
     private ListPreference mWindowAnimationsPref;
@@ -68,7 +69,8 @@ public class SpareParts extends PreferenceActivity
     private ListPreference mFontSizePref;
     private ListPreference mEndButtonPref;
     private CheckBoxPreference mShowMapsCompassPref;
-    
+    private CheckBoxPreference mCompatibilityMode;
+
     private IWindowManager mWindowManager;
 
     public static boolean updatePreferenceToSpecificActivityOrRemove(Context context,
@@ -124,7 +126,11 @@ public class SpareParts extends PreferenceActivity
         mEndButtonPref = (ListPreference) prefSet.findPreference(END_BUTTON_PREF);
         mEndButtonPref.setOnPreferenceChangeListener(this);
         mShowMapsCompassPref = (CheckBoxPreference) prefSet.findPreference(MAPS_COMPASS_PREF);
-        
+        mCompatibilityMode = (CheckBoxPreference) findPreference(KEY_COMPATIBILITY_MODE);
+        mCompatibilityMode.setPersistent(false);
+        mCompatibilityMode.setChecked(Settings.System.getInt(getContentResolver(),
+                Settings.System.COMPATIBILITY_MODE, 1) != 0);
+
         mWindowManager = IWindowManager.Stub.asInterface(ServiceManager.getService("window"));
         
         final PreferenceGroup parentPreference = getPreferenceScreen();
@@ -165,11 +171,21 @@ public class SpareParts extends PreferenceActivity
         } else if (preference == mEndButtonPref) {
             writeEndButtonPreference(objValue);
         }
-
         // always let the preference setting proceed.
         return true;
     }
-    
+
+    @Override
+    public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen, Preference preference) {
+        if (preference == mCompatibilityMode) {
+            Settings.System.putInt(getContentResolver(),
+                    Settings.System.COMPATIBILITY_MODE,
+                    mCompatibilityMode.isChecked() ? 1 : 0);
+            return true;
+        }
+        return false;
+    }
+
     public void writeAnimationPreference(int which, Object objValue) {
         try {
             float val = Float.parseFloat(objValue.toString());
