@@ -47,16 +47,9 @@ public class PointerLocation extends Activity {
         getWindow().setAttributes(lp);
     }
     
-    public class MyView extends View {
-        private final Paint mTextPaint;
-        private final Paint mTextBackgroundPaint;
-        private final Paint mTextLevelPaint;
-        private final Paint mPaint;
-        private final Paint mTargetPaint;
-        private final FontMetricsInt mTextMetrics = new FontMetricsInt();
+    public static class PointerState {
         private final ArrayList<Float> mXs = new ArrayList<Float>();
         private final ArrayList<Float> mYs = new ArrayList<Float>();
-        private int mHeaderBottom;
         private boolean mCurDown;
         private int mCurX;
         private int mCurY;
@@ -64,12 +57,26 @@ public class PointerLocation extends Activity {
         private float mCurSize;
         private int mCurWidth;
         private VelocityTracker mVelocity;
+    }
+    
+    public class MyView extends View {
+        private final Paint mTextPaint;
+        private final Paint mTextBackgroundPaint;
+        private final Paint mTextLevelPaint;
+        private final Paint mPaint;
+        private final Paint mTargetPaint;
+        private final FontMetricsInt mTextMetrics = new FontMetricsInt();
+        private int mHeaderBottom;
+        private boolean mCurDown;
+        private final ArrayList<PointerState> mPointers
+                 = new ArrayList<PointerState>();
         
         public MyView(Context c) {
             super(c);
             mTextPaint = new Paint();
             mTextPaint.setAntiAlias(true);
-            mTextPaint.setTextSize(10);
+            mTextPaint.setTextSize(10
+                    * getResources().getDisplayMetrics().density);
             mTextPaint.setARGB(255, 0, 0, 0);
             mTextBackgroundPaint = new Paint();
             mTextBackgroundPaint.setAntiAlias(false);
@@ -106,55 +113,72 @@ public class PointerLocation extends Activity {
             int w = getWidth()/5;
             int base = -mTextMetrics.ascent+1;
             int bottom = mHeaderBottom;
-            canvas.drawRect(0, 0, w-1, bottom, mTextBackgroundPaint);
-            canvas.drawText("X: " + mCurX, 1, base, mTextPaint);
-            canvas.drawRect(w, 0, (w * 2) - 1, bottom, mTextBackgroundPaint);
-            canvas.drawText("Y: " + mCurY, 1 + w, base, mTextPaint);
-            canvas.drawRect(w * 2, 0, (w * 3) - 1, bottom, mTextBackgroundPaint);
-            canvas.drawRect(w * 2, 0, (w * 2) + (mCurPressure * w) - 1, bottom, mTextLevelPaint);
-            canvas.drawText("Pres: " + mCurPressure, 1 + w * 2, base, mTextPaint);
-            canvas.drawRect(w * 3, 0, (w * 4) - 1, bottom, mTextBackgroundPaint);
-            canvas.drawRect(w * 3, 0, (w * 3) + (mCurSize * w) - 1, bottom, mTextLevelPaint);
-            canvas.drawText("Size: " + mCurSize, 1 + w * 3, base, mTextPaint);
-            canvas.drawRect(w * 4, 0, getWidth(), bottom, mTextBackgroundPaint);
-            int velocity = mVelocity == null ? 0 : (int) (mVelocity.getYVelocity() * 1000);
-            canvas.drawText("yVel: " + velocity, 1 + w * 4, base, mTextPaint);
             
-            final int N = mXs.size();
-            float lastX=0, lastY=0;
-            mPaint.setARGB(255, 0, 255, 255);
-            for (int i=0; i<N; i++) {
-                float x = mXs.get(i);
-                float y = mYs.get(i);
-                if (i > 0) {
-                    canvas.drawLine(lastX, lastY, x, y, mTargetPaint);
+            final int NP = mPointers.size();
+            
+            if (NP > 0) {
+                final PointerState ps = mPointers.get(0);
+                canvas.drawRect(0, 0, w-1, bottom, mTextBackgroundPaint);
+                canvas.drawText("X: " + ps.mCurX, 1, base, mTextPaint);
+                canvas.drawRect(w, 0, (w * 2) - 1, bottom, mTextBackgroundPaint);
+                canvas.drawText("Y: " + ps.mCurY, 1 + w, base, mTextPaint);
+                canvas.drawRect(w * 2, 0, (w * 3) - 1, bottom, mTextBackgroundPaint);
+                canvas.drawRect(w * 2, 0, (w * 2) + (ps.mCurPressure * w) - 1, bottom, mTextLevelPaint);
+                canvas.drawText("Pres: " + ps.mCurPressure, 1 + w * 2, base, mTextPaint);
+                canvas.drawRect(w * 3, 0, (w * 4) - 1, bottom, mTextBackgroundPaint);
+                canvas.drawRect(w * 3, 0, (w * 3) + (ps.mCurSize * w) - 1, bottom, mTextLevelPaint);
+                canvas.drawText("Size: " + ps.mCurSize, 1 + w * 3, base, mTextPaint);
+                canvas.drawRect(w * 4, 0, getWidth(), bottom, mTextBackgroundPaint);
+                int velocity = ps.mVelocity == null ? 0 : (int) (ps.mVelocity.getYVelocity() * 1000);
+                canvas.drawText("yVel: " + velocity, 1 + w * 4, base, mTextPaint);
+            }
+            
+            for (int p=0; p<NP; p++) {
+                final PointerState ps = mPointers.get(p);
+                
+                final int N = ps.mXs.size();
+                float lastX=0, lastY=0;
+                mPaint.setARGB(255, 0, 255, 255);
+                for (int i=0; i<N; i++) {
+                    float x = ps.mXs.get(i);
+                    float y = ps.mYs.get(i);
+                    if (i > 0) {
+                        canvas.drawLine(lastX, lastY, x, y, mTargetPaint);
+                        canvas.drawPoint(lastX, lastY, mPaint);
+                    }
+                    lastX = x;
+                    lastY = y;
+                }
+                if (ps.mVelocity != null) {
+                    mPaint.setARGB(255, 255, 0, 0);
+                    float xVel = ps.mVelocity.getXVelocity() * (1000/60);
+                    float yVel = ps.mVelocity.getYVelocity() * (1000/60);
+                    canvas.drawLine(lastX, lastY, lastX+xVel, lastY+yVel, mPaint);
+                } else {
                     canvas.drawPoint(lastX, lastY, mPaint);
                 }
-                lastX = x;
-                lastY = y;
-            }
-            if (mVelocity != null) {
-                mPaint.setARGB(255, 255, 0, 0);
-                float xVel = mVelocity.getXVelocity() * (1000/60);
-                float yVel = mVelocity.getYVelocity() * (1000/60);
-                canvas.drawLine(lastX, lastY, lastX+xVel, lastY+yVel, mPaint);
-            } else {
-                canvas.drawPoint(lastX, lastY, mPaint);
             }
             
-            if (mCurDown) {
-                canvas.drawLine(0, (int)mCurY, getWidth(), (int)mCurY, mTargetPaint);
-                canvas.drawLine((int)mCurX, 0, (int)mCurX, getHeight(), mTargetPaint);
-                int pressureLevel = (int)(mCurPressure*255);
+            if (mCurDown && NP > 0) {
+                final PointerState ps = mPointers.get(0);
+                canvas.drawLine(0, (int)ps.mCurY, getWidth(), (int)ps.mCurY, mTargetPaint);
+                canvas.drawLine((int)ps.mCurX, 0, (int)ps.mCurX, getHeight(), mTargetPaint);
+                int pressureLevel = (int)(ps.mCurPressure*255);
                 mPaint.setARGB(255, pressureLevel, 128, 255-pressureLevel);
-                canvas.drawPoint(mCurX, mCurY, mPaint);
-                canvas.drawCircle(mCurX, mCurY, mCurWidth, mPaint);
+                canvas.drawPoint(ps.mCurX, ps.mCurY, mPaint);
+                canvas.drawCircle(ps.mCurX, ps.mCurY, ps.mCurWidth, mPaint);
             }
         }
 
         @Override
         public boolean onTouchEvent(MotionEvent event) {
             int action = event.getAction();
+            
+            //Log.i("Pointer", "Motion: action=0x" + Integer.toHexString(action)
+            //        + " pointers=" + event.getPointerCount());
+            
+            int NP = mPointers.size();
+            
             //mRect.set(0, 0, getWidth(), mHeaderBottom+1);
             //invalidate(mRect);
             //if (mCurDown) {
@@ -164,26 +188,57 @@ public class PointerLocation extends Activity {
             //    mRect.setEmpty();
             //}
             if (action == MotionEvent.ACTION_DOWN) {
-                mXs.clear();
-                mYs.clear();
-                mVelocity = VelocityTracker.obtain();
+                for (int p=0; p<NP; p++) {
+                    final PointerState ps = mPointers.get(p);
+                    ps.mXs.clear();
+                    ps.mYs.clear();
+                    ps.mVelocity = VelocityTracker.obtain();
+                }
             }
-            mVelocity.addMovement(event);
-            mVelocity.computeCurrentVelocity(1);
-            final int N = event.getHistorySize();
-            for (int i=0; i<N; i++) {
-                mXs.add(event.getHistoricalX(i));
-                mYs.add(event.getHistoricalY(i));
+            
+            while (NP < event.getPointerCount()) {
+                PointerState ps = new PointerState();
+                ps.mVelocity = VelocityTracker.obtain();
+                mPointers.add(ps);
+                NP++;
             }
-            mXs.add(event.getX());
-            mYs.add(event.getY());
-            mCurDown = action == MotionEvent.ACTION_DOWN
-                    || action == MotionEvent.ACTION_MOVE;
-            mCurX = (int)event.getX();
-            mCurY = (int)event.getY();
-            mCurPressure = event.getPressure();
-            mCurSize = event.getSize();
-            mCurWidth = (int)(mCurSize*(getWidth()/3));
+            
+            if ((action&MotionEvent.ACTION_MASK) == MotionEvent.ACTION_POINTER_DOWN) {
+                final PointerState ps = mPointers.get(
+                        (action&MotionEvent.ACTION_POINTER_MASK)
+                                >> MotionEvent.ACTION_POINTER_SHIFT);
+                ps.mXs.clear();
+                ps.mYs.clear();
+                ps.mVelocity = VelocityTracker.obtain();
+            }
+            
+            if (NP > event.getPointerCount()) {
+                NP = event.getPointerCount();
+            }
+            
+            mCurDown = action != MotionEvent.ACTION_UP
+                    && action != MotionEvent.ACTION_CANCEL;
+            
+            for (int p=0; p<NP; p++) {
+                final PointerState ps = mPointers.get(p);
+                ps.mVelocity.addMovement(event);
+                ps.mVelocity.computeCurrentVelocity(1);
+                final int N = event.getHistorySize();
+                for (int i=0; i<N; i++) {
+                    ps.mXs.add(event.getHistoricalX(p, i));
+                    ps.mYs.add(event.getHistoricalY(p, i));
+                }
+                ps.mXs.add(event.getX(p));
+                ps.mYs.add(event.getY(p));
+                ps.mCurX = (int)event.getX(p);
+                ps.mCurY = (int)event.getY(p);
+                //Log.i("Pointer", "Pointer #" + p + ": (" + ps.mCurX
+                //        + "," + ps.mCurY + ")");
+                ps.mCurPressure = event.getPressure(p);
+                ps.mCurSize = event.getSize(p);
+                ps.mCurWidth = (int)(ps.mCurSize*(getWidth()/3));
+            }
+            
             //if (mCurDown) {
             //    mRect.union(mCurX-mCurWidth-3, mCurY-mCurWidth-3,
             //            mCurX+mCurWidth+3, mCurY+mCurWidth+3);
