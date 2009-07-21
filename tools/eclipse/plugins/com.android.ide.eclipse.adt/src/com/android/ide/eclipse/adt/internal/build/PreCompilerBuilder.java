@@ -24,6 +24,7 @@ import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.internal.project.FixLaunchConfig;
 import com.android.ide.eclipse.adt.internal.project.XmlErrorHandler.BasicXmlErrorListener;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
+import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkConstants;
 
@@ -89,22 +90,22 @@ public class PreCompilerBuilder extends BaseBuilder {
             this.sourceFolder = sourceFolder;
             this.aidlFile = aidlFile;
         }
-        
+
         @Override
         public boolean equals(Object obj) {
             if (this == obj) {
                 return true;
             }
-            
+
             if (obj instanceof AidlData) {
                 AidlData file = (AidlData)obj;
                 return aidlFile.equals(file.aidlFile) && sourceFolder.equals(file.sourceFolder);
             }
-            
+
             return false;
         }
     }
-    
+
     /**
      * Resource Compile flag. This flag is reset to false after each successful compilation, and
      * stored in the project persistent properties. This allows the builder to remember its state
@@ -120,7 +121,7 @@ public class PreCompilerBuilder extends BaseBuilder {
 
     /** cache of the java package defined in the manifest */
     private String mManifestPackage;
-    
+
     /** Output folder for generated Java File. Created on the Builder init
      * @see #startupOnInitialize()
      */
@@ -145,11 +146,11 @@ public class PreCompilerBuilder extends BaseBuilder {
         private boolean mDone = false;
         public DerivedProgressMonitor() {
         }
-        
+
         void addFile(IFile file) {
             mFileList.add(file);
         }
-        
+
         void reset() {
             mFileList.clear();
             mDone = false;
@@ -198,7 +199,7 @@ public class PreCompilerBuilder extends BaseBuilder {
     public PreCompilerBuilder() {
         super();
     }
-    
+
     // build() returns a list of project from which this project depends for future compilation.
     @SuppressWarnings("unchecked")
     @Override
@@ -209,24 +210,24 @@ public class PreCompilerBuilder extends BaseBuilder {
 
             // First thing we do is go through the resource delta to not
             // lose it if we have to abort the build for any reason.
-    
+
             // get the project objects
             IProject project = getProject();
-            
+
             // Top level check to make sure the build can move forward.
             abortOnBadSetup(project);
-            
+
             IJavaProject javaProject = JavaCore.create(project);
             IAndroidTarget projectTarget = Sdk.getCurrent().getTarget(project);
-    
+
             // now we need to get the classpath list
             ArrayList<IPath> sourceFolderPathList = BaseProjectHelper.getSourceClasspaths(
                     javaProject);
-            
+
             PreCompilerDeltaVisitor dv = null;
             String javaPackage = null;
-            int minSdkVersion = AndroidManifestParser.INVALID_MIN_SDK;
-    
+            String minSdkVersion = null;
+
             if (kind == FULL_BUILD) {
                 AdtPlugin.printBuildToConsole(AdtConstants.BUILD_VERBOSE, project,
                         Messages.Start_Full_Pre_Compiler);
@@ -235,7 +236,7 @@ public class PreCompilerBuilder extends BaseBuilder {
             } else {
                 AdtPlugin.printBuildToConsole(AdtConstants.BUILD_VERBOSE, project,
                         Messages.Start_Inc_Pre_Compiler);
-    
+
                 // Go through the resources and see if something changed.
                 // Even if the mCompileResources flag is true from a previously aborted
                 // build, we need to go through the Resource delta to get a possible
@@ -247,10 +248,10 @@ public class PreCompilerBuilder extends BaseBuilder {
                 } else {
                     dv = new PreCompilerDeltaVisitor(this, sourceFolderPathList);
                     delta.accept(dv);
-    
+
                     // record the state
                     mMustCompileResources |= dv.getCompileResources();
-                    
+
                     if (dv.getForceAidlCompile()) {
                         buildAidlCompilationList(project, sourceFolderPathList);
                     } else {
@@ -258,46 +259,46 @@ public class PreCompilerBuilder extends BaseBuilder {
                         mergeAidlFileModifications(dv.getAidlToCompile(),
                                 dv.getAidlToRemove());
                     }
-                    
+
                     // get the java package from the visitor
                     javaPackage = dv.getManifestPackage();
                     minSdkVersion = dv.getMinSdkVersion();
                 }
             }
-    
+
             // store the build status in the persistent storage
             saveProjectBooleanProperty(PROPERTY_COMPILE_RESOURCES , mMustCompileResources);
-    
+
             // if there was some XML errors, we just return w/o doing
             // anything since we've put some markers in the files anyway.
             if (dv != null && dv.mXmlError) {
                 AdtPlugin.printErrorToConsole(project, Messages.Xml_Error);
-    
+
                 // This interrupts the build. The next builders will not run.
                 stopBuild(Messages.Xml_Error);
             }
-    
-    
+
+
             // get the manifest file
             IFile manifest = AndroidManifestParser.getManifest(project);
-    
+
             if (manifest == null) {
                 String msg = String.format(Messages.s_File_Missing,
                         AndroidConstants.FN_ANDROID_MANIFEST);
                 AdtPlugin.printErrorToConsole(project, msg);
                 markProject(AdtConstants.MARKER_ADT, msg, IMarker.SEVERITY_ERROR);
-    
+
                 // This interrupts the build. The next builders will not run.
                 stopBuild(msg);
             }
-    
+
             // lets check the XML of the manifest first, if that hasn't been done by the
             // resource delta visitor yet.
             if (dv == null || dv.getCheckedManifestXml() == false) {
                 BasicXmlErrorListener errorListener = new BasicXmlErrorListener();
                 AndroidManifestParser parser = BaseProjectHelper.parseManifestForError(manifest,
                         errorListener);
-                
+
                 if (errorListener.mHasXmlError == true) {
                     // there was an error in the manifest, its file has been marked,
                     // by the XmlErrorHandler.
@@ -305,25 +306,71 @@ public class PreCompilerBuilder extends BaseBuilder {
                     String msg = String.format(Messages.s_Contains_Xml_Error,
                             AndroidConstants.FN_ANDROID_MANIFEST);
                     AdtPlugin.printBuildToConsole(AdtConstants.BUILD_VERBOSE, project, msg);
-    
+
                     // This interrupts the build. The next builders will not run.
                     stopBuild(msg);
                 }
-                
+
                 // get the java package from the parser
                 javaPackage = parser.getPackage();
                 minSdkVersion = parser.getApiLevelRequirement();
             }
 
-            if (minSdkVersion != AndroidManifestParser.INVALID_MIN_SDK &&
-                    minSdkVersion < projectTarget.getApiVersionNumber()) {
-                // check it against the target api level
-                String msg = String.format(
-                        "Manifest min SDK version (%1$d) is lower than project target API level (%2$d)",
-                        minSdkVersion, projectTarget.getApiVersionNumber());
-                AdtPlugin.printBuildToConsole(AdtConstants.BUILD_VERBOSE, project, msg);
-                BaseProjectHelper.addMarker(manifest, AdtConstants.MARKER_ADT, msg,
-                        IMarker.SEVERITY_WARNING);
+            if (minSdkVersion != null) {
+                int minSdkValue = -1;
+                try {
+                    minSdkValue = Integer.parseInt(minSdkVersion);
+                } catch (NumberFormatException e) {
+                    // it's ok, it means minSdkVersion contains a (hopefully) valid codename.
+                }
+
+                AndroidVersion projectVersion = projectTarget.getVersion();
+
+                if (minSdkValue != -1) {
+                    String codename = projectVersion.getCodename();
+                    if (codename != null) {
+                        // integer minSdk when the target is a preview => fatal error
+                        String msg = String.format(
+                                "Platform %1$s is a preview and requires appication manifests to set %2$s to '%3$s'",
+                                codename, AndroidManifestParser.ATTRIBUTE_MIN_SDK_VERSION,
+                                codename);
+                        AdtPlugin.printErrorToConsole(project, msg);
+                        BaseProjectHelper.addMarker(manifest, AdtConstants.MARKER_ADT, msg,
+                                IMarker.SEVERITY_ERROR);
+                        stopBuild(msg);
+                    } else if (minSdkValue < projectVersion.getApiLevel()) {
+                        // integer minSdk is not high enough for the target => warning
+                        String msg = String.format(
+                                "Manifest min SDK version (%1$d) is lower than project target API level (%2$d)",
+                                minSdkVersion, projectVersion.getApiLevel());
+                        AdtPlugin.printBuildToConsole(AdtConstants.BUILD_VERBOSE, project, msg);
+                        BaseProjectHelper.addMarker(manifest, AdtConstants.MARKER_ADT, msg,
+                                IMarker.SEVERITY_WARNING);
+                    }
+                } else {
+                    // looks like the min sdk is a codename, check it matches the codename
+                    // of the platform
+                    String codename = projectVersion.getCodename();
+                    if (codename == null) {
+                        // platform is not a preview => fatal error
+                        String msg = String.format(
+                                "Manifest attribute '%1$s' is set to '%2$s'. Integer is expected.",
+                                AndroidManifestParser.ATTRIBUTE_MIN_SDK_VERSION, codename);
+                        AdtPlugin.printErrorToConsole(project, msg);
+                        BaseProjectHelper.addMarker(manifest, AdtConstants.MARKER_ADT, msg,
+                                IMarker.SEVERITY_ERROR);
+                        stopBuild(msg);
+                    } else if (codename.equals(minSdkVersion) == false) {
+                        // platform and manifest codenames don't match => fatal error.
+                        String msg = String.format(
+                                "Value of manifest attribute '%1$s' does not match platform codename '%2$s'",
+                                AndroidManifestParser.ATTRIBUTE_MIN_SDK_VERSION, codename);
+                        AdtPlugin.printErrorToConsole(project, msg);
+                        BaseProjectHelper.addMarker(manifest, AdtConstants.MARKER_ADT, msg,
+                                IMarker.SEVERITY_ERROR);
+                        stopBuild(msg);
+                    }
+                }
             }
 
             if (javaPackage == null || javaPackage.length() == 0) {
@@ -332,11 +379,11 @@ public class PreCompilerBuilder extends BaseBuilder {
                         AndroidConstants.FN_ANDROID_MANIFEST);
                 AdtPlugin.printErrorToConsole(project, msg);
                 markProject(AdtConstants.MARKER_ADT, msg, IMarker.SEVERITY_ERROR);
-    
+
                 // This interrupts the build. The next builders will not run.
                 stopBuild(msg);
             }
-            
+
             // at this point we have the java package. We need to make sure it's not a different
             // package than the previous one that were built.
             if (javaPackage.equals(mManifestPackage) == false) {
@@ -345,64 +392,64 @@ public class PreCompilerBuilder extends BaseBuilder {
                 if (mManifestPackage != null) {
                     AdtPlugin.printBuildToConsole(AdtConstants.BUILD_VERBOSE, project,
                             Messages.Checking_Package_Change);
-    
+
                     FixLaunchConfig flc = new FixLaunchConfig(project, mManifestPackage,
                             javaPackage);
                     flc.start();
                 }
-    
+
                 // now we delete the generated classes from their previous location
                 deleteObsoleteGeneratedClass(AndroidConstants.FN_RESOURCE_CLASS,
                         mManifestPackage);
                 deleteObsoleteGeneratedClass(AndroidConstants.FN_MANIFEST_CLASS,
                         mManifestPackage);
-    
+
                 // record the new manifest package, and save it.
                 mManifestPackage = javaPackage;
                 saveProjectStringProperty(PROPERTY_PACKAGE, mManifestPackage);
             }
-    
+
             if (mMustCompileResources) {
                 // we need to figure out where to store the R class.
                 // get the parent folder for R.java and update mManifestPackageSourceFolder
                 IFolder packageFolder = getGenManifestPackageFolder(project);
-    
+
                 // get the resource folder
                 IFolder resFolder = project.getFolder(AndroidConstants.WS_RESOURCES);
-    
+
                 // get the file system path
                 IPath outputLocation = mGenFolder.getLocation();
                 IPath resLocation = resFolder.getLocation();
                 IPath manifestLocation = manifest.getLocation();
-    
+
                 // those locations have to exist for us to do something!
                 if (outputLocation != null && resLocation != null
                         && manifestLocation != null) {
                     String osOutputPath = outputLocation.toOSString();
                     String osResPath = resLocation.toOSString();
                     String osManifestPath = manifestLocation.toOSString();
-    
+
                     // remove the aapt markers
                     removeMarkersFromFile(manifest, AndroidConstants.MARKER_AAPT_COMPILE);
                     removeMarkersFromContainer(resFolder, AndroidConstants.MARKER_AAPT_COMPILE);
-    
+
                     AdtPlugin.printBuildToConsole(AdtConstants.BUILD_VERBOSE, project,
                             Messages.Preparing_Generated_Files);
-    
+
                     // since the R.java file may be already existing in read-only
                     // mode we need to make it readable so that aapt can overwrite
                     // it
                     IFile rJavaFile = packageFolder.getFile(AndroidConstants.FN_RESOURCE_CLASS);
-    
+
                     // do the same for the Manifest.java class
                     IFile manifestJavaFile = packageFolder.getFile(
                             AndroidConstants.FN_MANIFEST_CLASS);
-    
+
                     // we actually need to delete the manifest.java as it may become empty and
                     // in this case aapt doesn't generate an empty one, but instead doesn't
                     // touch it.
                     manifestJavaFile.delete(true, null);
-    
+
                     // launch aapt: create the command line
                     ArrayList<String> array = new ArrayList<String>();
                     array.add(projectTarget.getPath(IAndroidTarget.AAPT));
@@ -419,7 +466,7 @@ public class PreCompilerBuilder extends BaseBuilder {
                     array.add(osResPath);
                     array.add("-I"); //$NON-NLS-1$
                     array.add(projectTarget.getPath(IAndroidTarget.ANDROID_JAR));
-    
+
                     if (AdtPlugin.getBuildVerbosity() == AdtConstants.BUILD_VERBOSE) {
                         StringBuilder sb = new StringBuilder();
                         for (String c : array) {
@@ -429,23 +476,23 @@ public class PreCompilerBuilder extends BaseBuilder {
                         String cmd_line = sb.toString();
                         AdtPlugin.printToConsole(project, cmd_line);
                     }
-    
+
                     // launch
                     int execError = 1;
                     try {
                         // launch the command line process
                         Process process = Runtime.getRuntime().exec(
                                 array.toArray(new String[array.size()]));
-    
+
                         // list to store each line of stderr
                         ArrayList<String> results = new ArrayList<String>();
-    
+
                         // get the output and return code from the process
                         execError = grabProcessOutput(process, results);
-    
+
                         // attempt to parse the error output
                         boolean parsingError = parseAaptOutput(results, project);
-    
+
                         // if we couldn't parse the output we display it in the console.
                         if (parsingError) {
                             if (execError != 0) {
@@ -455,7 +502,7 @@ public class PreCompilerBuilder extends BaseBuilder {
                                         project, results.toArray());
                             }
                         }
-    
+
                         if (execError != 0) {
                             // if the exec failed, and we couldn't parse the error output
                             // (and therefore not all files that should have been marked,
@@ -464,10 +511,10 @@ public class PreCompilerBuilder extends BaseBuilder {
                                 markProject(AdtConstants.MARKER_ADT, Messages.Unparsed_AAPT_Errors,
                                         IMarker.SEVERITY_ERROR);
                             }
-    
+
                             AdtPlugin.printBuildToConsole(AdtConstants.BUILD_VERBOSE, project,
                                     Messages.AAPT_Error);
-    
+
                             // abort if exec failed.
                             // This interrupts the build. The next builders will not run.
                             stopBuild(Messages.AAPT_Error);
@@ -477,7 +524,7 @@ public class PreCompilerBuilder extends BaseBuilder {
                         // mark the project and exit
                         String msg = String.format(Messages.AAPT_Exec_Error, array.get(0));
                         markProject(AdtConstants.MARKER_ADT, msg, IMarker.SEVERITY_ERROR);
-    
+
                         // This interrupts the build. The next builders will not run.
                         stopBuild(msg);
                     } catch (InterruptedException e) {
@@ -485,11 +532,11 @@ public class PreCompilerBuilder extends BaseBuilder {
                         // mark the project and exit
                         String msg = String.format(Messages.AAPT_Exec_Error, array.get(0));
                         markProject(AdtConstants.MARKER_ADT, msg, IMarker.SEVERITY_ERROR);
-    
+
                         // This interrupts the build. The next builders will not run.
                         stopBuild(msg);
                     }
-    
+
                     // if the return code was OK, we refresh the folder that
                     // contains R.java to force a java recompile.
                     if (execError == 0) {
@@ -497,10 +544,10 @@ public class PreCompilerBuilder extends BaseBuilder {
                         // as derived.
                         mDerivedProgressMonitor.addFile(rJavaFile);
                         mDerivedProgressMonitor.addFile(manifestJavaFile);
-                        
+
                         // build has been done. reset the state of the builder
                         mMustCompileResources = false;
-    
+
                         // and store it
                         saveProjectBooleanProperty(PROPERTY_COMPILE_RESOURCES,
                                 mMustCompileResources);
@@ -509,10 +556,10 @@ public class PreCompilerBuilder extends BaseBuilder {
             } else {
                 // nothing to do
             }
-    
+
             // now handle the aidl stuff.
             boolean aidlStatus = handleAidl(projectTarget, sourceFolderPathList, monitor);
-    
+
             if (aidlStatus == false && mMustCompileResources == false) {
                 AdtPlugin.printBuildToConsole(AdtConstants.BUILD_VERBOSE, project,
                         Messages.Nothing_To_Compile);
@@ -540,14 +587,14 @@ public class PreCompilerBuilder extends BaseBuilder {
     @Override
     protected void startupOnInitialize() {
         super.startupOnInitialize();
-        
+
         mDerivedProgressMonitor = new DerivedProgressMonitor();
-        
+
         IProject project = getProject();
 
         // load the previous IFolder and java package.
         mManifestPackage = loadProjectStringProperty(PROPERTY_PACKAGE);
-        
+
         // get the source folder in which all the Java files are created
         mGenFolder = project.getFolder(SdkConstants.FD_GEN_SOURCES);
 
@@ -555,14 +602,14 @@ public class PreCompilerBuilder extends BaseBuilder {
         // recompile.
         mMustCompileResources = loadProjectBooleanProperty(PROPERTY_COMPILE_RESOURCES, true);
         boolean mustCompileAidl = loadProjectBooleanProperty(PROPERTY_COMPILE_AIDL, true);
-        
+
         // if we stored that we have to compile some aidl, we build the list that will compile them
         // all
         if (mustCompileAidl) {
             IJavaProject javaProject = JavaCore.create(project);
             ArrayList<IPath> sourceFolderPathList = BaseProjectHelper.getSourceClasspaths(
                     javaProject);
-            
+
             buildAidlCompilationList(project, sourceFolderPathList);
         }
     }
@@ -576,7 +623,7 @@ public class PreCompilerBuilder extends BaseBuilder {
         if (javaPackage == null) {
             return;
         }
-        
+
         IPath packagePath = getJavaPackagePath(javaPackage);
         IPath iPath = packagePath.append(filename);
 
@@ -614,10 +661,10 @@ public class PreCompilerBuilder extends BaseBuilder {
            path.append(AndroidConstants.WS_SEP_CHAR);
            path.append(s);
         }
-        
+
         return new Path(path.toString());
     }
-    
+
     /**
      * Returns an {@link IFolder} (located inside the 'gen' source folder), that matches the
      * package defined in the manifest. This {@link IFolder} may not actually exist
@@ -630,7 +677,7 @@ public class PreCompilerBuilder extends BaseBuilder {
             throws CoreException {
         // get the path for the package
         IPath packagePath = getJavaPackagePath(mManifestPackage);
-        
+
         // get a folder for this path under the 'gen' source folder, and return it.
         // This IFolder may not reference an actual existing folder.
         return mGenFolder.getFolder(packagePath);
@@ -657,10 +704,10 @@ public class PreCompilerBuilder extends BaseBuilder {
         command[index++] = projectTarget.getPath(IAndroidTarget.AIDL);
         command[index++] = "-p" + Sdk.getCurrent().getTarget(getProject()).getPath( //$NON-NLS-1$
                 IAndroidTarget.ANDROID_AIDL);
-        
+
         // since the path are relative to the workspace and not the project itself, we need
         // the workspace root.
-        IWorkspaceRoot wsRoot = ResourcesPlugin.getWorkspace().getRoot(); 
+        IWorkspaceRoot wsRoot = ResourcesPlugin.getWorkspace().getRoot();
         for (IPath p : sourceFolders) {
             IFolder f = wsRoot.getFolder(p);
             command[index++] = "-I" + f.getLocation().toOSString(); //$NON-NLS-1$
@@ -686,7 +733,7 @@ public class PreCompilerBuilder extends BaseBuilder {
             // get the path of the source file.
             IPath sourcePath = aidlData.aidlFile.getLocation();
             String osSourcePath = sourcePath.toOSString();
-            
+
             IFile javaFile = getGenDestinationFile(aidlData, true /*createFolders*/, monitor);
 
             // finish to set the command line.
@@ -755,15 +802,15 @@ public class PreCompilerBuilder extends BaseBuilder {
         IPath packagePath = aidlData.aidlFile.getFullPath().removeFirstSegments(
                 segmentToSourceFolderCount).removeLastSegments(1);
         Path destinationPath = new Path(packagePath.toString());
-        
+
         // get an IFolder for this path. It's relative to the 'gen' folder already
         IFolder destinationFolder = mGenFolder.getFolder(destinationPath);
-        
+
         // create it if needed.
         if (destinationFolder.exists() == false && createFolders) {
             createFolder(destinationFolder, monitor);
         }
-        
+
         // Build the Java file name from the aidl name.
         String javaName = aidlData.aidlFile.getName().replaceAll(AndroidConstants.RE_AIDL_EXT,
                 AndroidConstants.DOT_JAVA);
@@ -776,15 +823,15 @@ public class PreCompilerBuilder extends BaseBuilder {
     /**
      * Creates the destination folder. Because
      * {@link IFolder#create(boolean, boolean, IProgressMonitor)} only works if the parent folder
-     * already exists, this goes and ensure that all the parent folders actually exist, or it 
+     * already exists, this goes and ensure that all the parent folders actually exist, or it
      * creates them as well.
      * @param destinationFolder The folder to create
      * @param monitor the {@link IProgressMonitor},
-     * @throws CoreException 
+     * @throws CoreException
      */
     private void createFolder(IFolder destinationFolder, IProgressMonitor monitor)
             throws CoreException {
-        
+
         // check the parent exist and create if necessary.
         IContainer parent = destinationFolder.getParent();
         if (parent.getType() == IResource.FOLDER && parent.exists() == false) {

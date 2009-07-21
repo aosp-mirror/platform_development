@@ -63,6 +63,8 @@ public class SdkRepository {
     public static final String NODE_VERSION   = "version";                      //$NON-NLS-1$
     /** The api-level, an int > 0, for platform, add-on and doc packages. */
     public static final String NODE_API_LEVEL = "api-level";                    //$NON-NLS-1$
+    /** The api-codename, a string, for platform packages. */
+    public static final String NODE_API_CODENAME = "api-codename";              //$NON-NLS-1$
     /** The vendor, a string, for add-on packages. */
     public static final String NODE_VENDOR    = "vendor";                       //$NON-NLS-1$
     /** The name, a string, for add-on packages or for libraries. */

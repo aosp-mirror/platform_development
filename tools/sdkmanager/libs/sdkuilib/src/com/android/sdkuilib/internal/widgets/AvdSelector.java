@@ -723,8 +723,8 @@ public final class AvdSelector {
                     IAndroidTarget target = avd.getTarget();
                     if (target != null) {
                         item.setText(1, target.getFullName());
-                        item.setText(2, target.getApiVersionName());
-                        item.setText(3, Integer.toString(target.getApiVersionNumber()));
+                        item.setText(2, target.getVersionName());
+                        item.setText(3, target.getVersion().getApiString());
                     } else {
                         item.setText(1, "?");
                         item.setText(2, "?");

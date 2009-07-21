@@ -16,6 +16,7 @@
 
 package com.android.sdkuilib.internal.widgets;
 
+import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.internal.avd.AvdManager;
 import com.android.sdklib.internal.avd.AvdManager.AvdInfo;
@@ -106,8 +107,9 @@ final class AvdDetailsDialog extends Dialog {
                 displayValue(c, "Error:", mAvdInfo.getErrorMessage());
             } else {
                 IAndroidTarget target = mAvdInfo.getTarget();
-                displayValue(c, "Target:", String.format("%s (API level %d)",
-                        target.getName(), target.getApiVersionNumber()));
+                AndroidVersion version = target.getVersion();
+                displayValue(c, "Target:", String.format("%s (API level %s)",
+                        target.getName(), version.getApiString()));
 
                 // display some extra values.
                 Map<String, String> properties = mAvdInfo.getProperties();
