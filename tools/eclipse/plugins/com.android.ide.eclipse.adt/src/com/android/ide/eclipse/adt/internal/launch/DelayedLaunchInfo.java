@@ -17,7 +17,6 @@
 package com.android.ide.eclipse.adt.internal.launch;
 
 import com.android.ddmlib.IDevice;
-import com.android.ide.eclipse.adt.internal.project.AndroidManifestParser;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
@@ -28,14 +27,14 @@ import org.eclipse.core.runtime.IProgressMonitor;
  * application is launched.
  */
 public final class DelayedLaunchInfo {
-    
+
     /**
-     * Used to indicate behavior when Android app already exists 
+     * Used to indicate behavior when Android app already exists
      */
     enum InstallRetryMode {
-        NEVER, ALWAYS, PROMPT;  
+        NEVER, ALWAYS, PROMPT;
     }
-    
+
     /** The device on which to launch the app */
     private IDevice mDevice = null;
 
@@ -44,22 +43,21 @@ public final class DelayedLaunchInfo {
 
     /** Package name */
     private final String mPackageName;
-    
+
     /** Debug package name */
     private final String mDebugPackageName;
 
     /** IFile to the package (.apk) file */
     private final IFile mPackageFile;
-    
+
     /** debuggable attribute of the manifest file. */
     private final Boolean mDebuggable;
-    
-    /** Required ApiVersionNumber by the app. {@link AndroidManifestParser#INVALID_MIN_SDK} means
-     * no requirements */
-    private final int mRequiredApiVersionNumber;
-    
+
+    /** Required Api level by the app. null means no requirements */
+    private final String mRequiredApiVersionNumber;
+
     private InstallRetryMode mRetryMode = InstallRetryMode.NEVER;
-    
+
     /** Launch action. */
     private final IAndroidLaunchAction mLaunchAction;
 
@@ -78,23 +76,22 @@ public final class DelayedLaunchInfo {
     /** cancellation state of launch */
     private boolean mCancelled = false;
 
-    /** 
-     * Basic constructor with activity and package info. 
-     * 
+    /**
+     * Basic constructor with activity and package info.
+     *
      * @param project the eclipse project that corresponds to Android app
      * @param packageName package name of Android app
      * @param debugPackageName the package name of the Andriod app to debug
      * @param launchAction action to perform after app install
      * @param pack IFile to the package (.apk) file
      * @param debuggable debuggable attribute of the app's manifest file.
-     * @param requiredApiVersionNumber required SDK version by the app.
-     * {@link AndroidManifestParser#INVALID_MIN_SDK} means no requirements.
+     * @param requiredApiVersionNumber required SDK version by the app. null means no requirements.
      * @param launch the launch object
      * @param monitor progress monitor for launch
      */
     public DelayedLaunchInfo(IProject project, String packageName, String debugPackageName,
-            IAndroidLaunchAction launchAction, IFile pack, Boolean debuggable, 
-            int requiredApiVersionNumber, AndroidLaunch launch, IProgressMonitor monitor) {
+            IAndroidLaunchAction launchAction, IFile pack, Boolean debuggable,
+            String requiredApiVersionNumber, AndroidLaunch launch, IProgressMonitor monitor) {
         mProject = project;
         mPackageName = packageName;
         mDebugPackageName = debugPackageName;
@@ -112,7 +109,7 @@ public final class DelayedLaunchInfo {
     public IDevice getDevice() {
         return mDevice;
     }
-    
+
     /**
      * Set the device on which to launch the app
      */
@@ -153,16 +150,16 @@ public final class DelayedLaunchInfo {
     }
 
     /**
-     * @return true if Android app is marked as debuggable in its manifest 
+     * @return true if Android app is marked as debuggable in its manifest
      */
     public Boolean getDebuggable() {
         return mDebuggable;
     }
 
     /**
-     * @return the required api version number for the Android app
+     * @return the required api version number for the Android app.
      */
-    public int getRequiredApiVersionNumber() {
+    public String getRequiredApiVersionNumber() {
         return mRequiredApiVersionNumber;
     }
 
@@ -195,7 +192,7 @@ public final class DelayedLaunchInfo {
     }
 
     /**
-     * @return the launch progress monitor 
+     * @return the launch progress monitor
      */
     public IProgressMonitor getMonitor() {
         return mMonitor;
@@ -230,7 +227,7 @@ public final class DelayedLaunchInfo {
     }
 
     /**
-     * Set if launch has been cancelled 
+     * Set if launch has been cancelled
      */
     public void setCancelled(boolean cancelled) {
         this.mCancelled = cancelled;

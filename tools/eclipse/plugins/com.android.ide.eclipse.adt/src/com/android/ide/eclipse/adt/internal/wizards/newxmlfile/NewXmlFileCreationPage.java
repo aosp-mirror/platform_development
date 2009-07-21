@@ -87,10 +87,10 @@ class NewXmlFileCreationPage extends WizardPage {
         private final String mDefaultAttrs;
         private final String mDefaultRoot;
         private final int mTargetApiLevel;
-        
+
         public TypeInfo(String uiName,
-                        String tooltip, 
-                        ResourceFolderType resFolderType, 
+                        String tooltip,
+                        ResourceFolderType resFolderType,
                         Object rootSeed,
                         String defaultRoot,
                         String xmlns,
@@ -110,12 +110,12 @@ class NewXmlFileCreationPage extends WizardPage {
         String getUiName() {
             return mUiName;
         }
-        
-        /** Returns the tooltip for the resource type. Can be null. */ 
+
+        /** Returns the tooltip for the resource type. Can be null. */
         String getTooltip() {
             return mTooltip;
         }
-        
+
         /**
          * Returns the name of the {@link ResourceFolderType}.
          * Never null but not necessarily unique,
@@ -124,7 +124,7 @@ class NewXmlFileCreationPage extends WizardPage {
         String getResFolderName() {
             return mResFolderType.getName();
         }
-        
+
         /**
          * Returns the matching {@link ResourceFolderType}.
          * Never null but not necessarily unique,
@@ -138,16 +138,16 @@ class NewXmlFileCreationPage extends WizardPage {
         void setWidget(Button widget) {
             mWidget = widget;
         }
-        
+
         /** Returns the radio button associate with the resource type. Can be null. */
         Button getWidget() {
             return mWidget;
         }
-        
+
         /**
          * Returns the seed used to fill the root element values.
          * The seed might be either a String, a String array, an {@link ElementDescriptor},
-         * a {@link DocumentDescriptor} or null. 
+         * a {@link DocumentDescriptor} or null.
          */
         Object getRootSeed() {
             return mRootSeed;
@@ -278,7 +278,7 @@ class NewXmlFileCreationPage extends WizardPage {
     private static final String RES_FOLDER_ABS = AndroidConstants.WS_RESOURCES + AndroidConstants.WS_SEP;
     /** Relative destination folder root, e.g. "res/" */
     private static final String RES_FOLDER_REL = SdkConstants.FD_RESOURCES + AndroidConstants.WS_SEP;
-    
+
     private IProject mProject;
     private Text mProjectTextField;
     private Button mProjectBrowseButton;
@@ -297,7 +297,7 @@ class NewXmlFileCreationPage extends WizardPage {
     private TypeInfo mCurrentTypeInfo;
 
     // --- UI creation ---
-    
+
     /**
      * Constructs a new {@link NewXmlFileCreationPage}.
      * <p/>
@@ -314,9 +314,9 @@ class NewXmlFileCreationPage extends WizardPage {
 
     /**
      * Called by the parent Wizard to create the UI for this Wizard Page.
-     * 
+     *
      * {@inheritDoc}
-     * 
+     *
      * @see org.eclipse.jface.dialogs.IDialogPage#createControl(org.eclipse.swt.widgets.Composite)
      */
     public void createControl(Composite parent) {
@@ -347,7 +347,7 @@ class NewXmlFileCreationPage extends WizardPage {
         installTargetChangeListener();
         validatePage();
     }
-    
+
     private void installTargetChangeListener() {
         mSdkTargetChangeListener = new ITargetChangeListener() {
             public void onProjectTargetChange(IProject changedProject) {
@@ -364,18 +364,18 @@ class NewXmlFileCreationPage extends WizardPage {
                 }
             }
         };
-        
+
         AdtPlugin.getDefault().addTargetListener(mSdkTargetChangeListener);
     }
 
     @Override
     public void dispose() {
-        
+
         if (mSdkTargetChangeListener != null) {
             AdtPlugin.getDefault().removeTargetListener(mSdkTargetChangeListener);
             mSdkTargetChangeListener = null;
         }
-        
+
         super.dispose();
     }
 
@@ -399,7 +399,7 @@ class NewXmlFileCreationPage extends WizardPage {
     public String getWsFolderPath() {
         return mWsFolderPathTextField == null ? "" : mWsFolderPathTextField.getText(); //$NON-NLS-1$
     }
-    
+
 
     /**
      * Returns an {@link IFile} on the destination file.
@@ -426,7 +426,7 @@ class NewXmlFileCreationPage extends WizardPage {
     /**
      * Returns the {@link TypeInfo} for the currently selected type radio button.
      * Returns null if no radio button is selected.
-     * 
+     *
      * @return A {@link TypeInfo} or null.
      */
     public TypeInfo getSelectedType() {
@@ -439,10 +439,10 @@ class NewXmlFileCreationPage extends WizardPage {
         }
         return type;
     }
-    
+
     /**
      * Returns the selected root element string, if any.
-     * 
+     *
      * @return The selected root element string or null.
      */
     public String getRootElement() {
@@ -457,7 +457,7 @@ class NewXmlFileCreationPage extends WizardPage {
 
     /**
      * Helper method to create a new GridData with an horizontal span.
-     * 
+     *
      * @param horizSpan The number of cells for the horizontal span.
      * @return A new GridData with the horizontal span.
      */
@@ -469,7 +469,7 @@ class NewXmlFileCreationPage extends WizardPage {
 
     /**
      * Helper method to create a new GridData with an horizontal span and a style.
-     * 
+     *
      * @param horizSpan The number of cells for the horizontal span.
      * @param style The style, e.g. {@link GridData#FILL_HORIZONTAL}
      * @return A new GridData with the horizontal span and the style.
@@ -482,7 +482,7 @@ class NewXmlFileCreationPage extends WizardPage {
 
     /**
      * Helper method that creates an empty cell in the parent composite.
-     * 
+     *
      * @param parent The parent composite.
      */
     private void emptyCell(Composite parent) {
@@ -491,7 +491,7 @@ class NewXmlFileCreationPage extends WizardPage {
 
     /**
      * Pads the parent with empty cells to match the number of columns of the parent grid.
-     * 
+     *
      * @param parent A grid layout with NUM_COL columns
      * @param col The current number of columns used.
      * @return 0, the new number of columns used, for convenience.
@@ -511,7 +511,7 @@ class NewXmlFileCreationPage extends WizardPage {
      */
     private void createProjectGroup(Composite parent) {
         int col = 0;
-        
+
         // project name
         String tooltip = "The Android Project where the new resource file will be created.";
         Label label = new Label(parent, SWT.NONE);
@@ -542,7 +542,7 @@ class NewXmlFileCreationPage extends WizardPage {
         ++col;
 
         col = padWithEmptyCells(parent, col);
-        
+
         // file name
         tooltip = "The name of the resource file to create.";
         label = new Label(parent, SWT.NONE);
@@ -572,7 +572,7 @@ class NewXmlFileCreationPage extends WizardPage {
         // separator
         Label label = new Label(parent, SWT.SEPARATOR | SWT.HORIZONTAL);
         label.setLayoutData(newGridData(NUM_COL, GridData.GRAB_HORIZONTAL));
-        
+
         // label before type radios
         label = new Label(parent, SWT.NONE);
         label.setText("What type of resource would you like to create?");
@@ -584,7 +584,7 @@ class NewXmlFileCreationPage extends WizardPage {
         padWithEmptyCells(parent, 2);
 
         grid.setLayout(new GridLayout(NUM_COL, true /*makeColumnsEqualWidth*/));
-        
+
         SelectionListener radioListener = new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
@@ -594,7 +594,7 @@ class NewXmlFileCreationPage extends WizardPage {
                 }
             }
         };
-        
+
         int n = sTypes.length;
         int num_lines = (n + NUM_COL/2) / NUM_COL;
         for (int line = 0, k = 0; line < num_lines; line++) {
@@ -627,7 +627,7 @@ class NewXmlFileCreationPage extends WizardPage {
         mConfigSelector.setLayoutData(gd);
         mConfigSelector.setOnChangeListener(new onConfigSelectorUpdated());
         emptyCell(parent);
-        
+
         // folder name
         String tooltip = "The folder where the file will be generated, relative to the project.";
         label = new Label(parent, SWT.NONE);
@@ -669,7 +669,7 @@ class NewXmlFileCreationPage extends WizardPage {
         mRootElementCombo.select(0);
         mRootElementCombo.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         mRootElementCombo.setToolTipText(tooltip);
-        
+
         padWithEmptyCells(parent, 2);
     }
 
@@ -683,7 +683,7 @@ class NewXmlFileCreationPage extends WizardPage {
      * <li>The current folder, valid if it's a folder under /res</li>
      * <li>An existing filename, in which case the user will be asked whether to override it.</li>
      * <ul>
-     * 
+     *
      * @param selection The selection when the wizard was initiated.
      */
     private void initializeFromSelection(IStructuredSelection selection) {
@@ -702,7 +702,7 @@ class NewXmlFileCreationPage extends WizardPage {
             if (element instanceof IAdaptable) {
                 IResource res = (IResource) ((IAdaptable) element).getAdapter(IResource.class);
                 IProject project = res != null ? res.getProject() : null;
-                
+
                 // Is this an Android project?
                 try {
                     if (project == null || !project.hasNature(AndroidConstants.NATURE)) {
@@ -712,18 +712,18 @@ class NewXmlFileCreationPage extends WizardPage {
                     // checking the nature failed, ignore this resource
                     continue;
                 }
-                
+
                 int score = 1; // we have a valid project at least
 
                 IPath wsFolderPath = null;
                 String fileName = null;
                 if (res.getType() == IResource.FOLDER) {
-                    wsFolderPath = res.getProjectRelativePath();                    
+                    wsFolderPath = res.getProjectRelativePath();
                 } else if (res.getType() == IResource.FILE) {
                     fileName = res.getName();
                     wsFolderPath = res.getParent().getProjectRelativePath();
                 }
-                
+
                 // Disregard this folder selection if it doesn't point to /res/something
                 if (wsFolderPath != null &&
                         wsFolderPath.segmentCount() > 1 &&
@@ -735,7 +735,7 @@ class NewXmlFileCreationPage extends WizardPage {
                 }
 
                 score += fileName != null ? 4 : 0;
-                
+
                 if (score > targetScore) {
                     targetScore = score;
                     targetProject = project;
@@ -744,7 +744,7 @@ class NewXmlFileCreationPage extends WizardPage {
                 }
             }
         }
-        
+
         // Now set the UI accordingly
         if (targetScore > 0) {
             mProject = targetProject;
@@ -764,7 +764,7 @@ class NewXmlFileCreationPage extends WizardPage {
             if (roots.size() > 0) {
                 roots.clear();
             }
-            
+
             // depending of the type of the seed, initialize the root in different ways
             Object rootSeed = type.getRootSeed();
 
@@ -783,7 +783,7 @@ class NewXmlFileCreationPage extends WizardPage {
 
                 // Note: if project is null, the root list will be empty since it has been
                 // cleared above.
-                
+
                 // get the AndroidTargetData from the project
                 IAndroidTarget target = null;
                 AndroidTargetData data = null;
@@ -793,7 +793,7 @@ class NewXmlFileCreationPage extends WizardPage {
                     // A project should have a target. The target can be missing if the project
                     // is an old project for which a target hasn't been affected or if the
                     // target no longer exists in this SDK. Simply log the error and dismiss.
-                    
+
                     AdtPlugin.log(IStatus.INFO,
                             "NewXmlFile wizard: no platform target for project %s",  //$NON-NLS-1$
                             mProject.getName());
@@ -807,14 +807,14 @@ class NewXmlFileCreationPage extends WizardPage {
                         // loaded we can end up in a weird case where we have a target but it
                         // doesn't have any data yet.
                         // Lets log a warning and silently ignore this root.
-                        
+
                         AdtPlugin.log(IStatus.INFO,
                               "NewXmlFile wizard: no data for target %s, project %s",  //$NON-NLS-1$
                               target.getName(), mProject.getName());
                         continue;
                     }
                 }
-                
+
                 IDescriptorProvider provider = data.getDescriptorProvider((Integer)rootSeed);
                 ElementDescriptor descriptor = provider.getDescriptor();
                 if (descriptor != null) {
@@ -842,22 +842,22 @@ class NewXmlFileCreationPage extends WizardPage {
                 roots.add(xmlName);
             }
         }
-        
+
         visited.add(desc);
-        
+
         for (ElementDescriptor child : desc.getChildren()) {
             if (!visited.contains(child)) {
                 initRootElementDescriptor(roots, child, visited);
             }
         }
     }
-    
+
     /**
      * Callback called when the user edits the project text field.
      */
     private void onProjectFieldUpdated() {
         String project = mProjectTextField.getText();
-        
+
         // Is this a valid project?
         IJavaProject[] projects = mProjectChooserHelper.getAndroidProjects(null /*javaModel*/);
         IProject found = null;
@@ -896,15 +896,15 @@ class NewXmlFileCreationPage extends WizardPage {
 
         // enable types based on new API level
         enableTypesBasedOnApi();
-        
+
         // update the Type with the new descriptors.
         initializeRootValues();
-        
+
         // update the combo
         updateRootCombo(getSelectedType());
-        
+
         validatePage();
-    } 
+    }
 
     /**
      * Callback called when the Folder text field is changed, either programmatically
@@ -929,7 +929,7 @@ class NewXmlFileCreationPage extends WizardPage {
         // We get "res/foo" from selections relative to the project when we want a "/res/foo" path.
         if (wsFolderPath.startsWith(RES_FOLDER_REL)) {
             wsFolderPath = RES_FOLDER_ABS + wsFolderPath.substring(RES_FOLDER_REL.length());
-            
+
             mInternalWsFolderPathUpdate = true;
             mWsFolderPathTextField.setText(wsFolderPath);
             mInternalWsFolderPathUpdate = false;
@@ -937,7 +937,7 @@ class NewXmlFileCreationPage extends WizardPage {
 
         if (wsFolderPath.startsWith(RES_FOLDER_ABS)) {
             wsFolderPath = wsFolderPath.substring(RES_FOLDER_ABS.length());
-            
+
             int pos = wsFolderPath.indexOf(AndroidConstants.WS_SEP_CHAR);
             if (pos >= 0) {
                 wsFolderPath = wsFolderPath.substring(0, pos);
@@ -985,7 +985,7 @@ class NewXmlFileCreationPage extends WizardPage {
 
     /**
      * Callback called when one of the type radio button is changed.
-     * 
+     *
      * @param typeWidget The type radio button that changed.
      */
     private void onRadioTypeUpdated(Button typeWidget) {
@@ -1003,13 +1003,13 @@ class NewXmlFileCreationPage extends WizardPage {
                 break;
             }
         }
-        
+
         if (type == null) {
             return;
         }
 
         // update the combo
-        
+
         updateRootCombo(type);
 
         // update the folder path
@@ -1022,7 +1022,7 @@ class NewXmlFileCreationPage extends WizardPage {
         if (qual == null) {
             // The configuration is valid. Reformat the folder path using the canonical
             // value from the configuration.
-            
+
             newPath = RES_FOLDER_ABS + mTempConfig.getFolderName(type.getResFolderType());
         } else {
             // The configuration is invalid. We still update the path but this time
@@ -1049,7 +1049,7 @@ class NewXmlFileCreationPage extends WizardPage {
      * Helper method that fills the values of the "root element" combo box based
      * on the currently selected type radio button. Also disables the combo is there's
      * only one choice. Always select the first root element for the given type.
-     * 
+     *
      * @param type The currently selected {@link TypeInfo}. Cannot be null.
      */
     private void updateRootCombo(TypeInfo type) {
@@ -1059,14 +1059,14 @@ class NewXmlFileCreationPage extends WizardPage {
         if (type != null) {
             // get the list of roots. The list can be empty but not null.
             ArrayList<String> roots = type.getRoots();
-            
+
             // enable the combo if there's more than one choice
             mRootElementCombo.setEnabled(roots != null && roots.size() > 1);
-            
+
             for (String root : roots) {
                 mRootElementCombo.add(root);
             }
-            
+
             int index = 0; // default is to select the first one
             String defaultRoot = type.getDefaultRoot();
             if (defaultRoot != null) {
@@ -1086,16 +1086,16 @@ class NewXmlFileCreationPage extends WizardPage {
             }
 
             TypeInfo type = getSelectedType();
-            
+
             if (type != null) {
                 mConfigSelector.getConfiguration(mTempConfig);
                 StringBuffer sb = new StringBuffer(RES_FOLDER_ABS);
                 sb.append(mTempConfig.getFolderName(type.getResFolderType()));
-                
+
                 mInternalWsFolderPathUpdate = true;
                 mWsFolderPathTextField.setText(sb.toString());
                 mInternalWsFolderPathUpdate = false;
-                
+
                 validatePage();
             }
         }
@@ -1103,7 +1103,7 @@ class NewXmlFileCreationPage extends WizardPage {
 
     /**
      * Helper method to select on of the type radio buttons.
-     * 
+     *
      * @param type The TypeInfo matching the radio button to selected or null to deselect them all.
      */
     private void selectType(TypeInfo type) {
@@ -1130,9 +1130,9 @@ class NewXmlFileCreationPage extends WizardPage {
         IAndroidTarget target = mProject != null ? Sdk.getCurrent().getTarget(mProject) : null;
         int currentApiLevel = 1;
         if (target != null) {
-            currentApiLevel = target.getApiVersionNumber();
+            currentApiLevel = target.getVersion().getApiLevel();
         }
-        
+
         for (TypeInfo type : sTypes) {
             type.getWidget().setEnabled(type.getTargetApiLevel() <= currentApiLevel);
         }
@@ -1175,7 +1175,7 @@ class NewXmlFileCreationPage extends WizardPage {
             IAndroidTarget target = Sdk.getCurrent().getTarget(mProject);
             int currentApiLevel = 1;
             if (target != null) {
-                currentApiLevel = target.getApiVersionNumber();
+                currentApiLevel = target.getVersion().getApiLevel();
             }
 
             TypeInfo type = getSelectedType();

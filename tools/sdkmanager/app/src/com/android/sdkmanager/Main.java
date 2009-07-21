@@ -416,7 +416,7 @@ class Main {
             mSdkLog.printf("     Name: %s\n", target.getName());
             if (target.isPlatform()) {
                 mSdkLog.printf("     Type: Platform\n");
-                mSdkLog.printf("     API level: %d\n", target.getApiVersionNumber());
+                mSdkLog.printf("     API level: %s\n", target.getVersion().getApiString());
                 mSdkLog.printf("     Revision: %d\n", target.getRevision());
             } else {
                 mSdkLog.printf("     Type: Add-On\n");
@@ -426,7 +426,7 @@ class Main {
                     mSdkLog.printf("     Description: %s\n", target.getDescription());
                 }
                 mSdkLog.printf("     Based on Android %s (API level %d)\n",
-                        target.getApiVersionName(), target.getApiVersionNumber());
+                        target.getVersionName(), target.getVersion().getApiString());
 
                 // display the optional libraries.
                 IOptionalLibrary[] libraries = target.getOptionalLibraries();
@@ -501,13 +501,13 @@ class Main {
                 // get the target of the AVD
                 IAndroidTarget target = info.getTarget();
                 if (target.isPlatform()) {
-                    mSdkLog.printf("  Target: %s (API level %d)\n", target.getName(),
-                            target.getApiVersionNumber());
+                    mSdkLog.printf("  Target: %s (API level %s)\n", target.getName(),
+                            target.getVersion().getApiString());
                 } else {
                     mSdkLog.printf("  Target: %s (%s)\n", target.getName(), target
                             .getVendor());
-                    mSdkLog.printf("          Based on Android %s (API level %d)\n", target
-                            .getApiVersionName(), target.getApiVersionNumber());
+                    mSdkLog.printf("          Based on Android %s (API level %s)\n",
+                            target.getVersionName(), target.getVersion().getApiString());
                 }
 
                 // display some extra values.

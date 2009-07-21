@@ -119,14 +119,14 @@ public interface IAndroidTarget extends Comparable<IAndroidTarget> {
     String getDescription();
 
     /**
-     * Returns the api version as an integer.
+     * Returns the version of the target. This is guaranteed to be non-null.
      */
-    int getApiVersionNumber();
+    AndroidVersion getVersion();
 
     /**
      * Returns the platform version as a readable string.
      */
-    String getApiVersionName();
+    public String getVersionName();
 
     /** Returns the revision number for the target. */
     int getRevision();

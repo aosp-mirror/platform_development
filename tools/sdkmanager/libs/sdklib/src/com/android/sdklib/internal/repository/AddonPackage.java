@@ -16,6 +16,7 @@
 
 package com.android.sdklib.internal.repository;
 
+import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
@@ -36,13 +37,12 @@ import java.util.Properties;
  */
 public class AddonPackage extends Package {
 
-    private static final String PROP_API_LEVEL = "Addon.ApiLevel";  //$NON-NLS-1$
     private static final String PROP_NAME      = "Addon.Name";      //$NON-NLS-1$
     private static final String PROP_VENDOR    = "Addon.Vendor";    //$NON-NLS-1$
 
     private final String mVendor;
     private final String mName;
-    private final int    mApiLevel;
+    private final AndroidVersion mVersion;
 
     /** An add-on library. */
     public static class Lib {
@@ -74,7 +74,10 @@ public class AddonPackage extends Package {
         super(source, packageNode, licenses);
         mVendor   = XmlParserUtils.getXmlString(packageNode, SdkRepository.NODE_VENDOR);
         mName     = XmlParserUtils.getXmlString(packageNode, SdkRepository.NODE_NAME);
-        mApiLevel = XmlParserUtils.getXmlInt   (packageNode, SdkRepository.NODE_API_LEVEL, 0);
+        mVersion = new AndroidVersion(
+                XmlParserUtils.getXmlInt   (packageNode, SdkRepository.NODE_API_LEVEL, 0),
+                null); // add-ons on platform previews is not supported, so the codename is always
+                       // null in this case.
 
         mLibs = parseLibs(XmlParserUtils.getFirstChild(packageNode, SdkRepository.NODE_LIBS));
     }
@@ -88,7 +91,7 @@ public class AddonPackage extends Package {
     AddonPackage(IAndroidTarget target, Properties props) {
         super(  null,                       //source
                 props,                      //properties
-                0,                          //revision
+                target.getRevision(),       //revision
                 null,                       //license
                 target.getDescription(),    //description
                 null,                       //descUrl
@@ -97,7 +100,7 @@ public class AddonPackage extends Package {
                 target.getLocation()        //archiveOsPath
                 );
 
-        mApiLevel = target.getApiVersionNumber();
+        mVersion = target.getVersion();
         mName     = target.getName();
         mVendor   = target.getVendor();
 
@@ -114,13 +117,13 @@ public class AddonPackage extends Package {
 
     /**
      * Save the properties of the current packages in the given {@link Properties} object.
-     * These properties will later be give the constructor that takes a {@link Properties} object.
+     * These properties will later be given to a constructor that takes a {@link Properties} object.
      */
     @Override
     void saveProperties(Properties props) {
         super.saveProperties(props);
 
-        props.setProperty(PROP_API_LEVEL, Integer.toString(mApiLevel));
+        mVersion.saveProperties(props);
         props.setProperty(PROP_NAME, mName);
         props.setProperty(PROP_VENDOR, mVendor);
     }
@@ -167,7 +170,8 @@ public class AddonPackage extends Package {
 
     /** Returns the api-level, an int > 0, for platform, add-on and doc packages. */
     public int getApiLevel() {
-        return mApiLevel;
+        // FIXME: return the AndroidVersion instead.
+        return mVersion.getApiLevel();
     }
 
     /** Returns the libs defined in this add-on. Can be an empty array but not null. */
@@ -214,7 +218,7 @@ public class AddonPackage extends Package {
         // First find if this add-on is already installed. If so, reuse the same directory.
         for (IAndroidTarget target : sdkManager.getTargets()) {
             if (!target.isPlatform() &&
-                    target.getApiVersionNumber() == getApiLevel() &&
+                    target.getVersion().equals(mVersion) &&
                     target.getName().equals(getName()) &&
                     target.getVendor().equals(getVendor())) {
                 return new File(target.getLocation());

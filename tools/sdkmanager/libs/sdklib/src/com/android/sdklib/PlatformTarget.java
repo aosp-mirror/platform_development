@@ -26,31 +26,40 @@ import java.util.Map;
  */
 final class PlatformTarget implements IAndroidTarget {
     /** String used to get a hash to the platform target */
-    private final static String PLATFORM_HASH = "android-%d";
+    private final static String PLATFORM_HASH_API_LEVEL = "android-%d";
+    private final static String PLATFORM_HASH_CODENAME = "android-%s";
 
     private final static String PLATFORM_VENDOR = "Android Open Source Project";
+
     private final static String PLATFORM_NAME = "Android %s";
+    private final static String PLATFORM_NAME_PREVIEW = "Android %s (Preview)";
 
     private final String mLocation;
     private final String mName;
-    private final int mApiVersionNumber;
-    private final String mApiVersionName;
+    private final AndroidVersion mVersion;
+    private final String mVersionName;
     private final int mRevision;
     private final Map<String, String> mProperties;
     private final Map<Integer, String> mPaths = new HashMap<Integer, String>();
     private String[] mSkins;
 
+
     PlatformTarget(String location, Map<String, String> properties,
-            int apiNumber, String apiName, int revision) {
-        mName = String.format(PLATFORM_NAME, apiName);
+            int apiLevel, String codeName, String versionName, int revision) {
         if (location.endsWith(File.separator) == false) {
             location = location + File.separator;
         }
         mLocation = location;
         mProperties = Collections.unmodifiableMap(properties);
-        mApiVersionNumber = apiNumber;
-        mApiVersionName = apiName;
+        mVersion = new AndroidVersion(apiLevel, codeName);
+        mVersionName = versionName;
         mRevision = revision;
+
+        if (mVersion.isPreview()) {
+            mName =  String.format(PLATFORM_NAME_PREVIEW, mVersionName);
+        } else {
+            mName = String.format(PLATFORM_NAME, mVersionName);
+        }
 
         // pre-build the path to the platform components
         mPaths.put(ANDROID_JAR, mLocation + SdkConstants.FN_FRAMEWORK_LIBRARY);
@@ -119,15 +128,15 @@ final class PlatformTarget implements IAndroidTarget {
      * @see com.android.sdklib.IAndroidTarget#getDescription()
      */
     public String getDescription() {
-        return String.format("Standard Android platform %s", mApiVersionName);
+        return String.format("Standard Android platform %s", mVersionName);
     }
 
-    public int getApiVersionNumber(){
-        return mApiVersionNumber;
+    public AndroidVersion getVersion() {
+        return mVersion;
     }
 
-    public String getApiVersionName() {
-        return mApiVersionName;
+    public String getVersionName() {
+        return mVersionName;
     }
 
     public int getRevision() {
@@ -189,13 +198,23 @@ final class PlatformTarget implements IAndroidTarget {
             return true;
         }
 
+        // if the platform has a codename (ie it's a preview of an upcoming platform), then
+        // both platform must be exactly identical.
+        if (mVersion.getCodename() != null) {
+            return equals(target);
+        }
+
         // target is compatible wit the receiver as long as its api version number is greater or
         // equal.
-        return target.getApiVersionNumber() >= mApiVersionNumber;
+        return target.getVersion().getApiLevel() >= mVersion.getApiLevel();
     }
 
     public String hashString() {
-        return String.format(PLATFORM_HASH, mApiVersionNumber);
+        if (mVersion.getCodename() != null) {
+            return String.format(PLATFORM_HASH_CODENAME, mVersion.getCodename());
+        }
+
+        return String.format(PLATFORM_HASH_API_LEVEL, mVersion.getApiLevel());
     }
 
     @Override
@@ -206,10 +225,12 @@ final class PlatformTarget implements IAndroidTarget {
     @Override
     public boolean equals(Object obj) {
         if (obj instanceof PlatformTarget) {
-            return mApiVersionNumber == ((PlatformTarget)obj).mApiVersionNumber;
+            PlatformTarget platform = (PlatformTarget)obj;
+
+            return mVersion.equals(platform.getVersion());
         }
 
-        return super.equals(obj);
+        return false;
     }
 
     /*
@@ -223,7 +244,13 @@ final class PlatformTarget implements IAndroidTarget {
             return -1;
         }
 
-        return mApiVersionNumber - target.getApiVersionNumber();
+        int apiDiff = mVersion.getApiLevel() - target.getVersion().getApiLevel();
+
+        if (mVersion.getCodename() != null && apiDiff == 0) {
+            return mVersion.getCodename().compareTo(target.getVersion().getCodename());
+        }
+
+        return apiDiff;
     }
 
     // ---- platform only methods.
