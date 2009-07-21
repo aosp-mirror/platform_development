@@ -16,8 +16,6 @@
 
 package com.android.sdklib.repository;
 
-import com.android.sdklib.SdkConstants;
-
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;

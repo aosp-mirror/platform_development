@@ -16,6 +16,7 @@
 
 package com.android.sdklib.internal.repository;
 
+import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.repository.Archive.Arch;
@@ -33,9 +34,7 @@ import java.util.Properties;
  */
 public class DocPackage extends Package {
 
-    private static final String PROP_API_LEVEL = "Doc.ApiLevel";  //$NON-NLS-1$
-
-    private final int mApiLevel;
+    private final AndroidVersion mVersion;
 
     /**
      * Creates a new doc package from the attributes and elements of the given XML node.
@@ -44,7 +43,13 @@ public class DocPackage extends Package {
      */
     DocPackage(RepoSource source, Node packageNode, Map<String,String> licenses) {
         super(source, packageNode, licenses);
-        mApiLevel = XmlParserUtils.getXmlInt(packageNode, SdkRepository.NODE_API_LEVEL, 0);
+
+        int apiLevel = XmlParserUtils.getXmlInt   (packageNode, SdkRepository.NODE_API_LEVEL, 0);
+        String codeName = XmlParserUtils.getXmlString(packageNode, SdkRepository.NODE_CODENAME);
+        if (codeName.length() == 0) {
+            codeName = null;
+        }
+        mVersion = new AndroidVersion(apiLevel, codeName);
     }
 
     /**
@@ -55,6 +60,7 @@ public class DocPackage extends Package {
     DocPackage(RepoSource source,
             Properties props,
             int apiLevel,
+            String codename,
             int revision,
             String license,
             String description,
@@ -71,8 +77,7 @@ public class DocPackage extends Package {
                 archiveOs,
                 archiveArch,
                 archiveOsPath);
-        mApiLevel = Integer.parseInt(
-                        getProperty(props, PROP_API_LEVEL, Integer.toString(apiLevel)));
+        mVersion = new AndroidVersion(props, apiLevel, codename);
     }
 
     /**
@@ -83,20 +88,23 @@ public class DocPackage extends Package {
     void saveProperties(Properties props) {
         super.saveProperties(props);
 
-        props.setProperty(PROP_API_LEVEL, Integer.toString(mApiLevel));
+        mVersion.saveProperties(props);
     }
 
-    /** Returns the api-level, an int > 0, for platform, add-on and doc packages.
+    /** Returns the version, for platform, add-on and doc packages.
      *  Can be 0 if this is a local package of unknown api-level. */
-    public int getApiLevel() {
-        return mApiLevel;
+    public AndroidVersion getVersion() {
+        return mVersion;
     }
 
     /** Returns a short description for an {@link IDescription}. */
     @Override
     public String getShortDescription() {
-        if (mApiLevel != 0) {
-            return String.format("Documentation for Android SDK, API %1$d", mApiLevel);
+        if (mVersion.isPreview()) {
+            return String.format("Documentation for Android '%1$s' Preview SDK",
+                    mVersion.getCodename());
+        } else if (mVersion.getApiLevel() != 0) {
+            return String.format("Documentation for Android SDK, API %1$d", mVersion.getApiLevel());
         } else {
             return String.format("Documentation for Android SDK");
         }
@@ -147,6 +155,6 @@ public class DocPackage extends Package {
 
         DocPackage newPkg = (DocPackage) replacementPackage;
         return newPkg.getRevision() > this.getRevision() &&
-            newPkg.getApiLevel() >= this.getApiLevel();
+            newPkg.getVersion().equals(this.getVersion());
     }
 }

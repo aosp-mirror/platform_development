@@ -45,13 +45,29 @@ public class AndroidVersion {
     private final int mApiLevel;
     private final String mCodename;
 
+    /**
+     * Creates an {@link AndroidVersion} with the given api level and codename.
+     */
     public AndroidVersion(int apiLevel, String codename) {
         mApiLevel = apiLevel;
         mCodename = codename;
     }
 
-    public AndroidVersion(Properties properties) {
-        throw new UnsupportedOperationException("TODO");
+    /**
+     * Creates an {@link AndroidVersion} from {@link Properties}, with default values if the
+     * {@link Properties} object doesn't contain the expected values.
+     * <p/>The {@link Properties} is expected to have been filled with
+     * {@link #saveProperties(Properties)}.
+     */
+    public AndroidVersion(Properties properties, int defaultApiLevel, String defaultCodeName) {
+        if (properties == null) {
+            mApiLevel = defaultApiLevel;
+            mCodename = defaultCodeName;
+        } else {
+            mApiLevel = Integer.parseInt(properties.getProperty(PROP_API_LEVEL,
+                    Integer.toString(defaultApiLevel)));
+            mCodename = properties.getProperty(PROP_CODENAME, defaultCodeName);
+        }
     }
 
     public void saveProperties(Properties props) {
