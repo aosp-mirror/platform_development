@@ -53,7 +53,7 @@
                             <!-- The Android API Level for the platform. An int > 0. -->
                             <xsd:element name="api-level" type="xsd:positiveInteger"  />
                             <!-- The optional codename for this platform, if it's a preview. -->
-                            <xsd:element name="api-codename"  type="xsd:string" minOccurs="0" />
+                            <xsd:element name="codename"  type="xsd:string" minOccurs="0" />
 
                             <!-- The revision, an int > 0, incremented each time a new
                                  package is generated. -->
@@ -158,6 +158,8 @@
                         <xsd:all>
                             <!-- The Android API Level for the documentation. An int > 0. -->
                             <xsd:element name="api-level" type="xsd:positiveInteger"  />
+                            <!-- The optional codename for this doc, if it's a preview. -->
+                            <xsd:element name="codename"  type="xsd:string" minOccurs="0" />
 
                             <!-- The revision, an int > 0, incremented each time a new
                                  package is generated. -->

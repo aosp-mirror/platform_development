@@ -49,7 +49,7 @@ public class PlatformPackage extends Package {
         super(source, packageNode, licenses);
         mVersionName = XmlParserUtils.getXmlString(packageNode, SdkRepository.NODE_VERSION);
         int apiLevel = XmlParserUtils.getXmlInt   (packageNode, SdkRepository.NODE_API_LEVEL, 0);
-        String codeName = XmlParserUtils.getXmlString(packageNode, SdkRepository.NODE_API_CODENAME);
+        String codeName = XmlParserUtils.getXmlString(packageNode, SdkRepository.NODE_CODENAME);
         if (codeName.length() == 0) {
             codeName = null;
         }
@@ -95,10 +95,9 @@ public class PlatformPackage extends Package {
         return mVersionName;
     }
 
-    /** Returns the api-level, an int > 0, for platform, add-on and doc packages. */
-    public int getApiLevel() {
-        // FIXME: return the AndroidVersion instead.
-        return mVersion.getApiLevel();
+    /** Returns the package version, for platform, add-on and doc packages. */
+    public AndroidVersion getVersion() {
+        return mVersion;
     }
 
     /** Returns a short description for an {@link IDescription}. */
@@ -111,7 +110,7 @@ public class PlatformPackage extends Package {
 
         return String.format("SDK Platform Android %1$s, API %2$d",
                 getVersionName(),
-                getApiLevel());
+                mVersion.getApiLevel());
     }
 
     /** Returns a long description for an {@link IDescription}. */
@@ -174,7 +173,7 @@ public class PlatformPackage extends Package {
 
         PlatformPackage newPkg = (PlatformPackage) replacementPackage;
         return newPkg.getVersionName().equalsIgnoreCase(this.getVersionName()) &&
-            newPkg.getApiLevel() == this.getApiLevel() &&
+            newPkg.getVersion().equals(this.getVersion()) &&
             newPkg.getRevision() > this.getRevision();
     }
 }

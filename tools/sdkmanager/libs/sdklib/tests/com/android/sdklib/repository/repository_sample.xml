@@ -160,7 +160,7 @@
    <sdk:platform>
         <sdk:version>Pastry</sdk:version>
         <sdk:api-level>5</sdk:api-level>
-        <sdk:api-codename>Pastry</sdk:api-codename>
+        <sdk:codename>Pastry</sdk:codename>
         <sdk:revision>3</sdk:revision>
         <sdk:uses-license ref="license1" />
         <sdk:description>Preview version for Pastry</sdk:description>
