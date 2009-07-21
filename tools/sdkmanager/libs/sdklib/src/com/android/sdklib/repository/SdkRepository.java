@@ -26,7 +26,7 @@ public class SdkRepository {
 
     /** The URL of the official Google sdk-repository site. */
     public static final String URL_GOOGLE_SDK_REPO_SITE =
-        "https://dl.google.com/android/repository/";      //$NON-NLS-1$
+        "https://dl-ssl.google.com/android/repository/";      //$NON-NLS-1$
 
     public static final String URL_DEFAULT_XML_FILE = "repository.xml";         //$NON-NLS-1$
 

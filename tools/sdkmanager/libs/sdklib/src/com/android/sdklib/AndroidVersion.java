@@ -72,7 +72,9 @@ public class AndroidVersion {
 
     public void saveProperties(Properties props) {
         props.setProperty(PROP_API_LEVEL, Integer.toString(mApiLevel));
-        props.setProperty(PROP_CODENAME, mCodename);
+        if (mCodename != null) {
+            props.setProperty(PROP_CODENAME, mCodename);
+        }
     }
 
     /**
