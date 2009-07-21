@@ -785,7 +785,6 @@ public final class AvdSelector {
             mDetailsButton.setEnabled(hasSelection);
             mStartButton.setEnabled(mOsSdkPath != null &&
                     hasSelection &&
-                    selection != null &&
                     selection.getStatus() == AvdStatus.OK);
 
             if (mDeleteButton != null) {
@@ -793,7 +792,6 @@ public final class AvdSelector {
             }
             if (mUpdateButton != null) {
                 mUpdateButton.setEnabled(hasSelection &&
-                        selection != null &&
                         selection.getStatus() == AvdStatus.ERROR_IMAGE_DIR);
             }
         }

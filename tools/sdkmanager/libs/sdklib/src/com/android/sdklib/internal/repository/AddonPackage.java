@@ -168,10 +168,9 @@ public class AddonPackage extends Package {
         return mName;
     }
 
-    /** Returns the api-level, an int > 0, for platform, add-on and doc packages. */
-    public int getApiLevel() {
-        // FIXME: return the AndroidVersion instead.
-        return mVersion.getApiLevel();
+    /** Returns the version, for platform, add-on and doc packages. */
+    public AndroidVersion getVersion() {
+        return mVersion;
     }
 
     /** Returns the libs defined in this add-on. Can be an empty array but not null. */
@@ -185,7 +184,7 @@ public class AddonPackage extends Package {
         return String.format("%1$s by %2$s for Android API %3$d",
                 getName(),
                 getVendor(),
-                getApiLevel());
+                mVersion.getApiLevel());
     }
 
     /** Returns a long description for an {@link IDescription}. */
@@ -230,7 +229,7 @@ public class AddonPackage extends Package {
         String name = suggestedDir;
 
         if (suggestedDir == null || suggestedDir.length() == 0) {
-            name = String.format("addon-%s-%s-%d", getName(), getVendor(), getApiLevel()); //$NON-NLS-1$
+            name = String.format("addon-%s-%s-%d", getName(), getVendor(), mVersion.getApiLevel()); //$NON-NLS-1$
             name = name.toLowerCase();
             name = name.replaceAll("[^a-z0-9_-]+", "_");      //$NON-NLS-1$ //$NON-NLS-2$
             name = name.replaceAll("_+", "_");                //$NON-NLS-1$ //$NON-NLS-2$
@@ -272,6 +271,7 @@ public class AddonPackage extends Package {
         String newId  = newPkg.getName() + "+" + newPkg.getVendor();  //$NON-NLS-1$
 
         return thisId.equalsIgnoreCase(newId) &&
-               newPkg.getRevision() > this.getRevision();
+                mVersion.getApiLevel() == newPkg.getVersion().getApiLevel() &&
+                newPkg.getRevision() > this.getRevision();
     }
 }
