@@ -17,7 +17,8 @@ current version
      LOCAL_LDLIBS := -lz
 
   Actually work correctly, instead of having the linker complaining that it
-  could not find the corresponding libz.so library.
+  could not find the corresponding libz.so library. Also clear LOCAL_LDLIBS
+  in $(CLEAR_VARS) script.
 
 - Generate thumb binaries by default.
 
