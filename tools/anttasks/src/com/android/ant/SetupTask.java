@@ -18,6 +18,7 @@ package com.android.ant;
 
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.ISdkLog;
+import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.IAndroidTarget.IOptionalLibrary;
 import com.android.sdklib.internal.project.ProjectProperties;
@@ -27,10 +28,20 @@ import org.apache.tools.ant.Project;
 import org.apache.tools.ant.taskdefs.ImportTask;
 import org.apache.tools.ant.types.Path;
 import org.apache.tools.ant.types.Path.PathElement;
+import org.xml.sax.InputSource;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
+
+import javax.xml.XMLConstants;
+import javax.xml.namespace.NamespaceContext;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
 
 /**
  * Setup/Import Ant task. This task accomplishes:
@@ -134,6 +145,12 @@ public final class SetupTask extends ImportTask {
         }
         System.out.println("API level: " + androidTarget.getVersion().getApiString());
 
+        // if needed check the manifest so that it matches the target
+        if (androidTarget.getVersion().isPreview()) {
+            // for preview, the manifest minSdkVersion node *must* match the target codename
+            checkManifest(antProject, androidTarget.getVersion().getCodename());
+        }
+
         // sets up the properties to find android.jar/framework.aidl/target tools
         String androidJar = androidTarget.getPath(IAndroidTarget.ANDROID_JAR);
         antProject.setProperty(PROPERTY_ANDROID_JAR, androidJar);
@@ -204,5 +221,48 @@ public final class SetupTask extends ImportTask {
      */
     public void setImport(boolean value) {
         mDoImport = value;
+    }
+
+    private void checkManifest(Project antProject, String codename) {
+        try {
+            File manifest = new File(antProject.getBaseDir(), "AndroidManifest.xml");
+
+            XPath xPath = XPathFactory.newInstance().newXPath();
+            xPath.setNamespaceContext(new NamespaceContext() {
+                public String getNamespaceURI(String prefix) {
+                    if (prefix != null) {
+                        if (prefix.equals("android")) {
+                            return SdkConstants.NS_RESOURCES;
+                        }
+                    }
+
+                    return XMLConstants.NULL_NS_URI;
+                }
+
+                public String getPrefix(String namespaceURI) {
+                    // This isn't necessary for our use.
+                    assert false;
+                    return null;
+                }
+
+                public Iterator getPrefixes(String namespaceURI) {
+                    // This isn't necessary for our use.
+                    assert false;
+                    return null;
+                }
+            });
+
+            String value = xPath.evaluate("/manifest/uses-sdk/@android:minSdkVersion",
+                    new InputSource(new FileInputStream(manifest)));
+
+            if (codename.equals(value) == false) {
+                throw new BuildException(String.format("For '%1$s' SDK Preview, application manifest must declare minSdkVersion to '%1$s'",
+                        codename));
+            }
+        } catch (XPathExpressionException e) {
+            throw new BuildException(e);
+        } catch (FileNotFoundException e) {
+            throw new BuildException(e);
+        }
     }
 }
