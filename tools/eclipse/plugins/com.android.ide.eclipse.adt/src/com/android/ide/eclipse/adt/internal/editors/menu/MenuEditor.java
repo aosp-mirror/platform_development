@@ -21,8 +21,8 @@ import com.android.ide.eclipse.adt.AndroidConstants;
 import com.android.ide.eclipse.adt.internal.editors.AndroidEditor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
-import com.android.ide.eclipse.adt.internal.project.AndroidXPathFactory;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
+import com.android.sdklib.xml.AndroidXPathFactory;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.ui.IEditorInput;
