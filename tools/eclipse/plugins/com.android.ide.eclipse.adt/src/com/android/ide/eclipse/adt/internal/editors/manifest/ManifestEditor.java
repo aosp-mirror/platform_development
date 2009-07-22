@@ -27,10 +27,10 @@ import com.android.ide.eclipse.adt.internal.editors.manifest.pages.OverviewPage;
 import com.android.ide.eclipse.adt.internal.editors.manifest.pages.PermissionPage;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiAttributeNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
-import com.android.ide.eclipse.adt.internal.project.AndroidXPathFactory;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceMonitor;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceMonitor.IFileListener;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
+import com.android.sdklib.xml.AndroidXPathFactory;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;

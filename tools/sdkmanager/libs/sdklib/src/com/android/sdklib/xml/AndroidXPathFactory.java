@@ -1,11 +1,11 @@
 /*
- * Copyright (C) 2007 The Android Open Source Project
+ * Copyright (C) 2009 The Android Open Source Project
  *
- * Licensed under the Eclipse Public License, Version 1.0 (the "License");
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.eclipse.org/org/documents/epl-v10.php
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.ide.eclipse.adt.internal.project;
+package com.android.sdklib.xml;
 
 import com.android.sdklib.SdkConstants;
 
@@ -26,16 +26,27 @@ import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathFactory;
 
 /**
- * XPath factory with automatic support for the android namespace.
+ * XPath factory with automatic support for the android name space.
  */
 public class AndroidXPathFactory {
+    /** Default prefix for android name space: 'android' */
     public final static String DEFAULT_NS_PREFIX = "android"; //$NON-NLS-1$
 
     private final static XPathFactory sFactory = XPathFactory.newInstance();
-    
-    /** Namespace context for Android resource XML files. */
+
+    /** Name space context for Android resource XML files. */
     private static class AndroidNamespaceContext implements NamespaceContext {
+        private final static AndroidNamespaceContext sThis = new AndroidNamespaceContext(
+                DEFAULT_NS_PREFIX);
+
         private String mAndroidPrefix;
+
+        /**
+         * Returns the default {@link AndroidNamespaceContext}.
+         */
+        private static AndroidNamespaceContext getDefault() {
+            return sThis;
+        }
 
         /**
          * Construct the context with the prefix associated with the android namespace.
@@ -51,7 +62,7 @@ public class AndroidXPathFactory {
                     return SdkConstants.NS_RESOURCES;
                 }
             }
-            
+
             return XMLConstants.NULL_NS_URI;
         }
 
@@ -67,7 +78,7 @@ public class AndroidXPathFactory {
             return null;
         }
     }
-    
+
     /**
      * Creates a new XPath object, specifying which prefix in the query is used for the
      * android namespace.
@@ -84,6 +95,8 @@ public class AndroidXPathFactory {
      * @see #DEFAULT_NS_PREFIX
      */
     public static XPath newXPath() {
-        return newXPath(DEFAULT_NS_PREFIX);
+        XPath xpath = sFactory.newXPath();
+        xpath.setNamespaceContext(AndroidNamespaceContext.getDefault());
+        return xpath;
     }
 }
