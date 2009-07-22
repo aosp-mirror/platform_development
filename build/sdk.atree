@@ -63,6 +63,7 @@ development/tools/scripts/build.alias.template tools/lib/build.alias.template
 development/tools/scripts/android.el tools/lib/android.el
 
 # samples
+development/apps/GestureBuilder platforms/${PLATFORM_NAME}/samples/GestureBuilder
 development/samples/HelloActivity platforms/${PLATFORM_NAME}/samples/HelloActivity
 development/samples/Home platforms/${PLATFORM_NAME}/samples/Home
 development/samples/LunarLander platforms/${PLATFORM_NAME}/samples/LunarLander
