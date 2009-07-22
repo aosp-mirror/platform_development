@@ -766,7 +766,7 @@ public class CommandLineProcessor {
             String directObject,
             String shortName, String longName,
             String description, Object defaultValue) {
-        assert(mandatory || mode == Mode.BOOLEAN); // a boolean mode cannot be mandatory
+        assert(!(mandatory && mode == Mode.BOOLEAN)); // a boolean mode cannot be mandatory
 
         if (directObject == null) {
             directObject = NO_VERB_OBJECT;
