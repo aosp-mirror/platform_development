@@ -22,7 +22,7 @@ import com.android.ide.eclipse.adt.internal.editors.AndroidEditor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.resources.descriptors.ResourcesDescriptors;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
-import com.android.ide.eclipse.adt.internal.project.AndroidXPathFactory;
+import com.android.sdklib.xml.AndroidXPathFactory;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.IStatus;

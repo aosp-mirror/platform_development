@@ -18,10 +18,10 @@ package com.android.ant;
 
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.ISdkLog;
-import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.IAndroidTarget.IOptionalLibrary;
 import com.android.sdklib.internal.project.ProjectProperties;
+import com.android.sdklib.xml.AndroidXPathFactory;
 
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;
@@ -35,13 +35,9 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Iterator;
 
-import javax.xml.XMLConstants;
-import javax.xml.namespace.NamespaceContext;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
 
 /**
  * Setup/Import Ant task. This task accomplishes:
@@ -227,32 +223,10 @@ public final class SetupTask extends ImportTask {
         try {
             File manifest = new File(antProject.getBaseDir(), "AndroidManifest.xml");
 
-            XPath xPath = XPathFactory.newInstance().newXPath();
-            xPath.setNamespaceContext(new NamespaceContext() {
-                public String getNamespaceURI(String prefix) {
-                    if (prefix != null) {
-                        if (prefix.equals("android")) {
-                            return SdkConstants.NS_RESOURCES;
-                        }
-                    }
+            XPath xPath = AndroidXPathFactory.newXPath();
 
-                    return XMLConstants.NULL_NS_URI;
-                }
-
-                public String getPrefix(String namespaceURI) {
-                    // This isn't necessary for our use.
-                    assert false;
-                    return null;
-                }
-
-                public Iterator getPrefixes(String namespaceURI) {
-                    // This isn't necessary for our use.
-                    assert false;
-                    return null;
-                }
-            });
-
-            String value = xPath.evaluate("/manifest/uses-sdk/@android:minSdkVersion",
+            String value = xPath.evaluate("/manifest/uses-sdk/@" +
+                    AndroidXPathFactory.DEFAULT_NS_PREFIX + ":minSdkVersion",
                     new InputSource(new FileInputStream(manifest)));
 
             if (codename.equals(value) == false) {
