@@ -127,6 +127,7 @@ framework/anttasks.jar tools/lib/anttasks.jar
 
 # sdkmanager
 bin/android tools/android
+framework/commons-compress-1.0.jar tools/lib/commons-compress-1.0.jar
 framework/sdklib.jar tools/lib/sdklib.jar
 framework/sdkuilib.jar tools/lib/sdkuilib.jar
 framework/sdkmanager.jar tools/lib/sdkmanager.jar
