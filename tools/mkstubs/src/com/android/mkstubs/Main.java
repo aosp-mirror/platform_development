@@ -171,7 +171,9 @@ public class Main {
                 addString(p, line);
             }
         } finally {
-            br.close();
+            if (br != null) {
+                br.close();
+            }
         }
     }
 
