@@ -1,0 +1,7 @@
+usb/api.*
+*.sln
+*.vcproj*
+usb/Debug
+usb/Release
+usb/api/obj*
+usb/api/*.log
