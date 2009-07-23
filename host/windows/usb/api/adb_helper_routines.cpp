@@ -24,65 +24,6 @@
 #include "adb_helper_routines.h"
 #include "adb_interface_enum.h"
 
-bool GetSDKComplientParam(AdbOpenAccessType access_type,
-                          AdbOpenSharingMode sharing_mode,
-                          ULONG* desired_access,
-                          ULONG* desired_sharing) {
-  if (NULL != desired_access) {
-    switch (access_type) {
-      case AdbOpenAccessTypeReadWrite:
-        *desired_access = GENERIC_READ | GENERIC_WRITE;
-        break;
-
-      case AdbOpenAccessTypeRead:
-        *desired_access = GENERIC_READ;
-        break;
-
-      case AdbOpenAccessTypeWrite:
-        *desired_access = GENERIC_WRITE;
-        break;
-
-      case AdbOpenAccessTypeQueryInfo:
-        *desired_access = FILE_READ_ATTRIBUTES | FILE_READ_EA;
-        break;
-
-      default:
-        AtlTrace("\n!!!!! ADB API -> GetSDKComplientParam %u is unknown access type",
-                 access_type);
-        SetLastError(ERROR_INVALID_ACCESS);
-        return false;
-    }
-  }
-
-  if (NULL != desired_sharing) {
-    switch (sharing_mode) {
-      case AdbOpenSharingModeReadWrite:
-        *desired_sharing = FILE_SHARE_READ | FILE_SHARE_WRITE;
-        break;
-
-      case AdbOpenSharingModeRead:
-        *desired_sharing = FILE_SHARE_READ;
-        break;
-
-      case AdbOpenSharingModeWrite:
-        *desired_sharing = FILE_SHARE_WRITE;
-        break;
-
-      case AdbOpenSharingModeExclusive:
-        *desired_sharing = 0;
-        break;
-
-      default:
-        AtlTrace("\n!!!!! ADB API -> GetSDKComplientParam %u is unknown share mode",
-                 sharing_mode);
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return false;
-    }
-  }
-
-  return true;
-}
-
 bool EnumerateDeviceInterfaces(HDEVINFO hardware_dev_info,
                                GUID class_id,
                                bool exclude_removed,

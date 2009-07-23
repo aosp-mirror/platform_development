@@ -18,6 +18,12 @@
 
 #include "stdafx.h"
 
+extern "C" {
+int _forceCRTManifest;
+int _forceMFCManifest;
+int _forceAtlDllManifest;
+};
+
 class CAdbWinApiModule : public CAtlDllModuleT< CAdbWinApiModule > {
 public:
 };
