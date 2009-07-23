@@ -28,7 +28,7 @@
 #include "adb_io_completion.h"
 #include "adb_helper_routines.h"
 
-ADBAPIHANDLE AdbEnumInterfaces(GUID class_id,
+ADBAPIHANDLE __cdecl AdbEnumInterfaces(GUID class_id,
                                bool exclude_not_present,
                                bool exclude_removed,
                                bool active_only) {
@@ -56,7 +56,7 @@ ADBAPIHANDLE AdbEnumInterfaces(GUID class_id,
   return ret;
 }
 
-bool AdbNextInterface(ADBAPIHANDLE adb_handle,
+bool __cdecl AdbNextInterface(ADBAPIHANDLE adb_handle,
                       AdbInterfaceInfo* info,
                       unsigned long* size) {
   if (NULL == size) {
@@ -78,7 +78,7 @@ bool AdbNextInterface(ADBAPIHANDLE adb_handle,
   return ret;
 }
 
-bool AdbResetInterfaceEnum(ADBAPIHANDLE adb_handle) {
+bool __cdecl AdbResetInterfaceEnum(ADBAPIHANDLE adb_handle) {
   // Lookup AdbInterfaceEnumObject object for the handle
   AdbInterfaceEnumObject* adb_ienum_object =
     LookupObject<AdbInterfaceEnumObject>(adb_handle);
@@ -93,7 +93,7 @@ bool AdbResetInterfaceEnum(ADBAPIHANDLE adb_handle) {
   return ret;
 }
 
-ADBWIN_API ADBAPIHANDLE AdbCreateInterfaceByName(
+ADBAPIHANDLE __cdecl AdbCreateInterfaceByName(
     const wchar_t* interface_name) {
   AdbInterfaceObject* obj = NULL;
   ADBAPIHANDLE ret = NULL;
@@ -114,7 +114,7 @@ ADBWIN_API ADBAPIHANDLE AdbCreateInterfaceByName(
   return ret;
 }
 
-ADBAPIHANDLE AdbCreateInterface(GUID class_id,
+ADBAPIHANDLE __cdecl AdbCreateInterface(GUID class_id,
                                 unsigned short vendor_id,
                                 unsigned short product_id,
                                 unsigned char interface_id) {
@@ -159,7 +159,7 @@ ADBAPIHANDLE AdbCreateInterface(GUID class_id,
   for (AdbEnumInterfaceArray::iterator it = interfaces.begin();
        it != interfaces.end(); it++) {
     const AdbInstanceEnumEntry& next_interface = *it;
-    if (0 == wcsnicmp(match_name,
+    if (0 == _wcsnicmp(match_name,
                       next_interface.device_name().c_str(),
                       match_len)) {
       // Found requested interface among active interfaces.
@@ -171,7 +171,7 @@ ADBAPIHANDLE AdbCreateInterface(GUID class_id,
   return NULL;
 }
 
-bool AdbGetInterfaceName(ADBAPIHANDLE adb_interface,
+bool __cdecl AdbGetInterfaceName(ADBAPIHANDLE adb_interface,
                          void* buffer,
                          unsigned long* buffer_char_size,
                          bool ansi) {
@@ -190,7 +190,7 @@ bool AdbGetInterfaceName(ADBAPIHANDLE adb_interface,
   }
 }
 
-bool AdbGetSerialNumber(ADBAPIHANDLE adb_interface,
+bool __cdecl AdbGetSerialNumber(ADBAPIHANDLE adb_interface,
                         void* buffer,
                         unsigned long* buffer_char_size,
                         bool ansi) {
@@ -209,7 +209,7 @@ bool AdbGetSerialNumber(ADBAPIHANDLE adb_interface,
   }
 }
 
-bool AdbGetUsbDeviceDescriptor(ADBAPIHANDLE adb_interface,
+bool __cdecl AdbGetUsbDeviceDescriptor(ADBAPIHANDLE adb_interface,
                                USB_DEVICE_DESCRIPTOR* desc) {
   // Lookup interface object for the handle
   AdbInterfaceObject* adb_object =
@@ -226,7 +226,7 @@ bool AdbGetUsbDeviceDescriptor(ADBAPIHANDLE adb_interface,
   }
 }
 
-bool AdbGetUsbConfigurationDescriptor(ADBAPIHANDLE adb_interface,
+bool __cdecl AdbGetUsbConfigurationDescriptor(ADBAPIHANDLE adb_interface,
                                       USB_CONFIGURATION_DESCRIPTOR* desc) {
   // Lookup interface object for the handle
   AdbInterfaceObject* adb_object =
@@ -243,7 +243,7 @@ bool AdbGetUsbConfigurationDescriptor(ADBAPIHANDLE adb_interface,
   }
 }
 
-bool AdbGetUsbInterfaceDescriptor(ADBAPIHANDLE adb_interface,
+bool __cdecl AdbGetUsbInterfaceDescriptor(ADBAPIHANDLE adb_interface,
                                   USB_INTERFACE_DESCRIPTOR* desc) {
   // Lookup interface object for the handle
   AdbInterfaceObject* adb_object =
@@ -260,7 +260,7 @@ bool AdbGetUsbInterfaceDescriptor(ADBAPIHANDLE adb_interface,
   }
 }
 
-bool AdbGetEndpointInformation(ADBAPIHANDLE adb_interface,
+bool __cdecl AdbGetEndpointInformation(ADBAPIHANDLE adb_interface,
                                UCHAR endpoint_index,
                                AdbEndpointInformation* info) {
   // Lookup interface object for the handle
@@ -278,21 +278,21 @@ bool AdbGetEndpointInformation(ADBAPIHANDLE adb_interface,
   }
 }
 
-bool AdbGetDefaultBulkReadEndpointInformation(ADBAPIHANDLE adb_interface,
+bool __cdecl AdbGetDefaultBulkReadEndpointInformation(ADBAPIHANDLE adb_interface,
                                               AdbEndpointInformation* info) {
   return AdbGetEndpointInformation(adb_interface,
                                    ADB_QUERY_BULK_READ_ENDPOINT_INDEX,
                                    info);
 }
 
-bool AdbGetDefaultBulkWriteEndpointInformation(ADBAPIHANDLE adb_interface,
+bool __cdecl AdbGetDefaultBulkWriteEndpointInformation(ADBAPIHANDLE adb_interface,
                                                AdbEndpointInformation* info) {
   return AdbGetEndpointInformation(adb_interface,
                                    ADB_QUERY_BULK_WRITE_ENDPOINT_INDEX,
                                    info);
 }
 
-ADBAPIHANDLE AdbOpenEndpoint(ADBAPIHANDLE adb_interface,
+ADBAPIHANDLE __cdecl AdbOpenEndpoint(ADBAPIHANDLE adb_interface,
                              unsigned char endpoint_index,
                              AdbOpenAccessType access_type,
                              AdbOpenSharingMode sharing_mode) {
@@ -312,7 +312,7 @@ ADBAPIHANDLE AdbOpenEndpoint(ADBAPIHANDLE adb_interface,
   }
 }
 
-ADBAPIHANDLE AdbOpenDefaultBulkReadEndpoint(ADBAPIHANDLE adb_interface,
+ADBAPIHANDLE __cdecl AdbOpenDefaultBulkReadEndpoint(ADBAPIHANDLE adb_interface,
                                             AdbOpenAccessType access_type,
                                             AdbOpenSharingMode sharing_mode) {
   return AdbOpenEndpoint(adb_interface,
@@ -321,7 +321,7 @@ ADBAPIHANDLE AdbOpenDefaultBulkReadEndpoint(ADBAPIHANDLE adb_interface,
                          sharing_mode);
 }
 
-ADBAPIHANDLE AdbOpenDefaultBulkWriteEndpoint(ADBAPIHANDLE adb_interface,
+ADBAPIHANDLE __cdecl AdbOpenDefaultBulkWriteEndpoint(ADBAPIHANDLE adb_interface,
                                              AdbOpenAccessType access_type,
                                              AdbOpenSharingMode sharing_mode) {
   return AdbOpenEndpoint(adb_interface,
@@ -330,7 +330,7 @@ ADBAPIHANDLE AdbOpenDefaultBulkWriteEndpoint(ADBAPIHANDLE adb_interface,
                          sharing_mode);
 }
 
-ADBAPIHANDLE AdbGetEndpointInterface(ADBAPIHANDLE adb_endpoint) {
+ADBAPIHANDLE __cdecl AdbGetEndpointInterface(ADBAPIHANDLE adb_endpoint) {
   // Lookup endpoint object for the handle
   AdbEndpointObject* adb_object =
     LookupObject<AdbEndpointObject>(adb_endpoint);
@@ -346,7 +346,7 @@ ADBAPIHANDLE AdbGetEndpointInterface(ADBAPIHANDLE adb_endpoint) {
   }
 }
 
-bool AdbQueryInformationEndpoint(ADBAPIHANDLE adb_endpoint,
+bool __cdecl AdbQueryInformationEndpoint(ADBAPIHANDLE adb_endpoint,
                                  AdbEndpointInformation* info) {
   // Lookup endpoint object for the handle
   AdbEndpointObject* adb_object =
@@ -363,7 +363,7 @@ bool AdbQueryInformationEndpoint(ADBAPIHANDLE adb_endpoint,
   }
 }
 
-ADBAPIHANDLE AdbReadEndpointAsync(ADBAPIHANDLE adb_endpoint,
+ADBAPIHANDLE __cdecl AdbReadEndpointAsync(ADBAPIHANDLE adb_endpoint,
                                   void* buffer,
                                   unsigned long bytes_to_read,
                                   unsigned long* bytes_read,
@@ -388,7 +388,7 @@ ADBAPIHANDLE AdbReadEndpointAsync(ADBAPIHANDLE adb_endpoint,
   }
 }
 
-ADBAPIHANDLE AdbWriteEndpointAsync(ADBAPIHANDLE adb_endpoint,
+ADBAPIHANDLE __cdecl AdbWriteEndpointAsync(ADBAPIHANDLE adb_endpoint,
                                    void* buffer,
                                    unsigned long bytes_to_write,
                                    unsigned long* bytes_written,
@@ -413,7 +413,7 @@ ADBAPIHANDLE AdbWriteEndpointAsync(ADBAPIHANDLE adb_endpoint,
   }
 }
 
-bool AdbReadEndpointSync(ADBAPIHANDLE adb_endpoint,
+bool __cdecl AdbReadEndpointSync(ADBAPIHANDLE adb_endpoint,
                          void* buffer,
                          unsigned long bytes_to_read,
                          unsigned long* bytes_read,
@@ -434,7 +434,7 @@ bool AdbReadEndpointSync(ADBAPIHANDLE adb_endpoint,
   }
 }
 
-bool AdbWriteEndpointSync(ADBAPIHANDLE adb_endpoint,
+bool __cdecl AdbWriteEndpointSync(ADBAPIHANDLE adb_endpoint,
                           void* buffer,
                           unsigned long bytes_to_write,
                           unsigned long* bytes_written,
@@ -455,7 +455,7 @@ bool AdbWriteEndpointSync(ADBAPIHANDLE adb_endpoint,
   }
 }
 
-bool AdbGetOvelappedIoResult(ADBAPIHANDLE adb_io_completion,
+bool __cdecl AdbGetOvelappedIoResult(ADBAPIHANDLE adb_io_completion,
                              LPOVERLAPPED overlapped,
                              unsigned long* bytes_transferred,
                              bool wait) {
@@ -475,7 +475,7 @@ bool AdbGetOvelappedIoResult(ADBAPIHANDLE adb_io_completion,
   }
 }
 
-bool AdbHasOvelappedIoComplated(ADBAPIHANDLE adb_io_completion) {
+bool __cdecl AdbHasOvelappedIoComplated(ADBAPIHANDLE adb_io_completion) {
   // Lookup endpoint object for the handle
   AdbIOCompletion* adb_object =
     LookupObject<AdbIOCompletion>(adb_io_completion);
@@ -492,7 +492,7 @@ bool AdbHasOvelappedIoComplated(ADBAPIHANDLE adb_io_completion) {
   }
 }
 
-bool AdbCloseHandle(ADBAPIHANDLE adb_handle) {
+bool __cdecl AdbCloseHandle(ADBAPIHANDLE adb_handle) {
   // Lookup object for the handle
   AdbObjectHandle* adb_object = AdbObjectHandle::Lookup(adb_handle);
 

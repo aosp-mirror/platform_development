@@ -44,6 +44,12 @@
 #define _WIN32_IE 0x0501	// Change this to the appropriate value to target IE 5.0 or later.
 #endif
 
+// These defines prevent the MS header files from ejecting #pragma comment
+// statements with the manifest information of the used ATL, STL, and CRT
+#define _ATL_NOFORCE_MANIFEST
+#define _STL_NOFORCE_MANIFEST
+#define _CRT_NOFORCE_MANIFEST
+
 #define _ATL_APARTMENT_THREADED
 #define _ATL_NO_AUTOMATIC_NAMESPACE
 
@@ -52,20 +58,25 @@
 // turns off ATL's hiding of some common and often safely ignored warning messages
 #define _ATL_ALL_WARNINGS
 
+// #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
+
+#include <windows.h>
 #pragma warning(disable: 4702)
-#include "resource.h"
+#pragma warning(disable: 4201)
 #include <atlbase.h>
-#include <atlcom.h>
 #include <winioctl.h>
 #include <setupapi.h>
 #include <vector>
 #include <map>
 #include <string>
+#pragma warning(default: 4201)
 #pragma warning(disable: 4200)
 extern "C" {
 #include <usbdi.h>
+#include <winusb.h>
+#include <usb100.h>
 }
 
-#include "android_usb_common_defines.h"
+#include "resource.h"
 
 using namespace ATL;
