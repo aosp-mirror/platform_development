@@ -27,6 +27,7 @@ import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkConstants;
+import com.android.sdklib.xml.ManifestConstants;
 
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
@@ -332,7 +333,7 @@ public class PreCompilerBuilder extends BaseBuilder {
                         // integer minSdk when the target is a preview => fatal error
                         String msg = String.format(
                                 "Platform %1$s is a preview and requires appication manifests to set %2$s to '%3$s'",
-                                codename, AndroidManifestParser.ATTRIBUTE_MIN_SDK_VERSION,
+                                codename, ManifestConstants.ATTRIBUTE_MIN_SDK_VERSION,
                                 codename);
                         AdtPlugin.printErrorToConsole(project, msg);
                         BaseProjectHelper.addMarker(manifest, AdtConstants.MARKER_ADT, msg,
@@ -355,7 +356,7 @@ public class PreCompilerBuilder extends BaseBuilder {
                         // platform is not a preview => fatal error
                         String msg = String.format(
                                 "Manifest attribute '%1$s' is set to '%2$s'. Integer is expected.",
-                                AndroidManifestParser.ATTRIBUTE_MIN_SDK_VERSION, codename);
+                                ManifestConstants.ATTRIBUTE_MIN_SDK_VERSION, codename);
                         AdtPlugin.printErrorToConsole(project, msg);
                         BaseProjectHelper.addMarker(manifest, AdtConstants.MARKER_ADT, msg,
                                 IMarker.SEVERITY_ERROR);
@@ -364,7 +365,7 @@ public class PreCompilerBuilder extends BaseBuilder {
                         // platform and manifest codenames don't match => fatal error.
                         String msg = String.format(
                                 "Value of manifest attribute '%1$s' does not match platform codename '%2$s'",
-                                AndroidManifestParser.ATTRIBUTE_MIN_SDK_VERSION, codename);
+                                ManifestConstants.ATTRIBUTE_MIN_SDK_VERSION, codename);
                         AdtPlugin.printErrorToConsole(project, msg);
                         BaseProjectHelper.addMarker(manifest, AdtConstants.MARKER_ADT, msg,
                                 IMarker.SEVERITY_ERROR);

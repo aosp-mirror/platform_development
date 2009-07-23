@@ -172,12 +172,17 @@ public class AndroidVersion {
             }
 
         } else if (obj instanceof String) {
+            // if we have a code name, this must match.
+            if (mCodename != null) {
+                return mCodename.equals((String)obj);
+            }
+
+            // else we try to convert to a int and compare to the api level
             try {
                 int value = Integer.parseInt((String)obj);
                 return value == mApiLevel;
             } catch (NumberFormatException e) {
-                // not a number? compare to the code name
-                return obj.equals(mCodename);
+                // not a number? we'll return false below.
             }
         }
 
