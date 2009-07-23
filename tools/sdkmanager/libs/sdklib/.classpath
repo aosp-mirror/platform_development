@@ -5,5 +5,6 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/AndroidPrefs"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/3"/>
+	<classpathentry kind="var" path="ANDROID_SRC/prebuilt/common/commons-compress/commons-compress-1.0.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

@@ -16,19 +16,21 @@
 
 package com.android.sdklib.internal.repository;
 
+import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
 
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
+import org.apache.commons.compress.archivers.zip.ZipFile;
+
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Enumeration;
 import java.util.Properties;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
 
 /**
@@ -692,6 +694,7 @@ public class Archive implements IDescription {
      * unarchiving. However we return that root folder name to the caller, as it can be used
      * as a template to know what destination directory to use in the Add-on case.
      */
+    @SuppressWarnings("unchecked")
     private boolean unzipFolder(File archiveFile,
             long compressedSize,
             File unzipDestFolder,
@@ -701,11 +704,13 @@ public class Archive implements IDescription {
 
         description += " (%1$d%%)";
 
-        FileInputStream fis = null;
-        ZipInputStream  zis = null;
+        ZipFile zipFile = null;
         try {
-            fis = new FileInputStream(archiveFile);
-            zis = new ZipInputStream(fis);
+            zipFile = new ZipFile(archiveFile);
+
+            // figure if we'll need to set the unix permission
+            boolean usingUnixPerm = SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_DARWIN ||
+                    SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_LINUX;
 
             // To advance the percent and the progress bar, we don't know the number of
             // items left to unzip. However we know the size of the archive and the size of
@@ -718,8 +723,10 @@ public class Archive implements IDescription {
 
             byte[] buf = new byte[65536];
 
-            ZipEntry entry;
-            while ((entry = zis.getNextEntry()) != null) {
+            Enumeration<ZipArchiveEntry> entries =
+                    (Enumeration<ZipArchiveEntry>)zipFile.getEntries();
+            while (entries.hasMoreElements()) {
+                ZipArchiveEntry entry = entries.nextElement();
 
                 String name = entry.getName();
 
@@ -768,7 +775,8 @@ public class Archive implements IDescription {
                 try {
                     fos = new FileOutputStream(destFile);
                     int n;
-                    while ((n = zis.read(buf)) != -1) {
+                    InputStream entryContent = zipFile.getInputStream(entry);
+                    while ((n = entryContent.read(buf)) != -1) {
                         if (n > 0) {
                             fos.write(buf, 0, n);
                         }
@@ -777,6 +785,11 @@ public class Archive implements IDescription {
                     if (fos != null) {
                         fos.close();
                     }
+                }
+
+                // if needed set the permissions.
+                if (usingUnixPerm) {
+                    setPermission(destFile, entry.getUnixMode());
                 }
 
                 // Increment progress bar to match. We update only between files.
@@ -801,16 +814,9 @@ public class Archive implements IDescription {
             monitor.setResult("Unzip failed: %1$s", e.getMessage());
 
         } finally {
-            if (zis != null) {
+            if (zipFile != null) {
                 try {
-                    zis.close();
-                } catch (IOException e) {
-                    // pass
-                }
-            }
-            if (fis != null) {
-                try {
-                    fis.close();
+                    zipFile.close();
                 } catch (IOException e) {
                     // pass
                 }
@@ -902,5 +908,20 @@ public class Archive implements IDescription {
         return false;
     }
 
+    /**
+     * Sets the Unix permission on a file or folder.
+     * @param file The file to set permissions on.
+     * @param unixMode the permissions as received from {@link ZipArchiveEntry#getUnixMode()}.
+     * @throws IOException
+     */
+    private void setPermission(File file, int unixMode) throws IOException {
+        // permissions contains more than user/group/all, and we need the 777 display mode, so we
+        // convert it in octal string and take the last 3 digits.
+        String permission = String.format("%o", unixMode);
+        permission = permission.substring(permission.length() - 3, permission.length());
 
+        Runtime.getRuntime().exec(new String[] {
+           "chmod", permission, file.getAbsolutePath()
+        });
+    }
 }
