@@ -17,7 +17,6 @@
 package com.android.sdkuilib.internal.repository;
 
 import com.android.sdklib.internal.repository.IDescription;
-import com.android.sdklib.internal.repository.LocalSdkParser;
 import com.android.sdklib.internal.repository.Package;
 import com.android.sdklib.internal.repository.RepoSource;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
@@ -95,17 +94,7 @@ class LocalSdkAdapter  {
          */
         public Object[] getElements(Object inputElement) {
             if (inputElement == LocalSdkAdapter.this) {
-                LocalSdkParser parser = mUpdaterData.getLocalSdkParser();
-
-                Package[] packages = parser.getPackages();
-
-                if (packages == null) {
-                    // load on demand the first time
-                    packages = parser.parseSdk(
-                            mUpdaterData.getOsSdkRoot(),
-                            mUpdaterData.getSdkManager(),
-                            mUpdaterData.getSdkLog());
-                }
+                Package[] packages = mUpdaterData.getInstalledPackage();
 
                 if (packages != null) {
                     return packages;

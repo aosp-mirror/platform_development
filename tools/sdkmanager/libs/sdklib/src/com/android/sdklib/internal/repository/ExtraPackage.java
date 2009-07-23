@@ -141,25 +141,9 @@ public class ExtraPackage extends Package {
         return new File(osSdkRoot, getPath());
     }
 
-    /**
-     * Computes whether the given extra package is a suitable update for the current package.
-     * The base method checks the class type.
-     * The tools package also tests that the revision number is greater and the path is the
-     * same.
-     * <p/>
-     * An update is just that: a new package that supersedes the current one. If the new
-     * package has the same revision as the current one, it's not an update.
-     *
-     * @param replacementPackage The potential replacement package.
-     * @return True if the replacement package is a suitable update for this one.
-     */
     @Override
-    public boolean canBeUpdatedBy(Package replacementPackage) {
-        if (!super.canBeUpdatedBy(replacementPackage)) {
-            return false;
-        }
-
-        ExtraPackage newPkg = (ExtraPackage) replacementPackage;
-        return newPkg.getRevision() > this.getRevision() && newPkg.getPath().equals(this.getPath());
+    public boolean sameItemAs(Package pkg) {
+        // Extra packages are similar if they have the same path.
+        return pkg instanceof ExtraPackage && ((ExtraPackage)pkg).mPath.equals(mPath);
     }
 }

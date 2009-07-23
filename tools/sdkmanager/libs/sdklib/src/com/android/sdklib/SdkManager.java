@@ -44,7 +44,6 @@ public final class SdkManager {
     public final static String PROP_VERSION_SDK = "ro.build.version.sdk";
     public final static String PROP_VERSION_CODENAME = "ro.build.version.codename";
     public final static String PROP_VERSION_RELEASE = "ro.build.version.release";
-    public final static String PROP_VERSION_REVISION = "ro.build.version.incremental";
 
     private final static String ADDON_NAME = "name";
     private final static String ADDON_VENDOR = "vendor";
@@ -61,9 +60,6 @@ public final class SdkManager {
 
     private final static Pattern PATTERN_LIB_DATA = Pattern.compile(
             "^([a-zA-Z0-9._-]+\\.jar);(.*)$", Pattern.CASE_INSENSITIVE);
-
-    private final static Pattern PATTERN_LOCAL_BUILD_PATTERN = Pattern.compile(
-            "^\\S+\\.\\S+\\.(\\d+)\\.\\d+$");
 
      // usb ids are 16-bit hexadecimal values.
     private final static Pattern PATTERN_USB_IDS = Pattern.compile(
@@ -312,45 +308,7 @@ public final class SdkManager {
                 }
 
                 int revision = 1;
-                stringValue = map.get(PROP_VERSION_REVISION);
-                if (stringValue == null) {
-                    if (log != null) {
-                        log.error(null,
-                                "Ignoring platform '%1$s': %2$s is missing from '%3$s'",
-                                platform.getName(), PROP_VERSION_REVISION,
-                                SdkConstants.FN_BUILD_PROP);
-                    }
-                    return null;
-                } else {
-                    try {
-                         revision = Integer.parseInt(stringValue);
-                    } catch (NumberFormatException e) {
-                        // looks like the revision does not parse to a number.
-                        // we look if it's a local build in the format
-                        // <buildtype>.<username>.<date>.<time>
-                        Matcher m = PATTERN_LOCAL_BUILD_PATTERN.matcher(stringValue);
-                        boolean valid = false;
-                        if (m.matches()) {
-                            String date = m.group(1);
-                            try {
-                                revision = Integer.parseInt(date);
-                                valid = true;
-                            } catch (NumberFormatException e2) {
-                                // do nothing, we'll display an error and return below
-                            }
-                        }
-
-                        if (valid == false) {
-                            if (log != null) {
-                                log.error(null,
-                                        "Ignoring platform '%1$s': %2$s is not a valid number in %3$s.",
-                                        platform.getName(), PROP_VERSION_SDK,
-                                        SdkConstants.FN_BUILD_PROP);
-                            }
-                            return null;
-                        }
-                    }
-                }
+                // FIXME: properly parse the platform revision.
 
                 // api number and name look valid, perform a few more checks
                 if (checkPlatformContent(platform, log) == false) {

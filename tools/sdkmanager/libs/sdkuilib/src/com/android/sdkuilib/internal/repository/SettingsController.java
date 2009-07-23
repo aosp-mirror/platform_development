@@ -45,6 +45,18 @@ public class SettingsController {
         return Boolean.parseBoolean(mProperties.getProperty(ISettingsPage.KEY_FORCE_HTTP));
     }
 
+    public boolean getShowUpdateOnly() {
+        String value = mProperties.getProperty(ISettingsPage.KEY_SHOW_UPDATE_ONLY);
+        if (value == null) {
+            return true;
+        }
+        return Boolean.parseBoolean(value);
+    }
+
+    public void setShowUpdateOnly(boolean enabled) {
+        mProperties.setProperty(ISettingsPage.KEY_SHOW_UPDATE_ONLY, Boolean.toString(enabled));
+    }
+
     //--- Controller methods -------------
 
     /**

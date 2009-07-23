@@ -135,26 +135,9 @@ public class DocPackage extends Package {
         return new File(osSdkRoot, SdkConstants.FD_DOCS);
     }
 
-    /**
-     * Computes whether the given doc package is a suitable update for the current package.
-     * The base method checks the class type.
-     * The doc package also tests the API level and revision number: the revision number must
-     * always be bumped. The API level can be the same or greater.
-     * <p/>
-     * An update is just that: a new package that supersedes the current one. If the new
-     * package has the same revision as the current one, it's not an update.
-     *
-     * @param replacementPackage The potential replacement package.
-     * @return True if the replacement package is a suitable update for this one.
-     */
     @Override
-    public boolean canBeUpdatedBy(Package replacementPackage) {
-        if (!super.canBeUpdatedBy(replacementPackage)) {
-            return false;
-        }
-
-        DocPackage newPkg = (DocPackage) replacementPackage;
-        return newPkg.getRevision() > this.getRevision() &&
-            newPkg.getVersion().equals(this.getVersion());
+    public boolean sameItemAs(Package pkg) {
+        // only one doc package so any doc package is the same item.
+        return pkg instanceof DocPackage;
     }
 }
