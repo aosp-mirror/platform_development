@@ -236,8 +236,8 @@ public final class AvdSelector {
         if (displayMode == DisplayMode.MANAGER) {
             mNewButton = new Button(buttons, SWT.PUSH | SWT.FLAT);
             mNewButton.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-            mNewButton.setText("Add...");
-            mNewButton.setToolTipText("Adds a new AVD.");
+            mNewButton.setText("New...");
+            mNewButton.setToolTipText("Creates a new AVD.");
             mNewButton.addSelectionListener(new SelectionAdapter() {
                 @Override
                 public void widgetSelected(SelectionEvent arg0) {

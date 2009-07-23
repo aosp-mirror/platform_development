@@ -93,7 +93,7 @@ public class RepoSources {
                 int count = Integer.parseInt(props.getProperty(KEY_COUNT, "0"));
 
                 for (int i = 0; i < count; i++) {
-                    String url = props.getProperty(String.format("%s%02d", KEY_SRC, count));  //$NON-NLS-1$
+                    String url = props.getProperty(String.format("%s%02d", KEY_SRC, i));  //$NON-NLS-1$
                     if (url != null) {
                         mSources.add(new RepoSource(url, true /*userSource*/));
                     }
@@ -117,7 +117,6 @@ public class RepoSources {
                 }
             }
         }
-
     }
 
     /**
