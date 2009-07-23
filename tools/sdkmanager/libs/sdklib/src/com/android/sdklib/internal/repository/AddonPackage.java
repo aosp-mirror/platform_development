@@ -74,10 +74,12 @@ public class AddonPackage extends Package {
         super(source, packageNode, licenses);
         mVendor   = XmlParserUtils.getXmlString(packageNode, SdkRepository.NODE_VENDOR);
         mName     = XmlParserUtils.getXmlString(packageNode, SdkRepository.NODE_NAME);
-        mVersion = new AndroidVersion(
-                XmlParserUtils.getXmlInt   (packageNode, SdkRepository.NODE_API_LEVEL, 0),
-                null); // add-ons on platform previews is not supported, so the codename is always
-                       // null in this case.
+        int apiLevel = XmlParserUtils.getXmlInt   (packageNode, SdkRepository.NODE_API_LEVEL, 0);
+        String codeName = XmlParserUtils.getXmlString(packageNode, SdkRepository.NODE_CODENAME);
+        if (codeName.length() == 0) {
+            codeName = null;
+        }
+        mVersion = new AndroidVersion(apiLevel, codeName);
 
         mLibs = parseLibs(XmlParserUtils.getFirstChild(packageNode, SdkRepository.NODE_LIBS));
     }
@@ -181,10 +183,10 @@ public class AddonPackage extends Package {
     /** Returns a short description for an {@link IDescription}. */
     @Override
     public String getShortDescription() {
-        return String.format("%1$s by %2$s for Android API %3$d",
+        return String.format("%1$s by %2$s for Android API %3$s",
                 getName(),
                 getVendor(),
-                mVersion.getApiLevel());
+                mVersion.getApiString());
     }
 
     /** Returns a long description for an {@link IDescription}. */
@@ -229,7 +231,8 @@ public class AddonPackage extends Package {
         String name = suggestedDir;
 
         if (suggestedDir == null || suggestedDir.length() == 0) {
-            name = String.format("addon-%s-%s-%d", getName(), getVendor(), mVersion.getApiLevel()); //$NON-NLS-1$
+            name = String.format("addon-%s-%s-%s", getName(), getVendor(), //$NON-NLS-1$
+                    mVersion.getApiString());
             name = name.toLowerCase();
             name = name.replaceAll("[^a-z0-9_-]+", "_");      //$NON-NLS-1$ //$NON-NLS-2$
             name = name.replaceAll("_+", "_");                //$NON-NLS-1$ //$NON-NLS-2$
@@ -271,7 +274,7 @@ public class AddonPackage extends Package {
         String newId  = newPkg.getName() + "+" + newPkg.getVendor();  //$NON-NLS-1$
 
         return thisId.equalsIgnoreCase(newId) &&
-                mVersion.getApiLevel() == newPkg.getVersion().getApiLevel() &&
+                mVersion.equals(newPkg.getVersion()) &&
                 newPkg.getRevision() > this.getRevision();
     }
 }

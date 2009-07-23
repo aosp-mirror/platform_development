@@ -448,31 +448,20 @@ public final class SdkManager {
                     displayAddonManifestError(log, addon.getName(), ADDON_API);
                     return null;
                 } else {
-                    try {
-                        int apiValue = Integer.parseInt(api);
-                        for (IAndroidTarget target : targetList) {
-                            if (target.isPlatform() && target.getVersion().equals(apiValue)) {
-                                baseTarget = (PlatformTarget)target;
-                                break;
-                            }
+                    // Look for a platform that has a matching api level or codename.
+                    for (IAndroidTarget target : targetList) {
+                        if (target.isPlatform() && target.getVersion().equals(api)) {
+                            baseTarget = (PlatformTarget)target;
+                            break;
                         }
+                    }
 
-                        if (baseTarget == null) {
-                            if (log != null) {
-                                log.error(null,
-                                        "Ignoring add-on '%1$s': Unable to find base platform with API level %2$d",
-                                        addon.getName(), apiValue);
-                            }
-
-                            return null;
-                        }
-                    } catch (NumberFormatException e) {
-                        // looks like apiNumber does not parse to a number.
+                    if (baseTarget == null) {
                         // Ignore this add-on.
                         if (log != null) {
                             log.error(null,
-                                    "Ignoring add-on '%1$s': %2$s is not a valid number in %3$s.",
-                                    addon.getName(), ADDON_API, SdkConstants.FN_BUILD_PROP);
+                                    "Ignoring add-on '%1$s': Unable to find base platform with API level '%2$s'",
+                                    addon.getName(), api);
                         }
                         return null;
                     }

@@ -22,6 +22,7 @@ import com.android.sdklib.SdkManager;
 import com.android.sdklib.IAndroidTarget.IOptionalLibrary;
 import com.android.sdklib.internal.project.ProjectProperties;
 import com.android.sdklib.xml.AndroidXPathFactory;
+import com.android.sdklib.xml.ManifestConstants;
 
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;
@@ -225,8 +226,10 @@ public final class SetupTask extends ImportTask {
 
             XPath xPath = AndroidXPathFactory.newXPath();
 
-            String value = xPath.evaluate("/manifest/uses-sdk/@" +
-                    AndroidXPathFactory.DEFAULT_NS_PREFIX + ":minSdkVersion",
+            String value = xPath.evaluate("/" + ManifestConstants.NODE_MANIFEST +"/" +
+                    ManifestConstants.NODE_USES_SDK + "/@" +
+                    AndroidXPathFactory.DEFAULT_NS_PREFIX + ":" +
+                    ManifestConstants.ATTRIBUTE_MIN_SDK_VERSION,
                     new InputSource(new FileInputStream(manifest)));
 
             if (codename.equals(value) == false) {
