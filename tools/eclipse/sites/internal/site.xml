@@ -3,13 +3,13 @@
    <description url="https://android.corp.google.com/adt/">
       Update Site for Android Development Toolkit
    </description>
-   <feature url="features/com.android.ide.eclipse.adt_0.9.1.qualifier.jar" id="com.android.ide.eclipse.adt" version="0.9.1.qualifier">
+   <feature url="features/com.android.ide.eclipse.adt_0.9.2.qualifier.jar" id="com.android.ide.eclipse.adt" version="0.9.2.qualifier">
       <category name="developer"/>
    </feature>
-   <feature url="features/com.android.ide.eclipse.ddms_0.9.1.qualifier.jar" id="com.android.ide.eclipse.ddms" version="0.9.1.qualifier">
+   <feature url="features/com.android.ide.eclipse.ddms_0.9.2.qualifier.jar" id="com.android.ide.eclipse.ddms" version="0.9.2.qualifier">
       <category name="developer"/>
    </feature>
-   <feature url="features/com.android.ide.eclipse.tests_0.9.1.qualifier.jar" id="com.android.ide.eclipse.tests" version="0.9.1.qualifier">
+   <feature url="features/com.android.ide.eclipse.tests_0.9.2.qualifier.jar" id="com.android.ide.eclipse.tests" version="0.9.2.qualifier">
       <category name="test"/>
    </feature>
    <category-def name="developer" label="Application Developer Tools">
