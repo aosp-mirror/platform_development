@@ -133,7 +133,10 @@ public class Addr2Line {
         // to synchronize this code.
 
         // get the output directory.
-        String symbols = DdmUiPreferences.getSymbolDirectory();
+        String symbols = System.getenv("ANDROID_SYMBOLS");
+        if (symbols == null) {
+            symbols = DdmUiPreferences.getSymbolDirectory();
+        }
 
         // build the command line
         String[] command = new String[5];
