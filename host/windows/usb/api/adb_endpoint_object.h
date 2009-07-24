@@ -17,14 +17,17 @@
 #ifndef ANDROID_USB_API_ADB_ENDPOINT_OBJECT_H__
 #define ANDROID_USB_API_ADB_ENDPOINT_OBJECT_H__
 /** \file
-  This file consists of declaration of class AdbIOObject that encapsulates a
-  handle opened to an endpoint on our device.
+  This file consists of declaration of class AdbEndpointObject that
+  encapsulates a handle opened to an endpoint on our device.
 */
 
 #include "adb_interface.h"
 
 /** Class AdbEndpointObject encapsulates a handle opened to an endpoint on
   our device.
+
+  This class implement functionality that is common for both, WinUsb and
+  legacy APIs.
 */
 class AdbEndpointObject : public AdbObjectHandle {
  public:
@@ -49,6 +52,55 @@ class AdbEndpointObject : public AdbObjectHandle {
   */
   virtual ~AdbEndpointObject();
 
+  //
+  // Abstract
+  //
+
+ protected:
+  /** \brief Common code for async read / write
+
+    @param[in] is_read Read or write selector.
+    @param[in,out] buffer Pointer to the buffer for read / write.
+    @param[in] bytes_to_transfer Number of bytes to be read / written.
+    @param[out] bytes_transferred Number of bytes read / written. Can be NULL.
+    @param[in] event_handle Event handle that should be signaled when async I/O
+           completes. Can be NULL. If it's not NULL this handle will be used to
+           initialize OVERLAPPED structure for this I/O.
+    @param[in] time_out A timeout (in milliseconds) required for this I/O to
+           complete. Zero value in this parameter means that there is no
+           timeout set for this I/O.
+    @return A handle to IO completion object or NULL on failure. If NULL is
+            returned GetLastError() provides extended error information.
+  */
+  virtual ADBAPIHANDLE CommonAsyncReadWrite(bool is_read,
+                                            void* buffer,
+                                            ULONG bytes_to_transfer,
+                                            ULONG* bytes_transferred,
+                                            HANDLE event_handle,
+                                            ULONG time_out) = 0;
+
+  /** \brief Common code for sync read / write
+
+    @param[in] is_read Read or write selector.
+    @param[in,out] buffer Pointer to the buffer for read / write.
+    @param[in] bytes_to_transfer Number of bytes to be read / written.
+    @param[out] bytes_transferred Number of bytes read / written. Can be NULL.
+    @param[in] time_out A timeout (in milliseconds) required for this I/O to
+           complete. Zero value in this parameter means that there is no
+           timeout set for this I/O.
+    @return true on success, false on failure. If false is returned
+            GetLastError() provides extended error information.
+  */
+  virtual bool CommonSyncReadWrite(bool is_read,
+                                   void* buffer,
+                                   ULONG bytes_to_transfer,
+                                   ULONG* bytes_transferred,
+                                   ULONG time_out) = 0;
+
+  //
+  // Operations
+  //
+
  public:
   /** \brief Gets information about this endpoint.
 
@@ -56,7 +108,7 @@ class AdbEndpointObject : public AdbObjectHandle {
     @return true on success, false on failure. If false is returned
             GetLastError() provides extended error information.
   */
-  bool GetEndpointInformation(AdbEndpointInformation* info);
+  virtual bool GetEndpointInformation(AdbEndpointInformation* info);
 
   /** \brief Reads from opened I/O object asynchronously
 
@@ -130,64 +182,6 @@ class AdbEndpointObject : public AdbObjectHandle {
                          ULONG* bytes_written,
                          ULONG time_out);
 
- protected:
-  /** \brief Common code for async read / write
-
-    @param[in] is_read Read or write selector.
-    @param[in,out] buffer Pointer to the buffer for read / write.
-    @param[in] bytes_to_transfer Number of bytes to be read / written.
-    @param[out] bytes_transferred Number of bytes read / written. Can be NULL.
-    @param[in] event_handle Event handle that should be signaled when async I/O
-           completes. Can be NULL. If it's not NULL this handle will be used to
-           initialize OVERLAPPED structure for this I/O.
-    @param[in] time_out A timeout (in milliseconds) required for this I/O to
-           complete. Zero value in this parameter means that there is no
-           timeout set for this I/O.
-    @return A handle to IO completion object or NULL on failure. If NULL is
-            returned GetLastError() provides extended error information.
-  */
-  virtual ADBAPIHANDLE CommonAsyncReadWrite(bool is_read,
-                                            void* buffer,
-                                            ULONG bytes_to_transfer,
-                                            ULONG* bytes_transferred,
-                                            HANDLE event_handle,
-                                            ULONG time_out);
-
-  /** \brief Common code for sync read / write
-
-    @param[in] is_read Read or write selector.
-    @param[in,out] buffer Pointer to the buffer for read / write.
-    @param[in] bytes_to_transfer Number of bytes to be read / written.
-    @param[out] bytes_transferred Number of bytes read / written. Can be NULL.
-    @param[in] time_out A timeout (in milliseconds) required for this I/O to
-           complete. Zero value in this parameter means that there is no
-           timeout set for this I/O.
-    @return true on success, false on failure. If false is returned
-            GetLastError() provides extended error information.
-  */
-  virtual bool CommonSyncReadWrite(bool is_read,
-                                   void* buffer,
-                                   ULONG bytes_to_transfer,
-                                   ULONG* bytes_transferred,
-                                   ULONG time_out);
-  /** \brief Sets read / write operation timeout.
-
-    @param[in] timeout Timeout value in milliseconds to use for current read
-          or write operation. Zero value passed in this parameters indicate
-          not timeout at all. Note that timeout that is set with this method is
-          global per endpoint (pipe). I.e. once set, it will be used against
-          all read / write operations performed on this endpoint, untill
-          another call to this method modifies it. This is a WinUsb design
-          flaw. Microsoft is aware of this and (hopefuly) future versions of
-          WinUsb framework will accept a timeout parameter in WinUsb_Read/Write
-          routines. For the purposes of ADB this flaw doesn't apperar to be an
-          issue, since we use single-threaded synchronous read / writes, so
-          there is no conflict in setting per-endpoint timeouts.
-    @return true on success, false on failure. If false is returned
-            GetLastError() provides extended error information.
-  */
-  virtual bool SetTimeout(ULONG timeout);
-
  public:
   /// This is a helper for extracting object from the AdbObjectHandleMap
   static AdbObjectType Type() {
@@ -212,11 +206,6 @@ class AdbEndpointObject : public AdbObjectHandle {
   ADBAPIHANDLE GetParentInterfaceHandle() const {
     return (NULL != parent_interface()) ? parent_interface()->adb_handle() :
                                           NULL;
-  }
-
-  /// Gets parent interface WinUsb handle
-  WINUSB_INTERFACE_HANDLE winusb_handle() const {
-    return parent_interface()->winusb_handle();
   }
 
  protected:

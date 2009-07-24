@@ -24,6 +24,8 @@
 #include "adb_object_handle.h"
 #include "adb_interface_enum.h"
 #include "adb_interface.h"
+#include "adb_winusb_interface.h"
+#include "adb_legacy_interface.h"
 #include "adb_endpoint_object.h"
 #include "adb_io_completion.h"
 #include "adb_helper_routines.h"
@@ -100,7 +102,11 @@ ADBAPIHANDLE __cdecl AdbCreateInterfaceByName(
 
   try {
     // Instantiate object
-    obj = new AdbInterfaceObject(interface_name);
+    if (IsLegacyInterface(interface_name)) {
+      obj = new AdbLegacyInterfaceObject(interface_name);
+    } else {
+      obj = new AdbWinUsbInterfaceObject(interface_name);
+    }
 
     // Create handle for it
     ret = obj->CreateHandle();
