@@ -311,6 +311,7 @@ public class RemotePackagesPage extends Composite implements ISdkListener {
         if (dlg.open() == Window.OK) {
             String url = dlg.getValue();
             mUpdaterData.getSources().add(new RepoSource(url, true /*userSource*/));
+            onRefreshSelected();
         }
     }
 
@@ -345,6 +346,7 @@ public class RemotePackagesPage extends Composite implements ISdkListener {
         if (mUpdaterData != null) {
             mUpdaterData.refreshSources(false /*forceFetching*/);
         }
+        mTreeViewerSources.refresh();
         updateButtonsState();
     }
 
