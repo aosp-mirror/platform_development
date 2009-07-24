@@ -1,0 +1,46 @@
+#
+#  Copyright (C) 2009 The Android Open Source Project
+# 
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+# 
+#       http://www.apache.org/licenses/LICENSE-2.0
+# 
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+#
+
+TARGETNAME = adb_winapi_test
+TARGETPATH = obj
+TARGETTYPE = PROGRAM
+
+UMTYPE  = console
+UMENTRY = main
+
+# Use statically linked atl libraries:
+USE_STATIC_ATL  = 1
+
+# Use multithreaded libraries
+USE_LIBCMT      = 1
+
+TARGETLIBS=$(SDK_LIB_PATH)\ole32.lib    \
+           $(SDK_LIB_PATH)\oleaut32.lib \
+           ..\api\obj$(BUILD_ALT_DIR)\i386\AdbWinApi.lib
+
+INCLUDES=$(DDK_INC_PATH)\;$(SDK_INC_PATH)\;$(CRT_INC_PATH)\;$(ATL_INC_PATH)\api
+
+# Common C defines
+USER_C_FLAGS = $(USER_C_FLAGS) /FD /wd4100 /nologo
+
+# Turn on all warnings, and treat warnings as errors
+MSC_WARNING_LEVEL = /W4 /Wp64 /WX
+
+PRECOMPILED_CXX = 1
+PRECOMPILED_INCLUDE = stdafx.h
+PRECOMPILED_SOURCEFILE = stdafx.cpp
+
+SOURCES = adb_winapi_test.cpp
