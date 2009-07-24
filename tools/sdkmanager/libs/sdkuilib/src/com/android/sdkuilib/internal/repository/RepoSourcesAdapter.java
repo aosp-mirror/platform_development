@@ -163,7 +163,19 @@ public class RepoSourcesAdapter {
                 }
 
             } else if (parentElement instanceof Package) {
-                return ((Package) parentElement).getArchives();
+                Archive[] archives = ((Package) parentElement).getArchives();
+                if (mUpdaterData.getSettingsController().getShowUpdateOnly()) {
+                    for (Archive archive : archives) {
+                        // if we only want the compatible archives, then we just take the first
+                        // one. it's unlikely there are 2 compatible archives for the same
+                        // package
+                        if (archive.isCompatible()) {
+                            return new Object[] { archive };
+                        }
+                    }
+                }
+
+                return archives;
             }
 
             return new Object[0];
