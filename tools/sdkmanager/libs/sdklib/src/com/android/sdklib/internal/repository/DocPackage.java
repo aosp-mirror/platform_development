@@ -140,4 +140,51 @@ public class DocPackage extends Package {
         // only one doc package so any doc package is the same item.
         return pkg instanceof DocPackage;
     }
+
+    /**
+     * {@inheritDoc}
+     *
+     * The comparison between doc packages is a bit more complex so we override the default
+     * implementation.
+     * <p/>
+     * Docs are upgrade if they have a higher api, or a similar api but a higher revision.
+     * <p/>
+     * What makes this more complex is handling codename.
+     */
+    @Override
+    public UpdateInfo canBeUpdatedBy(Package replacementPackage) {
+        if (replacementPackage == null) {
+            return UpdateInfo.INCOMPATIBLE;
+        }
+
+        // check they are the same item.
+        if (sameItemAs(replacementPackage) == false) {
+            return UpdateInfo.INCOMPATIBLE;
+        }
+
+        DocPackage replacementDoc = (DocPackage)replacementPackage;
+
+        AndroidVersion replacementVersion = replacementDoc.getVersion();
+
+        // the new doc is an update if the api level is higher
+        if (replacementVersion.getApiLevel() > mVersion.getApiLevel()) {
+            return UpdateInfo.UPDATE;
+        }
+
+        // if it's the exactly same (including codename), we check the revision
+        if (replacementVersion.equals(mVersion) &&
+                replacementPackage.getRevision() > this.getRevision()) {
+            return UpdateInfo.UPDATE;
+        }
+
+        // else we check if they have the same api level and the new one is a preview, in which
+        // case it's also an update (since preview have the api level of the _previous_ version.
+        if (replacementVersion.getApiLevel() == mVersion.getApiLevel() &&
+                replacementVersion.isPreview()) {
+            return UpdateInfo.UPDATE;
+        }
+
+        // not an upgrade but not incompatible either.
+        return UpdateInfo.NOT_UPDATE;
+    }
 }
