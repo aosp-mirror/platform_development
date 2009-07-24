@@ -98,24 +98,9 @@ public class ToolPackage extends Package {
         return new File(osSdkRoot, SdkConstants.FD_TOOLS);
     }
 
-    /**
-     * Computes whether the given tools package is a suitable update for the current package.
-     * The base method checks the class type.
-     * The tools package also tests that the revision number is greater.
-     * <p/>
-     * An update is just that: a new package that supersedes the current one. If the new
-     * package has the same revision as the current one, it's not an update.
-     *
-     * @param replacementPackage The potential replacement package.
-     * @return True if the replacement package is a suitable update for this one.
-     */
     @Override
-    public boolean canBeUpdatedBy(Package replacementPackage) {
-        if (!super.canBeUpdatedBy(replacementPackage)) {
-            return false;
-        }
-
-        ToolPackage newPkg = (ToolPackage) replacementPackage;
-        return newPkg.getRevision() > this.getRevision();
+    public boolean sameItemAs(Package pkg) {
+        // only one tool package so any tool package is the same item.
+        return pkg instanceof ToolPackage;
     }
 }

@@ -250,31 +250,17 @@ public class AddonPackage extends Package {
         return null;
     }
 
-    /**
-     * Computes whether the given addon package is a suitable update for the current package.
-     * The base method checks the class type.
-     * The addon package also tests that the name+vendor is the same and
-     * the revision number is greater.
-     * <p/>
-     * An update is just that: a new package that supersedes the current one. If the new
-     * package has the same revision as the current one, it's not an update.
-     *
-     * @param replacementPackage The potential replacement package.
-     * @return True if the replacement package is a suitable update for this one.
-     */
     @Override
-    public boolean canBeUpdatedBy(Package replacementPackage) {
-        if (!super.canBeUpdatedBy(replacementPackage)) {
-            return false;
+    public boolean sameItemAs(Package pkg) {
+        if (pkg instanceof AddonPackage) {
+            AddonPackage newPkg = (AddonPackage)pkg;
+
+            // check they are the same add-on.
+            return getName().equals(newPkg.getName()) &&
+                    getVendor().equals(newPkg.getVendor()) &&
+                    getVersion().equals(newPkg.getVersion());
         }
 
-        AddonPackage newPkg = (AddonPackage) replacementPackage;
-
-        String thisId = getName() + "+" + getVendor();                //$NON-NLS-1$
-        String newId  = newPkg.getName() + "+" + newPkg.getVendor();  //$NON-NLS-1$
-
-        return thisId.equalsIgnoreCase(newId) &&
-                mVersion.equals(newPkg.getVersion()) &&
-                newPkg.getRevision() > this.getRevision();
+        return false;
     }
 }
