@@ -88,7 +88,7 @@ Android-specific Log Support:
 
 <android/log.h> contains various definitions that can be used to send log messages
 to the kernel from your native code. Please have a look at its content in
-(build/platforms/android-1.5/common/include/android/log.h), which contain many
+(build/platforms/android-3/common/include/android/log.h), which contain many
 informative comments on how to use it.
 
 You should be able to write helpful wrapper macros for your own usage to
