@@ -330,7 +330,7 @@ public abstract class Package implements IDescription {
      *
      * @see #sameItemAs(Package)
      */
-    public final UpdateInfo canBeUpdatedBy(Package replacementPackage) {
+    public UpdateInfo canBeUpdatedBy(Package replacementPackage) {
         if (replacementPackage == null) {
             return UpdateInfo.INCOMPATIBLE;
         }
