@@ -20,7 +20,8 @@ LOCAL_SRC_FILES := $(call all-subdir-java-files)
 LOCAL_JAVA_RESOURCE_DIRS := .
 
 LOCAL_JAVA_LIBRARIES := \
-        androidprefs
+        androidprefs \
+        commons-compress-1.0
 
 LOCAL_MODULE := sdklib
 
