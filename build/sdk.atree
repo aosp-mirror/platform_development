@@ -18,6 +18,11 @@
 # These are the files that comprise that SDK
 #
 
+# version files for the SDK updater
+development/tools/scripts/doc_source.properties docs/source.properties
+development/tools/scripts/tools_source.properties tools/source.properties
+development/tools/scripts/platform_source.properties platforms/${PLATFORM_NAME}/source.properties
+
 # host tools from out/host/$(HOST_OS)-$(HOST_ARCH)/
 bin/aapt platforms/${PLATFORM_NAME}/tools/aapt
 bin/aidl platforms/${PLATFORM_NAME}/tools/aidl
