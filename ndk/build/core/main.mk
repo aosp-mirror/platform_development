@@ -249,7 +249,7 @@ all: installed_modules host_libraries host_executables
 # XXX: For now, only support one platform and one target ABI with
 #      only one toolchain.
 #
-TARGET_PLATFORM  := android-1.5
+TARGET_PLATFORM  := android-3
 TARGET_ARCH_ABI  := arm
 TARGET_ARCH      := arm
 TARGET_TOOLCHAIN := $(NDK_TARGET_TOOLCHAIN)

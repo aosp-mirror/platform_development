@@ -40,4 +40,4 @@ current version
   Note that APP_CPPFLAGS / APP_CFLAGS / APP_CXXFLAGS continue to work.
 
 -------------------------------------------------------------------------------
-android-1.5_r1 released.
+android-ndk-1.5_r1 released.

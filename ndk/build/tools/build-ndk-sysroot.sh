@@ -31,7 +31,7 @@
 source `dirname $0`/../core/ndk-common.sh
 
 # PLATFORM is the name of the current Android system platform
-PLATFORM=android-1.5
+PLATFORM=android-3
 
 # ABI is the target ABI name for the NDK
 ABI=arm
