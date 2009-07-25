@@ -147,10 +147,7 @@ external/qemu/android/avd/hardware-properties.ini tools/lib/hardware-properties.
 
 # emulator skins
 development/emulator/skins/HVGA   platforms/${PLATFORM_NAME}/skins/HVGA
-development/emulator/skins/HVGA-L platforms/${PLATFORM_NAME}/skins/HVGA-L
-development/emulator/skins/HVGA-P platforms/${PLATFORM_NAME}/skins/HVGA-P
-development/emulator/skins/QVGA-L platforms/${PLATFORM_NAME}/skins/QVGA-L
-development/emulator/skins/QVGA-P platforms/${PLATFORM_NAME}/skins/QVGA-P
+development/emulator/skins/QVGA   platforms/${PLATFORM_NAME}/skins/QVGA
 
 # NOTICE files are copied by build/core/Makefile
 
