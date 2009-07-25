@@ -33,5 +33,11 @@ current version
 
 - Fix compilation of assembler files (e.g. foo.S)
 
+- Make LOCAL_CFLAGS / LOCAL_CXXFLAGS / LOCAL_CPPFLAGS work as advertized
+  by the documentation (previously, only LOCAL_CFLAGS did work for both C
+  *and* C++ sources, contrary to what the doc claimed).
+
+  Note that APP_CPPFLAGS / APP_CFLAGS / APP_CXXFLAGS continue to work.
+
 -------------------------------------------------------------------------------
 android-1.5_r1 released.
