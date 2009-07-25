@@ -12,7 +12,8 @@ Bundle-ClassPath: .,
  ninepatch.jar,
  layoutlib_utils.jar,
  sdklib.jar,
- sdkuilib.jar
+ sdkuilib.jar,
+ commons-compress-1.0.jar
 Bundle-Activator: com.android.ide.eclipse.adt.AdtPlugin
 Bundle-Vendor: The Android Open Source Project
 Require-Bundle: com.android.ide.eclipse.ddms,

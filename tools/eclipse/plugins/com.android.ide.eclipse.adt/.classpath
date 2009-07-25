@@ -12,5 +12,6 @@
 	<classpathentry kind="lib" path="ninepatch.jar"/>
 	<classpathentry kind="lib" path="sdklib.jar" sourcepath="/SdkLib"/>
 	<classpathentry kind="lib" path="sdkuilib.jar" sourcepath="/SdkUiLib"/>
+	<classpathentry kind="lib" path="commons-compress-1.0.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

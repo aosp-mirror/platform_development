@@ -11,6 +11,7 @@ com.android.ide.eclipse.adt/ninepatch.jar
 com.android.ide.eclipse.adt/sdklib.jar
 com.android.ide.eclipse.adt/sdkstats.jar
 com.android.ide.eclipse.adt/sdkuilib.jar
+com.android.ide.eclipse.adt/commons-compress-1.0.jar
 com.android.ide.eclipse.ddms/icons/add.png
 com.android.ide.eclipse.ddms/icons/backward.png
 com.android.ide.eclipse.ddms/icons/clear.png
