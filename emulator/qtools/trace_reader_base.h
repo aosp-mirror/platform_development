@@ -83,7 +83,7 @@ class TraceReaderBase {
 
     friend class BBReader;
 
-    void                Open(char *filename);
+    void                Open(const char *filename);
     void                Close();
     void                WriteHeader(TraceHeader *header);
     inline bool         ReadBB(BBEvent *event);
@@ -120,10 +120,10 @@ class TraceReaderBase {
 
   private:
     int          FindNumInsns(uint64_t bb_num, uint64_t bb_start_time);
-    void         ReadTraceHeader(FILE *fstream, char *filename,
-                                char *tracename, TraceHeader *header);
+    void         ReadTraceHeader(FILE *fstream, const char *filename,
+                                const char *tracename, TraceHeader *header);
     PidEvent     *FindMmapDexFileEvent();
-    void         ParseDexList(char *filename);
+    void         ParseDexList(const char *filename);
 
     char         *static_filename_;
     FILE         *static_fstream_;
@@ -159,7 +159,7 @@ class BBReader {
   public:
     explicit BBReader(TraceReaderBase *trace);
     ~BBReader();
-    void     Open(char *filename);
+    void     Open(const char *filename);
     void     Close();
     bool     ReadBB(BBEvent *event);
 
@@ -193,7 +193,7 @@ class InsnReader {
     InsnReader();
     ~InsnReader();
 
-    void        Open(char *filename);
+    void        Open(const char *filename);
     void        Close();
     uint64_t    ReadInsnTime(uint64_t min_time);
 
@@ -209,7 +209,7 @@ class AddrReader {
     AddrReader();
     ~AddrReader();
 
-    bool        Open(char *filename, char *suffix);
+    bool        Open(const char *filename, const char *suffix);
     void        Close();
     bool        ReadAddr(uint64_t *time, uint32_t *addr);
 
@@ -225,7 +225,7 @@ class ExcReader {
     ExcReader();
     ~ExcReader();
 
-    void        Open(char *filename);
+    void        Open(const char *filename);
     void        Close();
     bool        ReadExc(uint64_t *time, uint32_t *current_pc,
                         uint64_t *recnum, uint32_t *target_pc,
@@ -243,7 +243,7 @@ class PidReader {
     PidReader();
     ~PidReader();
 
-    void        Open(char *filename);
+    void        Open(const char *filename);
     void        Close();
     bool        ReadPidEvent(struct PidEvent *event);
     void        Dispose(struct PidEvent *event);
@@ -258,7 +258,7 @@ class MethodReader {
     MethodReader();
     ~MethodReader();
 
-    bool        Open(char *filename);
+    bool        Open(const char *filename);
     void        Close();
     bool        ReadMethod(MethodRec *method_record);
 

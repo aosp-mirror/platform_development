@@ -20,7 +20,7 @@ package com.android.ide.eclipse.ddms.views;
 import com.android.ddmlib.Client;
 import com.android.ddmlib.ClientData;
 import com.android.ddmlib.AndroidDebugBridge;
-import com.android.ddmlib.Device;
+import com.android.ddmlib.IDevice;
 import com.android.ddmuilib.DevicePanel;
 import com.android.ddmuilib.ScreenShotDialog;
 import com.android.ddmuilib.DevicePanel.IUiSelectionListener;
@@ -42,7 +42,7 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 
 public class DeviceView extends ViewPart implements IUiSelectionListener {
-    
+
     private final static boolean USE_SELECTED_DEBUG_PORT = true;
 
     public static final String ID =
@@ -69,7 +69,7 @@ public class DeviceView extends ViewPart implements IUiSelectionListener {
     public static DeviceView getInstance() {
         return sThis;
     }
-    
+
     /**
      * Sets the {@link IDebugLauncher}.
      * @param debugLauncher
@@ -89,7 +89,7 @@ public class DeviceView extends ViewPart implements IUiSelectionListener {
         mDeviceList = new DevicePanel(DdmsPlugin.getImageLoader(), USE_SELECTED_DEBUG_PORT);
         mDeviceList.createPanel(parent);
         mDeviceList.addSelectionListener(this);
-        
+
         DdmsPlugin plugin = DdmsPlugin.getDefault();
         mDeviceList.addSelectionListener(plugin);
         plugin.setListeningState(true);
@@ -212,7 +212,7 @@ public class DeviceView extends ViewPart implements IUiSelectionListener {
                         if (packageName != null) {
                             if (mDebugLauncher.debug(packageName,
                                     currentClient.getDebuggerListenPort()) == false) {
-    
+
                                 // if we get to this point, then we failed to find a project
                                 // that matched the application to debug
                                 Display display = DdmsPlugin.getDisplay();
@@ -233,7 +233,7 @@ public class DeviceView extends ViewPart implements IUiSelectionListener {
         if (mDebugLauncher == null) {
             mDebugAction.setEnabled(false);
         }
-        
+
         placeActions();
     }
 
@@ -241,13 +241,13 @@ public class DeviceView extends ViewPart implements IUiSelectionListener {
     public void setFocus() {
         mDeviceList.setFocus();
     }
-    
+
     /**
-     * Sent when a new {@link Device} and {@link Client} are selected.
+     * Sent when a new {@link IDevice} and {@link Client} are selected.
      * @param selectedDevice the selected device. If null, no devices are selected.
      * @param selectedClient The selected client. If null, no clients are selected.
      */
-    public void selectionChanged(Device selectedDevice, Client selectedClient) {
+    public void selectionChanged(IDevice selectedDevice, Client selectedClient) {
         // update the buttons
         doSelectionChanged(selectedClient);
         doSelectionChanged(selectedDevice);
@@ -264,7 +264,7 @@ public class DeviceView extends ViewPart implements IUiSelectionListener {
             mDebugAction.setEnabled(mDebugLauncher != null);
             mKillAppAction.setEnabled(true);
             mGcAction.setEnabled(true);
-            
+
             mUpdateHeapAction.setEnabled(true);
             mUpdateHeapAction.setChecked(selectedClient.isHeapUpdateEnabled());
 
@@ -278,7 +278,7 @@ public class DeviceView extends ViewPart implements IUiSelectionListener {
                     bridge.setSelectedClient(null);
                 }
             }
-            
+
             mDebugAction.setEnabled(false);
             mKillAppAction.setEnabled(false);
             mGcAction.setEnabled(false);
@@ -288,8 +288,8 @@ public class DeviceView extends ViewPart implements IUiSelectionListener {
             mUpdateThreadAction.setChecked(false);
         }
     }
-    
-    private void doSelectionChanged(Device selectedDevice) {
+
+    private void doSelectionChanged(IDevice selectedDevice) {
         mCaptureAction.setEnabled(selectedDevice != null);
     }
 

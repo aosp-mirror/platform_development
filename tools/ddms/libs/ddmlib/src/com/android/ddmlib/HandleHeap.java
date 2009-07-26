@@ -32,6 +32,7 @@ final class HandleHeap extends ChunkHandler {
     public static final int CHUNK_HPEN = type("HPEN");
     public static final int CHUNK_HPSG = type("HPSG");
     public static final int CHUNK_HPGC = type("HPGC");
+    public static final int CHUNK_HPDU = type("HPDU");
     public static final int CHUNK_REAE = type("REAE");
     public static final int CHUNK_REAQ = type("REAQ");
     public static final int CHUNK_REAL = type("REAL");
@@ -98,6 +99,8 @@ final class HandleHeap extends ChunkHandler {
             client.update(Client.CHANGE_HEAP_DATA);
         } else if (type == CHUNK_HPSG) {
             handleHPSG(client, data);
+        } else if (type == CHUNK_HPDU) {
+            handleHPDU(client, data);
         } else if (type == CHUNK_REAQ) {
             handleREAQ(client, data);
             client.update(Client.CHANGE_HEAP_ALLOCATION_STATUS);
@@ -218,6 +221,44 @@ final class HandleHeap extends ChunkHandler {
         finishChunkPacket(packet, CHUNK_HPGC, buf.position());
         Log.d("ddm-heap", "Sending " + name(CHUNK_HPGC));
         client.sendAndConsume(packet, mInst);
+    }
+
+    /**
+     * Sends an HPDU request to the client.
+     *
+     * We will get an HPDU response when the heap dump has completed.  On
+     * failure we get a generic failure response.
+     *
+     * @param fileName name of output file (on device)
+     */
+    public static void sendHPDU(Client client, String fileName)
+        throws IOException {
+        ByteBuffer rawBuf = allocBuffer(4 + fileName.length() * 2);
+        JdwpPacket packet = new JdwpPacket(rawBuf);
+        ByteBuffer buf = getChunkDataBuf(rawBuf);
+
+        buf.putInt(fileName.length());
+        putString(buf, fileName);
+
+        finishChunkPacket(packet, CHUNK_HPDU, buf.position());
+        Log.d("ddm-heap", "Sending " + name(CHUNK_HPDU) + " '" + fileName +"'");
+        client.sendAndConsume(packet, mInst);
+    }
+
+    /*
+     * Handle notification of completion of a HeaP DUmp.
+     */
+    private void handleHPDU(Client client, ByteBuffer data) {
+        byte result;
+
+        result = data.get();
+
+        if (result == 0) {
+            Log.i("ddm-heap", "Heap dump request has finished");
+            // TODO: stuff
+        } else {
+            Log.w("ddm-heap", "Heap dump request failed (check device log)");
+        }
     }
 
     /**

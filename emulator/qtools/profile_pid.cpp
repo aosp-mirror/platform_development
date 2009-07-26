@@ -76,7 +76,7 @@ int main(int argc, char **argv) {
     sum_time += pstate->cpu_time;
     double per = 100.0 * pstate->cpu_time / total_time;
     double sum_per = 100.0 * sum_time / total_time;
-    char *print_flags = "";
+    const char *print_flags = "";
     if ((pstate->flags & ProcessState::kCalledExec) == 0)
       print_flags = "T";
     if (pstate->name == NULL)
@@ -84,10 +84,11 @@ int main(int argc, char **argv) {
     printf("%5d  %5d %10llu %6.2f %6.2f %5s %s",
            pstate->pid, pstate->parent_pid, pstate->cpu_time,
            per, sum_per, print_flags, pstate->name);
-    for (int ii = 1; ii < pstate->argc; ++ii) {
-      printf(" %s", pstate->argv[ii]);
+    for (int jj = 1; jj < pstate->argc; ++jj) {
+      printf(" %s", pstate->argv[jj]);
     }
     printf("\n");
   }
+  delete trace;
   return 0;
 }

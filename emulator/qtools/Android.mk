@@ -97,6 +97,14 @@ LOCAL_MODULE := stack_dump
 include $(BUILD_HOST_EXECUTABLE)
 
 include $(CLEAR_VARS)
+LOCAL_SRC_FILES := check_stack.cpp trace_reader.cpp decoder.cpp armdis.cpp \
+	thumbdis.cpp opcode.cpp read_elf.cpp parse_options.cpp
+LOCAL_C_INCLUDES += $(common_includes)
+LOCAL_CFLAGS += $(common_cflags)
+LOCAL_MODULE := check_stack
+include $(BUILD_HOST_EXECUTABLE)
+
+include $(CLEAR_VARS)
 LOCAL_SRC_FILES := hist_trace.cpp trace_reader.cpp decoder.cpp
 LOCAL_C_INCLUDES += $(common_includes)
 LOCAL_CFLAGS += $(common_cflags)
@@ -138,4 +146,12 @@ LOCAL_SRC_FILES := profile_pid.cpp trace_reader.cpp decoder.cpp \
 LOCAL_C_INCLUDES += $(common_includes)
 LOCAL_CFLAGS += $(common_cflags)
 LOCAL_MODULE := profile_pid
+include $(BUILD_HOST_EXECUTABLE)
+
+include $(CLEAR_VARS)
+LOCAL_SRC_FILES := dump_regions.cpp trace_reader.cpp decoder.cpp \
+	read_elf.cpp parse_options.cpp
+LOCAL_C_INCLUDES += $(common_includes)
+LOCAL_CFLAGS += $(common_cflags)
+LOCAL_MODULE := dump_regions
 include $(BUILD_HOST_EXECUTABLE)

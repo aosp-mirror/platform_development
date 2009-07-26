@@ -20,11 +20,11 @@ import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.Client;
 import com.android.ddmlib.ClientData;
 import com.android.ddmlib.DdmPreferences;
-import com.android.ddmlib.Device;
+import com.android.ddmlib.IDevice;
 import com.android.ddmlib.AndroidDebugBridge.IClientChangeListener;
 import com.android.ddmlib.AndroidDebugBridge.IDebugBridgeChangeListener;
 import com.android.ddmlib.AndroidDebugBridge.IDeviceChangeListener;
-import com.android.ddmlib.Device.DeviceState;
+import com.android.ddmlib.IDevice.DeviceState;
 
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.viewers.ILabelProviderListener;
@@ -69,16 +69,16 @@ public final class DevicePanel extends Panel implements IDebugBridgeChangeListen
     private final static int CLIENT_COL_THREAD = 2;
     private final static int CLIENT_COL_HEAP = 3;
     private final static int CLIENT_COL_PORT = 4;
-    
+
     public final static int ICON_WIDTH = 16;
     public final static String ICON_THREAD = "thread.png"; //$NON-NLS-1$
     public final static String ICON_HEAP = "heap.png"; //$NON-NLS-1$
     public final static String ICON_HALT = "halt.png"; //$NON-NLS-1$
     public final static String ICON_GC = "gc.png"; //$NON-NLS-1$
 
-    private Device mCurrentDevice;
+    private IDevice mCurrentDevice;
     private Client mCurrentClient;
-    
+
     private Tree mTree;
     private TreeViewer mTreeViewer;
 
@@ -92,8 +92,8 @@ public final class DevicePanel extends Panel implements IDebugBridgeChangeListen
     private Image mDebugErrorImage;
 
     private final ArrayList<IUiSelectionListener> mListeners = new ArrayList<IUiSelectionListener>();
-    
-    private final ArrayList<Device> mDevicesToExpand = new ArrayList<Device>();
+
+    private final ArrayList<IDevice> mDevicesToExpand = new ArrayList<IDevice>();
 
     private IImageLoader mLoader;
 
@@ -102,13 +102,13 @@ public final class DevicePanel extends Panel implements IDebugBridgeChangeListen
     /**
      * A Content provider for the {@link TreeViewer}.
      * <p/>
-     * The input is a {@link AndroidDebugBridge}. First level elements are {@link Device} objects,
+     * The input is a {@link AndroidDebugBridge}. First level elements are {@link IDevice} objects,
      * and second level elements are {@link Client} object.
      */
     private class ContentProvider implements ITreeContentProvider {
         public Object[] getChildren(Object parentElement) {
-            if (parentElement instanceof Device) {
-                return ((Device)parentElement).getClients();
+            if (parentElement instanceof IDevice) {
+                return ((IDevice)parentElement).getClients();
             }
             return new Object[0];
         }
@@ -121,8 +121,8 @@ public final class DevicePanel extends Panel implements IDebugBridgeChangeListen
         }
 
         public boolean hasChildren(Object element) {
-            if (element instanceof Device) {
-                return ((Device)element).hasClients();
+            if (element instanceof IDevice) {
+                return ((IDevice)element).hasClients();
             }
 
             // Clients never have children.
@@ -147,13 +147,13 @@ public final class DevicePanel extends Panel implements IDebugBridgeChangeListen
 
     /**
      * A Label Provider for the {@link TreeViewer} in {@link DevicePanel}. It provides
-     * labels and images for {@link Device} and {@link Client} objects.
+     * labels and images for {@link IDevice} and {@link Client} objects.
      */
     private class LabelProvider implements ITableLabelProvider {
 
         public Image getColumnImage(Object element, int columnIndex) {
-            if (columnIndex == DEVICE_COL_SERIAL && element instanceof Device) {
-                Device device = (Device)element;
+            if (columnIndex == DEVICE_COL_SERIAL && element instanceof IDevice) {
+                IDevice device = (IDevice)element;
                 if (device.isEmulator()) {
                     return mEmulatorImage;
                 }
@@ -192,17 +192,17 @@ public final class DevicePanel extends Panel implements IDebugBridgeChangeListen
         }
 
         public String getColumnText(Object element, int columnIndex) {
-            if (element instanceof Device) {
-                Device device = (Device)element;
+            if (element instanceof IDevice) {
+                IDevice device = (IDevice)element;
                 switch (columnIndex) {
                     case DEVICE_COL_SERIAL:
                         return device.getSerialNumber();
                     case DEVICE_COL_STATE:
                         return getStateString(device);
                     case DEVICE_COL_BUILD: {
-                        String version = device.getProperty(Device.PROP_BUILD_VERSION);
+                        String version = device.getProperty(IDevice.PROP_BUILD_VERSION);
                         if (version != null) {
-                            String debuggable = device.getProperty(Device.PROP_DEBUGGABLE);
+                            String debuggable = device.getProperty(IDevice.PROP_DEBUGGABLE);
                             if (device.isEmulator()) {
                                 String avdName = device.getAvdName();
                                 if (avdName == null) {
@@ -279,15 +279,15 @@ public final class DevicePanel extends Panel implements IDebugBridgeChangeListen
 
     /**
      * Classes which implement this interface provide methods that deals
-     * with {@link Device} and {@link Client} selection changes coming from the ui.
+     * with {@link IDevice} and {@link Client} selection changes coming from the ui.
      */
     public interface IUiSelectionListener {
         /**
-         * Sent when a new {@link Device} and {@link Client} are selected.
+         * Sent when a new {@link IDevice} and {@link Client} are selected.
          * @param selectedDevice the selected device. If null, no devices are selected.
          * @param selectedClient The selected client. If null, no clients are selected.
          */
-        public void selectionChanged(Device selectedDevice, Client selectedClient);
+        public void selectionChanged(IDevice selectedDevice, Client selectedClient);
     }
 
     /**
@@ -359,7 +359,7 @@ public final class DevicePanel extends Panel implements IDebugBridgeChangeListen
 
         return mTree;
     }
-    
+
     /**
      * Sets the focus to the proper control inside the panel.
      */
@@ -371,7 +371,7 @@ public final class DevicePanel extends Panel implements IDebugBridgeChangeListen
     @Override
     protected void postCreation() {
         // ask for notification of changes in AndroidDebugBridge (a new one is created when
-        // adb is restarted from a different location), Device and Client objects.
+        // adb is restarted from a different location), IDevice and Client objects.
         AndroidDebugBridge.addDebugBridgeChangeListener(this);
         AndroidDebugBridge.addDeviceChangeListener(this);
         AndroidDebugBridge.addClientChangeListener(this);
@@ -391,10 +391,10 @@ public final class DevicePanel extends Panel implements IDebugBridgeChangeListen
     }
 
     /**
-     * Returns the selected {@link Device}. If a {@link Client} is selected, it returns the
-     * Device object containing the client.
+     * Returns the selected {@link IDevice}. If a {@link Client} is selected, it returns the
+     * IDevice object containing the client.
      */
-    public Device getSelectedDevice() {
+    public IDevice getSelectedDevice() {
         return mCurrentDevice;
     }
 
@@ -404,7 +404,7 @@ public final class DevicePanel extends Panel implements IDebugBridgeChangeListen
     public void killSelectedClient() {
         if (mCurrentClient != null) {
             Client client = mCurrentClient;
-            
+
             // reset the selection to the device.
             TreePath treePath = new TreePath(new Object[] { mCurrentDevice });
             TreeSelection treeSelection = new TreeSelection(treePath);
@@ -413,7 +413,7 @@ public final class DevicePanel extends Panel implements IDebugBridgeChangeListen
             client.kill();
         }
     }
-    
+
     /**
      * Forces a GC on the selected {@link Client}.
      */
@@ -422,13 +422,13 @@ public final class DevicePanel extends Panel implements IDebugBridgeChangeListen
             mCurrentClient.executeGarbageCollector();
         }
     }
-    
+
     public void setEnabledHeapOnSelectedClient(boolean enable) {
         if (mCurrentClient != null) {
             mCurrentClient.setHeapUpdateEnabled(enable);
         }
     }
-    
+
     public void setEnabledThreadOnSelectedClient(boolean enable) {
         if (mCurrentClient != null) {
             mCurrentClient.setThreadUpdateEnabled(enable);
@@ -476,9 +476,9 @@ public final class DevicePanel extends Panel implements IDebugBridgeChangeListen
      * This is sent from a non UI thread.
      * @param device the new device.
      *
-     * @see IDeviceChangeListener#deviceConnected(Device)
+     * @see IDeviceChangeListener#deviceConnected(IDevice)
      */
-    public void deviceConnected(Device device) {
+    public void deviceConnected(IDevice device) {
         exec(new Runnable() {
             public void run() {
                 if (mTree.isDisposed() == false) {
@@ -511,11 +511,11 @@ public final class DevicePanel extends Panel implements IDebugBridgeChangeListen
      * This is sent from a non UI thread.
      * @param device the new device.
      *
-     * @see IDeviceChangeListener#deviceDisconnected(Device)
+     * @see IDeviceChangeListener#deviceDisconnected(IDevice)
      */
-    public void deviceDisconnected(Device device) {
+    public void deviceDisconnected(IDevice device) {
         deviceConnected(device);
-        
+
         // just in case, we remove it from the list of devices to expand.
         synchronized (mDevicesToExpand) {
             mDevicesToExpand.remove(device);
@@ -529,9 +529,9 @@ public final class DevicePanel extends Panel implements IDebugBridgeChangeListen
      * @param device the device that was updated.
      * @param changeMask the mask indicating what changed.
      *
-     * @see IDeviceChangeListener#deviceChanged(Device)
+     * @see IDeviceChangeListener#deviceChanged(IDevice)
      */
-    public void deviceChanged(final Device device, int changeMask) {
+    public void deviceChanged(final IDevice device, int changeMask) {
         boolean expand = false;
         synchronized (mDevicesToExpand) {
             int index = mDevicesToExpand.indexOf(device);
@@ -540,7 +540,7 @@ public final class DevicePanel extends Panel implements IDebugBridgeChangeListen
                 expand = true;
             }
         }
-        
+
         final boolean finalExpand = expand;
 
         exec(new Runnable() {
@@ -549,22 +549,22 @@ public final class DevicePanel extends Panel implements IDebugBridgeChangeListen
                     // look if the current device is selected. This is done in case the current
                     // client of this particular device was killed. In this case, we'll need to
                     // manually reselect the device.
-                    
-                    Device selectedDevice = getSelectedDevice();
+
+                    IDevice selectedDevice = getSelectedDevice();
 
                     // refresh the device
                     mTreeViewer.refresh(device);
-                    
+
                     // if the selected device was the changed device and the new selection is
                     // empty, we reselect the device.
                     if (selectedDevice == device && mTreeViewer.getSelection().isEmpty()) {
                         mTreeViewer.setSelection(new TreeSelection(new TreePath(
                                 new Object[] { device })));
                     }
-                    
+
                     // notify the listener of a possible selection change.
                     notifyListeners();
-                    
+
                     if (finalExpand) {
                         mTreeViewer.setExpandedState(device, true);
                     }
@@ -606,7 +606,7 @@ public final class DevicePanel extends Panel implements IDebugBridgeChangeListen
                         // make sure the device is expanded. Normally the setSelection below
                         // will auto expand, but the children of device may not already exist
                         // at this time. Forcing an expand will make the TreeViewer create them.
-                        Device device = client.getDevice();
+                        IDevice device = client.getDevice();
                         if (mTreeViewer.getExpandedState(device) == false) {
                             mTreeViewer.setExpandedState(device, true);
                         }
@@ -615,11 +615,11 @@ public final class DevicePanel extends Panel implements IDebugBridgeChangeListen
                         TreePath treePath = new TreePath(new Object[] { device, client});
                         TreeSelection treeSelection = new TreeSelection(treePath);
                         mTreeViewer.setSelection(treeSelection);
-                        
+
                         if (mAdvancedPortSupport) {
                             client.setAsSelectedClient();
                         }
-                        
+
                         // notify the listener of a possible selection change.
                         notifyListeners(device, client);
                     }
@@ -676,7 +676,7 @@ public final class DevicePanel extends Panel implements IDebugBridgeChangeListen
      * Returns a display string representing the state of the device.
      * @param d the device
      */
-    private static String getStateString(Device d) {
+    private static String getStateString(IDevice d) {
         DeviceState deviceState = d.getState();
         if (deviceState == DeviceState.ONLINE) {
             return "Online";
@@ -704,32 +704,32 @@ public final class DevicePanel extends Panel implements IDebugBridgeChangeListen
             AndroidDebugBridge.removeClientChangeListener(this);
         }
     }
-    
+
     private void notifyListeners() {
         // get the selection
         TreeItem[] items = mTree.getSelection();
 
         Client client = null;
-        Device device = null;
+        IDevice device = null;
 
         if (items.length == 1) {
             Object object = items[0].getData();
             if (object instanceof Client) {
                 client = (Client)object;
                 device = client.getDevice();
-            } else if (object instanceof Device) {
-                device = (Device)object;
+            } else if (object instanceof IDevice) {
+                device = (IDevice)object;
             }
         }
 
         notifyListeners(device, client);
     }
-    
-    private void notifyListeners(Device selectedDevice, Client selectedClient) {
+
+    private void notifyListeners(IDevice selectedDevice, Client selectedClient) {
         if (selectedDevice != mCurrentDevice || selectedClient != mCurrentClient) {
             mCurrentDevice = selectedDevice;
             mCurrentClient = selectedClient;
-        
+
             for (IUiSelectionListener listener : mListeners) {
                 // notify the listener with a try/catch-all to make sure this thread won't die
                 // because of an uncaught exception before all the listeners were notified.
@@ -740,5 +740,5 @@ public final class DevicePanel extends Panel implements IDebugBridgeChangeListen
             }
         }
     }
-    
+
 }

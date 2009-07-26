@@ -33,7 +33,7 @@ import coverage
 import errors
 import logger
 import run_command
-import test_defs
+from test_defs import test_defs
 
 
 class TestRunner(object):
@@ -43,7 +43,7 @@ class TestRunner(object):
 
   # file path to android core platform tests, relative to android build root
   # TODO move these test data files to another directory
-  _CORE_TEST_PATH = os.path.join("development", "testrunner", 
+  _CORE_TEST_PATH = os.path.join("development", "testrunner",
                                  _TEST_FILE_NAME)
 
   # vendor glob file path patterns to tests, relative to android
@@ -58,7 +58,12 @@ class TestRunner(object):
 
   def __init__(self):
     # disable logging of timestamp
-    logger.SetTimestampLogging(False)  
+    self._root_path = android_build.GetTop()
+    logger.SetTimestampLogging(False)
+    self._adb = None
+    self._known_tests = None
+    self._options = None
+    self._test_args = None
 
   def _ProcessOptions(self):
     """Processes command-line options."""
@@ -93,6 +98,10 @@ class TestRunner(object):
                       help="Restrict test to a specific class")
     parser.add_option("-m", "--test-method", dest="test_method",
                       help="Restrict test to a specific method")
+    parser.add_option("-p", "--test-package", dest="test_package",
+                      help="Restrict test to a specific java package")
+    parser.add_option("-z", "--size", dest="test_size",
+                      help="Restrict test to a specific test size")
     parser.add_option("-u", "--user-tests-file", dest="user_tests_file",
                       metavar="FILE", default=user_test_default,
                       help="Alternate source of user test definitions")
@@ -106,7 +115,13 @@ class TestRunner(object):
                       default=False, action="store_true",
                       help="Run all tests defined as part of the continuous "
                       "test set")
-
+    parser.add_option("--timeout", dest="timeout",
+                      default=300, help="Set a timeout limit (in sec) for "
+                      "running native tests on a device (default: 300 secs)")
+    parser.add_option("--cts", dest="cts_tests",
+                      default=False, action="store_true",
+                      help="Run all tests defined as part of the "
+                      "compatibility test suite")
     group = optparse.OptionGroup(
         parser, "Targets", "Use these options to direct tests to a specific "
         "Android target")
@@ -120,8 +135,11 @@ class TestRunner(object):
 
     self._options, self._test_args = parser.parse_args()
 
-    if (not self._options.only_list_tests and not self._options.all_tests
-        and not self._options.continuous_tests and len(self._test_args) < 1):
+    if (not self._options.only_list_tests
+        and not self._options.all_tests
+        and not self._options.continuous_tests
+        and not self._options.cts_tests
+        and len(self._test_args) < 1):
       parser.print_help()
       logger.SilentLog("at least one test name must be specified")
       raise errors.AbortError
@@ -137,12 +155,10 @@ class TestRunner(object):
     if self._options.verbose:
       logger.SetVerbose(True)
 
-    self._root_path = android_build.GetTop()
-
     self._known_tests = self._ReadTests()
 
-    self._coverage_gen = coverage.CoverageGenerator(
-        android_root_path=self._root_path, adb_interface=self._adb)
+    self._options.host_lib_path = android_build.GetHostLibraryPath()
+    self._options.test_data_path = android_build.GetTestAppPath()
 
   def _ReadTests(self):
     """Parses the set of test definition data.
@@ -172,22 +188,26 @@ class TestRunner(object):
     """Prints out set of defined tests."""
     print "The following tests are currently defined:"
     for test in self._known_tests:
-      print test.GetName()
+      print "%-15s %s" % (test.GetName(), test.GetDescription())
 
   def _DoBuild(self):
     logger.SilentLog("Building tests...")
     target_set = Set()
+    extra_args_set = Set()
     for test_suite in self._GetTestsToRun():
-      self._AddBuildTarget(test_suite.GetBuildPath(), target_set)
+      self._AddBuildTarget(test_suite, target_set, extra_args_set)
 
     if target_set:
       if self._options.coverage:
-        self._coverage_gen.EnableCoverageBuild()
-        self._AddBuildTarget(self._coverage_gen.GetEmmaBuildPath(), target_set)
+        coverage.EnableCoverageBuild()
       target_build_string = " ".join(list(target_set))
-      logger.Log("mmm %s" % target_build_string)
-      cmd = 'ONE_SHOT_MAKEFILE="%s" make -C "%s" files' %  (target_build_string,
-                                                            self._root_path)
+      extra_args_string = " ".join(list(extra_args_set))
+      # mmm cannot be used from python, so perform a similar operation using
+      # ONE_SHOT_MAKEFILE
+      cmd = 'ONE_SHOT_MAKEFILE="%s" make -C "%s" files %s' % (
+          target_build_string, self._root_path, extra_args_string)
+      logger.Log(cmd)
+
       if self._options.preview:
         # in preview mode, just display to the user what command would have been
         # run
@@ -197,18 +217,29 @@ class TestRunner(object):
         logger.Log("Syncing to device...")
         self._adb.Sync()
 
-  def _AddBuildTarget(self, build_dir, target_set):
+  def _AddBuildTarget(self, test_suite, target_set, extra_args_set):
+    build_dir = test_suite.GetBuildPath()
+    if self._AddBuildTargetPath(build_dir, target_set):
+      extra_args_set.add(test_suite.GetExtraBuildArgs())
+    for path in test_suite.GetBuildDependencies(self._options):
+      self._AddBuildTargetPath(path, target_set)
+
+  def _AddBuildTargetPath(self, build_dir, target_set):
     if build_dir is not None:
       build_file_path = os.path.join(build_dir, "Android.mk")
       if os.path.isfile(os.path.join(self._root_path, build_file_path)):
         target_set.add(build_file_path)
+        return True
+    return False
 
   def _GetTestsToRun(self):
     """Get a list of TestSuite objects to run, based on command line args."""
     if self._options.all_tests:
       return self._known_tests.GetTests()
-    if self._options.continuous_tests:
+    elif self._options.continuous_tests:
       return self._known_tests.GetContinuousTests()
+    elif self._options.cts_tests:
+      return self._known_tests.GetCtsTests()
     tests = []
     for name in self._test_args:
       test = self._known_tests.GetTest(name)
@@ -219,48 +250,6 @@ class TestRunner(object):
       tests.append(test)
     return tests
 
-  def _RunTest(self, test_suite):
-    """Run the provided test suite.
-
-    Builds up an adb instrument command using provided input arguments.
-
-    Args:
-      test_suite: TestSuite to run
-    """
-
-    test_class = test_suite.GetClassName()
-    if self._options.test_class is not None:
-      test_class = self._options.test_class
-    if self._options.test_method is not None:
-      test_class = "%s#%s" % (test_class, self._options.test_method)
-
-    instrumentation_args = {}
-    if test_class is not None:
-      instrumentation_args["class"] = test_class
-    if self._options.wait_for_debugger:
-      instrumentation_args["debug"] = "true"
-    if self._options.suite_assign_mode:
-      instrumentation_args["suiteAssignment"] = "true"
-    if self._options.coverage:
-      instrumentation_args["coverage"] = "true"
-    if self._options.preview:
-      adb_cmd = self._adb.PreviewInstrumentationCommand(
-          package_name=test_suite.GetPackageName(),
-          runner_name=test_suite.GetRunnerName(),
-          raw_mode=self._options.raw_mode,
-          instrumentation_args=instrumentation_args)
-      logger.Log(adb_cmd)
-    else:
-      self._adb.StartInstrumentationNoResults(
-          package_name=test_suite.GetPackageName(),
-          runner_name=test_suite.GetRunnerName(),
-          raw_mode=self._options.raw_mode,
-          instrumentation_args=instrumentation_args)
-      if self._options.coverage and test_suite.GetTargetName() is not None:
-        coverage_file = self._coverage_gen.ExtractReport(test_suite)
-        if coverage_file is not None:
-          logger.Log("Coverage report generated at %s" % coverage_file)
-
   def RunTests(self):
     """Main entry method - executes the tests according to command line args."""
     try:
@@ -270,18 +259,16 @@ class TestRunner(object):
         self._DumpTests()
         return
 
-      if not self._adb.IsDevicePresent():
-        logger.Log("Error: specified device cannot be found")
-        return
-
       if not self._options.skip_build:
         self._DoBuild()
 
       for test_suite in self._GetTestsToRun():
-        self._RunTest(test_suite)
+        test_suite.Run(self._options, self._adb)
+
     except KeyboardInterrupt:
       logger.Log("Exiting...")
-    except errors.AbortError:
+    except errors.AbortError, error:
+      logger.Log(error.msg)
       logger.SilentLog("Exiting due to AbortError...")
     except errors.WaitForResponseTimedOutError:
       logger.Log("Timed out waiting for response")

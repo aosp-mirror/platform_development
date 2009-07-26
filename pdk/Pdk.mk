@@ -15,12 +15,12 @@
 #
 
 # Assemble the Platform Development Kit (PDK)
-# (TODO) Figure out why $(ACP) builds with target ndk but not pdk_docs
+# (TODO) Figure out why $(ACP) builds with target pndk but not pdk_docs
 
 pdk:
-	@echo "Package: $@ has targets ndk, pdk_docs and pdk_all"
+	@echo "Package: $@ has targets pndk, pdk_docs and pdk_all"
 
-pdk_all: ndk pdk_docs
+pdk_all: pndk pdk_docs
 	@echo "Package: $^"
 
 LOCAL_PATH := $(call my-dir)
@@ -28,8 +28,8 @@ LOCAL_PATH := $(call my-dir)
 #-------------------------------------------------------------------------------
 # Make the Native Development Kit (Code examples)
 #   Allows vendors to build shared libraries without entire source tree.
-# This include adds /ndk to LOCAL_PATH, so can't use it afterwards...
-include $(LOCAL_PATH)/ndk/Ndk.mk
+# This include adds /pndk to LOCAL_PATH, so can't use it afterwards...
+include $(LOCAL_PATH)/pndk/Pndk.mk
 
 
 #-------------------------------------------------------------------------------
@@ -50,10 +50,12 @@ pdk_templates_dir := development/pdk/docs
 pdk_config_dir := development/pdk/doxygen_config
 pdk_docsfile_dir := $(pdk_config_dir)/docsfiles
 pdk_legacy_hardware_dir := hardware/libhardware_legacy/include/hardware_legacy
+pdk_hardware_dir := hardware/libhardware/include/hardware
 pdk_camera_dir := frameworks/base/include/ui
 
 # Destination directory for docs (templates + doxygenated headers)
-pdk_docs_dest_dir := $(pdk_docs_intermediates)/docs
+pdk_docs_dest_dir := $(pdk_docs_intermediates)/docs/guide
+pdk_app_eng_root := $(pdk_docs_intermediates)/docs
 
 # Working directory for source to be doxygenated
 pdk_doxy_source_dir := $(pdk_docs_intermediates)/sources
@@ -77,7 +79,9 @@ pdk_headers := \
     $(pdk_legacy_hardware_dir)/AudioHardwareInterface.h \
     $(pdk_legacy_hardware_dir)/gps.h \
     $(pdk_legacy_hardware_dir)/wifi.h \
-    $(pdk_camera_dir)/CameraHardwareInterface.h
+    $(pdk_camera_dir)/CameraHardwareInterface.h \
+    $(pdk_hardware_dir)/sensors.h \
+    $(pdk_hardware_dir)/lights.h
 
 # Create a rule to copy the list of PDK headers to be doxyginated.
 # copy-one-header defines the actual rule.
@@ -101,7 +105,7 @@ pdk_templates := $(shell find $(pdk_templates_dir) -type f)
 # copy-one-file defines the actual rule.
 $(foreach template,$(pdk_templates), \
   $(eval _chFrom := $(template)) \
-  $(eval _chTo :=  $(pdk_docs_dest_dir)/$(notdir $(template))) \
+  $(eval _chTo :=  $(pdk_app_eng_root)/$(patsubst $(pdk_templates_dir)/%,%,$(template))) \
   $(eval $(call copy-one-header,$(_chFrom),$(_chTo))) \
   $(eval all_copied_pdk_templates: $(_chTo)) \
  )
@@ -160,7 +164,7 @@ pdk_doxygen: all_copied_pdk_headers $(pdk_doxygen_config_override_file) \
 	@cd $(pdk_generated_source_dir) && chmod ug+rx *
 	@rm -f $(pdk_generated_source_dir)/index.html
 	# Fix a doxygen bug: in *-source.html file insert '</div>\n' after line 25
-	@$(pdk_hosting_dir)/edoxfix.sh $(pdk_generated_source_dir)
+	# @$(pdk_hosting_dir)/edoxfix.sh $(pdk_generated_source_dir)
 	@cp -fp $(pdk_generated_source_dir)/* $(pdk_docs_dest_dir)
 	@rm $(pdk_generated_source_dir)/*
 
@@ -177,15 +181,16 @@ $(LOCAL_PATH)/pdk-timestamp: $(pdk_docs_intermediates)/pdk-timestamp
 include $(CLEAR_VARS)
 
 LOCAL_SRC_FILES := pdk-timestamp samples/samplejni/src/com/example/jniexample/JNIExample.java  
-LOCAL_MODULE_CLASS := development/pdk/ndk/samples/samplejni/src/com/example/jniexample
+LOCAL_MODULE_CLASS := development/pdk/pndk/samples/samplejni/src/com/example/jniexample
 LOCAL_DROIDDOC_SOURCE_PATH := $(framework_docs_LOCAL_DROIDDOC_SOURCE_PATH)
-LOCAL_DROIDDOC_HTML_DIR := ../../../$(pdk_docs_dest_dir)
+LOCAL_DROIDDOC_HTML_DIR := ../../../$(pdk_app_eng_root)
 
 LOCAL_MODULE := online-pdk
 
-LOCAL_DROIDDOC_OPTIONS := \
-        -toroot /online-pdk/ \
-    -hdf android.whichdoc online-pdk
+LOCAL_DROIDDOC_OPTIONS:= \
+		-toroot /online-pdk/ \
+		-hdf android.whichdoc online \
+		-hdf android.whichmodule $(LOCAL_MODULE)
 
 LOCAL_DROIDDOC_CUSTOM_TEMPLATE_DIR := build/tools/droiddoc/templates-pdk
 LOCAL_DROIDDOC_CUSTOM_ASSET_DIR := assets-pdk
@@ -231,7 +236,7 @@ $(pdk_docs_tarfile): $(DOCS_OUT_DIR)-timestamp $(OUT_DOCS)/app.yaml $(OUT_DOCS)/
 	@echo "PDK docs: $@"
 	@mkdir -p $(dir $@)
 	@rm -f $@
-	$(hide) tar rf $@ -C $(OUT_DOCS) $(LOCAL_MODULE) pdk.py app.yaml
+	$(hide) tar rf $@ -C $(OUT_DOCS) $(LOCAL_MODULE) pdk.py  app.yaml
 
 # Debugging reporting can go here, add it as a target to get output.
 pdk_debug:

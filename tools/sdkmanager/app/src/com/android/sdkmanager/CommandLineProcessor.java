@@ -29,7 +29,7 @@ import java.util.Map.Entry;
  * <li>override it.
  * <li>pass an action array to the constructor.
  * <li>define flags for your actions.
- * </ul> 
+ * </ul>
  * <p/>
  * To use, call {@link #parseArgs(String[])} and then
  * call {@link #getValue(String, String, String)}.
@@ -38,17 +38,17 @@ public class CommandLineProcessor {
 
     /** Internal verb name for internally hidden flags. */
     public final static String GLOBAL_FLAG_VERB = "@@internal@@";
-    
+
     /** String to use when the verb doesn't need any object. */
     public final static String NO_VERB_OBJECT = "";
-    
-    /** The global help flag. */ 
+
+    /** The global help flag. */
     public static final String KEY_HELP = "help";
     /** The global verbose flag. */
     public static final String KEY_VERBOSE = "verbose";
     /** The global silent flag. */
     public static final String KEY_SILENT = "silent";
-    
+
     /** Verb requested by the user. Null if none specified, which will be an error. */
     private String mVerbRequested;
     /** Direct object requested by the user. Can be null. */
@@ -66,7 +66,7 @@ public class CommandLineProcessor {
      * </ul>
      */
     private final String[][] mActions;
-    
+
     private static final int ACTION_VERB_INDEX = 0;
     private static final int ACTION_OBJECT_INDEX = 1;
     private static final int ACTION_DESC_INDEX = 2;
@@ -80,22 +80,33 @@ public class CommandLineProcessor {
     private final HashMap<String, Arg> mArguments = new HashMap<String, Arg>();
     /** Logger */
     private final ISdkLog mLog;
-    
+
     public CommandLineProcessor(ISdkLog logger, String[][] actions) {
         mLog = logger;
         mActions = actions;
 
-        define(MODE.BOOLEAN, false, GLOBAL_FLAG_VERB, NO_VERB_OBJECT, "v", KEY_VERBOSE,
+        define(Mode.BOOLEAN, false, GLOBAL_FLAG_VERB, NO_VERB_OBJECT, "v", KEY_VERBOSE,
                 "Verbose mode: errors, warnings and informational messages are printed.",
                 false);
-        define(MODE.BOOLEAN, false, GLOBAL_FLAG_VERB, NO_VERB_OBJECT, "s", KEY_SILENT,
+        define(Mode.BOOLEAN, false, GLOBAL_FLAG_VERB, NO_VERB_OBJECT, "s", KEY_SILENT,
                 "Silent mode: only errors are printed out.",
                 false);
-        define(MODE.BOOLEAN, false, GLOBAL_FLAG_VERB, NO_VERB_OBJECT, "h", KEY_HELP,
+        define(Mode.BOOLEAN, false, GLOBAL_FLAG_VERB, NO_VERB_OBJECT, "h", KEY_HELP,
                 "This help.",
                 false);
     }
-    
+
+    /**
+     * Indicates if this command-line can work when no verb is specified.
+     * The default is false, which generates an error when no verb/object is specified.
+     * Derived implementations can set this to true if they can deal with a lack
+     * of verb/action.
+     */
+    public boolean acceptLackOfVerb() {
+        return false;
+    }
+
+
     //------------------
     // Helpers to get flags values
 
@@ -113,7 +124,7 @@ public class CommandLineProcessor {
     public boolean isHelpRequested() {
         return ((Boolean) getValue(GLOBAL_FLAG_VERB, NO_VERB_OBJECT, KEY_HELP)).booleanValue();
     }
-    
+
     /** Returns the verb name from the command-line. Can be null. */
     public String getVerb() {
         return mVerbRequested;
@@ -123,9 +134,9 @@ public class CommandLineProcessor {
     public String getDirectObject() {
         return mDirectObjectRequested;
     }
-    
+
     //------------------
-    
+
     /**
      * Raw access to parsed parameter values.
      * <p/>
@@ -133,10 +144,10 @@ public class CommandLineProcessor {
      * command line are returned first. Otherwise one with a non-null value is returned.
      * <p/>
      * Both a verb and a direct object filter can be specified. When they are non-null they limit
-     * the scope of the search. 
+     * the scope of the search.
      * <p/>
      * If nothing has been found, return the last default value seen matching the filter.
-     * 
+     *
      * @param verb The verb name, including {@link #GLOBAL_FLAG_VERB}. If null, all possible
      *             verbs that match the direct object condition will be examined and the first
      *             value set will be used.
@@ -153,7 +164,7 @@ public class CommandLineProcessor {
             Arg arg = mArguments.get(key);
             return arg.getCurrentValue();
         }
-        
+
         Object lastDefault = null;
         for (Arg arg : mArguments.values()) {
             if (arg.getLongArg().equals(longFlagName)) {
@@ -169,7 +180,7 @@ public class CommandLineProcessor {
                 }
             }
         }
-        
+
         return lastDefault;
     }
 
@@ -191,7 +202,7 @@ public class CommandLineProcessor {
      * Parses the command-line arguments.
      * <p/>
      * This method will exit and not return if a parsing error arise.
-     * 
+     *
      * @param args The arguments typically received by a main method.
      */
     public void parseArgs(String[] args) {
@@ -209,7 +220,7 @@ public class CommandLineProcessor {
                 } else if (a.startsWith("-")) {
                     arg = findShortArg(verb, directObject, a.substring(1));
                 }
-                
+
                 // No matching argument name found
                 if (arg == null) {
                     // Does it looks like a dashed parameter?
@@ -217,7 +228,7 @@ public class CommandLineProcessor {
                         if (verb == null || directObject == null) {
                             // It looks like a dashed parameter and we don't have a a verb/object
                             // set yet, the parameter was just given too early.
-    
+
                             needsHelp = String.format(
                                 "Flag '%1$s' is not a valid global flag. Did you mean to specify it after the verb/object name?",
                                 a);
@@ -225,14 +236,14 @@ public class CommandLineProcessor {
                         } else {
                             // It looks like a dashed parameter and but it is unknown by this
                             // verb-object combination
-                            
+
                             needsHelp = String.format(
                                     "Flag '%1$s' is not valid for '%2$s %3$s'.",
                                     a, verb, directObject);
                             return;
                         }
                     }
-                    
+
                     if (verb == null) {
                         // Fill verb first. Find it.
                         for (String[] actionDesc : mActions) {
@@ -241,7 +252,7 @@ public class CommandLineProcessor {
                                 break;
                             }
                         }
-                        
+
                         // Error if it was not a valid verb
                         if (verb == null) {
                             needsHelp = String.format(
@@ -249,7 +260,7 @@ public class CommandLineProcessor {
                                 a);
                             return;
                         }
-    
+
                     } else if (directObject == null) {
                         // Then fill the direct object. Find it.
                         for (String[] actionDesc : mActions) {
@@ -266,20 +277,20 @@ public class CommandLineProcessor {
                                 }
                             }
                         }
-                        
+
                         // Error if it was not a valid object for that verb
                         if (directObject == null) {
                             needsHelp = String.format(
                                 "Expected verb after global parameters but found '%1$s' instead.",
                                 a);
                             return;
-                            
+
                         }
                     }
                 } else if (arg != null) {
                     // This argument was present on the command line
                     arg.setInCommandLine(true);
-                    
+
                     // Process keyword
                     String error = null;
                     if (arg.getMode().needsExtra()) {
@@ -287,11 +298,11 @@ public class CommandLineProcessor {
                             needsHelp = String.format("Missing argument for flag %1$s.", a);
                             return;
                         }
-                        
+
                         error = arg.getMode().process(arg, args[i]);
                     } else {
                         error = arg.getMode().process(arg, null);
-    
+
                         // If we just toggled help, we want to exit now without printing any error.
                         // We do this test here only when a Boolean flag is toggled since booleans
                         // are the only flags that don't take parameters and help is a boolean.
@@ -302,18 +313,18 @@ public class CommandLineProcessor {
                             return;
                         }
                     }
-                    
+
                     if (error != null) {
                         needsHelp = String.format("Invalid usage for flag %1$s: %2$s.", a, error);
                         return;
                     }
                 }
             }
-        
+
             if (needsHelp == null) {
-                if (verb == null) {
+                if (verb == null && !acceptLackOfVerb()) {
                     needsHelp = "Missing verb name.";
-                } else {
+                } else if (verb != null) {
                     if (directObject == null) {
                         // Make sure this verb has an optional direct object
                         for (String[] actionDesc : mActions) {
@@ -323,13 +334,13 @@ public class CommandLineProcessor {
                                 break;
                             }
                         }
-    
+
                         if (directObject == null) {
                             needsHelp = String.format("Missing object name for verb '%1$s'.", verb);
                             return;
                         }
                     }
-                    
+
                     // Validate that all mandatory arguments are non-null for this action
                     String missing = null;
                     boolean plural = false;
@@ -347,7 +358,7 @@ public class CommandLineProcessor {
                             }
                         }
                     }
-    
+
                     if (missing != null) {
                         needsHelp  = String.format(
                                 "The %1$s %2$s must be defined for action '%3$s %4$s'",
@@ -367,7 +378,7 @@ public class CommandLineProcessor {
             }
         }
     }
-    
+
     /**
      * Finds an {@link Arg} given an action name and a long flag name.
      * @return The {@link Arg} found or null.
@@ -409,23 +420,23 @@ public class CommandLineProcessor {
 
     /**
      * Prints the help/usage and exits.
-     * 
-     * @param errorFormat Optional error message to print prior to usage using String.format 
+     *
+     * @param errorFormat Optional error message to print prior to usage using String.format
      * @param args Arguments for String.format
      */
     public void printHelpAndExit(String errorFormat, Object... args) {
         printHelpAndExitForAction(null /*verb*/, null /*directObject*/, errorFormat, args);
     }
-    
+
     /**
      * Prints the help/usage and exits.
-     * 
+     *
      * @param verb If null, displays help for all verbs. If not null, display help only
      *          for that specific verb. In all cases also displays general usage and action list.
      * @param directObject If null, displays help for all verb objects.
      *          If not null, displays help only for that specific action
      *          In all cases also display general usage and action list.
-     * @param errorFormat Optional error message to print prior to usage using String.format 
+     * @param errorFormat Optional error message to print prior to usage using String.format
      * @param args Arguments for String.format
      */
     public void printHelpAndExitForAction(String verb, String directObject,
@@ -433,7 +444,7 @@ public class CommandLineProcessor {
         if (errorFormat != null) {
             stderr(errorFormat, args);
         }
-        
+
         /*
          * usage should fit in 80 columns
          *   12345678901234567890123456789012345678901234567890123456789012345678901234567890
@@ -448,14 +459,14 @@ public class CommandLineProcessor {
         if (verb == null || directObject == null) {
             stdout("\nValid actions are composed of a verb and an optional direct object:");
             for (String[] action : mActions) {
-                
+
                 stdout("- %1$6s %2$-7s: %3$s",
                         action[ACTION_VERB_INDEX],
                         action[ACTION_OBJECT_INDEX],
                         action[ACTION_DESC_INDEX]);
             }
         }
-        
+
         for (String[] action : mActions) {
             if (verb == null || verb.equals(action[ACTION_VERB_INDEX])) {
                 if (directObject == null || directObject.equals(action[ACTION_OBJECT_INDEX])) {
@@ -468,7 +479,7 @@ public class CommandLineProcessor {
                 }
             }
         }
-        
+
         exit();
     }
 
@@ -480,23 +491,30 @@ public class CommandLineProcessor {
         for (Entry<String, Arg> entry : mArguments.entrySet()) {
             Arg arg = entry.getValue();
             if (arg.getVerb().equals(verb) && arg.getDirectObject().equals(directObject)) {
-                
+
                 String value = "";
-                if (arg.getDefaultValue() instanceof String[]) {
-                    for (String v : (String[]) arg.getDefaultValue()) {
-                        if (value.length() > 0) {
-                            value += ", ";
+                String required = "";
+                if (arg.isMandatory()) {
+                    required = " [required]";
+
+                } else {
+                    if (arg.getDefaultValue() instanceof String[]) {
+                        for (String v : (String[]) arg.getDefaultValue()) {
+                            if (value.length() > 0) {
+                                value += ", ";
+                            }
+                            value += v;
                         }
-                        value += v;
+                    } else if (arg.getDefaultValue() != null) {
+                        Object v = arg.getDefaultValue();
+                        if (arg.getMode() != Mode.BOOLEAN || v.equals(Boolean.TRUE)) {
+                            value = v.toString();
+                        }
                     }
-                } else if (arg.getDefaultValue() != null) {
-                    value = arg.getDefaultValue().toString();
+                    if (value.length() > 0) {
+                        value = " [Default: " + value + "]";
+                    }
                 }
-                if (value.length() > 0) {
-                    value = " (" + value + ")";
-                }
-                
-                String required = arg.isMandatory() ? " [required]" : "";
 
                 stdout("  -%1$s %2$-10s %3$s%4$s%5$s",
                         arg.getShortArg(),
@@ -507,19 +525,19 @@ public class CommandLineProcessor {
                 numOptions++;
             }
         }
-        
+
         if (numOptions == 0) {
             stdout("  No options");
         }
     }
 
     //----
-    
+
     /**
      * The mode of an argument specifies the type of variable it represents,
      * whether an extra parameter is required after the flag and how to parse it.
      */
-    static enum MODE {
+    static enum Mode {
         /** Argument value is a Boolean. Default value is a Boolean. */
         BOOLEAN {
             @Override
@@ -551,7 +569,7 @@ public class CommandLineProcessor {
                 }
             }
         },
-        
+
         /** Argument value is a String. Default value is a String[]. */
         ENUM {
             @Override
@@ -567,7 +585,7 @@ public class CommandLineProcessor {
                         arg.setCurrentValue(extra);
                         return null;
                     }
-                    
+
                     if (desc.length() != 0) {
                         desc.append(", ");
                     }
@@ -577,7 +595,7 @@ public class CommandLineProcessor {
                 return String.format("'%1$s' is not one of %2$s", extra, desc.toString());
             }
         },
-        
+
         /** Argument value is a String. Default value is a null. */
         STRING {
             @Override
@@ -590,7 +608,7 @@ public class CommandLineProcessor {
                 return null;
             }
         };
-        
+
         /**
          * Returns true if this mode requires an extra parameter.
          */
@@ -598,9 +616,9 @@ public class CommandLineProcessor {
 
         /**
          * Processes the flag for this argument.
-         * 
+         *
          * @param arg The argument being processed.
-         * @param extra The extra parameter. Null if {@link #needsExtra()} returned false. 
+         * @param extra The extra parameter. Null if {@link #needsExtra()} returned false.
          * @return An error string or null if there's no error.
          */
         public abstract String process(Arg arg, String extra);
@@ -610,8 +628,8 @@ public class CommandLineProcessor {
      * An argument accepted by the command-line, also called "a flag".
      * Arguments must have a short version (one letter), a long version name and a description.
      * They can have a default value, or it can be null.
-     * Depending on the {@link MODE}, the default value can be a Boolean, an Integer, a String
-     * or a String array (in which case the first item is the current by default.)  
+     * Depending on the {@link Mode}, the default value can be a Boolean, an Integer, a String
+     * or a String array (in which case the first item is the current by default.)
      */
     static class Arg {
         /** Verb for that argument. Never null. */
@@ -627,7 +645,7 @@ public class CommandLineProcessor {
         /** A default value. Can be null. */
         private final Object mDefaultValue;
         /** The argument mode (type + process method). Never null. */
-        private final MODE mMode;
+        private final Mode mMode;
         /** True if this argument is mandatory for this verb/directobject. */
         private final boolean mMandatory;
         /** Current value. Initially set to the default value. */
@@ -637,16 +655,16 @@ public class CommandLineProcessor {
 
         /**
          * Creates a new argument flag description.
-         * 
-         * @param mode The {@link MODE} for the argument.
-         * @param mandatory True if this argument is mandatory for this action. 
+         *
+         * @param mode The {@link Mode} for the argument.
+         * @param mandatory True if this argument is mandatory for this action.
          * @param directObject The action name. Can be #NO_VERB_OBJECT or #INTERNAL_FLAG.
          * @param shortName The one-letter short argument name. Cannot be empty nor null.
          * @param longName The long argument name. Cannot be empty nor null.
          * @param description The description. Cannot be null.
-         * @param defaultValue The default value (or values), which depends on the selected {@link MODE}.
+         * @param defaultValue The default value (or values), which depends on the selected {@link Mode}.
          */
-        public Arg(MODE mode,
+        public Arg(Mode mode,
                    boolean mandatory,
                    String verb,
                    String directObject,
@@ -669,27 +687,27 @@ public class CommandLineProcessor {
                 mCurrentValue = mDefaultValue;
             }
         }
-        
+
         /** Return true if this argument is mandatory for this verb/directobject. */
         public boolean isMandatory() {
             return mMandatory;
         }
-        
+
         /** Returns the 1-letter short name of the argument, e.g. -v. */
         public String getShortArg() {
             return mShortName;
         }
-        
+
         /** Returns the long name of the argument, e.g. --verbose. */
         public String getLongArg() {
             return mLongName;
         }
-        
+
         /** Returns the description. Never null. */
         public String getDescription() {
             return mDescription;
         }
-        
+
         /** Returns the verb for that argument. Never null. */
         public String getVerb() {
             return mVerb;
@@ -699,12 +717,12 @@ public class CommandLineProcessor {
         public String getDirectObject() {
             return mDirectObject;
         }
-        
+
         /** Returns the default value. Can be null. */
         public Object getDefaultValue() {
             return mDefaultValue;
         }
-        
+
         /** Returns the current value. Initially set to the default value. Can be null. */
         public Object getCurrentValue() {
             return mCurrentValue;
@@ -714,46 +732,46 @@ public class CommandLineProcessor {
         public void setCurrentValue(Object currentValue) {
             mCurrentValue = currentValue;
         }
-        
+
         /** Returns the argument mode (type + process method). Never null. */
-        public MODE getMode() {
+        public Mode getMode() {
             return mMode;
         }
-        
+
         /** Returns true if the argument has been used on the command line. */
         public boolean isInCommandLine() {
             return mInCommandLine;
         }
-        
+
         /** Sets if the argument has been used on the command line. */
         public void setInCommandLine(boolean inCommandLine) {
             mInCommandLine = inCommandLine;
         }
     }
-    
+
     /**
      * Internal helper to define a new argument for a give action.
-     * 
-     * @param mode The {@link MODE} for the argument.
+     *
+     * @param mode The {@link Mode} for the argument.
      * @param verb The verb name. Can be #INTERNAL_VERB.
      * @param directObject The action name. Can be #NO_VERB_OBJECT or #INTERNAL_FLAG.
      * @param shortName The one-letter short argument name. Cannot be empty nor null.
      * @param longName The long argument name. Cannot be empty nor null.
      * @param description The description. Cannot be null.
-     * @param defaultValue The default value (or values), which depends on the selected {@link MODE}.
+     * @param defaultValue The default value (or values), which depends on the selected {@link Mode}.
      */
-    protected void define(MODE mode,
+    protected void define(Mode mode,
             boolean mandatory,
             String verb,
             String directObject,
             String shortName, String longName,
             String description, Object defaultValue) {
-        assert(mandatory || mode == MODE.BOOLEAN); // a boolean mode cannot be mandatory
-        
+        assert(mandatory || mode == Mode.BOOLEAN); // a boolean mode cannot be mandatory
+
         if (directObject == null) {
             directObject = NO_VERB_OBJECT;
         }
-        
+
         String key = verb + "/" + directObject + "/" + longName;
         mArguments.put(key, new Arg(mode, mandatory,
                 verb, directObject, shortName, longName, description, defaultValue));
@@ -770,7 +788,7 @@ public class CommandLineProcessor {
     /**
      * Prints a line to stdout.
      * This is protected so that it can be overridden in unit tests.
-     * 
+     *
      * @param format The string to be formatted. Cannot be null.
      * @param args Format arguments.
      */
@@ -781,7 +799,7 @@ public class CommandLineProcessor {
     /**
      * Prints a line to stderr.
      * This is protected so that it can be overridden in unit tests.
-     * 
+     *
      * @param format The string to be formatted. Cannot be null.
      * @param args Format arguments.
      */

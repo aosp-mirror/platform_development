@@ -62,6 +62,19 @@ class TraceReader : public TraceReaderBase {
             return NULL;
         }
 
+        region_entry   *MakePrivateCopy(region_entry *dest) {
+            dest->refs = 0;
+            dest->path = Strdup(path);
+            dest->vstart = vstart;
+            dest->vend = vend;
+            dest->base_addr = base_addr;
+            dest->file_offset = file_offset;
+            dest->flags = flags;
+            dest->nsymbols = nsymbols;
+            dest->symbols = symbols;
+            return dest;
+        }
+
         int             refs;        // reference count
         char            *path;
         uint32_t        vstart;
@@ -99,6 +112,11 @@ class TraceReader : public TraceReaderBase {
         static const int kIsClone               = 0x04;
         static const int kHasKernelRegion       = 0x08;
         static const int kHasFirstMmap          = 0x10;
+
+        struct methodFrame {
+            uint32_t    addr;
+            bool        isNative;
+        };
 
         ProcessState() {
             cpu_time = 0;
@@ -153,7 +171,7 @@ class TraceReader : public TraceReaderBase {
         }
 
         // Dumps the stack contents to standard output.  For debugging.
-        void            DumpStack();
+        void            DumpStack(FILE *stream);
 
         uint64_t        cpu_time;
         uint64_t        start_time;
@@ -165,7 +183,7 @@ class TraceReader : public TraceReaderBase {
         uint32_t        flags;
         int             argc;
         char            **argv;
-        char            *name;
+        const char      *name;
         int             nregions;        // num regions in use
         int             max_regions;     // max regions allocated
         region_type     **regions;
@@ -173,7 +191,7 @@ class TraceReader : public TraceReaderBase {
         ProcessState    *addr_manager;   // the address space manager process
         ProcessState    *next;
         int             method_stack_top;
-        uint32_t        method_stack[kMaxMethodStackSize];
+        methodFrame     method_stack[kMaxMethodStackSize];
         symbol_type     *current_method_sym;
     };
 
@@ -184,12 +202,13 @@ class TraceReader : public TraceReaderBase {
     void                CopyKernelRegion(ProcessState *pstate);
     void                ClearRegions(ProcessState *pstate);
     void                CopyRegions(ProcessState *parent, ProcessState *child);
+    void                DumpRegions(FILE *stream, ProcessState *pstate);
     symbol_type         *LookupFunction(int pid, uint32_t addr, uint64_t time);
     symbol_type         *GetSymbols(int *num_syms);
     ProcessState        *GetCurrentProcess()            { return current_; }
     ProcessState        *GetProcesses(int *num_procs);
     ProcessState        *GetNextProcess();
-    char                *GetProcessName(int pid);
+    const char          *GetProcessName(int pid);
     void                SetRoot(const char *root)       { root_ = root; }
     void                SetDemangle(bool demangle)      { demangle_ = demangle; }
     bool                ReadMethodSymbol(MethodRec *method_record,
@@ -217,6 +236,10 @@ class TraceReader : public TraceReaderBase {
     void                AddRegion(ProcessState *pstate, region_type *region);
     region_type         *FindRegion(uint32_t addr, int nregions,
                                     region_type **regions);
+    int                 FindRegionIndex(uint32_t addr, int nregions,
+                                         region_type **regions);
+    void                FindAndRemoveRegion(ProcessState *pstate,
+                                            uint32_t vstart, uint32_t vend);
     symbol_type         *FindFunction(uint32_t addr, int nsyms,
                                       symbol_type *symbols, bool exact_match);
     symbol_type         *FindCurrentMethod(int pid, uint64_t time);
@@ -276,11 +299,14 @@ TraceReader<T>::~TraceReader()
     hash_entry_type *ptr;
     for (ptr = hash_->GetFirst(); ptr; ptr = hash_->GetNext()) {
         region_type *region = ptr->value;
-        int nsymbols = region->nsymbols;
-        for (int ii = 0; ii < nsymbols; ii++) {
-            delete[] region->symbols[ii].name;
+        // If the symbols are not shared with another region, then delete them.
+        if ((region->flags & region_type::kSharedSymbols) == 0) {
+            int nsymbols = region->nsymbols;
+            for (int ii = 0; ii < nsymbols; ii++) {
+                delete[] region->symbols[ii].name;
+            }
+            delete[] region->symbols;
         }
-        delete[] region->symbols;
         delete[] region->path;
 
         // Do not delete the region itself here.  Each region
@@ -422,7 +448,7 @@ TraceReader<T>::GetNextProcess()
 }
 
 template<class T>
-char* TraceReader<T>::GetProcessName(int pid)
+const char* TraceReader<T>::GetProcessName(int pid)
 {
     if (pid < 0 || pid >= kNumPids || processes_[pid] == NULL)
         return "(unknown)";
@@ -923,6 +949,63 @@ void TraceReader<T>::AddRegion(ProcessState *pstate, region_type *region)
 }
 
 template<class T>
+void TraceReader<T>::FindAndRemoveRegion(ProcessState *pstate, uint32_t vstart,
+                                         uint32_t vend)
+{
+    ProcessState *manager = pstate->addr_manager;
+    int nregions = manager->nregions;
+    int index = FindRegionIndex(vstart, nregions, manager->regions);
+    region_type *region = manager->regions[index];
+
+    // If the region does not contain [vstart,vend], then return.
+    if (vstart < region->vstart || vend > region->vend)
+        return;
+
+    // If the existing region exactly matches the address range [vstart,vend]
+    // then remove the whole region.
+    if (vstart == region->vstart && vend == region->vend) {
+        // The regions are reference-counted.
+        if (region->refs == 0) {
+            // Free the region
+            hash_->Remove(region->path);
+            delete region;
+        } else {
+            region->refs -= 1;
+        }
+
+        if (nregions > 1) {
+            // Assign the region at the end of the array to this empty slot
+            manager->regions[index] = manager->regions[nregions - 1];
+
+            // Resort the regions into increasing start address
+            qsort(manager->regions, nregions - 1, sizeof(region_type*),
+                  cmp_region_addr<T>);
+        }
+        manager->nregions = nregions - 1;
+        return;
+    }
+
+    // If the existing region contains the given range and ends at the
+    // end of the given range (a common case for some reason), then
+    // truncate the existing region so that it ends at vstart (because
+    // we are deleting the range [vstart,vend]).
+    if (vstart > region->vstart && vend == region->vend) {
+        region_type *truncated;
+
+        if (region->refs == 0) {
+            // This region is not shared, so truncate it directly
+            truncated = region;
+        } else {
+            // This region is shared, so make a copy that we can truncate
+            region->refs -= 1;
+            truncated = region->MakePrivateCopy(new region_type);
+        }
+        truncated->vend = vstart;
+        manager->regions[index] = truncated;
+    }
+}
+
+template<class T>
 void TraceReader<T>::CopyRegions(ProcessState *parent, ProcessState *child)
 {
     // Copy the parent's address space
@@ -937,6 +1020,20 @@ void TraceReader<T>::CopyRegions(ProcessState *parent, ProcessState *child)
     // Increment the reference count on all the regions
     for (int ii = 0; ii < nregions; ii++) {
         regions[ii]->refs += 1;
+    }
+}
+
+template<class T>
+void TraceReader<T>::DumpRegions(FILE *stream, ProcessState *pstate) {
+    ProcessState *manager = pstate->addr_manager;
+    for (int ii = 0; ii < manager->nregions; ++ii) {
+        fprintf(stream, "  %08x - %08x offset: %5x  nsyms: %4d refs: %d %s\n",
+                manager->regions[ii]->vstart,
+                manager->regions[ii]->vend,
+                manager->regions[ii]->file_offset,
+                manager->regions[ii]->nsymbols,
+                manager->regions[ii]->refs,
+                manager->regions[ii]->path);
     }
 }
 
@@ -962,6 +1059,30 @@ TraceReader<T>::FindRegion(uint32_t addr, int nregions, region_type **regions)
     if (low < 0)
         low = 0;
     return regions[low];
+}
+
+template<class T>
+int TraceReader<T>::FindRegionIndex(uint32_t addr, int nregions,
+                                    region_type **regions)
+{
+    int high = nregions;
+    int low = -1;
+    while (low + 1 < high) {
+        int middle = (high + low) / 2;
+        uint32_t middle_addr = regions[middle]->vstart;
+        if (middle_addr == addr)
+            return middle;
+        if (middle_addr > addr)
+            high = middle;
+        else
+            low = middle;
+    }
+
+    // If we get here then we did not find an exact address match.  So use
+    // the closest region address that is less than the given address.
+    if (low < 0)
+        low = 0;
+    return low;
 }
 
 template<class T>
@@ -1004,15 +1125,12 @@ TraceReader<T>::LookupFunction(int pid, uint32_t addr, uint64_t time)
             uint32_t sym_addr = addr - cached_func_->region->base_addr;
             if (sym_addr >= cached_func_->addr
                 && sym_addr < (cached_func_ + 1)->addr) {
-                // If this function is the virtual machine interpreter, then
-                // read the method trace to find the "real" method name based
-                // on the current time and pid.
-                if (cached_func_->flags & symbol_type::kIsInterpreter) {
-                    symbol_type *sym = FindCurrentMethod(pid, time);
-                    if (sym != NULL) {
-                        sym->vm_sym = cached_func_;
-                        return sym;
-                    }
+
+                // Check if there is a Java method on the method trace.
+                symbol_type *sym = FindCurrentMethod(pid, time);
+                if (sym != NULL) {
+                    sym->vm_sym = cached_func_;
+                    return sym;
                 }
                 return cached_func_;
             }
@@ -1037,15 +1155,11 @@ TraceReader<T>::LookupFunction(int pid, uint32_t addr, uint64_t time)
     if (cached_func_ != NULL) {
         cached_func_->region = region;
 
-        // If this function is the virtual machine interpreter, then
-        // read the method trace to find the "real" method name based
-        // on the current time and pid.
-        if (cached_func_->flags & symbol_type::kIsInterpreter) {
-            symbol_type *sym = FindCurrentMethod(pid, time);
-            if (sym != NULL) {
-                sym->vm_sym = cached_func_;
-                return sym;
-            }
+        // Check if there is a Java method on the method trace.
+        symbol_type *sym = FindCurrentMethod(pid, time);
+        if (sym != NULL) {
+            sym->vm_sym = cached_func_;
+            return sym;
         }
     }
 
@@ -1139,11 +1253,17 @@ void TraceReader<T>::HandlePidEvent(PidEvent *event)
         current_->exit_val = event->pid;
         current_->flags |= ProcessState::kCalledExit;
         break;
+    case kPidMunmap:
+        FindAndRemoveRegion(current_, event->vstart, event->vend);
+        break;
     case kPidMmap:
         {
             region_type *region;
             region_type *existing_region = hash_->Find(event->path);
-            if (existing_region == NULL || existing_region->vstart != event->vstart) {
+            if (existing_region == NULL
+                || existing_region->vstart != event->vstart
+                || existing_region->vend != event->vend
+                || existing_region->file_offset != event->offset) {
                 // Create a new region and add it to the current process'
                 // address space.
                 region = new region_type;
@@ -1165,8 +1285,6 @@ void TraceReader<T>::HandlePidEvent(PidEvent *event)
                 } else {
                     region->nsymbols = existing_region->nsymbols;
                     region->symbols = existing_region->symbols;
-                    region->path = existing_region->path;
-                    delete[] event->path;
                     region->flags |= region_type::kSharedSymbols;
                 }
 
@@ -1263,10 +1381,12 @@ int TraceReader<T>::FindCurrentPid(uint64_t time)
 }
 
 template <class T>
-void TraceReader<T>::ProcessState::DumpStack()
+void TraceReader<T>::ProcessState::DumpStack(FILE *stream)
 {
+    const char *native;
     for (int ii = 0; ii < method_stack_top; ii++) {
-        printf("%2d: 0x%08x\n", ii, method_stack[ii]);
+        native = method_stack[ii].isNative ? "n" : " ";
+        fprintf(stream, "%2d: %s 0x%08x\n", ii, native, method_stack[ii].addr);
     }
 }
 
@@ -1276,13 +1396,17 @@ void TraceReader<T>::HandleMethodRecord(ProcessState *pstate,
 {
     uint32_t addr;
     int top = pstate->method_stack_top;
-    if (method_rec->flags == kMethodEnter) {
+    int flags = method_rec->flags;
+    bool isNative;
+    if (flags == kMethodEnter || flags == kNativeEnter) {
         // Push this method on the stack
         if (top >= pstate->kMaxMethodStackSize) {
             fprintf(stderr, "Stack overflow at time %llu\n", method_rec->time);
             exit(1);
         }
-        pstate->method_stack[top] = method_rec->addr;
+        pstate->method_stack[top].addr = method_rec->addr;
+        isNative = (flags == kNativeEnter);
+        pstate->method_stack[top].isNative = isNative;
         pstate->method_stack_top = top + 1;
         addr = method_rec->addr;
     } else {
@@ -1292,14 +1416,27 @@ void TraceReader<T>::HandleMethodRecord(ProcessState *pstate,
             return;
         }
         top -= 1;
-        addr = pstate->method_stack[top];
-        if (addr != method_rec->addr) {
+        addr = pstate->method_stack[top].addr;
+
+        // If this is a non-native method then the address we are popping should
+        // match the top-of-stack address.  Native pops don't always match the
+        // address of the native push for some reason.
+        if (addr != method_rec->addr && !pstate->method_stack[top].isNative) {
             fprintf(stderr,
                     "Stack method (0x%x) at index %d does not match trace record (0x%x) at time %llu\n",
                     addr, top, method_rec->addr, method_rec->time);
-            for (int ii = 0; ii <= top; ii++) {
-                fprintf(stderr, "  %d: 0x%x\n", ii, pstate->method_stack[ii]);
-            }
+            pstate->DumpStack(stderr);
+            exit(1);
+        }
+
+        // If we are popping a native method, then the top-of-stack should also
+        // be a native method.
+        bool poppingNative = (flags == kNativeExit) || (flags == kNativeException);
+        if (poppingNative != pstate->method_stack[top].isNative) {
+            fprintf(stderr,
+                    "Popping native vs. non-native mismatch at index %d time %llu\n",
+                    top, method_rec->time);
+            pstate->DumpStack(stderr);
             exit(1);
         }
 
@@ -1309,8 +1446,17 @@ void TraceReader<T>::HandleMethodRecord(ProcessState *pstate,
             pstate->current_method_sym = NULL;
             return;
         }
-        addr = pstate->method_stack[top - 1];
+        addr = pstate->method_stack[top - 1].addr;
+        isNative = pstate->method_stack[top - 1].isNative;
     }
+
+    // If the top-of-stack is a native method, then set the current method
+    // to NULL.
+    if (isNative) {
+        pstate->current_method_sym = NULL;
+        return;
+    }
+
     ProcessState *manager = pstate->addr_manager;
     region_type *region = FindRegion(addr, manager->nregions, manager->regions);
     uint32_t sym_addr = addr - region->base_addr;
@@ -1323,6 +1469,11 @@ void TraceReader<T>::HandleMethodRecord(ProcessState *pstate,
     }
 }
 
+// Returns the current top-of-stack Java method, if any, for the given pid
+// at the given time. The "time" parameter must be monotonically increasing
+// across successive calls to this method.
+// If the Java method stack is empty or if a native JNI method is on the
+// top of the stack, then this method returns NULL.
 template <class T>
 typename TraceReader<T>::symbol_type*
 TraceReader<T>::FindCurrentMethod(int pid, uint64_t time)

@@ -142,13 +142,6 @@
             android:layout_below="@id/font_hinting"
             android:layout_alignParentLeft="true"
             android:text="@string/development_settings_show_xmpp_text" />
-
-        <CheckBox android:id="@+id/show_maps_compass"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/show_xmpp"
-            android:layout_alignParentLeft="true"
-            android:text="@string/development_settings_show_maps_compass_text" />
             
     </RelativeLayout>
 

@@ -16,9 +16,10 @@
 
 package com.android.ddmlib;
 
-import com.android.ddmlib.Client;
+import com.android.ddmlib.SyncService.SyncResult;
 import com.android.ddmlib.log.LogReceiver;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
@@ -26,54 +27,26 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 /**
  * A Device. It can be a physical device or an emulator.
- *
- * TODO: make this class package-protected, and shift all callers to use IDevice
  */
-public final class Device implements IDevice {
-    /**
-     * The state of a device.
-     */
-    public static enum DeviceState {
-        BOOTLOADER("bootloader"), //$NON-NLS-1$
-        OFFLINE("offline"), //$NON-NLS-1$
-        ONLINE("device"); //$NON-NLS-1$
-
-        private String mState;
-
-        DeviceState(String state) {
-            mState = state;
-        }
-
-        /**
-         * Returns a {@link DeviceState} from the string returned by <code>adb devices</code>.
-         * @param state the device state.
-         * @return a {@link DeviceState} object or <code>null</code> if the state is unknown.
-         */
-        public static DeviceState getState(String state) {
-            for (DeviceState deviceState : values()) {
-                if (deviceState.mState.equals(state)) {
-                    return deviceState;
-                }
-            }
-            return null;
-        }
-    }
+final class Device implements IDevice {
 
     /** Emulator Serial Number regexp. */
     final static String RE_EMULATOR_SN = "emulator-(\\d+)"; //$NON-NLS-1$
 
     /** Serial number of the device */
-    String serialNumber = null;
+    private String mSerialNumber = null;
 
     /** Name of the AVD */
-    String mAvdName = null;
+    private String mAvdName = null;
 
     /** State of the device. */
-    DeviceState state = null;
+    private DeviceState mState = null;
 
     /** Device properties. */
     private final Map<String, String> mProperties = new HashMap<String, String>();
@@ -81,31 +54,91 @@ public final class Device implements IDevice {
     private final ArrayList<Client> mClients = new ArrayList<Client>();
     private DeviceMonitor mMonitor;
 
+    private static final String LOG_TAG = "Device";
+
     /**
      * Socket for the connection monitoring client connection/disconnection.
      */
     private SocketChannel mSocketChannel;
+
+    /**
+     * Output receiver for "pm install package.apk" command line.
+     */
+    private static final class InstallReceiver extends MultiLineReceiver {
+
+        private static final String SUCCESS_OUTPUT = "Success"; //$NON-NLS-1$
+        private static final Pattern FAILURE_PATTERN = Pattern.compile("Failure\\s+\\[(.*)\\]"); //$NON-NLS-1$
+
+        private String mErrorMessage = null;
+
+        public InstallReceiver() {
+        }
+
+        @Override
+        public void processNewLines(String[] lines) {
+            for (String line : lines) {
+                if (line.length() > 0) {
+                    if (line.startsWith(SUCCESS_OUTPUT)) {
+                        mErrorMessage = null;
+                    } else {
+                        Matcher m = FAILURE_PATTERN.matcher(line);
+                        if (m.matches()) {
+                            mErrorMessage = m.group(1);
+                        }
+                    }
+                }
+            }
+        }
+
+        public boolean isCancelled() {
+            return false;
+        }
+
+        public String getErrorMessage() {
+            return mErrorMessage;
+        }
+    }
 
     /*
      * (non-Javadoc)
      * @see com.android.ddmlib.IDevice#getSerialNumber()
      */
     public String getSerialNumber() {
-        return serialNumber;
+        return mSerialNumber;
     }
 
+    /** {@inheritDoc} */
     public String getAvdName() {
         return mAvdName;
     }
 
+    /**
+     * Sets the name of the AVD
+     */
+    void setAvdName(String avdName) {
+        if (isEmulator() == false) {
+            throw new IllegalArgumentException(
+                    "Cannot set the AVD name of the device is not an emulator");
+        }
+
+        mAvdName = avdName;
+    }
 
     /*
      * (non-Javadoc)
      * @see com.android.ddmlib.IDevice#getState()
      */
     public DeviceState getState() {
-        return state;
+        return mState;
     }
+
+    /**
+     * Changes the state of the device.
+     */
+    void setState(DeviceState state) {
+        mState = state;
+    }
+
 
     /*
      * (non-Javadoc)
@@ -134,7 +167,7 @@ public final class Device implements IDevice {
 
     @Override
     public String toString() {
-        return serialNumber;
+        return mSerialNumber;
     }
 
     /*
@@ -142,7 +175,7 @@ public final class Device implements IDevice {
      * @see com.android.ddmlib.IDevice#isOnline()
      */
     public boolean isOnline() {
-        return state == DeviceState.ONLINE;
+        return mState == DeviceState.ONLINE;
     }
 
     /*
@@ -150,7 +183,7 @@ public final class Device implements IDevice {
      * @see com.android.ddmlib.IDevice#isEmulator()
      */
     public boolean isEmulator() {
-        return serialNumber.matches(RE_EMULATOR_SN);
+        return mSerialNumber.matches(RE_EMULATOR_SN);
     }
 
     /*
@@ -158,7 +191,7 @@ public final class Device implements IDevice {
      * @see com.android.ddmlib.IDevice#isOffline()
      */
     public boolean isOffline() {
-        return state == DeviceState.OFFLINE;
+        return mState == DeviceState.OFFLINE;
     }
 
     /*
@@ -166,7 +199,7 @@ public final class Device implements IDevice {
      * @see com.android.ddmlib.IDevice#isBootLoader()
      */
     public boolean isBootLoader() {
-        return state == DeviceState.BOOTLOADER;
+        return mState == DeviceState.BOOTLOADER;
     }
 
     /*
@@ -208,7 +241,7 @@ public final class Device implements IDevice {
      * (non-Javadoc)
      * @see com.android.ddmlib.IDevice#getSyncService()
      */
-    public SyncService getSyncService() {
+    public SyncService getSyncService() throws IOException {
         SyncService syncService = new SyncService(AndroidDebugBridge.sSocketAddr, this);
         if (syncService.openSync()) {
             return syncService;
@@ -305,8 +338,10 @@ public final class Device implements IDevice {
     }
 
 
-    Device(DeviceMonitor monitor) {
+    Device(DeviceMonitor monitor, String serialNumber, DeviceState deviceState) {
         mMonitor = monitor;
+        mSerialNumber = serialNumber;
+        mState = deviceState;
     }
 
     DeviceMonitor getMonitor() {
@@ -381,5 +416,95 @@ public final class Device implements IDevice {
 
     void addProperty(String label, String value) {
         mProperties.put(label, value);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public String installPackage(String packageFilePath, boolean reinstall)
+           throws IOException {
+       String remoteFilePath = syncPackageToDevice(packageFilePath);
+       String result = installRemotePackage(remoteFilePath, reinstall);
+       removeRemotePackage(remoteFilePath);
+       return result;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public String syncPackageToDevice(String localFilePath)
+            throws IOException {
+        try {
+            String packageFileName = getFileName(localFilePath);
+            String remoteFilePath = String.format("/data/local/tmp/%1$s", packageFileName); //$NON-NLS-1$
+
+            Log.i(packageFileName, String.format("Uploading %1$s onto device '%2$s'",
+                    packageFileName, getSerialNumber()));
+
+            SyncService sync = getSyncService();
+            if (sync != null) {
+                String message = String.format("Uploading file onto device '%1$s'",
+                        getSerialNumber());
+                Log.i(LOG_TAG, message);
+                SyncResult result = sync.pushFile(localFilePath, remoteFilePath,
+                        SyncService.getNullProgressMonitor());
+
+                if (result.getCode() != SyncService.RESULT_OK) {
+                    throw new IOException(String.format("Unable to upload file: %1$s",
+                            result.getMessage()));
+                }
+            } else {
+                throw new IOException("Unable to open sync connection!");
+            }
+            return remoteFilePath;
+        } catch (IOException e) {
+            Log.e(LOG_TAG, String.format("Unable to open sync connection! reason: %1$s",
+                    e.getMessage()));
+            throw e;
+        }
+    }
+
+    /**
+     * Helper method to retrieve the file name given a local file path
+     * @param filePath full directory path to file
+     * @return {@link String} file name
+     */
+    private String getFileName(String filePath) {
+        return new File(filePath).getName();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public String installRemotePackage(String remoteFilePath, boolean reinstall)
+            throws IOException {
+        InstallReceiver receiver = new InstallReceiver();
+        String cmd = String.format(reinstall ? "pm install -r \"%1$s\"" : "pm install \"%1$s\"",
+                            remoteFilePath);
+        executeShellCommand(cmd, receiver);
+        return receiver.getErrorMessage();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void removeRemotePackage(String remoteFilePath) throws IOException {
+        // now we delete the app we sync'ed
+        try {
+            executeShellCommand("rm " + remoteFilePath, new NullOutputReceiver());
+        } catch (IOException e) {
+            Log.e(LOG_TAG, String.format("Failed to delete temporary package: %1$s",
+                    e.getMessage()));
+            throw e;
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public String uninstallPackage(String packageName) throws IOException {
+        InstallReceiver receiver = new InstallReceiver();
+        executeShellCommand("pm uninstall " + packageName, receiver);
+        return receiver.getErrorMessage();
     }
 }

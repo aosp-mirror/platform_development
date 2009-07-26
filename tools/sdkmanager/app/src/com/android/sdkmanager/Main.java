@@ -23,19 +23,21 @@ import com.android.sdklib.ISdkLog;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.IAndroidTarget.IOptionalLibrary;
-import com.android.sdklib.avd.AvdManager;
-import com.android.sdklib.avd.HardwareProperties;
-import com.android.sdklib.avd.AvdManager.AvdInfo;
-import com.android.sdklib.avd.HardwareProperties.HardwareProperty;
-import com.android.sdklib.project.ProjectCreator;
-import com.android.sdklib.project.ProjectCreator.OutputLevel;
+import com.android.sdklib.internal.avd.AvdManager;
+import com.android.sdklib.internal.avd.HardwareProperties;
+import com.android.sdklib.internal.avd.AvdManager.AvdInfo;
+import com.android.sdklib.internal.avd.HardwareProperties.HardwareProperty;
+import com.android.sdklib.internal.project.ProjectCreator;
+import com.android.sdklib.internal.project.ProjectCreator.OutputLevel;
+import com.android.sdkmanager.internal.repository.AboutPage;
+import com.android.sdkmanager.internal.repository.SettingsPage;
+import com.android.sdkuilib.repository.UpdaterWindow;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 /**
  * Main class for the 'android' application.
@@ -47,18 +49,12 @@ class Main {
     /** Java property that defines the working directory. On Windows the current working directory
      *  is actually the tools dir, in which case this is used to get the original CWD. */
     private final static String WORKDIR = "com.android.sdkmanager.workdir";
-    
+
     private final static String[] BOOLEAN_YES_REPLIES = new String[] { "yes", "y" };
     private final static String[] BOOLEAN_NO_REPLIES = new String[] { "no", "n" };
 
-    /** Regex used to validate characters that compose an AVD name. */
-    private final static Pattern RE_AVD_NAME = Pattern.compile("[a-zA-Z0-9._-]+");
-    /** List of valid characters for an AVD name. Used for display purposes. */
-    private final static String CHARS_AVD_NAME = "a-z A-Z 0-9 . _ -";
-    
-    
     /** Path to the SDK folder. This is the parent of {@link #TOOLSDIR}. */
-    private String mSdkFolder;
+    private String mOsSdkFolder;
     /** Logger object. Use this to print normal output, warnings or errors. */
     private ISdkLog mSdkLog;
     /** The SDK manager parses the SDK folder and gives access to the content. */
@@ -71,7 +67,7 @@ class Main {
     public static void main(String[] args) {
         new Main().run(args);
     }
-    
+
     /**
      * Runs the sdk manager app
      */
@@ -130,28 +126,28 @@ class Main {
             // for debugging, it's easier to override using the process environment
             toolsDirProp = System.getenv(TOOLSDIR);
         }
-    
+
         if (toolsDirProp != null) {
             // got back a level for the SDK folder
             File tools;
             if (toolsDirProp.length() > 0) {
                 tools = new File(toolsDirProp);
-                mSdkFolder = tools.getParent();
+                mOsSdkFolder = tools.getParent();
             } else {
                 try {
                     tools = new File(".").getCanonicalFile();
-                    mSdkFolder = tools.getParent();
+                    mOsSdkFolder = tools.getParent();
                 } catch (IOException e) {
                     // Will print an error below since mSdkFolder is not defined
                 }
             }
         }
 
-        if (mSdkFolder == null) {
+        if (mOsSdkFolder == null) {
             errorAndExit("The tools directory property is not set, please make sure you are executing %1$s",
                 SdkConstants.androidCmdName());
         }
-        
+
         // We might get passed a property for the working directory
         // Either it is a valid directory and mWorkDir is set to it's absolute canonical value
         // or mWorkDir remains null.
@@ -177,20 +173,20 @@ class Main {
      * Does the basic SDK parsing required for all actions
      */
     private void parseSdk() {
-        mSdkManager = SdkManager.createManager(mSdkFolder, mSdkLog);
-        
+        mSdkManager = SdkManager.createManager(mOsSdkFolder, mSdkLog);
+
         if (mSdkManager == null) {
             errorAndExit("Unable to parse SDK content.");
         }
     }
-    
+
     /**
      * Actually do an action...
      */
     private void doAction() {
         String verb = mSdkCommandLine.getVerb();
         String directObject = mSdkCommandLine.getDirectObject();
-        
+
         if (SdkCommandLine.VERB_LIST.equals(verb)) {
             // list action.
             if (SdkCommandLine.OBJECT_TARGET.equals(directObject)) {
@@ -226,13 +222,41 @@ class Main {
                 SdkCommandLine.OBJECT_PROJECT.equals(directObject)) {
             updateProject();
 
+        } else if (verb == null && directObject == null) {
+            showMainWindow();
+
+        } else if (SdkCommandLine.VERB_UPDATE.equals(verb) &&
+                SdkCommandLine.OBJECT_ADB.equals(directObject)) {
+            updateAdb();
+
         } else {
             mSdkCommandLine.printHelpAndExit(null);
         }
     }
 
     /**
-     * Creates a new Android project based on command-line parameters 
+     * Display the main SdkManager app window
+     */
+    private void showMainWindow() {
+        try {
+            // display a message talking about the command line version
+            System.out.printf("No command line parameters provided, launching UI.\n" +
+                    "See 'android --help' for operations from the command line.\n");
+            UpdaterWindow window = new UpdaterWindow(
+                    null /* parentShell */,
+                    mSdkLog,
+                    mOsSdkFolder,
+                    false /*userCanChangeSdkRoot*/);
+            window.registerPage("Settings", SettingsPage.class);
+            window.registerPage("About", AboutPage.class);
+            window.open();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Creates a new Android project based on command-line parameters
      */
     private void createProject() {
         // get the target and try to resolve it.
@@ -243,8 +267,8 @@ class Main {
                     SdkConstants.androidCmdName());
         }
         IAndroidTarget target = targets[targetId - 1];
-        
-        ProjectCreator creator = new ProjectCreator(mSdkFolder,
+
+        ProjectCreator creator = new ProjectCreator(mOsSdkFolder,
                 mSdkCommandLine.isVerbose() ? OutputLevel.VERBOSE :
                     mSdkCommandLine.isSilent() ? OutputLevel.SILENT :
                         OutputLevel.NORMAL,
@@ -255,7 +279,7 @@ class Main {
         String projectName = mSdkCommandLine.getParamName();
         String packageName = mSdkCommandLine.getParamProjectPackage();
         String activityName = mSdkCommandLine.getParamProjectActivity();
-        
+
         if (projectName != null &&
                 !ProjectCreator.RE_PROJECT_NAME.matcher(projectName).matches()) {
             errorAndExit(
@@ -291,7 +315,7 @@ class Main {
     }
 
     /**
-     * Updates an existing Android project based on command-line parameters 
+     * Updates an existing Android project based on command-line parameters
      */
     private void updateProject() {
         // get the target and try to resolve it.
@@ -305,29 +329,56 @@ class Main {
             }
             target = targets[targetId - 1];
         }
-        
-        ProjectCreator creator = new ProjectCreator(mSdkFolder,
+
+        ProjectCreator creator = new ProjectCreator(mOsSdkFolder,
                 mSdkCommandLine.isVerbose() ? OutputLevel.VERBOSE :
                     mSdkCommandLine.isSilent() ? OutputLevel.SILENT :
                         OutputLevel.NORMAL,
                 mSdkLog);
 
         String projectDir = getProjectLocation(mSdkCommandLine.getParamLocationPath());
-        
+
         creator.updateProject(projectDir,
                 target,
                 mSdkCommandLine.getParamName());
+
+        boolean doSubProjects = mSdkCommandLine.getParamSubProject();
+        boolean couldHaveDone = false;
+
+        // If there are any sub-folders with a manifest, try to update them as projects
+        // too. This will take care of updating any underlying test project even if the
+        // user changed the folder name.
+        File[] files = new File(projectDir).listFiles();
+        if (files != null) {
+            for (File dir : files) {
+                if (dir.isDirectory() &&
+                        new File(dir, SdkConstants.FN_ANDROID_MANIFEST_XML).isFile()) {
+                    if (doSubProjects) {
+                        creator.updateProject(dir.getPath(),
+                                target,
+                                mSdkCommandLine.getParamName());
+                    } else {
+                        couldHaveDone = true;
+                    }
+                }
+            }
+        }
+
+        if (couldHaveDone) {
+            mSdkLog.printf("It seems that there are sub-projects. If you want to update them\nplease use the --%1$s parameter.",
+                    SdkCommandLine.KEY_SUBPROJECTS);
+        }
     }
 
     /**
      * Adjusts the project location to make it absolute & canonical relative to the
      * working directory, if any.
-     * 
+     *
      * @return The project absolute path relative to {@link #mWorkDir} or the original
      *         newProjectLocation otherwise.
      */
     private String getProjectLocation(String newProjectLocation) {
-        
+
         // If the new project location is absolute, use it as-is
         File projectDir = new File(newProjectLocation);
         if (projectDir.isAbsolute()) {
@@ -342,7 +393,7 @@ class Main {
         // Combine then and get an absolute canonical directory
         try {
             projectDir = new File(mWorkDir, newProjectLocation).getCanonicalFile();
-            
+
             return projectDir.getPath();
         } catch (IOException e) {
             errorAndExit("Failed to combine working directory '%1$s' with project location '%2$s': %3$s",
@@ -366,15 +417,17 @@ class Main {
             if (target.isPlatform()) {
                 mSdkLog.printf("     Type: Platform\n");
                 mSdkLog.printf("     API level: %d\n", target.getApiVersionNumber());
+                mSdkLog.printf("     Revision: %d\n", target.getRevision());
             } else {
                 mSdkLog.printf("     Type: Add-On\n");
                 mSdkLog.printf("     Vendor: %s\n", target.getVendor());
+                mSdkLog.printf("     Revision: %d\n", target.getRevision());
                 if (target.getDescription() != null) {
                     mSdkLog.printf("     Description: %s\n", target.getDescription());
                 }
                 mSdkLog.printf("     Based on Android %s (API level %d)\n",
                         target.getApiVersionName(), target.getApiVersionNumber());
-                
+
                 // display the optional libraries.
                 IOptionalLibrary[] libraries = target.getOptionalLibraries();
                 if (libraries != null) {
@@ -390,7 +443,12 @@ class Main {
 
             // get the target skins
             displaySkinList(target, "     Skins: ");
-            
+
+            if (target.getUsbVendorId() != IAndroidTarget.NO_USB_ID) {
+                mSdkLog.printf("     Adds USB support for devices (Vendor: 0x%04X)\n",
+                        target.getUsbVendorId());
+            }
+
             index++;
         }
     }
@@ -411,7 +469,7 @@ class Main {
                     first = false;
                 }
                 mSdkLog.printf(skin);
-                
+
                 if (skin.equals(defaultSkin)) {
                     mSdkLog.printf(" (default)");
                 }
@@ -421,7 +479,7 @@ class Main {
             mSdkLog.printf("no skins.\n");
         }
     }
-    
+
     /**
      * Displays the list of available AVDs.
      */
@@ -451,19 +509,21 @@ class Main {
                     mSdkLog.printf("          Based on Android %s (API level %d)\n", target
                             .getApiVersionName(), target.getApiVersionNumber());
                 }
-                
+
                 // display some extra values.
                 Map<String, String> properties = info.getProperties();
-                String skin = properties.get(AvdManager.AVD_INI_SKIN_NAME);
-                if (skin != null) {
-                    mSdkLog.printf("    Skin: %s\n", skin);
-                }
-                String sdcard = properties.get(AvdManager.AVD_INI_SDCARD_SIZE);
-                if (sdcard == null) {
-                    sdcard = properties.get(AvdManager.AVD_INI_SDCARD_PATH);
-                }
-                if (sdcard != null) {
-                    mSdkLog.printf("  Sdcard: %s\n", sdcard);
+                if (properties != null) {
+                    String skin = properties.get(AvdManager.AVD_INI_SKIN_NAME);
+                    if (skin != null) {
+                        mSdkLog.printf("    Skin: %s\n", skin);
+                    }
+                    String sdcard = properties.get(AvdManager.AVD_INI_SDCARD_SIZE);
+                    if (sdcard == null) {
+                        sdcard = properties.get(AvdManager.AVD_INI_SDCARD_PATH);
+                    }
+                    if (sdcard != null) {
+                        mSdkLog.printf("  Sdcard: %s\n", sdcard);
+                    }
                 }
             }
 
@@ -499,7 +559,7 @@ class Main {
         // find a matching target
         int targetId = mSdkCommandLine.getParamTargetId();
         IAndroidTarget target = null;
-        
+
         if (targetId >= 1 && targetId <= mSdkManager.getTargets().length) {
             target = mSdkManager.getTargets()[targetId-1]; // target it is 1-based
         } else {
@@ -508,22 +568,21 @@ class Main {
         }
 
         try {
-            boolean removePrevious = false;
+            boolean removePrevious = mSdkCommandLine.getFlagForce();
             AvdManager avdManager = new AvdManager(mSdkManager, mSdkLog);
 
             String avdName = mSdkCommandLine.getParamName();
-            
-            if (!RE_AVD_NAME.matcher(avdName).matches()) {
+
+            if (!AvdManager.RE_AVD_NAME.matcher(avdName).matches()) {
                 errorAndExit(
                     "AVD name '%1$s' contains invalid characters.\nAllowed characters are: %2$s",
-                    avdName, CHARS_AVD_NAME);
+                    avdName, AvdManager.CHARS_AVD_NAME);
                 return;
             }
-            
+
             AvdInfo info = avdManager.getAvd(avdName, false /*validAvdOnly*/);
             if (info != null) {
-                if (mSdkCommandLine.getFlagForce()) {
-                    removePrevious = true;
+                if (removePrevious) {
                     mSdkLog.warning(
                             "Android Virtual Device '%s' already exists and will be replaced.",
                             avdName);
@@ -542,21 +601,8 @@ class Main {
                         avdName + AvdManager.AVD_FOLDER_EXTENSION);
             }
 
-            Map<String, String> hardwareConfig = null;
-            if (target.isPlatform()) {
-                try {
-                    hardwareConfig = promptForHardware(target);
-                } catch (IOException e) {
-                    errorAndExit(e.getMessage());
-                }
-            }
-
-            AvdInfo oldAvdInfo = null;
-            if (removePrevious) {
-                oldAvdInfo = avdManager.getAvd(avdName, false /*validAvdOnly*/);
-            }
-            
             // Validate skin is either default (empty) or NNNxMMM or a valid skin name.
+            Map<String, String> skinHardwareConfig = null;
             String skin = mSdkCommandLine.getParamSkin();
             if (skin != null && skin.length() == 0) {
                 skin = null;
@@ -568,10 +614,18 @@ class Main {
                     if (skin.equalsIgnoreCase(s)) {
                         skin = s;  // Make skin names case-insensitive.
                         valid = true;
+
+                        // get the hardware properties for this skin
+                        File skinFolder = avdManager.getSkinPath(skin, target);
+                        File skinHardwareFile = new File(skinFolder, AvdManager.HARDWARE_INI);
+                        if (skinHardwareFile.isFile()) {
+                            skinHardwareConfig = SdkManager.parsePropertyFile(
+                                    skinHardwareFile, mSdkLog);
+                        }
                         break;
                     }
                 }
-                
+
                 // Is it NNNxMMM?
                 if (!valid) {
                     valid = AvdManager.NUMERIC_SKIN_SIZE.matcher(skin).matches();
@@ -583,27 +637,30 @@ class Main {
                     return;
                 }
             }
-            
+
+            Map<String, String> hardwareConfig = null;
+            if (target.isPlatform()) {
+                try {
+                    hardwareConfig = promptForHardware(target, skinHardwareConfig);
+                } catch (IOException e) {
+                    errorAndExit(e.getMessage());
+                }
+            }
+
+            AvdInfo oldAvdInfo = null;
+            if (removePrevious) {
+                oldAvdInfo = avdManager.getAvd(avdName, false /*validAvdOnly*/);
+            }
+
             AvdInfo newAvdInfo = avdManager.createAvd(avdFolder,
                     avdName,
                     target,
                     skin,
                     mSdkCommandLine.getParamSdCard(),
                     hardwareConfig,
-                    removePrevious);
-            
-            if (newAvdInfo != null && 
-                    oldAvdInfo != null &&
-                    !oldAvdInfo.getPath().equals(newAvdInfo.getPath())) {
-                mSdkLog.warning("Removing previous AVD directory at %s", oldAvdInfo.getPath());
-                // Remove the old data directory
-                File dir = new File(oldAvdInfo.getPath());
-                avdManager.recursiveDelete(dir);
-                dir.delete();
-                // Remove old AVD info from manager
-                avdManager.removeAvd(oldAvdInfo);
-            }
-            
+                    removePrevious,
+                    mSdkLog);
+
         } catch (AndroidLocationException e) {
             errorAndExit(e.getMessage());
         }
@@ -618,18 +675,18 @@ class Main {
             String avdName = mSdkCommandLine.getParamName();
             AvdManager avdManager = new AvdManager(mSdkManager, mSdkLog);
             AvdInfo info = avdManager.getAvd(avdName, false /*validAvdOnly*/);
-            
+
             if (info == null) {
                 errorAndExit("There is no Android Virtual Device named '%s'.", avdName);
                 return;
             }
-    
+
             avdManager.deleteAvd(info, mSdkLog);
         } catch (AndroidLocationException e) {
             errorAndExit(e.getMessage());
         }
     }
-    
+
     /**
      * Moves an AVD.
      */
@@ -638,12 +695,12 @@ class Main {
             String avdName = mSdkCommandLine.getParamName();
             AvdManager avdManager = new AvdManager(mSdkManager, mSdkLog);
             AvdInfo info = avdManager.getAvd(avdName, true /*validAvdOnly*/);
-    
+
             if (info == null) {
                 errorAndExit("There is no valid Android Virtual Device named '%s'.", avdName);
                 return;
             }
-            
+
             // This is a rename if there's a new name for the AVD
             String newName = mSdkCommandLine.getParamMoveNewName();
             if (newName != null && newName.equals(info.getName())) {
@@ -664,17 +721,17 @@ class Main {
                     }
                 } catch (IOException e) {
                     // Fail to resolve canonical path. Fail now since a move operation might fail
-                    // later and be harder to recover from. 
+                    // later and be harder to recover from.
                     errorAndExit(e.getMessage());
                     return;
                 }
             }
-            
+
             if (newName == null && paramFolderPath == null) {
                 mSdkLog.warning("Move operation aborted: same AVD name, same canonical data path");
                 return;
             }
-            
+
             // If a rename was requested and no data move was requested, check if the original
             // data path is our default constructed from the AVD name. In this case we still want
             // to rename that folder too.
@@ -691,12 +748,12 @@ class Main {
                                      newName + AvdManager.AVD_FOLDER_EXTENSION);
                         paramFolderPath = f.getCanonicalPath();
                     } catch (IOException e) {
-                        // Fail to resolve canonical path. Fail now rather than later. 
+                        // Fail to resolve canonical path. Fail now rather than later.
                         errorAndExit(e.getMessage());
                     }
                 }
             }
-            
+
             // Check for conflicts
             if (newName != null) {
                 if (avdManager.getAvd(newName, false /*validAvdOnly*/) != null) {
@@ -716,7 +773,7 @@ class Main {
                         "There is already a file or directory at '%s'.\nUse --path to specify a different data folder.",
                         paramFolderPath);
             }
-            
+
             avdManager.moveAvd(info, newName, paramFolderPath, mSdkLog);
         } catch (AndroidLocationException e) {
             errorAndExit(e.getMessage());
@@ -724,7 +781,7 @@ class Main {
             errorAndExit(e.getMessage());
         }
     }
-    
+
     /**
      * Updates a broken AVD.
      */
@@ -732,27 +789,46 @@ class Main {
         try {
             String avdName = mSdkCommandLine.getParamName();
             AvdManager avdManager = new AvdManager(mSdkManager, mSdkLog);
-            avdManager.updateAvd(avdName);
+            avdManager.updateAvd(avdName, mSdkLog);
         } catch (AndroidLocationException e) {
             errorAndExit(e.getMessage());
         } catch (IOException e) {
             errorAndExit(e.getMessage());
         }
     }
-    
+
+    /**
+     * Updates adb with the USB devices declared in the SDK add-ons.
+     */
+    private void updateAdb() {
+        try {
+            mSdkManager.updateAdb();
+
+            mSdkLog.printf(
+                    "adb has been updated. You must restart adb with the following commands\n" +
+                    "\tadb kill-server\n" +
+                    "\tadb start-server\n");
+        } catch (AndroidLocationException e) {
+            errorAndExit(e.getMessage());
+        } catch (IOException e) {
+            errorAndExit(e.getMessage());
+        }
+    }
+
     /**
      * Prompts the user to setup a hardware config for a Platform-based AVD.
-     * @throws IOException 
+     * @throws IOException
      */
-    private Map<String, String> promptForHardware(IAndroidTarget createTarget) throws IOException {
+    private Map<String, String> promptForHardware(IAndroidTarget createTarget,
+            Map<String, String> skinHardwareConfig) throws IOException {
         byte[] readLineBuffer = new byte[256];
         String result;
         String defaultAnswer = "no";
-        
+
         mSdkLog.printf("%s is a basic Android platform.\n", createTarget.getName());
         mSdkLog.printf("Do you wish to create a custom hardware profile [%s]",
                 defaultAnswer);
-        
+
         result = readLine(readLineBuffer).trim();
         // handle default:
         if (result.length() == 0) {
@@ -760,20 +836,20 @@ class Main {
         }
 
         if (getBooleanReply(result) == false) {
-            // no custom config.
-            return null;
+            // no custom config, return the skin hardware config in case there is one.
+            return skinHardwareConfig;
         }
-        
+
         mSdkLog.printf("\n"); // empty line
-        
+
         // get the list of possible hardware properties
-        File hardwareDefs = new File (mSdkFolder + File.separator +
+        File hardwareDefs = new File (mOsSdkFolder + File.separator +
                 SdkConstants.OS_SDK_TOOLS_LIB_FOLDER, SdkConstants.FN_HARDWARE_INI);
         List<HardwareProperty> list = HardwareProperties.parseHardwareDefinitions(hardwareDefs,
                 null /*sdkLog*/);
-        
+
         HashMap<String, String> map = new HashMap<String, String>();
-        
+
         for (int i = 0 ; i < list.size() ;) {
             HardwareProperty property = list.get(i);
 
@@ -785,23 +861,32 @@ class Main {
             }
 
             String defaultValue = property.getDefault();
-            
-            if (defaultValue != null) {
+            String defaultFromSkin = skinHardwareConfig != null ? skinHardwareConfig.get(
+                    property.getName()) : null;
+
+            if (defaultFromSkin != null) {
+                mSdkLog.printf("%s [%s (from skin)]:", property.getName(), defaultFromSkin);
+            } else if (defaultValue != null) {
                 mSdkLog.printf("%s [%s]:", property.getName(), defaultValue);
             } else {
                 mSdkLog.printf("%s (%s):", property.getName(), property.getType());
             }
-            
+
             result = readLine(readLineBuffer);
             if (result.length() == 0) {
-                if (defaultValue != null) {
+                if (defaultFromSkin != null || defaultValue != null) {
+                    if (defaultFromSkin != null) {
+                        // we need to write this one in the AVD file
+                        map.put(property.getName(), defaultFromSkin);
+                    }
+
                     mSdkLog.printf("\n"); // empty line
                     i++; // go to the next property if we have a valid default value.
                          // if there's no default, we'll redo this property
                 }
                 continue;
             }
-            
+
             switch (property.getType()) {
                 case BOOLEAN:
                     try {
@@ -833,13 +918,13 @@ class Main {
                     i++; // valid reply, move to next property
                     break;
             }
-            
+
             mSdkLog.printf("\n"); // empty line
         }
 
         return map;
     }
-    
+
     /**
      * Reads the line from the input stream.
      * @param buffer
@@ -847,7 +932,7 @@ class Main {
      */
     private String readLine(byte[] buffer) throws IOException {
         int count = System.in.read(buffer);
-        
+
         // is the input longer than the buffer?
         if (count == buffer.length && buffer[count-1] != 10) {
             // create a new temp buffer
@@ -855,7 +940,7 @@ class Main {
 
             // and read the rest
             String secondHalf = readLine(tempBuffer);
-            
+
             // return a concat of both
             return new String(buffer, 0, count) + secondHalf;
         }
@@ -864,16 +949,16 @@ class Main {
         while (count > 0 && (buffer[count-1] == '\r' || buffer[count-1] == '\n')) {
             count--;
         }
-        
+
         return new String(buffer, 0, count);
     }
-    
+
     /**
      * Returns the boolean value represented by the string.
      * @throws IOException If the value is not a boolean string.
      */
     private boolean getBooleanReply(String reply) throws IOException {
-        
+
         for (String valid : BOOLEAN_YES_REPLIES) {
             if (valid.equalsIgnoreCase(reply)) {
                 return true;
@@ -888,7 +973,7 @@ class Main {
 
         throw new IOException(String.format("%s is not a valid reply", reply));
     }
-    
+
     private void errorAndExit(String format, Object...args) {
         mSdkLog.error(null, format, args);
         System.exit(1);

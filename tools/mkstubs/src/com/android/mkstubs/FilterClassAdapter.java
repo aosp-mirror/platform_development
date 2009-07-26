@@ -24,27 +24,25 @@ import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
-import java.util.List;
-
 /**
- * A class visitor that filters out all the referenced exclusions
+ * A class visitor that filters out all members (fields, methods and inner classes) that are
+ * either private, default-access or rejected by the {@link Filter}.
  */
 class FilterClassAdapter extends ClassAdapter {
 
-    private final List<String> mExclusions;
+    private final Filter mFilter;
+    private String mClassName;
 
-    public FilterClassAdapter(ClassVisitor writer, List<String> exclusions) {
+    public FilterClassAdapter(ClassVisitor writer, Filter filter) {
         super(writer);
-        mExclusions = exclusions;
+        mFilter = filter;
     }
 
     @Override
     public void visit(int version, int access, String name, String signature,
             String superName, String[] interfaces) {
 
-        // TODO filter super type
-        // TODO filter interfaces 
-        
+        mClassName = name;
         super.visit(version, access, name, signature, superName, interfaces);
     }
 
@@ -52,12 +50,12 @@ class FilterClassAdapter extends ClassAdapter {
     public void visitEnd() {
         super.visitEnd();
     }
-    
+
     /**
      * Visits a field.
-     * 
+     *
      * {@inheritDoc}
-     * 
+     *
      * Examples:
      * name = mArg
      * desc = Ljava/Lang/String;
@@ -66,21 +64,29 @@ class FilterClassAdapter extends ClassAdapter {
     @Override
     public FieldVisitor visitField(int access, String name, String desc,
             String signature, Object value) {
-        // exclude private fields
-        if ((access & Opcodes.ACC_PRIVATE) != 0) {
+        // only accept public/protected fields
+        if ((access & (Opcodes.ACC_PUBLIC | Opcodes.ACC_PROTECTED)) == 0) {
             return null;
         }
-        
-        // TODO filter on name
+
+        // filter on field name
+        String filterName = String.format("%s#%s", mClassName, name);
+
+        if (!mFilter.accept(filterName)) {
+            System.out.println("- Remove field " + filterName);
+            return null;
+        }
+
+        // TODO we should produce an error if a filtered desc/signature is being used.
 
         return super.visitField(access, name, desc, signature, value);
     }
 
     /**
      * Visits a method.
-     * 
+     *
      * {@inheritDoc}
-     * 
+     *
      * Examples:
      * name = <init>
      * desc = ()V
@@ -90,22 +96,38 @@ class FilterClassAdapter extends ClassAdapter {
     public MethodVisitor visitMethod(int access, String name, String desc,
             String signature, String[] exceptions) {
 
-        // exclude private methods
-        if ((access & Opcodes.ACC_PRIVATE) != 0) {
+        // only accept public/protected methods
+        if ((access & (Opcodes.ACC_PUBLIC | Opcodes.ACC_PROTECTED)) == 0) {
             return null;
         }
-        
-        // TODO filter exceptions: error if filtered exception is being used
 
-        // TODO filter on name; error if filtered desc or signatures is being used
+        // filter on method name using the non-generic descriptor
+        String filterName = String.format("%s#%s%s", mClassName, name, desc);
+
+        if (!mFilter.accept(filterName)) {
+            System.out.println("- Remove method " + filterName);
+            return null;
+        }
+
+        // filter on method name using the generic signature
+        if (signature != null) {
+            filterName = String.format("%s#%s%s", mClassName, name, signature);
+
+            if (!mFilter.accept(filterName)) {
+                System.out.println("- Remove method " + filterName);
+                return null;
+            }
+        }
+
+        // TODO we should produce an error if a filtered desc/signature/exception is being used.
 
         return super.visitMethod(access, name, desc, signature, exceptions);
     }
 
     @Override
     public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
-        
-        // Filter on desc type
+
+        // TODO produce an error if a filtered annotation type is being used
         return super.visitAnnotation(desc, visible);
     }
 
@@ -117,19 +139,22 @@ class FilterClassAdapter extends ClassAdapter {
     @Override
     public void visitInnerClass(String name, String outerName, String innerName, int access) {
 
-        // exclude private methods
-        if ((access & Opcodes.ACC_PRIVATE) != 0) {
+        // only accept public/protected inner classes
+        if ((access & (Opcodes.ACC_PUBLIC | Opcodes.ACC_PROTECTED)) == 0) {
             return;
         }
 
-        // TODO filter on name
+        // filter on name
+        if (!mFilter.accept(name)) {
+            return;
+        }
 
         super.visitInnerClass(name, outerName, innerName, access);
     }
 
     @Override
     public void visitOuterClass(String owner, String name, String desc) {
-        // TODO Auto-generated method stub
+        // pass
     }
 
     @Override

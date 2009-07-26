@@ -64,7 +64,7 @@ class AdbInterface:
       string output of command
 
     Raises:
-      WaitForResponseTimedOutError if device does not respond to command
+      WaitForResponseTimedOutError if device does not respond to command within time
     """
     adb_cmd = "adb %s %s" % (self._target_arg, command_string)
     logger.SilentLog("about to run %s" % adb_cmd)
@@ -157,8 +157,9 @@ class AdbInterface:
     separated into its package and runner components.
     """
     instrumentation_path = "%s/%s" % (package_name, runner_name)
-    return self.StartInstrumentation(self, instrumentation_path, timeout_time,
-                                     no_window_animation, instrumentation_args)
+    return self.StartInstrumentation(instrumentation_path, timeout_time=timeout_time,
+                                     no_window_animation=no_window_animation,
+                                     instrumentation_args=instrumentation_args)
 
   def StartInstrumentation(
       self, instrumentation_path, timeout_time=60*10, no_window_animation=False,
@@ -203,7 +204,7 @@ class AdbInterface:
         instrumentation_path, no_window_animation=no_window_animation,
         profile=profile, raw_mode=True,
         instrumentation_args=instrumentation_args)
-
+    logger.Log(command_string)
     (test_results, inst_finished_bundle) = (
         am_instrument_parser.ParseAmInstrumentOutput(
             self.SendShellCommand(command_string, timeout_time=timeout_time,
@@ -217,7 +218,7 @@ class AdbInterface:
       short_msg_result = "no error message"
       if "shortMsg" in inst_finished_bundle:
         short_msg_result = inst_finished_bundle["shortMsg"]
-        logger.Log(short_msg_result)
+        logger.Log("Error! Test run failed: %s" % short_msg_result)
       raise errors.InstrumentationError(short_msg_result)
 
     if "INSTRUMENTATION_ABORTED" in inst_finished_bundle:
@@ -274,7 +275,7 @@ class AdbInterface:
           (self.DEVICE_TRACE_DIR, instrumentation_path.split(".")[-1]))
 
     for key, value in instrumentation_args.items():
-      command_string += " -e %s %s" % (key, value)
+      command_string += " -e %s '%s'" % (key, value)
     if raw_mode:
       command_string += " -r"
     command_string += " -w %s" % instrumentation_path
@@ -305,7 +306,7 @@ class AdbInterface:
     attempts = 0
     wait_period = 5
     while not pm_found and (attempts*wait_period) < wait_time:
-      # assume the 'adb shell pm path android' command will always 
+      # assume the 'adb shell pm path android' command will always
       # return 'package: something' in the success case
       output = self.SendShellCommand("pm path android", retry_count=1)
       if "package:" in output:
@@ -316,43 +317,82 @@ class AdbInterface:
     if not pm_found:
       raise errors.WaitForResponseTimedOutError(
           "Package manager did not respond after %s seconds" % wait_time)
-    
+
+  def WaitForInstrumentation(self, package_name, runner_name, wait_time=120):
+    """Waits for given instrumentation to be present on device
+
+    Args:
+      wait_time: time in seconds to wait
+
+    Raises:
+      WaitForResponseTimedOutError if wait_time elapses and instrumentation
+      still not present.
+    """
+    instrumentation_path = "%s/%s" % (package_name, runner_name)
+    logger.Log("Waiting for instrumentation to be present")
+    # Query the package manager
+    inst_found = False
+    attempts = 0
+    wait_period = 5
+    while not inst_found and (attempts*wait_period) < wait_time:
+      # assume the 'adb shell pm list instrumentation'
+      # return 'instrumentation: something' in the success case
+      try:
+        output = self.SendShellCommand("pm list instrumentation | grep %s"
+                                       % instrumentation_path, retry_count=1)
+        if "instrumentation:" in output:
+          inst_found = True
+      except errors.AbortError, e:
+        # ignore
+        pass
+      if not inst_found:
+        time.sleep(wait_period)
+        attempts += 1
+    if not inst_found:
+      logger.Log(
+          "Could not find instrumentation %s on device. Does the "
+          "instrumentation in test's AndroidManifest.xml match definition"
+          "in test_defs.xml?" % instrumentation_path)
+      raise errors.WaitForResponseTimedOutError()
+
   def Sync(self, retry_count=3):
     """Perform a adb sync.
-    
+
     Blocks until device package manager is responding.
-    
+
     Args:
       retry_count: number of times to retry sync before failing
-      
+
     Raises:
       WaitForResponseTimedOutError if package manager does not respond
+      AbortError if unrecoverable error occurred
     """
-    output = self.SendCommand("sync", retry_count=retry_count)
+    output = ""
+    error = None
+    try:
+      output = self.SendCommand("sync", retry_count=retry_count)
+    except errors.AbortError, e:
+      error = e
+      output = e.msg
     if "Read-only file system" in output:
-      logger.SilentLog(output) 
+      logger.SilentLog(output)
       logger.Log("Remounting read-only filesystem")
       self.SendCommand("remount")
       output = self.SendCommand("sync", retry_count=retry_count)
-    if "No space left on device" in output:
-      logger.SilentLog(output) 
+    elif "No space left on device" in output:
+      logger.SilentLog(output)
       logger.Log("Restarting device runtime")
       self.SendShellCommand("stop", retry_count=retry_count)
       output = self.SendCommand("sync", retry_count=retry_count)
       self.SendShellCommand("start", retry_count=retry_count)
-
+    elif error is not None:
+      # exception occurred that cannot be recovered from
+      raise error
     logger.SilentLog(output)
     self.WaitForDevicePm()
     return output
-  
-  def IsDevicePresent(self):
-    """Check if targeted device is present.
 
-    Returns:
-      True if device is present, False otherwise.
-    """
-    output = self.SendShellCommand("ls", retry_count=0)
-    if output.startswith("error:"):
-      return False
-    else:
-      return True
+  def GetSerialNumber(self):
+    """Returns the serial number of the targeted device."""
+    return self.SendCommand("get-serialno").strip()
+

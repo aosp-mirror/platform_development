@@ -15,6 +15,9 @@
  */
 package com.android.ide.eclipse.adt.wizards.newproject;
 
+import com.android.ide.eclipse.adt.internal.wizards.newproject.NewProjectCreationPage;
+import com.android.ide.eclipse.adt.internal.wizards.newproject.NewProjectWizard;
+
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.wizard.IWizardContainer;
@@ -49,8 +52,7 @@ public class StubSampleProjectWizard extends NewProjectWizard {
      */
     @Override
     protected NewProjectCreationPage createMainPage() {
-        return new StubSampleProjectCreationPage(MAIN_PAGE_NAME,
-                mSampleProjectName, mOsSdkLocation);
+        return new StubSampleProjectCreationPage(mSampleProjectName, mOsSdkLocation);
     }
 
     /**

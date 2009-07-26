@@ -27,25 +27,41 @@ rem Change current directory and drive to where the script is, to avoid
 rem issues with directories containing whitespaces.
 cd /d %~dp0
 
-set jarfile=sdkmanager.jar
-set frameworkdir=
-set libdir=
+set jarpath=lib\sdkmanager.jar
 
-if exist %frameworkdir%%jarfile% goto JarFileOk
-    set frameworkdir=lib\
-    set libdir=lib\
+rem Set SWT.Jar path based on current architecture (x86 or x86_64)
+for /f %%a in ('java -jar lib\archquery.jar') do set swt_path=lib\%%a
 
-if exist %frameworkdir%%jarfile% goto JarFileOk
-    set frameworkdir=..\framework\
-    set libdir=..\lib\
+if not "%1"=="" goto EndTempCopy
+    echo Starting Android SDK Updater
 
-:JarFileOk
+    rem We're now going to create a temp dir to hold all the Jar files needed
+    rem to run the android tool, copy them in the temp dir and finally execute
+    rem from that path. We do this only when the launcher is run without
+    rem arguments, to display the SDK Updater UI. This allows the updater to
+    rem update the tools directory where the updater itself is located.
 
-if debug NEQ "%1" goto NoDebug
-    set java_debug=-agentlib:jdwp=transport=dt_socket,server=y,address=8050,suspend=y
-    shift 1
-:NoDebug
+    set tmpdir=%TEMP%\temp-android-tool
+    xcopy lib\x86 %tmpdir%\lib\x86 /I /E /C /G /R /O /Y /Q > nul
+    copy /B /D /Y lib\androidprefs.jar %tmpdir%\lib\       > nul
+    copy /B /D /Y lib\org.eclipse.*    %tmpdir%\lib\       > nul
+    copy /B /D /Y lib\sdk*             %tmpdir%\lib\       > nul
 
-set jarpath=%frameworkdir%%jarfile%
+    rem jarpath and swt_path are relative to PWD so we don't need to adjust them, just change dirs.
+    set toolsdir=%cd%
+    cd %tmpdir%
 
-call java %java_debug% -Djava.ext.dirs=%frameworkdir% -Djava.library.path=%libdir% -Dcom.android.sdkmanager.toolsdir= -Dcom.android.sdkmanager.workdir="%workdir%" -jar %jarpath% %*
+:EndTempCopy
+    
+rem The global ANDROID_SWT always override the SWT.Jar path
+if defined ANDROID_SWT set swt_path=%ANDROID_SWT%
+
+if exist %swt_path% goto SetPath
+    echo SWT folder '%swt_path%' does not exist.
+    echo Please set ANDROID_SWT to point to the folder containing swt.jar for your platform.
+    exit /B
+
+:SetPath
+set javaextdirs=%swt_path%;lib\
+
+call java -Djava.ext.dirs=%javaextdirs% -Dcom.android.sdkmanager.toolsdir="%toolsdir%" -Dcom.android.sdkmanager.workdir="%workdir%" -jar %jarpath% %*

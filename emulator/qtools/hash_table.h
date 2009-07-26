@@ -21,6 +21,7 @@ class HashTable {
     typedef T value_type;
 
     void         Update(const char *key, T value);
+    bool         Remove(const char *key);
     T            Find(const char *key);
     entry_type*  GetFirst();
     entry_type*  GetNext();
@@ -118,6 +119,31 @@ void HashTable<T>::Update(const char *key, T value)
     ptr->next = table_[pos];
     table_[pos] = ptr;
     num_entries_ += 1;
+}
+
+template<class T>
+bool HashTable<T>::Remove(const char *key)
+{
+    // Hash the key to get the table position
+    int len = strlen(key);
+    int pos = HashFunction(key) & mask_;
+
+    // Search the chain for a matching key and keep track of the previous
+    // element in the chain.
+    entry_type *prev = NULL;
+    for (entry_type *ptr = table_[pos]; ptr; prev = ptr, ptr = ptr->next) {
+        if (strcmp(ptr->key, key) == 0) {
+            if (prev == NULL) {
+                table_[pos] = ptr->next;
+            } else {
+                prev->next = ptr->next;
+            }
+            delete ptr->key;
+            delete ptr;
+            return true;
+        }
+    }
+    return false;
 }
 
 template<class T>

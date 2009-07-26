@@ -32,7 +32,9 @@ class StackFrame {
     typedef SYM symbol_type;
     static const uint32_t kCausedException = 0x01;
     static const uint32_t kInterpreted     = 0x02;
-    static const uint32_t kPopBarrier      = (kCausedException | kInterpreted);
+    static const uint32_t kStartNative     = 0x04;
+    static const uint32_t kPopBarrier      = (kCausedException | kInterpreted
+        | kStartNative);
 
     symbol_type *function;      // the symbol for the function we entered
     uint32_t    addr;           // return address when this function returns
@@ -43,7 +45,8 @@ class StackFrame {
 
 template <class FRAME, class BASE = CallStackBase>
 class CallStack : public BASE {
-  public:
+public:
+    typedef FRAME frame_type;
     typedef typename FRAME::symbol_type symbol_type;
     typedef typename FRAME::symbol_type::region_type region_type;
     typedef BASE base_type;
@@ -56,7 +59,7 @@ class CallStack : public BASE {
     void    threadStart(uint64_t time);
     void    threadStop(uint64_t time);
 
-    // Set to true if you don't want to see any Java methods
+    // Set to true if you don't want to see any Java methods ever
     void    setNativeOnly(bool nativeOnly) {
         mNativeOnly = nativeOnly;
     }
@@ -64,38 +67,36 @@ class CallStack : public BASE {
     int         getStackLevel() { return mTop; }
 
     uint64_t    getGlobalTime(uint64_t time) { return time + mSkippedTime; }
-    void        showStack();
-    void        showSnapshotStack();
-
-  private:
-    enum Action { NONE, PUSH, POP };
-
-    Action      getAction(BBEvent *event, symbol_type *function);
-    Action      getMethodAction(BBEvent *event, symbol_type *function);
-    void        doSimplePush(symbol_type *function, uint32_t addr,
-                             uint64_t time);
-    void        doSimplePop(uint64_t time);
-    void        doPush(BBEvent *event, symbol_type *function);
-    void        doPop(BBEvent *event, symbol_type *function, Action methodAction);
-
-    void        transitionToJava();
-    void        transitionFromJava(uint64_t time);
-
-    TraceReaderType *mTrace;
-    bool        mNativeOnly;
-
-    symbol_type mDummyFunction;
-    region_type mDummyRegion;
+    void        showStack(FILE *stream);
 
     int         mNumFrames;
     FRAME       *mFrames;
     int         mTop;           // index of the next stack frame to write
 
-    int         mJavaTop;
+private:
+    enum Action { NONE, PUSH, POP, NATIVE_PUSH };
 
-    int         mSnapshotNumFrames;
-    FRAME       *mSnapshotFrames;
-    int         mSnapshotTop;   // index of the next stack frame to write
+    Action      getAction(BBEvent *event, symbol_type *function);
+    void        doMethodAction(BBEvent *event, symbol_type *function);
+    void        doMethodPop(BBEvent *event, uint32_t addr, const uint32_t flags);
+    void        doSimplePush(symbol_type *function, uint32_t addr,
+                             uint64_t time, int flags);
+    void        doSimplePop(uint64_t time);
+    void        doPush(BBEvent *event, symbol_type *function);
+    void        doPop(BBEvent *event, symbol_type *function, Action methodAction);
+
+    TraceReaderType *mTrace;
+
+    // This is a global switch that disables Java methods from appearing
+    // on the stack.
+    bool        mNativeOnly;
+  
+    // This keeps track of whether native frames are currently allowed on the
+    // stack.
+    bool        mAllowNativeFrames;
+
+    symbol_type mDummyFunction;
+    region_type mDummyRegion;
 
     symbol_type *mPrevFunction;
     BBEvent     mPrevEvent;
@@ -124,10 +125,7 @@ CallStack<FRAME, BASE>::CallStack(int id, int numFrames, TraceReaderType *trace)
     mNumFrames = numFrames;
     mFrames = new FRAME[mNumFrames];
     mTop = 0;
-
-    mSnapshotNumFrames = numFrames;
-    mSnapshotFrames = new FRAME[mSnapshotNumFrames];
-    mSnapshotTop = 0;
+    mAllowNativeFrames = true;
 
     memset(&mDummyFunction, 0, sizeof(symbol_type));
     memset(&mDummyRegion, 0, sizeof(region_type));
@@ -138,7 +136,6 @@ CallStack<FRAME, BASE>::CallStack(int id, int numFrames, TraceReaderType *trace)
     memset(&mUserEvent, 0, sizeof(BBEvent));
     mSkippedTime = 0;
     mLastRunTime = 0;
-    mJavaTop = 0;
 
     // Read the first two methods from the trace if we haven't already read
     // from the method trace yet.
@@ -168,11 +165,29 @@ CallStack<FRAME, BASE>::updateStack(BBEvent *event, symbol_type *function)
         // instead.
         if (function->vm_sym != NULL)
             function = function->vm_sym;
+    } else {
+        doMethodAction(event, function);
     }
 
     Action action = getAction(event, function);
-    Action methodAction = getMethodAction(event, function);
 
+    // Allow native frames if we are executing in the kernel.
+    if (!mAllowNativeFrames
+        && (function->region->flags & region_type::kIsKernelRegion) == 0) {
+        action = NONE;
+    }
+
+    if (function->vm_sym != NULL) {
+        function = function->vm_sym;
+        function->vm_sym = NULL;
+    }
+    if (action == PUSH) {
+        doPush(event, function);
+    } else if (action == POP) {
+        doPop(event, function, NONE);
+    }
+
+#if 0
     // Pop off native functions before pushing or popping Java methods.
     if (action == POP && mPrevFunction->vm_sym == NULL) {
         // Pop off the previous function first.
@@ -197,11 +212,16 @@ CallStack<FRAME, BASE>::updateStack(BBEvent *event, symbol_type *function)
             doPush(event, function);
         }
     }
+#endif
 
     // If the stack is now empty, then push the current function.
     if (mTop == 0) {
         uint64_t time = event->time - mSkippedTime;
-        doSimplePush(function, 0, time);
+        int flags = 0;
+        if (function->vm_sym != NULL) {
+            flags = FRAME::kInterpreted;
+        }
+        doSimplePush(function, 0, time, 0);
     }
 
     mPrevFunction = function;
@@ -366,8 +386,11 @@ void CallStack<FRAME, BASE>::doPush(BBEvent *event, symbol_type *function)
 
     // Check for stack overflow
     if (mTop >= mNumFrames) {
+        // Don't show the stack by default because this generates a lot
+        // of output and this is seen by users if there is an error when
+        // post-processing the trace. But this is useful for debugging.
 #if 0
-        showStack();
+        showStack(stderr);
 #endif
         fprintf(stderr, "Error: stack overflow (%d frames)\n", mTop);
         exit(1);
@@ -391,17 +414,20 @@ void CallStack<FRAME, BASE>::doPush(BBEvent *event, symbol_type *function)
     }
 
 #if 0
+    // For debugging only.  Show the stack before entering the kernel
+    // exception-handling code.
     if (function->flags & symbol_type::kIsVectorStart) {
         printf("stack before entering exception\n");
-        showStack();
+        showStack(stderr);
     }
 #endif
 
-    // If the previous function was a vector table, then pop it
+    // If the top of stack is a vector table, then pop it
     // off before pushing on the new function.  Also, change the
     // return address for the new function to the return address
     // from the vector table.
-    if ((mPrevFunction->flags & symbol_type::kIsVectorTable) && mTop > 0) {
+    if (mTop > 0
+        && (mFrames[mTop - 1].function->flags & symbol_type::kIsVectorTable)) {
         retAddr = mFrames[mTop - 1].addr;
         doSimplePop(time);
     }
@@ -426,9 +452,10 @@ void CallStack<FRAME, BASE>::doPush(BBEvent *event, symbol_type *function)
         && mTop > 0) {
         // We are switching from kernel mode to user mode.
 #if 0
+        // For debugging.
         printf("  doPush(): popping to user mode, bb_addr: 0x%08x\n",
                event->bb_addr);
-        showStack();
+        showStack(stderr);
 #endif
         do {
             // Pop off the kernel frames until we reach the one that
@@ -445,6 +472,7 @@ void CallStack<FRAME, BASE>::doPush(BBEvent *event, symbol_type *function)
             }
         } while (mTop > 0);
 #if 0
+        // For debugging
         printf("  doPush() popping to level %d, using retAddr 0x%08x\n",
                mTop, retAddr);
 #endif
@@ -456,43 +484,32 @@ void CallStack<FRAME, BASE>::doPush(BBEvent *event, symbol_type *function)
     if ((function->flags & symbol_type::kIsVectorStart) && mTop > 0)
         mFrames[mTop - 1].flags |= FRAME::kCausedException;
 
-    doSimplePush(function, retAddr, time);
+    // If the function being pushed is a Java method, then mark it on
+    // the stack so that we don't pop it off until we get a matching
+    // trace record from the method trace file.
+    int flags = 0;
+    if (function->vm_sym != NULL) {
+        flags = FRAME::kInterpreted;
+    }
+    doSimplePush(function, retAddr, time, flags);
 }
 
 template<class FRAME, class BASE>
-void CallStack<FRAME, BASE>::doSimplePush(symbol_type *function,
-                                          uint32_t addr, uint64_t time)
+void CallStack<FRAME, BASE>::doSimplePush(symbol_type *function, uint32_t addr,
+                                          uint64_t time, int flags)
 {
     // Check for stack overflow
     if (mTop >= mNumFrames) {
-        showStack();
+        showStack(stderr);
         fprintf(stderr, "too many stack frames (%d)\n", mTop);
         exit(1);
     }
 
-    // Keep track of the number of Java methods we push on the stack.
-    if (!mNativeOnly && function->vm_sym != NULL) {
-        // If we are pushing the first Java method on the stack, then
-        // save a snapshot of the stack so that we can clean things up
-        // later when we pop off the last Java stack frame.
-        if (mJavaTop == 0) {
-            transitionToJava();
-        }
-        mJavaTop += 1;
-    }
-
     mFrames[mTop].addr = addr;
     mFrames[mTop].function = function;
-    mFrames[mTop].flags = 0;
+    mFrames[mTop].flags = flags;
     mFrames[mTop].time = time;
     mFrames[mTop].global_time = time + mSkippedTime;
-
-    // If the function being pushed is a Java method, then mark it on
-    // the stack so that we don't pop it off until we get a matching
-    // trace record from the method trace file.
-    if (function->vm_sym != NULL) {
-        mFrames[mTop].flags = FRAME::kInterpreted;
-    }
 
     mFrames[mTop].push(mTop, time, this);
     mTop += 1;
@@ -508,17 +525,25 @@ void CallStack<FRAME, BASE>::doSimplePop(uint64_t time)
     mTop -= 1;
     mFrames[mTop].pop(mTop, time, this);
 
-    // Keep track of the number of Java methods we have on the stack.
-    symbol_type *function = mFrames[mTop].function;
-    if (!mNativeOnly && function->vm_sym != NULL) {
-        mJavaTop -= 1;
+    if (mNativeOnly)
+        return;
 
-        // When there are no more Java stack frames, then clean up
-        // the client's stack.  We need to do this because the client
-        // doesn't see the changes to the native stack underlying the
-        // fake Java stack until the last Java method is popped off.
-        if (mJavaTop == 0) {
-            transitionFromJava(time);
+    // If the stack is empty, then allow more native frames.
+    // Otherwise, if we are transitioning from Java to native, then allow
+    // more native frames.
+    // Otherwise, if we are transitioning from native to Java, then disallow
+    // more native frames.
+    if (mTop == 0) {
+        mAllowNativeFrames = true;
+    } else {
+        bool newerIsJava = (mFrames[mTop].flags & FRAME::kInterpreted) != 0;
+        bool olderIsJava = (mFrames[mTop - 1].flags & FRAME::kInterpreted) != 0;
+        if (newerIsJava && !olderIsJava) {
+            // We are transitioning from Java to native
+            mAllowNativeFrames = true;
+        } else if (!newerIsJava && olderIsJava) {
+            // We are transitioning from native to Java
+            mAllowNativeFrames = false;
         }
     }
 }
@@ -565,7 +590,13 @@ void CallStack<FRAME, BASE>::doPop(BBEvent *event, symbol_type *function,
             // Compare the function with the one in the stack frame.
             if (function == mFrames[stackLevel].function) {
                 // We found a matching function.  We want to pop up to but not
-                // including this frame.
+                // including this frame.  But allow popping this frame if this
+                // method called itself and we have a method pop.
+                if (allowMethodPop && function == mPrevFunction) {
+                    // pop this frame
+                    break;
+                }
+                // do not pop this frame
                 stackLevel += 1;
                 break;
             }
@@ -604,9 +635,11 @@ void CallStack<FRAME, BASE>::doPop(BBEvent *event, symbol_type *function,
         stackLevel = 1;
 
 #if 0
+    // If we are popping off a large number of stack frames, then
+    // we might have a bug.
     if (mTop - stackLevel > 7) {
         printf("popping thru level %d\n", stackLevel);
-        showStack();
+        showStack(stderr);
     }
 #endif
 
@@ -654,20 +687,45 @@ void CallStack<FRAME, BASE>::popAll(uint64_t time)
 }
 
 template<class FRAME, class BASE>
-typename CallStack<FRAME, BASE>::Action
-CallStack<FRAME, BASE>::getMethodAction(BBEvent *event, symbol_type *function)
+void CallStack<FRAME, BASE>::doMethodPop(BBEvent *event, uint32_t addr,
+                                         const uint32_t flags)
 {
-    if (function->vm_sym == NULL && mPrevFunction->vm_sym == NULL) {
-        return NONE;
+    uint64_t time = event->time - mSkippedTime;
+
+    // Search the stack from the top down for a frame that contains a
+    // matching method.
+    int stackLevel;
+    for (stackLevel = mTop - 1; stackLevel >= 0; --stackLevel) {
+        if (mFrames[stackLevel].flags & flags) {
+            // If we are searching for a native method, then don't bother trying
+            // to match the address.
+            if (flags == FRAME::kStartNative)
+                break;
+            symbol_type *func = mFrames[stackLevel].function;
+            uint32_t methodAddr = func->region->base_addr + func->addr;
+            if (methodAddr == addr) {
+                break;
+            }
+        }
     }
 
-    Action action = NONE;
-    uint32_t prevAddr = mPrevFunction->addr + mPrevFunction->region->base_addr;
-    uint32_t addr = function->addr + function->region->base_addr;
+    // If we found a matching frame then pop the stack up to and including
+    // that frame.
+    if (stackLevel >= 0) {
+        // Pop the stack frames
+        for (int ii = mTop - 1; ii >= stackLevel; --ii)
+            doSimplePop(time);
+    }
+}
 
+template<class FRAME, class BASE>
+void CallStack<FRAME, BASE>::doMethodAction(BBEvent *event, symbol_type *function)
+{
     // If the events get ahead of the method trace, then read ahead until we
     // sync up again.  This can happen if there is a pop of a method in the
-    // method trace for which we don't have a previous push.
+    // method trace for which we don't have a previous push.  Such an unmatched
+    // pop can happen because the user can start tracing at any time and so
+    // there might already be a stack when we start tracing.
     while (event->time >= sNextMethod.time) {
         sCurrentMethod = sNextMethod;
         if (mTrace->ReadMethod(&sNextMethod)) {
@@ -675,85 +733,42 @@ CallStack<FRAME, BASE>::getMethodAction(BBEvent *event, symbol_type *function)
         }
     }
 
-    if (event->time >= sCurrentMethod.time) {
-        if (addr == sCurrentMethod.addr || prevAddr == sCurrentMethod.addr) {
-            action = (sCurrentMethod.flags == 0) ? PUSH : POP;
-            // We found a match, so read the next record.
-            sCurrentMethod = sNextMethod;
-            if (sNextMethod.time != ~0ull && mTrace->ReadMethod(&sNextMethod)) {
-                sNextMethod.time = ~0ull;
-            }
+    if (event->time >= sCurrentMethod.time && event->pid == sCurrentMethod.pid) {
+        uint64_t time = event->time - mSkippedTime;
+        int flags = sCurrentMethod.flags;
+        if (flags == kMethodEnter) {
+            doSimplePush(function, 0, time, FRAME::kInterpreted);
+            mAllowNativeFrames = false;
+        } else if (flags == kNativeEnter) {
+            doSimplePush(function, 0, time, FRAME::kStartNative);
+            mAllowNativeFrames = true;
+        } else if (flags == kMethodExit || flags == kMethodException) {
+            doMethodPop(event, sCurrentMethod.addr, FRAME::kInterpreted);
+        } else if (flags == kNativeExit || flags == kNativeException) {
+            doMethodPop(event, sCurrentMethod.addr, FRAME::kStartNative);
+        }
+
+        // We found a match, so read the next record. When we get to the end
+        // of the trace, we set the time to the maximum value (~0).
+        sCurrentMethod = sNextMethod;
+        if (sNextMethod.time != ~0ull && mTrace->ReadMethod(&sNextMethod)) {
+            sNextMethod.time = ~0ull;
         }
     }
-    return action;
 }
 
-// When the first Java method is pushed on the stack, this method is
-// called to save a snapshot of the current native stack so that the
-// client's view of the native stack can be patched up later when the
-// Java stack is empty.
 template<class FRAME, class BASE>
-void CallStack<FRAME, BASE>::transitionToJava()
+void CallStack<FRAME, BASE>::showStack(FILE *stream)
 {
-    mSnapshotTop = mTop;
+    fprintf(stream, "mTop: %d skippedTime: %llu\n", mTop, mSkippedTime);
     for (int ii = 0; ii < mTop; ++ii) {
-        mSnapshotFrames[ii] = mFrames[ii];
-    }
-}
-
-// When the Java stack becomes empty, the native stack becomes
-// visible.  This method is called when the Java stack becomes empty
-// to patch up the client's view of the native stack, which may have
-// changed underneath the Java stack.  The stack snapshot is used to
-// create a sequence of pops and pushes to make the client's view of
-// the native stack match the current native stack.
-template<class FRAME, class BASE>
-void CallStack<FRAME, BASE>::transitionFromJava(uint64_t time)
-{
-    int top = mTop;
-    if (top > mSnapshotTop) {
-        top = mSnapshotTop;
-    }
-    for (int ii = 0; ii < top; ++ii) {
-        if (mSnapshotFrames[ii].function->addr == mFrames[ii].function->addr) {
-            continue;
-        }
-
-        // Pop off all the rest of the frames from the snapshot
-        for (int jj = top - 1; jj >= ii; --jj) {
-            mSnapshotFrames[jj].pop(jj, time, this);
-        }
-
-        // Push the new frames from the native stack
-        for (int jj = ii; jj < mTop; ++jj) {
-            mFrames[jj].push(jj, time, this);
-        }
-        break;
-    }
-}
-
-template<class FRAME, class BASE>
-void CallStack<FRAME, BASE>::showStack()
-{
-    fprintf(stderr, "mTop: %d skippedTime: %llu\n", mTop, mSkippedTime);
-    for (int ii = 0; ii < mTop; ++ii) {
-        fprintf(stderr, "  %d: t %d gt %d f %x 0x%08x 0x%08x %s\n",
+        uint32_t addr = mFrames[ii].function->addr;
+        addr += mFrames[ii].function->region->vstart;
+        fprintf(stream, "  %d: t %d gt %d f %x 0x%08x 0x%08x %s\n",
                 ii, mFrames[ii].time, mFrames[ii].global_time,
                 mFrames[ii].flags,
-                mFrames[ii].addr, mFrames[ii].function->addr,
+                mFrames[ii].addr, addr,
                 mFrames[ii].function->name);
-    }
-}
-
-template<class FRAME, class BASE>
-void CallStack<FRAME, BASE>::showSnapshotStack()
-{
-    fprintf(stderr, "mSnapshotTop: %d\n", mSnapshotTop);
-    for (int ii = 0; ii < mSnapshotTop; ++ii) {
-        fprintf(stderr, "  %d: t %d f %x 0x%08x 0x%08x %s\n",
-                ii, mSnapshotFrames[ii].time, mSnapshotFrames[ii].flags,
-                mSnapshotFrames[ii].addr, mSnapshotFrames[ii].function->addr,
-                mSnapshotFrames[ii].function->name);
     }
 }
 

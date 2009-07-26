@@ -5,6 +5,8 @@
       android:versionName="1.0">
     <application android:icon="@drawable/icon" android:label="APPLICATION_NAME">
 ACTIVITIES
+TEST-USES-LIBRARY
     </application>
 USES-SDK
+TEST-INSTRUMENTATION
 </manifest> 

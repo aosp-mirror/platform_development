@@ -2,7 +2,7 @@
 <feature
       id="com.android.ide.eclipse.adt"
       label="Android Development Tools"
-      version="0.9.0.qualifier"
+      version="0.9.1.qualifier"
       provider-name="The Android Open Source Project"
       plugin="com.android.ide.eclipse.adt">
 
@@ -15,7 +15,7 @@
    </copyright>
 
    <license url="http://www.eclipse.org/org/documents/epl-v10.php">
-Note:  jcommon-1.0.12.jar is under the BSD license rather than the APL.  You can find a copy of the BSD License at http://www.opensource.org/licenses/bsd-license.php
+      Note:  jcommon-1.0.12.jar is under the BSD license rather than the APL.  You can find a copy of the BSD License at http://www.opensource.org/licenses/bsd-license.php
 
 jfreechart-1.0.9.jar and jfreechart-1.0.9-swt.jar are under the LGPL rather than the EPL.  You can find a copy of the LGPL at http://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt.  You can get the source code for these two components at http://android.git.kernel.org/pub/jfreechart-1.0.9.zip
 
@@ -140,6 +140,10 @@ This Agreement is governed by the laws of the State of New York and the intellec
       <import plugin="org.eclipse.wst.xml.core"/>
       <import plugin="org.eclipse.wst.xml.ui"/>
       <import plugin="org.eclipse.jdt.junit"/>
+      <import plugin="org.eclipse.jdt.junit.runtime"/>
+      <import plugin="org.eclipse.ltk.core.refactoring"/>
+      <import plugin="org.eclipse.ltk.ui.refactoring"/>
+      <import plugin="org.eclipse.core.expressions"/>
    </requires>
 
    <plugin

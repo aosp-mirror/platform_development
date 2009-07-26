@@ -194,19 +194,21 @@ public final class ValueResourceParser extends DefaultHandler {
         char[] buffer = value.toCharArray();
         
         for (int i = 0 ; i < length ; i++) {
-            if (buffer[i] == '\\') {
+            if (buffer[i] == '\\' && i + 1 < length) {
                 if (buffer[i+1] == 'u') {
-                    // this is unicode char.
-                    int unicodeChar = Integer.parseInt(new String(buffer, i+2, 4), 16);
-                    
-                    // put the unicode char at the location of the \
-                    buffer[i] = (char)unicodeChar;
-
-                    // offset the rest of the buffer since we go from 6 to 1 char
-                    if (i + 6 < buffer.length) {
-                        System.arraycopy(buffer, i+6, buffer, i+1, length - i - 6);
+                    if (i + 5 < length) {
+                        // this is unicode char \u1234
+                        int unicodeChar = Integer.parseInt(new String(buffer, i+2, 4), 16);
+                        
+                        // put the unicode char at the location of the \
+                        buffer[i] = (char)unicodeChar;
+    
+                        // offset the rest of the buffer since we go from 6 to 1 char
+                        if (i + 6 < buffer.length) {
+                            System.arraycopy(buffer, i+6, buffer, i+1, length - i - 6);
+                        }
+                        length -= 5;
                     }
-                    length -= 5;
                 } else {
                     if (buffer[i+1] == 'n') {
                         // replace the 'n' char with \n

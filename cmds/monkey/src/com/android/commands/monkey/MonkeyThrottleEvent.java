@@ -16,11 +16,10 @@
 
 package com.android.commands.monkey;
 
+import java.util.List;
+
 import android.app.IActivityManager;
-import android.os.RemoteException;
-import android.os.SystemClock;
 import android.view.IWindowManager;
-import android.view.MotionEvent;
 
 
 /**
@@ -29,8 +28,8 @@ import android.view.MotionEvent;
 public class MonkeyThrottleEvent extends MonkeyEvent {
     private long mThrottle; 
         
-    public MonkeyThrottleEvent(int type, long throttle) {
-        super(type);
+    public MonkeyThrottleEvent(long throttle) {
+        super(MonkeyEvent.EVENT_TYPE_THROTTLE);
         mThrottle = throttle;
     }  
 

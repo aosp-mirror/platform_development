@@ -19,12 +19,12 @@ package com.android.ddmlib;
 import com.android.ddmlib.Device;
 
 /**
- * Centralized point to provide a {@link IDebugPortProvider} to ddmlib. 
- * 
+ * Centralized point to provide a {@link IDebugPortProvider} to ddmlib.
+ *
  * <p/>When {@link Client} objects are created, they start listening for debuggers on a specific
- * port. The default behavior is to start with {@link DdmPreferences#getDebugPortBase()} and 
+ * port. The default behavior is to start with {@link DdmPreferences#getDebugPortBase()} and
  * increment this value for each new <code>Client</code>.
- * 
+ *
  * <p/>This {@link DebugPortManager} allows applications using ddmlib to provide a custom
  * port provider on a per-<code>Client</code> basis, depending on the device/emulator they are
  * running on, and/or their names.
@@ -48,7 +48,7 @@ public class DebugPortManager {
          * @return The non-random debugger port or {@link #NO_STATIC_PORT} if the {@link Client}
          * should use the automatic debugger port provider.
          */
-        public int getPort(Device device, String appName);
+        public int getPort(IDevice device, String appName);
     }
 
     private static IDebugPortProvider sProvider = null;
@@ -63,7 +63,7 @@ public class DebugPortManager {
     }
 
     /**
-     * Returns the 
+     * Returns the
      * @return
      */
     static IDebugPortProvider getProvider() {

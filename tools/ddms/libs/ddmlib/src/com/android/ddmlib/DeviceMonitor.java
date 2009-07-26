@@ -18,7 +18,7 @@ package com.android.ddmlib;
 
 import com.android.ddmlib.AdbHelper.AdbResponse;
 import com.android.ddmlib.DebugPortManager.IDebugPortProvider;
-import com.android.ddmlib.Device.DeviceState;
+import com.android.ddmlib.IDevice.DeviceState;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -112,11 +112,11 @@ final class DeviceMonitor {
     boolean isMonitoring() {
         return mMonitoring;
     }
-    
+
     int getConnectionAttemptCount() {
         return mConnectionAttempt;
     }
-    
+
     int getRestartAttemptCount() {
         return mRestartAttemptCount;
     }
@@ -129,7 +129,7 @@ final class DeviceMonitor {
             return mDevices.toArray(new Device[mDevices.size()]);
         }
     }
-    
+
     boolean hasInitialDeviceList() {
         return mInitialDeviceListDone;
     }
@@ -184,11 +184,11 @@ final class DeviceMonitor {
                 if (mMonitoring) {
                     // read the length of the incoming message
                     int length = readLength(mMainAdbConnection, mLengthBuffer);
-                    
+
                     if (length >= 0) {
                         // read the incoming message
                         processIncomingDeviceData(length);
-                        
+
                         // flag the fact that we have build the list at least once.
                         mInitialDeviceListDone = true;
                     }
@@ -278,20 +278,19 @@ final class DeviceMonitor {
      */
     private void processIncomingDeviceData(int length) throws IOException {
         ArrayList<Device> list = new ArrayList<Device>();
-        
+
         if (length > 0) {
             byte[] buffer = new byte[length];
             String result = read(mMainAdbConnection, buffer);
-            
+
             String[] devices = result.split("\n"); // $NON-NLS-1$
 
             for (String d : devices) {
                 String[] param = d.split("\t"); // $NON-NLS-1$
                 if (param.length == 2) {
                     // new adb uses only serial numbers to identify devices
-                    Device device = new Device(this);
-                    device.serialNumber = param[0];
-                    device.state = DeviceState.getState(param[1]);
+                    Device device = new Device(this, param[0] /*serialnumber*/,
+                            DeviceState.getState(param[1]));
 
                     //add the device to the list
                     list.add(device);
@@ -319,24 +318,24 @@ final class DeviceMonitor {
                 // * if we do not find it, we remove it from the current list.
                 // Once this is done, the new list contains device we aren't monitoring yet, so we
                 // add them to the list, and start monitoring them.
-    
+
                 for (int d = 0 ; d < mDevices.size() ;) {
                     Device device = mDevices.get(d);
-    
+
                     // look for a similar device in the new list.
                     int count = newList.size();
                     boolean foundMatch = false;
                     for (int dd = 0 ; dd < count ; dd++) {
                         Device newDevice = newList.get(dd);
                         // see if it matches in id and serial number.
-                        if (newDevice.serialNumber.equals(device.serialNumber)) {
+                        if (newDevice.getSerialNumber().equals(device.getSerialNumber())) {
                             foundMatch = true;
-    
+
                             // update the state if needed.
-                            if (device.state != newDevice.state) {
-                                device.state = newDevice.state;
+                            if (device.getState() != newDevice.getState()) {
+                                device.setState(newDevice.getState());
                                 device.update(Device.CHANGE_STATE);
-    
+
                                 // if the device just got ready/online, we need to start
                                 // monitoring it.
                                 if (device.isOnline()) {
@@ -344,7 +343,7 @@ final class DeviceMonitor {
                                         if (startMonitoringDevice(device) == false) {
                                             Log.e("DeviceMonitor",
                                                     "Failed to start monitoring "
-                                                    + device.serialNumber);
+                                                    + device.getSerialNumber());
                                         }
                                     }
 
@@ -353,13 +352,13 @@ final class DeviceMonitor {
                                     }
                                 }
                             }
-    
+
                             // remove the new device from the list since it's been used
                             newList.remove(dd);
                             break;
                         }
                     }
-    
+
                     if (foundMatch == false) {
                         // the device is gone, we need to remove it, and keep current index
                         // to process the next one.
@@ -370,21 +369,21 @@ final class DeviceMonitor {
                         d++;
                     }
                 }
-    
+
                 // at this point we should still have some new devices in newList, so we
                 // process them.
                 for (Device newDevice : newList) {
                     // add them to the list
                     mDevices.add(newDevice);
                     mServer.deviceConnected(newDevice);
-    
+
                     // start monitoring them.
                     if (AndroidDebugBridge.getClientSupport() == true) {
                         if (newDevice.isOnline()) {
                             startMonitoringDevice(newDevice);
                         }
                     }
-    
+
                     // look for their build info.
                     if (newDevice.isOnline()) {
                         queryNewDeviceForInfo(newDevice);
@@ -398,7 +397,7 @@ final class DeviceMonitor {
     private void removeDevice(Device device) {
         device.clearClientList();
         mDevices.remove(device);
-        
+
         SocketChannel channel = device.getClientMonitoringSocket();
         if (channel != null) {
             try {
@@ -419,12 +418,12 @@ final class DeviceMonitor {
             // first get the list of properties.
             device.executeShellCommand(GetPropReceiver.GETPROP_COMMAND,
                     new GetPropReceiver(device));
-            
+
             // now get the emulator Virtual Device name (if applicable).
             if (device.isEmulator()) {
                 EmulatorConsole console = EmulatorConsole.getConsole(device);
                 if (console != null) {
-                    device.mAvdName = console.getAvdName();
+                    device.setAvdName(console.getAvdName());
                 }
             }
         } catch (IOException e) {
@@ -510,7 +509,7 @@ final class DeviceMonitor {
                         MonitorThread monitorThread = MonitorThread.getInstance();
 
                         for (Client client : clients) {
-                            Device device = client.getDevice();
+                            Device device = client.getDeviceImpl();
                             int pid = client.getClientData().getPid();
 
                             monitorThread.dropClient(client, false /* notify */);
@@ -623,10 +622,10 @@ final class DeviceMonitor {
             if (length > 0) {
                 byte[] buffer = new byte[length];
                 String result = read(monitorSocket, buffer);
-    
+
                 // split each line in its own list and create an array of integer pid
                 String[] pids = result.split("\n"); //$NON-NLS-1$
-    
+
                 for (String pid : pids) {
                     try {
                         pidList.add(Integer.valueOf(pid));
@@ -662,7 +661,7 @@ final class DeviceMonitor {
                     for (int c = 0 ; c < clients.size() ;) {
                         Client client = clients.get(c);
                         int pid = client.getClientData().getPid();
-        
+
                         // look for a matching pid
                         Integer match = null;
                         for (Integer matchingPid : pidList) {
@@ -671,7 +670,7 @@ final class DeviceMonitor {
                                 break;
                             }
                         }
-        
+
                         if (match != null) {
                             pidList.remove(match);
                             c++; // move on to the next client.
@@ -705,7 +704,7 @@ final class DeviceMonitor {
      * @return
      */
     private void openClient(Device device, int pid, int port, MonitorThread monitorThread) {
-        
+
         SocketChannel clientSocket;
         try {
             clientSocket = AdbHelper.createPassThroughConnection(
@@ -721,7 +720,7 @@ final class DeviceMonitor {
                     "Failed to connect to client '" + pid + "': " + ioe.getMessage());
             return ;
         }
-        
+
         createClient(device, pid, clientSocket, port, monitorThread);
     }
 
@@ -748,12 +747,13 @@ final class DeviceMonitor {
                 if (AndroidDebugBridge.getClientSupport()) {
                     client.listenForDebugger(debuggerPort);
                 }
-                client.requestAllocationStatus();
             } catch (IOException ioe) {
                 client.getClientData().setDebuggerConnectionStatus(ClientData.DEBUGGER_ERROR);
                 Log.e("ddms", "Can't bind to local " + debuggerPort + " for debugger");
                 // oh well
             }
+
+            client.requestAllocationStatus();
         } else {
             Log.e("ddms", "Handshake with " + client + " failed!");
             /*
@@ -813,7 +813,7 @@ final class DeviceMonitor {
             }
         }
     }
-    
+
     /**
      * Reads the length of the next message from a socket.
      * @param socket The {@link SocketChannel} to read from.

@@ -16,7 +16,7 @@
 
 package com.android.hierarchyviewer.scene;
 
-import com.android.ddmlib.Device;
+import com.android.ddmlib.IDevice;
 import com.android.hierarchyviewer.device.Configuration;
 import com.android.hierarchyviewer.device.Window;
 import com.android.hierarchyviewer.device.DeviceBridge;
@@ -31,16 +31,16 @@ import java.net.Socket;
 import javax.imageio.ImageIO;
 
 public class CaptureLoader {
-    public static Image loadCapture(Device device, Window window, String params) {
+    public static Image loadCapture(IDevice device, Window window, String params) {
         Socket socket = null;
         BufferedInputStream in = null;
         BufferedWriter out = null;
-        
+
         try {
             socket = new Socket();
             socket.connect(new InetSocketAddress("127.0.0.1",
                     DeviceBridge.getDeviceLocalPort(device)));
-            
+
             out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
             in = new BufferedInputStream(socket.getInputStream());
 
@@ -66,7 +66,7 @@ public class CaptureLoader {
                 ex.printStackTrace();
             }
         }
-        
+
         return null;
     }
 }

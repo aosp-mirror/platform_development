@@ -84,16 +84,12 @@
     <string name="development_settings_show_xmpp_text">Show GTalk service connection status</string>
     <string name="development_settings_debug_app_label_text">Debug App:</string>
     <string name="development_settings_show_sleep_text">Show sleep state on LED</string>
-    <string name="development_settings_show_maps_compass_text">Show compass in Maps</string>
     <string name="development_settings_keep_screen_on_text">Keep screen on while plugged in</string>
 
     <string name="monkey_screen_initialActivity_text"></string>
     <string name="monkey_screen_number_of_events_label">Number of Events: </string>
     <string name="monkey_screen_start_text">Start</string>
     <string name="monkey_screen_initial_activity_label">Initial Activity: </string>
-
-    <string name="radio_issue_submit_text">Submit report</string>
-    <string name="radio_issue_instructions_text">Enter a description of the issue.</string>
 
     <string name="show_activity_clear_on_background_label">Clear on Background</string>
     <string name="show_activity_task_affinity_label">Task Affinity</string>
@@ -123,4 +119,18 @@
     <string name="hard_keyboard_label">hardKeyboard:</string>
     <string name="navigation_label">navigation:</string>
     <string name="five_way_nav_label">five way nav:</string>
+    <string name="gles_version_label">GLES Version:</string>
+
+    <!-- Permission details related string attribtues -->
+    <string name="perm_name_text">Name :  </string>
+    <string name="dialog_title_error">Error</string>
+    <string name="invalid_perm_name">Invalid Permission Name</string>
+    <string name="ok">Ok</string>
+    <string name="perm_desc_text">Desc :  </string>
+    <string name="perm_group_text">Group :  </string>
+    <string name="perm_protection_text">Protection Level :  </string>
+    <string name="perm_source_text">Source package :  </string>
+    <string name="perm_list_header_text">Apps using permission  </string>
+    <string name="source_uid_text">Source uid :  </string>
+    <string name="shared_pkgs_text">Packages accessing via shared uid :  </string>
 </resources>

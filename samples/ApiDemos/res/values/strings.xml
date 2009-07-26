@@ -476,6 +476,7 @@
     <string name="animation_2_text_3">a chance to be better.</string>
     <string name="animation_2_text_4">— Albert Camus</string>
     <string name="animation_2_instructions">Select an animation:</string>
+    <string name="animation_3_text">Interpolators</string>
     <string name="autocomplete_1_instructions">Type in the text field for auto-completion.</string>
     <string name="autocomplete_1_country">Country:</string>
     <string name="autocomplete_1_focus">Give me Focus</string>

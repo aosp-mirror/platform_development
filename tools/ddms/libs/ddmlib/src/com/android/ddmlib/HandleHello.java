@@ -20,11 +20,12 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 
 /**
- * Handle the "hello" chunk (HELO).
+ * Handle the "hello" chunk (HELO) and feature discovery.
  */
 final class HandleHello extends ChunkHandler {
 
     public static final int CHUNK_HELO = ChunkHandler.type("HELO");
+    public static final int CHUNK_FEAT = ChunkHandler.type("FEAT");
 
     private static final HandleHello mInst = new HandleHello();
 
@@ -65,6 +66,8 @@ final class HandleHello extends ChunkHandler {
         if (type == CHUNK_HELO) {
             assert isReply;
             handleHELO(client, data);
+        } else if (type == CHUNK_FEAT) {
+            handleFEAT(client, data);
         } else {
             handleUnknownChunk(client, type, data, isReply, msgId);
         }
@@ -126,5 +129,37 @@ final class HandleHello extends ChunkHandler {
             + " ID=0x" + Integer.toHexString(packet.getId()));
         client.sendAndConsume(packet, mInst);
     }
+
+    /**
+     * Handle a reply to our FEAT request.
+     */
+    private static void handleFEAT(Client client, ByteBuffer data) {
+        int featureCount;
+        int i;
+
+        featureCount = data.getInt();
+        for (i = 0; i < featureCount; i++) {
+            int len = data.getInt();
+            String feature = getString(data, len);
+
+            Log.d("ddm-hello", "Feature: " + feature);
+        }
+    }
+
+    /**
+     * Send a FEAT request to the client.
+     */
+    public static void sendFEAT(Client client) throws IOException {
+        ByteBuffer rawBuf = allocBuffer(0);
+        JdwpPacket packet = new JdwpPacket(rawBuf);
+        ByteBuffer buf = getChunkDataBuf(rawBuf);
+
+        // no data
+
+        finishChunkPacket(packet, CHUNK_FEAT, buf.position());
+        Log.d("ddm-heap", "Sending " + name(CHUNK_FEAT));
+        client.sendAndConsume(packet, mInst);
+    }
+
 }
 

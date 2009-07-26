@@ -1,4 +1,15 @@
-0.9.0 (work in progress)
+0.9.2:
+- New wizard to create Android JUnit Test Projects.
+
+
+0.9.1:
+- Added an AVD creation wizard to ADT. It is automatically displayed during a launch if no compatible AVDs are found.
+- Fixed issue with libs/ folder where files with no extension would prevent the build from finishing.
+- Improved error handling during the final steps of the build to mark the project if an unexpected error prevent the build from finishing.
+- Fixed issue when launching ADT on a clean install would trigger org.eclipse.swt.SWTError: Not implemented [multiple displays].
+
+
+0.9.0:
 - Projects now store generated Java files (R.java/Manifest.java and output from aidl) in a 'gen' source folder.
 - Support for the new Android SDK with support for multiple versions of the Android platform and for vendor supplied add-ons.
     * New Project Wizard lets you choose which platform/add-on to target.

@@ -17,7 +17,7 @@
 package com.android.hierarchyviewer.ui;
 
 import com.android.ddmlib.AndroidDebugBridge;
-import com.android.ddmlib.Device;
+import com.android.ddmlib.IDevice;
 import com.android.hierarchyviewer.device.DeviceBridge;
 import com.android.hierarchyviewer.device.Window;
 import com.android.hierarchyviewer.laf.UnifiedContentBorder;
@@ -147,7 +147,7 @@ public class Workspace extends JFrame {
     private DevicesTableModel devicesTableModel;
     private WindowsTableModel windowsTableModel;
 
-    private Device currentDevice;
+    private IDevice currentDevice;
     private Window currentWindow = Window.FOCUSED_WINDOW;
 
     private JButton displayNodeButton;
@@ -235,7 +235,7 @@ public class Workspace extends JFrame {
         }
 
         devicesTableModel = new DevicesTableModel();
-        for (Device device : DeviceBridge.getDevices()) {
+        for (IDevice device : DeviceBridge.getDevices()) {
             DeviceBridge.setupDeviceForward(device);
             devicesTableModel.addDevice(device);
         }
@@ -289,7 +289,7 @@ public class Workspace extends JFrame {
 
         setVisibleRowCount(profilingTable, 5);
         firstTableScroller.setMinimumSize(profilingTable.getPreferredScrollableViewportSize());
-        
+
         JSplitPane tablesSplitter = new JSplitPane();
         tablesSplitter.setBorder(null);
         tablesSplitter.setOrientation(JSplitPane.VERTICAL_SPLIT);
@@ -522,7 +522,7 @@ public class Workspace extends JFrame {
         showDevicesMenuItem.setEnabled(false);
         viewMenu.add(showDevicesMenuItem);
 
-        menuBar.add(viewMenu);        
+        menuBar.add(viewMenu);
 
         viewHierarchyMenu.setText("Hierarchy");
 
@@ -855,7 +855,7 @@ public class Workspace extends JFrame {
     public void showDevicesSelector() {
         if (mainSplitter != null) {
             if (pixelPerfectPanel != null) {
-                screenViewer.start();                
+                screenViewer.start();
             }
             mainPanel.remove(graphViewButton.isSelected() ? mainSplitter : pixelPerfectPanel);
             mainPanel.add(deviceSelector, BorderLayout.CENTER);
@@ -864,7 +864,7 @@ public class Workspace extends JFrame {
 
             hideStatusBarComponents();
 
-            saveMenuItem.setEnabled(false);            
+            saveMenuItem.setEnabled(false);
             showDevicesMenuItem.setEnabled(false);
             showDevicesButton.setEnabled(false);
             displayNodeButton.setEnabled(false);
@@ -926,7 +926,7 @@ public class Workspace extends JFrame {
     }
 
     public void cleanupDevices() {
-        for (Device device : devicesTableModel.getDevices()) {
+        for (IDevice device : devicesTableModel.getDevices()) {
             DeviceBridge.removeDeviceForward(device);
         }
     }
@@ -989,7 +989,7 @@ public class Workspace extends JFrame {
             return null;
         }
         return new CaptureNodeTask();
-    }    
+    }
 
     public SwingWorker<?, ?> startServer() {
         return new StartServerTask();
@@ -1232,7 +1232,7 @@ public class Workspace extends JFrame {
 
         @Override
         protected void done() {
-            endTask();            
+            endTask();
         }
     }
 
@@ -1293,10 +1293,10 @@ public class Workspace extends JFrame {
     private class DevicesTableModel extends DefaultTableModel implements
             AndroidDebugBridge.IDeviceChangeListener {
 
-        private ArrayList<Device> devices;
+        private ArrayList<IDevice> devices;
 
         private DevicesTableModel() {
-            devices = new ArrayList<Device>();
+            devices = new ArrayList<IDevice>();
         }
 
         @Override
@@ -1320,7 +1320,7 @@ public class Workspace extends JFrame {
         }
 
         @WorkerThread
-        public void deviceConnected(final Device device) {
+        public void deviceConnected(final IDevice device) {
             DeviceBridge.setupDeviceForward(device);
 
             SwingUtilities.invokeLater(new Runnable() {
@@ -1331,7 +1331,7 @@ public class Workspace extends JFrame {
         }
 
         @WorkerThread
-        public void deviceDisconnected(final Device device) {
+        public void deviceDisconnected(final IDevice device) {
             DeviceBridge.removeDeviceForward(device);
 
             SwingUtilities.invokeLater(new Runnable() {
@@ -1341,14 +1341,14 @@ public class Workspace extends JFrame {
             });
         }
 
-        public void addDevice(Device device) {
+        public void addDevice(IDevice device) {
             if (!devices.contains(device)) {
                 devices.add(device);
                 fireTableDataChanged();
             }
         }
 
-        public void removeDevice(Device device) {
+        public void removeDevice(IDevice device) {
             if (device.equals(currentDevice)) {
                 reset();
             }
@@ -1360,12 +1360,12 @@ public class Workspace extends JFrame {
         }
 
         @WorkerThread
-        public void deviceChanged(Device device, int changeMask) {
-            if ((changeMask & Device.CHANGE_STATE) != 0 &&
+        public void deviceChanged(IDevice device, int changeMask) {
+            if ((changeMask & IDevice.CHANGE_STATE) != 0 &&
                     device.isOnline()) {
                 // if the device state changed and it's now online, we set up its port forwarding.
                 DeviceBridge.setupDeviceForward(device);
-            } else if (device == currentDevice && (changeMask & Device.CHANGE_CLIENT_LIST) != 0) {
+            } else if (device == currentDevice && (changeMask & IDevice.CHANGE_CLIENT_LIST) != 0) {
                 // if the changed device is the current one and the client list changed, we update
                 // the UI.
                 loadWindows().execute();
@@ -1378,12 +1378,12 @@ public class Workspace extends JFrame {
             return devices == null ? 0 : devices.size();
         }
 
-        public Device getDevice(int index) {
+        public IDevice getDevice(int index) {
             return index < devices.size() ? devices.get(index) : null;
         }
 
-        public Device[] getDevices() {
-            return devices.toArray(new Device[devices.size()]);
+        public IDevice[] getDevices() {
+            return devices.toArray(new IDevice[devices.size()]);
         }
     }
 
@@ -1441,7 +1441,7 @@ public class Workspace extends JFrame {
 
         public void clear() {
             windows.clear();
-            windows.add(Window.FOCUSED_WINDOW);            
+            windows.add(Window.FOCUSED_WINDOW);
         }
 
         public Window getWindow(int index) {
@@ -1462,7 +1462,7 @@ public class Workspace extends JFrame {
                 if (currentDevice != null) {
                     if (!DeviceBridge.isViewServerRunning(currentDevice)) {
                         DeviceBridge.startViewServer(currentDevice);
-                        checkForServerOnCurrentDevice();                        
+                        checkForServerOnCurrentDevice();
                     }
                     loadWindows().execute();
                     windowsTableModel.setVisible(true);

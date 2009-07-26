@@ -20,37 +20,36 @@ import com.android.ddmuilib.StackTracePanel;
 import com.android.ddmuilib.StackTracePanel.ISourceRevealer;
 import com.android.ddmuilib.console.DdmConsole;
 import com.android.ddmuilib.console.IDdmConsole;
-import com.android.ide.eclipse.adt.launch.AndroidLaunchController;
-import com.android.ide.eclipse.adt.preferences.BuildPreferencePage;
-import com.android.ide.eclipse.adt.project.ProjectHelper;
-import com.android.ide.eclipse.adt.project.export.ExportWizard;
-import com.android.ide.eclipse.adt.project.internal.AndroidClasspathContainerInitializer;
-import com.android.ide.eclipse.adt.sdk.AndroidTargetParser;
-import com.android.ide.eclipse.adt.sdk.LoadStatus;
-import com.android.ide.eclipse.adt.sdk.Sdk;
-import com.android.ide.eclipse.adt.sdk.Sdk.ITargetChangeListener;
-import com.android.ide.eclipse.adt.ui.EclipseUiHelper;
-import com.android.ide.eclipse.common.AndroidConstants;
-import com.android.ide.eclipse.common.SdkStatsHelper;
-import com.android.ide.eclipse.common.StreamHelper;
-import com.android.ide.eclipse.common.project.BaseProjectHelper;
-import com.android.ide.eclipse.common.project.ExportHelper;
-import com.android.ide.eclipse.common.project.ExportHelper.IExportCallback;
+import com.android.ide.eclipse.adt.internal.VersionCheck;
+import com.android.ide.eclipse.adt.internal.editors.IconFactory;
+import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
+import com.android.ide.eclipse.adt.internal.editors.menu.MenuEditor;
+import com.android.ide.eclipse.adt.internal.editors.resources.ResourcesEditor;
+import com.android.ide.eclipse.adt.internal.editors.xml.XmlEditor;
+import com.android.ide.eclipse.adt.internal.launch.AndroidLaunchController;
+import com.android.ide.eclipse.adt.internal.preferences.BuildPreferencePage;
+import com.android.ide.eclipse.adt.internal.project.AndroidClasspathContainerInitializer;
+import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
+import com.android.ide.eclipse.adt.internal.project.ExportHelper;
+import com.android.ide.eclipse.adt.internal.project.ProjectHelper;
+import com.android.ide.eclipse.adt.internal.project.ExportHelper.IExportCallback;
+import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
+import com.android.ide.eclipse.adt.internal.resources.manager.ResourceFolder;
+import com.android.ide.eclipse.adt.internal.resources.manager.ResourceFolderType;
+import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
+import com.android.ide.eclipse.adt.internal.resources.manager.ResourceMonitor;
+import com.android.ide.eclipse.adt.internal.resources.manager.ResourceMonitor.IFileListener;
+import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetParser;
+import com.android.ide.eclipse.adt.internal.sdk.LoadStatus;
+import com.android.ide.eclipse.adt.internal.sdk.Sdk;
+import com.android.ide.eclipse.adt.internal.sdk.Sdk.ITargetChangeListener;
+import com.android.ide.eclipse.adt.internal.ui.EclipseUiHelper;
+import com.android.ide.eclipse.adt.internal.wizards.export.ExportWizard;
 import com.android.ide.eclipse.ddms.DdmsPlugin;
 import com.android.ide.eclipse.ddms.ImageLoader;
-import com.android.ide.eclipse.editors.IconFactory;
-import com.android.ide.eclipse.editors.layout.LayoutEditor;
-import com.android.ide.eclipse.editors.menu.MenuEditor;
-import com.android.ide.eclipse.editors.resources.ResourcesEditor;
-import com.android.ide.eclipse.editors.resources.manager.ProjectResources;
-import com.android.ide.eclipse.editors.resources.manager.ResourceFolder;
-import com.android.ide.eclipse.editors.resources.manager.ResourceFolderType;
-import com.android.ide.eclipse.editors.resources.manager.ResourceManager;
-import com.android.ide.eclipse.editors.resources.manager.ResourceMonitor;
-import com.android.ide.eclipse.editors.resources.manager.ResourceMonitor.IFileListener;
-import com.android.ide.eclipse.editors.xml.XmlEditor;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkConstants;
+import com.android.sdkstats.SdkStatsService;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
@@ -110,6 +109,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.List;
 
 /**
@@ -118,7 +118,7 @@ import java.util.List;
 public class AdtPlugin extends AbstractUIPlugin {
     /** The plug-in ID */
     public static final String PLUGIN_ID = "com.android.ide.eclipse.adt"; //$NON-NLS-1$
-    
+
     public final static String PREFS_SDK_DIR = PLUGIN_ID + ".sdk"; //$NON-NLS-1$
 
     public final static String PREFS_RES_AUTO_REFRESH = PLUGIN_ID + ".resAutoRefresh"; //$NON-NLS-1$
@@ -132,7 +132,7 @@ public class AdtPlugin extends AbstractUIPlugin {
     public final static String PREFS_HOME_PACKAGE = PLUGIN_ID + ".homePackage"; //$NON-NLS-1$
 
     public final static String PREFS_EMU_OPTIONS = PLUGIN_ID + ".emuOptions"; //$NON-NLS-1$
-    
+
     /** singleton instance */
     private static AdtPlugin sPlugin;
 
@@ -162,7 +162,7 @@ public class AdtPlugin extends AbstractUIPlugin {
 
     /** Color used in the error console */
     private Color mRed;
-    
+
     /** Load status of the SDK. Any access MUST be in a synchronized(mPostLoadProjects) block */
     private LoadStatus mSdkIsLoaded = LoadStatus.LOADING;
     /** Project to update once the SDK is loaded.
@@ -172,7 +172,7 @@ public class AdtPlugin extends AbstractUIPlugin {
     /** Project to check validity of cache vs actual once the SDK is loaded.
      * Any access MUST be in a synchronized(mPostLoadProjectsToResolve) block */
     private final ArrayList<IJavaProject> mPostLoadProjectsToCheck = new ArrayList<IJavaProject>();
-    
+
     private ResourceMonitor mResourceMonitor;
     private ArrayList<ITargetChangeListener> mTargetChangeListeners =
             new ArrayList<ITargetChangeListener>();
@@ -204,7 +204,7 @@ public class AdtPlugin extends AbstractUIPlugin {
         @Override
         public void println(String message) {
             // write the date/project tag first.
-            String tag = StreamHelper.getMessageTag(mProject != null ? mProject.getName() : null);
+            String tag = getMessageTag(mProject != null ? mProject.getName() : null);
 
             print(tag);
             if (mPrefix != null) {
@@ -312,7 +312,7 @@ public class AdtPlugin extends AbstractUIPlugin {
                     // get the SDK location and build id.
                     if (checkSdkLocationAndId()) {
                         // if sdk if valid, reparse it
-                        
+
                         // add all the opened Android projects to the list of projects to be updated
                         // after the SDK is reloaded
                         synchronized (getSdkLockObject()) {
@@ -320,7 +320,7 @@ public class AdtPlugin extends AbstractUIPlugin {
                             IJavaProject[] androidProjects = BaseProjectHelper.getAndroidProjects();
                             mPostLoadProjectsToResolve.addAll(Arrays.asList(androidProjects));
                         }
-    
+
                         // parse the SDK resources at the new location
                         parseSdkContent();
                     }
@@ -341,7 +341,7 @@ public class AdtPlugin extends AbstractUIPlugin {
 
         // check the location of SDK
         final boolean isSdkLocationValid = checkSdkLocationAndId();
-        
+
         mBuildVerbosity = BuildPreferencePage.getBuildLevel(
                 mStore.getString(PREFS_BUILD_VERBOSITY));
 
@@ -356,7 +356,7 @@ public class AdtPlugin extends AbstractUIPlugin {
         // and give it the debug launcher for android projects
         DdmsPlugin.setRunningAppDebugLauncher(new DdmsPlugin.IDebugLauncher() {
             public boolean debug(String appName, int port) {
-                // search for an android project matching the process name 
+                // search for an android project matching the process name
                 IProject project = ProjectHelper.findAndroidProjectByAppName(appName);
                 if (project != null) {
                     AndroidLaunchController.debugRunningApp(project, port);
@@ -366,7 +366,7 @@ public class AdtPlugin extends AbstractUIPlugin {
                 }
             }
         });
-        
+
         StackTracePanel.setSourceRevealer(new ISourceRevealer() {
             public void reveal(String applicationName, String className, int line) {
                 IProject project = ProjectHelper.findAndroidProjectByAppName(applicationName);
@@ -375,12 +375,12 @@ public class AdtPlugin extends AbstractUIPlugin {
                 }
             }
         });
-        
+
         // setup export callback for editors
         ExportHelper.setCallback(new IExportCallback() {
             public void startExportWizard(IProject project) {
                 StructuredSelection selection = new StructuredSelection(project);
-                
+
                 ExportWizard wizard = new ExportWizard();
                 wizard.init(PlatformUI.getWorkbench(), selection);
                 WizardDialog dialog = new WizardDialog(getDisplay().getActiveShell(),
@@ -388,7 +388,7 @@ public class AdtPlugin extends AbstractUIPlugin {
                 dialog.open();
             }
         });
-        
+
         // initialize editors
         startEditors();
 
@@ -400,16 +400,16 @@ public class AdtPlugin extends AbstractUIPlugin {
            @Override
             public void done(IJobChangeEvent event) {
                 super.done(event);
-    
+
                 // Once the ping job is finished, start the SDK parser
                 if (isSdkLocationValid) {
                     // parse the SDK resources.
                     parseSdkContent();
                 }
-            } 
+            }
         });
         // build jobs are run after other interactive jobs
-        pingJob.setPriority(Job.BUILD); 
+        pingJob.setPriority(Job.BUILD);
         // Wait 2 seconds before starting the ping job. This leaves some time to the
         // other bundles to initialize.
         pingJob.schedule(2000 /*milliseconds*/);
@@ -417,15 +417,15 @@ public class AdtPlugin extends AbstractUIPlugin {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see org.eclipse.ui.plugin.AbstractUIPlugin#stop(org.osgi.framework.BundleContext)
      */
     @Override
     public void stop(BundleContext context) throws Exception {
         super.stop(context);
-        
+
         stopEditors();
-        
+
         mRed.dispose();
         synchronized (AdtPlugin.class) {
             sPlugin = null;
@@ -525,7 +525,7 @@ public class AdtPlugin extends AbstractUIPlugin {
         if (sPlugin != null) {
             return sPlugin.mBuildVerbosity;
         }
-        
+
         return 0;
     }
 
@@ -537,7 +537,7 @@ public class AdtPlugin extends AbstractUIPlugin {
      * @return the image descriptor
      */
     public static ImageDescriptor getImageDescriptor(String path) {
-    	return imageDescriptorFromPlugin(PLUGIN_ID, path);
+        return imageDescriptorFromPlugin(PLUGIN_ID, path);
     }
 
     /**
@@ -555,7 +555,7 @@ public class AdtPlugin extends AbstractUIPlugin {
                 return null;
             }
         }
-        
+
         // attempt to get a file to one of the template.
         try {
             URL url = bundle.getEntry(AndroidConstants.WS_SEP + filepath);
@@ -683,10 +683,10 @@ public class AdtPlugin extends AbstractUIPlugin {
         });
         return result[0];
     }
-    
+
     /**
      * Logs a message to the default Eclipse log.
-     * 
+     *
      * @param severity The severity code. Valid values are: {@link IStatus#OK},
      * {@link IStatus#ERROR}, {@link IStatus#INFO}, {@link IStatus#WARNING} or
      * {@link IStatus#CANCEL}.
@@ -704,7 +704,7 @@ public class AdtPlugin extends AbstractUIPlugin {
      * Logs an exception to the default Eclipse log.
      * <p/>
      * The status severity is always set to ERROR.
-     * 
+     *
      * @param exception the exception to log.
      * @param format The format string, like for {@link String#format(String, Object...)}.
      * @param args The arguments for the format string, like for
@@ -715,13 +715,13 @@ public class AdtPlugin extends AbstractUIPlugin {
         Status status = new Status(IStatus.ERROR, PLUGIN_ID, message, exception);
         getDefault().getLog().log(status);
     }
-    
+
     /**
      * This is a mix between log(Throwable) and printErrorToConsole.
      * <p/>
      * This logs the exception with an ERROR severity and the given printf-like format message.
      * The same message is then printed on the Android error console with the associated tag.
-     * 
+     *
      * @param exception the exception to log.
      * @param format The format string, like for {@link String#format(String, Object...)}.
      * @param args The arguments for the format string, like for
@@ -733,7 +733,7 @@ public class AdtPlugin extends AbstractUIPlugin {
             String message = String.format(format, args);
             Status status = new Status(IStatus.ERROR, PLUGIN_ID, message, exception);
             getDefault().getLog().log(status);
-            StreamHelper.printToStream(sPlugin.mAndroidConsoleErrorStream, tag, message);
+            printToStream(sPlugin.mAndroidConsoleErrorStream, tag, message);
             showAndroidConsole();
         }
     }
@@ -745,8 +745,8 @@ public class AdtPlugin extends AbstractUIPlugin {
      */
     public static synchronized void printErrorToConsole(String tag, Object... objects) {
         if (sPlugin != null) {
-            StreamHelper.printToStream(sPlugin.mAndroidConsoleErrorStream, tag, objects);
-    
+            printToStream(sPlugin.mAndroidConsoleErrorStream, tag, objects);
+
             showAndroidConsole();
         }
     }
@@ -783,7 +783,7 @@ public class AdtPlugin extends AbstractUIPlugin {
         if (sPlugin != null) {
             if (level <= sPlugin.mBuildVerbosity) {
                 String tag = project != null ? project.getName() : null;
-                StreamHelper.printToStream(sPlugin.mAndroidConsoleStream, tag, objects);
+                printToStream(sPlugin.mAndroidConsoleStream, tag, objects);
             }
         }
     }
@@ -795,7 +795,7 @@ public class AdtPlugin extends AbstractUIPlugin {
      */
     public static synchronized void printToConsole(String tag, Object... objects) {
         if (sPlugin != null) {
-            StreamHelper.printToStream(sPlugin.mAndroidConsoleStream, tag, objects);
+            printToStream(sPlugin.mAndroidConsoleStream, tag, objects);
         }
     }
 
@@ -813,7 +813,7 @@ public class AdtPlugin extends AbstractUIPlugin {
     public static void showAndroidConsole() {
         // first make sure the console is in the workbench
         EclipseUiHelper.showView(IConsoleConstants.ID_CONSOLE_VIEW, true);
-        
+
         // now make sure it's not docked.
         ConsolePlugin.getDefault().getConsoleManager().showConsoleView(
                 AdtPlugin.getDefault().getAndroidConsole());
@@ -832,7 +832,7 @@ public class AdtPlugin extends AbstractUIPlugin {
         if (sPlugin != null) {
             return new AndroidPrintStream(project, prefix, sPlugin.mAndroidConsoleStream);
         }
-        
+
         return null;
     }
 
@@ -849,10 +849,10 @@ public class AdtPlugin extends AbstractUIPlugin {
         if (sPlugin != null) {
             return new AndroidPrintStream(project, prefix, sPlugin.mAndroidConsoleErrorStream);
         }
-        
+
         return null;
     }
-    
+
     /**
      * Returns whether the Sdk has been loaded.
      */
@@ -861,7 +861,7 @@ public class AdtPlugin extends AbstractUIPlugin {
             return mSdkIsLoaded;
         }
     }
-    
+
     /**
      * Returns the lock object for SDK loading. If you wish to do things while the SDK is loading,
      * you must synchronize on this object.
@@ -869,7 +869,7 @@ public class AdtPlugin extends AbstractUIPlugin {
     public final Object getSdkLockObject() {
         return mPostLoadProjectsToResolve;
     }
-    
+
     /**
      * Sets the given {@link IJavaProject} to have its target resolved again once the SDK finishes
      * to load.
@@ -879,14 +879,14 @@ public class AdtPlugin extends AbstractUIPlugin {
             mPostLoadProjectsToResolve.add(javaProject);
         }
     }
-    
+
     /**
      * Sets the given {@link IJavaProject} to have its target checked for consistency
      * once the SDK finishes to load. This is used if the target is resolved using cached
      * information while the SDK is loading.
      */
     public final void setProjectToCheck(IJavaProject javaProject) {
-        // only lock on 
+        // only lock on
         synchronized (getSdkLockObject()) {
             mPostLoadProjectsToCheck.add(javaProject);
         }
@@ -983,25 +983,19 @@ public class AdtPlugin extends AbstractUIPlugin {
             @Override
             protected IStatus run(IProgressMonitor monitor) {
                 try {
+                    pingUsageServer(); //$NON-NLS-1$
 
-                    // get the version of the plugin
-                    String versionString = (String) getBundle().getHeaders().get(
-                            Constants.BUNDLE_VERSION);
-                    Version version = new Version(versionString);
-                    
-                    SdkStatsHelper.pingUsageServer("adt", version); //$NON-NLS-1$
-                    
                     return Status.OK_STATUS;
                 } catch (Throwable t) {
-                    log(t, "pingUsageServer failed"); //$NON-NLS-1$
+                    log(t, "pingUsageServer failed");       //$NON-NLS-1$
                     return new Status(IStatus.ERROR, PLUGIN_ID,
-                            "pingUsageServer failed", t);
+                            "pingUsageServer failed", t);    //$NON-NLS-1$
                 }
             }
         };
         return job;
     }
-    
+
     /**
      * Parses the SDK resources.
      */
@@ -1018,18 +1012,18 @@ public class AdtPlugin extends AbstractUIPlugin {
                         return new Status(IStatus.WARNING, PLUGIN_ID,
                                 "An Android SDK is already being loaded. Please try again later.");
                     }
-                    
+
                     mSdkIsLoading = true;
-                    
+
                     SubMonitor progress = SubMonitor.convert(monitor,
                             "Initialize SDK Manager", 100);
-                    
+
                     Sdk sdk = Sdk.loadSdk(mOsSdkLocation);
-                    
+
                     if (sdk != null) {
-                        
+
                         progress.setTaskName(Messages.AdtPlugin_Parsing_Resources);
-                        
+
                         int n = sdk.getTargets().length;
                         if (n > 0) {
                             int w = 60 / n;
@@ -1050,7 +1044,7 @@ public class AdtPlugin extends AbstractUIPlugin {
                             mSdkIsLoaded = LoadStatus.LOADED;
 
                             progress.setTaskName("Check Projects");
-                            
+
                             ArrayList<IJavaProject> list = new ArrayList<IJavaProject>();
                             for (IJavaProject javaProject : mPostLoadProjectsToResolve) {
                                 if (javaProject.getProject().isOpen()) {
@@ -1066,24 +1060,24 @@ public class AdtPlugin extends AbstractUIPlugin {
                             // do not need to be resolved again).
                             AndroidClasspathContainerInitializer.checkProjectsCache(
                                     mPostLoadProjectsToCheck);
-                            
+
                             list.addAll(mPostLoadProjectsToCheck);
-                            
+
                             // update the project that needs recompiling.
                             if (list.size() > 0) {
                                 IJavaProject[] array = list.toArray(
                                         new IJavaProject[list.size()]);
                                 AndroidClasspathContainerInitializer.updateProjects(array);
                             }
-                            
+
                             progress.worked(10);
                         }
                     }
-                        
+
                     // Notify resource changed listeners
                     progress.setTaskName("Refresh UI");
                     progress.setWorkRemaining(mTargetChangeListeners.size());
-                    
+
                     // Clone the list before iterating, to avoid Concurrent Modification
                     // exceptions
                     final List<ITargetChangeListener> listeners =
@@ -1102,6 +1096,11 @@ public class AdtPlugin extends AbstractUIPlugin {
                             }
                         }
                     });
+                } catch (Throwable t) {
+                    log(t, "Unknown exception in parseSdkContent.");    //$NON-NLS-1$
+                    return new Status(IStatus.ERROR, PLUGIN_ID,
+                            "parseSdkContent failed", t);               //$NON-NLS-1$
+
                 } finally {
                     mSdkIsLoading = false;
                     if (monitor != null) {
@@ -1115,34 +1114,18 @@ public class AdtPlugin extends AbstractUIPlugin {
         job.setPriority(Job.BUILD); // build jobs are run after other interactive jobs
         job.schedule();
     }
-    
+
     /** Returns the global android console */
     public MessageConsole getAndroidConsole() {
         return mAndroidConsole;
     }
-    
+
     // ----- Methods for Editors -------
 
     public void startEditors() {
         sAndroidLogoDesc = imageDescriptorFromPlugin(AdtPlugin.PLUGIN_ID,
                 "/icons/android.png"); //$NON-NLS-1$
         sAndroidLogo = sAndroidLogoDesc.createImage();
-        
-        // get the stream to write in the android console.
-        MessageConsole androidConsole = AdtPlugin.getDefault().getAndroidConsole();
-        mAndroidConsoleStream = androidConsole.newMessageStream();
-
-        mAndroidConsoleErrorStream = androidConsole.newMessageStream();
-        mRed = new Color(getDisplay(), 0xFF, 0x00, 0x00);
-
-        // because this can be run, in some cases, by a non ui thread, and beccause
-        // changing the console properties update the ui, we need to make this change
-        // in the ui thread.
-        getDisplay().asyncExec(new Runnable() {
-            public void run() {
-                mAndroidConsoleErrorStream.setColor(mRed);
-            }
-        });
 
         // Add a resource listener to handle compiled resources.
         IWorkspace ws = ResourcesPlugin.getWorkspace();
@@ -1160,19 +1143,19 @@ public class AdtPlugin extends AbstractUIPlugin {
 
     /**
      * The <code>AbstractUIPlugin</code> implementation of this <code>Plugin</code>
-     * method saves this plug-in's preference and dialog stores and shuts down 
+     * method saves this plug-in's preference and dialog stores and shuts down
      * its image registry (if they are in use). Subclasses may extend this
      * method, but must send super <b>last</b>. A try-finally statement should
      * be used where necessary to ensure that <code>super.shutdown()</code> is
      * always done.
-     * 
+     *
      * @see org.eclipse.ui.plugin.AbstractUIPlugin#stop(org.osgi.framework.BundleContext)
      */
     public void stopEditors() {
         sAndroidLogo.dispose();
-        
+
         IconFactory.getInstance().Dispose();
-        
+
         // Remove the resource listener that handles compiled resources.
         IWorkspace ws = ResourcesPlugin.getWorkspace();
         ResourceMonitor.stopMonitoring(ws);
@@ -1182,7 +1165,7 @@ public class AdtPlugin extends AbstractUIPlugin {
 
     /**
      * Returns an Image for the small Android logo.
-     * 
+     *
      * Callers should not dispose it.
      */
     public static Image getAndroidLogo() {
@@ -1191,13 +1174,13 @@ public class AdtPlugin extends AbstractUIPlugin {
 
     /**
      * Returns an {@link ImageDescriptor} for the small Android logo.
-     * 
+     *
      * Callers should not dispose it.
      */
     public static ImageDescriptor getAndroidLogoDesc() {
         return sAndroidLogoDesc;
     }
-    
+
     /**
      * Returns the ResourceMonitor object.
      */
@@ -1207,23 +1190,23 @@ public class AdtPlugin extends AbstractUIPlugin {
 
     /**
      * Sets up the editor to register default editors for resource files when needed.
-     * 
+     *
      * This is called by the {@link AdtPlugin} during initialization.
-     * 
+     *
      * @param monitor The main Resource Monitor object.
      */
     public void setupDefaultEditor(ResourceMonitor monitor) {
         monitor.addFileListener(new IFileListener() {
 
             private static final String UNKNOWN_EDITOR = "unknown-editor"; //$NON-NLS-1$
-            
+
             /* (non-Javadoc)
              * Sent when a file changed.
              * @param file The file that changed.
              * @param markerDeltas The marker deltas for the file.
              * @param kind The change kind. This is equivalent to
              * {@link IResourceDelta#accept(IResourceDeltaVisitor)}
-             * 
+             *
              * @see IFileListener#fileChanged
              */
             public void fileChanged(IFile file, IMarkerDelta[] markerDeltas, int kind) {
@@ -1233,7 +1216,7 @@ public class AdtPlugin extends AbstractUIPlugin {
                     // There is no support for sub folders, so the segment count must be 4
                     if (file.getFullPath().segmentCount() == 4) {
                         // check if we are inside the res folder.
-                        String segment = file.getFullPath().segment(1); 
+                        String segment = file.getFullPath().segment(1);
                         if (segment.equalsIgnoreCase(SdkConstants.FD_RESOURCES)) {
                             // we are inside a res/ folder, get the actual ResourceFolder
                             ProjectResources resources = ResourceManager.getInstance().
@@ -1252,7 +1235,7 @@ public class AdtPlugin extends AbstractUIPlugin {
 
                             ResourceFolder resFolder = resources.getResourceFolder(
                                 (IFolder)file.getParent());
-                        
+
                             if (resFolder != null) {
                                 if (kind == IResourceDelta.ADDED) {
                                     resourceAdded(file, resFolder.getType());
@@ -1320,7 +1303,7 @@ public class AdtPlugin extends AbstractUIPlugin {
                                 file.setPersistentProperty(qname, null);
                                 IWorkbenchPage page = PlatformUI.getWorkbench().
                                                         getActiveWorkbenchWindow().getActivePage();
-                                
+
                                 IEditorPart oldEditor = page.findEditor(new FileEditorInput(file));
                                 if (oldEditor != null &&
                                         AdtPlugin.displayPrompt("Android XML Editor",
@@ -1332,7 +1315,7 @@ public class AdtPlugin extends AbstractUIPlugin {
                                             XmlEditor.ID,
                                             true, /* activate */
                                             IWorkbenchPage.MATCH_NONE);
-                                
+
                                     if (newEditor != null) {
                                         page.closeEditor(oldEditor, true /* save */);
                                     }
@@ -1385,8 +1368,60 @@ public class AdtPlugin extends AbstractUIPlugin {
             }
         });
     }
-    
+
     public static synchronized OutputStream getErrorStream() {
         return sPlugin.mAndroidConsoleErrorStream;
     }
+
+    /**
+     * Pings the usage start server.
+     */
+    private void pingUsageServer() {
+        // get the version of the plugin
+        String versionString = (String) getBundle().getHeaders().get(
+                Constants.BUNDLE_VERSION);
+        Version version = new Version(versionString);
+
+        versionString = String.format("%1$d.%2$d.%3$d", version.getMajor(), //$NON-NLS-1$
+                version.getMinor(), version.getMicro());
+
+        SdkStatsService.ping("adt", versionString, getDisplay()); //$NON-NLS-1$
+    }
+
+    /**
+     * Prints messages, associated with a project to the specified stream
+     * @param stream The stream to write to
+     * @param tag The tag associated to the message. Can be null
+     * @param objects The objects to print through their toString() method (or directly for
+     * {@link String} objects.
+     */
+    public static synchronized void printToStream(MessageConsoleStream stream, String tag,
+            Object... objects) {
+        String dateTag = getMessageTag(tag);
+
+        for (Object obj : objects) {
+            stream.print(dateTag);
+            if (obj instanceof String) {
+                stream.println((String)obj);
+            } else {
+                stream.println(obj.toString());
+            }
+        }
+    }
+
+    /**
+     * Creates a string containing the current date/time, and the tag
+     * @param tag The tag associated to the message. Can be null
+     * @return The dateTag
+     */
+    public static String getMessageTag(String tag) {
+        Calendar c = Calendar.getInstance();
+
+        if (tag == null) {
+            return String.format(Messages.Console_Date_Tag, c);
+        }
+
+        return String.format(Messages.Console_Data_Project_Tag, c, tag);
+    }
+
 }

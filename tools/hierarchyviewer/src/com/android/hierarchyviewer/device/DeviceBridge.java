@@ -17,7 +17,7 @@
 package com.android.hierarchyviewer.device;
 
 import com.android.ddmlib.AndroidDebugBridge;
-import com.android.ddmlib.Device;
+import com.android.ddmlib.IDevice;
 import com.android.ddmlib.Log;
 import com.android.ddmlib.MultiLineReceiver;
 
@@ -29,8 +29,8 @@ import java.util.regex.Pattern;
 
 public class DeviceBridge {
     private static AndroidDebugBridge bridge;
-    
-    private static final HashMap<Device, Integer> devicePortMap = new HashMap<Device, Integer>();
+
+    private static final HashMap<IDevice, Integer> devicePortMap = new HashMap<IDevice, Integer>();
     private static int nextLocalPort = Configuration.DEFAULT_SERVER_PORT;
 
     public static void initDebugBridge() {
@@ -57,11 +57,11 @@ public class DeviceBridge {
         AndroidDebugBridge.removeDeviceChangeListener(listener);
     }
 
-    public static Device[] getDevices() {
+    public static IDevice[] getDevices() {
         return bridge.getDevices();
     }
 
-    public static boolean isViewServerRunning(Device device) {
+    public static boolean isViewServerRunning(IDevice device) {
         initDebugBridge();
         final boolean[] result = new boolean[1];
         try {
@@ -75,11 +75,11 @@ public class DeviceBridge {
         return result[0];
     }
 
-    public static boolean startViewServer(Device device) {
+    public static boolean startViewServer(IDevice device) {
         return startViewServer(device, Configuration.DEFAULT_SERVER_PORT);
     }
 
-    public static boolean startViewServer(Device device, int port) {
+    public static boolean startViewServer(IDevice device, int port) {
         initDebugBridge();
         final boolean[] result = new boolean[1];
         try {
@@ -93,7 +93,7 @@ public class DeviceBridge {
         return result[0];
     }
 
-    public static boolean stopViewServer(Device device) {
+    public static boolean stopViewServer(IDevice device) {
         initDebugBridge();
         final boolean[] result = new boolean[1];
         try {
@@ -116,17 +116,17 @@ public class DeviceBridge {
      * <p/>This starts a port forwarding between a local port and a port on the device.
      * @param device
      */
-    public static void setupDeviceForward(Device device) {
+    public static void setupDeviceForward(IDevice device) {
         synchronized (devicePortMap) {
-            if (device.getState() == Device.DeviceState.ONLINE) {
+            if (device.getState() == IDevice.DeviceState.ONLINE) {
                 int localPort = nextLocalPort++;
                 device.createForward(localPort, Configuration.DEFAULT_SERVER_PORT);
                 devicePortMap.put(device, localPort);
             }
         }
     }
-    
-    public static void removeDeviceForward(Device device) {
+
+    public static void removeDeviceForward(IDevice device) {
         synchronized (devicePortMap) {
             final Integer localPort = devicePortMap.get(device);
             if (localPort != null) {
@@ -135,18 +135,18 @@ public class DeviceBridge {
             }
         }
     }
-    
-    public static int getDeviceLocalPort(Device device) {
+
+    public static int getDeviceLocalPort(IDevice device) {
         synchronized (devicePortMap) {
             Integer port = devicePortMap.get(device);
             if (port != null) {
                 return port;
             }
-            
+
             Log.e("hierarchy", "Missing forwarded port for " + device.getSerialNumber());
             return -1;
         }
-        
+
     }
 
     private static String buildStartServerShellCommand(int port) {

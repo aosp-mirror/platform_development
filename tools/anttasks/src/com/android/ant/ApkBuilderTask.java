@@ -16,11 +16,12 @@
 
 package com.android.ant;
 
-import com.android.apkbuilder.ApkBuilder;
-import com.android.apkbuilder.ApkBuilder.ApkFile;
-import com.android.sdklib.project.ApkConfigurationHelper;
-import com.android.sdklib.project.ProjectProperties;
-import com.android.sdklib.project.ProjectProperties.PropertyType;
+import com.android.apkbuilder.ApkBuilder.ApkCreationException;
+import com.android.apkbuilder.internal.ApkBuilderImpl;
+import com.android.apkbuilder.internal.ApkBuilderImpl.ApkFile;
+import com.android.sdklib.internal.project.ApkConfigurationHelper;
+import com.android.sdklib.internal.project.ProjectProperties;
+import com.android.sdklib.internal.project.ProjectProperties.PropertyType;
 
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;
@@ -37,7 +38,7 @@ import java.util.Set;
 import java.util.Map.Entry;
 
 public class ApkBuilderTask extends Task {
-    
+
     /**
      * Class to represent nested elements. Since they all have only one attribute ('path'), the
      * same class can be used for all the nested elements (zip, file, sourcefolder, jarfolder,
@@ -45,7 +46,7 @@ public class ApkBuilderTask extends Task {
      */
     public final static class Value extends ProjectComponent {
         String mPath;
-        
+
         /**
          * Sets the value of the "path" attribute.
          * @param path the value.
@@ -59,7 +60,7 @@ public class ApkBuilderTask extends Task {
     private String mBaseName;
     private boolean mVerbose = false;
     private boolean mSigned = true;
-    
+
     private final ArrayList<Value> mZipList = new ArrayList<Value>();
     private final ArrayList<Value> mFileList = new ArrayList<Value>();
     private final ArrayList<Value> mSourceList = new ArrayList<Value>();
@@ -79,7 +80,7 @@ public class ApkBuilderTask extends Task {
     public void setOutfolder(Path outFolder) {
         mOutFolder = outFolder.toString();
     }
-    
+
     /**
      * Sets the value of the "basename" attribute.
      * @param baseName the value.
@@ -87,7 +88,7 @@ public class ApkBuilderTask extends Task {
     public void setBasename(String baseName) {
         mBaseName = baseName;
     }
-    
+
     /**
      * Sets the value of the "verbose" attribute.
      * @param verbose the value.
@@ -95,7 +96,7 @@ public class ApkBuilderTask extends Task {
     public void setVerbose(boolean verbose) {
         mVerbose = verbose;
     }
-    
+
     /**
      * Sets the value of the "signed" attribute.
      * @param signed the value.
@@ -103,7 +104,7 @@ public class ApkBuilderTask extends Task {
     public void setSigned(boolean signed) {
         mSigned = signed;
     }
-    
+
     /**
      * Returns an object representing a nested <var>zip</var> element.
      */
@@ -112,7 +113,7 @@ public class ApkBuilderTask extends Task {
         mZipList.add(zip);
         return zip;
     }
-    
+
     /**
      * Returns an object representing a nested <var>file</var> element.
      */
@@ -139,7 +140,7 @@ public class ApkBuilderTask extends Task {
         mJarList.add(file);
         return file;
     }
-    
+
     /**
      * Returns an object representing a nested <var>nativefolder</var> element.
      */
@@ -148,64 +149,64 @@ public class ApkBuilderTask extends Task {
         mNativeList.add(file);
         return file;
     }
-    
+
     @Override
     public void execute() throws BuildException {
         Project taskProject = getProject();
-        
-        ApkBuilder apkBuilder = new ApkBuilder();
+
+        ApkBuilderImpl apkBuilder = new ApkBuilderImpl();
         apkBuilder.setVerbose(mVerbose);
         apkBuilder.setSignedPackage(mSigned);
-        
+
         try {
             // setup the list of everything that needs to go in the archive.
-            
+
             // go through the list of zip files to add. This will not include
             // the resource package, which is handled separaly for each apk to create.
             for (Value v : mZipList) {
                 FileInputStream input = new FileInputStream(v.mPath);
                 mZipArchives.add(input);
             }
-            
+
             // now go through the list of file to directly add the to the list.
             for (Value v : mFileList) {
-                mArchiveFiles.add(ApkBuilder.getInputFile(v.mPath));
+                mArchiveFiles.add(ApkBuilderImpl.getInputFile(v.mPath));
             }
-            
+
             // now go through the list of file to directly add the to the list.
             for (Value v : mSourceList) {
-                ApkBuilder.processSourceFolderForResource(v.mPath, mJavaResources);
+                ApkBuilderImpl.processSourceFolderForResource(v.mPath, mJavaResources);
             }
-            
+
             // now go through the list of jar folders.
             for (Value v : mJarList) {
-                ApkBuilder.processJarFolder(v.mPath, mResourcesJars);
+                ApkBuilderImpl.processJarFolder(v.mPath, mResourcesJars);
             }
-            
+
             // now the native lib folder.
             for (Value v : mNativeList) {
                 String parameter = v.mPath;
                 File f = new File(parameter);
-                
+
                 // compute the offset to get the relative path
                 int offset = parameter.length();
                 if (parameter.endsWith(File.separator) == false) {
                     offset++;
                 }
 
-                ApkBuilder.processNativeFolder(offset, f, mNativeLibraries);
+                ApkBuilderImpl.processNativeFolder(offset, f, mNativeLibraries);
             }
 
-            
+
             // first do a full resource package
             createApk(apkBuilder, null /*configName*/, null /*resourceFilter*/);
-    
+
             // now see if we need to create file with filtered resources.
             // Get the project base directory.
             File baseDir = taskProject.getBaseDir();
             ProjectProperties properties = ProjectProperties.load(baseDir.getAbsolutePath(),
                     PropertyType.DEFAULT);
-            
+
             Map<String, String> apkConfigs = ApkConfigurationHelper.getConfigs(properties);
             if (apkConfigs.size() > 0) {
                 Set<Entry<String, String>> entrySet = apkConfigs.entrySet();
@@ -217,20 +218,23 @@ public class ApkBuilderTask extends Task {
             throw new BuildException(e);
         } catch (IllegalArgumentException e) {
             throw new BuildException(e);
+        } catch (ApkCreationException e) {
+            throw new BuildException(e);
         }
     }
-    
+
     /**
      * Creates an application package.
-     * @param apkBuilder 
+     * @param apkBuilder
      * @param configName the name of the filter config. Can be null in which case a full resource
      * package will be generated.
      * @param resourceFilter the resource configuration filter to pass to aapt (if configName is
      * non null)
-     * @throws FileNotFoundException 
+     * @throws FileNotFoundException
+     * @throws ApkCreationException
      */
-    private void createApk(ApkBuilder apkBuilder, String configName, String resourceFilter)
-            throws FileNotFoundException {
+    private void createApk(ApkBuilderImpl apkBuilder, String configName, String resourceFilter)
+            throws FileNotFoundException, ApkCreationException {
         // All the files to be included in the archive have already been prep'ed up, except
         // the resource package.
         // figure out its name.
@@ -240,20 +244,20 @@ public class ApkBuilderTask extends Task {
         } else {
             filename = mBaseName + ".ap_";
         }
-        
+
         // now we add it to the list of zip archive (it's just a zip file).
-        
+
         // it's used as a zip archive input
         FileInputStream resoucePackageZipFile = new FileInputStream(new File(mOutFolder, filename));
         mZipArchives.add(resoucePackageZipFile);
-        
+
         // prepare the filename to generate. Same thing as the resource file.
         if (configName != null && resourceFilter != null) {
             filename = mBaseName + "-" + configName;
         } else {
             filename = mBaseName;
         }
-        
+
         if (mSigned) {
             filename = filename + "-debug.apk";
         } else {
@@ -279,13 +283,13 @@ public class ApkBuilderTask extends Task {
                         filename, resourceFilter));
             }
         }
-        
+
         File f = new File(mOutFolder, filename);
-        
+
         // and generate the apk
         apkBuilder.createPackage(f.getAbsoluteFile(), mZipArchives,
                 mArchiveFiles, mJavaResources, mResourcesJars, mNativeLibraries);
-        
+
         // we are done. We need to remove the resource package from the list of zip archives
         // in case we have another apk to generate.
         mZipArchives.remove(resoucePackageZipFile);

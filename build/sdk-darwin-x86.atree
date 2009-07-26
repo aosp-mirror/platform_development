@@ -2,9 +2,16 @@
 #
 
 # swt
-lib/libswt-carbon-3236.jnilib tools/lib/libswt-carbon-3236.jnilib
-lib/libswt-pi-carbon-3236.jnilib tools/lib/libswt-pi-carbon-3236.jnilib
-framework/swt.jar tools/lib/swt.jar
-framework/org.eclipse.core.commands_3.2.0.I20060605-1400.jar tools/lib/org.eclipse.core.commands_3.2.0.I20060605-1400.jar
-framework/org.eclipse.equinox.common_3.2.0.v20060603.jar tools/lib/org.eclipse.equinox.common_3.2.0.v20060603.jar
-framework/org.eclipse.jface_3.2.0.I20060605-1400.jar tools/lib/org.eclipse.jface_3.2.0.I20060605-1400.jar
+prebuilt/darwin-x86/swt/swt.jar tools/lib/x86/swt.jar
+
+
+# JetCreator (only available on mac/windows)
+external/sonivox/jet_tools/JetCreator tools/Jet/JetCreator
+prebuilt/darwin-x86/jetcreator/libEASLIb.dylib tools/Jet/JetCreator/libEASLIb.dylib
+external/sonivox/jet_tools/JetCreator_content tools/Jet/demo_content
+external/sonivox/jet_tools/logic_templates tools/Jet/logic_templates
+
+external/sonivox/docs/JET_Authoring_Guidelines.html docs/JetCreator/JET_Authoring_Guidelines.html
+external/sonivox/docs/JET_Authoring_Guidelines_files docs/JetCreator/JET_Authoring_Guidelines_files
+external/sonivox/docs/JET_Creator_User_Manual.html docs/JetCreator/JET_Creator_User_Manual.html
+external/sonivox/docs/JET_Creator_User_Manual_files docs/JetCreator/JET_Creator_User_Manual_files

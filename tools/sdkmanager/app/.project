@@ -3,6 +3,8 @@
 	<name>SdkManager</name>
 	<comment></comment>
 	<projects>
+		<project>SdkLib</project>
+		<project>SdkUiLib</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

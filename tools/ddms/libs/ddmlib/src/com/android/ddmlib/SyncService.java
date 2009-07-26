@@ -209,9 +209,11 @@ public final class SyncService {
 
     /**
      * Opens the sync connection. This must be called before any calls to push[File] / pull[File].
-     * @return true if the connection opened, false otherwise.
+     * @return true if the connection opened, false if adb refuse the connection. This can happen
+     * if the {@link Device} is invalid.
+     * @throws IOException If the connection to adb failed.
      */
-    boolean openSync() {
+    boolean openSync() throws IOException {
         try {
             mChannel = SocketChannel.open(mAddress);
             mChannel.configureBlocking(false);
@@ -236,13 +238,15 @@ public final class SyncService {
             if (mChannel != null) {
                 try {
                     mChannel.close();
-                } catch (IOException e1) {
-                    // we do nothing, since we'll return false just below
+                } catch (IOException e2) {
+                    // we want to throw the original exception, so we ignore this one.
                 }
                 mChannel = null;
-                return false;
             }
+
+            throw e;
         }
+
         return true;
     }
 

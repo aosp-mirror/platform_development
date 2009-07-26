@@ -15,7 +15,7 @@
  */
 package com.android.ide.eclipse.tests.functests.sampleProjects;
 
-import com.android.ide.eclipse.adt.project.ProjectHelper;
+import com.android.ide.eclipse.adt.internal.project.ProjectHelper;
 import com.android.ide.eclipse.adt.wizards.newproject.StubSampleProjectWizard;
 import com.android.ide.eclipse.tests.FuncTestCase;
 

@@ -36,7 +36,6 @@
             android:icon="@drawable/ic_launcher_devtools">
 
         <uses-library android:name="android.test.runner" />
-        <uses-library android:name="com.google.android.maps" />
 
         <activity android:name="Development" android:label="Dev Tools"
             android:icon="@drawable/ic_launcher_devtools">
@@ -129,6 +128,12 @@
     <activity android:name="AppHwPref" android:label="Applications Hardware Preferences">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+    </activity>
+    <activity android:name="PermissionDetails" android:label="Permission Info">
+            <intent-filter>
+                <action android:name="com.android.development.VIEW_PERMISSION" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
     </activity>

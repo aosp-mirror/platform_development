@@ -16,7 +16,6 @@
 
 package com.android.ddmlib;
 
-import com.android.ddmlib.Device.DeviceState;
 import com.android.ddmlib.log.LogReceiver;
 
 import java.io.IOException;
@@ -39,6 +38,35 @@ public interface IDevice {
     public static final int CHANGE_CLIENT_LIST = 0x0002;
     /** Device change bit mask: build info change. */
     public static final int CHANGE_BUILD_INFO = 0x0004;
+
+    /**
+     * The state of a device.
+     */
+    public static enum DeviceState {
+        BOOTLOADER("bootloader"), //$NON-NLS-1$
+        OFFLINE("offline"), //$NON-NLS-1$
+        ONLINE("device"); //$NON-NLS-1$
+
+        private String mState;
+
+        DeviceState(String state) {
+            mState = state;
+        }
+
+        /**
+         * Returns a {@link DeviceState} from the string returned by <code>adb devices</code>.
+         * @param state the device state.
+         * @return a {@link DeviceState} object or <code>null</code> if the state is unknown.
+         */
+        public static DeviceState getState(String state) {
+            for (DeviceState deviceState : values()) {
+                if (deviceState.mState.equals(state)) {
+                    return deviceState;
+                }
+            }
+            return null;
+        }
+    }
 
     /**
      * Returns the serial number of the device.
@@ -118,9 +146,11 @@ public interface IDevice {
 
     /**
      * Returns a {@link SyncService} object to push / pull files to and from the device.
-     * @return <code>null</code> if the SyncService couldn't be created.
+     * @return <code>null</code> if the SyncService couldn't be created. This can happen if adb
+     * refuse to open the connection because the {@link IDevice} is invalid (or got disconnected).
+     * @throws IOException if the connection with adb failed.
      */
-    public SyncService getSyncService();
+    public SyncService getSyncService() throws IOException;
 
     /**
      * Returns a {@link FileListingService} for this device.
@@ -180,5 +210,49 @@ public interface IDevice {
      * @param pid the pid of the client.
      */
     public String getClientName(int pid);
+
+    /**
+     * Installs an Android application on device.
+     * This is a helper method that combines the syncPackageToDevice, installRemotePackage,
+     * and removePackage steps
+     * @param packageFilePath the absolute file system path to file on local host to install
+     * @param reinstall set to <code>true</code> if re-install of app should be performed
+     * @return a {@link String} with an error code, or <code>null</code> if success.
+     * @throws IOException
+     */
+    public String installPackage(String packageFilePath, boolean reinstall)  throws IOException;
+
+    /**
+     * Pushes a file to device
+     * @param localFilePath the absolute path to file on local host
+     * @return {@link String} destination path on device for file
+     * @throws IOException if fatal error occurred when pushing file
+     */
+    public String syncPackageToDevice(String localFilePath)
+            throws IOException;
+
+    /**
+     * Installs the application package that was pushed to a temporary location on the device.
+     * @param remoteFilePath absolute file path to package file on device
+     * @param reinstall set to <code>true</code> if re-install of app should be performed
+     * @throws InstallException if installation failed
+     */
+    public String installRemotePackage(String remoteFilePath, boolean reinstall)
+            throws IOException;
+
+    /**
+     * Remove a file from device
+     * @param remoteFilePath path on device of file to remove
+     * @throws IOException if file removal failed
+     */
+    public void removeRemotePackage(String remoteFilePath) throws IOException;
+
+    /**
+     * Uninstall an package from the device.
+     * @param packageName the Android application package name to uninstall
+     * @return a {@link String} with an error code, or <code>null</code> if success.
+     * @throws IOException
+     */
+    public String uninstallPackage(String packageName) throws IOException;
 
 }

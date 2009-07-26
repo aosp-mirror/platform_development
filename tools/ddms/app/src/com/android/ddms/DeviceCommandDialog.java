@@ -17,7 +17,7 @@
 
 package com.android.ddms;
 
-import com.android.ddmlib.Device;
+import com.android.ddmlib.IDevice;
 import com.android.ddmlib.IShellOutputReceiver;
 import com.android.ddmlib.Log;
 
@@ -96,7 +96,7 @@ public class DeviceCommandDialog extends Dialog {
      * Prepare and display the dialog.
      * @param currentDevice
      */
-    public void open(Device currentDevice) {
+    public void open(IDevice currentDevice) {
         Shell parent = getParent();
         Shell shell = new Shell(parent, getStyle());
         shell.setText("Remote Command");
@@ -219,13 +219,13 @@ public class DeviceCommandDialog extends Dialog {
         private String mCommand;
         private Text mText;
         private int mResult;
-        private Device mDevice;
+        private IDevice mDevice;
 
         /**
          * Constructor; pass in the text widget that will receive the output.
          * @param device
          */
-        public Gatherer(Shell shell, Device device, String command, Text text) {
+        public Gatherer(Shell shell, IDevice device, String command, Text text) {
             mShell = shell;
             mDevice = device;
             mCommand = command;
@@ -307,7 +307,7 @@ public class DeviceCommandDialog extends Dialog {
      * We have to run the command in a thread so that the UI continues
      * to work.
      */
-    private void executeCommand(Shell shell, Device device) {
+    private void executeCommand(Shell shell, IDevice device) {
         Gatherer gath = new Gatherer(shell, device, commandString(), mText);
         gath.start();
     }

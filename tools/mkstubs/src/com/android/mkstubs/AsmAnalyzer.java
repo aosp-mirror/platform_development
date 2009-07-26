@@ -19,9 +19,7 @@ package com.android.mkstubs;
 import org.objectweb.asm.ClassReader;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Enumeration;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -30,7 +28,10 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 /**
- * 
+ * Analyzes an input Jar to get all the relevant classes according to the given filter.
+ * <p/>
+ * This is mostly a helper extracted for convenience. Callers will want to use
+ * {@link #parseInputJar(String)} followed by {@link #filter(Map, Filter)}.
  */
 class AsmAnalyzer {
 
@@ -68,66 +69,24 @@ class AsmAnalyzer {
         }
     }
 
-    public void filter(
-            Map<String, ClassReader> classes,
-            ArrayList<String> inclusions,
-            ArrayList<String> exclusions) {
+    /**
+     * Filters the set of classes. Removes all classes that should not be included in the
+     * filter or that should be excluded. This modifies the map in-place.
+     * 
+     * @param classes The in-out map of classes to examine and filter. The map is filtered
+     *                in-place.
+     * @param filter  A filter describing which classes to include and which ones to exclude.
+     */
+    void filter(Map<String, ClassReader> classes, Filter filter) {
 
-        ArrayList<String> inPrefix = new ArrayList<String>();
-        HashSet  <String> inFull   = new HashSet  <String>();
-        ArrayList<String> exPrefix = new ArrayList<String>();
-        HashSet  <String> exFull   = new HashSet  <String>();
-        
-        for (String in : inclusions) {
-            if (in.endsWith("*")) {
-                inPrefix.add(in.substring(0, in.length() - 1));
-            } else {
-                inFull.add(in);
-            }
-        }
-        
-        for (String ex : exclusions) {
-            if (ex.endsWith("*")) {
-                exPrefix.add(ex.substring(0, ex.length() - 1));
-            } else {
-                exFull.add(ex);
-            }
-        }
-        
-        
         Set<String> keys = classes.keySet();
         for(Iterator<String> it = keys.iterator(); it.hasNext(); ) {
             String key = it.next();
 
-            
-            // Check if it can be included.
-            boolean keep = inFull.contains(key);
-            if (!keep) {
-                // Check for a prefix inclusion
-                for (String prefix : inPrefix) {
-                    if (key.startsWith(prefix)) {
-                        keep = true;
-                        break;
-                    }
-                }
-            }
-            
-            if (keep) {
-                // check for a full exclusion
-                keep = !exFull.contains(key);
-            }
-            if (keep) {
-                // or check for prefix exclusion
-                for (String prefix : exPrefix) {
-                    if (key.startsWith(prefix)) {
-                        keep = false;
-                        break;
-                    }
-                }
-            }
+            // TODO: We *could* filter out all private classes here: classes.get(key).getAccess().
             
             // remove if we don't keep it
-            if (!keep) {
+            if (!filter.accept(key)) {
                 System.out.println("- Remove class " + key);
                 it.remove();
             }

@@ -1,0 +1,1 @@
+    <instrumentation android:targetPackage="TEST_TARGET_PCKG" android:name="android.test.InstrumentationTestRunner" />

@@ -9,9 +9,9 @@ LOCAL_JAVA_RESOURCE_DIRS := resources
 LOCAL_JAVA_LIBRARIES := \
 	ddmlib \
 	swt \
-	org.eclipse.jface_3.2.0.I20060605-1400 \
-	org.eclipse.equinox.common_3.2.0.v20060603 \
-	org.eclipse.core.commands_3.2.0.I20060605-1400 \
+	org.eclipse.jface_3.4.2.M20090107-0800 \
+	org.eclipse.equinox.common_3.4.0.v20080421-2006 \
+	org.eclipse.core.commands_3.4.0.I20080509-2000 \
 	jcommon-1.0.12 \
 	jfreechart-1.0.9 \
 	jfreechart-1.0.9-swt

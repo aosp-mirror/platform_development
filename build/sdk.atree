@@ -27,11 +27,14 @@ bin/dmtracedump tools/dmtracedump
 bin/hprof-conv tools/hprof-conv
 bin/mksdcard tools/mksdcard
 
-# other tools
-development/tools/scripts/add-accounts-sdk tools/add-accounts.py
-
 # the uper-jar file that apps link against
 out/target/common/obj/PACKAGING/android_jar_intermediates/android.jar platforms/${PLATFORM_NAME}/android.jar
+
+# eclipse files for SWT
+framework/org.eclipse.core.commands_3.4.0.I20080509-2000.jar tools/lib/org.eclipse.core.commands_3.4.0.I20080509-2000.jar
+framework/org.eclipse.equinox.common_3.4.0.v20080421-2006.jar tools/lib/org.eclipse.equinox.common_3.4.0.v20080421-2006.jar
+framework/org.eclipse.jface_3.4.2.M20090107-0800.jar tools/lib/org.eclipse.jface_3.4.2.M20090107-0800.jar
+
 
 sdk/sdk-build.prop platforms/${PLATFORM_NAME}/build.prop
 development/tools/scripts/plugin.prop tools/lib/plugin.prop
@@ -93,6 +96,9 @@ framework/jcommon-1.0.12.jar tools/lib/jcommon-1.0.12.jar
 framework/jfreechart-1.0.9.jar tools/lib/jfreechart-1.0.9.jar
 framework/jfreechart-1.0.9-swt.jar tools/lib/jfreechart-1.0.9-swt.jar
 
+# archquery to test VM architecture
+framework/archquery.jar tools/lib/archquery.jar
+
 # ddms
 bin/ddms tools/ddms
 framework/ddms.jar tools/lib/ddms.jar
@@ -121,6 +127,7 @@ framework/anttasks.jar tools/lib/anttasks.jar
 # sdkmanager
 bin/android tools/android
 framework/sdklib.jar tools/lib/sdklib.jar
+framework/sdkuilib.jar tools/lib/sdkuilib.jar
 framework/sdkmanager.jar tools/lib/sdkmanager.jar
 
 # emulator

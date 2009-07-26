@@ -3,37 +3,37 @@
 #
 # Copyright 2007, The Android Open Source Project
 #
-# Licensed under the Apache License, Version 2.0 (the "License"); 
-# you may not use this file except in compliance with the License. 
-# You may obtain a copy of the License at 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0 
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
-# Unless required by applicable law or agreed to in writing, software 
-# distributed under the License is distributed on an "AS IS" BASIS, 
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
-# See the License for the specific language governing permissions and 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
 # limitations under the License.
 
 # System imports
 import os
 import signal
 import subprocess
-import time
 import threading
+import time
 
 # local imports
-import logger
 import errors
+import logger
 
 _abort_on_error = False
 
 def SetAbortOnError(abort=True):
-  """Sets behavior of RunCommand to throw AbortError if command process returns 
+  """Sets behavior of RunCommand to throw AbortError if command process returns
   a negative error code"""
   global _abort_on_error
   _abort_on_error = abort
-  
+
 def RunCommand(cmd, timeout_time=None, retry_count=3, return_output=True):
   """Spawns a subprocess to run the given shell command, and checks for
   timeout_time. If return_output is True, the output of the command is returned
@@ -42,7 +42,7 @@ def RunCommand(cmd, timeout_time=None, retry_count=3, return_output=True):
   result = None
   while True:
     try:
-      result = RunOnce(cmd, timeout_time=timeout_time, 
+      result = RunOnce(cmd, timeout_time=timeout_time,
                        return_output=return_output)
     except errors.WaitForResponseTimedOutError:
       if retry_count == 0:
@@ -57,15 +57,16 @@ def RunOnce(cmd, timeout_time=None, return_output=True):
   start_time = time.time()
   so = []
   pid = []
-  global _abort_on_error
+  global _abort_on_error, error_occurred
   error_occurred = False
-  
+
   def Run():
+    global error_occurred
     if return_output:
       output_dest = subprocess.PIPE
     else:
       # None means direct to stdout
-      output_dest = None  
+      output_dest = None
     pipe = subprocess.Popen(
         cmd,
         executable='/bin/bash',
@@ -82,10 +83,10 @@ def RunOnce(cmd, timeout_time=None, return_output=True):
       logger.Log(e)
       so.append("ERROR")
       error_occurred = True
-    if pipe.returncode < 0:
-      logger.SilentLog("Error: %s was terminated by signal %d" %(cmd, 
+    if pipe.returncode != 0:
+      logger.SilentLog("Error: %s returned %d error code" %(cmd,
           pipe.returncode))
-      error_occurred = True  
+      error_occurred = True
 
   t = threading.Thread(target=Run)
   t.start()
@@ -110,8 +111,57 @@ def RunOnce(cmd, timeout_time=None, return_output=True):
       time.sleep(0.1)
 
   t.join()
-
+  output = "".join(so)
   if _abort_on_error and error_occurred:
-    raise errors.AbortError
-  
+    raise errors.AbortError(msg=output)
+
   return "".join(so)
+
+
+def RunHostCommand(binary, valgrind=False):
+  """Run a command on the host (opt using valgrind).
+
+  Runs the host binary and returns the exit code.
+  If successfull, the output (stdout and stderr) are discarded,
+  but printed in case of error.
+  The command can be run under valgrind in which case all the
+  output are always discarded.
+
+  Args:
+    binary: full path of the file to be run.
+    valgrind: If True the command will be run under valgrind.
+
+  Returns:
+    The command exit code (int)
+  """
+  if not valgrind:
+    subproc = subprocess.Popen(binary, stdout=subprocess.PIPE,
+                               stderr=subprocess.STDOUT)
+    subproc.wait()
+    if subproc.returncode != 0:         # In case of error print the output
+      print subproc.communicate()[0]
+    return subproc.returncode
+  else:
+    # Need the full path to valgrind to avoid other versions on the system.
+    subproc = subprocess.Popen(["/usr/bin/valgrind", "--tool=memcheck",
+                                "--leak-check=yes", "-q", full_path],
+                               stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    # Cannot rely on the retcode of valgrind. Instead look for an empty output.
+    valgrind_out = subproc.communicate()[0].strip()
+    if valgrind_out:
+      print valgrind_out
+      return 1
+    else:
+      return 0
+
+
+def HasValgrind():
+  """Check that /usr/bin/valgrind exists.
+
+  We look for the fullpath to avoid picking up 'alternative' valgrind
+  on the system.
+
+  Returns:
+    True if a system valgrind was found.
+  """
+  return os.path.exists("/usr/bin/valgrind")

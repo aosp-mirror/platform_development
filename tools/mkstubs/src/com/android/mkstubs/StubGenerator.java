@@ -25,7 +25,6 @@ import org.objectweb.asm.ClassWriter;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.Map.Entry;
@@ -33,7 +32,11 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 
 /**
- * 
+ * Given a set of already filtered classes, this filters out all private members,
+ * stubs the remaining classes and then generates a Jar out of them.
+ * <p/>
+ * This is an helper extracted for convenience. Callers just need to use
+ * {@link #generateStubbedJar(File, Map, Filter)}.
  */
 class StubGenerator {
 
@@ -43,14 +46,14 @@ class StubGenerator {
      */
     public void generateStubbedJar(File destJar,
             Map<String, ClassReader> classes,
-            List<String> exclusions) throws IOException {
+            Filter filter) throws IOException {
 
         TreeMap<String, byte[]> all = new TreeMap<String, byte[]>();
 
         for (Entry<String, ClassReader> entry : classes.entrySet()) {
             ClassReader cr = entry.getValue();
             
-            byte[] b = visitClassStubber(cr, exclusions);
+            byte[] b = visitClassStubber(cr, filter);
             String name = classNameToEntryPath(cr.getClassName());
             all.put(name, b);
         }
@@ -88,7 +91,7 @@ class StubGenerator {
         jar.close();
     }
     
-    byte[] visitClassStubber(ClassReader cr, List<String> exclusions) {
+    byte[] visitClassStubber(ClassReader cr, Filter filter) {
         System.out.println("Stub " + cr.getClassName());
 
         // Rewrite the new class from scratch, without reusing the constant pool from the
@@ -96,8 +99,8 @@ class StubGenerator {
         ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
 
         ClassVisitor stubWriter = new ClassStubber(cw);
-        ClassVisitor filter = new FilterClassAdapter(stubWriter, exclusions);
-        cr.accept(filter, 0 /*flags*/);
+        ClassVisitor classFilter = new FilterClassAdapter(stubWriter, filter);
+        cr.accept(classFilter, 0 /*flags*/);
         return cw.toByteArray();
     }
 }

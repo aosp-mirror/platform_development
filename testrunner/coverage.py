@@ -3,16 +3,16 @@
 #
 # Copyright 2008, The Android Open Source Project
 #
-# Licensed under the Apache License, Version 2.0 (the "License"); 
-# you may not use this file except in compliance with the License. 
-# You may obtain a copy of the License at 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0 
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
-# Unless required by applicable law or agreed to in writing, software 
-# distributed under the License is distributed on an "AS IS" BASIS, 
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
-# See the License for the specific language governing permissions and 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
 # limitations under the License.
 
 """Utilities for generating code coverage reports for Android tests."""
@@ -37,40 +37,30 @@ class CoverageGenerator(object):
   coverage results for a pre-defined set of tests and targets
   """
 
-  # environment variable to enable emma builds in Android build system
-  _EMMA_BUILD_FLAG = "EMMA_INSTRUMENT"
-  # build path to Emma target Makefile
-  _EMMA_BUILD_PATH = os.path.join("external", "emma")
     # path to EMMA host jar, relative to Android build root
-  _EMMA_JAR = os.path.join(_EMMA_BUILD_PATH, "lib", "emma.jar")
+  _EMMA_JAR = os.path.join("external", "emma", "lib", "emma.jar")
   _TEST_COVERAGE_EXT = "ec"
-  # default device-side path to code coverage results file
-  _DEVICE_COVERAGE_PATH = "/sdcard/coverage.ec"
   # root path of generated coverage report files, relative to Android build root
   _COVERAGE_REPORT_PATH = os.path.join("out", "emma")
+  _TARGET_DEF_FILE = "coverage_targets.xml"
   _CORE_TARGET_PATH = os.path.join("development", "testrunner",
-                                   "coverage_targets.xml")
+                                   _TARGET_DEF_FILE)
   # vendor glob file path patterns to tests, relative to android
   # build root
   _VENDOR_TARGET_PATH = os.path.join("vendor", "*", "tests", "testinfo",
-                                     "coverage_targets.xml")
+                                     _TARGET_DEF_FILE)
 
   # path to root of target build intermediates
   _TARGET_INTERMEDIATES_BASE_PATH = os.path.join("out", "target", "common",
                                                  "obj")
 
-  def __init__(self, android_root_path, adb_interface):
-    self._root_path = android_root_path
+  def __init__(self, adb_interface):
+    self._root_path = android_build.GetTop()
     self._output_root_path = os.path.join(self._root_path,
                                           self._COVERAGE_REPORT_PATH)
     self._emma_jar_path = os.path.join(self._root_path, self._EMMA_JAR)
     self._adb = adb_interface
     self._targets_manifest = self._ReadTargets()
-
-  def EnableCoverageBuild(self):
-    """Enable building an Android target with code coverage instrumentation."""
-    os.environ[self._EMMA_BUILD_FLAG] = "true"
-    #TODO: can emma.jar automagically be added to bootclasspath here?
 
   def TestDeviceCoverageSupport(self):
     """Check if device has support for generating code coverage metrics.
@@ -81,19 +71,21 @@ class CoverageGenerator(object):
     Returns:
       True if device can support code coverage. False otherwise.
     """
-    output = self._adb.SendShellCommand("cat init.rc | grep BOOTCLASSPATH | "
-                                        "grep emma.jar")
-    if len(output) > 0:
-      return True
-    else:
-      logger.Log("Error: Targeted device does not have emma.jar on its "
-                 "BOOTCLASSPATH.")
-      logger.Log("Modify the BOOTCLASSPATH entry in system/core/rootdir/init.rc"
-                 " to add emma.jar")
-      return False
+    try:
+      output = self._adb.SendShellCommand("cat init.rc | grep BOOTCLASSPATH | "
+                                          "grep emma.jar")
+      if len(output) > 0:
+        return True
+    except errors.AbortError:
+      pass
+    logger.Log("Error: Targeted device does not have emma.jar on its "
+               "BOOTCLASSPATH.")
+    logger.Log("Modify the BOOTCLASSPATH entry in system/core/rootdir/init.rc"
+               " to add emma.jar")
+    return False
 
   def ExtractReport(self, test_suite,
-                    device_coverage_path=_DEVICE_COVERAGE_PATH,
+                    device_coverage_path,
                     output_path=None):
     """Extract runtime coverage data and generate code coverage report.
 
@@ -122,8 +114,14 @@ class CoverageGenerator(object):
       report_path = os.path.join(output_path,
                                  test_suite.GetName())
       target = self._targets_manifest.GetTarget(test_suite.GetTargetName())
-      return self._GenerateReport(report_path, coverage_local_path, [target],
-                                  do_src=True)
+      if target is None:
+        msg = ["Error: test %s references undefined target %s."
+                % (test_suite.GetName(), test_suite.GetTargetName())]
+        msg.append(" Ensure target is defined in %s" % self._TARGET_DEF_FILE)
+        logger.Log("".join(msg))
+      else:
+        return self._GenerateReport(report_path, coverage_local_path, [target],
+                                    do_src=True)
     return None
 
   def _GenerateReport(self, report_path, coverage_file_path, targets,
@@ -254,9 +252,6 @@ class CoverageGenerator(object):
     coverage_files = glob.glob(file_pattern)
     return coverage_files
 
-  def GetEmmaBuildPath(self):
-    return self._EMMA_BUILD_PATH
-
   def _ReadTargets(self):
     """Parses the set of coverage target data.
 
@@ -303,6 +298,11 @@ class CoverageGenerator(object):
     """Create combined coverage reports for all targets and tests."""
     self._CombineTestCoverage()
     self._CombineTargetCoverage()
+
+
+def EnableCoverageBuild():
+  """Enable building an Android target with code coverage instrumentation."""
+  os.environ["EMMA_INSTRUMENT"] = "true"
 
 
 def Run():

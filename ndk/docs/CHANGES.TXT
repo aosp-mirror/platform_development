@@ -1,0 +1,34 @@
+Android NDK ChangeLog:
+
+-------------------------------------------------------------------------------
+current version
+
+- Fix build/host-setup.sh to:
+  * execute as a Bourne shell script
+  * remove unused host gcc dependency
+  * improve Windows host auto-detection
+  * add GNU Make version check
+  * ensure that the script is run from $NDKROOT as build/host-setup.sh
+  * add --help, --verbose and --no-make-check options
+
+- Properly add sysroot library search path at build time. This makes a line
+  in Android.mk like:
+
+     LOCAL_LDLIBS := -lz
+
+  Actually work correctly, instead of having the linker complaining that it
+  could not find the corresponding libz.so library.
+
+- Generate thumb binaries by default.
+
+- Add support for LOCAL_ARM_MODE in Android.mk.
+
+- Add support for the '.arm' suffix in source file names to force the
+  compilation of a single source in arm (32-bit) mode.
+
+- Generate proper unoptimized versions of binaries when APP_OPTIM := debug
+
+- Add support for LOCAL_C_INCLUDES in Android.mk
+
+-------------------------------------------------------------------------------
+android-1.5_r1 released.

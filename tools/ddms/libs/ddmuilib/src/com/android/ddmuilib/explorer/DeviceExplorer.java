@@ -16,7 +16,7 @@
 
 package com.android.ddmuilib.explorer;
 
-import com.android.ddmlib.Device;
+import com.android.ddmlib.IDevice;
 import com.android.ddmlib.FileListingService;
 import com.android.ddmlib.IShellOutputReceiver;
 import com.android.ddmlib.SyncService;
@@ -99,7 +99,7 @@ public class DeviceExplorer extends Panel {
     private Image mPackageImage;
     private Image mOtherImage;
 
-    private Device mCurrentDevice;
+    private IDevice mCurrentDevice;
 
     private String mDefaultSave;
 
@@ -374,13 +374,13 @@ public class DeviceExplorer extends Panel {
 
             }
         }.start();
-        
+
         return mTree;
     }
-    
+
     @Override
     protected void postCreation() {
-        
+
     }
 
     /**
@@ -418,61 +418,67 @@ public class DeviceExplorer extends Panel {
         }
 
         // download the files
-        SyncService sync = mCurrentDevice.getSyncService();
-        if (sync != null) {
-            ISyncProgressMonitor monitor = SyncService.getNullProgressMonitor();
-            SyncResult result = sync.pullFile(keyEntry, keyFile.getAbsolutePath(), monitor);
-            if (result.getCode() != SyncService.RESULT_OK) {
-                DdmConsole.printErrorToConsole(String.format(
-                        "Failed to pull %1$s: %2$s", keyEntry.getName(), result.getMessage()));
-                return;
-            }
+        try {
+            SyncService sync = mCurrentDevice.getSyncService();
+            if (sync != null) {
+                ISyncProgressMonitor monitor = SyncService.getNullProgressMonitor();
+                SyncResult result = sync.pullFile(keyEntry, keyFile.getAbsolutePath(), monitor);
+                if (result.getCode() != SyncService.RESULT_OK) {
+                    DdmConsole.printErrorToConsole(String.format(
+                            "Failed to pull %1$s: %2$s", keyEntry.getName(), result.getMessage()));
+                    return;
+                }
 
-            result = sync.pullFile(dataEntry, dataFile.getAbsolutePath(), monitor);
-            if (result.getCode() != SyncService.RESULT_OK) {
-                DdmConsole.printErrorToConsole(String.format(
-                        "Failed to pull %1$s: %2$s", dataEntry.getName(), result.getMessage()));
-                return;
-            }
+                result = sync.pullFile(dataEntry, dataFile.getAbsolutePath(), monitor);
+                if (result.getCode() != SyncService.RESULT_OK) {
+                    DdmConsole.printErrorToConsole(String.format(
+                            "Failed to pull %1$s: %2$s", dataEntry.getName(), result.getMessage()));
+                    return;
+                }
 
-            // now that we have the file, we need to launch traceview
-            String[] command = new String[2];
-            command[0] = DdmUiPreferences.getTraceview();
-            command[1] = path + File.separator + baseName;
+                // now that we have the file, we need to launch traceview
+                String[] command = new String[2];
+                command[0] = DdmUiPreferences.getTraceview();
+                command[1] = path + File.separator + baseName;
 
-            try {
-                final Process p = Runtime.getRuntime().exec(command);
+                try {
+                    final Process p = Runtime.getRuntime().exec(command);
 
-                // create a thread for the output
-                new Thread("Traceview output") {
-                    @Override
-                    public void run() {
-                        // create a buffer to read the stderr output
-                        InputStreamReader is = new InputStreamReader(p.getErrorStream());
-                        BufferedReader resultReader = new BufferedReader(is);
+                    // create a thread for the output
+                    new Thread("Traceview output") {
+                        @Override
+                        public void run() {
+                            // create a buffer to read the stderr output
+                            InputStreamReader is = new InputStreamReader(p.getErrorStream());
+                            BufferedReader resultReader = new BufferedReader(is);
 
-                        // read the lines as they come. if null is returned, it's
-                        // because the process finished
-                        try {
-                            while (true) {
-                                String line = resultReader.readLine();
-                                if (line != null) {
-                                    DdmConsole.printErrorToConsole("Traceview: " + line);
-                                } else {
-                                    break;
+                            // read the lines as they come. if null is returned, it's
+                            // because the process finished
+                            try {
+                                while (true) {
+                                    String line = resultReader.readLine();
+                                    if (line != null) {
+                                        DdmConsole.printErrorToConsole("Traceview: " + line);
+                                    } else {
+                                        break;
+                                    }
                                 }
+                                // get the return code from the process
+                                p.waitFor();
+                            } catch (IOException e) {
+                            } catch (InterruptedException e) {
+
                             }
-                            // get the return code from the process
-                            p.waitFor();
-                        } catch (IOException e) {
-                        } catch (InterruptedException e) {
-
                         }
-                    }
-                }.start();
+                    }.start();
 
-            } catch (IOException e) {
+                } catch (IOException e) {
+                }
             }
+        } catch (IOException e) {
+            DdmConsole.printErrorToConsole(String.format(
+                    "Failed to pull %1$s: %2$s", keyEntry.getName(), e.getMessage()));
+            return;
         }
     }
 
@@ -625,7 +631,7 @@ public class DeviceExplorer extends Panel {
     /**
      * Sets the new device to explorer
      */
-    public void switchDevice(final Device device) {
+    public void switchDevice(final IDevice device) {
         if (device != mCurrentDevice) {
             mCurrentDevice = device;
             // now we change the input. but we need to do that in the
@@ -667,21 +673,21 @@ public class DeviceExplorer extends Panel {
      * @param localDirector the local directory in which to save the files.
      */
     private void pullSelection(TreeItem[] items, final String localDirectory) {
-        final SyncService sync = mCurrentDevice.getSyncService();
-        if (sync != null) {
-            // make a list of the FileEntry.
-            ArrayList<FileEntry> entries = new ArrayList<FileEntry>();
-            for (TreeItem item : items) {
-                Object data = item.getData();
-                if (data instanceof FileEntry) {
-                    entries.add((FileEntry)data);
+        try {
+            final SyncService sync = mCurrentDevice.getSyncService();
+            if (sync != null) {
+                // make a list of the FileEntry.
+                ArrayList<FileEntry> entries = new ArrayList<FileEntry>();
+                for (TreeItem item : items) {
+                    Object data = item.getData();
+                    if (data instanceof FileEntry) {
+                        entries.add((FileEntry)data);
+                    }
                 }
-            }
-            final FileEntry[] entryArray = entries.toArray(
-                    new FileEntry[entries.size()]);
+                final FileEntry[] entryArray = entries.toArray(
+                        new FileEntry[entries.size()]);
 
-            // get a progressdialog
-            try {
+                // get a progressdialog
                 new ProgressMonitorDialog(mParent.getShell()).run(true, true,
                         new IRunnableWithProgress() {
                     public void run(IProgressMonitor monitor)
@@ -699,13 +705,10 @@ public class DeviceExplorer extends Panel {
                         sync.close();
                     }
                 });
-            } catch (InvocationTargetException e) {
-                DdmConsole.printErrorToConsole( "Failed to pull selection");
-                DdmConsole.printErrorToConsole(e.getMessage());
-            } catch (InterruptedException e) {
-                DdmConsole.printErrorToConsole("Failed to pull selection");
-                DdmConsole.printErrorToConsole(e.getMessage());
             }
+        } catch (Exception e) {
+            DdmConsole.printErrorToConsole( "Failed to pull selection");
+            DdmConsole.printErrorToConsole(e.getMessage());
         }
     }
 
@@ -715,9 +718,9 @@ public class DeviceExplorer extends Panel {
      * @param local the destination filepath
      */
     private void pullFile(final FileEntry remote, final String local) {
-        final SyncService sync = mCurrentDevice.getSyncService();
-        if (sync != null) {
-            try {
+        try {
+            final SyncService sync = mCurrentDevice.getSyncService();
+            if (sync != null) {
                 new ProgressMonitorDialog(mParent.getShell()).run(true, true,
                         new IRunnableWithProgress() {
                     public void run(IProgressMonitor monitor)
@@ -734,13 +737,10 @@ public class DeviceExplorer extends Panel {
                         sync.close();
                     }
                 });
-            } catch (InvocationTargetException e) {
-                DdmConsole.printErrorToConsole( "Failed to pull selection");
-                DdmConsole.printErrorToConsole(e.getMessage());
-            } catch (InterruptedException e) {
-                DdmConsole.printErrorToConsole("Failed to pull selection");
-                DdmConsole.printErrorToConsole(e.getMessage());
             }
+        } catch (Exception e) {
+            DdmConsole.printErrorToConsole( "Failed to pull selection");
+            DdmConsole.printErrorToConsole(e.getMessage());
         }
     }
 
@@ -750,9 +750,9 @@ public class DeviceExplorer extends Panel {
      * @param remoteDirectory
      */
     private void pushFiles(final String[] localFiles, final FileEntry remoteDirectory) {
-        final SyncService sync = mCurrentDevice.getSyncService();
-        if (sync != null) {
-            try {
+        try {
+            final SyncService sync = mCurrentDevice.getSyncService();
+            if (sync != null) {
                 new ProgressMonitorDialog(mParent.getShell()).run(true, true,
                         new IRunnableWithProgress() {
                     public void run(IProgressMonitor monitor)
@@ -769,14 +769,10 @@ public class DeviceExplorer extends Panel {
                         sync.close();
                     }
                 });
-            } catch (InvocationTargetException e) {
-                DdmConsole.printErrorToConsole("Failed to push the items");
-                DdmConsole.printErrorToConsole(e.getMessage());
-            } catch (InterruptedException e) {
-                DdmConsole.printErrorToConsole("Failed to push the items");
-                DdmConsole.printErrorToConsole(e.getMessage());
             }
-            return;
+        } catch (Exception e) {
+            DdmConsole.printErrorToConsole("Failed to push the items");
+            DdmConsole.printErrorToConsole(e.getMessage());
         }
     }
 
@@ -786,9 +782,9 @@ public class DeviceExplorer extends Panel {
      * @param remoteDirectory the remote destination directory on the device
      */
     private void pushFile(final String local, final String remoteDirectory) {
-        final SyncService sync = mCurrentDevice.getSyncService();
-        if (sync != null) {
-            try {
+        try {
+            final SyncService sync = mCurrentDevice.getSyncService();
+            if (sync != null) {
                 new ProgressMonitorDialog(mParent.getShell()).run(true, true,
                         new IRunnableWithProgress() {
                     public void run(IProgressMonitor monitor)
@@ -812,14 +808,10 @@ public class DeviceExplorer extends Panel {
                         sync.close();
                     }
                 });
-            } catch (InvocationTargetException e) {
-                DdmConsole.printErrorToConsole("Failed to push the item(s).");
-                DdmConsole.printErrorToConsole(e.getMessage());
-            } catch (InterruptedException e) {
-                DdmConsole.printErrorToConsole("Failed to push the item(s).");
-                DdmConsole.printErrorToConsole(e.getMessage());
             }
-            return;
+        } catch (Exception e) {
+            DdmConsole.printErrorToConsole("Failed to push the item(s).");
+            DdmConsole.printErrorToConsole(e.getMessage());
         }
     }
 

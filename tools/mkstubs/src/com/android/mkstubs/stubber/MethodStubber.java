@@ -24,7 +24,13 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
 /**
- * 
+ * A method visitor that generates a code stub for the visited method.
+ * <p/>
+ * Annotations and parameters are passed as-is.
+ * All other code is replaced by the following:
+ * <pre>throw new RuntimeException("stub");</pre>
+ * Note that constructors rewritten this way will probably fail with the runtime bytecode
+ * verifier since no call to <code>super</code> is generated.
  */
 public class MethodStubber extends MethodAdapter {
 

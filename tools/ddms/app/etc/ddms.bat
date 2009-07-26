@@ -26,15 +26,12 @@ cd /d %~dp0
 
 set jarfile=ddms.jar
 set frameworkdir=
-set libdir=
 
 if exist %frameworkdir%%jarfile% goto JarFileOk
     set frameworkdir=lib\
-    set libdir=lib\
 
 if exist %frameworkdir%%jarfile% goto JarFileOk
     set frameworkdir=..\framework\
-    set libdir=..\lib\
 
 :JarFileOk
 
@@ -45,4 +42,23 @@ if debug NEQ "%1" goto NoDebug
 
 set jarpath=%frameworkdir%%jarfile%
 
-call java %java_debug% -Djava.ext.dirs=%frameworkdir% -Djava.library.path=%libdir% -Dcom.android.ddms.bindir= -jar %jarpath% %*
+if not defined ANDROID_SWT goto QueryArch
+    set swt_path=%ANDROID_SWT%
+    goto SwtDone
+
+:QueryArch
+
+    for /f %%a in ('java -jar %frameworkdir%archquery.jar') do set swt_path=%frameworkdir%%%a
+
+:SwtDone
+
+if exist %swt_path% goto SetPath
+    echo SWT folder '%swt_path%' does not exist.
+    echo Please set ANDROID_SWT to point to the folder containing swt.jar for your platform.
+    exit /B
+
+:SetPath
+set javaextdirs=%swt_path%;%frameworkdir%
+
+call java %java_debug% -Djava.ext.dirs=%javaextdirs% -Dcom.android.ddms.bindir= -jar %jarpath% %*
+

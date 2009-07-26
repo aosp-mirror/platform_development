@@ -16,7 +16,7 @@
 
 package com.android.ddmuilib.logcat;
 
-import com.android.ddmlib.Device;
+import com.android.ddmlib.IDevice;
 import com.android.ddmlib.Log;
 import com.android.ddmlib.MultiLineReceiver;
 import com.android.ddmlib.Log.LogLevel;
@@ -163,13 +163,13 @@ public class LogPanel extends SelectionDependentPanel {
     private int mFilterMode = FILTER_NONE;
 
     /** Device currently running logcat */
-    private Device mCurrentLoggedDevice = null;
+    private IDevice mCurrentLoggedDevice = null;
 
     private ICommonAction mDeleteFilterAction;
     private ICommonAction mEditFilterAction;
 
     private ICommonAction[] mLogLevelActions;
-    
+
     /** message data, separated from content for multi line messages */
     protected static class LogMessageInfo {
         public LogLevel logLevel;
@@ -183,7 +183,7 @@ public class LogPanel extends SelectionDependentPanel {
      * log message, to reuse the info regarding level, pid, etc...
      */
     private LogMessageInfo mLastMessageInfo = null;
-    
+
     private boolean mPendingAsyncRefresh = false;
 
     /** loader for the images. the implementation will varie between standalone
@@ -481,7 +481,7 @@ public class LogPanel extends SelectionDependentPanel {
      * Starts a new logcat and set mCurrentLogCat as the current receiver.
      * @param device the device to connect logcat to.
      */
-    public void startLogCat(final Device device) {
+    public void startLogCat(final IDevice device) {
         if (device == mCurrentLoggedDevice) {
             return;
         }
@@ -491,7 +491,7 @@ public class LogPanel extends SelectionDependentPanel {
             stopLogCat(false);
             mCurrentLoggedDevice = null;
         }
-        
+
         resetUI(false);
 
         if (device != null) {
@@ -696,7 +696,7 @@ public class LogPanel extends SelectionDependentPanel {
         synchronized (mBuffer) {
             FileDialog dlg = new FileDialog(mParent.getShell(), SWT.SAVE);
             String fileName;
-    
+
             dlg.setText("Save log...");
             dlg.setFileName("log.txt");
             String defaultPath = mDefaultLogSave;
@@ -710,7 +710,7 @@ public class LogPanel extends SelectionDependentPanel {
             dlg.setFilterExtensions(new String[] {
                 "*.txt"
             });
-    
+
             fileName = dlg.open();
             if (fileName != null) {
                 mDefaultLogSave = dlg.getFilterPath();
@@ -928,7 +928,7 @@ public class LogPanel extends SelectionDependentPanel {
             t.setLinesVisible(false);
 
             if (mGlobalListener != null) {
-            	addTableToFocusListener(t);
+                addTableToFocusListener(t);
             }
 
             // create a controllistener that will handle the resizing of all the
@@ -1064,7 +1064,7 @@ public class LogPanel extends SelectionDependentPanel {
     }
 
     /**
-     * Process new Log lines coming from {@link LogCatOuputReceiver}. 
+     * Process new Log lines coming from {@link LogCatOuputReceiver}.
      * @param lines the new lines
      */
     protected void processLogLines(String[] lines) {
@@ -1074,10 +1074,10 @@ public class LogPanel extends SelectionDependentPanel {
         if (lines.length > STRING_BUFFER_LENGTH) {
             Log.e("LogCat", "Receiving more lines than STRING_BUFFER_LENGTH");
         }
-        
+
         // parse the lines and create LogMessage that are stored in a temporary list
         final ArrayList<LogMessage> newMessages = new ArrayList<LogMessage>();
-        
+
         synchronized (mBuffer) {
             for (String line : lines) {
                 // ignore empty lines.
@@ -1087,7 +1087,7 @@ public class LogPanel extends SelectionDependentPanel {
                     if (matcher.matches()) {
                         // this is a header line, parse the header and keep it around.
                         mLastMessageInfo = new LogMessageInfo();
-    
+
                         mLastMessageInfo.time = matcher.group(1);
                         mLastMessageInfo.pidString = matcher.group(2);
                         mLastMessageInfo.pid = Integer.valueOf(mLastMessageInfo.pidString);
@@ -1097,7 +1097,7 @@ public class LogPanel extends SelectionDependentPanel {
                         // This is not a header line.
                         // Create a new LogMessage and process it.
                         LogMessage mc = new LogMessage();
-    
+
                         if (mLastMessageInfo == null) {
                             // The first line of output wasn't preceded
                             // by a header line; make something up so
@@ -1109,34 +1109,34 @@ public class LogPanel extends SelectionDependentPanel {
                             mLastMessageInfo.logLevel = LogLevel.INFO;
                             mLastMessageInfo.tag = "<unknown>"; //$NON-NLS1$
                         }
-    
+
                         // If someone printed a log message with
                         // embedded '\n' characters, there will
                         // one header line followed by multiple text lines.
                         // Use the last header that we saw.
                         mc.data = mLastMessageInfo;
-    
+
                         // tabs seem to display as only 1 tab so we replace the leading tabs
                         // by 4 spaces.
                         mc.msg = line.replaceAll("\t", "    "); //$NON-NLS-1$ //$NON-NLS-2$
-                        
+
                         // process the new LogMessage.
                         processNewMessage(mc);
-                        
+
                         // store the new LogMessage
                         newMessages.add(mc);
                     }
                 }
             }
-            
+
             // if we don't have a pending Runnable that will do the refresh, we ask the Display
             // to run one in the UI thread.
             if (mPendingAsyncRefresh == false) {
                 mPendingAsyncRefresh = true;
-                
+
                 try {
                     Display display = mFolders.getDisplay();
-                    
+
                     // run in sync because this will update the buffer start/end indices
                     display.asyncExec(new Runnable() {
                         public void run() {
@@ -1165,7 +1165,7 @@ public class LogPanel extends SelectionDependentPanel {
                             f.flush();
                         }
                     }
-    
+
                     if (mDefaultFilter != null) {
                         mDefaultFilter.flush();
                     }
@@ -1209,7 +1209,7 @@ public class LogPanel extends SelectionDependentPanel {
             // increment the next usable slot index
             mBufferEnd = (mBufferEnd + 1) % STRING_BUFFER_LENGTH;
         }
-        
+
         LogMessage oldMessage = null;
 
         // record the message that was there before
@@ -1381,7 +1381,7 @@ public class LogPanel extends SelectionDependentPanel {
             initDefaultFilter();
             return;
         }
-        
+
         filter.clear();
 
         if (mBufferStart != -1) {
@@ -1482,13 +1482,13 @@ public class LogPanel extends SelectionDependentPanel {
             if (mDefaultFilter != null) {
                 mDefaultFilter.resetTempFiltering();
             }
-    
+
             // now we need to figure out the new temp filtering
             // split each word
             String[] segments = text.split(" "); //$NON-NLS-1$
-    
+
             ArrayList<String> keywords = new ArrayList<String>(segments.length);
-    
+
             // loop and look for temp id/tag
             int tempPid = -1;
             String tempTag = null;
@@ -1511,12 +1511,12 @@ public class LogPanel extends SelectionDependentPanel {
                     keywords.add(s);
                 }
             }
-    
+
             // set the temp filtering in the filters
             if (tempPid != -1 || tempTag != null || keywords.size() > 0) {
                 String[] keywordsArray = keywords.toArray(
                         new String[keywords.size()]);
-    
+
                 for (LogFilter f : mFilters) {
                     if (tempPid != -1) {
                         f.setTempPidFiltering(tempPid);
@@ -1526,7 +1526,7 @@ public class LogPanel extends SelectionDependentPanel {
                     }
                     f.setTempKeywordFiltering(keywordsArray);
                 }
-    
+
                 if (mDefaultFilter != null) {
                     if (tempPid != -1) {
                         mDefaultFilter.setTempPidFiltering(tempPid);
@@ -1535,10 +1535,10 @@ public class LogPanel extends SelectionDependentPanel {
                         mDefaultFilter.setTempTagFiltering(tempTag);
                     }
                     mDefaultFilter.setTempKeywordFiltering(keywordsArray);
-    
+
                 }
             }
-    
+
             initFilter(mCurrentFilter);
         }
     }

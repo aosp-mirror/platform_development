@@ -1,0 +1,43 @@
+JNI Example
+
+This sample shows how to build a native code library, package it into an APK, and call it using JNI.
+
+Prerequesites
+
+You must install the Android SDK in order to build the Java APK. The Android SDK can be downloaded
+from
+
+http://code.google.com/android/download.html
+
+Build Steps:
+
+1) Create an Eclipse project to for the Java code.
+
+	Launch Eclipse
+	Choose File : New : Project...
+	Choose Android : Android Project
+	Choose Next
+	Enter "JNIExample" into the Project name: field.
+	Choose "Create project from existing source"
+	Click the Browse button and browse to the pndk/samplejni directory
+	
+	Click Finish
+
+2) Build the Eclipse Project
+
+	Select the JNIExample project in the Package Explorer
+	Make sure that the menu item Project:Build Automatically is not checked.
+	Choose Project:Build
+
+    The resulting apk file ends up in bin/full/JNIExample.apk
+
+2) Build the shared library, insert the shared library into the APK file and resign the
+    shared library.
+
+    ANDROID_SDK_BASE=<directory where SDK is installed> make
+
+Install the APK on the device:
+
+	adb install -r bin/full/JNIExample.apk
+
+Once the application is installed, you can run it by tapping on the "JNI Example" icon.

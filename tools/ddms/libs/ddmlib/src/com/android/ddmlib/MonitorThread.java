@@ -103,7 +103,7 @@ final class MonitorThread extends Thread {
 
 
     /**
-     * Sets or changes the port number for "debug selected". 
+     * Sets or changes the port number for "debug selected".
      */
     synchronized void setDebugSelectedPort(int port) throws IllegalStateException {
         if (mInstance == null) {
@@ -206,7 +206,7 @@ final class MonitorThread extends Thread {
         }
 
         while (!mQuit) {
-            
+
             try {
                 /*
                  * sync with new registrations: we wait until addClient is done before going through
@@ -215,7 +215,7 @@ final class MonitorThread extends Thread {
                  */
                 synchronized (mClientList) {
                 }
-    
+
                 // (re-)open the "debug selected" port, if it's not opened yet or
                 // if the port changed.
                 try {
@@ -234,7 +234,7 @@ final class MonitorThread extends Thread {
                     Log.e("ddms", ioe);
                     mNewDebugSelectedPort = mDebugSelectedPort; // no retry
                 }
-    
+
                 int count;
                 try {
                     count = mSelector.select();
@@ -244,20 +244,20 @@ final class MonitorThread extends Thread {
                 } catch (CancelledKeyException cke) {
                     continue;
                 }
-    
+
                 if (count == 0) {
                     // somebody called wakeup() ?
                     // Log.i("ddms", "selector looping");
                     continue;
                 }
-    
+
                 Set<SelectionKey> keys = mSelector.selectedKeys();
                 Iterator<SelectionKey> iter = keys.iterator();
-    
+
                 while (iter.hasNext()) {
                     SelectionKey key = iter.next();
                     iter.remove();
-    
+
                     try {
                         if (key.attachment() instanceof Client) {
                             processClientActivity(key);
@@ -300,7 +300,7 @@ final class MonitorThread extends Thread {
      */
     private void processClientActivity(SelectionKey key) {
         Client client = (Client)key.attachment();
-        
+
         try {
             if (key.isReadable() == false || key.isValid() == false) {
                 Log.d("ddms", "Invalid key from " + client + ". Dropping client.");
@@ -423,7 +423,7 @@ final class MonitorThread extends Thread {
      * @param notify
      */
     synchronized void dropClient(Client client, boolean notify) {
-        if (mInstance == null) { 
+        if (mInstance == null) {
             return;
         }
 
@@ -551,13 +551,13 @@ final class MonitorThread extends Thread {
 
                 // we should drop the client, but also attempt to reopen it.
                 // This is done by the DeviceMonitor.
-                client.getDevice().getMonitor().addClientToDropAndReopen(client,
+                client.getDeviceImpl().getMonitor().addClientToDropAndReopen(client,
                         IDebugPortProvider.NO_STATIC_PORT);
             } else {
                 Log.i("ddms", " (recycling client connection as well)");
                 // we should drop the client, but also attempt to reopen it.
                 // This is done by the DeviceMonitor.
-                client.getDevice().getMonitor().addClientToDropAndReopen(client,
+                client.getDeviceImpl().getMonitor().addClientToDropAndReopen(client,
                         IDebugPortProvider.NO_STATIC_PORT);
             }
         }
@@ -644,7 +644,7 @@ final class MonitorThread extends Thread {
             }
         }
     }
-    
+
     /*
      * Broadcast an event to all message handlers.
      */
@@ -719,7 +719,7 @@ final class MonitorThread extends Thread {
             }
 
             mDebugSelectedChan.register(mSelector, SelectionKey.OP_ACCEPT, this);
-            
+
             return true;
         } catch (java.net.BindException e) {
             displayDebugSelectedBindError(mNewDebugSelectedPort);
@@ -727,7 +727,7 @@ final class MonitorThread extends Thread {
             // do not attempt to reopen it.
             mDebugSelectedChan = null;
             mNewDebugSelectedPort = -1;
-            
+
             return false;
         }
     }

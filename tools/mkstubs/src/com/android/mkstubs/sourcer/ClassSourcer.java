@@ -25,7 +25,7 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.signature.SignatureReader;
 
 /**
- * A class visitor that rewrites a java source
+ * A class visitor that writes a java source.
  */
 public class ClassSourcer implements ClassVisitor {
 

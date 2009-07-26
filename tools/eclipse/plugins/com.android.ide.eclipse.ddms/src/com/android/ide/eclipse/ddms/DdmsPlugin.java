@@ -19,7 +19,7 @@ package com.android.ide.eclipse.ddms;
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.Client;
 import com.android.ddmlib.DdmPreferences;
-import com.android.ddmlib.Device;
+import com.android.ddmlib.IDevice;
 import com.android.ddmlib.Log;
 import com.android.ddmlib.AndroidDebugBridge.IDeviceChangeListener;
 import com.android.ddmlib.Log.ILogOutput;
@@ -76,11 +76,11 @@ public final class DdmsPlugin extends AbstractUIPlugin implements IDeviceChangeL
 
     /** Image loader object */
     private ImageLoader mLoader;
-    
-    private Device mCurrentDevice;
+
+    private IDevice mCurrentDevice;
     private Client mCurrentClient;
     private boolean mListeningToUiSelection = false;
-    
+
     private final ArrayList<ISelectionListener> mListeners = new ArrayList<ISelectionListener>();
 
     private Color mRed;
@@ -93,24 +93,24 @@ public final class DdmsPlugin extends AbstractUIPlugin implements IDeviceChangeL
     public interface IDebugLauncher {
         public boolean debug(String packageName, int port);
     }
-    
+
     /**
      * Classes which implement this interface provide methods that deals
-     * with {@link Device} and {@link Client} selectionchanges.
+     * with {@link IDevice} and {@link Client} selectionchanges.
      */
     public interface ISelectionListener {
-        
+
         /**
          * Sent when a new {@link Client} is selected.
          * @param selectedClient The selected client. If null, no clients are selected.
          */
         public void selectionChanged(Client selectedClient);
-        
+
         /**
-         * Sent when a new {@link Device} is selected.
+         * Sent when a new {@link IDevice} is selected.
          * @param selectedDevice the selected device. If null, no devices are selected.
          */
-        public void selectionChanged(Device selectedDevice);
+        public void selectionChanged(IDevice selectedDevice);
     }
 
     /**
@@ -128,14 +128,14 @@ public final class DdmsPlugin extends AbstractUIPlugin implements IDeviceChangeL
     @Override
     public void start(BundleContext context) throws Exception {
         super.start(context);
-        
+
         final Display display = getDisplay();
 
         // get the eclipse store
         final IPreferenceStore eclipseStore = getPreferenceStore();
 
         AndroidDebugBridge.addDeviceChangeListener(this);
-        
+
         DdmUiPreferences.setStore(eclipseStore);
 
         //DdmUiPreferences.displayCharts();
@@ -186,12 +186,12 @@ public final class DdmsPlugin extends AbstractUIPlugin implements IDeviceChangeL
                     }
                 });
             }
-            
+
         });
 
         // create the loader that's able to load the images
         mLoader = new ImageLoader(this);
-        
+
         // set the listener for the preference change
         Preferences prefs = getPluginPreferences();
         prefs.addPropertyChangeListener(new IPropertyChangeListener() {
@@ -214,7 +214,7 @@ public final class DdmsPlugin extends AbstractUIPlugin implements IDeviceChangeL
                 }
             }
         });
-        
+
         // read the adb location from the prefs to attempt to start it properly without
         // having to wait for ADT to start
         sAdbLocation = eclipseStore.getString(ADB_LOCATION);
@@ -248,9 +248,9 @@ public final class DdmsPlugin extends AbstractUIPlugin implements IDeviceChangeL
     @Override
     public void stop(BundleContext context) throws Exception {
         AndroidDebugBridge.removeDeviceChangeListener(this);
-        
+
         AndroidDebugBridge.terminate();
-        
+
         mRed.dispose();
 
         sPlugin = null;
@@ -303,15 +303,15 @@ public final class DdmsPlugin extends AbstractUIPlugin implements IDeviceChangeL
             }.start();
         }
     }
-    
+
     private synchronized void initDdmlib() {
         if (mDdmlibInitialized == false) {
             // set the preferences.
             PreferenceInitializer.setupPreferences();
-    
+
             // init the lib
             AndroidDebugBridge.init(true /* debugger support */);
-            
+
             mDdmlibInitialized = true;
         }
     }
@@ -342,10 +342,10 @@ public final class DdmsPlugin extends AbstractUIPlugin implements IDeviceChangeL
     public static IDebugLauncher getRunningAppDebugLauncher() {
         return sRunningAppDebugLauncher;
     }
-    
+
     public synchronized void addSelectionListener(ISelectionListener listener) {
         mListeners.add(listener);
-        
+
         // notify the new listener of the current selection
        listener.selectionChanged(mCurrentDevice);
        listener.selectionChanged(mCurrentClient);
@@ -364,10 +364,10 @@ public final class DdmsPlugin extends AbstractUIPlugin implements IDeviceChangeL
      * <p/>
      * This is sent from a non UI thread.
      * @param device the new device.
-     * 
-     * @see IDeviceChangeListener#deviceConnected(Device)
+     *
+     * @see IDeviceChangeListener#deviceConnected(IDevice)
      */
-    public void deviceConnected(Device device) {
+    public void deviceConnected(IDevice device) {
         // if we are listening to selection coming from the ui, then we do nothing, as
         // any change in the devices/clients, will be handled by the UI, and we'll receive
         // selection notification through our implementation of IUiSelectionListener.
@@ -383,10 +383,10 @@ public final class DdmsPlugin extends AbstractUIPlugin implements IDeviceChangeL
      * <p/>
      * This is sent from a non UI thread.
      * @param device the new device.
-     * 
-     * @see IDeviceChangeListener#deviceDisconnected(Device)
+     *
+     * @see IDeviceChangeListener#deviceDisconnected(IDevice)
      */
-    public void deviceDisconnected(Device device) {
+    public void deviceDisconnected(IDevice device) {
         // if we are listening to selection coming from the ui, then we do nothing, as
         // any change in the devices/clients, will be handled by the UI, and we'll receive
         // selection notification through our implementation of IUiSelectionListener.
@@ -397,16 +397,16 @@ public final class DdmsPlugin extends AbstractUIPlugin implements IDeviceChangeL
                 AndroidDebugBridge bridge = AndroidDebugBridge.getBridge();
                 if (bridge != null) {
                     // get the device list
-                    Device[] devices = bridge.getDevices();
-                    
+                    IDevice[] devices = bridge.getDevices();
+
                     // check if we still have devices
                     if (devices.length == 0) {
-                        handleDefaultSelection((Device)null);
+                        handleDefaultSelection((IDevice)null);
                     } else {
                         handleDefaultSelection(devices[0]);
                     }
                 } else {
-                    handleDefaultSelection((Device)null);
+                    handleDefaultSelection((IDevice)null);
                 }
             }
         }
@@ -418,15 +418,15 @@ public final class DdmsPlugin extends AbstractUIPlugin implements IDeviceChangeL
      * This is sent from a non UI thread.
      * @param device the device that was updated.
      * @param changeMask the mask indicating what changed.
-     * 
-     * @see IDeviceChangeListener#deviceChanged(Device)
+     *
+     * @see IDeviceChangeListener#deviceChanged(IDevice)
      */
-    public void deviceChanged(Device device, int changeMask) {
+    public void deviceChanged(IDevice device, int changeMask) {
         // if we are listening to selection coming from the ui, then we do nothing, as
         // any change in the devices/clients, will be handled by the UI, and we'll receive
         // selection notification through our implementation of IUiSelectionListener.
         if (mListeningToUiSelection == false) {
-            
+
             // check if this is our device
             if (device == mCurrentDevice) {
                 if (mCurrentClient == null) {
@@ -441,7 +441,7 @@ public final class DdmsPlugin extends AbstractUIPlugin implements IDeviceChangeL
                             break;
                         }
                     }
-                    
+
                     // if we haven't found our client, lets look for a new one
                     if (foundClient == false) {
                         mCurrentClient = null;
@@ -453,11 +453,11 @@ public final class DdmsPlugin extends AbstractUIPlugin implements IDeviceChangeL
     }
 
     /**
-     * Sent when a new {@link Device} and {@link Client} are selected.
+     * Sent when a new {@link IDevice} and {@link Client} are selected.
      * @param selectedDevice the selected device. If null, no devices are selected.
      * @param selectedClient The selected client. If null, no clients are selected.
      */
-    public synchronized void selectionChanged(Device selectedDevice, Client selectedClient) {
+    public synchronized void selectionChanged(IDevice selectedDevice, Client selectedClient) {
         if (mCurrentDevice != selectedDevice) {
             mCurrentDevice = selectedDevice;
 
@@ -469,7 +469,7 @@ public final class DdmsPlugin extends AbstractUIPlugin implements IDeviceChangeL
 
         if (mCurrentClient != selectedClient) {
             mCurrentClient = selectedClient;
-            
+
             // notify of the new default client
             for (ISelectionListener listener : mListeners) {
                 listener.selectionChanged(mCurrentClient);
@@ -478,15 +478,15 @@ public final class DdmsPlugin extends AbstractUIPlugin implements IDeviceChangeL
     }
 
     /**
-     * Handles a default selection of a {@link Device} and {@link Client}.
+     * Handles a default selection of a {@link IDevice} and {@link Client}.
      * @param device the selected device
      */
-    private void handleDefaultSelection(final Device device) {
+    private void handleDefaultSelection(final IDevice device) {
         // because the listener expect to receive this from the UI thread, and this is called
         // from the AndroidDebugBridge notifications, we need to run this in the UI thread.
         try {
             Display display = getDisplay();
-            
+
             display.asyncExec(new Runnable() {
                 public void run() {
                     // set the new device if different.
@@ -494,13 +494,13 @@ public final class DdmsPlugin extends AbstractUIPlugin implements IDeviceChangeL
                     if (mCurrentDevice != device) {
                         mCurrentDevice = device;
                         newDevice = true;
-                
+
                         // notify of the new default device
                         for (ISelectionListener listener : mListeners) {
                             listener.selectionChanged(mCurrentDevice);
                         }
                     }
-                    
+
                     if (device != null) {
                         // if this is a device switch or the same device but we didn't find a valid
                         // client the last time, we go look for a client to use again.
@@ -522,16 +522,16 @@ public final class DdmsPlugin extends AbstractUIPlugin implements IDeviceChangeL
             // display is disposed. Do nothing since we're quitting anyway.
         }
     }
-    
+
     private void handleDefaultSelection(Client client) {
         mCurrentClient = client;
-        
+
         // notify of the new default client
         for (ISelectionListener listener : mListeners) {
             listener.selectionChanged(mCurrentClient);
         }
     }
-    
+
     /**
      * Prints a message, associated with a project to the specified stream
      * @param stream The stream to write to
@@ -545,7 +545,7 @@ public final class DdmsPlugin extends AbstractUIPlugin implements IDeviceChangeL
         stream.print(dateTag);
         stream.println(message);
     }
-    
+
     /**
      * Creates a string containing the current date/time, and the tag
      * @param tag The tag associated to the message. Can be null

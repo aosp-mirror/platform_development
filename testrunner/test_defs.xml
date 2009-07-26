@@ -4,9 +4,9 @@
      Licensed under the Apache License, Version 2.0 (the "License");
      you may not use this file except in compliance with the License.
      You may obtain a copy of the License at
-  
+
           http://www.apache.org/licenses/LICENSE-2.0
-  
+
      Unless required by applicable law or agreed to in writing, software
      distributed under the License is distributed on an "AS IS" BASIS,
      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,38 +14,20 @@
      limitations under the License.
 -->
 
-<!-- 
+<!--
 This file contains standard test definitions for the Android platform
-          
-Tests are defined by <test> tags with the following attributes
 
-name package [class runner build_path coverage_target continuous]
+The following test types are supported:
+ - On device Java instrumentation tests are defined by <test> tags.
+ - native ones (C/C++) are defined by <test-native> tags.
+ - host java tests are defined by <test-host> tags.
 
-Where:
-name: Self-descriptive name used to uniquely identify the test
-build_path: File system path, relative to Android build root, to this package's
-   Android.mk file. If omitted, build/sync step for this test will be skipped
-package: Android application package that contains the tests
-class: Optional. Fully qualified Java test class to run. 
-runner: Fully qualified InstrumentationTestRunner to execute. If omitted, 
-   will default to android.test.InstrumentationTestRunner
-coverage_target: Build name of Android package this test targets - these targets
-   are defined in the coverage_targets.xml file.  Used as basis for code
-   coverage metrics. If omitted, code coverage will not be supported for this
-   test
-continuous: Optional boolean. Default is false. Set to true if tests are known
-   to be reliable, and should be included in a continuous test system. false if
-   they are under development.
-
-These attributes map to the following commands:  
-(if class is defined)
-    adb shell am instrument -w <package>/<runner>
-(else)
-    adb shell am instrument -w -e class <class> <package>/<runner>
-
+See test_defs.xsd for more information.
 -->
 
-<test-definitions version="1">
+<test-definitions xmlns="http://schemas.android.com/testrunner/test_defs/1.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://schemas.android.com/testrunner/test_defs/1.0 test_defs.xsd">
 
 <!-- system-wide tests -->
 <test name="framework"
@@ -80,7 +62,7 @@ These attributes map to the following commands:
     package="android.core"
     class="android.core.JavaTests"
     coverage_target="framework" />
-    
+
 <test name="apidemos"
     build_path="development/samples/ApiDemos"
     package="com.example.android.apis.tests"
@@ -126,6 +108,177 @@ These attributes map to the following commands:
     coverage_target="framework"
     continuous="true" />
 
+<test name="framework-permission"
+    build_path="frameworks/base/tests/permission"
+    package="com.android.framework.permission.tests"
+    runner="android.test.InstrumentationTestRunner"
+    coverage_target="framework"
+    continuous="true" />
+
+<!--  cts tests -->
+
+<test name="cts-permission"
+    build_path="cts/tests"
+    package="com.android.cts.permission"
+    runner="android.test.InstrumentationTestRunner"
+    coverage_target="framework"
+    continuous="true"
+    cts="true" />
+
+<test name="cts-permission2"
+    build_path="cts/tests/tests/permission2"
+    package="com.android.cts.permission2"
+    runner="android.test.InstrumentationTestRunner"
+    coverage_target="framework"
+    continuous="true"
+    cts="true" />
+
+<test name="cts-process"
+    build_path="cts/tests"
+    package="com.android.cts.process"
+    coverage_target="framework"
+    cts="true" />
+
+<test name="cts-api-signature"
+    build_path="cts/tests"
+    package="android.tests.sigtest"
+    runner=".InstrumentationRunner"
+    cts="true" />
+
+<test name="cts-api-signature-func"
+    build_path="cts/tests"
+    package="android.tests.sigtest.tests"
+    cts="true" />
+
+<test name="cts-apidemos"
+    build_path="cts/tests"
+    package="android.apidemos.cts"
+    coverage_target="ApiDemos"
+    cts="true" />
+
+<test name="cts-app"
+    build_path="cts/tests"
+    package="com.android.cts.app"
+    runner="android.test.InstrumentationCtsTestRunner"
+    coverage_target="framework"
+    cts="true" />
+
+<test name="cts-content"
+    build_path="cts/tests"
+    package="com.android.cts.content"
+    runner="android.test.InstrumentationCtsTestRunner"
+    coverage_target="framework"
+    cts="true" />
+
+<test name="cts-database"
+    build_path="cts/tests"
+    package="com.android.cts.database"
+    runner="android.test.InstrumentationCtsTestRunner"
+    coverage_target="framework"
+    cts="true" />
+
+<test name="cts-graphics"
+    build_path="cts/tests"
+    package="com.android.cts.graphics"
+    runner="android.test.InstrumentationCtsTestRunner"
+    coverage_target="framework"
+    cts="true" />
+
+<test name="cts-hardware"
+    build_path="cts/tests"
+    package="com.android.cts.hardware"
+    runner="android.test.InstrumentationCtsTestRunner"
+    coverage_target="framework"
+    cts="true" />
+
+<test name="cts-location"
+    build_path="cts/tests"
+    package="com.android.cts.location"
+    runner="android.test.InstrumentationCtsTestRunner"
+    coverage_target="framework"
+    cts="true" />
+
+<test name="cts-net"
+    build_path="cts/tests"
+    package="com.android.cts.net"
+    runner="android.test.InstrumentationCtsTestRunner"
+    coverage_target="framework"
+    cts="true" />
+
+<test name="cts-os"
+    build_path="cts/tests"
+    package="com.android.cts.os"
+    runner="android.test.InstrumentationCtsTestRunner"
+    coverage_target="framework"
+    cts="true" />
+
+<test name="cts-perf1"
+    build_path="cts/tests"
+    package="com.android.cts.performance"
+    runner="android.test.InstrumentationCtsTestRunner"
+    cts="true" />
+
+<test name="cts-perf2"
+    build_path="cts/tests"
+    package="com.android.cts.performance2"
+    runner="android.test.InstrumentationCtsTestRunner"
+    cts="true" />
+
+<test name="cts-perf3"
+    build_path="cts/tests"
+    package="com.android.cts.performance3"
+    runner="android.test.InstrumentationCtsTestRunner"
+    cts="true" />
+
+<test name="cts-perf4"
+    build_path="cts/tests"
+    package="com.android.cts.performance4"
+    runner="android.test.InstrumentationCtsTestRunner"
+    cts="true" />
+
+<test name="cts-perf5"
+    build_path="cts/tests"
+    package="com.android.cts.performance5"
+    runner="android.test.InstrumentationCtsTestRunner"
+    cts="true" />
+
+<test name="cts-provider"
+    build_path="cts/tests"
+    package="com.android.cts.provider"
+    runner="android.test.InstrumentationCtsTestRunner"
+    coverage_target="framework"
+    cts="true" />
+
+<test name="cts-text"
+    build_path="cts/tests"
+    package="com.android.cts.text"
+    runner="android.test.InstrumentationCtsTestRunner"
+    coverage_target="framework"
+    cts="true" />
+
+<test name="cts-util"
+    build_path="cts/tests"
+    package="com.android.cts.util"
+    runner="android.test.InstrumentationCtsTestRunner"
+    coverage_target="framework"
+    cts="true" />
+
+<test name="cts-view"
+    build_path="cts/tests"
+    package="com.android.cts.view"
+    runner="android.test.InstrumentationCtsTestRunner"
+    coverage_target="framework"
+    cts="true" />
+
+<test name="cts-widget"
+    build_path="cts/tests"
+    package="com.android.cts.widget"
+    runner="android.test.InstrumentationCtsTestRunner"
+    coverage_target="framework"
+    cts="true" />
+
+<!--  end of cts tests -->
+
 <!--  selected app tests -->
 <test name="browser"
     build_path="packages/apps/Browser"
@@ -151,16 +304,35 @@ These attributes map to the following commands:
     coverage_target="CalendarProvider"
     continuous="true" />
 
+<test name="camerastress"
+    build_path="packages/apps/Camera"
+    package="com.android.camera.tests"
+    class="com.android.camera.StressTests"
+    coverage_target="Camera" />
+
+<test name="cameralatency"
+    build_path="packages/apps/Camera"
+    package="com.android.camera.tests"
+    class="com.android.camera.stress.CameraLatency"
+    coverage_target="Camera" />
+
 <test name="camera"
-    build_path="packages/apps/Camera/tests"
-    package="com.android.cameratests"
-    runner="CameraInstrumentationTestRunner"
+    build_path="packages/apps/Camera"
+    package="com.android.camera.tests"
+    class="com.android.camera.UnitTests"
+    continuous="true"
     coverage_target="Camera" />
 
 <test name="contactsprov"
     build_path="packages/providers/GoogleContactsProvider/tests"
     package="com.android.providers.contactstests"
     coverage_target="ContactsProvider" />
+
+<test name="downloadprovider-permission"
+    build_path="packages/providers/DownloadProvider/tests/permission"
+    package="com.android.providers.downloads.permission.tests"
+    coverage_target="DownloadProvider"
+    continuous="true" />
 
 <test name="email"
     build_path="packages/apps/Email"
@@ -174,19 +346,63 @@ These attributes map to the following commands:
     class="com.android.email.SmallTests"
     coverage_target="Email" />
 
+<test name="globalsearch"
+    build_path="packages/apps/GlobalSearch"
+    package="com.android.globalsearch.tests"
+    coverage_target="GlobalSearch"
+    continuous="true" />
+
+<test name="globalsearch-permission"
+    build_path="packages/apps/GlobalSearch"
+    package="com.android.globalsearch.permission.tests"
+    coverage_target="GlobalSearch"
+    continuous="true" />
+
+<test name="improvider-permission"
+    build_path="packages/providers/ImProvider/tests/permission"
+    package="com.android.providers.im.permission.tests"
+    coverage_target="ImProvider"
+    continuous="true" />
+
 <test name="media"
     build_path="frameworks/base/media/tests/MediaFrameworkTest"
     package="com.android.mediaframeworktest"
     runner=".MediaFrameworkTestRunner"
     coverage_target="framework"
     continuous="true" />
-    
+
+<test name="mediaapitest"
+    build_path="frameworks/base/media/tests/MediaFrameworkTest"
+    package="com.android.mediaframeworktest"
+    class="com.android.mediaframeworktest.functional.MediaPlayerApiTest"
+    runner=".MediaFrameworkTestRunner"
+    coverage_target="framework" />
+
+<test name="mediarecordertest"
+    build_path="frameworks/base/media/tests/MediaFrameworkTest"
+    package="com.android.mediaframeworktest"
+    class="com.android.mediaframeworktest.functional.MediaRecorderTest"
+    runner=".MediaFrameworkTestRunner"
+    coverage_target="framework" />
+
+<test name="mediastresstest"
+    build_path="frameworks/base/media/tests/MediaFrameworkTest"
+    package="com.android.mediaframeworktest"
+    runner=".MediaRecorderStressTestRunner"
+    coverage_target="framework" />
+
+<test name="mediamemorystress"
+    build_path="frameworks/base/media/tests/MediaFrameworkTest"
+    package="com.android.mediaframeworktest"
+    runner=".MediaFrameworkPerfTestRunner"
+    coverage_target="framework" />
+
 <test name="mediaunit"
     build_path="frameworks/base/media/tests/MediaFrameworkTest"
     package="com.android.mediaframeworktest"
     runner=".MediaFrameworkUnitTestRunner"
     coverage_target="framework" />
-    
+
 <test name="musicplayer"
     build_path="packages/apps/Music"
     package="com.android.music.tests"
@@ -221,5 +437,33 @@ These attributes map to the following commands:
     runner=".RingtoneSettingsInstrumentationTestRunner"
     coverage_target="Settings" />
 -->
+
+<!--  native tests  -->
+
+<!-- Bionic C++ -->
+<test-native name="libstdcpp"
+    build_path="system/extras/tests/bionic/libstdc++"
+    description="Bionic libstdc++."
+    extra_build_args="BIONIC_TESTS=1" />
+
+<!--  Android STL tests -->
+<test-native name="astl"
+    build_path="external/astl/tests"
+    description="Android STL."
+    extra_build_args="ASTL_TESTS=1" />
+
+<!-- pending patch 820
+<test-native name="gtest"
+    build_path="external/gtest"
+    description="Google test."
+    extra_build_args="GTEST_TESTS=1" />
+-->
+
+<!-- host java tests -->
+<test-host name="cts-appinstall"
+    build_path="cts/tests/install-tests"
+    class="com.android.cts.install.InstallTests"
+    jar_name="CtsInstallTests.jar"
+    cts="true" />
 
 </test-definitions>

@@ -26,7 +26,7 @@ import org.objectweb.asm.signature.SignatureReader;
 import java.util.ArrayList;
 
 /**
- * 
+ * A method visitor that generates the Java source for a whole method. 
  */
 class MethodSourcer implements MethodVisitor {
 

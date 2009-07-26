@@ -137,7 +137,7 @@ int main(int argc, char **argv)
             continue;
         if (strcmp(psym->name, ".plt") == 0)
             continue;
-        char *ksym = " ";
+        const char *ksym = " ";
         if (psym->region->flags & region_type::kIsKernelRegion)
             ksym = "k";
         printf("%s %s %s\n", ksym, psym->name, psym->region->path);
