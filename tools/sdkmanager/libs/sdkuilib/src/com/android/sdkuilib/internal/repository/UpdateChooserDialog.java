@@ -63,6 +63,12 @@ import java.util.TreeMap;
  */
 final class UpdateChooserDialog extends Dialog {
 
+    /**
+     * Min Y location for dialog. Need to deal with the menu bar on mac os.
+     */
+    private final static int MIN_Y = SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_DARWIN ?
+            20 : 0;
+
     /** Last dialog size for this session. */
     private static Point sLastSize;
     private boolean mCompleted;
@@ -373,7 +379,18 @@ final class UpdateChooserDialog extends Dialog {
             int cw = childSize.x;
             int ch = childSize.y;
 
-            child.setLocation(px + (pw - cw) / 2, py + (ph - ch) / 2);
+            int x = px + (pw - cw) / 2;
+            int y = py + (ph - ch) / 2;
+
+            if (x < 0) {
+                x = 0;
+            }
+
+            if (y < MIN_Y) {
+                y = MIN_Y;
+            }
+
+            child.setLocation(x, y);
             child.setSize(cw, ch);
         }
     }
