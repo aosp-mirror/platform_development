@@ -242,6 +242,9 @@ final class PlatformTarget implements IAndroidTarget {
         int apiDiff = mVersion.getApiLevel() - target.getVersion().getApiLevel();
 
         if (mVersion.getCodename() != null && apiDiff == 0) {
+            if (target.getVersionName() == null) {
+                return +1; // preview showed last
+            }
             return mVersion.getCodename().compareTo(target.getVersion().getCodename());
         }
 
