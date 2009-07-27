@@ -16,10 +16,13 @@
 
 #ifndef ANDROID_USB_API_ADBWINAPI_H__
 #define ANDROID_USB_API_ADBWINAPI_H__
+
 /** \file
   This file consists of declarations of routines exported by the API as well
   as types, structures, and constants definitions used in the API.
 */
+
+#include "adb_api_legacy.h"
 
 // Enables compillation for "straight" C
 #ifdef __cplusplus

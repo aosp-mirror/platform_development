@@ -187,3 +187,32 @@ bool GetUsbDeviceName(HDEVINFO hardware_dev_info,
 
   return !name->empty();
 }
+
+bool IsLegacyInterface(const wchar_t* interface_name) {
+  // Open USB device for this intefface
+  HANDLE usb_device_handle = CreateFile(interface_name,
+                                        GENERIC_READ | GENERIC_WRITE,
+                                        FILE_SHARE_READ | FILE_SHARE_WRITE,
+                                        NULL,
+                                        OPEN_EXISTING,
+                                        0,
+                                        NULL);
+  if (INVALID_HANDLE_VALUE == usb_device_handle)
+    return NULL;
+
+  // Try to issue ADB_IOCTL_GET_USB_DEVICE_DESCRIPTOR IOCTL that is supported
+  // by the legacy driver, but is not implemented in the WinUsb driver.
+  DWORD ret_bytes = 0;
+  USB_DEVICE_DESCRIPTOR descriptor;
+  BOOL ret = DeviceIoControl(usb_device_handle,
+                             ADB_IOCTL_GET_USB_DEVICE_DESCRIPTOR,
+                             NULL, 0,
+                             &descriptor,
+                             sizeof(descriptor),
+                             &ret_bytes,
+                             NULL);
+  ::CloseHandle(usb_device_handle);
+
+  // If IOCTL succeeded we've got legacy driver underneath.
+  return ret ? true : false;
+}

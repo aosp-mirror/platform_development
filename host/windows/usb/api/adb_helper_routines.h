@@ -106,4 +106,15 @@ bool GetUsbDeviceName(HDEVINFO hardware_dev_info,
                       PSP_DEVICE_INTERFACE_DATA dev_info_data,
                       std::wstring* name);
 
+/** \brief Checks if given interface is available via custom USB driver.
+
+  In this routine we will query the given interface with an IOCTL that should
+  be supported by the custom driver. If IOCTL fails, we make a conclusion that
+  this interface is available via WinUsb, and not via custom USB driver.
+  @param[in] interface_name Name of the interface to check.
+  @return true if interface is available via custom USB driver, or false
+          otherwise.
+*/
+bool IsLegacyInterface(const wchar_t* interface_name);
+
 #endif  // ANDROID_USB_API_ADB_HELPER_ROUTINES_H__
