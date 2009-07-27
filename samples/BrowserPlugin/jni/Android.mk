@@ -34,6 +34,7 @@ LOCAL_SRC_FILES := \
 	audio/AudioPlugin.cpp \
 	background/BackgroundPlugin.cpp \
 	form/FormPlugin.cpp \
+	paint/PaintPlugin.cpp \
 	surface/SurfacePlugin.cpp \
 
 LOCAL_C_INCLUDES += \
@@ -42,6 +43,7 @@ LOCAL_C_INCLUDES += \
 	$(LOCAL_PATH)/audio \
 	$(LOCAL_PATH)/background \
 	$(LOCAL_PATH)/form \
+	$(LOCAL_PATH)/paint \
 	$(LOCAL_PATH)/surface \
 	external/webkit/WebCore/bridge \
 	external/webkit/WebCore/plugins \
