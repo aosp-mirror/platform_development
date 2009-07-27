@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 The Android Open Source Project
+ * Copyright (C) 2009 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,18 +18,20 @@
 #define ANDROID_USB_API_ADB_IO_COMPLETION_H__
 /** \file
   This file consists of declaration of class AdbIOCompletion that encapsulates
-  a wrapper around OVERLAPPED Win32 structure returned from asynchronous I/O
-  requests.
+  a generic wrapper around OVERLAPPED Win32 structure returned from
+  asynchronous I/O requests.
 */
 
 #include "adb_endpoint_object.h"
 
-/** \brief Encapsulates encapsulates a wrapper around OVERLAPPED Win32
+/** \brief Encapsulates encapsulates a generic wrapper around OVERLAPPED Win32
   structure returned from asynchronous I/O requests.
 
-  A handle to this object is returned to the caller of each successful
-  asynchronous I/O request. Just like all other handles this handle
-  must be closed after it's no longer needed.
+  This is an abstract class that implements functionality common for I/O
+  performed via WinUsb as well as legacy driver APIs. A handle to this object
+  is returned to the caller of each successful asynchronous I/O request. Just
+  like all other handles this handle must be closed after it's no longer
+  needed.
 */
 class AdbIOCompletion : public AdbObjectHandle {
  public:
@@ -56,6 +58,10 @@ class AdbIOCompletion : public AdbObjectHandle {
   */
   virtual ~AdbIOCompletion();
 
+  //
+  // Abstract
+  //
+
  public:
   /** \brief Gets overlapped I/O result
 
@@ -76,8 +82,13 @@ class AdbIOCompletion : public AdbObjectHandle {
   */
   virtual bool GetOvelappedIoResult(LPOVERLAPPED ovl_data,
                                     ULONG* bytes_transferred,
-                                    bool wait);
+                                    bool wait) = 0;
 
+  //
+  // Operations
+  //
+
+ public:
   /** \brief Checks if I/O that this object represents has completed.
 
     @return true if I/O has been completed or false if it's still
