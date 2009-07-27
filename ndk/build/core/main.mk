@@ -20,11 +20,12 @@
 #
 # ====================================================================
 
+# The location of the build system files
+BUILD_SYSTEM := $(strip $(dir $(lastword $(MAKEFILE_LIST))))
+BUILD_SYSTEM := $(BUILD_SYSTEM:%/=%)
+
 # Include common definitions
 include build/core/definitions.mk
-
-# The location of the build system files
-BUILD_SYSTEM := build/core
 
 # Where all generated files will be stored during a build
 NDK_OUT := out
