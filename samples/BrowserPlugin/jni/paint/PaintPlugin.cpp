@@ -33,6 +33,7 @@ extern NPNetscapeFuncs*         browser;
 extern ANPLogInterfaceV0        gLogI;
 extern ANPCanvasInterfaceV0     gCanvasI;
 extern ANPPaintInterfaceV0      gPaintI;
+extern ANPPathInterfaceV0       gPathI;
 extern ANPSurfaceInterfaceV0    gSurfaceI;
 extern ANPTypefaceInterfaceV0   gTypefaceI;
 
@@ -40,9 +41,9 @@ extern ANPTypefaceInterfaceV0   gTypefaceI;
 
 PaintPlugin::PaintPlugin(NPP inst) : SubPlugin(inst) {
 
-    m_isTouchCurrentInput = true;
     m_isTouchActive = false;
-    m_prevX = m_prevY = 0;
+    m_isTouchCurrentInput = true;
+    m_activePaintColor = s_redColor;
 
     memset(&m_drawingSurface, 0, sizeof(m_drawingSurface));
     memset(&m_inputToggle,  0, sizeof(m_inputToggle));
@@ -55,6 +56,12 @@ PaintPlugin::PaintPlugin(NPP inst) : SubPlugin(inst) {
     if(!m_surface)
         gLogI.log(inst, kError_ANPLogType, "----%p Unable to create RGBA surface", inst);
 
+    // initialize the path
+    m_touchPath = gPathI.newPath();
+    if(!m_touchPath)
+        gLogI.log(inst, kError_ANPLogType, "----%p Unable to create the touch path", inst);
+
+    // initialize the paint colors
     m_paintSurface = gPaintI.newPaint();
     gPaintI.setFlags(m_paintSurface, gPaintI.getFlags(m_paintSurface) | kAntiAlias_ANPPaintFlag);
     gPaintI.setColor(m_paintSurface, 0xFFC0C0C0);
@@ -64,30 +71,10 @@ PaintPlugin::PaintPlugin(NPP inst) : SubPlugin(inst) {
     gPaintI.setFlags(m_paintButton, gPaintI.getFlags(m_paintButton) | kAntiAlias_ANPPaintFlag);
     gPaintI.setColor(m_paintButton, 0xFFA8A8A8);
 
-    m_paintBlue = gPaintI.newPaint();
-    gPaintI.setFlags(m_paintBlue, gPaintI.getFlags(m_paintBlue) | kAntiAlias_ANPPaintFlag);
-    gPaintI.setColor(m_paintBlue, 0xFF0000FF);
-    gPaintI.setTextSize(m_paintBlue, 18);
-
-    m_paintGreen = gPaintI.newPaint();
-    gPaintI.setFlags(m_paintGreen, gPaintI.getFlags(m_paintGreen) | kAntiAlias_ANPPaintFlag);
-    gPaintI.setColor(m_paintGreen, 0xFF00FF00);
-    gPaintI.setTextSize(m_paintGreen, 18);
-
-    m_paintRed = gPaintI.newPaint();
-    gPaintI.setFlags(m_paintRed, gPaintI.getFlags(m_paintRed) | kAntiAlias_ANPPaintFlag);
-    gPaintI.setColor(m_paintRed, 0xFFFF0000);
-    gPaintI.setTextSize(m_paintRed, 18);
-
+    // initialize the typeface (set the colors)
     ANPTypeface* tf = gTypefaceI.createFromName("serif", kItalic_ANPTypefaceStyle);
     gPaintI.setTypeface(m_paintSurface, tf);
-    gPaintI.setTypeface(m_paintBlue, tf);
-    gPaintI.setTypeface(m_paintGreen, tf);
-    gPaintI.setTypeface(m_paintRed, tf);
     gTypefaceI.unref(tf);
-
-    // set the default paint color
-    m_activePaint = m_paintRed;
 
     //register for touch events
     ANPEventFlags flags = kTouch_ANPEventFlag;
@@ -98,11 +85,10 @@ PaintPlugin::PaintPlugin(NPP inst) : SubPlugin(inst) {
 }
 
 PaintPlugin::~PaintPlugin() {
+    gSurfaceI.deleteSurface(m_surface);
+    gPathI.deletePath(m_touchPath);
     gPaintI.deletePaint(m_paintSurface);
     gPaintI.deletePaint(m_paintButton);
-    gPaintI.deletePaint(m_paintBlue);
-    gPaintI.deletePaint(m_paintGreen);
-    gPaintI.deletePaint(m_paintRed);
 }
 
 bool PaintPlugin::supportsDrawingModel(ANPDrawingModel model) {
@@ -114,7 +100,22 @@ ANPCanvas* PaintPlugin::getCanvas(ANPRectI* dirtyRect) {
     ANPBitmap bitmap;
     if (!m_surfaceReady || !gSurfaceI.lock(m_surface, &bitmap, dirtyRect))
         return NULL;
-    return gCanvasI.newCanvas(&bitmap);
+
+    ANPCanvas* canvas = gCanvasI.newCanvas(&bitmap);
+
+    // clip the canvas to the dirty rect b/c the surface is only required to
+    // copy a minimum of the dirty rect and may copy more. The clipped canvas
+    // however will never write to pixels outside of the clipped area.
+    if (dirtyRect) {
+        ANPRectF clipR;
+        clipR.left = dirtyRect->left;
+        clipR.top = dirtyRect->top;
+        clipR.right = dirtyRect->right;
+        clipR.bottom = dirtyRect->bottom;
+        gCanvasI.clipRect(canvas, &clipR);
+    }
+
+    return canvas;
 }
 
 ANPCanvas* PaintPlugin::getCanvas(ANPRectF* dirtyRect) {
@@ -162,7 +163,6 @@ void PaintPlugin::drawCleanPlugin(ANPCanvas* canvas) {
     m_inputToggle.right = m_inputToggle.left + buttonWidth;
     m_inputToggle.bottom = m_inputToggle.top + buttonHeight;
     gCanvasI.drawRect(canvas, &m_inputToggle, m_paintButton);
-    // draw the play box (under track box)
     const char* inputText = m_isTouchCurrentInput ? "Touch" : "Mouse";
     gCanvasI.drawText(canvas, inputText, strlen(inputText), m_inputToggle.left + 5,
                       m_inputToggle.top - fontMetrics.fTop, m_paintSurface);
@@ -173,7 +173,6 @@ void PaintPlugin::drawCleanPlugin(ANPCanvas* canvas) {
     m_colorToggle.right = m_colorToggle.left + buttonWidth;
     m_colorToggle.bottom = m_colorToggle.top + buttonHeight;
     gCanvasI.drawRect(canvas, &m_colorToggle, m_paintButton);
-    // draw the play box (under track box)
     const char* colorText = getColorText();
     gCanvasI.drawText(canvas, colorText, strlen(colorText), m_colorToggle.left + 5,
                       m_colorToggle.top - fontMetrics.fTop, m_paintSurface);
@@ -184,7 +183,6 @@ void PaintPlugin::drawCleanPlugin(ANPCanvas* canvas) {
     m_clearSurface.right = m_clearSurface.left + buttonWidth;
     m_clearSurface.bottom = m_clearSurface.top + buttonHeight;
     gCanvasI.drawRect(canvas, &m_clearSurface, m_paintButton);
-    // draw the play box (under track box)
     const char* clearText = "Clear";
     gCanvasI.drawText(canvas, clearText, strlen(clearText), m_clearSurface.left + 5,
                       m_clearSurface.top - fontMetrics.fTop, m_paintSurface);
@@ -202,17 +200,15 @@ void PaintPlugin::drawCleanPlugin(ANPCanvas* canvas) {
 
 const char* PaintPlugin::getColorText() {
 
-    if (m_activePaint == m_paintBlue)
+    if (m_activePaintColor == s_blueColor)
         return "Blue";
-    else if (m_activePaint == m_paintGreen)
+    else if (m_activePaintColor == s_greenColor)
         return "Green";
     else
         return "Red";
 }
 
 int16 PaintPlugin::handleEvent(const ANPEvent* evt) {
-    NPP instance = this->inst();
-
     switch (evt->eventType) {
         case kSurface_ANPEventType:
             switch (evt->data.surface.action) {
@@ -227,37 +223,45 @@ int16 PaintPlugin::handleEvent(const ANPEvent* evt) {
             break;
 
         case kTouch_ANPEventType: {
-            int x = evt->data.touch.x;
-            int y = evt->data.touch.y;
-            if (kDown_ANPTouchAction == evt->data.touch.action) {
+            float x = (float) evt->data.touch.x;
+            float y = (float) evt->data.touch.y;
+            if (kDown_ANPTouchAction == evt->data.touch.action && m_isTouchCurrentInput) {
 
-                ANPRectF* rect = validTouch(x,y);
+                ANPRectF* rect = validTouch(evt->data.touch.x, evt->data.touch.y);
                 if(rect == &m_drawingSurface) {
                     m_isTouchActive = true;
-                    m_prevX = x;
-                    m_prevY = y;
-                    paint(x, y, true);
+                    gPathI.moveTo(m_touchPath, x, y);
+                    paintTouch();
                     return 1;
                 }
 
             } else if (kMove_ANPTouchAction == evt->data.touch.action && m_isTouchActive) {
-                paint(x, y, true);
+                gPathI.lineTo(m_touchPath, x, y);
+                paintTouch();
                 return 1;
             } else if (kUp_ANPTouchAction == evt->data.touch.action && m_isTouchActive) {
-                paint(x, y, true);
+                gPathI.lineTo(m_touchPath, x, y);
+                paintTouch();
                 m_isTouchActive = false;
+                gPathI.reset(m_touchPath);
                 return 1;
             } else if (kCancel_ANPTouchAction == evt->data.touch.action) {
                 m_isTouchActive = false;
+                gPathI.reset(m_touchPath);
                 return 1;
             }
+
             break;
         }
         case kMouse_ANPEventType: {
+
+            if (m_isTouchActive)
+                gLogI.log(inst(), kError_ANPLogType, "----%p Received unintended mouse event", inst());
+
             if (kDown_ANPMouseAction == evt->data.mouse.action) {
                 ANPRectF* rect = validTouch(evt->data.mouse.x, evt->data.mouse.y);
                 if (rect == &m_drawingSurface)
-                    paint(evt->data.mouse.x, evt->data.mouse.y, false);
+                    paintMouse(evt->data.mouse.x, evt->data.mouse.y);
                 else if (rect == &m_inputToggle)
                     toggleInputMethod();
                 else if (rect == &m_colorToggle)
@@ -295,47 +299,69 @@ void PaintPlugin::toggleInputMethod() {
     m_isTouchCurrentInput = !m_isTouchCurrentInput;
 
     // lock only the input toggle and redraw the canvas
-    ANPCanvas* lockedCanvas = getCanvas(&m_colorToggle);
+    ANPCanvas* lockedCanvas = getCanvas(&m_inputToggle);
     drawCleanPlugin(lockedCanvas);
 }
 
 void PaintPlugin::togglePaintColor() {
-    if (m_activePaint == m_paintBlue)
-        m_activePaint = m_paintRed;
-    else if (m_activePaint == m_paintGreen)
-        m_activePaint = m_paintBlue;
+    if (m_activePaintColor == s_blueColor)
+        m_activePaintColor = s_redColor;
+    else if (m_activePaintColor == s_greenColor)
+        m_activePaintColor = s_blueColor;
     else
-        m_activePaint = m_paintGreen;
+        m_activePaintColor = s_greenColor;
 
     // lock only the color toggle and redraw the canvas
     ANPCanvas* lockedCanvas = getCanvas(&m_colorToggle);
     drawCleanPlugin(lockedCanvas);
 }
 
-void PaintPlugin::paint(int x, int y, bool isTouch) {
-    NPP instance = this->inst();
+void PaintPlugin::paintMouse(int x, int y) {
+    //TODO do not paint outside the drawing surface
 
-    // check to make sure the input types match
-    if (m_isTouchCurrentInput != isTouch)
-        return;
-
-    //TODO do not paint outside the drawing surface (mouse & touch)
+    //create the paint color
+    ANPPaint* fillPaint = gPaintI.newPaint();
+    gPaintI.setFlags(fillPaint, gPaintI.getFlags(fillPaint) | kAntiAlias_ANPPaintFlag);
+    gPaintI.setStyle(fillPaint, kFill_ANPPaintStyle);
+    gPaintI.setColor(fillPaint, m_activePaintColor);
 
     // handle the simple "mouse" paint (draw a point)
-    if (!isTouch) {
+    ANPRectF point;
+    point.left =   (float) x-3;
+    point.top =    (float) y-3;
+    point.right =  (float) x+3;
+    point.bottom = (float) y+3;
 
-        ANPRectF point;
-        point.left =   (float) x-3;
-        point.top =    (float) y-3;
-        point.right =  (float) x+3;
-        point.bottom = (float) y+3;
+    // get a canvas that is only locked around the point and draw it
+    ANPCanvas* canvas = getCanvas(&point);
+    gCanvasI.drawOval(canvas, &point, fillPaint);
 
-        // get a canvas that is only locked around the point
-        ANPCanvas* canvas = getCanvas(&point);
-        gCanvasI.drawOval(canvas, &point, m_activePaint);
-        releaseCanvas(canvas);
-        return;
-    }
+    // clean up
+    releaseCanvas(canvas);
+    gPaintI.deletePaint(fillPaint);
+}
 
-    // TODO handle the complex "touch" paint (draw a line)
+void PaintPlugin::paintTouch() {
+    //TODO do not paint outside the drawing surface
+
+    //create the paint color
+    ANPPaint* strokePaint = gPaintI.newPaint();
+    gPaintI.setFlags(strokePaint, gPaintI.getFlags(strokePaint) | kAntiAlias_ANPPaintFlag);
+    gPaintI.setColor(strokePaint, m_activePaintColor);
+    gPaintI.setStyle(strokePaint, kStroke_ANPPaintStyle);
+    gPaintI.setStrokeWidth(strokePaint, 6.0);
+    gPaintI.setStrokeCap(strokePaint, kRound_ANPPaintCap);
+    gPaintI.setStrokeJoin(strokePaint, kRound_ANPPaintJoin);
+
+    // handle the complex "touch" paint (draw a line)
+    ANPRectF bounds;
+    gPathI.getBounds(m_touchPath, &bounds);
+
+    // get a canvas that is only locked around the point and draw the path
+    ANPCanvas* canvas = getCanvas(&bounds);
+    gCanvasI.drawPath(canvas, m_touchPath, strokePaint);
+
+    // clean up
+    releaseCanvas(canvas);
+    gPaintI.deletePaint(strokePaint);
 }
