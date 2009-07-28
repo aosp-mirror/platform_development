@@ -100,14 +100,40 @@ check_gnu_make_version ()
     GNU_MAKE_VERSION=$version
 }
 
+# check that $1 points to an awk executable that has a working
+# match() function. This really means Nawk or GNU Awk, which should
+# be installed on all modern distributions, but hey, you never know...
+check_awk ()
+{
+    if [ -n "$AWK" ] ; then
+        return
+    fi
+    log2 "  looking for nawk/gawk as '$1'"
+    local executable=`which $1`
+    if [ -z "$executable" ] ; then
+        log2 "    Not available."
+        return
+    fi
+    local result
+    result=`echo "" | $executable -f build/check-awk.awk`
+    if [ "$result" == "Pass" ] ; then
+        AWK="$1"
+    fi
+    log2 "    Check $result"
+}
+
 OPTION_HELP=no
 OPTION_NO_MAKE_CHECK=no
+OPTION_NO_AWK_CHECK=no
+
 for opt do
   optarg=`expr "x$opt" : 'x[^=]*=\(.*\)'`
   case "$opt" in
   --help|-h|-\?) OPTION_HELP=yes
   ;;
   --no-make-check) OPTION_NO_MAKE_CHECK=yes
+  ;;
+  --no-awk-check) OPTION_NO_AWK_CHECK=yes
   ;;
   --verbose)
     if [ "$VERBOSE" = "yes" ] ; then
@@ -133,6 +159,7 @@ if [ $OPTION_HELP = yes ] ; then
     echo "  --help            Print this help message"
     echo "  --verbose         Enable verbose mode"
     echo "  --no-make-check   Ignore GNU Make version check"
+    echo "  --no-awk-check    Ignore Nawk/Gawk check"
     echo ""
     exit 1
 fi
@@ -158,6 +185,25 @@ else
     echo "GNU Make   : Check ignored through user option."
 fi
 
+## Check for nawk or gawk, straight awk doesn't have the 'match'
+## function we need in the build system.
+##
+if [ "$OPTION_NO_AWK_CHECK" = "no" ] ; then
+    AWK=
+    check_awk awk
+    check_awk gawk
+    check_awk nawk
+    if [ -z "$AWK" ] ; then
+        echo "ERROR: Could not find a valid Nawk or Gawk executable."
+        echo "       Please ensure that either one of them is installed."
+        echo "       Use the --no-awk-check option to ignore this message."
+        exit 1
+    fi
+    echo "Awk        : $AWK"
+else
+    echo "Awk        : Check ignored through user option."
+fi
+
 ## Check the host platform tag that will be used to locate prebuilt
 ## toolchain binaries. And create configuration file.
 ##
@@ -168,6 +214,7 @@ create_config_mk
 add_config "HOST_OS       := $HOST_OS"
 add_config "HOST_ARCH     := $HOST_ARCH"
 add_config "HOST_TAG      := $HOST_TAG"
+add_config "HOST_AWK      := $AWK"
 
 ## Check that the toolchains we need are installed
 ## Otherwise, instruct the user to download them from the web site
