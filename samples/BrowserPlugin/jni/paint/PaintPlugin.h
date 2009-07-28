@@ -40,14 +40,19 @@ private:
     ANPCanvas*  getCanvas(ANPRectI* dirtyRect = NULL);
     ANPCanvas*  getCanvas(ANPRectF* dirtyRect);
     const char* getColorText();
-    void        paint(int x, int y, bool isTouch);
+    void        paintMouse(int x, int y);
+    void        paintTouch();
     void        releaseCanvas(ANPCanvas*);
     void        toggleInputMethod();
     void        togglePaintColor();
     ANPRectF*   validTouch(int x, int y);
 
+    bool        m_isTouchActive;
+    bool        m_isTouchCurrentInput;
     bool        m_surfaceReady;
+
     ANPSurface* m_surface;
+    ANPPath*    m_touchPath;
 
     ANPRectF    m_drawingSurface;
     ANPRectF    m_inputToggle;
@@ -56,16 +61,11 @@ private:
 
     ANPPaint*   m_paintSurface;
     ANPPaint*   m_paintButton;
-    ANPPaint*   m_paintBlue;
-    ANPPaint*   m_paintGreen;
-    ANPPaint*   m_paintRed;
 
-    ANPPaint*   m_activePaint;
-
-    bool        m_isTouchCurrentInput;
-    bool        m_isTouchActive;
-    int         m_prevX;
-    int         m_prevY;
+    ANPColor    m_activePaintColor;
+    static const ANPColor s_redColor   = 0xFFFF0000;
+    static const ANPColor s_greenColor = 0xFF00FF00;
+    static const ANPColor s_blueColor  = 0xFF0000FF;
 };
 
 #endif // paintPlugin__DEFINED
