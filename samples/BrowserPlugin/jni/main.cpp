@@ -32,6 +32,7 @@
 #include "AudioPlugin.h"
 #include "BackgroundPlugin.h"
 #include "FormPlugin.h"
+#include "PaintPlugin.h"
 #include "SurfacePlugin.h"
 #include "android_npapi.h"
 
@@ -155,6 +156,31 @@ NPError NPP_New(NPMIMEType pluginType, NPP instance, uint16 mode, int16 argc,
     }
     /* END: STANDARD PLUGIN FRAMEWORK */
 
+    // select the drawing model based on user input
+    ANPDrawingModel model = kBitmap_ANPDrawingModel;
+
+    for (int i = 0; i < argc; i++) {
+        if (!strcmp(argn[i], "DrawingModel")) {
+            if (!strcmp(argv[i], "Bitmap")) {
+                model = kBitmap_ANPDrawingModel;
+            }
+            else if (!strcmp(argv[i], "Surface")) {
+               model = kSurface_ANPDrawingModel;
+            }
+            gLogI.log(instance, kDebug_ANPLogType, "------ %p DrawingModel is %d", instance, model);
+            break;
+        }
+    }
+
+    // notify the plugin API of the drawing model we wish to use. This must be
+    // done prior to creating certain subPlugin objects (e.g. surfaceViews)
+    NPError err = browser->setvalue(instance, kRequestDrawingModel_ANPSetValue,
+                            reinterpret_cast<void*>(model));
+    if (err) {
+        gLogI.log(instance, kError_ANPLogType, "request model %d err %d", model, err);
+        return err;
+    }
+
     // select the pluginType
     for (int i = 0; i < argc; i++) {
         if (!strcmp(argn[i], "PluginType")) {
@@ -174,6 +200,10 @@ NPError NPP_New(NPMIMEType pluginType, NPP instance, uint16 mode, int16 argc,
                 obj->pluginType = kForm_PluginType;
                 obj->activePlugin = new FormPlugin(instance);
             }
+            else if (!strcmp(argv[i], "Paint")) {
+                obj->pluginType = kPaint_PluginType;
+                obj->activePlugin = new PaintPlugin(instance);
+            }
             else if (!strcmp(argv[i], "RGBA_Surface")) {
                 obj->pluginType = kSurface_PluginType;
                 obj->activePlugin = new SurfacePlugin(instance, kRGBA_ANPSurfaceType);
@@ -185,38 +215,15 @@ NPError NPP_New(NPMIMEType pluginType, NPP instance, uint16 mode, int16 argc,
 
     // if no pluginType is specified then default to Animation
     if (!obj->pluginType) {
+        gLogI.log(instance, kError_ANPLogType, "------ %p No PluginType attribute was found", instance);
         obj->pluginType = kAnimation_PluginType;
         obj->activePlugin = new BallAnimation(instance);
-    }
-
-    // select the drawing model based on user input
-    ANPDrawingModel model = kBitmap_ANPDrawingModel;
-
-    for (int i = 0; i < argc; i++) {
-        if (!strcmp(argn[i], "DrawingModel")) {
-            if (!strcmp(argv[i], "Bitmap")) {
-                model = kBitmap_ANPDrawingModel;
-            }
-            else if (!strcmp(argv[i], "Surface")) {
-               model = kSurface_ANPDrawingModel;
-            }
-            gLogI.log(instance, kDebug_ANPLogType, "------ %p DrawingModel is %d", instance, model);
-            break;
-        }
     }
 
     // check to ensure the pluginType supports the model
     if (!obj->activePlugin->supportsDrawingModel(model)) {
         gLogI.log(instance, kError_ANPLogType, "------ %p Unsupported DrawingModel (%d)", instance, model);
         return NPERR_GENERIC_ERROR;
-    }
-
-    // notify the plugin API of the drawing model we wish to use
-    NPError err = browser->setvalue(instance, kRequestDrawingModel_ANPSetValue,
-                            reinterpret_cast<void*>(model));
-    if (err) {
-        gLogI.log(instance, kError_ANPLogType, "request model %d err %d", model, err);
-        return err;
     }
 
     return NPERR_NO_ERROR;
