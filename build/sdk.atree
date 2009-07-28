@@ -79,6 +79,9 @@ development/samples/Snake platforms/${PLATFORM_NAME}/samples/Snake
 development/samples/SoftKeyboard platforms/${PLATFORM_NAME}/samples/SoftKeyboard
 development/samples/JetBoy platforms/${PLATFORM_NAME}/samples/JetBoy
 
+#platform tools notice
+development/tools/scripts/sdk_files_NOTICE.txt platforms/${PLATFORM_NAME}/tools/NOTICE.txt
+
 # dx
 bin/dx platforms/${PLATFORM_NAME}/tools/dx
 bin/dexdump platforms/${PLATFORM_NAME}/tools/dexdump
@@ -151,6 +154,11 @@ development/emulator/skins/QVGA   platforms/${PLATFORM_NAME}/skins/QVGA
 development/emulator/skins/WVGA   platforms/${PLATFORM_NAME}/skins/WVGA
 
 # NOTICE files are copied by build/core/Makefile
+development/tools/scripts/sdk_files_NOTICE.txt platforms/${PLATFORM_NAME}/templates/NOTICE.txt
+development/tools/scripts/sdk_files_NOTICE.txt platforms/${PLATFORM_NAME}/samples/NOTICE.txt
+development/tools/scripts/sdk_files_NOTICE.txt platforms/${PLATFORM_NAME}/data/NOTICE.txt
+development/tools/scripts/sdk_files_NOTICE.txt platforms/${PLATFORM_NAME}/skins/NOTICE.txt
+development/tools/scripts/sdk_files_NOTICE.txt platforms/${PLATFORM_NAME}/tools/NOTICE.txt
 
 # the readme
 development/docs/SDK_RELEASE_NOTES RELEASE_NOTES.html
