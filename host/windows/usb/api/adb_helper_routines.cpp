@@ -21,6 +21,7 @@
 
 #include "stdafx.h"
 #include "adb_api.h"
+#include "adb_api_legacy.h"
 #include "adb_helper_routines.h"
 #include "adb_interface_enum.h"
 
