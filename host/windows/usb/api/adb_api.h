@@ -22,8 +22,6 @@
   as types, structures, and constants definitions used in the API.
 */
 
-#include "adb_api_legacy.h"
-
 // Enables compillation for "straight" C
 #ifdef __cplusplus
   #define EXTERN_C    extern "C"
