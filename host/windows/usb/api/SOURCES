@@ -88,6 +88,7 @@ PRECOMPILED_SOURCEFILE = stdafx.cpp
 SOURCES = adb_api.cpp                     \
           adb_endpoint_object.cpp         \
           adb_winusb_endpoint_object.cpp  \
+          adb_legacy_endpoint_object.cpp  \
           adb_helper_routines.cpp         \
           adb_interface.cpp               \
           adb_winusb_interface.cpp        \
@@ -95,6 +96,7 @@ SOURCES = adb_api.cpp                     \
           adb_interface_enum.cpp          \
           adb_io_completion.cpp           \
           adb_winusb_io_completion.cpp    \
+          adb_legacy_io_completion.cpp    \
           adb_object_handle.cpp           \
           AdbWinApi.cpp                   \
 		      AdbWinApi.rc
