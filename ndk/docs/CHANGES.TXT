@@ -33,11 +33,14 @@ current version
 
 - Fix compilation of assembler files (e.g. foo.S)
 
-- Make LOCAL_CFLAGS / LOCAL_CXXFLAGS / LOCAL_CPPFLAGS work as advertized
-  by the documentation (previously, only LOCAL_CFLAGS did work for both C
-  *and* C++ sources, contrary to what the doc claimed).
+- Fix LOCAL_CFLAGS / LOCAL_CPPFLAGS to work as in the full Android build
+  system. This means that:
 
-  Note that APP_CPPFLAGS / APP_CFLAGS / APP_CXXFLAGS continue to work.
+    - LOCAL_CFLAGS   is used for both C and C++ sources
+    - LOCAL_CPPFLAGS is used for C++ sources only
+    - LOCAL_CXXFLAGS is used like LOCAL_CPPFLAGS but is considered obsolete.
+
+  Also fixed APP_CPPFLAGS / APP_CFLAGS / APP_CXXFLAGS.
 
 -------------------------------------------------------------------------------
 android-ndk-1.5_r1 released.
