@@ -337,11 +337,10 @@ LOCAL_C_INCLUDES
 
 LOCAL_CFLAGS
     An optional set of compiler flags that will be passed when building
-    C source files (*not* C++ sources).
+    C *and* C++ source files.
 
-    This can be useful to specify an additionnal include path
-    (relative to the top of the NDK directory), macro definitions
-    or compile options.
+    This can be useful to specify additionnal macro definitions or
+    compile options.
 
     IMPORTANT: Try not to change the optimization/debugging level in
                your Android.mk, this can be handled automatically for
@@ -349,11 +348,24 @@ LOCAL_CFLAGS
                your Application.mk, and will let the NDK generate
                useful data files used during debugging.
 
+    NOTE: In android-ndk-1.5_r1, the corresponding flags only applied
+          to C source files, not C++ ones. This has been corrected to
+          match the full Android build system behaviour. (You can use
+          LOCAL_CPPFLAGS to specify flags for C++ sources only now).
+
 LOCAL_CXXFLAGS
-    Same as LOCAL_CFLAGS for C++ source files
+    An alias for LOCAL_CPPFLAGS. Note that use of this flag is obsolete
+    as it may disappear in future releases of the NDK.
 
 LOCAL_CPPFLAGS
-    Same as LOCAL_CFLAGS but used for both C and C++ source files
+    An optional set of compiler flags that will be passed when building
+    C++ source files *only*. They will appear after the LOCAL_CFLAGS
+    on the compiler's command-line.
+
+    NOTE: In android-ndk-1.5_r1, the corresponding flags applied to
+          both C and C++ sources. This has been corrected to match the
+          full Android build system. (You can use LOCAL_CFLAGS to specify
+          flags for both C and C++ sources now).
 
 LOCAL_STATIC_LIBRARIES
     The list of static libraries modules (built with BUILD_STATIC_LIBRARY)
