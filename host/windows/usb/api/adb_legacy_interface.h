@@ -60,15 +60,6 @@ class AdbLegacyInterfaceObject : public AdbInterfaceObject {
   */
   virtual ADBAPIHANDLE CreateHandle();
 
-  /** \brief This method is called when handle to this object gets closed.
-
-    In this call object is deleted from the AdbObjectHandleMap.
-    @return true on success or false if object is already closed. If
-            false is returned GetLastError() provides extended error
-            information.
-  */
-  virtual bool CloseHandle();
-
   //
   // Abstract overrides
   //
@@ -124,6 +115,76 @@ class AdbLegacyInterfaceObject : public AdbInterfaceObject {
   virtual ADBAPIHANDLE OpenEndpoint(UCHAR endpoint_index,
                                     AdbOpenAccessType access_type,
                                     AdbOpenSharingMode sharing_mode);
+
+  //
+  // Internal operations
+  //
+
+ protected:
+  /** \brief Opens an endpoint on this interface.
+
+    @param[in] endpoint_name Endpoint file name.
+    @param[in] endpoint_id Endpoint (pipe) address on the device.
+    @param[in] endpoint_index Zero-based endpoint index.
+    @param[in] access_type Desired access type. In the current implementation
+           this parameter has no effect on the way endpoint is opened. It's
+           always read / write access.
+    @param[in] sharing_mode Desired share mode. In the current implementation
+           this parameter has no effect on the way endpoint is opened. It's
+           always shared for read / write.
+    @return Handle to the opened endpoint object or NULL on failure.
+            If NULL is returned GetLastError() provides extended information
+            about the error that occurred.
+  */
+  ADBAPIHANDLE OpenEndpoint(const wchar_t* endpoint_name,
+                            UCHAR endpoint_id,
+                            UCHAR endpoint_index,
+                            AdbOpenAccessType access_type,
+                            AdbOpenSharingMode sharing_mode);
+
+  /** \brief Caches device descriptor for the USB device associated with
+    this interface.
+
+    This method is called from CreateHandle method to cache some interface
+    information.
+    @param[in] usb_device_handle Handle to USB device.
+    @return 'true' on success, 'false' on failure. If 'false' is returned
+            GetLastError() provides extended error information.
+  */
+  bool CacheUsbDeviceDescriptor(HANDLE usb_device_handle);
+
+  /** \brief Caches descriptor for the selected USB device configuration.
+
+    This method is called from CreateHandle method to cache some interface
+    information.
+    @param[in] usb_device_handle Handle to USB device.
+    @return 'true' on success, 'false' on failure. If 'false' is returned
+            GetLastError() provides extended error information.
+  */
+  bool CacheUsbConfigurationDescriptor(HANDLE usb_device_handle);
+
+  /** \brief Caches descriptor for this interface.
+
+    This method is called from CreateHandle method to cache some interface
+    information.
+    @param[in] usb_device_handle Handle to USB device.
+    @return 'true' on success, 'false' on failure. If 'false' is returned
+            GetLastError() provides extended error information.
+  */
+  bool CacheUsbInterfaceDescriptor(HANDLE usb_device_handle);
+
+ protected:
+  /// Index for the default bulk read endpoint
+  UCHAR                         def_read_endpoint_;
+
+  /// ID for the default bulk read endpoint
+  UCHAR                         read_endpoint_id_;
+
+  /// Index for the default bulk write endpoint
+  UCHAR                         def_write_endpoint_;
+
+  /// ID for the default bulk write endpoint
+  UCHAR                         write_endpoint_id_;
 };
 
 #endif  // ANDROID_USB_API_ADB_LEGACY_INTERFACE_H__

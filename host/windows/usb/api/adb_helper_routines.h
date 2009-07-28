@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 The Android Open Source Project
+ * Copyright (C) 2009 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,23 @@
 */
 
 #include "adb_api_private_defines.h"
+
+/** \brief Converts access type and share mode from our enum into
+  SDK - complient values.
+
+  @param[in] access_type Enumerated access type
+  @param[in] sharing_mode Enumerated share mode
+  @param[out] desired_access Will receive SDK - complient desired access
+         flags. This parameter can be NULL.
+  @param[out] desired_sharing Will receive SDK - complient share mode.
+         This parameter can be NULL.
+  @return True on success, false on failure, in which case GetLastError()
+          provides extended information about the error that occurred.
+*/
+bool GetSDKComplientParam(AdbOpenAccessType access_type,
+                          AdbOpenSharingMode sharing_mode,
+                          ULONG* desired_access,
+                          ULONG* desired_sharing);
 
 /** \brief Given the hardware device information enumerates interfaces for
   this device.

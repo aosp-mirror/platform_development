@@ -305,7 +305,7 @@ ADBAPIHANDLE AdbWinUsbInterfaceObject::OpenEndpoint(
 }
 
 ADBAPIHANDLE AdbWinUsbInterfaceObject::OpenEndpoint(UCHAR endpoint_id,
-                                              UCHAR endpoint_index) {
+                                                    UCHAR endpoint_index) {
   if (!IsOpened()) {
     SetLastError(ERROR_INVALID_HANDLE);
     return false;
