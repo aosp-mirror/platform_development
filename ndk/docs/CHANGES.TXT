@@ -42,5 +42,9 @@ current version
 
   Also fixed APP_CPPFLAGS / APP_CFLAGS / APP_CXXFLAGS.
 
+- Add build/platforms/android-4, and make the build system select which
+  platform to use based on the content of the project file named
+  $(APP_PROJECT_PATH)/default.properties.
+
 -------------------------------------------------------------------------------
 android-ndk-1.5_r1 released.
