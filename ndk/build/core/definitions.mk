@@ -404,7 +404,7 @@ compile-c-source = $(eval $(call ev-compile-c-source,$1,$(1:%.c=%.o)))
 # Usage     : $(call compile-s-source,<srcfile>)
 # Rationale : Setup everything required to build a single Assembly source file
 # -----------------------------------------------------------------------------
-compile-s-source = $(eval $(call ev-compile-s-source,$1,$(1:%.S=%.o)))
+compile-s-source = $(eval $(call ev-compile-c-source,$1,$(1:%.S=%.o)))
 
 
 # -----------------------------------------------------------------------------

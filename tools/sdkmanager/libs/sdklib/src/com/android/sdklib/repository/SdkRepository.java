@@ -26,7 +26,7 @@ public class SdkRepository {
 
     /** The URL of the official Google sdk-repository site. */
     public static final String URL_GOOGLE_SDK_REPO_SITE =
-        "https://dl.google.com/android/repository/";      //$NON-NLS-1$
+        "https://dl-ssl.google.com/android/repository/";      //$NON-NLS-1$
 
     public static final String URL_DEFAULT_XML_FILE = "repository.xml";         //$NON-NLS-1$
 
@@ -63,6 +63,8 @@ public class SdkRepository {
     public static final String NODE_VERSION   = "version";                      //$NON-NLS-1$
     /** The api-level, an int > 0, for platform, add-on and doc packages. */
     public static final String NODE_API_LEVEL = "api-level";                    //$NON-NLS-1$
+    /** The codename, a string, for platform packages. */
+    public static final String NODE_CODENAME = "codename";                      //$NON-NLS-1$
     /** The vendor, a string, for add-on packages. */
     public static final String NODE_VENDOR    = "vendor";                       //$NON-NLS-1$
     /** The name, a string, for add-on packages or for libraries. */

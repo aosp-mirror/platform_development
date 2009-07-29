@@ -323,8 +323,8 @@ public class SdkTargetSelector {
                 item.setData(target);
                 item.setText(0, target.getName());
                 item.setText(1, target.getVendor());
-                item.setText(2, target.getApiVersionName());
-                item.setText(3, Integer.toString(target.getApiVersionNumber()));
+                item.setText(2, target.getVersionName());
+                item.setText(3, target.getVersion().getApiString());
             }
         } else {
             table.setEnabled(false);

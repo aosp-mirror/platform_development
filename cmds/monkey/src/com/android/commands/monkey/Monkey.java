@@ -19,7 +19,7 @@ package com.android.commands.monkey;
 
 import android.app.ActivityManagerNative;
 import android.app.IActivityManager;
-import android.app.IActivityWatcher;
+import android.app.IActivityController;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.pm.IPackageManager;
@@ -88,10 +88,10 @@ public class Monkey {
     /** This is set when we would like to abort the running of the monkey. */
     private boolean mAbort;
     
-    /** This is set by the ActivityWatcher thread to request collection of ANR trace files */
+    /** This is set by the ActivityController thread to request collection of ANR trace files */
     private boolean mRequestAnrTraces = false;
 
-    /** This is set by the ActivityWatcher thread to request a "dumpsys meminfo" */
+    /** This is set by the ActivityController thread to request a "dumpsys meminfo" */
     private boolean mRequestDumpsysMemInfo = false;
 
     /** Kill the process after a timeout or crash. */
@@ -135,7 +135,7 @@ public class Monkey {
     /**
      * Monitor operations happening in the system.
      */
-    private class ActivityWatcher extends IActivityWatcher.Stub {
+    private class ActivityController extends IActivityController.Stub {
         public boolean activityStarting(Intent intent, String pkg) {
             boolean allow = checkEnteringPackage(pkg) || (DEBUG_ALLOW_ANY_STARTS != 0);
             if (mVerbose > 0) {
@@ -246,7 +246,7 @@ public class Monkey {
     /**
      * Run "dumpsys meminfo"
      * 
-     * NOTE:  You cannot perform a dumpsys call from the ActivityWatcher callback, as it will
+     * NOTE:  You cannot perform a dumpsys call from the ActivityController callback, as it will
      * deadlock.  This should only be called from the main loop of the monkey.
      */
     private void reportDumpsysMemInfo() {
@@ -425,7 +425,7 @@ public class Monkey {
         }
         
         try {
-            mAm.setActivityWatcher(null);
+            mAm.setActivityController(null);
             mNetworkMonitor.unregister(mAm);
         } catch (RemoteException e) {
             // just in case this was latent (after mCount cycles), make sure
@@ -608,7 +608,7 @@ public class Monkey {
         }
 
         try {
-            mAm.setActivityWatcher(new ActivityWatcher());
+            mAm.setActivityController(new ActivityController());
             mNetworkMonitor.register(mAm);
         } catch (RemoteException e) {
             System.err.println("** Failed talking with activity manager!");

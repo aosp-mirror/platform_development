@@ -45,10 +45,6 @@
     <string name="summary_on_fancy_ime_animations">Use fancier animations for input method windows</string>
     <string name="summary_off_fancy_ime_animations">Use normal animations for input method windows</string>
     
-    <string name="title_fancy_rotation_animations">Fancy rotation animations</string>
-    <string name="summary_on_fancy_rotation_animations">Use fancier animations for screen rotation</string>
-    <string name="summary_off_fancy_rotation_animations">Use normal animations for screen rotation</string>
-    
     <string name="title_haptic_feedback">Haptic feedback</string>
     <string name="summary_on_haptic_feedback">Use haptic feedback with user interaction</string>
     <string name="summary_off_haptic_feedback">Use haptic feedback with user interaction</string>
@@ -68,4 +64,11 @@
     <string name="summary_off_maps_compass">Compass is not displayed in Maps</string>
     
     <string name="development_settings_show_maps_compass_text">Show compass in Maps</string>
+
+    <!-- Sound & display settings screen, compatibility mode check box label -->
+    <string name="compatibility_mode_title">Compatibility Mode</string>
+    <!-- Sound & display settings screen, compatibility mode option summary text when check box is selected -->
+    <string name="compatibility_mode_summary_on">Run older apps in Compatibility mode. This require rebooting. </string>
+    <!-- Sound & display settings screen, compatibility mode option summary text when check box is clear -->
+    <string name="compatibility_mode_summary_off">Run older apps in Compatibility mode. This require rebooting. </string>
 </resources>

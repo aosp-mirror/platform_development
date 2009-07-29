@@ -33,6 +33,8 @@ import org.eclipse.ltk.ui.refactoring.UserInputWizardPage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
@@ -42,6 +44,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 
 import java.util.HashMap;
+import java.util.Map;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -59,7 +62,7 @@ class ExtractStringInputPage extends UserInputWizardPage implements IWizardPage 
     private final IProject mProject;
 
     /** Text field where the user enters the new ID to be generated or replaced with. */
-    private Text mStringIdField;
+    private Combo mStringIdCombo;
     /** Text field where the user enters the new string value. */
     private Text mStringValueField;
     /** The configuration selector, to select the resource path of the XML file. */
@@ -132,7 +135,7 @@ class ExtractStringInputPage extends UserInputWizardPage implements IWizardPage 
         // line: Textfield for string value (based on selection, if any)
 
         Label label = new Label(group, SWT.NONE);
-        label.setText("String");
+        label.setText("&String");
 
         String selectedString = ref.getTokenString();
 
@@ -156,21 +159,28 @@ class ExtractStringInputPage extends UserInputWizardPage implements IWizardPage 
 
         label = new Label(group, SWT.NONE);
         if (ref.getMode() == ExtractStringRefactoring.Mode.EDIT_SOURCE) {
-            label.setText("Replace by R.string.");
+            label.setText("&Replace by R.string.");
         } else if (ref.getMode() == ExtractStringRefactoring.Mode.SELECT_NEW_ID) {
-            label.setText("New R.string.");
+            label.setText("New &R.string.");
         } else {
-            label.setText("ID R.string.");
+            label.setText("ID &R.string.");
         }
 
-        mStringIdField = new Text(group, SWT.SINGLE | SWT.LEFT | SWT.BORDER);
-        mStringIdField.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-        mStringIdField.setText(guessId(selectedString));
+        mStringIdCombo = new Combo(group, SWT.SINGLE | SWT.LEFT | SWT.BORDER | SWT.DROP_DOWN);
+        mStringIdCombo.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        mStringIdCombo.setText(guessId(selectedString));
+        mStringIdCombo.forceFocus();
 
-        ref.setNewStringId(mStringIdField.getText().trim());
+        ref.setNewStringId(mStringIdCombo.getText().trim());
 
-        mStringIdField.addModifyListener(new ModifyListener() {
+        mStringIdCombo.addModifyListener(new ModifyListener() {
             public void modifyText(ModifyEvent e) {
+                validatePage();
+            }
+        });
+        mStringIdCombo.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
                 validatePage();
             }
         });
@@ -196,7 +206,7 @@ class ExtractStringInputPage extends UserInputWizardPage implements IWizardPage 
 
         Label label;
         label = new Label(group, SWT.NONE);
-        label.setText("Configuration:");
+        label.setText("&Configuration:");
 
         mConfigSelector = new ConfigurationSelector(group);
         GridData gd = new GridData(GridData.GRAB_HORIZONTAL | GridData.GRAB_VERTICAL);
@@ -210,7 +220,7 @@ class ExtractStringInputPage extends UserInputWizardPage implements IWizardPage 
         // line: selection of the output file
 
         label = new Label(group, SWT.NONE);
-        label.setText("Resource file:");
+        label.setText("Resource &file:");
 
         mResFileCombo = new Combo(group, SWT.DROP_DOWN);
         mResFileCombo.select(0);
@@ -269,7 +279,7 @@ class ExtractStringInputPage extends UserInputWizardPage implements IWizardPage 
 
         // Analyze fatal errors.
 
-        String text = mStringIdField.getText().trim();
+        String text = mStringIdCombo.getText().trim();
         if (text == null || text.length() < 1) {
             setErrorMessage("Please provide a resource ID.");
             success = false;
@@ -313,9 +323,12 @@ class ExtractStringInputPage extends UserInputWizardPage implements IWizardPage 
             ref.setTargetFile(resFile);
             sLastResFilePath.put(mProject.getFullPath().toPortableString(), resFile);
 
-            if (mXmlHelper.isResIdDuplicate(mProject, resFile, text)) {
-                String msg = String.format("There's already a string item called '%1$s' in %2$s.",
-                        text, resFile);
+            String idValue = mXmlHelper.valueOfStringId(mProject, resFile, text);
+            if (idValue != null) {
+                String msg = String.format("%1$s already contains a string ID '%2$s' with value '%3$s'.",
+                        resFile,
+                        text,
+                        idValue);
                 if (ref.getMode() == ExtractStringRefactoring.Mode.SELECT_NEW_ID) {
                     setErrorMessage(msg);
                     success = false;
@@ -339,6 +352,23 @@ class ExtractStringInputPage extends UserInputWizardPage implements IWizardPage 
 
         setPageComplete(success);
         return success;
+    }
+
+    private void updateStringValueCombo() {
+        String resFile = mResFileCombo.getText();
+        Map<String, String> ids = mXmlHelper.getResIdsForFile(mProject, resFile);
+
+        // get the current text from the combo, to make sure we don't change it
+        String currText = mStringIdCombo.getText();
+
+        // erase the choices and fill with the given ids
+        mStringIdCombo.removeAll();
+        mStringIdCombo.setItems(ids.keySet().toArray(new String[ids.size()]));
+
+        // set the current text to preserve it in case it changed
+        if (!currText.equals(mStringIdCombo.getText())) {
+            mStringIdCombo.setText(currText);
+        }
     }
 
     public class OnConfigSelectorUpdated implements Runnable, ModifyListener {
@@ -457,6 +487,7 @@ class ExtractStringInputPage extends UserInputWizardPage implements IWizardPage 
             }
 
             // finally validate the whole page
+            updateStringValueCombo();
             validatePage();
         }
 
@@ -509,6 +540,7 @@ class ExtractStringInputPage extends UserInputWizardPage implements IWizardPage 
                 }
             }
 
+            updateStringValueCombo();
             validatePage();
         }
     }

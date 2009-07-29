@@ -16,12 +16,14 @@
 
 package com.android.ide.eclipse.adt.internal.sdk;
 
+import com.android.ddmlib.IDevice;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.project.AndroidClasspathContainerInitializer;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceMonitor;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceMonitor.IProjectListener;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData.LayoutBridge;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
+import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.ISdkLog;
 import com.android.sdklib.SdkConstants;
@@ -392,6 +394,21 @@ public class Sdk implements IProjectListener {
      */
     public AvdManager getAvdManager() {
         return mAvdManager;
+    }
+
+    public static AndroidVersion getDeviceVersion(IDevice device) {
+        try {
+            Map<String, String> props = device.getProperties();
+            String apiLevel = props.get(IDevice.PROP_BUILD_API_LEVEL);
+            if (apiLevel == null) {
+                return null;
+            }
+
+            return new AndroidVersion(Integer.parseInt(apiLevel),
+                    props.get((IDevice.PROP_BUILD_CODENAME)));
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 
     private Sdk(SdkManager manager, AvdManager avdManager) {

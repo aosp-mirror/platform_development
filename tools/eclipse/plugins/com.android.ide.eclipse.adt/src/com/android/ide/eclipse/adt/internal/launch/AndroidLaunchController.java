@@ -35,9 +35,9 @@ import com.android.ide.eclipse.adt.internal.project.ProjectHelper;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.internal.wizards.actions.AvdManagerAction;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
+import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.NullSdkLog;
-import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.avd.AvdManager;
 import com.android.sdklib.internal.avd.AvdManager.AvdInfo;
 
@@ -274,16 +274,16 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
      * @param packageName the Android package name of the app
      * @param debugPackageName the Android package name to debug
      * @param debuggable the debuggable value of the app, or null if not set.
-     * @param requiredApiVersionNumber the api version required by the app, or
-     * {@link AndroidManifestParser#INVALID_MIN_SDK} if none.
+     * @param requiredApiVersionNumber the api version required by the app, or null if none.
      * @param launchAction the action to perform after app sync
      * @param config the launch configuration
      * @param launch the launch object
      */
     public void launch(final IProject project, String mode, IFile apk,
-            String packageName, String debugPackageName, Boolean debuggable, int requiredApiVersionNumber,
-            final IAndroidLaunchAction launchAction, final AndroidLaunchConfiguration config,
-            final AndroidLaunch launch, IProgressMonitor monitor) {
+            String packageName, String debugPackageName, Boolean debuggable,
+            String requiredApiVersionNumber, final IAndroidLaunchAction launchAction,
+            final AndroidLaunchConfiguration config, final AndroidLaunch launch,
+            IProgressMonitor monitor) {
 
         String message = String.format("Performing %1$s", launchAction.getLaunchDescription());
         AdtPlugin.printToConsole(project, message);
@@ -398,17 +398,16 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
                 } else {
                     if (projectTarget.isPlatform()) { // means this can run on any device as long
                                                       // as api level is high enough
-                        String apiString = d.getProperty(SdkManager.PROP_VERSION_SDK);
-                        try {
-                            int apiNumber = Integer.parseInt(apiString);
-                            if (apiNumber >= projectTarget.getApiVersionNumber()) {
-                                // device is compatible with project
-                                compatibleRunningAvds.put(d, null);
-                                continue;
-                            }
-                        } catch (NumberFormatException e) {
-                            // do nothing, we'll consider it a non compatible device below.
+                        AndroidVersion deviceVersion = Sdk.getDeviceVersion(d);
+                        if (deviceVersion.canRun(projectTarget.getVersion())) {
+                            // device is compatible with project
+                            compatibleRunningAvds.put(d, null);
+                            continue;
                         }
+                    } else {
+                        // for non project platform, we can't be sure if a device can
+                        // run an application or not, since we don't query the device
+                        // for the list of optional libraries that it supports.
                     }
                     hasDevice = true;
                 }
@@ -544,9 +543,12 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
         AvdInfo defaultAvd = null;
         for (AvdInfo avd : avds) {
             if (projectTarget.isCompatibleBaseFor(avd.getTarget())) {
+                // at this point we can ignore the code name issue since
+                // IAndroidTarget.isCompatibleBaseFor() will already have filtered the non
+                // compatible AVDs.
                 if (defaultAvd == null ||
-                        avd.getTarget().getApiVersionNumber() <
-                            defaultAvd.getTarget().getApiVersionNumber()) {
+                        avd.getTarget().getVersion().getApiLevel() <
+                            defaultAvd.getTarget().getVersion().getApiLevel()) {
                     defaultAvd = avd;
                 }
             }
@@ -654,46 +656,66 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
         if (device != null) {
             // check the app required API level versus the target device API level
 
-            String deviceApiVersionName = device.getProperty(IDevice.PROP_BUILD_VERSION);
-            String value = device.getProperty(IDevice.PROP_BUILD_VERSION_NUMBER);
-            int deviceApiVersionNumber = AndroidManifestParser.INVALID_MIN_SDK;
+            String deviceVersion = device.getProperty(IDevice.PROP_BUILD_VERSION);
+            String deviceApiLevelString = device.getProperty(IDevice.PROP_BUILD_API_LEVEL);
+            String deviceCodeName = device.getProperty(IDevice.PROP_BUILD_CODENAME);
+
+            int deviceApiLevel = -1;
             try {
-                deviceApiVersionNumber = Integer.parseInt(value);
+                deviceApiLevel = Integer.parseInt(deviceApiLevelString);
             } catch (NumberFormatException e) {
-                // pass, we'll keep the deviceVersionNumber value at 0.
+                // pass, we'll keep the apiLevel value at -1.
             }
 
-            if (launchInfo.getRequiredApiVersionNumber() == AndroidManifestParser.INVALID_MIN_SDK) {
-                // warn the API level requirement is not set.
+            String requiredApiString = launchInfo.getRequiredApiVersionNumber();
+            if (requiredApiString != null) {
+                int requiredApi = -1;
+                try {
+                    requiredApi = Integer.parseInt(requiredApiString);
+                } catch (NumberFormatException e) {
+                    // pass, we'll keep requiredApi value at -1.
+                }
+
+                if (requiredApi == -1) {
+                    // this means the manifest uses a codename for minSdkVersion
+                    // check that the device is using the same codename
+                    if (requiredApiString.equals(deviceCodeName) == false) {
+                        AdtPlugin.printErrorToConsole(launchInfo.getProject(), String.format(
+                            "ERROR: Application requires a device running '%1$s'!",
+                            requiredApiString));
+                        return false;
+                    }
+                } else {
+                    // app requires a specific API level
+                    if (deviceApiLevel == -1) {
+                        AdtPlugin.printToConsole(launchInfo.getProject(),
+                                "WARNING: Unknown device API version!");
+                    } else if (deviceApiLevel < requiredApi) {
+                        String msg = String.format(
+                                "ERROR: Application requires API version %1$d. Device API version is %2$d (Android %3$s).",
+                                requiredApi, deviceApiLevel, deviceVersion);
+                        AdtPlugin.printErrorToConsole(launchInfo.getProject(), msg);
+
+                        // abort the launch
+                        return false;
+                    }
+                }
+            } else {
+                // warn the application API level requirement is not set.
                 AdtPlugin.printErrorToConsole(launchInfo.getProject(),
                         "WARNING: Application does not specify an API level requirement!");
 
                 // and display the target device API level (if known)
-                if (deviceApiVersionName == null ||
-                        deviceApiVersionNumber == AndroidManifestParser.INVALID_MIN_SDK) {
+                if (deviceApiLevel == -1) {
                     AdtPlugin.printErrorToConsole(launchInfo.getProject(),
                             "WARNING: Unknown device API version!");
                 } else {
                     AdtPlugin.printErrorToConsole(launchInfo.getProject(), String.format(
-                            "Device API version is %1$d (Android %2$s)", deviceApiVersionNumber,
-                            deviceApiVersionName));
-                }
-            } else { // app requires a specific API level
-                if (deviceApiVersionName == null ||
-                        deviceApiVersionNumber == AndroidManifestParser.INVALID_MIN_SDK) {
-                    AdtPlugin.printToConsole(launchInfo.getProject(),
-                            "WARNING: Unknown device API version!");
-                } else if (deviceApiVersionNumber < launchInfo.getRequiredApiVersionNumber()) {
-                    String msg = String.format(
-                            "ERROR: Application requires API version %1$d. Device API version is %2$d (Android %3$s).",
-                            launchInfo.getRequiredApiVersionNumber(), deviceApiVersionNumber,
-                            deviceApiVersionName);
-                    AdtPlugin.printErrorToConsole(launchInfo.getProject(), msg);
-
-                    // abort the launch
-                    return false;
+                            "Device API version is %1$d (Android %2$s)", deviceApiLevel,
+                            deviceVersion));
                 }
             }
+
 
             // now checks that the device/app can be debugged (if needed)
             if (device.isEmulator() == false && launchInfo.isDebugMode()) {
@@ -1521,7 +1543,7 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
     /**
      * Get the stderr/stdout outputs of a process and return when the process is done.
      * Both <b>must</b> be read or the process will block on windows.
-     * @param process The process to get the ouput from
+     * @param process The process to get the output from
      */
     private void grabEmulatorOutput(final Process process) {
         // read the lines as they come. if null is returned, it's

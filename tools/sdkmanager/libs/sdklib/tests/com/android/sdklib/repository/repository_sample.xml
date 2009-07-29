@@ -157,6 +157,24 @@
         <sdk:uses-license ref="license2" />
     </sdk:add-on>
 
+   <sdk:platform>
+        <sdk:version>Pastry</sdk:version>
+        <sdk:api-level>5</sdk:api-level>
+        <sdk:codename>Pastry</sdk:codename>
+        <sdk:revision>3</sdk:revision>
+        <sdk:uses-license ref="license1" />
+        <sdk:description>Preview version for Pastry</sdk:description>
+        <sdk:desc-url>http://www.example.com/platform1.html</sdk:desc-url>
+        <!-- The archives node is mandatory and it cannot be empty. -->
+        <sdk:archives>
+            <sdk:archive os="any">
+                <sdk:size>65536</sdk:size>
+                <sdk:checksum type="sha1">2822ae37115ebf13412bbef91339ee0d9454525e</sdk:checksum>
+                <sdk:url>http://www.example.com/files/plat1.zip</sdk:url>
+            </sdk:archive>
+        </sdk:archives>
+    </sdk:platform>
+
     <sdk:tool>
         <sdk:revision>1</sdk:revision>
         <sdk:description>Some optional description</sdk:description>

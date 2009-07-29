@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.sdkuilib.internal.repository;
+package com.android.sdkuilib.internal.tasks;
 
 import com.android.sdklib.internal.repository.ITask;
 import com.android.sdklib.internal.repository.ITaskFactory;
@@ -25,7 +25,7 @@ import org.eclipse.swt.widgets.Shell;
  * An {@link ITaskFactory} that creates a new {@link ProgressTask} dialog
  * for each new task.
  */
-public class ProgressTaskFactory implements ITaskFactory {
+public final class ProgressTaskFactory implements ITaskFactory {
 
     private final Shell mShell;
 

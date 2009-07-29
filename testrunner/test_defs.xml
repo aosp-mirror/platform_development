@@ -88,6 +88,13 @@ See test_defs.xsd for more information.
     class="com.android.unit_tests.activity.ActivityTests"
     coverage_target="framework" />
 
+<test name="vpntests"
+    build_path="frameworks/base/tests/AndroidTests"
+    package="com.android.unit_tests"
+    class="com.android.unit_tests.VpnTest"
+    coverage_target="framework"
+    continuous="true" />
+
 <!--  obsolete?
 <test name="deadlock"
     build_path="frameworks/base/tests/Deadlock"
@@ -298,11 +305,11 @@ See test_defs.xsd for more information.
     coverage_target="Calendar"
     continuous="true" />
 
+<!-- Make continuous = "true" once the bug 1966269 is fixed -->
 <test name="calprov"
     build_path="packages/providers/CalendarProvider/tests"
     package="com.android.providers.calendar.tests"
-    coverage_target="CalendarProvider"
-    continuous="true" />
+    coverage_target="CalendarProvider" />
 
 <test name="camerastress"
     build_path="packages/apps/Camera"
@@ -460,10 +467,10 @@ See test_defs.xsd for more information.
 -->
 
 <!-- host java tests -->
-<test-host name="cts-appinstall"
-    build_path="cts/tests/install-tests"
-    class="com.android.cts.install.InstallTests"
-    jar_name="CtsInstallTests.jar"
+<test-host name="cts-appsecurity"
+    build_path="cts/tests/appsecurity-tests"
+    class="com.android.cts.appsecurity.AppSecurityTests"
+    jar_name="CtsAppSecurityTests.jar"
     cts="true" />
 
 </test-definitions>

@@ -51,7 +51,7 @@ public class AndroidManifestParser {
     private final static String ATTRIBUTE_NAME = "name"; //$NON-NLS-1$
     private final static String ATTRIBUTE_PROCESS = "process"; //$NON-NLS-$
     private final static String ATTRIBUTE_DEBUGGABLE = "debuggable"; //$NON-NLS-$
-    private final static String ATTRIBUTE_MIN_SDK_VERSION = "minSdkVersion"; //$NON-NLS-$
+    public final static String ATTRIBUTE_MIN_SDK_VERSION = "minSdkVersion"; //$NON-NLS-$
     private final static String ATTRIBUTE_TARGET_PACKAGE = "targetPackage"; //$NON-NLS-1$
     private final static String ATTRIBUTE_EXPORTED = "exported"; //$NON-NLS-1$
     private final static String NODE_MANIFEST = "manifest"; //$NON-NLS-1$
@@ -75,8 +75,6 @@ public class AndroidManifestParser {
 
     private final static String ACTION_MAIN = "android.intent.action.MAIN"; //$NON-NLS-1$
     private final static String CATEGORY_LAUNCHER = "android.intent.category.LAUNCHER"; //$NON-NLS-1$
-
-    public final static int INVALID_MIN_SDK = -1;
 
     /**
      * Instrumentation info obtained from manifest
@@ -179,9 +177,8 @@ public class AndroidManifestParser {
         private Set<String> mProcesses = null;
         /** debuggable attribute value. If null, the attribute is not present. */
         private Boolean mDebuggable = null;
-        /** API level requirement. if {@link AndroidManifestParser#INVALID_MIN_SDK}
-         * the attribute was not present. */
-        private int mApiLevelRequirement = INVALID_MIN_SDK;
+        /** API level requirement. if null the attribute was not present. */
+        private String mApiLevelRequirement = null;
         /** List of all instrumentations declared by the manifest */
         private final ArrayList<Instrumentation> mInstrumentations =
             new ArrayList<Instrumentation>();
@@ -258,10 +255,9 @@ public class AndroidManifestParser {
         }
 
         /**
-         * Returns the <code>minSdkVersion</code> attribute, or
-         * {@link AndroidManifestParser#INVALID_MIN_SDK} if it's not set.
+         * Returns the <code>minSdkVersion</code> attribute, or null if it's not set.
          */
-        int getApiLevelRequirement() {
+        String getApiLevelRequirement() {
             return mApiLevelRequirement;
         }
 
@@ -331,16 +327,8 @@ public class AndroidManifestParser {
 
                                 mValidLevel++;
                             } else if (NODE_USES_SDK.equals(localName)) {
-                                value = getAttributeValue(attributes, ATTRIBUTE_MIN_SDK_VERSION,
-                                        true /* hasNamespace */);
-
-                                if (value != null) {
-                                    try {
-                                        mApiLevelRequirement = Integer.parseInt(value);
-                                    } catch (NumberFormatException e) {
-                                        handleError(e, -1 /* lineNumber */);
-                                    }
-                                }
+                                mApiLevelRequirement = getAttributeValue(attributes,
+                                        ATTRIBUTE_MIN_SDK_VERSION, true /* hasNamespace */);
                             } else if (NODE_INSTRUMENTATION.equals(localName)) {
                                 processInstrumentationNode(attributes);
                             }
@@ -636,7 +624,7 @@ public class AndroidManifestParser {
     private final Activity mLauncherActivity;
     private final String[] mProcesses;
     private final Boolean mDebuggable;
-    private final int mApiLevelRequirement;
+    private final String mApiLevelRequirement;
     private final Instrumentation[] mInstrumentations;
     private final String[] mLibraries;
 
@@ -904,10 +892,9 @@ public class AndroidManifestParser {
     }
 
     /**
-     * Returns the <code>minSdkVersion</code> attribute, or {@link #INVALID_MIN_SDK}
-     * if it's not set.
+     * Returns the <code>minSdkVersion</code> attribute, or null if it's not set.
      */
-    public int getApiLevelRequirement() {
+    public String getApiLevelRequirement() {
         return mApiLevelRequirement;
     }
 
@@ -939,13 +926,13 @@ public class AndroidManifestParser {
      * @param launcherActivity the launcher activity parser from the manifest.
      * @param processes the list of custom processes declared in the manifest.
      * @param debuggable the debuggable attribute, or null if not set.
-     * @param apiLevelRequirement the minSdkVersion attribute value or 0 if not set.
+     * @param apiLevelRequirement the minSdkVersion attribute value or null if not set.
      * @param instrumentations the list of instrumentations parsed from the manifest.
      * @param libraries the list of libraries in use parsed from the manifest.
      */
     private AndroidManifestParser(String javaPackage, Activity[] activities,
             Activity launcherActivity, String[] processes, Boolean debuggable,
-            int apiLevelRequirement, Instrumentation[] instrumentations, String[] libraries) {
+            String apiLevelRequirement, Instrumentation[] instrumentations, String[] libraries) {
         mJavaPackage = javaPackage;
         mActivities = activities;
         mLauncherActivity = launcherActivity;

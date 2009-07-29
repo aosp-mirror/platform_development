@@ -42,6 +42,7 @@ import java.util.regex.Pattern;
 public final class SdkManager {
 
     public final static String PROP_VERSION_SDK = "ro.build.version.sdk";
+    public final static String PROP_VERSION_CODENAME = "ro.build.version.codename";
     public final static String PROP_VERSION_RELEASE = "ro.build.version.release";
     public final static String PROP_VERSION_REVISION = "ro.build.version.incremental";
 
@@ -263,23 +264,28 @@ public final class SdkManager {
 
             if (map != null) {
                 // look for some specific values in the map.
+
+                // version string
                 String apiName = map.get(PROP_VERSION_RELEASE);
                 if (apiName == null) {
                     if (log != null) {
                         log.error(null,
                                 "Ignoring platform '%1$s': %2$s is missing from '%3$s'",
-                                platform.getName(), PROP_VERSION_RELEASE, SdkConstants.FN_BUILD_PROP);
+                                platform.getName(), PROP_VERSION_RELEASE,
+                                SdkConstants.FN_BUILD_PROP);
                     }
                     return null;
                 }
 
+                // api level
                 int apiNumber;
                 String stringValue = map.get(PROP_VERSION_SDK);
                 if (stringValue == null) {
                     if (log != null) {
                         log.error(null,
                                 "Ignoring platform '%1$s': %2$s is missing from '%3$s'",
-                                platform.getName(), PROP_VERSION_SDK, SdkConstants.FN_BUILD_PROP);
+                                platform.getName(), PROP_VERSION_SDK,
+                                SdkConstants.FN_BUILD_PROP);
                     }
                     return null;
                 } else {
@@ -291,10 +297,18 @@ public final class SdkManager {
                         if (log != null) {
                             log.error(null,
                                     "Ignoring platform '%1$s': %2$s is not a valid number in %3$s.",
-                                    platform.getName(), PROP_VERSION_SDK, SdkConstants.FN_BUILD_PROP);
+                                    platform.getName(), PROP_VERSION_SDK,
+                                    SdkConstants.FN_BUILD_PROP);
                         }
                         return null;
                     }
+                }
+
+                // codename (optional)
+                String apiCodename = map.get(PROP_VERSION_CODENAME);
+                if (apiCodename != null && apiCodename.equals("REL")) {
+                    apiCodename = null; // REL means it's a release version and therefore the
+                                        // codename is irrelevant at this point.
                 }
 
                 int revision = 1;
@@ -303,7 +317,8 @@ public final class SdkManager {
                     if (log != null) {
                         log.error(null,
                                 "Ignoring platform '%1$s': %2$s is missing from '%3$s'",
-                                platform.getName(), PROP_VERSION_REVISION, SdkConstants.FN_BUILD_PROP);
+                                platform.getName(), PROP_VERSION_REVISION,
+                                SdkConstants.FN_BUILD_PROP);
                     }
                     return null;
                 } else {
@@ -346,6 +361,7 @@ public final class SdkManager {
                         platform.getAbsolutePath(),
                         map,
                         apiNumber,
+                        apiCodename,
                         apiName,
                         revision);
 
@@ -435,8 +451,7 @@ public final class SdkManager {
                     try {
                         int apiValue = Integer.parseInt(api);
                         for (IAndroidTarget target : targetList) {
-                            if (target.isPlatform() &&
-                                    target.getApiVersionNumber() == apiValue) {
+                            if (target.isPlatform() && target.getVersion().equals(apiValue)) {
                                 baseTarget = (PlatformTarget)target;
                                 break;
                             }

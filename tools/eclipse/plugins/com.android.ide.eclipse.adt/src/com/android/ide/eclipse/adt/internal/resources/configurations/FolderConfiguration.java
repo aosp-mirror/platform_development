@@ -366,7 +366,7 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
             }
         }
 
-        return result.toString();
+        return result == null ? null : result.toString();
     }
 
     public int compareTo(FolderConfiguration folderConfig) {

@@ -15,7 +15,7 @@
 -->
 <resources xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
-    <string name="appTitle">"Fallback"</string>
-    <string name="title">"不支持的操作"</string>
-    <string name="error">"当前不支持该操作。"</string>
+    <string name="appTitle">"后备"</string>
+    <string name="title">"不支持此操作"</string>
+    <string name="error">"目前不支持该操作。"</string>
 </resources>

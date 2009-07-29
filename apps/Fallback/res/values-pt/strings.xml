@@ -17,5 +17,5 @@
     xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <string name="appTitle">"Fallback"</string>
     <string name="title">"Ação não suportada"</string>
-    <string name="error">"Esta ação não é suportada no momento."</string>
+    <string name="error">"Essa ação não é suportada no momento."</string>
 </resources>

@@ -27,6 +27,7 @@ import com.android.ddmuilib.TableHelper;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.ddms.DdmsPlugin;
+import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.internal.avd.AvdManager.AvdInfo;
 import com.android.sdkuilib.internal.widgets.AvdSelector;
@@ -131,26 +132,19 @@ public class DeviceChooserDialog extends Dialog implements IDeviceChangeListener
                     case 2:
                         // check for compatibility.
                         if (device.isEmulator() == false) { // physical device
-                            // get the api level of the device
-                            try {
-                                String apiValue = device.getProperty(
-                                        IDevice.PROP_BUILD_VERSION_NUMBER);
-                                if (apiValue != null) {
-                                    int api = Integer.parseInt(apiValue);
-                                    if (api >= mProjectTarget.getApiVersionNumber()) {
-                                        // if the project is compiling against an add-on, the optional
-                                        // API may be missing from the device.
-                                        return mProjectTarget.isPlatform() ?
-                                                mMatchImage : mWarningImage;
-                                    } else {
-                                        return mNoMatchImage;
-                                    }
-                                } else {
-                                    return mWarningImage;
+                            // get the version of the device
+                            AndroidVersion deviceVersion = Sdk.getDeviceVersion(device);
+                            if (deviceVersion == null) {
+                                return mWarningImage;
+                            } else {
+                                if (deviceVersion.canRun(mProjectTarget.getVersion()) == false) {
+                                    return mNoMatchImage;
                                 }
-                            } catch (NumberFormatException e) {
-                                // lets consider the device non compatible
-                                return mNoMatchImage;
+
+                                // if the project is compiling against an add-on,
+                                // the optional API may be missing from the device.
+                                return mProjectTarget.isPlatform() ?
+                                        mMatchImage : mWarningImage;
                             }
                         } else {
                             // get the AvdInfo
@@ -411,6 +405,7 @@ public class DeviceChooserDialog extends Dialog implements IDeviceChangeListener
         offsetComp.setLayout(layout);
 
         mPreferredAvdSelector = new AvdSelector(offsetComp,
+                mSdk.getSdkLocation(),
                 mSdk.getAvdManager(),
                 new NonRunningAvdFilter(),
                 DisplayMode.SIMPLE_SELECTION);
