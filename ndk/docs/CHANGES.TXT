@@ -3,13 +3,16 @@ Android NDK ChangeLog:
 -------------------------------------------------------------------------------
 current version
 
+IMPORTANT BUG FIXES:
+
 - Fix build/host-setup.sh to:
   * execute as a Bourne shell script
   * remove unused host gcc dependency
   * improve Windows host auto-detection
   * add GNU Make version check
+  * add Nawk/Gawk check
   * ensure that the script is run from $NDKROOT as build/host-setup.sh
-  * add --help, --verbose and --no-make-check options
+  * add --help, --verbose, --no-awk-check and --no-make-check options
 
 - Properly add sysroot library search path at build time. This makes a line
   in Android.mk like:
@@ -19,6 +22,46 @@ current version
   Actually work correctly, instead of having the linker complaining that it
   could not find the corresponding libz.so library. Also clear LOCAL_LDLIBS
   in $(CLEAR_VARS) script.
+
+
+IMPORTANT CHANGES
+
+- The 'sources' directory is gone. The NDK build system now looks for
+  $(APP_PROJECT_PATH)/jni/Android.mk by default. You can override this with
+  the new APP_BUILD_SCRIPT variable in Application.mk
+
+  For example, the 'hello-jni' sample uses the following files:
+
+    apps/hello-jni/project/jni/Android.mk
+    apps/hello-jni/project/jni/hello-jni.c
+
+  The 'apps/<name>' directory is still needed in this release though.
+
+- Change LOCAL_CFLAGS / LOCAL_CPPFLAGS to work as in the full Android build
+  system. This means that:
+
+    - LOCAL_CFLAGS   is now used for *both* C and C++ sources  (was only for C)
+    - LOCAL_CPPFLAGS is now used for C++ sources only (was for both C and C++)
+    - LOCAL_CXXFLAGS is used like LOCAL_CPPFLAGS but is considered obsolete.
+      (will disappear in next release)
+
+  Also fixed APP_CPPFLAGS / APP_CFLAGS / APP_CXXFLAGS correspondingly.
+
+- Rename build/platforms/android-1.5 to build/platforms/android-3 to match
+  the Android API level instead of the marketing speak.
+
+  Also add a new build/platforms/android-4, and make the build system select
+  which platform to use based on the content of the project file named
+  $(APP_PROJECT_PATH)/default.properties.
+
+- Add OpenGL ES 1.x headers and libraries to the android-4 stable APIs.
+  (NOTE: they are *not* available for android-3)
+
+  Also provide a small port of the "San Angeles Observation" demo to show
+  how to make a simple Android application that uses them.
+
+
+OTHER FIXES & CHANGES
 
 - Generate thumb binaries by default.
 
@@ -32,24 +75,6 @@ current version
 - Add support for LOCAL_C_INCLUDES in Android.mk
 
 - Fix compilation of assembler files (e.g. foo.S)
-
-- Fix LOCAL_CFLAGS / LOCAL_CPPFLAGS to work as in the full Android build
-  system. This means that:
-
-    - LOCAL_CFLAGS   is used for both C and C++ sources
-    - LOCAL_CPPFLAGS is used for C++ sources only
-    - LOCAL_CXXFLAGS is used like LOCAL_CPPFLAGS but is considered obsolete.
-
-  Also fixed APP_CPPFLAGS / APP_CFLAGS / APP_CXXFLAGS.
-
-- Add build/platforms/android-4, and make the build system select which
-  platform to use based on the content of the project file named
-  $(APP_PROJECT_PATH)/default.properties.
-
-- Add OpenGL ES 1.x headers and libraries to the android-1.4 stable APIs.
-
-  Also provide a small port of the "San Angeles Observation" demo to show
-  how to make a simple Android application that uses them.
 
 -------------------------------------------------------------------------------
 android-ndk-1.5_r1 released.

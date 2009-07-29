@@ -51,25 +51,33 @@ source code easier for application developers.
 Simple example:
 ---------------
 
-Before describing the syntax in details, let's consider a simple
-"hello world" example, i.e. the following files:
+Before describing the syntax in details, let's consider the simple
+"hello JNI" example, i.e. the files under:
 
-    sources/helloworld/helloworld.c
-    sources/helloworld/Android.mk
+    apps/hello-jni/project
 
-Where 'helloworld.c' is the source of a simple JNI shared library
-that implements a native method that returns the "hello world"
-string.
+Here, we can see:
 
-The corresponding Android.mk file will look like this:
+  - The 'src' directory containing the Java sources for the
+    sample Android project.
+
+  - The 'jni' directory containing the native source for
+    the sample, i.e. 'jni/hello-jni.c'
+
+    This source file implements a simple shared library that
+    implements a native method that returns a string to the
+    VM application.
+
+  - The 'jni/Android.mk' file that describes the shared library
+    to the NDK build system. Its content is:
 
    ---------- cut here ------------------
    LOCAL_PATH := $(call my-dir)
 
    include $(CLEAR_VARS)
 
-   LOCAL_MODULE    := helloworld
-   LOCAL_SRC_FILES := helloworld.c
+   LOCAL_MODULE    := hello-jni
+   LOCAL_SRC_FILES := hello-jni.c
 
    include $(BUILD_SHARED_LIBRARY)
    ---------- cut here ------------------
@@ -93,7 +101,7 @@ with the exception of LOCAL_PATH. This is needed because all build
 control files are parsed in a single GNU Make execution context where
 all variables are global.
 
-  LOCAL_MODULE := helloworld
+  LOCAL_MODULE := hello-jni
 
 The LOCAL_MODULE variable must be defined to identify each module you
 describe in your Android.mk. The name must be *unique* and not contain
@@ -107,10 +115,10 @@ add another 'lib' prefix and will generate libfoo.so as well.
 This is to support Android.mk files that originate from the
 Android platform sources, would you need to use these.
 
-  LOCAL_SRC_FILES := helloworld.c
+  LOCAL_SRC_FILES := hello-jni.c
 
 The LOCAL_SRC_FILES variables must contain a list of C and/or C++ source
-files that will be built and assemble into a module. Note that you should
+files that will be built and assembled into a module. Note that you should
 not list header and included files here, because the build system will
 compute dependencies automatically for you; just list the source files
 that will be passed directly to a compiler, and you should be good.
@@ -128,7 +136,7 @@ information you defined in LOCAL_XXX variables since the latest
 'include $(CLEAR_VARS)' and determine what to build, and how to do it
 exactly. There is also BUILD_STATIC_LIBRARY to generate a static library.
 
-There are more complex examples under sources/samples, with commented
+There are more complex examples under apps/, with commented
 Android.mk files that you can look at.
 
 Reference:
@@ -332,7 +340,7 @@ LOCAL_C_INCLUDES
         LOCAL_C_INCLUDES := $(LOCAL_PATH)/../foo
 
     These are placed before any corresponding inclusion flag in
-    LOCAL_CFLAGS / LOCAL_CXXFLAGS / LOCAL_CPPFLAGS
+    LOCAL_CFLAGS / LOCAL_CPPFLAGS
 
 
 LOCAL_CFLAGS

@@ -26,7 +26,7 @@ IMPORTANT:
     This is due to subtle toolchain and ABI related changed that make
     it incompatible with 1.0 and 1.1 system images.
 
-The NDK also requires GNU Make 3.81 or later being available on your development
+The NDK requires GNU Make 3.81 or later being available on your development
 system. Earlier versions of GNU Make might work but have not been tested.
 
 You can check this by running 'make -v' from the command-line. The output
@@ -39,6 +39,10 @@ should look like:
 On certain systems, GNU Make might be available through a different command like
 'gmake' or 'gnumake'. For these systems, replace 'make' by the appropriate command
 when invoking the NDK build system as described in the documentation.
+
+The NDK also requires a Nawk or GNU Awk executable being available on your
+development system. Note that the original 'awk' program doesn't implement
+the 'match' and 'substr' functions used by the NDK build system.
 
 On Windows, you will need to install a recent release of Cygwin to use the NDK.
 See http://www.cygwin.com for instructions.
@@ -53,5 +57,3 @@ command from the root folder:
   build/host-setup.sh
 
 This will test your setup and make sure the NDK can work properly.
-
-

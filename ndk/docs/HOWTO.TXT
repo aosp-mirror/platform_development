@@ -23,28 +23,35 @@ Use GNU Make's "-B" option, as in:
    make APP=<yourapp> -B
 
 
-How to store your native sources in under your project's path:
---------------------------------------------------------------
+How to store your native sources in a location other than $PROJECT/jni:
+-----------------------------------------------------------------------
 
-It is often more convenient to store your native sources at a
-different location than $NDK_ROOT/sources. For example, you would
-typically place them under the same directory than your other project
-files, to keep everything under source control, etc...
+First, you can simply tell your $PROJECT/jni/Android.mk to include
+another Android.mk that are located in different places.
 
-The NDK build system needs to access the sources from $NDK_ROOT/sources
-and your Application.mk from $NDK_ROOT/apps/<name>. This is essentially
-to keep its implementation sane and simple, and to ensure that certain
-features, like automatic dependency management, work reliably.
+Alternatively, you can define APP_BUILD_SCRIPT in your Application.mk
+to point to an alternative Android.mk file, getting rid of the
+$PROJECT/jni directory hierarchy entirely if you need to.
 
-You can however use simple symlinks to redirect paths to your project's
-storage location. For example:
 
-   $NDK_ROOT/sources/<foo>  ---->  $PROJECT_PATH/jni/<foo>
-   $NDK_ROOT/apps/<foo>     ---->  $PROJECT_PATH/jni/<foo>
+How to store your Application.mk in a location other than $NDK/app/<name>:
+--------------------------------------------------------------------------
 
-Where $PROJECT_PATH/jni/<foo> contains both an Android.mk and an
-Application.mk. Note that things like $(call my-dir) will always evaluate
-to the NDK paths (i.e. $NDK_ROOT/sources/<foo>) at build time.
+At the moment, the application descriptor files must be accessible from
+$NDK/app/<name>. You can however create a symlink to a different directory.
+
+For example, imagine that you wrote:
+
+  $PROJECT/jni/Application.mk
+
+You can create a symlink like with a command like:
+
+  ln -s $PROJECT/jni  $NDK/apps/<name>
+
+This will make $NDK/apps/<name>/Application.mk point directly to
+$PROJECT/jni/Application.mk
+
+Note that generated files will still go under $NDK/out/apps/<name> though.
 
 Windows users: The NDK is only supported on Cygwin, which implements
 symbolic links through the "ln -s" command, as in:
@@ -92,7 +99,5 @@ Or even better:
 
 Which uses a path relative to $(LOCAL_PATH), in the case where you would
 need to move 'foo' and 'bar' to a deeper level in the 'sources' hierarchy.
-
-
 
 
