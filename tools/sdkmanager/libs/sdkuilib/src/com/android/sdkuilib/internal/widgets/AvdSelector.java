@@ -915,7 +915,7 @@ public final class AvdSelector {
                 new ITask() {
                     public void run(ITaskMonitor monitor) {
                         try {
-                            monitor.setDescription("Starting emualator for AVD '%1$s'", avdName);
+                            monitor.setDescription("Starting emulator for AVD '%1$s'", avdName);
                             int n = 10;
                             monitor.setProgressMax(n);
                             Process process = Runtime.getRuntime().exec(command);
