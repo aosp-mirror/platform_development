@@ -1,0 +1,105 @@
+;
+; WinUsb installation File.
+;
+[Version]
+Signature           = "$Windows NT$"
+Class               = AndroidUsbDeviceClass
+ClassGuid           = {3F966BD9-FA04-4ec5-991C-D326973B5128}
+Provider            = %ProviderName%
+DriverVer           = 07/20/2009,2.0.0010.00001
+CatalogFile.NTx86   = androidwinusb86.cat
+CatalogFile.NTamd64 = androidwinusba64.cat
+
+;
+; This section is required even though we report our driver
+; as a standard USB driver. If this section is removed the
+; installer will report an error "Required section not found
+; in INF file.
+;
+[ClassInstall32]
+Addreg = AndroidWinUsbClassReg
+
+[AndroidWinUsbClassReg]
+HKR,,,0,%ClassName%
+HKR,,Icon,,-1
+
+[Manufacturer]
+%ProviderName% = Google,NTx86,NTamd64
+
+[Google.NTx86]
+; HTC Dream
+%USB\HCT_Dream.DeviceDesc% = USB_Install, USB\VID_0BB4&PID_0C01
+%USB\HCT_Dream_Composite.DeviceDesc% = USB_Install, USB\VID_0BB4&PID_0C02&MI_01
+%USB\HCT_BootLoader.DeviceDesc% = USB_Install, USB\VID_0BB4&PID_0FFF
+; HCT Magic
+%USB\HCT_Magic_Composite.DeviceDesc% = USB_Install, USB\VID_0BB4&PID_0C03&MI_01
+
+[Google.NTamd64]
+; HTC Dream
+%USB\HCT_Dream.DeviceDesc% = USB_Install, USB\VID_0BB4&PID_0C01
+%USB\HCT_Dream_Composite.DeviceDesc% = USB_Install, USB\VID_0BB4&PID_0C02&MI_01
+%USB\HCT_BootLoader.DeviceDesc% = USB_Install, USB\VID_0BB4&PID_0FFF
+; HCT Magic
+%USB\HCT_Magic_Composite.DeviceDesc% = USB_Install, USB\VID_0BB4&PID_0C03&MI_01
+
+[USB_Install]
+Include=winusb.inf
+Needs=WINUSB.NT
+
+[USB_Install.Services]
+Include=winusb.inf
+AddService=WinUSB,0x00000002,WinUSB_ServiceInstall
+
+[WinUSB_ServiceInstall]
+DisplayName     = %WinUSB_SvcDesc%
+ServiceType     = 1
+StartType       = 3
+ErrorControl    = 1
+ServiceBinary   = %12%\WinUSB.sys
+
+[USB_Install.Wdf]
+KmdfService=WINUSB, WinUSB_Install
+[WinUSB_Install]
+KmdfLibraryVersion=1.7
+
+[USB_Install.HW]
+AddReg=Dev_AddReg
+
+[Dev_AddReg]
+HKR,,DeviceInterfaceGUIDs,0x10000,"{F72FE0D4-CBCB-407d-8814-9ED673D0DD6B}"
+
+[USB_Install.CoInstallers]
+AddReg=CoInstallers_AddReg
+CopyFiles=CoInstallers_CopyFiles
+
+[CoInstallers_AddReg]
+HKR,,CoInstallers32,0x00010000,"WdfCoInstaller01007.dll,WdfCoInstaller","WinUSBCoInstaller.dll"
+
+[CoInstallers_CopyFiles]
+WinUSBCoInstaller.dll
+WdfCoInstaller01007.dll
+
+[DestinationDirs]
+CoInstallers_CopyFiles=11
+
+[SourceDisksNames]
+1 = %DISK_NAME%,,,\i386
+2 = %DISK_NAME%,,,\amd64
+
+[SourceDisksFiles.x86]
+WinUSBCoInstaller.dll=1
+WdfCoInstaller01007.dll=1
+
+[SourceDisksFiles.amd64]
+WinUSBCoInstaller.dll=2
+WdfCoInstaller01007.dll=2
+
+[Strings]
+ProviderName="Google, Inc."
+USB\HCT_Dream.DeviceDesc="Android ADB Interface"
+USB\HCT_Dream_Composite.DeviceDesc="Android Composite ADB Interface"
+USB\HCT_BootLoader.DeviceDesc="Android Bootloader Interface"
+USB\HCT_Magic_Composite.DeviceDesc="Android Composite ADB Interface"
+WinUSB_SvcDesc="Android USB Driver"
+DISK_NAME="Android install disk"
+ClassName="Android Phone"
