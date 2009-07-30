@@ -46,5 +46,10 @@ current version
   platform to use based on the content of the project file named
   $(APP_PROJECT_PATH)/default.properties.
 
+- Add OpenGL ES 1.x headers and libraries to the android-1.4 stable APIs.
+
+  Also provide a small port of the "San Angeles Observation" demo to show
+  how to make a simple Android application that uses them.
+
 -------------------------------------------------------------------------------
 android-ndk-1.5_r1 released.

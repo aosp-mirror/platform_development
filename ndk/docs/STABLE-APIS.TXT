@@ -144,3 +144,10 @@ are *not* available. EGL is used to perform surface creation and flipping
 VM application instead, for example with a GLSurfaceView, as described here:
 
 http://android-developers.blogspot.com/2009/04/introducing-glsurfaceview.html
+
+The "san-angeles" sample application shows how you can do that, while
+rendering each frame in native code. This is a small Android port of the
+excellent "San Angeles Observation" demo program. For more information about
+it, see:
+
+    http://jet.ro/visuals/san-angeles-observation/
