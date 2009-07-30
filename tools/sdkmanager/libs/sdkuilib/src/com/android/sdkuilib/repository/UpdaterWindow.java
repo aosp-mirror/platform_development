@@ -32,6 +32,17 @@ public class UpdaterWindow {
     private UpdaterWindowImpl mWindow;
 
     /**
+     * Interface for listeners on SDK modifications (ie new installed compoments, or deleted
+     * components)
+     */
+    public interface ISdkListener {
+        /**
+         * Sent when the content of the SDK changed
+         */
+        void onSdkChange();
+    }
+
+    /**
      * Creates a new window. Caller must call open(), which will block.
      * @param sdkLog
      * @param osSdkRoot The OS path to the SDK root.
@@ -56,6 +67,21 @@ public class UpdaterWindow {
      */
     public void registerPage(String title, Class<? extends Composite> pageClass) {
         mWindow.registerExtraPage(title, pageClass);
+    }
+
+    /**
+     * Adds a new listener to be notified when a change is made to the content of the SDK.
+     */
+    public void addListeners(ISdkListener listener) {
+        mWindow.addListeners(listener);
+    }
+
+    /**
+     * Removes a new listener to be notified anymore when a change is made to the content of
+     * the SDK.
+     */
+    public void removeListener(ISdkListener listener) {
+        mWindow.removeListener(listener);
     }
 
     /**

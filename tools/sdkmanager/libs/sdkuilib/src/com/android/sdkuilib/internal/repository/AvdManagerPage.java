@@ -16,9 +16,9 @@
 
 package com.android.sdkuilib.internal.repository;
 
-import com.android.sdkuilib.internal.repository.UpdaterData.ISdkListener;
 import com.android.sdkuilib.internal.widgets.AvdSelector;
 import com.android.sdkuilib.internal.widgets.AvdSelector.DisplayMode;
+import com.android.sdkuilib.repository.UpdaterWindow.ISdkListener;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridLayout;

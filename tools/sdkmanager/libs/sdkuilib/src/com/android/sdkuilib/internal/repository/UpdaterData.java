@@ -32,6 +32,7 @@ import com.android.sdklib.internal.repository.RepoSources;
 import com.android.sdklib.internal.repository.ToolPackage;
 import com.android.sdklib.internal.repository.Package.UpdateInfo;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
+import com.android.sdkuilib.repository.UpdaterWindow.ISdkListener;
 
 import org.eclipse.swt.widgets.Shell;
 
@@ -66,10 +67,6 @@ class UpdaterData {
     private final ArrayList<ISdkListener> mListeners = new ArrayList<ISdkListener>();
 
     private Shell mWindowShell;
-
-    public interface ISdkListener {
-        void onSdkChange();
-    }
 
     public UpdaterData(String osSdkRoot, ISdkLog sdkLog) {
         mOsSdkRoot = osSdkRoot;
