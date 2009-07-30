@@ -104,10 +104,19 @@ APP_CPPFLAGS
           You can now use APP_CFLAGS for flags that shall apply to C and
           C++ souces.
 
+APP_BUILD_SCRIPT
+    By default, the NDK build system will look for a file named Android.mk
+    under $(APP_PROJECT_PATH)/jni, i.e. for the file:
+
+       $(APP_PROJECT_PATH)/jni/Android.mk
+
+    If you want to override this behaviour, you can define APP_BUILD_SCRIPT
+    to point to an alternate build script. A non-absolute path will always
+    be interpreated as relative to the NDK's top-level directory.
+
 A trivial Application.mk file would be:
 
 -------------- cut here -------------------------
 APP_MODULES      := <list of modules>
 APP_PROJECT_PATH := <path to project>
 -------------- cut here -------------------------
-

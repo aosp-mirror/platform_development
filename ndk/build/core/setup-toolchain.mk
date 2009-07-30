@@ -45,5 +45,5 @@ NDK_APP_DEST := $(NDK_APP_PROJECT_PATH)/libs/$(TARGET_ABI_SUBDIR)
 # free the dictionary of LOCAL_MODULE definitions
 $(call modules-clear)
 
-# now parse all Android.mk build files
-include sources/*/Android.mk
+# now parse the Android.mk for the application
+include $(NDK_APP_BUILD_SCRIPT)

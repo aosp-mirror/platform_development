@@ -5,6 +5,8 @@ Welcome, this NDK is designed to allow Android application developers
 to include native code in their Android application packages, compiled
 as JNI shared libraries.
 
+See docs/CHANGES.TXT for a list of changes since the previous release.
+
 A high-level overview of the NDK's features and limitations can be found
 in docs/OVERVIEW.TXT. Please read this document as it contains crucial
 information for correct usage.

@@ -76,6 +76,30 @@ ifdef _bad_platform
     $(call __ndk_error,Aborting...)
 endif
 
+# If APP_BUILD_SCRIPT is defined, check that the file exists.
+# If undefined, look in $(APP_PROJECT_PATH)/jni/Android.mk
+#
+APP_BUILD_SCRIPT := $(strip $(APP_BUILD_SCRIPT))
+ifdef APP_BUILD_SCRIPT
+    _build_script := $(strip $(wildcard $(APP_BUILD_SCRIPT)))
+    ifndef _build_script
+        $(call __ndk_info,Your APP_BUILD_SCRIPT points to an unknown file: $(APP_BUILD_SCRIPT))
+        $(call __ndk_error,Aborting...)
+    endif
+    APP_BUILD_SCRIPT := $(_build_script)
+    $(call ndk_log,  Using build script $(APP_BUILD_SCRIPT))
+else
+    _build_script := $(strip $(wildcard $(APP_PROJECT_PATH)/jni/Android.mk))
+    ifndef _build_script
+        $(call __ndk_info,There is no Android.mk under $(APP_PROJECT_PATH)/jni)
+        $(call __ndk_info,If this is intentional, please define APP_BUILD_SCRIPT to point)
+        $(call __ndk_info,to a valid NDK build script.)
+        $(call __ndk_error,Aborting...)
+    endif
+    APP_BUILD_SCRIPT := $(_build_script)
+    $(call ndk_log,  Defaulted to APP_BUILD_SCRIPT=$(APP_BUILD_SCRIPT))
+endif
+
 $(if $(call get,$(_map),defined),\
   $(call __ndk_info,Weird, the application $(_name) is already defined by $(call get,$(_map),defined))\
   $(call __ndk_error,Aborting)\

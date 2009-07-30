@@ -108,7 +108,7 @@ $(foreach tc,$(NDK_ALL_TOOLCHAINS),\
 
 NDK_PLATFORMS_ROOT := $(BUILD_SYSTEM)/../platforms
 NDK_ALL_PLATFORMS := $(strip $(notdir $(wildcard $(NDK_PLATFORMS_ROOT)/android-*)))
-$(info NDK_ALL_PLATFORMS=$(NDK_ALL_PLATFORMS))
+$(call ndk_log,Found supported platforms: $(NDK_ALL_PLATFORMS))
 
 $(foreach _platform,$(NDK_ALL_PLATFORMS),\
   $(eval include $(BUILD_SYSTEM)/add-platform.mk)\
