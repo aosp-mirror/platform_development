@@ -40,8 +40,7 @@ USER_C_FLAGS=$(USER_C_FLAGS) /wd4100 /wd4002 /wd4509 /wd4390 /TP
 
 INCLUDES=$(INCLUDES); \
     	 $(IFSKIT_INC_PATH); \
-    	 ..\common; \
-    	 ..\api;
+    	 ..\..\api;
 
 TARGETLIBS=$(DDK_LIB_PATH)\usbd.lib
 
