@@ -115,12 +115,6 @@ function package() {
     [[ -d "$PLATFORM_TOOLS" ]] || die "Missing folder $PLATFORM_TOOLS."
 
 
-    # USB Driver for ADB
-    mkdir -pv $TEMP_SDK_DIR/usb_driver/x86
-    cp -rv development/host/windows/prebuilt/usb/driver/* $TEMP_SDK_DIR/usb_driver/x86/
-    mkdir -pv $TEMP_SDK_DIR/usb_driver/x86_64
-    cp -rv development/host/windows/prebuilt/usb/driver_amd_64/* $TEMP_SDK_DIR/usb_driver/x86_64/
-
     # Remove obsolete stuff from tools & platform
     TOOLS="$TEMP_SDK_DIR/tools"
     LIB="$TEMP_SDK_DIR/tools/lib"
