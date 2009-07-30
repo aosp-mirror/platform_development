@@ -57,8 +57,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,0,0,1
- PRODUCTVERSION 1,0,0,1
+ FILEVERSION 2,0,0,0
+ PRODUCTVERSION 2,0,0,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -74,13 +74,13 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "Google, inc"
-            VALUE "FileDescription", "TODO: <File description>"
-            VALUE "FileVersion", "1.0.0.1"
+            VALUE "FileDescription", "Android ADB API"
+            VALUE "FileVersion", "2.0.0.0"
             VALUE "LegalCopyright", "Copyright (C) 2006 The Android Open Source Project"
             VALUE "InternalName", "AdbWinApi.dll"
             VALUE "OriginalFilename", "AdbWinApi.dll"
-            VALUE "ProductName", "TODO: <Product name>"
-            VALUE "ProductVersion", "1.0.0.1"
+            VALUE "ProductName", "Android SDK"
+            VALUE "ProductVersion", "2.0.0.0"
             VALUE "OLESelfRegister", ""
         END
     END
