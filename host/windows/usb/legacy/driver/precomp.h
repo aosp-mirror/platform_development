@@ -34,8 +34,13 @@ extern "C" {
 #pragma warning(default:4201)
 #pragma warning(default:4214)
 
-#include "adb_api_extra.h"
-#include "android_usb_common_defines.h"
+// Just to make adb_api.h compile. Since we will not reference any
+// of the API routines in the driver, only structures and constants,
+// we're fine with that.
+typedef void* LPOVERLAPPED;
+
+#include "adb_api.h"
+#include "adb_api_legacy.h"
 #include "android_usb_pool_tags.h"
 #include "android_usb_driver_defines.h"
 #include "android_usb_new_delete.h"
