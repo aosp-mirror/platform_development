@@ -336,6 +336,7 @@ out:        for (String name : entries) {
             mAdapter.clear();
         }
 
+        @Override
         protected Integer doInBackground(Void... params) {
             if (isCancelled()) return STATUS_CANCELLED;
             if (!Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())) {
@@ -386,7 +387,7 @@ out:        for (String name : entries) {
             super.onPostExecute(result);
 
             if (result == STATUS_NO_STORAGE) {
-                mList.setVisibility(View.GONE);
+                getListView().setVisibility(View.GONE);
                 mEmpty.setVisibility(View.VISIBLE);
                 mEmpty.setText(getString(R.string.gestures_error_loading,
                         mStoreFile.getAbsolutePath()));
