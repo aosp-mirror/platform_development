@@ -293,8 +293,14 @@ final class UpdateChooserDialog extends Dialog {
 
         // Automatically accept those with an empty license
         for (Archive a : mNewToOldArchiveMap.keySet()) {
-            String license = a.getParentPackage().getLicense().trim();
-            if (license.length() == 0) {
+
+            String license = a.getParentPackage().getLicense();
+            if (license != null) {
+                license = license.trim();
+                if (license.length() == 0) {
+                    mAccepted.add(a);
+                }
+            } else {
                 mAccepted.add(a);
             }
         }
@@ -453,8 +459,11 @@ final class UpdateChooserDialog extends Dialog {
         sb.append("\n*** Archive Description:\n");
         sb.append(a.getLongDescription()).append("\n");
 
-        sb.append("\n*** Package License:\n");
-        sb.append(a.getParentPackage().getLicense()).append("\n");
+        String license = a.getParentPackage().getLicense();
+        if (license != null) {
+            sb.append("\n*** Package License:\n");
+            sb.append(license).append("\n");
+        }
 
         mPackageText.setText(sb.toString());
     }
