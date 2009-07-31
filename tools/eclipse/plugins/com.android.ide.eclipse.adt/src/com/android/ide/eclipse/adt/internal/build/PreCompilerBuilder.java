@@ -291,6 +291,9 @@ public class PreCompilerBuilder extends BaseBuilder {
 
                 // This interrupts the build. The next builders will not run.
                 stopBuild(msg);
+
+                // TODO: document whether code below that uses manifest (which is now guaranteed
+                // to be null) will actually be executed or not.
             }
 
             // lets check the XML of the manifest first, if that hasn't been done by the
@@ -342,7 +345,7 @@ public class PreCompilerBuilder extends BaseBuilder {
                     } else if (minSdkValue < projectVersion.getApiLevel()) {
                         // integer minSdk is not high enough for the target => warning
                         String msg = String.format(
-                                "Manifest min SDK version (%1$d) is lower than project target API level (%2$d)",
+                                "Manifest min SDK version (%1$s) is lower than project target API level (%2$d)",
                                 minSdkVersion, projectVersion.getApiLevel());
                         AdtPlugin.printBuildToConsole(AdtConstants.BUILD_VERBOSE, project, msg);
                         BaseProjectHelper.addMarker(manifest, AdtConstants.MARKER_ADT, msg,
@@ -383,11 +386,14 @@ public class PreCompilerBuilder extends BaseBuilder {
 
                 // This interrupts the build. The next builders will not run.
                 stopBuild(msg);
+
+                // TODO: document whether code below that uses javaPackage (which is now guaranteed
+                // to be null) will actually be executed or not.
             }
 
             // at this point we have the java package. We need to make sure it's not a different
             // package than the previous one that were built.
-            if (javaPackage.equals(mManifestPackage) == false) {
+            if (javaPackage != null && javaPackage.equals(mManifestPackage) == false) {
                 // The manifest package has changed, the user may want to update
                 // the launch configuration
                 if (mManifestPackage != null) {
@@ -421,7 +427,7 @@ public class PreCompilerBuilder extends BaseBuilder {
                 // get the file system path
                 IPath outputLocation = mGenFolder.getLocation();
                 IPath resLocation = resFolder.getLocation();
-                IPath manifestLocation = manifest.getLocation();
+                IPath manifestLocation = manifest == null ? null : manifest.getLocation();
 
                 // those locations have to exist for us to do something!
                 if (outputLocation != null && resLocation != null
