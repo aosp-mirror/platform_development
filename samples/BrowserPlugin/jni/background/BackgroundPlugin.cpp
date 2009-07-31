@@ -68,6 +68,8 @@ BackgroundPlugin::BackgroundPlugin(NPP inst) : SubPlugin(inst) {
     test_logging(); // android logging
     test_timers();  // plugin timers
     test_bitmaps(); // android bitmaps
+    test_domAccess();
+    test_javascript();
 }
 
 BackgroundPlugin::~BackgroundPlugin() {
@@ -307,4 +309,69 @@ void BackgroundPlugin::test_bitmap_transparency(const ANPEvent* evt) {
 
         mFinishedStageThree = true;
     }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// DOM TESTS
+///////////////////////////////////////////////////////////////////////////////
+
+void BackgroundPlugin::test_domAccess() {
+    NPP instance = this->inst();
+
+    gLogI.log(instance, kDebug_ANPLogType, " ------ %p Testing DOM Access", instance);
+
+    // Get the plugin's DOM object
+    NPObject* windowObject = NULL;
+    browser->getvalue(instance, NPNVWindowNPObject, &windowObject);
+
+    if (!windowObject)
+        gLogI.log(instance, kError_ANPLogType, " ------ %p Unable to retrieve DOM Window", instance);
+
+    // Retrieve a property from the plugin's DOM object
+    NPIdentifier topIdentifier = browser->getstringidentifier("top");
+    NPVariant topObjectVariant;
+    browser->getproperty(instance, windowObject, topIdentifier, &topObjectVariant);
+
+    if (topObjectVariant.type != NPVariantType_Object)
+        gLogI.log(instance, kError_ANPLogType, " ------ %p Invalid Variant type for DOM Property: %d,%d", instance, topObjectVariant.type, NPVariantType_Object);
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// JAVASCRIPT TESTS
+///////////////////////////////////////////////////////////////////////////////
+
+
+void BackgroundPlugin::test_javascript() {
+    NPP instance = this->inst();
+
+    gLogI.log(instance, kDebug_ANPLogType, " ------ %p Testing JavaScript Access", instance);
+
+    // Get the plugin's DOM object
+    NPObject* windowObject = NULL;
+    browser->getvalue(instance, NPNVWindowNPObject, &windowObject);
+
+    if (!windowObject)
+        gLogI.log(instance, kError_ANPLogType, " ------ %p Unable to retrieve DOM Window", instance);
+
+    // create a string (JS code) that is stored in memory allocated by the browser
+    const char* jsString = "1200 + 34";
+    void* stringMem = browser->memalloc(strlen(jsString));
+    memcpy(stringMem, jsString, strlen(jsString));
+
+    // execute the javascript in the plugin's DOM object
+    NPString script = { (char*)stringMem, strlen(jsString) };
+    NPVariant scriptVariant;
+    if (!browser->evaluate(instance, windowObject, &script, &scriptVariant))
+        gLogI.log(instance, kError_ANPLogType, " ------ %p Unable to eval the JS.", instance);
+
+    if (scriptVariant.type == NPVariantType_Int32) {
+        if (scriptVariant.value.intValue != 1234)
+            gLogI.log(instance, kError_ANPLogType, " ------ %p Invalid Value for JS Return: %d,1234", instance, scriptVariant.value.intValue);
+    } else {
+        gLogI.log(instance, kError_ANPLogType, " ------ %p Invalid Variant type for JS Return: %d,%d", instance, scriptVariant.type, NPVariantType_Int32);
+    }
+
+    // free the memory allocated within the browser
+    browser->memfree(stringMem);
 }

@@ -57,6 +57,8 @@ private:
     void test_timers();
     void test_bitmaps();
     void test_bitmap_transparency(const ANPEvent* evt);
+    void test_domAccess();
+    void test_javascript();
 
 };
 
