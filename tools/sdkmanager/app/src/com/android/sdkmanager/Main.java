@@ -425,7 +425,7 @@ class Main {
                 if (target.getDescription() != null) {
                     mSdkLog.printf("     Description: %s\n", target.getDescription());
                 }
-                mSdkLog.printf("     Based on Android %s (API level %d)\n",
+                mSdkLog.printf("     Based on Android %s (API level %s)\n",
                         target.getVersionName(), target.getVersion().getApiString());
 
                 // display the optional libraries.

@@ -1,6 +1,7 @@
 0.9.2:
 - New wizard to create Android JUnit Test Projects.
-
+- New AVD wizard.
+- SDK Updater
 
 0.9.1:
 - Added an AVD creation wizard to ADT. It is automatically displayed during a launch if no compatible AVDs are found.

@@ -20,6 +20,7 @@ import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AndroidConstants;
 import com.android.ide.eclipse.adt.internal.project.XmlErrorHandler.XmlErrorListener;
 import com.android.sdklib.SdkConstants;
+import com.android.sdklib.xml.ManifestConstants;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
@@ -46,26 +47,6 @@ import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
 public class AndroidManifestParser {
-
-    private final static String ATTRIBUTE_PACKAGE = "package"; //$NON-NLS-1$
-    private final static String ATTRIBUTE_NAME = "name"; //$NON-NLS-1$
-    private final static String ATTRIBUTE_PROCESS = "process"; //$NON-NLS-$
-    private final static String ATTRIBUTE_DEBUGGABLE = "debuggable"; //$NON-NLS-$
-    public final static String ATTRIBUTE_MIN_SDK_VERSION = "minSdkVersion"; //$NON-NLS-$
-    private final static String ATTRIBUTE_TARGET_PACKAGE = "targetPackage"; //$NON-NLS-1$
-    private final static String ATTRIBUTE_EXPORTED = "exported"; //$NON-NLS-1$
-    private final static String NODE_MANIFEST = "manifest"; //$NON-NLS-1$
-    private final static String NODE_APPLICATION = "application"; //$NON-NLS-1$
-    private final static String NODE_ACTIVITY = "activity"; //$NON-NLS-1$
-    private final static String NODE_SERVICE = "service"; //$NON-NLS-1$
-    private final static String NODE_RECEIVER = "receiver"; //$NON-NLS-1$
-    private final static String NODE_PROVIDER = "provider"; //$NON-NLS-1$
-    private final static String NODE_INTENT = "intent-filter"; //$NON-NLS-1$
-    private final static String NODE_ACTION = "action"; //$NON-NLS-1$
-    private final static String NODE_CATEGORY = "category"; //$NON-NLS-1$
-    private final static String NODE_USES_SDK = "uses-sdk"; //$NON-NLS-1$
-    private final static String NODE_INSTRUMENTATION = "instrumentation"; //$NON-NLS-1$
-    private final static String NODE_USES_LIBRARY = "uses-library"; //$NON-NLS-1$
 
     private final static int LEVEL_MANIFEST = 0;
     private final static int LEVEL_APPLICATION = 1;
@@ -304,50 +285,55 @@ public class AndroidManifestParser {
                     String value;
                     switch (mValidLevel) {
                         case LEVEL_MANIFEST:
-                            if (NODE_MANIFEST.equals(localName)) {
+                            if (ManifestConstants.NODE_MANIFEST.equals(localName)) {
                                 // lets get the package name.
-                                mPackage = getAttributeValue(attributes, ATTRIBUTE_PACKAGE,
+                                mPackage = getAttributeValue(attributes,
+                                        ManifestConstants.ATTRIBUTE_PACKAGE,
                                         false /* hasNamespace */);
                                 mValidLevel++;
                             }
                             break;
                         case LEVEL_APPLICATION:
-                            if (NODE_APPLICATION.equals(localName)) {
-                                value = getAttributeValue(attributes, ATTRIBUTE_PROCESS,
+                            if (ManifestConstants.NODE_APPLICATION.equals(localName)) {
+                                value = getAttributeValue(attributes,
+                                        ManifestConstants.ATTRIBUTE_PROCESS,
                                         true /* hasNamespace */);
                                 if (value != null) {
                                     addProcessName(value);
                                 }
 
-                                value = getAttributeValue(attributes, ATTRIBUTE_DEBUGGABLE,
+                                value = getAttributeValue(attributes,
+                                        ManifestConstants.ATTRIBUTE_DEBUGGABLE,
                                         true /* hasNamespace*/);
                                 if (value != null) {
                                     mDebuggable = Boolean.parseBoolean(value);
                                 }
 
                                 mValidLevel++;
-                            } else if (NODE_USES_SDK.equals(localName)) {
+                            } else if (ManifestConstants.NODE_USES_SDK.equals(localName)) {
                                 mApiLevelRequirement = getAttributeValue(attributes,
-                                        ATTRIBUTE_MIN_SDK_VERSION, true /* hasNamespace */);
-                            } else if (NODE_INSTRUMENTATION.equals(localName)) {
+                                        ManifestConstants.ATTRIBUTE_MIN_SDK_VERSION,
+                                        true /* hasNamespace */);
+                            } else if (ManifestConstants.NODE_INSTRUMENTATION.equals(localName)) {
                                 processInstrumentationNode(attributes);
                             }
                             break;
                         case LEVEL_ACTIVITY:
-                            if (NODE_ACTIVITY.equals(localName)) {
+                            if (ManifestConstants.NODE_ACTIVITY.equals(localName)) {
                                 processActivityNode(attributes);
                                 mValidLevel++;
-                            } else if (NODE_SERVICE.equals(localName)) {
+                            } else if (ManifestConstants.NODE_SERVICE.equals(localName)) {
                                 processNode(attributes, AndroidConstants.CLASS_SERVICE);
                                 mValidLevel++;
-                            } else if (NODE_RECEIVER.equals(localName)) {
+                            } else if (ManifestConstants.NODE_RECEIVER.equals(localName)) {
                                 processNode(attributes, AndroidConstants.CLASS_BROADCASTRECEIVER);
                                 mValidLevel++;
-                            } else if (NODE_PROVIDER.equals(localName)) {
+                            } else if (ManifestConstants.NODE_PROVIDER.equals(localName)) {
                                 processNode(attributes, AndroidConstants.CLASS_CONTENTPROVIDER);
                                 mValidLevel++;
-                            } else if (NODE_USES_LIBRARY.equals(localName)) {
-                                value = getAttributeValue(attributes, ATTRIBUTE_NAME,
+                            } else if (ManifestConstants.NODE_USES_LIBRARY.equals(localName)) {
+                                value = getAttributeValue(attributes,
+                                        ManifestConstants.ATTRIBUTE_NAME,
                                         true /* hasNamespace */);
                                 if (value != null) {
                                     mLibraries.add(value);
@@ -356,24 +342,27 @@ public class AndroidManifestParser {
                             break;
                         case LEVEL_INTENT_FILTER:
                             // only process this level if we are in an activity
-                            if (mCurrentActivity != null && NODE_INTENT.equals(localName)) {
+                            if (mCurrentActivity != null &&
+                                    ManifestConstants.NODE_INTENT.equals(localName)) {
                                 mCurrentActivity.resetIntentFilter();
                                 mValidLevel++;
                             }
                             break;
                         case LEVEL_CATEGORY:
                             if (mCurrentActivity != null) {
-                                if (NODE_ACTION.equals(localName)) {
+                                if (ManifestConstants.NODE_ACTION.equals(localName)) {
                                     // get the name attribute
-                                    String action = getAttributeValue(attributes, ATTRIBUTE_NAME,
+                                    String action = getAttributeValue(attributes,
+                                            ManifestConstants.ATTRIBUTE_NAME,
                                             true /* hasNamespace */);
                                     if (action != null) {
                                         mCurrentActivity.setHasAction(true);
                                         mCurrentActivity.setHasMainAction(
                                                 ACTION_MAIN.equals(action));
                                     }
-                                } else if (NODE_CATEGORY.equals(localName)) {
-                                    String category = getAttributeValue(attributes, ATTRIBUTE_NAME,
+                                } else if (ManifestConstants.NODE_CATEGORY.equals(localName)) {
+                                    String category = getAttributeValue(attributes,
+                                            ManifestConstants.ATTRIBUTE_NAME,
                                             true /* hasNamespace */);
                                     if (CATEGORY_LAUNCHER.equals(category)) {
                                         mCurrentActivity.setHasLauncherCategory(true);
@@ -473,13 +462,14 @@ public class AndroidManifestParser {
          */
         private void processActivityNode(Attributes attributes) {
             // lets get the activity name, and add it to the list
-            String activityName = getAttributeValue(attributes, ATTRIBUTE_NAME,
+            String activityName = getAttributeValue(attributes, ManifestConstants.ATTRIBUTE_NAME,
                     true /* hasNamespace */);
             if (activityName != null) {
                 activityName = combinePackageAndClassName(mPackage, activityName);
 
                 // get the exported flag.
-                String exportedStr = getAttributeValue(attributes, ATTRIBUTE_EXPORTED, true);
+                String exportedStr = getAttributeValue(attributes,
+                        ManifestConstants.ATTRIBUTE_EXPORTED, true);
                 boolean exported = exportedStr == null ||
                         exportedStr.toLowerCase().equals("true"); // $NON-NLS-1$
                 mCurrentActivity = new Activity(activityName, exported);
@@ -495,7 +485,7 @@ public class AndroidManifestParser {
                 mCurrentActivity = null;
             }
 
-            String processName = getAttributeValue(attributes, ATTRIBUTE_PROCESS,
+            String processName = getAttributeValue(attributes, ManifestConstants.ATTRIBUTE_PROCESS,
                     true /* hasNamespace */);
             if (processName != null) {
                 addProcessName(processName);
@@ -510,7 +500,7 @@ public class AndroidManifestParser {
          */
         private void processNode(Attributes attributes, String superClassName) {
             // lets get the class name, and check it if required.
-            String serviceName = getAttributeValue(attributes, ATTRIBUTE_NAME,
+            String serviceName = getAttributeValue(attributes, ManifestConstants.ATTRIBUTE_NAME,
                     true /* hasNamespace */);
             if (serviceName != null) {
                 serviceName = combinePackageAndClassName(mPackage, serviceName);
@@ -520,7 +510,7 @@ public class AndroidManifestParser {
                 }
             }
 
-            String processName = getAttributeValue(attributes, ATTRIBUTE_PROCESS,
+            String processName = getAttributeValue(attributes, ManifestConstants.ATTRIBUTE_PROCESS,
                     true /* hasNamespace */);
             if (processName != null) {
                 addProcessName(processName);
@@ -534,11 +524,13 @@ public class AndroidManifestParser {
          */
         private void processInstrumentationNode(Attributes attributes) {
             // lets get the class name, and check it if required.
-            String instrumentationName = getAttributeValue(attributes, ATTRIBUTE_NAME,
+            String instrumentationName = getAttributeValue(attributes,
+                    ManifestConstants.ATTRIBUTE_NAME,
                     true /* hasNamespace */);
             if (instrumentationName != null) {
                 String instrClassName = combinePackageAndClassName(mPackage, instrumentationName);
-                String targetPackage = getAttributeValue(attributes, ATTRIBUTE_TARGET_PACKAGE,
+                String targetPackage = getAttributeValue(attributes,
+                        ManifestConstants.ATTRIBUTE_TARGET_PACKAGE,
                         true /* hasNamespace */);
                 mInstrumentations.add(new Instrumentation(instrClassName, targetPackage));
                 if (mMarkErrors) {

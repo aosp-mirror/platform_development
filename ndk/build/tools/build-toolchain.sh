@@ -27,7 +27,7 @@ source `dirname $0`/../core/ndk-common.sh
 JOBS=$HOST_NUM_CPUS
 
 TOOLCHAIN_NAME=arm-eabi-4.2.1
-PLATFORM=android-1.5
+PLATFORM=android-3
 ABI=arm
 
 OPTION_HELP=no

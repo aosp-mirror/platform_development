@@ -23,8 +23,7 @@
 
 #include "adb_object_handle.h"
 
-/** Class AdbInterfaceEnumObject encapsulates enumerator of USB
-  interfaces available through this API.
+/** \brief Enumerator of USB interfaces available through this API.
 */
 class AdbInterfaceEnumObject : public AdbObjectHandle {
  public:
@@ -41,16 +40,16 @@ class AdbInterfaceEnumObject : public AdbObjectHandle {
   virtual ~AdbInterfaceEnumObject();
 
  public:
-  /** \brief Enumerates all interfaces for our device class
+  /** \brief Enumerates all interfaces for the given device class.
 
     This routine uses SetupDiGetClassDevs to get our device info and calls
     EnumerateDeviceInterfaces to perform the enumeration.
-    @param class_id[in] Device class ID that is specified by our USB driver
-    @param exclude_not_present[in] If set include only those devices that are
+    @param[in] class_id Device class ID that is specified by our USB driver
+    @param[in] exclude_not_present If set include only those devices that are
            currently present.
-    @param exclude_removed[in] If true interfaces with SPINT_REMOVED flag set
+    @param[in] exclude_removed If true interfaces with SPINT_REMOVED flag set
            will be not included in the enumeration.
-    @param active_only[in] If 'true' only active interfaces (with flag
+    @param[in] active_only If true only active interfaces (with flag
            SPINT_ACTIVE set) will be included in the enumeration.
     @return True on success, false on failure, in which case GetLastError()
             provides extended information about the error that occurred.
@@ -61,11 +60,10 @@ class AdbInterfaceEnumObject : public AdbObjectHandle {
                       bool active_only);
 
   /** \brief Gets next enumerated interface information
-
-    @param info[out] Upon successful completion will receive interface
+    @param[out] info Upon successful completion will receive interface
            information. Can be NULL. If it is NULL, upon return from this
            method *size will have memory size required to fit this entry.
-    @param size[in,out]. On the way in provides size of the memory buffer
+    @param[in,out] size On the way in provides size of the memory buffer
            addressed by info param. On the way out (only if buffer is not
            big enough) will provide memory size required to fit this entry.
     @return true on success, false on error. If false is returned
@@ -78,7 +76,6 @@ class AdbInterfaceEnumObject : public AdbObjectHandle {
   bool Next(AdbInterfaceInfo* info, ULONG* size);
 
   /** \brief Makes enumerator to start from the beginning.
-
     @return true on success, false on error. If false is returned
             GetLastError() provides extended information about the error that
             occurred.

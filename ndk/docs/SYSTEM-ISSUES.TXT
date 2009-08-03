@@ -60,7 +60,7 @@ The standard mandates that this value is stored in network order (and thus
 should be converted to host order through ntohs()). However, the 1.5
 implementation is buggy and returns the number.
 
-This bug will be fixed in future releases of the platform, and applications
+This bug is fixed in later releases of the platform, and applications
 should not depend on the wrong behaviour in the future. Avoid using this
 function if possible; if this is not possible, try to use a small wrapper
 like the following one:

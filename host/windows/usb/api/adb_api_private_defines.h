@@ -22,8 +22,7 @@
 
 #include "adb_api.h"
 
-/** Class AdbInstanceEnumEntry encapsulates an entry in the array of
-  enumerated interfaces.
+/** \brief Encapsulates an entry in the array of enumerated interfaces.
 */
 class AdbInstanceEnumEntry {
  public:
@@ -73,7 +72,7 @@ class AdbInstanceEnumEntry {
 
   /** \brief Saves this entry into AdbInterfaceInfo structure.
 
-    @param info[in] Buffer to save this entry to. Must be big enough to fit it.
+    @param[in] info Buffer to save this entry to. Must be big enough to fit it.
            Use GetFlatSize() method to get buffer size needed for that.
 
   */

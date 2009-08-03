@@ -26,8 +26,7 @@ import java.util.Map;
  */
 final class PlatformTarget implements IAndroidTarget {
     /** String used to get a hash to the platform target */
-    private final static String PLATFORM_HASH_API_LEVEL = "android-%d";
-    private final static String PLATFORM_HASH_CODENAME = "android-%s";
+    private final static String PLATFORM_HASH = "android-%s";
 
     private final static String PLATFORM_VENDOR = "Android Open Source Project";
 
@@ -199,9 +198,9 @@ final class PlatformTarget implements IAndroidTarget {
         }
 
         // if the platform has a codename (ie it's a preview of an upcoming platform), then
-        // both platform must be exactly identical.
+        // both platforms must be exactly identical.
         if (mVersion.getCodename() != null) {
-            return equals(target);
+            return mVersion.equals(target.getVersion());
         }
 
         // target is compatible wit the receiver as long as its api version number is greater or
@@ -210,11 +209,7 @@ final class PlatformTarget implements IAndroidTarget {
     }
 
     public String hashString() {
-        if (mVersion.getCodename() != null) {
-            return String.format(PLATFORM_HASH_CODENAME, mVersion.getCodename());
-        }
-
-        return String.format(PLATFORM_HASH_API_LEVEL, mVersion.getApiLevel());
+        return String.format(PLATFORM_HASH, mVersion.getApiString());
     }
 
     @Override
@@ -247,6 +242,9 @@ final class PlatformTarget implements IAndroidTarget {
         int apiDiff = mVersion.getApiLevel() - target.getVersion().getApiLevel();
 
         if (mVersion.getCodename() != null && apiDiff == 0) {
+            if (target.getVersionName() == null) {
+                return +1; // preview showed last
+            }
             return mVersion.getCodename().compareTo(target.getVersion().getCodename());
         }
 

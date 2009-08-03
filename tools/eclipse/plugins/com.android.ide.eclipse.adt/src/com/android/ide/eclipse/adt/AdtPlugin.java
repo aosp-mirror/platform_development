@@ -313,16 +313,7 @@ public class AdtPlugin extends AbstractUIPlugin {
                     if (checkSdkLocationAndId()) {
                         // if sdk if valid, reparse it
 
-                        // add all the opened Android projects to the list of projects to be updated
-                        // after the SDK is reloaded
-                        synchronized (getSdkLockObject()) {
-                            // get the project to refresh.
-                            IJavaProject[] androidProjects = BaseProjectHelper.getAndroidProjects();
-                            mPostLoadProjectsToResolve.addAll(Arrays.asList(androidProjects));
-                        }
-
-                        // parse the SDK resources at the new location
-                        parseSdkContent();
+                        reparseSdk();
                     }
                 } else if (PREFS_BUILD_VERBOSITY.equals(property)) {
                     mBuildVerbosity = BuildPreferencePage.getBuildLevel(
@@ -1386,6 +1377,22 @@ public class AdtPlugin extends AbstractUIPlugin {
                 version.getMinor(), version.getMicro());
 
         SdkStatsService.ping("adt", versionString, getDisplay()); //$NON-NLS-1$
+    }
+
+    /**
+     * Reparses the content of the SDK and updates opened projects.
+     */
+    public void reparseSdk() {
+        // add all the opened Android projects to the list of projects to be updated
+        // after the SDK is reloaded
+        synchronized (getSdkLockObject()) {
+            // get the project to refresh.
+            IJavaProject[] androidProjects = BaseProjectHelper.getAndroidProjects();
+            mPostLoadProjectsToResolve.addAll(Arrays.asList(androidProjects));
+        }
+
+        // parse the SDK resources at the new location
+        parseSdkContent();
     }
 
     /**

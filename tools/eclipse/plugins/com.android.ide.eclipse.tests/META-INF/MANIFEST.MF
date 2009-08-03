@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Android Plugin Tests
 Bundle-SymbolicName: com.android.ide.eclipse.tests
-Bundle-Version: 0.9.1.qualifier
+Bundle-Version: 0.9.2.qualifier
 Bundle-Activator: com.android.ide.eclipse.tests.AndroidTestPlugin
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,

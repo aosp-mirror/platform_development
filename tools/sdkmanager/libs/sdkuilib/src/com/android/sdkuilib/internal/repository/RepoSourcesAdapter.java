@@ -22,6 +22,7 @@ import com.android.sdklib.internal.repository.ITask;
 import com.android.sdklib.internal.repository.ITaskMonitor;
 import com.android.sdklib.internal.repository.Package;
 import com.android.sdklib.internal.repository.RepoSource;
+import com.android.sdklib.internal.repository.Package.UpdateInfo;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 
 import org.eclipse.jface.viewers.IContentProvider;
@@ -30,6 +31,8 @@ import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.swt.graphics.Image;
+
+import java.util.ArrayList;
 
 /**
  * A list of sdk-repository sources.
@@ -149,6 +152,10 @@ public class RepoSourcesAdapter {
                     packages = source.getPackages();
                 }
                 if (packages != null) {
+                    // filter out only the packages that are new/upgrade.
+                    if (mUpdaterData.getSettingsController().getShowUpdateOnly()) {
+                        return filteredPackages(packages);
+                    }
                     return packages;
                 } else if (source.getFetchError() != null) {
                     // Return a dummy entry to display the fetch error
@@ -156,7 +163,19 @@ public class RepoSourcesAdapter {
                 }
 
             } else if (parentElement instanceof Package) {
-                return ((Package) parentElement).getArchives();
+                Archive[] archives = ((Package) parentElement).getArchives();
+                if (mUpdaterData.getSettingsController().getShowUpdateOnly()) {
+                    for (Archive archive : archives) {
+                        // if we only want the compatible archives, then we just take the first
+                        // one. it's unlikely there are 2 compatible archives for the same
+                        // package
+                        if (archive.isCompatible()) {
+                            return new Object[] { archive };
+                        }
+                    }
+                }
+
+                return archives;
             }
 
             return new Object[0];
@@ -188,4 +207,46 @@ public class RepoSourcesAdapter {
         }
     }
 
+    /**
+     * Filters out a list of remote packages to only keep the ones that are either new or
+     * updates of existing package.
+     * @param remotePackages the list of packages to filter.
+     * @return a non null (but maybe empty) list of new or update packages.
+     */
+    private Object[] filteredPackages(Package[] remotePackages) {
+        // get the installed packages
+        Package[] installedPackages = mUpdaterData.getInstalledPackage();
+
+        ArrayList<Package> filteredList = new ArrayList<Package>();
+
+        // for each remote packages, we look for an existing version.
+        // If no existing version -> add to the list
+        // if existing version but with older revision -> add it to the list
+        for (Package remotePkg : remotePackages) {
+            boolean newPkg = true;
+
+            // For all potential packages, we also make sure that there's an archive for the current
+            // platform, or we simply skip them.
+            if (remotePkg.hasCompatibleArchive()) {
+                for (Package installedPkg : installedPackages) {
+                    UpdateInfo info = installedPkg.canBeUpdatedBy(remotePkg);
+                    if (info == UpdateInfo.UPDATE) {
+                        filteredList.add(remotePkg);
+                        newPkg = false;
+                        break; // there shouldn't be 2 revision of the same package
+                    } else if (info != UpdateInfo.INCOMPATIBLE) {
+                        newPkg = false;
+                        break; // there shouldn't be 2 revision of the same package
+                    }
+                }
+
+                // if we have not found the same package, then we add it (it's a new package)
+                if (newPkg) {
+                    filteredList.add(remotePkg);
+                }
+            }
+        }
+
+        return filteredList.toArray();
+    }
 }

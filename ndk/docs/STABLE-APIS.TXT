@@ -21,10 +21,15 @@ Note that the build system automatically links the C library, the Math
 library and the C++ support library to your native code, there is no
 need to list them in a LOCAL_LDLIBS line.
 
+There are several "API Levels" defined. Each API level corresponds to
+a given Android system platform release. The following levels are
+currently supported:
 
+    android-3      -> Official Android 1.5 system images
+    android-4      -> Experimental Donut system images
 
-II. Android 1.5 Stable Native APIs:
------------------------------------
+II. Android-3 Stable Native APIs:
+---------------------------------
 
 All the APIs listed below are available for developing native code that
 runs on Android 1.5 system images and above.
@@ -75,8 +80,9 @@ currently limited to the following headers:
    <utility>
    <stl_pair.h>
 
-They may not contain all definitions required by the standard. Notably, support
-for C++ exceptions and RTTI is not available with Android 1.5 system images.
+They may not contain all definitions required by the standard. Notably,
+support for C++ exceptions and RTTI is not available with Android 1.5 system
+images.
 
 The C++ support library (-lstdc++) is automatically linked to your native
 modules too, so there is no need to list it through LOCAL_LDLIBS
@@ -86,10 +92,10 @@ modules too, so there is no need to list it through LOCAL_LDLIBS
 Android-specific Log Support:
 -----------------------------
 
-<android/log.h> contains various definitions that can be used to send log messages
-to the kernel from your native code. Please have a look at its content in
-(build/platforms/android-1.5/common/include/android/log.h), which contain many
-informative comments on how to use it.
+<android/log.h> contains various definitions that can be used to send log
+messages to the kernel from your native code. Please have a look at its
+content in (build/platforms/android-3/common/include/android/log.h), which
+contain many informative comments on how to use it.
 
 You should be able to write helpful wrapper macros for your own usage to
 access this facility.
@@ -99,15 +105,49 @@ If you use it, your native module should link to /system/lib/liblog.so with:
   LOCAL_LDLIBS := -llog
 
 
-
 ZLib Compression Library:
 -------------------------
 
-<zlib.h> and <zconf.h> are available and can be used to use the ZLib compression
-library available on Android 1.5 system images. Documentation for it is available
-on the ZLib page: http://www.zlib.net/manual.html
+<zlib.h> and <zconf.h> are available and can be used to use the ZLib
+compression library. Documentation for it is at the ZLib page:
+
+    http://www.zlib.net/manual.html
 
 If you use it, your native module should link to /system/lib/libz.so with:
 
   LOCAL_LDLIBS := -lz
 
+
+III. Android-4 Stable Native APIs:
+----------------------------------
+
+All the APIs listed below are available for developing native code that runs
+on the Donut experimental branch, which will be used to make the next official
+platform system images.
+
+
+The OpenGL ES 1.x Library:
+--------------------------
+
+The standard OpenGL ES headers <GLES/gl.h> and <GLES/glext.h> contain the
+declarations needed to perform OpenGL ES 1.x rendering calls from native
+code.
+
+If you use them, your native module should link to /system/lib/libGLESv1_CM.so
+as in:
+
+  LOCAL_LDLIBS := -lGLESv1_CM.so
+
+Please note that, at the moment, native headers and libraries for the EGL APIs
+are *not* available. EGL is used to perform surface creation and flipping
+(instead of rendering). The corresponding operations must be performed in your
+VM application instead, for example with a GLSurfaceView, as described here:
+
+http://android-developers.blogspot.com/2009/04/introducing-glsurfaceview.html
+
+The "san-angeles" sample application shows how you can do that, while
+rendering each frame in native code. This is a small Android port of the
+excellent "San Angeles Observation" demo program. For more information about
+it, see:
+
+    http://jet.ro/visuals/san-angeles-observation/

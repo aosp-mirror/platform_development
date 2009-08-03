@@ -39,7 +39,11 @@ TARGET_PREBUILT_SHARED_LIBRARIES := $(TARGET_PREBUILT_SHARED_LIBRARIES:%=$(SYSRO
 # now call the toolchain-specific setup script
 include $(NDK_TOOLCHAIN.$(TARGET_TOOLCHAIN).setup)
 
-# For each app, compute intermediate directories and parse module sources
-$(foreach _app,$(NDK_APPS),\
-  $(eval include $(BUILD_SYSTEM)/setup-app.mk)\
-)
+# compute NDK_APP_DEST as the destination directory for the generated files
+NDK_APP_DEST := $(NDK_APP_PROJECT_PATH)/libs/$(TARGET_ABI_SUBDIR)
+
+# free the dictionary of LOCAL_MODULE definitions
+$(call modules-clear)
+
+# now parse the Android.mk for the application
+include $(NDK_APP_BUILD_SCRIPT)

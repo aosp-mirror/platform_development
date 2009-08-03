@@ -56,6 +56,21 @@ public abstract class Package implements IDescription {
     private final RepoSource mSource;
 
     /**
+     * Enum for the result of {@link Package#canBeUpdatedBy(Package)}. This used so that we can
+     * differentiate between a package that is totally incompatible, and one that is the same item
+     * but just not an update.
+     * @see #canBeUpdatedBy(Package)
+     */
+    public static enum UpdateInfo {
+        /** Means that the 2 packages are not the same thing */
+        INCOMPATIBLE,
+        /** Means that the 2 packages are the same thing but one does not upgrade the other */
+        NOT_UPDATE,
+        /** Means that the 2 packages are the same thing, and one is the upgrade of the other */
+        UPDATE;
+    }
+
+    /**
      * Creates a new package from the attributes and elements of the given XML node.
      * <p/>
      * This constructor should throw an exception if the package cannot be created.
@@ -246,6 +261,20 @@ public abstract class Package implements IDescription {
     }
 
     /**
+     * Returns whether the {@link Package} has at least one {@link Archive} compatible with
+     * the host platform.
+     */
+    public boolean hasCompatibleArchive() {
+        for (Archive archive : mArchives) {
+            if (archive.isCompatible()) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Returns a short description for an {@link IDescription}.
      * Can be empty but not null.
      */
@@ -280,20 +309,43 @@ public abstract class Package implements IDescription {
             String osSdkRoot, String suggestedDir, SdkManager sdkManager);
 
     /**
+     * Returns whether the give package represents the same item as the current package.
+     * <p/>
+     * Two packages are considered the same if they represent the same thing, except for the
+     * revision number.
+     * @param pkg the package to compare
+     * @return true if the item
+     */
+    public abstract boolean sameItemAs(Package pkg);
+
+    /**
      * Computes whether the given package is a suitable update for the current package.
-     * The base class method only checks that the {@link Package} class type is the same.
-     * Derived classes must add more specific checks, including the revision number.
      * <p/>
      * An update is just that: a new package that supersedes the current one. If the new
-     * package has the same revision as the current one, it's not an update.
+     * package does not represent the same item or if it has the same or lower revision as the
+     * current one, it's not an update.
      *
      * @param replacementPackage The potential replacement package.
-     * @return True if the replacement package is a suitable update for this one.
+     * @return
+     *
+     * @see #sameItemAs(Package)
      */
-    public boolean canBeUpdatedBy(Package replacementPackage) {
-        return replacementPackage != null &&
-            replacementPackage.getClass() == this.getClass() &&
-            replacementPackage.getRevision() > this.getRevision();
-    }
+    public UpdateInfo canBeUpdatedBy(Package replacementPackage) {
+        if (replacementPackage == null) {
+            return UpdateInfo.INCOMPATIBLE;
+        }
 
+        // check they are the same item.
+        if (sameItemAs(replacementPackage) == false) {
+            return UpdateInfo.INCOMPATIBLE;
+        }
+
+        // check revision number
+        if (replacementPackage.getRevision() > this.getRevision()) {
+            return UpdateInfo.UPDATE;
+        }
+
+        // not an upgrade but not incompatible either.
+        return UpdateInfo.NOT_UPDATE;
+    }
 }

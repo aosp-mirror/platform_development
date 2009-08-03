@@ -135,26 +135,56 @@ public class DocPackage extends Package {
         return new File(osSdkRoot, SdkConstants.FD_DOCS);
     }
 
+    @Override
+    public boolean sameItemAs(Package pkg) {
+        // only one doc package so any doc package is the same item.
+        return pkg instanceof DocPackage;
+    }
+
     /**
-     * Computes whether the given doc package is a suitable update for the current package.
-     * The base method checks the class type.
-     * The doc package also tests the API level and revision number: the revision number must
-     * always be bumped. The API level can be the same or greater.
-     * <p/>
-     * An update is just that: a new package that supersedes the current one. If the new
-     * package has the same revision as the current one, it's not an update.
+     * {@inheritDoc}
      *
-     * @param replacementPackage The potential replacement package.
-     * @return True if the replacement package is a suitable update for this one.
+     * The comparison between doc packages is a bit more complex so we override the default
+     * implementation.
+     * <p/>
+     * Docs are upgrade if they have a higher api, or a similar api but a higher revision.
+     * <p/>
+     * What makes this more complex is handling codename.
      */
     @Override
-    public boolean canBeUpdatedBy(Package replacementPackage) {
-        if (!super.canBeUpdatedBy(replacementPackage)) {
-            return false;
+    public UpdateInfo canBeUpdatedBy(Package replacementPackage) {
+        if (replacementPackage == null) {
+            return UpdateInfo.INCOMPATIBLE;
         }
 
-        DocPackage newPkg = (DocPackage) replacementPackage;
-        return newPkg.getRevision() > this.getRevision() &&
-            newPkg.getVersion().equals(this.getVersion());
+        // check they are the same item.
+        if (sameItemAs(replacementPackage) == false) {
+            return UpdateInfo.INCOMPATIBLE;
+        }
+
+        DocPackage replacementDoc = (DocPackage)replacementPackage;
+
+        AndroidVersion replacementVersion = replacementDoc.getVersion();
+
+        // the new doc is an update if the api level is higher
+        if (replacementVersion.getApiLevel() > mVersion.getApiLevel()) {
+            return UpdateInfo.UPDATE;
+        }
+
+        // if it's the exactly same (including codename), we check the revision
+        if (replacementVersion.equals(mVersion) &&
+                replacementPackage.getRevision() > this.getRevision()) {
+            return UpdateInfo.UPDATE;
+        }
+
+        // else we check if they have the same api level and the new one is a preview, in which
+        // case it's also an update (since preview have the api level of the _previous_ version.
+        if (replacementVersion.getApiLevel() == mVersion.getApiLevel() &&
+                replacementVersion.isPreview()) {
+            return UpdateInfo.UPDATE;
+        }
+
+        // not an upgrade but not incompatible either.
+        return UpdateInfo.NOT_UPDATE;
     }
 }

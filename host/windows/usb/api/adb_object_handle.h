@@ -24,31 +24,29 @@
 
 #include "adb_api_private_defines.h"
 
-/** AdbObjectType enum defines types of internal API objects
+/** \brief Defines types of internal API objects
 */
 enum AdbObjectType {
-  /// Object is AdbInterfaceEnumObject
+  /// Object is AdbInterfaceEnumObject.
   AdbObjectTypeInterfaceEnumerator,
 
-  /// Object is AdbInterfaceObject
+  /// Object is AdbInterfaceObject.
   AdbObjectTypeInterface,
 
-  /// Object is derived from AdbIOObject
-  AdbObjectTypeIo,
-
-  /// Object is AdbEndpointObject
+  /// Object is AdbEndpointObject.
   AdbObjectTypeEndpoint,
 
-  /// Object is AdbIOCompletion
+  /// Object is AdbIOCompletion.
   AdbObjectTypeIoCompletion,
 
   AdbObjectTypeMax
 };
 
-/** Class AdbObjectHandle encapsulates an internal API basic object that is
-  visible to the outside of the API through a handle. In order to prevent
-  crashes when API client tries to access an object through an invalid or
-  already closed handle, we keep track of all opened handles in
+/** \brief Encapsulates an internal API basic object that is visible to the
+  outside of the API through a handle.
+  
+  In order to prevent crashes when API client tries to access an object through
+  an invalid or already closed handle, we keep track of all opened handles in
   AdbObjectHandleMap that maps association between valid ADBAPIHANDLE and
   an object that this handle represents. All objects that are exposed to the
   outside of API via ADBAPIHANDLE are self-destructing referenced objects.
@@ -78,7 +76,7 @@ class AdbObjectHandle {
   /** \brief Constructs the object
 
     Refernce counter is set to 1 in the constructor.
-    @param obj_type[in] Object type from AdbObjectType enum
+    @param[in] obj_type Object type from AdbObjectType enum
   */
   explicit AdbObjectHandle(AdbObjectType obj_type);
 
@@ -91,14 +89,14 @@ class AdbObjectHandle {
   virtual ~AdbObjectHandle();
 
  public:
-  /** \brief References the object
+  /** \brief References the object.
 
     @return Value of the reference counter after object is referenced in this
             method.
   */
   virtual LONG AddRef();
 
-  /** \brief Releases the object
+  /** \brief Releases the object.
 
     If refcount drops to zero as the result of this release, the object is
     destroyed in this method. As a general rule, objects must not be touched
@@ -108,7 +106,7 @@ class AdbObjectHandle {
   */
   virtual LONG Release();
 
-  /** \brief Creates handle to this object
+  /** \brief Creates handle to this object.
 
     In this call a handle for this object is generated and object is added
     to the AdbObjectHandleMap.
@@ -119,19 +117,19 @@ class AdbObjectHandle {
   */
   virtual ADBAPIHANDLE CreateHandle();
 
-  /** \brief This method is called when handle to this object gets closed
+  /** \brief This method is called when handle to this object gets closed.
 
     In this call object is deleted from the AdbObjectHandleMap.
-    @return 'true' on success or 'false' if object is already closed. If
-            'false' is returned GetLastError() provides extended error
+    @return true on success or false if object is already closed. If
+            false is returned GetLastError() provides extended error
             information.
   */
   virtual bool CloseHandle();
 
-  /** \brief Checks if this object is of the given type
+  /** \brief Checks if this object is of the given type.
 
-    @param obj_type[in] One of the AdbObjectType types to check
-    @return 'true' is this object type matches obj_type, or 'false' otherwise.
+    @param[in] obj_type One of the AdbObjectType types to check
+    @return true is this object type matches obj_type, or false otherwise.
   */
   virtual bool IsObjectOfType(AdbObjectType obj_type) const;
 
@@ -139,7 +137,7 @@ class AdbObjectHandle {
     in the AdbObjectHandleMap.
 
     This method increments reference counter for the returned found object.
-    @param adb_handle[in] ADB handle to the object
+    @param[in] adb_handle ADB handle to the object
     @return API object associated with the handle or NULL if object is not
             found. If NULL is returned GetLastError() provides extended error
             information.
@@ -188,7 +186,7 @@ typedef std::map< ADBAPIHANDLE, AdbObjectHandle* > AdbObjectHandleMap;
 /** \brief Template routine that unifies extracting of objects of different
   types from the AdbObjectHandleMap
 
-  @param adb_handle[in] API handle for the object
+  @param[in] adb_handle API handle for the object
   @return Object associated with the handle or NULL on error. If NULL is
           returned GetLastError() provides extended error information.
 */

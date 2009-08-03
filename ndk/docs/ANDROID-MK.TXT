@@ -51,25 +51,33 @@ source code easier for application developers.
 Simple example:
 ---------------
 
-Before describing the syntax in details, let's consider a simple
-"hello world" example, i.e. the following files:
+Before describing the syntax in details, let's consider the simple
+"hello JNI" example, i.e. the files under:
 
-    sources/helloworld/helloworld.c
-    sources/helloworld/Android.mk
+    apps/hello-jni/project
 
-Where 'helloworld.c' is the source of a simple JNI shared library
-that implements a native method that returns the "hello world"
-string.
+Here, we can see:
 
-The corresponding Android.mk file will look like this:
+  - The 'src' directory containing the Java sources for the
+    sample Android project.
+
+  - The 'jni' directory containing the native source for
+    the sample, i.e. 'jni/hello-jni.c'
+
+    This source file implements a simple shared library that
+    implements a native method that returns a string to the
+    VM application.
+
+  - The 'jni/Android.mk' file that describes the shared library
+    to the NDK build system. Its content is:
 
    ---------- cut here ------------------
    LOCAL_PATH := $(call my-dir)
 
    include $(CLEAR_VARS)
 
-   LOCAL_MODULE    := helloworld
-   LOCAL_SRC_FILES := helloworld.c
+   LOCAL_MODULE    := hello-jni
+   LOCAL_SRC_FILES := hello-jni.c
 
    include $(BUILD_SHARED_LIBRARY)
    ---------- cut here ------------------
@@ -93,7 +101,7 @@ with the exception of LOCAL_PATH. This is needed because all build
 control files are parsed in a single GNU Make execution context where
 all variables are global.
 
-  LOCAL_MODULE := helloworld
+  LOCAL_MODULE := hello-jni
 
 The LOCAL_MODULE variable must be defined to identify each module you
 describe in your Android.mk. The name must be *unique* and not contain
@@ -107,10 +115,10 @@ add another 'lib' prefix and will generate libfoo.so as well.
 This is to support Android.mk files that originate from the
 Android platform sources, would you need to use these.
 
-  LOCAL_SRC_FILES := helloworld.c
+  LOCAL_SRC_FILES := hello-jni.c
 
 The LOCAL_SRC_FILES variables must contain a list of C and/or C++ source
-files that will be built and assemble into a module. Note that you should
+files that will be built and assembled into a module. Note that you should
 not list header and included files here, because the build system will
 compute dependencies automatically for you; just list the source files
 that will be passed directly to a compiler, and you should be good.
@@ -128,7 +136,7 @@ information you defined in LOCAL_XXX variables since the latest
 'include $(CLEAR_VARS)' and determine what to build, and how to do it
 exactly. There is also BUILD_STATIC_LIBRARY to generate a static library.
 
-There are more complex examples under sources/samples, with commented
+There are more complex examples under apps/, with commented
 Android.mk files that you can look at.
 
 Reference:
@@ -201,7 +209,8 @@ TARGET_ARCH
 
 TARGET_PLATFORM
     Name of the target Android platform when this Android.mk is parsed.
-    For now, only 'android-1.5' is supported.
+    For now, only 'android-3' is supported, which corresponds to the
+    Android 1.5 platform.
 
 TARGET_ARCH_ABI
     Name of the target CPU+ABI when this Android.mk is parsed.
@@ -219,7 +228,7 @@ TARGET_ABI
     as $(TARGET_PLATFORM)-$(TARGET_ARCH_ABI) and is useful when you want
     to test against a specific target system image for a real device.
 
-    By default, this will be 'android-1.5-arm'
+    By default, this will be 'android-3-arm'
 
 
 NDK-provided function macros:
@@ -331,16 +340,15 @@ LOCAL_C_INCLUDES
         LOCAL_C_INCLUDES := $(LOCAL_PATH)/../foo
 
     These are placed before any corresponding inclusion flag in
-    LOCAL_CFLAGS / LOCAL_CXXFLAGS / LOCAL_CPPFLAGS
+    LOCAL_CFLAGS / LOCAL_CPPFLAGS
 
 
 LOCAL_CFLAGS
     An optional set of compiler flags that will be passed when building
-    C source files (*not* C++ sources).
+    C *and* C++ source files.
 
-    This can be useful to specify an additionnal include path
-    (relative to the top of the NDK directory), macro definitions
-    or compile options.
+    This can be useful to specify additionnal macro definitions or
+    compile options.
 
     IMPORTANT: Try not to change the optimization/debugging level in
                your Android.mk, this can be handled automatically for
@@ -348,11 +356,24 @@ LOCAL_CFLAGS
                your Application.mk, and will let the NDK generate
                useful data files used during debugging.
 
+    NOTE: In android-ndk-1.5_r1, the corresponding flags only applied
+          to C source files, not C++ ones. This has been corrected to
+          match the full Android build system behaviour. (You can use
+          LOCAL_CPPFLAGS to specify flags for C++ sources only now).
+
 LOCAL_CXXFLAGS
-    Same as LOCAL_CFLAGS for C++ source files
+    An alias for LOCAL_CPPFLAGS. Note that use of this flag is obsolete
+    as it may disappear in future releases of the NDK.
 
 LOCAL_CPPFLAGS
-    Same as LOCAL_CFLAGS but used for both C and C++ source files
+    An optional set of compiler flags that will be passed when building
+    C++ source files *only*. They will appear after the LOCAL_CFLAGS
+    on the compiler's command-line.
+
+    NOTE: In android-ndk-1.5_r1, the corresponding flags applied to
+          both C and C++ sources. This has been corrected to match the
+          full Android build system. (You can use LOCAL_CFLAGS to specify
+          flags for both C and C++ sources now).
 
 LOCAL_STATIC_LIBRARIES
     The list of static libraries modules (built with BUILD_STATIC_LIBRARY)

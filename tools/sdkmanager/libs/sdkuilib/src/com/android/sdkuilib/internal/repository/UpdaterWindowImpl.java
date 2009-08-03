@@ -24,6 +24,7 @@ import com.android.sdklib.internal.repository.RepoSources;
 import com.android.sdklib.repository.SdkRepository;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 import com.android.sdkuilib.internal.tasks.ProgressTaskFactory;
+import com.android.sdkuilib.repository.UpdaterWindow.ISdkListener;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
@@ -166,6 +167,14 @@ public class UpdaterWindowImpl {
             mExtraPages = new ArrayList<Object[]>();
         }
         mExtraPages.add(new Object[]{ title, pageClass });
+    }
+
+    public void addListeners(ISdkListener listener) {
+        mUpdaterData.addListeners(listener);
+    }
+
+    public void removeListener(ISdkListener listener) {
+        mUpdaterData.removeListener(listener);
     }
 
     /**

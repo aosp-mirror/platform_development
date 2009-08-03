@@ -16,7 +16,7 @@ pdk.version=1.0
 
 <p>Android's camera subsystem connects the camera application to the application framework and user space libraries, which in turn communicate with the camera hardware layer that operates the physical camera.</p>
 <p>The diagram below illustrates the structure of the camera subsystem.</p>
-<p><img src="images/androidCameraArchitecture.gif"></p>
+<p><img src="images/camera_video2.gif"></p>
 
 
 <a name="androidCameraBuildingDriver"></a><h3>Building a Camera Library</h3>

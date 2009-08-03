@@ -74,10 +74,12 @@ public class AddonPackage extends Package {
         super(source, packageNode, licenses);
         mVendor   = XmlParserUtils.getXmlString(packageNode, SdkRepository.NODE_VENDOR);
         mName     = XmlParserUtils.getXmlString(packageNode, SdkRepository.NODE_NAME);
-        mVersion = new AndroidVersion(
-                XmlParserUtils.getXmlInt   (packageNode, SdkRepository.NODE_API_LEVEL, 0),
-                null); // add-ons on platform previews is not supported, so the codename is always
-                       // null in this case.
+        int apiLevel = XmlParserUtils.getXmlInt   (packageNode, SdkRepository.NODE_API_LEVEL, 0);
+        String codeName = XmlParserUtils.getXmlString(packageNode, SdkRepository.NODE_CODENAME);
+        if (codeName.length() == 0) {
+            codeName = null;
+        }
+        mVersion = new AndroidVersion(apiLevel, codeName);
 
         mLibs = parseLibs(XmlParserUtils.getFirstChild(packageNode, SdkRepository.NODE_LIBS));
     }
@@ -181,10 +183,10 @@ public class AddonPackage extends Package {
     /** Returns a short description for an {@link IDescription}. */
     @Override
     public String getShortDescription() {
-        return String.format("%1$s by %2$s for Android API %3$d",
+        return String.format("%1$s by %2$s for Android API %3$s",
                 getName(),
                 getVendor(),
-                mVersion.getApiLevel());
+                mVersion.getApiString());
     }
 
     /** Returns a long description for an {@link IDescription}. */
@@ -229,7 +231,8 @@ public class AddonPackage extends Package {
         String name = suggestedDir;
 
         if (suggestedDir == null || suggestedDir.length() == 0) {
-            name = String.format("addon-%s-%s-%d", getName(), getVendor(), mVersion.getApiLevel()); //$NON-NLS-1$
+            name = String.format("addon-%s-%s-%s", getName(), getVendor(), //$NON-NLS-1$
+                    mVersion.getApiString());
             name = name.toLowerCase();
             name = name.replaceAll("[^a-z0-9_-]+", "_");      //$NON-NLS-1$ //$NON-NLS-2$
             name = name.replaceAll("_+", "_");                //$NON-NLS-1$ //$NON-NLS-2$
@@ -247,31 +250,17 @@ public class AddonPackage extends Package {
         return null;
     }
 
-    /**
-     * Computes whether the given addon package is a suitable update for the current package.
-     * The base method checks the class type.
-     * The addon package also tests that the name+vendor is the same and
-     * the revision number is greater.
-     * <p/>
-     * An update is just that: a new package that supersedes the current one. If the new
-     * package has the same revision as the current one, it's not an update.
-     *
-     * @param replacementPackage The potential replacement package.
-     * @return True if the replacement package is a suitable update for this one.
-     */
     @Override
-    public boolean canBeUpdatedBy(Package replacementPackage) {
-        if (!super.canBeUpdatedBy(replacementPackage)) {
-            return false;
+    public boolean sameItemAs(Package pkg) {
+        if (pkg instanceof AddonPackage) {
+            AddonPackage newPkg = (AddonPackage)pkg;
+
+            // check they are the same add-on.
+            return getName().equals(newPkg.getName()) &&
+                    getVendor().equals(newPkg.getVendor()) &&
+                    getVersion().equals(newPkg.getVersion());
         }
 
-        AddonPackage newPkg = (AddonPackage) replacementPackage;
-
-        String thisId = getName() + "+" + getVendor();                //$NON-NLS-1$
-        String newId  = newPkg.getName() + "+" + newPkg.getVendor();  //$NON-NLS-1$
-
-        return thisId.equalsIgnoreCase(newId) &&
-                mVersion.getApiLevel() == newPkg.getVersion().getApiLevel() &&
-                newPkg.getRevision() > this.getRevision();
+        return false;
     }
 }

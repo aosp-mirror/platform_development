@@ -30,7 +30,9 @@ import com.android.sdklib.internal.repository.Package;
 import com.android.sdklib.internal.repository.RepoSource;
 import com.android.sdklib.internal.repository.RepoSources;
 import com.android.sdklib.internal.repository.ToolPackage;
+import com.android.sdklib.internal.repository.Package.UpdateInfo;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
+import com.android.sdkuilib.repository.UpdaterWindow.ISdkListener;
 
 import org.eclipse.swt.widgets.Shell;
 
@@ -65,10 +67,6 @@ class UpdaterData {
     private final ArrayList<ISdkListener> mListeners = new ArrayList<ISdkListener>();
 
     private Shell mWindowShell;
-
-    public interface ISdkListener {
-        void onSdkChange();
-    }
 
     public UpdaterData(String osSdkRoot, ISdkLog sdkLog) {
         mOsSdkRoot = osSdkRoot;
@@ -224,6 +222,22 @@ class UpdaterData {
                 mSdkLog.error(e, null);
             }
         }
+    }
+
+    /**
+     * Returns the list of installed packages, parsing them if this has not yet been done.
+     */
+    public Package[] getInstalledPackage() {
+        LocalSdkParser parser = getLocalSdkParser();
+
+        Package[] packages = parser.getPackages();
+
+        if (packages == null) {
+            // load on demand the first time
+            packages = parser.parseSdk(getOsSdkRoot(), getSdkManager(), getSdkLog());
+        }
+
+        return packages;
     }
 
     /**
@@ -491,7 +505,8 @@ class UpdaterData {
                     // local package?
 
                     for (Archive availArchive : list) {
-                        if (localPkg.canBeUpdatedBy(availArchive.getParentPackage())) {
+                        UpdateInfo info = localPkg.canBeUpdatedBy(availArchive.getParentPackage());
+                        if (info == UpdateInfo.UPDATE) {
                             // Found one!
                             result.put(availArchive, localArchive);
                             break;

@@ -21,7 +21,7 @@ import com.android.sdklib.internal.repository.Archive;
 import com.android.sdklib.internal.repository.IDescription;
 import com.android.sdklib.internal.repository.Package;
 import com.android.sdklib.internal.repository.RepoSource;
-import com.android.sdkuilib.internal.repository.UpdaterData.ISdkListener;
+import com.android.sdkuilib.repository.UpdaterWindow.ISdkListener;
 
 import org.eclipse.jface.dialogs.IInputValidator;
 import org.eclipse.jface.dialogs.InputDialog;
@@ -58,6 +58,7 @@ public class RemotePackagesPage extends Composite implements ISdkListener {
     private CheckboxTreeViewer mTreeViewerSources;
     private Tree mTreeSources;
     private TreeColumn mColumnSource;
+    private Button mUpdateOnlyCheckBox;
     private Group mDescriptionContainer;
     private Button mAddSiteButton;
     private Button mDeleteSiteButton;
@@ -65,6 +66,7 @@ public class RemotePackagesPage extends Composite implements ISdkListener {
     private Button mRefreshButton;
     private Button mInstallSelectedButton;
     private Label mDescriptionLabel;
+
 
 
     /**
@@ -103,6 +105,28 @@ public class RemotePackagesPage extends Composite implements ISdkListener {
         mColumnSource = new TreeColumn(mTreeSources, SWT.NONE);
         mColumnSource.setWidth(289);
         mColumnSource.setText("Sources, Packages and Archives");
+
+        Composite composite = new Composite(parent, SWT.NONE);
+        composite.setLayoutData(
+                new GridData(SWT.FILL, SWT.BEGINNING, false, false, 5, 1));
+        GridLayout gl;
+        composite.setLayout(gl = new GridLayout(2, false));
+        gl.marginHeight = gl.marginWidth = 0;
+        // add an empty composite
+        Composite spacer = new Composite(composite, SWT.NONE);
+        GridData gd;
+        spacer.setLayoutData(gd = new GridData(GridData.FILL_HORIZONTAL));
+        gd.heightHint = 0;
+
+        mUpdateOnlyCheckBox = new Button(composite, SWT.CHECK);
+        mUpdateOnlyCheckBox.setText("Display updates only");
+        mUpdateOnlyCheckBox.setSelection(mUpdaterData.getSettingsController().getShowUpdateOnly());
+        mUpdateOnlyCheckBox.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent arg0) {
+                onShowUpdateOnly(); //$hide$
+            }
+        });
 
         mDescriptionContainer = new Group(parent, SWT.NONE);
         mDescriptionContainer.setLayout(new GridLayout(1, false));
@@ -263,6 +287,11 @@ public class RemotePackagesPage extends Composite implements ISdkListener {
         }
     }
 
+    private void onShowUpdateOnly() {
+        mUpdaterData.getSettingsController().setShowUpdateOnly(mUpdateOnlyCheckBox.getSelection());
+        mTreeViewerSources.refresh();
+    }
+
     private void onInstallSelectedArchives() {
         ArrayList<Archive> archives = new ArrayList<Archive>();
         for (Object element : mTreeViewerSources.getCheckedElements()) {
@@ -311,6 +340,7 @@ public class RemotePackagesPage extends Composite implements ISdkListener {
         if (dlg.open() == Window.OK) {
             String url = dlg.getValue();
             mUpdaterData.getSources().add(new RepoSource(url, true /*userSource*/));
+            onRefreshSelected();
         }
     }
 
@@ -345,6 +375,7 @@ public class RemotePackagesPage extends Composite implements ISdkListener {
         if (mUpdaterData != null) {
             mUpdaterData.refreshSources(false /*forceFetching*/);
         }
+        mTreeViewerSources.refresh();
         updateButtonsState();
     }
 

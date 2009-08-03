@@ -212,7 +212,7 @@ public class LocalSdkParser {
                         null,                       //source
                         props,                      //properties
                         0,                          //apiLevel
-                        null,                       // codename
+                        null,                       //codename
                         0,                          //revision
                         null,                       //license
                         null,                       //description

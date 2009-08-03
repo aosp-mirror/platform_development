@@ -16,7 +16,7 @@
 #
 
 # We use the GNU Make Standard Library
-include build/gmsl/gmsl
+include $(BUILD_SYSTEM)/../gmsl/gmsl
 
 # This is the Android NDK version number as a list of three items:
 # major, minor, revision
@@ -261,7 +261,8 @@ all-subdir-makefiles = $(call all-makefiles-under,$(call my-dir))
 NDK_APP_VARS_REQUIRED := APP_MODULES APP_PROJECT_PATH
 
 # the list of variables that *may* be defined in Application.mk files
-NDK_APP_VARS_OPTIONAL := APP_OPTIM APP_CPPFLAGS APP_CFLAGS APP_CXXFLAGS
+NDK_APP_VARS_OPTIONAL := APP_OPTIM APP_CPPFLAGS APP_CFLAGS APP_CXXFLAGS \
+                         APP_PLATFORM APP_BUILD_SCRIPT
 
 # the list of all variables that may appear in an Application.mk file
 NDK_APP_VARS := $(NDK_APP_VARS_REQUIRED) $(NDK_APP_VARS_OPTIONAL)
@@ -372,7 +373,6 @@ $$(_OBJ): PRIVATE_CFLAGS   := $$($$(my)CFLAGS) \
                               $$(LOCAL_C_INCLUDES:%=-I%) \
                               -I$$(LOCAL_PATH) \
                               $$(LOCAL_CFLAGS) \
-                              $$(NDK_APP_CPPFLAGS) \
                               $$(NDK_APP_CFLAGS)
 
 $$(_OBJ): $$(_SRC) $$(LOCAL_MAKEFILE) $$(NDK_APP_APPLICATION_MK)
@@ -431,6 +431,9 @@ $$(_OBJ): PRIVATE_CXXFLAGS := $$($$(my)CXXFLAGS) \
                               $$(LOCAL_C_INCLUDES:%=-I%) \
                               -I$$(LOCAL_PATH) \
                               $$(LOCAL_CFLAGS) \
+                              $$(LOCAL_CPPFLAGS) \
+                              $$(LOCAL_CXXFLAGS) \
+                              $$(NDK_APP_CFLAGS) \
                               $$(NDK_APP_CPPFLAGS) \
                               $$(NDK_APP_CXXFLAGS) \
 

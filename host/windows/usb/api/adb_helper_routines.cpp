@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 The Android Open Source Project
+ * Copyright (C) 2009 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@
 
 #include "stdafx.h"
 #include "adb_api.h"
+#include "adb_api_legacy.h"
 #include "adb_helper_routines.h"
 #include "adb_interface_enum.h"
 
@@ -47,8 +48,6 @@ bool GetSDKComplientParam(AdbOpenAccessType access_type,
         break;
 
       default:
-        AtlTrace("\n!!!!! ADB API -> GetSDKComplientParam %u is unknown access type",
-                 access_type);
         SetLastError(ERROR_INVALID_ACCESS);
         return false;
     }
@@ -73,8 +72,6 @@ bool GetSDKComplientParam(AdbOpenAccessType access_type,
         break;
 
       default:
-        AtlTrace("\n!!!!! ADB API -> GetSDKComplientParam %u is unknown share mode",
-                 sharing_mode);
         SetLastError(ERROR_INVALID_PARAMETER);
         return false;
     }
@@ -245,4 +242,33 @@ bool GetUsbDeviceName(HDEVINFO hardware_dev_info,
   free(func_class_dev_data);
 
   return !name->empty();
+}
+
+bool IsLegacyInterface(const wchar_t* interface_name) {
+  // Open USB device for this intefface
+  HANDLE usb_device_handle = CreateFile(interface_name,
+                                        GENERIC_READ | GENERIC_WRITE,
+                                        FILE_SHARE_READ | FILE_SHARE_WRITE,
+                                        NULL,
+                                        OPEN_EXISTING,
+                                        0,
+                                        NULL);
+  if (INVALID_HANDLE_VALUE == usb_device_handle)
+    return NULL;
+
+  // Try to issue ADB_IOCTL_GET_USB_DEVICE_DESCRIPTOR IOCTL that is supported
+  // by the legacy driver, but is not implemented in the WinUsb driver.
+  DWORD ret_bytes = 0;
+  USB_DEVICE_DESCRIPTOR descriptor;
+  BOOL ret = DeviceIoControl(usb_device_handle,
+                             ADB_IOCTL_GET_USB_DEVICE_DESCRIPTOR,
+                             NULL, 0,
+                             &descriptor,
+                             sizeof(descriptor),
+                             &ret_bytes,
+                             NULL);
+  ::CloseHandle(usb_device_handle);
+
+  // If IOCTL succeeded we've got legacy driver underneath.
+  return ret ? true : false;
 }

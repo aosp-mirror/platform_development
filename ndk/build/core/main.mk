@@ -20,11 +20,12 @@
 #
 # ====================================================================
 
+# The location of the build system files
+BUILD_SYSTEM := $(strip $(dir $(lastword $(MAKEFILE_LIST))))
+BUILD_SYSTEM := $(BUILD_SYSTEM:%/=%)
+
 # Include common definitions
 include build/core/definitions.mk
-
-# The location of the build system files
-BUILD_SYSTEM := build/core
 
 # Where all generated files will be stored during a build
 NDK_OUT := out
@@ -96,36 +97,32 @@ $(foreach tc,$(NDK_ALL_TOOLCHAINS),\
 
 # ====================================================================
 #
+# Read all platform-specific configuration files.
+#
+# Each platform must be located in build/platforms/android-<apilevel>
+# where <apilevel> corresponds to an API level number, with:
+#   3 -> Android 1.5
+#   4 -> next platform release
+#
+# ====================================================================
+
+NDK_PLATFORMS_ROOT := $(BUILD_SYSTEM)/../platforms
+NDK_ALL_PLATFORMS := $(strip $(notdir $(wildcard $(NDK_PLATFORMS_ROOT)/android-*)))
+$(call ndk_log,Found supported platforms: $(NDK_ALL_PLATFORMS))
+
+$(foreach _platform,$(NDK_ALL_PLATFORMS),\
+  $(eval include $(BUILD_SYSTEM)/add-platform.mk)\
+)
+
+# ====================================================================
+#
 # Read all application configuration files
 #
 # Each 'application' must have a corresponding Application.mk file
 # located in apps/<name> where <name> is a liberal name that doesn't
 # contain any space in it, used to uniquely identify the
 #
-# Each one of these files should define the following required
-# variables:
-#
-#   APP_MODULES   the list of modules needed by this application
-#
-#   APP_PROJECT_PATH
-#                 path to the Java project root directory where the
-#                 generated binaries will be copied to. The NDK will
-#                 place them in appropriate locations so they are
-#                 properly picked by aapt, the Android Packager tool,
-#                 when generating your applications.
-#
-# As well as the following *optional* variables:
-#
-#   APP_OPTIM     either 'release' or 'debug'
-#
-#   APP_CPPFLAGS  extra flags passed when building C and C++ sources
-#                 of application modules
-#
-#   APP_CFLAGS    extra flags passed when building C sources of
-#                 application's modules (not C++ ones)
-#
-#   APP_CXXFLAGS  extra flags passed when building C++ sources of
-#                 application's modules (not C ones)
+# See docs/ANDROID-MK.TXT for their specification.
 #
 # ====================================================================
 
@@ -235,26 +232,10 @@ ALL_INSTALLED_MODULES     :=
 # the first rule
 all: installed_modules host_libraries host_executables
 
-# ====================================================================
-#
-# For each platform/abi combo supported by the application, we should
-# setup the toolchain and parse all module definitions files again
-# to build the right dependency tree.
-#
-# All this work is performed by build/core/setup-toolchain.mk
-#
-# ====================================================================
 
-
-# XXX: For now, only support one platform and one target ABI with
-#      only one toolchain.
-#
-TARGET_PLATFORM  := android-1.5
-TARGET_ARCH_ABI  := arm
-TARGET_ARCH      := arm
-TARGET_TOOLCHAIN := $(NDK_TARGET_TOOLCHAIN)
-
-include build/core/setup-toolchain.mk
+$(foreach _app,$(NDK_APPS),\
+  $(eval include $(BUILD_SYSTEM)/setup-app.mk)\
+)
 
 # ====================================================================
 #

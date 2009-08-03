@@ -62,7 +62,7 @@ APP_OPTIM
     the code difficult, stack traces may not be reliable, etc...
 
 APP_CFLAGS
-    A set of C compiler flags passed when compiling any C source code
+    A set of C compiler flags passed when compiling any C or C++ source code
     of any of the modules. This can be used to change the build of a given
     module depending on the application that needs it, instead of modifying
     the Android.mk file itself.
@@ -89,11 +89,30 @@ APP_CFLAGS
     +
     +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+    NOTE: In android-ndk-1.5_r1, this only applied to C sources, not C++ ones.
+          This has been corrected to match the full Android build system.
+
 APP_CXXFLAGS
-    Same as APP_CFLAGS for C++ sources.
+    An alias for APP_CPPFLAGS, to be considered obsolete as it may disappear
+    in a future release of the NDK.
 
 APP_CPPFLAGS
-    Same as APP_CFLAGS but will be passed to both C and C++ sources
+    A set of C++ compiler flags passed when building C++ sources *only*.
+
+    NOTE: In android-ndk-1.5_r1, this applied to both C and C++ sources.
+          This has been corrected to match the full Android build system.
+          You can now use APP_CFLAGS for flags that shall apply to C and
+          C++ souces.
+
+APP_BUILD_SCRIPT
+    By default, the NDK build system will look for a file named Android.mk
+    under $(APP_PROJECT_PATH)/jni, i.e. for the file:
+
+       $(APP_PROJECT_PATH)/jni/Android.mk
+
+    If you want to override this behaviour, you can define APP_BUILD_SCRIPT
+    to point to an alternate build script. A non-absolute path will always
+    be interpreated as relative to the NDK's top-level directory.
 
 A trivial Application.mk file would be:
 
@@ -101,4 +120,3 @@ A trivial Application.mk file would be:
 APP_MODULES      := <list of modules>
 APP_PROJECT_PATH := <path to project>
 -------------- cut here -------------------------
-

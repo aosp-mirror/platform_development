@@ -18,6 +18,11 @@
 # These are the files that comprise that SDK
 #
 
+# version files for the SDK updater
+development/tools/scripts/doc_source.properties docs/source.properties
+development/tools/scripts/tools_source.properties tools/source.properties
+development/tools/scripts/platform_source.properties platforms/${PLATFORM_NAME}/source.properties
+
 # host tools from out/host/$(HOST_OS)-$(HOST_ARCH)/
 bin/aapt platforms/${PLATFORM_NAME}/tools/aapt
 bin/aidl platforms/${PLATFORM_NAME}/tools/aidl
@@ -63,6 +68,7 @@ development/tools/scripts/build.alias.template tools/lib/build.alias.template
 development/tools/scripts/android.el tools/lib/android.el
 
 # samples
+development/apps/GestureBuilder platforms/${PLATFORM_NAME}/samples/GestureBuilder
 development/samples/HelloActivity platforms/${PLATFORM_NAME}/samples/HelloActivity
 development/samples/Home platforms/${PLATFORM_NAME}/samples/Home
 development/samples/LunarLander platforms/${PLATFORM_NAME}/samples/LunarLander
@@ -126,6 +132,7 @@ framework/anttasks.jar tools/lib/anttasks.jar
 
 # sdkmanager
 bin/android tools/android
+framework/commons-compress-1.0.jar tools/lib/commons-compress-1.0.jar
 framework/sdklib.jar tools/lib/sdklib.jar
 framework/sdkuilib.jar tools/lib/sdkuilib.jar
 framework/sdkmanager.jar tools/lib/sdkmanager.jar
@@ -140,12 +147,15 @@ external/qemu/android/avd/hardware-properties.ini tools/lib/hardware-properties.
 
 # emulator skins
 development/emulator/skins/HVGA   platforms/${PLATFORM_NAME}/skins/HVGA
-development/emulator/skins/HVGA-L platforms/${PLATFORM_NAME}/skins/HVGA-L
-development/emulator/skins/HVGA-P platforms/${PLATFORM_NAME}/skins/HVGA-P
-development/emulator/skins/QVGA-L platforms/${PLATFORM_NAME}/skins/QVGA-L
-development/emulator/skins/QVGA-P platforms/${PLATFORM_NAME}/skins/QVGA-P
+development/emulator/skins/QVGA   platforms/${PLATFORM_NAME}/skins/QVGA
+development/emulator/skins/WVGA   platforms/${PLATFORM_NAME}/skins/WVGA
 
 # NOTICE files are copied by build/core/Makefile
+development/tools/scripts/sdk_files_NOTICE.txt platforms/${PLATFORM_NAME}/templates/NOTICE.txt
+development/tools/scripts/sdk_files_NOTICE.txt platforms/${PLATFORM_NAME}/samples/NOTICE.txt
+development/tools/scripts/sdk_files_NOTICE.txt platforms/${PLATFORM_NAME}/data/NOTICE.txt
+development/tools/scripts/sdk_files_NOTICE.txt platforms/${PLATFORM_NAME}/skins/NOTICE.txt
+development/tools/scripts/sdk_files_NOTICE.txt platforms/${PLATFORM_NAME}/tools/NOTICE.txt
 
 # the readme
 development/docs/SDK_RELEASE_NOTES RELEASE_NOTES.html

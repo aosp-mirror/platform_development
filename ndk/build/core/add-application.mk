@@ -24,6 +24,7 @@
 #
 
 $(call assert-defined, _application_mk)
+$(call ndk_log,Parsing $(_application_mk))
 
 $(call clear-vars, $(NDK_APP_VARS))
 
@@ -31,32 +32,87 @@ include $(_application_mk)
 
 $(call check-required-vars,$(NDK_APP_VARS_REQUIRED),$(_application_mk))
 
+_dir  := $(patsubst %/,%,$(dir $(_application_mk)))
+_name := $(notdir $(_dir))
+_map  := NDK_APP.$(_name)
+
 # strip the 'lib' prefix in front of APP_MODULES modules
 APP_MODULES := $(call strip-lib-prefix,$(APP_MODULES))
 
 # check that APP_OPTIM, if defined, is either 'release' or 'debug'
+APP_OPTIM := $(strip $(APP_OPTIM))
 $(if $(filter-out release debug,$(APP_OPTIM)),\
   $(call __ndk_info, The APP_OPTIM defined in $(_application_mk) must only be 'release' or 'debug')\
   $(call __ndk_error,Aborting)\
 )
 
-_dir  := $(patsubst %/,%,$(dir $(_application_mk)))
-_name := $(notdir $(_dir))
-_app  := NDK_APP.$(_name)
+ifndef APP_OPTIM
+    $(call ndk_log,  Defaulted to APP_OPTIM=release)
+    APP_OPTIM := release
+endif
 
-$(if $(strip $(APP.$(_app).defined)),\
-  $(call __ndk_info,Weird, the application $(_name) is already defined by $(APP.$(_app).defined))\
+# check whether APP_PLATFORM is defined. If not, look for default.properties in
+# the $(APP_PROJECT_PATH) and extract the value with awk's help. If nothing is here,
+# revert to the default value (i.e. "android-3").
+#
+# NOTE: APP_PLATFORM is an experimental feature for now.
+#
+APP_PLATFORM := $(strip $(APP_PLATFORM))
+ifndef APP_PLATFORM
+    _local_props := $(strip $(wildcard $(APP_PROJECT_PATH)/default.properties))
+    ifdef _local_props
+        APP_PLATFORM := $(strip $(shell awk -f $(BUILD_SYSTEM)/extract-platform.awk < $(_local_props)))
+        $(call ndk_log,  Found APP_PLATFORM=$(APP_PLATFORM) in $(_local_props))
+    else
+        APP_PLATFORM := android-3
+        $(call ndk_log,  Defaulted to APP_PLATFORM=$(APP_PLATFORM))
+    endif
+endif
+
+_bad_platform := $(strip $(filter-out $(NDK_ALL_PLATFORMS),$(APP_PLATFORM)))
+ifdef _bad_platform
+    $(call __ndk_info,Application $(_name) targets platform '$(_bad_platform)')
+    $(call __ndk_info,which is not supported by this release of the Android NDK)
+    $(call __ndk_error,Aborting...)
+endif
+
+# If APP_BUILD_SCRIPT is defined, check that the file exists.
+# If undefined, look in $(APP_PROJECT_PATH)/jni/Android.mk
+#
+APP_BUILD_SCRIPT := $(strip $(APP_BUILD_SCRIPT))
+ifdef APP_BUILD_SCRIPT
+    _build_script := $(strip $(wildcard $(APP_BUILD_SCRIPT)))
+    ifndef _build_script
+        $(call __ndk_info,Your APP_BUILD_SCRIPT points to an unknown file: $(APP_BUILD_SCRIPT))
+        $(call __ndk_error,Aborting...)
+    endif
+    APP_BUILD_SCRIPT := $(_build_script)
+    $(call ndk_log,  Using build script $(APP_BUILD_SCRIPT))
+else
+    _build_script := $(strip $(wildcard $(APP_PROJECT_PATH)/jni/Android.mk))
+    ifndef _build_script
+        $(call __ndk_info,There is no Android.mk under $(APP_PROJECT_PATH)/jni)
+        $(call __ndk_info,If this is intentional, please define APP_BUILD_SCRIPT to point)
+        $(call __ndk_info,to a valid NDK build script.)
+        $(call __ndk_error,Aborting...)
+    endif
+    APP_BUILD_SCRIPT := $(_build_script)
+    $(call ndk_log,  Defaulted to APP_BUILD_SCRIPT=$(APP_BUILD_SCRIPT))
+endif
+
+$(if $(call get,$(_map),defined),\
+  $(call __ndk_info,Weird, the application $(_name) is already defined by $(call get,$(_map),defined))\
   $(call __ndk_error,Aborting)\
 )
 
-APP.$(_app).defined := $(_application_mk)
+$(call set,$(_map),defined,$(_application_mk))
 
 # Record all app-specific variable definitions
 $(foreach __name,$(NDK_APP_VARS),\
-  $(eval $(_app).$(__name) := $($(__name)))\
+  $(call set,$(_map),$(__name),$($(__name)))\
 )
 
 # Record the Application.mk for debugging
-$(_app).Application.mk := $(_application_mk)
+$(call set,$(_map),Application.mk,$(_application_mk))
 
 NDK_ALL_APPS += $(_name)

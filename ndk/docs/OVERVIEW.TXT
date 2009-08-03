@@ -46,32 +46,34 @@ implemented in native code through the JNI. In a nutshell, this means that:
 
 The Android NDK is a complement to the Android SDK that helps you to:
 
-  - generate JNI-compatible shared libraries that can run on the Android
+  - Generate JNI-compatible shared libraries that can run on the Android
     1.5 platform (and later) running on ARM CPUs.
 
-  - copy the generated shared libraries to a proper location of your
+  - Copy the generated shared libraries to a proper location of your
     application project path, so they will be automatically added to your
     final (and signed) .apks
 
-  - in later revisions of the NDK, we intend to provide tools that help
+  - In later revisions of the NDK, we intend to provide tools that help
     debug your native code through a remote gdb connection and as much
     source/symbol information as possible.
 
 Moreover, the Android NDK provides:
 
-  - a set of cross-toolchains (compilers, linkers, etc..) that can
+  - A set of cross-toolchains (compilers, linkers, etc..) that can
     generate native ARM binaries on Linux, OS X and Windows (with Cygwin)
 
-  - a set of system headers corresponding to the list of stable native APIs
+  - A set of system headers corresponding to the list of stable native APIs
     supported by the Android platform. This corresponds to definitions that
     are guaranteed to be supported in all later releases of the platform.
 
-    IMPORTANT: 
+    They are documented in the file docs/STABLE-APIS.TXT
+
+    IMPORTANT:
     Keep in mind that most of the native system libraries in Android system
     images are not frozen and might changed drastically, or even deleted,
     in later updates and releases of the platform.
 
-  - a build system that allow developers to only write very short build files
+  - A build system that allow developers to only write very short build files
     to describe which sources need to be compiled, and how. The build system
     deals with all the hairy toolchain/platform/CPU/ABI specifics. Moreover,
     later updates of the NDK can add support for more toolchains, platforms,
@@ -96,11 +98,11 @@ A good understanding of JNI is highly recommended, since many operations
 in this environment require specific actions from the developers, that are
 not necessarily common in typical native code. These include:
 
-  - not being able to directly access the content of VM objects through
+  - Not being able to directly access the content of VM objects through
     direct native pointers. E.g. you cannot safely get a pointer to a
     String object's 16-bit char array to iterate over it in a loop.
 
-  - requiring explicit reference management when the native code wants to
+  - Requiring explicit reference management when the native code wants to
     keep handles to VM objects between JNI calls.
 
 
@@ -127,9 +129,9 @@ Android NDK:
 
   1/ Run build/host-setup.sh to configure the NDK
 
-  2/ Place your sources under sources/<mysrc>/...
+  2/ Place your native sources under $PROJECT/jni/...
 
-  3/ Write sources/<mysrc>/Android.mk to describe your sources
+  3/ Write $PROJECT/jni/Android.mk to describe your sources
      to the NDK build system
 
   4/ Write apps/<myapp>/Application.mk to describe your application
@@ -167,35 +169,32 @@ error message telling you what to do.
 III.2/ Placing C and C++ sources:
 - - - - - - - - - - - - - - - - -
 
-The NDK build system expects your sources to be visible under the top-level
-'sources' directory. You should first create a directory like:
+You should place your native sources under the following directory:
 
-    $NDK/sources/<mysrc>/
+    $PROJECT/jni/
 
-You are pretty free to organize the content of 'sources' as you want,
+Where $PROJECT corresponds to the path of your Android application
+project.
+
+You are pretty free to organize the content of 'jni' as you want,
 the directory names and structure here will not influence the final
 generated application packages, so you don't have to use pseudo-unique
 names like com.<mycompany>.<myproject> as is the case for application
 package names.
 
-For the record, the NDK comes with a 'sources/samples' directory which
-itself contains several subdirectories for various sample modules.
-
 Note that C and C++ sources are supported. The default C++ file extensions
 supported by the NDK is '.cpp', but other extensions can be handled as well
 (see docs/ANDROID-MK.TXT for details).
 
-It is possible to store your sources in a different location, as long as
-you create $NDK/sources/<mysrc> as a symbolic link. For proper operation, the
-NDK build system must be able to 'see' your source files and build scripts
-from $NDK/sources.
+It is possible to store your sources in a different location by adjusting
+your Android.mk file (see below).
 
 
 III.3/ Writing an Android.mk build script:
 - - - - - - - - - - - - - - - - - - - - - -
 
 An Android.mk file is a small build script that you write to describe your
-sources to the NDK build system. Their syntax is described in details in
+sources to the NDK build system. Its syntax is described in details in
 the file docs/ANDROID-MK.TXT.
 
 In a nutshell, the NDK groups your sources into "modules", where each module
@@ -207,13 +206,11 @@ can be one of the following:
 You can define several modules in a single Android.mk, or you can write
 several Android.mk files, each one defining a single module.
 
-All Android.mk files are parsed by the build system before any build occurs.
-Note also that a single Android.mk might be parsed several times by the build
+Note that a single Android.mk might be parsed several times by the build
 system so don't assume that certain variables are not defined in them.
+By default, the NDK will look for the following build script:
 
-By default, the NDK will look for all files that match the following:
-
-   $NDK/sources/*/Android.mk
+   $PROJECT/jni/Android.mk
 
 If you want to define Android.mk files in sub-directories, you should
 include them explicitely in your top-level Android.mk. There is even

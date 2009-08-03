@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Android Development Toolkit
 Bundle-SymbolicName: com.android.ide.eclipse.adt;singleton:=true
-Bundle-Version: 0.9.1.qualifier
+Bundle-Version: 0.9.2.qualifier
 Bundle-ClassPath: .,
  jarutils.jar,
  androidprefs.jar,
@@ -12,7 +12,8 @@ Bundle-ClassPath: .,
  ninepatch.jar,
  layoutlib_utils.jar,
  sdklib.jar,
- sdkuilib.jar
+ sdkuilib.jar,
+ commons-compress-1.0.jar
 Bundle-Activator: com.android.ide.eclipse.adt.AdtPlugin
 Bundle-Vendor: The Android Open Source Project
 Require-Bundle: com.android.ide.eclipse.ddms,
@@ -97,8 +98,11 @@ Export-Package: com.android.ide.eclipse.adt;x-friends:="com.android.ide.eclipse.
  com.android.sdklib.internal.project;x-friends:="com.android.ide.eclipse.tests",
  com.android.sdklib.internal.repository;x-friends:="com.android.ide.eclipse.tests",
  com.android.sdklib.repository;x-friends:="com.android.ide.eclipse.tests",
+ com.android.sdklib.xml;x-friends:="com.android.ide.eclipse.tests",
  com.android.sdkstats;x-friends:="com.android.ide.eclipse.tests",
  com.android.sdkuilib.internal.repository;x-friends:="com.android.ide.eclipse.tests",
+ com.android.sdkuilib.internal.repository.icons;x-friends:="com.android.ide.eclipse.tests",
+ com.android.sdkuilib.internal.tasks;x-friends:="com.android.ide.eclipse.tests",
  com.android.sdkuilib.internal.widgets;x-friends:="com.android.ide.eclipse.tests",
  com.android.sdkuilib.repository;x-friends:="com.android.ide.eclipse.tests"
 

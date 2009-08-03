@@ -86,6 +86,8 @@
                             <xsd:element name="vendor"    type="xsd:normalizedString" />
                             <!-- The Android API Level for the add-on. An int > 0. -->
                             <xsd:element name="api-level" type="xsd:positiveInteger"  />
+                            <!-- The optional codename for this add-on, if it's a preview. -->
+                            <xsd:element name="codename"  type="xsd:string" minOccurs="0" />
 
                             <!-- The revision, an int > 0, incremented each time a new
                                  package is generated. -->

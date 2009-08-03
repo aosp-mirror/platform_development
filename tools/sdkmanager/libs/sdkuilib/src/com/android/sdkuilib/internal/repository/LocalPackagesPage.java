@@ -19,7 +19,7 @@ package com.android.sdkuilib.internal.repository;
 import com.android.sdklib.internal.repository.Archive;
 import com.android.sdklib.internal.repository.IDescription;
 import com.android.sdklib.internal.repository.Package;
-import com.android.sdkuilib.internal.repository.UpdaterData.ISdkListener;
+import com.android.sdkuilib.repository.UpdaterWindow.ISdkListener;
 
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;

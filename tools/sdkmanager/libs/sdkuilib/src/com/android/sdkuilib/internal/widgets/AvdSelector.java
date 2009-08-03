@@ -236,8 +236,8 @@ public final class AvdSelector {
         if (displayMode == DisplayMode.MANAGER) {
             mNewButton = new Button(buttons, SWT.PUSH | SWT.FLAT);
             mNewButton.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-            mNewButton.setText("Add...");
-            mNewButton.setToolTipText("Adds a new AVD.");
+            mNewButton.setText("New...");
+            mNewButton.setToolTipText("Creates a new AVD.");
             mNewButton.addSelectionListener(new SelectionAdapter() {
                 @Override
                 public void widgetSelected(SelectionEvent arg0) {
@@ -915,7 +915,7 @@ public final class AvdSelector {
                 new ITask() {
                     public void run(ITaskMonitor monitor) {
                         try {
-                            monitor.setDescription("Starting emualator for AVD '%1$s'", avdName);
+                            monitor.setDescription("Starting emulator for AVD '%1$s'", avdName);
                             int n = 10;
                             monitor.setProgressMax(n);
                             Process process = Runtime.getRuntime().exec(command);
