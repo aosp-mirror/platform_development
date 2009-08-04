@@ -15,7 +15,7 @@
 -->
 <resources xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
-    <string name="appTitle">"Fallback"</string>
-    <string name="title">"Desteklenmeyen işlem"</string>
-    <string name="error">"Bu işlem şu an desteklenmiyor."</string>
+    <string name="appTitle" msgid="161410001913116606">"Fallback"</string>
+    <string name="title" msgid="8156274565006125136">"Desteklenmeyen işlem"</string>
+    <string name="error" msgid="6539615832923362301">"Bu işlem şu an desteklenmiyor."</string>
 </resources>
