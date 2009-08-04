@@ -49,10 +49,12 @@ public class List5 extends ListActivity {
             return mStrings.length;
         }
 
+        @Override
         public boolean areAllItemsEnabled() {
             return false;
         }
 
+        @Override
         public boolean isEnabled(int position) {
             return !mStrings[position].startsWith("-");
         }

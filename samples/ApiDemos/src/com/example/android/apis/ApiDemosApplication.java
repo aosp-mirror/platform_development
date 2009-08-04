@@ -16,8 +16,6 @@
 
 package com.example.android.apis;
 
-import com.example.android.apis.app.DefaultValues;
-
 import android.app.Application;
 import android.preference.PreferenceManager;
 
@@ -33,6 +31,7 @@ import android.preference.PreferenceManager;
  */
 public class ApiDemosApplication extends Application {
 
+    @Override
     public void onCreate() {
         /*
          * This populates the default values from the preferences XML file. See
@@ -41,6 +40,7 @@ public class ApiDemosApplication extends Application {
         PreferenceManager.setDefaultValues(this, R.xml.default_values, false);
     }
 
+    @Override
     public void onTerminate() {
     }
 }

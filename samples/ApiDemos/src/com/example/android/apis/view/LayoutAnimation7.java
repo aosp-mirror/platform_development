@@ -19,20 +19,7 @@ package com.example.android.apis.view;
 import com.example.android.apis.R;
 
 import android.app.Activity;
-import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.view.View;
-import android.view.ViewGroup;
-import android.view.animation.AlphaAnimation;
-import android.view.animation.Animation;
-import android.view.animation.GridLayoutAnimationController;
-import android.widget.BaseAdapter;
-import android.widget.Gallery;
-import android.widget.GridView;
-import android.widget.ImageView;
-
-import java.util.List;
 
 public class LayoutAnimation7 extends Activity {
     @Override

@@ -18,7 +18,6 @@ package com.example.android.apis.graphics.kube;
 
 import android.opengl.GLSurfaceView;
 
-import javax.microedition.khronos.egl.EGL10;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
