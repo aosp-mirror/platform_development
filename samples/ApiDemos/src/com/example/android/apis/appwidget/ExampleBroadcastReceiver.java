@@ -17,20 +17,12 @@
 package com.example.android.apis.appwidget;
 
 import android.appwidget.AppWidgetManager;
-import android.appwidget.AppWidgetProvider;
 import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.os.SystemClock;
 import android.util.Log;
-import android.widget.RemoteViews;
 
 import java.util.ArrayList;
-
-// Need the following import to get access to the app resources, since this
-// class is in a sub-package.
-import com.example.android.apis.R;
 
 /**
  * A BroadcastReceiver that listens for updates for the ExampleAppWidgetProvider.  This
@@ -39,6 +31,7 @@ import com.example.android.apis.R;
  */
 public class ExampleBroadcastReceiver extends BroadcastReceiver {
 
+    @Override
     public void onReceive(Context context, Intent intent) {
         Log.d("ExmampleBroadcastReceiver", "intent=" + intent);
 
@@ -48,8 +41,8 @@ public class ExampleBroadcastReceiver extends BroadcastReceiver {
         if (action.equals(Intent.ACTION_TIMEZONE_CHANGED)
                 || action.equals(Intent.ACTION_TIME_CHANGED)) {
             AppWidgetManager gm = AppWidgetManager.getInstance(context);
-            ArrayList<Integer> appWidgetIds = new ArrayList();
-            ArrayList<String> texts = new ArrayList();
+            ArrayList<Integer> appWidgetIds = new ArrayList<Integer>();
+            ArrayList<String> texts = new ArrayList<String>();
 
             ExampleAppWidgetConfigure.loadAllTitlePrefs(context, appWidgetIds, texts);
 

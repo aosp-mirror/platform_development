@@ -22,14 +22,13 @@ import android.app.Activity;
 import android.app.NotificationManager;
 import android.os.Bundle;
 
-import java.util.Map;
-
 /**
  * This activity is run as the click activity for {@link IncomingMessage}.
  * When it comes up, it also clears the notification, because the "message"
  * has been "read."
  */
 public class IncomingMessageView extends Activity {
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.incoming_message_view);

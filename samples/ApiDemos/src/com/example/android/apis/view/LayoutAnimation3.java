@@ -21,8 +21,6 @@ import com.example.android.apis.R;
 import android.app.ListActivity;
 import android.os.Bundle;
 import android.widget.ArrayAdapter;
-import android.widget.ListView;
-import android.view.View;
 
 public class LayoutAnimation3 extends ListActivity {
     @Override

@@ -20,13 +20,10 @@ import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
 import android.content.ComponentName;
 import android.content.Context;
-import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.SystemClock;
 import android.util.Log;
 import android.widget.RemoteViews;
-
-import java.util.ArrayList;
 
 // Need the following import to get access to the app resources, since this
 // class is in a sub-package.
@@ -51,6 +48,7 @@ public class ExampleAppWidgetProvider extends AppWidgetProvider {
     // log tag
     private static final String TAG = "ExampleAppWidgetProvider";
 
+    @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
         Log.d(TAG, "onUpdate");
         // For each widget that needs an update, get the text that we should display:
@@ -65,6 +63,7 @@ public class ExampleAppWidgetProvider extends AppWidgetProvider {
         }
     }
     
+    @Override
     public void onDeleted(Context context, int[] appWidgetIds) {
         Log.d(TAG, "onDeleted");
         // When the user deletes the widget, delete the preference associated with it.
@@ -74,6 +73,7 @@ public class ExampleAppWidgetProvider extends AppWidgetProvider {
         }
     }
 
+    @Override
     public void onEnabled(Context context) {
         Log.d(TAG, "onEnabled");
         // When the first widget is created, register for the TIMEZONE_CHANGED and TIME_CHANGED
@@ -87,11 +87,11 @@ public class ExampleAppWidgetProvider extends AppWidgetProvider {
                 PackageManager.DONT_KILL_APP);
     }
 
+    @Override
     public void onDisabled(Context context) {
         // When the first widget is created, stop listening for the TIMEZONE_CHANGED and
         // TIME_CHANGED broadcasts.
         Log.d(TAG, "onDisabled");
-        Class clazz = ExampleBroadcastReceiver.class;
         PackageManager pm = context.getPackageManager();
         pm.setComponentEnabledSetting(
                 new ComponentName("com.example.android.apis", ".appwidget.ExampleBroadcastReceiver"),

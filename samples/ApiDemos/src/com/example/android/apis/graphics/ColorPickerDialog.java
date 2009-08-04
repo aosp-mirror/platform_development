@@ -16,7 +16,6 @@
 
 package com.example.android.apis.graphics;
 
-import android.R;
 import android.os.Bundle;
 import android.app.Dialog;
 import android.content.Context;
@@ -218,7 +217,7 @@ public class ColorPickerDialog extends Dialog {
         mInitialColor = initialColor;
     }
 
-
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         OnColorChangedListener l = new OnColorChangedListener() {
