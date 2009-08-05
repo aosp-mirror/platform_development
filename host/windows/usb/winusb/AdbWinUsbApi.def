@@ -1,0 +1,5 @@
+; AdbWinUsbApi.def : Declares the module parameters.
+
+LIBRARY      "AdbWinUsbApi.DLL"
+
+EXPORTS
