@@ -71,6 +71,7 @@ ANPLogInterfaceV0           gLogI;
 ANPPaintInterfaceV0         gPaintI;
 ANPPathInterfaceV0          gPathI;
 ANPSurfaceInterfaceV0       gSurfaceI;
+ANPSystemInterfaceV0        gSystemI;
 ANPTypefaceInterfaceV0      gTypefaceI;
 ANPWindowInterfaceV0        gWindowI;
 
@@ -117,7 +118,8 @@ NPError NP_Initialize(NPNetscapeFuncs* browserFuncs, NPPluginFuncs* pluginFuncs,
         { kPaintInterfaceV0_ANPGetValue,        sizeof(gPaintI),    &gPaintI },
         { kPathInterfaceV0_ANPGetValue,         sizeof(gPathI),     &gPathI },
         { kSurfaceInterfaceV0_ANPGetValue,      sizeof(gSurfaceI),  &gSurfaceI },
-        { kTypefaceInterfaceV0_ANPGetValue,     sizeof(gPaintI),    &gTypefaceI },
+        { kSystemInterfaceV0_ANPGetValue,       sizeof(gSystemI),   &gSystemI },
+        { kTypefaceInterfaceV0_ANPGetValue,     sizeof(gTypefaceI), &gTypefaceI },
         { kWindowInterfaceV0_ANPGetValue,       sizeof(gWindowI),   &gWindowI },
     };
     for (size_t i = 0; i < ARRAY_COUNT(gPairs); i++) {
@@ -179,6 +181,13 @@ NPError NPP_New(NPMIMEType pluginType, NPP instance, uint16 mode, int16 argc,
     if (err) {
         gLogI.log(instance, kError_ANPLogType, "request model %d err %d", model, err);
         return err;
+    }
+
+    const char* path = gSystemI.getApplicationDataDirectory();
+    if (path) {
+        gLogI.log(instance, kDebug_ANPLogType, "Application data dir is %s", path);
+    } else {
+        gLogI.log(instance, kError_ANPLogType, "Can't find Application data dir");
     }
 
     // select the pluginType
