@@ -65,6 +65,7 @@ public class PointerLocation extends Activity {
         private final Paint mTextLevelPaint;
         private final Paint mPaint;
         private final Paint mTargetPaint;
+        private final Paint mPathPaint;
         private final FontMetricsInt mTextMetrics = new FontMetricsInt();
         private int mHeaderBottom;
         private boolean mCurDown;
@@ -92,6 +93,9 @@ public class PointerLocation extends Activity {
             mTargetPaint = new Paint();
             mTargetPaint.setAntiAlias(false);
             mTargetPaint.setARGB(192, 0, 0, 255);
+            mPathPaint = new Paint();
+            mPathPaint.setAntiAlias(false);
+            mPathPaint.setARGB(255, 64, 128, 255);
             mPaint.setStyle(Paint.Style.STROKE);
             mPaint.setStrokeWidth(1);
         }
@@ -138,35 +142,45 @@ public class PointerLocation extends Activity {
                 
                 final int N = ps.mXs.size();
                 float lastX=0, lastY=0;
-                mPaint.setARGB(255, 0, 255, 255);
+                boolean haveLast = false;
+                boolean drawn = false;
+                mPaint.setARGB(255, 128, 255, 255);
                 for (int i=0; i<N; i++) {
                     float x = ps.mXs.get(i);
                     float y = ps.mYs.get(i);
-                    if (i > 0) {
-                        canvas.drawLine(lastX, lastY, x, y, mTargetPaint);
+                    if (Float.isNaN(x)) {
+                        haveLast = false;
+                        continue;
+                    }
+                    if (haveLast) {
+                        canvas.drawLine(lastX, lastY, x, y, mPathPaint);
                         canvas.drawPoint(lastX, lastY, mPaint);
+                        drawn = true;
                     }
                     lastX = x;
                     lastY = y;
+                    haveLast = true;
                 }
-                if (ps.mVelocity != null) {
-                    mPaint.setARGB(255, 255, 0, 0);
-                    float xVel = ps.mVelocity.getXVelocity() * (1000/60);
-                    float yVel = ps.mVelocity.getYVelocity() * (1000/60);
-                    canvas.drawLine(lastX, lastY, lastX+xVel, lastY+yVel, mPaint);
-                } else {
-                    canvas.drawPoint(lastX, lastY, mPaint);
+                
+                if (drawn) {
+                    if (ps.mVelocity != null) {
+                        mPaint.setARGB(255, 255, 64, 128);
+                        float xVel = ps.mVelocity.getXVelocity() * (1000/60);
+                        float yVel = ps.mVelocity.getYVelocity() * (1000/60);
+                        canvas.drawLine(lastX, lastY, lastX+xVel, lastY+yVel, mPaint);
+                    } else {
+                        canvas.drawPoint(lastX, lastY, mPaint);
+                    }
                 }
-            }
-            
-            if (mCurDown && NP > 0) {
-                final PointerState ps = mPointers.get(0);
-                canvas.drawLine(0, (int)ps.mCurY, getWidth(), (int)ps.mCurY, mTargetPaint);
-                canvas.drawLine((int)ps.mCurX, 0, (int)ps.mCurX, getHeight(), mTargetPaint);
-                int pressureLevel = (int)(ps.mCurPressure*255);
-                mPaint.setARGB(255, pressureLevel, 128, 255-pressureLevel);
-                canvas.drawPoint(ps.mCurX, ps.mCurY, mPaint);
-                canvas.drawCircle(ps.mCurX, ps.mCurY, ps.mCurWidth, mPaint);
+                
+                if (mCurDown && ps.mCurDown) {
+                    canvas.drawLine(0, (int)ps.mCurY, getWidth(), (int)ps.mCurY, mTargetPaint);
+                    canvas.drawLine((int)ps.mCurX, 0, (int)ps.mCurX, getHeight(), mTargetPaint);
+                    int pressureLevel = (int)(ps.mCurPressure*255);
+                    mPaint.setARGB(255, pressureLevel, 128, 255-pressureLevel);
+                    canvas.drawPoint(ps.mCurX, ps.mCurY, mPaint);
+                    canvas.drawCircle(ps.mCurX, ps.mCurY, ps.mCurWidth, mPaint);
+                }
             }
         }
 
@@ -188,55 +202,68 @@ public class PointerLocation extends Activity {
             //    mRect.setEmpty();
             //}
             if (action == MotionEvent.ACTION_DOWN) {
+                if (NP == 0) {
+                    PointerState ps = new PointerState();
+                    ps.mVelocity = VelocityTracker.obtain();
+                    mPointers.add(ps);
+                    NP++;
+                }
                 for (int p=0; p<NP; p++) {
                     final PointerState ps = mPointers.get(p);
                     ps.mXs.clear();
                     ps.mYs.clear();
                     ps.mVelocity = VelocityTracker.obtain();
+                    ps.mCurDown = false;
                 }
-            }
-            
-            while (NP < event.getPointerCount()) {
-                PointerState ps = new PointerState();
-                ps.mVelocity = VelocityTracker.obtain();
-                mPointers.add(ps);
-                NP++;
+                mPointers.get(0).mCurDown = true;
             }
             
             if ((action&MotionEvent.ACTION_MASK) == MotionEvent.ACTION_POINTER_DOWN) {
-                final PointerState ps = mPointers.get(
-                        (action&MotionEvent.ACTION_POINTER_MASK)
-                                >> MotionEvent.ACTION_POINTER_SHIFT);
-                ps.mXs.clear();
-                ps.mYs.clear();
+                final int id = (action&MotionEvent.ACTION_POINTER_ID_MASK)
+                        >> MotionEvent.ACTION_POINTER_ID_SHIFT;
+                while (NP <= id) {
+                    PointerState ps = new PointerState();
+                    ps.mVelocity = VelocityTracker.obtain();
+                    mPointers.add(ps);
+                    NP++;
+                }
+                final PointerState ps = mPointers.get(id);
                 ps.mVelocity = VelocityTracker.obtain();
+                ps.mCurDown = true;
             }
             
-            if (NP > event.getPointerCount()) {
-                NP = event.getPointerCount();
-            }
+            final int NI = event.getPointerCount();
             
             mCurDown = action != MotionEvent.ACTION_UP
                     && action != MotionEvent.ACTION_CANCEL;
             
-            for (int p=0; p<NP; p++) {
-                final PointerState ps = mPointers.get(p);
+            for (int i=0; i<NI; i++) {
+                final PointerState ps = mPointers.get(event.getPointerId(i));
                 ps.mVelocity.addMovement(event);
                 ps.mVelocity.computeCurrentVelocity(1);
                 final int N = event.getHistorySize();
-                for (int i=0; i<N; i++) {
-                    ps.mXs.add(event.getHistoricalX(p, i));
-                    ps.mYs.add(event.getHistoricalY(p, i));
+                for (int j=0; j<N; j++) {
+                    ps.mXs.add(event.getHistoricalX(i, j));
+                    ps.mYs.add(event.getHistoricalY(i, j));
                 }
-                ps.mXs.add(event.getX(p));
-                ps.mYs.add(event.getY(p));
-                ps.mCurX = (int)event.getX(p);
-                ps.mCurY = (int)event.getY(p);
+                ps.mXs.add(event.getX(i));
+                ps.mYs.add(event.getY(i));
+                ps.mCurX = (int)event.getX(i);
+                ps.mCurY = (int)event.getY(i);
                 //Log.i("Pointer", "Pointer #" + p + ": (" + ps.mCurX
                 //        + "," + ps.mCurY + ")");
-                ps.mCurPressure = event.getPressure(p);
-                ps.mCurSize = event.getSize(p);
+                ps.mCurPressure = event.getPressure(i);
+                ps.mCurSize = event.getSize(i);
                 ps.mCurWidth = (int)(ps.mCurSize*(getWidth()/3));
+            }
+            
+            if ((action&MotionEvent.ACTION_MASK) == MotionEvent.ACTION_POINTER_UP) {
+                final int id = (action&MotionEvent.ACTION_POINTER_ID_MASK)
+                        >> MotionEvent.ACTION_POINTER_ID_SHIFT;
+                final PointerState ps = mPointers.get(id);
+                ps.mXs.add(Float.NaN);
+                ps.mYs.add(Float.NaN);
+                ps.mCurDown = false;
             }
             
             //if (mCurDown) {
