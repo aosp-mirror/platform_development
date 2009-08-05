@@ -33,7 +33,7 @@
   like all other handles this handle must be closed after it's no longer
   needed.
 */
-class AdbIOCompletion : public AdbObjectHandle {
+class ADBWIN_API_CLASS AdbIOCompletion : public AdbObjectHandle {
  public:
   /** \brief Constructs the object
     

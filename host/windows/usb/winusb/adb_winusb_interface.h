@@ -22,7 +22,7 @@
   via WinUsb API.
 */
 
-#include "adb_interface.h"
+#include "..\api\adb_interface.h"
 
 /** \brief Encapsulates an interface on our USB device that is accessible
   via WinUsb API.
@@ -48,6 +48,25 @@ class AdbWinUsbInterfaceObject : public AdbInterfaceObject {
   //
 
  public:
+  /** \brief Releases the object.
+
+    If refcount drops to zero as the result of this release, the object is
+    destroyed in this method. As a general rule, objects must not be touched
+    after this method returns even if returned value is not zero. We override
+    this method in order to make sure that objects of this class are deleted
+    in contect of the DLL they were created in. The problem is that since
+    objects of this class were created in context of AdbWinUsbApi module, they
+    are allocated from the heap assigned to that module. Now, if these objects
+    are deleted outside of AdbWinUsbApi module, this will lead to the heap
+    corruption in the module that deleted these objects. Since all objects of
+    this class are deleted in the Release method only, by overriding it we make
+    sure that we free memory in the context of the module where it was
+    allocated.
+    @return Value of the reference counter after object is released in this
+            method.
+  */
+  virtual LONG Release();
+
   /** \brief Creates handle to this object.
 
     In this call a handle for this object is generated and object is added
