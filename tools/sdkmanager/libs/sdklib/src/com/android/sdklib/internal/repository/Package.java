@@ -332,7 +332,7 @@ public abstract class Package implements IDescription {
      * current one, it's not an update.
      *
      * @param replacementPackage The potential replacement package.
-     * @return
+     * @return One of the {@link UpdateInfo} values.
      *
      * @see #sameItemAs(Package)
      */

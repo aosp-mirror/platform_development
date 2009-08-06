@@ -23,6 +23,7 @@ import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipFile;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -572,6 +573,10 @@ public class Archive implements IDescription {
 
             return true;
 
+        } catch (FileNotFoundException e) {
+            // The FNF message is just the URL. Make it a bit more useful.
+            monitor.setResult("File not found: %1$s", e.getMessage());
+
         } catch (Exception e) {
             monitor.setResult(e.getMessage());
 
@@ -723,8 +728,7 @@ public class Archive implements IDescription {
 
             byte[] buf = new byte[65536];
 
-            Enumeration<ZipArchiveEntry> entries =
-                    (Enumeration<ZipArchiveEntry>)zipFile.getEntries();
+            Enumeration<ZipArchiveEntry> entries = zipFile.getEntries();
             while (entries.hasMoreElements()) {
                 ZipArchiveEntry entry = entries.nextElement();
 
