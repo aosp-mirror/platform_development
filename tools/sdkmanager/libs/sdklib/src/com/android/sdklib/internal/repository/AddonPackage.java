@@ -126,8 +126,12 @@ public class AddonPackage extends Package {
         super.saveProperties(props);
 
         mVersion.saveProperties(props);
-        props.setProperty(PROP_NAME, mName);
-        props.setProperty(PROP_VENDOR, mVendor);
+        if (mName != null) {
+            props.setProperty(PROP_NAME, mName);
+        }
+        if (mVendor != null) {
+            props.setProperty(PROP_VENDOR, mVendor);
+        }
     }
 
     /**
