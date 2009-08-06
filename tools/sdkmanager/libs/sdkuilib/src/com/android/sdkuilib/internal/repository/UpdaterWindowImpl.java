@@ -109,7 +109,7 @@ public class UpdaterWindowImpl {
      * Create contents of the window.
      */
     protected void createContents() {
-        mAndroidSdkUpdater = new Shell(mParentShell);
+        mAndroidSdkUpdater = new Shell(mParentShell, SWT.SHELL_TRIM);
         mAndroidSdkUpdater.addDisposeListener(new DisposeListener() {
             public void widgetDisposed(DisposeEvent e) {
                 onAndroidSdkUpdaterDispose();    //$hide$ (hide from SWT designer)
