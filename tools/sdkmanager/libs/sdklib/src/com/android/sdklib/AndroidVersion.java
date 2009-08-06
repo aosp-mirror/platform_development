@@ -174,7 +174,7 @@ public class AndroidVersion {
         } else if (obj instanceof String) {
             // if we have a code name, this must match.
             if (mCodename != null) {
-                return mCodename.equals((String)obj);
+                return mCodename.equals(obj);
             }
 
             // else we try to convert to a int and compare to the api level
