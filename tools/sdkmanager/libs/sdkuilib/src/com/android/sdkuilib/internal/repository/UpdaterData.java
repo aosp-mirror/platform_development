@@ -36,6 +36,8 @@ import com.android.sdkuilib.repository.UpdaterWindow.ISdkListener;
 
 import org.eclipse.swt.widgets.Shell;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -304,8 +306,21 @@ class UpdaterData {
 
                     } catch (Throwable t) {
                         // Display anything unexpected in the monitor.
-                        monitor.setResult("Unexpected Error: %1$s", t.getMessage());
+                        String msg = t.getMessage();
+                        if (msg != null) {
+                            monitor.setResult("Unexpected Error installing '%1%s: %2$s",
+                                    archive.getParentPackage().getShortDescription(), msg);
+                        } else {
+                            // no error info? get the stack call to display it
+                            // At least that'll give us a better bug report.
+                            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                            t.printStackTrace(new PrintStream(baos));
 
+                            // and display it
+                            monitor.setResult("Unexpected Error installing '%1$s\n%2$s",
+                                    archive.getParentPackage().getShortDescription(),
+                                    baos.toString());
+                        }
                     } finally {
 
                         // Always move the progress bar to the desired position.

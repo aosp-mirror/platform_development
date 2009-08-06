@@ -87,7 +87,9 @@ public class PlatformPackage extends Package {
         super.saveProperties(props);
 
         mVersion.saveProperties(props);
-        props.setProperty(PROP_VERSION, mVersionName);
+        if (mVersionName != null) {
+            props.setProperty(PROP_VERSION, mVersionName);
+        }
     }
 
     /** Returns the version, a string, for platform packages. */
