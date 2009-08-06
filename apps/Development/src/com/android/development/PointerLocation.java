@@ -20,7 +20,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
-import android.graphics.Rect;
 import android.graphics.Paint.FontMetricsInt;
 import android.os.Bundle;
 import android.util.Log;
@@ -69,6 +68,8 @@ public class PointerLocation extends Activity {
         private final FontMetricsInt mTextMetrics = new FontMetricsInt();
         private int mHeaderBottom;
         private boolean mCurDown;
+        private int mCurNumPointers;
+        private int mMaxNumPointers;
         private final ArrayList<PointerState> mPointers
                  = new ArrayList<PointerState>();
         
@@ -98,6 +99,10 @@ public class PointerLocation extends Activity {
             mPathPaint.setARGB(255, 64, 128, 255);
             mPaint.setStyle(Paint.Style.STROKE);
             mPaint.setStrokeWidth(1);
+            
+            PointerState ps = new PointerState();
+            ps.mVelocity = VelocityTracker.obtain();
+            mPointers.add(ps);
         }
 
         @Override
@@ -114,27 +119,44 @@ public class PointerLocation extends Activity {
 
         @Override
         protected void onDraw(Canvas canvas) {
-            int w = getWidth()/5;
-            int base = -mTextMetrics.ascent+1;
-            int bottom = mHeaderBottom;
+            final int w = getWidth();
+            final int itemW = w/7;
+            final int base = -mTextMetrics.ascent+1;
+            final int bottom = mHeaderBottom;
             
             final int NP = mPointers.size();
             
             if (NP > 0) {
                 final PointerState ps = mPointers.get(0);
-                canvas.drawRect(0, 0, w-1, bottom, mTextBackgroundPaint);
-                canvas.drawText("X: " + ps.mCurX, 1, base, mTextPaint);
-                canvas.drawRect(w, 0, (w * 2) - 1, bottom, mTextBackgroundPaint);
-                canvas.drawText("Y: " + ps.mCurY, 1 + w, base, mTextPaint);
-                canvas.drawRect(w * 2, 0, (w * 3) - 1, bottom, mTextBackgroundPaint);
-                canvas.drawRect(w * 2, 0, (w * 2) + (ps.mCurPressure * w) - 1, bottom, mTextLevelPaint);
-                canvas.drawText("Pres: " + ps.mCurPressure, 1 + w * 2, base, mTextPaint);
-                canvas.drawRect(w * 3, 0, (w * 4) - 1, bottom, mTextBackgroundPaint);
-                canvas.drawRect(w * 3, 0, (w * 3) + (ps.mCurSize * w) - 1, bottom, mTextLevelPaint);
-                canvas.drawText("Size: " + ps.mCurSize, 1 + w * 3, base, mTextPaint);
-                canvas.drawRect(w * 4, 0, getWidth(), bottom, mTextBackgroundPaint);
-                int velocity = ps.mVelocity == null ? 0 : (int) (ps.mVelocity.getYVelocity() * 1000);
-                canvas.drawText("yVel: " + velocity, 1 + w * 4, base, mTextPaint);
+                canvas.drawRect(0, 0, itemW-1, bottom,mTextBackgroundPaint);
+                canvas.drawText("P: " + mCurNumPointers + " / " + mMaxNumPointers,
+                        1, base, mTextPaint);
+                
+                canvas.drawRect(itemW, 0, (itemW * 2) - 1, bottom, mTextBackgroundPaint);
+                canvas.drawText("X: " + ps.mCurX, 1 + itemW, base, mTextPaint);
+                
+                canvas.drawRect(itemW * 2, 0, (itemW * 3) - 1, bottom, mTextBackgroundPaint);
+                canvas.drawText("Y: " + ps.mCurY, 1 + itemW * 2, base, mTextPaint);
+                
+                canvas.drawRect(itemW * 3, 0, (itemW * 4) - 1, bottom, mTextBackgroundPaint);
+                int velocity = ps.mVelocity == null ? 0 : (int) (ps.mVelocity.getXVelocity() * 1000);
+                canvas.drawText("Xv: " + velocity, 1 + itemW * 3, base, mTextPaint);
+                
+                canvas.drawRect(itemW * 4, 0, (itemW * 5) - 1, bottom, mTextBackgroundPaint);
+                velocity = ps.mVelocity == null ? 0 : (int) (ps.mVelocity.getYVelocity() * 1000);
+                canvas.drawText("Yv: " + velocity, 1 + itemW * 4, base, mTextPaint);
+                
+                canvas.drawRect(itemW * 5, 0, (itemW * 6) - 1, bottom, mTextBackgroundPaint);
+                canvas.drawRect(itemW * 5, 0, (itemW * 5) + (ps.mCurPressure * itemW) - 1,
+                        bottom, mTextLevelPaint);
+                canvas.drawText("Prs: " + String.format("%.2f", ps.mCurPressure), 1 + itemW * 5,
+                        base, mTextPaint);
+                
+                canvas.drawRect(itemW * 6, 0, w, bottom, mTextBackgroundPaint);
+                canvas.drawRect(itemW * 6, 0, (itemW * 6) + (ps.mCurSize * itemW) - 1,
+                        bottom, mTextLevelPaint);
+                canvas.drawText("Size: " + String.format("%.2f", ps.mCurSize), 1 + itemW * 6,
+                        base, mTextPaint);
             }
             
             for (int p=0; p<NP; p++) {
@@ -202,12 +224,6 @@ public class PointerLocation extends Activity {
             //    mRect.setEmpty();
             //}
             if (action == MotionEvent.ACTION_DOWN) {
-                if (NP == 0) {
-                    PointerState ps = new PointerState();
-                    ps.mVelocity = VelocityTracker.obtain();
-                    mPointers.add(ps);
-                    NP++;
-                }
                 for (int p=0; p<NP; p++) {
                     final PointerState ps = mPointers.get(p);
                     ps.mXs.clear();
@@ -236,6 +252,10 @@ public class PointerLocation extends Activity {
             
             mCurDown = action != MotionEvent.ACTION_UP
                     && action != MotionEvent.ACTION_CANCEL;
+            mCurNumPointers = mCurDown ? NI : 0;
+            if (mMaxNumPointers < mCurNumPointers) {
+                mMaxNumPointers = mCurNumPointers;
+            }
             
             for (int i=0; i<NI; i++) {
                 final PointerState ps = mPointers.get(event.getPointerId(i));
