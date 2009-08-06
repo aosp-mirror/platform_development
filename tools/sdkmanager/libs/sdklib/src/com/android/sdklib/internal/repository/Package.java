@@ -145,9 +145,15 @@ public abstract class Package implements IDescription {
      */
     void saveProperties(Properties props) {
         props.setProperty(PROP_REVISION, Integer.toString(mRevision));
-        props.setProperty(PROP_LICENSE, mLicense);
-        props.setProperty(PROP_DESC, mDescription);
-        props.setProperty(PROP_DESC_URL, mDescUrl);
+        if (mLicense != null) {
+            props.setProperty(PROP_LICENSE, mLicense);
+        }
+        if (mDescription != null) {
+            props.setProperty(PROP_DESC, mDescription);
+        }
+        if (mDescUrl != null) {
+            props.setProperty(PROP_DESC_URL, mDescUrl);
+        }
 
         if (mSource != null) {
             props.setProperty(PROP_SOURCE_URL,  mSource.getUrl());
