@@ -112,7 +112,31 @@ public class ExtraPackage extends Package {
     /** Returns a short description for an {@link IDescription}. */
     @Override
     public String getShortDescription() {
-        return String.format("Extra %1$s package, revision %2$d", getPath(), getRevision());
+        String name = getPath();
+        if (name != null) {
+            // Uniformize all spaces in the name and upper case words.
+
+            name = name.replaceAll("[ _\t\f-]+", " ");     //$NON-NLS-1$ //$NON-NLS-2$
+
+            // Look at all lower case characters in range [1..n-1] and replace them by an upper
+            // case if they are preceded by a space. Also upper cases the first character of the
+            // string.
+            boolean changed = false;
+            char[] chars = name.toCharArray();
+            for (int n = chars.length - 1, i = 0; i < n; i++) {
+                if (Character.isLowerCase(chars[i]) && (i == 0 || chars[i - 1] == ' ')) {
+                    chars[i] = Character.toUpperCase(chars[i]);
+                    changed = true;
+                }
+            }
+            if (changed) {
+                name = new String(chars);
+            }
+        }
+
+        return String.format("%1$s package, revision %2$d",
+                name,
+                getRevision());
     }
 
     /** Returns a long description for an {@link IDescription}. */
