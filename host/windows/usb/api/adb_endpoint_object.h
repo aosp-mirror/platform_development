@@ -29,7 +29,7 @@
   This class implement functionality that is common for both, WinUsb and
   legacy APIs.
 */
-class AdbEndpointObject : public AdbObjectHandle {
+class ADBWIN_API_CLASS AdbEndpointObject : public AdbObjectHandle {
  public:
   /** \brief Constructs the object
     

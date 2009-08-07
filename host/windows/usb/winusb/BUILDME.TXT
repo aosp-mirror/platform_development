@@ -1,0 +1,7 @@
+In order to build AdbWinUsbApi.dll you will need to install Windows Driver Kit,
+which can be obtained from Microsoft. Assuming that WDK is installed, you
+need to set one of the WDK's build environments, "cd" back into this directory,
+and execute "build -cbeEIFZ" to clean and rebuild this project, or you can
+execute "build -befEIF" to do a minimal build.
+Note that you need to build AdbWinApi.dll (..\api) before you build
+AdbWinUsbApi.dll, as it depends on AdbWinApi.lib library.
