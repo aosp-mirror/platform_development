@@ -49,13 +49,18 @@
         classpathref="android.antlibs"/>
 
     <!-- Execute the Android Setup task that will setup some properties specific to the target,
-         and import the rules files.
-         To customize the rules, copy/paste them below the task, and disable import by setting
-         the import attribute to false:
-            <setup import="false" />
+         and import the build rules files.
+
+         The rules file is imported from
+            <SDK>/platforms/<target_platform>/templates/android_rules.xml
+
+         To customize some build steps for your project:
+         - copy the content of the main node <project> from android_rules.xml
+         - paste it in this build.xml below the <setup /> task.
+         - disable the import by changing the setup task below to <setup import="false" />
          
          This will ensure that the properties are setup correctly but that your customized
-         targets are used.
+         build steps are used.
     -->
     <setup />
 </project>
