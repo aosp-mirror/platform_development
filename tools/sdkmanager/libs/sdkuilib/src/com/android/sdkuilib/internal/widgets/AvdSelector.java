@@ -298,8 +298,8 @@ public final class AvdSelector {
 
         mRefreshButton = new Button(buttons, SWT.PUSH | SWT.FLAT);
         mRefreshButton.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-        mRefreshButton.setText("Resfresh");
-        mRefreshButton.setToolTipText("Reloads the list of AVD.\nUse this if you create AVD from the command line.");
+        mRefreshButton.setText("Refresh");
+        mRefreshButton.setToolTipText("Reloads the list of AVD.\nUse this if you create AVDs from the command line.");
         mRefreshButton.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent arg0) {
