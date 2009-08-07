@@ -308,7 +308,7 @@ class UpdaterData {
                         // Display anything unexpected in the monitor.
                         String msg = t.getMessage();
                         if (msg != null) {
-                            monitor.setResult("Unexpected Error installing '%1$s: %2$s",
+                            monitor.setResult("Unexpected Error installing '%1$s': %2$s",
                                     archive.getParentPackage().getShortDescription(), msg);
                         } else {
                             // no error info? get the stack call to display it
@@ -317,7 +317,7 @@ class UpdaterData {
                             t.printStackTrace(new PrintStream(baos));
 
                             // and display it
-                            monitor.setResult("Unexpected Error installing '%1$s\n%2$s",
+                            monitor.setResult("Unexpected Error installing '%1$s'\n%2$s",
                                     archive.getParentPackage().getShortDescription(),
                                     baos.toString());
                         }
