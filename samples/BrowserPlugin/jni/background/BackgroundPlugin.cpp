@@ -34,10 +34,10 @@
 
 extern NPNetscapeFuncs*        browser;
 extern ANPBitmapInterfaceV0    gBitmapI;
-extern ANPLogInterfaceV0       gLogI;
 extern ANPCanvasInterfaceV0    gCanvasI;
+extern ANPLogInterfaceV0       gLogI;
 extern ANPPaintInterfaceV0     gPaintI;
-extern ANPPathInterfaceV0      gPathI;
+extern ANPSurfaceInterfaceV0   gSurfaceI;
 extern ANPTypefaceInterfaceV0  gTypefaceI;
 
 extern uint32_t getMSecs();
@@ -50,16 +50,13 @@ extern uint32_t getMSecs();
 
 BackgroundPlugin::BackgroundPlugin(NPP inst) : SubPlugin(inst) {
 
-    m_paint = gPaintI.newPaint();
-    gPaintI.setFlags(m_paint, gPaintI.getFlags(m_paint) | kAntiAlias_ANPPaintFlag);
-    gPaintI.setColor(m_paint, 0xFFFF0000);
-    gPaintI.setTextSize(m_paint, 16);
+    // initialize the drawing surface
+    m_surfaceReady = false;
+    m_surface = gSurfaceI.newSurface(inst, kRGBA_ANPSurfaceType, false);
+    if(!m_surface)
+        gLogI.log(inst, kError_ANPLogType, "----%p Unable to create RGBA surface", inst);
 
-    ANPTypeface* tf = gTypefaceI.createFromName("serif", kItalic_ANPTypefaceStyle);
-    gPaintI.setTypeface(m_paint, tf);
-    gTypefaceI.unref(tf);
-
-    //initialize variables
+    //initialize bitmap transparency variables
     mFinishedStageOne   = false;
     mFinishedStageTwo   = false;
     mFinishedStageThree = false;
@@ -73,55 +70,97 @@ BackgroundPlugin::BackgroundPlugin(NPP inst) : SubPlugin(inst) {
 }
 
 BackgroundPlugin::~BackgroundPlugin() {
+    gSurfaceI.deleteSurface(m_surface);
 }
 
 bool BackgroundPlugin::supportsDrawingModel(ANPDrawingModel model) {
-    return (model == kBitmap_ANPDrawingModel);
+    return (model == kSurface_ANPDrawingModel);
 }
 
-void BackgroundPlugin::drawPlugin(const ANPBitmap& bitmap, const ANPRectI& clip) {
+void BackgroundPlugin::drawPlugin(int surfaceWidth, int surfaceHeight) {
+
+    // get the plugin's dimensions according to the DOM
+    PluginObject *obj = (PluginObject*) inst()->pdata;
+    const int W = obj->window->width;
+    const int H = obj->window->height;
+
+    // compute the current zoom level
+    const float zoomFactorW = static_cast<float>(surfaceWidth) / W;
+    const float zoomFactorH = static_cast<float>(surfaceHeight) / H;
+
+    // check to make sure the zoom level is uniform
+    if (zoomFactorW + .01 < zoomFactorH && zoomFactorW - .01 > zoomFactorH)
+        gLogI.log(inst(), kError_ANPLogType, " ------ %p zoom is out of sync (%f,%f)",
+                  inst(), zoomFactorW, zoomFactorH);
+
+    // scale the variables based on the zoom level
+    const int fontSize = (int)(zoomFactorW * 16);
+    const int leftMargin = (int)(zoomFactorW * 10);
+
+    // lock the surface
+    ANPBitmap bitmap;
+    if (!m_surfaceReady || !gSurfaceI.lock(m_surface, &bitmap, NULL)) {
+        gLogI.log(inst(), kError_ANPLogType, " ------ %p unable to lock the plugin", inst());
+        return;
+    }
+
+    // create a canvas
     ANPCanvas* canvas = gCanvasI.newCanvas(&bitmap);
-
-    ANPRectF clipR;
-    clipR.left = clip.left;
-    clipR.top = clip.top;
-    clipR.right = clip.right;
-    clipR.bottom = clip.bottom;
-    gCanvasI.clipRect(canvas, &clipR);
-
-    draw(canvas);
-    gCanvasI.deleteCanvas(canvas);
-}
-
-void BackgroundPlugin::draw(ANPCanvas* canvas) {
-
     gCanvasI.drawColor(canvas, 0xFFFFFFFF);
 
-    ANPFontMetrics fm;
-    gPaintI.getFontMetrics(m_paint, &fm);
+    ANPPaint* paint = gPaintI.newPaint();
+    gPaintI.setFlags(paint, gPaintI.getFlags(paint) | kAntiAlias_ANPPaintFlag);
+    gPaintI.setColor(paint, 0xFFFF0000);
+    gPaintI.setTextSize(paint, fontSize);
 
-    gPaintI.setColor(m_paint, 0xFF0000FF);
+    ANPTypeface* tf = gTypefaceI.createFromName("serif", kItalic_ANPTypefaceStyle);
+    gPaintI.setTypeface(paint, tf);
+    gTypefaceI.unref(tf);
+
+    ANPFontMetrics fm;
+    gPaintI.getFontMetrics(paint, &fm);
+
+    gPaintI.setColor(paint, 0xFF0000FF);
     const char c[] = "This is a background plugin.";
-    gCanvasI.drawText(canvas, c, sizeof(c)-1, 10, -fm.fTop, m_paint);
+    gCanvasI.drawText(canvas, c, sizeof(c)-1, leftMargin, -fm.fTop, paint);
+
+    // clean up variables and unlock the surface
+    gPaintI.deletePaint(paint);
+    gCanvasI.deleteCanvas(canvas);
+    gSurfaceI.unlock(m_surface);
 }
 
 int16 BackgroundPlugin::handleEvent(const ANPEvent* evt) {
-    NPP instance = this->inst();
-
     switch (evt->eventType) {
         case kDraw_ANPEventType:
-            switch (evt->data.draw.model) {
-                case kBitmap_ANPDrawingModel:
-                    test_bitmap_transparency(evt);
-                    drawPlugin(evt->data.draw.data.bitmap, evt->data.draw.clip);
-                    return 1;
-                default:
-                    break;   // unknown drawing model
+            gLogI.log(inst(), kError_ANPLogType, " ------ %p the plugin did not request draw events", inst());
+            break;
+        case kSurface_ANPEventType:
+                    switch (evt->data.surface.action) {
+                        case kCreated_ANPSurfaceAction:
+                            m_surfaceReady = true;
+                            return 1;
+                        case kDestroyed_ANPSurfaceAction:
+                            m_surfaceReady = false;
+                            return 1;
+                        case kChanged_ANPSurfaceAction:
+                            drawPlugin(evt->data.surface.data.changed.width,
+                                       evt->data.surface.data.changed.height);
+                            return 1;
+                    }
+                    break;
+        case kLifecycle_ANPEventType:
+            if (evt->data.lifecycle.action == kOnLoad_ANPLifecycleAction) {
+                gLogI.log(inst(), kDebug_ANPLogType, " ------ %p the plugin received an onLoad event", inst());
+                return 1;
             }
+            break;
         case kTouch_ANPEventType:
-            gLogI.log(instance, kError_ANPLogType, " ------ %p the plugin did not request touch events", instance);
+            gLogI.log(inst(), kError_ANPLogType, " ------ %p the plugin did not request touch events", inst());
+            break;
         case kKey_ANPEventType:
-            gLogI.log(instance, kError_ANPLogType, " ------ %p the plugin did not request key events", instance);
+            gLogI.log(inst(), kError_ANPLogType, " ------ %p the plugin did not request key events", inst());
+            break;
         default:
             break;
     }

@@ -33,7 +33,6 @@
 #include "BackgroundPlugin.h"
 #include "FormPlugin.h"
 #include "PaintPlugin.h"
-#include "SurfacePlugin.h"
 #include "android_npapi.h"
 
 NPNetscapeFuncs* browser;
@@ -212,10 +211,6 @@ NPError NPP_New(NPMIMEType pluginType, NPP instance, uint16 mode, int16 argc,
             else if (!strcmp(argv[i], "Paint")) {
                 obj->pluginType = kPaint_PluginType;
                 obj->activePlugin = new PaintPlugin(instance);
-            }
-            else if (!strcmp(argv[i], "RGBA_Surface")) {
-                obj->pluginType = kSurface_PluginType;
-                obj->activePlugin = new SurfacePlugin(instance, kRGBA_ANPSurfaceType);
             }
             gLogI.log(instance, kDebug_ANPLogType, "------ %p PluginType is %d", instance, obj->pluginType);
             break;
