@@ -185,7 +185,7 @@ public class RepoSource implements IDescription {
             monitor.setDescription("Parse XML");
             monitor.incProgress(1);
             parsePackages(xml, monitor);
-            if (mPackages.length == 0) {
+            if (mPackages == null || mPackages.length == 0) {
                 mDescription += "\nNo packages found.";
             } else if (mPackages.length == 1) {
                 mDescription += "\nOne package found.";
@@ -370,10 +370,10 @@ public class RepoSource implements IDescription {
             }
 
         } catch (ParserConfigurationException e) {
-            monitor.setResult("Failed to create XML document builder for %1$s");
+            monitor.setResult("Failed to create XML document builder");
 
         } catch (SAXException e) {
-            monitor.setResult("Failed to parse XML document %1$s");
+            monitor.setResult("Failed to parse XML document");
 
         } catch (IOException e) {
             monitor.setResult("Failed to read XML document");
