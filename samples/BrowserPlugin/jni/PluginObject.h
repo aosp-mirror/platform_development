@@ -56,7 +56,6 @@ enum PluginTypes {
     kForm_PluginType       = 4,
     kText_PluginType       = 5,
     kPaint_PluginType      = 6,
-    kSurface_PluginType    = 7,
 };
 typedef uint32_t PluginType;
 

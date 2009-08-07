@@ -52,7 +52,7 @@ PaintPlugin::PaintPlugin(NPP inst) : SubPlugin(inst) {
 
     // initialize the drawing surface
     m_surfaceReady = false;
-    m_surface = gSurfaceI.newSurface(inst, kRGBA_ANPSurfaceType);
+    m_surface = gSurfaceI.newSurface(inst, kRGBA_ANPSurfaceType, true);
     if(!m_surface)
         gLogI.log(inst, kError_ANPLogType, "----%p Unable to create RGBA surface", inst);
 
@@ -218,6 +218,19 @@ int16 PaintPlugin::handleEvent(const ANPEvent* evt) {
                     return 1;
                 case kDestroyed_ANPSurfaceAction:
                     m_surfaceReady = false;
+                    return 1;
+                case kChanged_ANPSurfaceAction:
+                    // get the plugin's dimensions according to the DOM
+                    PluginObject *obj = (PluginObject*) inst()->pdata;
+                    const int pW = obj->window->width;
+                    const int pH = obj->window->height;
+                    // get the plugin's surface dimensions
+                    const int sW = evt->data.surface.data.changed.width;
+                    const int sH = evt->data.surface.data.changed.height;
+                    if (pW != sW || pH != sH)
+                        gLogI.log(inst(), kError_ANPLogType,
+                                  "----%p Invalid Surface Dimensions (%d,%d):(%d,%d)",
+                                  inst(), pW, pH, sW, sH);
                     return 1;
             }
             break;

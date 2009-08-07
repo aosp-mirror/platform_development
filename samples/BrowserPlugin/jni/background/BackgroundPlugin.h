@@ -48,10 +48,10 @@ public:
     bool mFinishedStageThree; // check opaque
 
 private:
-    void draw(ANPCanvas*);
-    void drawPlugin(const ANPBitmap& bitmap, const ANPRectI& clip);
+    void drawPlugin(int surfaceWidth, int surfaceHeight);
 
-    ANPPaint*   m_paint;
+    bool        m_surfaceReady;
+    ANPSurface* m_surface;
 
     void test_logging();
     void test_timers();

@@ -303,6 +303,7 @@ bool FormPlugin::handleNavigation(ANPKeyCode keyCode) {
     gLogI.log(instance, kDebug_ANPLogType, "----%p Recvd Nav Key %d", instance, keyCode);
 
     if (!m_activeInput) {
+        gWindowI.showKeyboard(instance, true);
         switchActiveInput(&m_usernameInput);
     }
     else if (m_activeInput == &m_usernameInput) {
