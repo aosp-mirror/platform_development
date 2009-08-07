@@ -33,6 +33,17 @@ AdbWinUsbIOCompletion::AdbWinUsbIOCompletion(
 AdbWinUsbIOCompletion::~AdbWinUsbIOCompletion() {
 }
 
+LONG AdbWinUsbIOCompletion::Release() {
+  ATLASSERT(ref_count_ > 0);
+  LONG ret = InterlockedDecrement(&ref_count_);
+  ATLASSERT(ret >= 0);
+  if (0 == ret) {
+    LastReferenceReleased();
+    delete this;
+  }
+  return ret;
+}
+
 bool AdbWinUsbIOCompletion::GetOvelappedIoResult(LPOVERLAPPED ovl_data,
                                                  ULONG* bytes_transferred,
                                                  bool wait) {

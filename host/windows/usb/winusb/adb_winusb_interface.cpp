@@ -40,6 +40,17 @@ AdbWinUsbInterfaceObject::~AdbWinUsbInterfaceObject() {
   ATLASSERT(INVALID_HANDLE_VALUE == usb_device_handle_);
 }
 
+LONG AdbWinUsbInterfaceObject::Release() {
+  ATLASSERT(ref_count_ > 0);
+  LONG ret = InterlockedDecrement(&ref_count_);
+  ATLASSERT(ret >= 0);
+  if (0 == ret) {
+    LastReferenceReleased();
+    delete this;
+  }
+  return ret;
+}
+
 ADBAPIHANDLE AdbWinUsbInterfaceObject::CreateHandle() {
   // Open USB device for this inteface Note that WinUsb API
   // requires the handle to be opened for overlapped I/O.

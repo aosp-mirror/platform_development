@@ -23,12 +23,17 @@
 
 #include "adb_object_handle.h"
 
+// 'AdbInterfaceObject::interface_name_' : class 'std::basic_string<_E,_Tr,_A>'
+// needs to have dll-interface to be used by clients of class
+// 'AdbInterfaceObject' We're ok with that, since interface_name_ will not
+// be referenced by name from outside of this class.
+#pragma warning(disable: 4251)
 /** \brief Encapsulates an interface on our USB device.
 
   This is an abstract class that implements functionality common for both,
   legacy, and WinUsb based interfaces.
 */
-class AdbInterfaceObject : public AdbObjectHandle {
+class ADBWIN_API_CLASS AdbInterfaceObject : public AdbObjectHandle {
  public:
   /** \brief Constructs the object.
     
@@ -180,9 +185,6 @@ class AdbInterfaceObject : public AdbObjectHandle {
   }
 
  protected:
-  /// Name of the USB interface (device name) for this object
-  std::wstring                  interface_name_;
-
   /// Cached usb device descriptor
   USB_DEVICE_DESCRIPTOR         usb_device_descriptor_;
 
@@ -191,6 +193,11 @@ class AdbInterfaceObject : public AdbObjectHandle {
 
   /// Cached usb interface descriptor
   USB_INTERFACE_DESCRIPTOR      usb_interface_descriptor_;
+
+ private:
+  /// Name of the USB interface (device name) for this object
+  std::wstring                  interface_name_;
 };
+#pragma warning(default: 4251)
 
 #endif  // ANDROID_USB_API_ADB_INTERFACE_H__
