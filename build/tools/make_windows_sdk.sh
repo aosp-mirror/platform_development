@@ -19,25 +19,26 @@ DIST_DIR="$2"
 TEMP_DIR="$3"
 [ -z "$TEMP_DIR" ] && TEMP_DIR=${TMP:-/tmp}
 
-
 function die() {
-  echo "Error:" $*
-  echo "Aborting"
-  exit 1
+    echo "Error:" $*
+    echo "Aborting"
+    exit 1
 }
 
 function usage() {
-  echo "Usage: ${PROG_NAME} linux_or_mac_sdk.zip output_dir [temp_dir]"
-  echo "If temp_dir is not given, \$TMP is used. If that's missing, /tmp is used."
-  status
-  exit 2
+    local NAME
+    NAME=`basename ${PROG_NAME}`
+    echo "Usage: ${NAME} linux_or_mac_sdk.zip output_dir [temp_dir]"
+    echo "If temp_dir is not given, \$TMP is used. If that's missing, /tmp is used."
+    status
+    exit 2
 }
 
 function status() {
-  echo "Current values:"
-  echo "- Input  SDK: ${SDK_ZIP:-missing}"
-  echo "- Output dir: ${DIST_DIR:-missing}"
-  echo "- Temp   dir: ${TEMP_DIR:-missing}"
+    echo "Current values:"
+    echo "- Input  SDK: ${SDK_ZIP:-missing}"
+    echo "- Output dir: ${DIST_DIR:-missing}"
+    echo "- Temp   dir: ${TEMP_DIR:-missing}"
 }
 
 function check() {
@@ -114,6 +115,10 @@ function package() {
         "Instead found " $THE_PLATFORM
     [[ -d "$PLATFORM_TOOLS" ]] || die "Missing folder $PLATFORM_TOOLS."
 
+    # Package USB Driver
+    if type package_usb_driver 2>&1 | grep -q function ; then
+        package_usb_driver $TEMP_SDK_DIR
+    fi
 
     # Remove obsolete stuff from tools & platform
     TOOLS="$TEMP_SDK_DIR/tools"
@@ -190,14 +195,14 @@ function package() {
     # Now move the final zip from the temp dest to the final dist dir
     mv -v "$TEMP_DIR/$DEST_NAME_ZIP" "$DIST_DIR/$DEST_NAME_ZIP"
 
-    echo "Done"
-    echo
-    echo "Resulting SDK is in $DIST_DIR/$DEST_NAME_ZIP"
-
     # We want fastboot and adb next to the new SDK
     for i in fastboot.exe adb.exe AdbWinApi.dll; do
         mv -vf out/host/windows-x86/bin/$i "$DIST_DIR"/$i
     done
+
+    echo "Done"
+    echo
+    echo "Resulting SDK is in $DIST_DIR/$DEST_NAME_ZIP"
 }
 
 check
