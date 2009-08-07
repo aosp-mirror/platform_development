@@ -21,7 +21,7 @@
   encapsulates a handle opened to a WinUsb endpoint on our device.
 */
 
-#include "..\api\adb_endpoint_object.h"
+#include "adb_endpoint_object.h"
 #include "adb_winusb_interface.h"
 
 /** Class AdbWinUsbEndpointObject encapsulates a handle opened to an endpoint on
@@ -47,30 +47,6 @@ class AdbWinUsbEndpointObject : public AdbEndpointObject {
     instances on the stack. If such attemp occur, compiler will error.
   */
   virtual ~AdbWinUsbEndpointObject();
-
-  //
-  // Virtual overrides
-  //
-
- public:
-  /** \brief Releases the object.
-
-    If refcount drops to zero as the result of this release, the object is
-    destroyed in this method. As a general rule, objects must not be touched
-    after this method returns even if returned value is not zero. We override
-    this method in order to make sure that objects of this class are deleted
-    in contect of the DLL they were created in. The problem is that since
-    objects of this class were created in context of AdbWinUsbApi module, they
-    are allocated from the heap assigned to that module. Now, if these objects
-    are deleted outside of AdbWinUsbApi module, this will lead to the heap
-    corruption in the module that deleted these objects. Since all objects of
-    this class are deleted in the Release method only, by overriding it we make
-    sure that we free memory in the context of the module where it was
-    allocated.
-    @return Value of the reference counter after object is released in this
-            method.
-  */
-  virtual LONG Release();
 
   //
   // Abstract overrides

@@ -24,18 +24,11 @@
 #include "adb_object_handle.h"
 #include "adb_interface_enum.h"
 #include "adb_interface.h"
+#include "adb_winusb_interface.h"
 #include "adb_legacy_interface.h"
 #include "adb_endpoint_object.h"
 #include "adb_io_completion.h"
 #include "adb_helper_routines.h"
-
-/** \brief Points to InstantiateWinUsbInterface exported from AdbWinUsbApi.dll.
-
-  This variable is initialized with the actual address in DllMain routine for
-  this DLL on DLL_PROCESS_ATTACH event.
-  @see PFN_INSTWINUSBINTERFACE for more information.
-*/
-PFN_INSTWINUSBINTERFACE InstantiateWinUsbInterface = NULL;
 
 ADBAPIHANDLE __cdecl AdbEnumInterfaces(GUID class_id,
                                bool exclude_not_present,
@@ -108,22 +101,11 @@ ADBAPIHANDLE __cdecl AdbCreateInterfaceByName(
   ADBAPIHANDLE ret = NULL;
 
   try {
-    // Instantiate interface object, depending on the USB driver type.
+    // Instantiate object
     if (IsLegacyInterface(interface_name)) {
-      // We have legacy USB driver underneath us.
       obj = new AdbLegacyInterfaceObject(interface_name);
     } else {
-      // We have WinUsb driver underneath us. Make sure that AdbWinUsbApi.dll
-      // is loaded and its InstantiateWinUsbInterface routine address has
-      // been cached.
-      if (NULL != InstantiateWinUsbInterface) {
-        obj = InstantiateWinUsbInterface(interface_name);
-        if (NULL == obj) {
-          return NULL;
-        }
-      } else {
-        return NULL;
-      }
+      obj = new AdbWinUsbInterfaceObject(interface_name);
     }
 
     // Create handle for it
