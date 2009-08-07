@@ -22,7 +22,6 @@
   of the API through a handle.
 */
 
-#include "adb_api.h"
 #include "adb_api_private_defines.h"
 
 /** \brief Defines types of internal API objects
@@ -72,7 +71,7 @@ enum AdbObjectType {
   All API objects that have handles that are sent back to API client must be
   derived from this class.
 */
-class ADBWIN_API_CLASS AdbObjectHandle {
+class AdbObjectHandle {
  public:
   /** \brief Constructs the object
 
