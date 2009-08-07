@@ -95,7 +95,10 @@ public class RepoSources {
                 for (int i = 0; i < count; i++) {
                     String url = props.getProperty(String.format("%s%02d", KEY_SRC, i));  //$NON-NLS-1$
                     if (url != null) {
-                        mSources.add(new RepoSource(url, true /*userSource*/));
+                        RepoSource s = new RepoSource(url, true /*userSource*/);
+                        if (!hasSource(s)) {
+                            mSources.add(s);
+                        }
                     }
                 }
             }
@@ -117,6 +120,20 @@ public class RepoSources {
                 }
             }
         }
+    }
+
+    /**
+     * Returns true if there's already a similar source in the sources list.
+     * <p/>
+     * The search is O(N), which should be acceptable on the expectedly small source list.
+     */
+    public boolean hasSource(RepoSource source) {
+        for (RepoSource s : mSources) {
+            if (s.equals(source)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
