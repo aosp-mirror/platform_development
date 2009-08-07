@@ -56,6 +56,9 @@ public class RepoSource implements IDescription {
 
     /**
      * Constructs a new source for the given repository URL.
+     * @param url The source URL. Cannot be null. If the URL ends with a /, the default
+     *            repository.xml filename will be appended automatically.
+     * @param userSource True if this a user source (add-ons & packages only.)
      */
     public RepoSource(String url, boolean userSource) {
 
@@ -70,6 +73,23 @@ public class RepoSource implements IDescription {
         mUrl = url;
         mUserSource = userSource;
         setDefaultDescription();
+    }
+
+    /**
+     * Two repo source are equal if they have the same userSource flag and the same URL.
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof RepoSource) {
+            RepoSource rs = (RepoSource) obj;
+            return  rs.isUserSource() == this.isUserSource() && rs.getUrl().equals(this.getUrl());
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return mUrl.hashCode() ^ Boolean.valueOf(mUserSource).hashCode();
     }
 
     /** Returns true if this is a user source. We only load addon and extra packages
@@ -176,7 +196,7 @@ public class RepoSource implements IDescription {
                 }
             }
 
-            monitor.setResult("Failed to fetch URL %1$s, reason:", url, reason);
+            monitor.setResult("Failed to fetch URL %1$s, reason: %2$s", url, reason);
         }
 
         monitor.incProgress(1);
