@@ -37,6 +37,14 @@
         <item name="android:windowBackground">@drawable/filled_box</item>
     </style>
 
+    <!-- A theme that has a wallpaper background.  Here we explicitly specify
+         that this theme is to inherit from the system's translucent theme,
+         which sets up various attributes correctly.. -->
+    <style name="Theme.Wallpaper" parent="android:style/Theme.Translucent">
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:colorForeground">#fff</item>
+    </style>
+
     <!-- A theme that has a translucent background.  Here we explicitly specify
          that this theme is to inherit from the system's translucent theme,
          which sets up various attributes correctly.. -->

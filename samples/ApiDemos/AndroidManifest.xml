@@ -72,6 +72,15 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".app.WallpaperActivity"
+                android:label="@string/activity_wallpaper"
+                android:theme="@style/Theme.Wallpaper">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
         <activity android:name=".app.TranslucentActivity"
                 android:label="@string/activity_translucent"
                 android:theme="@style/Theme.Translucent">
