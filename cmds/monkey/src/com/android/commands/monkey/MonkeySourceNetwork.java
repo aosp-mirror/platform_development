@@ -15,6 +15,11 @@
  */
 package com.android.commands.monkey;
 
+import android.content.Context;
+import android.os.IPowerManager;
+import android.os.RemoteException;
+import android.os.ServiceManager;
+import android.os.SystemClock;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
@@ -203,6 +208,36 @@ public class MonkeySourceNetwork implements MonkeyEventSource {
         }
     }
 
+    /**
+     * Command to wake the device up
+     */
+    private static class WakeCommand implements MonkeyCommand {
+        // wake
+        public MonkeyEvent translateCommand(List<String> command) {
+            if (wake()) {
+                return null;
+            }
+            return new MonkeyNoopEvent();
+        }
+    }
+
+    /**
+     * Force the device to wake up.
+     *
+     * @return true if woken up OK.
+     */
+    private static final boolean wake() {
+        IPowerManager pm =
+                IPowerManager.Stub.asInterface(ServiceManager.getService(Context.POWER_SERVICE));
+        try {
+            pm.userActivityWithForce(SystemClock.uptimeMillis(), true, true);
+        } catch (RemoteException e) {
+            Log.e(TAG, "Got remote exception", e);
+            return false;
+        }
+        return true;
+    }
+
     // This maps from command names to command implementations.
     private static final Map<String, MonkeyCommand> COMMAND_MAP = new HashMap<String, MonkeyCommand>();
 
@@ -213,6 +248,7 @@ public class MonkeySourceNetwork implements MonkeyEventSource {
         COMMAND_MAP.put("trackball", new TrackballCommand());
         COMMAND_MAP.put("key", new KeyCommand());
         COMMAND_MAP.put("sleep", new SleepCommand());
+        COMMAND_MAP.put("wake", new WakeCommand());
     }
 
     // QUIT command
@@ -246,6 +282,10 @@ public class MonkeySourceNetwork implements MonkeyEventSource {
                                                0, // default backlog
                                                InetAddress.getLocalHost());
         Socket s = server.accept();
+        // At this point, we have a client connected.  Wake the device
+        // up in preparation for doing some commands.
+        wake();
+
         input = new BufferedReader(new InputStreamReader(s.getInputStream()));
         // auto-flush
         output = new PrintWriter(s.getOutputStream(), true);
