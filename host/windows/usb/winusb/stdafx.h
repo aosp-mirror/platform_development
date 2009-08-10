@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 The Android Open Source Project
+ * Copyright (C) 2009 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@
 
 #ifndef _WIN32_WINNT		// Allow use of features specific to Windows NT 4 or later.
 #define _WIN32_WINNT 0x0500	// Change this to the appropriate value to target Windows 2000 or later.
-#endif						
+#endif
 
 #ifndef _WIN32_WINDOWS		// Allow use of features specific to Windows 98 or later.
 #define _WIN32_WINDOWS 0x0500 // Change this to the appropriate value to target Windows Me or later.
@@ -71,8 +71,7 @@
 #include <string>
 #pragma warning(default: 4201)
 #pragma warning(disable: 4200)
-#include <usbdi.h>
-#include <usb100.h>
+#include <winusb.h>
 
 #include "resource.h"
 
