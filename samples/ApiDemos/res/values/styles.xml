@@ -38,16 +38,15 @@
     </style>
 
     <!-- A theme that has a wallpaper background.  Here we explicitly specify
-         that this theme is to inherit from the system's translucent theme,
-         which sets up various attributes correctly.. -->
-    <style name="Theme.Wallpaper" parent="android:style/Theme.Translucent">
-        <item name="android:windowBackground">@android:color/transparent</item>
+         that this theme is to inherit from the system's wallpaper theme,
+         which sets up various attributes correctly. -->
+    <style name="Theme.Wallpaper" parent="android:style/Theme.Wallpaper">
         <item name="android:colorForeground">#fff</item>
     </style>
 
     <!-- A theme that has a translucent background.  Here we explicitly specify
          that this theme is to inherit from the system's translucent theme,
-         which sets up various attributes correctly.. -->
+         which sets up various attributes correctly. -->
     <style name="Theme.Translucent" parent="android:style/Theme.Translucent">
         <item name="android:windowBackground">@drawable/translucent_background</item>
         <item name="android:windowNoTitle">true</item>
