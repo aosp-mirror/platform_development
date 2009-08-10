@@ -218,15 +218,32 @@ final class AddOnTarget implements IAndroidTarget {
             return true;
         }
 
-        // if the receiver has optional libraries, then the target is only compatible if the
-        // vendor and name are the same
-        if (mLibraries.length != 0 &&
-                (mVendor.equals(target.getVendor()) == false ||
-                        mName.equals(target.getName()) == false)) {
-            return false;
+        /*
+         * The method javadoc indicates:
+         * Returns whether the given target is compatible with the receiver.
+         * <p/>A target is considered compatible if applications developed for the receiver can
+         * run on the given target.
+         */
+
+        // The receiver is an add-on. There are 2 big use cases: The add-on has libraries
+        // or the add-on doesn't (in which case we consider it a platform).
+        if (mLibraries.length == 0) {
+            return mBasePlatform.isCompatibleBaseFor(target);
+        } else {
+            // the only targets that can run the receiver are the same add-on in the same or later
+            // versions.
+            // first check: vendor/name
+            if (mVendor.equals(target.getVendor()) == false ||
+                            mName.equals(target.getName()) == false) {
+                return false;
+            }
+
+            // now check the version. At this point since we checked the add-on part,
+            // we can revert to the basic check on version/codename which are done by the
+            // base platform already.
+            return mBasePlatform.isCompatibleBaseFor(target);
         }
 
-        return mBasePlatform.equals(target);
     }
 
     public String hashString() {
