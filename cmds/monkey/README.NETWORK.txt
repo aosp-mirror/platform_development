@@ -1,13 +1,13 @@
-MONKEY NETWORK SCRIPT
+SIMPLE PROTOCOL FOR AUTOMATED NETWORK CONTROL
 
-The Monkey Network Script was designed to be a low-level way to
-programmability inject KeyEvents and MotionEvents into the input
-system.  The idea is that a process will run on a host computer that
-will support higher-level operations (like conditionals, etc.) and
-will talk (via TCP over ADB) to the device in Monkey Network Script.
-For security reasons, the Monkey only binds to localhost, so you will
-need to use adb to setup port forwarding to actually talk to the
-device.
+The Simple Protocol for Automated Network Control was designed to be a
+low-level way to programmability inject KeyEvents and MotionEvents
+into the input system.  The idea is that a process will run on a host
+computer that will support higher-level operations (like conditionals,
+etc.) and will talk (via TCP over ADB) to the device in Simple
+Protocol for Automated Network Control.  For security reasons, the
+Monkey only binds to localhost, so you will need to use adb to setup
+port forwarding to actually talk to the device.
 
 INITIAL SETUP
 
