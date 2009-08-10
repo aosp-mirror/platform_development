@@ -73,6 +73,10 @@ flip [open|close]
 
 This simulates the opening or closing the keyboard (like on dream).
 
+wake
+
+This command will wake the device up from sleep and allow user input.
+
 OTHER NOTES
 
 There are some convenience features added to allow running without
