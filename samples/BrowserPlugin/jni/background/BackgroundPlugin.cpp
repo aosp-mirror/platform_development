@@ -52,7 +52,7 @@ BackgroundPlugin::BackgroundPlugin(NPP inst) : SubPlugin(inst) {
 
     // initialize the drawing surface
     m_surfaceReady = false;
-    m_surface = gSurfaceI.newSurface(inst, kRGBA_ANPSurfaceType, false);
+    m_surface = gSurfaceI.newRasterSurface(inst, kRGB_565_ANPBitmapFormat, false);
     if(!m_surface)
         gLogI.log(inst, kError_ANPLogType, "----%p Unable to create RGBA surface", inst);
 
