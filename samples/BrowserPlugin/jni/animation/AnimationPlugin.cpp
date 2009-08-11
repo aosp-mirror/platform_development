@@ -25,9 +25,6 @@
 
 #include "AnimationPlugin.h"
 
-#include <stdio.h>
-#include <sys/time.h>
-#include <time.h>
 #include <math.h>
 #include <string.h>
 
@@ -36,12 +33,7 @@ extern ANPLogInterfaceV0       gLogI;
 extern ANPCanvasInterfaceV0    gCanvasI;
 extern ANPPaintInterfaceV0     gPaintI;
 extern ANPPathInterfaceV0      gPathI;
-extern ANPTypefaceInterfaceV0  gTypefaceI;
 extern ANPWindowInterfaceV0    gWindowI;
-
-static void inval(NPP instance) {
-    browser->invalidaterect(instance, NULL);
-}
 
 static uint16 rnd16(float x, int inset) {
     int ix = (int)roundf(x) + inset;
@@ -54,49 +46,12 @@ static uint16 rnd16(float x, int inset) {
 static void inval(NPP instance, const ANPRectF& r, bool doAA) {
     const int inset = doAA ? -1 : 0;
 
-    PluginObject *obj = reinterpret_cast<PluginObject*>(instance->pdata);
     NPRect inval;
     inval.left = rnd16(r.left, inset);
     inval.top = rnd16(r.top, inset);
     inval.right = rnd16(r.right, -inset);
     inval.bottom = rnd16(r.bottom, -inset);
     browser->invalidaterect(instance, &inval);
-}
-
-uint32_t getMSecs() {
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    return (uint32_t) (tv.tv_sec * 1000 + tv.tv_usec / 1000 ); // microseconds to milliseconds
-}
-
-///////////////////////////////////////////////////////////////////////////////
-
-BallAnimation::BallAnimation(NPP inst) : SubPlugin(inst) {
-    m_x = m_y = 0;
-    m_dx = 7 * SCALE;
-    m_dy = 5 * SCALE;
-
-    memset(&m_oval, 0, sizeof(m_oval));
-
-    m_paint = gPaintI.newPaint();
-    gPaintI.setFlags(m_paint, gPaintI.getFlags(m_paint) | kAntiAlias_ANPPaintFlag);
-    gPaintI.setColor(m_paint, 0xFFFF0000);
-    gPaintI.setTextSize(m_paint, 24);
-
-    ANPTypeface* tf = gTypefaceI.createFromName("serif", kItalic_ANPTypefaceStyle);
-    gPaintI.setTypeface(m_paint, tf);
-    gTypefaceI.unref(tf);
-
-    //register for key and touch events
-    ANPEventFlags flags = kKey_ANPEventFlag | kTouch_ANPEventFlag;
-    NPError err = browser->setvalue(inst, kAcceptEvents_ANPSetValue, &flags);
-    if (err != NPERR_NO_ERROR) {
-        gLogI.log(inst, kError_ANPLogType, "Error selecting input events.");
-    }
-}
-
-BallAnimation::~BallAnimation() {
-    gPaintI.deletePaint(m_paint);
 }
 
 static void bounce(float* x, float* dx, const float max) {
@@ -113,14 +68,41 @@ static void bounce(float* x, float* dx, const float max) {
         }
     }
 }
+///////////////////////////////////////////////////////////////////////////////
+
+BallAnimation::BallAnimation(NPP inst) : SubPlugin(inst) {
+    m_x = m_y = 0;
+    m_dx = 7 * SCALE;
+    m_dy = 5 * SCALE;
+
+    memset(&m_oval, 0, sizeof(m_oval));
+
+    m_paint = gPaintI.newPaint();
+    gPaintI.setFlags(m_paint, gPaintI.getFlags(m_paint) | kAntiAlias_ANPPaintFlag);
+    gPaintI.setColor(m_paint, 0xFFFF0000);
+
+    //register for touch events
+    ANPEventFlags flags = kTouch_ANPEventFlag;
+    NPError err = browser->setvalue(inst, kAcceptEvents_ANPSetValue, &flags);
+    if (err != NPERR_NO_ERROR) {
+        gLogI.log(inst, kError_ANPLogType, "Error selecting input events.");
+    }
+}
+
+BallAnimation::~BallAnimation() {
+    gPaintI.deletePaint(m_paint);
+}
 
 bool BallAnimation::supportsDrawingModel(ANPDrawingModel model) {
     return (model == kBitmap_ANPDrawingModel);
 }
 
 void BallAnimation::drawPlugin(const ANPBitmap& bitmap, const ANPRectI& clip) {
+
+    // create a canvas
     ANPCanvas* canvas = gCanvasI.newCanvas(&bitmap);
 
+    // clip the canvas
     ANPRectF clipR;
     clipR.left = clip.left;
     clipR.top = clip.top;
@@ -128,28 +110,15 @@ void BallAnimation::drawPlugin(const ANPBitmap& bitmap, const ANPRectI& clip) {
     clipR.bottom = clip.bottom;
     gCanvasI.clipRect(canvas, &clipR);
 
-    draw(canvas);
-    gCanvasI.deleteCanvas(canvas);
-}
-
-void BallAnimation::draw(ANPCanvas* canvas) {
-    NPP instance = this->inst();
-    PluginObject *obj = (PluginObject*) instance->pdata;
+    // setup variables
+    PluginObject *obj = (PluginObject*) inst()->pdata;
     const float OW = 20;
     const float OH = 20;
     const int W = obj->window->width;
     const int H = obj->window->height;
 
-    inval(instance, m_oval, true);  // inval the old
-    m_oval.left = m_x;
-    m_oval.top = m_y;
-    m_oval.right = m_x + OW;
-    m_oval.bottom = m_y + OH;
-    inval(instance, m_oval, true);  // inval the new
-
+    // paint the canvas (using the path API)
     gCanvasI.drawColor(canvas, 0xFFFFFFFF);
-
-    // test out the Path API
     {
         ANPPath* path = gPathI.newPath();
 
@@ -167,28 +136,25 @@ void BallAnimation::draw(ANPCanvas* canvas) {
         ANPRectF bounds;
         memset(&bounds, 0, sizeof(bounds));
         gPathI.getBounds(path, &bounds);
-#if 0
-        gLogI.log(instance, kDebug_ANPLogType, "drawpath: center %g %g bounds [%g %g %g %g]\n",
-                  cx, cy,
-                  bounds.left, bounds.top, bounds.right, bounds.bottom);
-#endif
         gPathI.deletePath(path);
     }
 
+    // draw the oval
+    inval(inst(), m_oval, true);  // inval the old
+    m_oval.left = m_x;
+    m_oval.top = m_y;
+    m_oval.right = m_x + OW;
+    m_oval.bottom = m_y + OH;
+    inval(inst(), m_oval, true);  // inval the new
     gPaintI.setColor(m_paint, 0xFFFF0000);
     gCanvasI.drawOval(canvas, &m_oval, m_paint);
 
+    // update the coordinates of the oval
     bounce(&m_x, &m_dx, obj->window->width - OW);
     bounce(&m_y, &m_dy, obj->window->height - OH);
 
-    if (mUnichar) {
-        ANPFontMetrics fm;
-        gPaintI.getFontMetrics(m_paint, &fm);
-
-        gPaintI.setColor(m_paint, 0xFF0000FF);
-        char c = static_cast<char>(mUnichar);
-        gCanvasI.drawText(canvas, &c, 1, 10, -fm.fTop, m_paint);
-    }
+    // delete the canvas
+    gCanvasI.deleteCanvas(canvas);
 }
 
 void BallAnimation::showEntirePluginOnScreen() {
@@ -219,14 +185,6 @@ int16 BallAnimation::handleEvent(const ANPEvent* evt) {
                 default:
                     break;   // unknown drawing model
             }
-
-        case kKey_ANPEventType:
-            if (evt->data.key.action == kDown_ANPKeyAction) {
-                mUnichar = evt->data.key.unichar;
-                gLogI.log(instance, kDebug_ANPLogType, "ball downkey event");
-                browser->invalidaterect(instance, NULL);
-            }
-            return 1;
         case kTouch_ANPEventType:
              if (kDown_ANPTouchAction == evt->data.touch.action) {
                  showEntirePluginOnScreen();
