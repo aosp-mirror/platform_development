@@ -195,9 +195,9 @@ function package() {
     # Now move the final zip from the temp dest to the final dist dir
     mv -v "$TEMP_DIR/$DEST_NAME_ZIP" "$DIST_DIR/$DEST_NAME_ZIP"
 
-    # We want fastboot and adb next to the new SDK
-    for i in fastboot.exe adb.exe AdbWinApi.dll; do
-        mv -vf out/host/windows-x86/bin/$i "$DIST_DIR"/$i
+    # We want fastboot and adb (and its DLLs) next to the new SDK
+    for i in fastboot.exe adb.exe AdbWinApi.dll AdbWinUsbApi.dll; do
+        cp -vf out/host/windows-x86/bin/$i "$DIST_DIR"/$i
     done
 
     echo "Done"
