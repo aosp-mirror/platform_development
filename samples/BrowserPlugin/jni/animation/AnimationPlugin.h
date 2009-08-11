@@ -35,7 +35,6 @@ public:
     virtual bool supportsDrawingModel(ANPDrawingModel);
     virtual int16 handleEvent(const ANPEvent* evt);
 private:
-    void draw(ANPCanvas*);
     void drawPlugin(const ANPBitmap& bitmap, const ANPRectI& clip);
     void showEntirePluginOnScreen();
 
@@ -44,14 +43,10 @@ private:
     float m_dx;
     float m_dy;
 
-    int32_t mUnichar;
-
     ANPRectF    m_oval;
     ANPPaint*   m_paint;
 
     static const float SCALE = 0.1;
 };
-
-uint32_t getMSecs();
 
 #endif // pluginGraphics__DEFINED

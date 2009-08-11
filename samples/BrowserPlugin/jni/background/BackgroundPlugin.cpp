@@ -40,11 +40,13 @@ extern ANPPaintInterfaceV0     gPaintI;
 extern ANPSurfaceInterfaceV0   gSurfaceI;
 extern ANPTypefaceInterfaceV0  gTypefaceI;
 
-extern uint32_t getMSecs();
-
 #define ARRAY_COUNT(array)      (sizeof(array) / sizeof(array[0]))
 
-//#define LOG_ERROR(inst, string, params...) gLogI.log(inst, kError_ANPLogType, (log_prefix + string), inst, params)
+static uint32_t getMSecs() {
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return (uint32_t) (tv.tv_sec * 1000 + tv.tv_usec / 1000 ); // microseconds to milliseconds
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 
