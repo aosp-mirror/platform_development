@@ -22,7 +22,6 @@
 #include "stdafx.h"
 #include "adb_winusb_endpoint_object.h"
 #include "adb_winusb_io_completion.h"
-#include "adb_helper_routines.h"
 
 AdbWinUsbEndpointObject::AdbWinUsbEndpointObject(
     AdbWinUsbInterfaceObject* parent_interf,
@@ -32,6 +31,17 @@ AdbWinUsbEndpointObject::AdbWinUsbEndpointObject(
 }
 
 AdbWinUsbEndpointObject::~AdbWinUsbEndpointObject() {
+}
+
+LONG AdbWinUsbEndpointObject::Release() {
+  ATLASSERT(ref_count_ > 0);
+  LONG ret = InterlockedDecrement(&ref_count_);
+  ATLASSERT(ret >= 0);
+  if (0 == ret) {
+    LastReferenceReleased();
+    delete this;
+  }
+  return ret;
 }
 
 ADBAPIHANDLE AdbWinUsbEndpointObject::CommonAsyncReadWrite(
