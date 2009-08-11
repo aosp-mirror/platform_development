@@ -77,6 +77,16 @@ wake
 
 This command will wake the device up from sleep and allow user input.
 
+tap x y
+The tap command is a shortcut for the touch command.  It will
+automatically send both the up and the down event.
+
+press keycode
+
+The press command is a shortcut for the key command.  The keycode
+paramter works just like the key command and will automatically send
+both the up and the down event.
+
 OTHER NOTES
 
 There are some convenience features added to allow running without
