@@ -63,4 +63,21 @@
         <item name="android:textStyle">normal</item>
     </style>
 
+    <style name="ImageView120dpi">
+        <item name="android:src">@drawable/stylogo120dpi</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+    </style>
+
+    <style name="ImageView160dpi">
+        <item name="android:src">@drawable/stylogo160dpi</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+    </style>
+
+    <style name="ImageView240dpi">
+        <item name="android:src">@drawable/stylogo240dpi</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+    </style>
 </resources>
