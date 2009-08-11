@@ -83,7 +83,14 @@ function build() {
     make -j 4 emulator || die "Build failed"
     # Disable parallel build: it generates "permission denied" issues when
     # multiple "ar.exe" are running in parallel.
-    make prebuilt adb fastboot aidl aapt dexdump dmtracedump hprof-conv mksdcard sqlite3 \
+    make aapt adb aidl \
+        prebuilt \
+        dexdump dmtracedump \
+        fastboot \
+        hprof-conv \
+        mksdcard \
+        sqlite3 \
+        zipalign \
         || die "Build failed"
 }
 
@@ -124,7 +131,7 @@ function package() {
     TOOLS="$TEMP_SDK_DIR/tools"
     LIB="$TEMP_SDK_DIR/tools/lib"
     rm -v "$TOOLS"/{adb,android,apkbuilder,ddms,dmtracedump,draw9patch,emulator}
-    rm -v "$TOOLS"/{hierarchyviewer,hprof-conv,mksdcard,sqlite3,traceview}
+    rm -v "$TOOLS"/{hierarchyviewer,hprof-conv,mksdcard,sqlite3,traceview,zipalign}
     rm -v "$LIB"/*/swt.jar
     rm -v "$PLATFORM_TOOLS"/{aapt,aidl,dx,dexdump}
 

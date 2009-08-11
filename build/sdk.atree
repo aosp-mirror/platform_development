@@ -31,6 +31,7 @@ bin/sqlite3 tools/sqlite3
 bin/dmtracedump tools/dmtracedump
 bin/hprof-conv tools/hprof-conv
 bin/mksdcard tools/mksdcard
+bin/zipalign tools/zipalign
 
 # the uper-jar file that apps link against
 out/target/common/obj/PACKAGING/android_jar_intermediates/android.jar platforms/${PLATFORM_NAME}/android.jar
