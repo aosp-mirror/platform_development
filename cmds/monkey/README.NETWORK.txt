@@ -92,6 +92,14 @@ type string
 This command will simulate a user typing the given string on the
 keyboard by generating the proper KeyEvents.
 
+quit
+
+Fully quit the monkey and accept no new sessions.
+
+done
+
+Close the current session and allow a new session to connect
+
 OTHER NOTES
 
 There are some convenience features added to allow running without

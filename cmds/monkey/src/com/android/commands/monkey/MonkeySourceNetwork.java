@@ -359,6 +359,8 @@ public class MonkeySourceNetwork implements MonkeyEventSource {
 
     // QUIT command
     private static final String QUIT = "quit";
+    // DONE command
+    private static final String DONE = "done";
 
     // command response strings
     private static final String OK = "OK";
@@ -398,13 +400,19 @@ public class MonkeySourceNetwork implements MonkeyEventSource {
 
     private final CommandQueueImpl commandQueue = new CommandQueueImpl();
 
-    private final int port;
     private BufferedReader input;
     private PrintWriter output;
     private boolean started = false;
 
-    public MonkeySourceNetwork(int port) {
-        this.port = port;
+    private ServerSocket serverSocket;
+    private Socket clientSocket;
+
+    public MonkeySourceNetwork(int port) throws IOException {
+        // Only bind this to local host.  This means that you can only
+        // talk to the monkey locally, or though adb port forwarding.
+        serverSocket = new ServerSocket(port,
+                                        0, // default backlog
+                                        InetAddress.getLocalHost());
     }
 
     /**
@@ -415,19 +423,24 @@ public class MonkeySourceNetwork implements MonkeyEventSource {
      * @param port the port to listen on
      */
     private void startServer() throws IOException {
-        // Only bind this to local host.  This means that you can only
-        // talk to the monkey locally, or though adb port forwarding.
-        ServerSocket server = new ServerSocket(port,
-                                               0, // default backlog
-                                               InetAddress.getLocalHost());
-        Socket s = server.accept();
+        clientSocket = serverSocket.accept();
         // At this point, we have a client connected.  Wake the device
         // up in preparation for doing some commands.
         wake();
 
-        input = new BufferedReader(new InputStreamReader(s.getInputStream()));
+        input = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
         // auto-flush
-        output = new PrintWriter(s.getOutputStream(), true);
+        output = new PrintWriter(clientSocket.getOutputStream(), true);
+    }
+
+    /**
+     * Stop the server from running so it can reconnect a new client.
+     */
+    private void stopServer() throws IOException {
+        clientSocket.close();
+        input.close();
+        output.close();
+        started = false;
     }
 
     /**
@@ -529,8 +542,24 @@ public class MonkeySourceNetwork implements MonkeyEventSource {
                 String command = input.readLine();
                 if (command == null) {
                     Log.d(TAG, "Connection dropped.");
-                    return null;
+                    // Treat this exactly the same as if the user had
+                    // ended the session cleanly with a done commant.
+                    command = DONE;
                 }
+
+                if (DONE.equals(command)) {
+                  // stop the server so it can accept new connections
+                    try {
+                        stopServer();
+                    } catch (IOException e) {
+                        Log.e(TAG, "Got IOException shutting down!", e);
+                        return null;
+                    }
+                  // return a noop event so we keep executing the main
+                  // loop
+                  return new MonkeyNoopEvent();
+                }
+
                 // Do quit checking here
                 if (QUIT.equals(command)) {
                     // then we're done
