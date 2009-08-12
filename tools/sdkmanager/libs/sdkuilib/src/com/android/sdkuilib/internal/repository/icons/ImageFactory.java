@@ -91,31 +91,34 @@ public class ImageFactory {
      */
     public Image getImageForObject(Object object) {
         if (object instanceof RepoSource) {
-            return getImageByName("source_icon16.png");
+            return getImageByName("source_icon16.png");                         //$NON-NLS-1$
 
         } else if (object instanceof RepoSourcesAdapter.RepoSourceError) {
-            return getImageByName("error_icon16.png");
+            return getImageByName("error_icon16.png");                          //$NON-NLS-1$
+
+        } else if (object instanceof RepoSourcesAdapter.RepoSourceEmpty) {
+            return getImageByName("nopkg_icon16.png");                          //$NON-NLS-1$
 
         } else if (object instanceof PlatformPackage) {
-            return getImageByName("android_icon_16.png");
+            return getImageByName("android_icon_16.png");                       //$NON-NLS-1$
 
         } else if (object instanceof AddonPackage) {
-            return getImageByName("addon_icon16.png");
+            return getImageByName("addon_icon16.png");                          //$NON-NLS-1$
 
         } else if (object instanceof ToolPackage) {
-            return getImageByName("tool_icon16.png");
+            return getImageByName("tool_icon16.png");                           //$NON-NLS-1$
 
         } else if (object instanceof DocPackage) {
-            return getImageByName("doc_icon16.png");
+            return getImageByName("doc_icon16.png");                            //$NON-NLS-1$
 
         } else if (object instanceof ExtraPackage) {
-            return getImageByName("extra_icon16.png");
+            return getImageByName("extra_icon16.png");                          //$NON-NLS-1$
 
         } else if (object instanceof Archive) {
             if (((Archive) object).isCompatible()) {
-                return getImageByName("archive_icon16.png");
+                return getImageByName("archive_icon16.png");                    //$NON-NLS-1$
             } else {
-                return getImageByName("incompat_icon16.png");
+                return getImageByName("incompat_icon16.png");                   //$NON-NLS-1$
             }
         }
         return null;

@@ -62,7 +62,6 @@ public class RemotePackagesPage extends Composite implements ISdkListener {
     private Group mDescriptionContainer;
     private Button mAddSiteButton;
     private Button mDeleteSiteButton;
-    private Label mPlaceholder3;
     private Button mRefreshButton;
     private Button mInstallSelectedButton;
     private Label mDescriptionLabel;
@@ -118,16 +117,6 @@ public class RemotePackagesPage extends Composite implements ISdkListener {
         spacer.setLayoutData(gd = new GridData(GridData.FILL_HORIZONTAL));
         gd.heightHint = 0;
 
-        mUpdateOnlyCheckBox = new Button(composite, SWT.CHECK);
-        mUpdateOnlyCheckBox.setText("Display updates only");
-        mUpdateOnlyCheckBox.setSelection(mUpdaterData.getSettingsController().getShowUpdateOnly());
-        mUpdateOnlyCheckBox.addSelectionListener(new SelectionAdapter() {
-            @Override
-            public void widgetSelected(SelectionEvent arg0) {
-                onShowUpdateOnly(); //$hide$
-            }
-        });
-
         mDescriptionContainer = new Group(parent, SWT.NONE);
         mDescriptionContainer.setLayout(new GridLayout(1, false));
         mDescriptionContainer.setText("Description");
@@ -155,8 +144,16 @@ public class RemotePackagesPage extends Composite implements ISdkListener {
         });
         mDeleteSiteButton.setText("Delete Site...");
 
-        mPlaceholder3 = new Label(parent, SWT.NONE);
-        mPlaceholder3.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, false, 1, 1));
+        mUpdateOnlyCheckBox = new Button(parent, SWT.CHECK);
+        mUpdateOnlyCheckBox.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, false, 1, 1));
+        mUpdateOnlyCheckBox.setText("Display updates only");
+        mUpdateOnlyCheckBox.setSelection(mUpdaterData.getSettingsController().getShowUpdateOnly());
+        mUpdateOnlyCheckBox.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent arg0) {
+                onShowUpdateOnly(); //$hide$
+            }
+        });
 
         mRefreshButton = new Button(parent, SWT.NONE);
         mRefreshButton.addSelectionListener(new SelectionAdapter() {
