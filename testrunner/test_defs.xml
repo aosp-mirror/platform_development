@@ -78,7 +78,7 @@ See test_defs.xsd for more information.
 <test name="launchperf"
     build_path="development/apps/launchperf"
     package="com.android.launchperf"
-    class="com.android.launchperf.SimpleActivityLaunchPerformance"
+    runner=".SimpleActivityLaunchPerformance"
     coverage_target="framework" />
 
 <!--  targeted framework tests -->
