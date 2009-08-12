@@ -897,6 +897,9 @@ class NewXmlFileCreationPage extends WizardPage {
         // enable types based on new API level
         enableTypesBasedOnApi();
 
+        // update the folder name based on API level
+        resetFolderPath(false /*validate*/);
+
         // update the Type with the new descriptors.
         initializeRootValues();
 
@@ -1023,7 +1026,7 @@ class NewXmlFileCreationPage extends WizardPage {
             // The configuration is valid. Reformat the folder path using the canonical
             // value from the configuration.
 
-            newPath = RES_FOLDER_ABS + mTempConfig.getFolderName(type.getResFolderType());
+            newPath = RES_FOLDER_ABS + mTempConfig.getFolderName(type.getResFolderType(), mProject);
         } else {
             // The configuration is invalid. We still update the path but this time
             // do it manually on the string.
@@ -1032,7 +1035,8 @@ class NewXmlFileCreationPage extends WizardPage {
                         "^(" + RES_FOLDER_ABS +")[^-]*(.*)",         //$NON-NLS-1$ //$NON-NLS-2$
                         "\\1" + type.getResFolderName() + "\\2");   //$NON-NLS-1$ //$NON-NLS-2$
             } else {
-                newPath = RES_FOLDER_ABS + mTempConfig.getFolderName(type.getResFolderType());
+                newPath = RES_FOLDER_ABS + mTempConfig.getFolderName(type.getResFolderType(),
+                        mProject);
             }
         }
 
@@ -1085,19 +1089,7 @@ class NewXmlFileCreationPage extends WizardPage {
                 return;
             }
 
-            TypeInfo type = getSelectedType();
-
-            if (type != null) {
-                mConfigSelector.getConfiguration(mTempConfig);
-                StringBuffer sb = new StringBuffer(RES_FOLDER_ABS);
-                sb.append(mTempConfig.getFolderName(type.getResFolderType()));
-
-                mInternalWsFolderPathUpdate = true;
-                mWsFolderPathTextField.setText(sb.toString());
-                mInternalWsFolderPathUpdate = false;
-
-                validatePage();
-            }
+            resetFolderPath(true /*validate*/);
         }
     }
 
@@ -1135,6 +1127,28 @@ class NewXmlFileCreationPage extends WizardPage {
 
         for (TypeInfo type : sTypes) {
             type.getWidget().setEnabled(type.getTargetApiLevel() <= currentApiLevel);
+        }
+    }
+
+    /**
+     * Reset the current Folder path based on the UI selection
+     * @param validate if true, force a call to {@link #validatePage()}.
+     */
+    private void resetFolderPath(boolean validate) {
+        TypeInfo type = getSelectedType();
+
+        if (type != null) {
+            mConfigSelector.getConfiguration(mTempConfig);
+            StringBuffer sb = new StringBuffer(RES_FOLDER_ABS);
+            sb.append(mTempConfig.getFolderName(type.getResFolderType(), mProject));
+
+            mInternalWsFolderPathUpdate = true;
+            mWsFolderPathTextField.setText(sb.toString());
+            mInternalWsFolderPathUpdate = false;
+
+            if (validate) {
+                validatePage();
+            }
         }
     }
 

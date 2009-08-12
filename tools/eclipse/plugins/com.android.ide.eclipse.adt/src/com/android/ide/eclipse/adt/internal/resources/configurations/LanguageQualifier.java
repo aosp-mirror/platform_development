@@ -17,6 +17,7 @@
 package com.android.ide.eclipse.adt.internal.resources.configurations;
 
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
+import com.android.sdklib.IAndroidTarget;
 
 import org.eclipse.swt.graphics.Image;
 
@@ -29,9 +30,9 @@ public final class LanguageQualifier extends ResourceQualifier {
     private final static Pattern sLanguagePattern = Pattern.compile("^[a-z]{2}$"); //$NON-NLS-1$
 
     public static final String NAME = "Language";
-    
+
     private String mValue;
-    
+
     /**
      * Creates and returns a qualifier from the given folder segment. If the segment is incorrect,
      * <code>null</code> is returned.
@@ -42,12 +43,12 @@ public final class LanguageQualifier extends ResourceQualifier {
         if (sLanguagePattern.matcher(segment).matches()) {
             LanguageQualifier qualifier = new LanguageQualifier();
             qualifier.mValue = segment;
-            
+
             return qualifier;
         }
         return null;
     }
-    
+
     /**
      * Returns the folder name segment for the given value. This is equivalent to calling
      * {@link #toString()} on a {@link LanguageQualifier} object.
@@ -58,7 +59,7 @@ public final class LanguageQualifier extends ResourceQualifier {
         if (sLanguagePattern.matcher(segment).matches()) {
             return segment;
         }
-        
+
         return null;
     }
 
@@ -66,25 +67,25 @@ public final class LanguageQualifier extends ResourceQualifier {
         if (mValue != null) {
             return mValue;
         }
-        
+
         return ""; //$NON-NLS-1$
     }
-    
+
     @Override
     public String getName() {
         return NAME;
     }
-    
+
     @Override
     public String getShortName() {
         return NAME;
     }
-    
+
     @Override
     public Image getIcon() {
         return IconFactory.getInstance().getIcon("language"); //$NON-NLS-1$
     }
-    
+
     @Override
     public boolean isValid() {
         return mValue != null;
@@ -97,10 +98,10 @@ public final class LanguageQualifier extends ResourceQualifier {
             config.setLanguageQualifier(qualifier);
             return true;
         }
-        
+
         return false;
     }
-    
+
     @Override
     public boolean equals(Object qualifier) {
         if (qualifier instanceof LanguageQualifier) {
@@ -109,7 +110,7 @@ public final class LanguageQualifier extends ResourceQualifier {
             }
             return mValue.equals(((LanguageQualifier)qualifier).mValue);
         }
-        
+
         return false;
     }
 
@@ -118,15 +119,15 @@ public final class LanguageQualifier extends ResourceQualifier {
         if (mValue != null) {
             return mValue.hashCode();
         }
-        
+
         return 0;
     }
-    
+
     /**
      * Returns the string used to represent this qualifier in the folder name.
      */
     @Override
-    public String toString() {
+    public String getFolderSegment(IAndroidTarget target) {
         if (mValue != null) {
             return getFolderSegment(mValue);
         }
@@ -139,7 +140,7 @@ public final class LanguageQualifier extends ResourceQualifier {
         if (mValue != null) {
             return mValue;
         }
-        
+
         return ""; //$NON-NLS-1$
     }
 }

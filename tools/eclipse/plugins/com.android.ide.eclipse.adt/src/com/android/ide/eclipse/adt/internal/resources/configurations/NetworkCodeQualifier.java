@@ -17,6 +17,7 @@
 package com.android.ide.eclipse.adt.internal.resources.configurations;
 
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
+import com.android.sdklib.IAndroidTarget;
 
 import org.eclipse.swt.graphics.Image;
 
@@ -33,9 +34,9 @@ public final class NetworkCodeQualifier extends ResourceQualifier {
     private final static Pattern sNetworkCodePattern = Pattern.compile("^mnc(\\d{1,3})$"); //$NON-NLS-1$
 
     private int mCode = DEFAULT_CODE;
-    
+
     public final static String NAME = "Mobile Network Code";
-    
+
     /**
      * Creates and returns a qualifier from the given folder segment. If the segment is incorrect,
      * <code>null</code> is returned.
@@ -54,7 +55,7 @@ public final class NetworkCodeQualifier extends ResourceQualifier {
                 // looks like the string we extracted wasn't a valid number.
                 return null;
             }
-            
+
             NetworkCodeQualifier qualifier = new NetworkCodeQualifier();
             qualifier.mCode = code;
             return qualifier;
@@ -72,29 +73,29 @@ public final class NetworkCodeQualifier extends ResourceQualifier {
         if (code != DEFAULT_CODE && code >= 1 && code <= 999) { // code is 1-3 digit.
             return String.format("mnc%1$d", code); //$NON-NLS-1$
         }
-        
+
         return ""; //$NON-NLS-1$
     }
 
     public int getCode() {
         return mCode;
     }
-    
+
     @Override
     public String getName() {
         return NAME;
     }
-    
+
     @Override
     public String getShortName() {
         return "Network Code";
     }
-    
+
     @Override
     public Image getIcon() {
         return IconFactory.getInstance().getIcon("mnc"); //$NON-NLS-1$
     }
-    
+
     @Override
     public boolean isValid() {
         return mCode != DEFAULT_CODE;
@@ -113,22 +114,22 @@ public final class NetworkCodeQualifier extends ResourceQualifier {
                 // looks like the string we extracted wasn't a valid number.
                 return false;
             }
-            
+
             NetworkCodeQualifier qualifier = new NetworkCodeQualifier();
             qualifier.mCode = code;
             config.setNetworkCodeQualifier(qualifier);
             return true;
         }
-        
+
         return false;
     }
-    
+
     @Override
     public boolean equals(Object qualifier) {
         if (qualifier instanceof NetworkCodeQualifier) {
             return mCode == ((NetworkCodeQualifier)qualifier).mCode;
         }
-        
+
         return false;
     }
 
@@ -136,12 +137,12 @@ public final class NetworkCodeQualifier extends ResourceQualifier {
     public int hashCode() {
         return mCode;
     }
-    
+
     /**
      * Returns the string used to represent this qualifier in the folder name.
      */
     @Override
-    public String toString() {
+    public String getFolderSegment(IAndroidTarget target) {
         return getFolderSegment(mCode);
     }
 
@@ -150,7 +151,7 @@ public final class NetworkCodeQualifier extends ResourceQualifier {
         if (mCode != DEFAULT_CODE) {
             return String.format("MNC %1$d", mCode);
         }
-        
+
         return ""; //$NON-NLS-1$
     }
 }

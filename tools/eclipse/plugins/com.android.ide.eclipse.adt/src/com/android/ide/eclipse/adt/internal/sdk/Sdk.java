@@ -378,6 +378,20 @@ public class Sdk implements IProjectListener {
     }
 
     /**
+     * Return the {@link AndroidTargetData} for a given {@link IProject}.
+     */
+    public AndroidTargetData getTargetData(IProject project) {
+        synchronized (AdtPlugin.getDefault().getSdkLockObject()) {
+            IAndroidTarget target = getTarget(project);
+            if (target != null) {
+                return getTargetData(target);
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Returns the configuration map for a given project.
      * <p/>The Map key are name to be used in the apk filename, while the values are comma separated
      * config values. The config value can be passed directly to aapt through the -c option.
