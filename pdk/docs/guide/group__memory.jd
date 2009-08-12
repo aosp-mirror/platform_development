@@ -1,4 +1,6 @@
 page.title=Providing Heap Memory
+pdk.version=1.0
+doc.type=guide
 @jd:body
 
 <div class="navigation" id="top">

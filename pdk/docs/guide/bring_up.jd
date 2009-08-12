@@ -1,5 +1,6 @@
 page.title=Bring Up
 pdk.version=1.0
+doc.type=guide
 @jd:body
 
 <p>Once your code is built and you have verified that all necessary directories exist, power on and test your device with basic bring up, as described below. Bring up tests are typically designed to stress certain aspects of your system and allow you to characterize the device's behavior. </p>
