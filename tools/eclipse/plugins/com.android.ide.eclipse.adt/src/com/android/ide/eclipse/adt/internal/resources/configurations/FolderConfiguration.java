@@ -32,18 +32,21 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
 
     private final ResourceQualifier[] mQualifiers = new ResourceQualifier[INDEX_COUNT];
 
-    private final static int INDEX_COUNTRY_CODE = 0;
-    private final static int INDEX_NETWORK_CODE = 1;
-    private final static int INDEX_LANGUAGE = 2;
-    private final static int INDEX_REGION = 3;
-    private final static int INDEX_SCREEN_ORIENTATION = 4;
-    private final static int INDEX_PIXEL_DENSITY = 5;
-    private final static int INDEX_TOUCH_TYPE = 6;
-    private final static int INDEX_KEYBOARD_STATE = 7;
-    private final static int INDEX_TEXT_INPUT_METHOD = 8;
-    private final static int INDEX_NAVIGATION_METHOD = 9;
-    private final static int INDEX_SCREEN_DIMENSION = 10;
-    private final static int INDEX_COUNT = 11;
+    private final static int INDEX_COUNTRY_CODE       = 0;
+    private final static int INDEX_NETWORK_CODE       = 1;
+    private final static int INDEX_LANGUAGE           = 2;
+    private final static int INDEX_REGION             = 3;
+    private final static int INDEX_SCREEN_SIZE        = 4;
+    private final static int INDEX_SCREEN_RATIO       = 5;
+    private final static int INDEX_SCREEN_ORIENTATION = 6;
+    private final static int INDEX_PIXEL_DENSITY      = 7;
+    private final static int INDEX_TOUCH_TYPE         = 8;
+    private final static int INDEX_KEYBOARD_STATE     = 9;
+    private final static int INDEX_TEXT_INPUT_METHOD  = 10;
+    private final static int INDEX_NAVIGATION_METHOD  = 11;
+    private final static int INDEX_SCREEN_DIMENSION   = 12;
+    private final static int INDEX_VERSION            = 13;
+    private final static int INDEX_COUNT              = 14;
 
     /**
      * Sets the config from the qualifiers of a given <var>config</var>.
@@ -108,6 +111,10 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
             mQualifiers[INDEX_LANGUAGE] = qualifier;
         } else if (qualifier instanceof RegionQualifier) {
             mQualifiers[INDEX_REGION] = qualifier;
+        } else if (qualifier instanceof ScreenSizeQualifier) {
+            mQualifiers[INDEX_SCREEN_SIZE] = qualifier;
+        } else if (qualifier instanceof ScreenRatioQualifier) {
+            mQualifiers[INDEX_SCREEN_RATIO] = qualifier;
         } else if (qualifier instanceof ScreenOrientationQualifier) {
             mQualifiers[INDEX_SCREEN_ORIENTATION] = qualifier;
         } else if (qualifier instanceof PixelDensityQualifier) {
@@ -122,6 +129,8 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
             mQualifiers[INDEX_NAVIGATION_METHOD] = qualifier;
         } else if (qualifier instanceof ScreenDimensionQualifier) {
             mQualifiers[INDEX_SCREEN_DIMENSION] = qualifier;
+        } else if (qualifier instanceof VersionQualifier) {
+            mQualifiers[INDEX_VERSION] = qualifier;
         }
     }
 
@@ -168,6 +177,22 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
 
     public RegionQualifier getRegionQualifier() {
         return (RegionQualifier)mQualifiers[INDEX_REGION];
+    }
+
+    public void setScreenSizeQualifier(ScreenSizeQualifier qualifier) {
+        mQualifiers[INDEX_SCREEN_SIZE] = qualifier;
+    }
+
+    public ScreenSizeQualifier getScreenSizeQualifier() {
+        return (ScreenSizeQualifier)mQualifiers[INDEX_SCREEN_SIZE];
+    }
+
+    public void setScreenRatioQualifier(ScreenRatioQualifier qualifier) {
+        mQualifiers[INDEX_SCREEN_RATIO] = qualifier;
+    }
+
+    public ScreenRatioQualifier getScreenRatioQualifier() {
+        return (ScreenRatioQualifier)mQualifiers[INDEX_SCREEN_RATIO];
     }
 
     public void setScreenOrientationQualifier(ScreenOrientationQualifier qualifier) {
@@ -224,6 +249,14 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
 
     public ScreenDimensionQualifier getScreenDimensionQualifier() {
         return (ScreenDimensionQualifier)mQualifiers[INDEX_SCREEN_DIMENSION];
+    }
+
+    public void setVersionQualifier(VersionQualifier qualifier) {
+        mQualifiers[INDEX_VERSION] = qualifier;
+    }
+
+    public VersionQualifier getVersionQualifier() {
+        return (VersionQualifier)mQualifiers[INDEX_VERSION];
     }
 
     /**
@@ -467,6 +500,8 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
         mQualifiers[INDEX_NETWORK_CODE] = new NetworkCodeQualifier();
         mQualifiers[INDEX_LANGUAGE] = new LanguageQualifier();
         mQualifiers[INDEX_REGION] = new RegionQualifier();
+        mQualifiers[INDEX_SCREEN_SIZE] = new ScreenSizeQualifier();
+        mQualifiers[INDEX_SCREEN_RATIO] = new ScreenRatioQualifier();
         mQualifiers[INDEX_SCREEN_ORIENTATION] = new ScreenOrientationQualifier();
         mQualifiers[INDEX_PIXEL_DENSITY] = new PixelDensityQualifier();
         mQualifiers[INDEX_TOUCH_TYPE] = new TouchScreenQualifier();
@@ -474,6 +509,7 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
         mQualifiers[INDEX_TEXT_INPUT_METHOD] = new TextInputMethodQualifier();
         mQualifiers[INDEX_NAVIGATION_METHOD] = new NavigationMethodQualifier();
         mQualifiers[INDEX_SCREEN_DIMENSION] = new ScreenDimensionQualifier();
+        mQualifiers[INDEX_VERSION] = new VersionQualifier();
     }
 
     /**

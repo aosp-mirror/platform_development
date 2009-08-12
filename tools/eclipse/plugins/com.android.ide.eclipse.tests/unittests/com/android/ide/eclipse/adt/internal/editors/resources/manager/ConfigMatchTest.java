@@ -34,7 +34,7 @@ import com.android.ide.eclipse.adt.internal.resources.manager.files.IFileWrapper
 import com.android.ide.eclipse.adt.internal.resources.manager.files.IFolderWrapper;
 import com.android.ide.eclipse.mock.FileMock;
 import com.android.ide.eclipse.mock.FolderMock;
-import com.android.sdklib.SdkConstants;
+import com.android.sdklib.IAndroidTarget;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -221,7 +221,7 @@ public class ConfigMatchTest extends TestCase {
             FileMock[] memberList) throws Exception {
 
         // figure out the folder name based on the configuration
-        String folderName = config.getFolderName(ResourceFolderType.LAYOUT);
+        String folderName = config.getFolderName(ResourceFolderType.LAYOUT, (IAndroidTarget)null);
 
         // create the folder mock
         FolderMock folder = new FolderMock(folderName, memberList);
