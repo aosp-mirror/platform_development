@@ -17,6 +17,10 @@
 package com.android.ide.eclipse.adt.internal.resources.configurations;
 
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceFolderType;
+import com.android.ide.eclipse.adt.internal.sdk.Sdk;
+import com.android.sdklib.IAndroidTarget;
+
+import org.eclipse.core.resources.IProject;
 
 
 /**
@@ -27,7 +31,7 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
     public final static String QUALIFIER_SEP = "-"; //$NON-NLS-1$
 
     private final ResourceQualifier[] mQualifiers = new ResourceQualifier[INDEX_COUNT];
-    
+
     private final static int INDEX_COUNTRY_CODE = 0;
     private final static int INDEX_NETWORK_CODE = 1;
     private final static int INDEX_LANGUAGE = 2;
@@ -40,7 +44,7 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
     private final static int INDEX_NAVIGATION_METHOD = 9;
     private final static int INDEX_SCREEN_DIMENSION = 10;
     private final static int INDEX_COUNT = 11;
-    
+
     /**
      * Sets the config from the qualifiers of a given <var>config</var>.
      * @param config
@@ -62,7 +66,7 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
             }
         }
     }
-    
+
     /**
      * Returns the first invalid qualifier, or <code>null<code> if they are all valid (or if none
      * exists).
@@ -73,11 +77,11 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
                 return mQualifiers[i];
             }
         }
-        
+
         // all allocated qualifiers are valid, we return null.
         return null;
     }
-    
+
     /**
      * Returns whether the Region qualifier is valid. Region qualifier can only be present if a
      * Language qualifier is present as well.
@@ -90,7 +94,7 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
 
         return true;
     }
-    
+
     /**
      * Adds a qualifier to the {@link FolderConfiguration}
      * @param qualifier the {@link ResourceQualifier} to add.
@@ -120,7 +124,7 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
             mQualifiers[INDEX_SCREEN_DIMENSION] = qualifier;
         }
     }
-    
+
     /**
      * Removes a given qualifier from the {@link FolderConfiguration}.
      * @param qualifier the {@link ResourceQualifier} to remove.
@@ -133,7 +137,7 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
             }
         }
     }
-    
+
     public void setCountryCodeQualifier(CountryCodeQualifier qualifier) {
         mQualifiers[INDEX_COUNTRY_CODE] = qualifier;
     }
@@ -205,7 +209,7 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
     public TextInputMethodQualifier getTextInputMethodQualifier() {
         return (TextInputMethodQualifier)mQualifiers[INDEX_TEXT_INPUT_METHOD];
     }
-    
+
     public void setNavigationMethodQualifier(NavigationMethodQualifier qualifier) {
         mQualifiers[INDEX_NAVIGATION_METHOD] = qualifier;
     }
@@ -213,7 +217,7 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
     public NavigationMethodQualifier getNavigationMethodQualifier() {
         return (NavigationMethodQualifier)mQualifiers[INDEX_NAVIGATION_METHOD];
     }
-    
+
     public void setScreenDimensionQualifier(ScreenDimensionQualifier qualifier) {
         mQualifiers[INDEX_SCREEN_DIMENSION] = qualifier;
     }
@@ -230,7 +234,7 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
         if (obj == this) {
             return true;
         }
-        
+
         if (obj instanceof FolderConfiguration) {
             FolderConfiguration fc = (FolderConfiguration)obj;
             for (int i = 0 ; i < INDEX_COUNT ; i++) {
@@ -247,7 +251,7 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
 
             return true;
         }
-        
+
         return false;
     }
 
@@ -255,7 +259,7 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
     public int hashCode() {
         return toString().hashCode();
     }
-    
+
     /**
      * Returns whether the Configuration has only default values.
      */
@@ -265,52 +269,49 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
                 return false;
             }
         }
-        
+
         return true;
     }
-    
+
     /**
      * Returns the name of a folder with the configuration.
      */
-    public String getFolderName(ResourceFolderType folder) {
+    public String getFolderName(ResourceFolderType folder, IAndroidTarget target) {
         StringBuilder result = new StringBuilder(folder.getName());
-        
+
         for (ResourceQualifier qualifier : mQualifiers) {
             if (qualifier != null) {
                 result.append(QUALIFIER_SEP);
-                result.append(qualifier.toString());
+                result.append(qualifier.getFolderSegment(target));
             }
         }
-        
+
         return result.toString();
     }
-    
+
     /**
-     * Returns a string valid for usage in a folder name, or <code>null</code> if the configuration
-     * is default.
+     * Returns the name of a folder with the configuration.
+     */
+    public String getFolderName(ResourceFolderType folder, IProject project) {
+        IAndroidTarget target = null;
+        if (project != null) {
+            Sdk currentSdk = Sdk.getCurrent();
+            if (currentSdk != null) {
+                target = currentSdk.getTarget(project);
+            }
+        }
+
+        return getFolderName(folder, target);
+    }
+
+    /**
+     * Returns {@link #toDisplayString()}.
      */
     @Override
     public String toString() {
-        StringBuilder result = null;
-        
-        for (ResourceQualifier irq : mQualifiers) {
-            if (irq != null) {
-                if (result == null) {
-                    result = new StringBuilder();
-                } else {
-                    result.append(QUALIFIER_SEP);
-                }
-                result.append(irq.toString());
-            }
-        }
-        
-        if (result != null) {
-            return result.toString();
-        } else {
-            return null;
-        }
+        return toDisplayString();
     }
-    
+
     /**
      * Returns a string valid for display purpose.
      */
@@ -322,7 +323,7 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
         StringBuilder result = null;
         int index = 0;
         ResourceQualifier qualifier = null;
-        
+
         // pre- language/region qualifiers
         while (index < INDEX_LANGUAGE) {
             qualifier = mQualifiers[index++];
@@ -333,10 +334,10 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
                     result.append(", "); //$NON-NLS-1$
                 }
                 result.append(qualifier.getStringValue());
-                
+
             }
         }
-        
+
         // process the language/region qualifier in a custom way, if there are both non null.
         if (mQualifiers[INDEX_LANGUAGE] != null && mQualifiers[INDEX_REGION] != null) {
             String language = mQualifiers[INDEX_LANGUAGE].getStringValue();
@@ -348,10 +349,10 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
                 result.append(", "); //$NON-NLS-1$
             }
             result.append(String.format("%s_%s", language, region)); //$NON-NLS-1$
-            
+
             index += 2;
         }
-        
+
         // post language/region qualifiers.
         while (index < INDEX_COUNT) {
             qualifier = mQualifiers[index++];
@@ -362,7 +363,7 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
                     result.append(", "); //$NON-NLS-1$
                 }
                 result.append(qualifier.getStringValue());
-                
+
             }
         }
 
@@ -377,12 +378,12 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
             }
             return -1;
         }
-        
+
         // now we compare the qualifiers
         for (int i = 0 ; i < INDEX_COUNT; i++) {
             ResourceQualifier qualifier1 = mQualifiers[i];
             ResourceQualifier qualifier2 = folderConfig.mQualifiers[i];
-            
+
             if (qualifier1 == null) {
                 if (qualifier2 == null) {
                     continue;
@@ -394,16 +395,16 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
                     return 1;
                 } else {
                     int result = qualifier1.compareTo(qualifier2);
-                    
+
                     if (result == 0) {
                         continue;
                     }
-                    
+
                     return result;
                 }
             }
         }
-        
+
         // if we arrive here, all the qualifier matches
         return 0;
     }
@@ -421,11 +422,11 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
      */
     public int match(FolderConfiguration referenceConfig) {
         int matchCount = 0;
-        
+
         for (int i = 0 ; i < INDEX_COUNT ; i++) {
             ResourceQualifier testQualifier = mQualifiers[i];
             ResourceQualifier referenceQualifier = referenceConfig.mQualifiers[i];
-            
+
             // we only care if testQualifier is non null. If it's null, it's a match but
             // without increasing the matchCount.
             if (testQualifier != null) {
@@ -434,7 +435,7 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
                 } else if (testQualifier.equals(referenceQualifier) == false) {
                     return -1;
                 }
-                
+
                 // the qualifier match, increment the count
                 matchCount++;
             }
@@ -454,10 +455,10 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
                 return i;
             }
         }
-        
+
         return -1;
     }
-    
+
     /**
      * Create default qualifiers.
      */
@@ -485,7 +486,7 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
                 count++;
             }
         }
-        
+
         ResourceQualifier[] array = new ResourceQualifier[count];
         int index = 0;
         for (int i = 0 ; i < INDEX_COUNT ; i++) {
@@ -493,7 +494,7 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
                 array[index++] = mQualifiers[i];
             }
         }
-        
+
         return array;
     }
 }
