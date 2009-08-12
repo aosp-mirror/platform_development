@@ -369,7 +369,12 @@ public class Monkey {
             mEventSource = new MonkeySourceScript(mScriptFileName, mThrottle);
             mEventSource.setVerbose(mVerbose);
         } else if (mServerPort != -1) {
-            mEventSource = new MonkeySourceNetwork(mServerPort);
+            try {
+                mEventSource = new MonkeySourceNetwork(mServerPort);
+            } catch (IOException e) {
+                System.out.println("Error binding to network socket.");
+                return -5;
+            }
             mCount = Integer.MAX_VALUE;
         } else {
             // random source by default
