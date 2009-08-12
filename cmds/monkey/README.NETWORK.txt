@@ -87,6 +87,11 @@ The press command is a shortcut for the key command.  The keycode
 paramter works just like the key command and will automatically send
 both the up and the down event.
 
+type string
+
+This command will simulate a user typing the given string on the
+keyboard by generating the proper KeyEvents.
+
 OTHER NOTES
 
 There are some convenience features added to allow running without

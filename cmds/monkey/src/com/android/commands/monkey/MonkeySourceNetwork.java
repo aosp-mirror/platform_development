@@ -21,6 +21,7 @@ import android.os.RemoteException;
 import android.os.ServiceManager;
 import android.os.SystemClock;
 import android.util.Log;
+import android.view.KeyCharacterMap;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 
@@ -217,9 +218,37 @@ public class MonkeySourceNetwork implements MonkeyEventSource {
                 try {
                     sleep = Integer.parseInt(sleepStr);
                 } catch (NumberFormatException e) {
-                    Log.e(TAG, "Not a number: " + sleepStr, e);
+                  Log.e(TAG, "Not a number: " + sleepStr, e);
                 }
                 return new MonkeyThrottleEvent(sleep);
+            }
+            return null;
+        }
+    }
+
+    /**
+     * Command to type a string
+     */
+    private static class TypeCommand implements MonkeyCommand {
+        // wake
+        public MonkeyEvent translateCommand(List<String> command,
+                                            CommandQueue queue) {
+            if (command.size() == 2) {
+                String str = command.get(1);
+
+                char[] chars = str.toString().toCharArray();
+
+                // Convert the string to an array of KeyEvent's for
+                // the built in keymap.
+                KeyCharacterMap keyCharacterMap = KeyCharacterMap.
+                        load(KeyCharacterMap.BUILT_IN_KEYBOARD);
+                KeyEvent[] events = keyCharacterMap.getEvents(chars);
+
+                // enqueue all the events we just got.
+                for (KeyEvent event : events) {
+                    queue.enqueueEvent(new MonkeyKeyEvent(event));
+                }
+                return new MonkeyNoopEvent();
             }
             return null;
         }
@@ -325,6 +354,7 @@ public class MonkeySourceNetwork implements MonkeyEventSource {
         COMMAND_MAP.put("wake", new WakeCommand());
         COMMAND_MAP.put("tap", new TapCommand());
         COMMAND_MAP.put("press", new PressCommand());
+        COMMAND_MAP.put("type", new TypeCommand());
     }
 
     // QUIT command
@@ -401,6 +431,17 @@ public class MonkeySourceNetwork implements MonkeyEventSource {
     }
 
     /**
+     * Helper function for commandLineSplit that replaces quoted
+     * charaters with their real values.
+     *
+     * @param input the string to do replacement on.
+     * @returns the results with the characters replaced.
+     */
+    private static String replaceQuotedChars(String input) {
+        return input.replace("\\\"", "\"");
+    }
+
+    /**
      * This function splits the given line into String parts.  It obey's quoted
      * strings and returns them as a single part.
      *
@@ -420,22 +461,22 @@ public class MonkeySourceNetwork implements MonkeyEventSource {
             String cur = tok.nextToken();
             if (!insideQuote && cur.startsWith("\"")) {
                 // begin quote
-                quotedWord.append(cur);
+                quotedWord.append(replaceQuotedChars(cur));
                 insideQuote = true;
             } else if (insideQuote) {
                 // end quote
                 if (cur.endsWith("\"")) {
                     insideQuote = false;
-                    quotedWord.append(cur);
+                    quotedWord.append(" ").append(replaceQuotedChars(cur));
                     String word = quotedWord.toString();
 
                     // trim off the quotes
                     result.add(word.substring(1, word.length() - 1));
                 } else {
-                    quotedWord.append(cur);
+                    quotedWord.append(" ").append(replaceQuotedChars(cur));
                 }
             } else {
-                result.add(cur);
+                result.add(replaceQuotedChars(cur));
             }
         }
         return result;
