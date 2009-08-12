@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Dalvik Debug Monitor Service
 Bundle-SymbolicName: com.android.ide.eclipse.ddms;singleton:=true
-Bundle-Version: 0.9.2.qualifier
+Bundle-Version: 0.9.3.qualifier
 Bundle-Activator: com.android.ide.eclipse.ddms.DdmsPlugin
 Bundle-Vendor: The Android Open Source Project
 Bundle-Localization: plugin
