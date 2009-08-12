@@ -6,7 +6,8 @@ LOCAL_PREBUILT_LIBS := \
 	AdbWinApi.a
 
 LOCAL_PREBUILT_EXECUTABLES := \
-	AdbWinApi.dll
+	AdbWinApi.dll  \
+	AdbWinUsbApi.dll
 	
 .PHONY : kill-adb
 	
