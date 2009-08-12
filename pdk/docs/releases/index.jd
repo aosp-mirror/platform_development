@@ -1,0 +1,7 @@
+home=true
+doc.type=releases
+@jd:body
+
+<p>
+  Some release information here
+</p>
