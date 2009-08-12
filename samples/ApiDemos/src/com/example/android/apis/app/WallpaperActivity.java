@@ -41,8 +41,6 @@ public class WallpaperActivity extends Activity {
         // Be sure to call the super class.
         super.onCreate(savedInstanceState);
         
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER);
-        
         // See assets/res/any/layout/translucent_background.xml for this
         // view layout definition, which is being set here as
         // the content of our screen.
