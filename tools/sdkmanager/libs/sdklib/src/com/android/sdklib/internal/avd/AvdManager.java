@@ -911,7 +911,7 @@ public final class AvdManager {
                 replaceAvd(avdInfo, info);
 
                 // update the ini file
-                createAvdIniFile(avdInfo);
+                createAvdIniFile(info);
             }
 
             if (newName != null) {
