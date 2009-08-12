@@ -17,6 +17,7 @@
 package com.android.ide.eclipse.adt.internal.resources.configurations;
 
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
+import com.android.sdklib.IAndroidTarget;
 
 import org.eclipse.swt.graphics.Image;
 
@@ -29,7 +30,7 @@ public final class TouchScreenQualifier extends ResourceQualifier {
     public static final String NAME = "Touch Screen";
 
     private TouchScreenType mValue;
-    
+
     /**
      * Screen Orientation enum.
      */
@@ -37,15 +38,15 @@ public final class TouchScreenQualifier extends ResourceQualifier {
         NOTOUCH("notouch", "No Touch"), //$NON-NLS-1$
         STYLUS("stylus", "Stylus"), //$NON-NLS-1$
         FINGER("finger", "Finger"); //$NON-NLS-1$
-        
+
         private String mValue;
         private String mDisplayValue;
-        
+
         private TouchScreenType(String value, String displayValue) {
             mValue = value;
             mDisplayValue = displayValue;
         }
-        
+
         /**
          * Returns the enum for matching the provided qualifier value.
          * @param value The qualifier value.
@@ -57,14 +58,14 @@ public final class TouchScreenQualifier extends ResourceQualifier {
                     return orient;
                 }
             }
-            
+
             return null;
         }
 
         public String getValue() {
             return mValue;
         }
-        
+
         public String getDisplayValue() {
             return mDisplayValue;
         }
@@ -75,7 +76,7 @@ public final class TouchScreenQualifier extends ResourceQualifier {
                 if (t == touch) {
                     return i;
                 }
-                
+
                 i++;
             }
 
@@ -94,7 +95,7 @@ public final class TouchScreenQualifier extends ResourceQualifier {
             return null;
         }
     }
-    
+
     public TouchScreenQualifier() {
         // pass
     }
@@ -106,17 +107,17 @@ public final class TouchScreenQualifier extends ResourceQualifier {
     public TouchScreenType getValue() {
         return mValue;
     }
-    
+
     @Override
     public String getName() {
         return NAME;
     }
-    
+
     @Override
     public String getShortName() {
         return NAME;
     }
-    
+
     @Override
     public Image getIcon() {
         return IconFactory.getInstance().getIcon("touch"); //$NON-NLS-1$
@@ -136,10 +137,10 @@ public final class TouchScreenQualifier extends ResourceQualifier {
             config.setTouchTypeQualifier(qualifier);
             return true;
         }
-        
+
         return false;
     }
-    
+
     @Override
     public boolean equals(Object qualifier) {
         if (qualifier instanceof TouchScreenQualifier) {
@@ -153,7 +154,7 @@ public final class TouchScreenQualifier extends ResourceQualifier {
         if (mValue != null) {
             return mValue.hashCode();
         }
-        
+
         return 0;
     }
 
@@ -161,11 +162,11 @@ public final class TouchScreenQualifier extends ResourceQualifier {
      * Returns the string used to represent this qualifier in the folder name.
      */
     @Override
-    public String toString() {
+    public String getFolderSegment(IAndroidTarget target) {
         if (mValue != null) {
             return mValue.getValue();
         }
-        
+
         return ""; //$NON-NLS-1$
     }
 
@@ -174,7 +175,7 @@ public final class TouchScreenQualifier extends ResourceQualifier {
         if (mValue != null) {
             return mValue.getDisplayValue();
         }
-        
+
         return ""; //$NON-NLS-1$
     }
 }

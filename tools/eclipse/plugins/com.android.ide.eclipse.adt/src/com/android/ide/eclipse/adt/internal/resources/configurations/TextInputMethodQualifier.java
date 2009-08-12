@@ -17,6 +17,7 @@
 package com.android.ide.eclipse.adt.internal.resources.configurations;
 
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
+import com.android.sdklib.IAndroidTarget;
 
 import org.eclipse.swt.graphics.Image;
 
@@ -31,7 +32,7 @@ public final class TextInputMethodQualifier extends ResourceQualifier {
     public static final String NAME = "Text Input Method";
 
     private TextInputMethod mValue;
-    
+
     /**
      * Screen Orientation enum.
      */
@@ -39,15 +40,15 @@ public final class TextInputMethodQualifier extends ResourceQualifier {
         NOKEY("nokeys", "No Keys"), //$NON-NLS-1$
         QWERTY("qwerty", "Qwerty"), //$NON-NLS-1$
         TWELVEKEYS("12key", "12 Key"); //$NON-NLS-1$
-        
+
         private String mValue;
         private String mDisplayValue;
-        
+
         private TextInputMethod(String value, String displayValue) {
             mValue = value;
             mDisplayValue = displayValue;
         }
-        
+
         /**
          * Returns the enum for matching the provided qualifier value.
          * @param value The qualifier value.
@@ -59,14 +60,14 @@ public final class TextInputMethodQualifier extends ResourceQualifier {
                     return orient;
                 }
             }
-            
+
             return null;
         }
 
         public String getValue() {
             return mValue;
         }
-        
+
         public String getDisplayValue() {
             return mDisplayValue;
         }
@@ -77,7 +78,7 @@ public final class TextInputMethodQualifier extends ResourceQualifier {
                 if (value == input) {
                     return i;
                 }
-                
+
                 i++;
             }
 
@@ -95,7 +96,7 @@ public final class TextInputMethodQualifier extends ResourceQualifier {
             return null;
         }
     }
-    
+
     public TextInputMethodQualifier() {
         // pass
     }
@@ -107,17 +108,17 @@ public final class TextInputMethodQualifier extends ResourceQualifier {
     public TextInputMethod getValue() {
         return mValue;
     }
-    
+
     @Override
     public String getName() {
         return NAME;
     }
-    
+
     @Override
     public String getShortName() {
         return "Text Input";
     }
-    
+
     @Override
     public Image getIcon() {
         return IconFactory.getInstance().getIcon("text_input"); //$NON-NLS-1$
@@ -137,10 +138,10 @@ public final class TextInputMethodQualifier extends ResourceQualifier {
             config.setTextInputMethodQualifier(qualifier);
             return true;
         }
-        
+
         return false;
     }
-    
+
     @Override
     public boolean equals(Object qualifier) {
         if (qualifier instanceof TextInputMethodQualifier) {
@@ -155,7 +156,7 @@ public final class TextInputMethodQualifier extends ResourceQualifier {
         if (mValue != null) {
             return mValue.hashCode();
         }
-        
+
         return 0;
     }
 
@@ -163,11 +164,11 @@ public final class TextInputMethodQualifier extends ResourceQualifier {
      * Returns the string used to represent this qualifier in the folder name.
      */
     @Override
-    public String toString() {
+    public String getFolderSegment(IAndroidTarget target) {
         if (mValue != null) {
             return mValue.getValue();
         }
-        
+
         return ""; //$NON-NLS-1$
     }
 
@@ -176,7 +177,7 @@ public final class TextInputMethodQualifier extends ResourceQualifier {
         if (mValue != null) {
             return mValue.getDisplayValue();
         }
-        
+
         return ""; //$NON-NLS-1$
     }
 }

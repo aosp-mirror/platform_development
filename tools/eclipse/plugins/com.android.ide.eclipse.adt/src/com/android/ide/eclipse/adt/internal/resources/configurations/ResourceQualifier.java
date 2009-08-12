@@ -16,6 +16,8 @@
 
 package com.android.ide.eclipse.adt.internal.resources.configurations;
 
+import com.android.sdklib.IAndroidTarget;
+
 import org.eclipse.swt.graphics.Image;
 
 /**
@@ -23,28 +25,28 @@ import org.eclipse.swt.graphics.Image;
  * <p/>The resource qualifier classes are designed as immutable.
  */
 public abstract class ResourceQualifier implements Comparable<ResourceQualifier> {
-    
+
     /**
      * Returns the human readable name of the qualifier.
      */
     public abstract String getName();
-    
+
     /**
      * Returns a shorter human readable name for the qualifier.
      * @see #getName()
      */
     public abstract String getShortName();
-    
+
     /**
      * Returns the icon for the qualifier.
      */
     public abstract Image getIcon();
-    
+
     /**
      * Returns whether the qualifier has a valid filter value.
      */
     public abstract boolean isValid();
-    
+
     /**
      * Check if the value is valid for this qualifier, and if so sets the value
      * into a Folder Configuration.
@@ -53,13 +55,17 @@ public abstract class ResourceQualifier implements Comparable<ResourceQualifier>
      * @return true if the value was valid and was set.
      */
     public abstract boolean checkAndSet(String value, FolderConfiguration config);
-    
+
     /**
      * Returns a string formated to be used in a folder name.
      * <p/>This is declared as abstract to force children classes to implement it.
      */
+    public abstract String getFolderSegment(IAndroidTarget target);
+
     @Override
-    public abstract String toString();
+    public String toString() {
+        return getFolderSegment(null);
+    }
 
     /**
      * Returns a string formatted for display purpose.
@@ -72,7 +78,7 @@ public abstract class ResourceQualifier implements Comparable<ResourceQualifier>
      */
     @Override
     public abstract boolean equals(Object object);
-    
+
     /**
      * Returns a hash code value for the object.
      * <p/>This is declared as abstract to force children classes to implement it.

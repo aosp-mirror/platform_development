@@ -22,6 +22,7 @@ import com.android.ide.eclipse.adt.internal.resources.configurations.ResourceQua
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceFolderType;
 import com.android.ide.eclipse.adt.internal.ui.ConfigurationSelector;
 import com.android.ide.eclipse.adt.internal.ui.ConfigurationSelector.ConfigurationState;
+import com.android.sdklib.IAndroidTarget;
 
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.TrayDialog;
@@ -40,22 +41,26 @@ class LayoutCreatorDialog extends TrayDialog {
 
     private ConfigurationSelector mSelector;
     private Composite mStatusComposite;
-    private Label mStatusLabel; 
+    private Label mStatusLabel;
     private Label mStatusImage;
 
     private final FolderConfiguration mConfig = new FolderConfiguration();
     private final String mFileName;
+    private final IAndroidTarget mTarget;
 
     /**
      * Creates a dialog, and init the UI from a {@link FolderConfiguration}.
      * @param parentShell the parent {@link Shell}.
      * @param config The starting configuration.
      */
-    LayoutCreatorDialog(Shell parentShell, String fileName, FolderConfiguration config) {
+    LayoutCreatorDialog(Shell parentShell, String fileName, IAndroidTarget target,
+            FolderConfiguration config) {
         super(parentShell);
 
-        mFileName = fileName;        
-        // FIXME: add some data to know what configurations already exist. 
+        mFileName = fileName;
+        mTarget = target;
+
+        // FIXME: add some data to know what configurations already exist.
         mConfig.set(config);
     }
 
@@ -67,22 +72,22 @@ class LayoutCreatorDialog extends TrayDialog {
 
         new Label(top, SWT.NONE).setText(
                 String.format("Configuration for the alternate version of %1$s", mFileName));
-        
+
         mSelector = new ConfigurationSelector(top);
         mSelector.setConfiguration(mConfig);
-        
+
         // parent's layout is a GridLayout as specified in the javadoc.
         GridData gd = new GridData();
         gd.widthHint = ConfigurationSelector.WIDTH_HINT;
         gd.heightHint = ConfigurationSelector.HEIGHT_HINT;
         mSelector.setLayoutData(gd);
-        
+
         // add a listener to check on the validity of the FolderConfiguration as
         // they are built.
         mSelector.setOnChangeListener(new Runnable() {
             public void run() {
                 ConfigurationState state = mSelector.getState();
-                
+
                 switch (state) {
                     case OK:
                         mSelector.getConfiguration(mConfig);
@@ -125,16 +130,16 @@ class LayoutCreatorDialog extends TrayDialog {
 
         return top;
     }
-    
+
     public void getConfiguration(FolderConfiguration config) {
         config.set(mConfig);
     }
-    
+
     /**
      * resets the status label to show the file that will be created.
      */
     private void resetStatus() {
         mStatusLabel.setText(String.format("New File: res/%1$s/%2$s",
-                mConfig.getFolderName(ResourceFolderType.LAYOUT), mFileName));
+                mConfig.getFolderName(ResourceFolderType.LAYOUT, mTarget), mFileName));
     }
 }

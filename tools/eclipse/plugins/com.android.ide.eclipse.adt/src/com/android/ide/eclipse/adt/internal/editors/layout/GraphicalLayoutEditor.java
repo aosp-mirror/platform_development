@@ -4,7 +4,7 @@
  * Licensed under the Eclipse Public License, Version 1.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.eclipse.org/org/documents/epl-v10.php
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -43,6 +43,7 @@ import com.android.ide.eclipse.adt.internal.resources.configurations.TextInputMe
 import com.android.ide.eclipse.adt.internal.resources.configurations.TouchScreenQualifier;
 import com.android.ide.eclipse.adt.internal.resources.configurations.KeyboardStateQualifier.KeyboardState;
 import com.android.ide.eclipse.adt.internal.resources.configurations.NavigationMethodQualifier.NavigationMethod;
+import com.android.ide.eclipse.adt.internal.resources.configurations.PixelDensityQualifier.Density;
 import com.android.ide.eclipse.adt.internal.resources.configurations.ScreenOrientationQualifier.ScreenOrientation;
 import com.android.ide.eclipse.adt.internal.resources.configurations.TextInputMethodQualifier.TextInputMethod;
 import com.android.ide.eclipse.adt.internal.resources.configurations.TouchScreenQualifier.TouchScreenType;
@@ -55,7 +56,6 @@ import com.android.ide.eclipse.adt.internal.sdk.LoadStatus;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData.LayoutBridge;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk.ITargetChangeListener;
-import com.android.ide.eclipse.adt.internal.ui.ConfigurationSelector.DensityVerifier;
 import com.android.ide.eclipse.adt.internal.ui.ConfigurationSelector.DimensionVerifier;
 import com.android.ide.eclipse.adt.internal.ui.ConfigurationSelector.LanguageRegionVerifier;
 import com.android.ide.eclipse.adt.internal.ui.ConfigurationSelector.MobileCodeVerifier;
@@ -143,7 +143,7 @@ import java.util.Set;
  */
 public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
         implements ILayoutReloadListener {
-    
+
     private final static String THEME_SEPARATOR = "----------"; //$NON-NLS-1$
 
     /** Reference to the layout editor */
@@ -161,7 +161,7 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
     private Combo mLanguage;
     private Combo mRegion;
     private Combo mOrientation;
-    private Text mDensity;
+    private Combo mDensity;
     private Combo mTouch;
     private Combo mKeyboard;
     private Combo mTextInput;
@@ -216,7 +216,7 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
         public void onTargetsLoaded() {
             // because the SDK changed we must reset the configured framework resource.
             mConfiguredFrameworkRes = null;
-            
+
             updateUIFromResources();
 
             mThemeCombo.getParent().layout();
@@ -383,19 +383,19 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
 
         new Label(topParent, SWT.NONE).setText("Density");
         mDensityIcon = createControlComposite(topParent, true /* grab_horizontal */);
-        mDensity = new Text(mDensityIcon.getParent(), SWT.BORDER);
+        mDensity = new Combo(mDensityIcon.getParent(), SWT.DROP_DOWN | SWT.READ_ONLY);
+        Density[] dValues = Density.values();
+        mDensity.add("(Default)");
+        for (Density value : dValues) {
+            mDensity.add(value.getDisplayValue());
+        }
+        mDensity.select(0);
         mDensity.setLayoutData(new GridData(
                 GridData.HORIZONTAL_ALIGN_FILL | GridData.GRAB_HORIZONTAL));
-        mDensity.addVerifyListener(new DensityVerifier());
         mDensity.addSelectionListener(new SelectionAdapter() {
-            @Override
-            public void widgetDefaultSelected(SelectionEvent e) {
-                onDensityChange();
-            }
-        });
-        mDensity.addModifyListener(new ModifyListener() {
-            public void modifyText(ModifyEvent e) {
-                onDensityChange();
+           @Override
+            public void widgetSelected(SelectionEvent e) {
+               onDensityChange();
             }
         });
 
@@ -468,7 +468,7 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
             @Override
              public void widgetSelected(SelectionEvent e) {
                 onNavigationChange();
-            } 
+            }
         });
 
         Composite labelParent = new Composite(topParent, SWT.NONE);
@@ -512,7 +512,7 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
 
         mSize1.addSelectionListener(sl);
         mSize2.addSelectionListener(sl);
-        
+
         ModifyListener sizeModifyListener = new ModifyListener() {
             public void modifyText(ModifyEvent e) {
                 onSizeChange();
@@ -551,11 +551,12 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
             @Override
             public void widgetSelected(SelectionEvent e) {
                 LayoutCreatorDialog dialog = new LayoutCreatorDialog(mCreateButton.getShell(),
-                        mEditedFile.getName(), mCurrentConfig);
+                        mEditedFile.getName(),
+                        Sdk.getCurrent().getTarget(mEditedFile.getProject()), mCurrentConfig);
                 if (dialog.open() == Dialog.OK) {
                     final FolderConfiguration config = new FolderConfiguration();
                     dialog.getConfiguration(config);
-                    
+
                     createAlternateLayout(config);
                 }
             }
@@ -591,7 +592,7 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
     @Override
     protected PaletteRoot getPaletteRoot() {
         mPaletteRoot = PaletteFactory.createPaletteRoot(mPaletteRoot,
-                mLayoutEditor.getTargetData()); 
+                mLayoutEditor.getTargetData());
         return mPaletteRoot;
     }
 
@@ -618,7 +619,7 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
         getCommandStack().markSaveLocation();
         firePropertyChange(PROP_DIRTY);
     }
-    
+
     @Override
     protected void configurePaletteViewer() {
         super.configurePaletteViewer();
@@ -628,7 +629,7 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
         // the PaletteTemplateEntry held in the PaletteRoot.
         TemplateTransferDragSourceListener dragSource =
             new TemplateTransferDragSourceListener(getPaletteViewer());
-        
+
         // Create a drag source on the palette viewer.
         // See the drag target associated with the GraphicalViewer in configureGraphicalViewer.
         getPaletteViewer().addDragSourceListener(dragSource);
@@ -645,12 +646,12 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
         viewer.setEditPartFactory(new UiElementsEditPartFactory(mParent.getDisplay()));
         viewer.setRootEditPart(new ScalableFreeformRootEditPart());
 
-        // Disable the following -- we don't drag *from* the GraphicalViewer yet: 
+        // Disable the following -- we don't drag *from* the GraphicalViewer yet:
         // viewer.addDragSourceListener(new TemplateTransferDragSourceListener(viewer));
-        
+
         viewer.addDropTargetListener(new DropListener(viewer));
     }
-    
+
     class DropListener extends TemplateTransferDropTargetListener {
         public DropListener(EditPartViewer viewer) {
             super(viewer);
@@ -670,7 +671,7 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
                 public Object getObjectType() {
                     return template;
                 }
-                
+
             };
         }
     }
@@ -698,7 +699,7 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
                     input.toString());
         }
     }
-    
+
     /* (non-javadoc)
      * Sets the graphicalViewer for this EditorPart.
      * @param viewer the graphical viewer
@@ -714,18 +715,18 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
     /**
      * Used by LayoutEditor.UiEditorActions.selectUiNode to select a new UI Node
      * created by  {@link ElementCreateCommand#execute()}.
-     * 
+     *
      * @param uiNodeModel The {@link UiElementNode} to select.
      */
     @Override
     void selectModel(UiElementNode uiNodeModel) {
         GraphicalViewer viewer = getGraphicalViewer();
-        
+
         // Give focus to the graphical viewer (in case the outline has it)
         viewer.getControl().forceFocus();
-        
+
         Object editPart = viewer.getEditPartRegistry().get(uiNodeModel);
-        
+
         if (editPart instanceof EditPart) {
             viewer.select((EditPart)editPart);
         }
@@ -745,7 +746,7 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
         MenuManager menuManager = new MenuManager();
         menuManager.setRemoveAllWhenShown(true);
         menuManager.addMenuListener(new ActionMenuListener(viewer));
-        
+
         return menuManager;
     }
 
@@ -775,13 +776,13 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
                    }
                }
            }
-           
+
            if (selected.size() > 0) {
                doCreateMenuAction(manager, mViewer, selected);
            }
         }
     }
-    
+
     private void doCreateMenuAction(IMenuManager manager,
             final GraphicalViewer viewer,
             final ArrayList<UiElementNode> selected) {
@@ -820,7 +821,7 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
         // Append "add" and "remove" actions. They do the same thing as the add/remove
         // buttons on the side.
         IconFactory factory = IconFactory.getInstance();
-        
+
         final UiEditorActions uiActions = mLayoutEditor.getUiEditorActions();
 
         // "Add" makes sense only if there's 0 or 1 item selected since the
@@ -845,7 +846,7 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
             });
 
             manager.add(new Separator());
-            
+
             manager.add(new Action("Up", factory.getImageDescriptor("up")) { //$NON-NLS-2$
                 @Override
                 public void run() {
@@ -859,8 +860,8 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
                 }
             });
         }
-        
-    } 
+
+    }
 
     /**
      * Sets the UI for the edition of a new file.
@@ -870,11 +871,11 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
     void editNewFile(FolderConfiguration configuration) {
         // update the configuration UI
         setConfiguration(configuration, true /*force*/);
-        
+
         // enable the create button if the current and edited config are not equals
         mCreateButton.setEnabled(mEditedConfig.equals(mCurrentConfig) == false);
     }
-    
+
     public Rectangle getBounds() {
         ScreenOrientation orientation = null;
         if (mOrientation.getSelectionIndex() == 0) {
@@ -916,7 +917,7 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
                 return new Rectangle(0, 0, s1, s1);
         }
     }
-    
+
     /**
      * Renders an Android View described by a {@link ViewElementDescriptor}.
      * <p/>This uses the <code>wrap_content</code> mode for both <code>layout_width</code> and
@@ -928,17 +929,17 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
         if (mEditedFile == null) {
             return null;
         }
-        
+
         IAndroidTarget target = Sdk.getCurrent().getTarget(mEditedFile.getProject());
         if (target == null) {
             return null;
         }
-        
+
         AndroidTargetData data = Sdk.getCurrent().getTargetData(target);
         if (data == null) {
             return null;
         }
-        
+
         LayoutBridge bridge = data.getLayoutBridge();
 
         if (bridge.bridge != null) { // bridge can never be null.
@@ -961,7 +962,7 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
                     // get the project resource values based on the current config
                     mConfiguredProjectRes = projectRes.getConfiguredResources(mCurrentConfig);
                 }
-                
+
                 configuredProjectResources = mConfiguredProjectRes;
             } else {
                 // we absolutely need a Map of configured project resources.
@@ -998,12 +999,12 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
                         int height = result.getRootView().getBottom();
                         Raster raster = largeImage.getData(new java.awt.Rectangle(width, height));
                         int[] imageDataBuffer = ((DataBufferInt)raster.getDataBuffer()).getData();
-                        
+
                         ImageData imageData = new ImageData(width, height, 32,
                                 new PaletteData(0x00FF0000, 0x0000FF00, 0x000000FF));
 
                         imageData.setPixels(0, 0, imageDataBuffer.length, imageDataBuffer, 0);
-                        
+
                         return imageData;
                     }
                 }
@@ -1046,7 +1047,7 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
             mNeedsXmlReload = true;
         }
     }
-    
+
     /**
      * Actually performs the XML reload
      * @see #onXmlModelChanged()
@@ -1054,17 +1055,17 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
     private void doXmlReload(boolean force) {
         if (force || mNeedsXmlReload) {
             GraphicalViewer viewer = getGraphicalViewer();
-            
+
             // try to preserve the selection before changing the content
             SelectionManager selMan = viewer.getSelectionManager();
             ISelection selection = selMan.getSelection();
-    
+
             try {
                 viewer.setContents(getModel());
             } finally {
                 selMan.setSelection(selection);
             }
-            
+
             mNeedsXmlReload = false;
         }
     }
@@ -1148,12 +1149,13 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
         mDensityIcon.setImage(mMatchImage);
         PixelDensityQualifier densityQualifier = config.getPixelDensityQualifier();
         if (densityQualifier != null) {
-            mDensity.setText(String.format("%1$d", densityQualifier.getValue()));
+            mDensity.select(
+                    Density.getIndex(densityQualifier.getValue()) + 1);
             mCurrentConfig.setPixelDensityQualifier(densityQualifier);
         } else if (force) {
-            mDensity.setText(""); //$NON-NLS-1$
+            mOrientation.select(0);
             mCurrentConfig.setPixelDensityQualifier(null);
-        } else if (mDensity.getText().length() > 0) {
+        } else if (mDensity.getSelectionIndex() != 0) {
             mDensityIcon.setImage(mWarningImage);
         }
 
@@ -1223,10 +1225,10 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
         // update the string showing the folder name
         String current = config.toDisplayString();
         mCurrentLayoutLabel.setText(current != null ? current : "(Default)");
-        
+
         mDisableUpdates = false;
     }
-    
+
     /**
      * Displays an error icon in front of all the non-null qualifiers.
      */
@@ -1236,44 +1238,44 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
         if (countryQualifier != null) {
             mCountryIcon.setImage(mErrorImage);
         }
-        
+
         mNetworkIcon.setImage(mMatchImage);
         NetworkCodeQualifier networkQualifier = mCurrentConfig.getNetworkCodeQualifier();
         if (networkQualifier != null) {
             mNetworkIcon.setImage(mErrorImage);
         }
-        
+
         mLanguageIcon.setImage(mMatchImage);
         LanguageQualifier languageQualifier = mCurrentConfig.getLanguageQualifier();
         if (languageQualifier != null) {
             mLanguageIcon.setImage(mErrorImage);
         }
-        
+
         mRegionIcon.setImage(mMatchImage);
         RegionQualifier regionQualifier = mCurrentConfig.getRegionQualifier();
         if (regionQualifier != null) {
             mRegionIcon.setImage(mErrorImage);
         }
-        
+
         mOrientationIcon.setImage(mMatchImage);
         ScreenOrientationQualifier orientationQualifier =
             mCurrentConfig.getScreenOrientationQualifier();
         if (orientationQualifier != null) {
             mOrientationIcon.setImage(mErrorImage);
         }
-        
+
         mDensityIcon.setImage(mMatchImage);
         PixelDensityQualifier densityQualifier = mCurrentConfig.getPixelDensityQualifier();
         if (densityQualifier != null) {
             mDensityIcon.setImage(mErrorImage);
         }
-        
+
         mTouchIcon.setImage(mMatchImage);
         TouchScreenQualifier touchQualifier = mCurrentConfig.getTouchTypeQualifier();
         if (touchQualifier != null) {
             mTouchIcon.setImage(mErrorImage);
         }
-        
+
         mKeyboardIcon.setImage(mMatchImage);
         KeyboardStateQualifier keyboardQualifier = mCurrentConfig.getKeyboardStateQualifier();
         if (keyboardQualifier != null) {
@@ -1285,20 +1287,20 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
         if (inputQualifier != null) {
             mTextInputIcon.setImage(mErrorImage);
         }
-        
+
         mNavigationIcon.setImage(mMatchImage);
         NavigationMethodQualifier navigationQualifiter =
             mCurrentConfig.getNavigationMethodQualifier();
         if (navigationQualifiter != null) {
             mNavigationIcon.setImage(mErrorImage);
         }
-        
+
         mSizeIcon.setImage(mMatchImage);
         ScreenDimensionQualifier sizeQualifier = mCurrentConfig.getScreenDimensionQualifier();
         if (sizeQualifier != null) {
             mSizeIcon.setImage(mErrorImage);
         }
-        
+
         // update the string showing the folder name
         String current = mCurrentConfig.toDisplayString();
         mCurrentLayoutLabel.setText(current != null ? current : "(Default)");
@@ -1308,7 +1310,7 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
     UiDocumentNode getModel() {
         return mLayoutEditor.getUiRootNode();
     }
-    
+
     @Override
     void reloadPalette() {
         PaletteFactory.createPaletteRoot(mPaletteRoot, mLayoutEditor.getTargetData());
@@ -1474,36 +1476,12 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
     }
 
     private void onDensityChange() {
-        // because mDensity triggers onDensityChange at each modification, calling setText()
-        // will trigger notifications, and we don't want that.
-        if (mDisableUpdates == true) {
-            return;
-        }
-
-        // update the current config
-        String value = mDensity.getText();
-
-        // empty string, means no qualifier.
-        if (value.length() == 0) {
-            mCurrentConfig.setPixelDensityQualifier(null);
+        int index = mDensity.getSelectionIndex();
+        if (index != 0) {
+            mCurrentConfig.setPixelDensityQualifier((new PixelDensityQualifier(
+                Density.getByIndex(index-1))));
         } else {
-            try {
-                PixelDensityQualifier qualifier = PixelDensityQualifier.getQualifier(
-                        PixelDensityQualifier.getFolderSegment(Integer.parseInt(value)));
-                if (qualifier != null) {
-                    mCurrentConfig.setPixelDensityQualifier(qualifier);
-                } else {
-                    // Failure! Looks like the value is wrong (for instance a one letter string).
-                    // We do nothing in this case.
-                    return;
-                }
-            } catch (NumberFormatException e) {
-                // Looks like the code is not a number. This should not happen since the text
-                // field has a VerifyListener that prevents it.
-                // We do nothing in this case.
-                mDensityIcon.setImage(mErrorImage);
-                return;
-            }
+            mCurrentConfig.setPixelDensityQualifier(null);
         }
 
         // look for a file to open/create
@@ -1612,11 +1590,11 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
         if (mEditedFile == null || mEditedConfig == null) {
             return;
         }
-        
+
         // get the resources of the file's project.
         ProjectResources resources = ResourceManager.getInstance().getProjectResources(
                 mEditedFile.getProject());
-        
+
         // from the resources, look for a matching file
         ResourceFile match = null;
         if (resources != null) {
@@ -1643,7 +1621,7 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
 
             // update the configuration icons with the new edited config.
             setConfiguration(mEditedConfig, false /*force*/);
-            
+
             // enable the create button if the current and edited config are not equals
             mCreateButton.setEnabled(mEditedConfig.equals(mCurrentConfig) == false);
 
@@ -1653,7 +1631,7 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
         } else {
             // update the configuration icons with the new edited config.
             displayConfigError();
-            
+
             // enable the Create button
             mCreateButton.setEnabled(true);
 
@@ -1661,7 +1639,8 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
             String message = String.format(
                     "No resources match the configuration\n \n\t%1$s\n \nChange the configuration or create:\n \n\tres/%2$s/%3$s\n \nYou can also click the 'Create' button above.",
                     mCurrentConfig.toDisplayString(),
-                    mCurrentConfig.getFolderName(ResourceFolderType.LAYOUT),
+                    mCurrentConfig.getFolderName(ResourceFolderType.LAYOUT,
+                            Sdk.getCurrent().getTarget(mEditedFile.getProject())),
                     mEditedFile.getName());
             showErrorInEditor(message);
         }
@@ -1671,7 +1650,7 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
         int themeIndex = mThemeCombo.getSelectionIndex();
         if (themeIndex != -1) {
             String theme = mThemeCombo.getItem(themeIndex);
-            
+
             if (theme.equals(THEME_SEPARATOR)) {
                 mThemeCombo.select(0);
             }
@@ -1745,7 +1724,7 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
                     showErrorInEditor("The project target is not set.");
                     return;
                 }
-                
+
                 AndroidTargetData data = currentSdk.getTargetData(target);
                 if (data == null) {
                     // It can happen that the workspace refreshes while the SDK is loading its
@@ -1774,67 +1753,77 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
 
                 if (bridge.bridge != null) { // bridge can never be null.
                     ResourceManager resManager = ResourceManager.getInstance();
-    
+
                     ProjectResources projectRes = resManager.getProjectResources(iProject);
                     if (projectRes == null) {
                         return;
                     }
-    
+
                     // get the resources of the file's project.
                     if (mConfiguredProjectRes == null) {
                         // make sure they are loaded
                         projectRes.loadAll();
-    
+
                         // get the project resource values based on the current config
                         mConfiguredProjectRes = projectRes.getConfiguredResources(mCurrentConfig);
                     }
-    
+
                     // get the framework resources
                     Map<String, Map<String, IResourceValue>> frameworkResources =
                         getConfiguredFrameworkResources();
-    
+
                     if (mConfiguredProjectRes != null && frameworkResources != null) {
                         if (mProjectCallback == null) {
                             mProjectCallback = new ProjectCallback(
                                     bridge.classLoader, projectRes, iProject);
                         }
-    
+
                         if (mLogger == null) {
                             mLogger = new ILayoutLog() {
                                 public void error(String message) {
                                     AdtPlugin.printErrorToConsole(mEditedFile.getName(), message);
                                 }
-    
+
                                 public void error(Throwable error) {
                                     String message = error.getMessage();
                                     if (message == null) {
                                         message = error.getClass().getName();
                                     }
-    
+
                                     PrintStream ps = new PrintStream(AdtPlugin.getErrorStream());
                                     error.printStackTrace(ps);
                                 }
-    
+
                                 public void warning(String message) {
                                     AdtPlugin.printToConsole(mEditedFile.getName(), message);
                                 }
                             };
                         }
-    
+
                         // get the selected theme
                         int themeIndex = mThemeCombo.getSelectionIndex();
                         if (themeIndex != -1) {
                             String theme = mThemeCombo.getItem(themeIndex);
-                            
+
                             // Compute the layout
                             UiElementPullParser parser = new UiElementPullParser(getModel());
                             Rectangle rect = getBounds();
                             boolean isProjectTheme = themeIndex >= mPlatformThemeCount;
 
                             // FIXME pass the density/dpi from somewhere (resource config or skin).
+                            // For now, get it from the config
+                            int density = Density.MEDIUM.getDpiValue();
+                            PixelDensityQualifier qual = mCurrentConfig.getPixelDensityQualifier();
+                            if (qual != null) {
+                                int d = qual.getValue().getDpiValue();
+                                if (d > 0) {
+                                    density = d;
+                                }
+                            }
+
                             ILayoutResult result = computeLayout(bridge, parser,
                                     iProject /* projectKey */,
-                                    rect.width, rect.height, 160, 160.f, 160.f, 
+                                    rect.width, rect.height, density, density, density,
                                     theme, isProjectTheme,
                                     mConfiguredProjectRes, frameworkResources, mProjectCallback,
                                     mLogger);
@@ -1842,20 +1831,20 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
                             // update the UiElementNode with the layout info.
                             if (result.getSuccess() == ILayoutResult.SUCCESS) {
                                 model.setEditData(result.getImage());
-    
+
                                 updateNodeWithBounds(result.getRootView());
                             } else {
                                 String message = result.getErrorMessage();
-    
+
                                 // Reset the edit data for all the nodes.
                                 resetNodeBounds(model);
-    
+
                                 if (message != null) {
                                     // set the error in the top element.
                                     model.setEditData(message);
                                 }
                             }
-    
+
                             model.refreshUi();
                         }
                     }
@@ -1951,11 +1940,11 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
             // clear the cache in the bridge in case a bitmap/9-patch changed.
             IAndroidTarget target = Sdk.getCurrent().getTarget(mEditedFile.getProject());
             if (target != null) {
-                
+
                 AndroidTargetData data = Sdk.getCurrent().getTargetData(target);
                 if (data != null) {
                     LayoutBridge bridge = data.getLayoutBridge();
-        
+
                     if (bridge.bridge != null) {
                         bridge.bridge.clearCaches(mEditedFile.getProject());
                     }
@@ -2007,28 +1996,28 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
         ProjectResources frameworkProject = getFrameworkResources();
 
         mDisableUpdates = true;
-        
+
         // Reset stuff
         int selection = mThemeCombo.getSelectionIndex();
         mThemeCombo.removeAll();
         mPlatformThemeCount = 0;
         mLanguage.removeAll();
-        
+
         Set<String> languages = new HashSet<String>();
         ArrayList<String> themes = new ArrayList<String>();
-        
+
         // get the themes, and languages from the Framework.
         if (frameworkProject != null) {
             // get the configured resources for the framework
             Map<String, Map<String, IResourceValue>> frameworResources =
                 getConfiguredFrameworkResources();
-            
+
             if (frameworResources != null) {
                 // get the styles.
                 Map<String, IResourceValue> styles = frameworResources.get(
                         ResourceType.STYLE.getName());
-                
-                
+
+
                 // collect the themes out of all the styles.
                 for (IResourceValue value : styles.values()) {
                     String name = value.getName();
@@ -2040,11 +2029,11 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
 
                 // sort them and add them to the combo
                 Collections.sort(themes);
-                
+
                 for (String theme : themes) {
                     mThemeCombo.add(theme);
                 }
-                
+
                 mPlatformThemeCount = themes.size();
                 themes.clear();
             }
@@ -2054,7 +2043,7 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
                 languages.addAll(frameworkLanguages);
             }
         }
-        
+
         // now get the themes and languages from the project.
         ProjectResources project = null;
         if (mEditedFile != null) {
@@ -2062,7 +2051,7 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
 
             // in cases where the opened file is not linked to a project, this could be null.
             if (project != null) {
-                // get the configured resources for the project 
+                // get the configured resources for the project
                 if (mConfiguredProjectRes == null) {
                     // make sure they are loaded
                     project.loadAll();
@@ -2070,12 +2059,12 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
                     // get the project resource values based on the current config
                     mConfiguredProjectRes = project.getConfiguredResources(mCurrentConfig);
                 }
-                
+
                 if (mConfiguredProjectRes != null) {
                     // get the styles.
                     Map<String, IResourceValue> styleMap = mConfiguredProjectRes.get(
                             ResourceType.STYLE.getName());
-                    
+
                     if (styleMap != null) {
                         // collect the themes out of all the styles, ie styles that extend,
                         // directly or indirectly a platform theme.
@@ -2089,9 +2078,9 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
                         if (mPlatformThemeCount > 0 && themes.size() > 0) {
                             mThemeCombo.add(THEME_SEPARATOR);
                         }
-                        
+
                         Collections.sort(themes);
-                        
+
                         for (String theme : themes) {
                             mThemeCombo.add(theme);
                         }
@@ -2110,7 +2099,7 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
         for (String language : languages) {
             mLanguage.add(language);
         }
-        
+
         mDisableUpdates = false;
 
         // and update the Region UI based on the current language
@@ -2143,7 +2132,7 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
     private boolean isTheme(IResourceValue value, Map<String, IResourceValue> styleMap) {
         if (value instanceof IStyleResourceValue) {
             IStyleResourceValue style = (IStyleResourceValue)value;
-            
+
             boolean frameworkStyle = false;
             String parentStyle = style.getParentStyle();
             if (parentStyle == null) {
@@ -2160,13 +2149,13 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
                 if (parentStyle.startsWith("@")) {
                     parentStyle = parentStyle.substring(1);
                 }
-                
+
                 // check for framework identifier.
                 if (parentStyle.startsWith("android:")) {
                     frameworkStyle = true;
                     parentStyle = parentStyle.substring("android:".length());
                 }
-                
+
                 // at this point we could have the format style/<name>. we want only the name
                 if (parentStyle.startsWith("style/")) {
                     parentStyle = parentStyle.substring("style/".length());
@@ -2232,7 +2221,7 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
             mDisableUpdates = false;
         }
     }
-    
+
     private Map<String, Map<String, IResourceValue>> getConfiguredFrameworkResources() {
         if (mConfiguredFrameworkRes == null) {
             ProjectResources frameworkRes = getFrameworkResources();
@@ -2244,7 +2233,7 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
             // get the framework resource values based on the current config
             mConfiguredFrameworkRes = frameworkRes.getConfiguredResources(mCurrentConfig);
         }
-        
+
         return mConfiguredFrameworkRes;
     }
 
@@ -2256,14 +2245,15 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
             @Override
             protected IStatus run(IProgressMonitor monitor) {
                 // get the folder name
-                String folderName = config.getFolderName(ResourceFolderType.LAYOUT);
+                String folderName = config.getFolderName(ResourceFolderType.LAYOUT,
+                        Sdk.getCurrent().getTarget(mEditedFile.getProject()));
                 try {
-                    
+
                     // look to see if it exists.
                     // get the res folder
                     IFolder res = (IFolder)mEditedFile.getParent().getParent();
                     String path = res.getLocation().toOSString();
-                    
+
                     File newLayoutFolder = new File(path + File.separator + folderName);
                     if (newLayoutFolder.isFile()) {
                         // this should not happen since aapt would have complained
@@ -2271,34 +2261,34 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
                         // happen.
                         String message = String.format("File 'res/%1$s' is in the way!",
                                 folderName);
-                        
+
                         AdtPlugin.displayError("Layout Creation", message);
-                        
+
                         return new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID, message);
                     } else if (newLayoutFolder.exists() == false) {
                         // create it.
                         newLayoutFolder.mkdir();
                     }
-                    
+
                     // now create the file
                     File newLayoutFile = new File(newLayoutFolder.getAbsolutePath() +
                                 File.separator + mEditedFile.getName());
 
                     newLayoutFile.createNewFile();
-                    
+
                     InputStream input = mEditedFile.getContents();
-                    
+
                     FileOutputStream fos = new FileOutputStream(newLayoutFile);
-                    
+
                     byte[] data = new byte[512];
                     int count;
                     while ((count = input.read(data)) != -1) {
                         fos.write(data, 0, count);
                     }
-                    
+
                     input.close();
                     fos.close();
-                    
+
                     // refreshes the res folder to show up the new
                     // layout folder (if needed) and the file.
                     // We use a progress monitor to catch the end of the refresh
@@ -2346,27 +2336,27 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
                     String message = String.format(
                             "Failed to create File 'res/%1$s/%2$s' : %3$s",
                             folderName, mEditedFile.getName(), e2.getMessage());
-                    
+
                     AdtPlugin.displayError("Layout Creation", message);
-                    
+
                     return new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID,
                             message, e2);
                 } catch (CoreException e2) {
                     String message = String.format(
                             "Failed to create File 'res/%1$s/%2$s' : %3$s",
                             folderName, mEditedFile.getName(), e2.getMessage());
-                    
+
                     AdtPlugin.displayError("Layout Creation", message);
 
                     return e2.getStatus();
                 }
-                
+
                 return Status.OK_STATUS;
 
             }
         }.schedule();
     }
-    
+
     /**
      * Returns a {@link ProjectResources} for the framework resources.
      * @return the framework resources or null if not found.
@@ -2376,10 +2366,10 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
             Sdk currentSdk = Sdk.getCurrent();
             if (currentSdk != null) {
                 IAndroidTarget target = currentSdk.getTarget(mEditedFile.getProject());
-    
+
                 if (target != null) {
                     AndroidTargetData data = currentSdk.getTargetData(target);
-                    
+
                     if (data != null) {
                         return data.getFrameworkResources();
                     }
@@ -2389,7 +2379,7 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
 
         return null;
     }
-    
+
     /**
      * Computes a layout by calling the correct computeLayout method of ILayoutBridge based on
      * the implementation API level.
@@ -2402,12 +2392,12 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
             Map<String, Map<String, IResourceValue>> projectResources,
             Map<String, Map<String, IResourceValue>> frameworkResources,
             IProjectCallback projectCallback, ILayoutLog logger) {
-        
+
         if (bridge.apiLevel >= 3) {
             // newer api with boolean for separation of project/framework theme,
             // and density support.
             return bridge.bridge.computeLayout(layoutDescription,
-                    projectKey, screenWidth, screenHeight, density, xdpi, ydpi, 
+                    projectKey, screenWidth, screenHeight, density, xdpi, ydpi,
                     themeName, isProjectTheme,
                     projectResources, frameworkResources, projectCallback,
                     logger);

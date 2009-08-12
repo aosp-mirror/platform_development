@@ -17,6 +17,7 @@
 package com.android.ide.eclipse.adt.internal.resources.configurations;
 
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
+import com.android.sdklib.IAndroidTarget;
 
 import org.eclipse.swt.graphics.Image;
 
@@ -24,7 +25,7 @@ import org.eclipse.swt.graphics.Image;
  * Resource Qualifier for Screen Orientation.
  */
 public final class ScreenOrientationQualifier extends ResourceQualifier {
-    
+
     public static final String NAME = "Screen Orientation";
 
     private ScreenOrientation mValue = null;
@@ -36,15 +37,15 @@ public final class ScreenOrientationQualifier extends ResourceQualifier {
         PORTRAIT("port", "Portrait"), //$NON-NLS-1$
         LANDSCAPE("land", "Landscape"), //$NON-NLS-1$
         SQUARE("square", "Square"); //$NON-NLS-1$
-        
+
         private String mValue;
         private String mDisplayValue;
-        
+
         private ScreenOrientation(String value, String displayValue) {
             mValue = value;
             mDisplayValue = displayValue;
         }
-        
+
         /**
          * Returns the enum for matching the provided qualifier value.
          * @param value The qualifier value.
@@ -63,18 +64,18 @@ public final class ScreenOrientationQualifier extends ResourceQualifier {
         public String getValue() {
             return mValue;
         }
-        
+
         public String getDisplayValue() {
             return mDisplayValue;
         }
-        
+
         public static int getIndex(ScreenOrientation orientation) {
             int i = 0;
             for (ScreenOrientation orient : values()) {
                 if (orient == orientation) {
                     return i;
                 }
-                
+
                 i++;
             }
 
@@ -104,22 +105,22 @@ public final class ScreenOrientationQualifier extends ResourceQualifier {
     public ScreenOrientation getValue() {
         return mValue;
     }
-    
+
     @Override
     public String getName() {
         return NAME;
     }
-    
+
     @Override
     public String getShortName() {
         return "Orientation";
     }
-    
+
     @Override
     public Image getIcon() {
         return IconFactory.getInstance().getIcon("orientation"); //$NON-NLS-1$
     }
-    
+
     @Override
     public boolean isValid() {
         return mValue != null;
@@ -133,10 +134,10 @@ public final class ScreenOrientationQualifier extends ResourceQualifier {
             config.setScreenOrientationQualifier(qualifier);
             return true;
         }
-        
+
         return false;
     }
-    
+
     @Override
     public boolean equals(Object qualifier) {
         if (qualifier instanceof ScreenOrientationQualifier) {
@@ -151,19 +152,19 @@ public final class ScreenOrientationQualifier extends ResourceQualifier {
         if (mValue != null) {
             return mValue.hashCode();
         }
-        
+
         return 0;
     }
-    
+
     /**
      * Returns the string used to represent this qualifier in the folder name.
      */
     @Override
-    public String toString() {
+    public String getFolderSegment(IAndroidTarget target) {
         if (mValue != null) {
             return mValue.getValue();
         }
-        
+
         return ""; //$NON-NLS-1$
     }
 
@@ -172,7 +173,7 @@ public final class ScreenOrientationQualifier extends ResourceQualifier {
         if (mValue != null) {
             return mValue.getDisplayValue();
         }
-        
+
         return ""; //$NON-NLS-1$
     }
 }
