@@ -275,6 +275,13 @@ See test_defs.xsd for more information.
     coverage_target="framework"
     cts="true" />
 
+<test name="cts-telephony"
+    build_path="cts/tests"
+    package="com.android.cts.telephony"
+    runner="android.test.InstrumentationCtsTestRunner"
+    coverage_target="framework"
+    cts="true" />
+
 <test name="cts-util"
     build_path="cts/tests"
     package="com.android.cts.util"
