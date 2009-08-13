@@ -47,6 +47,8 @@ public class AccountsTester extends Activity implements OnAccountsUpdatedListene
     private static final int GET_AUTH_TOKEN_DIALOG_ID = 1;
     private static final int UPDATE_CREDENTIALS_DIALOG_ID = 2;
     private static final int INVALIDATE_AUTH_TOKEN_DIALOG_ID = 3;
+    private EditText mDesiredAuthTokenTypeEditText;
+    private EditText mDesiredFeaturesEditText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,6 +79,9 @@ public class AccountsTester extends Activity implements OnAccountsUpdatedListene
                 buttonClickListener);
         findViewById(R.id.accounts_tester_add_account).setOnClickListener(buttonClickListener);
         findViewById(R.id.accounts_tester_edit_properties).setOnClickListener(buttonClickListener);
+        mDesiredAuthTokenTypeEditText =
+                (EditText) findViewById(R.id.accounts_tester_desired_authtokentype);
+        mDesiredFeaturesEditText = (EditText) findViewById(R.id.accounts_tester_desired_features);
     }
 
     private static class AuthenticatorsArrayAdapter extends ArrayAdapter<AuthenticatorDescription> {
@@ -190,9 +195,17 @@ public class AccountsTester extends Activity implements OnAccountsUpdatedListene
                         }
                     }
                 };
+                String authTokenType = mDesiredAuthTokenTypeEditText.getText().toString();
+                if (TextUtils.isEmpty(authTokenType)) {
+                    authTokenType = null;
+                }
+                String featureString = mDesiredFeaturesEditText.getText().toString();
+                String[] requiredFeatures = TextUtils.split(featureString, " ");
+                if (requiredFeatures.length == 0) {
+                    requiredFeatures = null;
+                }
                 mAccountManager.addAccount(getSelectedAuthenticator().type,
-                        null /* authTokenType */,
-                        null /* requiredFeatures */, null /* options */,
+                        authTokenType, requiredFeatures, null /* options */,
                         AccountsTester.this, callback, null /* handler */);
             } else if (R.id.accounts_tester_edit_properties == v.getId()) {
                 mAccountManager.editProperties(getSelectedAuthenticator().type,
