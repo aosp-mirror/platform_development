@@ -201,7 +201,15 @@
     </target>
 
     <!-- Uinstall the package from the default emulator -->
-    <target name="uninstall">
+    <target name="uninstall.check">
+        <condition property="uninstall.run">
+           <isset property="application-package" />
+        </condition>
+    </target>
+    <target name="uninstall.error" depends="uninstall.check" unless="uninstall.run">
+        <echo>Unable to run 'ant unintall', application-package is not defined in build.properties</echo>
+    </target>
+    <target name="uninstall" depends="uninstall.error" if="uninstall.run">
         <echo>Uninstalling ${application-package} from the default emulator...</echo>
         <exec executable="${adb}" failonerror="true">
             <arg value="uninstall" />

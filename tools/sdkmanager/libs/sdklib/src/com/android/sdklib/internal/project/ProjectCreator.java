@@ -199,9 +199,10 @@ public class ProjectCreator {
             defaultProperties.setAndroidTarget(target);
             defaultProperties.save();
 
-            // create an empty build.properties
+            // create a build.properties file with just the application package
             ProjectProperties buildProperties = ProjectProperties.create(folderPath,
                     PropertyType.BUILD);
+            buildProperties.setProperty(ProjectProperties.PROPERTY_APP_PACKAGE, packageName);
             buildProperties.save();
 
             // create the map for place-holders of values to replace in the templates
