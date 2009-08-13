@@ -1,20 +1,23 @@
 This project contains the tests for the Android Eclipse Plugins.
 
-You can do two things:
-1- Run the full "eclipse plugin" suite
-2- Run independent JUnit tests (not as plugin)
+You can do three things:
+1- Run the unit tests as a full "eclipse plugin" suite
+2- Run the unit tests as independent JUnit tests (not as plugin)
+3. Run the functional tests as a full "eclipse plugin" suite (require a real SDK)
+
+The unit tests are isolated tests that do not require external dependencies such as an SDK. 
+The functional tests are higher level tests that may require a real SDK.
 
 ------------------------------------------
-1- Running the full "eclipse plugin" suite
+1- Running the unit tests as a full "eclipse plugin" suite
 ------------------------------------------
 
 Steps to run the test suite:
 
-A- In Eclipse, import following projects from //device/tools/eclipse/plugins:
+A- In Eclipse, import following projects from development/tools/eclipse/plugins:
 	- adt-tests
 	- adt
-	- common
-	- editors
+	- ddms
 
 B- Create a new "JUnit Plug-in Test" run configuration via the "Run > Open Run Dialog..." menu
 Set the launch configuration's data as follows:
@@ -44,14 +47,13 @@ in conjunction with the "test_data" environment variable mentioned above
 
 
 -------------------------------------------
-2- Run independent JUnit tests (not plugin)
+2- Run the unit tests as independent JUnit tests (not plugin)
 -------------------------------------------
 
-A- In Eclipse, import following projects from //device/tools/eclipse/plugins:
+A- In Eclipse, import following projects from development/tools/eclipse/plugins:
 	- adt-tests
 	- adt
-	- common
-	- editors
+	- ddms
 
 B- Select the "unittests" source folder, right-click and select
 	"Run As > JUnit Test" (i.e. not the plugin tests)
@@ -67,6 +69,33 @@ continuous test environment. Tests that pass when run as "JUnit Tests" can
 fail when run as "JUnit Plugin Tests", due to the extra constraints imposed by
 running within an Eclipse plug-in noted in section 1.
 
+------------------------------------------
+3- Running the functional tests as a full "eclipse plugin" suite
+------------------------------------------
 
+Steps to run the test suite:
+
+A- In Eclipse, import following projects from development/tools/eclipse/plugins:
+	- adt-tests
+	- adt
+	- ddms
+
+B - Setup an SDK on host machine, that is compatible with the Eclipse ADT plugins under test
+
+C- Create a new "JUnit Plug-in Test" run configuration via the "Run > Open Run Dialog..." menu
+Set the launch configuration's data as follows:
+i. "Test" tab: 
+  Select "Run a single test"
+  Project: adt-tests 
+  Test class: com.android.ide.eclipse.tests.FuncTests
+  Test runner: JUnit 3
+ii. "Environment" tab:
+ Add a "sdk_home" environment variable, setting its path to the SDK from step B
+
+All other fields can be left with their default values
+
+D. Run the newly created launch configuration
+
+Running the tests will run a secondary instance of Eclipse. 
 
 
