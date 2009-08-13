@@ -335,9 +335,8 @@ public class PreCompilerBuilder extends BaseBuilder {
                     if (codename != null) {
                         // integer minSdk when the target is a preview => fatal error
                         String msg = String.format(
-                                "Platform %1$s is a preview and requires appication manifests to set %2$s to '%3$s'",
-                                codename, ManifestConstants.ATTRIBUTE_MIN_SDK_VERSION,
-                                codename);
+                                "Platform %1$s is a preview and requires appication manifests to set %2$s to '%1$s'",
+                                codename, ManifestConstants.ATTRIBUTE_MIN_SDK_VERSION);
                         AdtPlugin.printErrorToConsole(project, msg);
                         BaseProjectHelper.addMarker(manifest, AdtConstants.MARKER_ADT, msg,
                                 IMarker.SEVERITY_ERROR);
@@ -375,6 +374,17 @@ public class PreCompilerBuilder extends BaseBuilder {
                         stopBuild(msg);
                     }
                 }
+            } else if (projectTarget.getVersion().isPreview()) {
+                // else the minSdkVersion is not set but we are using a preview target.
+                // Display an error
+                String codename = projectTarget.getVersion().getCodename();
+                String msg = String.format(
+                        "Platform %1$s is a preview and requires appication manifests to set %2$s to '%1$s'",
+                        codename, ManifestConstants.ATTRIBUTE_MIN_SDK_VERSION);
+                AdtPlugin.printErrorToConsole(project, msg);
+                BaseProjectHelper.addMarker(manifest, AdtConstants.MARKER_ADT, msg,
+                        IMarker.SEVERITY_ERROR);
+                stopBuild(msg);
             }
 
             if (javaPackage == null || javaPackage.length() == 0) {
