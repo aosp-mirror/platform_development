@@ -23,7 +23,7 @@ NDK_ROOT_DIR=`dirname $0`/../..
 NDK_ROOT_DIR=`cd $NDK_ROOT_DIR && pwd`
 
 # the release name
-RELEASE=1.5_r2
+RELEASE=1.6_r1
 
 # the package prefix
 PREFIX=android-ndk
