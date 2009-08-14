@@ -125,7 +125,7 @@ class NativeTestSuite(AbstractTestSuite):
     """
     for f in files:
       (name, ext) = os.path.splitext(f)
-      if ext == ".cc" or ext == ".cpp":
+      if ext == ".cc" or ext == ".cpp" or ext == ".c":
         if re.search("_test$|_test_$|_unittest$|_unittest_$|^test_", name):
           logger.SilentLog("Found %s" % f)
           test_list.append(str(os.path.join(dirname, f)))

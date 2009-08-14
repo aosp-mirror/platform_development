@@ -466,6 +466,12 @@ See test_defs.xsd for more information.
     description="Android STL."
     extra_build_args="ASTL_TESTS=1" />
 
+<!-- Android Keystore tests -->
+<test-native name="netkeystore_test"
+    build_path="frameworks/base/cmds/keystore/tests"
+    description="Android keystore."
+    extra_build_args="KEYSTORE_TESTS=1" />
+
 <!-- pending patch 820
 <test-native name="gtest"
     build_path="external/gtest"
