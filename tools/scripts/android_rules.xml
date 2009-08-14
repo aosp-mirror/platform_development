@@ -61,11 +61,16 @@
     </condition>
 
     <!-- The final package file to generate -->
+    <property name="out-debug-unaligned-package" value="${out-folder}/${ant.project.name}-debug-unaligned.apk"/>
     <property name="out-debug-package" value="${out-folder}/${ant.project.name}-debug.apk"/>
+    <property name="out-unsigned-package" value="${out-folder}/${ant.project.name}-unsigned.apk"/>
+    <property name="out-unaligned-package" value="${out-folder}/${ant.project.name}-unaligned.apk"/>
+    <property name="out-release-package" value="${out-folder}/${ant.project.name}-release.apk"/>
 
     <!-- Tools -->
     <condition property="exe" value=".exe" else=""><os family="windows"/></condition>
     <property name="adb" value="${android-tools}/adb${exe}"/>
+    <property name="zipalign" value="${android-tools}/zipalign${exe}" />
 
     <!-- rules -->
 
@@ -151,14 +156,14 @@
                 basename="${ant.project.name}" />
     </target>
 
-    <!-- Package the application and sign it with a debug key.
-         This is the default target when building. It is used for debug. -->
-    <target name="debug" depends="dex, package-resources">
+    <!-- Package the application and (maybe) sign it with a debug key.
+         This requires the property sign.package to be set to true or false. -->
+    <target name="package">
         <apkbuilder
                 outfolder="${out-folder}"
                 basename="${ant.project.name}"
-                signed="true"
-                verbose="false">
+                signed="${sign.package}"
+                verbose="true">
             <file path="${intermediate-dex}" />
             <sourcefolder path="${source-folder}" />
             <jarfolder path="${external-libs-folder}" />
@@ -166,20 +171,65 @@
         </apkbuilder>
     </target>
 
-    <!-- Package the application without signing it.
-         This allows for the application to be signed later with an official publishing key. -->
-    <target name="release" depends="dex, package-resources">
-        <apkbuilder
-                outfolder="${out-folder}"
-                basename="${ant.project.name}"
-                signed="false"
-                verbose="false">
-            <file path="${intermediate-dex}" />
-            <sourcefolder path="${source-folder}" />
-            <jarfolder path="${external-libs-folder}" />
-            <nativefolder path="${native-libs-folder}" />
-        </apkbuilder>
-        <echo>All generated packages need to be signed with jarsigner before they are published.</echo>
+    <target name="no-sign">
+       <property name="sign.package" value="false" />
+    </target>
+
+    <target name="debug-sign">
+       <property name="sign.package" value="true" />
+    </target>
+
+    <target name="debug" depends="dex, package-resources, debug-sign, package">
+        <exec executable="${zipalign}" failonerror="true">
+            <arg value="-f" />
+            <arg value="4" />
+            <arg path="${out-debug-unaligned-package}" />
+            <arg path="${out-debug-package}" />
+        </exec>
+        <echo>Debug Package: ${out-debug-package}</echo>
+    </target>
+
+    <target name="release-package" depends="dex, package-resources, no-sign, package">
+    </target>
+
+    <target name="release.check">
+        <condition property="release.sign">
+            <and>
+                <isset property="key.store" />
+                <isset property="key.alias" />
+            </and>
+        </condition>
+    </target>
+    <target name="release.nosign" depends="release.check" unless="release.sign">
+        <echo>No key.store and key.alias properties found in build.properties.</echo>
+        <echo>Please sign ${out-unsigned-package} manually</echo>
+        <echo>and run zipalign from the Android SDK tools.</echo>
+    </target>
+
+    <target name="release" depends="release-package, release.nosign" if="release.sign">
+        <!-- get passwords -->
+        <input
+                message="Please enter keystore password (store:${key.store}):"
+                addproperty="key.store.password"/>
+        <input
+                message="Please enter password for alias '${key.alias}':"
+                addproperty="key.alias.password"/>
+        <!-- sign the APK -->
+        <signjar
+                jar="${out-unsigned-package}"
+                signedjar="${out-unaligned-package}"
+                keystore="${key.store}"
+                storepass="${key.store.password}"
+                alias="${key.alias}"
+                keypass="${key.alias.password}"/>
+        <!-- zip align the APK -->
+        <exec executable="${zipalign}" failonerror="true">
+            <arg value="-f" />
+            <arg value="4" />
+            <arg path="${out-unaligned-package}" />
+            <arg path="${out-release-package}" />
+        </exec>
+        <echo>Release Package: ${out-release-package}</echo>
     </target>
 
     <!-- Install the package on the default emulator -->
