@@ -38,11 +38,13 @@ import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Tree;
@@ -104,18 +106,6 @@ public class RemotePackagesPage extends Composite implements ISdkListener {
         mColumnSource = new TreeColumn(mTreeSources, SWT.NONE);
         mColumnSource.setWidth(289);
         mColumnSource.setText("Sources, Packages and Archives");
-
-        Composite composite = new Composite(parent, SWT.NONE);
-        composite.setLayoutData(
-                new GridData(SWT.FILL, SWT.BEGINNING, false, false, 5, 1));
-        GridLayout gl;
-        composite.setLayout(gl = new GridLayout(2, false));
-        gl.marginHeight = gl.marginWidth = 0;
-        // add an empty composite
-        Composite spacer = new Composite(composite, SWT.NONE);
-        GridData gd;
-        spacer.setLayoutData(gd = new GridData(GridData.FILL_HORIZONTAL));
-        gd.heightHint = 0;
 
         mDescriptionContainer = new Group(parent, SWT.NONE);
         mDescriptionContainer.setLayout(new GridLayout(1, false));

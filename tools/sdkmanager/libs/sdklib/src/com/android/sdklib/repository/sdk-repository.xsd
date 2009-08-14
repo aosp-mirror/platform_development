@@ -71,6 +71,9 @@
                             <xsd:element name="release-url"  type="xsd:token"       minOccurs="0" />
                             <!-- A list of file archives for this package. -->
                             <xsd:element name="archives"     type="sdk:archivesType" />
+                            <!-- The minimal revision of tools required by this package.
+                                 Optional. If present, must be an int > 0. -->
+                            <xsd:element name="min-tools-rev" type="xsd:positiveInteger" minOccurs="0" />
                         </xsd:all>
                     </xsd:complexType>
                 </xsd:element>
@@ -241,6 +244,9 @@
                             <xsd:element name="release-url"  type="xsd:token"       minOccurs="0" />
                             <!-- A list of file archives for this package. -->
                             <xsd:element name="archives"     type="sdk:archivesType" />
+                            <!-- The minimal revision of tools required by this package.
+                                 Optional. If present, must be an int > 0. -->
+                            <xsd:element name="min-tools-rev" type="xsd:positiveInteger" minOccurs="0" />
                         </xsd:all>
                     </xsd:complexType>
                 </xsd:element>
