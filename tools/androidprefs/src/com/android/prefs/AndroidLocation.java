@@ -37,34 +37,44 @@ public final class AndroidLocation {
             super(string);
         }
     }
-    
+
     private static String sPrefsLocation = null;
-    
+
     /**
      * Returns the folder used to store android related files.
      * @return an OS specific path, terminated by a separator.
-     * @throws AndroidLocationException 
+     * @throws AndroidLocationException
      */
     public final static String getFolder() throws AndroidLocationException {
         if (sPrefsLocation == null) {
             String home = findValidPath("ANDROID_SDK_HOME", "user.home", "HOME");
-            
+
             // if the above failed, we throw an exception.
             if (home == null) {
                 throw new AndroidLocationException(
                         "Unable to get the home directory. Make sure the user.home property is set up");
             } else {
                 sPrefsLocation = home + File.separator + ".android" + File.separator;
-
-                // make sure the folder exists!
-                File f = new File(sPrefsLocation);
-                if (f.exists() == false) {
-                    f.mkdir();
-                } else if (f.isFile()) {
-                    throw new AndroidLocationException(sPrefsLocation +
-                            " is not a directory! This is required to run Android tools.");
-                }
             }
+        }
+
+        // make sure the folder exists!
+        File f = new File(sPrefsLocation);
+        if (f.exists() == false) {
+            try {
+                f.mkdir();
+            } catch (SecurityException e) {
+                AndroidLocationException e2 = new AndroidLocationException(String.format(
+                        "Unable to create folder '%1$s'. " +
+                        "This is the path of preference folder expected by the Android tools.",
+                        sPrefsLocation));
+                e2.initCause(e);
+                throw e2;
+            }
+        } else if (f.isFile()) {
+            throw new AndroidLocationException(sPrefsLocation +
+                    " is not a directory! " +
+                    "This is the path of preference folder expected by the Android tools.");
         }
 
         return sPrefsLocation;
@@ -92,7 +102,7 @@ public final class AndroidLocation {
                 }
             }
         }
-        
+
         return null;
     }
 }
