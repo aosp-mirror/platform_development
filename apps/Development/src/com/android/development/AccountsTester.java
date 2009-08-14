@@ -40,7 +40,6 @@ public class AccountsTester extends Activity implements OnAccountsUpdatedListene
     private ListView mAuthenticatorsListView;
     private AccountManager mAccountManager;
     private String mLongPressedAccount = null;
-    private Future1Callback<Account[]> mGetAccountsCallback;
     private static final String COM_GOOGLE_GAIA = "com.google.GAIA";
     private AuthenticatorDescription[] mAuthenticatorDescs;
 
@@ -56,24 +55,12 @@ public class AccountsTester extends Activity implements OnAccountsUpdatedListene
         mAccountManager = AccountManager.get(this);
         setContentView(R.layout.accounts_tester);
         ButtonClickListener buttonClickListener = new ButtonClickListener();
-        mGetAccountsCallback = new Future1Callback<Account[]>() {
-            public void run(Future1<Account[]> future) {
-                Log.d(TAG, "mGetAccountsCallback: starting");
-                try {
-                    Account[] accounts = future.getResult();
-                    onAccountsUpdated(accounts);
-                } catch (OperationCanceledException e) {
-                    // the request was canceled
-                    Log.d(TAG, "mGetAccountsCallback: request was canceled", e);
-                }
-            }
-        };
 
         mAccountTypesSpinner = (Spinner) findViewById(R.id.accounts_tester_account_types_spinner);
         mAccountsListView = (ListView) findViewById(R.id.accounts_tester_accounts_list);
         mAuthenticatorsListView = (ListView) findViewById(R.id.accounts_tester_authenticators_list);
         registerForContextMenu(mAccountsListView);
-        asyncGetAuthenticatorTypes();
+        getAuthenticatorTypes();
         findViewById(R.id.accounts_tester_get_all_accounts).setOnClickListener(buttonClickListener);
         findViewById(R.id.accounts_tester_get_accounts_by_type).setOnClickListener(
                 buttonClickListener);
@@ -143,15 +130,33 @@ public class AccountsTester extends Activity implements OnAccountsUpdatedListene
         }
     }
 
-    private void asyncGetAuthenticatorTypes() {
-        mAccountManager.getAuthenticatorTypes(new GetAuthenticatorsCallback(), null /* handler */);
+    private void getAuthenticatorTypes() {
+        mAuthenticatorDescs = mAccountManager.getAuthenticatorTypes();
+        String[] names = new String[mAuthenticatorDescs.length];
+        for (int i = 0; i < mAuthenticatorDescs.length; i++) {
+            Context authContext;
+            try {
+                authContext = createPackageContext(mAuthenticatorDescs[i].packageName, 0);
+            } catch (PackageManager.NameNotFoundException e) {
+                continue;
+            }
+            names[i] = authContext.getString(mAuthenticatorDescs[i].labelId);
+        }
+
+        ArrayAdapter<String> adapter =
+                new ArrayAdapter<String>(AccountsTester.this,
+                android.R.layout.simple_spinner_item, names);
+        mAccountTypesSpinner.setAdapter(adapter);
+
+        mAuthenticatorsListView.setAdapter(new AuthenticatorsArrayAdapter(
+                AccountsTester.this, mAuthenticatorDescs));
     }
 
     public void onAccountsUpdated(Account[] accounts) {
         Log.d(TAG, "onAccountsUpdated: \n  " + TextUtils.join("\n  ", accounts));
         String[] accountNames = new String[accounts.length];
         for (int i = 0; i < accounts.length; i++) {
-            accountNames[i] = accounts[i].mName;
+            accountNames[i] = accounts[i].name;
         }
         ArrayAdapter<String> adapter =
                 new ArrayAdapter<String>(AccountsTester.this,
@@ -174,14 +179,13 @@ public class AccountsTester extends Activity implements OnAccountsUpdatedListene
     class ButtonClickListener implements View.OnClickListener {
         public void onClick(View v) {
             if (R.id.accounts_tester_get_all_accounts == v.getId()) {
-                mAccountManager.getAccounts(mGetAccountsCallback, null /* handler */);
+                onAccountsUpdated(mAccountManager.getAccounts());
             } else if (R.id.accounts_tester_get_accounts_by_type == v.getId()) {
                 String type = getSelectedAuthenticator().type;
-                mAccountManager.getAccountsByType(mGetAccountsCallback, type,
-                        null /* handler */);
+                onAccountsUpdated(mAccountManager.getAccountsByType(type));
             } else if (R.id.accounts_tester_add_account == v.getId()) {
-                Future2Callback callback = new Future2Callback() {
-                    public void run(Future2 future) {
+                AccountManagerCallback<Bundle> callback = new AccountManagerCallback<Bundle>() {
+                    public void run(AccountManagerFuture<Bundle> future) {
                         try {
                             Bundle bundle = future.getResult();
                             bundle.keySet();
@@ -215,8 +219,8 @@ public class AccountsTester extends Activity implements OnAccountsUpdatedListene
             }
         }
 
-        private class EditPropertiesCallback implements Future2Callback {
-            public void run(Future2 future) {
+        private class EditPropertiesCallback implements AccountManagerCallback<Bundle> {
+            public void run(AccountManagerFuture<Bundle> future) {
                 try {
                     Bundle bundle = future.getResult();
                     bundle.keySet();
@@ -251,8 +255,17 @@ public class AccountsTester extends Activity implements OnAccountsUpdatedListene
     @Override
     public boolean onContextItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.accounts_tester_remove_account) {
-            mAccountManager.removeAccount(null /* callback */, new Account(mLongPressedAccount,
-                    COM_GOOGLE_GAIA), null /* handler */);
+            final Account account = new Account(mLongPressedAccount, COM_GOOGLE_GAIA);
+            mAccountManager.removeAccount(account, new AccountManagerCallback<Boolean>() {
+                public void run(AccountManagerFuture<Boolean> future) {
+                    try {
+                        Log.d(TAG, "removeAccount(" + account + ") = " + future.getResult());
+                    } catch (OperationCanceledException e) {
+                    } catch (IOException e) {
+                    } catch (AuthenticatorException e) {
+                    }
+                }
+            }, null /* handler */);
         } else if (item.getItemId() == R.id.accounts_tester_get_auth_token) {
             showDialog(GET_AUTH_TOKEN_DIALOG_ID);
         } else if (item.getItemId() == R.id.accounts_tester_invalidate_auth_token) {
@@ -279,8 +292,8 @@ public class AccountsTester extends Activity implements OnAccountsUpdatedListene
                                     R.id.accounts_tester_auth_token_type);
 
                             String authTokenType = value.getText().toString();
-                            Future2Callback callback = new Future2Callback() {
-                                public void run(Future2 future) {
+                            AccountManagerCallback<Bundle> callback = new AccountManagerCallback<Bundle>() {
+                                public void run(AccountManagerFuture<Bundle> future) {
                                     try {
                                         Bundle bundle = future.getResult();
                                         bundle.keySet();
@@ -317,11 +330,11 @@ public class AccountsTester extends Activity implements OnAccountsUpdatedListene
         return super.onCreateDialog(id);
     }
 
-    Future2Callback newAccountsCallback(String type, String[] features) {
+    AccountManagerCallback<Bundle> newAccountsCallback(String type, String[] features) {
         return new GetAccountsCallback(type, features);
     }
 
-    class GetAccountsCallback implements Future2Callback {
+    class GetAccountsCallback implements AccountManagerCallback<Bundle> {
         final String[] mFeatures;
         final String mAccountType;
 
@@ -330,7 +343,7 @@ public class AccountsTester extends Activity implements OnAccountsUpdatedListene
             mAccountType = type;
         }
 
-        public void run(Future2 future) {
+        public void run(AccountManagerFuture<Bundle> future) {
             Log.d(TAG, "GetAccountsCallback: type " + mAccountType
                     + ", features "
                     + (mFeatures == null ? "none" : TextUtils.join(",", mFeatures)));
@@ -351,11 +364,11 @@ public class AccountsTester extends Activity implements OnAccountsUpdatedListene
         }
     }
 
-    Future2Callback newAuthTokensCallback(String type, String authTokenType, String[] features) {
+    AccountManagerCallback<Bundle> newAuthTokensCallback(String type, String authTokenType, String[] features) {
         return new GetAuthTokenCallback(type, authTokenType, features);
     }
 
-    class GetAuthTokenCallback implements Future2Callback {
+    class GetAuthTokenCallback implements AccountManagerCallback<Bundle> {
         final String[] mFeatures;
         final String mAccountType;
         final String mAuthTokenType;
@@ -366,7 +379,7 @@ public class AccountsTester extends Activity implements OnAccountsUpdatedListene
             mAuthTokenType = authTokenType;
         }
 
-        public void run(Future2 future) {
+        public void run(AccountManagerFuture<Bundle> future) {
             Log.d(TAG, "GetAuthTokenCallback: type " + mAccountType
                     + ", features "
                     + (mFeatures == null ? "none" : TextUtils.join(",", mFeatures)));
@@ -384,20 +397,12 @@ public class AccountsTester extends Activity implements OnAccountsUpdatedListene
         }
     }
 
-    private class GetAndInvalidateAuthTokenCallback implements Future2Callback {
-        public void run(Future2 future) {
+    private class GetAndInvalidateAuthTokenCallback implements AccountManagerCallback<Bundle> {
+        public void run(AccountManagerFuture<Bundle> future) {
             try {
                 Bundle bundle = future.getResult();
                 String authToken = bundle.getString(Constants.AUTHTOKEN_KEY);
-                mAccountManager.invalidateAuthToken(new Future1Callback<Void>() {
-                    public void run(Future1<Void> future) {
-                        try {
-                            future.getResult();
-                        } catch (OperationCanceledException e) {
-                            // the request was canceled
-                        }
-                    }
-                }, COM_GOOGLE_GAIA, authToken, null);
+                mAccountManager.invalidateAuthToken(COM_GOOGLE_GAIA, authToken);
             } catch (OperationCanceledException e) {
                 Log.d(TAG, "invalidate: interrupted while getting authToken");
             } catch (IOException e) {
@@ -408,8 +413,8 @@ public class AccountsTester extends Activity implements OnAccountsUpdatedListene
         }
     }
 
-    private static class ConfirmCredentialsCallback implements Future2Callback {
-        public void run(Future2 future) {
+    private static class ConfirmCredentialsCallback implements AccountManagerCallback<Bundle> {
+        public void run(AccountManagerFuture<Bundle> future) {
             try {
                 Bundle bundle = future.getResult();
                 bundle.keySet();
@@ -420,35 +425,6 @@ public class AccountsTester extends Activity implements OnAccountsUpdatedListene
                 Log.d(TAG, "confirmCredentials failed: " + e);
             } catch (IOException e) {
                 Log.d(TAG, "confirmCredentials failed: " + e);
-            }
-        }
-    }
-
-    private class GetAuthenticatorsCallback implements Future1Callback<AuthenticatorDescription[]> {
-        public void run(Future1<AuthenticatorDescription[]> future) {
-            if (isFinishing()) return;
-            try {
-                mAuthenticatorDescs = future.getResult();
-                String[] names = new String[mAuthenticatorDescs.length];
-                for (int i = 0; i < mAuthenticatorDescs.length; i++) {
-                    Context authContext;
-                    try {
-                        authContext = createPackageContext(mAuthenticatorDescs[i].packageName, 0);
-                    } catch (PackageManager.NameNotFoundException e) {
-                        continue;
-                    }
-                    names[i] = authContext.getString(mAuthenticatorDescs[i].labelId);
-                }
-
-                ArrayAdapter<String> adapter =
-                        new ArrayAdapter<String>(AccountsTester.this,
-                        android.R.layout.simple_spinner_item, names);
-                mAccountTypesSpinner.setAdapter(adapter);
-
-                mAuthenticatorsListView.setAdapter(new AuthenticatorsArrayAdapter(
-                        AccountsTester.this, mAuthenticatorDescs));
-            } catch (OperationCanceledException e) {
-                // the request was canceled
             }
         }
     }
