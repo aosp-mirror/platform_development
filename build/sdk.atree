@@ -40,7 +40,7 @@ out/target/common/obj/PACKAGING/android_jar_intermediates/android.jar platforms/
 framework/org.eclipse.core.commands_3.4.0.I20080509-2000.jar tools/lib/org.eclipse.core.commands_3.4.0.I20080509-2000.jar
 framework/org.eclipse.equinox.common_3.4.0.v20080421-2006.jar tools/lib/org.eclipse.equinox.common_3.4.0.v20080421-2006.jar
 framework/org.eclipse.jface_3.4.2.M20090107-0800.jar tools/lib/org.eclipse.jface_3.4.2.M20090107-0800.jar
-
+framework/osgi.jar tools/lib/osgi.jar
 
 sdk/sdk-build.prop platforms/${PLATFORM_NAME}/build.prop
 development/tools/scripts/plugin.prop tools/lib/plugin.prop
