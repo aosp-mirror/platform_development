@@ -26,7 +26,11 @@ import java.io.IOException;
 import java.util.Properties;
 
 /**
- *
+ * Controller class to get settings values. Settings are kept in-memory.
+ * Users of this class must first load the settings before changing them and save
+ * them when modified.
+ * <p/>
+ * Settings are enumerated by constants in {@link ISettingsPage}.
  */
 public class SettingsController {
 
@@ -41,10 +45,30 @@ public class SettingsController {
 
     //--- Access to settings ------------
 
+    /**
+     * Returns the value of the ISettingsPage#KEY_FORCE_HTTP setting.
+     * @see ISettingsPage#KEY_FORCE_HTTP
+     */
     public boolean getForceHttp() {
         return Boolean.parseBoolean(mProperties.getProperty(ISettingsPage.KEY_FORCE_HTTP));
     }
 
+    /**
+     * Returns the value of the ISettingsPage#KEY_ASK_ADB_RESTART setting.
+     * @see ISettingsPage#KEY_ASK_ADB_RESTART
+     */
+    public boolean getAskBeforeAdbRestart() {
+        String value = mProperties.getProperty(ISettingsPage.KEY_ASK_ADB_RESTART);
+        if (value == null) {
+            return true;
+        }
+        return Boolean.parseBoolean(value);
+    }
+
+    /**
+     * Returns the value of the ISettingsPage#KEY_SHOW_UPDATE_ONLY setting.
+     * @see ISettingsPage#KEY_SHOW_UPDATE_ONLY
+     */
     public boolean getShowUpdateOnly() {
         String value = mProperties.getProperty(ISettingsPage.KEY_SHOW_UPDATE_ONLY);
         if (value == null) {
@@ -53,8 +77,20 @@ public class SettingsController {
         return Boolean.parseBoolean(value);
     }
 
+    /**
+     * Sets the value of the ISettingsPage#KEY_SHOW_UPDATE_ONLY setting.
+     * @param enabled True if only compatible update items should be shown.
+     * @see ISettingsPage#KEY_SHOW_UPDATE_ONLY
+     */
     public void setShowUpdateOnly(boolean enabled) {
-        mProperties.setProperty(ISettingsPage.KEY_SHOW_UPDATE_ONLY, Boolean.toString(enabled));
+        setSetting(ISettingsPage.KEY_SHOW_UPDATE_ONLY, enabled);
+    }
+
+    /**
+     * Internal helper to set a boolean setting.
+     */
+    private void setSetting(String key, boolean value) {
+        mProperties.setProperty(key, Boolean.toString(value));
     }
 
     //--- Controller methods -------------
@@ -89,6 +125,10 @@ public class SettingsController {
                 fis = new FileInputStream(f);
 
                 mProperties.load(fis);
+
+                // Properly reformat some settings to enforce their default value when missing.
+                setShowUpdateOnly(getShowUpdateOnly());
+                setSetting(ISettingsPage.KEY_ASK_ADB_RESTART, getAskBeforeAdbRestart());
             }
 
         } catch (AndroidLocationException e) {
