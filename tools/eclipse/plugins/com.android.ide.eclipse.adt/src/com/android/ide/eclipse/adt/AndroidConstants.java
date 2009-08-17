@@ -106,10 +106,6 @@ public class AndroidConstants {
     public final static Pattern PATTERN_RESOURCES_S_AP_ =
         Pattern.compile("resources-.*\\.ap_", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
 
-    public final static String FN_ADB = SdkConstants.FN_ADB;
-
-    public final static String FN_EMULATOR = SdkConstants.FN_EMULATOR;
-
     public final static String FN_TRACEVIEW =
         (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) ?
             "traceview.exe" : "traceview"; //$NON-NLS-1$ //$NON-NLS-2$
