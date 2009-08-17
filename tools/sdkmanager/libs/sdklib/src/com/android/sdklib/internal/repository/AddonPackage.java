@@ -196,9 +196,9 @@ public class AddonPackage extends Package {
     /** Returns a long description for an {@link IDescription}. */
     @Override
     public String getLongDescription() {
-        return String.format("%1$s.\n%2$s",
+        return String.format("%1$s,\nRevision %2$d.",
                 getShortDescription(),
-                super.getLongDescription());
+                getRevision());
     }
 
     /**

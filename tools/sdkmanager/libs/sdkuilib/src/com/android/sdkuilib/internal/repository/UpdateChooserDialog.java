@@ -28,6 +28,8 @@ import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
+import org.eclipse.swt.custom.StyleRange;
+import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -48,7 +50,6 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
-import org.eclipse.swt.widgets.Text;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -88,7 +89,7 @@ final class UpdateChooserDialog extends Dialog {
     private TableViewer mTableViewPackage;
     private Table mTablePackage;
     private TableColumn mTableColum;
-    private Text mPackageText;
+    private StyledText mPackageText;
     private Button mLicenseRadioAccept;
     private Button mLicenseRadioReject;
     private Button mLicenseRadioAcceptAll;
@@ -99,11 +100,15 @@ final class UpdateChooserDialog extends Dialog {
 
     /**
      * Create the dialog.
+     * @param parentShell The shell to use, typically updaterData.getWindowShell()
      * @param updaterData The updater data
      * @param newToOldUpdates The map [new archive => old archive] of potential updates
      */
-    public UpdateChooserDialog(UpdaterData updaterData, Map<Archive, Archive> newToOldUpdates) {
-        super(updaterData.getWindowShell(), SWT.APPLICATION_MODAL);
+    public UpdateChooserDialog(Shell parentShell,
+            UpdaterData updaterData,
+            Map<Archive, Archive> newToOldUpdates) {
+        super(parentShell,
+              SWT.APPLICATION_MODAL);
         mUpdaterData = updaterData;
 
         mNewToOldArchiveMap = new TreeMap<Archive, Archive>(new Comparator<Archive>() {
@@ -207,13 +212,13 @@ final class UpdateChooserDialog extends Dialog {
         mPackageTextGroup.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 4, 1));
         mPackageTextGroup.setLayout(new GridLayout(1, false/*makeColumnsEqual*/));
 
-        mPackageText = new Text(mPackageTextGroup,
-                SWT.MULTI | SWT.READ_ONLY | SWT.WRAP | SWT.V_SCROLL);
+        mPackageText = new StyledText(mPackageTextGroup,                        SWT.MULTI | SWT.READ_ONLY | SWT.WRAP | SWT.V_SCROLL);
+        mPackageText.setBackground(
+                getParent().getDisplay().getSystemColor(SWT.COLOR_WIDGET_BACKGROUND));
         mPackageText.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
 
         mLicenseRadioAccept = new Button(mPackageRootComposite, SWT.RADIO);
         mLicenseRadioAccept.setText("Accept");
-        mLicenseRadioAccept.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 1, 1));
         mLicenseRadioAccept.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
@@ -223,7 +228,6 @@ final class UpdateChooserDialog extends Dialog {
 
         mLicenseRadioReject = new Button(mPackageRootComposite, SWT.RADIO);
         mLicenseRadioReject.setText("Reject");
-        mLicenseRadioReject.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 1, 1));
         mLicenseRadioReject.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
@@ -236,8 +240,6 @@ final class UpdateChooserDialog extends Dialog {
 
         mLicenseRadioAcceptAll = new Button(mPackageRootComposite, SWT.RADIO);
         mLicenseRadioAcceptAll.setText("Accept All");
-        mLicenseRadioAcceptAll.setLayoutData(
-                new GridData(SWT.LEFT, SWT.CENTER, false, false, 1, 1));
         mLicenseRadioAcceptAll.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
@@ -316,7 +318,6 @@ final class UpdateChooserDialog extends Dialog {
         mTablePackage.select(0);
         onPackageSelected();
     }
-
 
     /**
      * Creates the icon of the window shell.
@@ -445,27 +446,46 @@ final class UpdateChooserDialog extends Dialog {
             return;
         }
 
-        StringBuilder sb = new StringBuilder();
+        mPackageText.setText("");                                               //$NON-NLS-1$
+
+        addSectionTitle("Package Description\n");
+        addText(a.getParentPackage().getLongDescription(), "\n\n");             //$NON-NLS-1$
 
         Archive aold = mNewToOldArchiveMap.get(a);
         if (aold != null) {
-            sb.append("*** Existing Package Description:\n");
-            sb.append(aold.getParentPackage().getLongDescription()).append("\n\n");
+            addText(String.format("This update will replace revision %1$s with revision %2$s.\n\n",
+                    aold.getParentPackage().getRevision(),
+                    a.getParentPackage().getRevision()));
         }
 
-        sb.append("*** New Package Description:\n");
-        sb.append(a.getParentPackage().getLongDescription()).append("\n\n");
 
-        sb.append("\n*** Archive Description:\n");
-        sb.append(a.getLongDescription()).append("\n");
+        addSectionTitle("Archive Description\n");
+        addText(a.getLongDescription(), "\n\n");                                //$NON-NLS-1$
 
         String license = a.getParentPackage().getLicense();
         if (license != null) {
-            sb.append("\n*** Package License:\n");
-            sb.append(license).append("\n");
+            addSectionTitle("License\n");
+            addText(license.trim(), "\n");                                      //$NON-NLS-1$
         }
+    }
 
-        mPackageText.setText(sb.toString());
+    private void addText(String...string) {
+        for (String s : string) {
+            mPackageText.append(s);
+        }
+    }
+
+    private void addSectionTitle(String string) {
+        String s = mPackageText.getText();
+        int start = (s == null ? 0 : s.length());
+        mPackageText.append(string);
+
+        StyleRange sr = new StyleRange();
+        sr.start = start;
+        sr.length = string.length();
+        sr.fontStyle = SWT.BOLD;
+        sr.underline = true;
+        mPackageText.setStyleRange(sr);
     }
 
     private void updateLicenceRadios(Archive a) {
