@@ -49,8 +49,55 @@ import java.util.StringTokenizer;
 public class MonkeySourceNetwork implements MonkeyEventSource {
     private static final String TAG = "MonkeyStub";
 
-    private interface MonkeyCommand {
-        MonkeyEvent translateCommand(List<String> command, CommandQueue queue);
+    /**
+     * ReturnValue from the MonkeyCommand that indicates whether the
+     * command was sucessful or not.
+     */
+    public static class MonkeyCommandReturn {
+        private final boolean success;
+        private final String message;
+
+        public MonkeyCommandReturn(boolean success) {
+            this.success = success;
+            this.message = null;
+        }
+
+        public MonkeyCommandReturn(boolean success,
+                                   String message) {
+            this.success = success;
+            this.message = message;
+        }
+
+        boolean hasMessage() {
+            return message != null;
+        }
+
+        String getMessage() {
+            return message;
+        }
+
+        boolean wasSuccessful() {
+            return success;
+        }
+    }
+
+    public final static MonkeyCommandReturn OK = new MonkeyCommandReturn(true);
+    public final static MonkeyCommandReturn ERROR = new MonkeyCommandReturn(false);
+    public final static MonkeyCommandReturn EARG = new MonkeyCommandReturn(false,
+                                                                            "Invalid Argument");
+
+    /**
+     * Interface that MonkeyCommands must implement.
+     */
+    public interface MonkeyCommand {
+        /**
+         * Translate the command line into a sequence of MonkeyEvents.
+         *
+         * @param command the command line.
+         * @param queue the command queue.
+         * @returs MonkeyCommandReturn indicating what happened.
+         */
+        MonkeyCommandReturn translateCommand(List<String> command, CommandQueue queue);
     }
 
     /**
@@ -59,17 +106,19 @@ public class MonkeySourceNetwork implements MonkeyEventSource {
     private static class FlipCommand implements MonkeyCommand {
         // flip open
         // flip closed
-        public MonkeyEvent translateCommand(List<String> command,
-                                            CommandQueue queue) {
+        public MonkeyCommandReturn translateCommand(List<String> command,
+                                                    CommandQueue queue) {
             if (command.size() > 1) {
                 String direction = command.get(1);
                 if ("open".equals(direction)) {
-                    return new MonkeyFlipEvent(true);
+                    queue.enqueueEvent(new MonkeyFlipEvent(true));
+                    return OK;
                 } else if ("close".equals(direction)) {
-                    return new MonkeyFlipEvent(false);
+                    queue.enqueueEvent(new MonkeyFlipEvent(false));
+                    return OK;
                 }
             }
-            return null;
+            return EARG;
         }
     }
 
@@ -81,8 +130,8 @@ public class MonkeySourceNetwork implements MonkeyEventSource {
         // touch down 120 120
         // touch move 140 140
         // touch up 140 140
-        public MonkeyEvent translateCommand(List<String> command,
-                                            CommandQueue queue) {
+        public MonkeyCommandReturn translateCommand(List<String> command,
+                                                    CommandQueue queue) {
             if (command.size() == 4) {
                 String actionName = command.get(1);
                 int x = 0;
@@ -93,7 +142,7 @@ public class MonkeySourceNetwork implements MonkeyEventSource {
                 } catch (NumberFormatException e) {
                     // Ok, it wasn't a number
                     Log.e(TAG, "Got something that wasn't a number", e);
-                    return null;
+                    return EARG;
                 }
 
                 // figure out the action
@@ -107,14 +156,14 @@ public class MonkeySourceNetwork implements MonkeyEventSource {
                 }
                 if (action == -1) {
                     Log.e(TAG, "Got a bad action: " + actionName);
-                    return null;
+                    return EARG;
                 }
 
-                return new MonkeyMotionEvent(MonkeyEvent.EVENT_TYPE_POINTER,
-                                             -1, action, x, y, 0);
+                queue.enqueueEvent(new MonkeyMotionEvent(MonkeyEvent.EVENT_TYPE_POINTER,
+                                                         -1, action, x, y, 0));
+                return OK;
             }
-            return null;
-
+            return EARG;
         }
     }
 
@@ -125,8 +174,8 @@ public class MonkeySourceNetwork implements MonkeyEventSource {
         // trackball [dx] [dy]
         // trackball 1 0 -- move right
         // trackball -1 0 -- move left
-        public MonkeyEvent translateCommand(List<String> command,
-                                            CommandQueue queue) {
+        public MonkeyCommandReturn translateCommand(List<String> command,
+                                                    CommandQueue queue) {
             if (command.size() == 3) {
                 int dx = 0;
                 int dy = 0;
@@ -136,13 +185,14 @@ public class MonkeySourceNetwork implements MonkeyEventSource {
                 } catch (NumberFormatException e) {
                     // Ok, it wasn't a number
                     Log.e(TAG, "Got something that wasn't a number", e);
-                    return null;
+                    return EARG;
                 }
-                return new MonkeyMotionEvent(MonkeyEvent.EVENT_TYPE_TRACKBALL, -1,
-                    MotionEvent.ACTION_MOVE, dx, dy, 0);
+                queue.enqueueEvent(new MonkeyMotionEvent(MonkeyEvent.EVENT_TYPE_TRACKBALL, -1,
+                                                         MotionEvent.ACTION_MOVE, dx, dy, 0));
+                return OK;
 
             }
-            return null;
+            return EARG;
         }
     }
 
@@ -153,14 +203,14 @@ public class MonkeySourceNetwork implements MonkeyEventSource {
         // key [down|up] [keycode]
         // key down 82
         // key up 82
-        public MonkeyEvent translateCommand(List<String> command,
-                                            CommandQueue queue) {
+        public MonkeyCommandReturn translateCommand(List<String> command,
+                                                    CommandQueue queue) {
             if (command.size() == 3) {
                 int keyCode = getKeyCode(command.get(2));
                 if (keyCode < 0) {
                     // Ok, you gave us something bad.
                     Log.e(TAG, "Can't find keyname: " + command.get(2));
-                    return null;
+                    return EARG;
                 }
                 Log.d(TAG, "keycode: " + keyCode);
                 int action = -1;
@@ -171,11 +221,12 @@ public class MonkeySourceNetwork implements MonkeyEventSource {
                 }
                 if (action == -1) {
                     Log.e(TAG, "got unknown action.");
-                    return null;
+                    return EARG;
                 }
-                return new MonkeyKeyEvent(action, keyCode);
+                queue.enqueueEvent(new MonkeyKeyEvent(action, keyCode));
+                return OK;
             }
-            return null;
+            return EARG;
         }
     }
 
@@ -210,19 +261,21 @@ public class MonkeySourceNetwork implements MonkeyEventSource {
      */
     private static class SleepCommand implements MonkeyCommand {
         // sleep 2000
-        public MonkeyEvent translateCommand(List<String> command,
-                                            CommandQueue queue) {
+        public MonkeyCommandReturn translateCommand(List<String> command,
+                                                    CommandQueue queue) {
             if (command.size() == 2) {
                 int sleep = -1;
                 String sleepStr = command.get(1);
                 try {
                     sleep = Integer.parseInt(sleepStr);
                 } catch (NumberFormatException e) {
-                  Log.e(TAG, "Not a number: " + sleepStr, e);
+                    Log.e(TAG, "Not a number: " + sleepStr, e);
+                    return EARG;
                 }
-                return new MonkeyThrottleEvent(sleep);
+                queue.enqueueEvent(new MonkeyThrottleEvent(sleep));
+                return OK;
             }
-            return null;
+            return EARG;
         }
     }
 
@@ -231,8 +284,8 @@ public class MonkeySourceNetwork implements MonkeyEventSource {
      */
     private static class TypeCommand implements MonkeyCommand {
         // wake
-        public MonkeyEvent translateCommand(List<String> command,
-                                            CommandQueue queue) {
+        public MonkeyCommandReturn translateCommand(List<String> command,
+                                                    CommandQueue queue) {
             if (command.size() == 2) {
                 String str = command.get(1);
 
@@ -248,9 +301,9 @@ public class MonkeySourceNetwork implements MonkeyEventSource {
                 for (KeyEvent event : events) {
                     queue.enqueueEvent(new MonkeyKeyEvent(event));
                 }
-                return new MonkeyNoopEvent();
+                return OK;
             }
-            return null;
+            return EARG;
         }
     }
 
@@ -259,12 +312,12 @@ public class MonkeySourceNetwork implements MonkeyEventSource {
      */
     private static class WakeCommand implements MonkeyCommand {
         // wake
-        public MonkeyEvent translateCommand(List<String> command,
-                                            CommandQueue queue) {
+        public MonkeyCommandReturn translateCommand(List<String> command,
+                                                    CommandQueue queue) {
             if (!wake()) {
-                return null;
+                return ERROR;
             }
-            return new MonkeyNoopEvent();
+            return OK;
         }
     }
 
@@ -274,8 +327,8 @@ public class MonkeySourceNetwork implements MonkeyEventSource {
      */
     private static class TapCommand implements MonkeyCommand {
         // tap x y
-        public MonkeyEvent translateCommand(List<String> command,
-                                            CommandQueue queue) {
+        public MonkeyCommandReturn translateCommand(List<String> command,
+                                                    CommandQueue queue) {
             if (command.size() == 3) {
                 int x = 0;
                 int y = 0;
@@ -285,7 +338,7 @@ public class MonkeySourceNetwork implements MonkeyEventSource {
                 } catch (NumberFormatException e) {
                     // Ok, it wasn't a number
                     Log.e(TAG, "Got something that wasn't a number", e);
-                    return null;
+                    return EARG;
                 }
 
                 queue.enqueueEvent(new MonkeyMotionEvent(MonkeyEvent.EVENT_TYPE_POINTER,
@@ -294,9 +347,9 @@ public class MonkeySourceNetwork implements MonkeyEventSource {
                 queue.enqueueEvent(new MonkeyMotionEvent(MonkeyEvent.EVENT_TYPE_POINTER,
                                                          -1, MotionEvent.ACTION_UP,
                                                          x, y, 0));
-                return new MonkeyNoopEvent();
+                return OK;
             }
-            return null;
+            return EARG;
         }
     }
 
@@ -305,22 +358,22 @@ public class MonkeySourceNetwork implements MonkeyEventSource {
      */
     private static class PressCommand implements MonkeyCommand {
         // press keycode
-        public MonkeyEvent translateCommand(List<String> command,
-                                            CommandQueue queue) {
+        public MonkeyCommandReturn translateCommand(List<String> command,
+                                                    CommandQueue queue) {
             if (command.size() == 2) {
                 int keyCode = getKeyCode(command.get(1));
                 if (keyCode < 0) {
                     // Ok, you gave us something bad.
                     Log.e(TAG, "Can't find keyname: " + command.get(1));
-                    return null;
+                    return EARG;
                 }
 
                 queue.enqueueEvent(new MonkeyKeyEvent(KeyEvent.ACTION_DOWN, keyCode));
                 queue.enqueueEvent(new MonkeyKeyEvent(KeyEvent.ACTION_UP, keyCode));
-                return new MonkeyNoopEvent();
+                return OK;
 
             }
-            return null;
+            return EARG;
         }
     }
 
@@ -355,6 +408,8 @@ public class MonkeySourceNetwork implements MonkeyEventSource {
         COMMAND_MAP.put("tap", new TapCommand());
         COMMAND_MAP.put("press", new PressCommand());
         COMMAND_MAP.put("type", new TypeCommand());
+        COMMAND_MAP.put("listvar", new MonkeySourceNetworkVars.ListVarCommand());
+        COMMAND_MAP.put("getvar", new MonkeySourceNetworkVars.GetVarCommand());
     }
 
     // QUIT command
@@ -363,10 +418,10 @@ public class MonkeySourceNetwork implements MonkeyEventSource {
     private static final String DONE = "done";
 
     // command response strings
-    private static final String OK = "OK";
-    private static final String ERROR = "ERROR";
+    private static final String OK_STR = "OK";
+    private static final String ERROR_STR = "ERROR";
 
-    private static interface CommandQueue {
+    public static interface CommandQueue {
         /**
          * Enqueue an event to be returned later.  This allows a
          * command to return multiple events.  Commands using the
@@ -499,21 +554,30 @@ public class MonkeySourceNetwork implements MonkeyEventSource {
      * Translate the given command line into a MonkeyEvent.
      *
      * @param commandLine the full command line given.
-     * @returns the MonkeyEvent corresponding to the command, or null
-     * if there was an issue.
      */
-    private MonkeyEvent translateCommand(String commandLine) {
+    private void translateCommand(String commandLine) {
         Log.d(TAG, "translateCommand: " + commandLine);
         List<String> parts = commandLineSplit(commandLine);
         if (parts.size() > 0) {
             MonkeyCommand command = COMMAND_MAP.get(parts.get(0));
             if (command != null) {
-                return command.translateCommand(parts,
-                                                commandQueue);
+                MonkeyCommandReturn ret = command.translateCommand(parts,
+                                                                   commandQueue);
+                if (ret.wasSuccessful()) {
+                    if (ret.hasMessage()) {
+                        returnOk(ret.getMessage());
+                    } else {
+                        returnOk();
+                    }
+                } else {
+                    if (ret.hasMessage()) {
+                        returnError(ret.getMessage());
+                    } else {
+                        returnError();
+                    }
+                }
             }
-            return null;
         }
-        return null;
     }
 
     public MonkeyEvent getNextEvent() {
@@ -548,16 +612,16 @@ public class MonkeySourceNetwork implements MonkeyEventSource {
                 }
 
                 if (DONE.equals(command)) {
-                  // stop the server so it can accept new connections
+                    // stop the server so it can accept new connections
                     try {
                         stopServer();
                     } catch (IOException e) {
                         Log.e(TAG, "Got IOException shutting down!", e);
                         return null;
                     }
-                  // return a noop event so we keep executing the main
-                  // loop
-                  return new MonkeyNoopEvent();
+                    // return a noop event so we keep executing the main
+                    // loop
+                    return new MonkeyNoopEvent();
                 }
 
                 // Do quit checking here
@@ -565,7 +629,7 @@ public class MonkeySourceNetwork implements MonkeyEventSource {
                     // then we're done
                     Log.d(TAG, "Quit requested");
                     // let the host know the command ran OK
-                    output.println(OK);
+                    returnOk();
                     return null;
                 }
 
@@ -573,25 +637,53 @@ public class MonkeySourceNetwork implements MonkeyEventSource {
                 // command, so we don't echo anything back to the
                 // user.
                 if (command.startsWith("#")) {
-                  // keep going
-                  continue;
+                    // keep going
+                    continue;
                 }
 
-                // Translate the command line
-                MonkeyEvent event = translateCommand(command);
-                if (event != null) {
-                    // let the host know the command ran OK
-                    output.println(OK);
-                    return event;
-                }
-                // keep going.  maybe the next command will make more sense
-                Log.e(TAG, "Got unknown command! \"" + command + "\"");
-                output.println(ERROR);
+                // Translate the command line.  This will handle returning error/ok to the user
+                translateCommand(command);
             }
         } catch (IOException e) {
             Log.e(TAG, "Exception: ", e);
             return null;
         }
+    }
+
+    /**
+     * Returns ERROR to the user.
+     */
+    private void returnError() {
+        output.println(ERROR_STR);
+    }
+
+    /**
+     * Returns ERROR to the user.
+     *
+     * @param msg the error message to include
+     */
+    private void returnError(String msg) {
+        output.print(ERROR_STR);
+        output.print(":");
+        output.println(msg);
+    }
+
+    /**
+     * Returns OK to the user.
+     */
+    private void returnOk() {
+        output.println(OK_STR);
+    }
+
+    /**
+     * Returns OK to the user.
+     *
+     * @param returnValue the value to return from this command.
+     */
+    private void returnOk(String returnValue) {
+        output.print(OK_STR);
+        output.print(":");
+        output.println(returnValue);
     }
 
     public void setVerbose(int verbose) {
