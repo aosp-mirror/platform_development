@@ -124,9 +124,6 @@ public class LunarLander extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // turn off the window's title bar
-        requestWindowFeature(Window.FEATURE_NO_TITLE);
-
         // tell system to use the layout defined in our XML file
         setContentView(R.layout.lunar_layout);
 

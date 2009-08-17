@@ -22,11 +22,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.android.lunarlander">
     <application android:icon="@drawable/app_lunar_lander" android:label="@string/app_name">
-        <activity android:name="LunarLander">
+        <activity android:name="LunarLander" android:theme="@android:style/Theme.NoTitleBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-		</activity>
+        </activity>
     </application>
 </manifest>

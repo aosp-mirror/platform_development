@@ -23,6 +23,7 @@
     package="com.example.android.snake">
     <application android:label="Snake on a Phone">
       <activity android:name="Snake"
+        android:theme="@android:style/Theme.NoTitleBar"
         android:screenOrientation="portrait"
         android:configChanges="keyboardHidden|orientation">
             <intent-filter>

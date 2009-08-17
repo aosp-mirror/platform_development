@@ -45,9 +45,6 @@ public class Snake extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // No Title bar
-        requestWindowFeature(Window.FEATURE_NO_TITLE);
-
         setContentView(R.layout.snake_layout);
 
         mSnakeView = (SnakeView) findViewById(R.id.snake);
