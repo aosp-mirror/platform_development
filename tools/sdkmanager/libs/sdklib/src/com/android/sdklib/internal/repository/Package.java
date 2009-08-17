@@ -336,8 +336,11 @@ public abstract class Package implements IDescription {
         if (s != null) {
             sb.append(s);
         }
+        if (sb.length() > 0) {
+            sb.append("\n");
+        }
 
-        sb.append(String.format("\nRevision %1$d", getRevision()));
+        sb.append(String.format("Revision %1$d", getRevision()));
 
         s = getDescUrl();
         if (s != null && s.length() > 0) {
