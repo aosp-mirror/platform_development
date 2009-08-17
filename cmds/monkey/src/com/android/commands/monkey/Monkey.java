@@ -135,6 +135,10 @@ public class Monkey {
     MonkeyEventSource mEventSource;
     private MonkeyNetworkMonitor mNetworkMonitor = new MonkeyNetworkMonitor();
 
+    // information on the current activity.
+    public static Intent currentIntent;
+    public static String currentPackage;
+
     /**
      * Monitor operations happening in the system.
      */
@@ -145,6 +149,8 @@ public class Monkey {
                 System.out.println("    // " + (allow ? "Allowing" : "Rejecting")
                         + " start of " + intent + " in package " + pkg);
             }
+            currentPackage = pkg;
+            currentIntent = intent;
             return allow;
         }
 
@@ -154,9 +160,10 @@ public class Monkey {
             if (!allow) {
                 if (mVerbose > 0) {
                     System.out.println("    // " + (allow ? "Allowing" : "Rejecting")
-                            + " resume of package " + pkg);
+                                       + " resume of package " + pkg);
                 }
             }
+            currentPackage = pkg;
             return allow;
         }
 

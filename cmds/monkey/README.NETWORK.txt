@@ -27,14 +27,20 @@ COMMAND LIST
 Individual commands are separated by newlines.  The Monkey will
 respond to every command with a line starting with OK for commands
 that executed without a problem, or a line starting with ERROR for
-commands that had problems being run.  The Monkey may decide to return
-more information about command execution.  That information would come
-on the same line after the OK or ERROR.  A possible example:
+commands that had problems being run.  For commands that return a
+value, that value is returned on the same line as the OK or ERROR
+response.  The value is everything after (but not include) the colon
+on that line.  For ERROR values, this could be a message indicating
+what happened.  A possible example:
 
 key down menu
 OK
 touch monkey
 ERROR: monkey not a number
+getvar sdk
+OK: donut
+getvar foo
+ERROR: no such var
 
 The complete list of commands follows:
 
@@ -91,6 +97,16 @@ type string
 
 This command will simulate a user typing the given string on the
 keyboard by generating the proper KeyEvents.
+
+listvar
+
+This command lists all the vars that the monkey knows about.  They are
+returned as a whitespace separated list.
+
+getvar varname
+
+This command returns the value of the given var.  listvar can be used
+to find out what vars are supported.
 
 quit
 
