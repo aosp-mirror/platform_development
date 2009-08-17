@@ -34,6 +34,8 @@ import com.android.sdklib.internal.repository.Package.UpdateInfo;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 import com.android.sdkuilib.repository.UpdaterWindow.ISdkListener;
 
+import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 
 import java.io.ByteArrayOutputStream;
@@ -294,14 +296,15 @@ class UpdaterData {
                             break;
                         }
 
-                        if (archive.getParentPackage() instanceof AddonPackage) {
-                            installedAddon = true;
-                        } else if (archive.getParentPackage() instanceof ToolPackage) {
-                            installedTools = true;
-                        }
-
                         if (archive.install(mOsSdkRoot, forceHttp, mSdkManager, monitor)) {
                             numInstalled++;
+
+                            // Check if we successfully installed a tool or add-on package.
+                            if (archive.getParentPackage() instanceof AddonPackage) {
+                                installedAddon = true;
+                            } else if (archive.getParentPackage() instanceof ToolPackage) {
+                                installedTools = true;
+                            }
                         }
 
                     } catch (Throwable t) {
@@ -334,8 +337,10 @@ class UpdaterData {
                     // Update the USB vendor ids for adb
                     try {
                         mSdkManager.updateAdb();
+                        monitor.setResult("Updated ADB to support the USB devices declared in the SDK add-ons.");
                     } catch (Exception e) {
                         mSdkLog.error(e, "Update ADB failed");
+                        monitor.setResult("failed to update adb to support the USB devices declared in the SDK add-ons.");
                     }
                 }
 
@@ -346,8 +351,11 @@ class UpdaterData {
                     // before updating the tools folder, as adb.exe is (surprisingly) not
                     // locked.
 
-                    // TODO either bring in ddmlib and use its existing methods to stop adb
-                    // or use a shell exec to tools/adb.
+                    askForAdbRestart(monitor);
+                }
+
+                if (installedTools) {
+                    notifyToolsNeedsToBeRestarted();
                 }
 
                 if (numInstalled == 0) {
@@ -363,6 +371,54 @@ class UpdaterData {
             }
         });
     }
+
+    /**
+     * Attemps to restart ADB.
+     *
+     * If the "ask before restart" setting is set (the default), prompt the user whether
+     * now is a good time to restart ADB.
+     * @param monitor
+     */
+    private void askForAdbRestart(ITaskMonitor monitor) {
+        final boolean[] canRestart = new boolean[] { true };
+
+        if (getSettingsController().getAskBeforeAdbRestart()) {
+            // need to ask for permission first
+            Display display = mWindowShell.getDisplay();
+
+            display.syncExec(new Runnable() {
+                public void run() {
+                    canRestart[0] = MessageDialog.openQuestion(mWindowShell,
+                            "ADB Restart",
+                            "A package that depends on ADB has been updated. It is recommended " +
+                            "to restart ADB. Is it OK to do it now? If not, you can restart it " +
+                            "manually later.");
+                }
+            });
+        }
+
+        if (canRestart[0]) {
+            AdbWrapper adb = new AdbWrapper(getOsSdkRoot(), monitor);
+            adb.stopAdb();
+            adb.startAdb();
+        }
+    }
+
+    private void notifyToolsNeedsToBeRestarted() {
+        Display display = mWindowShell.getDisplay();
+
+        display.syncExec(new Runnable() {
+            public void run() {
+                MessageDialog.openInformation(mWindowShell,
+                        "Android Tools Updated",
+                        "The Android SDK tool that you are currently using has been updated. " +
+                        "It is recommended that you now close the Android SDK window and re-open it. " +
+                        "If you started this window from Eclipse, please check if the Android " +
+                        "plug-in needs to be updated.");
+            }
+        });
+    }
+
 
     /**
      * Tries to update all the *existing* local packages.
