@@ -31,6 +31,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import javax.net.ssl.SSLKeyException;
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -191,6 +192,8 @@ public class RepoSource implements IDescription {
             if (exception[0] != null) {
                 if (exception[0] instanceof FileNotFoundException) {
                     reason = "File not found";
+                } else if (exception[0] instanceof SSLKeyException) {
+                    reason = "SSL error. You might want to force download through http in the settings.";
                 } else if (exception[0].getMessage() != null) {
                     reason = exception[0].getMessage();
                 }
