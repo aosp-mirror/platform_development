@@ -107,6 +107,10 @@ public final class SdkConstants {
     public final static String FN_EMULATOR = (CURRENT_PLATFORM == PLATFORM_WINDOWS) ?
             "emulator.exe" : "emulator"; //$NON-NLS-1$ //$NON-NLS-2$
 
+    /** zipalign executable (with extension for the current OS)  */
+    public final static String FN_ZIPALIGN = (CURRENT_PLATFORM == PLATFORM_WINDOWS) ?
+            "zipalign.exe" : "zipalign"; //$NON-NLS-1$ //$NON-NLS-2$
+
     /* Folder Names for Android Projects . */
 
     /** Resources folder name, i.e. "res". */
