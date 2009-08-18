@@ -13,7 +13,7 @@ parts {
     device {
         display {
             width   240
-            height  320
+            height  432
             x       0
             y       0
         }
@@ -354,7 +354,7 @@ parts {
 layouts {
     portrait {
         width     711
-        height    435
+        height    486
         color     0xe0e0e0
         event     EV_SW:0:1
         
@@ -373,17 +373,17 @@ layouts {
         part3 {
             name    device
             x       28
-            y       58
+            y       27
         }
         part4 {
             name     controls
             x        396
-            y        27
+            y        53
         }
         part5 {
             name     keyboard
             x        315
-            y        229
+            y        280
         }
     }
 
@@ -407,7 +407,7 @@ layouts {
 
         part3 {
             name      device
-            x         160
+            x         104
             y         270
             rotation  3
         }
