@@ -160,9 +160,7 @@ public class PlatformPackage extends Package {
     /** Returns a long description for an {@link IDescription}. */
     @Override
     public String getLongDescription() {
-        return String.format("%1$s.\n%2$s",
-                getShortDescription(),
-                super.getLongDescription());
+        return getShortDescription() + ".";
     }
 
     /**

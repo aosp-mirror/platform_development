@@ -366,7 +366,7 @@ class UpdaterData {
 
     /**
      * Tries to update all the *existing* local packages.
-     * This first refreshes all sources, then compares the available remote packages when
+     * This first refreshes all sources, then compares the available remote packages with
      * the current local ones and suggest updates to be done to the user. Finally all
      * selected updates are installed.
      *
@@ -386,13 +386,13 @@ class UpdaterData {
             // selected archives. If they do not match an update, list them anyway
             // except they map themselves to null (no "old" archive)
             for (Archive a : selectedArchives) {
-                if (!updates.containsValue(a)) {
+                if (!updates.containsKey(a)) {
                     updates.put(a, null);
                 }
             }
         }
 
-        UpdateChooserDialog dialog = new UpdateChooserDialog(this, updates);
+        UpdateChooserDialog dialog = new UpdateChooserDialog(getWindowShell(), this, updates);
         dialog.open();
 
         Collection<Archive> result = dialog.getResult();
@@ -444,9 +444,9 @@ class UpdaterData {
         // Map [remote archive => local archive] of suitable update candidates
         Map<Archive, Archive> result = new HashMap<Archive, Archive>();
 
-        // First go thru all sources and make a local list of all available archives
+        // First go thru all sources and make a list of all available remote archives
         // sorted by package class.
-        HashMap<Class<? extends Package>, ArrayList<Archive>> availPkgs =
+        HashMap<Class<? extends Package>, ArrayList<Archive>> availablePkgs =
             new HashMap<Class<? extends Package>, ArrayList<Archive>>();
 
         if (selectedArchives != null) {
@@ -457,9 +457,9 @@ class UpdaterData {
                 if (a.isCompatible()) {
                     Class<? extends Package> clazz = a.getParentPackage().getClass();
 
-                    ArrayList<Archive> list = availPkgs.get(clazz);
+                    ArrayList<Archive> list = availablePkgs.get(clazz);
                     if (list == null) {
-                        availPkgs.put(clazz, list = new ArrayList<Archive>());
+                        availablePkgs.put(clazz, list = new ArrayList<Archive>());
                     }
 
                     list.add(a);
@@ -476,9 +476,9 @@ class UpdaterData {
                     for (Package remotePkg : remotePkgs) {
                         Class<? extends Package> clazz = remotePkg.getClass();
 
-                        ArrayList<Archive> list = availPkgs.get(clazz);
+                        ArrayList<Archive> list = availablePkgs.get(clazz);
                         if (list == null) {
-                            availPkgs.put(clazz, list = new ArrayList<Archive>());
+                            availablePkgs.put(clazz, list = new ArrayList<Archive>());
                         }
 
                         for (Archive a : remotePkg.getArchives()) {
@@ -500,7 +500,7 @@ class UpdaterData {
 
         for (Package localPkg : localPkgs) {
             // get the available archive list for this package type
-            ArrayList<Archive> list = availPkgs.get(localPkg.getClass());
+            ArrayList<Archive> list = availablePkgs.get(localPkg.getClass());
 
             // if this list is empty, we'll never find anything that matches
             if (list == null || list.size() == 0) {
@@ -511,7 +511,7 @@ class UpdaterData {
             Archive[] localArchives = localPkg.getArchives();
             if (localArchives != null && localArchives.length > 0) {
                 Archive localArchive = localArchives[0];
-                // only consider archive compatible with the current platform
+                // only consider archives compatible with the current platform
                 if (localArchive != null && localArchive.isCompatible()) {
 
                     // We checked all this archive stuff because that's what eventually gets
