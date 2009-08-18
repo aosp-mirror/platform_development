@@ -48,6 +48,7 @@ public class SettingsPage extends Composite implements ISettingsPage {
     private Text mProxyServerText;
     private Text mProxyPortText;
     private Button mForceHttpCheck;
+    private Button mAskAdbRestartCheck;
 
     private ModifyListener mSetApplyDirty = new ModifyListener() {
         public void modifyText(ModifyEvent e) {
@@ -73,18 +74,26 @@ public class SettingsPage extends Composite implements ISettingsPage {
         mProxyServerLabel = new Label(mProxySettingsGroup, SWT.NONE);
         mProxyServerLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
         mProxyServerLabel.setText("HTTP Proxy Server");
+        String tooltip = "The DNS name or IP of the HTTP proxy server to use. " +
+                         "When empty, no HTTP proxy is used.";
+        mProxyServerLabel.setToolTipText(tooltip);
 
         mProxyServerText = new Text(mProxySettingsGroup, SWT.BORDER);
         mProxyServerText.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
         mProxyServerText.addModifyListener(mSetApplyDirty);
+        mProxyServerText.setToolTipText(tooltip);
 
         mProxyPortLabel = new Label(mProxySettingsGroup, SWT.NONE);
         mProxyPortLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
         mProxyPortLabel.setText("HTTP Proxy Port");
+        tooltip = "The port of the HTTP proxy server to use. " +
+                  "When empty, the default for HTTP or HTTPS is used.";
+        mProxyPortLabel.setToolTipText(tooltip);
 
         mProxyPortText = new Text(mProxySettingsGroup, SWT.BORDER);
         mProxyPortText.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
         mProxyPortText.addModifyListener(mSetApplyDirty);
+        mProxyPortText.setToolTipText(tooltip);
 
         mMiscGroup = new Group(this, SWT.NONE);
         mMiscGroup.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
@@ -92,8 +101,23 @@ public class SettingsPage extends Composite implements ISettingsPage {
         mMiscGroup.setLayout(new GridLayout(2, false));
 
         mForceHttpCheck = new Button(mMiscGroup, SWT.CHECK);
+        mForceHttpCheck.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
         mForceHttpCheck.setText("Force https://... sources to be fetched using http://...");
+        mForceHttpCheck.setToolTipText("If you are not able to connect to the official Android repository " +
+                "using HTTPS, enable this setting to force accessing it via HTTP.");
         mForceHttpCheck.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                onForceHttpSelected();  //$hide$
+            }
+        });
+
+        mAskAdbRestartCheck = new Button(mMiscGroup, SWT.CHECK);
+        mAskAdbRestartCheck.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
+        mAskAdbRestartCheck.setText("Ask before restarting ADB");
+        mAskAdbRestartCheck.setToolTipText("When checked, the user will be asked for permission " +
+                "to restart ADB after updating an addon-on package or a tool package.");
+        mAskAdbRestartCheck.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
                 onForceHttpSelected();  //$hide$
@@ -139,6 +163,7 @@ public class SettingsPage extends Composite implements ISettingsPage {
         mProxyServerText.setText(in_settings.getProperty(KEY_HTTP_PROXY_HOST, ""));  //$NON-NLS-1$
         mProxyPortText.setText(  in_settings.getProperty(KEY_HTTP_PROXY_PORT, ""));  //$NON-NLS-1$
         mForceHttpCheck.setSelection(Boolean.parseBoolean(in_settings.getProperty(KEY_FORCE_HTTP)));
+        mAskAdbRestartCheck.setSelection(Boolean.parseBoolean(in_settings.getProperty(KEY_ASK_ADB_RESTART)));
 
         // We loaded fresh settings so there's nothing dirty to apply
         mApplyButton.setEnabled(false);
@@ -151,6 +176,8 @@ public class SettingsPage extends Composite implements ISettingsPage {
         out_settings.setProperty(KEY_HTTP_PROXY_PORT, mProxyPortText.getText());
         out_settings.setProperty(KEY_FORCE_HTTP,
                 Boolean.toString(mForceHttpCheck.getSelection()));
+        out_settings.setProperty(KEY_ASK_ADB_RESTART,
+                Boolean.toString(mAskAdbRestartCheck.getSelection()));
     }
 
     /**

@@ -24,14 +24,34 @@ import java.util.Properties;
  */
 public interface ISettingsPage {
 
-    /** Java system setting picked up by {@link URL} for http proxy port. Type: String. */
+    /**
+     * Java system setting picked up by {@link URL} for http proxy port.
+     * Type: String.
+     */
     public static final String KEY_HTTP_PROXY_PORT = "http.proxyPort";           //$NON-NLS-1$
-    /** Java system setting picked up by {@link URL} for http proxy host. Type: String. */
+    /**
+     * Java system setting picked up by {@link URL} for http proxy host.
+     * Type: String.
+     */
     public static final String KEY_HTTP_PROXY_HOST = "http.proxyHost";           //$NON-NLS-1$
-    /** Setting to force using http:// instead of https:// connections. Type: Boolean. */
+    /**
+     * Setting to force using http:// instead of https:// connections.
+     * Type: Boolean.
+     * Default: False.
+     */
     public static final String KEY_FORCE_HTTP = "sdkman.force.http";             //$NON-NLS-1$
-    /** Setting to display only packages that are new or updates. Type: Boolean. */
+    /**
+     * Setting to display only packages that are new or updates.
+     * Type: Boolean.
+     * Default: True.
+     */
     public static final String KEY_SHOW_UPDATE_ONLY = "sdkman.show.update.only"; //$NON-NLS-1$
+    /**
+     * Setting to ask for permission before restarting ADB.
+     * Type: Boolean.
+     * Default: True.
+     */
+    public static final String KEY_ASK_ADB_RESTART = "sdkman.ask.adb.restart";   //$NON-NLS-1$
 
     /** Loads settings from the given {@link Properties} container and update the page UI. */
     public abstract void loadSettings(Properties in_settings);
