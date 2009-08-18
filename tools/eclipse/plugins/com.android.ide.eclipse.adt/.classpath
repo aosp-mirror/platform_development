@@ -3,8 +3,8 @@
 	<classpathentry excluding="Makefile|resources/" kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
-	<classpathentry kind="lib" path="jarutils.jar"/>
-	<classpathentry kind="lib" path="androidprefs.jar"/>
+	<classpathentry kind="lib" path="jarutils.jar" sourcepath="/JarUtils"/>
+	<classpathentry kind="lib" path="androidprefs.jar" sourcepath="/AndroidPrefs"/>
 	<classpathentry kind="lib" path="sdkstats.jar" sourcepath="/SdkStatsService"/>
 	<classpathentry kind="lib" path="kxml2-2.3.0.jar"/>
 	<classpathentry kind="lib" path="layoutlib_api.jar"/>
