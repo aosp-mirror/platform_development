@@ -660,6 +660,7 @@ public class Archive implements IDescription {
             }
 
             // Swap the old folder by the new one.
+            File renameFailedForDir = null;
             if (destFolder.isDirectory()) {
                 renamedDestFolder = findTempFolder(osSdkRoot, pkgKind, "old");  //$NON-NLS-1$
                 if (renamedDestFolder == null) {
@@ -671,14 +672,26 @@ public class Archive implements IDescription {
                 if (!destFolder.renameTo(renamedDestFolder)) {
                     monitor.setResult("Failed to rename directory %1$s to %2$s",
                             destFolder.getPath(), renamedDestFolder.getPath());
-                    return false;
-
+                    renameFailedForDir = destFolder;
                 }
             }
 
-            if (!unzipDestFolder.renameTo(destFolder)) {
+            if (renameFailedForDir == null && !unzipDestFolder.renameTo(destFolder)) {
                 monitor.setResult("Failed to rename directory %1$s to %2$s",
                         unzipDestFolder.getPath(), destFolder.getPath());
+                renameFailedForDir = unzipDestFolder;
+            }
+
+            if (renameFailedForDir != null) {
+                if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
+                    monitor.setResult(
+                            "-= Warning ! =-\n" +
+                            "A folder failed to be renamed or moved. On Windows this " +
+                            "typically means that a program is using that folder (for example " +
+                            "Windows Explorer.) Please close all running programs that may be " +
+                            "locking the directory '%1$s' and try again.",
+                            renameFailedForDir.getPath());
+                }
                 return false;
             }
 
