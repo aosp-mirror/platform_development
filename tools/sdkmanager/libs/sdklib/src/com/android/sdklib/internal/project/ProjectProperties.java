@@ -85,9 +85,17 @@ public final class ProjectProperties {
            "# This file must be checked in Version Control Systems, as it is\n" +
            "# integral to the build system of your project.\n" +
            "\n" +
+           "# This file is only used by the Ant script.\n" +
+           "\n" +
            "# You can use this to override default values such as\n" +
            "#  'source-folder' for the location of your java source folder and\n" +
            "#  'out-folder' for the location of your output folder.\n" +
+           "\n" +
+           "# You can also use it define how the release builds are signed by declaring\n" +
+           "# the following properties:\n" +
+           "#  'key.store' for the location of your keystore and\n" +
+           "#  'key.alias' for the name of the key to use.\n" +
+           "# The password will be asked during the build when you use the 'release' target.\n" +
            "\n";
 
     private final static Map<String, String> COMMENT_MAP = new HashMap<String, String>();
