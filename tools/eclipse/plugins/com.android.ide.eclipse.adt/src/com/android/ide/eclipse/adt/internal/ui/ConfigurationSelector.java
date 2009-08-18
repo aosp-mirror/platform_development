@@ -27,12 +27,17 @@ import com.android.ide.eclipse.adt.internal.resources.configurations.RegionQuali
 import com.android.ide.eclipse.adt.internal.resources.configurations.ResourceQualifier;
 import com.android.ide.eclipse.adt.internal.resources.configurations.ScreenDimensionQualifier;
 import com.android.ide.eclipse.adt.internal.resources.configurations.ScreenOrientationQualifier;
+import com.android.ide.eclipse.adt.internal.resources.configurations.ScreenRatioQualifier;
+import com.android.ide.eclipse.adt.internal.resources.configurations.ScreenSizeQualifier;
 import com.android.ide.eclipse.adt.internal.resources.configurations.TextInputMethodQualifier;
 import com.android.ide.eclipse.adt.internal.resources.configurations.TouchScreenQualifier;
+import com.android.ide.eclipse.adt.internal.resources.configurations.VersionQualifier;
 import com.android.ide.eclipse.adt.internal.resources.configurations.KeyboardStateQualifier.KeyboardState;
 import com.android.ide.eclipse.adt.internal.resources.configurations.NavigationMethodQualifier.NavigationMethod;
 import com.android.ide.eclipse.adt.internal.resources.configurations.PixelDensityQualifier.Density;
 import com.android.ide.eclipse.adt.internal.resources.configurations.ScreenOrientationQualifier.ScreenOrientation;
+import com.android.ide.eclipse.adt.internal.resources.configurations.ScreenRatioQualifier.ScreenRatio;
+import com.android.ide.eclipse.adt.internal.resources.configurations.ScreenSizeQualifier.ScreenSize;
 import com.android.ide.eclipse.adt.internal.resources.configurations.TextInputMethodQualifier.TextInputMethod;
 import com.android.ide.eclipse.adt.internal.resources.configurations.TouchScreenQualifier.TouchScreenType;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
@@ -357,6 +362,8 @@ public class ConfigurationSelector extends Composite {
         mUiMap.put(NetworkCodeQualifier.class, new MNCEdit(mQualifierEditParent));
         mUiMap.put(LanguageQualifier.class, new LanguageEdit(mQualifierEditParent));
         mUiMap.put(RegionQualifier.class, new RegionEdit(mQualifierEditParent));
+        mUiMap.put(ScreenSizeQualifier.class, new ScreenSizeEdit(mQualifierEditParent));
+        mUiMap.put(ScreenRatioQualifier.class, new ScreenRatioEdit(mQualifierEditParent));
         mUiMap.put(ScreenOrientationQualifier.class, new OrientationEdit(mQualifierEditParent));
         mUiMap.put(PixelDensityQualifier.class, new PixelDensityEdit(mQualifierEditParent));
         mUiMap.put(TouchScreenQualifier.class, new TouchEdit(mQualifierEditParent));
@@ -364,6 +371,7 @@ public class ConfigurationSelector extends Composite {
         mUiMap.put(TextInputMethodQualifier.class, new TextInputEdit(mQualifierEditParent));
         mUiMap.put(NavigationMethodQualifier.class, new NavigationEdit(mQualifierEditParent));
         mUiMap.put(ScreenDimensionQualifier.class, new ScreenDimensionEdit(mQualifierEditParent));
+        mUiMap.put(VersionQualifier.class, new VersionEdit(mQualifierEditParent));
     }
 
     /**
@@ -847,6 +855,124 @@ public class ConfigurationSelector extends Composite {
     }
 
     /**
+     * Edit widget for {@link ScreenSizeQualifier}.
+     */
+    private class ScreenSizeEdit extends QualifierEditBase {
+
+        private Combo mSize;
+
+        public ScreenSizeEdit(Composite parent) {
+            super(parent, ScreenSizeQualifier.NAME);
+
+            mSize = new Combo(this, SWT.DROP_DOWN | SWT.READ_ONLY);
+            ScreenSize[] ssValues = ScreenSize.values();
+            for (ScreenSize value : ssValues) {
+                mSize.add(value.getDisplayValue());
+            }
+
+            mSize.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+            mSize.addSelectionListener(new SelectionListener() {
+                public void widgetDefaultSelected(SelectionEvent e) {
+                    onScreenSizeChange();
+                }
+                public void widgetSelected(SelectionEvent e) {
+                    onScreenSizeChange();
+                }
+            });
+        }
+
+        protected void onScreenSizeChange() {
+            // update the current config
+            int index = mSize.getSelectionIndex();
+
+            if (index != -1) {
+                mSelectedConfiguration.setScreenSizeQualifier(new ScreenSizeQualifier(
+                    ScreenSize.getByIndex(index)));
+            } else {
+                // empty selection, means no qualifier.
+                // Since the qualifier classes are immutable, and we don't want to
+                // remove the qualifier from the configuration, we create a new default one.
+                mSelectedConfiguration.setScreenSizeQualifier(
+                        new ScreenSizeQualifier());
+            }
+
+            // notify of change
+            onChange(true /* keepSelection */);
+        }
+
+        @Override
+        public void setQualifier(ResourceQualifier qualifier) {
+            ScreenSizeQualifier q = (ScreenSizeQualifier)qualifier;
+
+            ScreenSize value = q.getValue();
+            if (value == null) {
+                mSize.clearSelection();
+            } else {
+                mSize.select(ScreenSize.getIndex(value));
+            }
+        }
+    }
+
+    /**
+     * Edit widget for {@link ScreenRatioQualifier}.
+     */
+    private class ScreenRatioEdit extends QualifierEditBase {
+
+        private Combo mSize;
+
+        public ScreenRatioEdit(Composite parent) {
+            super(parent, ScreenRatioQualifier.NAME);
+
+            mSize = new Combo(this, SWT.DROP_DOWN | SWT.READ_ONLY);
+            ScreenRatio[] srValues = ScreenRatio.values();
+            for (ScreenRatio value : srValues) {
+                mSize.add(value.getDisplayValue());
+            }
+
+            mSize.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+            mSize.addSelectionListener(new SelectionListener() {
+                public void widgetDefaultSelected(SelectionEvent e) {
+                    onScreenRatioChange();
+                }
+                public void widgetSelected(SelectionEvent e) {
+                    onScreenRatioChange();
+                }
+            });
+        }
+
+        protected void onScreenRatioChange() {
+            // update the current config
+            int index = mSize.getSelectionIndex();
+
+            if (index != -1) {
+                mSelectedConfiguration.setScreenRatioQualifier(new ScreenRatioQualifier(
+                        ScreenRatio.getByIndex(index)));
+            } else {
+                // empty selection, means no qualifier.
+                // Since the qualifier classes are immutable, and we don't want to
+                // remove the qualifier from the configuration, we create a new default one.
+                mSelectedConfiguration.setScreenRatioQualifier(
+                        new ScreenRatioQualifier());
+            }
+
+            // notify of change
+            onChange(true /* keepSelection */);
+        }
+
+        @Override
+        public void setQualifier(ResourceQualifier qualifier) {
+            ScreenRatioQualifier q = (ScreenRatioQualifier)qualifier;
+
+            ScreenRatio value = q.getValue();
+            if (value == null) {
+                mSize.clearSelection();
+            } else {
+                mSize.select(ScreenRatio.getIndex(value));
+            }
+        }
+    }
+
+    /**
      * Edit widget for {@link ScreenOrientationQualifier}.
      */
     private class OrientationEdit extends QualifierEditBase {
@@ -1271,4 +1397,68 @@ public class ConfigurationSelector extends Composite {
             mSize2.setText(Integer.toString(q.getValue2()));
         }
     }
+
+    /**
+     * Edit widget for {@link VersionQualifier}.
+     */
+    private class VersionEdit extends QualifierEditBase {
+        private Text mText;
+
+        public VersionEdit(Composite parent) {
+            super(parent, VersionQualifier.NAME);
+
+            mText = new Text(this, SWT.BORDER);
+            mText.addVerifyListener(new MobileCodeVerifier());
+            mText.addModifyListener(new ModifyListener() {
+                public void modifyText(ModifyEvent e) {
+                    onVersionChange();
+                }
+            });
+            mText.addFocusListener(new FocusAdapter() {
+                @Override
+                public void focusLost(FocusEvent e) {
+                    onVersionChange();
+                }
+            });
+
+            new Label(this, SWT.NONE).setText("(Platform API level)");
+        }
+
+        private void onVersionChange() {
+            String value = mText.getText();
+
+            if (value.length() == 0) {
+                // empty string, means a qualifier with no value.
+                // Since the qualifier classes are immutable, and we don't want to
+                // remove the qualifier from the configuration, we create a new default one.
+                mSelectedConfiguration.setVersionQualifier(new VersionQualifier());
+            } else {
+                try {
+                    VersionQualifier qualifier = VersionQualifier.getQualifier(
+                            VersionQualifier.getFolderSegment(Integer.parseInt(value)));
+                    if (qualifier != null) {
+                        mSelectedConfiguration.setVersionQualifier(qualifier);
+                    } else {
+                        // Failure! Looks like the value is wrong
+                        mSelectedConfiguration.setVersionQualifier(new VersionQualifier());
+                    }
+                } catch (NumberFormatException nfe) {
+                    // Looks like the code is not a number. This should not happen since the text
+                    // field has a VerifyListener that prevents it.
+                    mSelectedConfiguration.setVersionQualifier(new VersionQualifier());
+                }
+            }
+
+            // notify of change
+            onChange(true /* keepSelection */);
+        }
+
+        @Override
+        public void setQualifier(ResourceQualifier qualifier) {
+            VersionQualifier q = (VersionQualifier)qualifier;
+
+            mText.setText(Integer.toString(q.getVersion()));
+        }
+    }
+
 }
