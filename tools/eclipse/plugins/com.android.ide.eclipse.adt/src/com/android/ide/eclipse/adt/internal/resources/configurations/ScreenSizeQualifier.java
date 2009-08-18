@@ -163,6 +163,11 @@ public class ScreenSizeQualifier extends ResourceQualifier {
     @Override
     public String getFolderSegment(IAndroidTarget target) {
         if (mValue != null) {
+            if (target == null) {
+                // Default behavior (when target==null) is qualifier is supported
+                return mValue.getValue();
+            }
+
             AndroidVersion version = target.getVersion();
             if (version.getApiLevel() >= 4 ||
                     (version.getApiLevel() == 3 && "Donut".equals(version.getCodename()))) {

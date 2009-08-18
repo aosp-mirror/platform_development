@@ -132,6 +132,11 @@ public final class VersionQualifier extends ResourceQualifier {
      */
     @Override
     public String getFolderSegment(IAndroidTarget target) {
+        if (target == null) {
+            // Default behavior (when target==null) is qualifier is supported
+            return getFolderSegment(mVersion);
+        }
+
         AndroidVersion version = target.getVersion();
         if (version.getApiLevel() >= 3) {
             return getFolderSegment(mVersion);
@@ -143,7 +148,7 @@ public final class VersionQualifier extends ResourceQualifier {
     @Override
     public String getStringValue() {
         if (mVersion != DEFAULT_VERSION) {
-            return String.format("v%1$d", mVersion);
+            return String.format("API %1$d", mVersion);
         }
 
         return ""; //$NON-NLS-1$
