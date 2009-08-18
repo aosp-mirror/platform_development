@@ -192,8 +192,7 @@ public class ExtraPackage extends Package {
             s += String.format(" (min tools rev.: %1$d)", mMinToolsRevision);
         }
 
-        s += ".\n";
-        s += super.getLongDescription();
+        s += ".";
 
         return s;
     }
