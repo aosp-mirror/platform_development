@@ -45,8 +45,8 @@ import javax.imageio.ImageIO;
  */
 public class MonkeyRunner {
 
-  static String monkeyServer = null;
-  static int monkeyPort;
+  static String monkeyServer = "127.0.0.1";
+  static int monkeyPort = 1080;
   static Socket monkeySocket = null;
 
   static IDevice monkeyDevice;
@@ -62,7 +62,7 @@ public class MonkeyRunner {
   public static void main(String[] args) {
 
     processOptions(args);
-
+    
     initAdbConnection();
     openMonkeyConnection();
 
@@ -150,9 +150,13 @@ public class MonkeyRunner {
         monkeyDevice = devices[0];
       }
 
-    } finally {
-    }
+      monkeyDevice.createForward(monkeyPort, monkeyPort);
+      String command = "monkey --port " + monkeyPort;
+      monkeyDevice.executeShellCommand(command, new NullOutputReceiver());
 
+    } catch(IOException e) {
+      e.printStackTrace();
+    }
   }
 
   /**
