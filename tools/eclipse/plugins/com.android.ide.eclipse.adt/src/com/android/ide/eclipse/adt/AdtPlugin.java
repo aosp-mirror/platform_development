@@ -454,17 +454,27 @@ public class AdtPlugin extends AbstractUIPlugin {
 
     /** Returns the adb path relative to the sdk folder */
     public static String getOsRelativeAdb() {
-        return SdkConstants.OS_SDK_TOOLS_FOLDER + AndroidConstants.FN_ADB;
+        return SdkConstants.OS_SDK_TOOLS_FOLDER + SdkConstants.FN_ADB;
+    }
+
+    /** Returns the zipalign path relative to the sdk folder */
+    public static String getOsRelativeZipAlign() {
+        return SdkConstants.OS_SDK_TOOLS_FOLDER + SdkConstants.FN_ZIPALIGN;
     }
 
     /** Returns the emulator path relative to the sdk folder */
     public static String getOsRelativeEmulator() {
-        return SdkConstants.OS_SDK_TOOLS_FOLDER + AndroidConstants.FN_EMULATOR;
+        return SdkConstants.OS_SDK_TOOLS_FOLDER + SdkConstants.FN_EMULATOR;
     }
 
     /** Returns the absolute adb path */
     public static String getOsAbsoluteAdb() {
         return getOsSdkFolder() + getOsRelativeAdb();
+    }
+
+    /** Returns the absolute zipalign path */
+    public static String getOsAbsoluteZipAlign() {
+        return getOsSdkFolder() + getOsRelativeZipAlign();
     }
 
     /** Returns the absolute traceview path */
