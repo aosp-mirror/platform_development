@@ -358,7 +358,7 @@ public class PreCompilerBuilder extends BaseBuilder {
                         // platform is not a preview => fatal error
                         String msg = String.format(
                                 "Manifest attribute '%1$s' is set to '%2$s'. Integer is expected.",
-                                ManifestConstants.ATTRIBUTE_MIN_SDK_VERSION, codename);
+                                ManifestConstants.ATTRIBUTE_MIN_SDK_VERSION, minSdkVersion);
                         AdtPlugin.printErrorToConsole(project, msg);
                         BaseProjectHelper.addMarker(manifest, AdtConstants.MARKER_ADT, msg,
                                 IMarker.SEVERITY_ERROR);
