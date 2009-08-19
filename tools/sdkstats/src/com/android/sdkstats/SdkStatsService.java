@@ -44,6 +44,8 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.Random;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /** Utility class to send "ping" usage reports to the server. */
 public class SdkStatsService {
@@ -93,14 +95,14 @@ public class SdkStatsService {
         "kfmclient openURL %URL%",                    // $NON-NLS-1$ Konqueror
         "opera -newwindow %URL%",                     // $NON-NLS-1$ Opera
     };
-    
+
     public final static String PING_OPT_IN = "pingOptIn"; //$NON-NLS-1$
     public final static String PING_TIME = "pingTime"; //$NON-NLS-1$
     public final static String PING_ID = "pingId"; //$NON-NLS-1$
 
 
     private static PreferenceStore sPrefStore;
-    
+
     /**
      * Send a "ping" to the Google toolbar server, if enough time has
      * elapsed since the last ping, and if the user has not opted out.
@@ -123,7 +125,7 @@ public class SdkStatsService {
             if (!prefs.contains(PING_ID)) {
                 // First time: make up a new ID.  TODO: Use something more random?
                 prefs.setValue(PING_ID, new Random().nextLong());
-    
+
                 // Also give them a chance to opt out.
                 prefs.setValue(PING_OPT_IN, getUserPermission(display));
                 try {
@@ -132,13 +134,13 @@ public class SdkStatsService {
                 catch (IOException ioe) {
                 }
             }
-    
+
             // If the user has not opted in, do nothing and quietly return.
             if (!prefs.getBoolean(PING_OPT_IN)) {
                 // user opted out.
                 return;
             }
-    
+
             // If the last ping *for this app* was too recent, do nothing.
             String timePref = PING_TIME + "." + app;  // $NON-NLS-1$
             long now = System.currentTimeMillis();
@@ -147,7 +149,7 @@ public class SdkStatsService {
                 // too soon after a ping.
                 return;
             }
-    
+
             // Record the time of the attempt, whether or not it succeeds.
             prefs.setValue(timePref, now);
             try {
@@ -155,7 +157,7 @@ public class SdkStatsService {
             }
             catch (IOException ioe) {
             }
-    
+
             // Send the ping itself in the background (don't block if the
             // network is down or slow or confused).
             final long id = prefs.getLong(PING_ID);
@@ -171,7 +173,7 @@ public class SdkStatsService {
             }.start();
         }
     }
-    
+
     /**
      * Returns the DDMS {@link PreferenceStore}.
      */
@@ -187,7 +189,7 @@ public class SdkStatsService {
 
             if (homeDir != null) {
                 String rcFileName = homeDir + "ddms.cfg"; //$NON-NLS-1$
-                
+
                 // also look for an old pref file in the previous location
                 String oldPrefPath = System.getProperty("user.home") //$NON-NLS-1$
                     + File.separator + ".ddmsrc"; //$NON-NLS-1$
@@ -196,10 +198,10 @@ public class SdkStatsService {
                     try {
                         PreferenceStore oldStore = new PreferenceStore(oldPrefPath);
                         oldStore.load();
-                        
+
                         oldStore.save(new FileOutputStream(rcFileName), "");
                         oldPrefFile.delete();
-                        
+
                         PreferenceStore newStore = new PreferenceStore(rcFileName);
                         newStore.load();
                         sPrefStore = newStore;
@@ -220,10 +222,10 @@ public class SdkStatsService {
                 sPrefStore = new PreferenceStore();
             }
         }
-        
+
         return sPrefStore;
     }
-    
+
     /**
      * Unconditionally send a "ping" request to the Google toolbar server.
      *
@@ -239,8 +241,16 @@ public class SdkStatsService {
         String os = System.getProperty("os.name");          // $NON-NLS-1$
         if (os.startsWith("Mac OS")) {                      // $NON-NLS-1$
             os = "mac";                                     // $NON-NLS-1$
+            String osVers = getVersion();
+            if (osVers != null) {
+                os = os + "-" + osVers;                     // $NON-NLS-1$
+            }
         } else if (os.startsWith("Windows")) {              // $NON-NLS-1$
             os = "win";                                     // $NON-NLS-1$
+            String osVers = getVersion();
+            if (osVers != null) {
+                os = os + "-" + osVers;                     // $NON-NLS-1$
+            }
         } else if (os.startsWith("Linux")) {                // $NON-NLS-1$
             os = "linux";                                   // $NON-NLS-1$
         } else {
@@ -269,6 +279,24 @@ public class SdkStatsService {
             throw new IOException(
                 conn.getResponseMessage() + ": " + url);    // $NON-NLS-1$
         }
+    }
+
+    /**
+     * Returns the version of the os if it is defined as X.Y, or null otherwise.
+     * <p/>
+     * Example of returned versions can be found at http://lopica.sourceforge.net/os.html
+     * <p/>
+     * This method removes any exiting micro versions.
+     */
+    private static String getVersion() {
+        Pattern p = Pattern.compile("(\\d+)\\.(\\d+).*"); // $NON-NLS-1$
+        String osVers = System.getProperty("os.version"); // $NON-NLS-1$
+        Matcher m = p.matcher(osVers);
+        if (m.matches()) {
+            return m.group(1) + "." + m.group(2);         // $NON-NLS-1$
+        }
+
+        return null;
     }
 
     /**
