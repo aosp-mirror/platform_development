@@ -93,10 +93,10 @@ public class PointerLocation extends Activity {
             mPaint.setStrokeWidth(2);
             mTargetPaint = new Paint();
             mTargetPaint.setAntiAlias(false);
-            mTargetPaint.setARGB(192, 0, 0, 255);
+            mTargetPaint.setARGB(255, 0, 0, 192);
             mPathPaint = new Paint();
             mPathPaint.setAntiAlias(false);
-            mPathPaint.setARGB(255, 64, 128, 255);
+            mPathPaint.setARGB(255, 0, 96, 255);
             mPaint.setStyle(Paint.Style.STROKE);
             mPaint.setStrokeWidth(1);
             
@@ -162,6 +162,19 @@ public class PointerLocation extends Activity {
             for (int p=0; p<NP; p++) {
                 final PointerState ps = mPointers.get(p);
                 
+                if (mCurDown && ps.mCurDown) {
+                    canvas.drawLine(0, (int)ps.mCurY, getWidth(), (int)ps.mCurY, mTargetPaint);
+                    canvas.drawLine((int)ps.mCurX, 0, (int)ps.mCurX, getHeight(), mTargetPaint);
+                    int pressureLevel = (int)(ps.mCurPressure*255);
+                    mPaint.setARGB(255, pressureLevel, 128, 255-pressureLevel);
+                    canvas.drawPoint(ps.mCurX, ps.mCurY, mPaint);
+                    canvas.drawCircle(ps.mCurX, ps.mCurY, ps.mCurWidth, mPaint);
+                }
+            }
+            
+            for (int p=0; p<NP; p++) {
+                final PointerState ps = mPointers.get(p);
+                
                 final int N = ps.mXs.size();
                 float lastX=0, lastY=0;
                 boolean haveLast = false;
@@ -194,15 +207,6 @@ public class PointerLocation extends Activity {
                         canvas.drawPoint(lastX, lastY, mPaint);
                     }
                 }
-                
-                if (mCurDown && ps.mCurDown) {
-                    canvas.drawLine(0, (int)ps.mCurY, getWidth(), (int)ps.mCurY, mTargetPaint);
-                    canvas.drawLine((int)ps.mCurX, 0, (int)ps.mCurX, getHeight(), mTargetPaint);
-                    int pressureLevel = (int)(ps.mCurPressure*255);
-                    mPaint.setARGB(255, pressureLevel, 128, 255-pressureLevel);
-                    canvas.drawPoint(ps.mCurX, ps.mCurY, mPaint);
-                    canvas.drawCircle(ps.mCurX, ps.mCurY, ps.mCurWidth, mPaint);
-                }
             }
         }
 
@@ -232,6 +236,7 @@ public class PointerLocation extends Activity {
                     ps.mCurDown = false;
                 }
                 mPointers.get(0).mCurDown = true;
+                mMaxNumPointers = 0;
             }
             
             if ((action&MotionEvent.ACTION_MASK) == MotionEvent.ACTION_POINTER_DOWN) {
