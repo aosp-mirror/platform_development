@@ -42,6 +42,7 @@ import com.android.ide.eclipse.adt.internal.sdk.LoadStatus;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData.LayoutBridge;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk.ITargetChangeListener;
+import com.android.layoutlib.api.ILayoutBridge;
 import com.android.layoutlib.api.ILayoutLog;
 import com.android.layoutlib.api.ILayoutResult;
 import com.android.layoutlib.api.IProjectCallback;
@@ -1277,7 +1278,7 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
      * the implementation API level.
      */
     @SuppressWarnings("deprecation")
-    private ILayoutResult computeLayout(LayoutBridge bridge,
+    private static ILayoutResult computeLayout(LayoutBridge bridge,
             IXmlPullParser layoutDescription, Object projectKey,
             int screenWidth, int screenHeight, int density, float xdpi, float ydpi,
             String themeName, boolean isProjectTheme,
@@ -1285,9 +1286,17 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
             Map<String, Map<String, IResourceValue>> frameworkResources,
             IProjectCallback projectCallback, ILayoutLog logger) {
 
-        if (bridge.apiLevel >= 3) {
-            // newer api with boolean for separation of project/framework theme,
-            // and density support.
+        if (bridge.apiLevel >= ILayoutBridge.API_CURRENT) {
+            // newest API with support for "render full height"
+            // TODO: link boolean to UI.
+            return bridge.bridge.computeLayout(layoutDescription,
+                    projectKey, screenWidth, screenHeight, false /* renderFullHeight */,
+                    density, xdpi, ydpi,
+                    themeName, isProjectTheme,
+                    projectResources, frameworkResources, projectCallback,
+                    logger);
+        } else if (bridge.apiLevel == 3) {
+            // newer api with density support.
             return bridge.bridge.computeLayout(layoutDescription,
                     projectKey, screenWidth, screenHeight, density, xdpi, ydpi,
                     themeName, isProjectTheme,
@@ -1297,8 +1306,8 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
             // api with boolean for separation of project/framework theme
             return bridge.bridge.computeLayout(layoutDescription,
                     projectKey, screenWidth, screenHeight, themeName, isProjectTheme,
-                    mConfiguredProjectRes, frameworkResources, mProjectCallback,
-                    mLogger);
+                    projectResources, frameworkResources, projectCallback,
+                    logger);
         } else {
             // oldest api with no density/dpi, and project theme boolean mixed
             // into the theme name.
@@ -1311,8 +1320,8 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
 
             return bridge.bridge.computeLayout(layoutDescription,
                     projectKey, screenWidth, screenHeight, themeName,
-                    mConfiguredProjectRes, frameworkResources, mProjectCallback,
-                    mLogger);
+                    projectResources, frameworkResources, projectCallback,
+                    logger);
         }
     }
 
