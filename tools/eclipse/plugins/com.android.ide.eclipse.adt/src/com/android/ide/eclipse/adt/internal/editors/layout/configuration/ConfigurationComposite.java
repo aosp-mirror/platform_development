@@ -20,24 +20,16 @@ import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.resources.ResourceType;
 import com.android.ide.eclipse.adt.internal.resources.configurations.CountryCodeQualifier;
 import com.android.ide.eclipse.adt.internal.resources.configurations.FolderConfiguration;
-import com.android.ide.eclipse.adt.internal.resources.configurations.KeyboardStateQualifier;
 import com.android.ide.eclipse.adt.internal.resources.configurations.LanguageQualifier;
-import com.android.ide.eclipse.adt.internal.resources.configurations.NavigationMethodQualifier;
 import com.android.ide.eclipse.adt.internal.resources.configurations.NetworkCodeQualifier;
-import com.android.ide.eclipse.adt.internal.resources.configurations.PixelDensityQualifier;
 import com.android.ide.eclipse.adt.internal.resources.configurations.RegionQualifier;
+import com.android.ide.eclipse.adt.internal.resources.configurations.ResourceQualifier;
 import com.android.ide.eclipse.adt.internal.resources.configurations.ScreenDimensionQualifier;
 import com.android.ide.eclipse.adt.internal.resources.configurations.ScreenOrientationQualifier;
-import com.android.ide.eclipse.adt.internal.resources.configurations.TextInputMethodQualifier;
-import com.android.ide.eclipse.adt.internal.resources.configurations.TouchScreenQualifier;
-import com.android.ide.eclipse.adt.internal.resources.configurations.KeyboardStateQualifier.KeyboardState;
-import com.android.ide.eclipse.adt.internal.resources.configurations.NavigationMethodQualifier.NavigationMethod;
-import com.android.ide.eclipse.adt.internal.resources.configurations.PixelDensityQualifier.Density;
+import com.android.ide.eclipse.adt.internal.resources.configurations.VersionQualifier;
 import com.android.ide.eclipse.adt.internal.resources.configurations.ScreenOrientationQualifier.ScreenOrientation;
-import com.android.ide.eclipse.adt.internal.resources.configurations.TextInputMethodQualifier.TextInputMethod;
-import com.android.ide.eclipse.adt.internal.resources.configurations.TouchScreenQualifier.TouchScreenType;
 import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
-import com.android.ide.eclipse.adt.internal.ui.ConfigurationSelector.DimensionVerifier;
+import com.android.ide.eclipse.adt.internal.sdk.DeviceConfiguration;
 import com.android.ide.eclipse.adt.internal.ui.ConfigurationSelector.LanguageRegionVerifier;
 import com.android.ide.eclipse.adt.internal.ui.ConfigurationSelector.MobileCodeVerifier;
 import com.android.layoutlib.api.IResourceValue;
@@ -61,9 +53,9 @@ import org.eclipse.swt.widgets.Text;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedSet;
 
 public class ConfigurationComposite extends Composite {
 
@@ -71,34 +63,17 @@ public class ConfigurationComposite extends Composite {
 
     private Text mCountry;
     private Text mNetwork;
-    private Combo mLanguage;
-    private Combo mRegion;
-    private Combo mOrientation;
-    private Combo mDensity;
-    private Combo mTouch;
-    private Combo mKeyboard;
-    private Combo mTextInput;
-    private Combo mNavigation;
-    private Text mSize1;
-    private Text mSize2;
+    private Combo mLocale;
+    private Combo mDeviceList;
+    private Combo mDeviceConfigs;
     private Combo mThemeCombo;
     private Button mCreateButton;
 
     private Label mCountryIcon;
     private Label mNetworkIcon;
-    private Label mLanguageIcon;
-    private Label mRegionIcon;
-    private Label mOrientationIcon;
-    private Label mDensityIcon;
-    private Label mTouchIcon;
-    private Label mKeyboardIcon;
-    private Label mTextInputIcon;
-    private Label mNavigationIcon;
-    private Label mSizeIcon;
 
     private Label mCurrentLayoutLabel;
 
-    private Image mWarningImage;
     private Image mMatchImage;
     private Image mErrorImage;
 
@@ -107,6 +82,12 @@ public class ConfigurationComposite extends Composite {
 
     /** The {@link FolderConfiguration} representing the state of the UI controls */
     private final FolderConfiguration mCurrentConfig = new FolderConfiguration();
+
+    private DeviceConfiguration[] mDevices;
+
+    private final ArrayList<ResourceQualifier[] > mLocaleList =
+        new ArrayList<ResourceQualifier[]>();
+
     private final IConfigListener mListener;
 
     public interface IConfigListener {
@@ -123,9 +104,9 @@ public class ConfigurationComposite extends Composite {
     public ConfigurationComposite(IConfigListener listener, Composite parent, int style) {
         super(parent, style);
         mListener = listener;
+        mDevices = DeviceConfiguration.getDevices();
 
         IconFactory factory = IconFactory.getInstance();
-        mWarningImage = factory.getIcon("warning"); //$NON-NLS-1$
         mMatchImage = factory.getIcon("match"); //$NON-NLS-1$
         mErrorImage = factory.getIcon("error"); //$NON-NLS-1$
 
@@ -172,151 +153,54 @@ public class ConfigurationComposite extends Composite {
             }
         });
 
-        new Label(this, SWT.NONE).setText("Lang");
-        mLanguageIcon = createControlComposite(this, true /* grab_horizontal */);
-        mLanguage = new Combo(mLanguageIcon.getParent(), SWT.DROP_DOWN);
-        mLanguage.setLayoutData(new GridData(
+        new Label(this, SWT.NONE).setText("Locale");
+        mLocale = new Combo(this, SWT.DROP_DOWN | SWT.READ_ONLY);
+        mLocale.setLayoutData(new GridData(
                 GridData.HORIZONTAL_ALIGN_FILL | GridData.GRAB_HORIZONTAL));
-        mLanguage.addVerifyListener(new LanguageRegionVerifier());
-        mLanguage.addSelectionListener(new SelectionListener() {
+        mLocale.addVerifyListener(new LanguageRegionVerifier());
+        mLocale.addSelectionListener(new SelectionListener() {
             public void widgetDefaultSelected(SelectionEvent e) {
-                onLanguageChange();
+                onLocaleChange();
             }
             public void widgetSelected(SelectionEvent e) {
-                onLanguageChange();
-            }
-        });
-        mLanguage.addModifyListener(new ModifyListener() {
-            public void modifyText(ModifyEvent e) {
-                onLanguageChange();
+                onLocaleChange();
             }
         });
 
-        new Label(this, SWT.NONE).setText("Region");
-        mRegionIcon = createControlComposite(this, true /* grab_horizontal */);
-        mRegion = new Combo(mRegionIcon.getParent(), SWT.DROP_DOWN);
-        mRegion.setLayoutData(new GridData(
-                GridData.HORIZONTAL_ALIGN_FILL | GridData.GRAB_HORIZONTAL));
-        mRegion.addVerifyListener(new LanguageRegionVerifier());
-        mRegion.addSelectionListener(new SelectionListener() {
-            public void widgetDefaultSelected(SelectionEvent e) {
-                onRegionChange();
-            }
-            public void widgetSelected(SelectionEvent e) {
-                onRegionChange();
-            }
-        });
-        mRegion.addModifyListener(new ModifyListener() {
-            public void modifyText(ModifyEvent e) {
-                onRegionChange();
-            }
-        });
-
-        new Label(this, SWT.NONE).setText("Orient");
-        mOrientationIcon = createControlComposite(this, true /* grab_horizontal */);
-        mOrientation = new Combo(mOrientationIcon.getParent(), SWT.DROP_DOWN | SWT.READ_ONLY);
-        ScreenOrientation[] soValues = ScreenOrientation.values();
-        mOrientation.add("(Default)");
-        for (ScreenOrientation value : soValues) {
-            mOrientation.add(value.getDisplayValue());
+        new Label(this, SWT.NONE).setText("Devices");
+        mDeviceList = new Combo(this, SWT.DROP_DOWN | SWT.READ_ONLY);
+        // fill with the devices
+        for (DeviceConfiguration device : mDevices) {
+            mDeviceList.add(device.getName());
         }
-        mOrientation.select(0);
-        mOrientation.setLayoutData(new GridData(
-                GridData.HORIZONTAL_ALIGN_FILL | GridData.GRAB_HORIZONTAL));
-        mOrientation.addSelectionListener(new SelectionAdapter() {
-           @Override
-            public void widgetSelected(SelectionEvent e) {
-               onOrientationChange();
-            }
-        });
 
-        new Label(this, SWT.NONE).setText("Density");
-        mDensityIcon = createControlComposite(this, true /* grab_horizontal */);
-        mDensity = new Combo(mDensityIcon.getParent(), SWT.DROP_DOWN | SWT.READ_ONLY);
-        Density[] dValues = Density.values();
-        mDensity.add("(Default)");
-        for (Density value : dValues) {
-            mDensity.add(value.getDisplayValue());
-        }
-        mDensity.select(0);
-        mDensity.setLayoutData(new GridData(
+        mDeviceList.select(0);
+        mDeviceList.setLayoutData(new GridData(
                 GridData.HORIZONTAL_ALIGN_FILL | GridData.GRAB_HORIZONTAL));
-        mDensity.addSelectionListener(new SelectionAdapter() {
-           @Override
-            public void widgetSelected(SelectionEvent e) {
-               onDensityChange();
-            }
-        });
-
-        new Label(this, SWT.NONE).setText("Touch");
-        mTouchIcon = createControlComposite(this, true /* grab_horizontal */);
-        mTouch = new Combo(mTouchIcon.getParent(), SWT.DROP_DOWN | SWT.READ_ONLY);
-        TouchScreenType[] tstValues = TouchScreenType.values();
-        mTouch.add("(Default)");
-        for (TouchScreenType value : tstValues) {
-            mTouch.add(value.getDisplayValue());
-        }
-        mTouch.select(0);
-        mTouch.setLayoutData(new GridData(
-                GridData.HORIZONTAL_ALIGN_FILL | GridData.GRAB_HORIZONTAL));
-        mTouch.addSelectionListener(new SelectionAdapter() {
+        mDeviceList.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
-                onTouchChange();
+                onDeviceChange();
             }
         });
 
-        new Label(this, SWT.NONE).setText("Keybrd");
-        mKeyboardIcon = createControlComposite(this, true /* grab_horizontal */);
-        mKeyboard = new Combo(mKeyboardIcon.getParent(), SWT.DROP_DOWN | SWT.READ_ONLY);
-        KeyboardState[] ksValues = KeyboardState.values();
-        mKeyboard.add("(Default)");
-        for (KeyboardState value : ksValues) {
-            mKeyboard.add(value.getDisplayValue());
+        new Label(this, SWT.NONE).setText("Config");
+        mDeviceConfigs = new Combo(this, SWT.DROP_DOWN | SWT.READ_ONLY);
+        Map<String, FolderConfiguration> configs = mDevices[0].getConfigs();
+        Set<String> configNames = configs.keySet();
+        for (String name : configNames) {
+            mDeviceConfigs.add(name);
         }
-        mKeyboard.select(0);
-        mKeyboard.setLayoutData(new GridData(
-                GridData.HORIZONTAL_ALIGN_FILL | GridData.GRAB_HORIZONTAL));
-        mKeyboard.addSelectionListener(new SelectionAdapter() {
-            @Override
-            public void widgetSelected(SelectionEvent e) {
-                onKeyboardChange();
-            }
-        });
-
-        new Label(this, SWT.NONE).setText("Input");
-        mTextInputIcon = createControlComposite(this, true /* grab_horizontal */);
-        mTextInput = new Combo(mTextInputIcon.getParent(), SWT.DROP_DOWN | SWT.READ_ONLY);
-        TextInputMethod[] timValues = TextInputMethod.values();
-        mTextInput.add("(Default)");
-        for (TextInputMethod value : timValues) {
-            mTextInput.add(value.getDisplayValue());
+        mDeviceConfigs.select(0);
+        if (configNames.size() == 1) {
+            mDeviceConfigs.setEnabled(false);
         }
-        mTextInput.select(0);
-        mTextInput.setLayoutData(new GridData(
+        mDeviceConfigs.setLayoutData(new GridData(
                 GridData.HORIZONTAL_ALIGN_FILL | GridData.GRAB_HORIZONTAL));
-        mTextInput.addSelectionListener(new SelectionAdapter() {
-            @Override
-            public void widgetSelected(SelectionEvent e) {
-                onTextInputChange();
-            }
-        });
-
-        new Label(this, SWT.NONE).setText("Nav");
-        mNavigationIcon = createControlComposite(this, true /* grab_horizontal */);
-        mNavigation = new Combo(mNavigationIcon.getParent(), SWT.DROP_DOWN | SWT.READ_ONLY);
-        NavigationMethod[] nValues = NavigationMethod.values();
-        mNavigation.add("(Default)");
-        for (NavigationMethod value : nValues) {
-            mNavigation.add(value.getDisplayValue());
-        }
-        mNavigation.select(0);
-        mNavigation.setLayoutData(new GridData(
-                GridData.HORIZONTAL_ALIGN_FILL | GridData.GRAB_HORIZONTAL));
-        mNavigation.addSelectionListener(new SelectionAdapter() {
+        mDeviceConfigs.addSelectionListener(new SelectionAdapter() {
             @Override
              public void widgetSelected(SelectionEvent e) {
-                onNavigationChange();
+                onDeviceConfigChange();
             }
         });
 
@@ -330,46 +214,6 @@ public class ConfigurationComposite extends Composite {
         mCurrentLayoutLabel = new Label(labelParent, SWT.NONE);
         mCurrentLayoutLabel.setLayoutData(gd = new GridData(GridData.FILL_HORIZONTAL));
         gd.widthHint = 50;
-
-        new Label(labelParent, SWT.NONE).setText("Size");
-        mSizeIcon = createControlComposite(labelParent, false);
-        Composite sizeParent = new Composite(mSizeIcon.getParent(), SWT.NONE);
-        sizeParent.setLayout(gl = new GridLayout(3, false));
-        gl.marginWidth = gl.marginHeight = 0;
-        gl.horizontalSpacing = 0;
-
-        mSize1 = new Text(sizeParent, SWT.BORDER);
-        mSize1.setLayoutData(gd = new GridData());
-        gd.widthHint = 30;
-        new Label(sizeParent, SWT.NONE).setText("x");
-        mSize2 = new Text(sizeParent, SWT.BORDER);
-        mSize2.setLayoutData(gd = new GridData());
-        gd.widthHint = 30;
-
-        DimensionVerifier verifier = new DimensionVerifier();
-        mSize1.addVerifyListener(verifier);
-        mSize2.addVerifyListener(verifier);
-
-        SelectionListener sl = new SelectionListener() {
-            public void widgetDefaultSelected(SelectionEvent e) {
-                onSizeChange();
-            }
-            public void widgetSelected(SelectionEvent e) {
-                onSizeChange();
-            }
-        };
-
-        mSize1.addSelectionListener(sl);
-        mSize2.addSelectionListener(sl);
-
-        ModifyListener sizeModifyListener = new ModifyListener() {
-            public void modifyText(ModifyEvent e) {
-                onSizeChange();
-            }
-        };
-
-        mSize1.addModifyListener(sizeModifyListener);
-        mSize2.addModifyListener(sizeModifyListener);
 
         // first separator
         Label separator = new Label(labelParent, SWT.SEPARATOR | SWT.VERTICAL);
@@ -405,10 +249,12 @@ public class ConfigurationComposite extends Composite {
             }
         });
 
+        onDeviceConfigChange();
     }
 
     public void setConfig(FolderConfiguration config) {
-        mCurrentConfig.set(config);
+//        mCurrentConfig.set(config);
+        throw new UnsupportedOperationException("setConfig");
     }
 
     public FolderConfiguration getCurrentConfig() {
@@ -420,35 +266,14 @@ public class ConfigurationComposite extends Composite {
     }
 
     public Rectangle getScreenBounds() {
-        ScreenOrientation orientation = null;
-        if (mOrientation.getSelectionIndex() == 0) {
-            orientation = ScreenOrientation.PORTRAIT;
-        } else {
-            orientation = ScreenOrientation.getByIndex(
-                    mOrientation.getSelectionIndex() - 1);
-        }
+        // get the orientation from the current device config
+        ScreenOrientationQualifier qual = mCurrentConfig.getScreenOrientationQualifier();
+        ScreenOrientation orientation = qual.getValue();
 
-        int s1, s2;
-
-        // get the size from the UI controls. If it fails, revert to default values.
-        try {
-            s1 = Integer.parseInt(mSize1.getText().trim());
-        } catch (NumberFormatException e) {
-            s1 = 480;
-        }
-
-        try {
-            s2 = Integer.parseInt(mSize2.getText().trim());
-        } catch (NumberFormatException e) {
-            s2 = 320;
-        }
-
-        // make sure s1 is bigger than s2
-        if (s1 < s2) {
-            int tmp = s1;
-            s1 = s2;
-            s2 = tmp;
-        }
+        // get the device screen dimension
+        ScreenDimensionQualifier qual2 = mCurrentConfig.getScreenDimensionQualifier();
+        int s1 = qual2.getValue1();
+        int s2 = qual2.getValue2();
 
         switch (orientation) {
             default:
@@ -478,9 +303,11 @@ public class ConfigurationComposite extends Composite {
         int selection = mThemeCombo.getSelectionIndex();
         mThemeCombo.removeAll();
         mPlatformThemeCount = 0;
-        mLanguage.removeAll();
 
-        Set<String> languages = new HashSet<String>();
+        mLocale.removeAll();
+        mLocaleList.clear();
+
+        SortedSet<String> languages = null;
         ArrayList<String> themes = new ArrayList<String>();
 
         // get the themes, and languages from the Framework.
@@ -513,11 +340,6 @@ public class ConfigurationComposite extends Composite {
 
                 mPlatformThemeCount = themes.size();
                 themes.clear();
-            }
-            // now get the languages from the framework.
-            Set<String> frameworkLanguages = frameworkProject.getLanguages();
-            if (frameworkLanguages != null) {
-                languages.addAll(frameworkLanguages);
             }
         }
 
@@ -557,21 +379,33 @@ public class ConfigurationComposite extends Composite {
             }
 
             // now get the languages from the project.
-            Set<String> projectLanguages = project.getLanguages();
-            if (projectLanguages != null) {
-                languages.addAll(projectLanguages);
-            }
+            languages = project.getLanguages();
         }
 
         // add the languages to the Combo
-        for (String language : languages) {
-            mLanguage.add(language);
+        mLocale.add("Default");
+        mLocaleList.add(new ResourceQualifier[] { null, null });
+
+        if (languages != null && languages.size() > 0) {
+            for (String language : languages) {
+                // first the language alone
+                mLocale.add(language);
+                LanguageQualifier qual = new LanguageQualifier(language);
+                mLocaleList.add(new ResourceQualifier[] { qual, null });
+
+                // now find the matching regions and add them
+                SortedSet<String> regions = project.getRegions(language);
+                for (String region : regions) {
+                    mLocale.add(String.format("%1$s_%2$s", language, region)); //$NON-NLS-1$
+                    RegionQualifier qual2 = new RegionQualifier(region);
+                    mLocaleList.add(new ResourceQualifier[] { qual, qual2 });
+                }
+
+            }
+        } else {
         }
 
         mDisableUpdates = false;
-
-        // and update the Region UI based on the current language
-        updateRegionUi();
 
         // handle default selection of themes
         if (mThemeCombo.getItemCount() > 0) {
@@ -630,142 +464,8 @@ public class ConfigurationComposite extends Composite {
     public void setConfiguration(FolderConfiguration config, boolean force) {
         mDisableUpdates = true; // we do not want to trigger onXXXChange when setting new values in the widgets.
 
-        mCountryIcon.setImage(mMatchImage);
-        CountryCodeQualifier countryQualifier = config.getCountryCodeQualifier();
-        if (countryQualifier != null) {
-            mCountry.setText(String.format("%1$d", countryQualifier.getCode()));
-            mCurrentConfig.setCountryCodeQualifier(countryQualifier);
-        } else if (force) {
-            mCountry.setText(""); //$NON-NLS-1$
-            mCurrentConfig.setCountryCodeQualifier(null);
-        } else if (mCountry.getText().length() > 0) {
-            mCountryIcon.setImage(mWarningImage);
-        }
+        // TODO: find a device that can display this particular config or create a custom one if needed.
 
-        mNetworkIcon.setImage(mMatchImage);
-        NetworkCodeQualifier networkQualifier = config.getNetworkCodeQualifier();
-        if (networkQualifier != null) {
-            mNetwork.setText(String.format("%1$d", networkQualifier.getCode()));
-            mCurrentConfig.setNetworkCodeQualifier(networkQualifier);
-        } else if (force) {
-            mNetwork.setText(""); //$NON-NLS-1$
-            mCurrentConfig.setNetworkCodeQualifier(null);
-        } else if (mNetwork.getText().length() > 0) {
-            mNetworkIcon.setImage(mWarningImage);
-        }
-
-        mLanguageIcon.setImage(mMatchImage);
-        LanguageQualifier languageQualifier = config.getLanguageQualifier();
-        if (languageQualifier != null) {
-            mLanguage.setText(languageQualifier.getValue());
-            mCurrentConfig.setLanguageQualifier(languageQualifier);
-        } else if (force) {
-            mLanguage.setText(""); //$NON-NLS-1$
-            mCurrentConfig.setLanguageQualifier(null);
-        } else if (mLanguage.getText().length() > 0) {
-            mLanguageIcon.setImage(mWarningImage);
-        }
-
-        mRegionIcon.setImage(mMatchImage);
-        RegionQualifier regionQualifier = config.getRegionQualifier();
-        if (regionQualifier != null) {
-            mRegion.setText(regionQualifier.getValue());
-            mCurrentConfig.setRegionQualifier(regionQualifier);
-        } else if (force) {
-            mRegion.setText(""); //$NON-NLS-1$
-            mCurrentConfig.setRegionQualifier(null);
-        } else if (mRegion.getText().length() > 0) {
-            mRegionIcon.setImage(mWarningImage);
-        }
-
-        mOrientationIcon.setImage(mMatchImage);
-        ScreenOrientationQualifier orientationQualifier = config.getScreenOrientationQualifier();
-        if (orientationQualifier != null) {
-            mOrientation.select(
-                    ScreenOrientation.getIndex(orientationQualifier.getValue()) + 1);
-            mCurrentConfig.setScreenOrientationQualifier(orientationQualifier);
-        } else if (force) {
-            mOrientation.select(0);
-            mCurrentConfig.setScreenOrientationQualifier(null);
-        } else if (mOrientation.getSelectionIndex() != 0) {
-            mOrientationIcon.setImage(mWarningImage);
-        }
-
-        mDensityIcon.setImage(mMatchImage);
-        PixelDensityQualifier densityQualifier = config.getPixelDensityQualifier();
-        if (densityQualifier != null) {
-            mDensity.select(
-                    Density.getIndex(densityQualifier.getValue()) + 1);
-            mCurrentConfig.setPixelDensityQualifier(densityQualifier);
-        } else if (force) {
-            mDensity.select(0);
-            mCurrentConfig.setPixelDensityQualifier(null);
-        } else if (mDensity.getSelectionIndex() != 0) {
-            mDensityIcon.setImage(mWarningImage);
-        }
-
-        mTouchIcon.setImage(mMatchImage);
-        TouchScreenQualifier touchQualifier = config.getTouchTypeQualifier();
-        if (touchQualifier != null) {
-            mTouch.select(TouchScreenType.getIndex(touchQualifier.getValue()) + 1);
-            mCurrentConfig.setTouchTypeQualifier(touchQualifier);
-        } else if (force) {
-            mTouch.select(0);
-            mCurrentConfig.setTouchTypeQualifier(null);
-        } else if (mTouch.getSelectionIndex() != 0) {
-            mTouchIcon.setImage(mWarningImage);
-        }
-
-        mKeyboardIcon.setImage(mMatchImage);
-        KeyboardStateQualifier keyboardQualifier = config.getKeyboardStateQualifier();
-        if (keyboardQualifier != null) {
-            mKeyboard.select(KeyboardState.getIndex(keyboardQualifier.getValue()) + 1);
-            mCurrentConfig.setKeyboardStateQualifier(keyboardQualifier);
-        } else if (force) {
-            mKeyboard.select(0);
-            mCurrentConfig.setKeyboardStateQualifier(null);
-        } else if (mKeyboard.getSelectionIndex() != 0) {
-            mKeyboardIcon.setImage(mWarningImage);
-        }
-
-        mTextInputIcon.setImage(mMatchImage);
-        TextInputMethodQualifier inputQualifier = config.getTextInputMethodQualifier();
-        if (inputQualifier != null) {
-            mTextInput.select(TextInputMethod.getIndex(inputQualifier.getValue()) + 1);
-            mCurrentConfig.setTextInputMethodQualifier(inputQualifier);
-        } else if (force) {
-            mTextInput.select(0);
-            mCurrentConfig.setTextInputMethodQualifier(null);
-        } else if (mTextInput.getSelectionIndex() != 0) {
-            mTextInputIcon.setImage(mWarningImage);
-        }
-
-        mNavigationIcon.setImage(mMatchImage);
-        NavigationMethodQualifier navigationQualifiter = config.getNavigationMethodQualifier();
-        if (navigationQualifiter != null) {
-            mNavigation.select(
-                    NavigationMethod.getIndex(navigationQualifiter.getValue()) + 1);
-            mCurrentConfig.setNavigationMethodQualifier(navigationQualifiter);
-        } else if (force) {
-            mNavigation.select(0);
-            mCurrentConfig.setNavigationMethodQualifier(null);
-        } else if (mNavigation.getSelectionIndex() != 0) {
-            mNavigationIcon.setImage(mWarningImage);
-        }
-
-        mSizeIcon.setImage(mMatchImage);
-        ScreenDimensionQualifier sizeQualifier = config.getScreenDimensionQualifier();
-        if (sizeQualifier != null) {
-            mSize1.setText(String.format("%1$d", sizeQualifier.getValue1()));
-            mSize2.setText(String.format("%1$d", sizeQualifier.getValue2()));
-            mCurrentConfig.setScreenDimensionQualifier(sizeQualifier);
-        } else if (force) {
-            mSize1.setText(""); //$NON-NLS-1$
-            mSize2.setText(""); //$NON-NLS-1$
-            mCurrentConfig.setScreenDimensionQualifier(null);
-        } else if (mSize1.getText().length() > 0 && mSize2.getText().length() > 0) {
-            mSizeIcon.setImage(mWarningImage);
-        }
 
         // update the string showing the folder name
         String current = config.toDisplayString();
@@ -773,85 +473,6 @@ public class ConfigurationComposite extends Composite {
 
         mDisableUpdates = false;
     }
-
-    /**
-     * Displays an error icon in front of all the non-null qualifiers.
-     */
-    public void displayConfigError() {
-        mCountryIcon.setImage(mMatchImage);
-        CountryCodeQualifier countryQualifier = mCurrentConfig.getCountryCodeQualifier();
-        if (countryQualifier != null) {
-            mCountryIcon.setImage(mErrorImage);
-        }
-
-        mNetworkIcon.setImage(mMatchImage);
-        NetworkCodeQualifier networkQualifier = mCurrentConfig.getNetworkCodeQualifier();
-        if (networkQualifier != null) {
-            mNetworkIcon.setImage(mErrorImage);
-        }
-
-        mLanguageIcon.setImage(mMatchImage);
-        LanguageQualifier languageQualifier = mCurrentConfig.getLanguageQualifier();
-        if (languageQualifier != null) {
-            mLanguageIcon.setImage(mErrorImage);
-        }
-
-        mRegionIcon.setImage(mMatchImage);
-        RegionQualifier regionQualifier = mCurrentConfig.getRegionQualifier();
-        if (regionQualifier != null) {
-            mRegionIcon.setImage(mErrorImage);
-        }
-
-        mOrientationIcon.setImage(mMatchImage);
-        ScreenOrientationQualifier orientationQualifier =
-            mCurrentConfig.getScreenOrientationQualifier();
-        if (orientationQualifier != null) {
-            mOrientationIcon.setImage(mErrorImage);
-        }
-
-        mDensityIcon.setImage(mMatchImage);
-        PixelDensityQualifier densityQualifier = mCurrentConfig.getPixelDensityQualifier();
-        if (densityQualifier != null) {
-            mDensityIcon.setImage(mErrorImage);
-        }
-
-        mTouchIcon.setImage(mMatchImage);
-        TouchScreenQualifier touchQualifier = mCurrentConfig.getTouchTypeQualifier();
-        if (touchQualifier != null) {
-            mTouchIcon.setImage(mErrorImage);
-        }
-
-        mKeyboardIcon.setImage(mMatchImage);
-        KeyboardStateQualifier keyboardQualifier = mCurrentConfig.getKeyboardStateQualifier();
-        if (keyboardQualifier != null) {
-            mKeyboardIcon.setImage(mErrorImage);
-        }
-
-        mTextInputIcon.setImage(mMatchImage);
-        TextInputMethodQualifier inputQualifier = mCurrentConfig.getTextInputMethodQualifier();
-        if (inputQualifier != null) {
-            mTextInputIcon.setImage(mErrorImage);
-        }
-
-        mNavigationIcon.setImage(mMatchImage);
-        NavigationMethodQualifier navigationQualifiter =
-            mCurrentConfig.getNavigationMethodQualifier();
-        if (navigationQualifiter != null) {
-            mNavigationIcon.setImage(mErrorImage);
-        }
-
-        mSizeIcon.setImage(mMatchImage);
-        ScreenDimensionQualifier sizeQualifier = mCurrentConfig.getScreenDimensionQualifier();
-        if (sizeQualifier != null) {
-            mSizeIcon.setImage(mErrorImage);
-        }
-
-        // update the string showing the folder name
-        String current = mCurrentConfig.toDisplayString();
-        mCurrentLayoutLabel.setText(current != null ? current : "(Default)");
-    }
-
-
 
     private void onCountryCodeChange() {
         // because mCountry triggers onCountryCodeChange at each modification, calling setText()
@@ -932,195 +553,68 @@ public class ConfigurationComposite extends Composite {
     /**
      * Call back for language combo selection
      */
-    private void onLanguageChange() {
+    private void onLocaleChange() {
         // because mLanguage triggers onLanguageChange at each modification, the filling
         // of the combo with data will trigger notifications, and we don't want that.
         if (mDisableUpdates == true) {
             return;
         }
 
-        // update the current config
-        String value = mLanguage.getText();
+        int localeIndex = mLocale.getSelectionIndex();
+        ResourceQualifier[] localeQualifiers = mLocaleList.get(localeIndex);
 
-        updateRegionUi();
-
-        // empty string, means no qualifier.
-        if (value.length() == 0) {
-            mCurrentConfig.setLanguageQualifier(null);
-        } else {
-            LanguageQualifier qualifier = null;
-            String segment = LanguageQualifier.getFolderSegment(value);
-            if (segment != null) {
-                qualifier = LanguageQualifier.getQualifier(segment);
-            }
-
-            if (qualifier != null) {
-                mCurrentConfig.setLanguageQualifier(qualifier);
-            } else {
-                // Failure! Looks like the value is wrong (for instance a one letter string).
-                mCurrentConfig.setLanguageQualifier(null);
-                mLanguageIcon.setImage(mErrorImage);
-            }
-        }
+        mCurrentConfig.setLanguageQualifier((LanguageQualifier)localeQualifiers[0]); // language
+        mCurrentConfig.setRegionQualifier((RegionQualifier)localeQualifiers[1]); // region
 
         if (mListener != null) {
             mListener.onConfigurationChange();
         }
     }
 
-    private void onRegionChange() {
-        // because mRegion triggers onRegionChange at each modification, the filling
-        // of the combo with data will trigger notifications, and we don't want that.
-        if (mDisableUpdates == true) {
-            return;
+    private void onDeviceChange() {
+
+        int deviceIndex = mDeviceList.getSelectionIndex();
+        DeviceConfiguration device = mDevices[deviceIndex];
+
+        mDeviceConfigs.removeAll();
+
+        Set<String> configNames = device.getConfigs().keySet();
+        for (String name : configNames) {
+            mDeviceConfigs.add(name);
         }
 
-        // update the current config
-        String value = mRegion.getText();
-
-        // empty string, means no qualifier.
-        if (value.length() == 0) {
-            mCurrentConfig.setRegionQualifier(null);
-        } else {
-            RegionQualifier qualifier = null;
-            String segment = RegionQualifier.getFolderSegment(value);
-            if (segment != null) {
-                qualifier = RegionQualifier.getQualifier(segment);
-            }
-
-            if (qualifier != null) {
-                mCurrentConfig.setRegionQualifier(qualifier);
-            } else {
-                // Failure! Looks like the value is wrong (for instance a one letter string).
-                mCurrentConfig.setRegionQualifier(null);
-                mRegionIcon.setImage(mErrorImage);
-            }
+        mDeviceConfigs.select(0);
+        if (configNames.size() == 1) {
+            mDeviceConfigs.setEnabled(false);
         }
 
-        if (mListener != null) {
-            mListener.onConfigurationChange();
-        }
+        onDeviceConfigChange();
     }
 
-    private void onOrientationChange() {
-        // update the current config
-        int index = mOrientation.getSelectionIndex();
-        if (index != 0) {
-            mCurrentConfig.setScreenOrientationQualifier(new ScreenOrientationQualifier(
-                ScreenOrientation.getByIndex(index-1)));
-        } else {
-            mCurrentConfig.setScreenOrientationQualifier(null);
-        }
+    private void onDeviceConfigChange() {
+        int deviceIndex = mDeviceList.getSelectionIndex();
+        DeviceConfiguration device = mDevices[deviceIndex];
 
-        if (mListener != null) {
-            mListener.onConfigurationChange();
-        }
-    }
+        int configIndex = mDeviceConfigs.getSelectionIndex();
+        String name = mDeviceConfigs.getItem(configIndex);
+        FolderConfiguration config = device.getConfigs().get(name);
 
-    private void onDensityChange() {
-        int index = mDensity.getSelectionIndex();
-        if (index != 0) {
-            mCurrentConfig.setPixelDensityQualifier((new PixelDensityQualifier(
-                Density.getByIndex(index-1))));
-        } else {
-            mCurrentConfig.setPixelDensityQualifier(null);
-        }
+        // get the current qualifiers from the current config
+        CountryCodeQualifier mcc = mCurrentConfig.getCountryCodeQualifier();
+        NetworkCodeQualifier mnc = mCurrentConfig.getNetworkCodeQualifier();
+        LanguageQualifier lang = mCurrentConfig.getLanguageQualifier();
+        RegionQualifier region = mCurrentConfig.getRegionQualifier();
+        VersionQualifier version = mCurrentConfig.getVersionQualifier();
 
-        if (mListener != null) {
-            mListener.onConfigurationChange();
-        }
-    }
+        // replace the config with the one from the device
+        mCurrentConfig.set(config);
 
-    private void onTouchChange() {
-        // update the current config
-        int index = mTouch.getSelectionIndex();
-        if (index != 0) {
-            mCurrentConfig.setTouchTypeQualifier(new TouchScreenQualifier(
-                TouchScreenType.getByIndex(index-1)));
-        } else {
-            mCurrentConfig.setTouchTypeQualifier(null);
-        }
-
-        if (mListener != null) {
-            mListener.onConfigurationChange();
-        }
-    }
-
-    private void onKeyboardChange() {
-        // update the current config
-        int index = mKeyboard.getSelectionIndex();
-        if (index != 0) {
-            mCurrentConfig.setKeyboardStateQualifier(new KeyboardStateQualifier(
-                KeyboardState.getByIndex(index-1)));
-        } else {
-            mCurrentConfig.setKeyboardStateQualifier(null);
-        }
-
-        if (mListener != null) {
-            mListener.onConfigurationChange();
-        }
-    }
-
-    private void onTextInputChange() {
-        // update the current config
-        int index = mTextInput.getSelectionIndex();
-        if (index != 0) {
-            mCurrentConfig.setTextInputMethodQualifier(new TextInputMethodQualifier(
-                TextInputMethod.getByIndex(index-1)));
-        } else {
-            mCurrentConfig.setTextInputMethodQualifier(null);
-        }
-
-        if (mListener != null) {
-            mListener.onConfigurationChange();
-        }
-    }
-
-    private void onNavigationChange() {
-        // update the current config
-        int index = mNavigation.getSelectionIndex();
-        if (index != 0) {
-            mCurrentConfig.setNavigationMethodQualifier(new NavigationMethodQualifier(
-                NavigationMethod.getByIndex(index-1)));
-        } else {
-            mCurrentConfig.setNavigationMethodQualifier(null);
-        }
-
-        if (mListener != null) {
-            mListener.onConfigurationChange();
-        }
-    }
-
-    private void onSizeChange() {
-        // because mSize1 and mSize2 trigger onSizeChange at each modification, calling setText()
-        // will trigger notifications, and we don't want that.
-        if (mDisableUpdates == true) {
-            return;
-        }
-
-        // update the current config
-        String size1 = mSize1.getText();
-        String size2 = mSize2.getText();
-
-        // if only one of the strings is empty, do nothing
-        if ((size1.length() == 0) ^ (size2.length() == 0)) {
-            mSizeIcon.setImage(mErrorImage);
-            return;
-        } else if (size1.length() == 0 && size2.length() == 0) {
-            // both sizes are empty: remove the qualifier.
-            mCurrentConfig.setScreenDimensionQualifier(null);
-        } else {
-            ScreenDimensionQualifier qualifier = ScreenDimensionQualifier.getQualifier(size1,
-                    size2);
-
-            if (qualifier != null) {
-                mCurrentConfig.setScreenDimensionQualifier(qualifier);
-            } else {
-                // Failure! Looks like the value is wrong.
-                // we do nothing in this case.
-                return;
-            }
-        }
+        // and put back the rest of the qualifiers
+        mCurrentConfig.addQualifier(mcc);
+        mCurrentConfig.addQualifier(mnc);
+        mCurrentConfig.addQualifier(lang);
+        mCurrentConfig.addQualifier(region);
+        mCurrentConfig.addQualifier(version);
 
         if (mListener != null) {
             mListener.onConfigurationChange();
@@ -1166,49 +660,6 @@ public class ConfigurationComposite extends Composite {
 
         return icon;
     }
-
-    /**
-     * Update the Region UI widget based on the current language selection
-     * @param projectResources the project resources or {@code null}.
-     * @param frameworkResources the framework resource or {@code null}
-     */
-    private void updateRegionUi() {
-        if (mListener == null) {
-            return;
-        }
-
-        ProjectResources projectResources = mListener.getProjectResources();
-        ProjectResources frameworkResources = mListener.getFrameworkResources();
-
-        String currentLanguage = mLanguage.getText();
-
-        Set<String> set = null;
-
-        if (projectResources != null) {
-            set = projectResources.getRegions(currentLanguage);
-        }
-
-        if (frameworkResources != null) {
-            if (set != null) {
-                Set<String> set2 = frameworkResources.getRegions(currentLanguage);
-                set.addAll(set2);
-            } else {
-                set = frameworkResources.getRegions(currentLanguage);
-            }
-        }
-
-        if (set != null) {
-            mDisableUpdates = true;
-
-            mRegion.removeAll();
-            for (String region : set) {
-                mRegion.add(region);
-            }
-
-            mDisableUpdates = false;
-        }
-    }
-
 
     /**
      * Returns whether the given <var>style</var> is a theme.

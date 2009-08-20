@@ -134,8 +134,7 @@ public final class NavigationMethodQualifier extends ResourceQualifier {
     public boolean checkAndSet(String value, FolderConfiguration config) {
         NavigationMethod method = NavigationMethod.getEnum(value);
         if (method != null) {
-            NavigationMethodQualifier qualifier = new NavigationMethodQualifier();
-            qualifier.mValue = method;
+            NavigationMethodQualifier qualifier = new NavigationMethodQualifier(method);
             config.setNavigationMethodQualifier(qualifier);
             return true;
         }

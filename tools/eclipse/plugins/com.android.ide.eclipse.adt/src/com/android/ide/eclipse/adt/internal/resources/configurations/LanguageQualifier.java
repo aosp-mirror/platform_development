@@ -63,6 +63,14 @@ public final class LanguageQualifier extends ResourceQualifier {
         return null;
     }
 
+    public LanguageQualifier() {
+
+    }
+
+    public LanguageQualifier(String value) {
+        mValue = value;
+    }
+
     public String getValue() {
         if (mValue != null) {
             return mValue;

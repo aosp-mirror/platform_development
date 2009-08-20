@@ -759,9 +759,6 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
             // resources need to be updated.
             recomputeLayout();
         } else {
-            // update the configuration icons with the new edited config.
-            mConfigComposite.displayConfigError();
-
             // enable the Create button
             mConfigComposite.setEnabledCreate(true);
 

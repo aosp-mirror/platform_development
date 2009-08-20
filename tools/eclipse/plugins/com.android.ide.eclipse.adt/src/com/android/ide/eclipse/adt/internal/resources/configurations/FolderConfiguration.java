@@ -314,8 +314,11 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
 
         for (ResourceQualifier qualifier : mQualifiers) {
             if (qualifier != null) {
-                result.append(QUALIFIER_SEP);
-                result.append(qualifier.getFolderSegment(target));
+                String segment = qualifier.getFolderSegment(target);
+                if (segment != null && segment.length() > 0) {
+                    result.append(QUALIFIER_SEP);
+                    result.append(segment);
+                }
             }
         }
 

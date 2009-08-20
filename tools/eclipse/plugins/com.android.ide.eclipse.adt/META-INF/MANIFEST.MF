@@ -54,6 +54,7 @@ Export-Package: com.android.ide.eclipse.adt;x-friends:="com.android.ide.eclipse.
  com.android.ide.eclipse.adt.internal.editors;x-friends:="com.android.ide.eclipse.tests",
  com.android.ide.eclipse.adt.internal.editors.descriptors;x-friends:="com.android.ide.eclipse.tests",
  com.android.ide.eclipse.adt.internal.editors.layout;x-friends:="com.android.ide.eclipse.tests",
+ com.android.ide.eclipse.adt.internal.editors.layout.configuration,
  com.android.ide.eclipse.adt.internal.editors.layout.descriptors;x-friends:="com.android.ide.eclipse.tests",
  com.android.ide.eclipse.adt.internal.editors.layout.parts;x-friends:="com.android.ide.eclipse.tests",
  com.android.ide.eclipse.adt.internal.editors.layout.uimodel;x-friends:="com.android.ide.eclipse.tests",
