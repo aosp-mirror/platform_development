@@ -18,9 +18,10 @@ package com.android.ide.eclipse.adt.internal.editors.layout;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
-import com.android.ide.eclipse.adt.internal.editors.layout.ConfigurationComposite.IConfigListener;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor.UiEditorActions;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutReloadMonitor.ILayoutReloadListener;
+import com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationComposite;
+import com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationComposite.IConfigListener;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.layout.parts.ElementCreateCommand;
 import com.android.ide.eclipse.adt.internal.editors.layout.parts.UiElementEditPart;
@@ -29,25 +30,9 @@ import com.android.ide.eclipse.adt.internal.editors.ui.tree.CopyCutAction;
 import com.android.ide.eclipse.adt.internal.editors.ui.tree.PasteAction;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiDocumentNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
-import com.android.ide.eclipse.adt.internal.resources.ResourceType;
-import com.android.ide.eclipse.adt.internal.resources.configurations.CountryCodeQualifier;
 import com.android.ide.eclipse.adt.internal.resources.configurations.FolderConfiguration;
-import com.android.ide.eclipse.adt.internal.resources.configurations.KeyboardStateQualifier;
-import com.android.ide.eclipse.adt.internal.resources.configurations.LanguageQualifier;
-import com.android.ide.eclipse.adt.internal.resources.configurations.NavigationMethodQualifier;
-import com.android.ide.eclipse.adt.internal.resources.configurations.NetworkCodeQualifier;
 import com.android.ide.eclipse.adt.internal.resources.configurations.PixelDensityQualifier;
-import com.android.ide.eclipse.adt.internal.resources.configurations.RegionQualifier;
-import com.android.ide.eclipse.adt.internal.resources.configurations.ScreenDimensionQualifier;
-import com.android.ide.eclipse.adt.internal.resources.configurations.ScreenOrientationQualifier;
-import com.android.ide.eclipse.adt.internal.resources.configurations.TextInputMethodQualifier;
-import com.android.ide.eclipse.adt.internal.resources.configurations.TouchScreenQualifier;
-import com.android.ide.eclipse.adt.internal.resources.configurations.KeyboardStateQualifier.KeyboardState;
-import com.android.ide.eclipse.adt.internal.resources.configurations.NavigationMethodQualifier.NavigationMethod;
 import com.android.ide.eclipse.adt.internal.resources.configurations.PixelDensityQualifier.Density;
-import com.android.ide.eclipse.adt.internal.resources.configurations.ScreenOrientationQualifier.ScreenOrientation;
-import com.android.ide.eclipse.adt.internal.resources.configurations.TextInputMethodQualifier.TextInputMethod;
-import com.android.ide.eclipse.adt.internal.resources.configurations.TouchScreenQualifier.TouchScreenType;
 import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceFile;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceFolderType;
@@ -57,14 +42,10 @@ import com.android.ide.eclipse.adt.internal.sdk.LoadStatus;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData.LayoutBridge;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk.ITargetChangeListener;
-import com.android.ide.eclipse.adt.internal.ui.ConfigurationSelector.DimensionVerifier;
-import com.android.ide.eclipse.adt.internal.ui.ConfigurationSelector.LanguageRegionVerifier;
-import com.android.ide.eclipse.adt.internal.ui.ConfigurationSelector.MobileCodeVerifier;
 import com.android.layoutlib.api.ILayoutLog;
 import com.android.layoutlib.api.ILayoutResult;
 import com.android.layoutlib.api.IProjectCallback;
 import com.android.layoutlib.api.IResourceValue;
-import com.android.layoutlib.api.IStyleResourceValue;
 import com.android.layoutlib.api.IXmlPullParser;
 import com.android.layoutlib.api.ILayoutResult.ILayoutViewInfo;
 import com.android.sdklib.IAndroidTarget;
@@ -98,22 +79,12 @@ import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.Clipboard;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
-import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.PaletteData;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.ide.IDE;
@@ -128,12 +99,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Graphical layout editor, based on GEF.
@@ -168,7 +136,6 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
 
     private boolean mNeedsXmlReload = false;
     private boolean mNeedsRecompute = false;
-    private int mPlatformThemeCount = 0;
 
     /** Listener to update the root node if the target of the file is changed because of a
      * SDK location change or a project target change */
@@ -239,7 +206,7 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
         gl.marginHeight = gl.marginWidth = 0;
 
         // create the top part for the configuration control
-        mConfigComposite = new ConfigurationComposite(parent, SWT.NONE);
+        mConfigComposite = new ConfigurationComposite(this, parent, SWT.NONE);
 
         // create a new composite that will contain the standard editor controls.
         Composite editorParent = new Composite(parent, SWT.NONE);
@@ -552,7 +519,7 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
         setConfiguration(configuration, true /*force*/);
 
         // enable the create button if the current and edited config are not equals
-        mCreateButton.setEnabled(
+        mConfigComposite.setEnabledCreate(
                 mEditedConfig.equals(mConfigComposite.getCurrentConfig()) == false);
     }
 
@@ -602,7 +569,8 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
                     projectRes.loadAll();
 
                     // get the project resource values based on the current config
-                    mConfiguredProjectRes = projectRes.getConfiguredResources(mCurrentConfig);
+                    mConfiguredProjectRes = projectRes.getConfiguredResources(
+                            mConfigComposite.getCurrentConfig());
                 }
 
                 configuredProjectResources = mConfiguredProjectRes;
@@ -617,17 +585,15 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
 
             if (configuredProjectResources != null && frameworkResources != null) {
                 // get the selected theme
-                int themeIndex = mThemeCombo.getSelectionIndex();
-                if (themeIndex != -1) {
-                    String theme = mThemeCombo.getItem(themeIndex);
-
+                String theme = mConfigComposite.getTheme();
+                if (theme != null) {
                     // Render a single object as described by the ViewElementDescriptor.
                     WidgetPullParser parser = new WidgetPullParser(descriptor);
                     ILayoutResult result = computeLayout(bridge, parser,
                             null /* projectKey */,
                             300 /* width */, 300 /* height */, 160 /*density*/,
                             160.f /*xdpi*/, 160.f /*ydpi*/, theme,
-                            themeIndex >= mPlatformThemeCount /*isProjectTheme*/,
+                            mConfigComposite.isProjectTheme(),
                             configuredProjectResources, frameworkResources, projectCallback,
                             null /* logger */);
 
@@ -785,7 +751,7 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
             setConfiguration(mEditedConfig, false /*force*/);
 
             // enable the create button if the current and edited config are not equals
-            mCreateButton.setEnabled(
+            mConfigComposite.setEnabledCreate(
                     mEditedConfig.equals(mConfigComposite.getCurrentConfig()) == false);
 
             // Even though the layout doesn't change, the config changed, and referenced
@@ -796,13 +762,14 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
             mConfigComposite.displayConfigError();
 
             // enable the Create button
-            mCreateButton.setEnabled(true);
+            mConfigComposite.setEnabledCreate(true);
 
             // display the error.
+            FolderConfiguration currentConfig = mConfigComposite.getCurrentConfig();
             String message = String.format(
                     "No resources match the configuration\n \n\t%1$s\n \nChange the configuration or create:\n \n\tres/%2$s/%3$s\n \nYou can also click the 'Create' button above.",
-                    mCurrentConfig.toDisplayString(),
-                    mCurrentConfig.getFolderName(ResourceFolderType.LAYOUT,
+                    currentConfig.toDisplayString(),
+                    currentConfig.getFolderName(ResourceFolderType.LAYOUT,
                             Sdk.getCurrent().getTarget(mEditedFile.getProject())),
                     mEditedFile.getName());
             showErrorInEditor(message);
@@ -902,20 +869,14 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
                     }
 
                     // get the resources of the file's project.
-                    if (mConfiguredProjectRes == null) {
-                        // make sure they are loaded
-                        projectRes.loadAll();
-
-                        // get the project resource values based on the current config
-                        mConfiguredProjectRes = projectRes.getConfiguredResources(
-                                mConfigComposite.getCurrentConfig());
-                    }
+                    Map<String, Map<String, IResourceValue>> configuredProjectRes =
+                        getConfiguredProjectResources();
 
                     // get the framework resources
                     Map<String, Map<String, IResourceValue>> frameworkResources =
                         getConfiguredFrameworkResources();
 
-                    if (mConfiguredProjectRes != null && frameworkResources != null) {
+                    if (configuredProjectRes != null && frameworkResources != null) {
                         if (mProjectCallback == null) {
                             mProjectCallback = new ProjectCallback(
                                     bridge.classLoader, projectRes, iProject);
@@ -944,19 +905,19 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
                         }
 
                         // get the selected theme
-                        int themeIndex = mThemeCombo.getSelectionIndex();
-                        if (themeIndex != -1) {
-                            String theme = mThemeCombo.getItem(themeIndex);
+                        String theme = mConfigComposite.getTheme();
+                        if (theme != null) {
 
                             // Compute the layout
                             UiElementPullParser parser = new UiElementPullParser(getModel());
                             Rectangle rect = getBounds();
-                            boolean isProjectTheme = themeIndex >= mPlatformThemeCount;
+                            boolean isProjectTheme = mConfigComposite.isProjectTheme();
 
                             // FIXME pass the density/dpi from somewhere (resource config or skin).
                             // For now, get it from the config
                             int density = Density.MEDIUM.getDpiValue();
-                            PixelDensityQualifier qual = mCurrentConfig.getPixelDensityQualifier();
+                            PixelDensityQualifier qual =
+                                mConfigComposite.getCurrentConfig().getPixelDensityQualifier();
                             if (qual != null) {
                                 int d = qual.getValue().getDpiValue();
                                 if (d > 0) {
@@ -968,7 +929,7 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
                                     iProject /* projectKey */,
                                     rect.width, rect.height, density, density, density,
                                     theme, isProjectTheme,
-                                    mConfiguredProjectRes, frameworkResources, mProjectCallback,
+                                    configuredProjectRes, frameworkResources, mProjectCallback,
                                     mLogger);
 
                             // update the UiElementNode with the layout info.
@@ -1144,6 +1105,21 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
         return mConfiguredFrameworkRes;
     }
 
+    public Map<String, Map<String, IResourceValue>> getConfiguredProjectResources() {
+        if (mConfiguredProjectRes == null) {
+            ProjectResources project = getProjectResources();
+
+            // make sure they are loaded
+            project.loadAll();
+
+            // get the project resource values based on the current config
+            mConfiguredProjectRes = project.getConfiguredResources(
+                    mConfigComposite.getCurrentConfig());
+        }
+
+        return mConfiguredProjectRes;
+    }
+
     /**
      * Returns a {@link ProjectResources} for the framework resources.
      * @return the framework resources or null if not found.
@@ -1162,6 +1138,15 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
                     }
                 }
             }
+        }
+
+        return null;
+    }
+
+    public ProjectResources getProjectResources() {
+        if (mEditedFile != null) {
+            ResourceManager manager = ResourceManager.getInstance();
+            return manager.getProjectResources(mEditedFile.getProject());
         }
 
         return null;

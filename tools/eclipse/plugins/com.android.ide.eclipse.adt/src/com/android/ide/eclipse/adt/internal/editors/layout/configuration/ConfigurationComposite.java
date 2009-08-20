@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.ide.eclipse.adt.internal.editors.layout;
+package com.android.ide.eclipse.adt.internal.editors.layout.configuration;
 
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.resources.ResourceType;
@@ -106,8 +106,8 @@ public class ConfigurationComposite extends Composite {
     private boolean mDisableUpdates = false;
 
     /** The {@link FolderConfiguration} representing the state of the UI controls */
-    private FolderConfiguration mCurrentConfig = new FolderConfiguration();
-    private IConfigListener mListener;
+    private final FolderConfiguration mCurrentConfig = new FolderConfiguration();
+    private final IConfigListener mListener;
 
     public interface IConfigListener {
         void onConfigurationChange();
@@ -120,8 +120,9 @@ public class ConfigurationComposite extends Composite {
         Map<String, Map<String, IResourceValue>> getConfiguredFrameworkResources();
     }
 
-    public ConfigurationComposite(Composite parent, int style) {
+    public ConfigurationComposite(IConfigListener listener, Composite parent, int style) {
         super(parent, style);
+        mListener = listener;
 
         IconFactory factory = IconFactory.getInstance();
         mWarningImage = factory.getIcon("warning"); //$NON-NLS-1$
@@ -406,14 +407,9 @@ public class ConfigurationComposite extends Composite {
 
     }
 
-    public void setOnConfigurationChange(IConfigListener listener) {
-        mListener = listener;
-    }
-
     public void setConfig(FolderConfiguration config) {
         mCurrentConfig.set(config);
     }
-
 
     public FolderConfiguration getCurrentConfig() {
         return mCurrentConfig;
@@ -596,7 +592,31 @@ public class ConfigurationComposite extends Composite {
         mThemeCombo.getParent().layout();
     }
 
+    /**
+     * Returns the current theme, or null if the combo has no selection.
+     */
+    public String getTheme() {
+        int themeIndex = mThemeCombo.getSelectionIndex();
+        if (themeIndex != -1) {
+            return mThemeCombo.getItem(themeIndex);
+        }
 
+        return null;
+    }
+
+    /**
+     * Returns whether the current theme selection is a project theme.
+     * <p/>The returned value is meaningless if {@link #getTheme()} returns <code>null</code>.
+     * @return true for project theme, false for framework theme
+     */
+    public boolean isProjectTheme() {
+        return mThemeCombo.getSelectionIndex() >= mPlatformThemeCount;
+    }
+
+
+    public void setEnabledCreate(boolean enabled) {
+        mCreateButton.setEnabled(enabled);
+    }
 
     /**
      * Update the UI controls state with a given {@link FolderConfiguration}.
@@ -607,7 +627,7 @@ public class ConfigurationComposite extends Composite {
      * @param config The {@link FolderConfiguration} to set.
      * @param force Whether the UI should be changed to exactly match the received configuration.
      */
-    void setConfiguration(FolderConfiguration config, boolean force) {
+    public void setConfiguration(FolderConfiguration config, boolean force) {
         mDisableUpdates = true; // we do not want to trigger onXXXChange when setting new values in the widgets.
 
         mCountryIcon.setImage(mMatchImage);
@@ -678,7 +698,7 @@ public class ConfigurationComposite extends Composite {
                     Density.getIndex(densityQualifier.getValue()) + 1);
             mCurrentConfig.setPixelDensityQualifier(densityQualifier);
         } else if (force) {
-            mOrientation.select(0);
+            mDensity.select(0);
             mCurrentConfig.setPixelDensityQualifier(null);
         } else if (mDensity.getSelectionIndex() != 0) {
             mDensityIcon.setImage(mWarningImage);
@@ -757,7 +777,7 @@ public class ConfigurationComposite extends Composite {
     /**
      * Displays an error icon in front of all the non-null qualifiers.
      */
-    void displayConfigError() {
+    public void displayConfigError() {
         mCountryIcon.setImage(mMatchImage);
         CountryCodeQualifier countryQualifier = mCurrentConfig.getCountryCodeQualifier();
         if (countryQualifier != null) {
@@ -1244,4 +1264,5 @@ public class ConfigurationComposite extends Composite {
 
         return false;
     }
+
 }
