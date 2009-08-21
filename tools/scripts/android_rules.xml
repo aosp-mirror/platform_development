@@ -180,6 +180,7 @@
     </target>
 
     <target name="debug" depends="dex, package-resources, debug-sign, package">
+        <echo>Running zip align on final apk...</echo>
         <exec executable="${zipalign}" failonerror="true">
             <arg value="-f" />
             <arg value="4" />
@@ -215,6 +216,7 @@
                 message="Please enter password for alias '${key.alias}':"
                 addproperty="key.alias.password"/>
         <!-- sign the APK -->
+        <echo>Signing final apk...</echo>
         <signjar
                 jar="${out-unsigned-package}"
                 signedjar="${out-unaligned-package}"
@@ -223,6 +225,7 @@
                 alias="${key.alias}"
                 keypass="${key.alias.password}"/>
         <!-- zip align the APK -->
+        <echo>Running zip align on final apk...</echo>
         <exec executable="${zipalign}" failonerror="true">
             <arg value="-f" />
             <arg value="4" />
