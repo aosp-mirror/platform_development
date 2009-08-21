@@ -36,7 +36,7 @@ import java.util.Map;
  * This class contains the data of an Android Target as loaded from the SDK.
  */
 public class AndroidTargetData {
-    
+
     public final static int DESCRIPTOR_MANIFEST = 1;
     public final static int DESCRIPTOR_LAYOUT = 2;
     public final static int DESCRIPTOR_MENU = 3;
@@ -45,15 +45,15 @@ public class AndroidTargetData {
     public final static int DESCRIPTOR_SEARCHABLE = 6;
     public final static int DESCRIPTOR_PREFERENCES = 7;
     public final static int DESCRIPTOR_APPWIDGET_PROVIDER = 8;
-    
+
     public final static class LayoutBridge {
         /** Link to the layout bridge */
         public ILayoutBridge bridge;
 
         public LoadStatus status = LoadStatus.LOADING;
-        
+
         public ClassLoader classLoader;
-        
+
         public int apiLevel;
     }
 
@@ -67,12 +67,12 @@ public class AndroidTargetData {
      * The attribute namespace prefix must be:
      * - "android" for AndroidConstants.NS_RESOURCES
      * - "xmlns" for the XMLNS URI.
-     * 
+     *
      * This is used for attributes that do not have a unique name, but still need to be populated
      * with values in the UI. Uniquely named attributes have their values in {@link #mEnumValueMap}.
      */
     private Hashtable<String, String[]> mAttributeValues = new Hashtable<String, String[]>();
-    
+
     private IResourceRepository mSystemResourceRepository;
 
     private AndroidManifestDescriptors mManifestDescriptors;
@@ -86,19 +86,20 @@ public class AndroidTargetData {
     private LayoutBridge mLayoutBridge;
 
     private boolean mLayoutBridgeInit = false;
+    private DeviceConfiguration[] mDevices;
 
     AndroidTargetData(IAndroidTarget androidTarget) {
         mTarget = androidTarget;
     }
-    
+
     void setDexWrapper(DexWrapper wrapper) {
         mDexWrapper = wrapper;
     }
-    
+
     /**
      * Creates an AndroidTargetData object.
-     * @param platformLibraries 
-     * @param optionalLibraries 
+     * @param platformLibraries
+     * @param optionalLibraries
      */
     void setExtraData(IResourceRepository systemResourceRepository,
             AndroidManifestDescriptors manifestDescriptors,
@@ -113,15 +114,17 @@ public class AndroidTargetData {
             String[] intentCategoryValues,
             String[] platformLibraries,
             IOptionalLibrary[] optionalLibraries,
+            DeviceConfiguration[] devices,
             ProjectResources resources,
             LayoutBridge layoutBridge) {
-        
+
         mSystemResourceRepository = systemResourceRepository;
         mManifestDescriptors = manifestDescriptors;
         mLayoutDescriptors = layoutDescriptors;
         mMenuDescriptors = menuDescriptors;
         mXmlDescriptors = xmlDescriptors;
         mEnumValueMap = enumValueMap;
+        mDevices = devices;
         mFrameworkResources = resources;
         mLayoutBridge = layoutBridge;
 
@@ -134,11 +137,11 @@ public class AndroidTargetData {
     public DexWrapper getDexWrapper() {
         return mDexWrapper;
     }
-    
+
     public IResourceRepository getSystemResources() {
         return mSystemResourceRepository;
     }
-    
+
     /**
      * Returns an {@link IDescriptorProvider} from a given Id.
      * The Id can be one of {@link #DESCRIPTOR_MANIFEST}, {@link #DESCRIPTOR_LAYOUT},
@@ -168,21 +171,21 @@ public class AndroidTargetData {
                  throw new IllegalArgumentException();
         }
     }
-    
+
     /**
      * Returns the manifest descriptors.
      */
     public AndroidManifestDescriptors getManifestDescriptors() {
         return mManifestDescriptors;
     }
-    
+
     /**
      * Returns the layout Descriptors.
      */
     public LayoutDescriptors getLayoutDescriptors() {
         return mLayoutDescriptors;
     }
-    
+
     /**
      * Returns the menu descriptors.
      */
@@ -202,7 +205,7 @@ public class AndroidTargetData {
      * <p/>This should only be called for attributes for which possible values depend on the
      * parent element node.
      * <p/>For attributes that have the same values no matter the parent node, use
-     * {@link #getEnumValueMap()}.  
+     * {@link #getEnumValueMap()}.
      * @param elementName the name of the element containing the attribute.
      * @param attributeName the name of the attribute
      * @return an array of String with the possible values, or <code>null</code> if no values were
@@ -220,7 +223,7 @@ public class AndroidTargetData {
      * <p/>The typical example of this is for the 'name' attribute under
      * activity/intent-filter/action
      * <p/>For attributes that have the same values no matter the parent node, use
-     * {@link #getEnumValueMap()}.  
+     * {@link #getEnumValueMap()}.
      * @param elementName the name of the element containing the attribute.
      * @param attributeName the name of the attribute
      * @param greatGrandParentElementName the great-grand-parent node.
@@ -231,13 +234,13 @@ public class AndroidTargetData {
             String greatGrandParentElementName) {
         if (greatGrandParentElementName != null) {
             String key = String.format("(%1$s,%2$s,%3$s)", //$NON-NLS-1$
-                    greatGrandParentElementName, elementName, attributeName); 
+                    greatGrandParentElementName, elementName, attributeName);
             String[] values = mAttributeValues.get(key);
             if (values != null) {
                 return values;
             }
         }
-        
+
         return getAttributeValues(elementName, attributeName);
     }
 
@@ -250,14 +253,14 @@ public class AndroidTargetData {
     public Map<String, Map<String, Integer>> getEnumValueMap() {
         return mEnumValueMap;
     }
-    
+
     /**
      * Returns the {@link ProjectResources} containing the Framework Resources.
      */
     public ProjectResources getFrameworkResources() {
         return mFrameworkResources;
     }
-    
+
     /**
      * Returns a {@link LayoutBridge} object possibly containing a {@link ILayoutBridge} object.
      * <p/>If {@link LayoutBridge#bridge} is <code>null</code>, {@link LayoutBridge#status} will
@@ -272,7 +275,11 @@ public class AndroidTargetData {
         }
         return mLayoutBridge;
     }
-    
+
+    public DeviceConfiguration[] getDevices() {
+        return mDevices;
+    }
+
     /**
      * Sets the permission values
      * @param permissionValues the list of permissions
@@ -285,7 +292,7 @@ public class AndroidTargetData {
         setValues("(service,android:permission)", permissionValues);     //$NON-NLS-1$
         setValues("(provider,android:permission)", permissionValues);    //$NON-NLS-1$
     }
-    
+
     private void setIntentFilterActionsAndCategories(String[] activityIntentActions,
             String[] broadcastIntentActions, String[] serviceIntentActions,
             String[] intentCategoryValues) {
@@ -294,18 +301,18 @@ public class AndroidTargetData {
         setValues("(service,action,android:name)", serviceIntentActions);    //$NON-NLS-1$
         setValues("(category,android:name)", intentCategoryValues);          //$NON-NLS-1$
     }
-    
+
     private void setOptionalLibraries(String[] platformLibraries,
             IOptionalLibrary[] optionalLibraries) {
-        
+
         ArrayList<String> libs = new ArrayList<String>();
-        
+
         if (platformLibraries != null) {
             for (String name : platformLibraries) {
                 libs.add(name);
             }
         }
-        
+
         if (optionalLibraries != null) {
             for (int i = 0; i < optionalLibraries.length; i++) {
                 libs.add(optionalLibraries[i].getName());

@@ -67,6 +67,14 @@ public final class RegionQualifier extends ResourceQualifier {
         return "";  //$NON-NLS-1$
     }
 
+    public RegionQualifier() {
+
+    }
+
+    public RegionQualifier(String value) {
+        mValue = value;
+    }
+
     public String getValue() {
         if (mValue != null) {
             return mValue;
