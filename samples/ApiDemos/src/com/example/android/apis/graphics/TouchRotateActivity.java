@@ -134,16 +134,6 @@ class TouchSurfaceView extends GLSurfaceView {
             mCube.draw(gl);
         }
 
-        public int[] getConfigSpec() {
-            // We want a depth buffer, don't care about the
-            // details of the color buffer.
-            int[] configSpec = {
-                    EGL10.EGL_DEPTH_SIZE,   16,
-                    EGL10.EGL_NONE
-            };
-            return configSpec;
-        }
-
         public void onSurfaceChanged(GL10 gl, int width, int height) {
              gl.glViewport(0, 0, width, height);
 

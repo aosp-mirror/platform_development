@@ -64,29 +64,6 @@ class CubeRenderer implements GLSurfaceView.Renderer {
         mAngle += 1.2f;
     }
 
-    public int[] getConfigSpec() {
-        if (mTranslucentBackground) {
-                // We want a depth buffer and an alpha buffer
-                int[] configSpec = {
-                        EGL10.EGL_RED_SIZE,      8,
-                        EGL10.EGL_GREEN_SIZE,    8,
-                        EGL10.EGL_BLUE_SIZE,     8,
-                        EGL10.EGL_ALPHA_SIZE,    8,
-                        EGL10.EGL_DEPTH_SIZE,   16,
-                        EGL10.EGL_NONE
-                };
-                return configSpec;
-            } else {
-                // We want a depth buffer, don't care about the
-                // details of the color buffer.
-                int[] configSpec = {
-                        EGL10.EGL_DEPTH_SIZE,   16,
-                        EGL10.EGL_NONE
-                };
-                return configSpec;
-            }
-    }
-
     public void onSurfaceChanged(GL10 gl, int width, int height) {
          gl.glViewport(0, 0, width, height);
 
