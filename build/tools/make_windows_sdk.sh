@@ -185,8 +185,9 @@ function package() {
 
     # Copy or move platform specific tools to the default platform.
     cp -v dalvik/dx/etc/dx.bat "$PLATFORM_TOOLS"/
-    # Note: mgwz.dll must be in same folder than aapt.exe
-    mv -v "$TOOLS"/{aapt.exe,aidl.exe,dexdump.exe,mgwz.dll} "$PLATFORM_TOOLS"/
+    mv -v "$TOOLS"/{aapt.exe,aidl.exe,dexdump.exe} "$PLATFORM_TOOLS"/
+    # Note: mgwz.dll must be both in SDK/tools for zipalign and in SDK/platform/XYZ/tools/ for aapt
+    cp -v "$TOOLS"/mgwz.dll "$PLATFORM_TOOLS"/
 
     # Fix EOL chars to make window users happy - fix all files at the top level only
     # as well as all batch files including those in platforms/<name>/tools/
