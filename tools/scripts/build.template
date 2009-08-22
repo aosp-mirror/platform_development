@@ -2,9 +2,9 @@
 <project name="PROJECT_NAME" default="help">
 
     <!-- The local.properties file is created and updated by the 'android' tool.
-         It contain the path to the SDK. It should *NOT* be checked in in Version
+         It contains the path to the SDK. It should *NOT* be checked in in Version
          Control Systems. -->
-    <property file="local.properties"/>
+    <property file="local.properties" />
 
     <!-- The build.properties file can be created by you and is never touched
          by the 'android' tool. This is the place to change some of the default property values
@@ -14,10 +14,10 @@
          application-package
              the name of your application package as defined in the manifest. Used by the
              'uninstall' rule.
-         source-folder
-             the name of the source folder. Default is 'src'.
-         out-folder
-             the name of the output folder. Default is 'bin'.
+         source.dir
+             the name of the source directory. Default is 'src'.
+         out.dir
+             the name of the output directory. Default is 'bin'.
 
          Properties related to the SDK location or the project target should be updated
           using the 'android' tool with the 'update' action.
@@ -26,13 +26,13 @@
          should be checked in in Version Control Systems.
 
          -->
-    <property file="build.properties"/>
+    <property file="build.properties" />
 
     <!-- The default.properties file is created and updated by the 'android' tool, as well
          as ADT. 
          This file is an integral part of the build system for your application and
          should be checked in in Version Control Systems. -->
-    <property file="default.properties"/>
+    <property file="default.properties" />
 
     <!-- Custom Android task to deal with the project target, and import the proper rules.
          This requires ant 1.6.0 or above. -->
@@ -46,7 +46,7 @@
 
     <taskdef name="setup"
         classname="com.android.ant.SetupTask"
-        classpathref="android.antlibs"/>
+        classpathref="android.antlibs" />
 
     <!-- Execute the Android Setup task that will setup some properties specific to the target,
          and import the build rules files.
