@@ -24,176 +24,169 @@
 
     <!-- Properties -->
 
-    <property name="android-tools" value="${sdk-location}/tools" />
+    <property name="android.tools.dir" location="${sdk-location}/tools" />
 
     <!-- Input directories -->
-    <property name="source-folder" value="src" />
-    <property name="gen-folder" value="gen" />
-    <property name="resource-folder" value="res" />
-    <property name="asset-folder" value="assets" />
-    <property name="source-location" value="${basedir}/${source-folder}" />
+    <property name="source.dir" location="src" />
+    <property name="gen.dir" location="gen" />
+    <property name="resource.dir" location="res" />
+    <property name="asset.dir" location="assets" />
 
-    <!-- folder for the 3rd party java libraries -->
-    <property name="external-libs-folder" value="libs" />
+    <!-- Directory for the 3rd party java libraries -->
+    <property name="external.libs.dir" location="libs" />
 
-    <!-- folder for the native libraries -->
-    <property name="native-libs-folder" value="libs" />
+    <!-- Directory for the native libraries -->
+    <property name="native.libs.dir" location="libs" />
 
     <!-- Output directories -->
-    <property name="gen-folder" value="gen" />
-    <property name="out-folder" value="bin" />
-    <property name="out-classes" value="${out-folder}/classes" />
-    <property name="out-classes-location" value="${basedir}/${out-classes}"/>
-    <!-- out folders for a parent project if this project is an instrumentation project -->
-    <property name="main-out-folder" value="../${out-folder}" />
-    <property name="main-out-classes" value="${main-out-folder}/classes"/>
+    <property name="gen.dir" location="gen" />
+    <property name="out.dir" location="bin" />
+    <property name="out.classes.dir" location="${out.dir}/classes" />
+
+    <!-- Out directory for a parent project if this project is an instrumentation project -->
+    <property name="main.out.dir" location="../${out.dir}" />
+    <property name="main.out.classes.dir" location="${main.out.dir}/classes"/>
 
     <!-- Intermediate files -->
-    <property name="dex-file" value="classes.dex" />
-    <property name="intermediate-dex" value="${out-folder}/${dex-file}" />
-    <!-- dx does not properly support incorrect / or \ based on the platform
-         and Ant cannot convert them because the parameter is not a valid path.
-         Because of this we have to compute different paths depending on the platform. -->
-    <condition property="intermediate-dex-location"
-            value="${basedir}\${intermediate-dex}"
-            else="${basedir}/${intermediate-dex}" >
-        <os family="windows"/>
-    </condition>
+    <property name="dex.file.name" value="classes.dex" />
+    <property name="intermediate.dex.file" location="${out.dir}/${dex.file.name}" />
 
     <!-- The final package file to generate -->
-    <property name="out-debug-unaligned-package" value="${out-folder}/${ant.project.name}-debug-unaligned.apk"/>
-    <property name="out-debug-package" value="${out-folder}/${ant.project.name}-debug.apk"/>
-    <property name="out-unsigned-package" value="${out-folder}/${ant.project.name}-unsigned.apk"/>
-    <property name="out-unaligned-package" value="${out-folder}/${ant.project.name}-unaligned.apk"/>
-    <property name="out-release-package" value="${out-folder}/${ant.project.name}-release.apk"/>
+    <property name="out.debug.unaligned.package" location="${out.dir}/${ant.project.name}-debug-unaligned.apk"/>
+    <property name="out.debug.package" location="${out.dir}/${ant.project.name}-debug.apk"/>
+    <property name="out.unsigned.package" location="${out.dir}/${ant.project.name}-unsigned.apk"/>
+    <property name="out.unaligned.package" location="${out.dir}/${ant.project.name}-unaligned.apk"/>
+    <property name="out.release.package" location="${out.dir}/${ant.project.name}-release.apk"/>
 
     <!-- Tools -->
     <condition property="exe" value=".exe" else=""><os family="windows"/></condition>
-    <property name="adb" value="${android-tools}/adb${exe}"/>
-    <property name="zipalign" value="${android-tools}/zipalign${exe}" />
+    <property name="adb" location="${android.tools.dir}/adb${exe}"/>
+    <property name="zipalign" location="${android.tools.dir}/zipalign${exe}" />
 
-    <!-- rules -->
+    <!-- Rules -->
 
-    <!-- Create the output directories if they don't exist yet. -->
-    <target name="dirs">
+    <!-- Creates the output directories if they don't exist yet. -->
+    <target name="-dirs">
         <echo>Creating output directories if needed...</echo>
-        <mkdir dir="${resource-folder}" />
-        <mkdir dir="${external-libs-folder}" />
-        <mkdir dir="${gen-folder}" />
-        <mkdir dir="${out-folder}" />
-        <mkdir dir="${out-classes}" />
+        <mkdir dir="${resource.dir}" />
+        <mkdir dir="${external.libs.dir}" />
+        <mkdir dir="${gen.dir}" />
+        <mkdir dir="${out.dir}" />
+        <mkdir dir="${out.classes.dir}" />
     </target>
 
-    <!-- Generate the R.java file for this project's resources. -->
-    <target name="resource-src" depends="dirs">
+    <!-- Generates the R.java file for this project's resources. -->
+    <target name="-resource-src" depends="-dirs">
         <echo>Generating R.java / Manifest.java from the resources...</echo>
         <exec executable="${aapt}" failonerror="true">
             <arg value="package" />
             <arg value="-m" />
             <arg value="-J" />
-            <arg path="${gen-folder}" />
+            <arg path="${gen.dir}" />
             <arg value="-M" />
             <arg path="AndroidManifest.xml" />
             <arg value="-S" />
-            <arg path="${resource-folder}" />
+            <arg path="${resource.dir}" />
             <arg value="-I" />
             <arg path="${android-jar}" />
         </exec>
     </target>
 
-    <!-- Generate java classes from .aidl files. -->
-    <target name="aidl" depends="dirs">
+    <!-- Generates java classes from .aidl files. -->
+    <target name="-aidl" depends="-dirs">
         <echo>Compiling aidl files into Java classes...</echo>
         <apply executable="${aidl}" failonerror="true">
             <arg value="-p${android-aidl}" />
-            <arg value="-I${source-folder}" />
-            <arg value="-o${gen-folder}" />
-            <fileset dir="${source-folder}">
+            <arg value="-I${source.dir}" />
+            <arg value="-o${gen.dir}" />
+            <fileset dir="${source.dir}">
                 <include name="**/*.aidl"/>
             </fileset>
         </apply>
     </target>
 
-    <!-- Compile this project's .java files into .class files. -->
-    <target name="compile" depends="resource-src, aidl">
+    <!-- Compiles this project's .java files into .class files. -->
+    <target name="compile" depends="-resource-src, -aidl"
+                description="Compiles project's .java files into .class files">
         <javac encoding="ascii" target="1.5" debug="true" extdirs=""
-                destdir="${out-classes}"
+                destdir="${out.classes.dir}"
                 bootclasspathref="android.target.classpath">
-            <src path="${source-folder}" />
-            <src path="${gen-folder}" />
+            <src path="${source.dir}" />
+            <src path="${gen.dir}" />
             <classpath>
-                <fileset dir="${external-libs-folder}" includes="*.jar"/>
-                <pathelement path="${main-out-classes}"/>
+                <fileset dir="${external.libs.dir}" includes="*.jar"/>
+                <pathelement path="${main.out.classes.dir}"/>
             </classpath>
          </javac>
     </target>
 
-    <!-- Convert this project's .class files into .dex files. -->
-    <target name="dex" depends="compile">
-        <echo>Converting compiled files and external libraries into ${out-folder}/${dex-file}...</echo>
+    <!-- Converts this project's .class files into .dex files -->
+    <target name="-dex" depends="compile">
+        <echo>Converting compiled files and external libraries into ${out.dir}/${dex.file.name}...</echo>
         <apply executable="${dx}" failonerror="true" parallel="true">
             <arg value="--dex" />
-            <arg value="--output=${intermediate-dex-location}" />
-            <arg path="${out-classes-location}" />
-            <fileset dir="${external-libs-folder}" includes="*.jar"/>
+            <arg value="--output=${intermediate.dex.file}" />
+            <arg path="${out.classes.dir}" />
+            <fileset dir="${external.libs.dir}" includes="*.jar"/>
         </apply>
     </target>
 
-    <!-- Put the project's resources into the output package file
+    <!-- Puts the project's resources into the output package file
          This actually can create multiple resource package in case
          Some custom apk with specific configuration have been
          declared in default.properties.
          -->
-    <target name="package-resources">
+    <target name="-package-resources">
         <echo>Packaging resources</echo>
         <aaptexec executable="${aapt}"
                 command="package"
                 manifest="AndroidManifest.xml"
-                resources="${resource-folder}"
-                assets="${asset-folder}"
+                resources="${resource.dir}"
+                assets="${asset.dir}"
                 androidjar="${android-jar}"
-                outfolder="${out-folder}"
+                outfolder="${out.dir}"
                 basename="${ant.project.name}" />
     </target>
 
-    <!-- Package the application and (maybe) sign it with a debug key.
+    <!-- Packages the application and (maybe) sign it with a debug key.
          This requires the property sign.package to be set to true or false. -->
-    <target name="package">
+    <target name="-package">
         <apkbuilder
-                outfolder="${out-folder}"
+                outfolder="${out.dir}"
                 basename="${ant.project.name}"
                 signed="${sign.package}"
                 verbose="true">
-            <file path="${intermediate-dex}" />
-            <sourcefolder path="${source-folder}" />
-            <jarfolder path="${external-libs-folder}" />
-            <nativefolder path="${native-libs-folder}" />
+            <file path="${intermediate.dex.file}" />
+            <sourcefolder path="${source.dir}" />
+            <jarfolder path="${external.libs.dir}" />
+            <nativefolder path="${native.libs.dir}" />
         </apkbuilder>
     </target>
 
-    <target name="no-sign">
+    <target name="-no-sign">
        <property name="sign.package" value="false" />
     </target>
 
-    <target name="debug-sign">
+    <target name="-debug-sign">
        <property name="sign.package" value="true" />
     </target>
 
-    <target name="debug" depends="dex, package-resources, debug-sign, package">
+    <target name="debug" depends="-dex, -package-resources, -debug-sign, -package"
+                description="Builds the application and signs it with a debug key.">
         <echo>Running zip align on final apk...</echo>
         <exec executable="${zipalign}" failonerror="true">
             <arg value="-f" />
             <arg value="4" />
-            <arg path="${out-debug-unaligned-package}" />
-            <arg path="${out-debug-package}" />
+            <arg path="${out.debug.unaligned.package}" />
+            <arg path="${out.debug.package}" />
         </exec>
-        <echo>Debug Package: ${out-debug-package}</echo>
+        <echo>Debug Package: ${out.debug.package}</echo>
     </target>
 
-    <target name="release-package" depends="dex, package-resources, no-sign, package">
+    <target name="-release-package" depends="-dex, -package-resources, -no-sign, -package">
     </target>
 
-    <target name="release.check">
+    <target name="-release-check">
         <condition property="release.sign">
             <and>
                 <isset property="key.store" />
@@ -201,81 +194,90 @@
             </and>
         </condition>
     </target>
-    <target name="release.nosign" depends="release.check" unless="release.sign">
+
+    <target name="-release-nosign" depends="-release-check" unless="release.sign">
         <echo>No key.store and key.alias properties found in build.properties.</echo>
-        <echo>Please sign ${out-unsigned-package} manually</echo>
+        <echo>Please sign ${out.unsigned.package} manually</echo>
         <echo>and run zipalign from the Android SDK tools.</echo>
     </target>
 
-    <target name="release" depends="release-package, release.nosign" if="release.sign">
-        <!-- get passwords -->
+    <target name="release" depends="-release-package, -release-nosign" if="release-sign"
+                description="Builds the application. The generated apk file must be signed before it is published.">
+
+        <!-- Gets passwords -->
         <input
                 message="Please enter keystore password (store:${key.store}):"
                 addproperty="key.store.password"/>
         <input
                 message="Please enter password for alias '${key.alias}':"
                 addproperty="key.alias.password"/>
-        <!-- sign the APK -->
+
+        <!-- Signs the APK -->
         <echo>Signing final apk...</echo>
         <signjar
-                jar="${out-unsigned-package}"
-                signedjar="${out-unaligned-package}"
+                jar="${out.unsigned.package}"
+                signedjar="${out.unaligned.package}"
                 keystore="${key.store}"
                 storepass="${key.store.password}"
                 alias="${key.alias}"
                 keypass="${key.alias.password}"/>
-        <!-- zip align the APK -->
+
+        <!-- Zip aligns the APK -->
         <echo>Running zip align on final apk...</echo>
         <exec executable="${zipalign}" failonerror="true">
             <arg value="-f" />
             <arg value="4" />
-            <arg path="${out-unaligned-package}" />
-            <arg path="${out-release-package}" />
+            <arg path="${out.unaligned.package}" />
+            <arg path="${out.release.package}" />
         </exec>
-        <echo>Release Package: ${out-release-package}</echo>
+        <echo>Release Package: ${out.release.package}</echo>
     </target>
 
-    <!-- Install the package on the default emulator -->
-    <target name="install" depends="debug">
-        <echo>Installing ${out-debug-package} onto default emulator...</echo>
+    <!-- Installs the package on the default emulator/device -->
+    <target name="install" depends="debug"
+                description="Installs the debug package onto a running emulator or device. This can only be used if the application has not yet been installed.">
+        <echo>Installing ${out.debug.package} onto default emulator or device...</echo>
         <exec executable="${adb}" failonerror="true">
             <arg value="install" />
-            <arg path="${out-debug-package}" />
+            <arg path="${out.debug.package}" />
         </exec>
     </target>
 
-    <target name="reinstall" depends="debug">
-        <echo>Installing ${out-debug-package} onto default emulator...</echo>
+    <target name="reinstall" depends="debug" description="Installs the debug package on a running emulator or device that already has the application.">
+        <echo>Installing ${out.debug.package} onto default emulator or device...</echo>
         <exec executable="${adb}" failonerror="true">
             <arg value="install" />
             <arg value="-r" />
-            <arg path="${out-debug-package}" />
+            <arg path="${out.debug.package}" />
         </exec>
     </target>
 
-    <!-- Uinstall the package from the default emulator -->
-    <target name="uninstall.check">
+    <!-- Uninstalls the package from the default emulator/device -->
+    <target name="-uninstall-check">
         <condition property="uninstall.run">
            <isset property="application-package" />
         </condition>
     </target>
-    <target name="uninstall.error" depends="uninstall.check" unless="uninstall.run">
-        <echo>Unable to run 'ant unintall', application-package is not defined in build.properties</echo>
+
+    <target name="-uninstall-error" depends="-uninstall-check" unless="uninstall.run">
+        <echo>Unable to run 'ant uninstall', application-package is not defined in build.properties</echo>
     </target>
-    <target name="uninstall" depends="uninstall.error" if="uninstall.run">
-        <echo>Uninstalling ${application-package} from the default emulator...</echo>
+
+    <target name="uninstall" depends="-uninstall-error" if="uninstall.run" description="Uninstalls the application from a running emulator or device.">
+        <echo>Uninstalling ${application-package} from the default emulator or device...</echo>
         <exec executable="${adb}" failonerror="true">
             <arg value="uninstall" />
             <arg value="${application-package}" />
         </exec>
     </target>
-    
+
     <target name="help">
         <!-- displays starts at col 13
               |13                                                              80| -->
         <echo>Android Ant Build. Available targets:</echo>
         <echo>   help:      Displays this help.</echo>
-        <echo>   debug:     Builds the application and sign it with a debug key.</echo>
+        <echo>   compile:   Compiles project's .java files into .class files.</echo>
+        <echo>   debug:     Builds the application and signs it with a debug key.</echo>
         <echo>   release:   Builds the application. The generated apk file must be</echo>
         <echo>              signed before it is published.</echo>
         <echo>   install:   Installs the debug package onto a running emulator or</echo>
@@ -284,7 +286,7 @@
         <echo>   reinstall: Installs the debug package on a running emulator or</echo>
         <echo>              device that already has the application.</echo>
         <echo>              The signatures must match.</echo>
-        <echo>   uninstall: uninstall the application from a running emulator or</echo>
+        <echo>   uninstall: Uninstalls the application from a running emulator or</echo>
         <echo>              device.</echo>
     </target>
 </project>
