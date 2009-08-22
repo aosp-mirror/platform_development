@@ -617,8 +617,8 @@ public class GraphicalLayoutEditor extends GraphicalEditorWithPalette
                     WidgetPullParser parser = new WidgetPullParser(descriptor);
                     ILayoutResult result = computeLayout(bridge, parser,
                             null /* projectKey */,
-                            300 /* width */, 300 /* height */, 160 /*density*/,
-                            160.f /*xdpi*/, 160.f /*ydpi*/, theme,
+                            1 /* width */, 1 /* height */, true /* renderFullSize */,
+                            160 /*density*/, 160.f /*xdpi*/, 160.f /*ydpi*/, theme,
                             mConfigComposite.isProjectTheme(),
                             configuredProjectResources, frameworkResources, projectCallback,
                             null /* logger */);
@@ -799,6 +799,11 @@ public class GraphicalLayoutEditor extends GraphicalEditorWithPalette
         recomputeLayout();
     }
 
+    public void OnClippingChange() {
+        recomputeLayout();
+    }
+
+
     public void onCreate() {
         LayoutCreatorDialog dialog = new LayoutCreatorDialog(mParent.getShell(),
                 mEditedFile.getName(),
@@ -944,7 +949,8 @@ public class GraphicalLayoutEditor extends GraphicalEditorWithPalette
 
                             ILayoutResult result = computeLayout(bridge, parser,
                                     iProject /* projectKey */,
-                                    rect.width, rect.height, density, density, density,
+                                    rect.width, rect.height, !mConfigComposite.getClipping(),
+                                    density, density, density,
                                     theme, isProjectTheme,
                                     configuredProjectRes, frameworkResources, mProjectCallback,
                                     mLogger);
@@ -1294,7 +1300,8 @@ public class GraphicalLayoutEditor extends GraphicalEditorWithPalette
     @SuppressWarnings("deprecation")
     private static ILayoutResult computeLayout(LayoutBridge bridge,
             IXmlPullParser layoutDescription, Object projectKey,
-            int screenWidth, int screenHeight, int density, float xdpi, float ydpi,
+            int screenWidth, int screenHeight, boolean renderFullSize,
+            int density, float xdpi, float ydpi,
             String themeName, boolean isProjectTheme,
             Map<String, Map<String, IResourceValue>> projectResources,
             Map<String, Map<String, IResourceValue>> frameworkResources,
@@ -1304,7 +1311,7 @@ public class GraphicalLayoutEditor extends GraphicalEditorWithPalette
             // newest API with support for "render full height"
             // TODO: link boolean to UI.
             return bridge.bridge.computeLayout(layoutDescription,
-                    projectKey, screenWidth, screenHeight, false /* renderFullHeight */,
+                    projectKey, screenWidth, screenHeight, renderFullSize,
                     density, xdpi, ydpi,
                     themeName, isProjectTheme,
                     projectResources, frameworkResources, projectCallback,
@@ -1338,6 +1345,4 @@ public class GraphicalLayoutEditor extends GraphicalEditorWithPalette
                     logger);
         }
     }
-
-
 }
