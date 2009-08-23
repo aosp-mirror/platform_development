@@ -117,9 +117,6 @@
     <string name="remote_service_disconnected">Disconnected from remote service</string>
     <string name="remote_call_failed">Failure calling remote service</string>
 
-    <string name="service_arguments_started">"Started with arguments: "</string>
-    <string name="service_arguments_stopped">Finished arguments,
-        stopping.</string>
     <string name="service_start_arguments_label">Sample Service Start Arguments
     </string>
 
@@ -130,10 +127,13 @@
         service can be started with arguments, and run until all arguments are
         processed.
     </string>
-    <string name="start1_service">Start with \"One\"</string>
-    <string name="start2_service">Start with \"Two\"</string>
-    <string name="start3_service">Start with \"Three\"</string>
-
+    <string name="start1_service">Start \"One\" no redeliver</string>
+    <string name="start2_service">Start \"Two\" no redeliver</string>
+    <string name="start3_service">Start \"Three\" w/redeliver</string>
+    <string name="startfail_service">Start failed delivery</string>
+    <string name="service_created">Service created.</string>
+    <string name="service_destroyed">Service destroyed.</string>
+    
     <string name="one_shot_received">The one-shot alarm has gone off</string>
     <string name="repeating_received">The repeating alarm has gone off</string>
 
