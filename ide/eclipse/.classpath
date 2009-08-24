@@ -9,8 +9,6 @@
 	<classpathentry kind="src" path="packages/apps/Email/src"/>
 	<classpathentry kind="src" path="packages/apps/GoogleSearch/src"/>
 	<classpathentry kind="src" path="packages/apps/HTMLViewer/src"/>
-	<classpathentry kind="src" path="packages/apps/IM/src"/>
-	<classpathentry kind="src" path="packages/apps/IM/plugin"/>
 	<classpathentry kind="src" path="packages/apps/Launcher/src"/>
 	<classpathentry kind="src" path="packages/apps/Music/src"/>
 	<classpathentry kind="src" path="packages/apps/Mms/src"/>
@@ -95,12 +93,10 @@
 	<classpathentry kind="src" path="dalvik/libcore/xml/src/main/java"/>
 	<classpathentry kind="src" path="out/target/common/obj/APPS/ApiDemos_intermediates/src/src"/>
 	<classpathentry kind="src" path="out/target/common/obj/APPS/Email_intermediates/src/src"/>
-	<classpathentry kind="src" path="out/target/common/obj/APPS/IM_intermediates/src/src"/>
 	<classpathentry kind="src" path="out/target/common/obj/APPS/Music_intermediates/src/src"/>
 	<classpathentry kind="src" path="out/target/common/obj/APPS/Phone_intermediates/src/src"/>
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/com.android.im.plugin_intermediates/src"/>
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src/core/java"/>
-	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src/im/java"/>
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src/location/java"/>
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src/media/java"/>
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src/telephony/java"/>
