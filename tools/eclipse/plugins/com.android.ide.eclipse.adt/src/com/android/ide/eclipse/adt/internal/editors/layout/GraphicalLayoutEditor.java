@@ -19,7 +19,6 @@ package com.android.ide.eclipse.adt.internal.editors.layout;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor.UiEditorActions;
-import com.android.ide.eclipse.adt.internal.editors.layout.LayoutReloadMonitor.ILayoutReloadListener;
 import com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationComposite;
 import com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationComposite.IConfigListener;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewElementDescriptor;
@@ -71,6 +70,8 @@ import org.eclipse.gef.dnd.TemplateTransferDropTargetListener;
 import org.eclipse.gef.editparts.ScalableFreeformRootEditPart;
 import org.eclipse.gef.palette.PaletteRoot;
 import org.eclipse.gef.requests.CreationFactory;
+import org.eclipse.gef.ui.parts.GraphicalEditorWithPalette;
+import org.eclipse.gef.ui.parts.SelectionSynchronizer;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
@@ -111,8 +112,8 @@ import java.util.Map;
  * <p/>
  * To understand Drag'n'drop: http://www.eclipse.org/articles/Article-Workbench-DND/drag_drop.html
  */
-public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
-        implements ILayoutReloadListener, IConfigListener {
+public class GraphicalLayoutEditor extends GraphicalEditorWithPalette
+        implements IGraphicalLayoutEditor, IConfigListener {
 
 
     /** Reference to the layout editor */
@@ -233,6 +234,31 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
         super.dispose();
     }
 
+    /**
+     * Returns the selection synchronizer object.
+     * The synchronizer can be used to sync the selection of 2 or more EditPartViewers.
+     * <p/>
+     * This is changed from protected to public so that the outline can use it.
+     *
+     * @return the synchronizer
+     */
+    @Override
+    public SelectionSynchronizer getSelectionSynchronizer() {
+        return super.getSelectionSynchronizer();
+    }
+
+    /**
+     * Returns the edit domain.
+     * <p/>
+     * This is changed from protected to public so that the outline can use it.
+     *
+     * @return the edit domain
+     */
+    @Override
+    public DefaultEditDomain getEditDomain() {
+        return super.getEditDomain();
+    }
+
     /* (non-Javadoc)
      * Creates the palette root.
      */
@@ -243,7 +269,6 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
         return mPaletteRoot;
     }
 
-    @Override
     public Clipboard getClipboard() {
         return mClipboard;
     }
@@ -365,8 +390,7 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
      *
      * @param uiNodeModel The {@link UiElementNode} to select.
      */
-    @Override
-    void selectModel(UiElementNode uiNodeModel) {
+    public void selectModel(UiElementNode uiNodeModel) {
         GraphicalViewer viewer = getGraphicalViewer();
 
         // Give focus to the graphical viewer (in case the outline has it)
@@ -384,7 +408,6 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
     // Local methods
     //--------------
 
-    @Override
     public LayoutEditor getLayoutEditor() {
         return mLayoutEditor;
     }
@@ -514,8 +537,7 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
      * Sets the UI for the edition of a new file.
      * @param configuration the configuration of the new file.
      */
-    @Override
-    void editNewFile(FolderConfiguration configuration) {
+    public void editNewFile(FolderConfiguration configuration) {
         // update the configuration UI
         setConfiguration(configuration, true /*force*/);
 
@@ -625,8 +647,7 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
     /**
      * Reloads this editor, by getting the new model from the {@link LayoutEditor}.
      */
-    @Override
-    void reloadEditor() {
+    public void reloadEditor() {
         GraphicalViewer viewer = getGraphicalViewer();
         viewer.setContents(getModel());
 
@@ -647,8 +668,7 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
     /**
      * Callback for XML model changed. Only update/recompute the layout if the editor is visible
      */
-    @Override
-    void onXmlModelChanged() {
+    public void onXmlModelChanged() {
         if (mLayoutEditor.isGraphicalEditorActive()) {
             doXmlReload(true /* force */);
             recomputeLayout();
@@ -697,13 +717,11 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
     }
 
 
-    @Override
-    UiDocumentNode getModel() {
+    public UiDocumentNode getModel() {
         return mLayoutEditor.getUiRootNode();
     }
 
-    @Override
-    void reloadPalette() {
+    public void reloadPalette() {
         PaletteFactory.createPaletteRoot(mPaletteRoot, mLayoutEditor.getTargetData());
     }
 
@@ -794,9 +812,8 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
     /**
      * Recomputes the layout with the help of layoutlib.
      */
-    @Override
     @SuppressWarnings("deprecation")
-    void recomputeLayout() {
+    public void recomputeLayout() {
         doXmlReload(false /* force */);
         try {
             // check that the resource exists. If the file is opened but the project is closed
@@ -1072,8 +1089,7 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
     /**
      * Responds to a page change that made the Graphical editor page the activated page.
      */
-    @Override
-    void activated() {
+    public void activated() {
         if (mNeedsRecompute || mNeedsXmlReload) {
             recomputeLayout();
         }
@@ -1082,8 +1098,7 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
     /**
      * Responds to a page change that made the Graphical editor page the deactivated page
      */
-    @Override
-    void deactivated() {
+    public void deactivated() {
         // nothing to be done here for now.
     }
 
@@ -1093,11 +1108,11 @@ public class GraphicalLayoutEditor extends AbstractGraphicalLayoutEditor
 
             if (frameworkRes == null) {
                 AdtPlugin.log(IStatus.ERROR, "Failed to get ProjectResource for the framework");
+            } else {
+                // get the framework resource values based on the current config
+                mConfiguredFrameworkRes = frameworkRes.getConfiguredResources(
+                        mConfigComposite.getCurrentConfig());
             }
-
-            // get the framework resource values based on the current config
-            mConfiguredFrameworkRes = frameworkRes.getConfiguredResources(
-                    mConfigComposite.getCurrentConfig());
         }
 
         return mConfiguredFrameworkRes;
