@@ -11,7 +11,7 @@
          used by the Ant rules.
          Here are some properties you may want to change/update:
 
-         application-package
+         application.package
              the name of your application package as defined in the manifest. Used by the
              'uninstall' rule.
          source.dir
@@ -29,7 +29,7 @@
     <property file="build.properties" />
 
     <!-- The default.properties file is created and updated by the 'android' tool, as well
-         as ADT. 
+         as ADT.
          This file is an integral part of the build system for your application and
          should be checked in in Version Control Systems. -->
     <property file="default.properties" />
@@ -37,11 +37,11 @@
     <!-- Custom Android task to deal with the project target, and import the proper rules.
          This requires ant 1.6.0 or above. -->
     <path id="android.antlibs">
-        <pathelement path="${sdk-location}/tools/lib/anttasks.jar" />
-        <pathelement path="${sdk-location}/tools/lib/sdklib.jar" />
-        <pathelement path="${sdk-location}/tools/lib/androidprefs.jar" />
-        <pathelement path="${sdk-location}/tools/lib/apkbuilder.jar" />
-        <pathelement path="${sdk-location}/tools/lib/jarutils.jar" />
+        <pathelement path="${sdk.dir}/tools/lib/anttasks.jar" />
+        <pathelement path="${sdk.dir}/tools/lib/sdklib.jar" />
+        <pathelement path="${sdk.dir}/tools/lib/androidprefs.jar" />
+        <pathelement path="${sdk.dir}/tools/lib/apkbuilder.jar" />
+        <pathelement path="${sdk.dir}/tools/lib/jarutils.jar" />
     </path>
 
     <taskdef name="setup"
@@ -58,7 +58,7 @@
          - copy the content of the main node <project> from android_rules.xml
          - paste it in this build.xml below the <setup /> task.
          - disable the import by changing the setup task below to <setup import="false" />
-         
+
          This will ensure that the properties are setup correctly but that your customized
          build steps are used.
     -->

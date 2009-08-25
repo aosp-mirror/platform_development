@@ -60,9 +60,9 @@ public final class SetupTask extends ImportTask {
     private final static String ANDROID_RULES = "android_rules.xml";
 
     // ant property with the path to the android.jar
-    private final static String PROPERTY_ANDROID_JAR = "android-jar";
+    private final static String PROPERTY_ANDROID_JAR = "android.jar";
     // ant property with the path to the framework.jar
-    private final static String PROPERTY_ANDROID_AIDL = "android-aidl";
+    private final static String PROPERTY_ANDROID_AIDL = "android.aidl";
     // ant property with the path to the aapt tool
     private final static String PROPERTY_AAPT = "aapt";
     // ant property with the path to the aidl tool

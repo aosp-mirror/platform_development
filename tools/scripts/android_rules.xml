@@ -6,7 +6,7 @@
             com.android.ant.AndroidInitTask
 
         The following properties are put in place by the importing task:
-            android-jar, android-aidl, aapt, aidl, and dx
+            android.jar, android.aidl, aapt, aidl, and dx
 
         Additionnaly, the task sets up the following classpath reference:
             android.target.classpath
@@ -16,15 +16,15 @@
     <!-- Custom tasks -->
     <taskdef name="aaptexec"
         classname="com.android.ant.AaptExecLoopTask"
-        classpathref="android.antlibs"/>
+        classpathref="android.antlibs" />
 
     <taskdef name="apkbuilder"
         classname="com.android.ant.ApkBuilderTask"
-        classpathref="android.antlibs"/>
+        classpathref="android.antlibs" />
 
     <!-- Properties -->
 
-    <property name="android.tools.dir" location="${sdk-location}/tools" />
+    <property name="android.tools.dir" location="${sdk.dir}/tools" />
 
     <!-- Input directories -->
     <property name="source.dir" location="src" />
@@ -45,22 +45,22 @@
 
     <!-- Out directory for a parent project if this project is an instrumentation project -->
     <property name="main.out.dir" location="../${out.dir}" />
-    <property name="main.out.classes.dir" location="${main.out.dir}/classes"/>
+    <property name="main.out.classes.dir" location="${main.out.dir}/classes" />
 
     <!-- Intermediate files -->
     <property name="dex.file.name" value="classes.dex" />
     <property name="intermediate.dex.file" location="${out.dir}/${dex.file.name}" />
 
     <!-- The final package file to generate -->
-    <property name="out.debug.unaligned.package" location="${out.dir}/${ant.project.name}-debug-unaligned.apk"/>
-    <property name="out.debug.package" location="${out.dir}/${ant.project.name}-debug.apk"/>
-    <property name="out.unsigned.package" location="${out.dir}/${ant.project.name}-unsigned.apk"/>
-    <property name="out.unaligned.package" location="${out.dir}/${ant.project.name}-unaligned.apk"/>
-    <property name="out.release.package" location="${out.dir}/${ant.project.name}-release.apk"/>
+    <property name="out.debug.unaligned.package" location="${out.dir}/${ant.project.name}-debug-unaligned.apk" />
+    <property name="out.debug.package" location="${out.dir}/${ant.project.name}-debug.apk" />
+    <property name="out.unsigned.package" location="${out.dir}/${ant.project.name}-unsigned.apk" />
+    <property name="out.unaligned.package" location="${out.dir}/${ant.project.name}-unaligned.apk" />
+    <property name="out.release.package" location="${out.dir}/${ant.project.name}-release.apk" />
 
     <!-- Tools -->
-    <condition property="exe" value=".exe" else=""><os family="windows"/></condition>
-    <property name="adb" location="${android.tools.dir}/adb${exe}"/>
+    <condition property="exe" value=".exe" else=""><os family="windows" /></condition>
+    <property name="adb" location="${android.tools.dir}/adb${exe}" />
     <property name="zipalign" location="${android.tools.dir}/zipalign${exe}" />
 
     <!-- Rules -->
@@ -88,7 +88,7 @@
             <arg value="-S" />
             <arg path="${resource.dir}" />
             <arg value="-I" />
-            <arg path="${android-jar}" />
+            <arg path="${android.jar}" />
         </exec>
     </target>
 
@@ -96,11 +96,11 @@
     <target name="-aidl" depends="-dirs">
         <echo>Compiling aidl files into Java classes...</echo>
         <apply executable="${aidl}" failonerror="true">
-            <arg value="-p${android-aidl}" />
+            <arg value="-p${android.aidl}" />
             <arg value="-I${source.dir}" />
             <arg value="-o${gen.dir}" />
             <fileset dir="${source.dir}">
-                <include name="**/*.aidl"/>
+                <include name="**/*.aidl" />
             </fileset>
         </apply>
     </target>
@@ -114,8 +114,8 @@
             <src path="${source.dir}" />
             <src path="${gen.dir}" />
             <classpath>
-                <fileset dir="${external.libs.dir}" includes="*.jar"/>
-                <pathelement path="${main.out.classes.dir}"/>
+                <fileset dir="${external.libs.dir}" includes="*.jar" />
+                <pathelement path="${main.out.classes.dir}" />
             </classpath>
          </javac>
     </target>
@@ -127,7 +127,7 @@
             <arg value="--dex" />
             <arg value="--output=${intermediate.dex.file}" />
             <arg path="${out.classes.dir}" />
-            <fileset dir="${external.libs.dir}" includes="*.jar"/>
+            <fileset dir="${external.libs.dir}" includes="*.jar" />
         </apply>
     </target>
 
@@ -143,7 +143,7 @@
                 manifest="AndroidManifest.xml"
                 resources="${resource.dir}"
                 assets="${asset.dir}"
-                androidjar="${android-jar}"
+                androidjar="${android.jar}"
                 outfolder="${out.dir}"
                 basename="${ant.project.name}" />
     </target>
@@ -207,10 +207,10 @@
         <!-- Gets passwords -->
         <input
                 message="Please enter keystore password (store:${key.store}):"
-                addproperty="key.store.password"/>
+                addproperty="key.store.password" />
         <input
                 message="Please enter password for alias '${key.alias}':"
-                addproperty="key.alias.password"/>
+                addproperty="key.alias.password" />
 
         <!-- Signs the APK -->
         <echo>Signing final apk...</echo>
@@ -220,7 +220,7 @@
                 keystore="${key.store}"
                 storepass="${key.store.password}"
                 alias="${key.alias}"
-                keypass="${key.alias.password}"/>
+                keypass="${key.alias.password}" />
 
         <!-- Zip aligns the APK -->
         <echo>Running zip align on final apk...</echo>
@@ -255,19 +255,19 @@
     <!-- Uninstalls the package from the default emulator/device -->
     <target name="-uninstall-check">
         <condition property="uninstall.run">
-           <isset property="application-package" />
+           <isset property="application.package" />
         </condition>
     </target>
 
     <target name="-uninstall-error" depends="-uninstall-check" unless="uninstall.run">
-        <echo>Unable to run 'ant uninstall', application-package is not defined in build.properties</echo>
+        <echo>Unable to run 'ant uninstall', application.package is not defined in build.properties</echo>
     </target>
 
     <target name="uninstall" depends="-uninstall-error" if="uninstall.run" description="Uninstalls the application from a running emulator or device.">
-        <echo>Uninstalling ${application-package} from the default emulator or device...</echo>
+        <echo>Uninstalling ${application.package} from the default emulator or device...</echo>
         <exec executable="${adb}" failonerror="true">
             <arg value="uninstall" />
-            <arg value="${application-package}" />
+            <arg value="${application.package}" />
         </exec>
     </target>
 
