@@ -61,8 +61,12 @@ public final class SetupTask extends ImportTask {
 
     // ant property with the path to the android.jar
     private final static String PROPERTY_ANDROID_JAR = "android.jar";
+    // LEGACY - compatibility with 1.6 and before
+    private final static String PROPERTY_ANDROID_JAR_LEGACY = "android-jar";
     // ant property with the path to the framework.jar
     private final static String PROPERTY_ANDROID_AIDL = "android.aidl";
+    // LEGACY - compatibility with 1.6 and before
+    private final static String PROPERTY_ANDROID_AIDL_LEGACY = "android-aidl";
     // ant property with the path to the aapt tool
     private final static String PROPERTY_AAPT = "aapt";
     // ant property with the path to the aidl tool
@@ -83,7 +87,10 @@ public final class SetupTask extends ImportTask {
 
         // check if it's valid and exists
         if (sdkLocation == null || sdkLocation.length() == 0) {
-            throw new BuildException("SDK Location is not set.");
+            sdkLocation = antProject.getProperty(ProjectProperties.PROPERTY_SDK_LEGACY);
+            if (sdkLocation == null || sdkLocation.length() == 0) {
+                throw new BuildException("SDK Location is not set.");
+            }
         }
 
         File sdk = new File(sdkLocation);
@@ -152,8 +159,9 @@ public final class SetupTask extends ImportTask {
         String androidJar = androidTarget.getPath(IAndroidTarget.ANDROID_JAR);
         antProject.setProperty(PROPERTY_ANDROID_JAR, androidJar);
 
-        antProject.setProperty(PROPERTY_ANDROID_AIDL,
-                androidTarget.getPath(IAndroidTarget.ANDROID_AIDL));
+        String androidAidl = androidTarget.getPath(IAndroidTarget.ANDROID_AIDL);
+        antProject.setProperty(PROPERTY_ANDROID_AIDL, androidAidl);
+
         antProject.setProperty(PROPERTY_AAPT, androidTarget.getPath(IAndroidTarget.AAPT));
         antProject.setProperty(PROPERTY_AIDL, androidTarget.getPath(IAndroidTarget.AIDL));
         antProject.setProperty(PROPERTY_DX, androidTarget.getPath(IAndroidTarget.DX));
@@ -187,6 +195,16 @@ public final class SetupTask extends ImportTask {
 
         // find the file to import, and import it.
         String templateFolder = androidTarget.getPath(IAndroidTarget.TEMPLATES);
+
+        // legacy support
+        if (androidTarget.getVersion().getApiLevel() <= 4) { // 1.6 and earlier
+            antProject.setProperty(PROPERTY_ANDROID_JAR_LEGACY, androidJar);
+            antProject.setProperty(PROPERTY_ANDROID_AIDL_LEGACY, androidAidl);
+            String appPackage = antProject.getProperty(ProjectProperties.PROPERTY_APP_PACKAGE);
+            if (appPackage != null && appPackage.length() > 0) {
+                antProject.setProperty(ProjectProperties.PROPERTY_APP_PACKAGE_LEGACY, appPackage);
+            }
+        }
 
         // Now the import section. This is only executed if the task actually has to import a file.
         if (mDoImport) {
