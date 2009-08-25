@@ -37,7 +37,11 @@ public final class ProjectProperties {
     public final static String PROPERTY_TARGET = "target";
     public final static String PROPERTY_APK_CONFIGS = "apk.configurations";
     public final static String PROPERTY_SDK = "sdk.dir";
+    // LEGACY - compatibility with 1.6 and before
+    public final static String PROPERTY_SDK_LEGACY = "sdk-location";
     public final static String PROPERTY_APP_PACKAGE = "application.package";
+    // LEGACY - compatibility with 1.6 and before
+    public final static String PROPERTY_APP_PACKAGE_LEGACY = "application-package";
 
     public static enum PropertyType {
         BUILD("build.properties", BUILD_HEADER),
@@ -88,8 +92,8 @@ public final class ProjectProperties {
            "# This file is only used by the Ant script.\n" +
            "\n" +
            "# You can use this to override default values such as\n" +
-           "#  'source-folder' for the location of your java source folder and\n" +
-           "#  'out-folder' for the location of your output folder.\n" +
+           "#  'source.dir' for the location of your java source folder and\n" +
+           "#  'out.dir' for the location of your output folder.\n" +
            "\n" +
            "# You can also use it define how the release builds are signed by declaring\n" +
            "# the following properties:\n" +
