@@ -50,7 +50,6 @@ obj/framework.aidl platforms/${PLATFORM_NAME}/framework.aidl
 
 # sdk scripts
 development/tools/scripts/AndroidManifest.template platforms/${PLATFORM_NAME}/templates/AndroidManifest.template
-development/tools/scripts/AndroidManifest.alias.template platforms/${PLATFORM_NAME}/templates/AndroidManifest.alias.template
 development/tools/scripts/AndroidManifest.tests.template platforms/${PLATFORM_NAME}/templates/AndroidManifest.tests.template
 development/tools/scripts/iml.template platforms/${PLATFORM_NAME}/templates/iml.template
 development/tools/scripts/ipr.template platforms/${PLATFORM_NAME}/templates/ipr.template
@@ -59,11 +58,8 @@ development/tools/scripts/java_file.template platforms/${PLATFORM_NAME}/template
 development/tools/scripts/java_tests_file.template platforms/${PLATFORM_NAME}/templates/java_tests_file.template
 development/tools/scripts/layout.template platforms/${PLATFORM_NAME}/templates/layout.template
 development/tools/scripts/strings.template platforms/${PLATFORM_NAME}/templates/strings.template
-development/tools/scripts/alias.template platforms/${PLATFORM_NAME}/templates/alias.template
 development/tools/scripts/android_rules.xml platforms/${PLATFORM_NAME}/templates/android_rules.xml
-development/tools/scripts/alias_rules.xml platforms/${PLATFORM_NAME}/templates/alias_rules.xml
 development/tools/scripts/build.template tools/lib/build.template
-development/tools/scripts/build.alias.template tools/lib/build.alias.template
 
 # emacs support
 development/tools/scripts/android.el tools/lib/android.el
