@@ -30,7 +30,9 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.EditorPart;
 
 /**
- * Graphical layout editor, version 2.
+ * Graphical layout editor part, version 2.
+ *
+ * @since GLE2
  */
 public class GLE2 extends EditorPart implements IGraphicalLayoutEditor {
 

@@ -20,6 +20,8 @@ import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
 
 /**
  * Implementation of {@link UiElementTreeEditPart} for view objects.
+ *
+ * @since GLE1
  */
 public class UiViewTreeEditPart extends UiElementTreeEditPart {
 

@@ -35,10 +35,12 @@ import org.eclipse.ui.views.properties.PropertySheetPage;
  * A customized property sheet page for the graphical layout editor.
  * <p/>
  * Currently it just provides a custom tooltip to display attributes javadocs.
+ *
+ * @since GLE1
  */
 public class UiPropertySheetPage extends PropertySheetPage {
 
-    
+
     public UiPropertySheetPage() {
         super();
     }
@@ -46,7 +48,7 @@ public class UiPropertySheetPage extends PropertySheetPage {
     @Override
     public void createControl(Composite parent) {
         super.createControl(parent);
-        
+
         setupTooltip();
     }
 
@@ -59,14 +61,14 @@ public class UiPropertySheetPage extends PropertySheetPage {
         final Tree tree = (Tree) getControl();
 
         /*
-         * Reference: 
+         * Reference:
          * http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.swt.snippets/src/org/eclipse/swt/snippets/Snippet125.java?view=markup
          */
 
         final Listener listener = new Listener() {
             Shell tip = null;
             Label label  = null;
-            
+
             public void handleEvent(Event event) {
                 switch(event.type) {
                 case SWT.Dispose:
@@ -88,7 +90,7 @@ public class UiPropertySheetPage extends PropertySheetPage {
                     }
 
                     String tooltip = null;
-                    
+
                     TreeItem item = tree.getItem(new Point(event.x, event.y));
                     if (item != null) {
                         Object data = item.getData();
@@ -102,11 +104,11 @@ public class UiPropertySheetPage extends PropertySheetPage {
                             tooltip = item.getText() + ":\r" + tooltip;
                         }
                     }
-                    
+
                     if (tooltip != null) {
                         Shell shell = tree.getShell();
                         Display display = tree.getDisplay();
-                        
+
                         tip = new Shell(shell, SWT.ON_TOP | SWT.NO_FOCUS | SWT.TOOL);
                         tip.setBackground(display .getSystemColor(SWT.COLOR_INFO_BACKGROUND));
                         FillLayout layout = new FillLayout();
@@ -128,7 +130,7 @@ public class UiPropertySheetPage extends PropertySheetPage {
                 }
             }
         };
-        
+
         tree.addListener(SWT.Dispose, listener);
         tree.addListener(SWT.KeyDown, listener);
         tree.addListener(SWT.MouseMove, listener);

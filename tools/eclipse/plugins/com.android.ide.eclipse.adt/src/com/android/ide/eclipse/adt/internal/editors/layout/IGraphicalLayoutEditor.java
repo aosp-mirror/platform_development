@@ -28,6 +28,8 @@ import org.eclipse.ui.IEditorPart;
 
 /**
  * Interface defining what {@link LayoutEditor} expects from a GraphicalLayoutEditor part.
+ *
+ * @since GLE2
  */
 /*package*/ interface IGraphicalLayoutEditor extends IEditorPart, ILayoutReloadListener {
 
