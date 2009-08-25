@@ -4,7 +4,7 @@
  * Licensed under the Eclipse Public License, Version 1.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.eclipse.org/org/documents/epl-v10.php
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -22,17 +22,14 @@ import com.android.ide.eclipse.adt.internal.editors.uimodel.UiDocumentNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
 import com.android.ide.eclipse.adt.internal.resources.configurations.FolderConfiguration;
 
-import org.eclipse.gef.DefaultEditDomain;
-import org.eclipse.gef.ui.parts.GraphicalEditorWithPalette;
 import org.eclipse.gef.ui.parts.SelectionSynchronizer;
 import org.eclipse.swt.dnd.Clipboard;
-import org.eclipse.ui.IWorkbenchPart;
+import org.eclipse.ui.IEditorPart;
 
 /**
- * Abstract GraphicalLayoutEditor.
+ * Interface defining what {@link LayoutEditor} expects from a GraphicalLayoutEditor part.
  */
-/*package*/ abstract class AbstractGraphicalLayoutEditor extends GraphicalEditorWithPalette
-    implements IWorkbenchPart, ILayoutReloadListener {
+/*package*/ interface IGraphicalLayoutEditor extends IEditorPart, ILayoutReloadListener {
 
     /**
      * Sets the UI for the edition of a new file.
@@ -63,7 +60,7 @@ import org.eclipse.ui.IWorkbenchPart;
     /**
      * Used by LayoutEditor.UiEditorActions.selectUiNode to select a new UI Node
      * created by  {@link ElementCreateCommand#execute()}.
-     * 
+     *
      * @param uiNodeModel The {@link UiElementNode} to select.
      */
     abstract void selectModel(UiElementNode uiNodeModel);
@@ -71,27 +68,8 @@ import org.eclipse.ui.IWorkbenchPart;
     /**
      * Returns the selection synchronizer object.
      * The synchronizer can be used to sync the selection of 2 or more EditPartViewers.
-     * <p/>
-     * This is changed from protected to public so that the outline can use it.
-     *
-     * @return the synchronizer
      */
-    @Override
-    public SelectionSynchronizer getSelectionSynchronizer() {
-        return super.getSelectionSynchronizer();
-    }
-
-    /**
-     * Returns the edit domain.
-     * <p/>
-     * This is changed from protected to public so that the outline can use it.
-     *
-     * @return the edit domain
-     */
-    @Override
-    public DefaultEditDomain getEditDomain() {
-        return super.getEditDomain();
-    }
+    abstract public SelectionSynchronizer getSelectionSynchronizer();
 
     abstract void reloadPalette();
 
