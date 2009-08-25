@@ -111,6 +111,8 @@ import java.util.Map;
  * To understand GEF: http://www.ibm.com/developerworks/opensource/library/os-gef/
  * <p/>
  * To understand Drag'n'drop: http://www.eclipse.org/articles/Article-Workbench-DND/drag_drop.html
+ *
+ * @since GLE1
  */
 public class GraphicalLayoutEditor extends GraphicalEditorWithPalette
         implements IGraphicalLayoutEditor, IConfigListener {

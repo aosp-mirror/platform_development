@@ -44,10 +44,12 @@ import java.util.List;
 
 /**
  * An {@link EditPart} for a {@link UiElementNode}.
+ *
+ * @since GLE1
  */
 public abstract class UiElementEditPart extends AbstractGraphicalEditPart
     implements IUiUpdateListener {
-    
+
     public UiElementEditPart(UiElementNode uiElementNode) {
         setModel(uiElementNode);
     }
@@ -60,7 +62,7 @@ public abstract class UiElementEditPart extends AbstractGraphicalEditPart
 
     //-------------------------
     // Base class overrides
-    
+
     @Override
     public DragTracker getDragTracker(Request request) {
         return new SelectEditPartTracker(this);
@@ -71,12 +73,12 @@ public abstract class UiElementEditPart extends AbstractGraphicalEditPart
         /*
          * This is no longer needed, as a selection edit policy is set by the parent layout.
          * Leave this code commented out right now, I'll want to play with this later.
-         * 
+         *
         installEditPolicy(EditPolicy.SELECTION_FEEDBACK_ROLE,
                 new NonResizableSelectionEditPolicy(this));
          */
     }
-    
+
     /* (non-javadoc)
      * Returns a List containing the children model objects.
      * Must not return null, instead use the super which returns an empty list.
@@ -92,7 +94,7 @@ public abstract class UiElementEditPart extends AbstractGraphicalEditPart
         super.activate();
         getUiNode().addUpdateListener(this);
     }
-    
+
     @Override
     public void deactivate() {
         super.deactivate();
@@ -104,11 +106,11 @@ public abstract class UiElementEditPart extends AbstractGraphicalEditPart
         if (getFigure().getParent() != null) {
             ((GraphicalEditPart) getParent()).setLayoutConstraint(this, getFigure(), getBounds());
         }
-        
+
         // update the visuals of the children as well
         refreshChildrenVisuals();
     }
-    
+
     protected void refreshChildrenVisuals() {
         if (children != null) {
             for (Object child : children) {
@@ -131,7 +133,7 @@ public abstract class UiElementEditPart extends AbstractGraphicalEditPart
             break;
         case CHILDREN_CHANGED:
             refreshChildren();
-            
+
             // new children list, need to update the layout
             refreshVisuals();
             break;
@@ -151,19 +153,19 @@ public abstract class UiElementEditPart extends AbstractGraphicalEditPart
     public final UiElementNode getUiNode() {
         return (UiElementNode) getModel();
     }
-    
+
     protected final ElementDescriptor getDescriptor() {
         return getUiNode().getDescriptor();
     }
-    
+
     protected final UiElementEditPart getEditPartParent() {
         EditPart parent = getParent();
         if (parent instanceof UiElementEditPart) {
-            return (UiElementEditPart)parent; 
+            return (UiElementEditPart)parent;
         }
         return null;
     }
-    
+
     /**
      * Returns a given XML attribute.
      * @param attrName The local name of the attribute.
@@ -186,17 +188,17 @@ public abstract class UiElementEditPart extends AbstractGraphicalEditPart
         }
         return null;
     }
-    
+
     protected final Rectangle getBounds() {
         UiElementNode model = (UiElementNode)getModel();
-        
+
         Object editData = model.getEditData();
 
         if (editData != null) {
             // assert with fully qualified class name to prevent import changes to another
             // Rectangle class.
             assert (editData instanceof org.eclipse.draw2d.geometry.Rectangle);
-    
+
             return (Rectangle)editData;
         }
 
@@ -205,12 +207,12 @@ public abstract class UiElementEditPart extends AbstractGraphicalEditPart
     }
 
     /**
-     * Returns the EditPart that should be used as the target for the specified Request. 
+     * Returns the EditPart that should be used as the target for the specified Request.
      * <p/>
      * For instance this is called during drag'n'drop with a CreateRequest.
      * <p/>
      * Reject being a target for elements which descriptor does not allow children.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -227,7 +229,7 @@ public abstract class UiElementEditPart extends AbstractGraphicalEditPart
     /**
      * Used by derived classes {@link UiDocumentEditPart} and {@link UiLayoutEditPart}
      * to accept drag'n'drop of new items from the palette.
-     * 
+     *
      * @param layoutEditPart The layout edit part where this policy is installed. It can
      *        be either a {@link UiDocumentEditPart} or a {@link UiLayoutEditPart}.
      */
@@ -269,18 +271,18 @@ public abstract class UiElementEditPart extends AbstractGraphicalEditPart
                     Point where = request.getLocation().getCopy();
                     Point origin = getLayoutContainer().getClientArea().getLocation();
                     where.translate(origin.getNegated());
-                    
+
                     // The host is the EditPart where this policy is installed,
                     // e.g. this UiElementEditPart.
                     EditPart host = getHost();
                     if (host instanceof UiElementEditPart) {
-                        
+
                         return new ElementCreateCommand((ElementDescriptor) newType,
                                 (UiElementEditPart) host,
                                 where);
                     }
                 }
-                
+
                 return null;
             }
 
@@ -289,14 +291,14 @@ public abstract class UiElementEditPart extends AbstractGraphicalEditPart
                 // TODO Auto-generated method stub
                 return null;
             }
-            
+
             @Override
             public void showLayoutTargetFeedback(Request request) {
                 super.showLayoutTargetFeedback(request);
-                
+
                 // for debugging
                 // System.out.println("target: " + request.toString() + " -- " + layoutEditPart.getUiNode().getBreadcrumbTrailDescription(false));
-                
+
                 if (layoutEditPart instanceof UiLayoutEditPart &&
                         request instanceof DropRequest) {
                     Point where = ((DropRequest) request).getLocation().getCopy();
@@ -314,24 +316,24 @@ public abstract class UiElementEditPart extends AbstractGraphicalEditPart
                     ((UiLayoutEditPart) layoutEditPart).hideDropTarget();
                 }
             }
-            
+
             @Override
             protected IFigure createSizeOnDropFeedback(CreateRequest createRequest) {
                 // TODO understand if this is useful for us or remove
                 return super.createSizeOnDropFeedback(createRequest);
             }
-            
+
         });
     }
-    
+
     protected static class NonResizableSelectionEditPolicy extends SelectionEditPolicy {
-        
+
         private final UiElementEditPart mEditPart;
 
         public NonResizableSelectionEditPolicy(UiElementEditPart editPart) {
             mEditPart = editPart;
         }
-        
+
         @Override
         protected void hideSelection() {
             mEditPart.hideSelection();

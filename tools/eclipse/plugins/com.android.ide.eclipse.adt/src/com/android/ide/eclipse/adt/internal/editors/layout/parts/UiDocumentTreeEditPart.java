@@ -22,13 +22,15 @@ import java.util.List;
 
 /**
  * Implementation of {@link UiElementTreeEditPart} for the document root.
+ *
+ * @since GLE1
  */
 public class UiDocumentTreeEditPart extends UiElementTreeEditPart {
 
     public UiDocumentTreeEditPart(UiDocumentNode model) {
         super(model);
     }
-    
+
     @SuppressWarnings("unchecked")
     @Override
     protected List getModelChildren() {

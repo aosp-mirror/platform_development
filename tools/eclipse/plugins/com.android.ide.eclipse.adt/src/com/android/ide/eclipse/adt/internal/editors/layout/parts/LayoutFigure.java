@@ -30,11 +30,13 @@ import org.eclipse.swt.SWT;
  * By default the figure is transparent and empty.
  * The base {@link ElementFigure} knows how to draw the selection border.
  * This figure knows how to draw the drop feedback.
+ *
+ * @since GLE1
  */
 class LayoutFigure extends ElementFigure {
 
     private HighlightInfo mHighlightInfo;
-    
+
     public LayoutFigure() {
         super();
     }
@@ -50,12 +52,12 @@ class LayoutFigure extends ElementFigure {
      * The parent {@link Figure#paint(Graphics)} calls {@link #paintFigure(Graphics)} then
      * {@link #paintClientArea(Graphics)} then {@link #paintBorder(Graphics)}. Here we thus
      * draw the actual highlight border but also the highlight anchor lines and points so that
-     * we can make sure they are all drawn on top of the border. 
+     * we can make sure they are all drawn on top of the border.
      * <p/>
      * Note: This method doesn't really need to restore its graphic state. The parent
      * Figure will do it for us.
      * <p/>
-     * 
+     *
      * @param graphics The Graphics object used for painting
      */
     @Override
@@ -98,7 +100,7 @@ class LayoutFigure extends ElementFigure {
             int y1 = mHighlightInfo.linePoints[0].y;
             int x2 = mHighlightInfo.linePoints[1].x;
             int y2 = mHighlightInfo.linePoints[1].y;
-            
+
             // if the line is right to the edge, draw it one pixel more inside so that the
             // full 2-pixel width be visible.
             if (x1 <= 0) x1++;
@@ -110,12 +112,12 @@ class LayoutFigure extends ElementFigure {
             if (x2 >= w - 1) x2--;
             if (y1 >= h - 1) y1--;
             if (y2 >= h - 1) y2--;
-            
+
             x1 += bx;
             x2 += bx;
             y1 += by;
             y2 += by;
-            
+
             graphics.setLineWidth(2);
             graphics.setLineStyle(SWT.LINE_DASH);
             graphics.setLineCap(SWT.CAP_ROUND);

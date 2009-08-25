@@ -26,7 +26,9 @@ import org.eclipse.ui.views.contentoutline.IContentOutlinePage;
 
 /**
  * {@link EditPartFactory} to create {@link AbstractTreeEditPart} for {@link UiElementNode} objects.
- * These objects are used in the {@link IContentOutlinePage} linked to the layout editor. 
+ * These objects are used in the {@link IContentOutlinePage} linked to the layout editor.
+ *
+ * @since GLE1
  */
 public class UiElementTreeEditPartFactory implements EditPartFactory {
 

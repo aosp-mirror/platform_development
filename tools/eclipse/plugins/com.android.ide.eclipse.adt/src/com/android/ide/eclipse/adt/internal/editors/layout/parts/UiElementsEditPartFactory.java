@@ -28,15 +28,17 @@ import org.eclipse.swt.widgets.Display;
  * <p/>
  * The only model objects we use are {@link UiElementNode} objects and they are
  * edited using {@link UiElementEditPart}.
+ *
+ * @since GLE1
  */
 public class UiElementsEditPartFactory implements EditPartFactory {
-    
+
     private Display mDisplay;
 
     public UiElementsEditPartFactory(Display display) {
         mDisplay = display;
     }
-    
+
     public EditPart createEditPart(EditPart context, Object model) {
         if (model instanceof UiDocumentNode) {
             return new UiDocumentEditPart((UiDocumentNode) model, mDisplay);

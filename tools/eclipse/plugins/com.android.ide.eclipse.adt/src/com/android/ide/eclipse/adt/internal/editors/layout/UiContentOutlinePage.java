@@ -67,6 +67,8 @@ import java.util.List;
 
 /**
  * Implementation of the {@link ContentOutlinePage} to display {@link UiElementNode}.
+ *
+ * @since GLE1
  */
 class UiContentOutlinePage extends ContentOutlinePage {
 
