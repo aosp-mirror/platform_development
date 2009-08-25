@@ -4,16 +4,16 @@
     <!-- The build.properties file can be created by you and is never touched
          by activitycreator. If you want to manually set properties, this is
          the best place to set them. -->
-    <property file="build.properties"/>
+    <property file="build.properties" />
 
     <!-- The default.properties file is created and updated by activitycreator.
          It will set any properties not already defined by build.properties. -->
-    <property file="default.properties"/>
+    <property file="default.properties" />
 
     <!-- ************************************************************************************* -->
-    <!-- Import the default Android build rules. 
+    <!-- Import the default Android build rules.
          This requires ant 1.6.0 or above. -->
 
-    <import file="${sdk-folder}/tools/lib/alias_rules.xml" />
+    <import file="${sdk.dir}/tools/lib/alias_rules.xml" />
 
 </project>
