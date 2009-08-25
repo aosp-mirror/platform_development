@@ -57,6 +57,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 
+/**
+ * A composite that displays the current configuration displayed in a Graphical Layout Editor.
+ */
 public class ConfigurationComposite extends Composite {
 
     private final static String THEME_SEPARATOR = "----------"; //$NON-NLS-1$
@@ -90,6 +93,12 @@ public class ConfigurationComposite extends Composite {
 
     private final IConfigListener mListener;
 
+    /**
+     * Interface implemented by the part which owns a {@link ConfigurationComposite}.
+     * This notifies the owners when the configuration change.
+     * The owner must also provide methods to provide the configuration that will
+     * be displayed.
+     */
     public interface IConfigListener {
         void onConfigurationChange();
         void onThemeChange();
@@ -386,7 +395,7 @@ public class ConfigurationComposite extends Composite {
         mLocale.add("Default");
         mLocaleList.add(new ResourceQualifier[] { null, null });
 
-        if (languages != null && languages.size() > 0) {
+        if (project != null && languages != null && languages.size() > 0) {
             for (String language : languages) {
                 // first the language alone
                 mLocale.add(language);
@@ -402,7 +411,6 @@ public class ConfigurationComposite extends Composite {
                 }
 
             }
-        } else {
         }
 
         mDisableUpdates = false;
@@ -701,14 +709,16 @@ public class ConfigurationComposite extends Composite {
                 }
             }
 
-            if (frameworkStyle) {
-                // if the parent is a framework style, it has to be 'Theme' or 'Theme.*'
-                return parentStyle.equals("Theme") || parentStyle.startsWith("Theme.");
-            } else {
-                // if it's a project style, we check this is a theme.
-                value = styleMap.get(parentStyle);
-                if (value != null) {
-                    return isTheme(value, styleMap);
+            if (parentStyle != null) {
+                if (frameworkStyle) {
+                    // if the parent is a framework style, it has to be 'Theme' or 'Theme.*'
+                    return parentStyle.equals("Theme") || parentStyle.startsWith("Theme.");
+                } else {
+                    // if it's a project style, we check this is a theme.
+                    value = styleMap.get(parentStyle);
+                    if (value != null) {
+                        return isTheme(value, styleMap);
+                    }
                 }
             }
         }
