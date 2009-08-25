@@ -30,14 +30,17 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 
-class FontLab extends Activity
-{
+public class FontLab extends Activity {
     private static final int MIN_SIZE = 1;
     private static final int MAX_SIZE = 60;
     
     private static final float SCALE_X_RANGE = 20;
     private static final int MAX_SCALE_X = 20;
     private static final int MIN_SCALE_X = -19;   // -20 would make zero-scale
+
+    private static final int MAX_GAMMA = 40;
+    private static final int MIN_GAMMA = 1;
+    private static final float GAMMA_RANGE = 20;
 
     private static final String[] sText = {
         "Applications Contacts Maps Google Browser Text messages Address book"
@@ -107,13 +110,17 @@ class FontLab extends Activity
         updateText();
         
         setDefaultKeyMode(Activity.DEFAULT_KEYS_SHORTCUT);
+
+        mColumn1.setPadding(5, 0, 5, 0);
+        mColumn2.setPadding(5, 0, 5, 0);
     }
     
     private void updateTitle() {
         Typeface tf = mColumn1.getTypeface();
-        String title = " ps=" + mFontSize + " scaleX="
+        String title = " PS=" + mFontSize + " X="
                     + (1 + mTextScaleXDelta/SCALE_X_RANGE)
-                    + " gamma=" + (mGamma/20.f)
+                    + " G=" + (mGamma/GAMMA_RANGE)
+                    + " S=" + ((mColumn1.getPaintFlags() & Paint.SUBPIXEL_TEXT_FLAG) != 0 ? 1 : 0)
                     + " " + sTypefaceName[mFontIndex]
                     + " " + sStyleName[tf.getStyle()]
                     ;
@@ -133,9 +140,9 @@ class FontLab extends Activity
         "Regular", "Bold", "Italic", "Bold Italic"
     };
     private static final String sTypefaceName[] = {
-        "Droid Sans",
-        "Droid Serif",
-        "Droid Mono"
+        "Sans",
+        "Serif",
+        "Mono"
     };
     private static final Typeface sTypeface[] = {
         Typeface.SANS_SERIF,
@@ -198,6 +205,7 @@ class FontLab extends Activity
             int mask = item.getItemId();
             mColumn1.setPaintFlags(mColumn1.getPaintFlags() ^ mask);
             mColumn2.setPaintFlags(mColumn2.getPaintFlags() ^ mask);
+            updateTitle();
             return true;
         }
     };
@@ -233,10 +241,11 @@ class FontLab extends Activity
 
         addFontMenu(menu, FONT_INDEX_SANS);
         addFontMenu(menu, FONT_INDEX_SERIF);
-        addFontMenu(menu, FONT_INDEX_MONO);
+//        addFontMenu(menu, FONT_INDEX_MONO);
         addStyleMenu(menu, Typeface.BOLD, 'b');
         addStyleMenu(menu, Typeface.ITALIC, 'i');
-        addFlagMenu(menu, Paint.DEV_KERN_TEXT_FLAG, "DevKern", 'k');
+        addFlagMenu(menu, Paint.SUBPIXEL_TEXT_FLAG, "SubPixel", 's');
+        //        addFlagMenu(menu, Paint.DEV_KERN_TEXT_FLAG, "DevKern", 'k');
         menu.add(0, 0, 0, "Text").setOnMenuItemClickListener(mTextCallback).setAlphabeticShortcut('t');
         
         return true;
@@ -286,14 +295,14 @@ class FontLab extends Activity
             case KeyEvent.KEYCODE_DPAD_LEFT:
                 scaleX -= 1;
                 break;
-                /*
             case KeyEvent.KEYCODE_U:
+            case KeyEvent.KEYCODE_VOLUME_UP:
                 changeGamma(1);
                 return true;
             case KeyEvent.KEYCODE_D:
+            case KeyEvent.KEYCODE_VOLUME_DOWN:
                 changeGamma(-1);
                 return true;
-                 */
             default:
                 return super.onKeyDown(keyCode, event);
         }
@@ -318,16 +327,18 @@ class FontLab extends Activity
 
         return super.onKeyDown(keyCode, event);
     }
-    
-    private int mGamma = 28;    // current default is 1.4 (* 20)
+
+    // default to gamma of 1.0
+    private int mGamma = Math.round(1.0f * GAMMA_RANGE);
+
     private void changeGamma(int delta) {
-        int gamma = Math.min(100, Math.max(1, mGamma + delta));
+        int gamma = Math.min(MAX_GAMMA, Math.max(MIN_GAMMA, mGamma + delta));
         if (gamma != mGamma) {
             mGamma = gamma;
             updateTitle();
-//            Paint.setTextGamma(mGamma / 20.f);
+            float blackGamma = mGamma / GAMMA_RANGE;
+            Typeface.setGammaForText(blackGamma, 1 / blackGamma);
             mContentView.invalidate();
-            android.util.Log.d("skia", "setTextGamma " + mGamma);
         }
     }
     
