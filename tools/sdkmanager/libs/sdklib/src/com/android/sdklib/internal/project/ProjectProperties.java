@@ -35,9 +35,9 @@ import java.util.Map.Entry;
 public final class ProjectProperties {
     /** The property name for the project target */
     public final static String PROPERTY_TARGET = "target";
-    public final static String PROPERTY_APK_CONFIGS = "apk-configurations";
-    public final static String PROPERTY_SDK = "sdk-location";
-    public final static String PROPERTY_APP_PACKAGE = "application-package";
+    public final static String PROPERTY_APK_CONFIGS = "apk.configurations";
+    public final static String PROPERTY_SDK = "sdk.dir";
+    public final static String PROPERTY_APP_PACKAGE = "application.package";
 
     public static enum PropertyType {
         BUILD("build.properties", BUILD_HEADER),
