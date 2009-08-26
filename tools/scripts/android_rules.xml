@@ -240,14 +240,6 @@
         <echo>Installing ${out-debug-package} onto default emulator...</echo>
         <exec executable="${adb}" failonerror="true">
             <arg value="install" />
-            <arg path="${out-debug-package}" />
-        </exec>
-    </target>
-
-    <target name="reinstall" depends="debug">
-        <echo>Installing ${out-debug-package} onto default emulator...</echo>
-        <exec executable="${adb}" failonerror="true">
-            <arg value="install" />
             <arg value="-r" />
             <arg path="${out-debug-package}" />
         </exec>
@@ -278,12 +270,10 @@
         <echo>   debug:     Builds the application and sign it with a debug key.</echo>
         <echo>   release:   Builds the application. The generated apk file must be</echo>
         <echo>              signed before it is published.</echo>
-        <echo>   install:   Installs the debug package onto a running emulator or</echo>
-        <echo>              device. This can only be used if the application has </echo>
-        <echo>              not yet been installed.</echo>
-        <echo>   reinstall: Installs the debug package on a running emulator or</echo>
-        <echo>              device that already has the application.</echo>
-        <echo>              The signatures must match.</echo>
+        <echo>   install:   Installs/reinstall the debug package onto a running</echo>
+        <echo>              emulator or device.</echo>
+        <echo>              If the application was previously installed, the</echo>
+        <echo>              signatures must match.</echo>
         <echo>   uninstall: uninstall the application from a running emulator or</echo>
         <echo>              device.</echo>
     </target>

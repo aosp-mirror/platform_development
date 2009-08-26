@@ -205,8 +205,26 @@ public class ApkBuilderTask extends Task {
             // for reuse by other targets (signing/zipaligning)
             Path path = new Path(antProject);
 
+            // The createApk method uses mBaseName for the base name of the packages (resources
+            // and apk files).
+            // The generated apk file name is
+            // debug:   {base}[-{config}]-debug-unaligned.apk
+            // release: {base}[-{config}]-unsigned.apk
+            // Unfortunately for 1.5 projects and before the 'install' ant target expects the name
+            // of the default debug package to be {base}-debug.apk
+            // In order to support those package, we look for the 'out-debug-unaligned-package'
+            // property. If this exist, then we generate {base}[-{config}]-debug-unaligned.apk
+            // otherwise we generate {base}[-{config}]-debug.apk
+            // FIXME: Make apkbuilder export the package name used instead of
+            // having to keep apkbuilder and the rules file in sync
+            String debugPackageSuffix = "-debug-unaligned.apk";
+            if (antProject.getProperty("out-debug-unaligned-package") == null) {
+                debugPackageSuffix = "-debug.apk";
+            }
+
             // first do a full resource package
-            createApk(apkBuilder, null /*configName*/, null /*resourceFilter*/, path);
+            createApk(apkBuilder, null /*configName*/, null /*resourceFilter*/, path,
+                    debugPackageSuffix);
 
             // now see if we need to create file with filtered resources.
             // Get the project base directory.
@@ -218,7 +236,8 @@ public class ApkBuilderTask extends Task {
             if (apkConfigs.size() > 0) {
                 Set<Entry<String, String>> entrySet = apkConfigs.entrySet();
                 for (Entry<String, String> entry : entrySet) {
-                    createApk(apkBuilder, entry.getKey(), entry.getValue(), path);
+                    createApk(apkBuilder, entry.getKey(), entry.getValue(), path,
+                            debugPackageSuffix);
                 }
             }
 
@@ -242,11 +261,12 @@ public class ApkBuilderTask extends Task {
      * @param resourceFilter the resource configuration filter to pass to aapt (if configName is
      * non null)
      * @param path Ant {@link Path} to which add the generated APKs as {@link PathElement}
+     * @param debugPackageSuffix suffix for the debug packages.
      * @throws FileNotFoundException
      * @throws ApkCreationException
      */
     private void createApk(ApkBuilderImpl apkBuilder, String configName, String resourceFilter,
-            Path path)
+            Path path, String debugPackageSuffix)
             throws FileNotFoundException, ApkCreationException {
         // All the files to be included in the archive have already been prep'ed up, except
         // the resource package.
@@ -272,7 +292,7 @@ public class ApkBuilderTask extends Task {
         }
 
         if (mSigned) {
-            filename = filename + "-debug-unaligned.apk";
+            filename = filename + debugPackageSuffix;
         } else {
             filename = filename + "-unsigned.apk";
         }
