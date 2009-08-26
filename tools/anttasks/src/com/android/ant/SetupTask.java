@@ -87,6 +87,9 @@ public final class SetupTask extends ImportTask {
 
         // check if it's valid and exists
         if (sdkLocation == null || sdkLocation.length() == 0) {
+            // LEGACY support: project created with 1.6 or before may be using a different
+            // property to declare the location of the SDK. At this point, we cannot
+            // yet check which target is running so we check both always.
             sdkLocation = antProject.getProperty(ProjectProperties.PROPERTY_SDK_LEGACY);
             if (sdkLocation == null || sdkLocation.length() == 0) {
                 throw new BuildException("SDK Location is not set.");
@@ -196,10 +199,12 @@ public final class SetupTask extends ImportTask {
         // find the file to import, and import it.
         String templateFolder = androidTarget.getPath(IAndroidTarget.TEMPLATES);
 
-        // legacy support
+        // LEGACY support. android_rules.xml in older platforms expects properties with
+        // older names. This sets those properties to make sure the rules will work.
         if (androidTarget.getVersion().getApiLevel() <= 4) { // 1.6 and earlier
             antProject.setProperty(PROPERTY_ANDROID_JAR_LEGACY, androidJar);
             antProject.setProperty(PROPERTY_ANDROID_AIDL_LEGACY, androidAidl);
+            antProject.setProperty(ProjectProperties.PROPERTY_SDK_LEGACY, sdkLocation);
             String appPackage = antProject.getProperty(ProjectProperties.PROPERTY_APP_PACKAGE);
             if (appPackage != null && appPackage.length() > 0) {
                 antProject.setProperty(ProjectProperties.PROPERTY_APP_PACKAGE_LEGACY, appPackage);
