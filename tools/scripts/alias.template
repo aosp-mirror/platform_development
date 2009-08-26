@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+ALIAS PROJECTS ARE CURRENT NOT SUPPORTED.
+THIS FILE IS CURRENTLY BROKEN AND SHOULD NOT BE USED.
+-->
 <alias xmlns:android="http://schemas.android.com/apk/res/android">
     <intent android:action="android.intent.action.VIEW"
         android:data="ALIASDATA"/>
