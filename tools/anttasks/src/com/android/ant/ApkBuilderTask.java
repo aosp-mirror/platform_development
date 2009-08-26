@@ -20,6 +20,7 @@ import com.android.apkbuilder.ApkBuilder.ApkCreationException;
 import com.android.apkbuilder.internal.ApkBuilderImpl;
 import com.android.apkbuilder.internal.ApkBuilderImpl.ApkFile;
 import com.android.sdklib.internal.project.ApkConfigurationHelper;
+import com.android.sdklib.internal.project.ApkSettings;
 import com.android.sdklib.internal.project.ProjectProperties;
 import com.android.sdklib.internal.project.ProjectProperties.PropertyType;
 
@@ -35,7 +36,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
 
 public class ApkBuilderTask extends Task {
@@ -214,11 +214,13 @@ public class ApkBuilderTask extends Task {
             ProjectProperties properties = ProjectProperties.load(baseDir.getAbsolutePath(),
                     PropertyType.DEFAULT);
 
-            Map<String, String> apkConfigs = ApkConfigurationHelper.getConfigs(properties);
-            if (apkConfigs.size() > 0) {
-                Set<Entry<String, String>> entrySet = apkConfigs.entrySet();
-                for (Entry<String, String> entry : entrySet) {
-                    createApk(apkBuilder, entry.getKey(), entry.getValue(), path);
+            ApkSettings apkSettings = ApkConfigurationHelper.getSettings(properties);
+            if (apkSettings != null) {
+                Map<String, String> apkFilters = apkSettings.getResourceFilters();
+                if (apkFilters.size() > 0) {
+                    for (Entry<String, String> entry : apkFilters.entrySet()) {
+                        createApk(apkBuilder, entry.getKey(), entry.getValue(), path);
+                    }
                 }
             }
 

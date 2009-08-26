@@ -18,7 +18,7 @@ package com.android.ide.eclipse.adt.internal.properties;
 
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.sdklib.IAndroidTarget;
-import com.android.sdkuilib.internal.widgets.ApkConfigWidget;
+import com.android.sdklib.internal.project.ApkSettings;
 import com.android.sdkuilib.internal.widgets.SdkTargetSelector;
 
 import org.eclipse.core.resources.IProject;
@@ -27,13 +27,13 @@ import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.IWorkbenchPropertyPage;
 import org.eclipse.ui.dialogs.PropertyPage;
-
-import java.util.Map;
 
 /**
  * Property page for "Android" project.
@@ -45,7 +45,7 @@ public class AndroidPropertyPage extends PropertyPage implements IWorkbenchPrope
 
     private IProject mProject;
     private SdkTargetSelector mSelector;
-    private ApkConfigWidget mApkConfigWidget;
+    private Button mSplitByDensity;
 
     public AndroidPropertyPage() {
         // pass
@@ -72,13 +72,13 @@ public class AndroidPropertyPage extends PropertyPage implements IWorkbenchPrope
 
         mSelector = new SdkTargetSelector(top, targets);
 
-        l = new Label(top, SWT.SEPARATOR | SWT.HORIZONTAL);
-        l.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        Group g = new Group(top, SWT.NONE);
+        g.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        g.setLayout(new GridLayout(1, false));
+        g.setText("APK Generation");
 
-        l = new Label(top, SWT.NONE);
-        l.setText("Project APK Configurations");
-
-        mApkConfigWidget = new ApkConfigWidget(top);
+        mSplitByDensity = new Button(g, SWT.CHECK);
+        mSplitByDensity.setText("One APK per density");
 
         // fill the ui
         Sdk currentSdk = Sdk.getCurrent();
@@ -89,9 +89,9 @@ public class AndroidPropertyPage extends PropertyPage implements IWorkbenchPrope
                 mSelector.setSelection(target);
             }
 
-            // get the apk configurations
-            Map<String, String> configs = currentSdk.getProjectApkConfigs(mProject);
-            mApkConfigWidget.fillTable(configs);
+            // get the project settings
+            ApkSettings settings = currentSdk.getApkSettings(mProject);
+            mSplitByDensity.setSelection(settings.isSplitByDpi());
         }
 
         mSelector.setSelectionListener(new SelectionAdapter() {
@@ -114,8 +114,10 @@ public class AndroidPropertyPage extends PropertyPage implements IWorkbenchPrope
     public boolean performOk() {
         Sdk currentSdk = Sdk.getCurrent();
         if (currentSdk != null) {
-            currentSdk.setProject(mProject, mSelector.getSelected(),
-                    mApkConfigWidget.getApkConfigs());
+            ApkSettings apkSettings = new ApkSettings();
+            apkSettings.setSplitByDensity(mSplitByDensity.getSelection());
+
+            currentSdk.setProject(mProject, mSelector.getSelected(), apkSettings);
         }
 
         return true;

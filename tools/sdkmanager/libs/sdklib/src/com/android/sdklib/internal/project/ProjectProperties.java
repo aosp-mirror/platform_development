@@ -35,13 +35,16 @@ import java.util.Map.Entry;
 public final class ProjectProperties {
     /** The property name for the project target */
     public final static String PROPERTY_TARGET = "target";
-    public final static String PROPERTY_APK_CONFIGS = "apk.configurations";
+
     public final static String PROPERTY_SDK = "sdk.dir";
     // LEGACY - compatibility with 1.6 and before
     public final static String PROPERTY_SDK_LEGACY = "sdk-location";
+
     public final static String PROPERTY_APP_PACKAGE = "application.package";
     // LEGACY - compatibility with 1.6 and before
     public final static String PROPERTY_APP_PACKAGE_LEGACY = "application-package";
+
+    public final static String PROPERTY_SPLIT_BY_DENSITY = "split.density";
 
     public static enum PropertyType {
         BUILD("build.properties", BUILD_HEADER),
@@ -107,17 +110,8 @@ public final class ProjectProperties {
 //               1-------10--------20--------30--------40--------50--------60--------70--------80
         COMMENT_MAP.put(PROPERTY_TARGET,
                 "# Project target.\n");
-        COMMENT_MAP.put(PROPERTY_APK_CONFIGS,
-                "# apk configurations. This property allows creation of APK files with limited\n" +
-                "# resources. For example, if your application contains many locales and\n" +
-                "# you wish to release multiple smaller apks instead of a large one, you can\n" +
-                "# define configuration to create apks with limited language sets.\n" +
-                "# Format is a comma separated list of configuration names. For each\n" +
-                "# configuration, a property will declare the resource configurations to\n" +
-                "# include. Example:\n" +
-                "#     " + PROPERTY_APK_CONFIGS +"=european,northamerica\n" +
-                "#     " + ApkConfigurationHelper.CONFIG_PREFIX + "european=en,fr,it,de,es\n" +
-                "#     " + ApkConfigurationHelper.CONFIG_PREFIX + "northamerica=en,es\n");
+        COMMENT_MAP.put(PROPERTY_SPLIT_BY_DENSITY,
+                "# Indicates whether an apk should be generated for each density.\n");
         COMMENT_MAP.put(PROPERTY_SDK,
                 "# location of the SDK. This is only used by Ant\n" +
                 "# For customization when using a Version Control System, please read the\n" +
