@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+ALIAS PROJECTS ARE CURRENT NOT SUPPORTED.
+THIS FILE IS CURRENTLY BROKEN AND SHOULD NOT BE USED.
+-->
 <project name="PROJECT_NAME" default="package">
 
     <!-- The build.properties file can be created by you and is never touched
