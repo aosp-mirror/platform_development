@@ -132,7 +132,7 @@ public class LayoutEditor extends AndroidEditor implements IShowEditorInput, IPa
                 if (mGraphicalEditor == null) {
 
                     if (System.getenv("USE_GLE2") != null) {            //$NON-NLS-1$ //$NON-NLS-2$
-                        mGraphicalEditor = new GLE2(this);
+                        mGraphicalEditor = new GraphicalEditorPart(this);
                     } else {
                         mGraphicalEditor = new GraphicalLayoutEditor(this);
                     }
