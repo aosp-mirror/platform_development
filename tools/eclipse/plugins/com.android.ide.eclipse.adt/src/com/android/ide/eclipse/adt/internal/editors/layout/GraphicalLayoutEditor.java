@@ -19,6 +19,7 @@ package com.android.ide.eclipse.adt.internal.editors.layout;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor.UiEditorActions;
+import com.android.ide.eclipse.adt.internal.editors.layout.LayoutReloadMonitor.ILayoutReloadListener;
 import com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationComposite;
 import com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationComposite.IConfigListener;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewElementDescriptor;
@@ -115,7 +116,7 @@ import java.util.Map;
  * @since GLE1
  */
 public class GraphicalLayoutEditor extends GraphicalEditorWithPalette
-        implements IGraphicalLayoutEditor, IConfigListener {
+        implements IGraphicalLayoutEditor, IConfigListener, ILayoutReloadListener {
 
 
     /** Reference to the layout editor */
@@ -388,7 +389,7 @@ public class GraphicalLayoutEditor extends GraphicalEditorWithPalette
 
     /**
      * Used by LayoutEditor.UiEditorActions.selectUiNode to select a new UI Node
-     * created by  {@link ElementCreateCommand#execute()}.
+     * created by {@link ElementCreateCommand#execute()}.
      *
      * @param uiNodeModel The {@link UiElementNode} to select.
      */
@@ -814,7 +815,6 @@ public class GraphicalLayoutEditor extends GraphicalEditorWithPalette
     /**
      * Recomputes the layout with the help of layoutlib.
      */
-    @SuppressWarnings("deprecation")
     public void recomputeLayout() {
         doXmlReload(false /* force */);
         try {
@@ -1338,5 +1338,6 @@ public class GraphicalLayoutEditor extends GraphicalEditorWithPalette
                     logger);
         }
     }
+
 
 }

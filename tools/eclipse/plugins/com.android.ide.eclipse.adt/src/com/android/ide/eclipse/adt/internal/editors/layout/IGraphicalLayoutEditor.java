@@ -16,7 +16,6 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout;
 
-import com.android.ide.eclipse.adt.internal.editors.layout.LayoutReloadMonitor.ILayoutReloadListener;
 import com.android.ide.eclipse.adt.internal.editors.layout.parts.ElementCreateCommand;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiDocumentNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
@@ -31,7 +30,7 @@ import org.eclipse.ui.IEditorPart;
  *
  * @since GLE2
  */
-/*package*/ interface IGraphicalLayoutEditor extends IEditorPart, ILayoutReloadListener {
+/*package*/ interface IGraphicalLayoutEditor extends IEditorPart {
 
     /**
      * Sets the UI for the edition of a new file.
