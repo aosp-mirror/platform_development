@@ -24,15 +24,24 @@
 
     <uses-permission android:name="android.permission.READ_CONTACTS" />
     <uses-permission android:name="android.permission.WRITE_CONTACTS" />
-    <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <!-- We will request access to the camera, saying we require a camera
+         of some sort but not one with autofocus capability. -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" />
+    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
+    
     <application android:name="ApiDemosApplication"
             android:label="@string/activity_sample_code"
             android:icon="@drawable/app_sample_code" >
 
+        <!-- This is how we can request a library but still allow the app
+             to be installed if it doesn't exist. -->
+        <uses-library android:name="com.example.will.never.exist" android:required="false" />
+        
         <activity android:name="ApiDemos">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
