@@ -41,6 +41,9 @@
         <Button android:id="@+id/checkbox_button"
             android:layout_width="fill_parent" android:layout_height="wrap_content"
             android:text="@string/alert_dialog_multi_choice"/>
+        <Button android:id="@+id/checkbox_button2"
+            android:layout_width="fill_parent" android:layout_height="wrap_content"
+            android:text="@string/alert_dialog_multi_choice_cursor"/>
         <Button android:id="@+id/text_entry_button"
             android:layout_width="fill_parent" android:layout_height="wrap_content"
             android:text="@string/alert_dialog_text_entry"/>
