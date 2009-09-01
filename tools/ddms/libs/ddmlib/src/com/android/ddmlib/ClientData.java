@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -46,7 +47,7 @@ public class ClientData {
     * access should be synchronized against the ClientData object.
     */
 
-    
+
     /** Temporary name of VM to be ignored. */
     private final static String PRE_INITIALIZED = "<pre-initialized>"; //$NON-NLS-1$
 
@@ -62,7 +63,7 @@ public class ClientData {
     /** Debugger connection status: The listening port for debugger connection failed to listen.
      * No debugger will be able to connect. */
     public static final int DEBUGGER_ERROR = 4;
-    
+
     /**
      * Allocation tracking status: unknown.
      * <p/>This happens right after a {@link Client} is discovered
@@ -99,6 +100,18 @@ public class ClientData {
      */
     public final static String HEAP_OBJECTS_ALLOCATED = "objectsAllocated"; // $NON-NLS-1$
 
+    /**
+     * String for feature enabling starting/stopping method profiling
+     * @see #hasFeature(String)
+     */
+    public final static String FEATURE_PROFILING = "method-trace-profiling"; // $NON-NLS-1$
+
+    /**
+     * String for feature allowing to dump hprof files
+     * @see #hasFeature(String)
+     */
+    public final static String FEATURE_HPROF = "hprof-heap-dump"; // $NON-NLS-1$
+
     // is this a DDM-aware client?
     private boolean mIsDdmAware;
 
@@ -113,6 +126,9 @@ public class ClientData {
 
     // how interested are we in a debugger?
     private int mDebuggerInterest;
+
+    // List of supported feature by the client.
+    private final HashSet<String> mFeatures = new HashSet<String>();
 
     // Thread tracking (THCR, THDE).
     private TreeMap<Integer,ThreadInfo> mThreadMap;
@@ -232,11 +248,11 @@ public class ClientData {
         public void setProcessedHeapMap(Map<Integer, ArrayList<HeapSegmentElement>> heapMap) {
             mProcessedHeapMap = heapMap;
         }
-        
+
         public Map<Integer, ArrayList<HeapSegmentElement>> getProcessedHeapMap() {
             return mProcessedHeapMap;
         }
-        
+
 
     }
 
@@ -250,7 +266,7 @@ public class ClientData {
         mDebuggerInterest = DEBUGGER_DEFAULT;
         mThreadMap = new TreeMap<Integer,ThreadInfo>();
     }
-    
+
     /**
      * Returns whether the process is DDM-aware.
      */
@@ -290,7 +306,7 @@ public class ClientData {
      * Returns the client description.
      * <p/>This is generally the name of the package defined in the
      * <code>AndroidManifest.xml</code>.
-     * 
+     *
      * @return the client description or <code>null</code> if not the description was not yet
      * sent by the client.
      */
@@ -319,7 +335,7 @@ public class ClientData {
             }
         }
     }
-    
+
     /**
      * Returns the debugger connection status. Possible values are {@link #DEBUGGER_DEFAULT},
      * {@link #DEBUGGER_WAITING}, {@link #DEBUGGER_ATTACHED}, and {@link #DEBUGGER_ERROR}.
@@ -422,7 +438,7 @@ public class ClientData {
     synchronized ThreadInfo getThread(int threadId) {
         return mThreadMap.get(threadId);
     }
-    
+
     synchronized void clearThreads() {
         mThreadMap.clear();
     }
@@ -474,7 +490,7 @@ public class ClientData {
     public synchronized Iterator<NativeLibraryMapInfo> getNativeLibraryMapInfo() {
         return mNativeLibMapInfo.iterator();
     }
-    
+
     synchronized void setAllocationStatus(boolean enabled) {
         mAllocationStatus = enabled ? ALLOCATION_TRACKING_ON : ALLOCATION_TRACKING_OFF;
     }
@@ -486,17 +502,33 @@ public class ClientData {
     public synchronized int getAllocationStatus() {
         return mAllocationStatus;
     }
-    
+
     synchronized void setAllocations(AllocationInfo[] allocs) {
         mAllocations = allocs;
     }
-    
+
     /**
      * Returns the list of tracked allocations.
      * @see Client#requestAllocationDetails()
      */
     public synchronized AllocationInfo[] getAllocations() {
         return mAllocations;
+    }
+
+    void addFeature(String feature) {
+        mFeatures.add(feature);
+    }
+
+    /**
+     * Returns true if the {@link Client} supports the given <var>feature</var>
+     * @param feature The feature to test.
+     * @return true if the feature is supported
+     *
+     * @see ClientData#FEATURE_PROFILING
+     * @see ClientData#FEATURE_HPROF
+     */
+    public boolean hasFeature(String feature) {
+        return mFeatures.contains(feature);
     }
 }
 

@@ -604,7 +604,7 @@ public class Client {
                         "Good handshake from client, sending HELO to " + mClientData.getPid());
                     JdwpPacket.consumeHandshake(mReadBuffer);
                     mConnState = ST_NEED_DDM_PKT;
-                    HandleHello.sendHELO(this, SERVER_PROTOCOL_VERSION);
+                    HandleHello.sendHelloCommands(this, SERVER_PROTOCOL_VERSION);
                     // see if we have another packet in the buffer
                     return getJdwpPacket();
                 case JdwpPacket.HANDSHAKE_BAD:
