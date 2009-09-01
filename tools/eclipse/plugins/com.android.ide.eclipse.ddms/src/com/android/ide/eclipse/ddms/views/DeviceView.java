@@ -17,29 +17,40 @@
 
 package com.android.ide.eclipse.ddms.views;
 
+import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.Client;
 import com.android.ddmlib.ClientData;
-import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.IDevice;
+import com.android.ddmlib.SyncService;
+import com.android.ddmlib.ClientData.IHprofDumpHandler;
+import com.android.ddmlib.SyncService.SyncResult;
 import com.android.ddmuilib.DevicePanel;
 import com.android.ddmuilib.ScreenShotDialog;
+import com.android.ddmuilib.SyncProgressMonitor;
 import com.android.ddmuilib.DevicePanel.IUiSelectionListener;
 import com.android.ide.eclipse.ddms.DdmsPlugin;
 import com.android.ide.eclipse.ddms.DdmsPlugin.IDebugLauncher;
 
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.dialogs.ProgressMonitorDialog;
+import org.eclipse.jface.operation.IRunnableWithProgress;
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
+
+import java.io.File;
 
 public class DeviceView extends ViewPart implements IUiSelectionListener {
 
@@ -47,6 +58,8 @@ public class DeviceView extends ViewPart implements IUiSelectionListener {
 
     public static final String ID =
         "com.android.ide.eclipse.ddms.views.DeviceView"; //$NON-NLS-1$
+
+    private static DeviceView sThis;
 
     private DevicePanel mDeviceList;
     private Action mResetAdbAction;
@@ -56,9 +69,103 @@ public class DeviceView extends ViewPart implements IUiSelectionListener {
     private Action mGcAction;
     private Action mKillAppAction;
     private Action mDebugAction;
+    private Action mHprofAction;
     private IDebugLauncher mDebugLauncher;
 
-    private static DeviceView sThis;
+    private class HProfHandler implements IHprofDumpHandler {
+
+        private final Shell mParentShell;
+
+        public HProfHandler(Shell parentShell) {
+            mParentShell = parentShell;
+        }
+
+        public void onFailure(final Client client) {
+            mParentShell.getDisplay().asyncExec(new Runnable() {
+                public void run() {
+                    try {
+                        MessageDialog.openError(mParentShell, "HPROF Error",
+                                String.format(
+                                        "Unable to create HPROF file for application '%1$s'.\n" +
+                                        "Check logcat for more information.",
+                                client.getClientData().getClientDescription()));
+                    } finally {
+                        // this will make sure the dump hprof button is re-enabled for the
+                        // current selection. as the client is finished dumping an hprof file
+                        doSelectionChanged(mDeviceList.getSelectedClient());
+                    }
+                }
+            });
+        }
+
+        public void onSuccess(final String file, final Client client) {
+            mParentShell.getDisplay().asyncExec(new Runnable() {
+                public void run() {
+                    final IDevice device = client.getDevice();
+                    try {
+                        // get the sync service to pull the HPROF file
+                        final SyncService sync = client.getDevice().getSyncService();
+                        if (sync != null) {
+                            promptAndPull(device, client, sync, file);
+                        } else {
+                            MessageDialog.openError(mParentShell, "HPROF Error",
+                                    String.format(
+                                            "Unable to download HPROF file from device '%1$s'.",
+                                    device.getSerialNumber()));
+                        }
+                    } catch (Exception e) {
+                        MessageDialog.openError(mParentShell, "HPROF Error",
+                                String.format("Unable to download HPROF file from device '%1$s'.",
+                                device.getSerialNumber()));
+
+                    } finally {
+                        // this will make sure the dump hprof button is re-enabled for the
+                        // current selection. as the client is finished dumping an hprof file
+                        doSelectionChanged(mDeviceList.getSelectedClient());
+                    }
+                }
+            });
+        }
+
+        private void promptAndPull(final IDevice device, final Client client,
+        final SyncService sync, final String remoteFile) {
+            try {
+                FileDialog fileDialog = new FileDialog(mParentShell, SWT.SAVE);
+
+                fileDialog.setText("Save HPROF file");
+                fileDialog.setFileName(
+                        client.getClientData().getClientDescription() + ".hprof");
+
+                final String localFileName = fileDialog.open();
+                if (localFileName != null) {
+                    final File localFile = new File(localFileName);
+
+                    new ProgressMonitorDialog(mParentShell).run(true, true,
+                            new IRunnableWithProgress() {
+                        public void run(IProgressMonitor monitor) {
+                            SyncResult result = sync.pullFile(remoteFile, localFileName,
+                                    new SyncProgressMonitor(monitor, String.format(
+                                            "Pulling %1$s from the device",
+                                            localFile.getName())));
+
+                            if (result.getCode() != SyncService.RESULT_OK) {
+                                MessageDialog.openError(mParentShell, "HPROF Error",
+                                        String.format("Failed to pull %1$s: %2$s", remoteFile,
+                                                result.getMessage()));
+                            }
+
+                            sync.close();
+                        }
+                    });
+                }
+            } catch (Exception e) {
+                MessageDialog.openError(mParentShell, "HPROF Error",
+                        String.format("Unable to download HPROF file from device '%1$s'.",
+                        device.getSerialNumber()));
+            }
+        }
+    }
+
 
     public DeviceView() {
         // the view is declared with allowMultiple="false" so we
@@ -86,6 +193,8 @@ public class DeviceView extends ViewPart implements IUiSelectionListener {
 
     @Override
     public void createPartControl(Composite parent) {
+        ClientData.setHprofDumpHandler(new HProfHandler(parent.getShell()));
+
         mDeviceList = new DevicePanel(DdmsPlugin.getImageLoader(), USE_SELECTED_DEBUG_PORT);
         mDeviceList.createPanel(parent);
         mDeviceList.addSelectionListener(this);
@@ -155,6 +264,18 @@ public class DeviceView extends ViewPart implements IUiSelectionListener {
         mGcAction.setToolTipText("Cause GC");
         mGcAction.setImageDescriptor(DdmsPlugin.getImageLoader()
                 .loadDescriptor(DevicePanel.ICON_GC));
+
+        mHprofAction = new Action() {
+            @Override
+            public void run() {
+                mDeviceList.dumpHprof();
+                doSelectionChanged(mDeviceList.getSelectedClient());
+            }
+        };
+        mHprofAction.setText("Dump HPROF file");
+        mHprofAction.setToolTipText("Dump HPROF file");
+        mHprofAction.setImageDescriptor(DdmsPlugin.getImageLoader()
+                .loadDescriptor(DevicePanel.ICON_HPROF));
 
         mUpdateHeapAction = new Action("Update Heap", IAction.AS_CHECK_BOX) {
             @Override
@@ -270,6 +391,9 @@ public class DeviceView extends ViewPart implements IUiSelectionListener {
 
             mUpdateThreadAction.setEnabled(true);
             mUpdateThreadAction.setChecked(selectedClient.isThreadUpdateEnabled());
+            mHprofAction.setEnabled(
+                    selectedClient.getClientData().hasFeature(ClientData.FEATURE_HPROF) &&
+                    selectedClient.getClientData().hasPendingHprofDump() == false);
         } else {
             if (USE_SELECTED_DEBUG_PORT) {
                 // set the client as the debug client
@@ -286,6 +410,7 @@ public class DeviceView extends ViewPart implements IUiSelectionListener {
             mUpdateHeapAction.setEnabled(false);
             mUpdateThreadAction.setEnabled(false);
             mUpdateThreadAction.setChecked(false);
+            mHprofAction.setEnabled(false);
         }
     }
 
@@ -307,6 +432,7 @@ public class DeviceView extends ViewPart implements IUiSelectionListener {
         menuManager.add(mUpdateHeapAction);
         menuManager.add(new Separator());
         menuManager.add(mGcAction);
+        menuManager.add(mHprofAction);
         menuManager.add(new Separator());
         menuManager.add(mKillAppAction);
         menuManager.add(new Separator());
@@ -320,6 +446,9 @@ public class DeviceView extends ViewPart implements IUiSelectionListener {
         toolBarManager.add(new Separator());
         toolBarManager.add(mUpdateThreadAction);
         toolBarManager.add(mUpdateHeapAction);
+        toolBarManager.add(new Separator());
+        toolBarManager.add(mGcAction);
+        toolBarManager.add(mHprofAction);
         toolBarManager.add(new Separator());
         toolBarManager.add(mKillAppAction);
         toolBarManager.add(new Separator());
