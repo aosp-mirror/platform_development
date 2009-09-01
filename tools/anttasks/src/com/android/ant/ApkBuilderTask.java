@@ -212,13 +212,14 @@ public class ApkBuilderTask extends Task {
             // release: {base}[-{config}]-unsigned.apk
             // Unfortunately for 1.5 projects and before the 'install' ant target expects the name
             // of the default debug package to be {base}-debug.apk
-            // In order to support those package, we look for the 'out-debug-unaligned-package'
+            // In order to support those package, we look for the 'out.debug.unaligned.package'
             // property. If this exist, then we generate {base}[-{config}]-debug-unaligned.apk
             // otherwise we generate {base}[-{config}]-debug.apk
             // FIXME: Make apkbuilder export the package name used instead of
             // having to keep apkbuilder and the rules file in sync
             String debugPackageSuffix = "-debug-unaligned.apk";
-            if (antProject.getProperty("out-debug-unaligned-package") == null) {
+            if (antProject.getProperty("out.debug.unaligned.package") == null
+                    && antProject.getProperty("out-debug-unaligned-package") == null) {
                 debugPackageSuffix = "-debug.apk";
             }
 
