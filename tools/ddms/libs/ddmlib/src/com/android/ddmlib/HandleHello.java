@@ -29,7 +29,6 @@ final class HandleHello extends ChunkHandler {
 
     private static final HandleHello mInst = new HandleHello();
 
-
     private HandleHello() {}
 
     /**
@@ -53,6 +52,18 @@ final class HandleHello extends ChunkHandler {
     @Override
     public void clientDisconnected(Client client) {
         Log.d("ddm-hello", "Now disconnected: " + client);
+    }
+
+    /**
+     * Sends HELLO-type commands to the VM after a good handshake.
+     * @param client
+     * @param serverProtocolVersion
+     * @throws IOException
+     */
+    public static void sendHelloCommands(Client client, int serverProtocolVersion)
+            throws IOException {
+        sendHELO(client, serverProtocolVersion);
+        sendFEAT(client);
     }
 
     /**
@@ -87,12 +98,12 @@ final class HandleHello extends ChunkHandler {
 
         vmIdent = getString(data, vmIdentLen);
         appName = getString(data, appNameLen);
-        
+
         Log.d("ddm-hello", "HELO: v=" + version + ", pid=" + pid
             + ", vm='" + vmIdent + "', app='" + appName + "'");
 
         ClientData cd = client.getClientData();
-        
+
         synchronized (cd) {
             if (cd.getPid() == pid) {
                 cd.setVmIdentifier(vmIdent);
@@ -141,6 +152,7 @@ final class HandleHello extends ChunkHandler {
         for (i = 0; i < featureCount; i++) {
             int len = data.getInt();
             String feature = getString(data, len);
+            client.getClientData().addFeature(feature);
 
             Log.d("ddm-hello", "Feature: " + feature);
         }
@@ -160,6 +172,5 @@ final class HandleHello extends ChunkHandler {
         Log.d("ddm-heap", "Sending " + name(CHUNK_FEAT));
         client.sendAndConsume(packet, mInst);
     }
-
 }
 
