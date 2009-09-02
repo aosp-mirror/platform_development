@@ -357,9 +357,14 @@ See test_defs.xsd for more information.
     coverage_target="Camera" />
 
 <test name="contactsprov"
+    build_path="packages/providers/ContactsProvider/tests"
+    package="com.android.providers.contacts.tests"
+    coverage_target="ContactsProvider" />
+
+<test name="gcontactsprov"
     build_path="packages/providers/GoogleContactsProvider/tests"
     package="com.android.providers.contactstests"
-    coverage_target="ContactsProvider" />
+    coverage_target="GoogleContactsProvider" />
 
 <test name="downloadprovider-permission"
     build_path="packages/providers/DownloadProvider/tests/permission"
