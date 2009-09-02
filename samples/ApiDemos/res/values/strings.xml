@@ -365,8 +365,8 @@
     <string name="summary_my_preference">This is a custom counter preference</string>
 
     <string name="title_advanced_toggle_preference">Haunted preference</string>
-    <string name="summary_on_advanced_toggle_preference">I'm on! :)</string>
-    <string name="summary_off_advanced_toggle_preference">I'm off! :(</string>
+    <string name="summary_on_advanced_toggle_preference">I\'m on! :)</string>
+    <string name="summary_off_advanced_toggle_preference">I\'m off! :(</string>
 
     <string name="title_parent_preference">Parent toggle</string>
     <string name="summary_parent_preference">This is visually a parent</string>
@@ -635,13 +635,13 @@
  using the Java programming language and run on Dalvik, a custom virtual
  machine designed for embedded use which runs on top of a Linux kernel.
 
- If you want to know how to develop applications for Android, you're in the
+ If you want to know how to develop applications for Android, you\'re in the
  right place. This site provides a variety of documentation that will help you
  learn about Android and develop mobile applications for the platform.
 
  An early look at the the Android SDK is also available. It includes sample
  projects with source code, development tools, an emulator, and of course all
- the libraries you'll need to build an Android application. What would it take
+ the libraries you\'ll need to build an Android application. What would it take
  to build a better mobile phone?
     </string>
     <string name="spinner_1_color">Color:</string>
