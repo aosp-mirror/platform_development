@@ -58,12 +58,12 @@ import org.eclipse.gef.ui.parts.SelectionSynchronizer;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
-import org.eclipse.swt.custom.StackLayout;
+import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.dnd.Clipboard;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.PartInitException;
@@ -112,13 +112,16 @@ public class GraphicalEditorPart extends EditorPart implements IGraphicalLayoutE
     private ConfigurationComposite mConfigComposite;
 
     /** The sash that splits the palette from the canvas. */
-    private SashForm mSash;
+    private SashForm mSashPalette;
+    private SashForm mSashError;
 
     /** The palette displayed on the left of the sash. */
     private PaletteComposite mPalette;
 
     /** The layout canvas displayed o the right of the sash. */
     private LayoutCanvas mLayoutCanvas;
+
+    private StyledText mErrorLabel;
 
     /** The {@link FolderConfiguration} being edited. */
     private FolderConfiguration mEditedConfig;
@@ -135,13 +138,8 @@ public class GraphicalEditorPart extends EditorPart implements IGraphicalLayoutE
 
     private ConfigListener mConfigListener;
 
-    private Composite mCanvasOrErrorStack;
-
-    private StackLayout mCanvasOrErrorStackLayout;
-
-    private Label mErrorLabel;
-
     private ReloadListener mReloadListener;
+
 
     public GraphicalEditorPart(LayoutEditor layoutEditor) {
         mLayoutEditor = layoutEditor;
@@ -202,7 +200,8 @@ public class GraphicalEditorPart extends EditorPart implements IGraphicalLayoutE
     @Override
     public void createPartControl(Composite parent) {
 
-        mClipboard = new Clipboard(parent.getDisplay());
+        Display d = parent.getDisplay();
+        mClipboard = new Clipboard(d);
 
         GridLayout gl = new GridLayout(1, false);
         parent.setLayout(gl);
@@ -213,31 +212,26 @@ public class GraphicalEditorPart extends EditorPart implements IGraphicalLayoutE
         mConfigComposite = new ConfigurationComposite(mConfigListener, parent, SWT.BORDER);
         mConfigComposite.updateUIFromResources();
 
-        mSash = new SashForm(parent, SWT.HORIZONTAL);
-        mSash.setLayoutData(new GridData(GridData.FILL_BOTH));
+        mSashPalette = new SashForm(parent, SWT.HORIZONTAL);
+        mSashPalette.setLayoutData(new GridData(GridData.FILL_BOTH));
 
-        mPalette = new PaletteComposite(mSash);
+        mPalette = new PaletteComposite(mSashPalette);
 
-        mCanvasOrErrorStack = new Composite(mSash, SWT.NONE);
-        mCanvasOrErrorStackLayout = new StackLayout();
-        mCanvasOrErrorStack.setLayout(mCanvasOrErrorStackLayout);
+        mSashError = new SashForm(mSashPalette, SWT.VERTICAL | SWT.BORDER);
+        mSashError.setLayoutData(new GridData(GridData.FILL_BOTH));
 
-        mLayoutCanvas = new LayoutCanvas(mCanvasOrErrorStack);
-        mErrorLabel = new Label(mCanvasOrErrorStack, SWT.NONE);
-        mCanvasOrErrorStackLayout.topControl = mLayoutCanvas;
+        mLayoutCanvas = new LayoutCanvas(mSashError, SWT.NONE);
+        mErrorLabel = new StyledText(mSashError, SWT.READ_ONLY);
+        mErrorLabel.setEditable(false);
+        mErrorLabel.setBackground(d.getSystemColor(SWT.COLOR_INFO_BACKGROUND));
+        mErrorLabel.setForeground(d.getSystemColor(SWT.COLOR_INFO_FOREGROUND));
 
-        mSash.setWeights(new int[] { 20, 80 });
+        mSashPalette.setWeights(new int[] { 20, 80 });
+        mSashError.setWeights(new int[] { 80, 20 });
+        mSashError.setMaximizedControl(mLayoutCanvas);
 
         // Initialize the state
         reloadPalette();
-    }
-
-    /** Switches the stack to display the canvas and hide the error label. */
-    private void displayCanvas() {
-        if (mCanvasOrErrorStackLayout.topControl != mLayoutCanvas) {
-            mCanvasOrErrorStackLayout.topControl = mLayoutCanvas;
-            mCanvasOrErrorStack.layout();
-        }
     }
 
     /**
@@ -249,10 +243,12 @@ public class GraphicalEditorPart extends EditorPart implements IGraphicalLayoutE
         if (errorFormat != null) {
             mErrorLabel.setText(String.format(errorFormat, parameters));
         }
-        if (mCanvasOrErrorStackLayout.topControl != mErrorLabel) {
-            mCanvasOrErrorStackLayout.topControl = mErrorLabel;
-            mCanvasOrErrorStack.layout();
-        }
+        mSashError.setMaximizedControl(null);
+    }
+
+    /** Displays the canvas and hides the error label. */
+    private void hideError() {
+        mSashError.setMaximizedControl(mLayoutCanvas);
     }
 
     @Override
@@ -275,6 +271,10 @@ public class GraphicalEditorPart extends EditorPart implements IGraphicalLayoutE
         super.dispose();
     }
 
+    /**
+     * Listens to changes from the Configuration UI banner and triggers layout rendering when
+     * changed. Also provide the Configuration UI with the list of resources/layout to display.
+     */
     private class ConfigListener implements IConfigListener {
 
         /**
@@ -542,6 +542,9 @@ public class GraphicalEditorPart extends EditorPart implements IGraphicalLayoutE
         }
     }
 
+    /**
+     * Listens to target changed in the current project, to trigger a new layout rendering.
+     */
     private class TargetListener implements ITargetChangeListener {
 
         public void onProjectTargetChange(IProject changedProject) {
@@ -861,19 +864,13 @@ public class GraphicalEditorPart extends EditorPart implements IGraphicalLayoutE
                                     configuredProjectRes, frameworkResources, mProjectCallback,
                                     mLogger);
 
+                            mLayoutCanvas.setResult(result);
+
                             // update the UiElementNode with the layout info.
                             if (result.getSuccess() == ILayoutResult.SUCCESS) {
-
-                                // Update the image and make sure we're displaying the canvas.
-                                mLayoutCanvas.setImage(result.getImage());
-                                displayCanvas();
-
-                                updateNodeWithBounds(result.getRootView());
+                                hideError();
                             } else {
                                 displayError(result.getErrorMessage());
-
-                                // Reset the edit data for all the nodes.
-                                resetNodeBounds(model);
                             }
 
                             model.refreshUi();
@@ -957,6 +954,7 @@ public class GraphicalEditorPart extends EditorPart implements IGraphicalLayoutE
         return mConfigComposite.getScreenBounds();
     }
 
+    /** @deprecated for GLE2 */
     private void resetNodeBounds(UiElementNode node) {
         node.setEditData(null);
 
@@ -966,6 +964,7 @@ public class GraphicalEditorPart extends EditorPart implements IGraphicalLayoutE
         }
     }
 
+    /** @deprecated for GLE2 */
     private void updateNodeWithBounds(ILayoutViewInfo r) {
         if (r != null) {
             // update the node itself, as the viewKey is the XML node in this implementation.
