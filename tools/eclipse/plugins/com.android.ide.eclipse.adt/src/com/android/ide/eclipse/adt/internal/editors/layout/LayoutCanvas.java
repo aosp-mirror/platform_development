@@ -16,11 +16,8 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout;
 
-import java.awt.image.BufferedImage;
-import java.awt.image.DataBufferInt;
-import java.awt.image.Raster;
+import com.android.layoutlib.api.ILayoutResult;
 
-import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.GC;
@@ -29,6 +26,10 @@ import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.PaletteData;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
+
+import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferInt;
+import java.awt.image.Raster;
 
 /**
  * Displays the image rendered by the {@link GraphicalEditorPart} and handles
@@ -50,8 +51,8 @@ public class LayoutCanvas extends Canvas {
 
     private Image mImage;
 
-    public LayoutCanvas(Composite parent) {
-        super(parent, SWT.BORDER);
+    public LayoutCanvas(Composite parent, int style) {
+        super(parent, style);
 
         addPaintListener(new PaintListener() {
             public void paintControl(PaintEvent e) {
@@ -60,7 +61,13 @@ public class LayoutCanvas extends Canvas {
         });
     }
 
-    public void setImage(BufferedImage awtImage) {
+    public void setResult(ILayoutResult result) {
+        if (result.getSuccess() == ILayoutResult.SUCCESS) {
+            setImage(result.getImage());
+        }
+    }
+
+    private void setImage(BufferedImage awtImage) {
         // Convert the AWT image into an SWT image.
         int width = awtImage.getWidth();
         int height = awtImage.getHeight();
