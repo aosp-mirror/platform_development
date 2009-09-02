@@ -224,6 +224,20 @@ public class Client {
     }
 
     /**
+     * Makes the VM dump an HPROF file
+     */
+    public void dumpHprof() {
+        try {
+            String file = "/sdcard/" + mClientData.getClientDescription().replaceAll("\\:", ".") +
+                ".hprof";
+            HandleHeap.sendHPDU(this, file);
+        } catch (IOException e) {
+            Log.w("ddms", "Send of HPDU message failed");
+            // ignore
+        }
+    }
+
+    /**
      * Enables or disables the thread update.
      * <p/>If <code>true</code> the VM will be able to send thread information. Thread information
      * must be requested with {@link #requestThreadUpdate()}.

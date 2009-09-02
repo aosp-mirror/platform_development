@@ -25,6 +25,7 @@ import com.android.ddmlib.SyncService.ISyncProgressMonitor;
 import com.android.ddmlib.SyncService.SyncResult;
 import com.android.ddmuilib.DdmUiPreferences;
 import com.android.ddmuilib.Panel;
+import com.android.ddmuilib.SyncProgressMonitor;
 import com.android.ddmuilib.TableHelper;
 import com.android.ddmuilib.actions.ICommonAction;
 import com.android.ddmuilib.console.DdmConsole;
@@ -102,41 +103,6 @@ public class DeviceExplorer extends Panel {
     private IDevice mCurrentDevice;
 
     private String mDefaultSave;
-
-    /**
-     * Implementation of the SyncService.ISyncProgressMonitor. It wraps a jFace IProgressMonitor
-     * and just forward the calls to the jFace object.
-     */
-    private static class SyncProgressMonitor implements ISyncProgressMonitor {
-
-        private IProgressMonitor mMonitor;
-        private String mName;
-
-        SyncProgressMonitor(IProgressMonitor monitor, String name) {
-            mMonitor = monitor;
-            mName = name;
-        }
-
-        public void start(int totalWork) {
-            mMonitor.beginTask(mName, totalWork);
-        }
-
-        public void stop() {
-            mMonitor.done();
-        }
-
-        public void advance(int work) {
-            mMonitor.worked(work);
-        }
-
-        public boolean isCanceled() {
-            return mMonitor.isCanceled();
-        }
-
-        public void startSubTask(String name) {
-            mMonitor.subTask(name);
-        }
-    }
 
     public DeviceExplorer() {
 
