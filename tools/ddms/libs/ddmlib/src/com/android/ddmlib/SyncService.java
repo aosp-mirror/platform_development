@@ -374,6 +374,29 @@ public final class SyncService {
     }
 
     /**
+     * Pulls a single file.
+     * <p/>Because this method just deals with a String for the remote file instead of a
+     * {@link FileEntry}, the size of the file being pulled is unknown and the
+     * {@link ISyncProgressMonitor} will not properly show the progress
+     * @param remoteFilepath the full path to the remote file
+     * @param localFilename The local destination.
+     * @param monitor The progress monitor. Cannot be null.
+     * @return a {@link SyncResult} object with a code and an optional message.
+     *
+     * @see #getNullProgressMonitor()
+     */
+    public SyncResult pullFile(String remoteFilepath, String localFilename,
+            ISyncProgressMonitor monitor) {
+        monitor.start(0);
+        //TODO: use the {@link FileListingService} to get the file size.
+
+        SyncResult result = doPullFile(remoteFilepath, localFilename, monitor);
+
+        monitor.stop();
+        return result;
+    }
+
+    /**
      * Push several files.
      * @param local An array of loca files to push
      * @param remote the remote {@link FileEntry} representing a directory.
@@ -797,7 +820,6 @@ public final class SyncService {
 
         return new SyncResult(RESULT_OK);
     }
-
 
     /**
      * Returns the mode of the remote file.

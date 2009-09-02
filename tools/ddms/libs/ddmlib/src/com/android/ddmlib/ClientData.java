@@ -112,6 +112,8 @@ public class ClientData {
      */
     public final static String FEATURE_HPROF = "hprof-heap-dump"; // $NON-NLS-1$
 
+    private static IHprofDumpHandler sHprofDumpHandler;
+
     // is this a DDM-aware client?
     private boolean mIsDdmAware;
 
@@ -127,7 +129,7 @@ public class ClientData {
     // how interested are we in a debugger?
     private int mDebuggerInterest;
 
-    // List of supported feature by the client.
+    // List of supported features by the client.
     private final HashSet<String> mFeatures = new HashSet<String>();
 
     // Thread tracking (THCR, THDE).
@@ -155,6 +157,8 @@ public class ClientData {
 
     private AllocationInfo[] mAllocations;
     private int mAllocationStatus = ALLOCATION_TRACKING_UNKNOWN;
+
+    private String mPendingHprofDump;
 
     /**
      * Heap Information.
@@ -252,10 +256,36 @@ public class ClientData {
         public Map<Integer, ArrayList<HeapSegmentElement>> getProcessedHeapMap() {
             return mProcessedHeapMap;
         }
-
-
     }
 
+    /**
+     * Handlers able to act on HPROF dumps.
+     */
+    public interface IHprofDumpHandler {
+        /**
+         * Called when a HPROF dump succeeded.
+         * @param remoteFile the device-side filename of the HPROF file.
+         * @param client the client for which the HPROF file was.
+         */
+        void onSuccess(String remoteFile, Client client);
+
+        /**
+         * Called when the HPROF dump failed.
+         * @param client the client for which the HPROF file was.
+         */
+        void onFailure(Client client);
+    }
+
+    /**
+     * Sets the handler to receive notifications when an HPROF dump succeeded or failed.
+     */
+    public static void setHprofDumpHandler(IHprofDumpHandler handler) {
+        sHprofDumpHandler = handler;
+    }
+
+    static IHprofDumpHandler getHprofDumpHandler() {
+        return sHprofDumpHandler;
+    }
 
     /**
      * Generic constructor.
@@ -529,6 +559,18 @@ public class ClientData {
      */
     public boolean hasFeature(String feature) {
         return mFeatures.contains(feature);
+    }
+
+    void setPendingHprofDump(String pendingHprofDump) {
+        mPendingHprofDump = pendingHprofDump;
+    }
+
+    String getPendingHprofDump() {
+        return mPendingHprofDump;
+    }
+
+    public boolean hasPendingHprofDump() {
+        return mPendingHprofDump != null;
     }
 }
 

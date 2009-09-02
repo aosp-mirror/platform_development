@@ -75,6 +75,7 @@ public final class DevicePanel extends Panel implements IDebugBridgeChangeListen
     public final static String ICON_HEAP = "heap.png"; //$NON-NLS-1$
     public final static String ICON_HALT = "halt.png"; //$NON-NLS-1$
     public final static String ICON_GC = "gc.png"; //$NON-NLS-1$
+    public final static String ICON_HPROF = "hprof.png"; //$NON-NLS-1$
 
     private IDevice mCurrentDevice;
     private Client mCurrentClient;
@@ -422,6 +423,13 @@ public final class DevicePanel extends Panel implements IDebugBridgeChangeListen
             mCurrentClient.executeGarbageCollector();
         }
     }
+
+    public void dumpHprof() {
+        if (mCurrentClient != null) {
+            mCurrentClient.dumpHprof();
+        }
+    }
+
 
     public void setEnabledHeapOnSelectedClient(boolean enable) {
         if (mCurrentClient != null) {

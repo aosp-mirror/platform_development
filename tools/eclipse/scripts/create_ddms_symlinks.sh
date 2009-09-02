@@ -65,7 +65,7 @@ for i in \
     e.png edit.png empty.png emulator.png \
     forward.png \
     gc.png \
-    heap.png halt.png \
+    heap.png halt.png hprof.png \
     i.png importBug.png \
     load.png \
     pause.png play.png pull.png push.png \

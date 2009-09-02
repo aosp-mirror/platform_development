@@ -18,13 +18,16 @@ package com.android.ddms;
 
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.Client;
+import com.android.ddmlib.ClientData;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.Log;
+import com.android.ddmlib.SyncService;
+import com.android.ddmlib.ClientData.IHprofDumpHandler;
 import com.android.ddmlib.Log.ILogOutput;
 import com.android.ddmlib.Log.LogLevel;
+import com.android.ddmlib.SyncService.SyncResult;
 import com.android.ddmuilib.AllocationPanel;
 import com.android.ddmuilib.DevicePanel;
-import com.android.ddmuilib.DevicePanel.IUiSelectionListener;
 import com.android.ddmuilib.EmulatorControlPanel;
 import com.android.ddmuilib.HeapPanel;
 import com.android.ddmuilib.ITableFocusListener;
@@ -33,9 +36,11 @@ import com.android.ddmuilib.ImageLoader;
 import com.android.ddmuilib.InfoPanel;
 import com.android.ddmuilib.NativeHeapPanel;
 import com.android.ddmuilib.ScreenShotDialog;
+import com.android.ddmuilib.SyncProgressMonitor;
 import com.android.ddmuilib.SysinfoPanel;
 import com.android.ddmuilib.TablePanel;
 import com.android.ddmuilib.ThreadPanel;
+import com.android.ddmuilib.DevicePanel.IUiSelectionListener;
 import com.android.ddmuilib.actions.ToolItemAction;
 import com.android.ddmuilib.explorer.DeviceExplorer;
 import com.android.ddmuilib.log.event.EventLogPanel;
@@ -44,7 +49,10 @@ import com.android.ddmuilib.logcat.LogFilter;
 import com.android.ddmuilib.logcat.LogPanel;
 import com.android.ddmuilib.logcat.LogPanel.ILogFilterStorageManager;
 
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.dialogs.ProgressMonitorDialog;
+import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferenceStore;
 import org.eclipse.swt.SWT;
@@ -62,6 +70,7 @@ import org.eclipse.swt.events.ShellListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.FormAttachment;
@@ -72,6 +81,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
@@ -164,6 +174,7 @@ public class UIThread implements IUiSelectionListener {
     private ToolItem mTBShowHeapUpdates;
     private ToolItem mTBHalt;
     private ToolItem mTBCauseGc;
+    private ToolItem mTBDumpHprof;
 
     private ImageLoader mDdmsImageLoader;
     private ImageLoader mDdmuiLibImageLoader;
@@ -241,6 +252,7 @@ public class UIThread implements IUiSelectionListener {
 
     private EventLogPanel mEventLogPanel;
 
+
     private class TableFocusListener implements ITableFocusListener {
 
         private IFocusedTableActivator mCurrentActivator;
@@ -280,6 +292,99 @@ public class UIThread implements IUiSelectionListener {
 
     }
 
+    private class HProfHandler implements IHprofDumpHandler {
+
+        private final Shell mParentShell;
+
+        public HProfHandler(Shell parentShell) {
+            mParentShell = parentShell;
+        }
+
+        public void onFailure(final Client client) {
+            mDisplay.asyncExec(new Runnable() {
+                public void run() {
+                    try {
+                        MessageDialog.openError(mParentShell, "HPROF Error",
+                                String.format(
+                                        "Unable to create HPROF file for application '%1$s'.\n" +
+                                        "Check logcat for more information.",
+                                client.getClientData().getClientDescription()));
+                    } finally {
+                        // this will make sure the dump hprof button is re-enabled for the
+                        // current selection. as the client is finished dumping an hprof file
+                        enableButtons();
+                    }
+                }
+            });
+        }
+
+        public void onSuccess(final String file, final Client client) {
+            mDisplay.asyncExec(new Runnable() {
+                public void run() {
+                    final IDevice device = client.getDevice();
+                    try {
+                        // get the sync service to pull the HPROF file
+                        final SyncService sync = client.getDevice().getSyncService();
+                        if (sync != null) {
+                            promptAndPull(device, client, sync, file);
+                        } else {
+                            MessageDialog.openError(mParentShell, "HPROF Error",
+                                    String.format(
+                                            "Unable to download HPROF file from device '%1$s'.",
+                                    device.getSerialNumber()));
+                        }
+                    } catch (Exception e) {
+                        MessageDialog.openError(mParentShell, "HPROF Error",
+                                String.format("Unable to download HPROF file from device '%1$s'.",
+                                device.getSerialNumber()));
+
+                    } finally {
+                        // this will make sure the dump hprof button is re-enabled for the
+                        // current selection. as the client is finished dumping an hprof file
+                        enableButtons();
+                    }
+                }
+            });
+        }
+
+        private void promptAndPull(final IDevice device, final Client client,
+        final SyncService sync, final String remoteFile) {
+            try {
+                FileDialog fileDialog = new FileDialog(mParentShell, SWT.SAVE);
+
+                fileDialog.setText("Save HPROF file");
+                fileDialog.setFileName(
+                        client.getClientData().getClientDescription() + ".hprof");
+
+                final String localFileName = fileDialog.open();
+                if (localFileName != null) {
+                    final File localFile = new File(localFileName);
+
+                    new ProgressMonitorDialog(mParentShell).run(true, true,
+                            new IRunnableWithProgress() {
+                        public void run(IProgressMonitor monitor) {
+                            SyncResult result = sync.pullFile(remoteFile, localFileName,
+                                    new SyncProgressMonitor(monitor, String.format(
+                                            "Pulling %1$s from the device",
+                                            localFile.getName())));
+
+                            if (result.getCode() != SyncService.RESULT_OK) {
+                                MessageDialog.openError(mParentShell, "HPROF Error",
+                                        String.format("Failed to pull %1$s: %2$s", remoteFile,
+                                                result.getMessage()));
+                            }
+
+                            sync.close();
+                        }
+                    });
+                }
+            } catch (Exception e) {
+                MessageDialog.openError(mParentShell, "HPROF Error",
+                        String.format("Unable to download HPROF file from device '%1$s'.",
+                        device.getSerialNumber()));
+            }
+        }
+    }
 
     /**
      * Generic constructor.
@@ -328,7 +433,7 @@ public class UIThread implements IUiSelectionListener {
     public void runUI() {
         Display.setAppName("ddms");
         mDisplay = new Display();
-        Shell shell = new Shell(mDisplay);
+        final Shell shell = new Shell(mDisplay);
 
         // create the image loaders for DDMS and DDMUILIB
         mDdmsImageLoader = new ImageLoader(this.getClass());
@@ -359,6 +464,9 @@ public class UIThread implements IUiSelectionListener {
                 Log.printLog(logLevel, tag, message);
             }
         });
+
+        // set the handler for hprof dump
+        ClientData.setHprofDumpHandler(new HProfHandler(shell));
 
         // [try to] ensure ADB is running
         String adbLocation = System.getProperty("com.android.ddms.bindir"); //$NON-NLS-1$
@@ -965,6 +1073,23 @@ public class UIThread implements IUiSelectionListener {
             }
         });
 
+        // add "cause GC" button
+        mTBDumpHprof = new ToolItem(toolBar, SWT.PUSH);
+        mTBDumpHprof.setToolTipText("Dump HPROF file");
+        mTBDumpHprof.setEnabled(false);
+        mTBDumpHprof.setImage(ImageHelper.loadImage(mDdmuiLibImageLoader, display,
+                DevicePanel.ICON_HPROF, DevicePanel.ICON_WIDTH, DevicePanel.ICON_WIDTH, null));
+        mTBDumpHprof.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                mDevicePanel.dumpHprof();
+
+                // this will make sure the dump hprof button is disabled for the current selection
+                // as the client is already dumping an hprof file
+                enableButtons();
+            }
+        });
+
        toolBar.pack();
     }
 
@@ -1305,15 +1430,33 @@ public class UIThread implements IUiSelectionListener {
 
             ToolItemAction pullAction = new ToolItemAction(toolBar, SWT.PUSH);
             pullAction.item.setToolTipText("Pull File from Device");
-            pullAction.item.setImage(mDdmuiLibImageLoader.loadImage("pull.png", mDisplay)); //$NON-NLS-1$
+            Image image = mDdmuiLibImageLoader.loadImage("pull.png", mDisplay); //$NON-NLS-1$
+            if (image != null) {
+                pullAction.item.setImage(image);
+            } else {
+                // this is for debugging purpose when the icon is missing
+                pullAction.item.setText("Pull"); //$NON-NLS-1$
+            }
 
             ToolItemAction pushAction = new ToolItemAction(toolBar, SWT.PUSH);
             pushAction.item.setToolTipText("Push file onto Device");
-            pushAction.item.setImage(mDdmuiLibImageLoader.loadImage("push.png", mDisplay)); //$NON-NLS-1$
+            image = mDdmuiLibImageLoader.loadImage("push.png", mDisplay); //$NON-NLS-1$
+            if (image != null) {
+                pushAction.item.setImage(image);
+            } else {
+                // this is for debugging purpose when the icon is missing
+                pushAction.item.setText("Push"); //$NON-NLS-1$
+            }
 
             ToolItemAction deleteAction = new ToolItemAction(toolBar, SWT.PUSH);
             deleteAction.item.setToolTipText("Delete");
-            deleteAction.item.setImage(mDdmuiLibImageLoader.loadImage("delete.png", mDisplay)); //$NON-NLS-1$
+            image = mDdmuiLibImageLoader.loadImage("delete.png", mDisplay); //$NON-NLS-1$
+            if (image != null) {
+                deleteAction.item.setImage(image);
+            } else {
+                // this is for debugging purpose when the icon is missing
+                deleteAction.item.setText("Delete"); //$NON-NLS-1$
+            }
 
             // device explorer
             mExplorer = new DeviceExplorer();
@@ -1438,6 +1581,9 @@ public class UIThread implements IUiSelectionListener {
             mTBShowHeapUpdates.setEnabled(true);
             mTBHalt.setEnabled(true);
             mTBCauseGc.setEnabled(true);
+            mTBDumpHprof.setEnabled(
+                    mCurrentClient.getClientData().hasFeature(ClientData.FEATURE_HPROF) &&
+                    mCurrentClient.getClientData().hasPendingHprofDump() == false);
         } else {
             // list is empty, disable these
             mTBShowThreadUpdates.setSelection(false);
@@ -1446,6 +1592,7 @@ public class UIThread implements IUiSelectionListener {
             mTBShowHeapUpdates.setEnabled(false);
             mTBHalt.setEnabled(false);
             mTBCauseGc.setEnabled(false);
+            mTBDumpHprof.setEnabled(false);
         }
     }
 
