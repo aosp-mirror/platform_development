@@ -105,6 +105,10 @@ else
     exit 1
 fi
 
+if [ -z "$1" ]; then
+    echo "Starting Android SDK and AVD Manager"
+fi
+
 # need to use "java.ext.dirs" because "-jar" causes classpath to be ignored
 # might need more memory, e.g. -Xmx128M
 exec "$java_cmd" -Xmx256M $os_opts $java_debug -Djava.ext.dirs="$frameworkdir" -Dcom.android.sdkmanager.toolsdir="$progdir" -jar "$jarpath" "$@"
