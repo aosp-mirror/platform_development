@@ -33,7 +33,7 @@ rem Set SWT.Jar path based on current architecture (x86 or x86_64)
 for /f %%a in ('java -jar lib\archquery.jar') do set swt_path=lib\%%a
 
 if not "%1"=="" goto EndTempCopy
-    echo Starting Android SDK Updater
+    echo Starting Android SDK and AVD Manager
 
     rem We're now going to create a temp dir to hold all the Jar files needed
     rem to run the android tool, copy them in the temp dir and finally execute
