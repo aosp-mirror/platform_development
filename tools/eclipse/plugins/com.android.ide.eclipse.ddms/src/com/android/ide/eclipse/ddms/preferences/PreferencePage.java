@@ -17,10 +17,12 @@
 package com.android.ide.eclipse.ddms.preferences;
 
 import com.android.ide.eclipse.ddms.DdmsPlugin;
+import com.android.ide.eclipse.ddms.views.DeviceView.HProfHandler;
 import com.android.ddmlib.Log.LogLevel;
 import com.android.ddmuilib.PortFieldEditor;
 
 import org.eclipse.jface.preference.BooleanFieldEditor;
+import org.eclipse.jface.preference.ComboFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.jface.preference.IntegerFieldEditor;
 import org.eclipse.jface.preference.RadioGroupFieldEditor;
@@ -63,6 +65,13 @@ public class PreferencePage extends FieldEditorPreferencePage implements
         ife.setValidRange(1, 60);
         addField(ife);
 
+        ComboFieldEditor cfe = new ComboFieldEditor(PreferenceInitializer.ATTR_HPROF_ACTION,
+                "HPROF Action:", new String[][] {
+                    { "Save to disk", HProfHandler.ACTION_SAVE },
+                    { "Open in Eclipse", HProfHandler.ACTION_OPEN },
+                }, getFieldEditorParent());
+        addField(cfe);
+
         RadioGroupFieldEditor rgfe = new RadioGroupFieldEditor(PreferenceInitializer.ATTR_LOG_LEVEL,
                 "Logging Level", 1, new String[][] {
                     { "Verbose", LogLevel.VERBOSE.getStringValue() },
@@ -74,7 +83,6 @@ public class PreferencePage extends FieldEditorPreferencePage implements
                     },
                 getFieldEditorParent(), true);
         addField(rgfe);
-
     }
 
     public void init(IWorkbench workbench) {

@@ -17,6 +17,7 @@
 package com.android.ide.eclipse.ddms.preferences;
 
 import com.android.ide.eclipse.ddms.DdmsPlugin;
+import com.android.ide.eclipse.ddms.views.DeviceView.HProfHandler;
 import com.android.ddmlib.DdmPreferences;
 import com.android.ddmuilib.DdmUiPreferences;
 
@@ -29,7 +30,7 @@ import org.eclipse.swt.graphics.FontData;
  * Class used to initialize default preference values.
  */
 public class PreferenceInitializer extends AbstractPreferenceInitializer {
-    
+
     public final static String ATTR_LOG_LEVEL =
         DdmsPlugin.PLUGIN_ID + ".logLevel"; //$NON-NLS-1$
 
@@ -56,7 +57,10 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 
     public final static String ATTR_LOGCAT_FONT =
         DdmsPlugin.PLUGIN_ID + ".logcatFont"; //$NON-NLS-1$
-    
+
+    public final static String ATTR_HPROF_ACTION =
+        DdmsPlugin.PLUGIN_ID + ".hprofAction"; //$NON-NLS-1$
+
     /*
      * (non-Javadoc)
      *
@@ -84,14 +88,16 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 
         store.setDefault(ATTR_LOGCAT_FONT,
                 new FontData("Courier", 10, SWT.NORMAL).toString()); //$NON-NLS-1$
+
+        store.setDefault(ATTR_HPROF_ACTION, HProfHandler.ACTION_OPEN);
     }
-    
+
     /**
-     * Initializes the preferences of ddmlib and ddmuilib with values from the eclipse store. 
+     * Initializes the preferences of ddmlib and ddmuilib with values from the eclipse store.
      */
     public synchronized static void setupPreferences() {
         IPreferenceStore store = DdmsPlugin.getDefault().getPreferenceStore();
-        
+
         DdmPreferences.setDebugPortBase(store.getInt(ATTR_DEBUG_PORT_BASE));
         DdmPreferences.setSelectedDebugPort(store.getInt(ATTR_SELECTED_DEBUG_PORT));
         DdmPreferences.setLogLevel(store.getString(ATTR_LOG_LEVEL));
