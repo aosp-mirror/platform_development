@@ -75,7 +75,7 @@ final class HandleWait extends ChunkHandler {
 
         reason = data.get();
 
-        Log.i("ddm-wait", "WAIT: reason=" + reason);
+        Log.d("ddm-wait", "WAIT: reason=" + reason);
 
 
         ClientData cd = client.getClientData();

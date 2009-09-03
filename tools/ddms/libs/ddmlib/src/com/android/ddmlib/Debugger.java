@@ -78,7 +78,7 @@ class Debugger {
         mPreDataBuffer = ByteBuffer.allocate(PRE_DATA_BUF_SIZE);
         mConnState = ST_NOT_CONNECTED;
 
-        Log.i("ddms", "Created: " + this.toString());
+        Log.d("ddms", "Created: " + this.toString());
     }
 
     /**
@@ -137,7 +137,7 @@ class Debugger {
 
         if (listenChan != null) {
             SocketChannel newChan;
-    
+
             newChan = listenChan.accept();
             if (mChannel != null) {
                 Log.w("ddms", "debugger already talking to " + mClient
@@ -150,7 +150,7 @@ class Debugger {
             mConnState = ST_AWAIT_SHAKE;
             return mChannel;
         }
-        
+
         return null;
     }
 
@@ -243,7 +243,7 @@ class Debugger {
             //Log.v("ddms", "findHand: " + result);
             switch (result) {
                 case JdwpPacket.HANDSHAKE_GOOD:
-                    Log.i("ddms", "Good handshake from debugger");
+                    Log.d("ddms", "Good handshake from debugger");
                     JdwpPacket.consumeHandshake(mReadBuffer);
                     sendHandshake();
                     mConnState = ST_READY;
@@ -256,7 +256,7 @@ class Debugger {
                     return getJdwpPacket();
                 case JdwpPacket.HANDSHAKE_BAD:
                     // not a debugger, throw an exception so we drop the line
-                    Log.i("ddms", "Bad handshake from debugger");
+                    Log.d("ddms", "Bad handshake from debugger");
                     throw new IOException("bad handshake");
                 case JdwpPacket.HANDSHAKE_NOTYET:
                     break;
@@ -272,7 +272,7 @@ class Debugger {
         } else {
             Log.e("ddms", "Receiving data in state = " + mConnState);
         }
-        
+
         return null;
     }
 

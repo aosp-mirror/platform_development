@@ -178,13 +178,13 @@ final class HandleThread extends ChunkHandler {
             if (threadInfo != null)
                 threadInfo.updateThread(status, tid, utime, stime, isDaemon);
             else
-                Log.i("ddms", "Thread with id=" + threadId + " not found");
+                Log.d("ddms", "Thread with id=" + threadId + " not found");
 
             // slurp up any extra
             for (int slurp = extraPerEntry; slurp > 0; slurp--)
                 data.get();
         }
-        
+
         client.update(Client.CHANGE_THREAD_DATA);
     }
 
@@ -207,7 +207,7 @@ final class HandleThread extends ChunkHandler {
             threadInfo.setThreadName(name);
             client.update(Client.CHANGE_THREAD_DATA);
         } else {
-            Log.i("ddms", "Thread with id=" + threadId + " not found");
+            Log.d("ddms", "Thread with id=" + threadId + " not found");
         }
     }
 
@@ -291,7 +291,7 @@ final class HandleThread extends ChunkHandler {
         throws IOException {
 
         if (false) {
-            Log.i("ddm-thread", "would send STKL " + threadId);
+            Log.d("ddm-thread", "would send STKL " + threadId);
             return;
         }
 
@@ -326,7 +326,7 @@ final class HandleThread extends ChunkHandler {
                     try {
                         sendTHST(client);
                     } catch (IOException ioe) {
-                        Log.i("ddms", "Unable to request thread updates from "
+                        Log.d("ddms", "Unable to request thread updates from "
                                 + client + ": " + ioe.getMessage());
                     } finally {
                         mThreadStatusReqRunning = false;
@@ -335,7 +335,7 @@ final class HandleThread extends ChunkHandler {
             }.start();
         }
     }
-    
+
     static void requestThreadStackCallRefresh(final Client client, final int threadId) {
         if (client.isDdmAware() && client.isThreadUpdateEnabled()) {
             if (mThreadStackTraceReqRunning ) {
@@ -350,7 +350,7 @@ final class HandleThread extends ChunkHandler {
                     try {
                         sendSTKL(client, threadId);
                     } catch (IOException ioe) {
-                        Log.i("ddms", "Unable to request thread stack call updates from "
+                        Log.d("ddms", "Unable to request thread stack call updates from "
                                 + client + ": " + ioe.getMessage());
                     } finally {
                         mThreadStackTraceReqRunning = false;
@@ -358,7 +358,7 @@ final class HandleThread extends ChunkHandler {
                 }
             }.start();
         }
-        
+
     }
 
     /*

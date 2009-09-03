@@ -125,7 +125,7 @@ final class HandleProfiling extends ChunkHandler {
         result = data.get();
 
         if (result == 0) {
-            Log.i("ddm-prof", "Method profiling has finished");
+            Log.d("ddm-prof", "Method profiling has finished");
         } else {
             Log.w("ddm-prof", "Method profiling has failed (check device log)");
         }
@@ -157,9 +157,9 @@ final class HandleProfiling extends ChunkHandler {
         result = data.get();
 
         if (result == 0) {
-            Log.i("ddm-prof", "Method profiling is not running");
+            Log.d("ddm-prof", "Method profiling is not running");
         } else {
-            Log.i("ddm-prof", "Method profiling is running");
+            Log.d("ddm-prof", "Method profiling is running");
         }
     }
 }

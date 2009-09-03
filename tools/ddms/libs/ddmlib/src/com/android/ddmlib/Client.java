@@ -541,7 +541,7 @@ public class Client {
         Debugger dbg = mDebugger;
 
         if (dbg == null) {
-            Log.i("ddms", "Discarding packet");
+            Log.d("ddms", "Discarding packet");
             packet.consume();
         } else {
             dbg.sendAndConsume(packet);
@@ -614,7 +614,7 @@ public class Client {
             //Log.v("ddms", "findHand: " + result);
             switch (result) {
                 case JdwpPacket.HANDSHAKE_GOOD:
-                    Log.i("ddms",
+                    Log.d("ddms",
                         "Good handshake from client, sending HELO to " + mClientData.getPid());
                     JdwpPacket.consumeHandshake(mReadBuffer);
                     mConnState = ST_NEED_DDM_PKT;
@@ -622,7 +622,7 @@ public class Client {
                     // see if we have another packet in the buffer
                     return getJdwpPacket();
                 case JdwpPacket.HANDSHAKE_BAD:
-                    Log.i("ddms", "Bad handshake from client");
+                    Log.d("ddms", "Bad handshake from client");
                     if (MonitorThread.getInstance().getRetryOnBadHandshake()) {
                         // we should drop the client, but also attempt to reopen it.
                         // This is done by the DeviceMonitor.
@@ -635,7 +635,7 @@ public class Client {
                     }
                     break;
                 case JdwpPacket.HANDSHAKE_NOTYET:
-                    Log.i("ddms", "No handshake from client yet.");
+                    Log.d("ddms", "No handshake from client yet.");
                     break;
                 default:
                     Log.e("ddms", "Unknown packet while waiting for client handshake");
@@ -713,7 +713,7 @@ public class Client {
      */
     void packetFailed(JdwpPacket reply) {
         if (mConnState == ST_NEED_DDM_PKT) {
-            Log.i("ddms", "Marking " + this + " as non-DDM client");
+            Log.d("ddms", "Marking " + this + " as non-DDM client");
             mConnState = ST_NOT_DDM;
         } else if (mConnState != ST_NOT_DDM) {
             Log.w("ddms", "WEIRD: got JDWP failure packet on DDM req");
@@ -751,7 +751,7 @@ public class Client {
      * @param notify Whether or not to notify the listeners of a change.
      */
     void close(boolean notify) {
-        Log.i("ddms", "Closing " + this.toString());
+        Log.d("ddms", "Closing " + this.toString());
 
         mOutstandingReqs.clear();
 
