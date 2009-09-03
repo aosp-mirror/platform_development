@@ -48,6 +48,7 @@ abstract public class SyncCommon extends EventDisplay {
     final int EVENT_SYNC = 2720;
     final int EVENT_TICKLE = 2742;
     final int EVENT_SYNC_DETAILS = 2743;
+    final int EVENT_CONTACTS_AGGREGATION = 2747;
 
     protected SyncCommon(String name) {
         super(name);
@@ -111,6 +112,18 @@ abstract public class SyncCommon extends EventDisplay {
                                 false, mLastSyncSource);
                     }
                 }
+            } else if (event.mTag == EVENT_CONTACTS_AGGREGATION) {
+                long stopTime = (long) event.sec * 1000L + (event.nsec / 1000000L);
+                long startTime = stopTime - Long.parseLong(event.getValueAsString(0));
+                String details;
+                int count = Integer.parseInt(event.getValueAsString(1));
+                if (count < 0) {
+                    details = "g" + (-count);
+                } else {
+                    details = "G" + count;
+                }
+                processSyncEvent(event, CONTACTS, startTime, stopTime, details,
+                        true /* newEvent */, mLastSyncSource);
             }
         } catch (InvalidTypeException e) {
         }
@@ -141,7 +154,8 @@ abstract public class SyncCommon extends EventDisplay {
     protected int getAuth(String authname) throws InvalidTypeException {
         if ("calendar".equals(authname) || "cl".equals(authname)) {
             return CALENDAR;
-        } else if ("contacts".equals(authname) || "cp".equals(authname)) {
+        } else if ("contacts".equals(authname) || "cp".equals(authname) ||
+                "com.android.contacts".equals(authname)) {
             return CONTACTS;
         } else if ("subscribedfeeds".equals(authname)) {
             return FEEDS;
