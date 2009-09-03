@@ -267,7 +267,7 @@ final class HandleHeap extends ChunkHandler {
             if (result == 0) {
                 handler.onSuccess(filename, client);
 
-                Log.i("ddm-heap", "Heap dump request has finished");
+                Log.d("ddm-heap", "Heap dump request has finished");
             } else {
                 handler.onFailure(client);
                 Log.w("ddm-heap", "Heap dump request failed (check device log)");
