@@ -420,7 +420,7 @@ class ExtractStringInputPage extends UserInputWizardPage implements IWizardPage 
             // recreate the res path from the current configuration
             mConfigSelector.getConfiguration(mTempConfig);
             StringBuffer sb = new StringBuffer(RES_FOLDER_ABS);
-            sb.append(mTempConfig.getFolderName(ResourceFolderType.VALUES));
+            sb.append(mTempConfig.getFolderName(ResourceFolderType.VALUES, mProject));
             sb.append('/');
 
             String newPath = sb.toString();

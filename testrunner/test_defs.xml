@@ -72,7 +72,7 @@ See test_defs.xsd for more information.
 <test name="launchperf"
     build_path="development/apps/launchperf"
     package="com.android.launchperf"
-    class="com.android.launchperf.SimpleActivityLaunchPerformance"
+    runner=".SimpleActivityLaunchPerformance"
     coverage_target="framework" />
 
 <!--  targeted framework tests -->
@@ -183,6 +183,13 @@ See test_defs.xsd for more information.
     runner="android.test.InstrumentationCtsTestRunner"
     coverage_target="framework"
     cts="true" />
+    
+<test name="cts-gesture"
+    build_path="cts/tests/tests/gesture"
+    package="com.android.cts.gesture"
+    runner="android.test.InstrumentationTestRunner"
+    coverage_target="framework"
+    cts="true" />
 
 <test name="cts-graphics"
     build_path="cts/tests"
@@ -263,6 +270,13 @@ See test_defs.xsd for more information.
     coverage_target="framework"
     cts="true" />
 
+<test name="cts-telephony"
+    build_path="cts/tests"
+    package="com.android.cts.telephony"
+    runner="android.test.InstrumentationCtsTestRunner"
+    coverage_target="framework"
+    cts="true" />
+
 <test name="cts-util"
     build_path="cts/tests"
     package="com.android.cts.util"
@@ -305,11 +319,11 @@ See test_defs.xsd for more information.
     coverage_target="Calendar"
     continuous="true" />
 
-<!-- Make continuous = "true" once the bug 1966269 is fixed -->
 <test name="calprov"
     build_path="packages/providers/CalendarProvider/tests"
     package="com.android.providers.calendar.tests"
-    coverage_target="CalendarProvider" />
+    coverage_target="CalendarProvider"
+    continuous="true" />
 
 <test name="camerastress"
     build_path="packages/apps/Camera"
@@ -458,6 +472,12 @@ See test_defs.xsd for more information.
     build_path="external/astl/tests"
     description="Android STL."
     extra_build_args="ASTL_TESTS=1" />
+
+<!-- Android Keystore tests -->
+<test-native name="netkeystore_test"
+    build_path="frameworks/base/cmds/keystore/tests"
+    description="Android keystore."
+    extra_build_args="KEYSTORE_TESTS=1" />
 
 <!-- pending patch 820
 <test-native name="gtest"

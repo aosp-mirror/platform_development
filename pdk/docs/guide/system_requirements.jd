@@ -1,5 +1,6 @@
 page.title=Device Requirements
 pdk.version=1.0
+doc.type=guide
 @jd:body
 
 <p>While Android is designed to support a wide variety of hardware platforms and configurations, this section provides recommended minimum device requirements.</p>

@@ -43,6 +43,11 @@ public class RepoSourcesAdapter {
 
     private final UpdaterData mUpdaterData;
 
+    /**
+     * A dummy RepoSource entry returned for sources which had load errors.
+     * It displays a summary of the error as its short description or
+     * it displays the source's long description.
+     */
     public static class RepoSourceError implements IDescription {
 
         private final RepoSource mSource;
@@ -60,6 +65,33 @@ public class RepoSourcesAdapter {
         }
     }
 
+    /**
+     * A dummy RepoSource entry returned for sources with no packages.
+     * We need that to force the SWT tree to display an open/close triangle
+     * even for empty sources.
+     */
+    public static class RepoSourceEmpty implements IDescription {
+
+        private final RepoSource mSource;
+        private final boolean mEmptyBecauseOfUpdateOnly;
+
+        public RepoSourceEmpty(RepoSource source, boolean emptyBecauseOfUpdateOnly) {
+            mSource = source;
+            mEmptyBecauseOfUpdateOnly = emptyBecauseOfUpdateOnly;
+        }
+
+        public String getLongDescription() {
+            return mSource.getLongDescription();
+        }
+
+        public String getShortDescription() {
+            if (mEmptyBecauseOfUpdateOnly) {
+                return "Some packages were found but are not compatible updates.";
+            } else {
+                return "No packages found";
+            }
+        }
+    }
 
     public RepoSourcesAdapter(UpdaterData updaterData) {
         mUpdaterData = updaterData;
@@ -137,48 +169,76 @@ public class RepoSourcesAdapter {
                 return mUpdaterData.getSources().getSources();
 
             } else if (parentElement instanceof RepoSource) {
-                final RepoSource source = (RepoSource) parentElement;
-                Package[] packages = source.getPackages();
-
-                if (packages == null && source.getFetchError() == null) {
-                    final boolean forceHttp = mUpdaterData.getSettingsController().getForceHttp();
-
-                    mUpdaterData.getTaskFactory().start("Loading Source", new ITask() {
-                        public void run(ITaskMonitor monitor) {
-                            source.load(monitor, forceHttp);
-                        }
-                    });
-
-                    packages = source.getPackages();
-                }
-                if (packages != null) {
-                    // filter out only the packages that are new/upgrade.
-                    if (mUpdaterData.getSettingsController().getShowUpdateOnly()) {
-                        return filteredPackages(packages);
-                    }
-                    return packages;
-                } else if (source.getFetchError() != null) {
-                    // Return a dummy entry to display the fetch error
-                    return new Object[] { new RepoSourceError(source) };
-                }
+                return getRepoSourceChildren((RepoSource) parentElement);
 
             } else if (parentElement instanceof Package) {
-                Archive[] archives = ((Package) parentElement).getArchives();
-                if (mUpdaterData.getSettingsController().getShowUpdateOnly()) {
-                    for (Archive archive : archives) {
-                        // if we only want the compatible archives, then we just take the first
-                        // one. it's unlikely there are 2 compatible archives for the same
-                        // package
-                        if (archive.isCompatible()) {
-                            return new Object[] { archive };
-                        }
-                    }
-                }
-
-                return archives;
+                return getPackageChildren((Package) parentElement);
             }
 
             return new Object[0];
+        }
+
+        /**
+         * Returns the list of packages for this repo source, eventually filtered to display
+         * only update packages. If the list is empty, returns a specific empty node. If there's
+         * an error, returns a specific error node.
+         */
+        private Object[] getRepoSourceChildren(final RepoSource source) {
+            Package[] packages = source.getPackages();
+
+            if (packages == null && source.getFetchError() == null) {
+                final boolean forceHttp = mUpdaterData.getSettingsController().getForceHttp();
+
+                mUpdaterData.getTaskFactory().start("Loading Source", new ITask() {
+                    public void run(ITaskMonitor monitor) {
+                        source.load(monitor, forceHttp);
+                    }
+                });
+
+                packages = source.getPackages();
+            }
+
+            boolean wasEmptyBeforeFilter = (packages == null || packages.length == 0);
+
+            // filter out only the packages that are new/upgrade.
+            if (packages != null && mUpdaterData.getSettingsController().getShowUpdateOnly()) {
+                packages = filteredPackages(packages);
+            }
+            if (packages != null && packages.length == 0) {
+                packages = null;
+            }
+
+            if (packages != null && source.getFetchError() != null) {
+                // Return a dummy entry to display the fetch error
+                return new Object[] { new RepoSourceError(source) };
+            }
+
+            // Either return a non-null package list or create a new empty node
+            if (packages != null) {
+                return packages;
+            } else {
+                return new Object[] { new RepoSourceEmpty(source, !wasEmptyBeforeFilter) } ;
+            }
+        }
+
+        /**
+         * Returns the list of archives for the given package, eventually filtering it
+         * to only show the compatible archives.
+         */
+        private Object[] getPackageChildren(Package pkg) {
+            Archive[] archives = pkg.getArchives();
+            if (mUpdaterData.getSettingsController().getShowUpdateOnly()) {
+                for (Archive archive : archives) {
+                    // if we only want the compatible archives, then we just take the first
+                    // one. it's unlikely there are 2 compatible archives for the same
+                    // package
+                    if (archive.isCompatible()) {
+                        return new Object[] { archive };
+                    }
+                }
+            }
+
+            return archives;
         }
 
         /**
@@ -213,7 +273,7 @@ public class RepoSourcesAdapter {
      * @param remotePackages the list of packages to filter.
      * @return a non null (but maybe empty) list of new or update packages.
      */
-    private Object[] filteredPackages(Package[] remotePackages) {
+    private Package[] filteredPackages(Package[] remotePackages) {
         // get the installed packages
         Package[] installedPackages = mUpdaterData.getInstalledPackage();
 
@@ -233,10 +293,10 @@ public class RepoSourcesAdapter {
                     if (info == UpdateInfo.UPDATE) {
                         filteredList.add(remotePkg);
                         newPkg = false;
-                        break; // there shouldn't be 2 revision of the same package
+                        break; // there shouldn't be 2 revisions of the same package
                     } else if (info != UpdateInfo.INCOMPATIBLE) {
                         newPkg = false;
-                        break; // there shouldn't be 2 revision of the same package
+                        break; // there shouldn't be 2 revisions of the same package
                     }
                 }
 
@@ -247,6 +307,6 @@ public class RepoSourcesAdapter {
             }
         }
 
-        return filteredList.toArray();
+        return filteredList.toArray(new Package[filteredList.size()]);
     }
 }

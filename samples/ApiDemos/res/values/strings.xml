@@ -424,6 +424,8 @@
 
     <string name="hide_me">Hide Me!</string>
 
+    <string name="density_title">Density: Unknown Screen</string>
+    
     <!-- ============================ -->
     <!--  media examples strings  -->
     <!-- ============================ -->

@@ -1,0 +1,47 @@
+home=true
+doc.type=licenses
+@jd:body
+
+<div id="mainBodyFixed">
+
+<p>
+   The Android Open Source Project uses a few open source initiative approved open source licenses to enable availability
+   of source code and to accept contributions from individuals and corporations.
+</p>
+
+<p>
+   <b>Android Open Source Project license</b>
+</p>
+
+<p>
+   The preferred license for the Android Open Source Project is Apache 2.0. Apache 2.0 is a commercial and open source
+   friendly open source license. The majority of the Android platform is licensed under the Apache 2.0 license. While
+   the project will strive to adhere to the preferred license, there may be exceptions which will be handled on a case-by-case
+   basis. For example, the Linux kernel patches are under the GPLv2 license with system exceptions, which can be found on kernel.org
+</p>
+
+<p>
+   <b>Contributor License Grants</b>
+</p>
+
+<p>
+   All individual contributors of ideas, code, or documentation to the Android Open Source Project will be required to
+   complete, sign, and submit an Individual Contributor License Grant. The grant can be executed online through the code
+   review tool. The agreement clearly defines the terms under which intellectual property has been contributed to the
+   Android Open Source Project.  This license is for your protection as a contributor as well as the protection of the
+   project; it does not change your rights to use your own contributions for any other purpose.
+</p>
+
+<p>
+   For a corporation that has assigned employees to work on the Android Open Source Project, a Corporate Contributor License
+   Grant is available. This version of the Grant allows a corporation to authorize contributions submitted by its designated
+   employees and to grant copyright and patent licenses. Note that a Corporate Contributor License Grant does not remove the
+   need for any developer to sign their own Individual Contributor License Grant as an individual, to cover any of their
+   contributions which are not owned by the corporation signing the Corporate Contributor License Grant.
+</p>
+
+<p>
+   Please note that we based our grants on the ones that the Apache Software Foundation uses, which can be found on its site.
+</p>
+
+</div>

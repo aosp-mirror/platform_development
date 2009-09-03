@@ -47,10 +47,10 @@ import java.util.List;
  * Application that injects random key events and other actions into the system.
  */
 public class Monkey {
-    
+
     /**
      * Monkey Debugging/Dev Support
-     * 
+     *
      * All values should be zero when checking in.
      */
     private final static int DEBUG_ALLOW_ANY_STARTS = 0;
@@ -74,20 +74,20 @@ public class Monkey {
 
     /** Ignore any not responding timeouts while running? */
     private boolean mIgnoreTimeouts;
-    
+
     /** Ignore security exceptions when launching activities */
     /** (The activity launch still fails, but we keep pluggin' away) */
     private boolean mIgnoreSecurityExceptions;
-    
+
     /** Monitor /data/tombstones and stop the monkey if new files appear. */
     private boolean mMonitorNativeCrashes;
-    
+
     /** Send no events.  Use with long throttle-time to watch user operations */
     private boolean mSendNoEvents;
 
     /** This is set when we would like to abort the running of the monkey. */
     private boolean mAbort;
-    
+
     /** This is set by the ActivityController thread to request collection of ANR trace files */
     private boolean mRequestAnrTraces = false;
 
@@ -96,7 +96,7 @@ public class Monkey {
 
     /** Kill the process after a timeout or crash. */
     private boolean mKillProcessAfterError;
-    
+
     /** Generate hprof reports before/after monkey runs */
     private boolean mGenerateHprof;
 
@@ -106,16 +106,16 @@ public class Monkey {
     ArrayList<String> mMainCategories = new ArrayList<String>();
     /** Applications we can switch to. */
     private ArrayList<ComponentName> mMainApps = new ArrayList<ComponentName>();
-    
+
     /** The delay between event inputs **/
     long mThrottle = 0;
-    
+
     /** The number of iterations **/
     int mCount = 1000;
-    
+
     /** The random number seed **/
     long mSeed = 0;
-    
+
     /** Dropped-event statistics **/
     long mDroppedKeyEvents = 0;
     long mDroppedPointerEvents = 0;
@@ -124,14 +124,21 @@ public class Monkey {
 
     /** a filename to the script (if any) **/
     private String mScriptFileName = null;
-    
+
+    /** a TCP port to listen on for remote commands. */
+    private int mServerPort = -1;
+
     private static final File TOMBSTONES_PATH = new File("/data/tombstones");
     private HashSet<String> mTombstones = null;
-    
-    float[] mFactors = new float[MonkeySourceRandom.FACTORZ_COUNT];    
+
+    float[] mFactors = new float[MonkeySourceRandom.FACTORZ_COUNT];
     MonkeyEventSource mEventSource;
     private MonkeyNetworkMonitor mNetworkMonitor = new MonkeyNetworkMonitor();
-    
+
+    // information on the current activity.
+    public static Intent currentIntent;
+    public static String currentPackage;
+
     /**
      * Monitor operations happening in the system.
      */
@@ -142,21 +149,24 @@ public class Monkey {
                 System.out.println("    // " + (allow ? "Allowing" : "Rejecting")
                         + " start of " + intent + " in package " + pkg);
             }
+            currentPackage = pkg;
+            currentIntent = intent;
             return allow;
         }
-        
+
         public boolean activityResuming(String pkg) {
             System.out.println("    // activityResuming(" + pkg + ")");
             boolean allow = checkEnteringPackage(pkg) || (DEBUG_ALLOW_ANY_RESTARTS != 0);
             if (!allow) {
                 if (mVerbose > 0) {
                     System.out.println("    // " + (allow ? "Allowing" : "Rejecting")
-                            + " resume of package " + pkg);
+                                       + " resume of package " + pkg);
                 }
             }
+            currentPackage = pkg;
             return allow;
         }
-        
+
         private boolean checkEnteringPackage(String pkg) {
             if (pkg == null) {
                 return true;
@@ -168,7 +178,7 @@ public class Monkey {
                 return mValidPackages.contains(pkg);
             }
         }
-        
+
         public boolean appCrashed(String processName, int pid, String shortMsg,
                 String longMsg, byte[] crashData) {
             System.err.println("// CRASH: " + processName + " (pid " + pid
@@ -223,14 +233,14 @@ public class Monkey {
             return 1;
         }
     }
-  
+
     /**
      * Run the procrank tool to insert system status information into the debug report.
      */
     private void reportProcRank() {
       commandLineReport("procrank", "procrank");
     }
-  
+
     /**
      * Run "cat /data/anr/traces.txt".  Wait about 5 seconds first, to let the asynchronous
      * report writing complete.
@@ -238,21 +248,21 @@ public class Monkey {
     private void reportAnrTraces() {
         try {
             Thread.sleep(5 * 1000);
-        } catch (InterruptedException e) { 
+        } catch (InterruptedException e) {
         }
         commandLineReport("anr traces", "cat /data/anr/traces.txt");
     }
-    
+
     /**
      * Run "dumpsys meminfo"
-     * 
+     *
      * NOTE:  You cannot perform a dumpsys call from the ActivityController callback, as it will
      * deadlock.  This should only be called from the main loop of the monkey.
      */
     private void reportDumpsysMemInfo() {
         commandLineReport("meminfo", "dumpsys meminfo");
     }
-    
+
     /**
      * Print report from a single command line.
      * @param reportName Simple tag that will print before the report and in various annotations.
@@ -266,7 +276,7 @@ public class Monkey {
         try {
             // Process must be fully qualified here because android.os.Process is used elsewhere
             java.lang.Process p = Runtime.getRuntime().exec(command);
-            
+
             // pipe everything from process stdout -> System.err
             InputStream inStream = p.getInputStream();
             InputStreamReader inReader = new InputStreamReader(inStream);
@@ -275,7 +285,7 @@ public class Monkey {
             while ((s = inBuffer.readLine()) != null) {
                 System.err.println(s);
             }
-            
+
             int status = p.waitFor();
             System.err.println("// " + reportName + " status was " + status);
         } catch (Exception e) {
@@ -307,26 +317,26 @@ public class Monkey {
                 Debug.waitForDebugger();
             }
         }
-        
+
         // Default values for some command-line options
         mVerbose = 0;
         mCount = 1000;
         mSeed = 0;
         mThrottle = 0;
-        
+
         // prepare for command-line processing
         mArgs = args;
         mNextArg = 0;
-        
+
         //set a positive value, indicating none of the factors is provided yet
         for (int i = 0; i < MonkeySourceRandom.FACTORZ_COUNT; i++) {
             mFactors[i] = 1.0f;
         }
-        
+
         if (!processOptions()) {
             return -1;
         }
-        
+
         // now set up additional data in preparation for launch
         if (mMainCategories.size() == 0) {
             mMainCategories.add(Intent.CATEGORY_LAUNCHER);
@@ -348,11 +358,11 @@ public class Monkey {
                 }
             }
         }
-        
+
         if (!checkInternalConfiguration()) {
             return -2;
         }
-        
+
         if (!getSystemInterfaces()) {
             return -3;
         }
@@ -360,11 +370,19 @@ public class Monkey {
         if (!getMainApps()) {
             return -4;
         }
-        
+
         if (mScriptFileName != null) {
             // script mode, ignore other options
             mEventSource = new MonkeySourceScript(mScriptFileName, mThrottle);
             mEventSource.setVerbose(mVerbose);
+        } else if (mServerPort != -1) {
+            try {
+                mEventSource = new MonkeySourceNetwork(mServerPort);
+            } catch (IOException e) {
+                System.out.println("Error binding to network socket.");
+                return -5;
+            }
+            mCount = Integer.MAX_VALUE;
         } else {
             // random source by default
             if (mVerbose >= 2) {    // check seeding performance
@@ -378,7 +396,7 @@ public class Monkey {
                     ((MonkeySourceRandom) mEventSource).setFactors(i, mFactors[i]);
                 }
             }
-            
+
             //in random mode, we start with a random activity
             ((MonkeySourceRandom) mEventSource).generateActivity();
         }
@@ -387,7 +405,7 @@ public class Monkey {
         if (!mEventSource.validate()) {
             return -5;
         }
-        
+
         if (mScriptFileName != null) {
             // in random mode, count is the number of single events
             // while in script mode, count is the number of repetition
@@ -396,12 +414,12 @@ public class Monkey {
             mCount = mCount * ((MonkeySourceScript) mEventSource)
                 .getOneRoundEventCount();
         }
-        
+
         // If we're profiling, do it immediately before/after the main monkey loop
         if (mGenerateHprof) {
             signalPersistentProcesses();
         }
-        
+
         mNetworkMonitor.start();
         int crashedAtCycle = runMonkeyCycles();
         mNetworkMonitor.stop();
@@ -423,7 +441,7 @@ public class Monkey {
                 System.out.println("// Generated profiling reports in /data/misc");
             }
         }
-        
+
         try {
             mAm.setActivityController(null);
             mNetworkMonitor.unregister(mAm);
@@ -434,7 +452,7 @@ public class Monkey {
                 crashedAtCycle = mCount - 1;
             }
         }
-        
+
         // report dropped event stats
         if (mVerbose > 0) {
             System.out.print(":Dropped: keys=");
@@ -446,7 +464,7 @@ public class Monkey {
             System.out.print(" flips=");
             System.out.println(mDroppedFlipEvents);
         }
-        
+
         // report network stats
         mNetworkMonitor.dump();
 
@@ -461,10 +479,10 @@ public class Monkey {
             return 0;
         }
     }
-    
+
     /**
      * Process the command-line options
-     * 
+     *
      * @return Returns true if options were parsed with no apparent errors.
      */
     private boolean processOptions() {
@@ -498,28 +516,28 @@ public class Monkey {
                 } else if (opt.equals("--hprof")) {
                     mGenerateHprof = true;
                 } else if (opt.equals("--pct-touch")) {
-                    mFactors[MonkeySourceRandom.FACTOR_TOUCH] = 
+                    mFactors[MonkeySourceRandom.FACTOR_TOUCH] =
                         -nextOptionLong("touch events percentage");
                 } else if (opt.equals("--pct-motion")) {
-                    mFactors[MonkeySourceRandom.FACTOR_MOTION] = 
+                    mFactors[MonkeySourceRandom.FACTOR_MOTION] =
                         -nextOptionLong("motion events percentage");
                 } else if (opt.equals("--pct-trackball")) {
-                    mFactors[MonkeySourceRandom.FACTOR_TRACKBALL] = 
+                    mFactors[MonkeySourceRandom.FACTOR_TRACKBALL] =
                         -nextOptionLong("trackball events percentage");
                 } else if (opt.equals("--pct-nav")) {
-                    mFactors[MonkeySourceRandom.FACTOR_NAV] = 
+                    mFactors[MonkeySourceRandom.FACTOR_NAV] =
                         -nextOptionLong("nav events percentage");
                 } else if (opt.equals("--pct-majornav")) {
-                    mFactors[MonkeySourceRandom.FACTOR_MAJORNAV] = 
+                    mFactors[MonkeySourceRandom.FACTOR_MAJORNAV] =
                         -nextOptionLong("major nav events percentage");
                 } else if (opt.equals("--pct-appswitch")) {
-                    mFactors[MonkeySourceRandom.FACTOR_APPSWITCH] = 
+                    mFactors[MonkeySourceRandom.FACTOR_APPSWITCH] =
                         -nextOptionLong("app switch events percentage");
                 } else if (opt.equals("--pct-flip")) {
                     mFactors[MonkeySourceRandom.FACTOR_FLIP] =
                         -nextOptionLong("keyboard flip percentage");
                 } else if (opt.equals("--pct-anyevent")) {
-                    mFactors[MonkeySourceRandom.FACTOR_ANYTHING] = 
+                    mFactors[MonkeySourceRandom.FACTOR_ANYTHING] =
                         -nextOptionLong("any events percentage");
                 } else if (opt.equals("--throttle")) {
                     mThrottle = nextOptionLong("delay (in milliseconds) to wait between events");
@@ -527,7 +545,9 @@ public class Monkey {
                     // do nothing - it's caught at the very start of run()
                 } else if (opt.equals("--dbg-no-events")) {
                     mSendNoEvents = true;
-                } else  if (opt.equals("-f")) {
+                } else if (opt.equals("--port")) {
+                    mServerPort = (int) nextOptionLong("Server port to listen on for commands");
+                } else if (opt.equals("-f")) {
                     mScriptFileName = nextOptionData();
                 } else if (opt.equals("-h")) {
                     showUsage();
@@ -544,19 +564,23 @@ public class Monkey {
             return false;
         }
 
-        String countStr = nextArg();
-        if (countStr == null) {
-            System.err.println("** Error: Count not specified");
-            showUsage();
-            return false;
-        }
+        // If a server port hasn't been specified, we need to specify
+        // a count
+        if (mServerPort == -1) {
+            String countStr = nextArg();
+            if (countStr == null) {
+                System.err.println("** Error: Count not specified");
+                showUsage();
+                return false;
+            }
 
-        try {
-            mCount = Integer.parseInt(countStr);
-        } catch (NumberFormatException e) {
-            System.err.println("** Error: Count is not a number");
-            showUsage();
-            return false;
+            try {
+                mCount = Integer.parseInt(countStr);
+            } catch (NumberFormatException e) {
+                System.err.println("** Error: Count is not a number");
+                showUsage();
+                return false;
+            }
         }
 
         return true;
@@ -564,7 +588,7 @@ public class Monkey {
 
     /**
      * Check for any internal configuration (primarily build-time) errors.
-     * 
+     *
      * @return Returns true if ready to rock.
      */
     private boolean checkInternalConfiguration() {
@@ -585,7 +609,7 @@ public class Monkey {
 
     /**
      * Attach to the required system interfaces.
-     * 
+     *
      * @return Returns true if all system interfaces were available.
      */
     private boolean getSystemInterfaces() {
@@ -621,7 +645,7 @@ public class Monkey {
     /**
      * Using the restrictions provided (categories & packages), generate a list of activities
      * that we can actually switch to.
-     * 
+     *
      * @return Returns true if it could successfully build a list of target activities
      */
     private boolean getMainApps() {
@@ -644,7 +668,7 @@ public class Monkey {
                 final int NA = mainApps.size();
                 for (int a = 0; a < NA; a++) {
                     ResolveInfo r = mainApps.get(a);
-                    if (mValidPackages.size() == 0 || 
+                    if (mValidPackages.size() == 0 ||
                             mValidPackages.contains(r.activityInfo.applicationInfo.packageName)) {
                         if (mVerbose >= 2) {     // very verbose
                             System.out.println("//   + Using main activity "
@@ -676,15 +700,15 @@ public class Monkey {
             System.out.println("** No activities found to run, monkey aborted.");
             return false;
         }
-        
+
         return true;
     }
 
     /**
      * Run mCount cycles and see if we hit any crashers.
-     * 
+     *
      * TODO: Meta state on keys
-     * 
+     *
      * @return Returns the last cycle which executed. If the value == mCount, no errors detected.
      */
     private int runMonkeyCycles() {
@@ -749,9 +773,11 @@ public class Monkey {
                 } else if (injectCode == MonkeyEvent.INJECT_ERROR_SECURITY_EXCEPTION) {
                     systemCrashed = !mIgnoreSecurityExceptions;
                 }
+            } else {
+                // Event Source has signaled that we have no more events to process
+                break;
             }
         }
-
         // If we got this far, we succeeded!
         return mCount;
     }
@@ -775,18 +801,18 @@ public class Monkey {
 
     /**
      * Watch for appearance of new tombstone files, which indicate native crashes.
-     * 
+     *
      * @return Returns true if new files have appeared in the list
      */
     private boolean checkNativeCrashes() {
         String[] tombstones = TOMBSTONES_PATH.list();
-        
+
         // shortcut path for usually empty directory, so we don't waste even more objects
         if ((tombstones == null) || (tombstones.length == 0)) {
             mTombstones = null;
             return false;
         }
-        
+
         // use set logic to look for new files
         HashSet<String> newStones = new HashSet<String>();
         for (String x : tombstones) {
@@ -804,14 +830,14 @@ public class Monkey {
     /**
      * Return the next command line option.  This has a number of special cases which
      * closely, but not exactly, follow the POSIX command line options patterns:
-     *  
+     *
      * -- means to stop processing additional options
      * -z means option z
      * -z ARGS means option z with (non-optional) arguments ARGS
      * -zARGS means option z with (optional) arguments ARGS
      * --zz means option zz
      * --zz ARGS means option zz with (non-optional) arguments ARGS
-     * 
+     *
      * Note that you cannot combine single letter options;  -abc != -a -b -c
      *
      * @return Returns the option string, or null if there are no more options.
@@ -857,10 +883,10 @@ public class Monkey {
         mNextArg++;
         return data;
     }
-    
+
     /**
      * Returns a long converted from the next data argument, with error handling if not available.
-     * 
+     *
      * @param opt The name of the option.
      * @return Returns a long converted from the argument.
      */
@@ -904,6 +930,7 @@ public class Monkey {
       System.err.println("              [--pct-appswitch PERCENT] [--pct-flip PERCENT]");
       System.err.println("              [--pct-anyevent PERCENT]");
       System.err.println("              [--wait-dbg] [--dbg-no-events] [-f scriptfile]");
+      System.err.println("              [--port port]");
       System.err.println("              [-s SEED] [-v [-v] ...] [--throttle MILLISEC]");
       System.err.println("              COUNT");
   }

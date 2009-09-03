@@ -199,6 +199,7 @@ public class InternalSelectionView extends View {
     /* (non-Javadoc)
     * @see android.view.KeyEvent.Callback#onKeyDown(int, android.view.KeyEvent)
     */
+    @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         switch(event.getKeyCode()) {
             case KeyEvent.KEYCODE_DPAD_UP:

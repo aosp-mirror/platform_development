@@ -17,6 +17,7 @@
 package com.android.ide.eclipse.adt.internal.resources.configurations;
 
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
+import com.android.sdklib.IAndroidTarget;
 
 import org.eclipse.swt.graphics.Image;
 
@@ -30,9 +31,9 @@ public final class RegionQualifier extends ResourceQualifier {
     private final static Pattern sRegionPattern = Pattern.compile("^r([A-Z]{2})$"); //$NON-NLS-1$
 
     public static final String NAME = "Region";
-    
+
     private String mValue;
-    
+
     /**
      * Creates and returns a qualifier from the given folder segment. If the segment is incorrect,
      * <code>null</code> is returned.
@@ -49,7 +50,7 @@ public final class RegionQualifier extends ResourceQualifier {
         }
         return null;
     }
-    
+
     /**
      * Returns the folder name segment for the given value. This is equivalent to calling
      * {@link #toString()} on a {@link RegionQualifier} object.
@@ -62,7 +63,7 @@ public final class RegionQualifier extends ResourceQualifier {
                 return segment;
             }
         }
-            
+
         return "";  //$NON-NLS-1$
     }
 
@@ -70,20 +71,20 @@ public final class RegionQualifier extends ResourceQualifier {
         if (mValue != null) {
             return mValue;
         }
-        
+
         return ""; //$NON-NLS-1$
     }
-    
+
     @Override
     public String getName() {
         return NAME;
     }
-    
+
     @Override
     public String getShortName() {
         return NAME;
     }
-    
+
     @Override
     public Image getIcon() {
         return IconFactory.getInstance().getIcon("region"); //$NON-NLS-1$
@@ -101,10 +102,10 @@ public final class RegionQualifier extends ResourceQualifier {
             config.setRegionQualifier(qualifier);
             return true;
         }
-        
+
         return false;
     }
-    
+
     @Override
     public boolean equals(Object qualifier) {
         if (qualifier instanceof RegionQualifier) {
@@ -113,7 +114,7 @@ public final class RegionQualifier extends ResourceQualifier {
             }
             return mValue.equals(((RegionQualifier)qualifier).mValue);
         }
-        
+
         return false;
     }
 
@@ -122,15 +123,15 @@ public final class RegionQualifier extends ResourceQualifier {
         if (mValue != null) {
             return mValue.hashCode();
         }
-        
+
         return 0;
     }
-    
+
     /**
      * Returns the string used to represent this qualifier in the folder name.
      */
     @Override
-    public String toString() {
+    public String getFolderSegment(IAndroidTarget target) {
         return getFolderSegment(mValue);
     }
 
@@ -139,7 +140,7 @@ public final class RegionQualifier extends ResourceQualifier {
         if (mValue != null) {
             return mValue;
         }
-        
+
         return ""; //$NON-NLS-1$
     }
 }

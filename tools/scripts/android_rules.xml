@@ -61,11 +61,16 @@
     </condition>
 
     <!-- The final package file to generate -->
+    <property name="out-debug-unaligned-package" value="${out-folder}/${ant.project.name}-debug-unaligned.apk"/>
     <property name="out-debug-package" value="${out-folder}/${ant.project.name}-debug.apk"/>
+    <property name="out-unsigned-package" value="${out-folder}/${ant.project.name}-unsigned.apk"/>
+    <property name="out-unaligned-package" value="${out-folder}/${ant.project.name}-unaligned.apk"/>
+    <property name="out-release-package" value="${out-folder}/${ant.project.name}-release.apk"/>
 
     <!-- Tools -->
     <condition property="exe" value=".exe" else=""><os family="windows"/></condition>
     <property name="adb" value="${android-tools}/adb${exe}"/>
+    <property name="zipalign" value="${android-tools}/zipalign${exe}" />
 
     <!-- rules -->
 
@@ -151,14 +156,14 @@
                 basename="${ant.project.name}" />
     </target>
 
-    <!-- Package the application and sign it with a debug key.
-         This is the default target when building. It is used for debug. -->
-    <target name="debug" depends="dex, package-resources">
+    <!-- Package the application and (maybe) sign it with a debug key.
+         This requires the property sign.package to be set to true or false. -->
+    <target name="package">
         <apkbuilder
                 outfolder="${out-folder}"
                 basename="${ant.project.name}"
-                signed="true"
-                verbose="false">
+                signed="${sign.package}"
+                verbose="true">
             <file path="${intermediate-dex}" />
             <sourcefolder path="${source-folder}" />
             <jarfolder path="${external-libs-folder}" />
@@ -166,32 +171,72 @@
         </apkbuilder>
     </target>
 
-    <!-- Package the application without signing it.
-         This allows for the application to be signed later with an official publishing key. -->
-    <target name="release" depends="dex, package-resources">
-        <apkbuilder
-                outfolder="${out-folder}"
-                basename="${ant.project.name}"
-                signed="false"
-                verbose="false">
-            <file path="${intermediate-dex}" />
-            <sourcefolder path="${source-folder}" />
-            <jarfolder path="${external-libs-folder}" />
-            <nativefolder path="${native-libs-folder}" />
-        </apkbuilder>
-        <echo>All generated packages need to be signed with jarsigner before they are published.</echo>
+    <target name="no-sign">
+       <property name="sign.package" value="false" />
+    </target>
+
+    <target name="debug-sign">
+       <property name="sign.package" value="true" />
+    </target>
+
+    <target name="debug" depends="dex, package-resources, debug-sign, package">
+        <echo>Running zip align on final apk...</echo>
+        <exec executable="${zipalign}" failonerror="true">
+            <arg value="-f" />
+            <arg value="4" />
+            <arg path="${out-debug-unaligned-package}" />
+            <arg path="${out-debug-package}" />
+        </exec>
+        <echo>Debug Package: ${out-debug-package}</echo>
+    </target>
+
+    <target name="release-package" depends="dex, package-resources, no-sign, package">
+    </target>
+
+    <target name="release.check">
+        <condition property="release.sign">
+            <and>
+                <isset property="key.store" />
+                <isset property="key.alias" />
+            </and>
+        </condition>
+    </target>
+    <target name="release.nosign" depends="release.check" unless="release.sign">
+        <echo>No key.store and key.alias properties found in build.properties.</echo>
+        <echo>Please sign ${out-unsigned-package} manually</echo>
+        <echo>and run zipalign from the Android SDK tools.</echo>
+    </target>
+
+    <target name="release" depends="release-package, release.nosign" if="release.sign">
+        <!-- get passwords -->
+        <input
+                message="Please enter keystore password (store:${key.store}):"
+                addproperty="key.store.password"/>
+        <input
+                message="Please enter password for alias '${key.alias}':"
+                addproperty="key.alias.password"/>
+        <!-- sign the APK -->
+        <echo>Signing final apk...</echo>
+        <signjar
+                jar="${out-unsigned-package}"
+                signedjar="${out-unaligned-package}"
+                keystore="${key.store}"
+                storepass="${key.store.password}"
+                alias="${key.alias}"
+                keypass="${key.alias.password}"/>
+        <!-- zip align the APK -->
+        <echo>Running zip align on final apk...</echo>
+        <exec executable="${zipalign}" failonerror="true">
+            <arg value="-f" />
+            <arg value="4" />
+            <arg path="${out-unaligned-package}" />
+            <arg path="${out-release-package}" />
+        </exec>
+        <echo>Release Package: ${out-release-package}</echo>
     </target>
 
     <!-- Install the package on the default emulator -->
     <target name="install" depends="debug">
-        <echo>Installing ${out-debug-package} onto default emulator...</echo>
-        <exec executable="${adb}" failonerror="true">
-            <arg value="install" />
-            <arg path="${out-debug-package}" />
-        </exec>
-    </target>
-
-    <target name="reinstall" depends="debug">
         <echo>Installing ${out-debug-package} onto default emulator...</echo>
         <exec executable="${adb}" failonerror="true">
             <arg value="install" />
@@ -201,7 +246,15 @@
     </target>
 
     <!-- Uinstall the package from the default emulator -->
-    <target name="uninstall">
+    <target name="uninstall.check">
+        <condition property="uninstall.run">
+           <isset property="application-package" />
+        </condition>
+    </target>
+    <target name="uninstall.error" depends="uninstall.check" unless="uninstall.run">
+        <echo>Unable to run 'ant unintall', application-package is not defined in build.properties</echo>
+    </target>
+    <target name="uninstall" depends="uninstall.error" if="uninstall.run">
         <echo>Uninstalling ${application-package} from the default emulator...</echo>
         <exec executable="${adb}" failonerror="true">
             <arg value="uninstall" />
@@ -217,12 +270,10 @@
         <echo>   debug:     Builds the application and sign it with a debug key.</echo>
         <echo>   release:   Builds the application. The generated apk file must be</echo>
         <echo>              signed before it is published.</echo>
-        <echo>   install:   Installs the debug package onto a running emulator or</echo>
-        <echo>              device. This can only be used if the application has </echo>
-        <echo>              not yet been installed.</echo>
-        <echo>   reinstall: Installs the debug package on a running emulator or</echo>
-        <echo>              device that already has the application.</echo>
-        <echo>              The signatures must match.</echo>
+        <echo>   install:   Installs/reinstall the debug package onto a running</echo>
+        <echo>              emulator or device.</echo>
+        <echo>              If the application was previously installed, the</echo>
+        <echo>              signatures must match.</echo>
         <echo>   uninstall: uninstall the application from a running emulator or</echo>
         <echo>              device.</echo>
     </target>

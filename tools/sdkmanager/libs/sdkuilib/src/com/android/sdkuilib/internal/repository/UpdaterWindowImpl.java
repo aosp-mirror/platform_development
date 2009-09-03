@@ -109,7 +109,7 @@ public class UpdaterWindowImpl {
      * Create contents of the window.
      */
     protected void createContents() {
-        mAndroidSdkUpdater = new Shell(mParentShell);
+        mAndroidSdkUpdater = new Shell(mParentShell, SWT.SHELL_TRIM);
         mAndroidSdkUpdater.addDisposeListener(new DisposeListener() {
             public void widgetDisposed(DisposeEvent e) {
                 onAndroidSdkUpdaterDispose();    //$hide$ (hide from SWT designer)
@@ -335,16 +335,39 @@ public class UpdaterWindowImpl {
         RepoSources sources = mUpdaterData.getSources();
         sources.add(new RepoSource(SdkRepository.URL_GOOGLE_SDK_REPO_SITE, false /*userSource*/));
 
-        String str = System.getenv("TEMP_SDK_URL"); // TODO STOPSHIP temporary remove before shipping
+        // SDK_UPDATER_URLS is a semicolon-separated list of URLs that can be used to
+        // seed the SDK Updater list for full repositories.
+        String str = System.getenv("SDK_UPDATER_URLS");
         if (str != null) {
             String[] urls = str.split(";");
             for (String url : urls) {
-                sources.add(new RepoSource(url, false /*userSource*/));
+                if (url != null && url.length() > 0) {
+                    RepoSource s = new RepoSource(url, false /*userSource*/);
+                    if (!sources.hasSource(s)) {
+                        sources.add(s);
+                    }
+                }
             }
         }
 
         // Load user sources
         sources.loadUserSources(mUpdaterData.getSdkLog());
+
+        // SDK_UPDATER_USER_URLS is a semicolon-separated list of URLs that can be used to
+        // seed the SDK Updater list for user-only repositories. User sources can only provide
+        // add-ons and extra packages.
+        str = System.getenv("SDK_UPDATER_USER_URLS");
+        if (str != null) {
+            String[] urls = str.split(";");
+            for (String url : urls) {
+                if (url != null && url.length() > 0) {
+                    RepoSource s = new RepoSource(url, true /*userSource*/);
+                    if (!sources.hasSource(s)) {
+                        sources.add(s);
+                    }
+                }
+            }
+        }
 
         mRemotePackagesPage.onSdkChange();
     }

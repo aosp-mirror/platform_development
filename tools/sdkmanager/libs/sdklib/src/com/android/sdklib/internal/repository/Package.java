@@ -42,16 +42,20 @@ import java.util.Properties;
  */
 public abstract class Package implements IDescription {
 
-    private static final String PROP_REVISION    = "Pkg.Revision";     //$NON-NLS-1$
-    private static final String PROP_LICENSE     = "Pkg.License";      //$NON-NLS-1$
-    private static final String PROP_DESC        = "Pkg.Desc";         //$NON-NLS-1$
-    private static final String PROP_DESC_URL    = "Pkg.DescUrl";      //$NON-NLS-1$
-    private static final String PROP_SOURCE_URL  = "Pkg.SourceUrl";    //$NON-NLS-1$
-    private static final String PROP_USER_SOURCE = "Pkg.UserSrc";      //$NON-NLS-1$
+    private static final String PROP_REVISION     = "Pkg.Revision";     //$NON-NLS-1$
+    private static final String PROP_LICENSE      = "Pkg.License";      //$NON-NLS-1$
+    private static final String PROP_DESC         = "Pkg.Desc";         //$NON-NLS-1$
+    private static final String PROP_DESC_URL     = "Pkg.DescUrl";      //$NON-NLS-1$
+    private static final String PROP_RELEASE_NOTE = "Pkg.RelNote";      //$NON-NLS-1$
+    private static final String PROP_RELEASE_URL  = "Pkg.RelNoteUrl";   //$NON-NLS-1$
+    private static final String PROP_SOURCE_URL   = "Pkg.SourceUrl";    //$NON-NLS-1$
+    private static final String PROP_USER_SOURCE  = "Pkg.UserSrc";      //$NON-NLS-1$
     private final int mRevision;
     private final String mLicense;
     private final String mDescription;
     private final String mDescUrl;
+    private final String mReleaseNote;
+    private final String mReleaseUrl;
     private final Archive[] mArchives;
     private final RepoSource mSource;
 
@@ -80,6 +84,8 @@ public abstract class Package implements IDescription {
         mRevision    = XmlParserUtils.getXmlInt   (packageNode, SdkRepository.NODE_REVISION, 0);
         mDescription = XmlParserUtils.getXmlString(packageNode, SdkRepository.NODE_DESCRIPTION);
         mDescUrl     = XmlParserUtils.getXmlString(packageNode, SdkRepository.NODE_DESC_URL);
+        mReleaseNote = XmlParserUtils.getXmlString(packageNode, SdkRepository.NODE_RELEASE_NOTE);
+        mReleaseUrl  = XmlParserUtils.getXmlString(packageNode, SdkRepository.NODE_RELEASE_URL);
 
         mLicense  = parseLicense(packageNode, licenses);
         mArchives = parseArchives(XmlParserUtils.getFirstChild(
@@ -104,10 +110,19 @@ public abstract class Package implements IDescription {
             Arch archiveArch,
             String archiveOsPath) {
 
+        if (description == null) {
+            description = "";
+        }
+        if (descUrl == null) {
+            descUrl = "";
+        }
+
         mRevision = Integer.parseInt(getProperty(props, PROP_REVISION, Integer.toString(revision)));
-        mLicense     = getProperty(props, PROP_LICENSE,  license);
-        mDescription = getProperty(props, PROP_DESC,     description);
-        mDescUrl     = getProperty(props, PROP_DESC_URL, descUrl);
+        mLicense     = getProperty(props, PROP_LICENSE,      license);
+        mDescription = getProperty(props, PROP_DESC,         description);
+        mDescUrl     = getProperty(props, PROP_DESC_URL,     descUrl);
+        mReleaseNote = getProperty(props, PROP_RELEASE_NOTE, "");
+        mReleaseUrl  = getProperty(props, PROP_RELEASE_URL,  "");
 
         // If source is null and we can find a source URL in the properties, generate
         // a dummy source just to store the URL. This allows us to easily remember where
@@ -145,9 +160,23 @@ public abstract class Package implements IDescription {
      */
     void saveProperties(Properties props) {
         props.setProperty(PROP_REVISION, Integer.toString(mRevision));
-        props.setProperty(PROP_LICENSE, mLicense);
-        props.setProperty(PROP_DESC, mDescription);
-        props.setProperty(PROP_DESC_URL, mDescUrl);
+        if (mLicense != null && mLicense.length() > 0) {
+            props.setProperty(PROP_LICENSE, mLicense);
+        }
+
+        if (mDescription != null && mDescription.length() > 0) {
+            props.setProperty(PROP_DESC, mDescription);
+        }
+        if (mDescUrl != null && mDescUrl.length() > 0) {
+            props.setProperty(PROP_DESC_URL, mDescUrl);
+        }
+
+        if (mReleaseNote != null && mReleaseNote.length() > 0) {
+            props.setProperty(PROP_RELEASE_NOTE, mReleaseNote);
+        }
+        if (mReleaseUrl != null && mReleaseUrl.length() > 0) {
+            props.setProperty(PROP_RELEASE_URL, mReleaseUrl);
+        }
 
         if (mSource != null) {
             props.setProperty(PROP_SOURCE_URL,  mSource.getUrl());
@@ -253,6 +282,22 @@ public abstract class Package implements IDescription {
     }
 
     /**
+     * Returns the optional release note for all packages (platform, add-on, tool, doc) or
+     * for a lib. Can be empty but not null.
+     */
+    public String getReleaseNote() {
+        return mReleaseNote;
+    }
+
+    /**
+     * Returns the optional release note URL for all packages (platform, add-on, tool, doc).
+     * Can be empty but not null.
+     */
+    public String getReleaseNoteUrl() {
+        return mReleaseUrl;
+    }
+
+    /**
      * Returns the archives defined in this package.
      * Can be an empty array but not null.
      */
@@ -285,7 +330,34 @@ public abstract class Package implements IDescription {
      * Can be empty but not null.
      */
     public String getLongDescription() {
-        return String.format("%1$s\nRevision %2$d", getDescription(), getRevision());
+        StringBuilder sb = new StringBuilder();
+
+        String s = getDescription();
+        if (s != null) {
+            sb.append(s);
+        }
+        if (sb.length() > 0) {
+            sb.append("\n");
+        }
+
+        sb.append(String.format("Revision %1$d", getRevision()));
+
+        s = getDescUrl();
+        if (s != null && s.length() > 0) {
+            sb.append(String.format("\n\nMore information at %1$s", s));
+        }
+
+        s = getReleaseNote();
+        if (s != null && s.length() > 0) {
+            sb.append("\n\nRelease note:\n").append(s);
+        }
+
+        s = getReleaseNoteUrl();
+        if (s != null && s.length() > 0) {
+            sb.append("\nRelease note URL: ").append(s);
+        }
+
+        return sb.toString();
     }
 
     /**
@@ -326,7 +398,7 @@ public abstract class Package implements IDescription {
      * current one, it's not an update.
      *
      * @param replacementPackage The potential replacement package.
-     * @return
+     * @return One of the {@link UpdateInfo} values.
      *
      * @see #sameItemAs(Package)
      */

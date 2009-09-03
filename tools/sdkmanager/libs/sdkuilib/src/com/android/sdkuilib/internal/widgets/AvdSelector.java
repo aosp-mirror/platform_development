@@ -81,7 +81,7 @@ public final class AvdSelector {
     private Button mNewButton;
     private Button mRefreshButton;
     private Button mManagerButton;
-    private Button mUpdateButton;
+    private Button mRepairButton;
     private Button mStartButton;
 
     private SelectionListener mSelectionListener;
@@ -256,14 +256,14 @@ public final class AvdSelector {
                 }
             });
 
-            mUpdateButton = new Button(buttons, SWT.PUSH | SWT.FLAT);
-            mUpdateButton.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-            mUpdateButton.setText("Update...");
-            mUpdateButton.setToolTipText("Updates the path of the selected AVD.");
-            mUpdateButton.addSelectionListener(new SelectionAdapter() {
+            mRepairButton = new Button(buttons, SWT.PUSH | SWT.FLAT);
+            mRepairButton.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+            mRepairButton.setText("Repair...");
+            mRepairButton.setToolTipText("Repairs the selected AVD.");
+            mRepairButton.addSelectionListener(new SelectionAdapter() {
                 @Override
                 public void widgetSelected(SelectionEvent arg0) {
-                    onUpdate();
+                    onRepair();
                 }
             });
 
@@ -298,8 +298,8 @@ public final class AvdSelector {
 
         mRefreshButton = new Button(buttons, SWT.PUSH | SWT.FLAT);
         mRefreshButton.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-        mRefreshButton.setText("Resfresh");
-        mRefreshButton.setToolTipText("Reloads the list of AVD.\nUse this if you create AVD from the command line.");
+        mRefreshButton.setText("Refresh");
+        mRefreshButton.setToolTipText("Reloads the list of AVD.\nUse this if you create AVDs from the command line.");
         mRefreshButton.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent arg0) {
@@ -775,8 +775,8 @@ public final class AvdSelector {
             if (mDeleteButton != null) {
                 mDeleteButton.setEnabled(false);
             }
-            if (mUpdateButton != null) {
-                mUpdateButton.setEnabled(false);
+            if (mRepairButton != null) {
+                mRepairButton.setEnabled(false);
             }
         } else {
             AvdInfo selection = getTableSelection();
@@ -790,8 +790,8 @@ public final class AvdSelector {
             if (mDeleteButton != null) {
                 mDeleteButton.setEnabled(hasSelection);
             }
-            if (mUpdateButton != null) {
-                mUpdateButton.setEnabled(hasSelection &&
+            if (mRepairButton != null) {
+                mRepairButton.setEnabled(hasSelection &&
                         selection.getStatus() == AvdStatus.ERROR_IMAGE_DIR);
             }
         }
@@ -851,7 +851,12 @@ public final class AvdSelector {
         }
     }
 
-    private void onUpdate() {
+    /**
+     * Repairs the selected AVD.
+     * <p/>
+     * For now this only supports fixing the wrong value in image.sysdir.*
+     */
+    private void onRepair() {
         final AvdInfo avdInfo = getTableSelection();
 
         // get the current Display

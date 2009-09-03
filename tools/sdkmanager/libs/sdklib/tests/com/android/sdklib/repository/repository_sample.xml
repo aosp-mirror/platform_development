@@ -39,6 +39,11 @@
         <sdk:uses-license ref="license1" />
         <sdk:description>Some optional description</sdk:description>
         <sdk:desc-url>http://www.example.com/platform1.html</sdk:desc-url>
+        <sdk:release-note>This is an optional release note
+            for this package. It's a free multi-line text.
+        </sdk:release-note>
+        <sdk:release-url>http://some/url/for/the/release/note.html</sdk:release-url>
+        <sdk:min-tools-rev>2</sdk:min-tools-rev>
         <!-- The archives node is mandatory and it cannot be empty. -->
         <sdk:archives>
             <sdk:archive os="any">
@@ -264,6 +269,7 @@
         </sdk:archives>
         <sdk:description>An Extra package for the USB driver, it will install in $SDK/usb_driver</sdk:description>
         <sdk:desc-url>http://www.example.com/extra.html</sdk:desc-url>
+        <sdk:min-tools-rev>3</sdk:min-tools-rev>
     </sdk:extra>
 
 </sdk:sdk-repository>

@@ -31,7 +31,7 @@ import java.util.Random;
 /**
  * monkey event queue
  */
-public class MonkeySourceRandom implements MonkeyEventSource {    
+public class MonkeySourceRandom implements MonkeyEventSource {
     /** Key events that move around the UI. */
     private static final int[] NAV_KEYS = {
         KeyEvent.KEYCODE_DPAD_UP, KeyEvent.KEYCODE_DPAD_DOWN,
@@ -55,7 +55,7 @@ public class MonkeySourceRandom implements MonkeyEventSource {
     /** Nice names for all key events. */
     private static final String[] KEY_NAMES = {
         "KEYCODE_UNKNOWN",
-        "KEYCODE_MENU",
+        "KEYCODE_SOFT_LEFT",
         "KEYCODE_SOFT_RIGHT",
         "KEYCODE_HOME",
         "KEYCODE_BACK",
@@ -146,7 +146,7 @@ public class MonkeySourceRandom implements MonkeyEventSource {
         "KEYCODE_REWIND",
         "KEYCODE_FORWARD",
         "KEYCODE_MUTE",
-        
+
         "TAG_LAST_KEYCODE"      // EOL.  used to keep the lists in sync
     };
 
@@ -158,34 +158,50 @@ public class MonkeySourceRandom implements MonkeyEventSource {
     public static final int FACTOR_SYSOPS       = 5;
     public static final int FACTOR_APPSWITCH    = 6;
     public static final int FACTOR_FLIP         = 7;
-    public static final int FACTOR_ANYTHING     = 8;    
+    public static final int FACTOR_ANYTHING     = 8;
     public static final int FACTORZ_COUNT       = 9;    // should be last+1
-    
-    
+
+
     /** percentages for each type of event.  These will be remapped to working
      * values after we read any optional values.
-     **/    
+     **/
     private float[] mFactors = new float[FACTORZ_COUNT];
     private ArrayList<ComponentName> mMainApps;
     private int mEventCount = 0;  //total number of events generated so far
     private MonkeyEventQueue mQ;
-    private Random mRandom;    
+    private Random mRandom;
     private int mVerbose = 0;
     private long mThrottle = 0;
 
     private boolean mKeyboardOpen = false;
 
-    /** 
+    /**
      * @return the last name in the key list
      */
     public static String getLastKeyName() {
         return KEY_NAMES[KeyEvent.getMaxKeyCode() + 1];
     }
-    
+
     public static String getKeyName(int keycode) {
         return KEY_NAMES[keycode];
     }
-    
+
+    /**
+     * Looks up the keyCode from a given KEYCODE_NAME.  NOTE: This may
+     * be an expensive operation.
+     *
+     * @param keyName the name of the KEYCODE_VALUE to lookup.
+     * @returns the intenger keyCode value, or -1 if not found
+     */
+    public static int getKeyCode(String keyName) {
+        for (int x = 0; x < KEY_NAMES.length; x++) {
+            if (KEY_NAMES[x].equals(keyName)) {
+                return x;
+            }
+        }
+        return -1;
+    }
+
     public MonkeySourceRandom(long seed, ArrayList<ComponentName> MainApps, long throttle) {
         // default values for random distributions
         // note, these are straight percentages, to match user input (cmd line args)
@@ -199,7 +215,7 @@ public class MonkeySourceRandom implements MonkeyEventSource {
         mFactors[FACTOR_APPSWITCH] = 2.0f;
         mFactors[FACTOR_FLIP] = 1.0f;
         mFactors[FACTOR_ANYTHING] = 15.0f;
-        
+
         mRandom = new SecureRandom();
         mRandom.setSeed((seed == 0) ? -1 : seed);
         mMainApps = MainApps;
@@ -220,25 +236,25 @@ public class MonkeySourceRandom implements MonkeyEventSource {
             } else {
                 defaultSum += mFactors[i];
                 ++defaultCount;
-            }            
+            }
         }
-        
+
         // if the user request was > 100%, reject it
         if (userSum > 100.0f) {
             System.err.println("** Event weights > 100%");
             return false;
         }
-        
+
         // if the user specified all of the weights, then they need to be 100%
         if (defaultCount == 0 && (userSum < 99.9f || userSum > 100.1f)) {
             System.err.println("** Event weights != 100%");
             return false;
         }
-        
+
         // compute the adjustment necessary
         float defaultsTarget = (100.0f - userSum);
         float defaultsAdjustment = defaultsTarget / defaultSum;
-        
+
         // fix all values, by adjusting defaults, or flipping user values back to >0
         for (int i = 0; i < FACTORZ_COUNT; ++i) {
             if (mFactors[i] <= 0.0f) {   // user values are zero or negative
@@ -247,46 +263,46 @@ public class MonkeySourceRandom implements MonkeyEventSource {
                 mFactors[i] *= defaultsAdjustment;
             }
         }
-        
+
         // if verbose, show factors
-        
+
         if (mVerbose > 0) {
             System.out.println("// Event percentages:");
             for (int i = 0; i < FACTORZ_COUNT; ++i) {
                 System.out.println("//   " + i + ": " + mFactors[i] + "%");
             }
-        } 
-        
+        }
+
         // finally, normalize and convert to running sum
         float sum = 0.0f;
         for (int i = 0; i < FACTORZ_COUNT; ++i) {
             sum += mFactors[i] / 100.0f;
             mFactors[i] = sum;
-        }        
+        }
         return true;
     }
-   
+
     /**
      * set the factors
-     * 
+     *
      * @param factors: percentages for each type of event
      */
     public void setFactors(float factors[]) {
         int c = FACTORZ_COUNT;
         if (factors.length < c) {
             c = factors.length;
-        }        
+        }
         for (int i = 0; i < c; i++)
             mFactors[i] = factors[i];
     }
-    
+
     public void setFactors(int index, float v) {
         mFactors[index] = v;
     }
-    
+
     /**
      * Generates a random motion event. This method counts a down, move, and up as multiple events.
-     * 
+     *
      * TODO:  Test & fix the selectors when non-zero percentages
      * TODO:  Longpress.
      * TODO:  Fling.
@@ -294,13 +310,13 @@ public class MonkeySourceRandom implements MonkeyEventSource {
      * TODO:  More useful than the random walk here would be to pick a single random direction
      * and distance, and divvy it up into a random number of segments.  (This would serve to
      * generate fling gestures, which are important).
-     * 
+     *
      * @param random Random number source for positioning
-     * @param motionEvent If false, touch/release.  If true, touch/move/release. 
-     * 
+     * @param motionEvent If false, touch/release.  If true, touch/move/release.
+     *
      */
     private void generateMotionEvent(Random random, boolean motionEvent){
-        
+
         Display display = WindowManagerImpl.getDefault().getDefaultDisplay();
 
         float x = Math.abs(random.nextInt() % display.getWidth());
@@ -310,12 +326,12 @@ public class MonkeySourceRandom implements MonkeyEventSource {
         if (downAt == -1) {
             downAt = eventTime;
         }
-        
-        MonkeyMotionEvent e = new MonkeyMotionEvent(MonkeyEvent.EVENT_TYPE_POINTER, 
-                downAt, MotionEvent.ACTION_DOWN, x, y, 0);        
-        e.setIntermediateNote(false);        
+
+        MonkeyMotionEvent e = new MonkeyMotionEvent(MonkeyEvent.EVENT_TYPE_POINTER,
+                downAt, MotionEvent.ACTION_DOWN, x, y, 0);
+        e.setIntermediateNote(false);
         mQ.addLast(e);
-        
+
         // sometimes we'll move during the touch
         if (motionEvent) {
             int count = random.nextInt(10);
@@ -323,34 +339,34 @@ public class MonkeySourceRandom implements MonkeyEventSource {
                 // generate some slop in the up event
                 x = (x + (random.nextInt() % 10)) % display.getWidth();
                 y = (y + (random.nextInt() % 10)) % display.getHeight();
-                
-                e = new MonkeyMotionEvent(MonkeyEvent.EVENT_TYPE_POINTER, 
-                        downAt, MotionEvent.ACTION_MOVE, x, y, 0);        
-                e.setIntermediateNote(true);        
+
+                e = new MonkeyMotionEvent(MonkeyEvent.EVENT_TYPE_POINTER,
+                        downAt, MotionEvent.ACTION_MOVE, x, y, 0);
+                e.setIntermediateNote(true);
                 mQ.addLast(e);
             }
         }
 
         // TODO generate some slop in the up event
-        e = new MonkeyMotionEvent(MonkeyEvent.EVENT_TYPE_POINTER, 
-                downAt, MotionEvent.ACTION_UP, x, y, 0);        
-        e.setIntermediateNote(false);        
+        e = new MonkeyMotionEvent(MonkeyEvent.EVENT_TYPE_POINTER,
+                downAt, MotionEvent.ACTION_UP, x, y, 0);
+        e.setIntermediateNote(false);
         mQ.addLast(e);
     }
-  
+
     /**
      * Generates a random trackball event. This consists of a sequence of small moves, followed by
      * an optional single click.
-     * 
+     *
      * TODO:  Longpress.
      * TODO:  Meta state
      * TODO:  Parameterize the % clicked
      * TODO:  More useful than the random walk here would be to pick a single random direction
      * and distance, and divvy it up into a random number of segments.  (This would serve to
      * generate fling gestures, which are important).
-     * 
+     *
      * @param random Random number source for positioning
-     * 
+     *
      */
     private void generateTrackballEvent(Random random) {
         Display display = WindowManagerImpl.getDefault().getDefaultDisplay();
@@ -362,47 +378,47 @@ public class MonkeySourceRandom implements MonkeyEventSource {
             // generate a small random step
             int dX = random.nextInt(10) - 5;
             int dY = random.nextInt(10) - 5;
-            
-            
-            e = new MonkeyMotionEvent(MonkeyEvent.EVENT_TYPE_TRACKBALL, -1, 
-                    MotionEvent.ACTION_MOVE, dX, dY, 0);        
-            e.setIntermediateNote(i > 0);        
+
+
+            e = new MonkeyMotionEvent(MonkeyEvent.EVENT_TYPE_TRACKBALL, -1,
+                    MotionEvent.ACTION_MOVE, dX, dY, 0);
+            e.setIntermediateNote(i > 0);
             mQ.addLast(e);
         }
-        
+
         // 10% of trackball moves end with a click
         if (0 == random.nextInt(10)) {
             long downAt = SystemClock.uptimeMillis();
-            
-            
-            e = new MonkeyMotionEvent(MonkeyEvent.EVENT_TYPE_TRACKBALL, downAt, 
-                    MotionEvent.ACTION_DOWN, 0, 0, 0);        
-            e.setIntermediateNote(true);        
+
+
+            e = new MonkeyMotionEvent(MonkeyEvent.EVENT_TYPE_TRACKBALL, downAt,
+                    MotionEvent.ACTION_DOWN, 0, 0, 0);
+            e.setIntermediateNote(true);
             mQ.addLast(e);
-            
-            
-            e = new MonkeyMotionEvent(MonkeyEvent.EVENT_TYPE_TRACKBALL, downAt, 
-                    MotionEvent.ACTION_UP, 0, 0, 0);        
-            e.setIntermediateNote(false);        
+
+
+            e = new MonkeyMotionEvent(MonkeyEvent.EVENT_TYPE_TRACKBALL, downAt,
+                    MotionEvent.ACTION_UP, 0, 0, 0);
+            e.setIntermediateNote(false);
             mQ.addLast(e);
-        }        
+        }
     }
-    
-    /** 
+
+    /**
      * generate a random event based on mFactor
      */
-    private void generateEvents() {        
+    private void generateEvents() {
         float cls = mRandom.nextFloat();
         int lastKey = 0;
 
         boolean touchEvent = cls < mFactors[FACTOR_TOUCH];
         boolean motionEvent = !touchEvent && (cls < mFactors[FACTOR_MOTION]);
-        if (touchEvent || motionEvent) {            
+        if (touchEvent || motionEvent) {
             generateMotionEvent(mRandom, motionEvent);
             return;
         }
-        
-        if (cls < mFactors[FACTOR_TRACKBALL]) {            
+
+        if (cls < mFactors[FACTOR_TRACKBALL]) {
             generateTrackballEvent(mRandom);
             return;
         }
@@ -427,23 +443,23 @@ public class MonkeySourceRandom implements MonkeyEventSource {
         } else {
             lastKey = 1 + mRandom.nextInt(KeyEvent.getMaxKeyCode() - 1);
         }
-                
+
         MonkeyKeyEvent e = new MonkeyKeyEvent(KeyEvent.ACTION_DOWN, lastKey);
         mQ.addLast(e);
-        
+
         e = new MonkeyKeyEvent(KeyEvent.ACTION_UP, lastKey);
         mQ.addLast(e);
     }
-    
+
     public boolean validate() {
         //check factors
         return adjustEventFactors();
     }
-    
+
     public void setVerbose(int verbose) {
         mVerbose = verbose;
     }
-    
+
     /**
      * generate an activity event
      */
@@ -452,18 +468,18 @@ public class MonkeySourceRandom implements MonkeyEventSource {
                 mRandom.nextInt(mMainApps.size())));
         mQ.addLast(e);
     }
-    
+
     /**
      * if the queue is empty, we generate events first
-     * @return the first event in the queue 
+     * @return the first event in the queue
      */
     public MonkeyEvent getNextEvent() {
         if (mQ.isEmpty()) {
                 generateEvents();
-        }        
-        mEventCount++;        
-        MonkeyEvent e = mQ.getFirst();        
-        mQ.removeFirst();        
+        }
+        mEventCount++;
+        MonkeyEvent e = mQ.getFirst();
+        mQ.removeFirst();
         return e;
     }
 }

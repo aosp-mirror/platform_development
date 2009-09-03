@@ -43,9 +43,10 @@ if not "%1"=="" goto EndTempCopy
 
     set tmpdir=%TEMP%\temp-android-tool
     xcopy lib\x86 %tmpdir%\lib\x86 /I /E /C /G /R /O /Y /Q > nul
-    copy /B /D /Y lib\androidprefs.jar %tmpdir%\lib\       > nul
-    copy /B /D /Y lib\org.eclipse.*    %tmpdir%\lib\       > nul
-    copy /B /D /Y lib\sdk*             %tmpdir%\lib\       > nul
+    copy /B /D /Y lib\androidprefs.jar   %tmpdir%\lib\       > nul
+    copy /B /D /Y lib\org.eclipse.*      %tmpdir%\lib\       > nul
+    copy /B /D /Y lib\sdk*               %tmpdir%\lib\       > nul
+    copy /B /D /Y lib\commons-compress*  %tmpdir%\lib\       > nul
 
     rem jarpath and swt_path are relative to PWD so we don't need to adjust them, just change dirs.
     set toolsdir=%cd%

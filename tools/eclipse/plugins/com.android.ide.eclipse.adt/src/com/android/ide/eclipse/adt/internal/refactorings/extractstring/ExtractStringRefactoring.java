@@ -866,7 +866,7 @@ public class ExtractStringRefactoring extends Refactoring {
                         append("\">").                                      //$NON-NLS-1$
                         append(tokenString).
                         append("</string>\n");                              //$NON-NLS-1$
-            content.append("<resources>\n");                                //$NON-NLS-1$
+            content.append("</resources>\n");                                //$NON-NLS-1$
 
             edit = new InsertEdit(0, content.toString());
             editGroup = new TextEditGroup("Create <string> in new XML file", edit);

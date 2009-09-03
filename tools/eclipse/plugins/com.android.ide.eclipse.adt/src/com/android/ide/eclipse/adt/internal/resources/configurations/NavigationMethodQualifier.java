@@ -17,6 +17,7 @@
 package com.android.ide.eclipse.adt.internal.resources.configurations;
 
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
+import com.android.sdklib.IAndroidTarget;
 
 import org.eclipse.swt.graphics.Image;
 
@@ -26,7 +27,7 @@ import org.eclipse.swt.graphics.Image;
  * Resource Qualifier for Navigation Method.
  */
 public final class NavigationMethodQualifier extends ResourceQualifier {
-    
+
     public static final String NAME = "Navigation Method";
 
     private NavigationMethod mValue;
@@ -39,15 +40,15 @@ public final class NavigationMethodQualifier extends ResourceQualifier {
         TRACKBALL("trackball", "Trackball"), //$NON-NLS-1$
         WHEEL("wheel", "Wheel"), //$NON-NLS-1$
         NONAV("nonav", "No Navigation"); //$NON-NLS-1$
-        
+
         private String mValue;
         private String mDisplay;
-        
+
         private NavigationMethod(String value, String display) {
             mValue = value;
             mDisplay = display;
         }
-        
+
         /**
          * Returns the enum for matching the provided qualifier value.
          * @param value The qualifier value.
@@ -59,14 +60,14 @@ public final class NavigationMethodQualifier extends ResourceQualifier {
                     return orient;
                 }
             }
-            
+
             return null;
         }
-        
+
         public String getValue() {
             return mValue;
         }
-        
+
         public String getDisplayValue() {
             return mDisplay;
         }
@@ -77,7 +78,7 @@ public final class NavigationMethodQualifier extends ResourceQualifier {
                 if (nav == value) {
                     return i;
                 }
-                
+
                 i++;
             }
 
@@ -95,7 +96,7 @@ public final class NavigationMethodQualifier extends ResourceQualifier {
             return null;
         }
     }
-    
+
     public NavigationMethodQualifier() {
         // pass
     }
@@ -107,18 +108,18 @@ public final class NavigationMethodQualifier extends ResourceQualifier {
     public NavigationMethod getValue() {
         return mValue;
     }
-    
+
     @Override
     public String getName() {
         return NAME;
     }
-    
+
     @Override
     public String getShortName() {
         return "Navigation";
     }
 
-    
+
     @Override
     public Image getIcon() {
         return IconFactory.getInstance().getIcon("navpad"); //$NON-NLS-1$
@@ -138,16 +139,16 @@ public final class NavigationMethodQualifier extends ResourceQualifier {
             config.setNavigationMethodQualifier(qualifier);
             return true;
         }
-        
+
         return false;
     }
-    
+
     @Override
     public boolean equals(Object qualifier) {
         if (qualifier instanceof NavigationMethodQualifier) {
             return mValue == ((NavigationMethodQualifier)qualifier).mValue;
         }
-        
+
         return false;
     }
 
@@ -156,19 +157,19 @@ public final class NavigationMethodQualifier extends ResourceQualifier {
         if (mValue != null) {
             return mValue.hashCode();
         }
-        
+
         return 0;
     }
-    
+
     /**
      * Returns the string used to represent this qualifier in the folder name.
      */
     @Override
-    public String toString() {
+    public String getFolderSegment(IAndroidTarget target) {
         if (mValue != null) {
             return mValue.getValue();
         }
-        
+
         return ""; //$NON-NLS-1$
     }
 
@@ -177,7 +178,7 @@ public final class NavigationMethodQualifier extends ResourceQualifier {
         if (mValue != null) {
             return mValue.getDisplayValue();
         }
-        
+
         return ""; //$NON-NLS-1$
     }
 }

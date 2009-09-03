@@ -25,25 +25,26 @@ DIST_DIR="$2"
 TEMP_DIR="$3"
 [ -z "$TEMP_DIR" ] && TEMP_DIR=${TMP:-/tmp}
 
-
 function die() {
-  echo "Error:" $*
-  echo "Aborting"
-  exit 1
+    echo "Error:" $*
+    echo "Aborting"
+    exit 1
 }
 
 function usage() {
-  echo "Usage: ${PROG_NAME} linux_or_mac_sdk.zip output_dir [temp_dir]"
-  echo "If temp_dir is not given, \$TMP is used. If that's missing, /tmp is used."
-  status
-  exit 2
+    local NAME
+    NAME=`basename ${PROG_NAME}`
+    echo "Usage: ${NAME} linux_or_mac_sdk.zip output_dir [temp_dir]"
+    echo "If temp_dir is not given, \$TMP is used. If that's missing, /tmp is used."
+    status
+    exit 2
 }
 
 function status() {
-  echo "Current values:"
-  echo "- Input  SDK: ${SDK_ZIP:-missing}"
-  echo "- Output dir: ${DIST_DIR:-missing}"
-  echo "- Temp   dir: ${TEMP_DIR:-missing}"
+    echo "Current values:"
+    echo "- Input  SDK: ${SDK_ZIP:-missing}"
+    echo "- Output dir: ${DIST_DIR:-missing}"
+    echo "- Temp   dir: ${TEMP_DIR:-missing}"
 }
 
 function check() {
@@ -92,7 +93,14 @@ function build() {
     make -j 4 emulator || die "Build failed"
     # Disable parallel build: it generates "permission denied" issues when
     # multiple "ar.exe" are running in parallel.
-    make prebuilt adb fastboot aidl aapt dexdump dmtracedump hprof-conv mksdcard sqlite3 \
+    make aapt adb aidl \
+        prebuilt \
+        dexdump dmtracedump \
+        fastboot \
+        hprof-conv \
+        mksdcard \
+        sqlite3 \
+        zipalign \
         || die "Build failed"
 }
 
@@ -124,12 +132,16 @@ function package() {
         "Instead found " $THE_PLATFORM
     [[ -d "$PLATFORM_TOOLS" ]] || die "Missing folder $PLATFORM_TOOLS."
 
+    # Package USB Driver
+    if type package_usb_driver 2>&1 | grep -q function ; then
+        package_usb_driver $TEMP_SDK_DIR
+    fi
 
     # Remove obsolete stuff from tools & platform
     TOOLS="$TEMP_SDK_DIR/tools"
     LIB="$TEMP_SDK_DIR/tools/lib"
     rm -v "$TOOLS"/{adb,android,apkbuilder,ddms,dmtracedump,draw9patch,emulator}
-    rm -v "$TOOLS"/{hierarchyviewer,hprof-conv,mksdcard,sqlite3,traceview}
+    rm -v "$TOOLS"/{hierarchyviewer,hprof-conv,mksdcard,sqlite3,traceview,zipalign}
     rm -v "$LIB"/*/swt.jar
     rm -v "$PLATFORM_TOOLS"/{aapt,aidl,dx,dexdump}
 
@@ -183,8 +195,9 @@ function package() {
 
     # Copy or move platform specific tools to the default platform.
     cp -v dalvik/dx/etc/dx.bat "$PLATFORM_TOOLS"/
-    # Note: mgwz.dll must be in same folder than aapt.exe
-    mv -v "$TOOLS"/{aapt.exe,aidl.exe,dexdump.exe,mgwz.dll} "$PLATFORM_TOOLS"/
+    mv -v "$TOOLS"/{aapt.exe,aidl.exe,dexdump.exe} "$PLATFORM_TOOLS"/
+    # Note: mgwz.dll must be both in SDK/tools for zipalign and in SDK/platform/XYZ/tools/ for aapt
+    cp -v "$TOOLS"/mgwz.dll "$PLATFORM_TOOLS"/
 
     # Fix EOL chars to make window users happy - fix all files at the top level only
     # as well as all batch files including those in platforms/<name>/tools/
@@ -200,14 +213,14 @@ function package() {
     # Now move the final zip from the temp dest to the final dist dir
     mv -v "$TEMP_DIR/$DEST_NAME_ZIP" "$DIST_DIR/$DEST_NAME_ZIP"
 
+    # We want fastboot and adb (and its DLLs) next to the new SDK
+    for i in fastboot.exe adb.exe AdbWinApi.dll AdbWinUsbApi.dll; do
+        cp -vf out/host/windows-x86/bin/$i "$DIST_DIR"/$i
+    done
+
     echo "Done"
     echo
     echo "Resulting SDK is in $DIST_DIR/$DEST_NAME_ZIP"
-
-    # We want fastboot and adb next to the new SDK
-    for i in fastboot.exe adb.exe AdbWinApi.dll; do
-        mv -vf out/host/windows-x86/bin/$i "$DIST_DIR"/$i
-    done
 }
 
 check

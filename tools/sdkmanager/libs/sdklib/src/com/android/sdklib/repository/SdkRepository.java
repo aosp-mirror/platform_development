@@ -49,15 +49,21 @@ public class SdkRepository {
     public static final String NODE_EXTRA    = "extra";                         //$NON-NLS-1$
 
     /** The license definition. */
-    public static final String NODE_LICENSE = "license";                        //$NON-NLS-1$
+    public static final String NODE_LICENSE       = "license";                  //$NON-NLS-1$
     /** The optional uses-license for all packages (platform, add-on, tool, doc) or for a lib. */
-    public static final String NODE_USES_LICENSE = "uses-license";              //$NON-NLS-1$
+    public static final String NODE_USES_LICENSE  = "uses-license";             //$NON-NLS-1$
     /** The revision, an int > 0, for all packages (platform, add-on, tool, doc). */
-    public static final String NODE_REVISION    = "revision";                   //$NON-NLS-1$
+    public static final String NODE_REVISION      = "revision";                 //$NON-NLS-1$
     /** The optional description for all packages (platform, add-on, tool, doc) or for a lib. */
-    public static final String NODE_DESCRIPTION = "description";                //$NON-NLS-1$
+    public static final String NODE_DESCRIPTION   = "description";              //$NON-NLS-1$
     /** The optional description URL for all packages (platform, add-on, tool, doc). */
-    public static final String NODE_DESC_URL    = "desc-url";                   //$NON-NLS-1$
+    public static final String NODE_DESC_URL      = "desc-url";                 //$NON-NLS-1$
+    /** The optional release note for all packages (platform, add-on, tool, doc). */
+    public static final String NODE_RELEASE_NOTE  = "release-note";             //$NON-NLS-1$
+    /** The optional release note URL for all packages (platform, add-on, tool, doc). */
+    public static final String NODE_RELEASE_URL   = "release-url";              //$NON-NLS-1$
+    /** The optional minimal tools revision required by platform & extra packages. */
+    public static final String NODE_MIN_TOOLS_REV = "min-tools-rev";            //$NON-NLS-1$
 
     /** The version, a string, for platform packages. */
     public static final String NODE_VERSION   = "version";                      //$NON-NLS-1$

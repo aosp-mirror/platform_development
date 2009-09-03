@@ -62,7 +62,6 @@ public class RemotePackagesPage extends Composite implements ISdkListener {
     private Group mDescriptionContainer;
     private Button mAddSiteButton;
     private Button mDeleteSiteButton;
-    private Label mPlaceholder3;
     private Button mRefreshButton;
     private Button mInstallSelectedButton;
     private Label mDescriptionLabel;
@@ -106,28 +105,6 @@ public class RemotePackagesPage extends Composite implements ISdkListener {
         mColumnSource.setWidth(289);
         mColumnSource.setText("Sources, Packages and Archives");
 
-        Composite composite = new Composite(parent, SWT.NONE);
-        composite.setLayoutData(
-                new GridData(SWT.FILL, SWT.BEGINNING, false, false, 5, 1));
-        GridLayout gl;
-        composite.setLayout(gl = new GridLayout(2, false));
-        gl.marginHeight = gl.marginWidth = 0;
-        // add an empty composite
-        Composite spacer = new Composite(composite, SWT.NONE);
-        GridData gd;
-        spacer.setLayoutData(gd = new GridData(GridData.FILL_HORIZONTAL));
-        gd.heightHint = 0;
-
-        mUpdateOnlyCheckBox = new Button(composite, SWT.CHECK);
-        mUpdateOnlyCheckBox.setText("Display updates only");
-        mUpdateOnlyCheckBox.setSelection(mUpdaterData.getSettingsController().getShowUpdateOnly());
-        mUpdateOnlyCheckBox.addSelectionListener(new SelectionAdapter() {
-            @Override
-            public void widgetSelected(SelectionEvent arg0) {
-                onShowUpdateOnly(); //$hide$
-            }
-        });
-
         mDescriptionContainer = new Group(parent, SWT.NONE);
         mDescriptionContainer.setLayout(new GridLayout(1, false));
         mDescriptionContainer.setText("Description");
@@ -138,43 +115,59 @@ public class RemotePackagesPage extends Composite implements ISdkListener {
         mDescriptionLabel.setText("Line1\nLine2\nLine3");
 
         mAddSiteButton = new Button(parent, SWT.NONE);
+        mAddSiteButton.setText("Add Site...");
+        mAddSiteButton.setToolTipText("Allows you to enter a new user external site. " +
+                "Such site can only contribute add-ons and extra packages.");
         mAddSiteButton.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
                 onAddSiteSelected(); //$hide$
             }
         });
-        mAddSiteButton.setText("Add Site...");
 
         mDeleteSiteButton = new Button(parent, SWT.NONE);
+        mDeleteSiteButton.setText("Delete Site...");
+        mDeleteSiteButton.setToolTipText("Allows you to remove an external site. " +
+                "Built-in sites cannot be removed.");
         mDeleteSiteButton.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
                 onRemoveSiteSelected(); //$hide$
             }
         });
-        mDeleteSiteButton.setText("Delete Site...");
 
-        mPlaceholder3 = new Label(parent, SWT.NONE);
-        mPlaceholder3.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, false, 1, 1));
+        mUpdateOnlyCheckBox = new Button(parent, SWT.CHECK);
+        mUpdateOnlyCheckBox.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, false, 1, 1));
+        mUpdateOnlyCheckBox.setText("Display updates only");
+        mUpdateOnlyCheckBox.setToolTipText("When selected, only compatible update packages are shown in the list above.");
+        mUpdateOnlyCheckBox.setSelection(mUpdaterData.getSettingsController().getShowUpdateOnly());
+        mUpdateOnlyCheckBox.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent arg0) {
+                onShowUpdateOnly(); //$hide$
+            }
+        });
 
         mRefreshButton = new Button(parent, SWT.NONE);
+        mRefreshButton.setText("Refresh");
+        mRefreshButton.setToolTipText("Refreshes the list of packages from open sites.");
         mRefreshButton.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
                 onRefreshSelected(); //$hide$
             }
         });
-        mRefreshButton.setText("Refresh");
 
         mInstallSelectedButton = new Button(parent, SWT.NONE);
+        mInstallSelectedButton.setText("Install Selected");
+        mInstallSelectedButton.setToolTipText("Allows you to review all selected packages " +
+                "and install them.");
         mInstallSelectedButton.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
                 onInstallSelectedArchives();  //$hide$
             }
         });
-        mInstallSelectedButton.setText("Install Selected");
     }
 
     @Override
@@ -288,7 +281,9 @@ public class RemotePackagesPage extends Composite implements ISdkListener {
     }
 
     private void onShowUpdateOnly() {
-        mUpdaterData.getSettingsController().setShowUpdateOnly(mUpdateOnlyCheckBox.getSelection());
+        SettingsController controller = mUpdaterData.getSettingsController();
+        controller.setShowUpdateOnly(mUpdateOnlyCheckBox.getSelection());
+        controller.saveSettings();
         mTreeViewerSources.refresh();
     }
 
@@ -418,6 +413,9 @@ public class RemotePackagesPage extends Composite implements ISdkListener {
         mDeleteSiteButton.setEnabled(hasSelectedUserSource);
         mRefreshButton.setEnabled(true);
         mInstallSelectedButton.setEnabled(hasCheckedArchive);
+
+        // set value on the show only update checkbox
+        mUpdateOnlyCheckBox.setSelection(mUpdaterData.getSettingsController().getShowUpdateOnly());
     }
 
     // End of hiding from SWT Designer

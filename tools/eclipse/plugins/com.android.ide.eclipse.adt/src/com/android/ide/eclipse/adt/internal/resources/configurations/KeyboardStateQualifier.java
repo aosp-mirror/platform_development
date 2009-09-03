@@ -17,6 +17,7 @@
 package com.android.ide.eclipse.adt.internal.resources.configurations;
 
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
+import com.android.sdklib.IAndroidTarget;
 
 import org.eclipse.swt.graphics.Image;
 
@@ -26,7 +27,7 @@ import org.eclipse.swt.graphics.Image;
  * Resource Qualifier for keyboard state.
  */
 public final class KeyboardStateQualifier extends ResourceQualifier {
-    
+
     public static final String NAME = "Keyboard State";
 
     private KeyboardState mValue = null;
@@ -37,15 +38,15 @@ public final class KeyboardStateQualifier extends ResourceQualifier {
     public static enum KeyboardState {
         EXPOSED("keysexposed", "Exposed"), //$NON-NLS-1$
         HIDDEN("keyshidden", "Hidden"); //$NON-NLS-1$
-        
+
         private String mValue;
         private String mDisplayValue;
-        
+
         private KeyboardState(String value, String displayValue) {
             mValue = value;
             mDisplayValue = displayValue;
         }
-        
+
         /**
          * Returns the enum for matching the provided qualifier value.
          * @param value The qualifier value.
@@ -57,25 +58,25 @@ public final class KeyboardStateQualifier extends ResourceQualifier {
                     return orient;
                 }
             }
-            
+
             return null;
         }
 
         public String getValue() {
             return mValue;
         }
-        
+
         public String getDisplayValue() {
             return mDisplayValue;
         }
-        
+
         public static int getIndex(KeyboardState value) {
             int i = 0;
             for (KeyboardState input : values()) {
                 if (value == input) {
                     return i;
                 }
-                
+
                 i++;
             }
 
@@ -105,27 +106,27 @@ public final class KeyboardStateQualifier extends ResourceQualifier {
     public KeyboardState getValue() {
         return mValue;
     }
-    
+
     @Override
     public String getName() {
         return NAME;
     }
-    
+
     @Override
     public String getShortName() {
         return "Keyboard";
     }
-    
+
     @Override
     public Image getIcon() {
         return IconFactory.getInstance().getIcon("keyboard"); //$NON-NLS-1$
     }
-    
+
     @Override
     public boolean isValid() {
         return mValue != null;
     }
-    
+
     @Override
     public boolean checkAndSet(String value, FolderConfiguration config) {
         KeyboardState orientation = KeyboardState.getEnum(value);
@@ -135,10 +136,10 @@ public final class KeyboardStateQualifier extends ResourceQualifier {
             config.setKeyboardStateQualifier(qualifier);
             return true;
         }
-        
+
         return false;
     }
-    
+
     @Override
     public boolean equals(Object qualifier) {
         if (qualifier instanceof KeyboardStateQualifier) {
@@ -153,19 +154,19 @@ public final class KeyboardStateQualifier extends ResourceQualifier {
         if (mValue != null) {
             return mValue.hashCode();
         }
-        
+
         return 0;
     }
-    
+
     /**
      * Returns the string used to represent this qualifier in the folder name.
      */
     @Override
-    public String toString() {
+    public String getFolderSegment(IAndroidTarget target) {
         if (mValue != null) {
             return mValue.getValue();
         }
-        
+
         return ""; //$NON-NLS-1$
     }
 
@@ -174,7 +175,7 @@ public final class KeyboardStateQualifier extends ResourceQualifier {
         if (mValue != null) {
             return mValue.getDisplayValue();
         }
-        
+
         return ""; //$NON-NLS-1$
     }
 }

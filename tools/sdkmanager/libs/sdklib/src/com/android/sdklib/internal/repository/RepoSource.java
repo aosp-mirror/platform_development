@@ -31,6 +31,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import javax.net.ssl.SSLKeyException;
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -47,7 +48,7 @@ import javax.xml.validation.Validator;
  */
 public class RepoSource implements IDescription {
 
-    private final String mUrl;
+    private String mUrl;
     private final boolean mUserSource;
 
     private Package[] mPackages;
@@ -56,6 +57,9 @@ public class RepoSource implements IDescription {
 
     /**
      * Constructs a new source for the given repository URL.
+     * @param url The source URL. Cannot be null. If the URL ends with a /, the default
+     *            repository.xml filename will be appended automatically.
+     * @param userSource True if this a user source (add-ons & packages only.)
      */
     public RepoSource(String url, boolean userSource) {
 
@@ -70,6 +74,23 @@ public class RepoSource implements IDescription {
         mUrl = url;
         mUserSource = userSource;
         setDefaultDescription();
+    }
+
+    /**
+     * Two repo source are equal if they have the same userSource flag and the same URL.
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof RepoSource) {
+            RepoSource rs = (RepoSource) obj;
+            return  rs.isUserSource() == this.isUserSource() && rs.getUrl().equals(this.getUrl());
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return mUrl.hashCode() ^ Boolean.valueOf(mUserSource).hashCode();
     }
 
     /** Returns true if this is a user source. We only load addon and extra packages
@@ -132,55 +153,53 @@ public class RepoSource implements IDescription {
         monitor.setDescription("Fetching %1$s", url);
         monitor.incProgress(1);
 
-        ByteArrayInputStream xml = null;
+        mFetchError = null;
+        Exception[] exception = new Exception[] { null };
+        ByteArrayInputStream xml = fetchUrl(url, exception);
+        boolean validated = false;
+        if (xml != null) {
+            monitor.setDescription("Validate XML");
+            validated = validateXml(xml, url, monitor);
+        }
 
-        for (int tentative = 0; tentative < 2 && xml == null; tentative++) {
+        // If we failed the first time and the URL doesn't explicitly end with
+        // our filename, make another tentative after changing the URL.
+        if (!validated && !url.endsWith(SdkRepository.URL_DEFAULT_XML_FILE)) {
+            if (!url.endsWith("/")) {       //$NON-NLS-1$
+                url += "/";                 //$NON-NLS-1$
+            }
+            url += SdkRepository.URL_DEFAULT_XML_FILE;
 
-            // reset fetch error and fetch
-            mFetchError = null;
-            xml = fetchUrl(url, monitor);
+            xml = fetchUrl(url, exception);
+            if (xml != null) {
+                validated = validateXml(xml, url, monitor);
+            }
 
-            if (xml == null) {
-                mDescription += String.format("\nFailed to fetch URL %1$s", url);
-                mFetchError = "Failed to fetch URL";
-                monitor.setResult("Failed to fetch URL %1$s", url);
-            } else {
-                // We got a document. It might not be XML or it might not be valid.
+            if (validated) {
+                // If the second tentative succeeded, indicate it in the console
+                // with the URL that worked.
+                monitor.setResult("Repository found at %1$s", url);
 
-                monitor.setDescription("Validate XML");
+                // Keep the modified URL
+                mUrl = url;
+            }
+        }
 
-                if (validateXml(xml, url, monitor)) {
-                    // We got a valid XML, keep it and use it.
+        if (!validated) {
+            mFetchError = "Failed to fetch URL";
 
-                    if (tentative > 0) {
-                        // If the second tentative succeeded, indicate it in the console,
-                        // otherwise the user will only see the first failure
-                        // message and will think the whole thing failed. This also
-                        // indicates we modifed the URL.
-                        monitor.setResult("Repository found instead at %1$s", url);
-                    }
-                    break;
-                } else {
-                    mDescription += String.format("\nFailed to validate XML at %1$s", url);
-                    mFetchError = "Failed to validate XML";
-                    monitor.setResult("Failed to validate XML at %1$s", url);
-
-                    // forget this XML, it wasn't any good.
-                    xml = null;
+            String reason = "Unknown";
+            if (exception[0] != null) {
+                if (exception[0] instanceof FileNotFoundException) {
+                    reason = "File not found";
+                } else if (exception[0] instanceof SSLKeyException) {
+                    reason = "SSL error. You might want to force download through http in the settings.";
+                } else if (exception[0].getMessage() != null) {
+                    reason = exception[0].getMessage();
                 }
             }
 
-            // If we failed the first time and the URL doesn't explicitly end with
-            // our filename, make another tentative. Otherwise abort.
-            if (tentative == 0 && !url.endsWith(SdkRepository.URL_DEFAULT_XML_FILE)) {
-                if (!url.endsWith("/")) {       //$NON-NLS-1$
-                    url += "/";                 //$NON-NLS-1$
-                }
-                url += SdkRepository.URL_DEFAULT_XML_FILE;
-            } else {
-                break;
-            }
-
+            monitor.setResult("Failed to fetch URL %1$s, reason: %2$s", url, reason);
         }
 
         monitor.incProgress(1);
@@ -189,7 +208,7 @@ public class RepoSource implements IDescription {
             monitor.setDescription("Parse XML");
             monitor.incProgress(1);
             parsePackages(xml, monitor);
-            if (mPackages.length == 0) {
+            if (mPackages == null || mPackages.length == 0) {
                 mDescription += "\nNo packages found.";
             } else if (mPackages.length == 1) {
                 mDescription += "\nOne package found.";
@@ -219,7 +238,7 @@ public class RepoSource implements IDescription {
      * Java URL Reader: http://java.sun.com/docs/books/tutorial/networking/urls/readingURL.html
      * Java set Proxy: http://java.sun.com/docs/books/tutorial/networking/urls/_setProxy.html
      */
-    private ByteArrayInputStream fetchUrl(String urlString, ITaskMonitor monitor) {
+    private ByteArrayInputStream fetchUrl(String urlString, Exception[] outException) {
         URL url;
         try {
             url = new URL(urlString);
@@ -255,12 +274,8 @@ public class RepoSource implements IDescription {
                 }
             }
 
-        } catch (FileNotFoundException e) {
-            // The FNF message is just the URL. Make it a bit more useful.
-            monitor.setResult("File not found: %1$s", e.getMessage());
-
         } catch (IOException e) {
-            monitor.setResult(e.getMessage());
+            outException[0] = e;
         }
 
         return null;
@@ -378,10 +393,10 @@ public class RepoSource implements IDescription {
             }
 
         } catch (ParserConfigurationException e) {
-            monitor.setResult("Failed to create XML document builder for %1$s");
+            monitor.setResult("Failed to create XML document builder");
 
         } catch (SAXException e) {
-            monitor.setResult("Failed to parse XML document %1$s");
+            monitor.setResult("Failed to parse XML document");
 
         } catch (IOException e) {
             monitor.setResult("Failed to read XML document");

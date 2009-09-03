@@ -1,0 +1,133 @@
+home=true
+@jd:body
+
+
+	<div id="mainBodyFixed" align="top">
+              <div id="mainBodyLeft">			
+                   <h2>Android Open Source Project</h2>
+                   <!-- total max width is 520px -->
+                   <p> Android is the first free, open source, and fully customizable mobile platform. 
+                       Android offers a full stack: an operating system, middleware and key mobile applications.
+                       It also contains a rich set of APIs that allows third-party developers to develop great
+                       applications. </p>
+              </div><!-- end mainBodyLeft -->
+
+              <div id="mainBodyRight">
+                      <table id="rightColumn">
+                              <tr>
+                                      <td class="imageCell"><a href="{@docRoot}sdk/index.html"><img src="{@docRoot}assets/images/icon_download.jpg" style="padding:0" /></a></td>
+                                      <td>
+                                              <h2 class="green">Download</h2>
+                                              <p>The Android SDK has the tools, sample code, and docs you need to create great apps.  </p>
+                                              <p><a href="http://developer.android.com">Learn more &raquo;</a></p>
+                                      </td>
+                              </tr>
+                              <tr>
+                                      <td colspan="2"><div class="seperator">&nbsp;</div></td>
+                              </tr>
+                              <tr>
+                                      <td class="imageCell"><a href="http://www.android.com/market.html"><img src="{@docRoot}assets/images/icon_market.jpg" style="padding:0" /></a></td>
+                                      <td>
+                                              <h2 class="green">Publish</h2>
+                                              <p>Android Market is an open service that lets you distribute your apps to handsets.</p>
+                                              <p><a href="http://www.android.com/market.html">Learn more &raquo;</a></p>
+                                      </td>
+                              </tr>
+                              <tr>
+                                      <td colspan="2"><div class="seperator">&nbsp;</div></td>
+                              </tr>
+                              <tr>
+                                      <td class="imageCell"><a href="http://source.android.com"><img src="{@docRoot}assets/images/icon_contribute.jpg" style="padding:0" /></a></td>
+                                      <td>
+                                              <h2 class="green">Contribute</h2>
+                                              <p>Android Open Source Project gives you access to the entire platform source.</p>
+                                              <p><a href="http://source.android.com">Learn more &raquo;</a></p>
+                                      </td>
+                              </tr>
+                              <tr>
+                                      <td colspan="2"><div class="seperator">&nbsp;</div></td>
+                              </tr>
+                              <tr>
+                                      <td class="imageCell"><a href="http://www.youtube.com/user/androiddevelopers"><img src="{@docRoot}assets/images/video-droid.png" style="padding:0" /></a></td>
+                                      <td>
+                                              <h2 class="green">Watch</h2>
+                                              <object width="150" height="140"><param name="movie" value="http://www.youtube.com/v/GARMe7Km_gk&hl=en&fs=1"></param><param name="allowFullScreen" value="true"></param><param name="allowscriptaccess" value="always"></param><embed src="http://www.youtube.com/v/GARMe7Km_gk&hl=en&fs=1" type="application/x-shockwave-flash" allowscriptaccess="always" allowfullscreen="true" width="150" height="140"></embed></object>
+                                              <p style="margin-top:1em"><a href="{@docRoot}videos/index.html">More Android videos &raquo;</a></p>
+                                      </td>
+                              </tr>
+
+                      </table>
+              </div>
+	</div>
+
+<!--[if lte IE 6]>
+  <style>
+    #arrow-left {
+      margin:0 0 0 5px;
+    }
+    #arrow-right {
+      margin-left:0;
+    }
+    .app-list-container {
+      margin: 37px 0 0 23px;
+    }
+    div#list-clip { 
+      width:468px;
+    }
+  </style>
+<![endif]-->
+
+<script type="text/javascript">
+
+// * -- carousel dictionary -- * //
+  /* layout:  imgLeft, imgRight, imgTop
+     icon:    image for carousel entry. cropped (height:70px, width:90px)
+     name:    string for carousel entry
+     img:     image for bulletin post. cropped (height: 170, width:230px)
+     title:   header for bulletin (optional, insert "" value to skip
+     desc:    the bulletin post. must include html tags. 
+  */
+
+  var droidList = {
+    'sdk': {
+      'layout':"imgLeft",
+      'icon':"sdk-small.png",
+      'name':"SDK 1.5 r3",
+      'img':"sdk-large.png",
+      'title':"Android 1.5 SDK",
+      'desc': "<p>Android 1.5 SDK is now available. It includes new APIs for Android 1.5, updated developer tools, multiple platform versions, and a Google APIs add-on.</p><p><a href='{@docRoot}sdk/1.5_r3/index.html'>Download Android 1.5 SDK &raquo;</a></p>"
+    },
+    
+    'io': {
+      'layout':"imgLeft",
+      'icon':"io-small.png",
+      'name':"Google I/O",
+      'img':"io-large.png",
+      'title':"Google I/O Developer Conference",
+      'desc': "<p>The Google I/O developer conference took place May 27-28 in San Francisco. If you missed the conference, you can experience the Android sessions by viewing YouTube videos.</p><p><a href='{@docRoot}videos/index.html'>See the sessions from Google I/O &raquo;</a></p>"
+    },
+
+    'mapskey': {
+      'layout':"imgLeft",
+      'icon':"maps-small.png",
+      'name':"Maps API Key",
+      'img':"maps-large.png",
+      'title':"Maps API Key",
+      'desc':"<p>If you're writing an Android application that uses Google Maps (with MapView), you must register your application to obtain a Maps API Key. Without the key, your maps application will not work on Android devices. Obtaining a key requires just a couple of steps.</p><p><a href='http://code.google.com/android/add-ons/google-apis/maps-overview.html'>Learn more &raquo;</a></p>"
+    },
+
+    'devphone': {
+      'layout':"imgLeft",
+      'icon':"devphone-small.png",
+      'name':"Dev Phone 1",
+      'img':"devphone-large.png",
+      'title':"Android Dev Phone 1",
+      'desc': "<p>Run and debug your Android applications directly on this device. Modify and rebuild the Android operating system, and flash it onto the phone. The Android Dev Phone 1 is carrier independent, and available for purchase by any developer registered with <a href='http://market.android.com/publish'>Android Market</a>.</p><p><a href='/guide/developing/device.html#dev-phone-1'>Learn more about the Android Dev Phone 1 &raquo;</a></p>"
+    }
+
+  }
+</script>
+<script type="text/javascript" src="{@docRoot}assets/carousel.js"></script>
+<script type="text/javascript">
+  initCarousel("sdk");
+</script>

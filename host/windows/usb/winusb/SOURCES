@@ -1,0 +1,93 @@
+#
+#  Copyright (C) 2009 The Android Open Source Project
+# 
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+# 
+#       http://www.apache.org/licenses/LICENSE-2.0
+# 
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+#
+
+TARGETNAME = AdbWinUsbApi
+TARGETPATH = obj
+TARGETTYPE = DYNLINK
+
+UMTYPE = windows
+DLLDEF = AdbWinUsbApi.def
+
+# Use statically linked atl libraries:
+# - atls.lib for free build
+# - atlsd.lib for checked build
+USE_STATIC_ATL  = 1
+# Use ATL v. 7.1
+ATL_VER         = 71
+# Use STL v. 6.0
+USE_STL         = 1
+STL_VER         = 60
+# Use multithreaded libraries
+USE_LIBCMT      = 1
+
+# Include directories
+INCLUDES = $(DDK_INC_PATH);           \
+           $(SDK_INC_PATH);           \
+           $(CRT_INC_PATH);           \
+           $(SDK_INC_PATH)\crt;       \
+           $(CRT_INC_PATH)\atl71;     \
+           $(SDK_INC_PATH)\crt\stl60
+
+# Common target libraries
+TARGETLIBS = $(SDK_LIB_PATH)\ole32.lib    \
+             $(SDK_LIB_PATH)\Advapi32.lib \
+             $(SDK_LIB_PATH)\Kernel32.lib \
+             $(SDK_LIB_PATH)\User32.lib   \
+             $(SDK_LIB_PATH)\oleaut32.lib \
+             $(SDK_LIB_PATH)\wbemuuid.lib \
+             $(SDK_LIB_PATH)\uuid.lib     \
+             $(SDK_LIB_PATH)\setupapi.lib \
+             $(SDK_LIB_PATH)\usbd.lib     \
+             $(SDK_LIB_PATH)\winusb.lib   \
+             ..\api\obj$(BUILD_ALT_DIR)\i386\AdbWinApi.lib
+
+!IF "$(DDKBUILDENV)" == "fre"
+# Libraries for release (free) builds
+TARGETLIBS = $(TARGETLIBS) $(ATL_LIB_PATH)\atls.lib
+!ELSE
+# Libraries for debug (checked) builds
+TARGETLIBS = $(TARGETLIBS) $(ATL_LIB_PATH)\atlsd.lib
+!ENDIF
+
+# Common C defines
+C_DEFINES= $(C_DEFINES) -DADBWINUSB_EXPORTS -D_UNICODE \
+           -DUNICODE -DWIN32 -D_WINDOWS -D_USRDLL -D_WINDLL
+
+!IF "$(DDKBUILDENV)" == "fre"
+# C defines for release (free) builds
+C_DEFINES = $(C_DEFINES) -DNDEBUG
+!ELSE
+# C defines for debug (checked) builds
+C_DEFINES = $(C_DEFINES) -D_DEBUG
+!ENDIF
+
+# Turn on all warnings, and treat warnings as errors
+MSC_WARNING_LEVEL = /W4 /Wp64 /WX
+
+# Common C defines
+USER_C_FLAGS = $(USER_C_FLAGS) /FD /EHsc /wd4100 /wd4200 /wd4702 /nologo
+
+# Set precompiled header information
+PRECOMPILED_CXX = 1
+PRECOMPILED_INCLUDE = stdafx.h
+PRECOMPILED_SOURCEFILE = stdafx.cpp
+
+# Define source files for AdbWinUsbApi.dll
+SOURCES = adb_winusb_endpoint_object.cpp  \
+          adb_winusb_interface.cpp        \
+          adb_winusb_io_completion.cpp    \
+          AdbWinUsbApi.cpp                \
+		      AdbWinUsbApi.rc

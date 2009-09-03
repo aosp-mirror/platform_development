@@ -20,8 +20,6 @@ import com.example.android.apis.R;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.widget.LinearLayout;
-import android.widget.TextView;
 
 /**
  * Baseline alignment includes elements within nested vertical
@@ -29,7 +27,7 @@ import android.widget.TextView;
  */
 public class BaselineNested1 extends Activity {
 
-
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 

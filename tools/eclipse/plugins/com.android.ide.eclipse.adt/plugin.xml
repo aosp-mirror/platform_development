@@ -571,19 +571,19 @@
          </menu>
       </actionSet>
       <actionSet
-            description="Android AVD Manager"
+            description="Android AVD and SDK Manager"
             id="adt.actionSet.avdManager"
-            label="Android AVD Manager"
+            label="Android SDK and AVD Manager"
             visible="true">
          <action
                class="com.android.ide.eclipse.adt.internal.wizards.actions.AvdManagerAction"
                icon="icons/avd_manager.png"
                id="com.android.ide.eclipse.adt.ui.avdmanager"
-               label="Android AVD Manager"
+               label="Android SDK and AVD Manager"
                menubarPath="Window/additions"
                style="push"
                toolbarPath="android_project"
-               tooltip="Opens the Android Virtual Device (AVD) Manager">
+               tooltip="Opens the Android Virtual Device (AVD) and SDK Manager">
          </action>
       </actionSet>
    </extension>

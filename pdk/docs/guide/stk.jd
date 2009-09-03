@@ -1,5 +1,6 @@
 page.title=Sim Toolkit Application (STK)
 pdk.version=1.0
+doc.type=guide
 @jd:body
 
 <div id="qv-wrapper">
@@ -16,7 +17,7 @@ pdk.version=1.0
 </div>
 
 
-<p>This document offers a high-level overview of the SIM Toolkit Application for Android 1.0 and is primarily of interest for implementors of the Radio Interface Layer (RIL). The STK is  R96 compatible (3GPP TS 11.14 v5.9.0) and complies partially with R99 (3GPP TS 101.267 v8.17.0). See the <a href="androidSTKFeatureList">STK Feature List</a> for the complete feature list. </p> 
+<p>This document offers a high-level overview of the SIM Toolkit Application for Android 1.0 and is primarily of interest for implementors of the Radio Interface Layer (RIL). The STK is  R96 compatible (3GPP TS 11.14 v5.9.0) and complies partially with R99 (3GPP TS 101.267 v8.17.0). See the <a href="#androidSTKFeatureList">STK Feature List</a> for the complete feature list. </p>.
 <p>The Android STK implementation includes three layers:</p> 
 <ul> 
   <li> STK RIL: Low-level layer provided by the vendor plus <code>libril</code>.</li> 

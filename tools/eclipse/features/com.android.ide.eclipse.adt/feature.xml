@@ -2,7 +2,7 @@
 <feature
       id="com.android.ide.eclipse.adt"
       label="Android Development Tools"
-      version="0.9.2.qualifier"
+      version="0.9.3.qualifier"
       provider-name="The Android Open Source Project"
       plugin="com.android.ide.eclipse.adt">
 
@@ -15,11 +15,8 @@
    </copyright>
 
    <license url="http://www.eclipse.org/org/documents/epl-v10.php">
-      Note:  jcommon-1.0.12.jar is under the BSD license rather than the APL.  You can find a copy of the BSD License at http://www.opensource.org/licenses/bsd-license.php
+      Note:  kxml2-2.3.0.jar is under the BSD license rather than the EPL.  You can find a copy of the BSD License at http://www.opensource.org/licenses/bsd-license.php
 
-jfreechart-1.0.9.jar and jfreechart-1.0.9-swt.jar are under the LGPL rather than the EPL.  You can find a copy of the LGPL at http://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt.  You can get the source code for these two components at http://android.git.kernel.org/pub/jfreechart-1.0.9.zip
-
-   
       Eclipse Public License - v 1.0
 
 THE ACCOMPANYING PROGRAM IS PROVIDED UNDER THE TERMS OF THIS ECLIPSE PUBLIC LICENSE (&quot;AGREEMENT&quot;). ANY USE, REPRODUCTION OR DISTRIBUTION OF THE PROGRAM CONSTITUTES RECIPIENT&apos;S ACCEPTANCE OF THIS AGREEMENT.

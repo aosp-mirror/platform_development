@@ -76,9 +76,7 @@ public class ToolPackage extends Package {
     /** Returns a long description for an {@link IDescription}. */
     @Override
     public String getLongDescription() {
-        return String.format("Android SDK Tools, revision %1$d.\n%2$s",
-                getRevision(),
-                super.getLongDescription());
+        return getShortDescription() + ".";
     }
 
     /**

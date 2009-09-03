@@ -25,6 +25,7 @@ public class Focus3 extends Activity {
     private Button mTopButton;
     private Button mBottomButton;
 
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 

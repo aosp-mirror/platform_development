@@ -1,7 +1,7 @@
 Android NDK ChangeLog:
 
 -------------------------------------------------------------------------------
-current version
+android-ndk-1.6_r1
 
 IMPORTANT BUG FIXES:
 

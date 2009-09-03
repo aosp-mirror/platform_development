@@ -36,7 +36,6 @@ import com.android.sdkuilib.internal.widgets.AvdSelector.IAvdFilter;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
-import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
@@ -67,12 +66,6 @@ import org.eclipse.swt.widgets.Table;
 public class DeviceChooserDialog extends Dialog implements IDeviceChangeListener {
 
     private final static int ICON_WIDTH = 16;
-
-    private final static String PREFS_COL_SERIAL = "deviceChooser.serial"; //$NON-NLS-1$
-    private final static String PREFS_COL_STATE  = "deviceChooser.state"; //$NON-NLS-1$
-    private final static String PREFS_COL_AVD     = "deviceChooser.avd"; //$NON-NLS-1$
-    private final static String PREFS_COL_TARGET = "deviceChooser.target"; //$NON-NLS-1$
-    private final static String PREFS_COL_DEBUG  = "deviceChooser.debug"; //$NON-NLS-1$
 
     private Table mDeviceTable;
     private TableViewer mViewer;
@@ -334,7 +327,6 @@ public class DeviceChooserDialog extends Dialog implements IDeviceChangeListener
         layout.marginLeft = 30;
         offsetComp.setLayout(layout);
 
-        IPreferenceStore store = AdtPlugin.getDefault().getPreferenceStore();
         mDeviceTable = new Table(offsetComp, SWT.SINGLE | SWT.FULL_SELECTION | SWT.BORDER);
         GridData gd;
         mDeviceTable.setLayoutData(gd = new GridData(GridData.FILL_BOTH));
@@ -345,23 +337,23 @@ public class DeviceChooserDialog extends Dialog implements IDeviceChangeListener
 
         TableHelper.createTableColumn(mDeviceTable, "Serial Number",
                 SWT.LEFT, "AAA+AAAAAAAAAAAAAAAAAAA", //$NON-NLS-1$
-                PREFS_COL_SERIAL, store);
+                null /* prefs name */, null /* prefs store */);
 
         TableHelper.createTableColumn(mDeviceTable, "AVD Name",
-                SWT.LEFT, "engineering", //$NON-NLS-1$
-                PREFS_COL_AVD, store);
+                SWT.LEFT, "AAAAAAAAAAAAAAAAAAA", //$NON-NLS-1$
+                null /* prefs name */, null /* prefs store */);
 
         TableHelper.createTableColumn(mDeviceTable, "Target",
                 SWT.LEFT, "AAA+Android 9.9.9", //$NON-NLS-1$
-                PREFS_COL_TARGET, store);
+                null /* prefs name */, null /* prefs store */);
 
         TableHelper.createTableColumn(mDeviceTable, "Debug",
                 SWT.LEFT, "Debug", //$NON-NLS-1$
-                PREFS_COL_DEBUG, store);
+                null /* prefs name */, null /* prefs store */);
 
         TableHelper.createTableColumn(mDeviceTable, "State",
                 SWT.LEFT, "bootloader", //$NON-NLS-1$
-                PREFS_COL_STATE, store);
+                null /* prefs name */, null /* prefs store */);
 
         // create the viewer for it
         mViewer = new TableViewer(mDeviceTable);

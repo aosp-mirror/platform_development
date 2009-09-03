@@ -119,8 +119,10 @@ typedef struct _AdbEndpointInformation {
 // as being exported.
 #ifdef ADBWIN_EXPORTS
 #define ADBWIN_API EXTERN_C __declspec(dllexport)
+#define ADBWIN_API_CLASS     __declspec(dllexport)
 #else
 #define ADBWIN_API EXTERN_C __declspec(dllimport)
+#define ADBWIN_API_CLASS     __declspec(dllimport)
 #endif
 
 /** \brief Handle to an API object.

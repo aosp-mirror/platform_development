@@ -113,9 +113,9 @@ public class DocPackage extends Package {
     /** Returns a long description for an {@link IDescription}. */
     @Override
     public String getLongDescription() {
-        return String.format("%1$s.\n%2$s",
+        return String.format("%1$s,\nRevision %2$d.",
                 getShortDescription(),
-                super.getLongDescription());
+                getRevision());
     }
 
     /**
@@ -166,22 +166,25 @@ public class DocPackage extends Package {
 
         AndroidVersion replacementVersion = replacementDoc.getVersion();
 
-        // the new doc is an update if the api level is higher
+        // the new doc is an update if the api level is higher (no matter the codename on either)
         if (replacementVersion.getApiLevel() > mVersion.getApiLevel()) {
             return UpdateInfo.UPDATE;
         }
 
-        // if it's the exactly same (including codename), we check the revision
-        if (replacementVersion.equals(mVersion) &&
-                replacementPackage.getRevision() > this.getRevision()) {
-            return UpdateInfo.UPDATE;
-        }
-
-        // else we check if they have the same api level and the new one is a preview, in which
-        // case it's also an update (since preview have the api level of the _previous_ version.
-        if (replacementVersion.getApiLevel() == mVersion.getApiLevel() &&
-                replacementVersion.isPreview()) {
-            return UpdateInfo.UPDATE;
+        // Check if they're the same exact (api and codename)
+        if (replacementVersion.equals(mVersion)) {
+            // exact same version, so check the revision level
+            if (replacementPackage.getRevision() > this.getRevision()) {
+                return UpdateInfo.UPDATE;
+            }
+        } else {
+            // not the same version? we check if they have the same api level and the new one
+            // is a preview, in which case it's also an update (since preview have the api level
+            // of the _previous_ version.)
+            if (replacementVersion.getApiLevel() == mVersion.getApiLevel() &&
+                    replacementVersion.isPreview()) {
+                return UpdateInfo.UPDATE;
+            }
         }
 
         // not an upgrade but not incompatible either.

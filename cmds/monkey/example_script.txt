@@ -1,0 +1,57 @@
+# Touch the android
+touch down 160 200
+touch up 160 200
+sleep 1000
+
+# Hit Next
+touch down 300 450
+touch up 300 450
+sleep 1000
+
+# Hit Next
+touch down 300 450
+touch up 300 450
+sleep 1000
+
+# Hit Next
+touch down 300 450
+touch up 300 450
+sleep 1000
+
+# Go down and select the account username
+key down dpad_down
+key up dpad_down
+key down dpad_down
+key up dpad_down
+key down dpad_center
+key up dpad_center
+# account name: bill
+key down b
+key up b
+key down i
+key up i
+key down l
+key up l
+key down l
+key up l
+
+# Go down to the password field
+key down dpad_down
+key up dpad_down
+
+# password: bill
+key down b
+key up b
+key down i
+key up i
+key down l
+key up l
+key down l
+key up l
+
+# Select next
+touch down 300 450
+touch up 300 450
+
+# quit
+quit

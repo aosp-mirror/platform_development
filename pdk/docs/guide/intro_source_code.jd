@@ -1,4 +1,6 @@
 page.title=Source Code Overview
+pdk.version=1.0
+doc.type=guide
 @jd:body
 
 <a name="toc"/>

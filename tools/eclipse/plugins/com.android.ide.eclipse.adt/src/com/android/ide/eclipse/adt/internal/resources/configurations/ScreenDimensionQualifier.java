@@ -17,6 +17,7 @@
 package com.android.ide.eclipse.adt.internal.resources.configurations;
 
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
+import com.android.sdklib.IAndroidTarget;
 
 import org.eclipse.swt.graphics.Image;
 
@@ -46,7 +47,7 @@ public final class ScreenDimensionQualifier extends ResourceQualifier {
      * 200 but that'll be Y in landscape and X in portrait.
      * Default value is <code>DEFAULT_SIZE</code> */
     private int mValue2 = DEFAULT_SIZE;
-    
+
     public int getValue1() {
         return mValue1;
     }
@@ -54,17 +55,17 @@ public final class ScreenDimensionQualifier extends ResourceQualifier {
     public int getValue2() {
         return mValue2;
     }
-    
+
     @Override
     public String getName() {
         return NAME;
     }
-    
+
     @Override
     public String getShortName() {
         return "Dimension";
     }
-    
+
     @Override
     public Image getIcon() {
         return IconFactory.getInstance().getIcon("dimension"); //$NON-NLS-1$
@@ -81,7 +82,7 @@ public final class ScreenDimensionQualifier extends ResourceQualifier {
         if (m.matches()) {
             String d1 = m.group(1);
             String d2 = m.group(2);
-            
+
             ScreenDimensionQualifier qualifier = getQualifier(d1, d2);
             if (qualifier != null) {
                 config.setScreenDimensionQualifier(qualifier);
@@ -90,14 +91,14 @@ public final class ScreenDimensionQualifier extends ResourceQualifier {
         }
         return false;
     }
-    
+
     @Override
     public boolean equals(Object qualifier) {
         if (qualifier instanceof ScreenDimensionQualifier) {
             ScreenDimensionQualifier q = (ScreenDimensionQualifier)qualifier;
             return (mValue1 == q.mValue1 && mValue2 == q.mValue2);
         }
-        
+
         return false;
     }
 
@@ -105,12 +106,12 @@ public final class ScreenDimensionQualifier extends ResourceQualifier {
     public int hashCode() {
         return toString().hashCode();
     }
-    
+
     public static ScreenDimensionQualifier getQualifier(String size1, String size2) {
         try {
             int s1 = Integer.parseInt(size1);
             int s2 = Integer.parseInt(size2);
-            
+
             ScreenDimensionQualifier qualifier = new ScreenDimensionQualifier();
 
             if (s1 > s2) {
@@ -125,7 +126,7 @@ public final class ScreenDimensionQualifier extends ResourceQualifier {
         } catch (NumberFormatException e) {
             // looks like the string we extracted wasn't a valid number.
         }
-        
+
         return null;
     }
 
@@ -133,7 +134,7 @@ public final class ScreenDimensionQualifier extends ResourceQualifier {
      * Returns the string used to represent this qualifier in the folder name.
      */
     @Override
-    public String toString() {
+    public String getFolderSegment(IAndroidTarget target) {
         return String.format("%1$dx%2$d", mValue1, mValue2); //$NON-NLS-1$
     }
 
@@ -142,7 +143,7 @@ public final class ScreenDimensionQualifier extends ResourceQualifier {
         if (mValue1 != -1 && mValue2 != -1) {
             return String.format("%1$dx%2$d", mValue1, mValue2);
         }
-        
+
         return ""; //$NON-NLS-1$
     }
 }

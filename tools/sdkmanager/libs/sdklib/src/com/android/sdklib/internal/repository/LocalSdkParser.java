@@ -44,7 +44,11 @@ public class LocalSdkParser {
     }
 
     /**
-     * Returns the packages found by the last call to {@link #parseSdk(String, SdkManager, ISdkLog)}.
+     * Returns the packages found by the last call to
+     * {@link #parseSdk(String, SdkManager, ISdkLog)}.
+     * <p/>
+     * This returns initially returns null.
+     * Once the parseSdk() method has been called, this returns a possibly empty but non-null array.
      */
     public Package[] getPackages() {
         return mPackages;

@@ -31,6 +31,7 @@ bin/sqlite3 tools/sqlite3
 bin/dmtracedump tools/dmtracedump
 bin/hprof-conv tools/hprof-conv
 bin/mksdcard tools/mksdcard
+bin/zipalign tools/zipalign
 
 # the uper-jar file that apps link against
 out/target/common/obj/PACKAGING/android_jar_intermediates/android.jar platforms/${PLATFORM_NAME}/android.jar
@@ -39,7 +40,7 @@ out/target/common/obj/PACKAGING/android_jar_intermediates/android.jar platforms/
 framework/org.eclipse.core.commands_3.4.0.I20080509-2000.jar tools/lib/org.eclipse.core.commands_3.4.0.I20080509-2000.jar
 framework/org.eclipse.equinox.common_3.4.0.v20080421-2006.jar tools/lib/org.eclipse.equinox.common_3.4.0.v20080421-2006.jar
 framework/org.eclipse.jface_3.4.2.M20090107-0800.jar tools/lib/org.eclipse.jface_3.4.2.M20090107-0800.jar
-
+framework/osgi.jar tools/lib/osgi.jar
 
 sdk/sdk-build.prop platforms/${PLATFORM_NAME}/build.prop
 development/tools/scripts/plugin.prop tools/lib/plugin.prop
@@ -49,7 +50,6 @@ obj/framework.aidl platforms/${PLATFORM_NAME}/framework.aidl
 
 # sdk scripts
 development/tools/scripts/AndroidManifest.template platforms/${PLATFORM_NAME}/templates/AndroidManifest.template
-development/tools/scripts/AndroidManifest.alias.template platforms/${PLATFORM_NAME}/templates/AndroidManifest.alias.template
 development/tools/scripts/AndroidManifest.tests.template platforms/${PLATFORM_NAME}/templates/AndroidManifest.tests.template
 development/tools/scripts/iml.template platforms/${PLATFORM_NAME}/templates/iml.template
 development/tools/scripts/ipr.template platforms/${PLATFORM_NAME}/templates/ipr.template
@@ -58,11 +58,8 @@ development/tools/scripts/java_file.template platforms/${PLATFORM_NAME}/template
 development/tools/scripts/java_tests_file.template platforms/${PLATFORM_NAME}/templates/java_tests_file.template
 development/tools/scripts/layout.template platforms/${PLATFORM_NAME}/templates/layout.template
 development/tools/scripts/strings.template platforms/${PLATFORM_NAME}/templates/strings.template
-development/tools/scripts/alias.template platforms/${PLATFORM_NAME}/templates/alias.template
 development/tools/scripts/android_rules.xml platforms/${PLATFORM_NAME}/templates/android_rules.xml
-development/tools/scripts/alias_rules.xml platforms/${PLATFORM_NAME}/templates/alias_rules.xml
 development/tools/scripts/build.template tools/lib/build.template
-development/tools/scripts/build.alias.template tools/lib/build.alias.template
 
 # emacs support
 development/tools/scripts/android.el tools/lib/android.el
@@ -78,6 +75,7 @@ development/samples/SkeletonApp platforms/${PLATFORM_NAME}/samples/SkeletonApp
 development/samples/Snake platforms/${PLATFORM_NAME}/samples/Snake
 development/samples/SoftKeyboard platforms/${PLATFORM_NAME}/samples/SoftKeyboard
 development/samples/JetBoy platforms/${PLATFORM_NAME}/samples/JetBoy
+development/samples/SearchableDictionary platforms/${PLATFORM_NAME}/samples/SearchableDictionary
 
 # dx
 bin/dx platforms/${PLATFORM_NAME}/tools/dx
@@ -146,9 +144,10 @@ prebuilt/android-arm/kernel/kernel-qemu platforms/${PLATFORM_NAME}/images/kernel
 external/qemu/android/avd/hardware-properties.ini tools/lib/hardware-properties.ini
 
 # emulator skins
-development/emulator/skins/HVGA   platforms/${PLATFORM_NAME}/skins/HVGA
-development/emulator/skins/QVGA   platforms/${PLATFORM_NAME}/skins/QVGA
-development/emulator/skins/WVGA   platforms/${PLATFORM_NAME}/skins/WVGA
+development/emulator/skins/HVGA     platforms/${PLATFORM_NAME}/skins/HVGA
+development/emulator/skins/QVGA     platforms/${PLATFORM_NAME}/skins/QVGA
+development/emulator/skins/WVGA800  platforms/${PLATFORM_NAME}/skins/WVGA800
+development/emulator/skins/WVGA854  platforms/${PLATFORM_NAME}/skins/WVGA854
 
 # NOTICE files are copied by build/core/Makefile
 development/tools/scripts/sdk_files_NOTICE.txt platforms/${PLATFORM_NAME}/templates/NOTICE.txt

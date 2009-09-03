@@ -33,9 +33,28 @@ import java.util.Properties;
  */
 public class ExtraPackage extends Package {
 
-    private static final String PROP_PATH = "Extra.Path";  //$NON-NLS-1$
+    private static final String PROP_PATH          = "Extra.Path";         //$NON-NLS-1$
+    private static final String PROP_MIN_TOOLS_REV = "Extra.MinToolsRev";  //$NON-NLS-1$
 
+    /**
+     * The install folder name. It must be a single-segment path.
+     * The paths "add-ons", "platforms", "tools" and "docs" are reserved and cannot be used.
+     * This limitation cannot be written in the XML Schema and must be enforced here by using
+     * the method {@link #isPathValid()} *before* installing the package.
+     */
     private final String mPath;
+
+    /**
+     * The minimal revision of the tools package required by this extra package, if > 0,
+     * or {@link #MIN_TOOLS_REV_NOT_SPECIFIED} if there is no such requirement.
+     */
+    private final int mMinToolsRevision;
+
+    /**
+     * The value of {@link #mMinToolsRevision} when the {@link SdkRepository#NODE_MIN_TOOLS_REV}
+     * was not specified in the XML source.
+     */
+    public static final int MIN_TOOLS_REV_NOT_SPECIFIED = 0;
 
     /**
      * Creates a new tool package from the attributes and elements of the given XML node.
@@ -45,6 +64,8 @@ public class ExtraPackage extends Package {
     ExtraPackage(RepoSource source, Node packageNode, Map<String,String> licenses) {
         super(source, packageNode, licenses);
         mPath = XmlParserUtils.getXmlString(packageNode, SdkRepository.NODE_PATH);
+        mMinToolsRevision = XmlParserUtils.getXmlInt(packageNode, SdkRepository.NODE_MIN_TOOLS_REV,
+                MIN_TOOLS_REV_NOT_SPECIFIED);
     }
 
     /**
@@ -73,6 +94,9 @@ public class ExtraPackage extends Package {
                 archiveOsPath);
         // The path argument comes before whatever could be in the properties
         mPath = path != null ? path : getProperty(props, PROP_PATH, path);
+
+        mMinToolsRevision = Integer.parseInt(getProperty(props, PROP_MIN_TOOLS_REV,
+                Integer.toString(MIN_TOOLS_REV_NOT_SPECIFIED)));
     }
 
     /**
@@ -84,6 +108,10 @@ public class ExtraPackage extends Package {
         super.saveProperties(props);
 
         props.setProperty(PROP_PATH, mPath);
+
+        if (mMinToolsRevision != MIN_TOOLS_REV_NOT_SPECIFIED) {
+            props.setProperty(PROP_MIN_TOOLS_REV, Integer.toString(mMinToolsRevision));
+        }
     }
 
     /**
@@ -109,19 +137,64 @@ public class ExtraPackage extends Package {
         return mPath;
     }
 
+    /**
+     * The minimal revision of the tools package required by this extra package, if > 0,
+     * or {@link #MIN_TOOLS_REV_NOT_SPECIFIED} if there is no such requirement.
+     */
+    public int getMinToolsRevision() {
+        return mMinToolsRevision;
+    }
+
     /** Returns a short description for an {@link IDescription}. */
     @Override
     public String getShortDescription() {
-        return String.format("Extra %1$s package, revision %2$d", getPath(), getRevision());
+        String name = getPath();
+        if (name != null) {
+            // Uniformize all spaces in the name and upper case words.
+
+            name = name.replaceAll("[ _\t\f-]+", " ");     //$NON-NLS-1$ //$NON-NLS-2$
+
+            // Look at all lower case characters in range [1..n-1] and replace them by an upper
+            // case if they are preceded by a space. Also upper cases the first character of the
+            // string.
+            boolean changed = false;
+            char[] chars = name.toCharArray();
+            for (int n = chars.length - 1, i = 0; i < n; i++) {
+                if (Character.isLowerCase(chars[i]) && (i == 0 || chars[i - 1] == ' ')) {
+                    chars[i] = Character.toUpperCase(chars[i]);
+                    changed = true;
+                }
+            }
+            if (changed) {
+                name = new String(chars);
+            }
+        }
+
+        String s = String.format("%1$s package, revision %2$d",
+                name,
+                getRevision());
+
+        if (mMinToolsRevision != MIN_TOOLS_REV_NOT_SPECIFIED) {
+            s += String.format(" (tools rev: %1$d)", mMinToolsRevision);
+        }
+
+        return s;
     }
 
     /** Returns a long description for an {@link IDescription}. */
     @Override
     public String getLongDescription() {
-        return String.format("Extra %1$s package, revision %2$d.\n%3$s",
+        String s = String.format("Extra %1$s package, revision %2$d",
                 getPath(),
-                getRevision(),
-                super.getLongDescription());
+                getRevision());
+
+        if (mMinToolsRevision != MIN_TOOLS_REV_NOT_SPECIFIED) {
+            s += String.format(" (min tools rev.: %1$d)", mMinToolsRevision);
+        }
+
+        s += ".";
+
+        return s;
     }
 
     /**

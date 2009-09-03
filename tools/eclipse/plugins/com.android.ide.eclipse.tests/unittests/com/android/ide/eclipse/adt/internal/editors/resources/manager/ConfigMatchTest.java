@@ -34,6 +34,7 @@ import com.android.ide.eclipse.adt.internal.resources.manager.files.IFileWrapper
 import com.android.ide.eclipse.adt.internal.resources.manager.files.IFolderWrapper;
 import com.android.ide.eclipse.mock.FileMock;
 import com.android.ide.eclipse.mock.FolderMock;
+import com.android.sdklib.IAndroidTarget;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -44,7 +45,7 @@ public class ConfigMatchTest extends TestCase {
     private static final String SEARCHED_FILENAME = "main.xml"; //$NON-NLS-1$
     private static final String MISC1_FILENAME = "foo.xml"; //$NON-NLS-1$
     private static final String MISC2_FILENAME = "bar.xml"; //$NON-NLS-1$
-    
+
     private ProjectResources mResources;
     private ResourceQualifier[] mQualifierList;
     private FolderConfiguration config4;
@@ -55,20 +56,20 @@ public class ConfigMatchTest extends TestCase {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        
+
         // create a Resource Manager to get a list of qualifier as instantiated by the real code.
-        // Thanks for QualifierListTest we know this contains all the qualifiers. 
+        // Thanks for QualifierListTest we know this contains all the qualifiers.
         ResourceManager manager = ResourceManager.getInstance();
         Field qualifierListField = ResourceManager.class.getDeclaredField("mQualifiers");
         assertNotNull(qualifierListField);
         qualifierListField.setAccessible(true);
-        
+
         // get the actual list.
         mQualifierList = (ResourceQualifier[])qualifierListField.get(manager);
-        
+
         // create the project resources.
         mResources = new ProjectResources(false /* isFrameworkRepository */);
-        
+
         // create 2 arrays of IResource. one with the filename being looked up, and one without.
         // Since the required API uses IResource, we can use MockFolder for them.
         FileMock[] validMemberList = new FileMock[] {
@@ -80,7 +81,7 @@ public class ConfigMatchTest extends TestCase {
                 new FileMock(MISC1_FILENAME),
                 new FileMock(MISC2_FILENAME),
         };
-        
+
         // add multiple ResourceFolder to the project resource.
         FolderConfiguration defaultConfig = getConfiguration(
                 null, // country code
@@ -94,9 +95,9 @@ public class ConfigMatchTest extends TestCase {
                 null, // text input
                 null, // navigation
                 null); // screen size
-        
+
         addFolder(mResources, defaultConfig, validMemberList);
-        
+
         config1 = getConfiguration(
                 null, // country code
                 null, // network code
@@ -109,7 +110,7 @@ public class ConfigMatchTest extends TestCase {
                 null, // text input
                 null, // navigation
                 null); // screen size
-        
+
         addFolder(mResources, config1, validMemberList);
 
         config2 = getConfiguration(
@@ -124,7 +125,7 @@ public class ConfigMatchTest extends TestCase {
                 null, // text input
                 null, // navigation
                 null); // screen size
-        
+
         addFolder(mResources, config2, validMemberList);
 
         config3 = getConfiguration(
@@ -139,7 +140,7 @@ public class ConfigMatchTest extends TestCase {
                 null, // text input
                 null, // navigation
                 null); // screen size
-        
+
         addFolder(mResources, config3, validMemberList);
 
         config4 = getConfiguration(
@@ -154,7 +155,7 @@ public class ConfigMatchTest extends TestCase {
                 TextInputMethod.QWERTY.getValue(), // text input
                 NavigationMethod.DPAD.getValue(), // navigation
                 "480x320"); // screen size
-        
+
         addFolder(mResources, config4, invalidMemberList);
     }
 
@@ -177,10 +178,10 @@ public class ConfigMatchTest extends TestCase {
                 TextInputMethod.QWERTY.getValue(), // text input
                 NavigationMethod.DPAD.getValue(), // navigation
                 "480x320"); // screen size
-        
+
         ResourceFile result = mResources.getMatchingFile(SEARCHED_FILENAME,
                 ResourceFolderType.LAYOUT, testConfig);
-        
+
         boolean bresult = result.getFolder().getConfiguration().equals(config3);
         assertEquals(bresult, true);
     }
@@ -193,10 +194,10 @@ public class ConfigMatchTest extends TestCase {
      */
     private FolderConfiguration getConfiguration(String... qualifierValues) {
         FolderConfiguration config = new FolderConfiguration();
-        
+
         // those must be of the same length
         assertEquals(qualifierValues.length, mQualifierList.length);
-        
+
         int index = 0;
 
         for (ResourceQualifier qualifier : mQualifierList) {
@@ -208,7 +209,7 @@ public class ConfigMatchTest extends TestCase {
 
         return config;
     }
-    
+
     /**
      * Adds a folder to the given {@link ProjectResources} with the given
      * {@link FolderConfiguration}. The folder is filled with files from the provided list.
@@ -218,13 +219,10 @@ public class ConfigMatchTest extends TestCase {
      */
     private void addFolder(ProjectResources resources, FolderConfiguration config,
             FileMock[] memberList) throws Exception {
-        
+
         // figure out the folder name based on the configuration
-        String folderName = "layout";
-        if (config.isDefault() == false) {
-            folderName += "-" + config.toString();
-        }
-        
+        String folderName = config.getFolderName(ResourceFolderType.LAYOUT, (IAndroidTarget)null);
+
         // create the folder mock
         FolderMock folder = new FolderMock(folderName, memberList);
 
@@ -237,15 +235,15 @@ public class ConfigMatchTest extends TestCase {
         }
     }
 
-    /** Calls ProjectResource.add method via reflection to circumvent access 
-     * restrictions that are enforced when running in the plug-in environment 
+    /** Calls ProjectResource.add method via reflection to circumvent access
+     * restrictions that are enforced when running in the plug-in environment
      * ie cannot access package or protected members in a different plug-in, even
      * if they are in the same declared package as the accessor
      */
     private ResourceFolder _addProjectResourceFolder(ProjectResources resources,
             FolderConfiguration config, FolderMock folder) throws Exception {
 
-        Method addMethod = ProjectResources.class.getDeclaredMethod("add", 
+        Method addMethod = ProjectResources.class.getDeclaredMethod("add",
                 ResourceFolderType.class, FolderConfiguration.class,
                 IAbstractFolder.class);
         addMethod.setAccessible(true);
@@ -253,7 +251,4 @@ public class ConfigMatchTest extends TestCase {
                 ResourceFolderType.LAYOUT, config, new IFolderWrapper(folder));
         return resFolder;
     }
-    
-
-    
 }

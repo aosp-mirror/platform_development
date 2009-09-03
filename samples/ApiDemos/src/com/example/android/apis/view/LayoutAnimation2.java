@@ -17,7 +17,6 @@
 package com.example.android.apis.view;
 
 import android.app.ListActivity;
-import android.content.Context;
 import android.os.Bundle;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;

@@ -1,84 +1,104 @@
 parts {
-    device {
+    portrait {
         background {
-            image   device.png
+            image   background_port.png
         }
+    }
+    landscape {
+        background {
+            image   background_land.png
+        }
+    }
+
+    device {
         display {
             width   320
             height  480
-            x       31
-            y       72
+            x       0
+            y       0
         }
-
+    }
+    
+    controls {
+        background {
+            image   controls.png
+        }
         buttons {
             soft-left {
-                    image menu.png
-                    x 147
-                    y 555
+                    image button.png
+                    x 56
+                    y 142
             }
             home {
-                    image home.png
-                    x 48
-                    y 590
+                    image button.png
+                    x 0
+                    y 142
             }
             back {
-                    image back.png
-                    x 286
-                    y 590
+                    image button.png
+                    x 112
+                    y 142
             }
             dpad-up {
                     image arrow_up.png
-                    x 140
-                    y 595
+                    x 77
+                    y 53
             }
             dpad-down {
                     image arrow_down.png
-                    x 140
-                    y 656
+                    x 77
+                    y 106
             }
             dpad-left {
                     image arrow_left.png
-                    x 111
-                    y 598
+                    x 53
+                    y 53
             }
             dpad-right {
                     image arrow_right.png
-                    x 222
-                    y 598
+                    x 123
+                    y 53
             }
             dpad-center {
                     image select.png
-                    x 142
-                    y 626
+                    x 77
+                    y 81
             }
             phone-dial {
-                    image send.png
-                    x 48
-                    y 646
+                    image button.png
+                    x 0
+                    y 71
             }
             phone-hangup {
-                    image end.png
-                    x 286
-                    y 646
+                    image button.png
+                    x 168
+                    y 71
             }
 
             power {
-                    image power.png
-                    x -38
-                    y 52
+                    image button.png
+                    x 168
+                    y 0
             }
 
             volume-up {
-                    image volume_up.png
-                    x 362
-                    y 260
+                    image button.png
+                    x 112
+                    y 0
             }
 
             volume-down {
-                    image volume_down.png
-                    x 362
-                    y 310
+                    image button.png
+                    x 56
+                    y 0
             }
+
+            search {
+                    image button.png
+                    x 168
+                    y 142
+            }
+
         }
     }
 
@@ -89,242 +109,242 @@ parts {
         buttons {
             1 {
                 image  key.png
-                x  0
-                y  0
+                x  5
+                y  5
             }
             2 {
                 image  key.png
-                x 37
-                y 0
+                x 42
+                y 5
             }
             3 {
                 image  key.png
-                x 74
-                y 0
+                x 79
+                y 5
             }
             4 {
                 image  key.png
-                x 111
-                y 0
+                x 116
+                y 5
             }
             5 {
                 image  key.png
-                x 148
-                y 0
+                x 153
+                y 5
             }
             6 {
                 image  key.png
-                x 185
-                y 0
+                x 190
+                y 5
             }
             7 {
                 image  key.png
-                x 222
-                y 0
+                x 227
+                y 5
             }
             8 {
                 image  key.png
-                x 259
-                y 0
+                x 264
+                y 5
             }
             9 {
                 image  key.png
-                x 296
-                y 0
+                x 301
+                y 5
             }
             0 {
                 image  key.png
-                x 333
-                y 0
+                x 338
+                y 5
             }
 
             q {
                 image  key.png
-                x  0
-                y  36
+                x  5
+                y  41
             }
             w {
                 image  key.png
-                x 37
-                y 36
+                x 42
+                y 41
             }
             e {
                 image  key.png
-                x 74
-                y 36
+                x 79
+                y 41
             }
             r {
                 image  key.png
-                x 111
-                y 36
+                x 116
+                y 41
             }
             t {
                 image  key.png
-                x 148
-                y 36
+                x 153
+                y 41
             }
             y {
                 image  key.png
-                x 185
-                y 36
+                x 190
+                y 41
             }
             u {
                 image  key.png
-                x 222
-                y 36
+                x 227
+                y 41
             }
             i {
                 image  key.png
-                x 259
-                y 36
+                x 264
+                y 41
             }
             o {
                 image  key.png
-                x 296
-                y 36
+                x 301
+                y 41
             }
             p {
                 image  key.png
-                x 333
-                y 36
+                x 338
+                y 41
             }
 
             a {
                 image  key.png
-                x  0
-                y  72
+                x  5
+                y 77
             }
             s {
                 image  key.png
-                x 37
-                y 72
+                x 42
+                y 77
             }
             d {
                 image  key.png
-                x 74
-                y 72
+                x 79
+                y 77
             }
             f {
                 image  key.png
-                x 111
-                y 72
+                x 116
+                y 77
             }
             g {
                 image  key.png
-                x 148
-                y 72
+                x 153
+                y 77
             }
             h {
                 image  key.png
-                x 185
-                y 72
+                x 190
+                y 77
             }
             j {
                 image  key.png
-                x 222
-                y 72
+                x 227
+                y 77
             }
             k {
                 image  key.png
-                x 259
-                y 72
+                x 264
+                y 77
             }
             l {
                 image  key.png
-                x 296
-                y 72
+                x 301
+                y 77
             }
             DEL {
                 image  key.png
-                x 333
-                y 72
+                x 338
+                y 77
             }
 
             CAP {
                 image  key.png
-                x  0
-                y  108
+                x  5
+                y 113
             }
             z {
                 image  key.png
-                x 37
-                y 108
+                x 42
+                y 113
             }
             x {
                 image  key.png
-                x 74
-                y 108
+                x 79
+                y 113
             }
             c {
                 image  key.png
-                x 111
-                y 108
+                x 116
+                y 113
             }
             v {
                 image  key.png
-                x 148
-                y 108
+                x 153
+                y 113
             }
             b {
                 image  key.png
-                x 185
-                y 108
+                x 190
+                y 113
             }
             n {
                 image  key.png
-                x 222
-                y 108
+                x 227
+                y 113
             }
             m {
                 image  key.png
-                x 259
-                y 108
+                x 264
+                y 113
             }
             PERIOD {
                 image  key.png
-                x 296
-                y 108
+                x 301
+                y 113
             }
             ENTER {
                 image  key.png
-                x 333
-                y 108
+                x 338
+                y 113
             }
 
             ALT {
                 image  key.png
-                x  0
-                y  144
+                x  5
+                y 149
             }
             SYM {
                 image  key.png
-                x 37
-                y 144
+                x 42
+                y 149
             }
             AT {
                 image  key.png
-                x 74
-                y 144
+                x 79
+                y 149
             }
             SPACE {
                 image  spacebar.png
-                x 111
-                y 144
+                x 116
+                y 149
             }
             SLASH {
                 image  key.png
-                x 259
-                y 144
+                x 264
+                y 149
             }
             COMMA {
                 image  key.png
-                x 296
-                y 144
+                x 301
+                y 149
             }
             ALT2 {
                 image  key.png
-                x 333
-                y 144
+                x 338
+                y 149
             }
 
         }
@@ -333,39 +353,76 @@ parts {
 
 layouts {
     portrait {
-        width     900
-        height    730
+        width     791
+        height    534
         color     0xe0e0e0
         event     EV_SW:0:1
-
+        
         part1 {
-            name    device
-            x       40
-            y       -18
+            name    portrait
+            x       0
+            y       0
         }
+
         part2 {
-            name    keyboard
-            x       480
-            y       200
+            name    landscape
+            x       800
+            y       0
         }
+
+        part3 {
+            name    device
+            x       28
+            y       27
+        }
+        part4 {
+            name    controls
+            x       476
+            y       77
+        }
+        part5 {
+            name    keyboard
+            x       395
+            y       328
+        }
+
     }
 
     landscape {
-        width     900
-        height    670
+        width     640
+        height    601
         color     0xe0e0e0
         event     EV_SW:0:0
 
         part1 {
+            name    portrait
+            x       800
+            y       0
+        }
+
+        part2 {
+            name    landscape
+            x       0
+            y       0
+        }
+
+        part3 {
             name      device
-            x         50
-            y         440
+            x         80
+            y         349
             rotation  3
         }
-        part2 {
+
+        part4 {
+            name     controls
+            x        410
+            y        396
+        }
+
+        part5 {
             name     keyboard
-            x        250
-            y        470
+            x        18
+            y        396
         }
     }
 }

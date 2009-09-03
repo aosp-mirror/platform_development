@@ -22,7 +22,6 @@ import com.android.sdklib.SdkManager;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.HashMap;
@@ -38,6 +37,7 @@ public final class ProjectProperties {
     public final static String PROPERTY_TARGET = "target";
     public final static String PROPERTY_APK_CONFIGS = "apk-configurations";
     public final static String PROPERTY_SDK = "sdk-location";
+    public final static String PROPERTY_APP_PACKAGE = "application-package";
 
     public static enum PropertyType {
         BUILD("build.properties", BUILD_HEADER),
@@ -85,15 +85,17 @@ public final class ProjectProperties {
            "# This file must be checked in Version Control Systems, as it is\n" +
            "# integral to the build system of your project.\n" +
            "\n" +
-           "# The name of your application package as defined in the manifest.\n" +
-           "# Used by the 'uninstall' rule.\n"+
-           "#application-package=com.example.myproject\n" +
+           "# This file is only used by the Ant script.\n" +
            "\n" +
-           "# The name of the source folder.\n" +
-           "#source-folder=src\n" +
+           "# You can use this to override default values such as\n" +
+           "#  'source-folder' for the location of your java source folder and\n" +
+           "#  'out-folder' for the location of your output folder.\n" +
            "\n" +
-           "# The name of the output folder.\n" +
-           "#out-folder=bin\n" +
+           "# You can also use it define how the release builds are signed by declaring\n" +
+           "# the following properties:\n" +
+           "#  'key.store' for the location of your keystore and\n" +
+           "#  'key.alias' for the name of the key to use.\n" +
+           "# The password will be asked during the build when you use the 'release' target.\n" +
            "\n";
 
     private final static Map<String, String> COMMENT_MAP = new HashMap<String, String>();
@@ -116,6 +118,9 @@ public final class ProjectProperties {
                 "# location of the SDK. This is only used by Ant\n" +
                 "# For customization when using a Version Control System, please read the\n" +
                 "# header note.\n");
+        COMMENT_MAP.put(PROPERTY_APP_PACKAGE,
+                "# The name of your application package as defined in the manifest.\n" +
+                "# Used by the 'uninstall' rule.\n");
     }
 
     private final String mProjectFolderOsPath;

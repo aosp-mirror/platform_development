@@ -291,6 +291,9 @@ public class PreCompilerBuilder extends BaseBuilder {
 
                 // This interrupts the build. The next builders will not run.
                 stopBuild(msg);
+
+                // TODO: document whether code below that uses manifest (which is now guaranteed
+                // to be null) will actually be executed or not.
             }
 
             // lets check the XML of the manifest first, if that hasn't been done by the
@@ -332,9 +335,8 @@ public class PreCompilerBuilder extends BaseBuilder {
                     if (codename != null) {
                         // integer minSdk when the target is a preview => fatal error
                         String msg = String.format(
-                                "Platform %1$s is a preview and requires appication manifests to set %2$s to '%3$s'",
-                                codename, ManifestConstants.ATTRIBUTE_MIN_SDK_VERSION,
-                                codename);
+                                "Platform %1$s is a preview and requires appication manifests to set %2$s to '%1$s'",
+                                codename, ManifestConstants.ATTRIBUTE_MIN_SDK_VERSION);
                         AdtPlugin.printErrorToConsole(project, msg);
                         BaseProjectHelper.addMarker(manifest, AdtConstants.MARKER_ADT, msg,
                                 IMarker.SEVERITY_ERROR);
@@ -342,7 +344,7 @@ public class PreCompilerBuilder extends BaseBuilder {
                     } else if (minSdkValue < projectVersion.getApiLevel()) {
                         // integer minSdk is not high enough for the target => warning
                         String msg = String.format(
-                                "Manifest min SDK version (%1$d) is lower than project target API level (%2$d)",
+                                "Manifest min SDK version (%1$s) is lower than project target API level (%2$d)",
                                 minSdkVersion, projectVersion.getApiLevel());
                         AdtPlugin.printBuildToConsole(AdtConstants.BUILD_VERBOSE, project, msg);
                         BaseProjectHelper.addMarker(manifest, AdtConstants.MARKER_ADT, msg,
@@ -356,7 +358,7 @@ public class PreCompilerBuilder extends BaseBuilder {
                         // platform is not a preview => fatal error
                         String msg = String.format(
                                 "Manifest attribute '%1$s' is set to '%2$s'. Integer is expected.",
-                                ManifestConstants.ATTRIBUTE_MIN_SDK_VERSION, codename);
+                                ManifestConstants.ATTRIBUTE_MIN_SDK_VERSION, minSdkVersion);
                         AdtPlugin.printErrorToConsole(project, msg);
                         BaseProjectHelper.addMarker(manifest, AdtConstants.MARKER_ADT, msg,
                                 IMarker.SEVERITY_ERROR);
@@ -372,6 +374,17 @@ public class PreCompilerBuilder extends BaseBuilder {
                         stopBuild(msg);
                     }
                 }
+            } else if (projectTarget.getVersion().isPreview()) {
+                // else the minSdkVersion is not set but we are using a preview target.
+                // Display an error
+                String codename = projectTarget.getVersion().getCodename();
+                String msg = String.format(
+                        "Platform %1$s is a preview and requires appication manifests to set %2$s to '%1$s'",
+                        codename, ManifestConstants.ATTRIBUTE_MIN_SDK_VERSION);
+                AdtPlugin.printErrorToConsole(project, msg);
+                BaseProjectHelper.addMarker(manifest, AdtConstants.MARKER_ADT, msg,
+                        IMarker.SEVERITY_ERROR);
+                stopBuild(msg);
             }
 
             if (javaPackage == null || javaPackage.length() == 0) {
@@ -383,11 +396,14 @@ public class PreCompilerBuilder extends BaseBuilder {
 
                 // This interrupts the build. The next builders will not run.
                 stopBuild(msg);
+
+                // TODO: document whether code below that uses javaPackage (which is now guaranteed
+                // to be null) will actually be executed or not.
             }
 
             // at this point we have the java package. We need to make sure it's not a different
             // package than the previous one that were built.
-            if (javaPackage.equals(mManifestPackage) == false) {
+            if (javaPackage != null && javaPackage.equals(mManifestPackage) == false) {
                 // The manifest package has changed, the user may want to update
                 // the launch configuration
                 if (mManifestPackage != null) {
@@ -421,7 +437,7 @@ public class PreCompilerBuilder extends BaseBuilder {
                 // get the file system path
                 IPath outputLocation = mGenFolder.getLocation();
                 IPath resLocation = resFolder.getLocation();
-                IPath manifestLocation = manifest.getLocation();
+                IPath manifestLocation = manifest == null ? null : manifest.getLocation();
 
                 // those locations have to exist for us to do something!
                 if (outputLocation != null && resLocation != null

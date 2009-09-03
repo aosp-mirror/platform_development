@@ -41,17 +41,17 @@ import java.util.zip.ZipOutputStream;
  * Export helper for project.
  */
 public final class ExportHelper {
-    
+
     private static IExportCallback sCallback;
 
     public interface IExportCallback {
         void startExportWizard(IProject project);
     }
-    
+
     public static void setCallback(IExportCallback callback) {
         sCallback = callback;
     }
-    
+
     public static void startExportWizard(IProject project) {
         if (sCallback != null) {
             sCallback.startExportWizard(project);
@@ -69,30 +69,30 @@ public final class ExportHelper {
         IFolder outputFolder = BaseProjectHelper.getOutputFolder(project);
         if (outputFolder != null) {
             IPath binLocation = outputFolder.getLocation();
-    
+
             // make the full path to the package
             String fileName = project.getName() + AndroidConstants.DOT_ANDROID_PACKAGE;
-    
+
             File file = new File(binLocation.toOSString() + File.separator + fileName);
-    
+
             if (file.exists() == false || file.isFile() == false) {
-                MessageDialog.openInformation(Display.getCurrent().getActiveShell(),
+                MessageDialog.openError(Display.getCurrent().getActiveShell(),
                         "Android IDE Plug-in",
                         String.format("Failed to export %1$s: %2$s doesn't exist!",
                                 project.getName(), file.getPath()));
                 return;
             }
-    
+
             // ok now pop up the file save window
             FileDialog fileDialog = new FileDialog(shell, SWT.SAVE);
-    
+
             fileDialog.setText("Export Project");
             fileDialog.setFileName(fileName);
-    
+
             String saveLocation = fileDialog.open();
             if (saveLocation != null) {
                 // get the stream from the original file
-                
+
                 ZipInputStream zis = null;
                 ZipOutputStream zos = null;
                 FileInputStream input = null;
@@ -116,8 +116,8 @@ public final class ExportHelper {
                             // pass
                         }
                     }
-                    
-                    MessageDialog.openInformation(shell, "Android IDE Plug-in",
+
+                    MessageDialog.openError(shell, "Android IDE Plug-in",
                             String.format("Failed to export %1$s: %2$s doesn't exist!",
                                     project.getName(), file.getPath()));
                     return;
@@ -125,20 +125,20 @@ public final class ExportHelper {
 
                 try {
                     ZipEntry entry;
-                    
+
                     byte[] buffer = new byte[4096];
 
                     while ((entry = zis.getNextEntry()) != null) {
                         String name = entry.getName();
-                        
+
                         // do not take directories or anything inside the META-INF folder since
                         // we want to strip the signature.
                         if (entry.isDirectory() || name.startsWith("META-INF/")) { //$NON-NL1$
                             continue;
                         }
-            
+
                         ZipEntry newEntry;
-            
+
                         // Preserve the STORED method of the input entry.
                         if (entry.getMethod() == JarEntry.STORED) {
                             newEntry = new JarEntry(entry);
@@ -146,12 +146,12 @@ public final class ExportHelper {
                             // Create a new entry so that the compressed len is recomputed.
                             newEntry = new JarEntry(name);
                         }
-                        
+
                         // add the entry to the jar archive
                         zos.putNextEntry(newEntry);
 
                         // read the content of the entry from the input stream, and write it into the archive.
-                        int count; 
+                        int count;
                         while ((count = zis.read(buffer)) != -1) {
                             zos.write(buffer, 0, count);
                         }
@@ -159,11 +159,10 @@ public final class ExportHelper {
                         // close the entry for this file
                         zos.closeEntry();
                         zis.closeEntry();
-
                     }
-    
+
                 } catch (IOException e) {
-                    MessageDialog.openInformation(shell, "Android IDE Plug-in",
+                    MessageDialog.openError(shell, "Android IDE Plug-in",
                             String.format("Failed to export %1$s: %2$s",
                                     project.getName(), e.getMessage()));
                 } finally {
@@ -178,9 +177,19 @@ public final class ExportHelper {
                         // pass
                     }
                 }
+
+                // this is unsigned export. Let's tell the developers to run zip align
+                MessageDialog.openWarning(shell, "Android IDE Plug-in", String.format(
+                        "An unsigned package of the application was saved at\n%1$s\n\n" +
+                        "Before publishing the application you will need to:\n" +
+                        "- Sign the application with your release key,\n" +
+                        "- run zipalign on the signed package. ZipAlign is located in <SDK>/tools/\n\n" +
+                        "Aligning applications allows Android to use application resources\n" +
+                        "more efficiently.", saveLocation));
+
             }
         } else {
-            MessageDialog.openInformation(shell, "Android IDE Plug-in",
+            MessageDialog.openError(shell, "Android IDE Plug-in",
                     String.format("Failed to export %1$s: Could not get project output location",
                             project.getName()));
         }

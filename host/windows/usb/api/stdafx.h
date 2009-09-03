@@ -71,11 +71,8 @@
 #include <string>
 #pragma warning(default: 4201)
 #pragma warning(disable: 4200)
-extern "C" {
 #include <usbdi.h>
-#include <winusb.h>
 #include <usb100.h>
-}
 
 #include "resource.h"
 

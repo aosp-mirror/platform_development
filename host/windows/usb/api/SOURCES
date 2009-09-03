@@ -50,8 +50,7 @@ TARGETLIBS = $(SDK_LIB_PATH)\ole32.lib    \
              $(SDK_LIB_PATH)\wbemuuid.lib \
              $(SDK_LIB_PATH)\uuid.lib     \
              $(SDK_LIB_PATH)\setupapi.lib \
-             $(SDK_LIB_PATH)\usbd.lib     \
-             $(SDK_LIB_PATH)\winusb.lib
+             $(SDK_LIB_PATH)\usbd.lib
            
 !IF "$(DDKBUILDENV)" == "fre"
 # Libraries for release (free) builds
@@ -87,15 +86,12 @@ PRECOMPILED_SOURCEFILE = stdafx.cpp
 # Define source files for AdbWinApi.dll
 SOURCES = adb_api.cpp                     \
           adb_endpoint_object.cpp         \
-          adb_winusb_endpoint_object.cpp  \
           adb_legacy_endpoint_object.cpp  \
           adb_helper_routines.cpp         \
           adb_interface.cpp               \
-          adb_winusb_interface.cpp        \
           adb_legacy_interface.cpp        \
           adb_interface_enum.cpp          \
           adb_io_completion.cpp           \
-          adb_winusb_io_completion.cpp    \
           adb_legacy_io_completion.cpp    \
           adb_object_handle.cpp           \
           AdbWinApi.cpp                   \
