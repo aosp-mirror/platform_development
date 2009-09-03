@@ -18,8 +18,8 @@ package com.android.ddmuilib;
 
 import com.android.ddmlib.AllocationInfo;
 import com.android.ddmlib.Client;
-import com.android.ddmlib.ClientData;
 import com.android.ddmlib.AndroidDebugBridge.IClientChangeListener;
+import com.android.ddmlib.ClientData.AllocationTrackingStatus;
 
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.viewers.ILabelProviderListener;
@@ -61,7 +61,7 @@ public class AllocationPanel extends TablePanel {
     private final static String PREFS_ALLOC_COL_THREAD = "allocPanel.Col2"; //$NON-NLS-1$
     private final static String PREFS_ALLOC_COL_TRACE_CLASS = "allocPanel.Col3"; //$NON-NLS-1$
     private final static String PREFS_ALLOC_COL_TRACE_METHOD = "allocPanel.Col4"; //$NON-NLS-1$
-    
+
     private final static String PREFS_ALLOC_SASH = "allocPanel.sash"; //$NON-NLS-1$
 
     private static final String PREFS_STACK_COL_CLASS = "allocPanel.stack.col0"; //$NON-NLS-1$
@@ -69,7 +69,7 @@ public class AllocationPanel extends TablePanel {
     private static final String PREFS_STACK_COL_FILE = "allocPanel.stack.col2"; //$NON-NLS-1$
     private static final String PREFS_STACK_COL_LINE = "allocPanel.stack.col3"; //$NON-NLS-1$
     private static final String PREFS_STACK_COL_NATIVE = "allocPanel.stack.col4"; //$NON-NLS-1$
-    
+
     private Composite mAllocationBase;
     private Table mAllocationTable;
     private TableViewer mAllocationViewer;
@@ -171,18 +171,18 @@ public class AllocationPanel extends TablePanel {
         // base composite for selected client with enabled thread update.
         mAllocationBase = new Composite(parent, SWT.NONE);
         mAllocationBase.setLayout(new FormLayout());
-        
+
         // table above the sash
         Composite topParent = new Composite(mAllocationBase, SWT.NONE);
         topParent.setLayout(new GridLayout(2, false));
-        
+
         mEnableButton = new Button(topParent, SWT.PUSH);
         mEnableButton.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
                 Client current = getCurrentClient();
-                int status = current.getClientData().getAllocationStatus();
-                if (status == ClientData.ALLOCATION_TRACKING_ON) {
+                AllocationTrackingStatus status = current.getClientData().getAllocationStatus();
+                if (status == AllocationTrackingStatus.ON) {
                     current.enableAllocationTracker(false);
                 } else {
                     current.enableAllocationTracker(true);
@@ -199,8 +199,8 @@ public class AllocationPanel extends TablePanel {
                 getCurrentClient().requestAllocationDetails();
             }
         });
-        
-        setUpButtons(false /* enabled */, ClientData.ALLOCATION_TRACKING_OFF /* trackingStatus */);
+
+        setUpButtons(false /* enabled */, AllocationTrackingStatus.OFF);
 
         mAllocationTable = new Table(topParent, SWT.MULTI | SWT.FULL_SELECTION);
         GridData gridData;
@@ -243,7 +243,7 @@ public class AllocationPanel extends TablePanel {
                 SWT.LEFT,
                 "utime", //$NON-NLS-1$
                 PREFS_ALLOC_COL_TRACE_METHOD, store);
-        
+
         mAllocationViewer = new TableViewer(mAllocationTable);
         mAllocationViewer.setContentProvider(new AllocationContentProvider());
         mAllocationViewer.setLabelProvider(new AllocationLabelProvider());
@@ -254,12 +254,12 @@ public class AllocationPanel extends TablePanel {
                 updateAllocationStackTrace(selectedAlloc);
             }
         });
-        
+
         // the separating sash
         final Sash sash = new Sash(mAllocationBase, SWT.HORIZONTAL);
         Color darkGray = parent.getDisplay().getSystemColor(SWT.COLOR_DARK_GRAY);
         sash.setBackground(darkGray);
-        
+
         // the UI below the sash
         mStackTracePanel = new StackTracePanel();
         mStackTraceTable = mStackTracePanel.createPanel(mAllocationBase,
@@ -269,7 +269,7 @@ public class AllocationPanel extends TablePanel {
                 PREFS_STACK_COL_LINE,
                 PREFS_STACK_COL_NATIVE,
                 store);
-        
+
         // now setup the sash.
         // form layout data
         FormData data = new FormData();
@@ -313,7 +313,7 @@ public class AllocationPanel extends TablePanel {
 
         return mAllocationBase;
     }
-    
+
     /**
      * Sets the focus to the proper control inside the panel.
      */
@@ -329,7 +329,7 @@ public class AllocationPanel extends TablePanel {
      * @param client the updated client.
      * @param changeMask the bit mask describing the changed properties. It can contain
      * any of the following values: {@link Client#CHANGE_INFO}, {@link Client#CHANGE_NAME}
-     * {@link Client#CHANGE_DEBUGGER_INTEREST}, {@link Client#CHANGE_THREAD_MODE},
+     * {@link Client#CHANGE_DEBUGGER_STATUS}, {@link Client#CHANGE_THREAD_MODE},
      * {@link Client#CHANGE_THREAD_DATA}, {@link Client#CHANGE_HEAP_MODE},
      * {@link Client#CHANGE_HEAP_DATA}, {@link Client#CHANGE_NATIVE_HEAP_DATA}
      *
@@ -382,20 +382,19 @@ public class AllocationPanel extends TablePanel {
         }
 
         Client client = getCurrentClient();
-        
+
         mStackTracePanel.setCurrentClient(client);
         mStackTracePanel.setViewerInput(null); // always empty on client selection change.
 
         if (client != null) {
             setUpButtons(true /* enabled */, client.getClientData().getAllocationStatus());
         } else {
-            setUpButtons(false /* enabled */,
-                    ClientData.ALLOCATION_TRACKING_OFF /* trackingStatus */);
+            setUpButtons(false /* enabled */, AllocationTrackingStatus.OFF);
         }
 
         mAllocationViewer.setInput(client);
     }
-    
+
     /**
      * Updates the stack call of the currently selected thread.
      * <p/>
@@ -406,7 +405,7 @@ public class AllocationPanel extends TablePanel {
         if (client != null) {
             // get the current selection in the ThreadTable
             AllocationInfo selectedAlloc = getAllocationSelection(null);
-            
+
             if (selectedAlloc != null) {
                 updateAllocationStackTrace(selectedAlloc);
             } else {
@@ -441,7 +440,7 @@ public class AllocationPanel extends TablePanel {
         if (selection == null) {
             selection = mAllocationViewer.getSelection();
         }
-        
+
         if (selection instanceof IStructuredSelection) {
             IStructuredSelection structuredSelection = (IStructuredSelection)selection;
             Object object = structuredSelection.getFirstElement();
@@ -449,29 +448,29 @@ public class AllocationPanel extends TablePanel {
                 return (AllocationInfo)object;
             }
         }
-        
+
         return null;
     }
 
     /**
-     * 
+     *
      * @param enabled
      * @param trackingStatus
      */
-    private void setUpButtons(boolean enabled, int trackingStatus) {
+    private void setUpButtons(boolean enabled, AllocationTrackingStatus trackingStatus) {
         if (enabled) {
             switch (trackingStatus) {
-                case ClientData.ALLOCATION_TRACKING_UNKNOWN:
+                case UNKNOWN:
                     mEnableButton.setText("?");
                     mEnableButton.setEnabled(false);
                     mRequestButton.setEnabled(false);
                     break;
-                case ClientData.ALLOCATION_TRACKING_OFF:
+                case OFF:
                     mEnableButton.setText("Start Tracking");
                     mEnableButton.setEnabled(true);
                     mRequestButton.setEnabled(false);
                     break;
-                case ClientData.ALLOCATION_TRACKING_ON:
+                case ON:
                     mEnableButton.setText("Stop Tracking");
                     mEnableButton.setEnabled(true);
                     mRequestButton.setEnabled(true);

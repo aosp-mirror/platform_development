@@ -17,6 +17,7 @@
 
 package com.android.ddms;
 
+import com.android.ddmlib.DdmConstants;
 import com.android.ddmlib.DdmPreferences;
 import com.android.ddmlib.Log;
 import com.android.ddmlib.Log.LogLevel;
@@ -126,9 +127,9 @@ public final class PrefsDialog {
      */
     public static void init() {
         assert mPrefStore == null;
-        
+
         mPrefStore = SdkStatsService.getPreferenceStore();
-        
+
         if (mPrefStore == null) {
             // we have a serious issue here...
             Log.e("ddms",
@@ -158,9 +159,9 @@ public final class PrefsDialog {
 
         String traceview = System.getProperty("com.android.ddms.bindir");  //$NON-NLS-1$
         if (traceview != null && traceview.length() != 0) {
-            traceview += File.separator + "traceview"; //$NON-NLS-1$
+            traceview += File.separator + DdmConstants.FN_TRACEVIEW;
         } else {
-            traceview = "traceview"; //$NON-NLS-1$
+            traceview = DdmConstants.FN_TRACEVIEW;
         }
         DdmUiPreferences.setTraceviewLocation(traceview);
 

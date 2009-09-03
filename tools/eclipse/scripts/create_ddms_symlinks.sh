@@ -70,7 +70,7 @@ for i in \
     load.png \
     pause.png play.png pull.png push.png \
     save.png \
-    thread.png \
+    thread.png tracing_start.png tracing_stop.png \
     up.png \
     v.png \
     w.png warning.png ; do

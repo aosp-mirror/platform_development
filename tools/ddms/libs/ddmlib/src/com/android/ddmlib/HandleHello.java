@@ -64,6 +64,7 @@ final class HandleHello extends ChunkHandler {
             throws IOException {
         sendHELO(client, serverProtocolVersion);
         sendFEAT(client);
+        HandleProfiling.sendMPRQ(client);
     }
 
     /**
