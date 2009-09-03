@@ -18,6 +18,7 @@ package com.android.ide.eclipse.ddms;
 
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.Client;
+import com.android.ddmlib.DdmConstants;
 import com.android.ddmlib.DdmPreferences;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.Log;
@@ -56,20 +57,6 @@ import java.util.Calendar;
 public final class DdmsPlugin extends AbstractUIPlugin implements IDeviceChangeListener,
         IUiSelectionListener {
 
-    public final static int PLATFORM_UNKNOWN = 0;
-    public final static int PLATFORM_LINUX = 1;
-    public final static int PLATFORM_WINDOWS = 2;
-    public final static int PLATFORM_DARWIN = 3;
-
-    /**
-     * Returns current platform, one of {@link #PLATFORM_WINDOWS}, {@link #PLATFORM_DARWIN},
-     * {@link #PLATFORM_LINUX} or {@link #PLATFORM_UNKNOWN}.
-     */
-    public final static int CURRENT_PLATFORM = currentPlatform();
-
-    /** hprof-conv executable (with extension for the current OS)  */
-    public final static String FN_HPROF_CONVERTER = (CURRENT_PLATFORM == PLATFORM_WINDOWS) ?
-            "hprof-conv.exe" : "hprof-conv"; //$NON-NLS-1$ //$NON-NLS-2$
 
     // The plug-in ID
     public static final String PLUGIN_ID = "com.android.ide.eclipse.ddms"; // $NON-NLS-1$
@@ -312,8 +299,11 @@ public final class DdmsPlugin extends AbstractUIPlugin implements IDeviceChangeL
         File toolsFolder = adb.getParentFile();
         sToolsFolder = toolsFolder.getAbsolutePath();
 
-        File hprofConverter = new File(toolsFolder, FN_HPROF_CONVERTER);
+        File hprofConverter = new File(toolsFolder, DdmConstants.FN_HPROF_CONVERTER);
         sHprofConverter = hprofConverter.getAbsolutePath();
+
+        File traceview = new File(toolsFolder, DdmConstants.FN_TRACEVIEW);
+        DdmUiPreferences.setTraceviewLocation(traceview.getAbsolutePath());
     }
 
     /**
@@ -598,25 +588,4 @@ public final class DdmsPlugin extends AbstractUIPlugin implements IDeviceChangeL
 
         return String.format("[%1$tF %1$tT - %2$s]", c, tag);
     }
-
-
-    /**
-     * Returns current platform
-     *
-     * @return one of {@link #PLATFORM_WINDOWS}, {@link #PLATFORM_DARWIN},
-     * {@link #PLATFORM_LINUX} or {@link #PLATFORM_UNKNOWN}.
-     */
-    public static int currentPlatform() {
-        String os = System.getProperty("os.name");          //$NON-NLS-1$
-        if (os.startsWith("Mac OS")) {                      //$NON-NLS-1$
-            return PLATFORM_DARWIN;
-        } else if (os.startsWith("Windows")) {              //$NON-NLS-1$
-            return PLATFORM_WINDOWS;
-        } else if (os.startsWith("Linux")) {                //$NON-NLS-1$
-            return PLATFORM_LINUX;
-        }
-
-        return PLATFORM_UNKNOWN;
-    }
-
 }

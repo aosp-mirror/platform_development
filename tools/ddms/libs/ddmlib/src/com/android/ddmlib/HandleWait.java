@@ -16,6 +16,8 @@
 
 package com.android.ddmlib;
 
+import com.android.ddmlib.ClientData.DebuggerStatus;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
@@ -80,10 +82,10 @@ final class HandleWait extends ChunkHandler {
 
         ClientData cd = client.getClientData();
         synchronized (cd) {
-            cd.setDebuggerConnectionStatus(ClientData.DEBUGGER_WAITING);
+            cd.setDebuggerConnectionStatus(DebuggerStatus.WAITING);
         }
 
-        client.update(Client.CHANGE_DEBUGGER_INTEREST);
+        client.update(Client.CHANGE_DEBUGGER_STATUS);
     }
 }
 

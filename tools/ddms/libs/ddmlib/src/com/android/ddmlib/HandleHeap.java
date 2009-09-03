@@ -16,6 +16,7 @@
 
 package com.android.ddmlib;
 
+import com.android.ddmlib.ClientData.AllocationTrackingStatus;
 import com.android.ddmlib.ClientData.IHprofDumpHandler;
 
 import java.io.IOException;
@@ -93,22 +94,18 @@ final class HandleHeap extends ChunkHandler {
 
         if (type == CHUNK_HPIF) {
             handleHPIF(client, data);
-            client.update(Client.CHANGE_HEAP_DATA);
         } else if (type == CHUNK_HPST) {
             handleHPST(client, data);
         } else if (type == CHUNK_HPEN) {
             handleHPEN(client, data);
-            client.update(Client.CHANGE_HEAP_DATA);
         } else if (type == CHUNK_HPSG) {
             handleHPSG(client, data);
         } else if (type == CHUNK_HPDU) {
             handleHPDU(client, data);
         } else if (type == CHUNK_REAQ) {
             handleREAQ(client, data);
-            client.update(Client.CHANGE_HEAP_ALLOCATION_STATUS);
         } else if (type == CHUNK_REAL) {
             handleREAL(client, data);
-            client.update(Client.CHANGE_HEAP_ALLOCATIONS);
         } else {
             handleUnknownChunk(client, type, data, isReply, msgId);
         }
@@ -135,6 +132,7 @@ final class HandleHeap extends ChunkHandler {
 
                 client.getClientData().setHeapInfo(heapId, maxHeapSize,
                         heapSize, bytesAllocated, objectsAllocated);
+                client.update(Client.CHANGE_HEAP_DATA);
             }
         } catch (BufferUnderflowException ex) {
             Log.w("ddm-heap", "malformed HPIF chunk from client");
@@ -176,6 +174,7 @@ final class HandleHeap extends ChunkHandler {
          */
 //xxx todo: only seal data that belongs to the heap mentioned in <data>.
         client.getClientData().getVmHeapData().sealHeapData();
+        client.update(Client.CHANGE_HEAP_DATA);
     }
 
     /*
@@ -332,7 +331,9 @@ final class HandleHeap extends ChunkHandler {
         enabled = (data.get() != 0);
         Log.d("ddm-heap", "REAQ says: enabled=" + enabled);
 
-        client.getClientData().setAllocationStatus(enabled);
+        client.getClientData().setAllocationStatus(enabled ?
+                AllocationTrackingStatus.ON : AllocationTrackingStatus.OFF);
+        client.update(Client.CHANGE_HEAP_ALLOCATION_STATUS);
     }
 
     /**
@@ -517,6 +518,7 @@ final class HandleHeap extends ChunkHandler {
         Collections.sort(list);
 
         client.getClientData().setAllocations(list.toArray(new AllocationInfo[numEntries]));
+        client.update(Client.CHANGE_HEAP_ALLOCATIONS);
     }
 
     /*

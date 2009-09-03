@@ -51,33 +51,50 @@ public class ClientData {
     /** Temporary name of VM to be ignored. */
     private final static String PRE_INITIALIZED = "<pre-initialized>"; //$NON-NLS-1$
 
-    /** Debugger connection status: not waiting on one, not connected to one, but accepting
-     * new connections. This is the default value. */
-    public static final int DEBUGGER_DEFAULT = 1;
-    /**
-     * Debugger connection status: the application's VM is paused, waiting for a debugger to
-     * connect to it before resuming. */
-    public static final int DEBUGGER_WAITING = 2;
-    /** Debugger connection status : Debugger is connected */
-    public static final int DEBUGGER_ATTACHED = 3;
-    /** Debugger connection status: The listening port for debugger connection failed to listen.
-     * No debugger will be able to connect. */
-    public static final int DEBUGGER_ERROR = 4;
+    public static enum DebuggerStatus {
+        /** Debugger connection status: not waiting on one, not connected to one, but accepting
+         * new connections. This is the default value. */
+        DEFAULT,
+        /**
+         * Debugger connection status: the application's VM is paused, waiting for a debugger to
+         * connect to it before resuming. */
+        WAITING,
+        /** Debugger connection status : Debugger is connected */
+        ATTACHED,
+        /** Debugger connection status: The listening port for debugger connection failed to listen.
+         * No debugger will be able to connect. */
+        ERROR;
+    }
 
-    /**
-     * Allocation tracking status: unknown.
-     * <p/>This happens right after a {@link Client} is discovered
-     * by the {@link AndroidDebugBridge}, and before the {@link Client} answered the query regarding
-     * its allocation tracking status.
-     * @see Client#requestAllocationStatus()
-     */
-    public static final int ALLOCATION_TRACKING_UNKNOWN = -1;
-    /**
-     * Allocation tracking status: the {@link Client} is not tracking allocations. */
-    public static final int ALLOCATION_TRACKING_OFF = 0;
-    /**
-     * Allocation tracking status: the {@link Client} is tracking allocations. */
-    public static final int ALLOCATION_TRACKING_ON = 1;
+    public static enum AllocationTrackingStatus {
+        /**
+         * Allocation tracking status: unknown.
+         * <p/>This happens right after a {@link Client} is discovered
+         * by the {@link AndroidDebugBridge}, and before the {@link Client} answered the query
+         * regarding its allocation tracking status.
+         * @see Client#requestAllocationStatus()
+         */
+        UNKNOWN,
+        /** Allocation tracking status: the {@link Client} is not tracking allocations. */
+        OFF,
+        /** Allocation tracking status: the {@link Client} is tracking allocations. */
+        ON;
+    }
+
+    public static enum MethodProfilingStatus {
+        /**
+         * Method profiling status: unknown.
+         * <p/>This happens right after a {@link Client} is discovered
+         * by the {@link AndroidDebugBridge}, and before the {@link Client} answered the query
+         * regarding its method profiling status.
+         * @see Client#requestMethodProfilingStatus()
+         */
+        UNKNOWN,
+        /** Method profiling status: the {@link Client} is not profiling method calls. */
+        OFF,
+        /** Method profiling status: the {@link Client} is profiling method calls. */
+        ON;
+    }
 
     /**
      * Name of the value representing the max size of the heap, in the {@link Map} returned by
@@ -113,6 +130,7 @@ public class ClientData {
     public final static String FEATURE_HPROF = "hprof-heap-dump"; // $NON-NLS-1$
 
     private static IHprofDumpHandler sHprofDumpHandler;
+    private static IMethodProfilingHandler sMethodProfilingHandler;
 
     // is this a DDM-aware client?
     private boolean mIsDdmAware;
@@ -127,7 +145,7 @@ public class ClientData {
     private String mClientDescription;
 
     // how interested are we in a debugger?
-    private int mDebuggerInterest;
+    private DebuggerStatus mDebuggerInterest;
 
     // List of supported features by the client.
     private final HashSet<String> mFeatures = new HashSet<String>();
@@ -156,9 +174,12 @@ public class ClientData {
     private int mNativeTotalMemory;
 
     private AllocationInfo[] mAllocations;
-    private int mAllocationStatus = ALLOCATION_TRACKING_UNKNOWN;
+    private AllocationTrackingStatus mAllocationStatus = AllocationTrackingStatus.UNKNOWN;
 
     private String mPendingHprofDump;
+
+    private MethodProfilingStatus mProfilingStatus = MethodProfilingStatus.UNKNOWN;
+    private String mPendingMethodProfiling;
 
     /**
      * Heap Information.
@@ -264,14 +285,32 @@ public class ClientData {
     public interface IHprofDumpHandler {
         /**
          * Called when a HPROF dump succeeded.
-         * @param remoteFile the device-side filename of the HPROF file.
+         * @param remoteFilePath the device-side path of the HPROF file.
          * @param client the client for which the HPROF file was.
          */
-        void onSuccess(String remoteFile, Client client);
+        void onSuccess(String remoteFilePath, Client client);
 
         /**
          * Called when the HPROF dump failed.
          * @param client the client for which the HPROF file was.
+         */
+        void onFailure(Client client);
+    }
+
+    /**
+     * Handlers able to act on Method profiling info
+     */
+    public interface IMethodProfilingHandler {
+        /**
+         * Called when a method tracing was successful.
+         * @param remoteFilePath the device-side path of the trace file.
+         * @param client the client that was profiled.
+         */
+        void onSuccess(String remoteFilePath, Client client);
+
+        /**
+         * Called when method tracing failed.
+         * @param client the client that was profiled.
          */
         void onFailure(Client client);
     }
@@ -288,12 +327,23 @@ public class ClientData {
     }
 
     /**
+     * Sets the handler to receive notifications when an HPROF dump succeeded or failed.
+     */
+    public static void setMethodProfilingHandler(IMethodProfilingHandler handler) {
+        sMethodProfilingHandler = handler;
+    }
+
+    static IMethodProfilingHandler getMethodProfilingHandler() {
+        return sMethodProfilingHandler;
+    }
+
+    /**
      * Generic constructor.
      */
     ClientData(int pid) {
         mPid = pid;
 
-        mDebuggerInterest = DEBUGGER_DEFAULT;
+        mDebuggerInterest = DebuggerStatus.DEFAULT;
         mThreadMap = new TreeMap<Integer,ThreadInfo>();
     }
 
@@ -367,18 +417,17 @@ public class ClientData {
     }
 
     /**
-     * Returns the debugger connection status. Possible values are {@link #DEBUGGER_DEFAULT},
-     * {@link #DEBUGGER_WAITING}, {@link #DEBUGGER_ATTACHED}, and {@link #DEBUGGER_ERROR}.
+     * Returns the debugger connection status.
      */
-    public int getDebuggerConnectionStatus() {
+    public DebuggerStatus getDebuggerConnectionStatus() {
         return mDebuggerInterest;
     }
 
     /**
      * Sets debugger connection status.
      */
-    void setDebuggerConnectionStatus(int val) {
-        mDebuggerInterest = val;
+    void setDebuggerConnectionStatus(DebuggerStatus status) {
+        mDebuggerInterest = status;
     }
 
     /**
@@ -521,15 +570,15 @@ public class ClientData {
         return mNativeLibMapInfo.iterator();
     }
 
-    synchronized void setAllocationStatus(boolean enabled) {
-        mAllocationStatus = enabled ? ALLOCATION_TRACKING_ON : ALLOCATION_TRACKING_OFF;
+    synchronized void setAllocationStatus(AllocationTrackingStatus status) {
+        mAllocationStatus = status;
     }
 
     /**
      * Returns the allocation tracking status.
      * @see Client#requestAllocationStatus()
      */
-    public synchronized int getAllocationStatus() {
+    public synchronized AllocationTrackingStatus getAllocationStatus() {
         return mAllocationStatus;
     }
 
@@ -561,16 +610,50 @@ public class ClientData {
         return mFeatures.contains(feature);
     }
 
+    /**
+     * Sets the device-side path to the hprof file being written
+     * @param pendingHprofDump the file to the hprof file
+     */
     void setPendingHprofDump(String pendingHprofDump) {
         mPendingHprofDump = pendingHprofDump;
     }
 
+    /**
+     * Returns the path to the device-side hprof file being written.
+     */
     String getPendingHprofDump() {
         return mPendingHprofDump;
     }
 
     public boolean hasPendingHprofDump() {
         return mPendingHprofDump != null;
+    }
+
+    synchronized void setMethodProfilingStatus(MethodProfilingStatus status) {
+        mProfilingStatus = status;
+    }
+
+    /**
+     * Returns the method profiling status.
+     * @see Client#requestMethodProfilingStatus()
+     */
+    public synchronized MethodProfilingStatus getMethodProfilingStatus() {
+        return mProfilingStatus;
+    }
+
+    /**
+     * Sets the device-side path to the method profile file being written
+     * @param pendingMethodProfiling the file being written
+     */
+    void setPendingMethodProfiling(String pendingMethodProfiling) {
+        mPendingMethodProfiling = pendingMethodProfiling;
+    }
+
+    /**
+     * Returns the path to the device-side method profiling file being written.
+     */
+    String getPendingMethodProfiling() {
+        return mPendingMethodProfiling;
     }
 }
 

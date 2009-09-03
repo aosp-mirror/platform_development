@@ -17,6 +17,7 @@
 package com.android.ddmlib;
 
 import com.android.ddmlib.AdbHelper.AdbResponse;
+import com.android.ddmlib.ClientData.DebuggerStatus;
 import com.android.ddmlib.DebugPortManager.IDebugPortProvider;
 import com.android.ddmlib.IDevice.DeviceState;
 
@@ -748,7 +749,7 @@ final class DeviceMonitor {
                     client.listenForDebugger(debuggerPort);
                 }
             } catch (IOException ioe) {
-                client.getClientData().setDebuggerConnectionStatus(ClientData.DEBUGGER_ERROR);
+                client.getClientData().setDebuggerConnectionStatus(DebuggerStatus.ERROR);
                 Log.e("ddms", "Can't bind to local " + debuggerPort + " for debugger");
                 // oh well
             }
