@@ -77,7 +77,7 @@ final class HandleAppName extends ChunkHandler {
         appNameLen = data.getInt();
         appName = getString(data, appNameLen);
 
-        Log.i("ddm-appname", "APNM: app='" + appName + "'");
+        Log.d("ddm-appname", "APNM: app='" + appName + "'");
 
         ClientData cd = client.getClientData();
         synchronized (cd) {

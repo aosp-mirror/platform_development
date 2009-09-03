@@ -229,7 +229,7 @@ public class ScreenShotDialog extends Dialog {
         if (fileName != null) {
             DdmUiPreferences.getStore().setValue("lastImageSaveDir", dlg.getFilterPath());
 
-            Log.i("ddms", "Saving image to " + fileName);
+            Log.d("ddms", "Saving image to " + fileName);
             ImageData imageData = mImageLabel.getImage().getImageData();
 
             try {

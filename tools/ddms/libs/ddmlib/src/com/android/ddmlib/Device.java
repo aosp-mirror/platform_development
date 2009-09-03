@@ -438,14 +438,14 @@ final class Device implements IDevice {
             String packageFileName = getFileName(localFilePath);
             String remoteFilePath = String.format("/data/local/tmp/%1$s", packageFileName); //$NON-NLS-1$
 
-            Log.i(packageFileName, String.format("Uploading %1$s onto device '%2$s'",
+            Log.d(packageFileName, String.format("Uploading %1$s onto device '%2$s'",
                     packageFileName, getSerialNumber()));
 
             SyncService sync = getSyncService();
             if (sync != null) {
                 String message = String.format("Uploading file onto device '%1$s'",
                         getSerialNumber());
-                Log.i(LOG_TAG, message);
+                Log.d(LOG_TAG, message);
                 SyncResult result = sync.pushFile(localFilePath, remoteFilePath,
                         SyncService.getNullProgressMonitor());
 

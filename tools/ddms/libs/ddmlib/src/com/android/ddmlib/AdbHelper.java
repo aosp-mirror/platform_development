@@ -613,7 +613,7 @@ final class AdbHelper {
             } else if (count == 0) {
                 // TODO: need more accurate timeout?
                 if (timeout != 0 && numWaits * WAIT_TIME > timeout) {
-                    Log.i("ddms", "read: timeout");
+                    Log.d("ddms", "read: timeout");
                     throw new IOException("timeout");
                 }
                 // non-blocking spin
@@ -670,7 +670,7 @@ final class AdbHelper {
             } else if (count == 0) {
                 // TODO: need more accurate timeout?
                 if (timeout != 0 && numWaits * WAIT_TIME > timeout) {
-                    Log.i("ddms", "write: timeout");
+                    Log.d("ddms", "write: timeout");
                     throw new IOException("timeout");
                 }
                 // non-blocking spin
