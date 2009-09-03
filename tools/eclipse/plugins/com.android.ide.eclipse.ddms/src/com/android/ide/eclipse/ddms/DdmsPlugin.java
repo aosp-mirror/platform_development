@@ -46,6 +46,7 @@ import org.eclipse.ui.console.MessageConsoleStream;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Calendar;
 
@@ -54,6 +55,21 @@ import java.util.Calendar;
  */
 public final class DdmsPlugin extends AbstractUIPlugin implements IDeviceChangeListener,
         IUiSelectionListener {
+
+    public final static int PLATFORM_UNKNOWN = 0;
+    public final static int PLATFORM_LINUX = 1;
+    public final static int PLATFORM_WINDOWS = 2;
+    public final static int PLATFORM_DARWIN = 3;
+
+    /**
+     * Returns current platform, one of {@link #PLATFORM_WINDOWS}, {@link #PLATFORM_DARWIN},
+     * {@link #PLATFORM_LINUX} or {@link #PLATFORM_UNKNOWN}.
+     */
+    public final static int CURRENT_PLATFORM = currentPlatform();
+
+    /** hprof-conv executable (with extension for the current OS)  */
+    public final static String FN_HPROF_CONVERTER = (CURRENT_PLATFORM == PLATFORM_WINDOWS) ?
+            "hprof-conv.exe" : "hprof-conv"; //$NON-NLS-1$ //$NON-NLS-2$
 
     // The plug-in ID
     public static final String PLUGIN_ID = "com.android.ide.eclipse.ddms"; // $NON-NLS-1$
@@ -65,11 +81,14 @@ public final class DdmsPlugin extends AbstractUIPlugin implements IDeviceChangeL
 
     /** Location of the adb command line executable */
     private static String sAdbLocation;
+    private static String sToolsFolder;
+    private static String sHprofConverter;
 
     /**
      * Debug Launcher for already running apps
      */
     private static IDebugLauncher sRunningAppDebugLauncher;
+
 
     /** Console for DDMS log message */
     private MessageConsole mDdmsConsole;
@@ -217,7 +236,7 @@ public final class DdmsPlugin extends AbstractUIPlugin implements IDeviceChangeL
 
         // read the adb location from the prefs to attempt to start it properly without
         // having to wait for ADT to start
-        sAdbLocation = eclipseStore.getString(ADB_LOCATION);
+        setAdbLocation(eclipseStore.getString(ADB_LOCATION));
 
         // start it in a thread to return from start() asap.
         new Thread() {
@@ -278,13 +297,32 @@ public final class DdmsPlugin extends AbstractUIPlugin implements IDeviceChangeL
         return sAdbLocation;
     }
 
+    public static String getToolsFolder() {
+        return sToolsFolder;
+    }
+
+    public static String getHprofConverter() {
+        return sHprofConverter;
+    }
+
+    private static void setAdbLocation(String adbLocation) {
+        sAdbLocation = adbLocation;
+
+        File adb = new File(sAdbLocation);
+        File toolsFolder = adb.getParentFile();
+        sToolsFolder = toolsFolder.getAbsolutePath();
+
+        File hprofConverter = new File(toolsFolder, FN_HPROF_CONVERTER);
+        sHprofConverter = hprofConverter.getAbsolutePath();
+    }
+
     /**
      * Set the location of the adb executable and optionally starts adb
      * @param adb location of adb
      * @param startAdb flag to start adb
      */
     public static void setAdb(String adb, boolean startAdb) {
-        sAdbLocation = adb;
+        setAdbLocation(adb);
 
         // store the location for future ddms only start.
         sPlugin.getPreferenceStore().setValue(ADB_LOCATION, sAdbLocation);
@@ -561,5 +599,24 @@ public final class DdmsPlugin extends AbstractUIPlugin implements IDeviceChangeL
         return String.format("[%1$tF %1$tT - %2$s]", c, tag);
     }
 
+
+    /**
+     * Returns current platform
+     *
+     * @return one of {@link #PLATFORM_WINDOWS}, {@link #PLATFORM_DARWIN},
+     * {@link #PLATFORM_LINUX} or {@link #PLATFORM_UNKNOWN}.
+     */
+    public static int currentPlatform() {
+        String os = System.getProperty("os.name");          //$NON-NLS-1$
+        if (os.startsWith("Mac OS")) {                      //$NON-NLS-1$
+            return PLATFORM_DARWIN;
+        } else if (os.startsWith("Windows")) {              //$NON-NLS-1$
+            return PLATFORM_WINDOWS;
+        } else if (os.startsWith("Linux")) {                //$NON-NLS-1$
+            return PLATFORM_LINUX;
+        }
+
+        return PLATFORM_UNKNOWN;
+    }
 
 }

@@ -30,8 +30,12 @@ import com.android.ddmuilib.SyncProgressMonitor;
 import com.android.ddmuilib.DevicePanel.IUiSelectionListener;
 import com.android.ide.eclipse.ddms.DdmsPlugin;
 import com.android.ide.eclipse.ddms.DdmsPlugin.IDebugLauncher;
+import com.android.ide.eclipse.ddms.preferences.PreferenceInitializer;
 
+import org.eclipse.core.filesystem.EFS;
+import org.eclipse.core.filesystem.IFileStore;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.action.IMenuManager;
@@ -40,6 +44,7 @@ import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.ProgressMonitorDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
@@ -47,10 +52,14 @@ import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.ISharedImages;
+import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.ide.IDE;
 import org.eclipse.ui.part.ViewPart;
 
 import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 
 public class DeviceView extends ViewPart implements IUiSelectionListener {
 
@@ -72,11 +81,15 @@ public class DeviceView extends ViewPart implements IUiSelectionListener {
     private Action mHprofAction;
     private IDebugLauncher mDebugLauncher;
 
-    private class HProfHandler implements IHprofDumpHandler {
+    public class HProfHandler implements IHprofDumpHandler {
+        public final static String ACTION_SAVE ="hprof.save"; //$NON-NLS-1$
+        public final static String ACTION_OPEN = "hprof.open"; //$NON-NLS-1$
+
+        public final static String DOT_HPROF = ".hprof"; //$NON-NLS-1$
 
         private final Shell mParentShell;
 
-        public HProfHandler(Shell parentShell) {
+        HProfHandler(Shell parentShell) {
             mParentShell = parentShell;
         }
 
@@ -98,7 +111,7 @@ public class DeviceView extends ViewPart implements IUiSelectionListener {
             });
         }
 
-        public void onSuccess(final String file, final Client client) {
+        public void onSuccess(final String remoteFile, final Client client) {
             mParentShell.getDisplay().asyncExec(new Runnable() {
                 public void run() {
                     final IDevice device = client.getDevice();
@@ -106,7 +119,19 @@ public class DeviceView extends ViewPart implements IUiSelectionListener {
                         // get the sync service to pull the HPROF file
                         final SyncService sync = client.getDevice().getSyncService();
                         if (sync != null) {
-                            promptAndPull(device, client, sync, file);
+                            // get from the preference what action to take
+                            IPreferenceStore store = DdmsPlugin.getDefault().getPreferenceStore();
+                            String value = store.getString(PreferenceInitializer.ATTR_HPROF_ACTION);
+                            if (ACTION_OPEN.equals(value)) {
+                                File temp = File.createTempFile("android", DOT_HPROF); //$NON-NLS-1$
+                                String tempPath = temp.getAbsolutePath();
+                                pull(sync, tempPath, remoteFile);
+
+                                open(tempPath);
+                            } else {
+                                // default action is ACTION_SAVE
+                                promptAndPull(device, client, sync, remoteFile);
+                            }
                         } else {
                             MessageDialog.openError(mParentShell, "HPROF Error",
                                     String.format(
@@ -134,34 +159,60 @@ public class DeviceView extends ViewPart implements IUiSelectionListener {
 
                 fileDialog.setText("Save HPROF file");
                 fileDialog.setFileName(
-                        client.getClientData().getClientDescription() + ".hprof");
+                        client.getClientData().getClientDescription() + DOT_HPROF);
 
                 final String localFileName = fileDialog.open();
                 if (localFileName != null) {
-                    final File localFile = new File(localFileName);
-
-                    new ProgressMonitorDialog(mParentShell).run(true, true,
-                            new IRunnableWithProgress() {
-                        public void run(IProgressMonitor monitor) {
-                            SyncResult result = sync.pullFile(remoteFile, localFileName,
-                                    new SyncProgressMonitor(monitor, String.format(
-                                            "Pulling %1$s from the device",
-                                            localFile.getName())));
-
-                            if (result.getCode() != SyncService.RESULT_OK) {
-                                MessageDialog.openError(mParentShell, "HPROF Error",
-                                        String.format("Failed to pull %1$s: %2$s", remoteFile,
-                                                result.getMessage()));
-                            }
-
-                            sync.close();
-                        }
-                    });
+                    pull(sync, localFileName, remoteFile);
                 }
             } catch (Exception e) {
                 MessageDialog.openError(mParentShell, "HPROF Error",
                         String.format("Unable to download HPROF file from device '%1$s'.",
                         device.getSerialNumber()));
+            }
+        }
+
+        private void pull(final SyncService sync,
+                final String localFileName, final String remoteFile)
+                throws InvocationTargetException, InterruptedException {
+            new ProgressMonitorDialog(mParentShell).run(true, true,
+                    new IRunnableWithProgress() {
+                public void run(IProgressMonitor monitor) {
+                    SyncResult result = sync.pullFile(remoteFile, localFileName,
+                            new SyncProgressMonitor(monitor, String.format(
+                                    "Pulling %1$s from the device",
+                                    remoteFile)));
+
+                    if (result.getCode() != SyncService.RESULT_OK) {
+                        MessageDialog.openError(mParentShell, "HPROF Error",
+                                String.format("Failed to pull %1$s: %2$s", remoteFile,
+                                        result.getMessage()));
+                    }
+
+                    sync.close();
+                }
+            });
+        }
+
+        private void open(String path) throws IOException, InterruptedException, PartInitException {
+            // make a temp file to convert the hprof into something
+            // readable by normal tools
+            File temp = File.createTempFile("android", DOT_HPROF);
+            String tempPath = temp.getAbsolutePath();
+
+            String[] command = new String[3];
+            command[0] = DdmsPlugin.getHprofConverter();
+            command[1] = path;
+            command[2] = tempPath;
+
+            Process p = Runtime.getRuntime().exec(command);
+            p.waitFor();
+
+            IFileStore fileStore =  EFS.getLocalFileSystem().getStore(new Path(tempPath));
+            if (!fileStore.fetchInfo().isDirectory() && fileStore.fetchInfo().exists()) {
+                IDE.openEditorOnFileStore(
+                        getSite().getWorkbenchWindow().getActivePage(),
+                        fileStore);
             }
         }
     }
