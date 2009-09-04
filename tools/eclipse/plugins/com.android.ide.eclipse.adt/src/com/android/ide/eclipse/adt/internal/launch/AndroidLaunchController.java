@@ -24,6 +24,7 @@ import com.android.ddmlib.Log;
 import com.android.ddmlib.AndroidDebugBridge.IClientChangeListener;
 import com.android.ddmlib.AndroidDebugBridge.IDebugBridgeChangeListener;
 import com.android.ddmlib.AndroidDebugBridge.IDeviceChangeListener;
+import com.android.ddmlib.ClientData.DebuggerStatus;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.launch.AndroidLaunchConfiguration.TargetMode;
 import com.android.ide.eclipse.adt.internal.launch.DelayedLaunchInfo.InstallRetryMode;
@@ -1382,7 +1383,7 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
      * @param client the updated client.
      * @param changeMask the bit mask describing the changed properties. It can contain
      * any of the following values: {@link Client#CHANGE_INFO}, {@link Client#CHANGE_NAME}
-     * {@link Client#CHANGE_DEBUGGER_INTEREST}, {@link Client#CHANGE_THREAD_MODE},
+     * {@link Client#CHANGE_DEBUGGER_STATUS}, {@link Client#CHANGE_THREAD_MODE},
      * {@link Client#CHANGE_THREAD_DATA}, {@link Client#CHANGE_HEAP_MODE},
      * {@link Client#CHANGE_HEAP_DATA}, {@link Client#CHANGE_NATIVE_HEAP_DATA}
      *
@@ -1445,7 +1446,7 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
                 }
 
                 // check if it's already waiting for a debugger, and if so we connect to it.
-                if (client.getClientData().getDebuggerConnectionStatus() == ClientData.DEBUGGER_WAITING) {
+                if (client.getClientData().getDebuggerConnectionStatus() == DebuggerStatus.WAITING) {
                     // search for this client in the list;
                     synchronized (sListLock) {
                         int index = mUnknownClientsWaitingForDebugger.indexOf(client);
@@ -1461,10 +1462,10 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
         // if it's not home, it could be an app that is now in debugger mode that we're waiting for
         // lets check it
 
-        if ((changeMask & Client.CHANGE_DEBUGGER_INTEREST) == Client.CHANGE_DEBUGGER_INTEREST) {
+        if ((changeMask & Client.CHANGE_DEBUGGER_STATUS) == Client.CHANGE_DEBUGGER_STATUS) {
             ClientData clientData = client.getClientData();
             String applicationName = client.getClientData().getClientDescription();
-            if (clientData.getDebuggerConnectionStatus() == ClientData.DEBUGGER_WAITING) {
+            if (clientData.getDebuggerConnectionStatus() == DebuggerStatus.WAITING) {
                 // Get the application name, and make sure its valid.
                 if (applicationName == null) {
                     // looks like we don't have the client yet, so we keep it around for when its

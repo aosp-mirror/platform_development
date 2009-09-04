@@ -16,6 +16,8 @@
 
 package com.android.ddmlib;
 
+import com.android.ddmlib.ClientData.DebuggerStatus;
+
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -165,8 +167,8 @@ class Debugger {
                 mConnState = ST_NOT_CONNECTED;
 
                 ClientData cd = mClient.getClientData();
-                cd.setDebuggerConnectionStatus(ClientData.DEBUGGER_DEFAULT);
-                mClient.update(Client.CHANGE_DEBUGGER_INTEREST);
+                cd.setDebuggerConnectionStatus(DebuggerStatus.DEFAULT);
+                mClient.update(Client.CHANGE_DEBUGGER_STATUS);
             }
         } catch (IOException ioe) {
             Log.w("ddms", "Failed to close data " + this);
@@ -249,8 +251,8 @@ class Debugger {
                     mConnState = ST_READY;
 
                     ClientData cd = mClient.getClientData();
-                    cd.setDebuggerConnectionStatus(ClientData.DEBUGGER_ATTACHED);
-                    mClient.update(Client.CHANGE_DEBUGGER_INTEREST);
+                    cd.setDebuggerConnectionStatus(DebuggerStatus.ATTACHED);
+                    mClient.update(Client.CHANGE_DEBUGGER_STATUS);
 
                     // see if we have another packet in the buffer
                     return getJdwpPacket();

@@ -24,6 +24,7 @@ import com.android.ddmlib.IDevice;
 import com.android.ddmlib.AndroidDebugBridge.IClientChangeListener;
 import com.android.ddmlib.AndroidDebugBridge.IDebugBridgeChangeListener;
 import com.android.ddmlib.AndroidDebugBridge.IDeviceChangeListener;
+import com.android.ddmlib.ClientData.DebuggerStatus;
 import com.android.ddmlib.IDevice.DeviceState;
 
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -76,6 +77,8 @@ public final class DevicePanel extends Panel implements IDebugBridgeChangeListen
     public final static String ICON_HALT = "halt.png"; //$NON-NLS-1$
     public final static String ICON_GC = "gc.png"; //$NON-NLS-1$
     public final static String ICON_HPROF = "hprof.png"; //$NON-NLS-1$
+    public final static String ICON_TRACING_START = "tracing_start.png"; //$NON-NLS-1$
+    public final static String ICON_TRACING_STOP = "tracing_stop.png"; //$NON-NLS-1$
 
     private IDevice mCurrentDevice;
     private Client mCurrentClient;
@@ -167,13 +170,13 @@ public final class DevicePanel extends Panel implements IDebugBridgeChangeListen
                 switch (columnIndex) {
                     case CLIENT_COL_NAME:
                         switch (cd.getDebuggerConnectionStatus()) {
-                            case ClientData.DEBUGGER_DEFAULT:
+                            case DEFAULT:
                                 return null;
-                            case ClientData.DEBUGGER_WAITING:
+                            case WAITING:
                                 return mWaitingImage;
-                            case ClientData.DEBUGGER_ATTACHED:
+                            case ATTACHED:
                                 return mDebuggerImage;
-                            case ClientData.DEBUGGER_ERROR:
+                            case ERROR:
                                 return mDebugErrorImage;
                         }
                         return null;
@@ -430,6 +433,11 @@ public final class DevicePanel extends Panel implements IDebugBridgeChangeListen
         }
     }
 
+    public void toggleMethodProfiling() {
+        if (mCurrentClient != null) {
+            mCurrentClient.toggleMethodProfiling();
+        }
+    }
 
     public void setEnabledHeapOnSelectedClient(boolean enable) {
         if (mCurrentClient != null) {
@@ -594,7 +602,7 @@ public final class DevicePanel extends Panel implements IDebugBridgeChangeListen
      * @param client the updated client.
      * @param changeMask the bit mask describing the changed properties. It can contain
      * any of the following values: {@link Client#CHANGE_INFO},
-     * {@link Client#CHANGE_DEBUGGER_INTEREST}, {@link Client#CHANGE_THREAD_MODE},
+     * {@link Client#CHANGE_DEBUGGER_STATUS}, {@link Client#CHANGE_THREAD_MODE},
      * {@link Client#CHANGE_THREAD_DATA}, {@link Client#CHANGE_HEAP_MODE},
      * {@link Client#CHANGE_HEAP_DATA}, {@link Client#CHANGE_NATIVE_HEAP_DATA}
      *
@@ -607,10 +615,10 @@ public final class DevicePanel extends Panel implements IDebugBridgeChangeListen
                     // refresh the client
                     mTreeViewer.refresh(client);
 
-                    if ((changeMask & Client.CHANGE_DEBUGGER_INTEREST) ==
-                            Client.CHANGE_DEBUGGER_INTEREST &&
+                    if ((changeMask & Client.CHANGE_DEBUGGER_STATUS) ==
+                            Client.CHANGE_DEBUGGER_STATUS &&
                             client.getClientData().getDebuggerConnectionStatus() ==
-                                ClientData.DEBUGGER_WAITING) {
+                                DebuggerStatus.WAITING) {
                         // make sure the device is expanded. Normally the setSelection below
                         // will auto expand, but the children of device may not already exist
                         // at this time. Forcing an expand will make the TreeViewer create them.

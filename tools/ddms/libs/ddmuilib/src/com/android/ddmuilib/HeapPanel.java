@@ -217,7 +217,7 @@ public final class HeapPanel extends BaseHeapPanel {
      * @param client the updated client.
      * @param changeMask the bit mask describing the changed properties. It can contain
      * any of the following values: {@link Client#CHANGE_INFO}, {@link Client#CHANGE_NAME}
-     * {@link Client#CHANGE_DEBUGGER_INTEREST}, {@link Client#CHANGE_THREAD_MODE},
+     * {@link Client#CHANGE_DEBUGGER_STATUS}, {@link Client#CHANGE_THREAD_MODE},
      * {@link Client#CHANGE_THREAD_DATA}, {@link Client#CHANGE_HEAP_MODE},
      * {@link Client#CHANGE_HEAP_DATA}, {@link Client#CHANGE_NATIVE_HEAP_DATA}
      *
