@@ -37,7 +37,7 @@ import org.eclipse.ui.part.FileEditorInput;
 import org.w3c.dom.Document;
 
 /**
- * Multi-page form editor for /res/xml XML files. 
+ * Multi-page form editor for /res/xml XML files.
  */
 public class XmlEditor extends AndroidEditor {
 
@@ -69,7 +69,7 @@ public class XmlEditor extends AndroidEditor {
      * <p/>
      * The {@link XmlEditor} can handle XML files that have a <searchable> or
      * <Preferences> root XML element with the adequate xmlns:android attribute.
-     * 
+     *
      * @return True if the {@link XmlEditor} can handle that file.
      */
     public static boolean canHandleFile(IFile file) {
@@ -77,14 +77,17 @@ public class XmlEditor extends AndroidEditor {
         IProject project = file.getProject();
         IAndroidTarget target = Sdk.getCurrent().getTarget(project);
         if (target != null) {
+            // Note: the target data can be null when an SDK is not finished loading yet.
+            // We can potentially arrive here when Eclipse is started with a file previously
+            // open and the resource gets refreshed -- at that point we may not have the SDK yet.
             AndroidTargetData data = Sdk.getCurrent().getTargetData(target);
-        
+
             FirstElementParser.Result result = FirstElementParser.parse(
                     file.getLocation().toOSString(),
                     SdkConstants.NS_RESOURCES);
-            
-            if (result != null) {
-                String name = result.getElement(); 
+
+            if (result != null && data != null) {
+                String name = result.getElement();
                 if (name != null && result.getXmlnsPrefix() != null) {
                     DocumentDescriptor desc = data.getXmlDescriptors().getDescriptor();
                     for (ElementDescriptor elem : desc.getChildren()) {
@@ -96,7 +99,7 @@ public class XmlEditor extends AndroidEditor {
                 }
             }
         }
-        
+
         return false;
     }
 
@@ -106,7 +109,7 @@ public class XmlEditor extends AndroidEditor {
      * Returns whether the "save as" operation is supported by this editor.
      * <p/>
      * Save-As is a valid operation for the ManifestEditor since it acts on a
-     * single source file. 
+     * single source file.
      *
      * @see IEditorPart
      */
@@ -125,7 +128,7 @@ public class XmlEditor extends AndroidEditor {
         } catch (PartInitException e) {
             AdtPlugin.log(e, "Error creating nested page"); //$NON-NLS-1$
         }
-        
+
     }
 
     /* (non-java doc)
@@ -140,10 +143,10 @@ public class XmlEditor extends AndroidEditor {
             setPartName(String.format("%1$s", file.getName()));
         }
     }
-    
+
     /**
      * Processes the new XML Model, which XML root node is given.
-     * 
+     *
      * @param xml_doc The XML document, if available, or null if none exists.
      */
     @Override
@@ -152,10 +155,10 @@ public class XmlEditor extends AndroidEditor {
         initUiRootNode(false /*force*/);
 
         mUiRootNode.loadFromXmlNode(xml_doc);
-        
+
         super.xmlModelChanged(xml_doc);
     }
-    
+
     /**
      * Creates the initial UI Root Node, including the known mandatory elements.
      * @param force if true, a new UiRootNode is recreated even if it already exists.
@@ -198,5 +201,5 @@ public class XmlEditor extends AndroidEditor {
             mUiRootNode.reloadFromXmlNode(mUiRootNode.getXmlNode());
         }
     }
-    
+
 }
