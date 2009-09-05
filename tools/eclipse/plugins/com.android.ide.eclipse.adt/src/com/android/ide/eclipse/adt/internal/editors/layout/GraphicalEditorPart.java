@@ -85,6 +85,7 @@ import java.util.Map;
  * @since GLE2
  *
  * TODO List:
+ * - display error icon
  * - finish palette (see palette's todo list)
  * - finish canvas (see canva's todo list)
  * - completly rethink the property panel
@@ -901,6 +902,9 @@ public class GraphicalEditorPart extends EditorPart implements IGraphicalLayoutE
     /**
      * Computes a layout by calling the correct computeLayout method of ILayoutBridge based on
      * the implementation API level.
+     *
+     * Implementation detail: the bridge's computeLayout() method already returns a newly
+     * allocated ILayourResult.
      */
     @SuppressWarnings("deprecation")
     private static ILayoutResult computeLayout(LayoutBridge bridge,
@@ -952,38 +956,6 @@ public class GraphicalEditorPart extends EditorPart implements IGraphicalLayoutE
 
     public Rectangle getBounds() {
         return mConfigComposite.getScreenBounds();
-    }
-
-    /** @deprecated for GLE2 */
-    private void resetNodeBounds(UiElementNode node) {
-        node.setEditData(null);
-
-        List<UiElementNode> children = node.getUiChildren();
-        for (UiElementNode child : children) {
-            resetNodeBounds(child);
-        }
-    }
-
-    /** @deprecated for GLE2 */
-    private void updateNodeWithBounds(ILayoutViewInfo r) {
-        if (r != null) {
-            // update the node itself, as the viewKey is the XML node in this implementation.
-            Object viewKey = r.getViewKey();
-            if (viewKey instanceof UiElementNode) {
-                Rectangle bounds = new Rectangle(r.getLeft(), r.getTop(),
-                        r.getRight()-r.getLeft(), r.getBottom() - r.getTop());
-
-                ((UiElementNode)viewKey).setEditData(bounds);
-            }
-
-            // and then its children.
-            ILayoutViewInfo[] children = r.getChildren();
-            if (children != null) {
-                for (ILayoutViewInfo child : children) {
-                    updateNodeWithBounds(child);
-                }
-            }
-        }
     }
 
     public void reloadPalette() {
