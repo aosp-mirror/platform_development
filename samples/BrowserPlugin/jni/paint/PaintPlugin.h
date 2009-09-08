@@ -29,12 +29,17 @@
 #ifndef paintPlugin__DEFINED
 #define paintPlugin__DEFINED
 
-class PaintPlugin : public SubPlugin {
+class PaintPlugin : public SurfaceSubPlugin {
 public:
     PaintPlugin(NPP inst);
     virtual ~PaintPlugin();
     virtual bool supportsDrawingModel(ANPDrawingModel);
     virtual int16 handleEvent(const ANPEvent* evt);
+    virtual void surfaceCreated(JNIEnv* env, jobject surface);
+    virtual void surfaceChanged(int format, int width, int height);
+    virtual void surfaceDestroyed();
+    virtual bool isFixedSurface();
+
 private:
     void        drawCleanPlugin(ANPCanvas* canvas = NULL);
     ANPCanvas*  getCanvas(ANPRectI* dirtyRect = NULL);
@@ -49,9 +54,9 @@ private:
 
     bool        m_isTouchActive;
     bool        m_isTouchCurrentInput;
-    bool        m_surfaceReady;
 
-    ANPSurface* m_surface;
+    JavaVM*     m_vm;
+    jobject     m_surface;
     ANPPath*    m_touchPath;
 
     ANPRectF    m_drawingSurface;

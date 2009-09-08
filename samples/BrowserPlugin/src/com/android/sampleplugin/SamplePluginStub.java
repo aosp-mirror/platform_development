@@ -19,8 +19,11 @@ package com.android.sampleplugin;
 import android.content.Context;
 import android.graphics.PixelFormat;
 import android.opengl.GLSurfaceView;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
 import android.view.View;
 import android.view.WindowManager;
+import android.view.SurfaceHolder.Callback;
 import android.view.ViewGroup.LayoutParams;
 import android.webkit.PluginStub;
 import android.widget.FrameLayout;
@@ -28,28 +31,52 @@ import android.widget.MediaController;
 import android.widget.VideoView;
 import com.android.sampleplugin.graphics.CubeRenderer;
 
-public class SamplePluginStub extends PluginStub {
+public class SamplePluginStub implements PluginStub {
 
-    private int npp; 
-    
-    public SamplePluginStub(int npp) { 
-        super(npp);
-        this.npp = npp;
-    }
-
-    public View getEmbeddedView(Context context) {
-        // TODO Auto-generated method stub
-        return null;
+    static {
+        //needed for jni calls
+        System.loadLibrary("sampleplugin");
     }
     
-    public View getFullScreenView(Context context) {
+    public View getEmbeddedView(final int npp, Context context) {
+        
+        final SurfaceView view = new SurfaceView(context);
+
+        /* You can do all sorts of interesting operations on the surface view
+         * here. We illustrate a few of the important operations below.
+         */
+        
+        //TODO get pixel format from the subplugin (via jni)
+        view.getHolder().setFormat(PixelFormat.RGBA_8888);
+        view.getHolder().addCallback(new Callback() {
+
+            public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+                nativeSurfaceChanged(npp, format, width, height);
+            }
+
+            public void surfaceCreated(SurfaceHolder holder) {
+                nativeSurfaceCreated(npp, view);
+            }
+
+            public void surfaceDestroyed(SurfaceHolder holder) {
+                nativeSurfaceDestroyed(npp);
+            }
+            
+        });
+        
+        if (nativeIsFixedSurface(npp)) {
+            //TODO get the fixed dimensions from the plugin 
+            //view.getHolder().setFixedSize(width, height);
+        }
+        
+        return view;
+    }
+    
+    public View getFullScreenView(int npp, Context context) {
         
         /* TODO make this aware of the plugin instance and get the video file
          * from the plugin.
          */
-        
-        //needed for jni calls
-        System.loadLibrary("sampleplugin");
         
         FrameLayout layout = new FrameLayout(context);
         LayoutParams fp = new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT);
@@ -84,6 +111,8 @@ public class SamplePluginStub extends PluginStub {
         return layout;
     }
     
-    public native String  nativeStringFromJNI();
-
+    private native void nativeSurfaceCreated(int npp, View surfaceView);
+    private native void nativeSurfaceChanged(int npp, int format, int width, int height);
+    private native void nativeSurfaceDestroyed(int npp);
+    private native boolean nativeIsFixedSurface(int npp);
 }

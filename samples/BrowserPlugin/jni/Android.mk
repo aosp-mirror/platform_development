@@ -35,7 +35,7 @@ LOCAL_SRC_FILES := \
 	background/BackgroundPlugin.cpp \
 	form/FormPlugin.cpp \
 	paint/PaintPlugin.cpp \
-	hello-jni.cpp \
+	jni-bridge.cpp \
 
 LOCAL_C_INCLUDES += \
 	$(JNI_H_INCLUDE) \
