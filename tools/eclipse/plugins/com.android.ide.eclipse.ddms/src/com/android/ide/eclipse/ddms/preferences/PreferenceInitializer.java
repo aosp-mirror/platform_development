@@ -61,6 +61,9 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
     public final static String ATTR_HPROF_ACTION =
         DdmsPlugin.PLUGIN_ID + ".hprofAction"; //$NON-NLS-1$
 
+    public final static String ATTR_TIME_OUT =
+        DdmsPlugin.PLUGIN_ID + ".timeOut"; //$NON-NLS-1$
+
     /*
      * (non-Javadoc)
      *
@@ -90,6 +93,8 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
                 new FontData("Courier", 10, SWT.NORMAL).toString()); //$NON-NLS-1$
 
         store.setDefault(ATTR_HPROF_ACTION, HProfHandler.ACTION_OPEN);
+
+        store.setDefault(ATTR_TIME_OUT, DdmPreferences.DEFAULT_TIMEOUT);
     }
 
     /**
@@ -104,5 +109,6 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
         DdmPreferences.setInitialThreadUpdate(store.getBoolean(ATTR_DEFAULT_THREAD_UPDATE));
         DdmPreferences.setInitialHeapUpdate(store.getBoolean(ATTR_DEFAULT_HEAP_UPDATE));
         DdmUiPreferences.setThreadRefreshInterval(store.getInt(ATTR_THREAD_INTERVAL));
+        DdmPreferences.setTimeOut(store.getInt(ATTR_TIME_OUT));
     }
 }
