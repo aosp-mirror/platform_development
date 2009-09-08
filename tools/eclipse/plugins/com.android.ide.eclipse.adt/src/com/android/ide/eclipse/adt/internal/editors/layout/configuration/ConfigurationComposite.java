@@ -18,10 +18,8 @@ package com.android.ide.eclipse.adt.internal.editors.layout.configuration;
 
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.resources.ResourceType;
-import com.android.ide.eclipse.adt.internal.resources.configurations.CountryCodeQualifier;
 import com.android.ide.eclipse.adt.internal.resources.configurations.FolderConfiguration;
 import com.android.ide.eclipse.adt.internal.resources.configurations.LanguageQualifier;
-import com.android.ide.eclipse.adt.internal.resources.configurations.NetworkCodeQualifier;
 import com.android.ide.eclipse.adt.internal.resources.configurations.RegionQualifier;
 import com.android.ide.eclipse.adt.internal.resources.configurations.ResourceQualifier;
 import com.android.ide.eclipse.adt.internal.resources.configurations.ScreenDimensionQualifier;
@@ -31,25 +29,20 @@ import com.android.ide.eclipse.adt.internal.resources.configurations.ScreenOrien
 import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
 import com.android.ide.eclipse.adt.internal.sdk.DeviceConfiguration;
 import com.android.ide.eclipse.adt.internal.ui.ConfigurationSelector.LanguageRegionVerifier;
-import com.android.ide.eclipse.adt.internal.ui.ConfigurationSelector.MobileCodeVerifier;
 import com.android.layoutlib.api.IResourceValue;
 import com.android.layoutlib.api.IStyleResourceValue;
 
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
-import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Text;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -64,21 +57,15 @@ public class ConfigurationComposite extends Composite {
 
     private final static String THEME_SEPARATOR = "----------"; //$NON-NLS-1$
 
-    private Text mCountry;
-    private Text mNetwork;
+    private Button mClippingButton;
+    private Label mCurrentLayoutLabel;
+
     private Combo mLocale;
     private Combo mDeviceList;
     private Combo mDeviceConfigs;
     private Combo mThemeCombo;
     private Button mCreateButton;
 
-    private Label mCountryIcon;
-    private Label mNetworkIcon;
-
-    private Label mCurrentLayoutLabel;
-
-    private Image mMatchImage;
-    private Image mErrorImage;
 
     private int mPlatformThemeCount = 0;
     private boolean mDisableUpdates = false;
@@ -93,6 +80,8 @@ public class ConfigurationComposite extends Composite {
 
     private final IConfigListener mListener;
 
+    private boolean mClipping = true;
+
     /**
      * Interface implemented by the part which owns a {@link ConfigurationComposite}.
      * This notifies the owners when the configuration change.
@@ -103,6 +92,7 @@ public class ConfigurationComposite extends Composite {
         void onConfigurationChange();
         void onThemeChange();
         void onCreate();
+        void OnClippingChange();
 
         ProjectResources getProjectResources();
         ProjectResources getFrameworkResources();
@@ -115,66 +105,39 @@ public class ConfigurationComposite extends Composite {
         mListener = listener;
         mDevices = DeviceConfiguration.getDevices();
 
-        IconFactory factory = IconFactory.getInstance();
-        mMatchImage = factory.getIcon("match"); //$NON-NLS-1$
-        mErrorImage = factory.getIcon("error"); //$NON-NLS-1$
-
         GridLayout gl;
         GridData gd;
-        int cols = 10;
+        int cols = 10; // device*2+config*2+locale*2+separator*2+theme+createBtn
+
+        // ---- First line: collapse button, clipping button, editing config display.
+        Composite labelParent = new Composite(this, SWT.NONE);
+        labelParent.setLayout(gl = new GridLayout(3, false));
+        gl.marginWidth = gl.marginHeight = 0;
+        labelParent.setLayoutData(gd = new GridData(GridData.FILL_HORIZONTAL));
+        gd.horizontalSpan = cols;
+
+        new Label(labelParent, SWT.NONE).setText("Editing config:");
+        mCurrentLayoutLabel = new Label(labelParent, SWT.NONE);
+        mCurrentLayoutLabel.setLayoutData(gd = new GridData(GridData.FILL_HORIZONTAL));
+        gd.widthHint = 50;
+
+        mClippingButton = new Button(labelParent, SWT.TOGGLE | SWT.FLAT);
+        mClippingButton.setSelection(mClipping);
+        mClippingButton.setToolTipText("Toggles screen clipping on/off");
+        mClippingButton.setImage(IconFactory.getInstance().getIcon("clipping")); //$NON-NLS-1$
+        mClippingButton.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                OnClippingChange();
+            }
+        });
+
+        // ---- 2nd line: device/config/locale/theme Combos, create button.
 
         setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         setLayout(gl = new GridLayout(cols, false));
-
-        new Label(this, SWT.NONE).setText("MCC");
-        mCountryIcon = createControlComposite(this, true /* grab_horizontal */);
-        mCountry = new Text(mCountryIcon.getParent(), SWT.BORDER);
-        mCountry.setLayoutData(new GridData(
-                GridData.HORIZONTAL_ALIGN_FILL | GridData.GRAB_HORIZONTAL));
-        mCountry.addVerifyListener(new MobileCodeVerifier());
-        mCountry.addSelectionListener(new SelectionAdapter() {
-            @Override
-            public void widgetDefaultSelected(SelectionEvent e) {
-                onCountryCodeChange();
-            }
-        });
-        mCountry.addModifyListener(new ModifyListener() {
-            public void modifyText(ModifyEvent e) {
-                onCountryCodeChange();
-            }
-        });
-
-        new Label(this, SWT.NONE).setText("MNC");
-        mNetworkIcon = createControlComposite(this, true /* grab_horizontal */);
-        mNetwork = new Text(mNetworkIcon.getParent(), SWT.BORDER);
-        mNetwork.setLayoutData(new GridData(
-                GridData.HORIZONTAL_ALIGN_FILL | GridData.GRAB_HORIZONTAL));
-        mNetwork.addVerifyListener(new MobileCodeVerifier());
-        mNetwork.addSelectionListener(new SelectionAdapter() {
-            @Override
-            public void widgetDefaultSelected(SelectionEvent e) {
-                onNetworkCodeChange();
-            }
-        });
-        mNetwork.addModifyListener(new ModifyListener() {
-            public void modifyText(ModifyEvent e) {
-                onNetworkCodeChange();
-            }
-        });
-
-        new Label(this, SWT.NONE).setText("Locale");
-        mLocale = new Combo(this, SWT.DROP_DOWN | SWT.READ_ONLY);
-        mLocale.setLayoutData(new GridData(
-                GridData.HORIZONTAL_ALIGN_FILL | GridData.GRAB_HORIZONTAL));
-        mLocale.addVerifyListener(new LanguageRegionVerifier());
-        mLocale.addSelectionListener(new SelectionListener() {
-            public void widgetDefaultSelected(SelectionEvent e) {
-                onLocaleChange();
-            }
-            public void widgetSelected(SelectionEvent e) {
-                onLocaleChange();
-            }
-        });
+        gl.marginHeight = 0;
+        gl.horizontalSpacing = 0;
 
         new Label(this, SWT.NONE).setText("Devices");
         mDeviceList = new Combo(this, SWT.DROP_DOWN | SWT.READ_ONLY);
@@ -213,24 +176,27 @@ public class ConfigurationComposite extends Composite {
             }
         });
 
-        Composite labelParent = new Composite(this, SWT.NONE);
-        labelParent.setLayout(gl = new GridLayout(8, false));
-        gl.marginWidth = gl.marginHeight = 0;
-        labelParent.setLayoutData(gd = new GridData(GridData.FILL_HORIZONTAL));
-        gd.horizontalSpan = cols;
-
-        new Label(labelParent, SWT.NONE).setText("Editing config:");
-        mCurrentLayoutLabel = new Label(labelParent, SWT.NONE);
-        mCurrentLayoutLabel.setLayoutData(gd = new GridData(GridData.FILL_HORIZONTAL));
-        gd.widthHint = 50;
+        new Label(this, SWT.NONE).setText("Locale");
+        mLocale = new Combo(this, SWT.DROP_DOWN | SWT.READ_ONLY);
+        mLocale.setLayoutData(new GridData(
+                GridData.HORIZONTAL_ALIGN_FILL | GridData.GRAB_HORIZONTAL));
+        mLocale.addVerifyListener(new LanguageRegionVerifier());
+        mLocale.addSelectionListener(new SelectionListener() {
+            public void widgetDefaultSelected(SelectionEvent e) {
+                onLocaleChange();
+            }
+            public void widgetSelected(SelectionEvent e) {
+                onLocaleChange();
+            }
+        });
 
         // first separator
-        Label separator = new Label(labelParent, SWT.SEPARATOR | SWT.VERTICAL);
+        Label separator = new Label(this, SWT.SEPARATOR | SWT.VERTICAL);
         separator.setLayoutData(gd = new GridData(
                 GridData.VERTICAL_ALIGN_FILL | GridData.GRAB_VERTICAL));
         gd.heightHint = 0;
 
-        mThemeCombo = new Combo(labelParent, SWT.READ_ONLY | SWT.DROP_DOWN);
+        mThemeCombo = new Combo(this, SWT.READ_ONLY | SWT.DROP_DOWN);
         mThemeCombo.setEnabled(false);
         updateUIFromResources();
         mThemeCombo.addSelectionListener(new SelectionAdapter() {
@@ -241,12 +207,12 @@ public class ConfigurationComposite extends Composite {
         });
 
         // second separator
-        separator = new Label(labelParent, SWT.SEPARATOR | SWT.VERTICAL);
+        separator = new Label(this, SWT.SEPARATOR | SWT.VERTICAL);
         separator.setLayoutData(gd = new GridData(
                 GridData.VERTICAL_ALIGN_FILL | GridData.GRAB_VERTICAL));
         gd.heightHint = 0;
 
-        mCreateButton = new Button(labelParent, SWT.PUSH | SWT.FLAT);
+        mCreateButton = new Button(this, SWT.PUSH | SWT.FLAT);
         mCreateButton.setText("Create...");
         mCreateButton.setEnabled(false);
         mCreateButton.addSelectionListener(new SelectionAdapter() {
@@ -455,6 +421,9 @@ public class ConfigurationComposite extends Composite {
         return mThemeCombo.getSelectionIndex() >= mPlatformThemeCount;
     }
 
+    public boolean getClipping() {
+        return mClipping;
+    }
 
     public void setEnabledCreate(boolean enabled) {
         mCreateButton.setEnabled(enabled);
@@ -480,82 +449,6 @@ public class ConfigurationComposite extends Composite {
         mCurrentLayoutLabel.setText(current != null ? current : "(Default)");
 
         mDisableUpdates = false;
-    }
-
-    private void onCountryCodeChange() {
-        // because mCountry triggers onCountryCodeChange at each modification, calling setText()
-        // will trigger notifications, and we don't want that.
-        if (mDisableUpdates == true) {
-            return;
-        }
-
-        // update the current config
-        String value = mCountry.getText();
-
-        // empty string, means no qualifier.
-        if (value.length() == 0) {
-            mCurrentConfig.setCountryCodeQualifier(null);
-        } else {
-            try {
-                CountryCodeQualifier qualifier = CountryCodeQualifier.getQualifier(
-                        CountryCodeQualifier.getFolderSegment(Integer.parseInt(value)));
-                if (qualifier != null) {
-                    mCurrentConfig.setCountryCodeQualifier(qualifier);
-                } else {
-                    // Failure! Looks like the value is wrong (for instance a one letter string).
-                    // We do nothing in this case.
-                    mCountryIcon.setImage(mErrorImage);
-                    return;
-                }
-            } catch (NumberFormatException e) {
-                // Looks like the code is not a number. This should not happen since the text
-                // field has a VerifyListener that prevents it.
-                mCurrentConfig.setCountryCodeQualifier(null);
-                mCountryIcon.setImage(mErrorImage);
-            }
-        }
-
-        if (mListener != null) {
-            mListener.onConfigurationChange();
-        }
-    }
-
-    private void onNetworkCodeChange() {
-        // because mNetwork triggers onNetworkCodeChange at each modification, calling setText()
-        // will trigger notifications, and we don't want that.
-        if (mDisableUpdates == true) {
-            return;
-        }
-
-        // update the current config
-        String value = mNetwork.getText();
-
-        // empty string, means no qualifier.
-        if (value.length() == 0) {
-            mCurrentConfig.setNetworkCodeQualifier(null);
-        } else {
-            try {
-                NetworkCodeQualifier qualifier = NetworkCodeQualifier.getQualifier(
-                        NetworkCodeQualifier.getFolderSegment(Integer.parseInt(value)));
-                if (qualifier != null) {
-                    mCurrentConfig.setNetworkCodeQualifier(qualifier);
-                } else {
-                    // Failure! Looks like the value is wrong (for instance a one letter string).
-                    // We do nothing in this case.
-                    mNetworkIcon.setImage(mErrorImage);
-                    return;
-                }
-            } catch (NumberFormatException e) {
-                // Looks like the code is not a number. This should not happen since the text
-                // field has a VerifyListener that prevents it.
-                mCurrentConfig.setNetworkCodeQualifier(null);
-                mNetworkIcon.setImage(mErrorImage);
-            }
-        }
-
-        if (mListener != null) {
-            mListener.onConfigurationChange();
-        }
     }
 
     /**
@@ -608,8 +501,6 @@ public class ConfigurationComposite extends Composite {
         FolderConfiguration config = device.getConfigs().get(name);
 
         // get the current qualifiers from the current config
-        CountryCodeQualifier mcc = mCurrentConfig.getCountryCodeQualifier();
-        NetworkCodeQualifier mnc = mCurrentConfig.getNetworkCodeQualifier();
         LanguageQualifier lang = mCurrentConfig.getLanguageQualifier();
         RegionQualifier region = mCurrentConfig.getRegionQualifier();
         VersionQualifier version = mCurrentConfig.getVersionQualifier();
@@ -618,8 +509,6 @@ public class ConfigurationComposite extends Composite {
         mCurrentConfig.set(config);
 
         // and put back the rest of the qualifiers
-        mCurrentConfig.addQualifier(mcc);
-        mCurrentConfig.addQualifier(mnc);
         mCurrentConfig.addQualifier(lang);
         mCurrentConfig.addQualifier(region);
         mCurrentConfig.addQualifier(version);
@@ -644,29 +533,11 @@ public class ConfigurationComposite extends Composite {
         }
     }
 
-    /**
-     * Creates a composite with no margin/spacing, and puts a {@link Label} in it with the matching
-     * icon.
-     * @param parent the parent to receive the composite
-     * @return the created {@link Label} object.
-     */
-    private Label createControlComposite(Composite parent, boolean grab) {
-        GridLayout gl;
-
-        Composite composite = new Composite(parent, SWT.NONE);
-        composite.setLayout(gl = new GridLayout(2, false));
-        gl.marginHeight = gl.marginWidth = 0;
-        gl.horizontalSpacing = 0;
-        if (grab) {
-            composite.setLayoutData(
-                    new GridData(GridData.HORIZONTAL_ALIGN_FILL | GridData.GRAB_HORIZONTAL));
+    protected void OnClippingChange() {
+        mClipping = mClippingButton.getSelection();
+        if (mListener != null) {
+            mListener.OnClippingChange();
         }
-
-        // create the label
-        Label icon = new Label(composite, SWT.NONE);
-        icon.setImage(mMatchImage);
-
-        return icon;
     }
 
     /**

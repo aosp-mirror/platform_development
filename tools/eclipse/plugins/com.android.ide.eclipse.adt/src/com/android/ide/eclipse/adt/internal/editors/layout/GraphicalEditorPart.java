@@ -346,6 +346,10 @@ public class GraphicalEditorPart extends EditorPart implements IGraphicalLayoutE
             recomputeLayout();
         }
 
+        public void OnClippingChange() {
+            recomputeLayout();
+        }
+
         public void onCreate() {
             LayoutCreatorDialog dialog = new LayoutCreatorDialog(mConfigComposite.getShell(),
                     mEditedFile.getName(),
@@ -860,7 +864,8 @@ public class GraphicalEditorPart extends EditorPart implements IGraphicalLayoutE
 
                             ILayoutResult result = computeLayout(bridge, parser,
                                     iProject /* projectKey */,
-                                    rect.width, rect.height, density, density, density,
+                                    rect.width, rect.height, !mConfigComposite.getClipping(),
+                                    density, density, density,
                                     theme, isProjectTheme,
                                     configuredProjectRes, frameworkResources, mProjectCallback,
                                     mLogger);
@@ -909,7 +914,8 @@ public class GraphicalEditorPart extends EditorPart implements IGraphicalLayoutE
     @SuppressWarnings("deprecation")
     private static ILayoutResult computeLayout(LayoutBridge bridge,
             IXmlPullParser layoutDescription, Object projectKey,
-            int screenWidth, int screenHeight, int density, float xdpi, float ydpi,
+            int screenWidth, int screenHeight, boolean renderFullSize,
+            int density, float xdpi, float ydpi,
             String themeName, boolean isProjectTheme,
             Map<String, Map<String, IResourceValue>> projectResources,
             Map<String, Map<String, IResourceValue>> frameworkResources,
@@ -919,7 +925,7 @@ public class GraphicalEditorPart extends EditorPart implements IGraphicalLayoutE
             // newest API with support for "render full height"
             // TODO: link boolean to UI.
             return bridge.bridge.computeLayout(layoutDescription,
-                    projectKey, screenWidth, screenHeight, false /* renderFullHeight */,
+                    projectKey, screenWidth, screenHeight, renderFullSize,
                     density, xdpi, ydpi,
                     themeName, isProjectTheme,
                     projectResources, frameworkResources, projectCallback,
