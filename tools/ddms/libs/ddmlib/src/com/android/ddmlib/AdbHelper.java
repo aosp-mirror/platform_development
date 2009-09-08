@@ -40,8 +40,6 @@ final class AdbHelper {
 
     static final int WAIT_TIME = 5; // spin-wait sleep, in ms
 
-    public static final int STD_TIMEOUT = 5000; // standard delay, in ms
-
     static final String DEFAULT_ENCODING = "ISO-8859-1"; //$NON-NLS-1$
 
     /** do not instantiate */
@@ -576,7 +574,7 @@ final class AdbHelper {
      */
     static boolean read(SocketChannel chan, byte[] data) {
        try {
-           read(chan, data, -1, STD_TIMEOUT);
+           read(chan, data, -1, DdmPreferences.getTimeOut());
        } catch (IOException e) {
            Log.d("ddms", "readAll: IOException: " + e.getMessage());
            return false;
@@ -636,7 +634,7 @@ final class AdbHelper {
      */
     static boolean write(SocketChannel chan, byte[] data) {
         try {
-            write(chan, data, -1, STD_TIMEOUT);
+            write(chan, data, -1, DdmPreferences.getTimeOut());
         } catch (IOException e) {
             Log.e("ddms", e);
             return false;
