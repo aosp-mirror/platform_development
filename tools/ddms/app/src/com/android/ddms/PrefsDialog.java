@@ -82,10 +82,9 @@ public final class PrefsDialog {
     private final static String PREFS_SELECTED_DEBUG_PORT = "debugSelectedPort"; //$NON-NLS-1$
     private final static String PREFS_DEFAULT_THREAD_UPDATE = "defaultThreadUpdateEnabled"; //$NON-NLS-1$
     private final static String PREFS_DEFAULT_HEAP_UPDATE = "defaultHeapUpdateEnabled"; //$NON-NLS-1$
-
     private final static String PREFS_THREAD_REFRESH_INTERVAL = "threadStatusInterval"; //$NON-NLS-1$
-
     private final static String PREFS_LOG_LEVEL = "ddmsLogLevel"; //$NON-NLS-1$
+    private final static String PREFS_TIMEOUT = "timeOut"; //$NON-NLS-1$
 
 
     /**
@@ -151,6 +150,7 @@ public final class PrefsDialog {
         DdmPreferences.setLogLevel(mPrefStore.getString(PREFS_LOG_LEVEL));
         DdmPreferences.setInitialThreadUpdate(mPrefStore.getBoolean(PREFS_DEFAULT_THREAD_UPDATE));
         DdmPreferences.setInitialHeapUpdate(mPrefStore.getBoolean(PREFS_DEFAULT_HEAP_UPDATE));
+        DdmPreferences.setTimeOut(mPrefStore.getInt(PREFS_TIMEOUT));
 
         // some static values
         String out = System.getenv("ANDROID_PRODUCT_OUT"); //$NON-NLS-1$
@@ -195,6 +195,8 @@ public final class PrefsDialog {
 
         mPrefStore.setDefault(PREFS_LOG_LEVEL, "info"); //$NON-NLS-1$
 
+        mPrefStore.setDefault(PREFS_TIMEOUT, DdmPreferences.DEFAULT_TIMEOUT);
+
         // choose a default font for the text output
         FontData fdat = new FontData("Courier", 10, SWT.NORMAL); //$NON-NLS-1$
         mPrefStore.setDefault("textOutputFont", fdat.toString()); //$NON-NLS-1$
@@ -235,7 +237,8 @@ public final class PrefsDialog {
             } else if (changed.equals("imageSaveDir")) {
                 mPrefStore.setValue("lastImageSaveDir",
                     (String) event.getNewValue());
-
+            } else if (changed.equals(PREFS_TIMEOUT)) {
+                DdmPreferences.setTimeOut(mPrefStore.getInt(PREFS_TIMEOUT));
             } else {
                 Log.v("ddms", "Preference change: " + event.getProperty()
                     + ": '" + event.getOldValue()
@@ -259,20 +262,17 @@ public final class PrefsDialog {
         //PreferenceNode app = new PreferenceNode("app", "Application", null,
         //    AppPrefs.class.getName());
 
-        node = new PreferenceNode("client", new ClientPrefs());
+        node = new PreferenceNode("debugger", new DebuggerPrefs());
         prefMgr.addToRoot(node);
 
         subNode = new PreferenceNode("panel", new PanelPrefs());
         //prefMgr.addTo(node.getId(), subNode);
         prefMgr.addToRoot(subNode);
 
-        node = new PreferenceNode("device", new DevicePrefs());
-        prefMgr.addToRoot(node);
-
         node = new PreferenceNode("LogCat", new LogCatPrefs());
         prefMgr.addToRoot(node);
 
-        node = new PreferenceNode("app", new AppPrefs());
+        node = new PreferenceNode("misc", new MiscPrefs());
         prefMgr.addToRoot(node);
 
         node = new PreferenceNode("stats", new UsageStatsPrefs());
@@ -297,16 +297,16 @@ public final class PrefsDialog {
     }
 
     /**
-     * "Client Scan" prefs page.
+     * "Debugger" prefs page.
      */
-    private static class ClientPrefs extends FieldEditorPreferencePage {
+    private static class DebuggerPrefs extends FieldEditorPreferencePage {
 
         /**
          * Basic constructor.
          */
-        public ClientPrefs() {
+        public DebuggerPrefs() {
             super(GRID);        // use "grid" layout so edit boxes line up
-            setTitle("Client Scan");
+            setTitle("Debugger");
         }
 
          /**
@@ -317,11 +317,11 @@ public final class PrefsDialog {
             IntegerFieldEditor ife;
 
             ife = new PortFieldEditor(PREFS_DEBUG_PORT_BASE,
-                "ADB debugger base:", getFieldEditorParent());
+                "Starting value for local port:", getFieldEditorParent());
             addField(ife);
 
             ife = new PortFieldEditor(PREFS_SELECTED_DEBUG_PORT,
-                "Debug selected VM:", getFieldEditorParent());
+                "Port of Selected VM:", getFieldEditorParent());
             addField(ife);
         }
     }
@@ -363,41 +363,6 @@ public final class PrefsDialog {
     }
 
     /**
-     * "Device" prefs page.
-     */
-    private static class DevicePrefs extends FieldEditorPreferencePage {
-
-        /**
-         * Basic constructor.
-         */
-        public DevicePrefs() {
-            super(FLAT);        // use "flat" layout
-            setTitle("Device");
-        }
-
-        /**
-         * Create field editors.
-         */
-        @Override
-        protected void createFieldEditors() {
-            DirectoryFieldEditor dfe;
-            FontFieldEditor ffe;
-
-            dfe = new DirectoryFieldEditor("textSaveDir",
-                "Default text save dir:", getFieldEditorParent());
-            addField(dfe);
-
-            dfe = new DirectoryFieldEditor("imageSaveDir",
-                "Default image save dir:", getFieldEditorParent());
-            addField(dfe);
-
-            ffe = new FontFieldEditor("textOutputFont", "Text output font:",
-                getFieldEditorParent());
-            addField(ffe);
-        }
-    }
-
-    /**
      * "logcat" prefs page.
      */
     private static class LogCatPrefs extends FieldEditorPreferencePage {
@@ -431,18 +396,17 @@ public final class PrefsDialog {
         }
     }
 
-
     /**
-     * "Application" prefs page.
+     * "misc" prefs page.
      */
-    private static class AppPrefs extends FieldEditorPreferencePage {
+    private static class MiscPrefs extends FieldEditorPreferencePage {
 
         /**
          * Basic constructor.
          */
-        public AppPrefs() {
+        public MiscPrefs() {
             super(FLAT);        // use "flat" layout
-            setTitle("DDMS");
+            setTitle("Misc");
         }
 
         /**
@@ -450,6 +414,25 @@ public final class PrefsDialog {
          */
         @Override
         protected void createFieldEditors() {
+            DirectoryFieldEditor dfe;
+            FontFieldEditor ffe;
+
+            IntegerFieldEditor ife = new IntegerFieldEditor(PREFS_TIMEOUT,
+                    "ADB connection time out (ms):", getFieldEditorParent());
+            addField(ife);
+
+            dfe = new DirectoryFieldEditor("textSaveDir",
+                "Default text save dir:", getFieldEditorParent());
+            addField(dfe);
+
+            dfe = new DirectoryFieldEditor("imageSaveDir",
+                "Default image save dir:", getFieldEditorParent());
+            addField(dfe);
+
+            ffe = new FontFieldEditor("textOutputFont", "Text output font:",
+                getFieldEditorParent());
+            addField(ffe);
+
             RadioGroupFieldEditor rgfe;
 
             rgfe = new RadioGroupFieldEditor(PREFS_LOG_LEVEL,
