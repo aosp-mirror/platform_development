@@ -566,7 +566,7 @@ public final class EmulatorConsole {
             }
 
             // write the command
-            AdbHelper.write(mSocketChannel, bCommand, bCommand.length, AdbHelper.STD_TIMEOUT);
+            AdbHelper.write(mSocketChannel, bCommand, bCommand.length, DdmPreferences.getTimeOut());
 
             result = true;
         } catch (IOException e) {
