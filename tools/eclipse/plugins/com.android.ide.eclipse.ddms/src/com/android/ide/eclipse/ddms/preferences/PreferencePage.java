@@ -47,7 +47,7 @@ public class PreferencePage extends FieldEditorPreferencePage implements
         IntegerFieldEditor ife;
 
         ife = new PortFieldEditor(PreferenceInitializer.ATTR_DEBUG_PORT_BASE,
-            "ADB debugger base port:", getFieldEditorParent());
+            "Base local debugger port:", getFieldEditorParent());
         addField(ife);
 
         BooleanFieldEditor bfe;
@@ -71,6 +71,10 @@ public class PreferencePage extends FieldEditorPreferencePage implements
                     { "Open in Eclipse", HProfHandler.ACTION_OPEN },
                 }, getFieldEditorParent());
         addField(cfe);
+
+        ife = new IntegerFieldEditor(PreferenceInitializer.ATTR_TIME_OUT,
+                "ADB connection time out (ms):", getFieldEditorParent());
+            addField(ife);
 
         RadioGroupFieldEditor rgfe = new RadioGroupFieldEditor(PreferenceInitializer.ATTR_LOG_LEVEL,
                 "Logging Level", 1, new String[][] {

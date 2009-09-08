@@ -217,6 +217,9 @@ public final class DdmsPlugin extends AbstractUIPlugin implements IDeviceChangeL
                 } else if (PreferenceInitializer.ATTR_LOG_LEVEL.equals(property)) {
                     DdmPreferences.setLogLevel(
                             eclipseStore.getString(PreferenceInitializer.ATTR_LOG_LEVEL));
+                } else if (PreferenceInitializer.ATTR_TIME_OUT.equals(property)) {
+                    DdmPreferences.setTimeOut(
+                            eclipseStore.getInt(PreferenceInitializer.ATTR_TIME_OUT));
                 }
             }
         });
