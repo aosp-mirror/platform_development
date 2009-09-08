@@ -40,6 +40,8 @@ public final class DdmPreferences {
     public final static int DEFAULT_DEBUG_PORT_BASE = 8600;
     /** Default value for the logcat {@link LogLevel} */
     public final static LogLevel DEFAULT_LOG_LEVEL = LogLevel.ERROR;
+    /** Default timeout values for adb connection (milliseconds) */
+    public static final int DEFAULT_TIMEOUT = 5000; // standard delay, in ms
 
     private static boolean sThreadUpdate = DEFAULT_INITIAL_THREAD_UPDATE;
     private static boolean sInitialHeapUpdate = DEFAULT_INITIAL_HEAP_UPDATE;
@@ -47,6 +49,7 @@ public final class DdmPreferences {
     private static int sSelectedDebugPort = DEFAULT_SELECTED_DEBUG_PORT;
     private static int sDebugPortBase = DEFAULT_DEBUG_PORT_BASE;
     private static LogLevel sLogLevel = DEFAULT_LOG_LEVEL;
+    private static int sTimeOut = DEFAULT_TIMEOUT;
 
     /**
      * Returns the initial {@link Client} flag for thread updates.
@@ -75,7 +78,7 @@ public final class DdmPreferences {
     /**
      * Sets the initial {@link Client} flag for heap updates.
      * <p/>If <code>true</code>, the {@link ClientData} will automatically be updated with
-     * the VM heap information whenever a GC happens. 
+     * the VM heap information whenever a GC happens.
      * <p/>This change takes effect right away, for newly created {@link Client} objects.
      */
     public static void setInitialHeapUpdate(boolean state) {
@@ -137,7 +140,23 @@ public final class DdmPreferences {
 
         Log.setLevel(sLogLevel);
     }
-    
+
+    /**
+     * Returns the timeout to be used in adb connections (milliseconds).
+     */
+    public static int getTimeOut() {
+        return sTimeOut;
+    }
+
+    /**
+     * Sets the timeout value for adb connection.
+     * <p/>This change takes effect for newly created connections only.
+     * @param timeOut the timeout value (milliseconds).
+     */
+    public static void setTimeOut(int timeOut) {
+        sTimeOut = timeOut;
+    }
+
     /**
      * Non accessible constructor.
      */
