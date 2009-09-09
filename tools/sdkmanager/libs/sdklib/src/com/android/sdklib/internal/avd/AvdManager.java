@@ -590,23 +590,12 @@ public final class AvdManager {
             // priority order is:
             // - values provided by the user
             // - values provided by the skin
-            // - values provided by the target (add-on only).
             // In order to follow this priority, we'll add the lowest priority values first and then
             // override by higher priority values.
             // In the case of a platform with override values from the user, the skin value might
             // already be there, but it's ok.
 
             HashMap<String, String> finalHardwareValues = new HashMap<String, String>();
-
-            File targetHardwareFile = new File(target.getLocation(), AvdManager.HARDWARE_INI);
-            if (targetHardwareFile.isFile()) {
-                Map<String, String> targetHardwareConfig = SdkManager.parsePropertyFile(
-                        targetHardwareFile, log);
-                if (targetHardwareConfig != null) {
-                    finalHardwareValues.putAll(targetHardwareConfig);
-                    values.putAll(targetHardwareConfig);
-                }
-            }
 
             // get the hardware properties for this skin
             File skinFolder = getSkinPath(skinName, target);
