@@ -607,6 +607,7 @@ class Main {
             if (skin != null && skin.length() == 0) {
                 skin = null;
             }
+
             if (skin != null) {
                 boolean valid = false;
                 // Is it a know skin name for this target?
