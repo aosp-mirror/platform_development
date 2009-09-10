@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="android_test_rules" default="run-tests">
+
+    <import file="android_rules.xml" />
+
+    <!-- Existence of this property in build.properties or build.xml is an assertion for the test
+         project
+         <property name="tested.project.dir" value=".." /> -->
+    <property name="tested.project.absolute.dir" location="${tested.project.dir}" />
+    <property name="instrumentation.dir" value="instru" />
+    <property name="instrumentation.absolute.dir" location="${instrumentation.dir}" />
+
+    <property name="test.runner" value="android.test.InstrumentationTestRunner" />
+    <property name="application.package.to.instrument" value="${application.package}.tests" />
+
+    <!-- Enables adding tested project classes location to test project classpath -->
+    <property name="extensible.classpath" value="${tested.project.absolute.dir}/bin/classes" />
+
+    <!-- TODO: make it more configurable in the next CL's - now it is default for auto-generated
+         project -->
+    <property name="emma.dump.file" value="/data/data/${application.package}/files/coverage.ec" />
+
+    <!-- Emma configuration -->
+    <property name="emma.dir" value="${sdk.dir}/tools/lib" />
+        <path id="emma.lib">
+             <pathelement location="${emma.dir}/emma.jar" />
+             <pathelement location="${emma.dir}/emma_ant.jar" />
+        </path>
+    <taskdef resource="emma_ant.properties" classpathref="emma.lib" />
+    <!-- End of emma configuration -->
+
+    <!-- Runs 'compile' target for tested project -->
+    <target name="-compile-tested-project">
+        <subant target="compile">
+           <fileset dir="${tested.project.absolute.dir}" includes="build.xml" />
+        </subant>
+    </target>
+
+    <!-- Emma-instruments tested project classes (compiles the tested project if necessary)
+         and writes instrumented classes to ${instrumentation.absolute.dir}/classes -->
+    <target name="-emma-instrument" depends="-compile-tested-project">
+        <echo>Instrumenting classes from ${instrumentation.dir}/${out.dir}/classes...</echo>
+        <!-- It only instruments class files, not any external libs -->
+        <emma enabled="true">
+            <instr verbosity="verbose"
+                   mode="copy"
+                   instrpath="${tested.project.absolute.dir}/${out.dir}/classes"
+                   outdir="${instrumentation.absolute.dir}/classes">
+            </instr>
+            <!-- TODO: exclusion filters on R*.class and allowing custom exclusion from
+                 user defined file -->
+        </emma>
+    </target>
+
+    <!-- Dexes emma-instrumented classes -->
+    <target name="-dex-instrumented" depends="-emma-instrument">
+       <dex-helper out.absolute.dir="${instrumentation.absolute.dir}/classes"
+                                   out.dex.file="${instrumentation.absolute.dir}/${dex.file.name}">
+          <external-libs>
+            <fileset dir="${external.libs.dir}" includes="*.jar" />
+            <fileset dir="${emma.dir}">
+                <include name="emma_device.jar" />
+            </fileset>
+          </external-libs>
+       </dex-helper>
+    </target>
+
+    <!-- Installs instrumented package on the default emulator/device -->
+    <target name="-install-instrumented" depends="-dex-instrumented">
+        <subant target="-install-no-dex">
+            <property name="out.absolute.dir" value="${instrumentation.absolute.dir}" />
+            <property name="external.jars" location="${emma.dir}/emma_device.jar" />
+            <fileset dir="${tested.project.absolute.dir}" includes="build.xml" />
+        </subant>
+    </target>
+
+    <macrodef name="run-tests-helper">
+        <attribute name="emma.enabled" default="false" />
+        <sequential>
+            <echo>Running tests ...</echo>
+            <exec executable="${adb}" failonerror="true">
+                <arg value="shell" />
+                    <arg value="am" />
+                <arg value="instrument" />
+                   <arg value="-w" />
+                <arg value="-e" />
+                   <arg value="coverage" />
+                <arg value="@{emma.enabled}" />
+                   <arg value="${application.package.to.instrument}/${test.runner}" />
+            </exec>
+        </sequential>
+    </macrodef>
+
+    <!-- Ensures that tested project is installed on the device before we run the tests.
+         Used for ordinary tests, without coverage measurement -->
+    <target name="-install-tested-project">
+        <subant target="install">
+            <fileset dir="${tested.project.absolute.dir}" includes="build.xml" />
+        </subant>
+    </target>
+
+    <target name="run-tests" depends="-install-tested-project, install"
+                description="Runs tests from the package defined in test.package property">
+        <run-tests-helper />
+    </target>
+
+    <target name="coverage" depends="-install-instrumented, install"
+                description="Runs test on instrumented code and generates code coverage report">
+        <run-tests-helper emma.enabled="true" />
+        <echo>Downloading coverage file into project directory...</echo>
+        <exec executable="${adb}" failonerror="true">
+            <arg value="pull" />
+            <arg value="${emma.dump.file}" />
+            <arg value="coverage.ec" />
+        </exec>
+        <echo>Extracting coverage report...</echo>
+        <emma>
+            <report sourcepath="${tested.project.absolute.dir}/${source.dir}"
+                              verbosity="verbose">
+                <!-- TODO: report.dir or something like should be introduced if necessary -->
+                <infileset dir=".">
+                    <include name="coverage.ec" />
+                    <include name="coverage.em" />
+                </infileset>
+                <!-- TODO: reports in other, indicated by user formats -->
+                <html outfile="coverage.html" />
+           </report>
+        </emma>
+    </target>
+
+</project>
