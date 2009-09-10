@@ -249,15 +249,18 @@ public final class ApkBuilderImpl {
 
             for (String file : files) {
                 String path = f.getAbsolutePath() + File.separator + file;
-                FileInputStream input = new FileInputStream(path);
-                resourcesJars.add(input);
+                processJarFile(parameter, resourcesJars);
             }
         } else {
-            FileInputStream input = new FileInputStream(parameter);
-            resourcesJars.add(input);
+            processJarFile(parameter, resourcesJars);
         }
     }
 
+    public static void processJarFile(String jarfilePath, Collection<FileInputStream> resourcesJars)
+            throws FileNotFoundException {
+        FileInputStream input = new FileInputStream(jarfilePath);
+        resourcesJars.add(input);
+    }
 
     /**
      * Processes a {@link File} that could be a {@link ApkFile}, or a folder containing
