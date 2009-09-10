@@ -34,7 +34,7 @@ import java.util.Map.Entry;
  * To use, call {@link #parseArgs(String[])} and then
  * call {@link #getValue(String, String, String)}.
  */
-public class CommandLineProcessor {
+class CommandLineProcessor {
 
     /** Internal verb name for internally hidden flags. */
     public final static String GLOBAL_FLAG_VERB = "@@internal@@";

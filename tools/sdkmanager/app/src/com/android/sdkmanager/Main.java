@@ -50,6 +50,9 @@ class Main {
      *  is actually the tools dir, in which case this is used to get the original CWD. */
     private final static String WORKDIR = "com.android.sdkmanager.workdir";
 
+    /** Value returned by {@link #resolveTargetName(String)} when the target id does not match. */
+    private final static int INVALID_TARGET_ID = 0;
+
     private final static String[] BOOLEAN_YES_REPLIES = new String[] { "yes", "y" };
     private final static String[] BOOLEAN_NO_REPLIES = new String[] { "no", "n" };
 
@@ -260,7 +263,7 @@ class Main {
      */
     private void createProject() {
         // get the target and try to resolve it.
-        int targetId = mSdkCommandLine.getParamTargetId();
+        int targetId = resolveTargetName(mSdkCommandLine.getParamTargetId());
         IAndroidTarget[] targets = mSdkManager.getTargets();
         if (targetId < 1 || targetId > targets.length) {
             errorAndExit("Target id is not valid. Use '%s list targets' to get the target ids.",
@@ -320,7 +323,7 @@ class Main {
     private void updateProject() {
         // get the target and try to resolve it.
         IAndroidTarget target = null;
-        int targetId = mSdkCommandLine.getParamTargetId();
+        int targetId = resolveTargetName(mSdkCommandLine.getParamTargetId());
         if (targetId >= 0) {
             IAndroidTarget[] targets = mSdkManager.getTargets();
             if (targetId < 1 || targetId > targets.length) {
@@ -412,7 +415,7 @@ class Main {
 
         int index = 1;
         for (IAndroidTarget target : mSdkManager.getTargets()) {
-            mSdkLog.printf("id: %d\n", index);
+            mSdkLog.printf("id: %1$d or \"%2$s\"\n", index, target.hashString());
             mSdkLog.printf("     Name: %s\n", target.getName());
             if (target.isPlatform()) {
                 mSdkLog.printf("     Type: Platform\n");
@@ -557,7 +560,7 @@ class Main {
      */
     private void createAvd() {
         // find a matching target
-        int targetId = mSdkCommandLine.getParamTargetId();
+        int targetId = resolveTargetName(mSdkCommandLine.getParamTargetId());
         IAndroidTarget target = null;
 
         if (targetId >= 1 && targetId <= mSdkManager.getTargets().length) {
@@ -587,7 +590,9 @@ class Main {
                             "Android Virtual Device '%s' already exists and will be replaced.",
                             avdName);
                 } else {
-                    errorAndExit("Android Virtual Device '%s' already exists.", avdName);
+                    errorAndExit("Android Virtual Device '%s' already exists.\n" +
+                                 "Use --force if you want to replace it.",
+                                 avdName);
                     return;
                 }
             }
@@ -608,7 +613,7 @@ class Main {
                 skin = null;
             }
 
-            if (skin != null) {
+            if (skin != null && target != null) {
                 boolean valid = false;
                 // Is it a know skin name for this target?
                 for (String s : target.getSkins()) {
@@ -640,7 +645,7 @@ class Main {
             }
 
             Map<String, String> hardwareConfig = null;
-            if (target.isPlatform()) {
+            if (target != null && target.isPlatform()) {
                 try {
                     hardwareConfig = promptForHardware(target, skinHardwareConfig);
                 } catch (IOException e) {
@@ -648,11 +653,13 @@ class Main {
                 }
             }
 
+            @SuppressWarnings("unused") // oldAvdInfo is never read, yet useful for debugging
             AvdInfo oldAvdInfo = null;
             if (removePrevious) {
                 oldAvdInfo = avdManager.getAvd(avdName, false /*validAvdOnly*/);
             }
 
+            @SuppressWarnings("unused") // newAvdInfo is never read, yet useful for debugging
             AvdInfo newAvdInfo = avdManager.createAvd(avdFolder,
                     avdName,
                     target,
@@ -978,5 +985,44 @@ class Main {
     private void errorAndExit(String format, Object...args) {
         mSdkLog.error(null, format, args);
         System.exit(1);
+    }
+
+    /**
+     * Converts a symbolic target name (such as those accepted by --target on the command-line)
+     * to an internal target index id. A valid target name is either a numeric target id (> 0)
+     * or a target hash string.
+     * <p/>
+     * If the given target can't be mapped, {@link #INVALID_TARGET_ID} (0) is returned.
+     * It's up to the caller to output an error.
+     * <p/>
+     * On success, returns a value > 0.
+     */
+    private int resolveTargetName(String targetName) {
+
+        if (targetName == null) {
+            return INVALID_TARGET_ID;
+        }
+
+        targetName = targetName.trim();
+
+        // Case of an integer number
+        if (targetName.matches("[0-9]*")) {
+            try {
+                int n = Integer.parseInt(targetName);
+                return n < 1 ? INVALID_TARGET_ID : n;
+            } catch (NumberFormatException e) {
+                // Ignore. Should not happen.
+            }
+        }
+
+        // Let's try to find a platform or addon name.
+        IAndroidTarget[] targets = mSdkManager.getTargets();
+        for (int i = 0; i < targets.length; i++) {
+            if (targetName.equals(targets[i].hashString())) {
+                return i + 1;
+            }
+        }
+
+        return INVALID_TARGET_ID;
     }
 }

@@ -23,7 +23,7 @@ import com.android.sdklib.SdkManager;
 /**
  * Specific command-line flags for the {@link SdkManager}.
  */
-public class SdkCommandLine extends CommandLineProcessor {
+class SdkCommandLine extends CommandLineProcessor {
 
     public final static String VERB_LIST   = "list";
     public final static String VERB_CREATE = "create";
@@ -104,7 +104,7 @@ public class SdkCommandLine extends CommandLineProcessor {
         define(Mode.STRING, true,
                 VERB_CREATE, OBJECT_AVD, "n", KEY_NAME,
                 "Name of the new AVD", null);
-        define(Mode.INTEGER, true,
+        define(Mode.STRING, true,
                 VERB_CREATE, OBJECT_AVD, "t", KEY_TARGET_ID,
                 "Target id of the new AVD", null);
         define(Mode.STRING, false,
@@ -154,7 +154,7 @@ public class SdkCommandLine extends CommandLineProcessor {
                 VERB_CREATE, OBJECT_PROJECT,
                 "p", KEY_PATH,
                 "Location path of new project", null);
-        define(Mode.INTEGER, true,
+        define(Mode.STRING, true,
                 VERB_CREATE, OBJECT_PROJECT, "t", KEY_TARGET_ID,
                 "Target id of the new project", null);
         define(Mode.STRING, true,
@@ -173,7 +173,7 @@ public class SdkCommandLine extends CommandLineProcessor {
                 VERB_UPDATE, OBJECT_PROJECT,
                 "p", KEY_PATH,
                 "Location path of the project", null);
-        define(Mode.INTEGER, true,
+        define(Mode.STRING, true,
                 VERB_UPDATE, OBJECT_PROJECT,
                 "t", KEY_TARGET_ID,
                 "Target id to set for the project", -1);
@@ -196,27 +196,34 @@ public class SdkCommandLine extends CommandLineProcessor {
 
     /** Helper to retrieve the --path value. */
     public String getParamLocationPath() {
-        return ((String) getValue(null, null, KEY_PATH));
+        return (String) getValue(null, null, KEY_PATH);
     }
 
-    /** Helper to retrieve the --target id value. */
-    public int getParamTargetId() {
-        return ((Integer) getValue(null, null, KEY_TARGET_ID)).intValue();
+    /**
+     * Helper to retrieve the --target id value.
+     * The id is a string. It can be one of:
+     * - an integer, in which case it's the index of the target (cf "android list targets")
+     * - a symbolic name such as android-N for platforn API N
+     * - a symbolic add-on name such as written in the avd/*.ini files,
+     *   e.g. "Google Inc.:Google APIs:3"
+     */
+    public String getParamTargetId() {
+        return (String) getValue(null, null, KEY_TARGET_ID);
     }
 
     /** Helper to retrieve the --name value. */
     public String getParamName() {
-        return ((String) getValue(null, null, KEY_NAME));
+        return (String) getValue(null, null, KEY_NAME);
     }
 
     /** Helper to retrieve the --skin value. */
     public String getParamSkin() {
-        return ((String) getValue(null, null, KEY_SKIN));
+        return (String) getValue(null, null, KEY_SKIN);
     }
 
     /** Helper to retrieve the --sdcard value. */
     public String getParamSdCard() {
-        return ((String) getValue(null, null, KEY_SDCARD));
+        return (String) getValue(null, null, KEY_SDCARD);
     }
 
     /** Helper to retrieve the --force flag. */
@@ -228,7 +235,7 @@ public class SdkCommandLine extends CommandLineProcessor {
 
     /** Helper to retrieve the --rename value for a move verb. */
     public String getParamMoveNewName() {
-        return ((String) getValue(VERB_MOVE, null, KEY_RENAME));
+        return (String) getValue(VERB_MOVE, null, KEY_RENAME);
     }
 
 
