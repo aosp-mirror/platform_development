@@ -59,6 +59,7 @@ development/tools/scripts/java_tests_file.template platforms/${PLATFORM_NAME}/te
 development/tools/scripts/layout.template platforms/${PLATFORM_NAME}/templates/layout.template
 development/tools/scripts/strings.template platforms/${PLATFORM_NAME}/templates/strings.template
 development/tools/scripts/android_rules.xml platforms/${PLATFORM_NAME}/templates/android_rules.xml
+development/tools/scripts/android_test_rules.xml platforms/${PLATFORM_NAME}/templates/android_test_rules.xml
 development/tools/scripts/build.template tools/lib/build.template
 
 # emacs support
@@ -124,6 +125,11 @@ framework/swing-worker-1.1.jar tools/lib/swing-worker-1.1.jar
 # traceview
 bin/traceview tools/traceview
 framework/traceview.jar tools/lib/traceview.jar
+
+# emma lib for code coverage support
+framework/emmalib.jar tools/lib/emma_device.jar
+external/emma/lib/emma.jar tools/lib/emma.jar
+external/emma/lib/emma_ant.jar tools/lib/emma_ant.jar
 
 # custom ant tasks
 framework/anttasks.jar tools/lib/anttasks.jar

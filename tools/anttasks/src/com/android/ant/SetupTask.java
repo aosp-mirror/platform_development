@@ -58,7 +58,8 @@ import javax.xml.xpath.XPathExpressionException;
  */
 public final class SetupTask extends ImportTask {
     private final static String ANDROID_RULES = "android_rules.xml";
-
+    // additional android rules for test project - depends on android_rules.xml
+    private final static String ANDROID_TEST_RULES = "android_test_rules.xml";
     // ant property with the path to the android.jar
     private final static String PROPERTY_ANDROID_JAR = "android.jar";
     // LEGACY - compatibility with 1.6 and before
@@ -103,6 +104,13 @@ public final class SetupTask extends ImportTask {
 
         // get the target property value
         String targetHashString = antProject.getProperty(ProjectProperties.PROPERTY_TARGET);
+
+        boolean isTestProject = false;
+
+        if (antProject.getProperty("tested.project.dir") != null) {
+            isTestProject = true;
+        }
+
         if (targetHashString == null) {
             throw new BuildException("Android Target is not set.");
         }
@@ -215,17 +223,21 @@ public final class SetupTask extends ImportTask {
         if (mDoImport) {
             // make sure the file exists.
             File templates = new File(templateFolder);
+
             if (templates.isDirectory() == false) {
                 throw new BuildException(String.format("Template directory '%s' is missing.",
                         templateFolder));
             }
 
+            String importedRulesFileName = isTestProject ? ANDROID_TEST_RULES : ANDROID_RULES;
+
             // now check the rules file exists.
-            File rules = new File(templateFolder, ANDROID_RULES);
+            File rules = new File(templateFolder, importedRulesFileName);
+
             if (rules.isFile() == false) {
                 throw new BuildException(String.format("Build rules file '%s' is missing.",
                         templateFolder));
-           }
+            }
 
             // set the file location to import
             setFile(rules.getAbsolutePath());
