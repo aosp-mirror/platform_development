@@ -208,7 +208,7 @@ public class RepoSourcesAdapter {
                 packages = null;
             }
 
-            if (packages != null && source.getFetchError() != null) {
+            if (packages == null && source.getFetchError() != null) {
                 // Return a dummy entry to display the fetch error
                 return new Object[] { new RepoSourceError(source) };
             }

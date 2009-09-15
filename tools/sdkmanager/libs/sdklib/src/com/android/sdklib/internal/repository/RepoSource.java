@@ -192,8 +192,10 @@ public class RepoSource implements IDescription {
             if (exception[0] != null) {
                 if (exception[0] instanceof FileNotFoundException) {
                     reason = "File not found";
+                    mFetchError += ": " + reason;
                 } else if (exception[0] instanceof SSLKeyException) {
-                    reason = "SSL error. You might want to force download through http in the settings.";
+                    reason = "HTTPS SSL error. You might want to force download through HTTP in the settings.";
+                    mFetchError += ": HTTPS SSL error";
                 } else if (exception[0].getMessage() != null) {
                     reason = exception[0].getMessage();
                 }
