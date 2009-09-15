@@ -195,7 +195,7 @@ See test_defs.xsd for more information.
     runner="android.test.InstrumentationCtsTestRunner"
     coverage_target="framework"
     cts="true" />
-    
+
 <test name="cts-gesture"
     build_path="cts/tests/tests/gesture"
     package="com.android.cts.gesture"
@@ -466,6 +466,11 @@ See test_defs.xsd for more information.
     runner="com.android.mms.SmsLaunchPerformance"
     coverage_target="Mms" />
 
+<test name="telephony-unit"
+    build_path="frameworks/base/telephony/tests/TelephonyTest"
+    package="com.android.telephonytest"
+    runner=".TelephonyUnitTestRunner"
+    coverage_target="framework" />
 
 <!-- obsolete?
 <test name="ringtone"
