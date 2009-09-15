@@ -3,6 +3,7 @@
 
 # swt
 prebuilt/darwin-x86/swt/swt.jar tools/lib/x86/swt.jar
+prebuilt/darwin-x86_64/swt/swt.jar tools/lib/x86_64/swt.jar
 
 
 # JetCreator (only available on mac/windows)
