@@ -79,7 +79,6 @@
         type="APPS" />
     <coverage_target name="Launcher" build_path="packages/apps/Home"
         type="APPS" />
-    <coverage_target name="IM" build_path="packages/apps/IM" type="APPS" />
     <coverage_target name="Mms" build_path="packages/apps/Mms" type="APPS" />
     <coverage_target name="Music" build_path="packages/apps/Music"
         type="APPS" />
