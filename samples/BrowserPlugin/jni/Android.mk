@@ -35,8 +35,10 @@ LOCAL_SRC_FILES := \
 	background/BackgroundPlugin.cpp \
 	form/FormPlugin.cpp \
 	paint/PaintPlugin.cpp \
+	hello-jni.cpp \
 
 LOCAL_C_INCLUDES += \
+	$(JNI_H_INCLUDE) \
 	$(LOCAL_PATH) \
 	$(LOCAL_PATH)/animation \
 	$(LOCAL_PATH)/audio \
@@ -47,6 +49,9 @@ LOCAL_C_INCLUDES += \
 	external/webkit/WebCore/plugins \
 	external/webkit/WebCore/platform/android/JavaVM \
 	external/webkit/WebKit/android/plugins
+
+LOCAL_SHARED_LIBRARIES := \
+	libnativehelper
 
 LOCAL_SRC_FILES := $(LOCAL_SRC_FILES)
 LOCAL_CFLAGS += -fvisibility=hidden 
