@@ -33,7 +33,6 @@
 #include "BackgroundPlugin.h"
 #include "FormPlugin.h"
 #include "PaintPlugin.h"
-#include "android_npapi.h"
 
 NPNetscapeFuncs* browser;
 #define EXPORT __attribute__((visibility("default")))
@@ -171,6 +170,15 @@ NPError NPP_New(NPMIMEType pluginType, NPP instance, uint16 mode, int16 argc,
             gLogI.log(instance, kDebug_ANPLogType, "------ %p DrawingModel is %d", instance, model);
             break;
         }
+    }
+
+    // notify the plugin API of the location of the java interface
+    char* className = "com.android.sampleplugin.SamplePluginStub";
+    NPError npErr = browser->setvalue(instance, kSetJavaClassName_ANPSetValue,
+                                reinterpret_cast<void*>(className));
+    if (npErr) {
+        gLogI.log(instance, kError_ANPLogType, "set class err %d", npErr);
+        return npErr;
     }
 
     // notify the plugin API of the drawing model we wish to use. This must be

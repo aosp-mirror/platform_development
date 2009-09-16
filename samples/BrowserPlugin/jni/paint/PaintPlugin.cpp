@@ -39,7 +39,7 @@ extern ANPTypefaceInterfaceV0   gTypefaceI;
 
 ///////////////////////////////////////////////////////////////////////////////
 
-PaintPlugin::PaintPlugin(NPP inst) : SubPlugin(inst) {
+PaintPlugin::PaintPlugin(NPP inst) : SurfaceSubPlugin(inst) {
 
     m_isTouchActive = false;
     m_isTouchCurrentInput = true;
@@ -51,10 +51,8 @@ PaintPlugin::PaintPlugin(NPP inst) : SubPlugin(inst) {
     memset(&m_clearSurface,  0, sizeof(m_clearSurface));
 
     // initialize the drawing surface
-    m_surfaceReady = false;
-    m_surface = gSurfaceI.newRasterSurface(inst, kRGBA_8888_ANPBitmapFormat, true);
-    if(!m_surface)
-        gLogI.log(inst, kError_ANPLogType, "----%p Unable to create RGBA surface", inst);
+    m_surface = NULL;
+    m_vm = NULL;
 
     // initialize the path
     m_touchPath = gPathI.newPath();
@@ -85,10 +83,10 @@ PaintPlugin::PaintPlugin(NPP inst) : SubPlugin(inst) {
 }
 
 PaintPlugin::~PaintPlugin() {
-    gSurfaceI.deleteSurface(m_surface);
     gPathI.deletePath(m_touchPath);
     gPaintI.deletePaint(m_paintSurface);
     gPaintI.deletePaint(m_paintButton);
+    surfaceDestroyed();
 }
 
 bool PaintPlugin::supportsDrawingModel(ANPDrawingModel model) {
@@ -98,8 +96,11 @@ bool PaintPlugin::supportsDrawingModel(ANPDrawingModel model) {
 ANPCanvas* PaintPlugin::getCanvas(ANPRectI* dirtyRect) {
 
     ANPBitmap bitmap;
-    if (!m_surfaceReady || !gSurfaceI.lock(m_surface, &bitmap, dirtyRect))
-        return NULL;
+    JNIEnv* env = NULL;
+    if (!m_surface || m_vm->GetEnv((void**) &env, JNI_VERSION_1_4) != JNI_OK ||
+        !gSurfaceI.lock(env, m_surface, &bitmap, dirtyRect)) {
+            return NULL;
+        }
 
     ANPCanvas* canvas = gCanvasI.newCanvas(&bitmap);
 
@@ -130,7 +131,10 @@ ANPCanvas* PaintPlugin::getCanvas(ANPRectF* dirtyRect) {
 }
 
 void PaintPlugin::releaseCanvas(ANPCanvas* canvas) {
-    gSurfaceI.unlock(m_surface);
+    JNIEnv* env = NULL;
+    if (m_surface && m_vm->GetEnv((void**) &env, JNI_VERSION_1_4) == JNI_OK) {
+        gSurfaceI.unlock(env, m_surface);
+    }
     gCanvasI.deleteCanvas(canvas);
 }
 
@@ -208,33 +212,37 @@ const char* PaintPlugin::getColorText() {
         return "Red";
 }
 
+bool PaintPlugin::isFixedSurface() {
+    return true;
+}
+
+void PaintPlugin::surfaceCreated(JNIEnv* env, jobject surface) {
+    env->GetJavaVM(&m_vm);
+    m_surface = env->NewGlobalRef(surface);
+    drawCleanPlugin();
+}
+
+void PaintPlugin::surfaceChanged(int format, int width, int height) {
+    // get the plugin's dimensions according to the DOM
+    PluginObject *obj = (PluginObject*) inst()->pdata;
+    const int pW = obj->window->width;
+    const int pH = obj->window->height;
+    // compare to the plugin's surface dimensions
+    if (pW != width || pH != height)
+        gLogI.log(inst(), kError_ANPLogType,
+                  "----%p Invalid Surface Dimensions (%d,%d):(%d,%d)",
+                  inst(), pW, pH, width, height);
+}
+void PaintPlugin::surfaceDestroyed() {
+    JNIEnv* env = NULL;
+    if (m_surface && m_vm->GetEnv((void**) &env, JNI_VERSION_1_4) == JNI_OK) {
+        env->DeleteGlobalRef(m_surface);
+        m_surface = NULL;
+    }
+}
+
 int16 PaintPlugin::handleEvent(const ANPEvent* evt) {
     switch (evt->eventType) {
-        case kSurface_ANPEventType:
-            switch (evt->data.surface.action) {
-                case kCreated_ANPSurfaceAction:
-                    m_surfaceReady = true;
-                    drawCleanPlugin();
-                    return 1;
-                case kDestroyed_ANPSurfaceAction:
-                    m_surfaceReady = false;
-                    return 1;
-                case kChanged_ANPSurfaceAction:
-                    // get the plugin's dimensions according to the DOM
-                    PluginObject *obj = (PluginObject*) inst()->pdata;
-                    const int pW = obj->window->width;
-                    const int pH = obj->window->height;
-                    // get the plugin's surface dimensions
-                    const int sW = evt->data.surface.data.changed.width;
-                    const int sH = evt->data.surface.data.changed.height;
-                    if (pW != sW || pH != sH)
-                        gLogI.log(inst(), kError_ANPLogType,
-                                  "----%p Invalid Surface Dimensions (%d,%d):(%d,%d)",
-                                  inst(), pW, pH, sW, sH);
-                    return 1;
-            }
-            break;
-
         case kTouch_ANPEventType: {
             float x = (float) evt->data.touch.x;
             float y = (float) evt->data.touch.y;
