@@ -28,12 +28,16 @@
 #ifndef backgroundPlugin__DEFINED
 #define backgroundPlugin__DEFINED
 
-class BackgroundPlugin : public SubPlugin {
+class BackgroundPlugin : public SurfaceSubPlugin {
 public:
     BackgroundPlugin(NPP inst);
     virtual ~BackgroundPlugin();
     virtual bool supportsDrawingModel(ANPDrawingModel);
     virtual int16 handleEvent(const ANPEvent* evt);
+    virtual void surfaceCreated(JNIEnv* env, jobject surface);
+    virtual void surfaceChanged(int format, int width, int height);
+    virtual void surfaceDestroyed();
+    virtual bool isFixedSurface();
 
     // Timer Testing Variables
     uint32_t mStartTime;
@@ -50,8 +54,8 @@ public:
 private:
     void drawPlugin(int surfaceWidth, int surfaceHeight);
 
-    bool        m_surfaceReady;
-    ANPSurface* m_surface;
+    jobject     m_surface;
+    JavaVM*     m_vm;
 
     void test_logging();
     void test_timers();

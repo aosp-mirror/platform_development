@@ -50,13 +50,11 @@ static uint32_t getMSecs() {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-BackgroundPlugin::BackgroundPlugin(NPP inst) : SubPlugin(inst) {
+BackgroundPlugin::BackgroundPlugin(NPP inst) : SurfaceSubPlugin(inst) {
 
     // initialize the drawing surface
-    m_surfaceReady = false;
-    m_surface = gSurfaceI.newRasterSurface(inst, kRGB_565_ANPBitmapFormat, false);
-    if(!m_surface)
-        gLogI.log(inst, kError_ANPLogType, "----%p Unable to create RGBA surface", inst);
+    m_surface = NULL;
+    m_vm = NULL;
 
     //initialize bitmap transparency variables
     mFinishedStageOne   = false;
@@ -71,12 +69,31 @@ BackgroundPlugin::BackgroundPlugin(NPP inst) : SubPlugin(inst) {
     test_javascript();
 }
 
-BackgroundPlugin::~BackgroundPlugin() {
-    gSurfaceI.deleteSurface(m_surface);
-}
+BackgroundPlugin::~BackgroundPlugin() { }
 
 bool BackgroundPlugin::supportsDrawingModel(ANPDrawingModel model) {
     return (model == kSurface_ANPDrawingModel);
+}
+
+bool BackgroundPlugin::isFixedSurface() {
+    return false;
+}
+
+void BackgroundPlugin::surfaceCreated(JNIEnv* env, jobject surface) {
+    env->GetJavaVM(&m_vm);
+    m_surface = env->NewGlobalRef(surface);
+}
+
+void BackgroundPlugin::surfaceChanged(int format, int width, int height) {
+    drawPlugin(width, height);
+}
+
+void BackgroundPlugin::surfaceDestroyed() {
+    JNIEnv* env = NULL;
+    if (m_surface && m_vm->GetEnv((void**) &env, JNI_VERSION_1_4) == JNI_OK) {
+        env->DeleteGlobalRef(m_surface);
+        m_surface = NULL;
+    }
 }
 
 void BackgroundPlugin::drawPlugin(int surfaceWidth, int surfaceHeight) {
@@ -101,7 +118,9 @@ void BackgroundPlugin::drawPlugin(int surfaceWidth, int surfaceHeight) {
 
     // lock the surface
     ANPBitmap bitmap;
-    if (!m_surfaceReady || !gSurfaceI.lock(m_surface, &bitmap, NULL)) {
+    JNIEnv* env = NULL;
+    if (!m_surface || m_vm->GetEnv((void**) &env, JNI_VERSION_1_4) != JNI_OK ||
+        !gSurfaceI.lock(env, m_surface, &bitmap, NULL)) {
         gLogI.log(inst(), kError_ANPLogType, " ------ %p unable to lock the plugin", inst());
         return;
     }
@@ -129,7 +148,7 @@ void BackgroundPlugin::drawPlugin(int surfaceWidth, int surfaceHeight) {
     // clean up variables and unlock the surface
     gPaintI.deletePaint(paint);
     gCanvasI.deleteCanvas(canvas);
-    gSurfaceI.unlock(m_surface);
+    gSurfaceI.unlock(env, m_surface);
 }
 
 int16 BackgroundPlugin::handleEvent(const ANPEvent* evt) {
@@ -137,20 +156,6 @@ int16 BackgroundPlugin::handleEvent(const ANPEvent* evt) {
         case kDraw_ANPEventType:
             gLogI.log(inst(), kError_ANPLogType, " ------ %p the plugin did not request draw events", inst());
             break;
-        case kSurface_ANPEventType:
-                    switch (evt->data.surface.action) {
-                        case kCreated_ANPSurfaceAction:
-                            m_surfaceReady = true;
-                            return 1;
-                        case kDestroyed_ANPSurfaceAction:
-                            m_surfaceReady = false;
-                            return 1;
-                        case kChanged_ANPSurfaceAction:
-                            drawPlugin(evt->data.surface.data.changed.width,
-                                       evt->data.surface.data.changed.height);
-                            return 1;
-                    }
-                    break;
         case kLifecycle_ANPEventType:
             if (evt->data.lifecycle.action == kOnLoad_ANPLifecycleAction) {
                 gLogI.log(inst(), kDebug_ANPLogType, " ------ %p the plugin received an onLoad event", inst());
