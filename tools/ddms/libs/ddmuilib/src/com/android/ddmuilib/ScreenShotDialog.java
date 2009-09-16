@@ -165,7 +165,8 @@ public class ScreenShotDialog extends Dialog {
         Image image = getDeviceImage();
         if (image == null) {
             Display display = shell.getDisplay();
-            image = ImageHelper.createPlaceHolderArt(display, 320, 240, display.getSystemColor(SWT.COLOR_BLUE));
+            image = ImageHelper.createPlaceHolderArt(
+                    display, 320, 240, display.getSystemColor(SWT.COLOR_BLUE));
             mSave.setEnabled(false);
             mBusyLabel.setText("Screen not available");
         } else {
@@ -199,14 +200,21 @@ public class ScreenShotDialog extends Dialog {
         if (rawImage == null)
             return null;
 
-        // convert raw data to an Image
-        assert rawImage.bpp == 16;
-        PaletteData palette = new PaletteData(0xf800, 0x07e0, 0x001f);
+        // convert raw data to an Image.
+        PaletteData palette = new PaletteData(
+                rawImage.getRedMask(),
+                rawImage.getGreenMask(),
+                rawImage.getBlueMask());
         ImageData imageData = new ImageData(rawImage.width, rawImage.height,
-            rawImage.bpp, palette, 1, rawImage.data);
+                rawImage.bpp, palette, 1, rawImage.data);
 
-        return new Image(getParent().getDisplay(), imageData);
+        if (imageData != null) {
+            return new Image(getParent().getDisplay(), imageData);
+        }
+
+        return null;
     }
+
 
     /*
      * Prompt the user to save the image to disk.
