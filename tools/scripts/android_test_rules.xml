@@ -88,6 +88,10 @@
                 <html outfile="coverage.html" />
            </report>
         </emma>
+        <echo>Cleaning up temporary files...</echo>
+        <delete dir="${instrumentation.absolute.dir}" />
+        <delete file="coverage.ec" />
+        <delete file="coverage.em" />
     </target>
 
 </project>
