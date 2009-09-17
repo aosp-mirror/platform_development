@@ -40,11 +40,6 @@
     <property name="external.libs.dir" value="libs" />
     <property name="external.libs.absolute.dir" location="${external.libs.dir}" />
 
-    <!-- In this file it is just alias for external.libs.absolute.dir. It is used for
-         reusability though, when calling ant targets in this file from other files.
-         However, it is a temporary solution. -->
-    <property name="external.jars" location="${external.libs.absolute.dir}" />
-
     <!-- Directory for the native libraries -->
     <property name="native.libs.dir" value="libs" />
     <property name="native.libs.absolute.dir" location="${native.libs.dir}" />
@@ -52,7 +47,7 @@
     <!-- Output directories -->
     <property name="out.dir" value="bin" />
     <property name="out.absolute.dir" location="${out.dir}" />
-    <property name="out.classes.dir" value="${out.dir}/classes" />
+    <property name="out.classes.dir" value="${out.absolute.dir}/classes" />
     <property name="out.classes.absolute.dir" location="${out.classes.dir}" />
 
     <!-- Intermediate files -->
@@ -62,16 +57,101 @@
     <!-- The final package file to generate -->
     <property name="out.debug.unaligned.package"
                   location="${out.absolute.dir}/${ant.project.name}-debug-unaligned.apk" />
-    <property name="out.debug.package" location="${out.absolute.dir}/${ant.project.name}-debug.apk" />
-    <property name="out.unsigned.package" location="${out.absolute.dir}/${ant.project.name}-unsigned.apk" />
+    <property name="out.debug.package"
+                  location="${out.absolute.dir}/${ant.project.name}-debug.apk" />
+    <property name="out.unsigned.package"
+                  location="${out.absolute.dir}/${ant.project.name}-unsigned.apk" />
     <property name="out.unaligned.package"
                   location="${out.absolute.dir}/${ant.project.name}-unaligned.apk" />
-    <property name="out.release.package" location="${out.absolute.dir}/${ant.project.name}-release.apk" />
+    <property name="out.release.package"
+                  location="${out.absolute.dir}/${ant.project.name}-release.apk" />
 
     <!-- Tools -->
     <condition property="exe" value=".exe" else=""><os family="windows" /></condition>
     <property name="adb" location="${android.tools.dir}/adb${exe}" />
     <property name="zipalign" location="${android.tools.dir}/zipalign${exe}" />
+
+    <!-- Emma configuration -->
+    <property name="emma.dir" value="${sdk.dir}/tools/lib" />
+        <path id="emma.lib">
+            <pathelement location="${emma.dir}/emma.jar" />
+            <pathelement location="${emma.dir}/emma_ant.jar" />
+        </path>
+    <taskdef resource="emma_ant.properties" classpathref="emma.lib" />
+    <!-- End of emma configuration -->
+
+    <!-- Macros -->
+
+    <!-- Configurable macro, which allows to pass as parameters output directory,
+         output dex filename and external libraries to dex (optional) -->
+    <macrodef name="dex-helper">
+       <element name="external-libs" optional="yes" />
+       <sequential>
+         <echo>Converting compiled files and external libraries into ${intermediate.dex.file}...
+         </echo>
+         <apply executable="${dx}" failonerror="true" parallel="true">
+             <arg value="--dex" />
+             <arg value="--output=${intermediate.dex.file}" />
+             <arg path="${out.classes.absolute.dir}" />
+             <fileset dir="${external.libs.absolute.dir}" includes="*.jar" />
+             <external-libs />
+         </apply>
+       </sequential>
+    </macrodef>
+
+    <!-- This is macro that enable passing variable list of external jar files to ApkBuilder
+         Example of use:
+         <package-helper>
+             <extra-jars>
+                <jarfolder path="my_jars" />
+                <jarfile path="foo/bar.jar" />
+                <jarfolder path="your_jars" />
+             </extra-jars>
+         </package-helper> -->
+    <macrodef name="package-helper">
+        <element name="extra-jars" optional="yes" />
+        <sequential>
+            <apkbuilder
+                    outfolder="${out.absolute.dir}"
+                    basename="${ant.project.name}"
+                    signed="${sign.package}"
+                    verbose="true">
+                <file path="${intermediate.dex.file}" />
+                <sourcefolder path="${source.absolute.dir}" />
+                <nativefolder path="${native.libs.absolute.dir}" />
+                <jarfolder path="${external.libs.absolute.dir}" />
+                <extra-jars/>
+            </apkbuilder>
+        </sequential>
+    </macrodef>
+
+    <!-- This is macro used only for sharing code among two targets, -debug and
+         -debug-with-emma which do exactly the same but differ in dependencies -->
+    <macrodef name="debug-helper">
+        <sequential>
+            <echo>Running zip align on final apk...</echo>
+            <exec executable="${zipalign}" failonerror="true">
+                <arg value="-f" />
+                <arg value="4" />
+                <arg path="${out.debug.unaligned.package}" />
+                <arg path="${out.debug.package}" />
+            </exec>
+            <echo>Debug Package: ${out.debug.package}</echo>
+        </sequential>
+    </macrodef>
+
+    <!-- This is macro used only for sharing code among two targets, -install and
+         -install-with-emma which do exactly the same but differ in dependencies -->
+    <macrodef name="install-helper">
+        <sequential>
+            <echo>Installing ${out.debug.package} onto default emulator or device...</echo>
+            <exec executable="${adb}" failonerror="true">
+                <arg value="install" />
+                <arg value="-r" />
+                <arg path="${out.debug.package}" />
+            </exec>
+        </sequential>
+    </macrodef>
 
     <!-- Rules -->
 
@@ -134,32 +214,9 @@
         </javac>
     </target>
 
-    <!-- Configurable macro, which allows to pass as parameters output directory,
-         output dex filename and external libraries to dex (optional) -->
-    <macrodef name="dex-helper">
-       <attribute name="out.absolute.dir" />
-       <attribute name="out.dex.file" />
-       <element name="external-libs" optional="yes" />
-       <sequential>
-         <echo>Converting compiled files and external libraries into @{out.dex.file}...</echo>
-         <apply executable="${dx}" failonerror="true" parallel="true">
-             <arg value="--dex" />
-             <arg value="--output=@{out.dex.file}" />
-             <arg path="@{out.absolute.dir}" />
-             <external-libs />
-         </apply>
-       </sequential>
-    </macrodef>
-
     <!-- Converts this project's .class files into .dex files -->
     <target name="-dex" depends="compile">
-        <dex-helper out.absolute.dir="${out.absolute.dir}/classes"
-                out.dex.file="${intermediate.dex.file}">
-            <external-libs>
-                <!-- Temporary solution, before <jarfile> in <apkbuilder> is ready -->
-                <fileset dir="${external.jars}" includes="*.jar" />
-            </external-libs>
-        </dex-helper>
+        <dex-helper />
     </target>
 
     <!-- Puts the project's resources into the output package file
@@ -181,17 +238,8 @@
 
     <!-- Packages the application and (maybe) sign it with a debug key.
          This requires the property sign.package to be set to true or false. -->
-    <target name="-package">
-        <apkbuilder
-                outfolder="${out.absolute.dir}"
-                basename="${ant.project.name}"
-                signed="${sign.package}"
-                verbose="true">
-            <file path="${intermediate.dex.file}" />
-            <sourcefolder path="${source.absolute.dir}" />
-            <jarfolder path="${external.jars}" />
-            <nativefolder path="${native.libs.absolute.dir}" />
-        </apkbuilder>
+    <target name="-package" depends="-dex, -package-resources">
+        <package-helper />
     </target>
 
     <target name="-no-sign">
@@ -203,21 +251,12 @@
     </target>
 
     <!-- Builds debug output package, provided all the necessary files are already dexed -->
-    <target name="-debug-no-dex" depends="-package-resources, -debug-sign, -package">
-        <echo>Running zip align on final apk...</echo>
-        <exec executable="${zipalign}" failonerror="true">
-            <arg value="-f" />
-            <arg value="4" />
-            <arg path="${out.debug.unaligned.package}" />
-            <arg path="${out.debug.package}" />
-        </exec>
-        <echo>Debug Package: ${out.debug.package}</echo>
+    <target name="debug" depends="-debug-sign, -package"
+                description="Builds the application and signs it with a debug key.">
+        <debug-helper />
     </target>
 
-    <target name="debug" depends="-dex, -debug-no-dex"
-                description="Builds the application and signs it with a debug key." />
-
-    <target name="-release-package" depends="-dex, -package-resources, -no-sign, -package" />
+    <target name="-release-package" depends="-no-sign, -package" />
 
     <target name="-release-check">
         <condition property="release.sign">
@@ -234,7 +273,7 @@
         <echo>and run zipalign from the Android SDK tools.</echo>
     </target>
 
-    <target name="release" depends="-release-package, -release-nosign" if="release-sign"
+    <target name="release" depends="-release-package, -release-nosign" if="release.sign"
                 description="Builds the application. The generated apk file must be signed before
                             it is published.">
         <!-- Gets passwords -->
@@ -266,22 +305,12 @@
         <echo>Release Package: ${out.release.package}</echo>
     </target>
 
-    <!-- Installs the package on the default emulator/device -->
-    <target name="-install-no-deps">
-        <echo>Installing ${out.debug.package} onto default emulator or device...</echo>
-        <exec executable="${adb}" failonerror="true">
-            <arg value="install" />
-            <arg value="-r" />
-            <arg path="${out.debug.package}" />
-        </exec>
-    </target>
-
-    <target name="install" depends="debug, -install-no-deps"
+    <target name="install" depends="debug"
                 description="Installs/reinstalls the debug package onto a running
                             emulator or device. If the application was previously installed,
-                            the signatures must match." />
-
-    <target name="-install-no-dex" depends="-debug-no-dex, -install-no-deps" />
+                            the signatures must match." >
+        <install-helper />
+    </target>
 
     <target name="-uninstall-check">
         <condition property="uninstall.run">
@@ -290,8 +319,7 @@
     </target>
 
     <target name="-uninstall-error" depends="-uninstall-check" unless="uninstall.run">
-        <echo>
-        Unable to run 'ant uninstall', application.package is not defined in build.properties
+        <echo>Unable to run 'ant uninstall', application.package is not defined in build.properties
         </echo>
     </target>
 
@@ -309,6 +337,53 @@
         <delete dir="${out.absolute.dir}" />
         <delete dir="${gen.absolute.dir}" />
     </target>
+
+    <!-- Targets for code-coverage measurement purposes, invoked from external file -->
+
+    <!-- Emma-instruments tested project classes (compiles the tested project if necessary)
+             and writes instrumented classes to ${instrumentation.absolute.dir}/classes -->
+    <target name="-emma-instrument" depends="compile">
+        <echo>Instrumenting classes from ${out.absolute.dir}/classes...</echo>
+        <!-- It only instruments class files, not any external libs -->
+        <emma enabled="true">
+            <instr verbosity="verbose"
+                   mode="overwrite"
+                   instrpath="${out.absolute.dir}/classes"
+                   outdir="${out.absolute.dir}/classes">
+            </instr>
+            <!-- TODO: exclusion filters on R*.class and allowing custom exclusion from
+                 user defined file -->
+        </emma>
+    </target>
+
+    <target name="-dex-instrumented" depends="-emma-instrument">
+       <dex-helper>
+          <external-libs>
+            <fileset file="${emma.dir}/emma_device.jar" />
+          </external-libs>
+       </dex-helper>
+    </target>
+
+    <!-- Invoked from external files for code coverage purposes -->
+    <target name="-package-with-emma" depends="-dex-instrumented, -package-resources">
+        <package-helper>
+            <extra-jars>
+                <!-- Injected from external file -->
+                <jarfile path="${emma.dir}/emma_device.jar" />
+            </extra-jars>
+        </package-helper>
+    </target>
+
+    <target name="-debug-with-emma"
+                depends="-debug-sign, -package-with-emma">
+        <debug-helper />
+    </target>
+
+    <target name="-install-with-emma" depends="-debug-with-emma">
+        <install-helper />
+    </target>
+
+    <!-- End of targets for code-coverage measurement purposes -->
 
     <target name="help">
         <!-- displays starts at col 13
