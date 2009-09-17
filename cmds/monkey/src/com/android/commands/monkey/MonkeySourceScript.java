@@ -85,10 +85,12 @@ public class MonkeySourceScript implements MonkeyEventSource {
     private static final String EVENT_KEYWORD_KEYPRESS = "DispatchPress";
     private static final String EVENT_KEYWORD_ACTIVITY = "LaunchActivity";
     private static final String EVENT_KEYWORD_WAIT = "UserWait";
+    private static final String EVENT_KEYWORD_LONGPRESS = "LongPress";
 
     // a line at the end of the header
     private static final String STARTING_DATA_LINE = "start data >>";    
     private boolean mFileOpened = false;    
+    private static int LONGPRESS_WAIT_TIME = 2000; // wait time for the long press
     
     FileInputStream mFStream;
     DataInputStream mInputStream;
@@ -250,6 +252,16 @@ public class MonkeySourceScript implements MonkeyEventSource {
             MonkeyKeyEvent e = new MonkeyKeyEvent(KeyEvent.ACTION_DOWN, keyCode);
             mQ.addLast(e);
             e = new MonkeyKeyEvent(KeyEvent.ACTION_UP, keyCode);
+            mQ.addLast(e);
+        } else if (s.indexOf(EVENT_KEYWORD_LONGPRESS) >= 0) {
+            // handle the long press
+            MonkeyKeyEvent e = new MonkeyKeyEvent(KeyEvent.ACTION_DOWN,
+                    KeyEvent.KEYCODE_DPAD_CENTER);
+            mQ.addLast(e);
+            MonkeyWaitEvent we = new MonkeyWaitEvent(LONGPRESS_WAIT_TIME);
+            mQ.addLast(we);
+            e = new MonkeyKeyEvent(KeyEvent.ACTION_UP,
+                    KeyEvent.KEYCODE_DPAD_CENTER);
             mQ.addLast(e);
         }
     }
