@@ -68,7 +68,8 @@ public class ApkBuilderTask extends Task {
     private final ArrayList<Value> mZipList = new ArrayList<Value>();
     private final ArrayList<Value> mFileList = new ArrayList<Value>();
     private final ArrayList<Value> mSourceList = new ArrayList<Value>();
-    private final ArrayList<Value> mJarList = new ArrayList<Value>();
+    private final ArrayList<Value> mJarfolderList = new ArrayList<Value>();
+    private final ArrayList<Value> mJarfileList = new ArrayList<Value>();
     private final ArrayList<Value> mNativeList = new ArrayList<Value>();
 
     private final ArrayList<FileInputStream> mZipArchives = new ArrayList<FileInputStream>();
@@ -141,7 +142,16 @@ public class ApkBuilderTask extends Task {
      */
     public Object createJarfolder() {
         Value file = new Value();
-        mJarList.add(file);
+        mJarfolderList.add(file);
+        return file;
+    }
+
+    /**
+     * Returns an object representing a nested <var>jarfile</var> element.
+     */
+    public Object createJarfile() {
+        Value file = new Value();
+        mJarfileList.add(file);
         return file;
     }
 
@@ -183,8 +193,13 @@ public class ApkBuilderTask extends Task {
             }
 
             // now go through the list of jar folders.
-            for (Value v : mJarList) {
+            for (Value v : mJarfolderList) {
                 ApkBuilderImpl.processJarFolder(v.mPath, mResourcesJars);
+            }
+
+            // now go through the list of jar files.
+            for (Value v : mJarfileList) {
+                ApkBuilderImpl.processJarFile(v.mPath, mResourcesJars);
             }
 
             // now the native lib folder.
