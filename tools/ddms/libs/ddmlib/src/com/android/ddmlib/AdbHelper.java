@@ -286,7 +286,8 @@ final class AdbHelper {
                 return null;
             }
 
-            reply = new byte[16];
+            // first the protocol version.
+            reply = new byte[4];
             if (read(adbChan, reply) == false) {
                 Log.w("ddms", "got partial reply from ADB fb:");
                 Log.hexDump("ddms", LogLevel.WARN, reply, 0, reply.length);
@@ -296,10 +297,27 @@ final class AdbHelper {
             ByteBuffer buf = ByteBuffer.wrap(reply);
             buf.order(ByteOrder.LITTLE_ENDIAN);
 
-            imageParams.bpp = buf.getInt();
-            imageParams.size = buf.getInt();
-            imageParams.width = buf.getInt();
-            imageParams.height = buf.getInt();
+            int version = buf.getInt();
+
+            // get the header size (this is a count of int)
+            int headerSize = RawImage.getHeaderSize(version);
+
+            // read the header
+            reply = new byte[headerSize * 4];
+            if (read(adbChan, reply) == false) {
+                Log.w("ddms", "got partial reply from ADB fb:");
+                Log.hexDump("ddms", LogLevel.WARN, reply, 0, reply.length);
+                adbChan.close();
+                return null;
+            }
+            buf = ByteBuffer.wrap(reply);
+            buf.order(ByteOrder.LITTLE_ENDIAN);
+
+            // fill the RawImage with the header
+            if (imageParams.readHeader(version, buf) == false) {
+                Log.e("Screenshot", "Unsupported protocol: " + version);
+                return null;
+            }
 
             Log.d("ddms", "image params: bpp=" + imageParams.bpp + ", size="
                     + imageParams.size + ", width=" + imageParams.width
@@ -314,6 +332,7 @@ final class AdbHelper {
                 adbChan.close();
                 return null;
             }
+
             imageParams.data = reply;
         } finally {
             if (adbChan != null) {
