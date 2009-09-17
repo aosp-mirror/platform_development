@@ -109,12 +109,13 @@
              </extra-jars>
          </package-helper> -->
     <macrodef name="package-helper">
+        <attribute name="sign.package" />
         <element name="extra-jars" optional="yes" />
         <sequential>
             <apkbuilder
                     outfolder="${out.absolute.dir}"
                     basename="${ant.project.name}"
-                    signed="${sign.package}"
+                    signed="@{sign.package}"
                     verbose="true">
                 <file path="${intermediate.dex.file}" />
                 <sourcefolder path="${source.absolute.dir}" />
@@ -236,27 +237,21 @@
                 basename="${ant.project.name}" />
     </target>
 
-    <!-- Packages the application and (maybe) sign it with a debug key.
-         This requires the property sign.package to be set to true or false. -->
-    <target name="-package" depends="-dex, -package-resources">
-        <package-helper />
+    <!-- Packages the application and sign it with a debug key. -->
+    <target name="-package-debug-sign" depends="-dex, -package-resources">
+        <package-helper sign.package="true" />
     </target>
 
-    <target name="-no-sign">
-       <property name="sign.package" value="false" />
-    </target>
-
-    <target name="-debug-sign">
-       <property name="sign.package" value="true" />
+    <!-- Packages the application without signing it. -->
+    <target name="-package-no-sign" depends="-dex, -package-resources">
+        <package-helper sign.package="false" />
     </target>
 
     <!-- Builds debug output package, provided all the necessary files are already dexed -->
-    <target name="debug" depends="-debug-sign, -package"
+    <target name="debug" depends="-package-debug-sign"
                 description="Builds the application and signs it with a debug key.">
         <debug-helper />
     </target>
-
-    <target name="-release-package" depends="-no-sign, -package" />
 
     <target name="-release-check">
         <condition property="release.sign">
@@ -273,7 +268,7 @@
         <echo>and run zipalign from the Android SDK tools.</echo>
     </target>
 
-    <target name="release" depends="-release-package, -release-nosign" if="release.sign"
+    <target name="release" depends="-package-no-sign, -release-nosign" if="release.sign"
                 description="Builds the application. The generated apk file must be signed before
                             it is published.">
         <!-- Gets passwords -->
@@ -366,7 +361,7 @@
 
     <!-- Invoked from external files for code coverage purposes -->
     <target name="-package-with-emma" depends="-dex-instrumented, -package-resources">
-        <package-helper>
+        <package-helper sign.package="true">
             <extra-jars>
                 <!-- Injected from external file -->
                 <jarfile path="${emma.dir}/emma_device.jar" />
@@ -374,8 +369,7 @@
         </package-helper>
     </target>
 
-    <target name="-debug-with-emma"
-                depends="-debug-sign, -package-with-emma">
+    <target name="-debug-with-emma" depends="-package-with-emma">
         <debug-helper />
     </target>
 
