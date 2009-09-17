@@ -35,6 +35,7 @@
 #define PluginObject__DEFINED
 
 #include "main.h"
+#include <jni.h>
 
 class SubPlugin {
 public:
@@ -47,6 +48,16 @@ public:
 
 private:
     NPP m_inst;
+};
+
+class SurfaceSubPlugin : public SubPlugin {
+public:
+    SurfaceSubPlugin(NPP inst) : SubPlugin(inst) {}
+    virtual ~SurfaceSubPlugin() {}
+    virtual bool isFixedSurface() = 0;
+    virtual void surfaceCreated(JNIEnv*, jobject) = 0;
+    virtual void surfaceChanged(int format, int width, int height) = 0;
+    virtual void surfaceDestroyed() = 0;
 };
 
 enum PluginTypes {

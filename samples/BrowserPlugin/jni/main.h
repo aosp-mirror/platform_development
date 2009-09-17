@@ -27,5 +27,6 @@
 #include <npfunctions.h>
 #include <npruntime.h>
 #include "android_npapi.h"
+#include "ANPSurface_npapi.h"
 
 extern NPNetscapeFuncs* browser;
