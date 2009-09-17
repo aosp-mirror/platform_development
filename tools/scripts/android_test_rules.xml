@@ -16,17 +16,19 @@
 
     <macrodef name="run-tests-helper">
         <attribute name="emma.enabled" default="false" />
+        <element name="extra-instrument-args" optional="yes" />
         <sequential>
             <echo>Running tests ...</echo>
             <exec executable="${adb}" failonerror="true">
                 <arg value="shell" />
-                    <arg value="am" />
-                <arg value="instrument" />
-                   <arg value="-w" />
+                <arg value="am" />
+                   <arg value="instrument" />
+                <arg value="-w" />
                 <arg value="-e" />
                    <arg value="coverage" />
-                <arg value="@{emma.enabled}" />
-                   <arg value="${application.package.to.instrument}/${test.runner}" />
+                   <arg value="@{emma.enabled}" />
+                <extra-instrument-args />
+                <arg value="${application.package.to.instrument}/${test.runner}" />
             </exec>
         </sequential>
     </macrodef>
@@ -68,7 +70,13 @@
     <target name="coverage" depends="-set-coverage-classpath, -install-instrumented, install"
                 description="Runs the tests against the instrumented code and generates
                             code coverage report">
-        <run-tests-helper emma.enabled="true" />
+        <run-tests-helper emma.enabled="true">
+            <extra-instrument-args>
+                <arg value="-e" />
+                   <arg value="coverageFile" />
+                   <arg value="${emma.dump.file}" />
+            </extra-instrument-args>
+        </run-tests-helper>
         <echo>Downloading coverage file into project directory...</echo>
         <exec executable="${adb}" failonerror="true">
             <arg value="pull" />
