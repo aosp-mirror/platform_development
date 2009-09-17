@@ -15,7 +15,7 @@
 -->
 <resources xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
-    <string name="appTitle">"Переход в обходной режим"</string>
-    <string name="title">"Неподдерживаемое действие"</string>
-    <string name="error">"В настоящее время это действие не поддерживается."</string>
+    <string name="appTitle" msgid="161410001913116606">"Переход в обходной режим"</string>
+    <string name="title" msgid="8156274565006125136">"Неподдерживаемое действие"</string>
+    <string name="error" msgid="6539615832923362301">"В настоящее время это действие не поддерживается."</string>
 </resources>
