@@ -66,6 +66,24 @@
     <property name="out.release.package"
                   location="${out.absolute.dir}/${ant.project.name}-release.apk" />
 
+    <!-- Verbosity -->
+    <property name="verbose" value="false" />
+    <!-- This is needed by emma as it uses multilevel verbosity instead of simple 'true' or 'false'
+         The property 'verbosity' is not user configurable and depends exclusively on 'verbose'
+         value.-->
+    <condition property="verbosity" value="verbose" else="quiet">
+        <istrue value="${verbose}" />
+    </condition>
+    <!-- This is needed to switch verbosity of zipalign and aapt. Depends exclusively on 'verbose'
+         -->
+    <condition property="v.option" value="-v" else="">
+        <istrue value="${verbose}" />
+    </condition>
+    <!-- This is needed to switch verbosity of dx. Depends exclusively on 'verbose' -->
+    <condition property="verbose.option" value="--verbose" else="">
+        <istrue value="${verbose}" />
+    </condition>
+
     <!-- Tools -->
     <condition property="exe" value=".exe" else=""><os family="windows" /></condition>
     <property name="adb" location="${android.tools.dir}/adb${exe}" />
@@ -92,6 +110,7 @@
          <apply executable="${dx}" failonerror="true" parallel="true">
              <arg value="--dex" />
              <arg value="--output=${intermediate.dex.file}" />
+             <arg line="${verbose.option}" />
              <arg path="${out.classes.absolute.dir}" />
              <fileset dir="${external.libs.absolute.dir}" includes="*.jar" />
              <external-libs />
@@ -116,7 +135,7 @@
                     outfolder="${out.absolute.dir}"
                     basename="${ant.project.name}"
                     signed="@{sign.package}"
-                    verbose="true">
+                    verbose="${verbose}">
                 <file path="${intermediate.dex.file}" />
                 <sourcefolder path="${source.absolute.dir}" />
                 <nativefolder path="${native.libs.absolute.dir}" />
@@ -132,6 +151,7 @@
         <sequential>
             <echo>Running zip align on final apk...</echo>
             <exec executable="${zipalign}" failonerror="true">
+                <arg line="${v.option}" />
                 <arg value="-f" />
                 <arg value="4" />
                 <arg path="${out.debug.unaligned.package}" />
@@ -171,6 +191,7 @@
         <echo>Generating R.java / Manifest.java from the resources...</echo>
         <exec executable="${aapt}" failonerror="true">
             <arg value="package" />
+            <arg line="${v.option}" />
             <arg value="-m" />
             <arg value="-J" />
             <arg path="${gen.absolute.dir}" />
@@ -206,7 +227,7 @@
         <javac encoding="ascii" target="1.5" debug="true" extdirs=""
                 destdir="${out.classes.absolute.dir}"
                 bootclasspathref="android.target.classpath"
-                verbose="false" classpath="${extensible.classpath}">
+                verbose="${verbose}" classpath="${extensible.classpath}">
             <src path="${source.absolute.dir}" />
             <src path="${gen.absolute.dir}" />
             <classpath>
@@ -287,7 +308,8 @@
                 keystore="${key.store}"
                 storepass="${key.store.password}"
                 alias="${key.alias}"
-                keypass="${key.alias.password}" />
+                keypass="${key.alias.password}"
+                verbose="${verbose}" />
 
         <!-- Zip aligns the APK -->
         <echo>Running zip align on final apk...</echo>
@@ -329,8 +351,8 @@
     </target>
 
     <target name="clean" description="Removes output files created by other targets.">
-        <delete dir="${out.absolute.dir}" />
-        <delete dir="${gen.absolute.dir}" />
+        <delete dir="${out.absolute.dir}" verbose="${verbose}" />
+        <delete dir="${gen.absolute.dir}" verbose="${verbose}" />
     </target>
 
     <!-- Targets for code-coverage measurement purposes, invoked from external file -->
@@ -341,7 +363,7 @@
         <echo>Instrumenting classes from ${out.absolute.dir}/classes...</echo>
         <!-- It only instruments class files, not any external libs -->
         <emma enabled="true">
-            <instr verbosity="verbose"
+            <instr verbosity="${verbosity}"
                    mode="overwrite"
                    instrpath="${out.absolute.dir}/classes"
                    outdir="${out.absolute.dir}/classes">
