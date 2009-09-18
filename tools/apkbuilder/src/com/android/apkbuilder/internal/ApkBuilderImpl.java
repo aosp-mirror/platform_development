@@ -249,7 +249,7 @@ public final class ApkBuilderImpl {
 
             for (String file : files) {
                 String path = f.getAbsolutePath() + File.separator + file;
-                processJarFile(parameter, resourcesJars);
+                processJarFile(path, resourcesJars);
             }
         } else {
             processJarFile(parameter, resourcesJars);
