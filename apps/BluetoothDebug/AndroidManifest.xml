@@ -23,6 +23,7 @@
                 <action android:name="android.bluetooth.device.action.NAME_FAILED" />
                 <action android:name="android.bluetooth.device.action.PAIRING_REQUEST" />
                 <action android:name="android.bluetooth.device.action.PAIRING_CANCEL" />
+                <action android:name="android.bluetooth.device.action.UUID" />
 
                 <action android:name="android.bluetooth.headset.action.STATE_CHANGED" />
                 <action android:name="android.bluetooth.headset.action.AUDIO_STATE_CHANGED" />
