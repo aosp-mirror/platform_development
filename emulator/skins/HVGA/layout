@@ -18,7 +18,7 @@ parts {
             y       0
         }
     }
-    
+
     controls {
         background {
             image   controls.png
@@ -357,7 +357,7 @@ layouts {
         height    534
         color     0xe0e0e0
         event     EV_SW:0:1
-        
+
         part1 {
             name    portrait
             x       0
@@ -393,6 +393,12 @@ layouts {
         height    601
         color     0xe0e0e0
         event     EV_SW:0:0
+
+        # the framework _always_ assume that the DPad
+        # has been physically rotated in landscape mode.
+        # however, with this skin, this is not the case
+        #
+        dpad-rotation 3
 
         part1 {
             name    portrait
