@@ -22,9 +22,16 @@
         classname="com.android.ant.ApkBuilderTask"
         classpathref="android.antlibs" />
 
+    <taskdef name="xpath"
+        classname="com.android.ant.XPathTask"
+        classpathref="android.antlibs" />
+
     <!-- Properties -->
 
     <property name="android.tools.dir" location="${sdk.dir}/tools" />
+    <!-- Name of the application package extracted from manifest file -->
+    <xpath input="AndroidManifest.xml" expression="/manifest/@package"
+                output="application.package" />
 
     <!-- Input directories -->
     <property name="source.dir" value="src" />
