@@ -133,7 +133,12 @@ public final class ApkBuilderImpl {
                     throw new WrongOptionException("Missing value for -rj");
                 }
 
-                processJarFolder(args[index++], resourcesJars);
+                File f = new File(args[index]);
+                if (f.isDirectory()) {
+                    processJarFolder(args[index++], resourcesJars);
+                } else if (f.isFile()) {
+                    processJarFile(args[index++], resourcesJars);
+                }
             } else if ("-nf".equals(argument)) {
                 // quick check on the next argument.
                 if (index == args.length) {
