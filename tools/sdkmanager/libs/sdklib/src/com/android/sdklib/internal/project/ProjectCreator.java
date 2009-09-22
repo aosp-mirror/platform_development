@@ -203,6 +203,10 @@ public class ProjectCreator {
             ProjectProperties buildProperties = ProjectProperties.create(folderPath,
                     PropertyType.BUILD);
             buildProperties.setProperty(ProjectProperties.PROPERTY_APP_PACKAGE, packageName);
+            if (isTestProject == true) {
+                buildProperties.setProperty(ProjectProperties.PROPERTY_TESTED_PROJECT, "..");
+            }
+
             buildProperties.save();
 
             // create the map for place-holders of values to replace in the templates
