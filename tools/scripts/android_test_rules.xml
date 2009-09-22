@@ -86,7 +86,7 @@
         <echo>Extracting coverage report...</echo>
         <emma>
             <report sourcepath="${tested.project.absolute.dir}/${source.dir}"
-                              verbosity="verbose">
+                              verbosity="${verbosity}">
                 <!-- TODO: report.dir or something like should be introduced if necessary -->
                 <infileset dir=".">
                     <include name="coverage.ec" />
