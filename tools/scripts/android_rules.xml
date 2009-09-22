@@ -145,19 +145,20 @@
         </sequential>
     </macrodef>
 
-    <!-- This is macro used only for sharing code among two targets, -debug and
-         -debug-with-emma which do exactly the same but differ in dependencies -->
-    <macrodef name="debug-helper">
+    <!-- This is macro which zipaligns in.package and outputs it to out.package. Used by targets
+         debug, -debug-with-emma and release.-->
+    <macrodef name="zipalign-helper">
+        <attribute name="in.package" />
+        <attribute name="out.package" />
         <sequential>
             <echo>Running zip align on final apk...</echo>
             <exec executable="${zipalign}" failonerror="true">
                 <arg line="${v.option}" />
                 <arg value="-f" />
                 <arg value="4" />
-                <arg path="${out.debug.unaligned.package}" />
-                <arg path="${out.debug.package}" />
+                <arg path="@{in.package}" />
+                <arg path="@{out.package}" />
             </exec>
-            <echo>Debug Package: ${out.debug.package}</echo>
         </sequential>
     </macrodef>
 
@@ -271,7 +272,9 @@
     <!-- Builds debug output package, provided all the necessary files are already dexed -->
     <target name="debug" depends="-package-debug-sign"
                 description="Builds the application and signs it with a debug key.">
-        <debug-helper />
+        <zipalign-helper in.package="${out.debug.unaligned.package}"
+                                   out.package="${out.debug.package}" />
+        <echo>Debug Package: ${out.debug.package}</echo>
     </target>
 
     <target name="-release-check">
@@ -312,13 +315,8 @@
                 verbose="${verbose}" />
 
         <!-- Zip aligns the APK -->
-        <echo>Running zip align on final apk...</echo>
-        <exec executable="${zipalign}" failonerror="true">
-            <arg value="-f" />
-            <arg value="4" />
-            <arg path="${out.unaligned.package}" />
-            <arg path="${out.release.package}" />
-        </exec>
+        <zipalign-helper in.package="${out.unaligned.package}"
+                                   out.package="${out.release.package}" />
         <echo>Release Package: ${out.release.package}</echo>
     </target>
 
@@ -392,7 +390,8 @@
     </target>
 
     <target name="-debug-with-emma" depends="-package-with-emma">
-        <debug-helper />
+        <zipalign-helper in.package="${out.debug.unaligned.package}"
+                                   out.package="${out.debug.package}" />
     </target>
 
     <target name="-install-with-emma" depends="-debug-with-emma">
