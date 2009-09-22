@@ -186,9 +186,13 @@ class TestRunner(object):
 
   def _DumpTests(self):
     """Prints out set of defined tests."""
-    print "The following tests are currently defined:"
+    print "The following tests are currently defined:\n"
+    print "%-25s %-40s %s" % ("name", "build path", "description")
+    print "-" * 80
     for test in self._known_tests:
-      print "%-15s %s" % (test.GetName(), test.GetDescription())
+      print "%-25s %-40s %s" % (test.GetName(), test.GetBuildPath(),
+                                test.GetDescription())
+    print "\nSee %s for more information" % self._TEST_FILE_NAME
 
   def _DoBuild(self):
     logger.SilentLog("Building tests...")
