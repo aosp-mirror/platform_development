@@ -8,11 +8,14 @@
     <property name="instrumentation.absolute.dir" location="${instrumentation.dir}" />
 
     <property name="test.runner" value="android.test.InstrumentationTestRunner" />
-    <property name="application.package.to.instrument" value="${application.package}.tests" />
+    <!-- Application package of the tested project extracted from its manifest file -->
+    <xpath input="${tested.project.absolute.dir}/AndroidManifest.xml"
+                expression="/manifest/@package" output="tested.application.package" />
 
     <!-- TODO: make it more configurable in the next CL's - now it is default for auto-generated
          project -->
-    <property name="emma.dump.file" value="/data/data/${application.package}/files/coverage.ec" />
+    <property name="emma.dump.file"
+                  value="/data/data/${tested.application.package}/files/coverage.ec" />
 
     <macrodef name="run-tests-helper">
         <attribute name="emma.enabled" default="false" />
@@ -28,7 +31,7 @@
                    <arg value="coverage" />
                    <arg value="@{emma.enabled}" />
                 <extra-instrument-args />
-                <arg value="${application.package.to.instrument}/${test.runner}" />
+                <arg value="${application.package}/${test.runner}" />
             </exec>
         </sequential>
     </macrodef>
