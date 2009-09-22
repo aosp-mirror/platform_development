@@ -62,6 +62,32 @@ public abstract class ResourceQualifier implements Comparable<ResourceQualifier>
      */
     public abstract String getFolderSegment(IAndroidTarget target);
 
+    /**
+     * Returns whether the given qualifier is a match for the receiver.
+     * <p/>The default implementation returns the result of {@link #equals(Object)}.
+     * <p/>Children class that re-implements this must implement
+     * {@link #isBetterMatchThan(ResourceQualifier, ResourceQualifier)} too.
+     * @param qualifier the reference qualifier
+     * @return true if the receiver is a match.
+     */
+    public boolean isMatchFor(ResourceQualifier qualifier) {
+        return equals(qualifier);
+    }
+
+    /**
+     * Returns true if the receiver is a better match for the given <var>reference</var> than
+     * the given <var>compareTo</var> comparable.
+     * @param compareTo The {@link ResourceQualifier} to compare to. Can be null, in which
+     * case the method must return <code>true</code>.
+     * @param reference The reference qualifier value for which the match is.
+     * @return true if the receiver is a better match.
+     */
+    public boolean isBetterMatchThan(ResourceQualifier compareTo, ResourceQualifier reference) {
+        // the default is to always return false. This gives less overhead than always returning
+        // true, as it would only compare same values anyway.
+        return false;
+    }
+
     @Override
     public String toString() {
         return getFolderSegment(null);

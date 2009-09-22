@@ -184,6 +184,38 @@ public final class PixelDensityQualifier extends ResourceQualifier {
     }
 
     @Override
+    public boolean isMatchFor(ResourceQualifier qualifier) {
+        if (qualifier instanceof PixelDensityQualifier) {
+            // as long as there's a density qualifier, it's always a match.
+            // The best match will be found later.
+            return true;
+        }
+
+        return false;
+    }
+
+    @Override
+    public boolean isBetterMatchThan(ResourceQualifier compareTo, ResourceQualifier reference) {
+        if (compareTo == null) {
+            return true;
+        }
+
+        PixelDensityQualifier compareQ = (PixelDensityQualifier)compareTo;
+        PixelDensityQualifier referenceQ = (PixelDensityQualifier)reference;
+
+        if (mValue == referenceQ.mValue && compareQ.mValue != referenceQ.mValue) {
+            // got exact value, this is the best!
+            return true;
+        } else {
+            // in all case we're going to prefer the higher dpi.
+            // if reference is high, we want highest dpi.
+            // if reference is medium, we'll prefer to scale down high dpi, than scale up low dpi
+            // if reference if low, we'll prefer to scale down high than medium (2:1 over 4:3)
+            return mValue.mDpiValue > compareQ.mValue.mDpiValue;
+        }
+    }
+
+    @Override
     public boolean equals(Object qualifier) {
         if (qualifier instanceof PixelDensityQualifier) {
             return mValue == ((PixelDensityQualifier)qualifier).mValue;
