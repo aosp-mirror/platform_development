@@ -37,7 +37,8 @@ public final class KeyboardStateQualifier extends ResourceQualifier {
      */
     public static enum KeyboardState {
         EXPOSED("keysexposed", "Exposed"), //$NON-NLS-1$
-        HIDDEN("keyshidden", "Hidden"); //$NON-NLS-1$
+        HIDDEN("keyshidden", "Hidden"),    //$NON-NLS-1$
+        SOFT("keyssoft", "Soft");          //$NON-NLS-1$
 
         private String mValue;
         private String mDisplayValue;
