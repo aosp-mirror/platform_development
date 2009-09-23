@@ -226,7 +226,7 @@ public final class DdmsPlugin extends AbstractUIPlugin implements IDeviceChangeL
 
         // read the adb location from the prefs to attempt to start it properly without
         // having to wait for ADT to start
-        setAdbLocation(eclipseStore.getString(ADB_LOCATION));
+        final boolean adbValid = setAdbLocation(eclipseStore.getString(ADB_LOCATION));
 
         // start it in a thread to return from start() asap.
         new Thread() {
@@ -236,7 +236,9 @@ public final class DdmsPlugin extends AbstractUIPlugin implements IDeviceChangeL
                 getDefault().initDdmlib();
 
                 // create and start the first bridge
-                AndroidDebugBridge.createBridge(sAdbLocation, true /* forceNewBridge */);
+                if (adbValid) {
+                    AndroidDebugBridge.createBridge(sAdbLocation, true /* forceNewBridge */);
+                }
             }
         }.start();
     }
@@ -295,18 +297,27 @@ public final class DdmsPlugin extends AbstractUIPlugin implements IDeviceChangeL
         return sHprofConverter;
     }
 
-    private static void setAdbLocation(String adbLocation) {
-        sAdbLocation = adbLocation;
+    /**
+     * Stores the adb location. This returns true if the location is an existing file.
+     */
+    private static boolean setAdbLocation(String adbLocation) {
+        File adb = new File(adbLocation);
+        if (adb.isFile()) {
+            sAdbLocation = adbLocation;
 
-        File adb = new File(sAdbLocation);
-        File toolsFolder = adb.getParentFile();
-        sToolsFolder = toolsFolder.getAbsolutePath();
+            File toolsFolder = adb.getParentFile();
+            sToolsFolder = toolsFolder.getAbsolutePath();
 
-        File hprofConverter = new File(toolsFolder, DdmConstants.FN_HPROF_CONVERTER);
-        sHprofConverter = hprofConverter.getAbsolutePath();
+            File hprofConverter = new File(toolsFolder, DdmConstants.FN_HPROF_CONVERTER);
+            sHprofConverter = hprofConverter.getAbsolutePath();
 
-        File traceview = new File(toolsFolder, DdmConstants.FN_TRACEVIEW);
-        DdmUiPreferences.setTraceviewLocation(traceview.getAbsolutePath());
+            File traceview = new File(toolsFolder, DdmConstants.FN_TRACEVIEW);
+            DdmUiPreferences.setTraceviewLocation(traceview.getAbsolutePath());
+
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -315,23 +326,26 @@ public final class DdmsPlugin extends AbstractUIPlugin implements IDeviceChangeL
      * @param startAdb flag to start adb
      */
     public static void setAdb(String adb, boolean startAdb) {
-        setAdbLocation(adb);
+        if (adb != null) {
+            if (setAdbLocation(adb)) {
+                // store the location for future ddms only start.
+                sPlugin.getPreferenceStore().setValue(ADB_LOCATION, sAdbLocation);
 
-        // store the location for future ddms only start.
-        sPlugin.getPreferenceStore().setValue(ADB_LOCATION, sAdbLocation);
+                // starts the server in a thread in case this is blocking.
+                if (startAdb) {
+                    new Thread() {
+                        @Override
+                        public void run() {
+                            // init ddmlib if needed
+                            getDefault().initDdmlib();
 
-        // starts the server in a thread in case this is blocking.
-        if (startAdb) {
-            new Thread() {
-                @Override
-                public void run() {
-                    // init ddmlib if needed
-                    getDefault().initDdmlib();
-
-                    // create and start the bridge
-                    AndroidDebugBridge.createBridge(sAdbLocation, false /* forceNewBridge */);
+                            // create and start the bridge
+                            AndroidDebugBridge.createBridge(sAdbLocation,
+                                    false /* forceNewBridge */);
+                        }
+                    }.start();
                 }
-            }.start();
+            }
         }
     }
 
