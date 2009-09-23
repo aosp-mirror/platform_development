@@ -256,7 +256,6 @@ public class UIThread implements IUiSelectionListener, IClientChangeListener {
 
     private Image mTracingStopImage;
 
-
     private class TableFocusListener implements ITableFocusListener {
 
         private IFocusedTableActivator mCurrentActivator;
@@ -753,16 +752,16 @@ public class UIThread implements IUiSelectionListener, IClientChangeListener {
         actionMenu.addMenuListener(new MenuAdapter() {
             @Override
             public void menuShown(MenuEvent e) {
-                actionHaltItem.setEnabled(mTBHalt.getEnabled());
-                actionCauseGcItem.setEnabled(mTBCauseGc.getEnabled());
+                actionHaltItem.setEnabled(mTBHalt.getEnabled() && mCurrentClient != null);
+                actionCauseGcItem.setEnabled(mTBCauseGc.getEnabled() && mCurrentClient != null);
             }
         });
 
         // create Device menu items
-        item = new MenuItem(deviceMenu, SWT.NONE);
-        item.setText("&Screen capture...\tCTrl-S");
-        item.setAccelerator('S' | SWT.CONTROL);
-        item.addSelectionListener(new SelectionAdapter() {
+        final MenuItem screenShotItem = new MenuItem(deviceMenu, SWT.NONE);
+        screenShotItem.setText("&Screen capture...\tCTrl-S");
+        screenShotItem.setAccelerator('S' | SWT.CONTROL);
+        screenShotItem.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
                 if (mCurrentDevice != null) {
@@ -774,9 +773,9 @@ public class UIThread implements IUiSelectionListener, IClientChangeListener {
 
         new MenuItem(deviceMenu, SWT.SEPARATOR);
 
-        item = new MenuItem(deviceMenu, SWT.NONE);
-        item.setText("File Explorer...");
-        item.addSelectionListener(new SelectionAdapter() {
+        final MenuItem explorerItem = new MenuItem(deviceMenu, SWT.NONE);
+        explorerItem.setText("File Explorer...");
+        explorerItem.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
                 createFileExplorer();
@@ -785,9 +784,9 @@ public class UIThread implements IUiSelectionListener, IClientChangeListener {
 
         new MenuItem(deviceMenu, SWT.SEPARATOR);
 
-        item = new MenuItem(deviceMenu, SWT.NONE);
-        item.setText("Show &process status...");
-        item.addSelectionListener(new SelectionAdapter() {
+        final MenuItem processItem = new MenuItem(deviceMenu, SWT.NONE);
+        processItem.setText("Show &process status...");
+        processItem.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
                 DeviceCommandDialog dlg;
@@ -796,9 +795,9 @@ public class UIThread implements IUiSelectionListener, IClientChangeListener {
             }
         });
 
-        item = new MenuItem(deviceMenu, SWT.NONE);
-        item.setText("Dump &device state...");
-        item.addSelectionListener(new SelectionAdapter() {
+        final MenuItem deviceStateItem = new MenuItem(deviceMenu, SWT.NONE);
+        deviceStateItem.setText("Dump &device state...");
+        deviceStateItem.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
                 DeviceCommandDialog dlg;
@@ -808,10 +807,10 @@ public class UIThread implements IUiSelectionListener, IClientChangeListener {
             }
         });
 
-        item = new MenuItem(deviceMenu, SWT.NONE);
-        item.setText("Dump &app state...");
-        item.setEnabled(false);
-        item.addSelectionListener(new SelectionAdapter() {
+        final MenuItem appStateItem = new MenuItem(deviceMenu, SWT.NONE);
+        appStateItem.setText("Dump &app state...");
+        appStateItem.setEnabled(false);
+        appStateItem.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
                 DeviceCommandDialog dlg;
@@ -820,9 +819,9 @@ public class UIThread implements IUiSelectionListener, IClientChangeListener {
             }
         });
 
-        item = new MenuItem(deviceMenu, SWT.NONE);
-        item.setText("Dump &radio state...");
-        item.addSelectionListener(new SelectionAdapter() {
+        final MenuItem radioStateItem = new MenuItem(deviceMenu, SWT.NONE);
+        radioStateItem.setText("Dump &radio state...");
+        radioStateItem.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
                 DeviceCommandDialog dlg;
@@ -835,15 +834,30 @@ public class UIThread implements IUiSelectionListener, IClientChangeListener {
             }
         });
 
-        item = new MenuItem(deviceMenu, SWT.NONE);
-        item.setText("Run &logcat...");
-        item.addSelectionListener(new SelectionAdapter() {
+        final MenuItem logCatItem = new MenuItem(deviceMenu, SWT.NONE);
+        logCatItem.setText("Run &logcat...");
+        logCatItem.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
                 DeviceCommandDialog dlg;
                 dlg = new DeviceCommandDialog("logcat '*:d jdwp:w'", "log.txt",
                         shell);
                 dlg.open(mCurrentDevice);
+            }
+        });
+
+        // configure Action items based on current state
+        deviceMenu.addMenuListener(new MenuAdapter() {
+            @Override
+            public void menuShown(MenuEvent e) {
+                boolean deviceEnabled = mCurrentDevice != null;
+                screenShotItem.setEnabled(deviceEnabled);
+                explorerItem.setEnabled(deviceEnabled);
+                processItem.setEnabled(deviceEnabled);
+                deviceStateItem.setEnabled(deviceEnabled);
+                appStateItem.setEnabled(deviceEnabled);
+                radioStateItem.setEnabled(deviceEnabled);
+                logCatItem.setEnabled(deviceEnabled);
             }
         });
 
