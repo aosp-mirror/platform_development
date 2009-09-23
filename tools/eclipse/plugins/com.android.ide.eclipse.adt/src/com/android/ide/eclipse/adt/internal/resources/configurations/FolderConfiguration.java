@@ -49,6 +49,13 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
     private final static int INDEX_COUNT              = 14;
 
     /**
+     * Returns the number of {@link ResourceQualifier} that make up a Folder configuration.
+     */
+    public static int getQualifierCount() {
+        return INDEX_COUNT;
+    }
+
+    /**
      * Sets the config from the qualifiers of a given <var>config</var>.
      * @param config
      */
@@ -145,6 +152,16 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
                 return;
             }
         }
+    }
+
+    /**
+     * Returns a qualifier by its index. The total number of qualifiers can be accessed by
+     * {@link #getQualifierCount()}.
+     * @param index the index of the qualifier to return.
+     * @return the qualifier or null if there are none at the index.
+     */
+    public ResourceQualifier getQualifier(int index) {
+        return mQualifiers[index];
     }
 
     public void setCountryCodeQualifier(CountryCodeQualifier qualifier) {
@@ -446,7 +463,7 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
     }
 
     /**
-     * Returns whether the configuration match the given reference config.
+     * Returns whether the configuration is a match for the given reference config.
      * <p/>A match means that:
      * <ul>
      * <li>This config does not use any qualifier not used by the reference config</li>
@@ -454,29 +471,24 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
      * the reference config.</li>
      * </ul>
      * @param referenceConfig The reference configuration to test against.
-     * @return the number of matching qualifiers or -1 if the configurations are not compatible.
+     * @return true if the configuration matches.
      */
-    public int match(FolderConfiguration referenceConfig) {
-        int matchCount = 0;
-
+    public boolean isMatchFor(FolderConfiguration referenceConfig) {
         for (int i = 0 ; i < INDEX_COUNT ; i++) {
             ResourceQualifier testQualifier = mQualifiers[i];
             ResourceQualifier referenceQualifier = referenceConfig.mQualifiers[i];
 
-            // we only care if testQualifier is non null. If it's null, it's a match but
-            // without increasing the matchCount.
+            // we only care if testQualifier is non null.
             if (testQualifier != null) {
-                if (referenceQualifier == null) {
-                    return -1;
-                } else if (testQualifier.equals(referenceQualifier) == false) {
-                    return -1;
+                if (referenceQualifier == null) { // reference config doesn't specify anything
+                                                  // for this qualifier so we refuse it.
+                    return false;
+                } else if (testQualifier.isMatchFor(referenceQualifier) == false) {
+                    return false;
                 }
-
-                // the qualifier match, increment the count
-                matchCount++;
             }
         }
-        return matchCount;
+        return true;
     }
 
     /**
