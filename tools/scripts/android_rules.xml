@@ -31,7 +31,7 @@
     <property name="android.tools.dir" location="${sdk.dir}/tools" />
     <!-- Name of the application package extracted from manifest file -->
     <xpath input="AndroidManifest.xml" expression="/manifest/@package"
-                output="application.package" />
+                output="manifest.package" />
 
     <!-- Input directories -->
     <property name="source.dir" value="src" />
@@ -336,22 +336,22 @@
 
     <target name="-uninstall-check">
         <condition property="uninstall.run">
-           <isset property="application.package" />
+           <isset property="manifest.package" />
         </condition>
     </target>
 
     <target name="-uninstall-error" depends="-uninstall-check" unless="uninstall.run">
-        <echo>Unable to run 'ant uninstall', application.package is not defined in build.properties
+        <echo>Unable to run 'ant uninstall', manifest.package property is not defined.
         </echo>
     </target>
 
     <!-- Uninstalls the package from the default emulator/device -->
     <target name="uninstall" depends="-uninstall-error" if="uninstall.run"
                 description="Uninstalls the application from a running emulator or device.">
-        <echo>Uninstalling ${application.package} from the default emulator or device...</echo>
+        <echo>Uninstalling ${manifest.package} from the default emulator or device...</echo>
         <exec executable="${adb}" failonerror="true">
             <arg value="uninstall" />
-            <arg value="${application.package}" />
+            <arg value="${manifest.package}" />
         </exec>
     </target>
 
