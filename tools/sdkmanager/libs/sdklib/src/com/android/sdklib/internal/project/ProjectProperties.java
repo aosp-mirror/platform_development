@@ -46,6 +46,8 @@ public final class ProjectProperties {
 
     public final static String PROPERTY_SPLIT_BY_DENSITY = "split.density";
 
+    public final static String PROPERTY_TESTED_PROJECT = "tested.project.dir";
+
     public static enum PropertyType {
         BUILD("build.properties", BUILD_HEADER),
         DEFAULT("default.properties", DEFAULT_HEADER),
