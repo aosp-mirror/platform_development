@@ -147,6 +147,7 @@ void PropertyServer::SetDefaultProperties(void)
         { "debug.sf.showcpu", "0" },
         { "debug.sf.showbackground", "0" },
         { "debug.sf.showfps", "0" },
+        { "default", "default" },
     };
 
     for (int i = 0; i < NELEM(propList); i++)
