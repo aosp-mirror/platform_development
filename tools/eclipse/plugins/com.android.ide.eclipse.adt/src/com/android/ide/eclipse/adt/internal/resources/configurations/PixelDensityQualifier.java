@@ -40,20 +40,18 @@ public final class PixelDensityQualifier extends ResourceQualifier {
      * Screen Orientation enum.
      */
     public static enum Density {
-        HIGH("hdpi", 240, "High Density", IDensityBasedResourceValue.Density.HIGH), //$NON-NLS-1$
-        MEDIUM("mdpi", 160, "Medium Density", IDensityBasedResourceValue.Density.MEDIUM), //$NON-NLS-1$
-        LOW("ldpi", 120, "Low Density", IDensityBasedResourceValue.Density.LOW), //$NON-NLS-1$
-        NODPI("nodpi", -1, "No Density", IDensityBasedResourceValue.Density.NODPI); //$NON-NLS-1$
+        HIGH("hdpi", "High Density", IDensityBasedResourceValue.Density.HIGH), //$NON-NLS-1$
+        MEDIUM("mdpi", "Medium Density", IDensityBasedResourceValue.Density.MEDIUM), //$NON-NLS-1$
+        LOW("ldpi", "Low Density", IDensityBasedResourceValue.Density.LOW), //$NON-NLS-1$
+        NODPI("nodpi", "No Density", IDensityBasedResourceValue.Density.NODPI); //$NON-NLS-1$
 
         private final String mValue;
         private final String mDisplayValue;
-        private final int mDpiValue;
         private final IDensityBasedResourceValue.Density mDensity;
 
-        private Density(String value, int dpiValue, String displayValue,
+        private Density(String value, String displayValue,
                 IDensityBasedResourceValue.Density density) {
             mValue = value;
-            mDpiValue = dpiValue;
             mDisplayValue = displayValue;
             mDensity = density;
         }
@@ -81,7 +79,7 @@ public final class PixelDensityQualifier extends ResourceQualifier {
                 try {
                     int density = Integer.parseInt(v);
                     for (Density orient : values()) {
-                        if (orient.mDpiValue == density) {
+                        if (orient.mDensity.getValue() == density) {
                             return orient;
                         }
                     }
@@ -98,12 +96,12 @@ public final class PixelDensityQualifier extends ResourceQualifier {
         }
 
         public int getDpiValue() {
-            return mDpiValue;
+            return mDensity.getValue();
         }
 
         public String getLegacyValue() {
             if (this != NODPI) {
-                return String.format("%1$ddpi", mDpiValue);
+                return String.format("%1$ddpi", getDpiValue());
             }
 
             return "";
@@ -223,7 +221,7 @@ public final class PixelDensityQualifier extends ResourceQualifier {
             // if reference is high, we want highest dpi.
             // if reference is medium, we'll prefer to scale down high dpi, than scale up low dpi
             // if reference if low, we'll prefer to scale down high than medium (2:1 over 4:3)
-            return mValue.mDpiValue > compareQ.mValue.mDpiValue;
+            return mValue.mDensity.getValue() > compareQ.mValue.mDensity.getValue();
         }
     }
 
