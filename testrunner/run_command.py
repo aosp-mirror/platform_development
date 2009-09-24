@@ -84,7 +84,7 @@ def RunOnce(cmd, timeout_time=None, return_output=True):
       so.append("ERROR")
       error_occurred = True
     if pipe.returncode != 0:
-      logger.SilentLog("Error: %s returned %d error code" %(cmd,
+      logger.SilentLog("Error: %s returned %s error code" %(cmd,
           pipe.returncode))
       error_occurred = True
 
