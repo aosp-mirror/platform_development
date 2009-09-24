@@ -27,10 +27,8 @@ import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.IWorkbenchPropertyPage;
 import org.eclipse.ui.dialogs.PropertyPage;
@@ -45,7 +43,8 @@ public class AndroidPropertyPage extends PropertyPage implements IWorkbenchPrope
 
     private IProject mProject;
     private SdkTargetSelector mSelector;
-    private Button mSplitByDensity;
+    // APK-SPLIT: This is not yet supported, so we hide the UI
+//    private Button mSplitByDensity;
 
     public AndroidPropertyPage() {
         // pass
@@ -72,6 +71,8 @@ public class AndroidPropertyPage extends PropertyPage implements IWorkbenchPrope
 
         mSelector = new SdkTargetSelector(top, targets);
 
+        /*
+         * APK-SPLIT: This is not yet supported, so we hide the UI
         Group g = new Group(top, SWT.NONE);
         g.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         g.setLayout(new GridLayout(1, false));
@@ -80,6 +81,7 @@ public class AndroidPropertyPage extends PropertyPage implements IWorkbenchPrope
         mSplitByDensity = new Button(g, SWT.CHECK);
         mSplitByDensity.setText("One APK per density");
 
+*/
         // fill the ui
         Sdk currentSdk = Sdk.getCurrent();
         if (currentSdk != null && mProject.isOpen()) {
@@ -89,9 +91,12 @@ public class AndroidPropertyPage extends PropertyPage implements IWorkbenchPrope
                 mSelector.setSelection(target);
             }
 
+            /*
+             * APK-SPLIT: This is not yet supported, so we hide the UI
             // get the project settings
             ApkSettings settings = currentSdk.getApkSettings(mProject);
             mSplitByDensity.setSelection(settings.isSplitByDpi());
+            */
         }
 
         mSelector.setSelectionListener(new SelectionAdapter() {
@@ -115,7 +120,10 @@ public class AndroidPropertyPage extends PropertyPage implements IWorkbenchPrope
         Sdk currentSdk = Sdk.getCurrent();
         if (currentSdk != null) {
             ApkSettings apkSettings = new ApkSettings();
+            /*
+             * APK-SPLIT: This is not yet supported, so we hide the UI
             apkSettings.setSplitByDensity(mSplitByDensity.getSelection());
+             */
 
             currentSdk.setProject(mProject, mSelector.getSelected(), apkSettings);
         }
