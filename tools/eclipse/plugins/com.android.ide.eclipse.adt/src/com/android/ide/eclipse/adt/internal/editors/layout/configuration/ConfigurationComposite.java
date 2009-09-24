@@ -227,11 +227,6 @@ public class ConfigurationComposite extends Composite {
         onDeviceConfigChange();
     }
 
-    public void setConfig(FolderConfiguration config) {
-//        mCurrentConfig.set(config);
-        throw new UnsupportedOperationException("setConfig");
-    }
-
     public FolderConfiguration getCurrentConfig() {
         return mCurrentConfig;
     }
@@ -429,6 +424,17 @@ public class ConfigurationComposite extends Composite {
         mCreateButton.setEnabled(enabled);
     }
 
+    public void setClippingSupport(boolean b) {
+        mClippingButton.setEnabled(b);
+        if (b) {
+            mClippingButton.setToolTipText("Toggles screen clipping on/off");
+        } else {
+            mClipping = true;
+            mClippingButton.setSelection(true);
+            mClippingButton.setToolTipText("Non clipped rendering is not supported");
+        }
+    }
+
     /**
      * Update the UI controls state with a given {@link FolderConfiguration}.
      * <p/>If <var>force</var> is set to <code>true</code> the UI will be changed to exactly reflect
@@ -596,5 +602,4 @@ public class ConfigurationComposite extends Composite {
 
         return false;
     }
-
 }
