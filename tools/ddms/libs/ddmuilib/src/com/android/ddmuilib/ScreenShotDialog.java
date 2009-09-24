@@ -48,6 +48,7 @@ public class ScreenShotDialog extends Dialog {
     private Label mImageLabel;
     private Button mSave;
     private IDevice mDevice;
+    private RawImage mRawImage;
 
 
     /**
@@ -95,7 +96,9 @@ public class ScreenShotDialog extends Dialog {
     private void createContents(final Shell shell) {
         GridData data;
 
-        shell.setLayout(new GridLayout(3, true));
+        final int colCount = 4;
+
+        shell.setLayout(new GridLayout(colCount, true));
 
         // "refresh" button
         Button refresh = new Button(shell, SWT.PUSH);
@@ -107,6 +110,22 @@ public class ScreenShotDialog extends Dialog {
             @Override
             public void widgetSelected(SelectionEvent e) {
                 updateDeviceImage(shell);
+            }
+        });
+
+        // "rotate" button
+        Button rotate = new Button(shell, SWT.PUSH);
+        rotate.setText("Rotate");
+        data = new GridData(GridData.HORIZONTAL_ALIGN_CENTER);
+        data.widthHint = 80;
+        rotate.setLayoutData(data);
+        rotate.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                if (mRawImage != null) {
+                    mRawImage = mRawImage.getRotated();
+                    updateImageDisplay(shell);
+                }
             }
         });
 
@@ -156,22 +175,43 @@ public class ScreenShotDialog extends Dialog {
         shell.setDefaultButton(done);
     }
 
-    /*
-     * Capture a new image from the device.
+    /**
+     * Captures a new image from the device, and display it.
      */
     private void updateDeviceImage(Shell shell) {
         mBusyLabel.setText("Capturing...");     // no effect
 
         shell.setCursor(shell.getDisplay().getSystemCursor(SWT.CURSOR_WAIT));
 
-        Image image = getDeviceImage();
-        if (image == null) {
+        mRawImage = getDeviceImage();
+
+        updateImageDisplay(shell);
+    }
+
+    /**
+     * Updates the display with {@link #mRawImage}.
+     * @param shell
+     */
+    private void updateImageDisplay(Shell shell) {
+        Image image;
+        if (mRawImage == null) {
             Display display = shell.getDisplay();
             image = ImageHelper.createPlaceHolderArt(
                     display, 320, 240, display.getSystemColor(SWT.COLOR_BLUE));
+
             mSave.setEnabled(false);
             mBusyLabel.setText("Screen not available");
         } else {
+            // convert raw data to an Image.
+            PaletteData palette = new PaletteData(
+                    mRawImage.getRedMask(),
+                    mRawImage.getGreenMask(),
+                    mRawImage.getBlueMask());
+
+            ImageData imageData = new ImageData(mRawImage.width, mRawImage.height,
+                    mRawImage.bpp, palette, 1, mRawImage.data);
+            image = new Image(getParent().getDisplay(), imageData);
+
             mSave.setEnabled(true);
             mBusyLabel.setText("Captured image:");
         }
@@ -184,39 +224,18 @@ public class ScreenShotDialog extends Dialog {
         shell.setCursor(shell.getDisplay().getSystemCursor(SWT.CURSOR_ARROW));
     }
 
-    /*
-     * Grab an image from an ADB-connected device.
+    /**
+     * Grabs an image from an ADB-connected device and returns it as a {@link RawImage}.
      */
-    private Image getDeviceImage() {
-        RawImage rawImage;
-
+    private RawImage getDeviceImage() {
         try {
-            rawImage = mDevice.getScreenshot();
+            return mDevice.getScreenshot();
         }
         catch (IOException ioe) {
             Log.w("ddms", "Unable to get frame buffer: " + ioe.getMessage());
             return null;
         }
-
-        // device/adb not available?
-        if (rawImage == null)
-            return null;
-
-        // convert raw data to an Image.
-        PaletteData palette = new PaletteData(
-                rawImage.getRedMask(),
-                rawImage.getGreenMask(),
-                rawImage.getBlueMask());
-        ImageData imageData = new ImageData(rawImage.width, rawImage.height,
-                rawImage.bpp, palette, 1, rawImage.data);
-
-        if (imageData != null) {
-            return new Image(getParent().getDisplay(), imageData);
-        }
-
-        return null;
     }
-
 
     /*
      * Prompt the user to save the image to disk.
