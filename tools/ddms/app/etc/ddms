@@ -62,22 +62,16 @@ else
     java_debug=
 fi
 
+javaCmd="java"
+
 # Mac OS X needs an additional arg, or you get an "illegal thread" complaint.
 if [ `uname` = "Darwin" ]; then
     os_opts="-XstartOnFirstThread"
-    #because Java 1.6 is 64 bits only and SWT doesn't support this, we force the usage of java 1.5
-    java_cmd="/System/Library/Frameworks/JavaVM.framework/Versions/1.5/Commands/java"
 else
     os_opts=
-    java_cmd="java"
 fi
 
-if [ "$OSTYPE" = "cygwin" ] ; then
-    jarpath=`cygpath -w  "$frameworkdir/$jarfile"`
-    progdir=`cygpath -w  "$progdir"`
-else
-    jarpath="$frameworkdir/$jarfile"
-fi
+jarpath="$frameworkdir/$jarfile"
 
 # Figure out the path to the swt.jar for the current architecture.
 # if ANDROID_SWT is defined, then just use this.
@@ -87,7 +81,7 @@ swtpath=""
 if [ -n "$ANDROID_SWT" ]; then
     swtpath="$ANDROID_SWT"
 else
-    vmarch=`java -jar "${frameworkdir}"/archquery.jar`
+    vmarch=`${javaCmd} -jar "${frameworkdir}"/archquery.jar`
     if [ -n "$ANDROID_BUILD_TOP" ]; then
         osname=`uname -s | tr A-Z a-z`
         swtpath="${ANDROID_BUILD_TOP}/prebuilt/${osname}-${vmarch}/swt"
@@ -107,4 +101,4 @@ fi
 
 # need to use "java.ext.dirs" because "-jar" causes classpath to be ignored
 # might need more memory, e.g. -Xmx128M
-exec "$java_cmd" -Xmx256M $os_opts $java_debug -Djava.ext.dirs="$frameworkdir" -Dcom.android.ddms.bindir="$progdir" -jar "$jarpath" "$@"
+exec "$javaCmd" -Xmx256M $os_opts $java_debug -Djava.ext.dirs="$frameworkdir" -Dcom.android.ddms.bindir="$progdir" -jar "$jarpath" "$@"
