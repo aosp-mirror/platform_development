@@ -22,6 +22,7 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.List;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.zip.ZipEntry;
@@ -88,7 +89,7 @@ public class MonkeyRecorder {
   
   // unique subdirectory to put results in (screenshots and xml file)
   private static String mDirname;
-  private static ArrayList <String> mScreenShots = new ArrayList<String>();
+  private static List<String> mScreenShotNames = new ArrayList<String>();
   
   // where we store all the results for all the script runs
   private static final String ROOT_DIR = "out";
@@ -216,7 +217,7 @@ public class MonkeyRecorder {
     File file = new File(filename);
     String screenShotName = stampFilename(filename);
     file.renameTo(new File(mDirname, screenShotName));
-    mScreenShots.add(screenShotName);
+    mScreenShotNames.add(screenShotName);
   }
 
   /**
@@ -285,7 +286,7 @@ public class MonkeyRecorder {
     addFileToZip(out, mDirname + "/" + mXmlFilename, buf);
     
     // Add the screenshots
-    for (String filename : mScreenShots) {
+    for (String filename : mScreenShotNames) {
       addFileToZip(out, mDirname + "/" + filename, buf);
     }
     out.close();

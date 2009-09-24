@@ -63,14 +63,15 @@ public class MonkeyRunner {
   static String scriptName = null;
   
   // Obtain a suitable logger.
-//  private static Logger logger = Logger.getLogger("com.android.monkeyrunner");
-  private static Logger logger = Logger.global;
+  private static Logger logger = Logger.getLogger("com.android.monkeyrunner");
 
   // delay between key events
   final static int KEY_INPUT_DELAY = 1000;
   
   // version of monkey runner
-  final static String monkeyRunnerVersion = "0.2";
+  final static String monkeyRunnerVersion = "0.31";
+
+  // TODO: interface cmd; class xml tags; fix logger; test class/script
 
   public static void main(String[] args) throws IOException {
 
@@ -291,12 +292,8 @@ public class MonkeyRunner {
    * @param y y-coordinate
    */
   public static boolean tap(int x, int y) throws IOException {
-    String command = "touch down " + x + "  " + y + "\r\n" + "touch up " + x + " " + y + "\r\n";
-
-    recordCommand("Tapping: " + x + ", " + y);
-    System.out.println("Tapping: " + x + ", " + y);
-    boolean result = sendMonkeyEvent(command, true, false);
-    recordResponse(monkeyResponse);
+    String command = "tap " + x + " " + y;
+    boolean result = sendMonkeyEvent(command);
     return result;
   }
 
@@ -316,13 +313,8 @@ public class MonkeyRunner {
    * @param print whether to send output to user
    */
   private static boolean press(String key, boolean print) throws IOException {
-    String command = "key down " + key + "\r\n" + "key up " + key + "\r\n";
-
-    recordCommand("Pressing: " + key);
-    if (print)
-      System.out.println("Pressing: " + key);
-    boolean result = sendMonkeyEvent(command, print, false);
-    recordResponse(monkeyResponse);
+    String command = "press " + key;
+    boolean result = sendMonkeyEvent(command, print, true);
     return result;
   }
 
@@ -346,33 +338,14 @@ public class MonkeyRunner {
    * @param text text to type
    */
   public static boolean type(String text) throws IOException {
-    System.out.println("Typing: " + text);
-    recordCommand("Typing: " + text);
-    
-    for (int i=0; i<text.length(); i++) {
-      String command = "key down ";
-      char c = text.charAt(i);
-      if(Character.isDigit(c)) {
-        command += "KEYCODE_" + c + "\n" + "key up KEYCODE_" + c + "\n";
-      } else {
-        command = "key down " + c + "\n" + "key up " + c + "\n";
-      }
-
-      if(!sendMonkeyEvent(command, false, false)) {
-        System.out.println("\nERROR: Key not set \n");
-        recordResponse("ERROR: Key not set");
-      }
-
-      // lets delay a bit after each input to ensure accuracy
-      try {
-        Thread.sleep(KEY_INPUT_DELAY);
-      } catch (InterruptedException e) {
-      }
+    boolean result = false;
+    // text might have line ends, which signal new monkey command, so we have to eat and reissue
+    String[] lines = text.split("[\\r\\n]+");
+    for (String line: lines) {
+      result = sendMonkeyEvent("type " + line + "\n");
     }
-    System.out.println("MonkeyServer: OK");
-    recordResponse("OK");
-
-    return true;
+    // return last result.  Should never fail..?
+    return result;
   }
   
   /**
@@ -381,7 +354,6 @@ public class MonkeyRunner {
    * @param name name of static variable to get
    */
   public static boolean getvar(String name) throws IOException {
-    System.out.println("Getting var: " + name);
     return sendMonkeyEvent("getvar " + name + "\n");
   }
 
@@ -389,7 +361,6 @@ public class MonkeyRunner {
    * Function to get the list of static variables from the device
    */
   public static boolean listvar() throws IOException {
-    System.out.println("List of vars:");
     return sendMonkeyEvent("listvar \n");
   }
 
@@ -415,41 +386,46 @@ public class MonkeyRunner {
    * @param record whether to put the command in the xml file that stores test outputs
    */
   private static boolean sendMonkeyEvent(String command, Boolean print, Boolean record) throws IOException {
-    // split a command string into line driven protocol monkey understands
-    String[] commands = command.trim().split("[\r\n|\r|\n]+");
-    for (String subcommand: commands) {
-      if (record)
-        recordCommand(subcommand);
-      logger.info("Monkey Command: " + subcommand + ".");
+    command = command.trim();
+    if (print)
+      System.out.println("MonkeyCommand: " + command);
+    if (record)
+      recordCommand(command);
+    logger.info("Monkey Command: " + command + ".");
       
-      // send a single command and get the response
-      monkeyWriter.write(subcommand + "\n");
-      monkeyWriter.flush();      
-      monkeyResponse = monkeyReader.readLine();
+    // send a single command and get the response
+    monkeyWriter.write(command + "\n");
+    monkeyWriter.flush();
+    monkeyResponse = monkeyReader.readLine();
 
-      logger.info("Monkey Response: " + monkeyResponse + ".");      
+    if(monkeyResponse != null) {
+      // if a command returns with a response
+      if (print)
+        System.out.println("MonkeyServer: " + monkeyResponse);
       if (record)
         recordResponse(monkeyResponse);
-      
-      // if a command returns an error, abandon further commands and return
-      if((monkeyResponse != null) && monkeyResponse.equals("ERROR")) {
-        if (print)
-          System.out.println("MonkeyServer: " + monkeyResponse);
+      logger.info("Monkey Response: " + monkeyResponse + ".");
+
+      // return on error
+      if (monkeyResponse.startsWith("ERROR"))
         return false;
-      }
-    }
-    if (monkeyResponse != null) {
-      // all responses were not ERROR
+
+      // return on ok
       if(monkeyResponse.startsWith("OK"))
-        if (print)
-          System.out.println("MonkeyServer: " + monkeyResponse);
         return true;
-    } else {
-      // didn't get a final response...
-      if (print)
-        System.out.println("MonkeyServer: ??no response");
+
+      // return on something else?
       return false;
     }
+    // didn't get a response...
+    if (print)
+      System.out.println("MonkeyServer: ??no response");
+    if (record)
+      recordResponse("??no response");
+    logger.info("Monkey Response: ??no response.");
+
+    //return on no response
+    return false;
   }
 
   /**
@@ -460,10 +436,7 @@ public class MonkeyRunner {
   private static void recordCommand(String command) throws IOException {
     if (monkeyRecorder != null) {                       // don't record setup junk
       monkeyRecorder.startCommand();
-      String[] commands = command.split("[\\r\\n]+");   // for formatting, text might have line ends
-      for (String subcommand: commands) {
-        monkeyRecorder.addInput(subcommand);
-      }
+      monkeyRecorder.addInput(command);
     }
   }
   
@@ -491,7 +464,7 @@ public class MonkeyRunner {
     
   /**
    * Add the device variables to the xml file in monkeyRecorder.
-   * The results get added as attributes to the script_run tag
+   * The results get added as device_var tags in the script_run tag
    */
   private static void addDeviceVars() throws IOException {
     monkeyRecorder.addComment("Device specific variables");
