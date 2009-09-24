@@ -41,7 +41,6 @@ import com.android.layoutlib.api.ILayoutResult;
 import com.android.layoutlib.api.IProjectCallback;
 import com.android.layoutlib.api.IResourceValue;
 import com.android.layoutlib.api.IXmlPullParser;
-import com.android.layoutlib.api.ILayoutResult.ILayoutViewInfo;
 import com.android.sdklib.IAndroidTarget;
 
 import org.eclipse.core.resources.IFile;
@@ -76,7 +75,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -484,7 +482,6 @@ public class GraphicalEditorPart extends EditorPart implements IGraphicalLayoutE
                         // to trigger the edit of the new file.
                         res.refreshLocal(IResource.DEPTH_INFINITE, new IProgressMonitor() {
                             public void done() {
-                                mConfigComposite.setConfig(config);
                                 mConfigComposite.getDisplay().asyncExec(new Runnable() {
                                     public void run() {
                                         onConfigurationChange();
@@ -967,6 +964,19 @@ public class GraphicalEditorPart extends EditorPart implements IGraphicalLayoutE
     public void reloadPalette() {
         if (mPalette != null) {
             mPalette.reloadPalette(mLayoutEditor.getTargetData());
+        }
+    }
+
+    public void reloadConfigurationUi() {
+        // enable the clipping button if it's supported.
+        Sdk currentSdk = Sdk.getCurrent();
+        if (currentSdk != null) {
+            IAndroidTarget target = currentSdk.getTarget(mEditedFile.getProject());
+            AndroidTargetData data = currentSdk.getTargetData(target);
+            if (data != null) {
+                LayoutBridge bridge = data.getLayoutBridge();
+                mConfigComposite.setClippingSupport(bridge.apiLevel >= 4);
+            }
         }
     }
 

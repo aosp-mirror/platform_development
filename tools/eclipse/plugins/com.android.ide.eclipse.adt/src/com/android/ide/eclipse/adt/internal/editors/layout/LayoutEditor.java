@@ -410,6 +410,7 @@ public class LayoutEditor extends AndroidEditor implements IShowEditorInput, IPa
         if (mGraphicalEditor != null) {
             mGraphicalEditor.reloadEditor();
             mGraphicalEditor.reloadPalette();
+            mGraphicalEditor.reloadConfigurationUi();
             mGraphicalEditor.recomputeLayout();
         }
     }

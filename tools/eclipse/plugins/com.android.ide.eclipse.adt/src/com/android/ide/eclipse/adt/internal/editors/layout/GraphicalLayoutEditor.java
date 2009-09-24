@@ -547,6 +547,8 @@ public class GraphicalLayoutEditor extends GraphicalEditorWithPalette
         // enable the create button if the current and edited config are not equals
         mConfigComposite.setEnabledCreate(
                 mEditedConfig.equals(mConfigComposite.getCurrentConfig()) == false);
+
+        reloadConfigurationUi();
     }
 
     public Rectangle getBounds() {
@@ -728,7 +730,18 @@ public class GraphicalLayoutEditor extends GraphicalEditorWithPalette
         PaletteFactory.createPaletteRoot(mPaletteRoot, mLayoutEditor.getTargetData());
     }
 
-
+    public void reloadConfigurationUi() {
+        // enable the clipping button if it's supported.
+        Sdk currentSdk = Sdk.getCurrent();
+        if (currentSdk != null) {
+            IAndroidTarget target = currentSdk.getTarget(mEditedFile.getProject());
+            AndroidTargetData data = currentSdk.getTargetData(target);
+            if (data != null) {
+                LayoutBridge bridge = data.getLayoutBridge();
+                mConfigComposite.setClippingSupport(bridge.apiLevel >= 4);
+            }
+        }
+    }
 
     /**
      * Looks for a file matching the new {@link FolderConfiguration} and attempts to open it.
@@ -1231,7 +1244,6 @@ public class GraphicalLayoutEditor extends GraphicalEditorWithPalette
                     // to trigger the edit of the new file.
                     res.refreshLocal(IResource.DEPTH_INFINITE, new IProgressMonitor() {
                         public void done() {
-                            mConfigComposite.setConfig(config);
                             mParent.getDisplay().asyncExec(new Runnable() {
                                 public void run() {
                                     onConfigurationChange();

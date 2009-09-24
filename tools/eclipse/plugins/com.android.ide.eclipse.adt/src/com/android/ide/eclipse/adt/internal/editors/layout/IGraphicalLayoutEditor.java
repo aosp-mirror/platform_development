@@ -82,4 +82,6 @@ import org.eclipse.ui.IEditorPart;
 
     abstract Clipboard getClipboard();
 
+    abstract void reloadConfigurationUi();
+
 }
