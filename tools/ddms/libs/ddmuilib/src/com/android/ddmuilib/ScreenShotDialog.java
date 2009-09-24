@@ -97,21 +97,6 @@ public class ScreenShotDialog extends Dialog {
 
         shell.setLayout(new GridLayout(3, true));
 
-        // title/"capturing" label
-        mBusyLabel = new Label(shell, SWT.NONE);
-        mBusyLabel.setText("Preparing...");
-        data = new GridData(GridData.HORIZONTAL_ALIGN_BEGINNING);
-        data.horizontalSpan = 3;
-        mBusyLabel.setLayoutData(data);
-
-        // space for the image
-        mImageLabel = new Label(shell, SWT.BORDER);
-        data = new GridData(GridData.HORIZONTAL_ALIGN_CENTER);
-        data.horizontalSpan = 3;
-        mImageLabel.setLayoutData(data);
-        Display display = shell.getDisplay();
-        mImageLabel.setImage(ImageHelper.createPlaceHolderArt(display, 50, 50, display.getSystemColor(SWT.COLOR_BLUE)));
-
         // "refresh" button
         Button refresh = new Button(shell, SWT.PUSH);
         refresh.setText("Refresh");
@@ -150,6 +135,23 @@ public class ScreenShotDialog extends Dialog {
                 shell.close();
             }
         });
+
+        // title/"capturing" label
+        mBusyLabel = new Label(shell, SWT.NONE);
+        mBusyLabel.setText("Preparing...");
+        data = new GridData(GridData.HORIZONTAL_ALIGN_BEGINNING);
+        data.horizontalSpan = 3;
+        mBusyLabel.setLayoutData(data);
+
+        // space for the image
+        mImageLabel = new Label(shell, SWT.BORDER);
+        data = new GridData(GridData.HORIZONTAL_ALIGN_CENTER);
+        data.horizontalSpan = 3;
+        mImageLabel.setLayoutData(data);
+        Display display = shell.getDisplay();
+        mImageLabel.setImage(ImageHelper.createPlaceHolderArt(
+                display, 50, 50, display.getSystemColor(SWT.COLOR_BLUE)));
+
 
         shell.setDefaultButton(done);
     }
