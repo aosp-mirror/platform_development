@@ -208,53 +208,21 @@ public class Screenshot {
         if (rawImage == null)
             return;
 
-        assert rawImage.bpp == 16;
-
-        BufferedImage image;
-
         if (landscape) {
-            // convert raw data to an Image
-            image = new BufferedImage(rawImage.height, rawImage.width,
-                    BufferedImage.TYPE_INT_ARGB);
+            rawImage = rawImage.getRotated();
+        }
 
-            byte[] buffer = rawImage.data;
-            int index = 0;
-            for (int y = 0 ; y < rawImage.height ; y++) {
-                for (int x = 0 ; x < rawImage.width ; x++) {
+        // convert raw data to an Image
+        BufferedImage image = new BufferedImage(rawImage.width, rawImage.height,
+                BufferedImage.TYPE_INT_ARGB);
 
-                    int value = buffer[index++] & 0x00FF;
-                    value |= (buffer[index++] << 8) & 0x0FF00;
-
-                    int r = ((value >> 11) & 0x01F) << 3;
-                    int g = ((value >> 5) & 0x03F) << 2;
-                    int b = ((value >> 0) & 0x01F) << 3;
-
-                    value = 0xFF << 24 | r << 16 | g << 8 | b;
-
-                    image.setRGB(y, rawImage.width - x - 1, value);
-                }
-            }
-        } else {
-            // convert raw data to an Image
-            image = new BufferedImage(rawImage.width, rawImage.height,
-                    BufferedImage.TYPE_INT_ARGB);
-
-            byte[] buffer = rawImage.data;
-            int index = 0;
-            for (int y = 0 ; y < rawImage.height ; y++) {
-                for (int x = 0 ; x < rawImage.width ; x++) {
-
-                    int value = buffer[index++] & 0x00FF;
-                    value |= (buffer[index++] << 8) & 0x0FF00;
-
-                    int r = ((value >> 11) & 0x01F) << 3;
-                    int g = ((value >> 5) & 0x03F) << 2;
-                    int b = ((value >> 0) & 0x01F) << 3;
-
-                    value = 0xFF << 24 | r << 16 | g << 8 | b;
-
-                    image.setRGB(x, y, value);
-                }
+        int index = 0;
+        int IndexInc = rawImage.bpp >> 3;
+        for (int y = 0 ; y < rawImage.height ; y++) {
+            for (int x = 0 ; x < rawImage.width ; x++) {
+                int value = rawImage.getARGB(index);
+                index += IndexInc;
+                image.setRGB(x, y, value);
             }
         }
 
