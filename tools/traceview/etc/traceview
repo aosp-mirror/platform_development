@@ -14,27 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# This script assumes that the path to this script is something like:
-#
-# /somepath/outdir/archdir/hostdir/bindir/traceview
-#
-# where "somepath" is some pathname (like "/work/android/device/")
-#       "outdir"   is a subdirectory (like "out")
-#       "archdir"  is a subdirectory (like "linux-x86-release")
-#       "hostdir"  is a subdirectory (like "host")
-#       "bindir"   is a subdirectory (like "bin")
-#
-# e.g. /work/android/device/out/linux-x86-release/host/bin/traceview
-#
-# and that the following directories also exist:
-#
-# /somepath/outdir/archdir/hostdir/lib/
-# /somepath/outdir/archdir/hostdir/framework/
-#
-# where:
-#       "lib", and "framework" are at the same level as "bindir",
-#        and are the literal names.
-
 # Set up prog to be the path of this script, including following symlinks,
 # and set up progdir to be the fully-qualified pathname of its directory.
 prog="$0"
@@ -118,4 +97,4 @@ else
     exit 1
 fi
 
-exec "${javaCmd}" $javaOpts -Djava.ext.dirs="$frameworkdir" -jar "$jarpath" "$@"
+exec "${javaCmd}" $javaOpts -Djava.ext.dirs="$frameworkdir" -Dcom.android.traceview.toolsdir="$progdir" -jar "$jarpath" "$@"
