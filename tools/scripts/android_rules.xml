@@ -230,10 +230,12 @@
     <!-- Compiles this project's .java files into .class files. -->
     <target name="compile" depends="-resource-src, -aidl"
                 description="Compiles project's .java files into .class files">
-        <!-- Allows to inject additional classpath from another (build|property) file.
-             As ant properties are immutable, the injected value will have priority
-             over the one defined below -->
-        <property name="extensible.classpath" value="." />
+        <!-- If android rules are used for a test project, its classpath should include
+             tested project's location -->
+        <condition property="extensible.classpath"
+                           value="${tested.project.absolute.dir}/bin/classes" else=".">
+            <isset property="tested.project.absolute.dir" />
+        </condition>
         <javac encoding="ascii" target="1.5" debug="true" extdirs=""
                 destdir="${out.classes.absolute.dir}"
                 bootclasspathref="android.target.classpath"
@@ -278,8 +280,14 @@
         <package-helper sign.package="false" />
     </target>
 
+    <target name="-compile-tested-if-test" if="tested.project.dir" unless="do.not.compile.again">
+       <subant target="compile">
+            <fileset dir="${tested.project.absolute.dir}" includes="build.xml" />
+       </subant>
+    </target>
+
     <!-- Builds debug output package, provided all the necessary files are already dexed -->
-    <target name="debug" depends="-package-debug-sign"
+    <target name="debug" depends="-compile-tested-if-test, -package-debug-sign"
                 description="Builds the application and signs it with a debug key.">
         <zipalign-helper in.package="${out.debug.unaligned.package}"
                                    out.package="${out.debug.package}" />

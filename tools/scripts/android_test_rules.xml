@@ -43,27 +43,22 @@
                       location="${instrumentation.absolute.dir}/classes" />
     </target>
 
-    <!-- Invoking this target sets the value of extensible.classpath, which is being added to javac
-         classpath in target 'compile' (android_rules.xml) -->
-    <target name="-set-run-tests-classpath">
-        <property name="extensible.classpath"
-                      location="${tested.project.absolute.dir}/bin/classes" />
-    </target>
-
     <!-- Ensures that tested project is installed on the device before we run the tests.
          Used for ordinary tests, without coverage measurement -->
     <target name="-install-tested-project">
+        <property name="do.not.compile.again" value="true" />
         <subant target="install">
             <fileset dir="${tested.project.absolute.dir}" includes="build.xml" />
         </subant>
     </target>
 
-    <target name="run-tests" depends="-set-run-tests-classpath, -install-tested-project, install"
+    <target name="run-tests" depends="-install-tested-project, install"
                 description="Runs tests from the package defined in test.package property">
         <run-tests-helper />
     </target>
 
     <target name="-install-instrumented">
+        <property name="do.not.compile.again" value="true" />
         <subant target="-install-with-emma">
             <property name="out.absolute.dir" value="${instrumentation.absolute.dir}" />
             <fileset dir="${tested.project.absolute.dir}" includes="build.xml" />
