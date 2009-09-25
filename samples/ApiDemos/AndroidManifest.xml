@@ -108,6 +108,13 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".app.Animation" android:label="@string/activity_animation">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
         <activity android:name=".app.SaveRestoreState"
                 android:label="@string/activity_save_restore"
                 android:windowSoftInputMode="stateVisible|adjustResize">

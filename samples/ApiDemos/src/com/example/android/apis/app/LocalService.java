@@ -24,6 +24,7 @@ import android.content.Intent;
 import android.os.Binder;
 import android.os.IBinder;
 import android.os.Parcel;
+import android.util.Log;
 import android.widget.Toast;
 
 // Need the following import to get access to the app resources, since this
@@ -61,6 +62,14 @@ public class LocalService extends Service {
 
         // Display a notification about us starting.  We put an icon in the status bar.
         showNotification();
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        Log.i("LocalService", "Received start id " + startId + ": " + intent);
+        // We want this service to continue running until it is explicitly
+        // stopped, so return sticky.
+        return START_STICKY;
     }
 
     @Override
