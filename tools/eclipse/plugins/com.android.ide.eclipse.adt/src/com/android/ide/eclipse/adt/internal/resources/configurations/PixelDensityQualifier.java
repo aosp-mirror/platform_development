@@ -17,6 +17,7 @@
 package com.android.ide.eclipse.adt.internal.resources.configurations;
 
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
+import com.android.layoutlib.api.IDensityBasedResourceValue;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 
@@ -39,19 +40,22 @@ public final class PixelDensityQualifier extends ResourceQualifier {
      * Screen Orientation enum.
      */
     public static enum Density {
-        HIGH("hdpi", 240, "High Density"), //$NON-NLS-1$
-        MEDIUM("mdpi", 160, "Medium Density"), //$NON-NLS-1$
-        LOW("ldpi", 120, "Low Density"), //$NON-NLS-1$
-        NODPI("nodpi", -1, "No Density"); //$NON-NLS-1$
+        HIGH("hdpi", 240, "High Density", IDensityBasedResourceValue.Density.HIGH), //$NON-NLS-1$
+        MEDIUM("mdpi", 160, "Medium Density", IDensityBasedResourceValue.Density.MEDIUM), //$NON-NLS-1$
+        LOW("ldpi", 120, "Low Density", IDensityBasedResourceValue.Density.LOW), //$NON-NLS-1$
+        NODPI("nodpi", -1, "No Density", IDensityBasedResourceValue.Density.NODPI); //$NON-NLS-1$
 
         private final String mValue;
         private final String mDisplayValue;
         private final int mDpiValue;
+        private final IDensityBasedResourceValue.Density mDensity;
 
-        private Density(String value, int dpiValue, String displayValue) {
+        private Density(String value, int dpiValue, String displayValue,
+                IDensityBasedResourceValue.Density density) {
             mValue = value;
             mDpiValue = dpiValue;
             mDisplayValue = displayValue;
+            mDensity = density;
         }
 
         /**
@@ -107,6 +111,14 @@ public final class PixelDensityQualifier extends ResourceQualifier {
 
         public String getDisplayValue() {
             return mDisplayValue;
+        }
+
+        /**
+         * Returns the {@link com.android.layoutlib.api.IDensityBasedResourceValue.Density} value
+         * associated to this {@link Density}.
+         */
+        public IDensityBasedResourceValue.Density getDensity() {
+            return mDensity;
         }
 
         public static int getIndex(Density value) {

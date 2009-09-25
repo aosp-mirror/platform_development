@@ -17,8 +17,10 @@
 package com.android.ide.eclipse.adt.internal.resources.manager;
 
 import com.android.ide.eclipse.adt.internal.resources.ResourceType;
+import com.android.ide.eclipse.adt.internal.resources.configurations.PixelDensityQualifier;
 import com.android.ide.eclipse.adt.internal.resources.manager.files.IAbstractFile;
 import com.android.layoutlib.api.IResourceValue;
+import com.android.layoutlib.utils.DensityBasedResourceValue;
 import com.android.layoutlib.utils.ResourceValue;
 
 import java.util.ArrayList;
@@ -40,24 +42,24 @@ public class SingleResourceFile extends ResourceFile {
     static {
         sParserFactory.setNamespaceAware(true);
     }
-    
+
     private final static Pattern sXmlPattern = Pattern.compile("^(.+)\\.xml", //$NON-NLS-1$
             Pattern.CASE_INSENSITIVE);
-    
+
     private final static Pattern[] sDrawablePattern = new Pattern[] {
         Pattern.compile("^(.+)\\.9\\.png", Pattern.CASE_INSENSITIVE), //$NON-NLS-1$
         Pattern.compile("^(.+)\\.png", Pattern.CASE_INSENSITIVE), //$NON-NLS-1$
         Pattern.compile("^(.+)\\.jpg", Pattern.CASE_INSENSITIVE), //$NON-NLS-1$
         Pattern.compile("^(.+)\\.gif", Pattern.CASE_INSENSITIVE), //$NON-NLS-1$
     };
-    
+
     private String mResourceName;
     private ResourceType mType;
     private IResourceValue mValue;
 
     public SingleResourceFile(IAbstractFile file, ResourceFolder folder) {
         super(file, folder);
-        
+
         // we need to infer the type of the resource from the folder type.
         // This is easy since this is a single Resource file.
         ResourceType[] types = FolderTypeRelationship.getRelatedResourceTypes(folder.getType());
@@ -65,9 +67,17 @@ public class SingleResourceFile extends ResourceFile {
 
         // compute the resource name
         mResourceName = getResourceName(mType);
-        
-        mValue = new ResourceValue(mType.getName(), getResourceName(mType), file.getOsLocation(),
-                isFramework());
+
+        // test if there's a density qualifier associated with the resource
+        PixelDensityQualifier qualifier = folder.getConfiguration().getPixelDensityQualifier();
+
+        if (qualifier == null) {
+            mValue = new ResourceValue(mType.getName(), getResourceName(mType),
+                    file.getOsLocation(), isFramework());
+        } else {
+            mValue = new DensityBasedResourceValue(mType.getName(), getResourceName(mType),
+                    file.getOsLocation(), qualifier.getValue().getDensity(), isFramework());
+        }
     }
 
     @Override
@@ -83,27 +93,27 @@ public class SingleResourceFile extends ResourceFile {
     @Override
     public Collection<ProjectResourceItem> getResources(ResourceType type,
             ProjectResources projectResources) {
-        
+
         // looking for an existing ResourceItem with this name and type
         ProjectResourceItem item = projectResources.findResourceItem(type, mResourceName);
-        
+
         ArrayList<ProjectResourceItem> items = new ArrayList<ProjectResourceItem>();
 
         if (item == null) {
             item = new ConfigurableResourceItem(mResourceName);
             items.add(item);
         }
-        
+
         // add this ResourceFile to the ResourceItem
         item.add(this);
-        
+
         return items;
     }
 
     /*
      * (non-Javadoc)
      * @see com.android.ide.eclipse.editors.resources.manager.ResourceFile#getValue(com.android.ide.eclipse.common.resources.ResourceType, java.lang.String)
-     * 
+     *
      * This particular implementation does not care about the type or name since a
      * SingleResourceFile represents a file generating only one resource.
      * The value returned is the full absolute path of the file in OS form.
@@ -112,14 +122,14 @@ public class SingleResourceFile extends ResourceFile {
     public IResourceValue getValue(ResourceType type, String name) {
         return mValue;
     }
-    
+
     /**
      * Returns the name of the resources.
      */
     private String getResourceName(ResourceType type) {
         // get the name from the filename.
         String name = getFile().getName();
-        
+
         if (type == ResourceType.ANIM || type == ResourceType.LAYOUT || type == ResourceType.MENU ||
                 type == ResourceType.COLOR || type == ResourceType.XML) {
             Matcher m = sXmlPattern.matcher(name);
@@ -133,7 +143,7 @@ public class SingleResourceFile extends ResourceFile {
                     return m.group(1);
                 }
             }
-            
+
             // also try the Xml pattern for selector/shape based drawable.
             Matcher m = sXmlPattern.matcher(name);
             if (m.matches()) {
