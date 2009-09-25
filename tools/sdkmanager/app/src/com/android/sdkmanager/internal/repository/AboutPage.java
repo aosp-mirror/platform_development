@@ -17,16 +17,20 @@
 package com.android.sdkmanager.internal.repository;
 
 
+import com.android.sdkmanager.*;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 
-/*
- * TODO list
- * - Change version to be a constant pulled from somewhere.
- */
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
 
 public class AboutPage extends Composite {
 
@@ -45,11 +49,21 @@ public class AboutPage extends Composite {
     }
 
     private void createContents(Composite parent) {
-        parent.setLayout(new GridLayout(1, false));
+        parent.setLayout(new GridLayout(2, false));
+
+        Label logo = new Label(parent, SWT.NONE);
+        InputStream imageStream = this.getClass().getResourceAsStream("logo.png");
+
+        if (imageStream != null) {
+            Image img = new Image(parent.getShell().getDisplay(), imageStream);
+            logo.setImage(img);
+        }
 
         mLabel = new Label(parent, SWT.NONE);
-        mLabel.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, true, 1, 1));
-        mLabel.setText("Android SDK Updater.\n\nVersion 0.1.\n\nCopyright (C) 2009 The Android Open Source Project.");
+        mLabel.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, false, false, 1, 1));
+        mLabel.setText(String.format(
+                "Android SDK Updater.\nRevision %1$s\nCopyright (C) 2009 The Android Open Source Project.",
+                getRevision()));
     }
 
     @Override
@@ -69,4 +83,28 @@ public class AboutPage extends Composite {
 
     // End of hiding from SWT Designer
     //$hide<<$
+
+    private String getRevision() {
+        Properties p = new Properties();
+        try{
+            String toolsdir = System.getProperty(Main.TOOLSDIR);
+            File sourceProp;
+            if (toolsdir == null || toolsdir.length() == 0) {
+                sourceProp = new File("source.properties"); //$NON-NLS-1$
+            } else {
+                sourceProp = new File(toolsdir, "source.properties"); //$NON-NLS-1$
+            }
+            p.load(new FileInputStream(sourceProp));
+            String revision = p.getProperty("Pkg.Revision"); //$NON-NLS-1$
+            if (revision != null) {
+                return revision;
+            }
+        } catch (FileNotFoundException e) {
+            // couldn't find the file? don't ping.
+        } catch (IOException e) {
+            // couldn't find the file? don't ping.
+        }
+
+        return "?";
+    }
 }
