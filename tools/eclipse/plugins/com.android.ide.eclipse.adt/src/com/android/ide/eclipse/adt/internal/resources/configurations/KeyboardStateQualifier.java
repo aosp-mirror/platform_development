@@ -142,6 +142,42 @@ public final class KeyboardStateQualifier extends ResourceQualifier {
     }
 
     @Override
+    public boolean isMatchFor(ResourceQualifier qualifier) {
+        if (qualifier instanceof KeyboardStateQualifier) {
+            KeyboardStateQualifier referenceQualifier = (KeyboardStateQualifier)qualifier;
+
+            // special case where EXPOSED can be used for SOFT
+            if (referenceQualifier.mValue == KeyboardState.SOFT &&
+                    mValue == KeyboardState.EXPOSED) {
+                return true;
+            }
+
+            return referenceQualifier.mValue == mValue;
+        }
+
+        return false;
+    }
+
+    @Override
+    public boolean isBetterMatchThan(ResourceQualifier compareTo, ResourceQualifier reference) {
+        if (compareTo == null) {
+            return true;
+        }
+
+        KeyboardStateQualifier compareQualifier = (KeyboardStateQualifier)compareTo;
+        KeyboardStateQualifier referenceQualifier = (KeyboardStateQualifier)reference;
+        if (referenceQualifier.mValue == KeyboardState.SOFT) { // only case where there could be a
+                                                               // better qualifier
+            // only return true if it's a better value.
+            if (compareQualifier.mValue == KeyboardState.EXPOSED && mValue == KeyboardState.SOFT) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    @Override
     public boolean equals(Object qualifier) {
         if (qualifier instanceof KeyboardStateQualifier) {
             return mValue == ((KeyboardStateQualifier)qualifier).mValue;

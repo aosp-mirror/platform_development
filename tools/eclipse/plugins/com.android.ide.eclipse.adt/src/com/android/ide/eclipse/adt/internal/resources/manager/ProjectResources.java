@@ -22,6 +22,7 @@ import com.android.ide.eclipse.adt.internal.resources.ResourceType;
 import com.android.ide.eclipse.adt.internal.resources.configurations.FolderConfiguration;
 import com.android.ide.eclipse.adt.internal.resources.configurations.LanguageQualifier;
 import com.android.ide.eclipse.adt.internal.resources.configurations.RegionQualifier;
+import com.android.ide.eclipse.adt.internal.resources.configurations.ResourceQualifier;
 import com.android.ide.eclipse.adt.internal.resources.manager.files.IAbstractFolder;
 import com.android.layoutlib.api.IResourceValue;
 import com.android.layoutlib.utils.ResourceValue;
@@ -505,79 +506,102 @@ public class ProjectResources implements IResourceRepository {
      * Returns the best matching {@link Resource}.
      * @param resources the list of {@link Resource} to choose from.
      * @param referenceConfig the {@link FolderConfiguration} to match.
+     * @see http://d.android.com/guide/topics/resources/resources-i18n.html#best-match
      */
     private Resource findMatchingConfiguredResource(List<? extends Resource> resources,
             FolderConfiguration referenceConfig) {
-        // look for resources with the maximum number of qualifier match.
-        int currentMax = -1;
+        //
+        // 1: eliminate resources that contradict the reference configuration
+        // 2: pick next qualifier type
+        // 3: check if any resources use this qualifier, if no, back to 2, else move on to 4.
+        // 4: eliminate resources that don't use this qualifier.
+        // 5: if more than one resource left, go back to 2.
+        //
+        // The precedence of the qualifiers is more important than the number of qualifiers that
+        // exactly match the device.
+
+        // 1: eliminate resources that contradict
         ArrayList<Resource> matchingResources = new ArrayList<Resource>();
         for (int i = 0 ; i < resources.size(); i++) {
             Resource res = resources.get(i);
 
-            int count = res.getConfiguration().match(referenceConfig);
-            if (count > currentMax) {
-                matchingResources.clear();
-                matchingResources.add(res);
-                currentMax = count;
-            } else if (count != -1 && count == currentMax) {
+            if (res.getConfiguration().isMatchFor(referenceConfig)) {
                 matchingResources.add(res);
             }
         }
 
-        // if we have more than one match, we look for the match with the qualifiers with the
-        // highest priority.
-        Resource resMatch = null;
+        // if there is only one match, just take it
         if (matchingResources.size() == 1) {
-            resMatch = matchingResources.get(0);
-        } else if (matchingResources.size() > 1) {
-            // More than one resource with the same number of qualifier match.
-            // We loop, looking for the resource with the highest priority qualifiers.
-            ArrayList<Resource> tmpResources = new ArrayList<Resource>();
-            int startIndex = 0;
-            while (matchingResources.size() > 1) {
-                int highest = -1;
-                for (int i = 0 ; i < matchingResources.size() ; i++) {
-                    Resource folder = matchingResources.get(i);
+            return matchingResources.get(0);
+        } else if (matchingResources.size() == 0) {
+            return null;
+        }
 
-                    // get highest priority qualifiers.
-                    int m = folder.getConfiguration().getHighestPriorityQualifier(startIndex);
+        // 2. Loop on the qualifiers, and eliminate matches
+        final int count = FolderConfiguration.getQualifierCount();
+        for (int q = 0 ; q < count ; q++) {
+            // look to see if one resource has this qualifier.
+            // At the same time also record the best match value for the qualifier (if applicable).
+            ResourceQualifier referenceQualifier = referenceConfig.getQualifier(q);
 
-                    // add to the list if highest.
-                    if (m != -1) {
-                        if (highest == -1 || m == highest) {
-                            tmpResources.add(folder);
-                            highest = m;
-                        } else if (m < highest) { // highest priority == lowest index.
-                            tmpResources.clear();
-                            tmpResources.add(folder);
+            if (referenceQualifier != null) { // no need to check if it's null, since the loop
+                                              // above will have removed the resources anyway.
+                boolean found = false;
+                ResourceQualifier bestMatch = null;
+                for (Resource res : matchingResources) {
+                    ResourceQualifier qualifier = res.getConfiguration().getQualifier(q);
+                    if (qualifier != null) {
+                        // set the flag.
+                        found = true;
+
+                        // now check for a best match.
+                        if (qualifier.isBetterMatchThan(bestMatch, referenceQualifier)) {
+                            bestMatch = qualifier;
                         }
                     }
                 }
 
-                // at this point, we have a list with 1+ resources that all have the same highest
-                // priority qualifiers. Go through the list again looking for the next highest
-                // priority qualifier.
-                startIndex = highest + 1;
+                // if a resources as a qualifier at the current index, remove all the resources that
+                // do not have one.
+                // If there is one, and we have a bestComparable, also check that it's equal to the
+                // best comparable.
+                if (found) {
+                    for (int i = 0 ; i < matchingResources.size(); ) {
+                        Resource res = matchingResources.get(i);
+                        ResourceQualifier qualifier = res.getConfiguration().getQualifier(q);
 
-                // this should not happen, but it's better to check.
-                if (matchingResources.size() == tmpResources.size() && highest == -1) {
-                    // this means all the resources match with the same qualifiers
-                    // (highest == -1 means we reached the end of the qualifier list)
-                    // In this case, we arbitrarily take the first resource.
-                    matchingResources.clear();
-                    matchingResources.add(tmpResources.get(0));
-                } else {
-                    matchingResources.clear();
-                    matchingResources.addAll(tmpResources);
+                        if (qualifier == null) { // no qualifier? remove the resources
+                            matchingResources.remove(res);
+                        } else if (bestMatch != null && bestMatch.equals(qualifier) == false) {
+                            // if there is a best match, only accept the resource if the qualifier
+                            // has the same best value.
+                            matchingResources.remove(res);
+                        } else {
+                            i++;
+                        }
+                    }
+
+                    // at this point we may have run out of matching resources before going
+                    // through all the qualifiers.
+                    if (matchingResources.size() == 1) {
+                        return matchingResources.get(0);
+                    } else if (matchingResources.size() == 0) {
+                        return null;
+                    }
                 }
-                tmpResources.clear();
             }
-
-            // we should have only one match here.
-            resMatch = matchingResources.get(0);
         }
 
-        return resMatch;
+        // went through all the qualifiers. We should not have more than one
+        switch (matchingResources.size()) {
+            case 0:
+                return null;
+            case 1:
+                return matchingResources.get(1);
+            case 2:
+                assert false;
+        }
+        return null;
     }
 
     /**
