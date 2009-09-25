@@ -47,6 +47,11 @@
 
     <string name="activity_translucent_blur">App/Activity/Translucent Blur</string>
 
+    <string name="activity_animation">App/Activity/Animation</string>
+    <string name="activity_animation_msg">Press a button to launch an activity with a custom animation.</string>
+    <string name="activity_animation_fade">Fade in</string>
+    <string name="activity_animation_zoom">Zoom in</string>
+
     <string name="activity_save_restore">App/Activity/Save &amp; Restore State</string>
     <string name="save_restore_msg">Demonstration of saving and restoring activity state in onSaveInstanceState() and onCreate().</string>
     <string name="saves_state">This text field saves its state:</string>
