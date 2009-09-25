@@ -98,6 +98,7 @@
         <delete dir="${instrumentation.absolute.dir}" />
         <delete file="coverage.ec" />
         <delete file="coverage.em" />
+        <echo>Saving the report file in ${basedir}/coverage/coverage.html</echo>
     </target>
 
 </project>
