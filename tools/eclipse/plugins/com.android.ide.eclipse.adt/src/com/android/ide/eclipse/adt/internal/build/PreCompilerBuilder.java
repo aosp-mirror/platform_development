@@ -335,7 +335,7 @@ public class PreCompilerBuilder extends BaseBuilder {
                     if (codename != null) {
                         // integer minSdk when the target is a preview => fatal error
                         String msg = String.format(
-                                "Platform %1$s is a preview and requires appication manifests to set %2$s to '%1$s'",
+                                "Platform %1$s is a preview and requires appication manifest to set %2$s to '%1$s'",
                                 codename, ManifestConstants.ATTRIBUTE_MIN_SDK_VERSION);
                         AdtPlugin.printErrorToConsole(project, msg);
                         BaseProjectHelper.addMarker(manifest, AdtConstants.MARKER_ADT, msg,
@@ -344,8 +344,18 @@ public class PreCompilerBuilder extends BaseBuilder {
                     } else if (minSdkValue < projectVersion.getApiLevel()) {
                         // integer minSdk is not high enough for the target => warning
                         String msg = String.format(
-                                "Manifest min SDK version (%1$s) is lower than project target API level (%2$d)",
-                                minSdkVersion, projectVersion.getApiLevel());
+                                "Attribute %1$s (%2$d) is lower than the project target API level (%3$d)",
+                                ManifestConstants.ATTRIBUTE_MIN_SDK_VERSION,
+                                minSdkValue, projectVersion.getApiLevel());
+                        AdtPlugin.printBuildToConsole(AdtConstants.BUILD_VERBOSE, project, msg);
+                        BaseProjectHelper.addMarker(manifest, AdtConstants.MARKER_ADT, msg,
+                                IMarker.SEVERITY_WARNING);
+                    } else if (minSdkValue > projectVersion.getApiLevel()) {
+                        // integer minSdk is too high for the target => warning
+                        String msg = String.format(
+                                "Attribute %1$s (%2$d) is higher than the project target API level (%3$d)",
+                                ManifestConstants.ATTRIBUTE_MIN_SDK_VERSION,
+                                minSdkValue, projectVersion.getApiLevel());
                         AdtPlugin.printBuildToConsole(AdtConstants.BUILD_VERBOSE, project, msg);
                         BaseProjectHelper.addMarker(manifest, AdtConstants.MARKER_ADT, msg,
                                 IMarker.SEVERITY_WARNING);

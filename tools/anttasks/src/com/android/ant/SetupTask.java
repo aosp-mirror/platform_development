@@ -16,6 +16,7 @@
 
 package com.android.ant;
 
+import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.ISdkLog;
 import com.android.sdklib.SdkManager;
@@ -160,11 +161,8 @@ public final class SetupTask extends ImportTask {
         }
         System.out.println("API level: " + androidTarget.getVersion().getApiString());
 
-        // if needed check the manifest so that it matches the target
-        if (androidTarget.getVersion().isPreview()) {
-            // for preview, the manifest minSdkVersion node *must* match the target codename
-            checkManifest(antProject, androidTarget.getVersion().getCodename());
-        }
+        // always check the manifest minSdkVersion.
+        checkManifest(antProject, androidTarget.getVersion());
 
         // sets up the properties to find android.jar/framework.aidl/target tools
         String androidJar = androidTarget.getPath(IAndroidTarget.ANDROID_JAR);
@@ -255,7 +253,12 @@ public final class SetupTask extends ImportTask {
         mDoImport = value;
     }
 
-    private void checkManifest(Project antProject, String codename) {
+    /**
+     * Checks the manifest <code>minSdkVersion</code> attribute.
+     * @param antProject the ant project
+     * @param androidVersion the version of the platform the project is compiling against.
+     */
+    private void checkManifest(Project antProject, AndroidVersion androidVersion) {
         try {
             File manifest = new File(antProject.getBaseDir(), "AndroidManifest.xml");
 
@@ -267,10 +270,47 @@ public final class SetupTask extends ImportTask {
                     ManifestConstants.ATTRIBUTE_MIN_SDK_VERSION,
                     new InputSource(new FileInputStream(manifest)));
 
-            if (codename.equals(value) == false) {
-                throw new BuildException(String.format("For '%1$s' SDK Preview, application manifest must declare minSdkVersion to '%1$s'",
-                        codename));
+            if (androidVersion.isPreview()) {
+                // in preview mode, the content of the minSdkVersion must match exactly the
+                // platform codename.
+                String codeName = androidVersion.getCodename();
+                if (codeName.equals(value) == false) {
+                    throw new BuildException(String.format(
+                            "For '%1$s' SDK Preview, attribute minSdkVersion in AndroidManifest.xml must be '%1$s'",
+                            codeName));
+                }
+            } else if (value.length() > 0) {
+                // for normal platform, we'll only display warnings if the value is lower or higher
+                // than the target api level.
+                // First convert to an int.
+                int minSdkValue = -1;
+                try {
+                    minSdkValue = Integer.parseInt(value);
+                } catch (NumberFormatException e) {
+                    // looks like it's not a number: error!
+                    throw new BuildException(String.format(
+                            "Attribute %1$s in AndroidManifest.xml must be an Integer!",
+                            ManifestConstants.ATTRIBUTE_MIN_SDK_VERSION));
+                }
+
+                int projectApiLevel = androidVersion.getApiLevel();
+                if (minSdkValue < projectApiLevel) {
+                    System.out.println(String.format(
+                            "WARNING: Attribute %1$s in AndroidManifest.xml (%2$d) is lower than the project target API level (%3$d)",
+                            ManifestConstants.ATTRIBUTE_MIN_SDK_VERSION,
+                            minSdkValue, projectApiLevel));
+                } else if (minSdkValue > androidVersion.getApiLevel()) {
+                    System.out.println(String.format(
+                            "WARNING: Attribute %1$s in AndroidManifest.xml (%2$d) is higher than the project target API level (%3$d)",
+                            ManifestConstants.ATTRIBUTE_MIN_SDK_VERSION,
+                            minSdkValue, projectApiLevel));
+                }
+            } else {
+                // no minSdkVersion? display a warning
+                System.out.println(
+                        "WARNING: No minSdkVersion value set. Application will install on all Android versions.");
             }
+
         } catch (XPathExpressionException e) {
             throw new BuildException(e);
         } catch (FileNotFoundException e) {
