@@ -56,6 +56,9 @@ class TestRunner(object):
       "The runtest script works in two ways.  You can query it "
       "for a list of tests, or you can launch one or more tests.")
 
+  # default value for make -jX
+  _DEFAULT_JOBS=4
+
   def __init__(self):
     # disable logging of timestamp
     self._root_path = android_build.GetTop()
@@ -78,6 +81,9 @@ class TestRunner(object):
                       help="To view the list of tests")
     parser.add_option("-b", "--skip-build", dest="skip_build", default=False,
                       action="store_true", help="Skip build - just launch")
+    parser.add_option("-j", "--jobs", dest="make_jobs",
+                      metavar="X", default=self._DEFAULT_JOBS,
+                      help="Number of make jobs to use when building")
     parser.add_option("-n", "--skip_execute", dest="preview", default=False,
                       action="store_true",
                       help="Do not execute, just preview commands")
@@ -198,18 +204,31 @@ class TestRunner(object):
     logger.SilentLog("Building tests...")
     target_set = Set()
     extra_args_set = Set()
-    for test_suite in self._GetTestsToRun():
+    tests = self._GetTestsToRun()
+    for test_suite in tests:
       self._AddBuildTarget(test_suite, target_set, extra_args_set)
 
     if target_set:
       if self._options.coverage:
         coverage.EnableCoverageBuild()
+
+      # hack to build cts dependencies
+      # TODO: remove this when build dependency support added to runtest or
+      # cts dependencies are removed
+      if self._IsCtsTests(tests):
+        # need to use make since these fail building with ONE_SHOT_MAKEFILE
+        cmd=('make -j%s CtsTestStubs android.core.tests.runner' %
+              self._options.make_jobs)
+        logger.Log(cmd)
+        if not self._options.preview:
+          run_command.RunCommand(cmd, return_output=False)
       target_build_string = " ".join(list(target_set))
       extra_args_string = " ".join(list(extra_args_set))
       # mmm cannot be used from python, so perform a similar operation using
       # ONE_SHOT_MAKEFILE
-      cmd = 'ONE_SHOT_MAKEFILE="%s" make -C "%s" files %s' % (
-          target_build_string, self._root_path, extra_args_string)
+      cmd = 'ONE_SHOT_MAKEFILE="%s" make -j%s -C "%s" files %s' % (
+          target_build_string, self._options.make_jobs, self._root_path,
+          extra_args_string)
       logger.Log(cmd)
 
       if self._options.preview:
@@ -253,6 +272,13 @@ class TestRunner(object):
         raise errors.AbortError
       tests.append(test)
     return tests
+
+  def _IsCtsTests(self, test_list):
+    """Check if any cts tests are included in given list of tests to run."""
+    for test in test_list:
+      if test.IsCts():
+        return True
+    return False
 
   def RunTests(self):
     """Main entry method - executes the tests according to command line args."""
