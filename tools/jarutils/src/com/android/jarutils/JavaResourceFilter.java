@@ -45,10 +45,10 @@ public class JavaResourceFilter implements IZipEntryFilter {
 
         // get the file name from the path
         String fileName = segments[segments.length-1];
-        
+
         return checkFileForPackaging(fileName);
     }
-    
+
     /**
      * Checks whether a folder and its content is valid for packaging into the .apk as
      * standard Java resource.
@@ -84,13 +84,14 @@ public class JavaResourceFilter implements IZipEntryFilter {
      * @return true if the file should be packaged as standard java resources.
      */
     public static boolean checkFileForPackaging(String fileName, String extension) {
-        return "aidl".equalsIgnoreCase(extension) == false &&
-            "java".equalsIgnoreCase(extension) == false &&
-            "class".equalsIgnoreCase(extension) == false &&
-            "package.html".equalsIgnoreCase(fileName) == false &&
-            "overview.html".equalsIgnoreCase(fileName) == false &&
-            ".cvsignore".equalsIgnoreCase(fileName) == false &&
-            ".DS_Store".equals(fileName) == false && 
-            fileName.charAt(fileName.length()-1) != '~';
+        return "aidl".equalsIgnoreCase(extension) == false &&       // Aidl files
+            "java".equalsIgnoreCase(extension) == false &&          // Java files
+            "class".equalsIgnoreCase(extension) == false &&         // Java class files
+            "scc".equalsIgnoreCase(extension) == false &&           // VisualSourceSafe
+            "package.html".equalsIgnoreCase(fileName) == false &&   // Javadoc
+            "overview.html".equalsIgnoreCase(fileName) == false &&  // Javadoc
+            ".cvsignore".equalsIgnoreCase(fileName) == false &&     // CVS
+            ".DS_Store".equals(fileName) == false &&                // Mac resources
+            fileName.charAt(fileName.length()-1) != '~';            // Backup files
     }
 }
