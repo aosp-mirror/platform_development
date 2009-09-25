@@ -224,6 +224,13 @@ See test_defs.xsd for more information.
     coverage_target="framework"
     cts="true" />
 
+<test name="cts-media"
+    build_path="cts/tests/tests/media"
+    package="com.android.cts.media"
+    runner="android.test.InstrumentationCtsTestRunner"
+    coverage_target="framework"
+    cts="true" />
+
 <test name="cts-net"
     build_path="cts/tests"
     package="com.android.cts.net"
