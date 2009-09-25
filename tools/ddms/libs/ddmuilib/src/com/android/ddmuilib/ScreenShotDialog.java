@@ -159,13 +159,13 @@ public class ScreenShotDialog extends Dialog {
         mBusyLabel = new Label(shell, SWT.NONE);
         mBusyLabel.setText("Preparing...");
         data = new GridData(GridData.HORIZONTAL_ALIGN_BEGINNING);
-        data.horizontalSpan = 3;
+        data.horizontalSpan = colCount;
         mBusyLabel.setLayoutData(data);
 
         // space for the image
         mImageLabel = new Label(shell, SWT.BORDER);
         data = new GridData(GridData.HORIZONTAL_ALIGN_CENTER);
-        data.horizontalSpan = 3;
+        data.horizontalSpan = colCount;
         mImageLabel.setLayoutData(data);
         Display display = shell.getDisplay();
         mImageLabel.setImage(ImageHelper.createPlaceHolderArt(
