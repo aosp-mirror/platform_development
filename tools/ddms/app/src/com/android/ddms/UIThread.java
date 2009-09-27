@@ -404,8 +404,9 @@ public class UIThread implements IUiSelectionListener, IClientChangeListener {
 
     /**
      * Create SWT objects and drive the user interface event loop.
+     * @param location location of the folder that contains ddms.
      */
-    public void runUI() {
+    public void runUI(String ddmsParentLocation) {
         Display.setAppName("ddms");
         mDisplay = new Display();
         final Shell shell = new Shell(mDisplay);
@@ -445,9 +446,9 @@ public class UIThread implements IUiSelectionListener, IClientChangeListener {
         ClientData.setMethodProfilingHandler(new MethodProfilingHandler(shell));
 
         // [try to] ensure ADB is running
-        String adbLocation = System.getProperty("com.android.ddms.bindir"); //$NON-NLS-1$
-        if (adbLocation != null && adbLocation.length() != 0) {
-            adbLocation += File.separator + "adb"; //$NON-NLS-1$
+        String adbLocation;
+        if (ddmsParentLocation != null && ddmsParentLocation.length() != 0) {
+            adbLocation = ddmsParentLocation + File.separator + "adb"; //$NON-NLS-1$
         } else {
             adbLocation = "adb"; //$NON-NLS-1$
         }

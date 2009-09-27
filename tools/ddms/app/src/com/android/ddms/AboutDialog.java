@@ -124,7 +124,11 @@ public class AboutDialog extends Dialog {
 
         // Text lines
         label = new Label(textArea, SWT.NONE);
-        label.setText("Dalvik Debug Monitor v" + Main.VERSION);
+        if (Main.sRevision != null && Main.sRevision.length() > 0) {
+            label.setText("Dalvik Debug Monitor Revision " + Main.sRevision);
+        } else {
+            label.setText("Dalvik Debug Monitor");
+        }
         label = new Label(textArea, SWT.NONE);
         label.setText("Copyright 2007, The Android Open Source Project");
         label = new Label(textArea, SWT.NONE);

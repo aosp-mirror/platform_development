@@ -42,10 +42,10 @@ import java.util.Map;
 /**
  * Main class for the 'android' application.
  */
-class Main {
+public class Main {
 
     /** Java property that defines the location of the sdk/tools directory. */
-    private final static String TOOLSDIR = "com.android.sdkmanager.toolsdir";
+    public final static String TOOLSDIR = "com.android.sdkmanager.toolsdir";
     /** Java property that defines the working directory. On Windows the current working directory
      *  is actually the tools dir, in which case this is used to get the original CWD. */
     private final static String WORKDIR = "com.android.sdkmanager.workdir";
