@@ -18,6 +18,7 @@ package com.android.ide.eclipse.adt.internal.editors.resources.configurations;
 
 import com.android.ide.eclipse.adt.internal.resources.configurations.FolderConfiguration;
 import com.android.ide.eclipse.adt.internal.resources.configurations.PixelDensityQualifier;
+import com.android.ide.eclipse.adt.internal.resources.configurations.PixelDensityQualifier.Density;
 
 import junit.framework.TestCase;
 
@@ -41,16 +42,16 @@ public class PixelDensityQualifierTest extends TestCase {
     }
 
     public void testCheckAndSet() {
-        assertEquals(true, pdq.checkAndSet("123dpi", config));//$NON-NLS-1$
+        assertEquals(true, pdq.checkAndSet("ldpi", config));//$NON-NLS-1$
         assertTrue(config.getPixelDensityQualifier() != null);
-        assertEquals(123, config.getPixelDensityQualifier().getValue());
-        assertEquals("123dpi", config.getPixelDensityQualifier().toString()); //$NON-NLS-1$
+        assertEquals(Density.LOW, config.getPixelDensityQualifier().getValue());
+        assertEquals("ldpi", config.getPixelDensityQualifier().toString()); //$NON-NLS-1$
     }
 
     public void testFailures() {
         assertEquals(false, pdq.checkAndSet("", config));//$NON-NLS-1$
         assertEquals(false, pdq.checkAndSet("dpi", config));//$NON-NLS-1$
-        assertEquals(false, pdq.checkAndSet("123DPI", config));//$NON-NLS-1$
+        assertEquals(false, pdq.checkAndSet("123dpi", config));//$NON-NLS-1$
         assertEquals(false, pdq.checkAndSet("123", config));//$NON-NLS-1$
         assertEquals(false, pdq.checkAndSet("sdfdpi", config));//$NON-NLS-1$
     }
