@@ -88,13 +88,16 @@ public class ConfigMatchTest extends TestCase {
                 null, // network code
                 null, // language
                 null, // region
+                null, // screen size
+                null, // screen ratio
                 null, // screen orientation
                 null, // dpi
                 null, // touch mode
                 null, // keyboard state
                 null, // text input
                 null, // navigation
-                null); // screen size
+                null, // screen dimension
+                null);// version
 
         addFolder(mResources, defaultConfig, validMemberList);
 
@@ -103,13 +106,16 @@ public class ConfigMatchTest extends TestCase {
                 null, // network code
                 "en", // language
                 null, // region
+                null, // screen size
+                null, // screen ratio
                 null, // screen orientation
                 null, // dpi
                 null, // touch mode
                 KeyboardState.EXPOSED.getValue(), // keyboard state
                 null, // text input
                 null, // navigation
-                null); // screen size
+                null, // screen dimension
+                null);// version
 
         addFolder(mResources, config1, validMemberList);
 
@@ -118,13 +124,16 @@ public class ConfigMatchTest extends TestCase {
                 null, // network code
                 "en", // language
                 null, // region
+                null, // screen size
+                null, // screen ratio
                 null, // screen orientation
                 null, // dpi
                 null, // touch mode
                 KeyboardState.HIDDEN.getValue(), // keyboard state
                 null, // text input
                 null, // navigation
-                null); // screen size
+                null, // screen dimension
+                null);// version
 
         addFolder(mResources, config2, validMemberList);
 
@@ -133,13 +142,16 @@ public class ConfigMatchTest extends TestCase {
                 null, // network code
                 "en", // language
                 null, // region
+                null, // screen size
+                null, // screen ratio
                 ScreenOrientation.LANDSCAPE.getValue(), // screen orientation
                 null, // dpi
                 null, // touch mode
                 null, // keyboard state
                 null, // text input
                 null, // navigation
-                null); // screen size
+                null, // screen dimension
+                null);// version
 
         addFolder(mResources, config3, validMemberList);
 
@@ -148,13 +160,16 @@ public class ConfigMatchTest extends TestCase {
                 "mnc435", // network code
                 "en", // language
                 "rUS", // region
+                "normal", // screen size
+                "notlong", // screen ratio
                 ScreenOrientation.LANDSCAPE.getValue(), // screen orientation
-                "160dpi", // dpi
+                "mdpi", // dpi
                 TouchScreenType.FINGER.getValue(), // touch mode
                 KeyboardState.EXPOSED.getValue(), // keyboard state
                 TextInputMethod.QWERTY.getValue(), // text input
                 NavigationMethod.DPAD.getValue(), // navigation
-                "480x320"); // screen size
+                "480x320", // screen dimension
+                "v3"); // version
 
         addFolder(mResources, config4, invalidMemberList);
     }
@@ -171,13 +186,16 @@ public class ConfigMatchTest extends TestCase {
                 "mnc435", // network code
                 "en", // language
                 "rUS", // region
+                "normal", // screen size
+                "notlong", // screen ratio
                 ScreenOrientation.LANDSCAPE.getValue(), // screen orientation
-                "160dpi", // dpi
+                "mdpi", // dpi
                 TouchScreenType.FINGER.getValue(), // touch mode
                 KeyboardState.EXPOSED.getValue(), // keyboard state
                 TextInputMethod.QWERTY.getValue(), // text input
                 NavigationMethod.DPAD.getValue(), // navigation
-                "480x320"); // screen size
+                "480x320", // screen dimension
+                "v3"); // version
 
         ResourceFile result = mResources.getMatchingFile(SEARCHED_FILENAME,
                 ResourceFolderType.LAYOUT, testConfig);
