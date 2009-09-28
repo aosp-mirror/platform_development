@@ -74,7 +74,7 @@ TARGET_AR      := $(TOOLCHAIN_PREFIX)ar
 TARGET_ARFLAGS := crs
 
 TARGET_LIBGCC := $(shell $(TARGET_CC) -mthumb-interwork -print-libgcc-file-name)
-TARGET_LDLIBS := -Wl,-rpath-link=$(SYSROOT)/usr/lib $(TARGET_LIBGCC)
+TARGET_LDLIBS := -Wl,-rpath-link=$(SYSROOT)/usr/lib
 
 # These flags are used to ensure that a binary doesn't reference undefined
 # flags.
@@ -84,6 +84,15 @@ TARGET_NO_UNDEFINED_LDFLAGS := -Wl,--no-undefined
 # this toolchain's generated binaries
 TARGET_ABI_SUBDIR := armeabi
 
+# NOTE: Ensure that TARGET_LIBGCC is placed after all private objects
+#       and static libraries, but before any other library in the link
+#       command line when generating shared libraries and executables.
+#
+#       This ensures that all libgcc.a functions required by the target
+#       will be included into it, instead of relying on what's available
+#       on other libraries like libc.so, which may change between system
+#       releases due to toolchain or library changes.
+#
 define cmd-build-shared-library
 $(TARGET_CC) \
     -nostdlib -Wl,-soname,$(notdir $@) \
@@ -93,6 +102,7 @@ $(TARGET_CC) \
     $(PRIVATE_WHOLE_STATIC_LIBRARIES) \
     -Wl,--no-whole-archive \
     $(PRIVATE_STATIC_LIBRARIES) \
+    $(TARGET_LIBGCC) \
     $(PRIVATE_SHARED_LIBRARIES) \
     $(PRIVATE_LDFLAGS) \
     $(PRIVATE_LDLIBS) \
@@ -105,10 +115,11 @@ $(TARGET_CC) \
     -Wl,-dynamic-linker,/system/bin/linker \
     -Wl,--gc-sections \
     -Wl,-z,nocopyreloc \
-    $(PRIVATE_SHARED_LIBRARIES) \
     $(TARGET_CRTBEGIN_DYNAMIC_O) \
     $(PRIVATE_OBJECTS) \
     $(PRIVATE_STATIC_LIBRARIES) \
+    $(TARGET_LIBGCC) \
+    $(PRIVATE_SHARED_LIBRARIES) \
     $(PRIVATE_LDFLAGS) \
     $(PRIVATE_LDLIBS) \
     $(TARGET_CRTEND_O) \
