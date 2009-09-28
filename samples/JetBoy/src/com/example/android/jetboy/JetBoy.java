@@ -133,19 +133,22 @@ public class JetBoy extends Activity implements View.OnClickListener {
      */
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent msg) {
-
-        if (keyCode == 4)
-            super.onKeyDown(keyCode, msg);
-
-        return mJetBoyThread.doKeyDown(keyCode, msg);
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+            return super.onKeyDown(keyCode, msg);
+        } else {
+            return mJetBoyThread.doKeyDown(keyCode, msg);
+        }
     }
 
     /**
-     * Standard override for key-up. We actually care about these, so we can
-     * turn off the engine or stop rotating.
+     * Standard override for key-up.
      */
     @Override
     public boolean onKeyUp(int keyCode, KeyEvent msg) {
-        return mJetBoyThread.doKeyUp(keyCode, msg);
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+            return super.onKeyUp(keyCode, msg);
+        } else {
+            return mJetBoyThread.doKeyUp(keyCode, msg);
+        }
     }
 }
