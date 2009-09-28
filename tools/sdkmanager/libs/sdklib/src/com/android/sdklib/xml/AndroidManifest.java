@@ -17,10 +17,10 @@
 package com.android.sdklib.xml;
 
 /**
- * Constants for nodes and attributes of the AndroidManifest.xml file.
+ * Helper and Constants for the AndroidManifest.xml file.
  *
  */
-public final class ManifestConstants {
+public final class AndroidManifest {
 
     public final static String NODE_MANIFEST = "manifest"; //$NON-NLS-1$
     public final static String NODE_APPLICATION = "application"; //$NON-NLS-1$
@@ -42,4 +42,39 @@ public final class ManifestConstants {
     public final static String ATTRIBUTE_MIN_SDK_VERSION = "minSdkVersion"; //$NON-NLS-$
     public final static String ATTRIBUTE_TARGET_PACKAGE = "targetPackage"; //$NON-NLS-1$
     public final static String ATTRIBUTE_EXPORTED = "exported"; //$NON-NLS-1$
+
+
+    /**
+     * Combines a java package, with a class value from the manifest to make a fully qualified
+     * class name
+     * @param javaPackage the java package from the manifest.
+     * @param className the class name from the manifest.
+     * @return the fully qualified class name.
+     */
+    public static String combinePackageAndClassName(String javaPackage, String className) {
+        if (className == null || className.length() == 0) {
+            return javaPackage;
+        }
+        if (javaPackage == null || javaPackage.length() == 0) {
+            return className;
+        }
+
+        // the class name can be a subpackage (starts with a '.'
+        // char), a simple class name (no dot), or a full java package
+        boolean startWithDot = (className.charAt(0) == '.');
+        boolean hasDot = (className.indexOf('.') != -1);
+        if (startWithDot || hasDot == false) {
+
+            // add the concatenation of the package and class name
+            if (startWithDot) {
+                return javaPackage + className;
+            } else {
+                return javaPackage + '.' + className;
+            }
+        } else {
+            // just add the class as it should be a fully qualified java name.
+            return className;
+        }
+    }
+
 }

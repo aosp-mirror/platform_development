@@ -460,7 +460,7 @@ class CommandLineProcessor {
             stdout("\nValid actions are composed of a verb and an optional direct object:");
             for (String[] action : mActions) {
 
-                stdout("- %1$6s %2$-7s: %3$s",
+                stdout("- %1$6s %2$-12s: %3$s",
                         action[ACTION_VERB_INDEX],
                         action[ACTION_OBJECT_INDEX],
                         action[ACTION_DESC_INDEX]);

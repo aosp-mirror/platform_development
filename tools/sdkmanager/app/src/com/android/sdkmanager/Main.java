@@ -28,16 +28,26 @@ import com.android.sdklib.internal.avd.HardwareProperties;
 import com.android.sdklib.internal.avd.AvdManager.AvdInfo;
 import com.android.sdklib.internal.avd.HardwareProperties.HardwareProperty;
 import com.android.sdklib.internal.project.ProjectCreator;
+import com.android.sdklib.internal.project.ProjectProperties;
 import com.android.sdklib.internal.project.ProjectCreator.OutputLevel;
+import com.android.sdklib.internal.project.ProjectProperties.PropertyType;
+import com.android.sdklib.xml.AndroidXPathFactory;
 import com.android.sdkmanager.internal.repository.AboutPage;
 import com.android.sdkmanager.internal.repository.SettingsPage;
 import com.android.sdkuilib.repository.UpdaterWindow;
 
+import org.xml.sax.InputSource;
+
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathExpressionException;
 
 /**
  * Main class for the 'android' application.
@@ -221,6 +231,10 @@ public class Main {
                 SdkCommandLine.OBJECT_PROJECT.equals(directObject)) {
             createProject();
 
+        } else if (SdkCommandLine.VERB_CREATE.equals(verb) &&
+                SdkCommandLine.OBJECT_TEST_PROJECT.equals(directObject)) {
+            createTestProject();
+
         } else if (SdkCommandLine.VERB_UPDATE.equals(verb) &&
                 SdkCommandLine.OBJECT_PROJECT.equals(directObject)) {
             updateProject();
@@ -314,8 +328,111 @@ public class Main {
                 packageName,
                 activityName,
                 target,
-                false /* isTestProject*/);
+                null /*pathToMain*/);
     }
+
+    /**
+     * Creates a new Android test project based on command-line parameters
+     */
+    private void createTestProject() {
+
+        String projectDir = getProjectLocation(mSdkCommandLine.getParamLocationPath());
+
+        // first check the path of the parent project, and make sure it's valid.
+        String pathToMainProject = mSdkCommandLine.getParamTestProjectMain();
+
+        File parentProject = new File(pathToMainProject);
+        if (parentProject.isAbsolute() == false) {
+            // if the path is not absolute, we need to resolve it based on the
+            // destination path of the project
+            parentProject = new File(projectDir, pathToMainProject);
+        }
+
+        if (parentProject.isDirectory() == false) {
+            errorAndExit("Main project's directory does not exist: %1$s",
+                    pathToMainProject);
+        }
+
+        // now look for a manifest in there
+        File manifest = new File(parentProject, SdkConstants.FN_ANDROID_MANIFEST_XML);
+        if (manifest.isFile() == false) {
+            errorAndExit("No AndroidManifest.xml file found in the main project directory: %1$s",
+                    parentProject.getAbsolutePath());
+        }
+
+        // now query the manifest for the package file.
+        XPath xpath = AndroidXPathFactory.newXPath();
+        String packageName, activityName;
+
+        try {
+            packageName = xpath.evaluate("/manifest/@package",
+                    new InputSource(new FileInputStream(manifest)));
+
+            mSdkLog.printf("Found main project package: %1$s\n", packageName);
+
+            // now get the name of the first activity we find
+            activityName = xpath.evaluate("/manifest/application/activity[1]/@android:name",
+                    new InputSource(new FileInputStream(manifest)));
+            // xpath will return empty string when there's no match
+            if (activityName == null || activityName.length() == 0) {
+                activityName = null;
+            } else {
+                mSdkLog.printf("Found main project activity: %1$s\n", activityName);
+            }
+        } catch (FileNotFoundException e) {
+            // this shouldn't happen as we test it above.
+            errorAndExit("No AndroidManifest.xml file found in main project.");
+            return; // this is not strictly needed because errorAndExit will stop the execution,
+            // but this makes the java compiler happy, wrt to uninitialized variables.
+        } catch (XPathExpressionException e) {
+            // looks like the main manifest is not valid.
+            errorAndExit("Unable to parse main project manifest to get information.");
+            return; // this is not strictly needed because errorAndExit will stop the execution,
+                    // but this makes the java compiler happy, wrt to uninitialized variables.
+        }
+
+        // now get the target hash
+        ProjectProperties p = ProjectProperties.load(parentProject.getAbsolutePath(),
+                PropertyType.DEFAULT);
+        String targetHash = p.getProperty(ProjectProperties.PROPERTY_TARGET);
+        if (targetHash == null) {
+            errorAndExit("Couldn't find the main project target");
+        }
+
+        // and resolve it.
+        IAndroidTarget target = mSdkManager.getTargetFromHashString(targetHash);
+        if (target == null) {
+            errorAndExit(
+                    "Unable to resolve main project target '%1$s'. You may want to install the platform in your SDK.",
+                    targetHash);
+        }
+
+        mSdkLog.printf("Found main project target: %1$s\n", target.getFullName());
+
+        ProjectCreator creator = new ProjectCreator(mOsSdkFolder,
+                mSdkCommandLine.isVerbose() ? OutputLevel.VERBOSE :
+                    mSdkCommandLine.isSilent() ? OutputLevel.SILENT :
+                        OutputLevel.NORMAL,
+                mSdkLog);
+
+        String projectName = mSdkCommandLine.getParamName();
+
+        if (projectName != null &&
+                !ProjectCreator.RE_PROJECT_NAME.matcher(projectName).matches()) {
+            errorAndExit(
+                "Project name '%1$s' contains invalid characters.\nAllowed characters are: %2$s",
+                projectName, ProjectCreator.CHARS_PROJECT_NAME);
+            return;
+        }
+
+        creator.createProject(projectDir,
+                projectName,
+                packageName,
+                activityName,
+                target,
+                pathToMainProject);
+    }
+
 
     /**
      * Updates an existing Android project based on command-line parameters

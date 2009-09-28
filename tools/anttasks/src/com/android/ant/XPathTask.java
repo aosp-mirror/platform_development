@@ -16,6 +16,8 @@
 
 package com.android.ant;
 
+import com.android.sdklib.xml.AndroidXPathFactory;
+
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Task;
 import org.apache.tools.ant.types.Path;

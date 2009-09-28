@@ -51,9 +51,6 @@ obj/framework.aidl platforms/${PLATFORM_NAME}/framework.aidl
 # sdk scripts
 development/tools/scripts/AndroidManifest.template platforms/${PLATFORM_NAME}/templates/AndroidManifest.template
 development/tools/scripts/AndroidManifest.tests.template platforms/${PLATFORM_NAME}/templates/AndroidManifest.tests.template
-development/tools/scripts/iml.template platforms/${PLATFORM_NAME}/templates/iml.template
-development/tools/scripts/ipr.template platforms/${PLATFORM_NAME}/templates/ipr.template
-development/tools/scripts/iws.template platforms/${PLATFORM_NAME}/templates/iws.template
 development/tools/scripts/java_file.template platforms/${PLATFORM_NAME}/templates/java_file.template
 development/tools/scripts/java_tests_file.template platforms/${PLATFORM_NAME}/templates/java_tests_file.template
 development/tools/scripts/layout.template platforms/${PLATFORM_NAME}/templates/layout.template

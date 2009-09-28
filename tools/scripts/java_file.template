@@ -3,7 +3,7 @@ package PACKAGE;
 import android.app.Activity;
 import android.os.Bundle;
 
-public class ACTIVITY_NAME extends Activity
+public class ACTIVITY_CLASS_NAME extends Activity
 {
     /** Called when the activity is first created. */
     @Override
