@@ -78,6 +78,8 @@ public final class SdkConstants {
     public final static String FN_PLUGIN_PROP = "plugin.prop";
     /** add-on manifest file */
     public final static String FN_MANIFEST_INI = "manifest.ini";
+    /** add-on layout device XML file. */
+    public final static String FN_DEVICES_XML = "devices.xml";
     /** hardware properties definition file */
     public final static String FN_HARDWARE_INI = "hardware-properties.ini";
 

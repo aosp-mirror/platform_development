@@ -52,7 +52,7 @@ public final class TouchScreenQualifier extends ResourceQualifier {
          * @param value The qualifier value.
          * @return the enum for the qualifier value or null if no matching was found.
          */
-        static TouchScreenType getEnum(String value) {
+        public static TouchScreenType getEnum(String value) {
             for (TouchScreenType orient : values()) {
                 if (orient.mValue.equals(value)) {
                     return orient;

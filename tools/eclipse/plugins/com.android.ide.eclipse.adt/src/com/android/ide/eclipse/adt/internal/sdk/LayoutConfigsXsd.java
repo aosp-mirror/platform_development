@@ -17,10 +17,19 @@
 package com.android.ide.eclipse.adt.internal.sdk;
 
 
+import org.xml.sax.ErrorHandler;
+import org.xml.sax.SAXException;
+
 import java.io.InputStream;
 
+import javax.xml.XMLConstants;
+import javax.xml.transform.stream.StreamSource;
+import javax.xml.validation.Schema;
+import javax.xml.validation.SchemaFactory;
+import javax.xml.validation.Validator;
+
 /**
- * Public constants for the sdk-repository XML Schema.
+ * Public constants for the layout device description XML Schema.
  */
 public class LayoutConfigsXsd {
 
@@ -98,6 +107,19 @@ public class LayoutConfigsXsd {
      */
     public static InputStream getXsdStream() {
         return LayoutConfigsXsd.class.getResourceAsStream("layout-configs.xsd");    //$NON-NLS-1$
+    }
+
+    /** Helper method that returns a {@link Validator} for our XSD */
+    public static Validator getValidator(ErrorHandler handler) throws SAXException {
+        InputStream xsdStream = getXsdStream();
+        SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+        Schema schema = factory.newSchema(new StreamSource(xsdStream));
+        Validator validator = schema.newValidator();
+        if (handler != null) {
+            validator.setErrorHandler(handler);
+        }
+
+        return validator;
     }
 
 }

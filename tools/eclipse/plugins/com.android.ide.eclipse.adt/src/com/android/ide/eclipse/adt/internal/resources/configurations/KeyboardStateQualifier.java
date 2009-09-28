@@ -53,7 +53,7 @@ public final class KeyboardStateQualifier extends ResourceQualifier {
          * @param value The qualifier value.
          * @return the enum for the qualifier value or null if no matching was found.
          */
-        static KeyboardState getEnum(String value) {
+        public static KeyboardState getEnum(String value) {
             for (KeyboardState orient : values()) {
                 if (orient.mValue.equals(value)) {
                     return orient;

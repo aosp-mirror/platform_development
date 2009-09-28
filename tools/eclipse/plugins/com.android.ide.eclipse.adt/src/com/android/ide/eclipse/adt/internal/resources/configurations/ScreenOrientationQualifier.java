@@ -51,7 +51,7 @@ public final class ScreenOrientationQualifier extends ResourceQualifier {
          * @param value The qualifier value.
          * @return the enum for the qualifier value or null if no matching was found.
          */
-        static ScreenOrientation getEnum(String value) {
+        public static ScreenOrientation getEnum(String value) {
             for (ScreenOrientation orient : values()) {
                 if (orient.mValue.equals(value)) {
                     return orient;
