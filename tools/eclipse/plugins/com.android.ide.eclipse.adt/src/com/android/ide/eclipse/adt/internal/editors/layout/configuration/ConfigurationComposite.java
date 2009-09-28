@@ -28,6 +28,7 @@ import com.android.ide.eclipse.adt.internal.resources.configurations.VersionQual
 import com.android.ide.eclipse.adt.internal.resources.configurations.ScreenOrientationQualifier.ScreenOrientation;
 import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
 import com.android.ide.eclipse.adt.internal.sdk.DeviceConfiguration;
+import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.internal.ui.ConfigurationSelector.LanguageRegionVerifier;
 import com.android.layoutlib.api.IResourceValue;
 import com.android.layoutlib.api.IStyleResourceValue;
@@ -46,6 +47,7 @@ import org.eclipse.swt.widgets.Label;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
@@ -73,7 +75,7 @@ public class ConfigurationComposite extends Composite {
     /** The {@link FolderConfiguration} representing the state of the UI controls */
     private final FolderConfiguration mCurrentConfig = new FolderConfiguration();
 
-    private DeviceConfiguration[] mDevices;
+    private List<DeviceConfiguration> mDevices;
 
     private final ArrayList<ResourceQualifier[] > mLocaleList =
         new ArrayList<ResourceQualifier[]>();
@@ -103,7 +105,9 @@ public class ConfigurationComposite extends Composite {
     public ConfigurationComposite(IConfigListener listener, Composite parent, int style) {
         super(parent, style);
         mListener = listener;
-        mDevices = DeviceConfiguration.getDevices();
+        if (Sdk.getCurrent() != null) {
+            mDevices = Sdk.getCurrent().getLayoutDevices();
+        }
 
         GridLayout gl;
         GridData gd;
@@ -141,12 +145,6 @@ public class ConfigurationComposite extends Composite {
 
         new Label(this, SWT.NONE).setText("Devices");
         mDeviceList = new Combo(this, SWT.DROP_DOWN | SWT.READ_ONLY);
-        // fill with the devices
-        for (DeviceConfiguration device : mDevices) {
-            mDeviceList.add(device.getName());
-        }
-
-        mDeviceList.select(0);
         mDeviceList.setLayoutData(new GridData(
                 GridData.HORIZONTAL_ALIGN_FILL | GridData.GRAB_HORIZONTAL));
         mDeviceList.addSelectionListener(new SelectionAdapter() {
@@ -158,15 +156,6 @@ public class ConfigurationComposite extends Composite {
 
         new Label(this, SWT.NONE).setText("Config");
         mDeviceConfigs = new Combo(this, SWT.DROP_DOWN | SWT.READ_ONLY);
-        Map<String, FolderConfiguration> configs = mDevices[0].getConfigs();
-        Set<String> configNames = configs.keySet();
-        for (String name : configNames) {
-            mDeviceConfigs.add(name);
-        }
-        mDeviceConfigs.select(0);
-        if (configNames.size() == 1) {
-            mDeviceConfigs.setEnabled(false);
-        }
         mDeviceConfigs.setLayoutData(new GridData(
                 GridData.HORIZONTAL_ALIGN_FILL | GridData.GRAB_HORIZONTAL));
         mDeviceConfigs.addSelectionListener(new SelectionAdapter() {
@@ -224,8 +213,11 @@ public class ConfigurationComposite extends Composite {
             }
         });
 
+        initUiWithDevices();
+
         onDeviceConfigChange();
     }
+
 
     public FolderConfiguration getCurrentConfig() {
         return mCurrentConfig;
@@ -458,6 +450,44 @@ public class ConfigurationComposite extends Composite {
     }
 
     /**
+     * Reloads the list of {@link DeviceConfiguration} from the {@link Sdk}.
+     */
+    public void reloadDevices() {
+        mDevices = Sdk.getCurrent().getLayoutDevices();
+        initUiWithDevices();
+        onDeviceChange();
+    }
+
+    /**
+     * Init the UI with the list of Devices.
+     */
+    private void initUiWithDevices() {
+        // remove older devices if applicable
+        mDeviceList.removeAll();
+        mDeviceConfigs.removeAll();
+
+        // fill with the devices
+        if (mDevices != null) {
+            for (DeviceConfiguration device : mDevices) {
+                mDeviceList.add(device.getName());
+            }
+            mDeviceList.select(0);
+
+            if (mDevices.size() > 0) {
+                Map<String, FolderConfiguration> configs = mDevices.get(0).getConfigs();
+                Set<String> configNames = configs.keySet();
+                for (String name : configNames) {
+                    mDeviceConfigs.add(name);
+                }
+                mDeviceConfigs.select(0);
+                if (configNames.size() == 1) {
+                    mDeviceConfigs.setEnabled(false);
+                }
+            }
+        }
+    }
+
+    /**
      * Call back for language combo selection
      */
     private void onLocaleChange() {
@@ -481,7 +511,7 @@ public class ConfigurationComposite extends Composite {
     private void onDeviceChange() {
 
         int deviceIndex = mDeviceList.getSelectionIndex();
-        DeviceConfiguration device = mDevices[deviceIndex];
+        DeviceConfiguration device = mDevices.get(deviceIndex);
 
         mDeviceConfigs.removeAll();
 
@@ -499,28 +529,30 @@ public class ConfigurationComposite extends Composite {
     }
 
     private void onDeviceConfigChange() {
-        int deviceIndex = mDeviceList.getSelectionIndex();
-        DeviceConfiguration device = mDevices[deviceIndex];
+        if (mDevices != null) {
+            int deviceIndex = mDeviceList.getSelectionIndex();
+            DeviceConfiguration device = mDevices.get(deviceIndex);
 
-        int configIndex = mDeviceConfigs.getSelectionIndex();
-        String name = mDeviceConfigs.getItem(configIndex);
-        FolderConfiguration config = device.getConfigs().get(name);
+            int configIndex = mDeviceConfigs.getSelectionIndex();
+            String name = mDeviceConfigs.getItem(configIndex);
+            FolderConfiguration config = device.getConfigs().get(name);
 
-        // get the current qualifiers from the current config
-        LanguageQualifier lang = mCurrentConfig.getLanguageQualifier();
-        RegionQualifier region = mCurrentConfig.getRegionQualifier();
-        VersionQualifier version = mCurrentConfig.getVersionQualifier();
+            // get the current qualifiers from the current config
+            LanguageQualifier lang = mCurrentConfig.getLanguageQualifier();
+            RegionQualifier region = mCurrentConfig.getRegionQualifier();
+            VersionQualifier version = mCurrentConfig.getVersionQualifier();
 
-        // replace the config with the one from the device
-        mCurrentConfig.set(config);
+            // replace the config with the one from the device
+            mCurrentConfig.set(config);
 
-        // and put back the rest of the qualifiers
-        mCurrentConfig.addQualifier(lang);
-        mCurrentConfig.addQualifier(region);
-        mCurrentConfig.addQualifier(version);
+            // and put back the rest of the qualifiers
+            mCurrentConfig.addQualifier(lang);
+            mCurrentConfig.addQualifier(region);
+            mCurrentConfig.addQualifier(version);
 
-        if (mListener != null) {
-            mListener.onConfigurationChange();
+            if (mListener != null) {
+                mListener.onConfigurationChange();
+            }
         }
     }
 
@@ -603,3 +635,4 @@ public class ConfigurationComposite extends Composite {
         return false;
     }
 }
+

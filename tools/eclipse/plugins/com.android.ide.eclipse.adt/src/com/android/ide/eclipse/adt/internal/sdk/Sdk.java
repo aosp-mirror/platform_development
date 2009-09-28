@@ -19,6 +19,24 @@ package com.android.ide.eclipse.adt.internal.sdk;
 import com.android.ddmlib.IDevice;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.project.AndroidClasspathContainerInitializer;
+import com.android.ide.eclipse.adt.internal.resources.configurations.FolderConfiguration;
+import com.android.ide.eclipse.adt.internal.resources.configurations.KeyboardStateQualifier;
+import com.android.ide.eclipse.adt.internal.resources.configurations.NavigationMethodQualifier;
+import com.android.ide.eclipse.adt.internal.resources.configurations.PixelDensityQualifier;
+import com.android.ide.eclipse.adt.internal.resources.configurations.ScreenDimensionQualifier;
+import com.android.ide.eclipse.adt.internal.resources.configurations.ScreenOrientationQualifier;
+import com.android.ide.eclipse.adt.internal.resources.configurations.ScreenRatioQualifier;
+import com.android.ide.eclipse.adt.internal.resources.configurations.ScreenSizeQualifier;
+import com.android.ide.eclipse.adt.internal.resources.configurations.TextInputMethodQualifier;
+import com.android.ide.eclipse.adt.internal.resources.configurations.TouchScreenQualifier;
+import com.android.ide.eclipse.adt.internal.resources.configurations.KeyboardStateQualifier.KeyboardState;
+import com.android.ide.eclipse.adt.internal.resources.configurations.NavigationMethodQualifier.NavigationMethod;
+import com.android.ide.eclipse.adt.internal.resources.configurations.PixelDensityQualifier.Density;
+import com.android.ide.eclipse.adt.internal.resources.configurations.ScreenOrientationQualifier.ScreenOrientation;
+import com.android.ide.eclipse.adt.internal.resources.configurations.ScreenRatioQualifier.ScreenRatio;
+import com.android.ide.eclipse.adt.internal.resources.configurations.ScreenSizeQualifier.ScreenSize;
+import com.android.ide.eclipse.adt.internal.resources.configurations.TextInputMethodQualifier.TextInputMethod;
+import com.android.ide.eclipse.adt.internal.resources.configurations.TouchScreenQualifier.TouchScreenType;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceMonitor;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceMonitor.IProjectListener;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData.LayoutBridge;
@@ -41,14 +59,30 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
+import org.xml.sax.ErrorHandler;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
+import javax.xml.transform.Source;
+import javax.xml.transform.stream.StreamSource;
+import javax.xml.validation.Validator;
 
 /**
  * Central point to load, manipulate and deal with the Android SDK. Only one SDK can be used
@@ -72,6 +106,8 @@ public class Sdk implements IProjectListener {
     private final HashMap<IProject, ApkSettings> mApkSettingsMap =
             new HashMap<IProject, ApkSettings>();
     private final String mDocBaseUrl;
+
+    private List<DeviceConfiguration> mLayoutDevices = new ArrayList<DeviceConfiguration>();
 
     /**
      * Classes implementing this interface will receive notification when targets are changed.
@@ -432,6 +468,9 @@ public class Sdk implements IProjectListener {
         // pre-compute some paths
         mDocBaseUrl = getDocumentationBaseUrl(mManager.getLocation() +
                 SdkConstants.OS_SDK_DOCS_FOLDER);
+
+        // create some built-in layout devices
+        createDefaultLayoutDevices();
     }
 
     /**
@@ -518,6 +557,173 @@ public class Sdk implements IProjectListener {
         // ignore this. The project will be added to the map the first time the target needs
         // to be resolved.
     }
+
+
+    // ---------- Device Configuration methods ----------
+
+    /**
+     * A SAX error handler that captures the errors and warnings.
+     * This allows us to capture *all* errors and just not get an exception on the first one.
+     */
+    private static class CaptureErrorHandler implements ErrorHandler {
+
+        private final String mSourceLocation;
+
+        private boolean mFoundError = false;
+
+        CaptureErrorHandler(String sourceLocation) {
+            mSourceLocation = sourceLocation;
+        }
+
+        public boolean foundError() {
+            return mFoundError;
+        }
+
+        /**
+         * @throws SAXException
+         */
+        public void error(SAXParseException ex) throws SAXException {
+            mFoundError = true;
+            AdtPlugin.log(ex, "Error validating %1$s", mSourceLocation);
+        }
+
+        /**
+         * @throws SAXException
+         */
+        public void fatalError(SAXParseException ex) throws SAXException {
+            mFoundError = true;
+            AdtPlugin.log(ex, "Error validating %1$s", mSourceLocation);
+        }
+
+        /**
+         * @throws SAXException
+         */
+        public void warning(SAXParseException ex) throws SAXException {
+            // ignore those for now.
+        }
+    }
+
+    /**
+     * Returns the list of {@link DeviceConfiguration} found in the SDK.
+     */
+    public List<DeviceConfiguration> getLayoutDevices() {
+        return mLayoutDevices;
+    }
+
+    /**
+     * Parses the SDK add-ons to look for files called {@link SdkConstants#FN_DEVICES_XML} to
+     * load {@link DeviceConfiguration} from them.
+     */
+    public void parseAddOnLayoutDevices() {
+        SAXParserFactory parserFactory = SAXParserFactory.newInstance();
+        parserFactory.setNamespaceAware(true);
+
+        IAndroidTarget[] targets = mManager.getTargets();
+        for (IAndroidTarget target : targets) {
+            if (target.isPlatform() == false) {
+                File deviceXml = new File(target.getLocation(), SdkConstants.FN_DEVICES_XML);
+                if (deviceXml.isFile()) {
+                    parseLayoutDevices(parserFactory, deviceXml);
+                }
+            }
+        }
+
+        mLayoutDevices = Collections.unmodifiableList(mLayoutDevices);
+    }
+
+    /**
+     * Does the actual parsing of a devices.xml file.
+     */
+    private void parseLayoutDevices(SAXParserFactory parserFactory, File deviceXml) {
+        // first we validate the XML
+        try {
+            Source source = new StreamSource(new FileReader(deviceXml));
+
+            CaptureErrorHandler errorHandler = new CaptureErrorHandler(deviceXml.getAbsolutePath());
+
+            Validator validator = LayoutConfigsXsd.getValidator(errorHandler);
+            validator.validate(source);
+
+            if (errorHandler.foundError() == false) {
+                // do the actual parsing
+                LayoutDeviceHandler handler = new LayoutDeviceHandler();
+
+                SAXParser parser = parserFactory.newSAXParser();
+                parser.parse(new InputSource(new FileInputStream(deviceXml)), handler);
+
+                // get the parsed devices
+                mLayoutDevices.addAll(handler.getDevices());
+            }
+        } catch (SAXException e) {
+            AdtPlugin.log(e, "Error parsing %1$s", deviceXml.getAbsoluteFile());
+        } catch (FileNotFoundException e) {
+            // this shouldn't happen as we check above.
+        } catch (IOException e) {
+            AdtPlugin.log(e, "Error reading %1$s", deviceXml.getAbsoluteFile());
+        } catch (ParserConfigurationException e) {
+            AdtPlugin.log(e, "Error parsing %1$s", deviceXml.getAbsoluteFile());
+        }
+    }
+
+    /**
+     * Creates some built-it layout devices.
+     */
+    private void createDefaultLayoutDevices() {
+        DeviceConfiguration adp1 = new DeviceConfiguration("ADP1");
+        mLayoutDevices.add(adp1);
+        // default config
+        FolderConfiguration defConfig = new FolderConfiguration();
+        defConfig.addQualifier(new ScreenSizeQualifier(ScreenSize.NORMAL));
+        defConfig.addQualifier(new ScreenRatioQualifier(ScreenRatio.NOTLONG));
+        defConfig.addQualifier(new PixelDensityQualifier(Density.MEDIUM));
+        defConfig.addQualifier(new TouchScreenQualifier(TouchScreenType.FINGER));
+        defConfig.addQualifier(new KeyboardStateQualifier(KeyboardState.SOFT));
+        defConfig.addQualifier(new TextInputMethodQualifier(TextInputMethod.QWERTY));
+        defConfig.addQualifier(new NavigationMethodQualifier(NavigationMethod.TRACKBALL));
+        defConfig.addQualifier(new ScreenDimensionQualifier(480, 320));
+
+        // specific configs
+        FolderConfiguration closedPort = new FolderConfiguration();
+        closedPort.set(defConfig);
+        closedPort.addQualifier(new ScreenOrientationQualifier(ScreenOrientation.PORTRAIT));
+        adp1.addConfig("Portrait, closed", closedPort);
+
+        FolderConfiguration closedLand = new FolderConfiguration();
+        closedLand.set(defConfig);
+        closedLand.addQualifier(new ScreenOrientationQualifier(ScreenOrientation.LANDSCAPE));
+        adp1.addConfig("Landscape, closed", closedLand);
+
+        FolderConfiguration opened = new FolderConfiguration();
+        opened.set(defConfig);
+        opened.addQualifier(new ScreenOrientationQualifier(ScreenOrientation.LANDSCAPE));
+        opened.addQualifier(new KeyboardStateQualifier(KeyboardState.EXPOSED));
+        adp1.addConfig("Landscape, opened", opened);
+
+        DeviceConfiguration ion = new DeviceConfiguration("Ion");
+        mLayoutDevices.add(ion);
+        // default config
+        defConfig = new FolderConfiguration();
+        defConfig.addQualifier(new ScreenSizeQualifier(ScreenSize.NORMAL));
+        defConfig.addQualifier(new ScreenRatioQualifier(ScreenRatio.NOTLONG));
+        defConfig.addQualifier(new PixelDensityQualifier(Density.MEDIUM));
+        defConfig.addQualifier(new TouchScreenQualifier(TouchScreenType.FINGER));
+        defConfig.addQualifier(new KeyboardStateQualifier(KeyboardState.EXPOSED));
+        defConfig.addQualifier(new TextInputMethodQualifier(TextInputMethod.NOKEY));
+        defConfig.addQualifier(new NavigationMethodQualifier(NavigationMethod.TRACKBALL));
+        defConfig.addQualifier(new ScreenDimensionQualifier(480, 320));
+
+        // specific configs
+        FolderConfiguration landscape = new FolderConfiguration();
+        landscape.set(defConfig);
+        landscape.addQualifier(new ScreenOrientationQualifier(ScreenOrientation.LANDSCAPE));
+        ion.addConfig("Landscape", landscape);
+
+        FolderConfiguration portrait = new FolderConfiguration();
+        portrait.set(defConfig);
+        portrait.addQualifier(new ScreenOrientationQualifier(ScreenOrientation.PORTRAIT));
+        ion.addConfig("Portrait", portrait);
+    }
 }
+
 
 

@@ -61,7 +61,7 @@ public final class PixelDensityQualifier extends ResourceQualifier {
          * @param value The qualifier value.
          * @return the enum for the qualifier value or null if no matching was found.
          */
-        static Density getEnum(String value) {
+        public static Density getEnum(String value) {
             for (Density orient : values()) {
                 if (orient.mValue.equals(value)) {
                     return orient;

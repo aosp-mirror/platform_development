@@ -975,6 +975,7 @@ public class GraphicalEditorPart extends EditorPart implements IGraphicalLayoutE
             AndroidTargetData data = currentSdk.getTargetData(target);
             if (data != null) {
                 LayoutBridge bridge = data.getLayoutBridge();
+                mConfigComposite.reloadDevices();
                 mConfigComposite.setClippingSupport(bridge.apiLevel >= 4);
             }
         }
