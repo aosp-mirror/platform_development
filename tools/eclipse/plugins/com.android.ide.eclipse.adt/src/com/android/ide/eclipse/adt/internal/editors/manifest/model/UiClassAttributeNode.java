@@ -25,8 +25,8 @@ import com.android.ide.eclipse.adt.internal.editors.manifest.descriptors.Android
 import com.android.ide.eclipse.adt.internal.editors.ui.SectionHelper;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiTextAttributeNode;
-import com.android.ide.eclipse.adt.internal.project.AndroidManifestParser;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
+import com.android.sdklib.xml.AndroidManifest;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
@@ -94,9 +94,9 @@ public class UiClassAttributeNode extends UiTextAttributeNode {
     private IPostTypeCreationAction mPostCreationAction;
     private boolean mMandatory;
     private final boolean mDefaultToProjectOnly;
-    
+
     private class HierarchyTypeSelection extends TypeSelectionExtension {
-        
+
         private IJavaProject mJavaProject;
         private IType mReferenceType;
         private Button mProjectOnly;
@@ -112,13 +112,13 @@ public class UiClassAttributeNode extends UiTextAttributeNode {
         public ITypeInfoFilterExtension getFilterExtension() {
             return new ITypeInfoFilterExtension() {
                 public boolean select(ITypeInfoRequestor typeInfoRequestor) {
-                    
+
                     boolean projectOnly = mUseProjectOnly;
-                    
+
                     String packageName = typeInfoRequestor.getPackageName();
                     String typeName = typeInfoRequestor.getTypeName();
                     String enclosingType = typeInfoRequestor.getEnclosingName();
-                    
+
                     // build the full class name.
                     StringBuilder sb = new StringBuilder(packageName);
                     sb.append('.');
@@ -127,9 +127,9 @@ public class UiClassAttributeNode extends UiTextAttributeNode {
                         sb.append('.');
                     }
                     sb.append(typeName);
-                    
+
                     String className = sb.toString();
-                    
+
                     try {
                         IType type = mJavaProject.findType(className);
 
@@ -150,11 +150,11 @@ public class UiClassAttributeNode extends UiTextAttributeNode {
                                 return false;
                             }
                         }
-                        
+
                         // get the type hierarchy and reference type is one of the super classes.
                         ITypeHierarchy hierarchy = type.newSupertypeHierarchy(
                                 new NullProgressMonitor());
-                        
+
                         IType[] supertypes = hierarchy.getAllSupertypes(type);
                         int n = supertypes.length;
                         for (int i = 0; i < n; i++) {
@@ -165,12 +165,12 @@ public class UiClassAttributeNode extends UiTextAttributeNode {
                         }
                     } catch (JavaModelException e) {
                     }
-                    
+
                     return false;
                 }
             };
         }
-        
+
         @Override
         public Control createContentArea(Composite parent) {
 
@@ -178,10 +178,10 @@ public class UiClassAttributeNode extends UiTextAttributeNode {
             mProjectOnly.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
             mProjectOnly.setText(String.format("Display classes from sources of project '%s' only",
                     mJavaProject.getProject().getName()));
-            
+
             mUseProjectOnly = mDefaultToProjectOnly;
             mProjectOnly.setSelection(mUseProjectOnly);
-            
+
             mProjectOnly.addSelectionListener(new SelectionAdapter() {
                 @Override
                 public void widgetSelected(SelectionEvent e) {
@@ -190,7 +190,7 @@ public class UiClassAttributeNode extends UiTextAttributeNode {
                     getTypeSelectionComponent().triggerSearch();
                 }
             });
-            
+
             return super.createContentArea(parent);
         }
     }
@@ -216,13 +216,13 @@ public class UiClassAttributeNode extends UiTextAttributeNode {
      * @param mandatory indicates if the class value is mandatory
      * @param attributeDescriptor the {@link AttributeDescriptor} object linked to the Ui Node.
      * @param defaultToProjectOnly When true display classes of this project only by default.
-     *         When false any class path will be considered. The user can always toggle this. 
+     *         When false any class path will be considered. The user can always toggle this.
      */
     public UiClassAttributeNode(String referenceClass, IPostTypeCreationAction postCreationAction,
             boolean mandatory, AttributeDescriptor attributeDescriptor, UiElementNode uiParent,
             boolean defaultToProjectOnly) {
         super(attributeDescriptor, uiParent);
-        
+
         mReferenceClass = referenceClass;
         mPostCreationAction = postCreationAction;
         mMandatory = mandatory;
@@ -256,7 +256,7 @@ public class UiClassAttributeNode extends UiTextAttributeNode {
         });
         formText.setLayoutData(new TableWrapData(TableWrapData.LEFT, TableWrapData.MIDDLE));
         SectionHelper.addControlTooltip(formText, desc.getTooltip());
-        
+
         Composite composite = toolkit.createComposite(parent);
         composite.setLayoutData(new TableWrapData(TableWrapData.FILL_GRAB, TableWrapData.MIDDLE));
         GridLayout gl = new GridLayout(2, false);
@@ -265,13 +265,13 @@ public class UiClassAttributeNode extends UiTextAttributeNode {
         // Fixes missing text borders under GTK... also requires adding a 1-pixel margin
         // for the text field below
         toolkit.paintBordersFor(composite);
-        
+
         final Text text = toolkit.createText(composite, getCurrentValue());
         GridData gd = new GridData(GridData.FILL_HORIZONTAL);
         gd.horizontalIndent = 1;  // Needed by the fixed composite borders under GTK
         text.setLayoutData(gd);
         Button browseButton = toolkit.createButton(composite, "Browse...", SWT.PUSH);
-        
+
         setTextWidget(text);
 
         browseButton.addSelectionListener(new SelectionAdapter() {
@@ -282,9 +282,9 @@ public class UiClassAttributeNode extends UiTextAttributeNode {
             }
         });
     }
-    
+
     /* (non-java doc)
-     * 
+     *
      * Add a modify listener that will check the validity of the class
      */
     @Override
@@ -305,12 +305,12 @@ public class UiClassAttributeNode extends UiTextAttributeNode {
                     String javaPackage = getManifestPackage();
 
                     // build the fully qualified name of the class
-                    String className = AndroidManifestParser.combinePackageAndClassName(
+                    String className = AndroidManifest.combinePackageAndClassName(
                             javaPackage, textValue);
-                    
+
                     // only test the vilibility for activities.
                     boolean testVisibility = AndroidConstants.CLASS_ACTIVITY.equals(
-                            mReferenceClass); 
+                            mReferenceClass);
 
                     // test the class
                     setErrorMessage(BaseProjectHelper.testClassForManifest(
@@ -339,11 +339,11 @@ public class UiClassAttributeNode extends UiTextAttributeNode {
 
     private void handleBrowseClick() {
         Text text = getTextWidget();
-        
+
         // we need to get the project of the manifest.
         IProject project = getProject();
         if (project != null) {
-            
+
             // Create a search scope including only the source folder of the current
             // project.
             IPackageFragmentRoot[] packageFragmentRoots = getPackageFragmentRoots(project,
@@ -365,7 +365,7 @@ public class UiClassAttributeNode extends UiTextAttributeNode {
                 if (dlg instanceof ITypeSelectionComponent) {
                     ((ITypeSelectionComponent)dlg).triggerSearch();
                 }
-                
+
                 if (dlg.open() == Window.OK) {
                     Object[] results = dlg.getResult();
                     if (results.length == 1) {
@@ -384,7 +384,7 @@ public class UiClassAttributeNode extends UiTextAttributeNode {
 
         // get the package name from the manifest.
         String packageName = getManifestPackage();
-        
+
         if (className.length() == 0) {
             createNewClass(packageName, null /* className */);
         } else {
@@ -398,10 +398,10 @@ public class UiClassAttributeNode extends UiTextAttributeNode {
                     fullClassName = packageName + "." + className; //$NON-NLS-1$
                 }
             }
-            
+
             // in case the type is enclosed, we need to replace the $ with .
             fullClassName = fullClassName.replaceAll("\\$", "\\."); //$NON-NLS-1$ //$NON-NLS2$
-            
+
             // now we try to find the file that contains this class and we open it in the editor.
             IProject project = getProject();
             IJavaProject javaProject = JavaCore.create(project);
@@ -427,7 +427,7 @@ public class UiClassAttributeNode extends UiTextAttributeNode {
             }
         }
     }
-    
+
     private IProject getProject() {
         UiElementNode uiNode = getUiParent();
         AndroidEditor editor = uiNode.getEditor();
@@ -437,7 +437,7 @@ public class UiClassAttributeNode extends UiTextAttributeNode {
             IFile file = ((IFileEditorInput)input).getFile();
             return file.getProject();
         }
-        
+
         return null;
     }
 
@@ -449,7 +449,7 @@ public class UiClassAttributeNode extends UiTextAttributeNode {
     private String getManifestPackage() {
         // get the root uiNode to get the 'package' attribute value.
         UiElementNode rootNode = getUiParent().getUiRoot();
-                  
+
         Element xmlElement = (Element) rootNode.getXmlNode();
 
         if (xmlElement != null) {
@@ -485,20 +485,20 @@ public class UiClassAttributeNode extends UiTextAttributeNode {
 
         return result.toArray(new IPackageFragmentRoot[result.size()]);
     }
-    
+
     private void handleNewType(IType type) {
         Text text = getTextWidget();
 
         // get the fully qualified name with $ to properly detect the enclosing types.
         String name = type.getFullyQualifiedName('$');
-        
+
         String packageValue = getManifestPackage();
-        
+
         // check if the class doesn't start with the package.
         if (packageValue.length() > 0 && name.startsWith(packageValue)) {
             // if it does, we remove the package and the first dot.
             name = name.substring(packageValue.length() + 1);
-            
+
             // look for how many segments we have left.
             // if one, just write it that way.
             // if more than one, write it with a leading dot.
@@ -512,14 +512,14 @@ public class UiClassAttributeNode extends UiTextAttributeNode {
             text.setText(name);
         }
     }
-    
+
     private void createNewClass(String packageName, String className) {
         // create the wizard page for the class creation, and configure it
         NewClassWizardPage page = new NewClassWizardPage();
-        
+
         // set the parent class
         page.setSuperClass(mReferenceClass, true /* canBeModified */);
-        
+
         // get the source folders as java elements.
         IPackageFragmentRoot[] roots = getPackageFragmentRoots(getProject(),
                 true /*include_containers*/);
@@ -527,7 +527,7 @@ public class UiClassAttributeNode extends UiTextAttributeNode {
         IPackageFragmentRoot currentRoot = null;
         IPackageFragment currentFragment = null;
         int packageMatchCount = -1;
-        
+
         for (IPackageFragmentRoot root : roots) {
             // Get the java element for the package.
             // This method is said to always return a IPackageFragment even if the
@@ -564,7 +564,7 @@ public class UiClassAttributeNode extends UiTextAttributeNode {
                 }
             }
         }
-        
+
         ArrayList<IPackageFragment> createdFragments = null;
 
         if (currentRoot != null) {
@@ -578,7 +578,7 @@ public class UiClassAttributeNode extends UiTextAttributeNode {
                 // know what to delete in case of a cancel.
                 try {
                     createdFragments = new ArrayList<IPackageFragment>();
-                    
+
                     int totalCount = packageName.split("\\.").length; //$NON-NLS-1$
                     int count = 0;
                     int index = -1;
@@ -587,7 +587,7 @@ public class UiClassAttributeNode extends UiTextAttributeNode {
                         index = packageName.indexOf('.', index+1);
                         count++;
                     }
-                    
+
                     // create the rest of the segments, except for the last one as indexOf will
                     // return -1;
                     while (count < totalCount - 1) {
@@ -597,11 +597,11 @@ public class UiClassAttributeNode extends UiTextAttributeNode {
                                 packageName.substring(0, index),
                                 true /* force*/, new NullProgressMonitor()));
                     }
-                    
+
                     // create the last package
                     createdFragments.add(currentRoot.createPackageFragment(
                             packageName, true /* force*/, new NullProgressMonitor()));
-                    
+
                     // set the root and fragment in the Wizard page
                     page.setPackageFragmentRoot(currentRoot, true /* canBeModified*/);
                     page.setPackageFragment(createdFragments.get(createdFragments.size()-1),
@@ -626,27 +626,27 @@ public class UiClassAttributeNode extends UiTextAttributeNode {
             // if we haven't found a valid fragment, we set the root to the first source folder.
             page.setPackageFragmentRoot(roots[0], true /* canBeModified*/);
         }
-        
+
         // if we have a starting class name we use it
         if (className != null) {
             page.setTypeName(className, true /* canBeModified*/);
         }
-        
+
         // create the action that will open it the wizard.
         OpenNewClassWizardAction action = new OpenNewClassWizardAction();
         action.setConfiguredWizardPage(page);
         action.run();
         IJavaElement element = action.getCreatedElement();
-        
+
         if (element != null) {
             if (element.getElementType() == IJavaElement.TYPE) {
-                    
+
                 IType type = (IType)element;
-                
+
                 if (mPostCreationAction != null) {
                     mPostCreationAction.processNewType(type);
                 }
-                
+
                 handleNewType(type);
             }
         } else {
@@ -663,7 +663,7 @@ public class UiClassAttributeNode extends UiTextAttributeNode {
             }
         }
     }
-    
+
     /**
      * Sets the error messages. If message is <code>null</code>, the message is removed.
      * @param message the message to set, or <code>null</code> to remove the current message
@@ -679,7 +679,7 @@ public class UiClassAttributeNode extends UiTextAttributeNode {
             getManagedForm().getMessageManager().removeMessage(textWidget, textWidget);
         }
     }
-    
+
     @Override
     public String[] getPossibleValues(String prefix) {
         // TODO: compute a list of existing classes for content assist completion
