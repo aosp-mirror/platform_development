@@ -366,14 +366,16 @@ See test_defs.xsd for more information.
 <test name="contactsprov"
     build_path="packages/providers/ContactsProvider/tests"
     package="com.android.providers.contacts.tests"
-    coverage_target="ContactsProvider" />
+    coverage_target="ContactsProvider"
+    continuous="true" />
 
 <test name="contacts"
     build_path="packages/apps/Contacts"
     package="com.android.contacts.tests"
     runner="android.test.InstrumentationTestRunner"
     coverage_target="Contacts"
-    description="Tests for the Contacts app." />
+    description="Tests for the Contacts app."
+    continuous="true" />
 
 <test name="gcontactsprov"
     build_path="packages/providers/GoogleContactsProvider/tests"
