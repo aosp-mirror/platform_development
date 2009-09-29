@@ -104,6 +104,42 @@ public class TestLayoutConfisXsd extends TestCase {
 
     // --- Helpers ------------
 
+    /** An helper that validates a string against an expected regexp. */
+    private void assertRegex(String expectedRegexp, String actualString) {
+        assertNotNull(actualString);
+        assertTrue(
+                String.format("Regexp Assertion Failed:\nExpected: %s\nActual: %s\n",
+                        expectedRegexp, actualString),
+                actualString.matches(expectedRegexp));
+    }
+
+    public void checkFailure(String document, String regexp) throws Exception {
+        Source source = new StreamSource(new StringReader(document));
+
+        // don't capture the validator errors, we want it to fail and catch the exception
+        Validator validator = LayoutConfigsXsd.getValidator(null);
+        try {
+            validator.validate(source);
+        } catch (SAXParseException e) {
+            // We expect a parse expression referring to this grammar rule
+            assertRegex(regexp, e.getMessage());
+            return;
+        }
+        // If we get here, the validator has not failed as we expected it to.
+        fail();
+    }
+
+    public void checkSuccess(String document) throws Exception {
+        Source source = new StreamSource(new StringReader(document));
+
+        CaptureErrorHandler handler = new CaptureErrorHandler();
+        Validator validator = LayoutConfigsXsd.getValidator(null);
+        validator.validate(source);
+        handler.verify();
+    }
+
+    // --- Tests ------------
+
     /** Validate a valid sample using an InputStream */
     public void testValidateLocalRepositoryFile() throws Exception {
 
@@ -117,171 +153,180 @@ public class TestLayoutConfisXsd extends TestCase {
         handler.verify();
     }
 
-    /** An helper that validates a string against an expected regexp. */
-    private void assertRegex(String expectedRegexp, String actualString) {
-        assertNotNull(actualString);
-        assertTrue(
-                String.format("Regexp Assertion Failed:\nExpected: %s\nActual: %s\n",
-                        expectedRegexp, actualString),
-                actualString.matches(expectedRegexp));
-    }
-
-    // --- Tests ------------
-
     /** A document should at least have a root to be valid */
     public void testEmptyXml() throws Exception {
-        String document = "<?xml version=\"1.0\"?>";
+        checkFailure(
+                // document
+                "<?xml version=\"1.0\"?>",
 
-        Source source = new StreamSource(new StringReader(document));
-
-        CaptureErrorHandler handler = new CaptureErrorHandler();
-        Validator validator = LayoutConfigsXsd.getValidator(handler);
-
-        try {
-            validator.validate(source);
-        } catch (SAXParseException e) {
-            // We expect to get this specific exception message
-            assertRegex("Premature end of file.*", e.getMessage());
-            return;
-        }
-        // We shouldn't get here
-        handler.verify();
-        fail();
+                // expected failure
+                "Premature end of file.*");
     }
 
     /** A document with an unknown element. */
     public void testUnknownContentXml() throws Exception {
-        String document = "<?xml version=\"1.0\"?>" +
-            "<d:layout-configs xmlns:d=\"http://schemas.android.com/sdk/android/layout-configs/1\" >" +
-            "<d:unknown />" +
-            "</d:layout-configs>";
+        checkFailure(
+                // document
+                "<?xml version=\"1.0\"?>" +
+                "<d:layout-configs xmlns:d=\"http://schemas.android.com/sdk/android/layout-configs/1\" >" +
+                "<d:unknown />" +
+                "</d:layout-configs>",
 
-        Source source = new StreamSource(new StringReader(document));
-
-        // don't capture the validator errors, we want it to fail and catch the exception
-        Validator validator = LayoutConfigsXsd.getValidator(null);
-        try {
-            validator.validate(source);
-        } catch (SAXParseException e) {
-            // We expect a parse expression referring to this grammar rule
-            assertRegex("cvc-complex-type.2.4.a: Invalid content was found.*", e.getMessage());
-            return;
-        }
-        // If we get here, the validator has not failed as we expected it to.
-        fail();
+                // expected failure
+                "cvc-complex-type.2.4.a: Invalid content was found.*");
     }
 
     /** A document with an missing attribute in a device element. */
     public void testIncompleteContentXml() throws Exception {
-        String document = "<?xml version=\"1.0\"?>" +
-            "<d:layout-configs xmlns:d=\"http://schemas.android.com/sdk/android/layout-configs/1\" >" +
-            "<d:device />" +
-            "</d:layout-configs>";
+        checkFailure(
+                // document
+                "<?xml version=\"1.0\"?>" +
+                "<d:layout-configs xmlns:d=\"http://schemas.android.com/sdk/android/layout-configs/1\" >" +
+                "<d:device />" +
+                "</d:layout-configs>",
 
-        Source source = new StreamSource(new StringReader(document));
-
-        // don't capture the validator errors, we want it to fail and catch the exception
-        Validator validator = LayoutConfigsXsd.getValidator(null);
-        try {
-            validator.validate(source);
-        } catch (SAXParseException e) {
-            // We expect a parse error referring to this grammar rule
-            assertRegex("cvc-complex-type.4: Attribute 'name' must appear on element 'd:device'.", e.getMessage());
-            return;
-        }
-        // If we get here, the validator has not failed as we expected it to.
-        fail();
+                // expected failure
+                "cvc-complex-type.4: Attribute 'name' must appear on element 'd:device'.");
     }
 
     /** A document with a root element containing no device element is not valid. */
     public void testEmptyRootXml() throws Exception {
-        String document = "<?xml version=\"1.0\"?>" +
-            "<d:layout-configs xmlns:d=\"http://schemas.android.com/sdk/android/layout-configs/1\" />";
+        checkFailure(
+                // document
+                "<?xml version=\"1.0\"?>" +
+                "<d:layout-configs xmlns:d=\"http://schemas.android.com/sdk/android/layout-configs/1\" />",
 
-        Source source = new StreamSource(new StringReader(document));
-
-        // don't capture the validator errors, we want it to fail and catch the exception
-        Validator validator = LayoutConfigsXsd.getValidator(null);
-        try {
-            validator.validate(source);
-        } catch (SAXParseException e) {
-            // We expect a parse expression referring to this grammar rule
-            assertRegex("cvc-complex-type.2.4.b: The content of element 'd:layout-configs' is not complete.*", e.getMessage());
-            return;
-        }
-        // If we get here, the validator has not failed as we expected it to.
-        fail();
+                // expected failure
+                "cvc-complex-type.2.4.b: The content of element 'd:layout-configs' is not complete.*");
     }
 
     /** A document with an empty device element is not valid. */
     public void testEmptyDeviceXml() throws Exception {
-        String document = "<?xml version=\"1.0\"?>" +
-            "<d:layout-configs xmlns:d=\"http://schemas.android.com/sdk/android/layout-configs/1\" >" +
-            "<d:device name=\"foo\"/>" +
-            "</d:layout-configs>";
+        checkFailure(
+                // document
+                "<?xml version=\"1.0\"?>" +
+                "<d:layout-configs xmlns:d=\"http://schemas.android.com/sdk/android/layout-configs/1\" >" +
+                "<d:device name=\"foo\"/>" +
+                "</d:layout-configs>",
 
-        Source source = new StreamSource(new StringReader(document));
-
-        // don't capture the validator errors, we want it to fail and catch the exception
-        Validator validator = LayoutConfigsXsd.getValidator(null);
-        try {
-            validator.validate(source);
-        } catch (SAXParseException e) {
-            // We expect a parse error referring to this grammar rule
-            assertRegex("cvc-complex-type.2.4.b: The content of element 'd:device' is not complete.*", e.getMessage());
-            return;
-        }
-        // If we get here, the validator has not failed as we expected it to.
-        fail();
+                // expected failure
+                "cvc-complex-type.2.4.b: The content of element 'd:device' is not complete.*");
     }
 
     /** A document with two default elements in a device element is not valid. */
     public void testTwoDefaultsXml() throws Exception {
-        String document = "<?xml version=\"1.0\"?>" +
-            "<d:layout-configs xmlns:d=\"http://schemas.android.com/sdk/android/layout-configs/1\" >" +
-            "<d:device name=\"foo\">" +
-            "  <d:default />" +
-            "  <d:default />" +
-            "</d:device>" +
-            "</d:layout-configs>";
+        checkFailure(
+                // document
+                "<?xml version=\"1.0\"?>" +
+                "<d:layout-configs xmlns:d=\"http://schemas.android.com/sdk/android/layout-configs/1\" >" +
+                "<d:device name=\"foo\">" +
+                "  <d:default />" +
+                "  <d:default />" +
+                "</d:device>" +
+                "</d:layout-configs>",
 
-        Source source = new StreamSource(new StringReader(document));
-
-        // don't capture the validator errors, we want it to fail and catch the exception
-        Validator validator = LayoutConfigsXsd.getValidator(null);
-        try {
-            validator.validate(source);
-        } catch (SAXParseException e) {
-            // We expect a parse error referring to this grammar rule
-            assertRegex("cvc-complex-type.2.4.a: Invalid content was found starting with element 'd:default'.*", e.getMessage());
-            return;
-        }
-        // If we get here, the validator has not failed as we expected it to.
-        fail();
+                // expected failure
+                "cvc-complex-type.2.4.a: Invalid content was found starting with element 'd:default'.*");
     }
 
     /** The default elements must be defined before the config one. It's invalid if after. */
     public void testDefaultConfigOrderXml() throws Exception {
-        String document = "<?xml version=\"1.0\"?>" +
-            "<d:layout-configs xmlns:d=\"http://schemas.android.com/sdk/android/layout-configs/1\" >" +
-            "<d:device name=\"foo\">" +
-            "  <d:config name=\"must-be-after-default\" />" +
-            "  <d:default />" +
-            "</d:device>" +
-            "</d:layout-configs>";
+        checkFailure(
+                // document
+                "<?xml version=\"1.0\"?>" +
+                "<d:layout-configs xmlns:d=\"http://schemas.android.com/sdk/android/layout-configs/1\" >" +
+                "<d:device name=\"foo\">" +
+                "  <d:config name=\"must-be-after-default\" />" +
+                "  <d:default />" +
+                "</d:device>" +
+                "</d:layout-configs>",
 
-        Source source = new StreamSource(new StringReader(document));
-
-        // don't capture the validator errors, we want it to fail and catch the exception
-        Validator validator = LayoutConfigsXsd.getValidator(null);
-        try {
-            validator.validate(source);
-        } catch (SAXParseException e) {
-            // We expect a parse error referring to this grammar rule
-            assertRegex("cvc-complex-type.2.4.a: Invalid content was found starting with element 'd:default'.*", e.getMessage());
-            return;
-        }
-        // If we get here, the validator has not failed as we expected it to.
-        fail();
+                // expected failure
+                "cvc-complex-type.2.4.a: Invalid content was found starting with element 'd:default'.*");
     }
+
+    /** Screen dimension cannot be 0. */
+    public void testScreenDimZeroXml() throws Exception {
+        checkFailure(
+                // document
+                "<?xml version=\"1.0\"?>" +
+                "<d:layout-configs xmlns:d=\"http://schemas.android.com/sdk/android/layout-configs/1\" >" +
+                "<d:device name=\"foo\">" +
+                "  <d:default>" +
+                "    <d:screen-dimension> <d:size>0</d:size> <d:size>1</d:size> </d:screen-dimension>" +
+                "  </d:default>" +
+                "</d:device>" +
+                "</d:layout-configs>",
+
+                // expected failure
+                "cvc-minInclusive-valid: Value '0' is not facet-valid with respect to minInclusive '1'.*");
+    }
+
+    /** Screen dimension cannot be negative. */
+    public void testScreenDimNegativeXml() throws Exception {
+        checkFailure(
+                // document
+                "<?xml version=\"1.0\"?>" +
+                "<d:layout-configs xmlns:d=\"http://schemas.android.com/sdk/android/layout-configs/1\" >" +
+                "<d:device name=\"foo\">" +
+                "  <d:default>" +
+                "    <d:screen-dimension> <d:size>-5</d:size> <d:size>1</d:size> </d:screen-dimension>" +
+                "  </d:default>" +
+                "</d:device>" +
+                "</d:layout-configs>",
+
+                // expected failure
+                "cvc-minInclusive-valid: Value '-5' is not facet-valid with respect to minInclusive '1'.*");
+    }
+
+    /** X/Y dpi cannot be 0. */
+    public void testXDpiZeroXml() throws Exception {
+        checkFailure(
+                // document
+                "<?xml version=\"1.0\"?>" +
+                "<d:layout-configs xmlns:d=\"http://schemas.android.com/sdk/android/layout-configs/1\" >" +
+                "<d:device name=\"foo\">" +
+                "  <d:default>" +
+                "    <d:xdpi>0</d:xdpi>" +
+                "  </d:default>" +
+                "</d:device>" +
+                "</d:layout-configs>",
+
+                // expected failure
+                "cvc-minExclusive-valid: Value '0' is not facet-valid with respect to minExclusive '0.0E1'.*");
+    }
+
+
+    /** X/Y dpi cannot be negative. */
+    public void testXDpiNegativeXml() throws Exception {
+        checkFailure(
+                // document
+                "<?xml version=\"1.0\"?>" +
+                "<d:layout-configs xmlns:d=\"http://schemas.android.com/sdk/android/layout-configs/1\" >" +
+                "<d:device name=\"foo\">" +
+                "  <d:default>" +
+                "    <d:xdpi>-3.1415926538</d:xdpi>" +
+                "  </d:default>" +
+                "</d:device>" +
+                "</d:layout-configs>",
+
+                // expected failure
+                "cvc-minExclusive-valid: Value '-3.1415926538' is not facet-valid with respect to minExclusive '0.0E1'.*");
+    }
+
+    /** WHitespace around token is accepted by the schema. */
+    public void testTokenWhitespaceXml() throws Exception {
+        checkSuccess(
+                // document
+                "<?xml version=\"1.0\"?>" +
+                "<d:layout-configs xmlns:d=\"http://schemas.android.com/sdk/android/layout-configs/1\" >" +
+                "<d:device name=\"foo\">" +
+                "  <d:config name='foo'>" +
+                "    <d:screen-ratio>  \n long \r </d:screen-ratio>" +
+                "  </d:config>" +
+                "</d:device>" +
+                "</d:layout-configs>");
+    }
+
 }
+
