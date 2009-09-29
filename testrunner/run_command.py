@@ -34,16 +34,25 @@ def SetAbortOnError(abort=True):
   global _abort_on_error
   _abort_on_error = abort
 
-def RunCommand(cmd, timeout_time=None, retry_count=3, return_output=True):
-  """Spawns a subprocess to run the given shell command, and checks for
-  timeout_time. If return_output is True, the output of the command is returned
-  as a string. Otherwise, output of command directed to stdout """
+def RunCommand(cmd, timeout_time=None, retry_count=3, return_output=True,
+               stdin_input=None):
+  """Spawn and retry a subprocess to run the given shell command.
 
+  Args:
+    cmd: shell command to run
+    timeout_time: time in seconds to wait for command to run before aborting.
+    retry_count: number of times to retry command
+    return_output: if True return output of command as string. Otherwise,
+      direct output of command to stdout.
+    stdin_input: data to feed to stdin
+  Returns:
+    output of command
+  """
   result = None
   while True:
     try:
       result = RunOnce(cmd, timeout_time=timeout_time,
-                       return_output=return_output)
+                       return_output=return_output, stdin_input=stdin_input)
     except errors.WaitForResponseTimedOutError:
       if retry_count == 0:
         raise
@@ -53,7 +62,22 @@ def RunCommand(cmd, timeout_time=None, retry_count=3, return_output=True):
       # Success
       return result
 
-def RunOnce(cmd, timeout_time=None, return_output=True):
+def RunOnce(cmd, timeout_time=None, return_output=True, stdin_input=None):
+  """Spawns a subprocess to run the given shell command.
+
+  Args:
+    cmd: shell command to run
+    timeout_time: time in seconds to wait for command to run before aborting.
+    return_output: if True return output of command as string. Otherwise,
+      direct output of command to stdout.
+    stdin_input: data to feed to stdin
+  Returns:
+    output of command
+  Raises:
+    errors.WaitForResponseTimedOutError if command did not complete within
+      timeout_time seconds.
+    errors.AbortError is command returned error code and SetAbortOnError is on.
+  """
   start_time = time.time()
   so = []
   pid = []
@@ -67,15 +91,20 @@ def RunOnce(cmd, timeout_time=None, return_output=True):
     else:
       # None means direct to stdout
       output_dest = None
+    if stdin_input:
+      stdin_dest = subprocess.PIPE
+    else:
+      stdin_dest = None
     pipe = subprocess.Popen(
         cmd,
         executable='/bin/bash',
+        stdin=stdin_dest,
         stdout=output_dest,
         stderr=subprocess.STDOUT,
         shell=True)
     pid.append(pipe.pid)
     try:
-      output = pipe.communicate()[0]
+      output = pipe.communicate(input=stdin_input)[0]
       if output is not None and len(output) > 0:
         so.append(output)
     except OSError, e:
@@ -84,7 +113,7 @@ def RunOnce(cmd, timeout_time=None, return_output=True):
       so.append("ERROR")
       error_occurred = True
     if pipe.returncode != 0:
-      logger.SilentLog("Error: %s returned %s error code" %(cmd,
+      logger.SilentLog("Error: %s returned %d error code" %(cmd,
           pipe.returncode))
       error_occurred = True
 
