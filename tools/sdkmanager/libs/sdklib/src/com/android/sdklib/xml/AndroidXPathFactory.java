@@ -18,7 +18,9 @@ package com.android.sdklib.xml;
 
 import com.android.sdklib.SdkConstants;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 import javax.xml.XMLConstants;
 import javax.xml.namespace.NamespaceContext;
@@ -39,7 +41,8 @@ public class AndroidXPathFactory {
         private final static AndroidNamespaceContext sThis = new AndroidNamespaceContext(
                 DEFAULT_NS_PREFIX);
 
-        private String mAndroidPrefix;
+        private final String mAndroidPrefix;
+        private final List<String> mAndroidPrefixes = new ArrayList<String>();
 
         /**
          * Returns the default {@link AndroidNamespaceContext}.
@@ -54,6 +57,7 @@ public class AndroidXPathFactory {
          */
         public AndroidNamespaceContext(String androidPrefix) {
             mAndroidPrefix = androidPrefix;
+            mAndroidPrefixes.add(mAndroidPrefix);
         }
 
         public String getNamespaceURI(String prefix) {
@@ -67,14 +71,18 @@ public class AndroidXPathFactory {
         }
 
         public String getPrefix(String namespaceURI) {
-            // This isn't necessary for our use.
-            assert false;
+            if (SdkConstants.NS_RESOURCES.equals(namespaceURI)) {
+                return mAndroidPrefix;
+            }
+
             return null;
         }
 
         public Iterator<?> getPrefixes(String namespaceURI) {
-            // This isn't necessary for our use.
-            assert false;
+            if (SdkConstants.NS_RESOURCES.equals(namespaceURI)) {
+                return mAndroidPrefixes.iterator();
+            }
+
             return null;
         }
     }

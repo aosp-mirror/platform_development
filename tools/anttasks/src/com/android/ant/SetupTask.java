@@ -23,7 +23,7 @@ import com.android.sdklib.SdkManager;
 import com.android.sdklib.IAndroidTarget.IOptionalLibrary;
 import com.android.sdklib.internal.project.ProjectProperties;
 import com.android.sdklib.xml.AndroidXPathFactory;
-import com.android.sdklib.xml.ManifestConstants;
+import com.android.sdklib.xml.AndroidManifest;
 
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;
@@ -264,10 +264,11 @@ public final class SetupTask extends ImportTask {
 
             XPath xPath = AndroidXPathFactory.newXPath();
 
-            String value = xPath.evaluate("/" + ManifestConstants.NODE_MANIFEST +"/" +
-                    ManifestConstants.NODE_USES_SDK + "/@" +
-                    AndroidXPathFactory.DEFAULT_NS_PREFIX + ":" +
-                    ManifestConstants.ATTRIBUTE_MIN_SDK_VERSION,
+            String value = xPath.evaluate(
+                    "/"  + AndroidManifest.NODE_MANIFEST +
+                    "/"  + AndroidManifest.NODE_USES_SDK +
+                    "/@" + AndroidXPathFactory.DEFAULT_NS_PREFIX + ":" +
+                            AndroidManifest.ATTRIBUTE_MIN_SDK_VERSION,
                     new InputSource(new FileInputStream(manifest)));
 
             if (androidVersion.isPreview()) {
@@ -290,19 +291,19 @@ public final class SetupTask extends ImportTask {
                     // looks like it's not a number: error!
                     throw new BuildException(String.format(
                             "Attribute %1$s in AndroidManifest.xml must be an Integer!",
-                            ManifestConstants.ATTRIBUTE_MIN_SDK_VERSION));
+                            AndroidManifest.ATTRIBUTE_MIN_SDK_VERSION));
                 }
 
                 int projectApiLevel = androidVersion.getApiLevel();
                 if (minSdkValue < projectApiLevel) {
                     System.out.println(String.format(
                             "WARNING: Attribute %1$s in AndroidManifest.xml (%2$d) is lower than the project target API level (%3$d)",
-                            ManifestConstants.ATTRIBUTE_MIN_SDK_VERSION,
+                            AndroidManifest.ATTRIBUTE_MIN_SDK_VERSION,
                             minSdkValue, projectApiLevel));
                 } else if (minSdkValue > androidVersion.getApiLevel()) {
                     System.out.println(String.format(
                             "WARNING: Attribute %1$s in AndroidManifest.xml (%2$d) is higher than the project target API level (%3$d)",
-                            ManifestConstants.ATTRIBUTE_MIN_SDK_VERSION,
+                            AndroidManifest.ATTRIBUTE_MIN_SDK_VERSION,
                             minSdkValue, projectApiLevel));
                 }
             } else {

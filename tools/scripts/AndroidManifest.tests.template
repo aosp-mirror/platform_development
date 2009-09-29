@@ -17,5 +17,5 @@
     -->
     <instrumentation android:name="android.test.InstrumentationTestRunner"
                      android:targetPackage="PACKAGE"
-                     android:label="Tests for ACTIVITY_NAME"/>
+                     android:label="Tests for PACKAGE"/>
 </manifest>
