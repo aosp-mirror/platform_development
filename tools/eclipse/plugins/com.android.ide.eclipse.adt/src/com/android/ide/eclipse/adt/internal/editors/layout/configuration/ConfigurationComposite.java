@@ -150,7 +150,7 @@ public class ConfigurationComposite extends Composite {
         mDeviceList.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
-                onDeviceChange();
+                onDeviceChange(true /* recomputeLayout*/);
             }
         });
 
@@ -451,11 +451,12 @@ public class ConfigurationComposite extends Composite {
 
     /**
      * Reloads the list of {@link DeviceConfiguration} from the {@link Sdk}.
+     * @param notifyListener
      */
-    public void reloadDevices() {
+    public void reloadDevices(boolean notifyListener) {
         mDevices = Sdk.getCurrent().getLayoutDevices();
         initUiWithDevices();
-        onDeviceChange();
+        onDeviceChange(notifyListener);
     }
 
     /**
@@ -508,7 +509,7 @@ public class ConfigurationComposite extends Composite {
         }
     }
 
-    private void onDeviceChange() {
+    private void onDeviceChange(boolean recomputeLayout) {
 
         int deviceIndex = mDeviceList.getSelectionIndex();
         DeviceConfiguration device = mDevices.get(deviceIndex);
@@ -525,7 +526,9 @@ public class ConfigurationComposite extends Composite {
             mDeviceConfigs.setEnabled(false);
         }
 
-        onDeviceConfigChange();
+        if (recomputeLayout) {
+            onDeviceConfigChange();
+        }
     }
 
     private void onDeviceConfigChange() {
