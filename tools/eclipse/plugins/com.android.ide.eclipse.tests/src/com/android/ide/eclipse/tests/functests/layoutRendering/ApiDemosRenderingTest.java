@@ -17,6 +17,23 @@
 package com.android.ide.eclipse.tests.functests.layoutRendering;
 
 import com.android.ide.eclipse.adt.internal.resources.configurations.FolderConfiguration;
+import com.android.ide.eclipse.adt.internal.resources.configurations.KeyboardStateQualifier;
+import com.android.ide.eclipse.adt.internal.resources.configurations.NavigationMethodQualifier;
+import com.android.ide.eclipse.adt.internal.resources.configurations.PixelDensityQualifier;
+import com.android.ide.eclipse.adt.internal.resources.configurations.ScreenDimensionQualifier;
+import com.android.ide.eclipse.adt.internal.resources.configurations.ScreenOrientationQualifier;
+import com.android.ide.eclipse.adt.internal.resources.configurations.ScreenRatioQualifier;
+import com.android.ide.eclipse.adt.internal.resources.configurations.ScreenSizeQualifier;
+import com.android.ide.eclipse.adt.internal.resources.configurations.TextInputMethodQualifier;
+import com.android.ide.eclipse.adt.internal.resources.configurations.TouchScreenQualifier;
+import com.android.ide.eclipse.adt.internal.resources.configurations.KeyboardStateQualifier.KeyboardState;
+import com.android.ide.eclipse.adt.internal.resources.configurations.NavigationMethodQualifier.NavigationMethod;
+import com.android.ide.eclipse.adt.internal.resources.configurations.PixelDensityQualifier.Density;
+import com.android.ide.eclipse.adt.internal.resources.configurations.ScreenOrientationQualifier.ScreenOrientation;
+import com.android.ide.eclipse.adt.internal.resources.configurations.ScreenRatioQualifier.ScreenRatio;
+import com.android.ide.eclipse.adt.internal.resources.configurations.ScreenSizeQualifier.ScreenSize;
+import com.android.ide.eclipse.adt.internal.resources.configurations.TextInputMethodQualifier.TextInputMethod;
+import com.android.ide.eclipse.adt.internal.resources.configurations.TouchScreenQualifier.TouchScreenType;
 import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
@@ -205,6 +222,7 @@ public class ApiDemosRenderingTest extends FuncTestCase {
                     null /*projectKey*/,
                     320,
                     480,
+                    false, //renderFullSize
                     160, //density
                     160, //xdpi
                     160, // ydpi
@@ -234,8 +252,25 @@ public class ApiDemosRenderingTest extends FuncTestCase {
         }
     }
 
+    /**
+     * Returns a config. This must be a valid config like a device would return. This is to
+     * prevent issues where some resources don't exist in all cases and not in the default
+     * (for instance only available in hdpi and mdpi but not in default).
+     * @return
+     */
     private FolderConfiguration getConfiguration() {
         FolderConfiguration config = new FolderConfiguration();
+
+        // this matches an ADP1.
+        config.addQualifier(new ScreenSizeQualifier(ScreenSize.NORMAL));
+        config.addQualifier(new ScreenRatioQualifier(ScreenRatio.NOTLONG));
+        config.addQualifier(new ScreenOrientationQualifier(ScreenOrientation.PORTRAIT));
+        config.addQualifier(new PixelDensityQualifier(Density.MEDIUM));
+        config.addQualifier(new TouchScreenQualifier(TouchScreenType.FINGER));
+        config.addQualifier(new KeyboardStateQualifier(KeyboardState.HIDDEN));
+        config.addQualifier(new TextInputMethodQualifier(TextInputMethod.QWERTY));
+        config.addQualifier(new NavigationMethodQualifier(NavigationMethod.TRACKBALL));
+        config.addQualifier(new ScreenDimensionQualifier(480, 320));
 
         return config;
     }
