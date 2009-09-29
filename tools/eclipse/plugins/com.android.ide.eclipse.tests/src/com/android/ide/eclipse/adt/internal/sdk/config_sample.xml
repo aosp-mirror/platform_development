@@ -50,8 +50,8 @@
         <d:config name="screen-size-small">
             <d:screen-size>small</d:screen-size>
         </d:config>
-        <d:config name="screen-size-medium">
-            <d:screen-size>medium</d:screen-size>
+        <d:config name="screen-size-normal">
+            <d:screen-size>normal</d:screen-size>
         </d:config>
         <d:config name="screen-size-large">
             <d:screen-size>large</d:screen-size>
@@ -121,8 +121,8 @@
 
 
     <d:device name="SomePhone">       <!-- 1..n -->
-        <d:config name="screen-size-medium">
-            <d:screen-size>medium</d:screen-size>
+        <d:config name="screen-size-normal">
+            <d:screen-size>normal</d:screen-size>
         </d:config>
     </d:device>
 

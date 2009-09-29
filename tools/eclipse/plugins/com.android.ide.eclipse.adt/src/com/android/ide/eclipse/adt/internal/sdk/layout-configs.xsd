@@ -92,7 +92,7 @@
                 <xsd:simpleType>
                     <xsd:restriction base="xsd:token">
                         <xsd:enumeration value="small" />
-                        <xsd:enumeration value="medium" />
+                        <xsd:enumeration value="normal" />
                         <xsd:enumeration value="large" />
                     </xsd:restriction>
                 </xsd:simpleType>

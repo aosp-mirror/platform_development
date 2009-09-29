@@ -1026,10 +1026,16 @@ public class AdtPlugin extends AbstractUIPlugin {
 
                         progress.setTaskName(Messages.AdtPlugin_Parsing_Resources);
 
-                        int n = sdk.getTargets().length;
+                        final IAndroidTarget[] targets = sdk.getTargets();
+                        final int n = targets.length;
                         if (n > 0) {
+                            // load the layout devices.
+                            sdk.parseAddOnLayoutDevices();
+
+                            // load the rest of the targes.
+                            // TODO: make this on-demand.
                             int w = 60 / n;
-                            for (IAndroidTarget target : sdk.getTargets()) {
+                            for (IAndroidTarget target : targets) {
                                 SubMonitor p2 = progress.newChild(w);
                                 IStatus status = new AndroidTargetParser(target).run(p2);
                                 if (status.getCode() != IStatus.OK) {

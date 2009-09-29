@@ -23,11 +23,8 @@ import org.xml.sax.SAXParseException;
 import java.io.InputStream;
 import java.io.StringReader;
 
-import javax.xml.XMLConstants;
 import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
-import javax.xml.validation.Schema;
-import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
 
 import junit.framework.TestCase;
@@ -107,19 +104,6 @@ public class TestLayoutConfisXsd extends TestCase {
 
     // --- Helpers ------------
 
-    /** Helper method that returns a validator for our XSD */
-    private Validator getValidator(CaptureErrorHandler handler) throws SAXException {
-        InputStream xsdStream = LayoutConfigsXsd.getXsdStream();
-        SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-        Schema schema = factory.newSchema(new StreamSource(xsdStream));
-        Validator validator = schema.newValidator();
-        if (handler != null) {
-            validator.setErrorHandler(handler);
-        }
-
-        return validator;
-    }
-
     /** Validate a valid sample using an InputStream */
     public void testValidateLocalRepositoryFile() throws Exception {
 
@@ -128,7 +112,7 @@ public class TestLayoutConfisXsd extends TestCase {
         Source source = new StreamSource(xmlStream);
 
         CaptureErrorHandler handler = new CaptureErrorHandler();
-        Validator validator = getValidator(handler);
+        Validator validator = LayoutConfigsXsd.getValidator(handler);
         validator.validate(source);
         handler.verify();
     }
@@ -151,7 +135,7 @@ public class TestLayoutConfisXsd extends TestCase {
         Source source = new StreamSource(new StringReader(document));
 
         CaptureErrorHandler handler = new CaptureErrorHandler();
-        Validator validator = getValidator(handler);
+        Validator validator = LayoutConfigsXsd.getValidator(handler);
 
         try {
             validator.validate(source);
@@ -175,7 +159,7 @@ public class TestLayoutConfisXsd extends TestCase {
         Source source = new StreamSource(new StringReader(document));
 
         // don't capture the validator errors, we want it to fail and catch the exception
-        Validator validator = getValidator(null);
+        Validator validator = LayoutConfigsXsd.getValidator(null);
         try {
             validator.validate(source);
         } catch (SAXParseException e) {
@@ -197,7 +181,7 @@ public class TestLayoutConfisXsd extends TestCase {
         Source source = new StreamSource(new StringReader(document));
 
         // don't capture the validator errors, we want it to fail and catch the exception
-        Validator validator = getValidator(null);
+        Validator validator = LayoutConfigsXsd.getValidator(null);
         try {
             validator.validate(source);
         } catch (SAXParseException e) {
@@ -217,7 +201,7 @@ public class TestLayoutConfisXsd extends TestCase {
         Source source = new StreamSource(new StringReader(document));
 
         // don't capture the validator errors, we want it to fail and catch the exception
-        Validator validator = getValidator(null);
+        Validator validator = LayoutConfigsXsd.getValidator(null);
         try {
             validator.validate(source);
         } catch (SAXParseException e) {
@@ -239,7 +223,7 @@ public class TestLayoutConfisXsd extends TestCase {
         Source source = new StreamSource(new StringReader(document));
 
         // don't capture the validator errors, we want it to fail and catch the exception
-        Validator validator = getValidator(null);
+        Validator validator = LayoutConfigsXsd.getValidator(null);
         try {
             validator.validate(source);
         } catch (SAXParseException e) {
@@ -264,7 +248,7 @@ public class TestLayoutConfisXsd extends TestCase {
         Source source = new StreamSource(new StringReader(document));
 
         // don't capture the validator errors, we want it to fail and catch the exception
-        Validator validator = getValidator(null);
+        Validator validator = LayoutConfigsXsd.getValidator(null);
         try {
             validator.validate(source);
         } catch (SAXParseException e) {
@@ -289,7 +273,7 @@ public class TestLayoutConfisXsd extends TestCase {
         Source source = new StreamSource(new StringReader(document));
 
         // don't capture the validator errors, we want it to fail and catch the exception
-        Validator validator = getValidator(null);
+        Validator validator = LayoutConfigsXsd.getValidator(null);
         try {
             validator.validate(source);
         } catch (SAXParseException e) {
