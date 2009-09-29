@@ -1,6 +1,14 @@
 Android NDK ChangeLog:
 
 -------------------------------------------------------------------------------
+current version
+
+IMPORTANT BUG FIXES:
+
+- Make target shared libraries portable to systems that don't use the exact same
+  toolchain (GCC 4.2.1) .
+
+-------------------------------------------------------------------------------
 android-ndk-1.6_r1
 
 IMPORTANT BUG FIXES:
@@ -24,7 +32,7 @@ IMPORTANT BUG FIXES:
   in $(CLEAR_VARS) script.
 
 
-IMPORTANT CHANGES
+IMPORTANT CHANGES:
 
 - The 'sources' directory is gone. The NDK build system now looks for
   $(APP_PROJECT_PATH)/jni/Android.mk by default. You can override this with
