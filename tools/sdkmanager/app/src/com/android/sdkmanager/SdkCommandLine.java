@@ -192,10 +192,10 @@ class SdkCommandLine extends CommandLineProcessor {
                 VERB_UPDATE, OBJECT_PROJECT,
                 "p", KEY_PATH,
                 "Location path of the project", null);
-        define(Mode.STRING, true,
+        define(Mode.STRING, false,
                 VERB_UPDATE, OBJECT_PROJECT,
                 "t", KEY_TARGET_ID,
-                "Target id to set for the project", -1);
+                "Target id to set for the project", null);
         define(Mode.STRING, false,
                 VERB_UPDATE, OBJECT_PROJECT,
                 "n", KEY_NAME,
@@ -214,7 +214,7 @@ class SdkCommandLine extends CommandLineProcessor {
         define(Mode.STRING, true,
                 VERB_UPDATE, OBJECT_TEST_PROJECT,
                 "m", KEY_MAIN_PROJECT,
-                "Location path of the project to test", null);
+                "Location path of the project to test, relative to the new project", null);
     }
 
     @Override
@@ -290,6 +290,6 @@ class SdkCommandLine extends CommandLineProcessor {
 
     /** Helper to retrieve the --main value. */
     public String getParamTestProjectMain() {
-        return ((String) getValue(null, OBJECT_TEST_PROJECT, KEY_MAIN_PROJECT));
+        return ((String) getValue(null, null, KEY_MAIN_PROJECT));
     }
 }
