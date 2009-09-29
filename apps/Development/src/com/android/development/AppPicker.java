@@ -17,11 +17,14 @@
 
 package com.android.development;
 
+import com.android.development.PackageBrowser.MyPackageInfo;
+
 import android.app.ActivityManagerNative;
 import android.app.ListActivity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageInfo;
 import android.os.Bundle;
 import android.os.RemoteException;
 import android.provider.Settings;
@@ -29,10 +32,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.LayoutInflater;
 import android.widget.BaseAdapter;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
 import java.text.Collator;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -67,96 +72,67 @@ public class AppPicker extends ListActivity
     @Override
     protected void onListItemClick(ListView l, View v, int position, long id)
     {
-        ApplicationInfo app = mAdapter.appForPosition(position);
+        MyApplicationInfo app = mAdapter.itemForPosition(position);
         Intent intent = new Intent();
-        if (app != null) intent.setAction(app.packageName);
+        if (app.info != null) intent.setAction(app.info.packageName);
         setResult(RESULT_OK, intent);
         
-        /* This is a temporary fix for 824637 while it is blocked by 805226.  When 805226 is resolved, please remove this. */
         try {
             boolean waitForDebugger = Settings.System.getInt(
                     getContentResolver(), Settings.System.WAIT_FOR_DEBUGGER, 0) != 0;
             ActivityManagerNative.getDefault().setDebugApp(
-                    app != null ? app.packageName : null, waitForDebugger, true);
+                    app.info != null ? app.info.packageName : null, waitForDebugger, true);
         } catch (RemoteException ex) {
         }
         
         finish();
     }
 
-    private final class AppListAdapter extends BaseAdapter
-    {
-        public AppListAdapter(Context context)
-        {
-            mContext = context;
-            mInflater = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+    class MyApplicationInfo {
+        ApplicationInfo info;
+        String label;
+    }
+    
+    public class AppListAdapter extends ArrayAdapter<MyApplicationInfo> {
+        private List<MyApplicationInfo> mPackageInfoList = new ArrayList<MyApplicationInfo>();
 
-            mList = context.getPackageManager().getInstalledApplications(0);
-            if (mList != null) {
-                Collections.sort(mList, sDisplayNameComparator);
-                mList.add(0, null);
+        public AppListAdapter(Context context) {
+            super(context, R.layout.package_list_item);
+            List<ApplicationInfo> pkgs = context.getPackageManager().getInstalledApplications(0);
+            for (int i=0; i<pkgs.size(); i++) {
+                MyApplicationInfo info = new MyApplicationInfo();
+                info.info = pkgs.get(i);
+                info.label = info.info.loadLabel(getPackageManager()).toString();
+                mPackageInfoList.add(info);
             }
+            Collections.sort(mPackageInfoList, sDisplayNameComparator);
+            MyApplicationInfo info = new MyApplicationInfo();
+            info.label = "(none)";
+            mPackageInfoList.add(0, info);
+            setSource(mPackageInfoList);
         }
     
-        public ApplicationInfo appForPosition(int position)
-        {
-            if (mList == null) {
-                return null;
-            }
-
-            return mList.get(position);
-        }
-
-        public int getCount()
-        {
-            return mList != null ? mList.size() : 0;
-        }
-
-        public Object getItem(int position)
-        {
-            return position;
-        }
-    
-        public long getItemId(int position)
-        {
-            return position;
-        }
-    
-        public View getView(int position, View convertView, ViewGroup parent)
-        {
-            View view;
-            if (convertView == null) {
-                view = mInflater.inflate(
-                        android.R.layout.simple_list_item_1, parent, false);
+        @Override
+        public void bindView(View view, MyApplicationInfo info) {
+            ImageView icon = (ImageView)view.findViewById(R.id.icon);
+            TextView name = (TextView)view.findViewById(R.id.name);
+            TextView description = (TextView)view.findViewById(R.id.description);
+            name.setText(info.label);
+            if (info.info != null) {
+                icon.setImageDrawable(info.info.loadIcon(getPackageManager()));
+                description.setText(info.info.packageName);
             } else {
-                view = convertView;
+                icon.setImageDrawable(null);
+                description.setText("");
             }
-            bindView(view, mList.get(position));
-            return view;
         }
-    
-        private final void bindView(View view, ApplicationInfo info)
-        {
-            TextView text = (TextView)view.findViewById(android.R.id.text1);
-    
-            text.setText(info != null ? info.packageName : "(none)");
-        }
-    
-        protected final Context mContext;
-        protected final LayoutInflater mInflater;
-    
-        protected List<ApplicationInfo> mList;
-        
     }
 
-    private final static Comparator sDisplayNameComparator = new Comparator() {
+    private final static Comparator<MyApplicationInfo> sDisplayNameComparator
+            = new Comparator<MyApplicationInfo>() {
         public final int
-        compare(Object a, Object b)
-        {
-            CharSequence  sa = ((ApplicationInfo) a).packageName;
-            CharSequence  sb = ((ApplicationInfo) b).packageName;
-
-            return collator.compare(sa, sb);
+        compare(MyApplicationInfo a, MyApplicationInfo b) {
+            return collator.compare(a.label, b.label);
         }
 
         private final Collator   collator = Collator.getInstance();

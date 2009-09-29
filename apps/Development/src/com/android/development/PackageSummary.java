@@ -31,6 +31,7 @@ import android.content.pm.ServiceInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.RemoteException;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
@@ -90,7 +91,8 @@ public class PackageSummary extends Activity {
             info = pm.getPackageInfo(mPackageName,
                 PackageManager.GET_ACTIVITIES | PackageManager.GET_RECEIVERS
                 | PackageManager.GET_SERVICES | PackageManager.GET_PROVIDERS
-                | PackageManager.GET_INSTRUMENTATION);
+                | PackageManager.GET_INSTRUMENTATION
+                | PackageManager.GET_DISABLED_COMPONENTS);
         } catch (PackageManager.NameNotFoundException e) {
         }
 
@@ -192,6 +194,7 @@ public class PackageSummary extends Activity {
                     ActivityInfo ai = info.receivers[i];
                     Button view = (Button)inflate.inflate(
                         R.layout.package_item, null, false);
+                    Log.i("foo", "Receiver #" + i + " of " + N + ": " + ai);
                     setItemText(view, info, ai.name);
                     receivers.addView(view, lp);
                 }
