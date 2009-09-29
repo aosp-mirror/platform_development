@@ -32,6 +32,8 @@
                 <d:size>240</d:size>    <!-- 2 * int>0 -->
                 <d:size>480</d:size>
             </d:screen-dimension>
+            <d:xdpi>180.81234</d:xdpi>
+            <d:ydpi>180.81234</d:ydpi>
         </d:default>
 
         <d:config name="Portrait">
@@ -117,8 +119,14 @@
             <d:nav-method>nonav</d:nav-method>
         </d:config>
 
-    </d:device>
+        <d:config name="xdpi">
+            <d:xdpi>240</d:xdpi>
+        </d:config>
+        <d:config name="ydpi">
+            <d:ydpi>2800</d:ydpi>
+        </d:config>
 
+    </d:device>
 
     <d:device name="SomePhone">       <!-- 1..n -->
         <d:config name="screen-size-normal">
