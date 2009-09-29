@@ -24,8 +24,6 @@ import com.android.ide.eclipse.adt.internal.editors.layout.parts.ElementCreateCo
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiDocumentNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
 import com.android.ide.eclipse.adt.internal.resources.configurations.FolderConfiguration;
-import com.android.ide.eclipse.adt.internal.resources.configurations.PixelDensityQualifier;
-import com.android.ide.eclipse.adt.internal.resources.configurations.PixelDensityQualifier.Density;
 import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceFile;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceFolderType;
@@ -849,22 +847,14 @@ public class GraphicalEditorPart extends EditorPart implements IGraphicalLayoutE
                             Rectangle rect = getBounds();
                             boolean isProjectTheme = mConfigComposite.isProjectTheme();
 
-                            // FIXME pass the density/dpi from somewhere (resource config or skin).
-                            // For now, get it from the config
-                            int density = Density.MEDIUM.getDpiValue();
-                            PixelDensityQualifier qual =
-                                mConfigComposite.getCurrentConfig().getPixelDensityQualifier();
-                            if (qual != null) {
-                                int d = qual.getValue().getDpiValue();
-                                if (d > 0) {
-                                    density = d;
-                                }
-                            }
+                            int density = mConfigComposite.getDensity().getDpiValue();
+                            float xdpi = mConfigComposite.getXDpi();
+                            float ydpi = mConfigComposite.getYDpi();
 
                             ILayoutResult result = computeLayout(bridge, parser,
                                     iProject /* projectKey */,
                                     rect.width, rect.height, !mConfigComposite.getClipping(),
-                                    density, density, density,
+                                    density, xdpi, ydpi,
                                     theme, isProjectTheme,
                                     configuredProjectRes, frameworkResources, mProjectCallback,
                                     mLogger);

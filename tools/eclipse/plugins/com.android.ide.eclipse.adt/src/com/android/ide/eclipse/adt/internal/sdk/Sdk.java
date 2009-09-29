@@ -670,6 +670,8 @@ public class Sdk implements IProjectListener {
      */
     private void createDefaultLayoutDevices() {
         DeviceConfiguration adp1 = new DeviceConfiguration("ADP1");
+        adp1.setXDpi(180.6f);
+        adp1.setYDpi(182.f);
         mLayoutDevices.add(adp1);
         // default config
         FolderConfiguration defConfig = new FolderConfiguration();
@@ -700,6 +702,8 @@ public class Sdk implements IProjectListener {
         adp1.addConfig("Landscape, opened", opened);
 
         DeviceConfiguration ion = new DeviceConfiguration("Ion");
+        ion.setXDpi(180.6f);
+        ion.setYDpi(182.f);
         mLayoutDevices.add(ion);
         // default config
         defConfig = new FolderConfiguration();

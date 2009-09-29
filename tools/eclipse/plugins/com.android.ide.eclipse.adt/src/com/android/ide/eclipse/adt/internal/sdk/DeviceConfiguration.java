@@ -25,8 +25,11 @@ import java.util.Map;
 public class DeviceConfiguration {
 
     private final String mName;
+
     private Map<String, FolderConfiguration> mMap =
         new HashMap<String, FolderConfiguration>();
+    private float mXDpi = Float.NaN;
+    private float mYDpi = Float.NaN;
 
     DeviceConfiguration(String name) {
         mName = name;
@@ -40,11 +43,35 @@ public class DeviceConfiguration {
         mMap = Collections.unmodifiableMap(mMap);
     }
 
+    void setXDpi(float xdpi) {
+        mXDpi = xdpi;
+    }
+
+    void setYDpi(float ydpi) {
+        mYDpi = ydpi;
+    }
+
     public String getName() {
         return mName;
     }
 
     public Map<String, FolderConfiguration> getConfigs() {
         return mMap;
+    }
+
+    /**
+     * Returns the dpi of the Device screen in X.
+     * @return the dpi of screen or {@link Float#NaN} if it's not set.
+     */
+    public float getXDpi() {
+        return mXDpi;
+    }
+
+    /**
+     * Returns the dpi of the Device screen in Y.
+     * @return the dpi of screen or {@link Float#NaN} if it's not set.
+     */
+    public float getYDpi() {
+        return mYDpi;
     }
  }

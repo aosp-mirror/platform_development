@@ -20,11 +20,13 @@ import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.resources.ResourceType;
 import com.android.ide.eclipse.adt.internal.resources.configurations.FolderConfiguration;
 import com.android.ide.eclipse.adt.internal.resources.configurations.LanguageQualifier;
+import com.android.ide.eclipse.adt.internal.resources.configurations.PixelDensityQualifier;
 import com.android.ide.eclipse.adt.internal.resources.configurations.RegionQualifier;
 import com.android.ide.eclipse.adt.internal.resources.configurations.ResourceQualifier;
 import com.android.ide.eclipse.adt.internal.resources.configurations.ScreenDimensionQualifier;
 import com.android.ide.eclipse.adt.internal.resources.configurations.ScreenOrientationQualifier;
 import com.android.ide.eclipse.adt.internal.resources.configurations.VersionQualifier;
+import com.android.ide.eclipse.adt.internal.resources.configurations.PixelDensityQualifier.Density;
 import com.android.ide.eclipse.adt.internal.resources.configurations.ScreenOrientationQualifier.ScreenOrientation;
 import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
 import com.android.ide.eclipse.adt.internal.sdk.DeviceConfiguration;
@@ -83,6 +85,8 @@ public class ConfigurationComposite extends Composite {
     private final IConfigListener mListener;
 
     private boolean mClipping = true;
+
+    private DeviceConfiguration mCurrentDevice;
 
     /**
      * Interface implemented by the part which owns a {@link ConfigurationComposite}.
@@ -227,15 +231,73 @@ public class ConfigurationComposite extends Composite {
         config.set(mCurrentConfig);
     }
 
+    /**
+     * Returns the currently selected {@link Density}. This is guaranteed to be non null.
+     */
+    public Density getDensity() {
+        if (mCurrentConfig != null) {
+            PixelDensityQualifier qual = mCurrentConfig.getPixelDensityQualifier();
+            if (qual != null) {
+                // just a sanity check
+                Density d = qual.getValue();
+                if (d != Density.NODPI) {
+                    return d;
+                }
+            }
+        }
+
+        // no config? return medium as the default density.
+        return Density.MEDIUM;
+    }
+
+    /**
+     * Returns the current device xdpi.
+     */
+    public float getXDpi() {
+        if (mCurrentDevice != null) {
+            float dpi = mCurrentDevice.getXDpi();
+            if (Float.isNaN(dpi) == false) {
+                return dpi;
+            }
+        }
+
+        // get the pixel density as the density.
+        return getDensity().getDpiValue();
+    }
+
+    /**
+     * Returns the current device ydpi.
+     */
+    public float getYDpi() {
+        if (mCurrentDevice != null) {
+            float dpi = mCurrentDevice.getYDpi();
+            if (Float.isNaN(dpi) == false) {
+                return dpi;
+            }
+        }
+
+        // get the pixel density as the density.
+        return getDensity().getDpiValue();
+    }
+
     public Rectangle getScreenBounds() {
         // get the orientation from the current device config
         ScreenOrientationQualifier qual = mCurrentConfig.getScreenOrientationQualifier();
-        ScreenOrientation orientation = qual.getValue();
+        ScreenOrientation orientation = ScreenOrientation.PORTRAIT;
+        if (qual != null) {
+            orientation = qual.getValue();
+        }
 
         // get the device screen dimension
         ScreenDimensionQualifier qual2 = mCurrentConfig.getScreenDimensionQualifier();
-        int s1 = qual2.getValue1();
-        int s2 = qual2.getValue2();
+        int s1, s2;
+        if (qual2 != null) {
+            s1 = qual2.getValue1();
+            s2 = qual2.getValue2();
+        } else {
+            s1 = 480;
+            s2 = 320;
+        }
 
         switch (orientation) {
             default:
@@ -512,33 +574,36 @@ public class ConfigurationComposite extends Composite {
     private void onDeviceChange(boolean recomputeLayout) {
 
         int deviceIndex = mDeviceList.getSelectionIndex();
-        DeviceConfiguration device = mDevices.get(deviceIndex);
+        if (deviceIndex != -1) {
+            mCurrentDevice = mDevices.get(deviceIndex);
+        } else {
+            mCurrentDevice = null;
+        }
 
         mDeviceConfigs.removeAll();
 
-        Set<String> configNames = device.getConfigs().keySet();
-        for (String name : configNames) {
-            mDeviceConfigs.add(name);
-        }
+        if (mCurrentDevice != null) {
+            Set<String> configNames = mCurrentDevice.getConfigs().keySet();
+            for (String name : configNames) {
+                mDeviceConfigs.add(name);
+            }
 
-        mDeviceConfigs.select(0);
-        if (configNames.size() == 1) {
-            mDeviceConfigs.setEnabled(false);
-        }
+            mDeviceConfigs.select(0);
+            if (configNames.size() == 1) {
+                mDeviceConfigs.setEnabled(false);
+            }
 
+        }
         if (recomputeLayout) {
             onDeviceConfigChange();
         }
     }
 
     private void onDeviceConfigChange() {
-        if (mDevices != null) {
-            int deviceIndex = mDeviceList.getSelectionIndex();
-            DeviceConfiguration device = mDevices.get(deviceIndex);
-
+        if (mCurrentDevice != null) {
             int configIndex = mDeviceConfigs.getSelectionIndex();
             String name = mDeviceConfigs.getItem(configIndex);
-            FolderConfiguration config = device.getConfigs().get(name);
+            FolderConfiguration config = mCurrentDevice.getConfigs().get(name);
 
             // get the current qualifiers from the current config
             LanguageQualifier lang = mCurrentConfig.getLanguageQualifier();
