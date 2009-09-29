@@ -239,6 +239,10 @@ public class Main {
                 SdkCommandLine.OBJECT_PROJECT.equals(directObject)) {
             updateProject();
 
+        } else if (SdkCommandLine.VERB_UPDATE.equals(verb) &&
+                SdkCommandLine.OBJECT_TEST_PROJECT.equals(directObject)) {
+            updateTestProject();
+
         } else if (verb == null && directObject == null) {
             showMainWindow();
 
@@ -345,7 +349,12 @@ public class Main {
         if (parentProject.isAbsolute() == false) {
             // if the path is not absolute, we need to resolve it based on the
             // destination path of the project
-            parentProject = new File(projectDir, pathToMainProject);
+            try {
+                parentProject = new File(projectDir, pathToMainProject).getCanonicalFile();
+            } catch (IOException e) {
+                errorAndExit("Unable to resolve Main project's directory: %1$s",
+                        pathToMainProject);
+            }
         }
 
         if (parentProject.isDirectory() == false) {
@@ -488,6 +497,21 @@ public class Main {
             mSdkLog.printf("It seems that there are sub-projects. If you want to update them\nplease use the --%1$s parameter.",
                     SdkCommandLine.KEY_SUBPROJECTS);
         }
+    }
+
+    /**
+     * Updates an existing test project with a new path to the main project.
+     */
+    private void updateTestProject() {
+        ProjectCreator creator = new ProjectCreator(mOsSdkFolder,
+                mSdkCommandLine.isVerbose() ? OutputLevel.VERBOSE :
+                    mSdkCommandLine.isSilent() ? OutputLevel.SILENT :
+                        OutputLevel.NORMAL,
+                mSdkLog);
+
+        String projectDir = getProjectLocation(mSdkCommandLine.getParamLocationPath());
+
+        creator.updateTestProject(projectDir, mSdkCommandLine.getParamTestProjectMain());
     }
 
     /**
