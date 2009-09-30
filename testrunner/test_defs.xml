@@ -94,6 +94,13 @@ See test_defs.xsd for more information.
     class="com.android.unit_tests.activity.ActivityTests"
     coverage_target="framework" />
 
+<test name="keystore-unit"
+    build_path="frameworks/base/keystore/tests"
+    package="android.security.tests"
+    runner=".KeyStoreTestRunner"
+    coverage_target="framework"
+    continuous="true" />
+
 <test name="vpntests"
     build_path="frameworks/base/tests/AndroidTests"
     package="com.android.unit_tests"
@@ -513,12 +520,6 @@ See test_defs.xsd for more information.
     build_path="external/astl/tests"
     description="Android STL."
     extra_build_args="ASTL_TESTS=1" />
-
-<!-- Android Keystore tests -->
-<test-native name="netkeystore_test"
-    build_path="frameworks/base/cmds/keystore/tests"
-    description="Android keystore."
-    extra_build_args="KEYSTORE_TESTS=1" />
 
 <!-- pending patch 820
 <test-native name="gtest"
