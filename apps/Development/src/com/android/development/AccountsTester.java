@@ -40,7 +40,7 @@ public class AccountsTester extends Activity implements OnAccountsUpdatedListene
     private ListView mAuthenticatorsListView;
     private AccountManager mAccountManager;
     private String mLongPressedAccount = null;
-    private static final String COM_GOOGLE_GAIA = "com.google.GAIA";
+    private static final String COM_GOOGLE = "com.google";
     private AuthenticatorDescription[] mAuthenticatorDescs;
 
     private static final int GET_AUTH_TOKEN_DIALOG_ID = 1;
@@ -255,7 +255,7 @@ public class AccountsTester extends Activity implements OnAccountsUpdatedListene
     @Override
     public boolean onContextItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.accounts_tester_remove_account) {
-            final Account account = new Account(mLongPressedAccount, COM_GOOGLE_GAIA);
+            final Account account = new Account(mLongPressedAccount, COM_GOOGLE);
             mAccountManager.removeAccount(account, new AccountManagerCallback<Boolean>() {
                 public void run(AccountManagerFuture<Boolean> future) {
                     try {
@@ -273,7 +273,7 @@ public class AccountsTester extends Activity implements OnAccountsUpdatedListene
         } else if (item.getItemId() == R.id.accounts_tester_update_credentials) {
             showDialog(UPDATE_CREDENTIALS_DIALOG_ID);
         } else if (item.getItemId() == R.id.accounts_tester_confirm_credentials) {
-            mAccountManager.confirmCredentials(new Account(mLongPressedAccount, COM_GOOGLE_GAIA),
+            mAccountManager.confirmCredentials(new Account(mLongPressedAccount, COM_GOOGLE),
                     AccountsTester.this, new ConfirmCredentialsCallback(), null /* handler */);
         }
         return true;
@@ -308,7 +308,7 @@ public class AccountsTester extends Activity implements OnAccountsUpdatedListene
                                 }
                             };
                             final Account account = new Account(mLongPressedAccount,
-                                    COM_GOOGLE_GAIA);
+                                    COM_GOOGLE);
                             if (id == GET_AUTH_TOKEN_DIALOG_ID) {
                                 mAccountManager.getAuthToken(account, authTokenType,
                                         null /* loginOptions */, AccountsTester.this,
@@ -402,7 +402,7 @@ public class AccountsTester extends Activity implements OnAccountsUpdatedListene
             try {
                 Bundle bundle = future.getResult();
                 String authToken = bundle.getString(Constants.AUTHTOKEN_KEY);
-                mAccountManager.invalidateAuthToken(COM_GOOGLE_GAIA, authToken);
+                mAccountManager.invalidateAuthToken(COM_GOOGLE, authToken);
             } catch (OperationCanceledException e) {
                 Log.d(TAG, "invalidate: interrupted while getting authToken");
             } catch (IOException e) {
