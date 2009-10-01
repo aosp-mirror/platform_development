@@ -21,6 +21,7 @@ import com.android.sdklib.ISdkLog;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.internal.project.ProjectProperties.PropertyType;
 import com.android.sdklib.xml.AndroidManifest;
+import com.android.sdklib.xml.AndroidXPathFactory;
 
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
@@ -31,18 +32,13 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-import javax.xml.XMLConstants;
-import javax.xml.namespace.NamespaceContext;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
 
 /**
  * Creates the basic files needed to get an Android project up and running.
@@ -385,23 +381,14 @@ public class ProjectCreator {
      * @param projectName The project name from --name. Can be null.
      */
     public void updateProject(String folderPath, IAndroidTarget target, String projectName) {
-        // project folder must exist and be a directory, since this is an update
-        File projectFolder = new File(folderPath);
-        if (!projectFolder.isDirectory()) {
-            mLog.error(null, "Project folder '%1$s' is not a valid directory, this is not an Android project you can update.",
-                    projectFolder);
+        // since this is an update, check the folder does point to a project
+        File androidManifest = checkProjectFolder(folderPath);
+        if (androidManifest == null) {
             return;
         }
 
-        // Check AndroidManifest.xml is present
-        File androidManifest = new File(projectFolder, SdkConstants.FN_ANDROID_MANIFEST_XML);
-        if (!androidManifest.isFile()) {
-            mLog.error(null,
-                    "%1$s not found in '%2$s', this is not an Android project you can update.",
-                    SdkConstants.FN_ANDROID_MANIFEST_XML,
-                    folderPath);
-            return;
-        }
+        // get the parent File.
+        File projectFolder = androidManifest.getParentFile();
 
         // Check there's a default.properties with a target *or* --target was specified
         ProjectProperties props = ProjectProperties.load(folderPath, PropertyType.DEFAULT);
@@ -483,9 +470,16 @@ public class ProjectCreator {
                 keywords.put(PH_PROJECT_NAME, projectName);
             } else {
                 extractPackageFromManifest(androidManifest, keywords);
-                if (keywords.containsKey(PH_ACTIVITY_NAME)) {
+                if (keywords.containsKey(PH_ACTIVITY_ENTRY_NAME)) {
+                    String activity = keywords.get(PH_ACTIVITY_ENTRY_NAME);
+                    // keep only the last segment if applicable
+                    int pos = activity.lastIndexOf('.');
+                    if (pos != -1) {
+                        activity = activity.substring(pos + 1);
+                    }
+
                     // Use the activity as project name
-                    keywords.put(PH_PROJECT_NAME, keywords.get(PH_ACTIVITY_NAME));
+                    keywords.put(PH_PROJECT_NAME, activity);
                 } else {
                     // We need a project name. Just pick up the basename of the project
                     // directory.
@@ -508,6 +502,84 @@ public class ProjectCreator {
                 mLog.error(e, null);
             }
         }
+    }
+
+    /**
+     * Updates a test project with a new path to the main (tested) project.
+     * @param folderPath the path of the test project.
+     * @param pathToMainProject the path to the main project, relative to the test project.
+     */
+    public void updateTestProject(final String folderPath, final String pathToMainProject) {
+        // since this is an update, check the folder does point to a project
+        if (checkProjectFolder(folderPath) == null) {
+            return;
+        }
+
+        // check the path to the main project is valid.
+        File mainProject = new File(pathToMainProject);
+        String resolvedPath;
+        if (mainProject.isAbsolute() == false) {
+            mainProject = new File(folderPath, pathToMainProject);
+            try {
+                resolvedPath = mainProject.getCanonicalPath();
+            } catch (IOException e) {
+                mLog.error(e, "Unable to resolve path to main project: %1$s", pathToMainProject);
+                return;
+            }
+        } else {
+            resolvedPath = mainProject.getAbsolutePath();
+        }
+
+        println("Resolved location of main project to: %1$s", resolvedPath);
+
+        // check the main project exists
+        if (checkProjectFolder(resolvedPath) == null) {
+            return;
+        }
+
+        ProjectProperties props = ProjectProperties.create(folderPath, PropertyType.BUILD);
+
+        // set or replace the path to the main project
+        props.setProperty(ProjectProperties.PROPERTY_TESTED_PROJECT, pathToMainProject);
+        try {
+            props.save();
+            println("Updated %1$s", PropertyType.BUILD.getFilename());
+        } catch (IOException e) {
+            mLog.error(e, "Failed to write %1$s file in '%2$s'",
+                    PropertyType.BUILD.getFilename(),
+                    folderPath);
+            return;
+        }
+    }
+
+    /**
+     * Checks whether the give <var>folderPath</var> is a valid project folder, and returns
+     * a {@link File} to the AndroidManifest.xml file.
+     * <p/>This checks that the folder exists and contains an AndroidManifest.xml file in it.
+     * <p/>Any error are output using {@link #mLog}.
+     * @param folderPath the folder to check
+     * @return a {@link File} to the AndroidManifest.xml file, or null otherwise.
+     */
+    private File checkProjectFolder(String folderPath) {
+        // project folder must exist and be a directory, since this is an update
+        File projectFolder = new File(folderPath);
+        if (!projectFolder.isDirectory()) {
+            mLog.error(null, "Project folder '%1$s' is not a valid directory, this is not an Android project you can update.",
+                    projectFolder);
+            return null;
+        }
+
+        // Check AndroidManifest.xml is present
+        File androidManifest = new File(projectFolder, SdkConstants.FN_ANDROID_MANIFEST_XML);
+        if (!androidManifest.isFile()) {
+            mLog.error(null,
+                    "%1$s not found in '%2$s', this is not an Android project you can update.",
+                    SdkConstants.FN_ANDROID_MANIFEST_XML,
+                    folderPath);
+            return null;
+        }
+
+        return androidManifest;
     }
 
     /**
@@ -538,7 +610,7 @@ public class ProjectCreator {
      * Extracts a "full" package & activity name from an AndroidManifest.xml.
      * <p/>
      * The keywords dictionary is always filed the package name under the key {@link #PH_PACKAGE}.
-     * If an activity name can be found, it is filed under the key {@link #PH_ACTIVITY_NAME}.
+     * If an activity name can be found, it is filed under the key {@link #PH_ACTIVITY_ENTRY_NAME}.
      * When no activity is found, this key is not created.
      *
      * @param manifestFile The AndroidManifest.xml file
@@ -548,37 +620,7 @@ public class ProjectCreator {
     private boolean extractPackageFromManifest(File manifestFile,
             Map<String, String> outKeywords) {
         try {
-            final String nsPrefix = "android";
-            final String nsURI = SdkConstants.NS_RESOURCES;
-
-            XPath xpath = XPathFactory.newInstance().newXPath();
-
-            xpath.setNamespaceContext(new NamespaceContext() {
-                public String getNamespaceURI(String prefix) {
-                    if (nsPrefix.equals(prefix)) {
-                        return nsURI;
-                    }
-                    return XMLConstants.NULL_NS_URI;
-                }
-
-                public String getPrefix(String namespaceURI) {
-                    if (nsURI.equals(namespaceURI)) {
-                        return nsPrefix;
-                    }
-                    return null;
-                }
-
-                @SuppressWarnings("unchecked")
-                public Iterator getPrefixes(String namespaceURI) {
-                    if (nsURI.equals(namespaceURI)) {
-                        ArrayList<String> list = new ArrayList<String>();
-                        list.add(nsPrefix);
-                        return list.iterator();
-                    }
-                    return null;
-                }
-
-            });
+            XPath xpath = AndroidXPathFactory.newXPath();
 
             InputSource source = new InputSource(new FileReader(manifestFile));
             String packageName = xpath.evaluate("/manifest/@package", source);
@@ -592,7 +634,7 @@ public class ProjectCreator {
             String expression = String.format("/manifest/application/activity" +
                     "[intent-filter/action/@%1$s:name='android.intent.action.MAIN' and " +
                     "intent-filter/category/@%1$s:name='android.intent.category.LAUNCHER']" +
-                    "/@%1$s:name", nsPrefix);
+                    "/@%1$s:name", AndroidXPathFactory.DEFAULT_NS_PREFIX);
 
             NodeList activityNames = (NodeList) xpath.evaluate(expression, source,
                     XPathConstants.NODESET);
@@ -632,9 +674,9 @@ public class ProjectCreator {
             if (activityName.length() == 0) {
                 mLog.warning("Missing <activity %1$s:name=\"...\"> in '%2$s'.\n" +
                         "No activity will be generated.",
-                        nsPrefix, manifestFile.getName());
+                        AndroidXPathFactory.DEFAULT_NS_PREFIX, manifestFile.getName());
             } else {
-                outKeywords.put(PH_ACTIVITY_NAME, activityName);
+                outKeywords.put(PH_ACTIVITY_ENTRY_NAME, activityName);
             }
 
             outKeywords.put(PH_PACKAGE, packageName);
