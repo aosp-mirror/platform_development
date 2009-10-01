@@ -68,10 +68,17 @@
             android:layout_alignParentLeft="true"
             android:text="@string/development_settings_show_updates_text" />
 
+        <CheckBox android:id="@+id/compatibility_mode"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/show_updates"
+            android:layout_alignParentLeft="true"
+            android:text="@string/development_settings_compatibility_mode_text" />
+
         <Spinner android:id="@+id/max_procs"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:layout_below="@id/show_updates"
+            android:layout_below="@id/compatibility_mode"
             android:layout_alignParentLeft="true" />
 
         <View android:id="@+id/separator2"

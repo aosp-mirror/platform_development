@@ -77,6 +77,9 @@
     <string name="development_settings_always_finish_text">Immediately destroy activities</string>
     <string name="development_settings_show_load_text">Show running processes</string>
     <string name="development_settings_show_updates_text">Show screen updates</string>
+    <string name="development_settings_compatibility_mode_text">Disable compatibility mode</string>
+    <string name="development_settings_compatibility_mode_toast">Reboot required for
+            change to take effect.</string>
     <string name="development_settings_enable_gl_text">Enable OpenGL ES (reboot needed)</string>
     <string name="development_settings_allow_mock_location_text">Allow mock locations for testing</string>
     <string name="development_settings_wait_for_debugger_text">Wait for debugger</string>
