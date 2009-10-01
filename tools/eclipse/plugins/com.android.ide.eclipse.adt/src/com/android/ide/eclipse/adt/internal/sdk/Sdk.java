@@ -19,24 +19,6 @@ package com.android.ide.eclipse.adt.internal.sdk;
 import com.android.ddmlib.IDevice;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.project.AndroidClasspathContainerInitializer;
-import com.android.ide.eclipse.adt.internal.resources.configurations.FolderConfiguration;
-import com.android.ide.eclipse.adt.internal.resources.configurations.KeyboardStateQualifier;
-import com.android.ide.eclipse.adt.internal.resources.configurations.NavigationMethodQualifier;
-import com.android.ide.eclipse.adt.internal.resources.configurations.PixelDensityQualifier;
-import com.android.ide.eclipse.adt.internal.resources.configurations.ScreenDimensionQualifier;
-import com.android.ide.eclipse.adt.internal.resources.configurations.ScreenOrientationQualifier;
-import com.android.ide.eclipse.adt.internal.resources.configurations.ScreenRatioQualifier;
-import com.android.ide.eclipse.adt.internal.resources.configurations.ScreenSizeQualifier;
-import com.android.ide.eclipse.adt.internal.resources.configurations.TextInputMethodQualifier;
-import com.android.ide.eclipse.adt.internal.resources.configurations.TouchScreenQualifier;
-import com.android.ide.eclipse.adt.internal.resources.configurations.KeyboardStateQualifier.KeyboardState;
-import com.android.ide.eclipse.adt.internal.resources.configurations.NavigationMethodQualifier.NavigationMethod;
-import com.android.ide.eclipse.adt.internal.resources.configurations.PixelDensityQualifier.Density;
-import com.android.ide.eclipse.adt.internal.resources.configurations.ScreenOrientationQualifier.ScreenOrientation;
-import com.android.ide.eclipse.adt.internal.resources.configurations.ScreenRatioQualifier.ScreenRatio;
-import com.android.ide.eclipse.adt.internal.resources.configurations.ScreenSizeQualifier.ScreenSize;
-import com.android.ide.eclipse.adt.internal.resources.configurations.TextInputMethodQualifier.TextInputMethod;
-import com.android.ide.eclipse.adt.internal.resources.configurations.TouchScreenQualifier.TouchScreenType;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceMonitor;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceMonitor.IProjectListener;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData.LayoutBridge;
@@ -469,8 +451,8 @@ public class Sdk implements IProjectListener {
         mDocBaseUrl = getDocumentationBaseUrl(mManager.getLocation() +
                 SdkConstants.OS_SDK_DOCS_FOLDER);
 
-        // create some built-in layout devices
-        createDefaultLayoutDevices();
+        // load the built-in layout devices
+        loadDefaultLayoutDevices();
     }
 
     /**
@@ -668,66 +650,17 @@ public class Sdk implements IProjectListener {
     /**
      * Creates some built-it layout devices.
      */
-    private void createDefaultLayoutDevices() {
-        DeviceConfiguration adp1 = new DeviceConfiguration("ADP1");
-        adp1.setXDpi(180.6f);
-        adp1.setYDpi(182.f);
-        mLayoutDevices.add(adp1);
-        // default config
-        FolderConfiguration defConfig = new FolderConfiguration();
-        defConfig.addQualifier(new ScreenSizeQualifier(ScreenSize.NORMAL));
-        defConfig.addQualifier(new ScreenRatioQualifier(ScreenRatio.NOTLONG));
-        defConfig.addQualifier(new PixelDensityQualifier(Density.MEDIUM));
-        defConfig.addQualifier(new TouchScreenQualifier(TouchScreenType.FINGER));
-        defConfig.addQualifier(new KeyboardStateQualifier(KeyboardState.SOFT));
-        defConfig.addQualifier(new TextInputMethodQualifier(TextInputMethod.QWERTY));
-        defConfig.addQualifier(new NavigationMethodQualifier(NavigationMethod.TRACKBALL));
-        defConfig.addQualifier(new ScreenDimensionQualifier(480, 320));
+    private void loadDefaultLayoutDevices() {
+        SAXParserFactory parserFactory = SAXParserFactory.newInstance();
+        parserFactory.setNamespaceAware(true);
 
-        // specific configs
-        FolderConfiguration closedPort = new FolderConfiguration();
-        closedPort.set(defConfig);
-        closedPort.addQualifier(new ScreenOrientationQualifier(ScreenOrientation.PORTRAIT));
-        adp1.addConfig("Portrait, closed", closedPort);
-
-        FolderConfiguration closedLand = new FolderConfiguration();
-        closedLand.set(defConfig);
-        closedLand.addQualifier(new ScreenOrientationQualifier(ScreenOrientation.LANDSCAPE));
-        adp1.addConfig("Landscape, closed", closedLand);
-
-        FolderConfiguration opened = new FolderConfiguration();
-        opened.set(defConfig);
-        opened.addQualifier(new ScreenOrientationQualifier(ScreenOrientation.LANDSCAPE));
-        opened.addQualifier(new KeyboardStateQualifier(KeyboardState.EXPOSED));
-        adp1.addConfig("Landscape, opened", opened);
-
-        DeviceConfiguration ion = new DeviceConfiguration("Ion");
-        ion.setXDpi(180.6f);
-        ion.setYDpi(182.f);
-        mLayoutDevices.add(ion);
-        // default config
-        defConfig = new FolderConfiguration();
-        defConfig.addQualifier(new ScreenSizeQualifier(ScreenSize.NORMAL));
-        defConfig.addQualifier(new ScreenRatioQualifier(ScreenRatio.NOTLONG));
-        defConfig.addQualifier(new PixelDensityQualifier(Density.MEDIUM));
-        defConfig.addQualifier(new TouchScreenQualifier(TouchScreenType.FINGER));
-        defConfig.addQualifier(new KeyboardStateQualifier(KeyboardState.EXPOSED));
-        defConfig.addQualifier(new TextInputMethodQualifier(TextInputMethod.NOKEY));
-        defConfig.addQualifier(new NavigationMethodQualifier(NavigationMethod.TRACKBALL));
-        defConfig.addQualifier(new ScreenDimensionQualifier(480, 320));
-
-        // specific configs
-        FolderConfiguration landscape = new FolderConfiguration();
-        landscape.set(defConfig);
-        landscape.addQualifier(new ScreenOrientationQualifier(ScreenOrientation.LANDSCAPE));
-        ion.addConfig("Landscape", landscape);
-
-        FolderConfiguration portrait = new FolderConfiguration();
-        portrait.set(defConfig);
-        portrait.addQualifier(new ScreenOrientationQualifier(ScreenOrientation.PORTRAIT));
-        ion.addConfig("Portrait", portrait);
+        File toolsFolder = new File(mManager.getLocation(), SdkConstants.OS_SDK_TOOLS_LIB_FOLDER);
+        if (toolsFolder.isDirectory()) {
+            File deviceXml = new File(toolsFolder, SdkConstants.FN_DEVICES_XML);
+            if (deviceXml.isFile()) {
+                parseLayoutDevices(parserFactory, deviceXml);
+            }
+        }
     }
 }
-
-
 
