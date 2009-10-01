@@ -22,6 +22,7 @@ http://developer.android.com/guide/topics/manifest/manifest-intro.html
 """
 
 # python imports
+import os
 import xml.dom.minidom
 import xml.parsers
 
@@ -29,7 +30,7 @@ import xml.parsers
 class AndroidManifest(object):
   """In memory representation of AndroidManifest.xml file."""
 
-  FILENAME = "AndroidManifest.xml"
+  FILENAME = 'AndroidManifest.xml'
 
   def __init__(self, app_path=None):
     if app_path:
@@ -41,10 +42,10 @@ class AndroidManifest(object):
     Returns:
       Package name if defined, otherwise None
     """
-    manifests = self._dom.getElementsByTagName("manifest")
-    if not manifests or not manifests[0].getAttribute("package"):
+    manifest = self._GetManifestElement()
+    if not manifest or not manifest.hasAttribute('package'):
       return None
-    return manifests[0].getAttribute("package")
+    return manifest.getAttribute('package')
 
   def ParseManifest(self, app_path):
     """Parse AndroidManifest.xml at the specified path.
@@ -55,6 +56,37 @@ class AndroidManifest(object):
       IOError: AndroidManifest.xml cannot be found at given path, or cannot be
           opened for reading
     """
-    self.app_path = app_path.rstrip("/")
-    self.manifest_path = "%s/%s" % (self.app_path, self.FILENAME)
-    self._dom = xml.dom.minidom.parse(self.manifest_path)
+    self._manifest_path = os.path.join(app_path, self.FILENAME)
+    self._dom = xml.dom.minidom.parse(self._manifest_path)
+
+  def AddUsesSdk(self, min_sdk_version):
+    """Adds a uses-sdk element to manifest.
+
+    Args:
+      min_sdk_version: value to provide for minSdkVersion attribute.
+    """
+    manifest = self._GetManifestElement()
+    uses_sdk_elements = manifest.getElementsByTagName('uses-sdk')
+    if uses_sdk_elements:
+      uses_sdk_element = uses_sdk_elements[0]
+    else:
+      uses_sdk_element = self._dom.createElement('uses-sdk')
+      manifest.appendChild(uses_sdk_element)
+
+    uses_sdk_element.setAttribute('android:minSdkVersion', min_sdk_version)
+    self._SaveXml()
+
+  def _GetManifestElement(self):
+    """Retrieve the root manifest element.
+
+    Returns:
+      the DOM element for manifest or None.
+    """
+    manifests = self._dom.getElementsByTagName('manifest')
+    if not manifests:
+      return None
+    return manifests[0]
+
+  def _SaveXml(self):
+    """Saves the manifest to disk."""
+    self._dom.writexml(open(self._manifest_path, mode='w'), encoding='utf-8')
