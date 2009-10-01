@@ -20,6 +20,7 @@ import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AndroidConstants;
 import com.android.ide.eclipse.adt.internal.project.AndroidNature;
 import com.android.ide.eclipse.adt.internal.project.ProjectHelper;
+import com.android.ide.eclipse.adt.internal.resources.configurations.PixelDensityQualifier.Density;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.internal.wizards.newproject.NewProjectCreationPage.IMainInfo;
 import com.android.ide.eclipse.adt.internal.wizards.newproject.NewTestProjectCreationPage.TestInfo;
@@ -132,6 +133,12 @@ public class NewProjectWizard extends Wizard implements INewWizard {
         SdkConstants.FD_ASSETS + AndroidConstants.WS_SEP;
     private static final String DRAWABLE_DIRECTORY =
         SdkConstants.FD_DRAWABLE + AndroidConstants.WS_SEP;
+    private static final String DRAWABLE_HDPI_DIRECTORY =
+        SdkConstants.FD_DRAWABLE + "-" + Density.HIGH.getValue() + AndroidConstants.WS_SEP;   //$NON-NLS-1$
+    private static final String DRAWABLE_MDPI_DIRECTORY =
+        SdkConstants.FD_DRAWABLE + "-" + Density.MEDIUM.getValue() + AndroidConstants.WS_SEP; //$NON-NLS-1$
+    private static final String DRAWABLE_LDPI_DIRECTORY =
+        SdkConstants.FD_DRAWABLE + "-" + Density.LOW.getValue() + AndroidConstants.WS_SEP;    //$NON-NLS-1$
     private static final String LAYOUT_DIRECTORY =
         SdkConstants.FD_LAYOUT + AndroidConstants.WS_SEP;
     private static final String VALUES_DIRECTORY =
@@ -159,7 +166,10 @@ public class NewProjectWizard extends Wizard implements INewWizard {
             + "strings.template"; //$NON-NLS-1$
     private static final String TEMPLATE_STRING = TEMPLATES_DIRECTORY
             + "string.template"; //$NON-NLS-1$
-    private static final String ICON = "icon.png"; //$NON-NLS-1$
+    private static final String PROJECT_ICON = "icon.png"; //$NON-NLS-1$
+    private static final String ICON_HDPI = "icon_hdpi.png"; //$NON-NLS-1$
+    private static final String ICON_MDPI = "icon_mdpi.png"; //$NON-NLS-1$
+    private static final String ICON_LDPI = "icon_ldpi.png"; //$NON-NLS-1$
 
     private static final String STRINGS_FILE = "strings.xml";       //$NON-NLS-1$
 
@@ -170,7 +180,10 @@ public class NewProjectWizard extends Wizard implements INewWizard {
     private static final String[] DEFAULT_DIRECTORIES = new String[] {
             BIN_DIRECTORY, RES_DIRECTORY, ASSETS_DIRECTORY };
     private static final String[] RES_DIRECTORIES = new String[] {
-            DRAWABLE_DIRECTORY, LAYOUT_DIRECTORY, VALUES_DIRECTORY};
+            DRAWABLE_DIRECTORY, LAYOUT_DIRECTORY, VALUES_DIRECTORY };
+    private static final String[] RES_DENSITY_ENABLED_DIRECTORIES = new String[] {
+            DRAWABLE_HDPI_DIRECTORY, DRAWABLE_MDPI_DIRECTORY, DRAWABLE_LDPI_DIRECTORY,
+            LAYOUT_DIRECTORY, VALUES_DIRECTORY };
 
     private static final String PROJECT_LOGO_LARGE = "icons/android_large.png"; //$NON-NLS-1$
     private static final String JAVA_ACTIVITY_TEMPLATE = "java_file.template";  //$NON-NLS-1$
@@ -587,6 +600,10 @@ public class NewProjectWizard extends Wizard implements INewWizard {
             Map<String, String> dictionary)
                 throws CoreException, IOException {
 
+        // get the project target
+        IAndroidTarget target = (IAndroidTarget) parameters.get(PARAM_SDK_TARGET);
+        boolean legacy = target.getVersion().getApiLevel() < 4;
+
         // Create project and open it
         project.create(description, new SubProgressMonitor(monitor, 10));
         if (monitor.isCanceled()) throw new OperationCanceledException();
@@ -605,7 +622,11 @@ public class NewProjectWizard extends Wizard implements INewWizard {
         addDefaultDirectories(project, AndroidConstants.WS_ROOT, sourceFolders, monitor);
 
         // Create the resource folders in the project if they don't already exist.
-        addDefaultDirectories(project, RES_DIRECTORY, RES_DIRECTORIES, monitor);
+        if (legacy) {
+            addDefaultDirectories(project, RES_DIRECTORY, RES_DIRECTORIES, monitor);
+        } else {
+            addDefaultDirectories(project, RES_DIRECTORY, RES_DENSITY_ENABLED_DIRECTORIES, monitor);
+        }
 
         // Setup class path: mark folders as source folders
         IJavaProject javaProject = JavaCore.create(project);
@@ -624,7 +645,7 @@ public class NewProjectWizard extends Wizard implements INewWizard {
             addManifest(project, parameters, dictionary, monitor);
 
             // add the default app icon
-            addIcon(project, monitor);
+            addIcon(project, legacy, monitor);
 
             // Create the default package components
             addSampleCode(project, sourceFolders[0], parameters, dictionary, monitor);
@@ -650,7 +671,8 @@ public class NewProjectWizard extends Wizard implements INewWizard {
                 // the currently-empty current list.
                 desc.setReferencedProjects(new IProject[] { refProject });
 
-                project.setDescription(desc, IResource.KEEP_HISTORY, new SubProgressMonitor(monitor, 10));
+                project.setDescription(desc, IResource.KEEP_HISTORY,
+                        new SubProgressMonitor(monitor, 10));
 
                 IClasspathEntry entry = JavaCore.newProjectEntry(
                         refProject.getFullPath(), //path
@@ -664,8 +686,7 @@ public class NewProjectWizard extends Wizard implements INewWizard {
             }
         }
 
-        Sdk.getCurrent().setProject(project, (IAndroidTarget) parameters.get(PARAM_SDK_TARGET),
-                null /* apkConfigMap*/);
+        Sdk.getCurrent().setProject(project, target, null /* apkConfigMap*/);
 
         // Fix the project to make sure all properties are as expected.
         // Necessary for existing projects and good for new ones to.
@@ -839,23 +860,58 @@ public class NewProjectWizard extends Wizard implements INewWizard {
      * Adds default application icon to the project.
      *
      * @param project The Java Project to update.
+     * @param legacy whether we're running in legacy mode (no density support)
      * @param monitor An existing monitor.
      * @throws CoreException if the method fails to update the project.
      */
-    private void addIcon(IProject project, IProgressMonitor monitor)
+    private void addIcon(IProject project, boolean legacy, IProgressMonitor monitor)
             throws CoreException {
-        IFile file = project.getFile(RES_DIRECTORY + AndroidConstants.WS_SEP
-                                     + DRAWABLE_DIRECTORY + AndroidConstants.WS_SEP + ICON);
-        if (!file.exists()) {
-            // read the content from the template
-            byte[] buffer = AdtPlugin.readEmbeddedFile(TEMPLATES_DIRECTORY + ICON);
-
-            // if valid
-            if (buffer != null) {
-                // Save in the project
-                InputStream stream = new ByteArrayInputStream(buffer);
-                file.create(stream, false /* force */, new SubProgressMonitor(monitor, 10));
+        if (legacy) { // density support
+            // do medium density icon only, in the default drawable folder.
+            IFile file = project.getFile(RES_DIRECTORY + AndroidConstants.WS_SEP
+                    + DRAWABLE_DIRECTORY + AndroidConstants.WS_SEP + PROJECT_ICON);
+            if (!file.exists()) {
+                addFile(file, AdtPlugin.readEmbeddedFile(TEMPLATES_DIRECTORY + ICON_MDPI), monitor);
             }
+        } else {
+            // do all 3 icons.
+            IFile file;
+
+            // high density
+            file = project.getFile(RES_DIRECTORY + AndroidConstants.WS_SEP
+                    + DRAWABLE_HDPI_DIRECTORY + AndroidConstants.WS_SEP + PROJECT_ICON);
+            if (!file.exists()) {
+                addFile(file, AdtPlugin.readEmbeddedFile(TEMPLATES_DIRECTORY + ICON_HDPI), monitor);
+            }
+
+            // medium density
+            file = project.getFile(RES_DIRECTORY + AndroidConstants.WS_SEP
+                    + DRAWABLE_MDPI_DIRECTORY + AndroidConstants.WS_SEP + PROJECT_ICON);
+            if (!file.exists()) {
+                addFile(file, AdtPlugin.readEmbeddedFile(TEMPLATES_DIRECTORY + ICON_MDPI), monitor);
+            }
+
+            // low density
+            file = project.getFile(RES_DIRECTORY + AndroidConstants.WS_SEP
+                    + DRAWABLE_LDPI_DIRECTORY + AndroidConstants.WS_SEP + PROJECT_ICON);
+            if (!file.exists()) {
+                addFile(file, AdtPlugin.readEmbeddedFile(TEMPLATES_DIRECTORY + ICON_LDPI), monitor);
+            }
+        }
+    }
+
+    /**
+     * Creates a file from a data source.
+     * @param dest the file to write
+     * @param source the content of the file.
+     * @param monitor the progress monitor
+     * @throws CoreException
+     */
+    private void addFile(IFile dest, byte[] source, IProgressMonitor monitor) throws CoreException {
+        if (source != null) {
+            // Save in the project
+            InputStream stream = new ByteArrayInputStream(source);
+            dest.create(stream, false /* force */, new SubProgressMonitor(monitor, 10));
         }
     }
 
