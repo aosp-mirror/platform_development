@@ -926,7 +926,8 @@ public class UiElementNode implements IPropertySource {
      * Internal helper to remove an UI child node given by its index in the
      * internal child list.
      *
-     * Also invokes the update listener on the node to be deleted.
+     * Also invokes the update listener on the node to be deleted *after* the node has
+     * been removed.
      *
      * @param ui_index The index of the UI child to remove, range 0 .. mUiChildren.size()-1
      * @return True if the structure has changed
@@ -935,19 +936,46 @@ public class UiElementNode implements IPropertySource {
      */
     private boolean removeUiChildAtIndex(int ui_index) {
         UiElementNode ui_node = mUiChildren.get(ui_index);
-        invokeUiUpdateListeners(UiUpdateState.DELETED);
-        if (ui_node.getDescriptor().isMandatory()) {
-            // We can't remove a mandatory node, we just clear its content.
+        ElementDescriptor desc = ui_node.getDescriptor();
 
-            // A mandatory node with no XML means it doesn't really exist, so it can't be
-            // deleted.
-            boolean xml_exists = (ui_node.getXmlNode() != null);
+        try {
+            if (ui_node.getDescriptor().isMandatory()) {
+                // This is a mandatory node. Such a node must exist in the UiNode hierarchy
+                // even if there's no XML counterpart. However we only need to keep one.
 
-            ui_node.clearContent();
-            return xml_exists;
-        } else {
+                // Check if the parent (e.g. this node) has another similar ui child node.
+                boolean keepNode = true;
+                for (UiElementNode child : mUiChildren) {
+                    if (child != ui_node && child.getDescriptor() == desc) {
+                        // We found another child with the same descriptor that is not
+                        // the node we want to remove. This means we have one mandatory
+                        // node so we can safely remove ui_node.
+                        keepNode = false;
+                        break;
+                    }
+                }
+
+                if (keepNode) {
+                    // We can't remove a mandatory node as we need to keep at least one
+                    // mandatory node in the parent. Instead we just clear its content
+                    // (including its XML Node reference).
+
+                    // A mandatory node with no XML means it doesn't really exist, so it can't be
+                    // deleted. So the structure will change only if the ui node is actually
+                    // associated to an XML node.
+                    boolean xml_exists = (ui_node.getXmlNode() != null);
+
+                    ui_node.clearContent();
+                    return xml_exists;
+                }
+            }
+
             mUiChildren.remove(ui_index);
             return true;
+        } finally {
+            // Tell listeners that a node has been removed.
+            // The model has already been modified.
+            invokeUiUpdateListeners(UiUpdateState.DELETED);
         }
     }
 
@@ -1077,7 +1105,7 @@ public class UiElementNode implements IPropertySource {
     }
 
     /**
-     * Invoke all registered {@link IUiUpdateListener} listening on this UI updates for this node.
+     * Invoke all registered {@link IUiUpdateListener} listening on this UI update for this node.
      */
     protected void invokeUiUpdateListeners(UiUpdateState state) {
         if (mUiUpdateListeners != null) {
