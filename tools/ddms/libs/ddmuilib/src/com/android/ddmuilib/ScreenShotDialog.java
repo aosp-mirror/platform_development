@@ -21,11 +21,13 @@ import com.android.ddmlib.Log;
 import com.android.ddmlib.RawImage;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.dnd.Clipboard;
+import org.eclipse.swt.dnd.ImageTransfer;
+import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
-import org.eclipse.swt.graphics.ImageLoader;
 import org.eclipse.swt.graphics.PaletteData;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -49,6 +51,7 @@ public class ScreenShotDialog extends Dialog {
     private Button mSave;
     private IDevice mDevice;
     private RawImage mRawImage;
+    private Clipboard mClipboard;
 
 
     /**
@@ -56,6 +59,7 @@ public class ScreenShotDialog extends Dialog {
      */
     public ScreenShotDialog(Shell parent) {
         this(parent, SWT.DIALOG_TRIM | SWT.APPLICATION_MODAL);
+        mClipboard = new Clipboard(parent.getDisplay());
     }
 
     /**
@@ -96,7 +100,7 @@ public class ScreenShotDialog extends Dialog {
     private void createContents(final Shell shell) {
         GridData data;
 
-        final int colCount = 4;
+        final int colCount = 5;
 
         shell.setLayout(new GridLayout(colCount, true));
 
@@ -142,6 +146,20 @@ public class ScreenShotDialog extends Dialog {
             }
         });
 
+        Button copy = new Button(shell, SWT.PUSH);
+        copy.setText("Copy");
+        copy.setToolTipText("Copy the screenshot to the clipboard");
+        data = new GridData(GridData.HORIZONTAL_ALIGN_CENTER);
+        data.widthHint = 80;
+        copy.setLayoutData(data);
+        copy.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                copy();
+            }
+        });
+
+
         // "done" button
         Button done = new Button(shell, SWT.PUSH);
         done.setText("Done");
@@ -173,6 +191,18 @@ public class ScreenShotDialog extends Dialog {
 
 
         shell.setDefaultButton(done);
+    }
+
+    /**
+     * Copies the content of {@link #mImageLabel} to the clipboard.
+     */
+    private void copy() {
+        mClipboard.setContents(
+                new Object[] {
+                        mImageLabel.getImage().getImageData()
+                }, new Transfer[] {
+                        ImageTransfer.getInstance()
+                });
     }
 
     /**
@@ -266,17 +296,6 @@ public class ScreenShotDialog extends Dialog {
             }
             catch (IOException ioe) {
                 Log.w("ddms", "Unable to save " + fileName + ": " + ioe);
-            }
-
-            if (false) {
-                ImageLoader loader = new ImageLoader();
-                loader.data = new ImageData[] { imageData };
-                // PNG writing not available until 3.3?  See bug at:
-                //  https://bugs.eclipse.org/bugs/show_bug.cgi?id=24697
-                // GIF writing only works for 8 bits
-                // JPEG uses lossy compression
-                // BMP has screwed-up colors
-                loader.save(fileName, SWT.IMAGE_JPEG);
             }
         }
     }
