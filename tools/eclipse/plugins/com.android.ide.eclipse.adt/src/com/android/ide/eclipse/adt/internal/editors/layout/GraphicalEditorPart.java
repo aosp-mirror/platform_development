@@ -679,6 +679,8 @@ public class GraphicalEditorPart extends EditorPart implements IGraphicalLayoutE
         // enable the create button if the current and edited config are not equals
         mConfigComposite.setEnabledCreate(
                 mEditedConfig.equals(mConfigComposite.getCurrentConfig()) == false);
+
+        reloadConfigurationUi(false /*notifyListener*/);
     }
 
     public Clipboard getClipboard() {
@@ -967,7 +969,7 @@ public class GraphicalEditorPart extends EditorPart implements IGraphicalLayoutE
         }
     }
 
-    public void reloadConfigurationUi() {
+    public void reloadConfigurationUi(boolean notifyListener) {
         // enable the clipping button if it's supported.
         Sdk currentSdk = Sdk.getCurrent();
         if (currentSdk != null) {
@@ -975,7 +977,7 @@ public class GraphicalEditorPart extends EditorPart implements IGraphicalLayoutE
             AndroidTargetData data = currentSdk.getTargetData(target);
             if (data != null) {
                 LayoutBridge bridge = data.getLayoutBridge();
-                mConfigComposite.reloadDevices();
+                mConfigComposite.reloadDevices(notifyListener);
                 mConfigComposite.setClippingSupport(bridge.apiLevel >= 4);
             }
         }

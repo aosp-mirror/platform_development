@@ -548,7 +548,7 @@ public class GraphicalLayoutEditor extends GraphicalEditorWithPalette
         mConfigComposite.setEnabledCreate(
                 mEditedConfig.equals(mConfigComposite.getCurrentConfig()) == false);
 
-        reloadConfigurationUi();
+        reloadConfigurationUi(false /*notifyListener*/);
     }
 
     public Rectangle getBounds() {
@@ -730,7 +730,7 @@ public class GraphicalLayoutEditor extends GraphicalEditorWithPalette
         PaletteFactory.createPaletteRoot(mPaletteRoot, mLayoutEditor.getTargetData());
     }
 
-    public void reloadConfigurationUi() {
+    public void reloadConfigurationUi(boolean notifyListener) {
         // enable the clipping button if it's supported.
         Sdk currentSdk = Sdk.getCurrent();
         if (currentSdk != null) {
@@ -738,7 +738,7 @@ public class GraphicalLayoutEditor extends GraphicalEditorWithPalette
             AndroidTargetData data = currentSdk.getTargetData(target);
             if (data != null) {
                 LayoutBridge bridge = data.getLayoutBridge();
-                mConfigComposite.reloadDevices();
+                mConfigComposite.reloadDevices(notifyListener);
                 mConfigComposite.setClippingSupport(bridge.apiLevel >= 4);
             }
         }
