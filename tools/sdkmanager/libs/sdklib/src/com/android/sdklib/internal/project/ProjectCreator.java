@@ -29,6 +29,9 @@ import org.xml.sax.InputSource;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -66,6 +69,8 @@ public class ProjectCreator {
     private final static String PH_ACTIVITY_TESTED_CLASS_NAME = "ACTIVITY_TESTED_CLASS_NAME";
     /** Project name substitution string used in template files, i.e. "PROJECT_NAME". */
     private final static String PH_PROJECT_NAME = "PROJECT_NAME";
+    /** Application icon substitution string used in the manifest template */
+    private final static String PH_ICON = "ICON";
 
     /** Pattern for characters accepted in a project name. Since this will be used as a
      * directory name, we're being a bit conservative on purpose: dot and space cannot be used. */
@@ -106,6 +111,7 @@ public class ProjectCreator {
         /** default UID. This will not be serialized anyway. */
         private static final long serialVersionUID = 1L;
 
+        @SuppressWarnings("unused")
         ProjectCreateException(String message) {
             super(message);
         }
@@ -329,19 +335,26 @@ public class ProjectCreator {
             }
 
             // create other useful folders
-            File resourceFodler = createDirs(projectFolder, SdkConstants.FD_RESOURCES);
+            File resourceFolder = createDirs(projectFolder, SdkConstants.FD_RESOURCES);
             createDirs(projectFolder, SdkConstants.FD_OUTPUT);
             createDirs(projectFolder, SdkConstants.FD_NATIVE_LIBS);
 
             if (isTestProject == false) {
                 /* Make res files only for non test projects */
-                File valueFolder = createDirs(resourceFodler, SdkConstants.FD_VALUES);
+                File valueFolder = createDirs(resourceFolder, SdkConstants.FD_VALUES);
                 installTemplate("strings.template", new File(valueFolder, "strings.xml"),
                         keywords, target);
 
-                File layoutFolder = createDirs(resourceFodler, SdkConstants.FD_LAYOUT);
+                File layoutFolder = createDirs(resourceFolder, SdkConstants.FD_LAYOUT);
                 installTemplate("layout.template", new File(layoutFolder, "main.xml"),
                         keywords, target);
+
+                // create the icons
+                if (installIcons(resourceFolder, target)) {
+                    keywords.put(PH_ICON, "android:icon=\"@drawable/icon\"");
+                } else {
+                    keywords.put(PH_ICON, "");
+                }
             }
 
             /* Make AndroidManifest.xml and build.xml files */
@@ -776,8 +789,10 @@ public class ProjectCreator {
             String line;
 
             while ((line = in.readLine()) != null) {
-                for (String key : placeholderMap.keySet()) {
-                    line = line.replace(key, placeholderMap.get(key));
+                if (placeholderMap != null) {
+                    for (String key : placeholderMap.keySet()) {
+                        line = line.replace(key, placeholderMap.get(key));
+                    }
                 }
 
                 out.write(line);
@@ -794,6 +809,85 @@ public class ProjectCreator {
         println("%1$s file %2$s",
                 existed ? "Updated" : "Added",
                 destFile);
+    }
+
+    /**
+     * Installs the project icons.
+     * @param resourceFolder the resource folder
+     * @param target the target of the project.
+     * @return true if any icon was installed.
+     */
+    private boolean installIcons(File resourceFolder, IAndroidTarget target)
+            throws ProjectCreateException {
+        // query the target for its template directory
+        String templateFolder = target.getPath(IAndroidTarget.TEMPLATES);
+
+        boolean installedIcon = false;
+
+        installedIcon |= installIcon(templateFolder, "icon_hdpi.png", resourceFolder, "drawable-hdpi");
+        installedIcon |= installIcon(templateFolder, "icon_mdpi.png", resourceFolder, "drawable-mdpi");
+        installedIcon |= installIcon(templateFolder, "icon_ldpi.png", resourceFolder, "drawable-ldpi");
+
+        return installedIcon;
+    }
+
+    /**
+     * Installs an Icon in the project.
+     * @return true if the icon was installed.
+     */
+    private boolean installIcon(String templateFolder, String iconName, File resourceFolder,
+            String folderName) throws ProjectCreateException {
+        File icon = new File(templateFolder, iconName);
+        if (icon.exists()) {
+            File drawable = createDirs(resourceFolder, folderName);
+            installBinaryFile(icon, new File(drawable, "icon.png"));
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Installs a binary file
+     * @param source the source file to copy
+     * @param destination the destination file to write
+     */
+    private void installBinaryFile(File source, File destination) {
+        byte[] buffer = new byte[8192];
+
+        FileInputStream fis = null;
+        FileOutputStream fos = null;
+        try {
+            fis = new FileInputStream(source);
+            fos = new FileOutputStream(destination);
+
+            int read;
+            while ((read = fis.read(buffer)) != -1) {
+                fos.write(buffer, 0, read);
+            }
+
+        } catch (FileNotFoundException e) {
+            // shouldn't happen since we check before.
+        } catch (IOException e) {
+            new ProjectCreateException(e, "Failed to read binary file: %1$s",
+                    source.getAbsolutePath());
+        } finally {
+            if (fis != null) {
+                try {
+                    fis.close();
+                } catch (IOException e) {
+                    // ignore
+                }
+            }
+            if (fos != null) {
+                try {
+                    fos.close();
+                } catch (IOException e) {
+                    // ignore
+                }
+            }
+        }
+        
     }
 
     /**
