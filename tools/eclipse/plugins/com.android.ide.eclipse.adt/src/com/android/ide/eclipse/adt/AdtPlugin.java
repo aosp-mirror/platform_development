@@ -1029,10 +1029,7 @@ public class AdtPlugin extends AbstractUIPlugin {
                         final IAndroidTarget[] targets = sdk.getTargets();
                         final int n = targets.length;
                         if (n > 0) {
-                            // load the layout devices.
-                            sdk.parseAddOnLayoutDevices();
-
-                            // load the rest of the targes.
+                            // load the rest of the targets.
                             // TODO: make this on-demand.
                             int w = 60 / n;
                             for (IAndroidTarget target : targets) {

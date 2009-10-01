@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.ide.eclipse.adt.internal.editors.layout;
+package com.android.ide.eclipse.adt.internal.editors.layout.configuration;
 
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.resources.configurations.FolderConfiguration;
@@ -23,21 +23,21 @@ import com.android.ide.eclipse.adt.internal.resources.manager.ResourceFolderType
 import com.android.ide.eclipse.adt.internal.ui.ConfigurationSelector;
 import com.android.ide.eclipse.adt.internal.ui.ConfigurationSelector.ConfigurationState;
 import com.android.sdklib.IAndroidTarget;
+import com.android.sdkuilib.ui.GridDialog;
 
+import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
-import org.eclipse.jface.dialogs.TrayDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 
 /**
  * Dialog to choose a non existing {@link FolderConfiguration}.
  */
-class LayoutCreatorDialog extends TrayDialog {
+public final class LayoutCreatorDialog extends GridDialog {
 
     private ConfigurationSelector mSelector;
     private Composite mStatusComposite;
@@ -53,9 +53,9 @@ class LayoutCreatorDialog extends TrayDialog {
      * @param parentShell the parent {@link Shell}.
      * @param config The starting configuration.
      */
-    LayoutCreatorDialog(Shell parentShell, String fileName, IAndroidTarget target,
+    public LayoutCreatorDialog(Shell parentShell, String fileName, IAndroidTarget target,
             FolderConfiguration config) {
-        super(parentShell);
+        super(parentShell, 1, false);
 
         mFileName = fileName;
         mTarget = target;
@@ -65,15 +65,11 @@ class LayoutCreatorDialog extends TrayDialog {
     }
 
     @Override
-    protected Control createDialogArea(Composite parent) {
-        Composite top = new Composite(parent, SWT.NONE);
-        top.setLayoutData(new GridData());
-        top.setLayout(new GridLayout(1, false));
-
-        new Label(top, SWT.NONE).setText(
+    public void createDialogContent(Composite parent) {
+        new Label(parent, SWT.NONE).setText(
                 String.format("Configuration for the alternate version of %1$s", mFileName));
 
-        mSelector = new ConfigurationSelector(top);
+        mSelector = new ConfigurationSelector(parent);
         mSelector.setConfiguration(mConfig);
 
         // parent's layout is a GridLayout as specified in the javadoc.
@@ -117,7 +113,7 @@ class LayoutCreatorDialog extends TrayDialog {
             }
         });
 
-        mStatusComposite = new Composite(top, SWT.NONE);
+        mStatusComposite = new Composite(parent, SWT.NONE);
         mStatusComposite.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         GridLayout gl = new GridLayout(2, false);
         mStatusComposite.setLayout(gl);
@@ -127,8 +123,6 @@ class LayoutCreatorDialog extends TrayDialog {
         mStatusLabel = new Label(mStatusComposite, SWT.NONE);
         mStatusLabel.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         resetStatus();
-
-        return top;
     }
 
     public void getConfiguration(FolderConfiguration config) {
@@ -139,7 +133,9 @@ class LayoutCreatorDialog extends TrayDialog {
      * resets the status label to show the file that will be created.
      */
     private void resetStatus() {
-        mStatusLabel.setText(String.format("New File: res/%1$s/%2$s",
-                mConfig.getFolderName(ResourceFolderType.LAYOUT, mTarget), mFileName));
+        String displayString = Dialog.shortenText(String.format("New File: res/%1$s/%2$s",
+                mConfig.getFolderName(ResourceFolderType.LAYOUT, mTarget), mFileName),
+                mStatusLabel);
+        mStatusLabel.setText(displayString);
     }
 }
