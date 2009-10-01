@@ -5,6 +5,8 @@ current version
 
 IMPORTANT BUG FIXES:
 
+- Fix build/host-setup.sh to execute as a Bourne shell script (again)
+
 - Make target shared libraries portable to systems that don't use the exact same
   toolchain (GCC 4.2.1) .
 
