@@ -289,7 +289,15 @@ public class CustomLocaleActivity extends ListActivity {
             IActivityManager am = ActivityManagerNative.getDefault();
             Configuration config = am.getConfiguration();
 
-            Locale loc = new Locale(locale);
+            Locale loc = null;
+
+            String[] langCountry = locale.split("_");
+            if (langCountry.length == 2) {
+                loc = new Locale(langCountry[0], langCountry[1]);
+            } else {
+                loc = new Locale(locale);
+            }
+            
             config.locale = loc;
 
             // indicate this isn't some passing default - the user wants this
