@@ -110,7 +110,7 @@ public final class AvdManager {
     /**
      * Pattern to match pixel-sized skin "names", e.g. "320x480".
      */
-    public final static Pattern NUMERIC_SKIN_SIZE = Pattern.compile("[0-9]{2,}x[0-9]{2,}"); //$NON-NLS-1$
+    public final static Pattern NUMERIC_SKIN_SIZE = Pattern.compile("([0-9]{2,})x([0-9]{2,})"); //$NON-NLS-1$
 
     private final static String USERDATA_IMG = "userdata.img"; //$NON-NLS-1$
     private final static String CONFIG_INI = "config.ini"; //$NON-NLS-1$
