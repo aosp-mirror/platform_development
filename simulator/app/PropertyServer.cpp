@@ -121,7 +121,6 @@ void PropertyServer::SetDefaultProperties(void)
         { "init.svc.dbus", "running" },
         { "init.svc.pppd_gprs", "running" },
         { "adb.connected", "0" },
-        //{ "use-adb-networking", "1" },
         /*
         { "status.battery.state", "Slow" },
         { "status.battery.level", "5" },
