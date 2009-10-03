@@ -1,3 +1,6 @@
+0.9.4:
+- New "Create project from sample" choice in the New Project Wizard.
+
 0.9.3:
 - New wizard to create Android JUnit Test Projects.
 - New AVD wizard.
