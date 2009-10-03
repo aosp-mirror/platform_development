@@ -33,7 +33,7 @@ import android.text.TextUtils;
 
 import java.io.IOException;
 
-public class AccountsTester extends Activity implements OnAccountsUpdatedListener {
+public class AccountsTester extends Activity implements OnAccountsUpdateListener {
     private static final String TAG = "AccountsTester";
     private Spinner mAccountTypesSpinner;
     private ListView mAccountsListView;
@@ -273,7 +273,7 @@ public class AccountsTester extends Activity implements OnAccountsUpdatedListene
         } else if (item.getItemId() == R.id.accounts_tester_update_credentials) {
             showDialog(UPDATE_CREDENTIALS_DIALOG_ID);
         } else if (item.getItemId() == R.id.accounts_tester_confirm_credentials) {
-            mAccountManager.confirmCredentials(new Account(mLongPressedAccount, COM_GOOGLE),
+            mAccountManager.confirmCredentials(new Account(mLongPressedAccount, COM_GOOGLE), null,
                     AccountsTester.this, new ConfirmCredentialsCallback(), null /* handler */);
         }
         return true;
@@ -349,7 +349,7 @@ public class AccountsTester extends Activity implements OnAccountsUpdatedListene
                     + (mFeatures == null ? "none" : TextUtils.join(",", mFeatures)));
             try {
                 Bundle result = future.getResult();
-                Parcelable[] accounts = result.getParcelableArray(Constants.ACCOUNTS_KEY);
+                Parcelable[] accounts = result.getParcelableArray(AccountManager.KEY_ACCOUNTS);
                 Log.d(TAG, "found " + accounts.length + " accounts");
                 for (Parcelable account : accounts) {
                     Log.d(TAG, "  " + account);
@@ -401,7 +401,7 @@ public class AccountsTester extends Activity implements OnAccountsUpdatedListene
         public void run(AccountManagerFuture<Bundle> future) {
             try {
                 Bundle bundle = future.getResult();
-                String authToken = bundle.getString(Constants.AUTHTOKEN_KEY);
+                String authToken = bundle.getString(AccountManager.KEY_AUTHTOKEN);
                 mAccountManager.invalidateAuthToken(COM_GOOGLE, authToken);
             } catch (OperationCanceledException e) {
                 Log.d(TAG, "invalidate: interrupted while getting authToken");
