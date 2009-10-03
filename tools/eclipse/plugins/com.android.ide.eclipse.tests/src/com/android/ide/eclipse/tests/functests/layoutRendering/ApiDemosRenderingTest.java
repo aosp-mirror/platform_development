@@ -37,9 +37,7 @@ import com.android.ide.eclipse.adt.internal.resources.configurations.TouchScreen
 import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
-import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetParser;
 import com.android.ide.eclipse.adt.internal.sdk.LoadStatus;
-import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData.LayoutBridge;
 import com.android.ide.eclipse.tests.FuncTestCase;
 import com.android.layoutlib.api.ILayoutResult;
@@ -49,8 +47,6 @@ import com.android.layoutlib.api.IXmlPullParser;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkConstants;
 
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.NullProgressMonitor;
 import org.kxml2.io.KXmlParser;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -120,28 +116,8 @@ public class ApiDemosRenderingTest extends FuncTestCase {
 
     }
 
-    private Sdk mSdk;
-
     public void testApiDemos() throws IOException, XmlPullParserException {
-        loadSdk();
         findApiDemos();
-    }
-
-    /**
-     * Loads the {@link Sdk}.
-     */
-    private void loadSdk() {
-        mSdk = Sdk.loadSdk(this.getOsSdkLocation());
-
-        int n = mSdk.getTargets().length;
-        if (n > 0) {
-            for (IAndroidTarget target : mSdk.getTargets()) {
-                IStatus status = new AndroidTargetParser(target).run(new NullProgressMonitor());
-                if (status.getCode() != IStatus.OK) {
-                    fail("Failed to parse targets data");
-                }
-            }
-        }
     }
 
     private void findApiDemos() throws IOException, XmlPullParserException {

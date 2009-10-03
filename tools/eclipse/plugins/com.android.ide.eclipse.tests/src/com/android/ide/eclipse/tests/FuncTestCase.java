@@ -15,40 +15,70 @@
  */
 package com.android.ide.eclipse.tests;
 
+import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetParser;
+import com.android.ide.eclipse.adt.internal.sdk.Sdk;
+import com.android.sdklib.IAndroidTarget;
+
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.NullProgressMonitor;
+
 import junit.framework.TestCase;
 
 /**
- * Generic superclass for Eclipse Android functional test cases, that provides
- * common facilities
+ * Generic superclass for Eclipse Android functional test cases, that provides common facilities.
  */
 public class FuncTestCase extends TestCase {
 
     private String mOsSdkLocation;
+    protected Sdk mSdk;
 
     /**
-     * Constructor
-     *
-     * @throws IllegalArgumentException if environment variable "sdk_home" is
-     *         not set
+     * Initializes test SDK
+     * <p/>
+     * Fails test if environment variable "sdk_home" is not set.
      */
-    protected FuncTestCase() {
+    @Override
+    protected void setUp() throws Exception {
+        super.setUp();
         mOsSdkLocation = System.getProperty("sdk_home");
         if (mOsSdkLocation == null) {
             mOsSdkLocation = System.getenv("sdk_home");
         }
         if (mOsSdkLocation == null || mOsSdkLocation.length() < 1) {
-            throw new IllegalArgumentException(
-                    "Environment variable sdk_home is not set");
+            fail("Environment variable sdk_home is not set");
         }
+
+        loadSdk(mOsSdkLocation);
     }
 
     /**
-     * Returns the absolute file system path of the Android SDK location to use
-     * for this test
+     * Returns the absolute file system path of the Android SDK location to use for this test.
      */
     protected String getOsSdkLocation() {
         return mOsSdkLocation;
     }
 
+    /**
+     * Returns the {@link Sdk} under test.
+     */
+    protected Sdk getSdk() {
+        return mSdk;
+    }
 
+    /**
+     * Loads the {@link Sdk}.
+     */
+    private void loadSdk(String sdkLocation) {
+        mSdk = Sdk.loadSdk(sdkLocation);
+
+        int n = mSdk.getTargets().length;
+        if (n > 0) {
+            for (IAndroidTarget target : mSdk.getTargets()) {
+                IStatus status = new AndroidTargetParser(target).run(new NullProgressMonitor());
+                if (status.getCode() != IStatus.OK) {
+                    fail("Failed to parse targets data");
+                }
+            }
+        }
+    }
 }
