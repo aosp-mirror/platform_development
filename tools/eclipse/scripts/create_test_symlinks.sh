@@ -51,4 +51,5 @@ fi
 DEST=$BASE/unittests/com/android
 BACK=`back $DEST`
 cpdir $DEST development/tools/ddms/libs/ddmlib/tests/src/com/android/ddmlib
+cpdir $DEST development/tools/sdkmanager/libs/sdklib/tests/com/android/sdklib
 
