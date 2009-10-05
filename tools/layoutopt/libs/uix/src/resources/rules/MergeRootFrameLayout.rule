@@ -1,0 +1,16 @@
+// Rule: MergeRootFrameLayout
+//
+// Description: Checks whether the root node of the XML document can be
+//              replaced with a <merge /> tag.
+//
+// Conditions:
+// - The node is the root of the document
+// - The node is a FrameLayout
+// - The node is fill_parent in both orientation *or* it has no layout_gravity
+// - The node does not have a background nor a foreground
+
+if (xml.isRoot() && xml.is("FrameLayout") && !xml.'@android:background' &&
+        !xml.'@android:foreground' && ((node.isWidthFillParent() &&
+                node.isHeightFillParent()) || !xml.'@android:layout_gravity')) {
+    analysis << [node: node, description: "The root-level <FrameLayout/> can be replaced with <merge/>"]
+}
