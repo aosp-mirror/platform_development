@@ -1,5 +1,5 @@
 /*
- * Copyright 2008, The Android Open Source Project
+ * Copyright 2009, The Android Open Source Project
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,11 +23,26 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <npapi.h>
-#include <npfunctions.h>
-#include <npruntime.h>
-#include "android_npapi.h"
-#include "ANPSurface_npapi.h"
+#include "PluginObject.h"
 
-extern NPNetscapeFuncs* browser;
-extern JavaVM* gVM;
+#ifndef videoPlugin__DEFINED
+#define videoPlugin__DEFINED
+
+class VideoPlugin : public SurfaceSubPlugin {
+public:
+    VideoPlugin(NPP inst);
+    virtual ~VideoPlugin();
+    virtual bool supportsDrawingModel(ANPDrawingModel);
+    virtual int16 handleEvent(const ANPEvent* evt);
+    virtual void surfaceCreated(jobject surface);
+    virtual void surfaceChanged(int format, int width, int height);
+    virtual void surfaceDestroyed();
+    virtual bool isFixedSurface();
+
+private:
+    void drawPlugin();
+
+    jobject     m_surface;
+};
+
+#endif // videoPlugin__DEFINED

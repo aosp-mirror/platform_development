@@ -33,8 +33,11 @@
 #include "BackgroundPlugin.h"
 #include "FormPlugin.h"
 #include "PaintPlugin.h"
+#include "VideoPlugin.h"
 
 NPNetscapeFuncs* browser;
+JavaVM* gVM;
+
 #define EXPORT __attribute__((visibility("default")))
 
 NPError NPP_New(NPMIMEType pluginType, NPP instance, uint16 mode, int16 argc,
@@ -128,6 +131,10 @@ NPError NP_Initialize(NPNetscapeFuncs* browserFuncs, NPPluginFuncs* pluginFuncs,
         }
     }
 
+    // store the JavaVM for the plugin
+    JNIEnv* env = (JNIEnv*)java_env;
+    env->GetJavaVM(&gVM);
+
     return NPERR_NO_ERROR;
 }
 
@@ -219,6 +226,10 @@ NPError NPP_New(NPMIMEType pluginType, NPP instance, uint16 mode, int16 argc,
             else if (!strcmp(argv[i], "Paint")) {
                 obj->pluginType = kPaint_PluginType;
                 obj->activePlugin = new PaintPlugin(instance);
+            }
+            else if (!strcmp(argv[i], "Video")) {
+                obj->pluginType = kVideo_PluginType;
+                obj->activePlugin = new VideoPlugin(instance);
             }
             gLogI.log(instance, kDebug_ANPLogType, "------ %p PluginType is %d", instance, obj->pluginType);
             break;
