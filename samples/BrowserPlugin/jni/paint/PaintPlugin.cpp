@@ -52,7 +52,6 @@ PaintPlugin::PaintPlugin(NPP inst) : SurfaceSubPlugin(inst) {
 
     // initialize the drawing surface
     m_surface = NULL;
-    m_vm = NULL;
 
     // initialize the path
     m_touchPath = gPathI.newPath();
@@ -97,7 +96,7 @@ ANPCanvas* PaintPlugin::getCanvas(ANPRectI* dirtyRect) {
 
     ANPBitmap bitmap;
     JNIEnv* env = NULL;
-    if (!m_surface || m_vm->GetEnv((void**) &env, JNI_VERSION_1_4) != JNI_OK ||
+    if (!m_surface || gVM->GetEnv((void**) &env, JNI_VERSION_1_4) != JNI_OK ||
         !gSurfaceI.lock(env, m_surface, &bitmap, dirtyRect)) {
             return NULL;
         }
@@ -132,7 +131,7 @@ ANPCanvas* PaintPlugin::getCanvas(ANPRectF* dirtyRect) {
 
 void PaintPlugin::releaseCanvas(ANPCanvas* canvas) {
     JNIEnv* env = NULL;
-    if (m_surface && m_vm->GetEnv((void**) &env, JNI_VERSION_1_4) == JNI_OK) {
+    if (m_surface && gVM->GetEnv((void**) &env, JNI_VERSION_1_4) == JNI_OK) {
         gSurfaceI.unlock(env, m_surface);
     }
     gCanvasI.deleteCanvas(canvas);
@@ -216,9 +215,8 @@ bool PaintPlugin::isFixedSurface() {
     return true;
 }
 
-void PaintPlugin::surfaceCreated(JNIEnv* env, jobject surface) {
-    env->GetJavaVM(&m_vm);
-    m_surface = env->NewGlobalRef(surface);
+void PaintPlugin::surfaceCreated(jobject surface) {
+    m_surface = surface;
     drawCleanPlugin();
 }
 
@@ -235,7 +233,7 @@ void PaintPlugin::surfaceChanged(int format, int width, int height) {
 }
 void PaintPlugin::surfaceDestroyed() {
     JNIEnv* env = NULL;
-    if (m_surface && m_vm->GetEnv((void**) &env, JNI_VERSION_1_4) == JNI_OK) {
+    if (m_surface && gVM->GetEnv((void**) &env, JNI_VERSION_1_4) == JNI_OK) {
         env->DeleteGlobalRef(m_surface);
         m_surface = NULL;
     }

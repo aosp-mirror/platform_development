@@ -55,7 +55,7 @@ public:
     SurfaceSubPlugin(NPP inst) : SubPlugin(inst) {}
     virtual ~SurfaceSubPlugin() {}
     virtual bool isFixedSurface() = 0;
-    virtual void surfaceCreated(JNIEnv*, jobject) = 0;
+    virtual void surfaceCreated(jobject) = 0;
     virtual void surfaceChanged(int format, int width, int height) = 0;
     virtual void surfaceDestroyed() = 0;
 };
@@ -67,6 +67,7 @@ enum PluginTypes {
     kForm_PluginType       = 4,
     kText_PluginType       = 5,
     kPaint_PluginType      = 6,
+    kVideo_PluginType      = 7,
 };
 typedef uint32_t PluginType;
 

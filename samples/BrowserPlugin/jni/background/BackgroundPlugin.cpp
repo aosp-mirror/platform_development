@@ -54,7 +54,6 @@ BackgroundPlugin::BackgroundPlugin(NPP inst) : SurfaceSubPlugin(inst) {
 
     // initialize the drawing surface
     m_surface = NULL;
-    m_vm = NULL;
 
     //initialize bitmap transparency variables
     mFinishedStageOne   = false;
@@ -69,7 +68,9 @@ BackgroundPlugin::BackgroundPlugin(NPP inst) : SurfaceSubPlugin(inst) {
     test_javascript();
 }
 
-BackgroundPlugin::~BackgroundPlugin() { }
+BackgroundPlugin::~BackgroundPlugin() {
+    surfaceDestroyed();
+}
 
 bool BackgroundPlugin::supportsDrawingModel(ANPDrawingModel model) {
     return (model == kSurface_ANPDrawingModel);
@@ -79,9 +80,8 @@ bool BackgroundPlugin::isFixedSurface() {
     return false;
 }
 
-void BackgroundPlugin::surfaceCreated(JNIEnv* env, jobject surface) {
-    env->GetJavaVM(&m_vm);
-    m_surface = env->NewGlobalRef(surface);
+void BackgroundPlugin::surfaceCreated(jobject surface) {
+    m_surface = surface;
 }
 
 void BackgroundPlugin::surfaceChanged(int format, int width, int height) {
@@ -90,7 +90,7 @@ void BackgroundPlugin::surfaceChanged(int format, int width, int height) {
 
 void BackgroundPlugin::surfaceDestroyed() {
     JNIEnv* env = NULL;
-    if (m_surface && m_vm->GetEnv((void**) &env, JNI_VERSION_1_4) == JNI_OK) {
+    if (m_surface && gVM->GetEnv((void**) &env, JNI_VERSION_1_4) == JNI_OK) {
         env->DeleteGlobalRef(m_surface);
         m_surface = NULL;
     }
@@ -119,7 +119,7 @@ void BackgroundPlugin::drawPlugin(int surfaceWidth, int surfaceHeight) {
     // lock the surface
     ANPBitmap bitmap;
     JNIEnv* env = NULL;
-    if (!m_surface || m_vm->GetEnv((void**) &env, JNI_VERSION_1_4) != JNI_OK ||
+    if (!m_surface || gVM->GetEnv((void**) &env, JNI_VERSION_1_4) != JNI_OK ||
         !gSurfaceI.lock(env, m_surface, &bitmap, NULL)) {
         gLogI.log(inst(), kError_ANPLogType, " ------ %p unable to lock the plugin", inst());
         return;

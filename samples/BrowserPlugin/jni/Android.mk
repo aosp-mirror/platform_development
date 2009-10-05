@@ -35,6 +35,7 @@ LOCAL_SRC_FILES := \
 	background/BackgroundPlugin.cpp \
 	form/FormPlugin.cpp \
 	paint/PaintPlugin.cpp \
+	video/VideoPlugin.cpp \
 	jni-bridge.cpp \
 
 LOCAL_C_INCLUDES += \
@@ -45,6 +46,7 @@ LOCAL_C_INCLUDES += \
 	$(LOCAL_PATH)/background \
 	$(LOCAL_PATH)/form \
 	$(LOCAL_PATH)/paint \
+	$(LOCAL_PATH)/video \
 	external/webkit/WebCore/bridge \
 	external/webkit/WebCore/plugins \
 	external/webkit/WebCore/platform/android/JavaVM \

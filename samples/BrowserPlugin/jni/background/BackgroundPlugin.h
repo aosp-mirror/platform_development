@@ -34,7 +34,7 @@ public:
     virtual ~BackgroundPlugin();
     virtual bool supportsDrawingModel(ANPDrawingModel);
     virtual int16 handleEvent(const ANPEvent* evt);
-    virtual void surfaceCreated(JNIEnv* env, jobject surface);
+    virtual void surfaceCreated(jobject surface);
     virtual void surfaceChanged(int format, int width, int height);
     virtual void surfaceDestroyed();
     virtual bool isFixedSurface();
@@ -55,7 +55,6 @@ private:
     void drawPlugin(int surfaceWidth, int surfaceHeight);
 
     jobject     m_surface;
-    JavaVM*     m_vm;
 
     void test_logging();
     void test_timers();
