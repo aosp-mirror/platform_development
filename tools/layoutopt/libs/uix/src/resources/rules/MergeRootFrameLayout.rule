@@ -12,5 +12,6 @@
 if (xml.isRoot() && xml.is("FrameLayout") && !xml.'@android:background' &&
         !xml.'@android:foreground' && ((node.isWidthFillParent() &&
                 node.isHeightFillParent()) || !xml.'@android:layout_gravity')) {
-    analysis << [node: node, description: "The root-level <FrameLayout/> can be replaced with <merge/>"]
+    analysis << [node: node, description: "The root-level <FrameLayout/> can be " +
+            "replaced with <merge/>"]
 }
