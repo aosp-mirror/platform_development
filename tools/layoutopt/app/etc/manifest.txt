@@ -1,0 +1,2 @@
+Main-Class: com.android.layoutopt.cli.Main
+Class-Path: groovy-all-1.6.5.jar
