@@ -1,12 +1,12 @@
 /*
  * Copyright (C) 2008 The Android Open Source Project
- * 
+ *
  * Licensed under the Eclipse Public License, Version 1.0 (the "License"); you
  * may not use this file except in compliance with the License. You may obtain a
  * copy of the License at
- * 
+ *
  *      http://www.eclipse.org/org/documents/epl-v10.php
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -15,9 +15,11 @@
  */
 package com.android.ide.eclipse.tests.functests.sampleProjects;
 
+import com.android.ide.eclipse.adt.AndroidConstants;
 import com.android.ide.eclipse.adt.internal.project.ProjectHelper;
-import com.android.ide.eclipse.adt.wizards.newproject.StubSampleProjectWizard;
+import com.android.ide.eclipse.adt.wizards.newproject.StubProjectWizard;
 import com.android.ide.eclipse.tests.FuncTestCase;
+import com.android.sdklib.IAndroidTarget;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResourceChangeEvent;
@@ -26,74 +28,112 @@ import org.eclipse.core.resources.IResourceDelta;
 import org.eclipse.core.resources.IResourceDeltaVisitor;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.swt.widgets.Display;
 
+import java.io.File;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Test case that verifies all SDK sample projects can be imported, built in
- * Eclipse
- * 
+ * Test case that verifies all SDK sample projects can be imported, and built in
+ * Eclipse.
+ * <p/>
  * TODO: add support for deploying apps onto emulator and verifying successful
  * execution there
- * 
+ *
  */
 public class SampleProjectTest extends FuncTestCase {
-    
+
     private static final Logger sLogger = Logger.getLogger(SampleProjectTest.class.getName());
 
     /**
-     * Tests the sample project with the given name
-     * 
-     * @param name - name of sample project to test
+     * Finds all samples projects in set SDK and verify they can be built in Eclipse.
+     * <p/>
+     * TODO: add install and run on emulator test
+     * @throws CoreException
      */
-    protected void doTestSampleProject(String name) {
-        try {
-
-            StubSampleProjectWizard newProjCreator = new StubSampleProjectWizard(
-                    name, getOsSdkLocation());
-            newProjCreator.init(null, null);
-            newProjCreator.performFinish();
-
-            IProject iproject = validateProjectExists(name);
-
-            validateNoProblems(iproject);
-
-        } 
-        catch (CoreException e) {
-            fail("Unexpected exception when creating sample project: " + e.toString());
+    public void testSamples() throws CoreException {
+        // TODO: For reporting purposes, it would be better if a separate test success or failure
+        // could be reported for each sample
+        IAndroidTarget[] targets = mSdk.getTargets();
+        for (IAndroidTarget target : targets) {
+            doTestSamplesForTarget(target);
         }
     }
 
-    public void testApiDemos() {
-        doTestSampleProject("ApiDemos");
+    private void doTestSamplesForTarget(IAndroidTarget target) throws CoreException {
+        String path = target.getPath(IAndroidTarget.SAMPLES);
+        File samples = new File(path);
+        if (samples.isDirectory()) {
+            File[] files = samples.listFiles();
+            for (File file : files) {
+                if (file.isDirectory()) {
+                    doTestSampleProject(file.getName(), file.getAbsolutePath(), target);
+                }
+            }
+        }
     }
 
-    public void testHelloActivity() {
-        doTestSampleProject("HelloActivity");
+    /**
+     * Tests the sample project with the given name
+     *
+     * @param target - SDK target of project
+     * @param name - name of sample project to test
+     * @param path - absolute file system path
+     * @throws CoreException
+     */
+    private void doTestSampleProject(String name, String path, IAndroidTarget target)
+             throws CoreException {
+        IProject iproject = null;
+        try {
+            sLogger.log(Level.INFO, String.format("Testing sample %s for target %s", name,
+                    target.getName()));
+
+            prepareProject(path, target);
+
+            final StubProjectWizard newProjCreator = new StubProjectWizard(
+                    name, path, target);
+            newProjCreator.init(null, null);
+            // need to run finish on ui thread since it invokes a perspective switch
+            Display.getDefault().syncExec(new Runnable() {
+                public void run() {
+                    newProjCreator.performFinish();
+                }
+            });
+
+            iproject = validateProjectExists(name);
+            validateNoProblems(iproject);
+        }
+        catch (CoreException e) {
+            sLogger.log(Level.SEVERE,
+                    String.format("Unexpected exception when creating sample project %s " +
+                            "for target %s", name, target.getName()));
+            throw e;
+        } finally {
+            if (iproject != null) {
+                iproject.delete(false, true, new NullProgressMonitor());
+            }
+        }
     }
 
-    public void testLunarLander() {
-        doTestSampleProject("LunarLander");
-    }
-
-    public void testNotePad() {
-        doTestSampleProject("NotePad");
-    }
-
-    public void testSkeletonApp() {
-        doTestSampleProject("SkeletonApp");
-    }
-
-    public void testSnake() {
-        doTestSampleProject("Snake");
+    private void prepareProject(String path, IAndroidTarget target) {
+        if (target.getVersion().isPreview()) {
+            // need to explicitly set preview's version in manifest for project to compile
+            final String manifestPath = path + File.separatorChar +
+                    AndroidConstants.FN_ANDROID_MANIFEST;
+            AndroidManifestWriter manifestWriter =
+                AndroidManifestWriter.parse(manifestPath);
+            assertNotNull(String.format("could not read manifest %s", manifestPath),
+                    manifestWriter);
+            assertTrue(manifestWriter.setMinSdkVersion(target.getVersion().getApiString()));
+        }
     }
 
     private IProject validateProjectExists(String name) {
         IProject iproject = getIProject(name);
-        assertTrue(iproject.exists());
-        assertTrue(iproject.isOpen());
+        assertTrue(String.format("%s project not created", name), iproject.exists());
+        assertTrue(String.format("%s project not opened", name), iproject.isOpen());
         return iproject;
     }
 
@@ -105,17 +145,17 @@ public class SampleProjectTest extends FuncTestCase {
 
     private void validateNoProblems(IProject iproject) throws CoreException {
         waitForBuild(iproject);
-        assertFalse(ProjectHelper.hasError(iproject, true));
+        assertFalse(String.format("%s project has compile errors", iproject.getName()),
+                ProjectHelper.hasError(iproject, true));
     }
-
 
     /**
      * Waits for build to complete.
-     * 
+     *
      * @param iproject
      */
     private void waitForBuild(final IProject iproject) {
-       
+
         final BuiltProjectDeltaVisitor deltaVisitor = new BuiltProjectDeltaVisitor(iproject);
         IResourceChangeListener newBuildListener = new IResourceChangeListener() {
 
@@ -127,9 +167,9 @@ public class SampleProjectTest extends FuncTestCase {
                     fail();
                 }
             }
-            
+
         };
-        iproject.getWorkspace().addResourceChangeListener(newBuildListener, 
+        iproject.getWorkspace().addResourceChangeListener(newBuildListener,
           IResourceChangeEvent.POST_BUILD);
 
         // poll build listener to determine when build is done
@@ -143,32 +183,31 @@ public class SampleProjectTest extends FuncTestCase {
                 Thread.sleep(50);
             }
             catch (InterruptedException e) {
-                
+                // ignore
             }
            if (Display.getCurrent() != null) {
                Display.getCurrent().readAndDispatch();
            }
         }
-        
-        sLogger.log(Level.SEVERE, "expected build event never happened?");
-        fail("expected build event never happened for " + iproject.getName());
 
+        sLogger.log(Level.SEVERE, "expected build event never happened?");
+        fail(String.format("Expected build event never happened for %s", iproject.getName()));
     }
-    
+
     /**
      * Scans a given IResourceDelta looking for a "build event" change for given IProject
-     * 
+     *
      */
     private class BuiltProjectDeltaVisitor implements IResourceDeltaVisitor {
 
         private IProject mIProject;
         private boolean  mIsBuilt;
-        
+
         public BuiltProjectDeltaVisitor(IProject iproject) {
             mIProject = iproject;
             mIsBuilt = false;
         }
-        
+
         public boolean visit(IResourceDelta delta) {
             if (mIProject.equals(delta.getResource())) {
                 setBuilt(true);
@@ -176,7 +215,7 @@ public class SampleProjectTest extends FuncTestCase {
             }
             return true;
         }
-        
+
         private synchronized void setBuilt(boolean b) {
             mIsBuilt = b;
         }
@@ -184,6 +223,5 @@ public class SampleProjectTest extends FuncTestCase {
         public synchronized boolean isProjectBuilt() {
             return mIsBuilt;
         }
-        
     }
 }
