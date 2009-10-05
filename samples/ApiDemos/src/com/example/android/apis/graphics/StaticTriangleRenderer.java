@@ -101,7 +101,7 @@ public class StaticTriangleRenderer implements GLSurfaceView.Renderer{
                 GL_REPLACE);
 
         InputStream is = mContext.getResources()
-                .openRawResource(R.drawable.robot);
+                .openRawResource(R.raw.robot);
         Bitmap bitmap;
         try {
             bitmap = BitmapFactory.decodeStream(is);
