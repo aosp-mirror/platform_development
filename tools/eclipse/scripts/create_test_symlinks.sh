@@ -31,17 +31,15 @@ BACK=`back $DEST`
 
 HOST=`uname`
 if [ "$HOST" == "Linux" ]; then
-    ln -svf $BACK/out/host/linux-x86/framework/kxml2-2.3.0.jar "$DEST/"
+    ln -svf $BACK/out/host/linux-x86/framework/layoutlib.jar "$DEST/"
 
 elif [ "$HOST" == "Darwin" ]; then
-    ln -svf $BACK/out/host/darwin-x86/framework/kxml2-2.3.0.jar "$DEST/"
+    ln -svf $BACK/out/host/darwin-x86/framework/layoutlib.jar "$DEST/"
 
 elif [ "${HOST:0:6}" == "CYGWIN" ]; then
+    cp -v "$BACK/out/host/windows/framework/layoutlib.jar" "$DEST/"
 
-    if [ ! -f "$DEST/kxml2-2.3.0.jar" ]; then
-        cp -v "prebuilt/common/kxml2/kxml2-2.3.0.jar" "$DEST/"
-        chmod -v a+rx "$DEST"/*.jar
-    fi
+    chmod -v a+rx "$DEST"/*.jar
 
 else
     echo "Unsupported platform ($HOST). Nothing done."
@@ -49,7 +47,10 @@ fi
 
 # create link to ddmlib tests
 DEST=$BASE/unittests/com/android
-BACK=`back $DEST`
 cpdir $DEST development/tools/ddms/libs/ddmlib/tests/src/com/android/ddmlib
 cpdir $DEST development/tools/sdkmanager/libs/sdklib/tests/com/android/sdklib
+
+DEST=$BASE/unittests/com/android/layoutlib
+mkdir $BASE
+cpdir $DEST frameworks/base/tools/layoutlib/bridge/tests/com/android/layoutlib/bridge
 
