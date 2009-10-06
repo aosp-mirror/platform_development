@@ -16,8 +16,12 @@
 
 package com.android.layoutopt.uix;
 
+import org.w3c.dom.Node;
+
 import java.util.List;
 import java.util.ArrayList;
+
+import com.android.layoutopt.uix.groovy.LayoutAnalysisCategory;
 
 /**
  * Contains the results of a layout analysis. Instances of this class are
@@ -40,6 +44,7 @@ public class LayoutAnalysis {
     private final List<Issue> mIssues = new ArrayList<Issue>();
     private String mName;
     private boolean mAnalyzed;
+    private Node mNode;
 
     /**
      * Creates a new analysis. An analysis is always considered invalid by default.
@@ -77,16 +82,16 @@ public class LayoutAnalysis {
      * @param description Description of the issue.
      */
     public void addIssue(String description) {
-        mIssues.add(new Issue(description));
+        mIssues.add(new Issue(mNode, description));
     }
 
     /**
      * Adds an issue to the layout analysis.
      *
-     * @param node The layout node containing the issue.
+     * @param node The node containing the issue.
      * @param description Description of the issue.
      */
-    public void addIssue(LayoutNode node, String description) {
+    public void addIssue(Node node, String description) {
         mIssues.add(new Issue(node, description));
     }
 
@@ -111,10 +116,22 @@ public class LayoutAnalysis {
 
     /**
      * Validates the analysis. This must be call before this analysis can
-     * be considered valid.
+     * be considered valid. Calling this method resets the current node to null.
+     * 
+     * @see #setCurrentNode(org.w3c.dom.Node) 
      */
     void validate() {
         mAnalyzed = true;
+        mNode = null;
+    }
+
+    /**
+     * Sets the current node to be automatically added to created issues.
+     * 
+     * @param node An XML node.
+     */
+    void setCurrentNode(Node node) {
+        mNode = node;
     }
 
     /**
@@ -123,7 +140,7 @@ public class LayoutAnalysis {
      */
     public static class Issue {
         private final String mDescription;
-        private final LayoutNode mNode;
+        private final Node mNode;
 
         /**
          * Creates a new issue with the specified description.
@@ -144,7 +161,7 @@ public class LayoutAnalysis {
          * @param node The node in which the issue was found.
          * @param description The description of the issue.
          */
-        public Issue(LayoutNode node, String description) {
+        public Issue(Node node, String description) {
             mNode = node;
             if (description == null) {
                 throw new IllegalArgumentException("The description must be non-null");
@@ -168,7 +185,7 @@ public class LayoutAnalysis {
          * @return The start line or -1 if the line is unknown.
          */
         public int getStartLine() {
-            return mNode == null ? -1 : mNode.getStartLine();
+            return LayoutAnalysisCategory.getStartLine(mNode);
         }
 
         /**
@@ -177,7 +194,7 @@ public class LayoutAnalysis {
          * @return The end line or -1 if the line is unknown.
          */
         public int getEndLine() {
-            return mNode == null ? -1 : mNode.getEndLine();
+            return LayoutAnalysisCategory.getEndLine(mNode);
         }
     }
 }

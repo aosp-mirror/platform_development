@@ -1,0 +1,14 @@
+// Rule: UselessView
+//
+// Description: Checks whether a container view can be removed.
+//
+// Conditions:
+// - The node is a container view (LinearLayout, etc.)
+// - The node has no id
+// - The node has no background
+// - The node has no children
+
+if (node.isContainer() && node.'*'.size() == 0 && !node.'@android:id' &&
+        !node.'@android:background') {
+    analysis << "This ${node.name()} view is useless (no children, no background, no id)"
+}

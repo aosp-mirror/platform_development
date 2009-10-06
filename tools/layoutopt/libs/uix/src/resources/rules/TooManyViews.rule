@@ -5,6 +5,7 @@
 // Conditions:
 // - The document contains more than 80 views
 
-if (xml.isRoot && (size = xml.'**'.size()) > 80) {
-    analysis << "This layout has too many views: ${size} views, it should have <= 80!"
+if (node.isRoot && (size = node.'**'.size()) > 80) {
+    analysis << [node: null,
+            description: "This layout has too many views: ${size} views, it should have <= 80!"]
 }
