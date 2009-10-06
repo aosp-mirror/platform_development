@@ -40,7 +40,7 @@ public class MonkeyNetworkMonitor extends IIntentReceiver.Stub {
     private long mElapsedTime = 0; // amount of time spent between start() and stop()
     
     public void performReceive(Intent intent, int resultCode, String data, Bundle extras,
-            boolean ordered) throws RemoteException {
+            boolean ordered, boolean sticky) throws RemoteException {
         NetworkInfo ni = (NetworkInfo) intent.getParcelableExtra(
                 ConnectivityManager.EXTRA_NETWORK_INFO);
         if (LDEBUG) System.out.println("Network state changed: " 
