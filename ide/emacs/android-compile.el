@@ -25,22 +25,7 @@
 ;; TODO: Maybe we could cache the result of the compile function in buffer local vars.
 
 (require 'compile)
-
-(defun android-find-build-tree-root ()
-  "Ascend the current path until the root of the android build tree is found.
-Similarly to the shell functions in envsetup.sh, for the root both ./Makefile
-and ./build/core/envsetup.mk are exiting files.
-Return the root of the build tree. Signal an error if not found."
-  (let ((default-directory default-directory))
-    (while (and (> (length default-directory) 2)
-                (not (file-exists-p (concat default-directory "Makefile")))
-                (not (file-exists-p (concat default-directory "build/core/envsetup.mk"))))
-      (setq default-directory
-            (substring default-directory 0
-                       (string-match "[^/]+/$" default-directory))))
-    (if (> (length default-directory) 2)
-        default-directory
-      (error "Not in a valid android tree."))))
+(require 'android-common)
 
 (defun android-find-makefile (topdir)
   "Ascend the current path until an Android makefile is found.
@@ -69,30 +54,28 @@ Signal an error if no Makefile was found."
                            (length topdir) nil) nil)
         (error "Not in a valid android tree.")))))
 
-(defun android-project-p ()
-"Return nil if not in an android build tree."
-  (condition-case nil
-      (android-find-build-tree-root)
-    (error nil)))
-
-;; TODO: Cannot pass additional flags (e.g -j4).
 (defun android-compile ()
   "Elisp equivalent of mm shell function.
 Walk up the path until a makefile is found and build it.
-You need to have a proper buildspec.mk in your top dir."
+You need to have a proper buildspec.mk in your top dir.
+
+Use `android-compilation-jobs' to control the number of jobs used
+in a compilation."
   (interactive)
   (if (android-project-p)
       (let* ((topdir (android-find-build-tree-root))
-             (makefile (android-find-makefile topdir)))
+             (makefile (android-find-makefile topdir))
+             (options
+              (concat " -j " (number-to-string android-compilation-jobs))))
         (if (not (file-exists-p (concat topdir "buildspec.mk")))
             (error "buildspec.mk missing in %s." topdir))
         (set (make-local-variable 'compile-command)
              (if (cadr makefile)
                  ;; The root Makefile is not invoked using ONE_SHOT_MAKEFILE.
-                 (concat "make -C " topdir " files ")
+                 (concat "make -C " topdir options " files ")
                (concat "ONE_SHOT_MAKEFILE=" (car makefile)
-                       " make -C " topdir " files ")))
+                       " make -C " topdir options " files ")))
         (if (interactive-p)
-            (compile compile-command)))))
+            (call-interactively 'compile)))))
 
 (provide 'android-compile)
