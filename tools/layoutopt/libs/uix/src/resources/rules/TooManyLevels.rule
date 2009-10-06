@@ -5,6 +5,7 @@
 // Conditions:
 // - The depth of the layout is > 10
 
-if (xml.isRoot() && (depth = xml.depth()) > 10) {
-    analysis << "This layout has too many nested layouts: ${depth} levels, it should have <= 10!"
+if (node.isRoot() && (depth = node.depth()) > 10) {
+    analysis << [node: null, description: "This layout has too many nested layouts: " +
+            "${depth} levels, it should have <= 10!"]
 }
