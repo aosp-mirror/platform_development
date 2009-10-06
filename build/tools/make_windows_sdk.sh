@@ -164,7 +164,7 @@ function package() {
     cp -v development/tools/ddms/app/etc/ddms.bat                   "$TOOLS"/
     cp -v development/tools/traceview/etc/traceview.bat             "$TOOLS"/
     cp -v development/tools/hierarchyviewer/etc/hierarchyviewer.bat "$TOOLS"/
-    cp -v development/tools/layoutopt/etc/layoutopt.bat             "$TOOLS"/
+    cp -v development/tools/layoutopt/app/etc/layoutopt.bat         "$TOOLS"/
     cp -v development/tools/draw9patch/etc/draw9patch.bat           "$TOOLS"/
     cp -v development/tools/sdkmanager/app/etc/android.bat          "$TOOLS"/
 
