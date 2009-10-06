@@ -61,6 +61,15 @@ public class LayoutAnalysis {
     void setName(String name) {
         mName = name;
     }
+    
+    /**
+     * Adds an issue to the layout analysis.
+     *
+     * @param issue The issue to add.
+     */
+    public void addIssue(Issue issue) {
+        mIssues.add(issue);
+    }
 
     /**
      * Adds an issue to the layout analysis.
@@ -116,7 +125,12 @@ public class LayoutAnalysis {
         private final String mDescription;
         private final LayoutNode mNode;
 
-        Issue(String description) {
+        /**
+         * Creates a new issue with the specified description.
+         * 
+         * @param description The description of the issue.
+         */
+        public Issue(String description) {
             mNode = null;
             if (description == null) {
                 throw new IllegalArgumentException("The description must be non-null");
@@ -124,6 +138,12 @@ public class LayoutAnalysis {
             mDescription = description;
         }
 
+        /**
+         * Creates a new issue with the specified description.
+         * 
+         * @param node The node in which the issue was found.
+         * @param description The description of the issue.
+         */
         public Issue(LayoutNode node, String description) {
             mNode = node;
             if (description == null) {
