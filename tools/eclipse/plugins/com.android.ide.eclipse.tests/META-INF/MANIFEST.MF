@@ -18,4 +18,5 @@ Bundle-Vendor: The Android Open Source Project
 Bundle-ClassPath: kxml2-2.3.0.jar,
  .,
  layoutlib_api.jar,
- sdklib.jar
+ sdklib.jar,
+ layoutlib.jar
