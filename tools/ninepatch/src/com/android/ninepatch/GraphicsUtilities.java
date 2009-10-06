@@ -25,10 +25,16 @@ import java.awt.Graphics;
 import java.awt.Transparency;
 import java.net.URL;
 import java.io.IOException;
+import java.io.InputStream;
 
 public class GraphicsUtilities {
     public static BufferedImage loadCompatibleImage(URL resource) throws IOException {
         BufferedImage image = ImageIO.read(resource);
+        return toCompatibleImage(image);
+    }
+
+    public static BufferedImage loadCompatibleImage(InputStream stream) throws IOException {
+        BufferedImage image = ImageIO.read(stream);
         return toCompatibleImage(image);
     }
 
