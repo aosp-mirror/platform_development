@@ -57,4 +57,5 @@ cpdir $DEST development/tools/sdkmanager/libs/sdklib/tests/com/android/sdklib
 DEST=$BASE/unittests/com/android/layoutlib
 mkdir -p $DEST
 cpdir $DEST frameworks/base/tools/layoutlib/bridge/tests/com/android/layoutlib/bridge
+cpdir $DEST frameworks/base/tools/layoutlib/bridge/tests/com/android/layoutlib/testdata
 
