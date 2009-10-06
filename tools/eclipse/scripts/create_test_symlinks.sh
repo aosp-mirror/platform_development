@@ -51,6 +51,8 @@ cpdir $DEST development/tools/ddms/libs/ddmlib/tests/src/com/android/ddmlib
 cpdir $DEST development/tools/sdkmanager/libs/sdklib/tests/com/android/sdklib
 
 DEST=$BASE/unittests/com/android/layoutlib
-mkdir $DEST
+if [ ! -d "$DEST" ]; then
+	mkdir $DEST
+fi
 cpdir $DEST frameworks/base/tools/layoutlib/bridge/tests/com/android/layoutlib/bridge
 
