@@ -9,9 +9,8 @@
 // - The node is fill_parent in both orientation *or* it has no layout_gravity
 // - The node does not have a background nor a foreground
 
-if (xml.isRoot() && xml.is("FrameLayout") && !xml.'@android:background' &&
-        !xml.'@android:foreground' && ((node.isWidthFillParent() &&
-                node.isHeightFillParent()) || !xml.'@android:layout_gravity')) {
-    analysis << [node: node, description: "The root-level <FrameLayout/> can be " +
-            "replaced with <merge/>"]
+if (node.isRoot() && node.is("FrameLayout") && !node.'@android:background' &&
+        !node.'@android:foreground' && ((node.isWidthFillParent() &&
+                node.isHeightFillParent()) || !node.'@android:layout_gravity')) {
+    analysis << "The root-level <FrameLayout/> can be replaced with <merge/>"
 }

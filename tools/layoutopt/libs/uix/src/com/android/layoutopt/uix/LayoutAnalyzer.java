@@ -241,9 +241,9 @@ public class LayoutAnalyzer {
     }
 
     private void applyRules(LayoutAnalysis analysis, Node node) {
-        LayoutNode layoutNode = new LayoutNode(node);
+        analysis.setCurrentNode(node);
         for (Rule rule : mRules) {
-            rule.run(analysis, layoutNode, node);
+            rule.run(analysis, node);
         }
     }
 }

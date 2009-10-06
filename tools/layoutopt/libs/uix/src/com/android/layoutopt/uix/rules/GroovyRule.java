@@ -21,7 +21,6 @@ import groovy.lang.Binding;
 import groovy.lang.Closure;
 import groovy.xml.dom.DOMCategory;
 import com.android.layoutopt.uix.LayoutAnalysis;
-import com.android.layoutopt.uix.LayoutNode;
 import com.android.layoutopt.uix.groovy.LayoutAnalysisCategory;
 import org.w3c.dom.Node;
 import org.codehaus.groovy.runtime.GroovyCategorySupport;
@@ -59,10 +58,9 @@ public class GroovyRule implements Rule {
         return mName;
     }
 
-    public void run(LayoutAnalysis analysis, LayoutNode node, Node xml) {
+    public void run(LayoutAnalysis analysis, Node node) {
         mBinding.setVariable("analysis", analysis);
         mBinding.setVariable("node", node);
-        mBinding.setVariable("xml", xml);
 
         GroovyCategorySupport.use(mCategories, mClosure);
     }
