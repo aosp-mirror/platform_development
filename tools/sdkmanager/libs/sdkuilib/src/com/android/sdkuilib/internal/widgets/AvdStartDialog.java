@@ -19,6 +19,7 @@ package com.android.sdkuilib.internal.widgets;
 import com.android.sdklib.internal.avd.AvdManager;
 import com.android.sdklib.internal.avd.AvdManager.AvdInfo;
 import com.android.sdkuilib.internal.repository.SettingsController;
+import com.android.sdkuilib.ui.GridDialog;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
@@ -60,7 +61,7 @@ import java.util.regex.Pattern;
  * Values are stored (in the class as static field) to be reused while the app is still running.
  * The Monitor dpi is stored in the settings if availabe.
  */
-final class AvdStartDialog extends Dialog {
+final class AvdStartDialog extends GridDialog {
     // static field to reuse values during the same session.
     private static boolean sWipeData = false;
     private static int sMonitorDpi = 72; // used if there's no setting controller.
@@ -86,7 +87,7 @@ final class AvdStartDialog extends Dialog {
 
     AvdStartDialog(Shell parentShell, AvdInfo avd, String sdkLocation,
             SettingsController settingsController) {
-        super(parentShell);
+        super(parentShell, 2, false);
         mAvd = avd;
         mSdkLocation = sdkLocation;
         mSettingsController = settingsController;
@@ -112,42 +113,31 @@ final class AvdStartDialog extends Dialog {
     }
 
     @Override
-    protected Control createDialogArea(final Composite parent) {
+    public void createDialogContent(final Composite parent) {
         GridData gd;
 
-        // create a composite with standard margins and spacing
-        Composite composite = new Composite(parent, SWT.NONE);
-        GridLayout layout = new GridLayout(2, false);
-        layout.marginHeight = convertVerticalDLUsToPixels(IDialogConstants.VERTICAL_MARGIN);
-        layout.marginWidth = convertHorizontalDLUsToPixels(IDialogConstants.HORIZONTAL_MARGIN);
-        layout.verticalSpacing = convertVerticalDLUsToPixels(IDialogConstants.VERTICAL_SPACING);
-        layout.horizontalSpacing = convertHorizontalDLUsToPixels(
-                IDialogConstants.HORIZONTAL_SPACING);
-        composite.setLayout(layout);
-        composite.setLayoutData(new GridData(GridData.FILL_BOTH));
-
-        Label l = new Label(composite, SWT.NONE);
+        Label l = new Label(parent, SWT.NONE);
         l.setText("Skin:");
 
-        l = new Label(composite, SWT.NONE);
+        l = new Label(parent, SWT.NONE);
         l.setText(mSkinDisplay);
         l.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
-        l = new Label(composite, SWT.NONE);
+        l = new Label(parent, SWT.NONE);
         l.setText("Density:");
 
-        l = new Label(composite, SWT.NONE);
+        l = new Label(parent, SWT.NONE);
         l.setText(getDensityText());
         l.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
-        mScaleButton = new Button(composite, SWT.CHECK);
+        mScaleButton = new Button(parent, SWT.CHECK);
         mScaleButton.setText("Scale display to real size");
         mScaleButton.setEnabled(mEnableScaling);
         boolean defaultState = mEnableScaling && sSkinScaling.get(mAvd.getName()) != null;
         mScaleButton.setSelection(defaultState);
         mScaleButton.setLayoutData(gd = new GridData(GridData.FILL_HORIZONTAL));
         gd.horizontalSpan = 2;
-        final Group scaleGroup = new Group(composite, SWT.NONE);
+        final Group scaleGroup = new Group(parent, SWT.NONE);
         scaleGroup.setLayoutData(gd = new GridData(GridData.FILL_HORIZONTAL));
         gd.horizontalIndent = 30;
         gd.horizontalSpan = 2;
@@ -229,7 +219,7 @@ final class AvdStartDialog extends Dialog {
             }
         });
 
-        final Button wipeButton = new Button(composite, SWT.CHECK);
+        final Button wipeButton = new Button(parent, SWT.CHECK);
         wipeButton.setLayoutData(gd = new GridData(GridData.FILL_HORIZONTAL));
         gd.horizontalSpan = 2;
         wipeButton.setText("Wipe user data");
@@ -241,18 +231,14 @@ final class AvdStartDialog extends Dialog {
             }
         });
 
-        l = new Label(composite, SWT.SEPARATOR | SWT.HORIZONTAL);
+        l = new Label(parent, SWT.SEPARATOR | SWT.HORIZONTAL);
         l.setLayoutData(gd = new GridData(GridData.FILL_HORIZONTAL));
         gd.horizontalSpan = 2;
-
-        applyDialogFont(composite);
 
         // if the scaling is enabled by default, we must initialize the value of mScale
         if (defaultState) {
             onScaleChange();
         }
-
-        return composite;
     }
 
     @Override
