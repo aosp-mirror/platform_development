@@ -116,7 +116,7 @@ check_awk ()
     fi
     local result
     result=`echo "" | $executable -f build/check-awk.awk`
-    if [ "$result" == "Pass" ] ; then
+    if [ "$result" = "Pass" ] ; then
         AWK="$1"
     fi
     log2 "    Check $result"
