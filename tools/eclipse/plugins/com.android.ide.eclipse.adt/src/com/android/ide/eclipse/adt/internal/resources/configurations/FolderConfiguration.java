@@ -464,11 +464,11 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
 
     /**
      * Returns whether the configuration is a match for the given reference config.
-     * <p/>A match means that:
+     * <p/>A match means that, for each qualifier of this config
      * <ul>
-     * <li>This config does not use any qualifier not used by the reference config</li>
-     * <li>The qualifier used by this config have the same values as the qualifiers of
-     * the reference config.</li>
+     * <li>The reference config has no value set
+     * <li>or, the qualifier of the reference config is a match. Depending on the qualifier type
+     * this does not mean the same exact value.</li>
      * </ul>
      * @param referenceConfig The reference configuration to test against.
      * @return true if the configuration matches.
@@ -478,14 +478,10 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
             ResourceQualifier testQualifier = mQualifiers[i];
             ResourceQualifier referenceQualifier = referenceConfig.mQualifiers[i];
 
-            // we only care if testQualifier is non null.
-            if (testQualifier != null) {
-                if (referenceQualifier == null) { // reference config doesn't specify anything
-                                                  // for this qualifier so we refuse it.
-                    return false;
-                } else if (testQualifier.isMatchFor(referenceQualifier) == false) {
-                    return false;
-                }
+            // it's only a non match if both qualifiers are non-null, and they don't match.
+            if (testQualifier != null && referenceQualifier != null &&
+                        testQualifier.isMatchFor(referenceQualifier) == false) {
+                return false;
             }
         }
         return true;
