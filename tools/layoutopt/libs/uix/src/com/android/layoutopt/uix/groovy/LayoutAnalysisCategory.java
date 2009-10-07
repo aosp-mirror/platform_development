@@ -35,6 +35,11 @@ import org.w3c.dom.Element;
  * to {@link com.android.layoutopt.uix.LayoutAnalysis} and {@link org.w3c.dom.Node}.
  */
 public class LayoutAnalysisCategory {
+    private static final String ANDROID_PADDING = "android:padding";
+    private static final String ANDROID_PADDING_LEFT = "android:paddingLeft";
+    private static final String ANDROID_PADDING_TOP = "android:paddingTop";
+    private static final String ANDROID_PADDING_RIGHT = "android:paddingRight";
+    private static final String ANDROID_PADDING_BOTTOM = "android:paddingBottom";
     private static final String ANDROID_LAYOUT_WIDTH = "android:layout_width";
     private static final String ANDROID_LAYOUT_HEIGHT = "android:layout_height";
     private static final String VALUE_FILL_PARENT = "fill_parent";
@@ -98,8 +103,20 @@ public class LayoutAnalysisCategory {
                 node.getUserData(XmlDocumentBuilder.NODE_END_LINE);
         return data == null ? -1 : (Integer) data;
     }
-    
-    
+
+    /**
+     * xmlNode.hasPadding()
+     * 
+     * @return True if the node has one ore more padding attributes.
+     */
+    public static boolean hasPadding(Element element) {
+        return element.getAttribute(ANDROID_PADDING).length() > 0 ||
+                element.getAttribute(ANDROID_PADDING_LEFT).length() > 0 ||
+                element.getAttribute(ANDROID_PADDING_TOP).length() > 0 ||
+                element.getAttribute(ANDROID_PADDING_BOTTOM).length() > 0 ||
+                element.getAttribute(ANDROID_PADDING_RIGHT).length() > 0;
+    }
+
     /**
      * Returns whether this node's width is fill_parent.
      */
