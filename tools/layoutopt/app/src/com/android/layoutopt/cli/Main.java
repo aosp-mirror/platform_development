@@ -51,7 +51,7 @@ public class Main {
         for (File file : files) {
             if (file.isFile() && file.getName().endsWith(".xml")) {
                 analyze(analyzer, file);
-            } else {
+            } else if (file.isDirectory()) {
                 analyzeFiles(file.listFiles());
             }
         }
