@@ -16,14 +16,13 @@
 
 package com.android.sdkuilib.internal.widgets;
 
-import org.eclipse.jface.dialogs.Dialog;
+import com.android.sdkuilib.ui.GridDialog;
+
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Rectangle;
-import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
@@ -40,7 +39,7 @@ import org.eclipse.swt.widgets.Shell;
  * After the dialog as returned, one can query {@link #getDensity()} to get the chosen monitor
  * pixel density.
  */
-class ResolutionChooserDialog extends Dialog {
+class ResolutionChooserDialog extends GridDialog {
     public final static float[] MONITOR_SIZES = new float[] {
             13.3f, 14, 15.4f, 15.6f, 17, 19, 20, 21, 24, 30,
     };
@@ -54,7 +53,7 @@ class ResolutionChooserDialog extends Dialog {
     private int mMonitorIndex = 0;
 
     ResolutionChooserDialog(Shell parentShell) {
-        super(parentShell);
+        super(parentShell, 2, false);
     }
 
     /**
@@ -84,22 +83,11 @@ class ResolutionChooserDialog extends Dialog {
     }
 
     @Override
-    protected Control createDialogArea(Composite parent) {
-        // create a composite with standard margins and spacing
-        Composite composite = new Composite(parent, SWT.NONE);
-        GridLayout layout = new GridLayout(2, false);
-        layout.marginHeight = convertVerticalDLUsToPixels(IDialogConstants.VERTICAL_MARGIN);
-        layout.marginWidth = convertHorizontalDLUsToPixels(IDialogConstants.HORIZONTAL_MARGIN);
-        layout.verticalSpacing = convertVerticalDLUsToPixels(IDialogConstants.VERTICAL_SPACING);
-        layout.horizontalSpacing = convertHorizontalDLUsToPixels(
-                IDialogConstants.HORIZONTAL_SPACING);
-        composite.setLayout(layout);
-        composite.setLayoutData(new GridData(GridData.FILL_BOTH));
-
-        Label l = new Label(composite, SWT.NONE);
+    public void createDialogContent(Composite parent) {
+        Label l = new Label(parent, SWT.NONE);
         l.setText("Screen Size:");
 
-        mScreenSizeCombo = new Combo(composite, SWT.DROP_DOWN | SWT.READ_ONLY);
+        mScreenSizeCombo = new Combo(parent, SWT.DROP_DOWN | SWT.READ_ONLY);
         for (float size : MONITOR_SIZES) {
             if (Math.round(size) == size) {
                 mScreenSizeCombo.add(String.format("%.0f\"", size));
@@ -115,10 +103,10 @@ class ResolutionChooserDialog extends Dialog {
             }
         });
 
-        l = new Label(composite, SWT.NONE);
+        l = new Label(parent, SWT.NONE);
         l.setText("Resolution:");
 
-        mMonitorCombo = new Combo(composite, SWT.DROP_DOWN | SWT.READ_ONLY);
+        mMonitorCombo = new Combo(parent, SWT.DROP_DOWN | SWT.READ_ONLY);
         mMonitors = parent.getDisplay().getMonitors();
         for (Monitor m : mMonitors) {
             Rectangle r = m.getBounds();
@@ -131,8 +119,5 @@ class ResolutionChooserDialog extends Dialog {
                 mMonitorIndex = mMonitorCombo.getSelectionIndex();
             }
         });
-
-        applyDialogFont(composite);
-        return composite;
     }
 }
