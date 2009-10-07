@@ -22,6 +22,7 @@ import com.android.sdkuilib.internal.repository.SettingsController;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
@@ -83,7 +84,7 @@ final class AvdStartDialog extends Dialog {
     private String mSkinDisplay;
     private boolean mEnableScaling = true;
 
-    protected AvdStartDialog(Shell parentShell, AvdInfo avd, String sdkLocation,
+    AvdStartDialog(Shell parentShell, AvdInfo avd, String sdkLocation,
             SettingsController settingsController) {
         super(parentShell);
         mAvd = avd;
@@ -111,7 +112,7 @@ final class AvdStartDialog extends Dialog {
     }
 
     @Override
-    protected Control createDialogArea(Composite parent) {
+    protected Control createDialogArea(final Composite parent) {
         GridData gd;
 
         // create a composite with standard margins and spacing
@@ -150,7 +151,7 @@ final class AvdStartDialog extends Dialog {
         scaleGroup.setLayoutData(gd = new GridData(GridData.FILL_HORIZONTAL));
         gd.horizontalIndent = 30;
         gd.horizontalSpan = 2;
-        scaleGroup.setLayout(new GridLayout(2, false));
+        scaleGroup.setLayout(new GridLayout(3, false));
 
         l = new Label(scaleGroup, SWT.NONE);
         l.setText("Screen Size (in):");
@@ -172,12 +173,16 @@ final class AvdStartDialog extends Dialog {
                 onScaleChange();
             }
         });
+        // empty composite, only 2 widgets on this line.
+        new Composite(scaleGroup, SWT.NONE).setLayoutData(gd = new GridData());
+        gd.widthHint = gd.heightHint = 0;
 
         l = new Label(scaleGroup, SWT.NONE);
         l.setText("Monitor dpi:");
         mMonitorDpi = new Text(scaleGroup, SWT.BORDER);
         mMonitorDpi.setText(Integer.toString(getMonitorDpi()));
-        mMonitorDpi.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        mMonitorDpi.setLayoutData(gd = new GridData(GridData.FILL_HORIZONTAL));
+        gd.widthHint = 50;
         mMonitorDpi.addVerifyListener(new VerifyListener() {
             public void verifyText(VerifyEvent event) {
                 // check for digit only.
@@ -193,6 +198,19 @@ final class AvdStartDialog extends Dialog {
         mMonitorDpi.addModifyListener(new ModifyListener() {
             public void modifyText(ModifyEvent event) {
                 onScaleChange();
+            }
+        });
+
+        Button button = new Button(scaleGroup, SWT.PUSH | SWT.FLAT);
+        button.setText("?");
+        button.setToolTipText("Click to figure out your monitor's pixel density");
+        button.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent arg0) {
+                ResolutionChooserDialog dialog = new ResolutionChooserDialog(parent.getShell());
+                if (dialog.open() == Window.OK) {
+                    mMonitorDpi.setText(Integer.toString(dialog.getDensity()));
+                }
             }
         });
 
