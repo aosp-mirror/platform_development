@@ -52,6 +52,12 @@ public interface ISettingsPage {
      * Default: True.
      */
     public static final String KEY_ASK_ADB_RESTART = "sdkman.ask.adb.restart";   //$NON-NLS-1$
+    /**
+     * Setting to set the density of the monitor.
+     * Type: Integer.
+     * Default: -1
+     */
+    public static final String KEY_MONITOR_DENSITY = "sdkman.monitor.density"; //$NON-NLS-1$
 
     /** Loads settings from the given {@link Properties} container and update the page UI. */
     public abstract void loadSettings(Properties in_settings);
