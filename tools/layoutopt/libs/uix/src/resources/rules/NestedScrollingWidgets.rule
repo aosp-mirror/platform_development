@@ -1,0 +1,19 @@
+// Rule: NestedScrollingWidgets
+//
+// Description: Checks whether a scrolling widget has nested scrolling widgets.
+//
+// Conditions:
+// - The node is a scrolling widget
+// - The node has a descendant who is also a scrolling widget
+
+def widgets = ["ScrollView", "ListView", "GridView"]
+if (xml.name() in widgets && xml.all().any{ it.name() in widgets }) {
+    analysis << [node: node, description: "The vertically scrolling ${xml.name()} should " +
+            "not contain another vertically scrolling widget"]
+}
+
+widgets = ["HorizontalScrollView", "Gallery"]
+if (xml.name() in widgets && xml.all().any{ it.name() in widgets }) {
+    analysis << [node: node, description: "The horizontally scrolling ${xml.name()} should " +
+            "not contain another horizontally scrolling widget"]
+}
