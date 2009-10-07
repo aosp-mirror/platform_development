@@ -52,11 +52,6 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.TreeMap;
 
 
 /**
@@ -64,21 +59,16 @@ import java.util.TreeMap;
  */
 final class UpdateChooserDialog extends Dialog {
 
-    /**
-     * Min Y location for dialog. Need to deal with the menu bar on mac os.
-     */
-    private final static int MIN_Y = SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_DARWIN ?
-            20 : 0;
+    /** Min Y location for dialog. Need to deal with the menu bar on mac os. */
+    private final static int MIN_Y =
+        SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_DARWIN ? 20 : 0;
 
     /** Last dialog size for this session. */
     private static Point sLastSize;
+    private boolean mCancelled = true;
     private boolean mCompleted;
-    private final Map<Archive, Archive> mNewToOldArchiveMap;
     private boolean mLicenseAcceptAll;
     private boolean mInternalLicenseRadioUpdate;
-    private HashSet<Archive> mAccepted = new HashSet<Archive>();
-    private HashSet<Archive> mRejected = new HashSet<Archive>();
-    private ArrayList<Archive> mResult = new ArrayList<Archive>();
 
     // UI fields
     private Shell mDialogShell;
@@ -96,40 +86,56 @@ final class UpdateChooserDialog extends Dialog {
     private Group mPackageTextGroup;
     private final UpdaterData mUpdaterData;
     private Group mTableGroup;
+    private Label mErrorLabel;
+
+    /**
+     * List of all archives to be installed with dependency information.
+     *
+     * Note: in a lot of cases, we need to find the archive info for a given archive. This
+     * is currently done using a simple linear search, which is fine since we only have a very
+     * limited number of archives to deal with (e.g. < 10 now). We might want to revisit
+     * this later if it becomes an issue. Right now just do the simple thing.
+     *
+     * Typically we could add a map Archive=>ArchiveInfo later.
+     */
+    private final ArrayList<ArchiveInfo> mArchives;
+
 
 
     /**
      * Create the dialog.
      * @param parentShell The shell to use, typically updaterData.getWindowShell()
      * @param updaterData The updater data
-     * @param newToOldUpdates The map [new archive => old archive] of potential updates
+     * @param archives The archives to be installed
      */
     public UpdateChooserDialog(Shell parentShell,
             UpdaterData updaterData,
-            Map<Archive, Archive> newToOldUpdates) {
+            ArrayList<ArchiveInfo> archives) {
         super(parentShell,
               SWT.APPLICATION_MODAL);
         mUpdaterData = updaterData;
-
-        mNewToOldArchiveMap = new TreeMap<Archive, Archive>(new Comparator<Archive>() {
-            public int compare(Archive a1, Archive a2) {
-                // The items are archive but what we show are packages so we'll
-                // sort of packages short descriptions
-                String desc1 = a1.getParentPackage().getShortDescription();
-                String desc2 = a2.getParentPackage().getShortDescription();
-                return desc1.compareTo(desc2);
-            }
-        });
-        mNewToOldArchiveMap.putAll(newToOldUpdates);
+        mArchives = archives;
     }
 
     /**
      * Returns the results, i.e. the list of selected new archives to install.
-     * The list is always non null. It is empty when cancel is selected or when
-     * all potential updates have been refused.
+     * This is similar to the {@link ArchiveInfo} list instance given to the constructor
+     * except only accepted archives are present.
+     *
+     * An empty list is returned if cancel was choosen.
      */
-    public Collection<Archive> getResult() {
-        return mResult;
+    public ArrayList<ArchiveInfo> getResult() {
+        ArrayList<ArchiveInfo> ais = new ArrayList<ArchiveInfo>();
+
+        if (!mCancelled) {
+            for (ArchiveInfo ai : mArchives) {
+                if (ai.isAccepted()) {
+                    ais.add(ai);
+                }
+            }
+        }
+
+        return ais;
     }
 
     /**
@@ -249,7 +255,14 @@ final class UpdateChooserDialog extends Dialog {
 
         mSashForm.setWeights(new int[] {200, 300});
 
-        // Bottom buttons
+        // Error message area
+
+        mErrorLabel = new Label(mDialogShell, SWT.NONE);
+        mErrorLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 3, 1));
+
+
+        // Bottom buttons area
+
         placeholder = new Label(mDialogShell, SWT.NONE);
         placeholder.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, true, false, 1, 1));
 
@@ -293,24 +306,19 @@ final class UpdateChooserDialog extends Dialog {
     private void postCreate() {
         setWindowImage();
 
-        // Automatically accept those with an empty license
-        for (Archive a : mNewToOldArchiveMap.keySet()) {
+        // Automatically accept those with an empty license or no license
+        for (ArchiveInfo ai : mArchives) {
+            Archive a = ai.getNewArchive();
+            assert a != null;
 
             String license = a.getParentPackage().getLicense();
-            if (license != null) {
-                license = license.trim();
-                if (license.length() == 0) {
-                    mAccepted.add(a);
-                }
-            } else {
-                mAccepted.add(a);
-            }
+            ai.setAccepted(license == null || license.trim().length() == 0);
         }
 
         // Fill the list with the replacement packages
         mTableViewPackage.setLabelProvider(new NewArchivesLabelProvider());
         mTableViewPackage.setContentProvider(new NewArchivesContentProvider());
-        mTableViewPackage.setInput(mNewToOldArchiveMap);
+        mTableViewPackage.setInput(mArchives);
 
         adjustColumnsWidth();
 
@@ -403,12 +411,10 @@ final class UpdateChooserDialog extends Dialog {
     }
 
     /**
-     * Callback invoked when the Install button is selected. Fills {@link #mResult} and
-     * completes the dialog.
+     * Callback invoked when the Install button is selected. Completes the dialog.
      */
     private void onInstallSelected() {
-        // get list of accepted items
-        mResult.addAll(mAccepted);
+        mCancelled = false;
         mCompleted = true;
     }
 
@@ -416,6 +422,7 @@ final class UpdateChooserDialog extends Dialog {
      * Callback invoked when the Cancel button is selected.
      */
     private void onCancelSelected() {
+        mCancelled = true;
         mCompleted = true;
     }
 
@@ -423,49 +430,123 @@ final class UpdateChooserDialog extends Dialog {
      * Callback invoked when a package item is selected in the list.
      */
     private void onPackageSelected() {
-        Archive a = getSelectedArchive();
-        displayInformation(a);
-        updateLicenceRadios(a);
+        ArchiveInfo ai = getSelectedArchive();
+        displayInformation(ai);
+        displayMissingDependency(ai);
+        updateLicenceRadios(ai);
     }
 
-    /** Returns the currently selected Archive or null. */
-    private Archive getSelectedArchive() {
+    /** Returns the currently selected {@link ArchiveInfo} or null. */
+    private ArchiveInfo getSelectedArchive() {
         ISelection sel = mTableViewPackage.getSelection();
         if (sel instanceof IStructuredSelection) {
             Object elem = ((IStructuredSelection) sel).getFirstElement();
-            if (elem instanceof Archive) {
-                return (Archive) elem;
+            if (elem instanceof ArchiveInfo) {
+                return (ArchiveInfo) elem;
             }
         }
         return null;
     }
 
-    private void displayInformation(Archive a) {
-        if (a == null) {
+    /**
+     * Updates the package description and license text depending on the selected package.
+     */
+    private void displayInformation(ArchiveInfo ai) {
+        if (ai == null) {
             mPackageText.setText("Please select a package.");
             return;
         }
 
-        mPackageText.setText("");                                               //$NON-NLS-1$
+        Archive anew = ai.getNewArchive();
+
+        mPackageText.setText("");                                                //$NON-NLS-1$
 
         addSectionTitle("Package Description\n");
-        addText(a.getParentPackage().getLongDescription(), "\n\n");             //$NON-NLS-1$
+        addText(anew.getParentPackage().getLongDescription(), "\n\n");          //$NON-NLS-1$
 
-        Archive aold = mNewToOldArchiveMap.get(a);
+        Archive aold = ai.getReplaced();
         if (aold != null) {
             addText(String.format("This update will replace revision %1$s with revision %2$s.\n\n",
                     aold.getParentPackage().getRevision(),
-                    a.getParentPackage().getRevision()));
+                    anew.getParentPackage().getRevision()));
         }
 
+        ArchiveInfo adep = ai.getDependsOn();
+        if (adep != null || ai.isDependencyFor()) {
+            addSectionTitle("Dependencies\n");
+
+            if (adep != null) {
+                addText(String.format("This package depends on %1$s.\n\n",
+                        adep.getNewArchive().getParentPackage().getShortDescription()));
+            }
+
+            if (ai.isDependencyFor()) {
+                addText("This package is a dependency for:");
+                for (ArchiveInfo ai2 : ai.getDependenciesFor()) {
+                    addText("\n- " +
+                            ai2.getNewArchive().getParentPackage().getShortDescription());
+                }
+                addText("\n\n");
+            }
+        }
 
         addSectionTitle("Archive Description\n");
-        addText(a.getLongDescription(), "\n\n");                                //$NON-NLS-1$
+        addText(anew.getLongDescription(), "\n\n");                             //$NON-NLS-1$
 
-        String license = a.getParentPackage().getLicense();
+        String license = anew.getParentPackage().getLicense();
         if (license != null) {
             addSectionTitle("License\n");
-            addText(license.trim(), "\n");                                      //$NON-NLS-1$
+            addText(license.trim(), "\n");                                       //$NON-NLS-1$
+        }
+    }
+
+    /**
+     * Computes and display missing dependency.
+     * If there's a selected package, check the dependency for that one.
+     * Otherwise display the first missing dependency.
+     */
+    private void displayMissingDependency(ArchiveInfo ai) {
+        String error = null;
+
+        try {
+            if (ai != null) {
+
+                if (!ai.isAccepted()) {
+                    // Case where this package blocks another one when not accepted
+                    for (ArchiveInfo ai2 : ai.getDependenciesFor()) {
+                        // It only matters if the blocked one is accepted
+                        if (ai2.isAccepted()) {
+                            error = String.format("Package '%1$s' depends on this one.",
+                                    ai2.getNewArchive().getParentPackage().getShortDescription());
+                            return;
+                        }
+                    }
+                } else {
+                    // Case where this package is accepted but blocked by another non-accepted one
+                    ArchiveInfo adep = ai.getDependsOn();
+                    if (adep != null && !adep.isAccepted()) {
+                        error = String.format("This package depends on '%1$s'.",
+                                adep.getNewArchive().getParentPackage().getShortDescription());
+                        return;
+                    }
+                }
+            }
+
+            // If there's no selection, just find the first missing dependency of any accepted
+            // package.
+            for (ArchiveInfo ai2 : mArchives) {
+                if (ai2.isAccepted()) {
+                    ArchiveInfo adep = ai.getDependsOn();
+                    if (adep != null && !adep.isAccepted()) {
+                        error = String.format("Package '%1$s' depends on '%2$s'",
+                                ai2.getNewArchive().getParentPackage().getShortDescription(),
+                                adep.getNewArchive().getParentPackage().getShortDescription());
+                        return;
+                    }
+                }
+            }
+        } finally {
+            mErrorLabel.setText(error == null ? "" : error);        //$NON-NLS-1$
         }
     }
 
@@ -488,25 +569,41 @@ final class UpdateChooserDialog extends Dialog {
         mPackageText.setStyleRange(sr);
     }
 
-    private void updateLicenceRadios(Archive a) {
+    private void updateLicenceRadios(ArchiveInfo ai) {
         if (mInternalLicenseRadioUpdate) {
             return;
         }
         mInternalLicenseRadioUpdate = true;
 
+        boolean oneAccepted = false;
+
         if (mLicenseAcceptAll) {
             mLicenseRadioAcceptAll.setSelection(true);
+            mLicenseRadioAccept.setEnabled(true);
+            mLicenseRadioReject.setEnabled(true);
             mLicenseRadioAccept.setSelection(false);
             mLicenseRadioReject.setSelection(false);
         } else {
             mLicenseRadioAcceptAll.setSelection(false);
-            mLicenseRadioAccept.setSelection(mAccepted.contains(a));
-            mLicenseRadioReject.setSelection(mRejected.contains(a));
+            oneAccepted = ai != null && ai.isAccepted();
+            mLicenseRadioAccept.setEnabled(ai != null);
+            mLicenseRadioReject.setEnabled(ai != null);
+            mLicenseRadioAccept.setSelection(oneAccepted);
+            mLicenseRadioReject.setSelection(ai != null && ai.isRejected());
         }
 
-        // The install button is enabled if there's at least one
-        // package accepted.
-        mInstallButton.setEnabled(mAccepted.size() > 0);
+        // The install button is enabled if there's at least one package accepted.
+        // If the current one isn't, look for another one.
+        boolean missing = mErrorLabel.getText() != null && mErrorLabel.getText().length() > 0;
+        if (!missing && !oneAccepted) {
+            for(ArchiveInfo ai2 : mArchives) {
+                if (ai2.isAccepted()) {
+                    oneAccepted = true;
+                    break;
+                }
+            }
+        }
+        mInstallButton.setEnabled(!missing && oneAccepted);
 
         mInternalLicenseRadioUpdate = false;
     }
@@ -523,26 +620,28 @@ final class UpdateChooserDialog extends Dialog {
         }
         mInternalLicenseRadioUpdate = true;
 
-        Archive a = getSelectedArchive();
+        ArchiveInfo ai = getSelectedArchive();
         boolean needUpdate = true;
 
         if (!mLicenseAcceptAll && mLicenseRadioAcceptAll.getSelection()) {
             // Accept all has been switched on. Mark all packages as accepted
             mLicenseAcceptAll = true;
-            mAccepted.addAll(mNewToOldArchiveMap.keySet());
-            mRejected.clear();
+            for(ArchiveInfo ai2 : mArchives) {
+                ai2.setAccepted(true);
+                ai2.setRejected(false);
+            }
 
         } else if (mLicenseRadioAccept.getSelection()) {
             // Accept only this one
             mLicenseAcceptAll = false;
-            mAccepted.add(a);
-            mRejected.remove(a);
+            ai.setAccepted(true);
+            ai.setRejected(false);
 
         } else if (mLicenseRadioReject.getSelection()) {
             // Reject only this one
             mLicenseAcceptAll = false;
-            mAccepted.remove(a);
-            mRejected.add(a);
+            ai.setAccepted(false);
+            ai.setRejected(true);
 
         } else {
             needUpdate = false;
@@ -554,9 +653,10 @@ final class UpdateChooserDialog extends Dialog {
             if (mLicenseAcceptAll) {
                 mTableViewPackage.refresh();
             } else {
-               mTableViewPackage.refresh(a);
+               mTableViewPackage.refresh(ai);
             }
-            updateLicenceRadios(a);
+            displayMissingDependency(ai);
+            updateLicenceRadios(ai);
         }
     }
 
@@ -564,32 +664,29 @@ final class UpdateChooserDialog extends Dialog {
      * Callback invoked when a package item is double-clicked in the list.
      */
     private void onPackageDoubleClick() {
-        Archive a = getSelectedArchive();
+        ArchiveInfo ai = getSelectedArchive();
 
-        if (mAccepted.contains(a)) {
-            // toggle from accepted to rejected
-            mAccepted.remove(a);
-            mRejected.add(a);
-        } else {
-            // toggle from rejected or unknown to accepted
-            mAccepted.add(a);
-            mRejected.remove(a);
-        }
+        boolean wasAccepted = ai.isAccepted();
+        ai.setAccepted(!wasAccepted);
+        ai.setRejected(wasAccepted);
 
         // update state
         mLicenseAcceptAll = false;
-        mTableViewPackage.refresh(a);
-        updateLicenceRadios(a);
+        mTableViewPackage.refresh(ai);
+        updateLicenceRadios(ai);
     }
 
     private class NewArchivesLabelProvider extends LabelProvider {
         @Override
         public Image getImage(Object element) {
+            assert element instanceof ArchiveInfo;
+            ArchiveInfo ai = (ArchiveInfo) element;
+
             ImageFactory imgFactory = mUpdaterData.getImageFactory();
             if (imgFactory != null) {
-                if (mAccepted.contains(element)) {
+                if (ai.isAccepted()) {
                     return imgFactory.getImageByName("accept_icon16.png");
-                } else if (mRejected.contains(element)) {
+                } else if (ai.isRejected()) {
                     return imgFactory.getImageByName("reject_icon16.png");
                 }
                 return imgFactory.getImageByName("unknown_icon16.png");
@@ -599,10 +696,16 @@ final class UpdateChooserDialog extends Dialog {
 
         @Override
         public String getText(Object element) {
-            if (element instanceof Archive) {
-                return ((Archive) element).getParentPackage().getShortDescription();
+            assert element instanceof ArchiveInfo;
+            ArchiveInfo ai = (ArchiveInfo) element;
+
+            String desc = ai.getNewArchive().getParentPackage().getShortDescription();
+
+            if (ai.isDependencyFor()) {
+                desc += " [*]";
             }
-            return super.getText(element);
+
+            return desc;
         }
     }
 
@@ -613,11 +716,11 @@ final class UpdateChooserDialog extends Dialog {
         }
 
         public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
-            // Ignore. The input is always mNewArchives
+            // Ignore. The input is always mArchives
         }
 
         public Object[] getElements(Object inputElement) {
-            return mNewToOldArchiveMap.keySet().toArray();
+            return mArchives.toArray();
         }
     }
 
