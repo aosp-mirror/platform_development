@@ -61,7 +61,7 @@ development/tools/scripts/icon_ldpi.png platforms/${PLATFORM_NAME}/templates/ico
 development/tools/scripts/icon_mdpi.png platforms/${PLATFORM_NAME}/templates/icon_mdpi.png
 development/tools/scripts/icon_hdpi.png platforms/${PLATFORM_NAME}/templates/icon_hdpi.png
 development/tools/scripts/build.template tools/lib/build.template
-tools/scripts/devices.xml tools/lib/devices.xml
+development/tools/scripts/devices.xml tools/lib/devices.xml
 
 # emacs support
 development/tools/scripts/android.el tools/lib/android.el
