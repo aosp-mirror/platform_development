@@ -141,7 +141,7 @@ function package() {
     TOOLS="$TEMP_SDK_DIR/tools"
     LIB="$TEMP_SDK_DIR/tools/lib"
     rm -v "$TOOLS"/{adb,android,apkbuilder,ddms,dmtracedump,draw9patch,emulator}
-    rm -v "$TOOLS"/{hierarchyviewer,hprof-conv,mksdcard,sqlite3,traceview,zipalign}
+    rm -v "$TOOLS"/{hierarchyviewer,hprof-conv,layoutopt,mksdcard,sqlite3,traceview,zipalign}
     rm -v "$LIB"/*/swt.jar
     rm -v "$PLATFORM_TOOLS"/{aapt,aidl,dx,dexdump}
 
@@ -164,6 +164,7 @@ function package() {
     cp -v development/tools/ddms/app/etc/ddms.bat                   "$TOOLS"/
     cp -v development/tools/traceview/etc/traceview.bat             "$TOOLS"/
     cp -v development/tools/hierarchyviewer/etc/hierarchyviewer.bat "$TOOLS"/
+    cp -v development/tools/layoutopt/etc/layoutopt.bat             "$TOOLS"/
     cp -v development/tools/draw9patch/etc/draw9patch.bat           "$TOOLS"/
     cp -v development/tools/sdkmanager/app/etc/android.bat          "$TOOLS"/
 
