@@ -1,0 +1,62 @@
+<?xml version="1.0"?>
+<d:layout-configs
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:d="http://schemas.android.com/sdk/android/layout-configs/1">
+
+    <d:device name="ADP1">
+        <d:default>
+            <d:screen-size>normal</d:screen-size>
+            <d:screen-ratio>notlong</d:screen-ratio>
+            <d:screen-orientation>port</d:screen-orientation>
+            <d:pixel-density>mdpi</d:pixel-density>
+            <d:touch-type>finger</d:touch-type>
+            <d:text-input-method>qwerty</d:text-input-method>
+            <d:nav-method>trackball</d:nav-method>
+            <d:screen-dimension>
+                <d:size>320</d:size>
+                <d:size>480</d:size>
+            </d:screen-dimension>
+            <d:xdpi>180.6</d:xdpi>
+            <d:ydpi>182</d:ydpi>
+        </d:default>
+
+        <d:config name="Portrait">
+            <d:keyboard-state>keyssoft</d:keyboard-state>
+            <d:screen-orientation>port</d:screen-orientation>
+        </d:config>
+        <d:config name="Landscape, closed">
+            <d:keyboard-state>keyssoft</d:keyboard-state>
+            <d:screen-orientation>land</d:screen-orientation>
+        </d:config>
+        <d:config name="Landscape, open">
+            <d:keyboard-state>keysexposed</d:keyboard-state>
+            <d:screen-orientation>land</d:screen-orientation>
+        </d:config>
+    </d:device>
+
+    <d:device name="Ion">
+        <d:default>
+            <d:screen-size>normal</d:screen-size>
+            <d:screen-ratio>notlong</d:screen-ratio>
+            <d:screen-orientation>port</d:screen-orientation>
+            <d:pixel-density>mdpi</d:pixel-density>
+            <d:touch-type>finger</d:touch-type>
+            <d:keyboard-state>keyssoft</d:keyboard-state>
+            <d:text-input-method>nokeys</d:text-input-method>
+            <d:nav-method>trackball</d:nav-method>
+            <d:screen-dimension>
+                <d:size>320</d:size>
+                <d:size>480</d:size>
+            </d:screen-dimension>
+            <d:xdpi>180.6</d:xdpi>
+            <d:ydpi>182</d:ydpi>
+        </d:default>
+
+        <d:config name="Portrait">
+            <d:screen-orientation>port</d:screen-orientation>
+        </d:config>
+        <d:config name="Landscape">
+            <d:screen-orientation>land</d:screen-orientation>
+        </d:config>
+    </d:device>
+</d:layout-configs>
