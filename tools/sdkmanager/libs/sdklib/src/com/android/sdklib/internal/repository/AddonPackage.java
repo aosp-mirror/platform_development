@@ -89,6 +89,8 @@ public class AddonPackage extends Package {
      * {@link IAndroidTarget#isPlatform()} false) from the {@link SdkManager}.
      * This is used to list local SDK folders in which case there is one archive which
      * URL is the actual target location.
+     * <p/>
+     * By design, this creates a package with one and only one archive.
      */
     AddonPackage(IAndroidTarget target, Properties props) {
         super(  null,                       //source

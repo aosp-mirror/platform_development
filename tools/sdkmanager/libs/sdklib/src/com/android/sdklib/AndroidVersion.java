@@ -40,13 +40,14 @@ import java.util.Properties;
 public class AndroidVersion {
 
     private static final String PROP_API_LEVEL = "AndroidVersion.ApiLevel";  //$NON-NLS-1$
-    private static final String PROP_CODENAME = "AndroidVersion.CodeName";  //$NON-NLS-1$
+    private static final String PROP_CODENAME = "AndroidVersion.CodeName";   //$NON-NLS-1$
 
     private final int mApiLevel;
     private final String mCodename;
 
     /**
      * Creates an {@link AndroidVersion} with the given api level and codename.
+     * Codename should be null for a release version, otherwise it's a preview codename.
      */
     public AndroidVersion(int apiLevel, String codename) {
         mApiLevel = apiLevel;
