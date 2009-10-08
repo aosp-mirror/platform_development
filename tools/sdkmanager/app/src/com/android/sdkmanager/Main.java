@@ -43,7 +43,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import javax.xml.xpath.XPath;
@@ -994,13 +993,16 @@ public class Main {
         // get the list of possible hardware properties
         File hardwareDefs = new File (mOsSdkFolder + File.separator +
                 SdkConstants.OS_SDK_TOOLS_LIB_FOLDER, SdkConstants.FN_HARDWARE_INI);
-        List<HardwareProperty> list = HardwareProperties.parseHardwareDefinitions(hardwareDefs,
-                null /*sdkLog*/);
+        Map<String, HardwareProperty> hwMap = HardwareProperties.parseHardwareDefinitions(
+                hardwareDefs, null /*sdkLog*/);
 
         HashMap<String, String> map = new HashMap<String, String>();
 
-        for (int i = 0 ; i < list.size() ;) {
-            HardwareProperty property = list.get(i);
+        // we just want to loop on the HardwareProperties
+        HardwareProperty[] hwProperties = hwMap.values().toArray(
+                new HardwareProperty[hwMap.size()]);
+        for (int i = 0 ; i < hwProperties.length ;) {
+            HardwareProperty property = hwProperties[i];
 
             String description = property.getDescription();
             if (description != null) {
