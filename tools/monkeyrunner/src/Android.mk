@@ -21,9 +21,31 @@ LOCAL_SRC_FILES := $(call all-subdir-java-files)
 LOCAL_JAR_MANIFEST := ../etc/manifest.txt
 LOCAL_JAVA_LIBRARIES := \
 	ddmlib \
-	jython
+	jython \
+	xmlwriter
 
 
 LOCAL_MODULE := monkeyrunner
 
 include $(BUILD_HOST_JAVA_LIBRARY)
+
+# Build ext.jar
+# ============================================================
+
+ext_dirs := 	../../../../external/xmlwriter/src
+
+ext_src_files := $(call all-java-files-under,$(ext_dirs))
+
+# ====  the library  =========================================
+include $(CLEAR_VARS)
+
+LOCAL_SRC_FILES := $(ext_src_files)
+
+LOCAL_NO_STANDARD_LIBRARIES := true
+#LOCAL_JAVA_LIBRARIES := core
+#LOCAL_STATIC_JAVA_LIBRARIES := libgoogleclient
+
+LOCAL_MODULE := xmlwriter
+
+include $(BUILD_HOST_JAVA_LIBRARY)
+
