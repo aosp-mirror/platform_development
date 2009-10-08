@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+/*
+**
+** Copyright 2009, The Android Open Source Project
+**
+** Licensed under the Apache License, Version 2.0 (the "License");
+** you may not use this file except in compliance with the License.
+** You may obtain a copy of the License at
+**
+**     http://www.apache.org/licenses/LICENSE-2.0
+**
+** Unless required by applicable law or agreed to in writing, software
+** distributed under the License is distributed on an "AS IS" BASIS,
+** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+** See the License for the specific language governing permissions and
+** limitations under the License.
+*/
+-->
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.android.livecubes">
+
+    <application
+        android:label="@string/wallpapers"
+        android:icon="@drawable/ic_launcher_wallpaper">
+
+        <service
+            android:label="@string/wallpaper_cube1"
+            android:name=".cube1.CubeWallpaper1"
+            android:permission="android.permission.BIND_WALLPAPER">
+            <intent-filter>
+                <action android:name="android.service.wallpaper.WallpaperService" />
+            </intent-filter>
+            <meta-data android:name="android.service.wallpaper" android:resource="@xml/cube1" />
+        </service>
+
+        <service
+            android:label="@string/wallpaper_cube2"
+            android:name=".cube2.CubeWallpaper2"
+            android:permission="android.permission.BIND_WALLPAPER">
+            <intent-filter>
+                <action android:name="android.service.wallpaper.WallpaperService" />
+            </intent-filter>
+            <meta-data android:name="android.service.wallpaper" android:resource="@xml/cube2" />
+        </service>
+        <activity
+            android:label="@string/cube2_settings"
+            android:name="com.android.livecubes.cube2.CubeWallpaper2Settings"
+            android:theme="@android:style/Theme.Light.WallpaperSettings"
+            android:exported="true">
+        </activity>
+
+        <service
+            android:label="@string/wallpaper_cube3"
+            android:name=".cube3.CubeWallpaper3"
+            android:permission="android.permission.BIND_WALLPAPER">
+            <intent-filter>
+                <action android:name="android.service.wallpaper.WallpaperService" />
+            </intent-filter>
+            <meta-data android:name="android.service.wallpaper" android:resource="@xml/cube3" />
+        </service>
+
+    </application>
+
+</manifest>

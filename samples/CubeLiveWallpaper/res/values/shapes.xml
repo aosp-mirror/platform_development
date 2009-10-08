@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+/*
+* Copyright (C) 4008 The Android Open Source Project
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*      http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
+-->
+
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+
+    <string-array name="cube2_shapenames">
+        <item>"Cube"</item>
+        <item>"Dodecahedron"</item>
+    </string-array>
+
+    <string-array name="cube2_shapeprefix">
+        <item>"cube"</item>
+        <item>"dodecahedron"</item>
+    </string-array>
+
+    <!-- x,y,z tuples for the points defining the object -->
+    <!-- stored as strings for easier human readability -->
+    <string-array name="cubepoints">
+        <item>"-400 -400 -400"</item>
+        <item>"400 -400 -400"</item>
+        <item>"400 400 -400"</item>
+        <item>"-400 400 -400"</item>
+        <item>"-400 -400 400"</item>
+        <item>"400 -400 400"</item>
+        <item>"400 400 400"</item>
+        <item>"-400 400 400"</item>
+    </string-array>
+
+    <!-- start,end point index tuples of the lines defining the object -->
+    <string-array name="cubelines">
+        <!-- lines forming one face -->
+        <item>"0 1"</item>
+        <item>"1 2"</item>
+        <item>"2 3"</item>
+        <item>"3 0"</item>
+
+        <!-- lines forming the opposite face -->
+        <item>"4 5"</item>
+        <item>"5 6"</item>
+        <item>"6 7"</item>
+        <item>"7 4"</item>
+
+        <!-- lines connecting the two faces -->
+        <item>"0 4"</item>
+        <item>"1 5"</item>
+        <item>"2 6"</item>
+        <item>"3 7"</item>
+    </string-array>
+
+    <string-array name="dodecahedronpoints">
+        <item>"333.850000 0.000000 437.250000"</item>
+        <item>"103.400000 317.350000 437.250000"</item>
+        <item>"-270.050000 196.350000 437.250000"</item>
+        <item>"-270.050000 -196.350000 437.250000"</item>
+        <item>"103.400000 -317.350000 437.250000"</item>
+        <item>"540.100000 0.000000 103.400000"</item>
+        <item>"167.200000 513.700000 103.400000"</item>
+        <item>"-437.250000 317.350000 103.400000"</item>
+        <item>"-437.250000 -317.350000 103.400000"</item>
+        <item>"167.200000 -513.700000 103.400000"</item>
+        <item>"437.250000 317.350000 -103.400000"</item>
+        <item>"-167.200000 513.700000 -103.400000"</item>
+        <item>"-540.100000 0.000000 -103.400000"</item>
+        <item>"-167.200000 -513.700000 -103.400000"</item>
+        <item>"437.250000 -317.350000 -103.400000"</item>
+        <item>"270.050000 196.350000 -437.250000"</item>
+        <item>"-103.400000 317.350000 -437.250000"</item>
+        <item>"-333.850000 0.000000 -437.250000"</item>
+        <item>"-103.400000 -317.350000 -437.250000"</item>
+        <item>"270.050000 -196.350000 -437.250000"</item>
+    </string-array>
+
+    <string-array name="dodecahedronlines">
+        <item>"0 1"</item>
+        <item>"0 4"</item>
+        <item>"0 5"</item>
+        <item>"1 2"</item>
+        <item>"1 6"</item>
+        <item>"2 3"</item>
+        <item>"2 7"</item>
+        <item>"3 4"</item>
+        <item>"3 8"</item>
+        <item>"4 9"</item>
+        <item>"5 10"</item>
+        <item>"5 14"</item>
+        <item>"6 10"</item>
+        <item>"6 11"</item>
+        <item>"7 11"</item>
+        <item>"7 12"</item>
+        <item>"8 12"</item>
+        <item>"8 13"</item>
+        <item>"9 13"</item>
+        <item>"9 14"</item>
+        <item>"10 15"</item>
+        <item>"11 16"</item>
+        <item>"12 17"</item>
+        <item>"13 18"</item>
+        <item>"14 19"</item>
+        <item>"15 16"</item>
+        <item>"15 19"</item>
+        <item>"16 17"</item>
+        <item>"17 18"</item>
+        <item>"18 19"</item>
+    </string-array>
+</resources>
