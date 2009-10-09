@@ -30,6 +30,7 @@ public abstract class AdtSdkTestCase extends SdkTestCase {
     /**
      * Gets the current Sdk from Adt, waiting if necessary.
      */
+    @Override
     protected Sdk loadSdk() {
         AdtPlugin adt = AdtPlugin.getDefault();
         Object sdkLock = adt.getSdkLockObject();
