@@ -182,7 +182,7 @@
         <sequential>
             <echo>Installing ${out.debug.package} onto default emulator or device...</echo>
             <exec executable="${adb}" failonerror="true">
-                <arg value="${adb.device.arg}" />
+                <arg line="${adb.device.arg}" />
                 <arg value="install" />
                 <arg value="-r" />
                 <arg path="${out.debug.package}" />
@@ -366,6 +366,7 @@
                 description="Uninstalls the application from a running emulator or device.">
         <echo>Uninstalling ${manifest.package} from the default emulator or device...</echo>
         <exec executable="${adb}" failonerror="true">
+            <arg line="${adb.device.arg}" />
             <arg value="uninstall" />
             <arg value="${manifest.package}" />
         </exec>
