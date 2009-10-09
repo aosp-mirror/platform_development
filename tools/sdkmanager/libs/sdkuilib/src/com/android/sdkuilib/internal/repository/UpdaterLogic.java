@@ -29,7 +29,7 @@ import com.android.sdklib.internal.repository.Package.UpdateInfo;
 import java.util.ArrayList;
 import java.util.Collection;
 
-class UpdaterLogic {
+public /* public for continuous tests */ class UpdaterLogic {
 
     private RepoSources mSources;
 
