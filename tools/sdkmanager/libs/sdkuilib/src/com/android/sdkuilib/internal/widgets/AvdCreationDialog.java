@@ -316,7 +316,7 @@ final class AvdCreationDialog extends GridDialog {
         });
 
         mSkinSizeRadio = new Button(skinGroup, SWT.RADIO);
-        mSkinSizeRadio.setText("Size:");
+        mSkinSizeRadio.setText("Resolution:");
 
         mSkinSizeWidth = new Text(skinGroup, SWT.BORDER);
         mSkinSizeWidth.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
