@@ -1,0 +1,11 @@
+home=true
+doc.type=getsource
+@jd:body
+
+<div id="mainBodyFixed">
+
+<p>
+Some new content about getting source goes here
+</p>
+
+</div>

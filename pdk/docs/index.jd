@@ -36,25 +36,6 @@ home=true
                               <tr>
                                       <td colspan="2"><div class="seperator">&nbsp;</div></td>
                               </tr>
-                              <tr>
-                                      <td class="imageCell"><a href="http://source.android.com"><img src="{@docRoot}assets/images/icon_contribute.jpg" style="padding:0" /></a></td>
-                                      <td>
-                                              <h2 class="green">Contribute</h2>
-                                              <p>Android Open Source Project gives you access to the entire platform source.</p>
-                                              <p><a href="http://source.android.com">Learn more &raquo;</a></p>
-                                      </td>
-                              </tr>
-                              <tr>
-                                      <td colspan="2"><div class="seperator">&nbsp;</div></td>
-                              </tr>
-                              <tr>
-                                      <td class="imageCell"><a href="http://www.youtube.com/user/androiddevelopers"><img src="{@docRoot}assets/images/video-droid.png" style="padding:0" /></a></td>
-                                      <td>
-                                              <h2 class="green">Watch</h2>
-                                              <object width="150" height="140"><param name="movie" value="http://www.youtube.com/v/GARMe7Km_gk&hl=en&fs=1"></param><param name="allowFullScreen" value="true"></param><param name="allowscriptaccess" value="always"></param><embed src="http://www.youtube.com/v/GARMe7Km_gk&hl=en&fs=1" type="application/x-shockwave-flash" allowscriptaccess="always" allowfullscreen="true" width="150" height="140"></embed></object>
-                                              <p style="margin-top:1em"><a href="{@docRoot}videos/index.html">More Android videos &raquo;</a></p>
-                                      </td>
-                              </tr>
 
                       </table>
               </div>
