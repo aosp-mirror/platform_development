@@ -29,10 +29,24 @@ import com.android.sdklib.internal.repository.Package.UpdateInfo;
 import java.util.ArrayList;
 import java.util.Collection;
 
-public /* public for continuous tests */ class UpdaterLogic {
+/**
+ * The logic to compute which packages to install, based on the choices
+ * made by the user. This adds dependent packages as needed.
+ * <p/>
+ * When the user doesn't provide a selection, looks at local package to find
+ * those that can be updated and compute dependencies too.
+ */
+class UpdaterLogic {
 
     private RepoSources mSources;
 
+    /**
+     * Compute which packages to install by taking the user selection
+     * and adding dependent packages as needed.
+     *
+     * When the user doesn't provide a selection, looks at local package to find
+     * those that can be updated and compute dependencies too.
+     */
     public ArrayList<ArchiveInfo> computeUpdates(
             Collection<Archive> selectedArchives,
             RepoSources sources,

@@ -68,7 +68,6 @@ fi
 DEST=$BASE/unittests/com/android
 cpdir $DEST development/tools/ddms/libs/ddmlib/tests/src/com/android/ddmlib
 cpdir $DEST development/tools/sdkmanager/libs/sdklib/tests/com/android/sdklib
-cpdir $DEST development/tools/sdkmanager/libs/sdkuilib/tests/com/android/sdkuilib
 
 DEST=$BASE/unittests/com/android/layoutlib
 mkdir -p $DEST
