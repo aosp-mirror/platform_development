@@ -16,12 +16,13 @@
 package com.android.ide.eclipse.tests.functests.sampleProjects;
 
 import com.android.ide.eclipse.adt.AndroidConstants;
-import com.android.ide.eclipse.adt.internal.project.ProjectHelper;
 import com.android.ide.eclipse.adt.wizards.newproject.StubProjectWizard;
-import com.android.ide.eclipse.tests.FuncTestCase;
+import com.android.ide.eclipse.tests.AdtSdkTestCase;
 import com.android.sdklib.IAndroidTarget;
 
+import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceChangeEvent;
 import org.eclipse.core.resources.IResourceChangeListener;
 import org.eclipse.core.resources.IResourceDelta;
@@ -43,7 +44,7 @@ import java.util.logging.Logger;
  * execution there
  *
  */
-public class SampleProjectTest extends FuncTestCase {
+public class SampleProjectTest extends AdtSdkTestCase {
 
     private static final Logger sLogger = Logger.getLogger(SampleProjectTest.class.getName());
 
@@ -56,7 +57,7 @@ public class SampleProjectTest extends FuncTestCase {
     public void testSamples() throws CoreException {
         // TODO: For reporting purposes, it would be better if a separate test success or failure
         // could be reported for each sample
-        IAndroidTarget[] targets = mSdk.getTargets();
+        IAndroidTarget[] targets = getSdk().getTargets();
         for (IAndroidTarget target : targets) {
             doTestSamplesForTarget(target);
         }
@@ -145,8 +146,25 @@ public class SampleProjectTest extends FuncTestCase {
 
     private void validateNoProblems(IProject iproject) throws CoreException {
         waitForBuild(iproject);
-        assertFalse(String.format("%s project has compile errors", iproject.getName()),
-                ProjectHelper.hasError(iproject, true));
+
+        boolean hasErrors = false;
+        StringBuilder failureBuilder = new StringBuilder(String.format("%s project has errors:",
+                iproject.getName()));
+        IMarker[] markers = iproject.findMarkers(IMarker.PROBLEM, true, IResource.DEPTH_INFINITE);
+        if (markers != null && markers.length > 0) {
+            // the project has marker(s). even though they are "problem" we
+            // don't know their severity. so we loop on them and figure if they
+            // are warnings or errors
+            for (IMarker m : markers) {
+                int s = m.getAttribute(IMarker.SEVERITY, -1);
+                if (s == IMarker.SEVERITY_ERROR) {
+                    hasErrors = true;
+                    failureBuilder.append("\n");
+                    failureBuilder.append(m.getAttribute(IMarker.MESSAGE, ""));
+                }
+            }
+        }
+        assertFalse(failureBuilder.toString(), hasErrors);
     }
 
     /**

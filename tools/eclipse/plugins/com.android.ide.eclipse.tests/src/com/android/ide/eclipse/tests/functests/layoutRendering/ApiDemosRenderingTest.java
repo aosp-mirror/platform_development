@@ -39,7 +39,7 @@ import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.ide.eclipse.adt.internal.sdk.LoadStatus;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData.LayoutBridge;
-import com.android.ide.eclipse.tests.FuncTestCase;
+import com.android.ide.eclipse.tests.SdkEnvTestCase;
 import com.android.layoutlib.api.ILayoutResult;
 import com.android.layoutlib.api.IProjectCallback;
 import com.android.layoutlib.api.IResourceValue;
@@ -59,7 +59,7 @@ import java.util.Map;
 
 import javax.imageio.ImageIO;
 
-public class ApiDemosRenderingTest extends FuncTestCase {
+public class ApiDemosRenderingTest extends SdkEnvTestCase {
 
     /**
      * Custom parser that implements {@link IXmlPullParser} (which itself extends
@@ -121,7 +121,7 @@ public class ApiDemosRenderingTest extends FuncTestCase {
     }
 
     private void findApiDemos() throws IOException, XmlPullParserException {
-        IAndroidTarget[] targets = mSdk.getTargets();
+        IAndroidTarget[] targets = getSdk().getTargets();
 
         for (IAndroidTarget target : targets) {
             String path = target.getPath(IAndroidTarget.SAMPLES);
@@ -141,7 +141,7 @@ public class ApiDemosRenderingTest extends FuncTestCase {
     }
 
     private void testSample(IAndroidTarget target, File sampleProject) throws IOException, XmlPullParserException {
-        AndroidTargetData data = mSdk.getTargetData(target);
+        AndroidTargetData data = getSdk().getTargetData(target);
         if (data == null) {
             fail("No AndroidData!");
         }
