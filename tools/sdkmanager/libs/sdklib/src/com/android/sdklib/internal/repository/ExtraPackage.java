@@ -72,6 +72,8 @@ public class ExtraPackage extends Package {
      * Manually create a new package with one archive and the given attributes or properties.
      * This is used to create packages from local directories in which case there must be
      * one archive which URL is the actual target location.
+     * <p/>
+     * By design, this creates a package with one and only one archive.
      */
     ExtraPackage(RepoSource source,
             Properties props,
