@@ -72,8 +72,7 @@ See test_defs.xsd for more information.
 <test name="apidemos"
     build_path="development/samples/ApiDemos"
     package="com.example.android.apis.tests"
-    coverage_target="ApiDemos"
-    continuous="true" />
+    coverage_target="ApiDemos" />
 
 <test name="launchperf"
     build_path="development/apps/launchperf"
