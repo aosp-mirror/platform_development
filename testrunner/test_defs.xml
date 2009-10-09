@@ -317,6 +317,13 @@ See test_defs.xsd for more information.
     coverage_target="framework"
     cts="true" />
 
+<test name="cts-webkit"
+    build_path="cts/tests/tests/webkit"
+    package="com.android.cts.webkit"
+    runner="android.test.InstrumentationCtsTestRunner"
+    coverage_target="framework"
+    cts="true" />
+
 <test name="cts-widget"
     build_path="cts/tests/tests/widget"
     package="com.android.cts.widget"
