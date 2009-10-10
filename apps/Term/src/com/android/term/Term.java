@@ -45,6 +45,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.preference.PreferenceManager;
 import android.util.AttributeSet;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.KeyEvent;
@@ -158,14 +159,6 @@ public class Term extends Activity {
         super.onCreate(icicle);
         Log.e(Term.LOG_TAG, "onCreate");
         mPrefs = PreferenceManager.getDefaultSharedPreferences(this);
-        mPrefs.registerOnSharedPreferenceChangeListener(
-                new SharedPreferences.OnSharedPreferenceChangeListener(){
-
-                    public void onSharedPreferenceChanged(
-                            SharedPreferences sharedPreferences, String key) {
-                        readPrefs();
-                        updatePrefs();
-                    }});
         readPrefs();
 
         setContentView(R.layout.term_activity);
@@ -227,7 +220,7 @@ public class Term extends Activity {
 
     private void sendInitialCommand() {
         String initialCommand = mInitialCommand;
-        if (initialCommand == null) {
+        if (initialCommand == null || initialCommand.equals("")) {
             initialCommand = DEFAULT_INITIAL_COMMAND;
         }
         if (initialCommand.length() > 0) {
@@ -253,7 +246,7 @@ public class Term extends Activity {
 
     private void createSubprocess(int[] processId) {
         String shell = mShell;
-        if (shell == null) {
+        if (shell == null || shell.equals("")) {
             shell = DEFAULT_SHELL;
         }
         ArrayList<String> args = parse(shell);
@@ -347,7 +340,9 @@ public class Term extends Activity {
     }
 
     private void updatePrefs() {
-        mEmulatorView.setTextSize(mFontSize);
+        DisplayMetrics metrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(metrics);
+        mEmulatorView.setTextSize((int) (mFontSize * metrics.density));
         setColors();
         mControlKeyCode = CONTROL_KEY_SCHEMES[mControlKeyId];
     }
@@ -369,17 +364,10 @@ public class Term extends Activity {
     }
 
     @Override
-    public void onPause() {
-        SharedPreferences.Editor e = mPrefs.edit();
-        e.clear();
-        e.putString(FONTSIZE_KEY, Integer.toString(mFontSize));
-        e.putString(COLOR_KEY, Integer.toString(mColorId));
-        e.putString(CONTROLKEY_KEY, Integer.toString(mControlKeyId));
-        e.putString(SHELL_KEY, mShell);
-        e.putString(INITIALCOMMAND_KEY, mInitialCommand);
-        e.commit();
-
-        super.onPause();
+    public void onResume() {
+        super.onResume();
+        readPrefs();
+        updatePrefs();
     }
 
     @Override

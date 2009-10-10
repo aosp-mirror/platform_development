@@ -25,7 +25,7 @@
    <string name="text_preferences">Text</string>
 
    <string name="title_fontsize_preference">Font size</string>
-   <string name="summary_fontsize_preference">Choose character height in pixels.</string>
+   <string name="summary_fontsize_preference">Choose character height in points.</string>
    <string name="dialog_title_fontsize_preference">Font size</string>
 
    <string name="title_color_preference">Colors</string>
