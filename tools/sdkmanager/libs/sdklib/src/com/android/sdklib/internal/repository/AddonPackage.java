@@ -189,18 +189,29 @@ public class AddonPackage extends Package {
     /** Returns a short description for an {@link IDescription}. */
     @Override
     public String getShortDescription() {
-        return String.format("%1$s by %2$s for Android API %3$s",
+        return String.format("%1$s by %2$s, Android API %3$s, revision %4$s",
                 getName(),
                 getVendor(),
-                mVersion.getApiString());
+                mVersion.getApiString(),
+                getRevision());
     }
 
-    /** Returns a long description for an {@link IDescription}. */
+    /**
+     * Returns a long description for an {@link IDescription}.
+     *
+     * The long description is whatever the XML contains for the &lt;description&gt; field,
+     * or the short description if the former is empty.
+     */
     @Override
     public String getLongDescription() {
-        return String.format("%1$s,\nRevision %2$d.",
-                getShortDescription(),
-                getRevision());
+        String s = getDescription();
+        if (s == null || s.length() == 0) {
+            s = getShortDescription();
+        }
+
+        s += String.format(".\nRequires SDK Platform Android API %1$s.",
+                mVersion.getApiString());
+        return s;
     }
 
     /**

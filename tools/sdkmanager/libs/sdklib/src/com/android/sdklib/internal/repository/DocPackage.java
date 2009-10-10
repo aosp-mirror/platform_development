@@ -103,21 +103,34 @@ public class DocPackage extends Package {
     @Override
     public String getShortDescription() {
         if (mVersion.isPreview()) {
-            return String.format("Documentation for Android '%1$s' Preview SDK",
-                    mVersion.getCodename());
-        } else if (mVersion.getApiLevel() != 0) {
-            return String.format("Documentation for Android SDK, API %1$d", mVersion.getApiLevel());
+            return String.format("Documentation for Android '%1$s' Preview SDK, revision %2$s",
+                    mVersion.getCodename(),
+                    getRevision());
         } else {
-            return String.format("Documentation for Android SDK");
+            return String.format("Documentation for Android SDK, API %1$d, revision %2$s",
+                    mVersion.getApiLevel(),
+                    getRevision());
         }
     }
 
-    /** Returns a long description for an {@link IDescription}. */
+    /**
+     * Returns a long description for an {@link IDescription}.
+     *
+     * The long description is whatever the XML contains for the &lt;description&gt; field,
+     * or the short description if the former is empty.
+     */
     @Override
     public String getLongDescription() {
-        return String.format("%1$s,\nRevision %2$d.",
-                getShortDescription(),
-                getRevision());
+        String s = getDescription();
+        if (s == null || s.length() == 0) {
+            s = getShortDescription();
+        }
+
+        if (!s.endsWith(".")) {
+            s += ".";
+        }
+
+        return s;
     }
 
     /**
