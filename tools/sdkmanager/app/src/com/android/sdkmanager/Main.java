@@ -34,6 +34,7 @@ import com.android.sdklib.internal.project.ProjectProperties.PropertyType;
 import com.android.sdklib.xml.AndroidXPathFactory;
 import com.android.sdkmanager.internal.repository.AboutPage;
 import com.android.sdkmanager.internal.repository.SettingsPage;
+import com.android.sdkuilib.internal.repository.LocalPackagesPage;
 import com.android.sdkuilib.repository.UpdaterWindow;
 
 import org.xml.sax.InputSource;
@@ -243,7 +244,11 @@ public class Main {
             updateTestProject();
 
         } else if (verb == null && directObject == null) {
-            showMainWindow();
+            showMainWindow(false /*autoUpdate*/);
+
+        } else if (SdkCommandLine.VERB_UPDATE.equals(verb) &&
+                SdkCommandLine.OBJECT_SDK.equals(directObject)) {
+            showMainWindow(true /*autoUpdate*/);
 
         } else if (SdkCommandLine.VERB_UPDATE.equals(verb) &&
                 SdkCommandLine.OBJECT_ADB.equals(directObject)) {
@@ -257,7 +262,7 @@ public class Main {
     /**
      * Display the main SdkManager app window
      */
-    private void showMainWindow() {
+    private void showMainWindow(boolean autoUpdate) {
         try {
             // display a message talking about the command line version
             System.out.printf("No command line parameters provided, launching UI.\n" +
@@ -269,6 +274,10 @@ public class Main {
                     false /*userCanChangeSdkRoot*/);
             window.registerPage("Settings", SettingsPage.class);
             window.registerPage("About", AboutPage.class);
+            if (autoUpdate) {
+                window.setInitialPage(LocalPackagesPage.class);
+                window.setRequestAutoUpdate(true);
+            }
             window.open();
         } catch (Exception e) {
             e.printStackTrace();
@@ -353,12 +362,14 @@ public class Main {
             } catch (IOException e) {
                 errorAndExit("Unable to resolve Main project's directory: %1$s",
                         pathToMainProject);
+                return; // help Eclipse static analyzer understand we'll never execute the rest.
             }
         }
 
         if (parentProject.isDirectory() == false) {
             errorAndExit("Main project's directory does not exist: %1$s",
                     pathToMainProject);
+            return;
         }
 
         // now look for a manifest in there
@@ -366,6 +377,7 @@ public class Main {
         if (manifest.isFile() == false) {
             errorAndExit("No AndroidManifest.xml file found in the main project directory: %1$s",
                     parentProject.getAbsolutePath());
+            return;
         }
 
         // now query the manifest for the package file.
@@ -405,6 +417,7 @@ public class Main {
         String targetHash = p.getProperty(ProjectProperties.PROPERTY_TARGET);
         if (targetHash == null) {
             errorAndExit("Couldn't find the main project target");
+            return;
         }
 
         // and resolve it.
@@ -413,6 +426,7 @@ public class Main {
             errorAndExit(
                     "Unable to resolve main project target '%1$s'. You may want to install the platform in your SDK.",
                     targetHash);
+            return;
         }
 
         mSdkLog.printf("Found main project target: %1$s\n", target.getFullName());
