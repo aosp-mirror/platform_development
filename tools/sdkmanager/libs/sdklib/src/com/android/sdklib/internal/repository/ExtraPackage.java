@@ -152,25 +152,27 @@ public class ExtraPackage extends MinToolsPackage {
                 name,
                 getRevision());
 
-        if (getMinToolsRevision() != MIN_TOOLS_REV_NOT_SPECIFIED) {
-            s += String.format(" (tools rev: %1$d)", getMinToolsRevision());
-        }
-
         return s;
     }
 
-    /** Returns a long description for an {@link IDescription}. */
+    /**
+     * Returns a long description for an {@link IDescription}.
+     *
+     * The long description is whatever the XML contains for the &lt;description&gt; field,
+     * or the short description if the former is empty.
+     */
     @Override
     public String getLongDescription() {
-        String s = String.format("Extra %1$s package, revision %2$d",
-                getPath(),
-                getRevision());
-
-        if (getMinToolsRevision() != MIN_TOOLS_REV_NOT_SPECIFIED) {
-            s += String.format(" (min tools rev.: %1$d)", getMinToolsRevision());
+        String s = getDescription();
+        if (s == null || s.length() == 0) {
+            s = String.format("Extra %1$s package, revision %2$d",
+                    getPath(),
+                    getRevision());
         }
 
-        s += ".";
+        if (getMinToolsRevision() != MIN_TOOLS_REV_NOT_SPECIFIED) {
+            s += String.format(".\nRequires tools revision %1$d.", getMinToolsRevision());
+        }
 
         return s;
     }
