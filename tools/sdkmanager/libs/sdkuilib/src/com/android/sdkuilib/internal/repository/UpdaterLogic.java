@@ -19,6 +19,7 @@ package com.android.sdkuilib.internal.repository;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.internal.repository.AddonPackage;
 import com.android.sdklib.internal.repository.Archive;
+import com.android.sdklib.internal.repository.MinToolsPackage;
 import com.android.sdklib.internal.repository.Package;
 import com.android.sdklib.internal.repository.PlatformPackage;
 import com.android.sdklib.internal.repository.RepoSource;
@@ -142,34 +143,36 @@ class UpdaterLogic {
         if (pkg instanceof AddonPackage) {
             AddonPackage addon = (AddonPackage) pkg;
 
-            return findAddonDependency(
+            return findPlatformDependency(
                     addon, outArchives, selectedArchives, remotePkgs, localPkgs);
 
-        } else if (pkg instanceof PlatformPackage) {
-            PlatformPackage platform = (PlatformPackage) pkg;
+        } else if (pkg instanceof MinToolsPackage) {
+            MinToolsPackage platformOrExtra = (MinToolsPackage) pkg;
 
-            return findPlatformDependency(
-                    platform, outArchives, selectedArchives, remotePkgs, localPkgs);
+            return findToolsDependency(
+                    platformOrExtra, outArchives, selectedArchives, remotePkgs, localPkgs);
         }
 
         return null;
     }
 
     /**
-     * A platform can have a min-tools-rev, in which case it depends on having a tools package
-     * of the requested revision.
+     * Resolves dependencies on tools.
+     *
+     * A platform or an extra package can both have a min-tools-rev, in which case it
+     * depends on having a tools package of the requested revision.
      * Finds the tools dependency. If found, add it to the list of things to install.
      * Returns the archive info dependency, if any.
      */
-    protected ArchiveInfo findPlatformDependency(PlatformPackage platform,
+    protected ArchiveInfo findToolsDependency(MinToolsPackage platformOrExtra,
             ArrayList<ArchiveInfo> outArchives,
             Collection<Archive> selectedArchives,
             ArrayList<Package> remotePkgs,
             Package[] localPkgs) {
         // This is the requirement to match.
-        int rev = platform.getMinToolsRevision();
+        int rev = platformOrExtra.getMinToolsRevision();
 
-        if (rev == PlatformPackage.MIN_TOOLS_REV_NOT_SPECIFIED) {
+        if (rev == MinToolsPackage.MIN_TOOLS_REV_NOT_SPECIFIED) {
             // Well actually there's no requirement.
             return null;
         }
@@ -234,11 +237,13 @@ class UpdaterLogic {
     }
 
     /**
+     * Resolves dependencies on platform.
+     *
      * An addon depends on having a platform with the same API version.
      * Finds the platform dependency. If found, add it to the list of things to install.
      * Returns the archive info dependency, if any.
      */
-    protected ArchiveInfo findAddonDependency(AddonPackage addon,
+    protected ArchiveInfo findPlatformDependency(AddonPackage addon,
             ArrayList<ArchiveInfo> outArchives,
             Collection<Archive> selectedArchives,
             ArrayList<Package> remotePkgs,
