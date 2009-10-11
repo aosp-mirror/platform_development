@@ -33,10 +33,9 @@ import java.util.Properties;
 /**
  * Represents a platform XML node in an SDK repository.
  */
-public class PlatformPackage extends Package {
+public class PlatformPackage extends MinToolsPackage {
 
     protected static final String PROP_VERSION       = "Platform.Version";      //$NON-NLS-1$
-    protected static final String PROP_MIN_TOOLS_REV = "Platform.MinToolsRev";  //$NON-NLS-1$
 
     /** The package version, for platform, add-on and doc packages. */
     private final AndroidVersion mVersion;
@@ -45,24 +44,13 @@ public class PlatformPackage extends Package {
     private final String mVersionName;
 
     /**
-     * The minimal revision of the tools package required by this extra package, if > 0,
-     * or {@link #MIN_TOOLS_REV_NOT_SPECIFIED} if there is no such requirement.
-     */
-    private final int mMinToolsRevision;
-
-    /**
-     * The value of {@link #mMinToolsRevision} when the {@link SdkRepository#NODE_MIN_TOOLS_REV}
-     * was not specified in the XML source.
-     */
-    public static final int MIN_TOOLS_REV_NOT_SPECIFIED = 0;
-
-    /**
      * Creates a new platform package from the attributes and elements of the given XML node.
      * <p/>
      * This constructor should throw an exception if the package cannot be created.
      */
     PlatformPackage(RepoSource source, Node packageNode, Map<String,String> licenses) {
         super(source, packageNode, licenses);
+
         mVersionName = XmlParserUtils.getXmlString(packageNode, SdkRepository.NODE_VERSION);
         int apiLevel = XmlParserUtils.getXmlInt   (packageNode, SdkRepository.NODE_API_LEVEL, 0);
         String codeName = XmlParserUtils.getXmlString(packageNode, SdkRepository.NODE_CODENAME);
@@ -70,9 +58,6 @@ public class PlatformPackage extends Package {
             codeName = null;
         }
         mVersion = new AndroidVersion(apiLevel, codeName);
-
-        mMinToolsRevision = XmlParserUtils.getXmlInt(packageNode, SdkRepository.NODE_MIN_TOOLS_REV,
-                MIN_TOOLS_REV_NOT_SPECIFIED);
     }
 
     /**
@@ -97,9 +82,6 @@ public class PlatformPackage extends Package {
 
         mVersion = target.getVersion();
         mVersionName  = target.getVersionName();
-
-        mMinToolsRevision = Integer.parseInt(getProperty(props, PROP_MIN_TOOLS_REV,
-                Integer.toString(MIN_TOOLS_REV_NOT_SPECIFIED)));
     }
 
     /**
@@ -116,8 +98,8 @@ public class PlatformPackage extends Package {
             props.setProperty(PROP_VERSION, mVersionName);
         }
 
-        if (mMinToolsRevision != MIN_TOOLS_REV_NOT_SPECIFIED) {
-            props.setProperty(PROP_MIN_TOOLS_REV, Integer.toString(mMinToolsRevision));
+        if (getMinToolsRevision() != MIN_TOOLS_REV_NOT_SPECIFIED) {
+            props.setProperty(PROP_MIN_TOOLS_REV, Integer.toString(getMinToolsRevision()));
         }
     }
 
@@ -129,14 +111,6 @@ public class PlatformPackage extends Package {
     /** Returns the package version, for platform, add-on and doc packages. */
     public AndroidVersion getVersion() {
         return mVersion;
-    }
-
-    /**
-     * The minimal revision of the tools package required by this extra package, if > 0,
-     * or {@link #MIN_TOOLS_REV_NOT_SPECIFIED} if there is no such requirement.
-     */
-    public int getMinToolsRevision() {
-        return mMinToolsRevision;
     }
 
     /** Returns a short description for an {@link IDescription}. */
@@ -152,8 +126,8 @@ public class PlatformPackage extends Package {
                 mVersion.getApiLevel());
         }
 
-        if (mMinToolsRevision != MIN_TOOLS_REV_NOT_SPECIFIED) {
-            s += String.format(" (tools rev: %1$d)", mMinToolsRevision);
+        if (getMinToolsRevision() != MIN_TOOLS_REV_NOT_SPECIFIED) {
+            s += String.format(" (tools rev: %1$d)", getMinToolsRevision());
         }
 
         return s;

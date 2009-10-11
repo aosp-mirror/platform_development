@@ -536,7 +536,7 @@ final class UpdateChooserDialog extends Dialog {
             // package.
             for (ArchiveInfo ai2 : mArchives) {
                 if (ai2.isAccepted()) {
-                    ArchiveInfo adep = ai.getDependsOn();
+                    ArchiveInfo adep = ai2.getDependsOn();
                     if (adep != null && !adep.isAccepted()) {
                         error = String.format("Package '%1$s' depends on '%2$s'",
                                 ai2.getNewArchive().getParentPackage().getShortDescription(),
