@@ -542,66 +542,69 @@ public class ProjectResources implements IResourceRepository {
         for (int q = 0 ; q < count ; q++) {
             // look to see if one resource has this qualifier.
             // At the same time also record the best match value for the qualifier (if applicable).
+
+            // The reference value, to find the best match.
+            // Note that this qualifier could be null. In which case any qualifier found in the
+            // possible match, will all be considered best match.
             ResourceQualifier referenceQualifier = referenceConfig.getQualifier(q);
 
-            if (referenceQualifier != null) { // no need to check if it's null, since the loop
-                                              // above will have removed the resources anyway.
-                boolean found = false;
-                ResourceQualifier bestMatch = null;
-                for (Resource res : matchingResources) {
-                    ResourceQualifier qualifier = res.getConfiguration().getQualifier(q);
-                    if (qualifier != null) {
-                        // set the flag.
-                        found = true;
+            boolean found = false;
+            ResourceQualifier bestMatch = null; // this is to store the best match.
+            for (Resource res : matchingResources) {
+                ResourceQualifier qualifier = res.getConfiguration().getQualifier(q);
+                if (qualifier != null) {
+                    // set the flag.
+                    found = true;
 
-                        // now check for a best match.
+                    // Now check for a best match. If the reference qualifier is null ,
+                    // any qualifier is a "best" match (we don't need to record all of them.
+                    // Instead the non compatible ones are removed below)
+                    if (referenceQualifier != null) {
                         if (qualifier.isBetterMatchThan(bestMatch, referenceQualifier)) {
                             bestMatch = qualifier;
                         }
                     }
                 }
+            }
 
-                // if a resources as a qualifier at the current index, remove all the resources that
-                // do not have one.
-                // If there is one, and we have a bestComparable, also check that it's equal to the
-                // best comparable.
-                if (found) {
-                    for (int i = 0 ; i < matchingResources.size(); ) {
-                        Resource res = matchingResources.get(i);
-                        ResourceQualifier qualifier = res.getConfiguration().getQualifier(q);
+            // 4. If a resources has a qualifier at the current index, remove all the resources that
+            // do not have one, or whose qualifier value does not equal the best match found above
+            // unless there's no reference qualifier, in which case they are all considered
+            // "best" match.
+            if (found) {
+                for (int i = 0 ; i < matchingResources.size(); ) {
+                    Resource res = matchingResources.get(i);
+                    ResourceQualifier qualifier = res.getConfiguration().getQualifier(q);
 
-                        if (qualifier == null) { // no qualifier? remove the resources
-                            matchingResources.remove(res);
-                        } else if (bestMatch != null && bestMatch.equals(qualifier) == false) {
-                            // if there is a best match, only accept the resource if the qualifier
-                            // has the same best value.
-                            matchingResources.remove(res);
-                        } else {
-                            i++;
-                        }
+                    if (qualifier == null) {
+                        // this resources has no qualifier of this type: rejected.
+                        matchingResources.remove(res);
+                    } else if (referenceQualifier != null && bestMatch != null &&
+                            bestMatch.equals(qualifier) == false) {
+                        // there's a reference qualifier and there is a better match for it than
+                        // this resource, so we reject it.
+                        matchingResources.remove(res);
+                    } else {
+                        // looks like we keep this resource, move on to the next one.
+                        i++;
                     }
+                }
 
-                    // at this point we may have run out of matching resources before going
-                    // through all the qualifiers.
-                    if (matchingResources.size() == 1) {
-                        return matchingResources.get(0);
-                    } else if (matchingResources.size() == 0) {
-                        return null;
-                    }
+                // at this point we may have run out of matching resources before going
+                // through all the qualifiers.
+                if (matchingResources.size() < 2) {
+                    break;
                 }
             }
         }
 
-        // went through all the qualifiers. We should not have more than one
-        switch (matchingResources.size()) {
-            case 0:
-                return null;
-            case 1:
-                return matchingResources.get(1);
-            case 2:
-                assert false;
+        // Because we accept resources whose configuration have qualifiers where the reference 
+        // configuration doesn't, we can end up with more than one match. In this case, we just
+        // take the first one.
+        if (matchingResources.size() == 0) {
+            return null;
         }
-        return null;
+        return matchingResources.get(1);
     }
 
     /**
