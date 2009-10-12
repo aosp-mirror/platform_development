@@ -35,12 +35,8 @@ static SurfaceSubPlugin* getPluginObject(int npp) {
 
 static void surfaceCreated(JNIEnv* env, jobject thiz, jint npp, jobject surface) {
     SurfaceSubPlugin* obj = getPluginObject(npp);
-
-    //TODO why is this VM different from the one in NP_INIT...
-    JavaVM* vm = NULL;
-    env->GetJavaVM(&vm);
-
-    obj->surfaceCreated(env, surface);
+    jobject globalSurface = env->NewGlobalRef(surface);
+    obj->surfaceCreated(globalSurface);
 }
 
 static void surfaceChanged(JNIEnv* env, jobject thiz, jint npp, jint format, jint width, jint height) {

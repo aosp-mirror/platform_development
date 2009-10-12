@@ -35,7 +35,7 @@ public:
     virtual ~PaintPlugin();
     virtual bool supportsDrawingModel(ANPDrawingModel);
     virtual int16 handleEvent(const ANPEvent* evt);
-    virtual void surfaceCreated(JNIEnv* env, jobject surface);
+    virtual void surfaceCreated(jobject surface);
     virtual void surfaceChanged(int format, int width, int height);
     virtual void surfaceDestroyed();
     virtual bool isFixedSurface();
@@ -55,7 +55,6 @@ private:
     bool        m_isTouchActive;
     bool        m_isTouchCurrentInput;
 
-    JavaVM*     m_vm;
     jobject     m_surface;
     ANPPath*    m_touchPath;
 
