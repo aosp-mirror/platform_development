@@ -604,7 +604,7 @@ public class ProjectResources implements IResourceRepository {
         if (matchingResources.size() == 0) {
             return null;
         }
-        return matchingResources.get(1);
+        return matchingResources.get(0);
     }
 
     /**
