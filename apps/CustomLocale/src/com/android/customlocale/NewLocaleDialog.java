@@ -31,8 +31,7 @@ import android.widget.EditText;
  * "en_US") via an intent with a "locale" extra string and a "select" extra
  * boolean.
  */
-public class NewLocaleDialog extends Activity
-    implements View.OnClickListener, View.OnKeyListener {
+public class NewLocaleDialog extends Activity implements View.OnClickListener {
 
     public static final String INTENT_EXTRA_LOCALE = "locale";
     public static final String INTENT_EXTRA_SELECT = "select";
@@ -55,13 +54,9 @@ public class NewLocaleDialog extends Activity
 
         mButtonAdd = (Button) findViewById(R.id.add);
         mButtonAdd.setOnClickListener(this);
-        mButtonAdd.setEnabled(false);
 
         mButtonAddSelect = (Button) findViewById(R.id.add_and_select);
         mButtonAddSelect.setOnClickListener(this);
-        mButtonAddSelect.setEnabled(false);
-        
-        mEditText.setOnKeyListener(this);
     }
 
     public void onClick(View v) {
@@ -78,16 +73,5 @@ public class NewLocaleDialog extends Activity
         setResult(RESULT_OK, data);
 
         finish();
-    }
-
-    public boolean onKey(View v, int keyCode, KeyEvent event) {
-        boolean isEmpty = TextUtils.isEmpty(mEditText.getText());
-        if (isEmpty != mWasEmpty) {
-            mWasEmpty = isEmpty;
-            
-            mButtonAdd.setEnabled(!isEmpty);
-            mButtonAddSelect.setEnabled(!isEmpty);
-        }
-        return false;
     }
 }
