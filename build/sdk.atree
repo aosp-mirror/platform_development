@@ -123,6 +123,12 @@ bin/draw9patch tools/draw9patch
 framework/draw9patch.jar tools/lib/draw9patch.jar
 framework/swing-worker-1.1.jar tools/lib/swing-worker-1.1.jar
 
+# layoutopt
+bin/layoutopt tools/layoutopt
+framework/layoutopt.jar tools/lib/layoutopt.jar
+framework/uix.jar tools/lib/uix.jar
+framework/groovy-all-1.6.5.jar tools/lib/groovy-all-1.6.5.jar
+
 # traceview
 bin/traceview tools/traceview
 framework/traceview.jar tools/lib/traceview.jar
