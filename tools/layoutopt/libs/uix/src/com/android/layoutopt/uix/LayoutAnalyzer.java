@@ -230,15 +230,14 @@ public class LayoutAnalyzer {
         NodeList list = node.getChildNodes();
         int count = list.getLength();
 
-        // Depth first
+        applyRules(analysis, node);
+
         for (int i = 0; i < count; i++) {
             Node child = list.item(i);
             if (child.getNodeType() == Node.ELEMENT_NODE) {
                 analyze(analysis, child);
             }
         }
-
-        applyRules(analysis, node);
     }
 
     private void applyRules(LayoutAnalysis analysis, Node node) {
