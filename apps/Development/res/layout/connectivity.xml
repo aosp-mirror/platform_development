@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+/* //device/apps/Settings/assets/res/any/layout/keyboard_version.xml
+**
+** Copyright 2006, The Android Open Source Project
+**
+** Licensed under the Apache License, Version 2.0 (the "License");
+** you may not use this file except in compliance with the License.
+** You may obtain a copy of the License at
+**
+**     http://www.apache.org/licenses/LICENSE-2.0
+**
+** Unless required by applicable law or agreed to in writing, software
+** distributed under the License is distributed on an "AS IS" BASIS,
+** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+** See the License for the specific language governing permissions and
+** limitations under the License.
+*/
+-->
+<LinearLayout
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  android:orientation="vertical"
+  android:layout_width="fill_parent"
+  android:layout_height="fill_parent">
+
+    <LinearLayout
+      android:orientation="horizontal"
+      android:layout_width="fill_parent"
+      android:layout_height="wrap_content">
+        <Button android:id="@+id/enableWifi"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="@string/enable_wifi" />
+        <Button android:id="@+id/disableWifi"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="@string/disable_wifi" />
+    </LinearLayout>
+
+    <!-- divider line -->
+    <View android:background="#FFFFFFFF"
+      android:layout_width="fill_parent"
+      android:layout_height="3dip" />
+
+    <LinearLayout
+      android:orientation="horizontal"
+      android:paddingTop="4dip"
+      android:layout_width="fill_parent"
+      android:layout_height="wrap_content">
+        <Button android:id="@+id/startDelayedCycle"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="@string/start_toggling" />
+        <Button android:id="@+id/stopDelayedCycle"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="@string/stop_toggling" />
+    </LinearLayout>
+
+    <LinearLayout
+      android:orientation="horizontal"
+      android:layout_width="fill_parent"
+      android:layout_height="wrap_content">
+        <TextView
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="@string/wifi_on_duration" />
+        <EditText android:id="@+id/dc_wifi_on_duration"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:minEms="15" />
+    </LinearLayout>
+
+    <LinearLayout
+      android:orientation="horizontal"
+      android:layout_width="fill_parent"
+      android:layout_height="wrap_content">
+        <TextView
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="@string/wifi_off_duration" />
+        <EditText android:id="@+id/dc_wifi_off_duration"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:minEms="15"/>
+    </LinearLayout>
+
+    <LinearLayout
+      android:orientation="horizontal"
+      android:layout_width="fill_parent"
+      android:layout_height="wrap_content">
+        <TextView
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="@string/wifi_cycles_done" />
+        <TextView android:id="@+id/dc_wifi_cycles_done"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:minEms="15"/>
+    </LinearLayout>
+
+    <!-- divider line -->
+    <View android:background="#FFFFFFFF"
+      android:layout_width="fill_parent"
+      android:layout_height="3dip" />
+
+    <LinearLayout
+      android:orientation="horizontal"
+      android:paddingTop="4dip"
+      android:layout_width="fill_parent"
+      android:layout_height="wrap_content">
+        <Button android:id="@+id/startScreenCycle"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="@string/start_screen_toggling" />
+        <Button android:id="@+id/stopScreenCycle"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="@string/stop_screen_toggling" />
+    </LinearLayout>
+
+    <LinearLayout
+      android:orientation="horizontal"
+      android:layout_width="fill_parent"
+      android:layout_height="wrap_content">
+        <TextView
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="@string/wifi_on_duration" />
+        <EditText android:id="@+id/sc_wifi_on_duration"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:minEms="15" />
+    </LinearLayout>
+
+    <LinearLayout
+      android:orientation="horizontal"
+      android:layout_width="fill_parent"
+      android:layout_height="wrap_content">
+        <TextView
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="@string/wifi_off_duration" />
+        <EditText android:id="@+id/sc_wifi_off_duration"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:minEms="15"/>
+    </LinearLayout>
+
+    <LinearLayout
+      android:orientation="horizontal"
+      android:layout_width="fill_parent"
+      android:layout_height="wrap_content">
+        <TextView
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="@string/wifi_cycles_done" />
+        <TextView android:id="@+id/sc_wifi_cycles_done"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:minEms="15"/>
+    </LinearLayout>
+
+    <!-- divider line -->
+    <View android:background="#FFFFFFFF"
+      android:layout_width="fill_parent"
+      android:layout_height="3dip" />
+
+    <LinearLayout
+      android:orientation="horizontal"
+      android:paddingTop="4dip"
+      android:layout_width="fill_parent"
+      android:layout_height="wrap_content">
+        <Button android:id="@+id/start_mms"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="@string/start_mms" />
+        <Button android:id="@+id/stop_mms"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="@string/stop_mms" />
+    </LinearLayout>
+    <LinearLayout
+      android:orientation="horizontal"
+      android:layout_width="fill_parent"
+      android:layout_height="wrap_content">
+        <Button android:id="@+id/start_hipri"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="@string/start_hipri" />
+        <Button android:id="@+id/stop_hipri"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="@string/stop_hipri" />
+    </LinearLayout>
+    <LinearLayout
+      android:orientation="horizontal"
+      android:layout_width="fill_parent"
+      android:layout_height="wrap_content">
+        <Button android:id="@+id/crash"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="@string/crash" />
+    </LinearLayout>
+</LinearLayout>
+

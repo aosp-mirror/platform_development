@@ -21,6 +21,23 @@
     <string name="menu_upload_exceptions">Upload Exceptions</string>
     <string name="menu_clear_exceptions">Clear Exceptions</string>
 
+    <string name="enable_wifi">Enable Wifi</string>
+    <string name="disable_wifi">Disable Wifi</string>
+    <string name="wifi_on_duration">Wifi on (ms): </string>
+    <string name="wifi_off_duration">Wifi off (ms): </string>
+    <string name="wifi_cycles_done">Cycles done: </string>
+    <string name="start_toggling">Start Wifi Toggle</string>
+    <string name="stop_toggling">Stop Wifi Toggle</string>
+    <string name="start_screen_toggling">Start Screen Toggle</string>
+    <string name="stop_screen_toggling">Stop Screen Toggle</string>
+
+    <string name="start_mms">Start MMS</string>
+    <string name="stop_mms">Stop MMS</string>
+    <string name="start_hipri">Start HiPri</string>
+    <string name="stop_hipri">Stop HiPri</string>
+    <string name="crash">CRASH</string>
+
+
         <string name="device_info_default">unknown</string>
         <string name="device_info_uptime">Uptime</string>
         <string name="device_info_awaketime">Awake Time</string>
