@@ -46,7 +46,7 @@ public class SettingsController {
     //--- Access to settings ------------
 
     /**
-     * Returns the value of the ISettingsPage#KEY_FORCE_HTTP setting.
+     * Returns the value of the {@link ISettingsPage#KEY_FORCE_HTTP} setting.
      * @see ISettingsPage#KEY_FORCE_HTTP
      */
     public boolean getForceHttp() {
@@ -54,7 +54,7 @@ public class SettingsController {
     }
 
     /**
-     * Returns the value of the ISettingsPage#KEY_ASK_ADB_RESTART setting.
+     * Returns the value of the {@link ISettingsPage#KEY_ASK_ADB_RESTART} setting.
      * @see ISettingsPage#KEY_ASK_ADB_RESTART
      */
     public boolean getAskBeforeAdbRestart() {
@@ -66,7 +66,7 @@ public class SettingsController {
     }
 
     /**
-     * Returns the value of the ISettingsPage#KEY_SHOW_UPDATE_ONLY setting.
+     * Returns the value of the {@link ISettingsPage#KEY_SHOW_UPDATE_ONLY} setting.
      * @see ISettingsPage#KEY_SHOW_UPDATE_ONLY
      */
     public boolean getShowUpdateOnly() {
@@ -78,12 +78,38 @@ public class SettingsController {
     }
 
     /**
-     * Sets the value of the ISettingsPage#KEY_SHOW_UPDATE_ONLY setting.
+     * Sets the value of the {@link ISettingsPage#KEY_SHOW_UPDATE_ONLY} setting.
      * @param enabled True if only compatible update items should be shown.
      * @see ISettingsPage#KEY_SHOW_UPDATE_ONLY
      */
     public void setShowUpdateOnly(boolean enabled) {
         setSetting(ISettingsPage.KEY_SHOW_UPDATE_ONLY, enabled);
+    }
+
+    /**
+     * Returns the value of the {@link ISettingsPage#KEY_MONITOR_DENSITY} setting
+     * @see ISettingsPage#KEY_MONITOR_DENSITY
+     */
+    public int getMonitorDensity() {
+        String value = mProperties.getProperty(ISettingsPage.KEY_MONITOR_DENSITY, null);
+        if (value == null) {
+            return -1;
+        }
+
+        try {
+            return Integer.parseInt(value);
+        } catch (NumberFormatException e) {
+            return -1;
+        }
+    }
+
+    /**
+     * Sets the value of the {@link ISettingsPage#KEY_MONITOR_DENSITY} setting.
+     * @param density the density of the monitor
+     * @see ISettingsPage#KEY_MONITOR_DENSITY
+     */
+    public void setMonitorDensity(int density) {
+        mProperties.setProperty(ISettingsPage.KEY_MONITOR_DENSITY, Integer.toString(density));
     }
 
     /**
