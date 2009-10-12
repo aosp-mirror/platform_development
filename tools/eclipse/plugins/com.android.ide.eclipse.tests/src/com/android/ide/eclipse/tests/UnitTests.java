@@ -31,16 +31,17 @@ import junit.framework.TestSuite;
  * 
  */                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
 public class UnitTests {
-    private static final String TEST_PACKAGE = "com.android.ide.eclipse";
+    private static final String TEST_PACKAGE = "com.android";
     
     public static Test suite() {
         TestSuite suite = new TestSuite();
-        
+
         UnitTestCollector collector = new UnitTestCollector();
         collector.addTestCases(suite, AndroidTestPlugin.getDefault(), TEST_PACKAGE);
+
         return suite;
     }
-    
+
     /**
      * Specialized test collector which will skip adding functional tests
      */
@@ -54,5 +55,4 @@ public class UnitTests {
             !testClass.getPackage().getName().startsWith(FuncTests.FUNC_TEST_PACKAGE);
         }
     }
-
 }
