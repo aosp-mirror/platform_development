@@ -90,7 +90,7 @@ public final class UiTreeBlock extends MasterDetailsBlock implements ICommitXml 
 
     /** Container editor */
     AndroidEditor mEditor;
-    /** The root {@link UiElementNode} which contains all the elements that are to be 
+    /** The root {@link UiElementNode} which contains all the elements that are to be
      *  manipulated by this tree view. In general this is the manifest UI node. */
     private UiElementNode mUiRootNode;
     /** The descriptor of the elements to be displayed as root in this tree view. All elements
@@ -104,7 +104,7 @@ public final class UiTreeBlock extends MasterDetailsBlock implements ICommitXml 
     private ManifestSectionPart mMasterPart;
     /** The tree viewer in the master-detail part */
     private TreeViewer mTreeViewer;
-    /** The "add" button for the tree view */ 
+    /** The "add" button for the tree view */
     private Button mAddButton;
     /** The "remove" button for the tree view */
     private Button mRemoveButton;
@@ -137,7 +137,7 @@ public final class UiTreeBlock extends MasterDetailsBlock implements ICommitXml 
     /**
      * Creates a new {@link MasterDetailsBlock} that will display all UI nodes matching the
      * given filter in the given root node.
-     * 
+     *
      * @param editor The parent manifest editor.
      * @param uiRootNode The root {@link UiElementNode} which contains all the elements that are
      *        to be manipulated by this tree view. In general this is the manifest UI node or the
@@ -165,17 +165,17 @@ public final class UiTreeBlock extends MasterDetailsBlock implements ICommitXml 
         mTitle = title;
         mDescription = description;
     }
-    
+
     /** @returns The container editor */
     AndroidEditor getEditor() {
         return mEditor;
     }
-    
+
     /** @returns The reference to the clipboard for copy-paste */
     Clipboard getClipboard() {
         return mClipboard;
     }
-    
+
     /** @returns The master-detail part, composed of a main tree and an auxiliary detail part */
     ManifestSectionPart getMasterPart() {
         return mMasterPart;
@@ -186,7 +186,7 @@ public final class UiTreeBlock extends MasterDetailsBlock implements ICommitXml 
      * <p/>
      * This is used by the content provider attached to {@link #mTreeViewer} since
      * the uiRootNode changes after each call to
-     * {@link #changeRootAndDescriptors(UiElementNode, ElementDescriptor[], boolean)}. 
+     * {@link #changeRootAndDescriptors(UiElementNode, ElementDescriptor[], boolean)}.
      */
     public UiElementNode getRootNode() {
         return mUiRootNode;
@@ -215,21 +215,21 @@ public final class UiTreeBlock extends MasterDetailsBlock implements ICommitXml 
     private void createSectionActions(Section section, FormToolkit toolkit) {
         ToolBarManager manager = new ToolBarManager(SWT.FLAT);
         manager.removeAll();
-        
-        ToolBar toolbar = manager.createControl(section);        
+
+        ToolBar toolbar = manager.createControl(section);
         section.setTextClient(toolbar);
-        
+
         ElementDescriptor[] descs = mDescriptorFilters;
         if (descs == null && mUiRootNode != null) {
             descs = mUiRootNode.getDescriptor().getChildren();
         }
-        
+
         if (descs != null && descs.length > 1) {
             for (ElementDescriptor desc : descs) {
                 manager.add(new DescriptorFilterAction(desc));
             }
         }
-        
+
         manager.add(new TreeSortAction());
 
         manager.update(true /*force*/);
@@ -264,7 +264,7 @@ public final class UiTreeBlock extends MasterDetailsBlock implements ICommitXml 
                 adjustTreeButtons(event.getSelection());
             }
         });
-        
+
         // Create three listeners:
         // - One to refresh the tree viewer when the parent's node has been updated
         // - One to refresh the tree viewer when the framework resources have changed
@@ -274,7 +274,7 @@ public final class UiTreeBlock extends MasterDetailsBlock implements ICommitXml 
                 mTreeViewer.refresh();
             }
         };
-        
+
         mUiEnableListener = new IUiUpdateListener() {
             public void uiElementNodeUpdated(UiElementNode ui_node, UiUpdateState state) {
                 // The UiElementNode for the application XML node always exists, even
@@ -345,7 +345,7 @@ public final class UiTreeBlock extends MasterDetailsBlock implements ICommitXml 
                 }
             }
         });
-        
+
         // Get a new clipboard reference. It is disposed when the tree is disposed.
         mClipboard = new Clipboard(tree.getDisplay());
 
@@ -357,7 +357,7 @@ public final class UiTreeBlock extends MasterDetailsBlock implements ICommitXml 
      * <p/>
      * This removes the listeners attached to the old root node and reattaches them to the
      * new one.
-     * 
+     *
      * @param uiRootNode The root {@link UiElementNode} which contains all the elements that are
      *        to be manipulated by this tree view. In general this is the manifest UI node or the
      *        application UI node. This cannot be null.
@@ -375,7 +375,7 @@ public final class UiTreeBlock extends MasterDetailsBlock implements ICommitXml 
             node.removeUpdateListener(mUiRefreshListener);
             mUiRootNode.removeUpdateListener(mUiEnableListener);
         }
-        
+
         mUiRootNode = uiRootNode;
         mDescriptorFilters = descriptorFilters;
 
@@ -385,13 +385,13 @@ public final class UiTreeBlock extends MasterDetailsBlock implements ICommitXml 
         // If the node has a parent, listen on the parent instead.
         node = mUiRootNode.getUiParent() != null ? mUiRootNode.getUiParent() : mUiRootNode;
         node.addUpdateListener(mUiRefreshListener);
-        
+
         // Use the root node to listen to its presence.
         mUiRootNode.addUpdateListener(mUiEnableListener);
 
         // Initialize the enabled/disabled state
         mUiEnableListener.uiElementNodeUpdated(mUiRootNode, null /* state, not used */);
-        
+
         if (forceRefresh) {
             mTreeViewer.refresh();
         }
@@ -403,9 +403,9 @@ public final class UiTreeBlock extends MasterDetailsBlock implements ICommitXml 
      * Creates the buttons next to the tree.
      */
     private void createButtons(FormToolkit toolkit, Composite grid) {
-        
+
         mUiTreeActions = new UiTreeActions();
-        
+
         Composite button_grid = SectionHelper.createGridLayout(grid, toolkit, 1);
         button_grid.setLayoutData(new GridData(GridData.VERTICAL_ALIGN_BEGINNING));
         mAddButton = toolkit.createButton(button_grid, "Add...", SWT.PUSH);
@@ -420,11 +420,11 @@ public final class UiTreeBlock extends MasterDetailsBlock implements ICommitXml 
                 doTreeAdd();
             }
         });
-        
+
         mRemoveButton = toolkit.createButton(button_grid, "Remove...", SWT.PUSH);
         SectionHelper.addControlTooltip(mRemoveButton, "Removes an existing selected element.");
         mRemoveButton.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-        
+
         mRemoveButton.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
@@ -432,11 +432,11 @@ public final class UiTreeBlock extends MasterDetailsBlock implements ICommitXml 
                 doTreeRemove();
             }
         });
-        
+
         mUpButton = toolkit.createButton(button_grid, "Up", SWT.PUSH);
         SectionHelper.addControlTooltip(mRemoveButton, "Moves the selected element up.");
         mUpButton.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-        
+
         mUpButton.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
@@ -448,7 +448,7 @@ public final class UiTreeBlock extends MasterDetailsBlock implements ICommitXml 
         mDownButton = toolkit.createButton(button_grid, "Down", SWT.PUSH);
         SectionHelper.addControlTooltip(mRemoveButton, "Moves the selected element down.");
         mDownButton.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-        
+
         mDownButton.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
@@ -478,7 +478,7 @@ public final class UiTreeBlock extends MasterDetailsBlock implements ICommitXml 
                    return;
                }
                doCreateMenuAction(manager, null /* ui_node */);
-            } 
+            }
         });
         Menu contextMenu = menuManager.createContextMenu(tree);
         tree.setMenu(contextMenu);
@@ -487,7 +487,7 @@ public final class UiTreeBlock extends MasterDetailsBlock implements ICommitXml 
     /**
      * Adds the menu actions to the context menu when the given UI node is selected in
      * the tree view.
-     * 
+     *
      * @param manager The context menu manager
      * @param selected The UI nodes selected in the tree. Can be null, in which case the root
      *                is to be modified.
@@ -526,7 +526,6 @@ public final class UiTreeBlock extends MasterDetailsBlock implements ICommitXml 
 
         // Append "add" and "remove" actions. They do the same thing as the add/remove
         // buttons on the side.
-        Action action;
         IconFactory factory = IconFactory.getInstance();
 
         // "Add" makes sense only if there's 0 or 1 item selected since the
@@ -552,7 +551,7 @@ public final class UiTreeBlock extends MasterDetailsBlock implements ICommitXml 
                 });
             }
             manager.add(new Separator());
-            
+
             manager.add(new Action("Up", factory.getImageDescriptor("up")) { //$NON-NLS-1$
                 @Override
                 public void run() {
@@ -570,7 +569,7 @@ public final class UiTreeBlock extends MasterDetailsBlock implements ICommitXml 
         }
     }
 
-    
+
     /**
      * This is called by the tree when a selection is made.
      * It enables/disables the buttons associated with the tree depending on the current
@@ -619,16 +618,16 @@ public final class UiTreeBlock extends MasterDetailsBlock implements ICommitXml 
     /**
      * Filters an ITreeSelection to only keep the {@link UiElementNode}s (in case there's
      * something else in there).
-     * 
+     *
      * @return A new list of {@link UiElementNode} with at least one item or null.
      */
     @SuppressWarnings("unchecked")
     private ArrayList<UiElementNode> filterSelection(ITreeSelection selection) {
         ArrayList<UiElementNode> selected = new ArrayList<UiElementNode>();
-        
+
         for (Iterator it = selection.iterator(); it.hasNext(); ) {
             Object selectedObj = it.next();
-        
+
             if (selectedObj instanceof UiElementNode) {
                 selected.add((UiElementNode) selectedObj);
             }
@@ -639,7 +638,7 @@ public final class UiTreeBlock extends MasterDetailsBlock implements ICommitXml 
 
     /**
      * Called when the "Add..." button next to the tree view is selected.
-     * 
+     *
      * Displays a selection dialog that lets the user select which kind of node
      * to create, depending on the current selection.
      */
@@ -663,7 +662,7 @@ public final class UiTreeBlock extends MasterDetailsBlock implements ICommitXml 
 
     /**
      * Called when the "Remove" button is selected.
-     * 
+     *
      * If the tree has a selection, remove it.
      * This simply deletes the XML node attached to the UI node: when the XML model fires the
      * update event, the tree will get refreshed.
@@ -689,10 +688,10 @@ public final class UiTreeBlock extends MasterDetailsBlock implements ICommitXml 
             mUiTreeActions.doUp(selected);
         }
     }
-    
+
     /**
      * Called when the "Down" button is selected.
-     * 
+     *
      * If the tree has a selection, move it down, either in the same child list or as the
      * first child of the next parent.
      */
@@ -729,16 +728,16 @@ public final class UiTreeBlock extends MasterDetailsBlock implements ICommitXml 
         // Keep a reference on the details part (the super class doesn't provide a getter
         // for it.)
         mDetailsPart = detailsPart;
-        
+
         // The page selection mechanism does not use pages registered by association with
         // a node class. Instead it uses a custom details page provider that provides a
         // new UiElementDetail instance for each node instance. A limit of 5 pages is
         // then set (the value is arbitrary but should be reasonable) for the internal
         // page book.
         detailsPart.setPageLimit(5);
-        
+
         final UiTreeBlock tree = this;
-        
+
         detailsPart.setPageProvider(new IDetailsPageProvider() {
             public IDetailsPage getPage(Object key) {
                 if (key instanceof UiElementNode) {
@@ -757,13 +756,13 @@ public final class UiTreeBlock extends MasterDetailsBlock implements ICommitXml 
      * An alphabetic sort action for the tree viewer.
      */
     private class TreeSortAction extends Action {
-        
+
         private ViewerComparator mComparator;
 
         public TreeSortAction() {
             super("Sorts elements alphabetically.", AS_CHECK_BOX);
             setImageDescriptor(IconFactory.getInstance().getImageDescriptor("az_sort")); //$NON-NLS-1$
- 
+
             if (mTreeViewer != null) {
                 boolean is_sorted = mTreeViewer.getComparator() != null;
                 setChecked(is_sorted);
@@ -794,7 +793,7 @@ public final class UiTreeBlock extends MasterDetailsBlock implements ICommitXml 
                 }
                 mTreeViewer.setComparator(mComparator);
             }
-            
+
             notifyResult(true /*success*/);
         }
     }
@@ -813,11 +812,11 @@ public final class UiTreeBlock extends MasterDetailsBlock implements ICommitXml 
 
         private final ElementDescriptor mDescriptor;
         private ViewerFilter mFilter;
-        
+
         public DescriptorFilterAction(ElementDescriptor descriptor) {
             super(String.format("Displays only %1$s elements.", descriptor.getUiName()),
                     AS_CHECK_BOX);
-            
+
             mDescriptor = descriptor;
             setImageDescriptor(descriptor.getImageDescriptor());
         }
@@ -830,7 +829,7 @@ public final class UiTreeBlock extends MasterDetailsBlock implements ICommitXml 
         @Override
         public void run() {
             super.run();
-            
+
             if (isChecked()) {
                 if (mFilter == null) {
                     // create filter when required
@@ -868,7 +867,7 @@ public final class UiTreeBlock extends MasterDetailsBlock implements ICommitXml 
             public DescriptorFilter(DescriptorFilterAction action) {
                 mAction = action;
             }
-            
+
             public DescriptorFilterAction getAction() {
                 return mAction;
             }
@@ -890,5 +889,5 @@ public final class UiTreeBlock extends MasterDetailsBlock implements ICommitXml 
             }
         }
     }
-    
+
 }
