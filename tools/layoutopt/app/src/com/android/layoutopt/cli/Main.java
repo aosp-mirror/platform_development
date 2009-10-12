@@ -49,7 +49,7 @@ public class Main {
     private static void analyzeFiles(File[] files) {
         LayoutAnalyzer analyzer = new LayoutAnalyzer();
         for (File file : files) {
-            if (file.isFile()) {
+            if (file.isFile() && file.getName().endsWith(".xml")) {
                 analyze(analyzer, file);
             } else {
                 analyzeFiles(file.listFiles());
@@ -95,7 +95,7 @@ public class Main {
             List<File> files = new ArrayList<File>();
             for (String path : args) {
                 File file = new File(path);
-                if (file.exists()) {
+                if (file.exists() && (file.isDirectory() || file.getName().endsWith(".xml"))) {
                     files.add(file);
                 }
             }
