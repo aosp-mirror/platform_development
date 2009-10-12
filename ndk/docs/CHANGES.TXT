@@ -10,6 +10,8 @@ IMPORTANT BUG FIXES:
 - Make target shared libraries portable to systems that don't use the exact same
   toolchain (GCC 4.2.1) .
 
+- Actually use the awk version detected by host-setup.sh during the build.
+
 -------------------------------------------------------------------------------
 android-ndk-1.6_r1
 
