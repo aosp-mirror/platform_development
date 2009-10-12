@@ -32,6 +32,8 @@ import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.VerifyEvent;
+import org.eclipse.swt.events.VerifyListener;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -40,6 +42,7 @@ import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.FileDialog;
+import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
@@ -53,8 +56,6 @@ import java.util.TreeMap;
  * TODO:
  * - support custom hardware properties
  * - use SdkTargetSelector instead of Combo
- * - Better UI for the sdcard (radio button for K or M, info about what is valid value)
- * - Support for ###x### skins
  * - tooltips on widgets.
  *
  */
@@ -66,8 +67,15 @@ final class AvdCreationDialog extends Dialog {
 
     private Text mAvdName;
     private Combo mTargetCombo;
-    private Text mSdCard;
+
+    private Button mSdCardSizeRadio;
+    private Text mSdCardSize;
+    private Combo mSdCardSizeCombo;
+
+    private Text mSdCardFile;
     private Button mBrowseSdCard;
+    private Button mSdCardFileRadio;
+
     private Combo mSkinCombo;
     private Button mForceCreation;
     private Button mOkButton;
@@ -75,13 +83,32 @@ final class AvdCreationDialog extends Dialog {
     private Label mStatusLabel;
     private Composite mStatusComposite;
     private final ImageFactory mImageFactory;
+    private Button mSkinListRadio;
+    private Button mSkinSizeRadio;
+    private Text mSkinSizeWidth;
+    private Text mSkinSizeHeight;
+
+    /**
+     * {@link VerifyListener} for {@link Text} widgets that should only contains numbers.
+     */
+    private final VerifyListener mDigitVerifier = new VerifyListener() {
+        public void verifyText(VerifyEvent event) {
+            int count = event.text.length();
+            for (int i = 0 ; i < count ; i++) {
+                char c = event.text.charAt(i);
+                if (c < '0' || c > '9') {
+                    event.doit = false;
+                    return;
+                }
+            }
+        }
+    };
 
     /**
      * Callback when the AVD name is changed.
      * Enables the force checkbox if the name is a duplicate.
      */
     private class CreateNameModifyListener implements ModifyListener {
-
         public void modifyText(ModifyEvent e) {
             String name = mAvdName.getText().trim();
             AvdInfo avdMatch = mAvdManager.getAvd(name, false /*validAvdOnly*/);
@@ -96,8 +123,10 @@ final class AvdCreationDialog extends Dialog {
         }
     }
 
+    /**
+     * {@link ModifyListener} used for live-validation of the fields content.
+     */
     private class ValidateListener extends SelectionAdapter implements ModifyListener {
-
         public void modifyText(ModifyEvent e) {
             validatePage();
         }
@@ -140,24 +169,31 @@ final class AvdCreationDialog extends Dialog {
 
     @Override
     protected Control createDialogArea(Composite parent) {
+        GridData gd;
+        final int groupIndent = 30;
+
         Composite top = new Composite(parent, SWT.NONE);
+        GridLayout layout = new GridLayout(2, false);
+        layout.marginHeight = convertVerticalDLUsToPixels(IDialogConstants.VERTICAL_MARGIN);
+        layout.marginWidth = convertHorizontalDLUsToPixels(IDialogConstants.HORIZONTAL_MARGIN);
+        layout.verticalSpacing = convertVerticalDLUsToPixels(IDialogConstants.VERTICAL_SPACING);
+        layout.horizontalSpacing = convertHorizontalDLUsToPixels(
+                IDialogConstants.HORIZONTAL_SPACING);
+        top.setLayout(layout);
         top.setLayoutData(new GridData(GridData.FILL_BOTH));
-        top.setLayout(new GridLayout(3, false));
 
         Label label = new Label(top, SWT.NONE);
         label.setText("Name:");
 
         mAvdName = new Text(top, SWT.BORDER);
-        mAvdName.setLayoutData(new GridData(GridData.FILL, GridData.CENTER,
-                true, false, 2, 1));
+        mAvdName.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         mAvdName.addModifyListener(new CreateNameModifyListener());
 
         label = new Label(top, SWT.NONE);
         label.setText("Target:");
 
         mTargetCombo = new Combo(top, SWT.READ_ONLY | SWT.DROP_DOWN);
-        mTargetCombo.setLayoutData(new GridData(GridData.FILL, GridData.CENTER,
-                true, false, 2, 1));
+        mTargetCombo.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         mTargetCombo.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
@@ -167,18 +203,48 @@ final class AvdCreationDialog extends Dialog {
             }
         });
 
+        // --- sd card group
         label = new Label(top, SWT.NONE);
         label.setText("SD Card:");
-        label.setToolTipText("Either a path to an existing SD card image\n" +
-                "or an image size in K or M (e.g. 512K, 10M).");
+        label.setLayoutData(gd = new GridData(GridData.FILL_HORIZONTAL));
+        gd.horizontalSpan = 2;
+
+        final Group sdCardGroup = new Group(top, SWT.NONE);
+        sdCardGroup.setLayoutData(gd = new GridData(GridData.FILL_HORIZONTAL));
+        gd.horizontalIndent = groupIndent;
+        gd.horizontalSpan = 2;
+        sdCardGroup.setLayout(new GridLayout(3, false));
+
+        mSdCardSizeRadio = new Button(sdCardGroup, SWT.RADIO);
+        mSdCardSizeRadio.setText("Size:");
+        mSdCardSizeRadio.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent arg0) {
+                boolean sizeMode = mSdCardSizeRadio.getSelection();
+                enableSdCardWidgets(sizeMode);
+                validatePage();
+            }
+        });
 
         ValidateListener validateListener = new ValidateListener();
 
-        mSdCard = new Text(top, SWT.BORDER);
-        mSdCard.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-        mSdCard.addModifyListener(validateListener);
+        mSdCardSize = new Text(sdCardGroup, SWT.BORDER);
+        mSdCardSize.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        mSdCardSize.addVerifyListener(mDigitVerifier);
 
-        mBrowseSdCard = new Button(top, SWT.PUSH);
+        mSdCardSizeCombo = new Combo(sdCardGroup, SWT.DROP_DOWN | SWT.READ_ONLY);
+        mSdCardSizeCombo.add("K");
+        mSdCardSizeCombo.add("M");
+        mSdCardSizeCombo.select(1);
+
+        mSdCardFileRadio = new Button(sdCardGroup, SWT.RADIO);
+        mSdCardFileRadio.setText("File:");
+
+        mSdCardFile = new Text(sdCardGroup, SWT.BORDER);
+        mSdCardFile.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        mSdCardFile.addModifyListener(validateListener);
+
+        mBrowseSdCard = new Button(sdCardGroup, SWT.PUSH);
         mBrowseSdCard.setText("Browse...");
         mBrowseSdCard.addSelectionListener(new SelectionAdapter() {
            @Override
@@ -188,19 +254,60 @@ final class AvdCreationDialog extends Dialog {
             }
         });
 
-        label = new Label(top, SWT.NONE);
-        label.setText("Skin");
+        mSdCardSizeRadio.setSelection(true);
+        enableSdCardWidgets(true);
 
-        mSkinCombo = new Combo(top, SWT.READ_ONLY | SWT.DROP_DOWN);
-        mSkinCombo.setLayoutData(new GridData(GridData.FILL, GridData.CENTER,
-                true, false, 2, 1));
-
-        // dummies for alignment
+        // --- skin group
         label = new Label(top, SWT.NONE);
+        label.setText("Skin:");
+        label.setLayoutData(gd = new GridData(GridData.FILL_HORIZONTAL));
+        gd.horizontalSpan = 2;
+
+        final Group skinGroup = new Group(top, SWT.NONE);
+        skinGroup.setLayoutData(gd = new GridData(GridData.FILL_HORIZONTAL));
+        gd.horizontalIndent = groupIndent;
+        gd.horizontalSpan = 2;
+        skinGroup.setLayout(new GridLayout(4, false));
+
+        mSkinListRadio = new Button(skinGroup, SWT.RADIO);
+        mSkinListRadio.setText("Built-in:");
+        mSkinListRadio.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent arg0) {
+                boolean listMode = mSkinListRadio.getSelection();
+                enableSkinWidgets(listMode);
+                validatePage();
+            }
+        });
+
+        mSkinCombo = new Combo(skinGroup, SWT.READ_ONLY | SWT.DROP_DOWN);
+        mSkinCombo.setLayoutData(gd = new GridData(GridData.FILL_HORIZONTAL));
+        gd.horizontalSpan = 3;
+
+        mSkinSizeRadio = new Button(skinGroup, SWT.RADIO);
+        mSkinSizeRadio.setText("Size:");
+
+        mSkinSizeWidth = new Text(skinGroup, SWT.BORDER);
+        mSkinSizeWidth.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        mSkinSizeWidth.addVerifyListener(mDigitVerifier);
+        mSkinSizeWidth.addModifyListener(validateListener);
+
+        new Label(skinGroup, SWT.NONE).setText("x");
+
+        mSkinSizeHeight = new Text(skinGroup, SWT.BORDER);
+        mSkinSizeHeight.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        mSkinSizeHeight.addVerifyListener(mDigitVerifier);
+        mSkinSizeHeight.addModifyListener(validateListener);
+
+        mSkinListRadio.setSelection(true);
+        enableSkinWidgets(true);
+
+        // --- end skin group
 
         mForceCreation = new Button(top, SWT.CHECK);
-        mForceCreation.setText("Force");
-        mForceCreation.setLayoutData(new GridData(GridData.FILL, GridData.CENTER,
+        mForceCreation.setText("Force create");
+        mForceCreation.setToolTipText("Select this to override any existing AVD");
+        mForceCreation.setLayoutData(new GridData(GridData.END, GridData.CENTER,
                 true, false, 2, 1));
         mForceCreation.setEnabled(false);
         mForceCreation.addSelectionListener(validateListener);
@@ -226,6 +333,7 @@ final class AvdCreationDialog extends Dialog {
 
         reloadTargetCombo();
 
+        applyDialogFont(top);
         return top;
     }
 
@@ -240,10 +348,36 @@ final class AvdCreationDialog extends Dialog {
 
     @Override
     protected void okPressed() {
-        if (onCreate()) {
+        if (createAvd()) {
             super.okPressed();
         }
     }
+
+    /**
+     * Enable or disable the sd card widgets.
+     * @param sizeMode if true the size-based widgets are to be enabled, and the file-based ones
+     * disabled.
+     */
+    private void enableSdCardWidgets(boolean sizeMode) {
+        mSdCardSize.setEnabled(sizeMode);
+        mSdCardSizeCombo.setEnabled(sizeMode);
+
+        mSdCardFile.setEnabled(!sizeMode);
+        mBrowseSdCard.setEnabled(!sizeMode);
+    }
+
+    /**
+     * Enable or disable the skin widgets.
+     * @param listMode if true the list-based widgets are to be enabled, and the size-based ones
+     * disabled.
+     */
+    private void enableSkinWidgets(boolean listMode) {
+        mSkinCombo.setEnabled(listMode);
+
+        mSkinSizeWidth.setEnabled(!listMode);
+        mSkinSizeHeight.setEnabled(!listMode);
+    }
+
 
     private void onBrowseSdCard() {
         FileDialog dlg = new FileDialog(getContents().getShell(), SWT.OPEN);
@@ -251,7 +385,7 @@ final class AvdCreationDialog extends Dialog {
 
         String fileName = dlg.open();
         if (fileName != null) {
-            mSdCard.setText(fileName);
+            mSdCardFile.setText(fileName);
         }
     }
 
@@ -363,12 +497,29 @@ final class AvdCreationDialog extends Dialog {
 
         // Validate SDCard path or value
         if (error == null) {
-            String sdName = mSdCard.getText().trim();
+            // get the mode. We only need to check the file since the
+            // verifier on the size Text will prevent invalid input
+            boolean sdcardFileMode = mSdCardFileRadio.getSelection();
+            if (sdcardFileMode) {
+                String sdName = mSdCardFile.getText().trim();
+                if (sdName.length() > 0 && !new File(sdName).isFile()) {
+                    error = "SD Card path isn't valid.";
+                }
+            }
+        }
 
-            if (sdName.length() > 0 &&
-                    !new File(sdName).isFile() &&
-                    !AvdManager.SDCARD_SIZE_PATTERN.matcher(sdName).matches()) {
-                error = "SD Card must be either a file path or a size\nsuch as 128K or 64M.";
+        // validate the skin
+        if (error == null) {
+            // get the mode, we should only check if it's in size mode since
+            // the built-in list mode is always valid.
+            if (mSkinSizeRadio.getSelection()) {
+                // need both with and heigh to be non null
+                String width = mSkinSizeWidth.getText();   // no need for trim, since the verifier
+                String height = mSkinSizeHeight.getText(); // rejects non digit.
+
+                if (width.length() == 0 || height.length() == 0) {
+                    error = "Skin size is incorrect.\nBoth dimensions must be > 0";
+                }
             }
         }
 
@@ -378,7 +529,7 @@ final class AvdCreationDialog extends Dialog {
             if (avdMatch != null && !mForceCreation.getSelection()) {
                 error = String.format(
                         "The AVD name '%s' is already used.\n" +
-                        "Check \"Force\" to override existing AVD.",
+                        "Check \"Force create\" to override existing AVD.",
                         avdName);
             }
         }
@@ -405,27 +556,60 @@ final class AvdCreationDialog extends Dialog {
     /**
      * Creates an AVD from the values in the UI. Called when the user presses the OK button.
      */
-    private boolean onCreate() {
+    private boolean createAvd() {
         String avdName = mAvdName.getText().trim();
-        String sdName = mSdCard.getText().trim();
         int targetIndex = mTargetCombo.getSelectionIndex();
-        int skinIndex = mSkinCombo.getSelectionIndex();
-        boolean force = mForceCreation.getSelection();
 
+        // quick check on the name and the target selection
         if (avdName.length() == 0 || targetIndex < 0) {
             return false;
         }
 
+        // resolve the target.
         String targetName = mTargetCombo.getItem(targetIndex);
         IAndroidTarget target = mCurrentTargets.get(targetName);
         if (target == null) {
             return false;
         }
 
+        // get the SD card data from the UI.
+        String sdName = null;
+        if (mSdCardSizeRadio.getSelection()) {
+            // size mode
+            String value = mSdCardSize.getText().trim();
+            if (value.length() > 0) {
+                sdName = value;
+                // add the unit
+                switch (mSdCardSizeCombo.getSelectionIndex()) {
+                    case 0:
+                        sdName += "K";
+                        break;
+                    case 1:
+                        sdName += "M";
+                        break;
+                    default:
+                        // shouldn't be here
+                        assert false;
+                }
+            }
+        } else {
+            // file mode.
+            sdName = mSdCardFile.getText().trim();
+        }
+
+        // get the Skin data from the UI
         String skinName = null;
-        if (skinIndex > 0) {
-            // index 0 is the default, we don't use it
-            skinName = mSkinCombo.getItem(skinIndex);
+        if (mSkinListRadio.getSelection()) {
+            // built-in list provides the skin
+            int skinIndex = mSkinCombo.getSelectionIndex();
+            if (skinIndex > 0) {
+                // index 0 is the default, we don't use it
+                skinName = mSkinCombo.getItem(skinIndex);
+            }
+        } else {
+            // size mode. get both size and writes it as a skin name
+            // thanks to validatePage() we know the content of the fields is correct
+            skinName = mSkinSizeWidth.getText() + "x" + mSkinSizeHeight.getText(); //$NON-NLS-1$
         }
 
         SdkLog log = new SdkLog(String.format("Result of creating AVD '%s':", avdName),
@@ -439,6 +623,8 @@ final class AvdCreationDialog extends Dialog {
         } catch (AndroidLocationException e) {
             return false;
         }
+
+        boolean force = mForceCreation.getSelection();
 
         boolean success = false;
         AvdInfo avdInfo = mAvdManager.createAvd(
@@ -454,7 +640,6 @@ final class AvdCreationDialog extends Dialog {
         success = avdInfo != null;
 
         log.displayResult(success);
-
         return success;
     }
 }
