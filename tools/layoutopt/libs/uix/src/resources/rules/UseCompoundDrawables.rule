@@ -8,8 +8,8 @@
 // - The node has two children, ImageView and TextView
 // - The ImageView does not have a weight
 
-if (xml.is("LinearLayout") && xml.'*'.size() == 2 && xml.'TextView'.size() == 1 &&
-        xml.'ImageView'.size() == 1 && !xml.'ImageView'[0].'@android:layout_weight') {
-    analysis << [node: node, description: "This tag and its children can be replaced by one " +
-            "<TextView/> and a compound drawable"]
+if (node.is("LinearLayout") && node.'*'.size() == 2 && node.'TextView'.size() == 1 &&
+        node.'ImageView'.size() == 1 && !node.'ImageView'[0].'@android:layout_weight') {
+    analysis << "This tag and its children can be replaced by one <TextView/> and " +
+            "a compound drawable"
 }

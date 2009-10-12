@@ -17,7 +17,6 @@
 package com.android.layoutopt.uix.rules;
 
 import com.android.layoutopt.uix.LayoutAnalysis;
-import com.android.layoutopt.uix.LayoutNode;
 import org.w3c.dom.Node;
 
 /**
@@ -36,8 +35,7 @@ public interface Rule {
      * issue to the analysis.
      *
      * @param analysis The resulting analysis.
-     * @param node The layout node to analyse.
-     * @param xml The original XML node.
+     * @param node The original XML node.
      */
-    void run(LayoutAnalysis analysis, LayoutNode node, Node xml);
+    void run(LayoutAnalysis analysis, Node node);
 }
