@@ -21,28 +21,31 @@ import com.android.sdklib.IAndroidTarget;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 
-import java.io.File;
-
 /**
- * Stub class for project creation page Returns canned responses for creating a
- * sample project
+ * Stub class for project creation page.
+ * <p/>
+ * Returns canned responses for creating a sample project.
  */
-public class StubSampleProjectCreationPage extends NewProjectCreationPage {
+public class StubProjectCreationPage extends NewProjectCreationPage {
 
-    private String mSampleProjectName;
-    private String mOsSdkLocation;
+    private final String mProjectName;
+    private final String mLocation;
+    private final IAndroidTarget mTarget;
 
-    public StubSampleProjectCreationPage(String sampleProjectName, String osSdkLocation) {
+    public StubProjectCreationPage(String projectName, String projectLocation, IAndroidTarget target) {
         super();
-        this.mSampleProjectName = sampleProjectName;
-        this.mOsSdkLocation = osSdkLocation;
+        this.mProjectName = projectName;
+        this.mLocation = projectLocation;
+        this.mTarget = target;
+        // don't set test project info
+        setTestInfo(null);
     }
 
     @Override
     public IMainInfo getMainInfo() {
         return new IMainInfo() {
             public String getProjectName() {
-                return mSampleProjectName;
+                return mProjectName;
             }
 
             public String getPackageName() {
@@ -50,11 +53,11 @@ public class StubSampleProjectCreationPage extends NewProjectCreationPage {
             }
 
             public String getActivityName() {
-                return mSampleProjectName;
+                return mProjectName;
             }
 
             public String getApplicationName() {
-                return mSampleProjectName;
+                return mProjectName;
             }
 
             public boolean isNewProject() {
@@ -66,9 +69,7 @@ public class StubSampleProjectCreationPage extends NewProjectCreationPage {
             }
 
             public IPath getLocationPath() {
-                return new Path(mOsSdkLocation + File.separator +
-                        "samples" + File.separator +
-                        mSampleProjectName);
+                return new Path(mLocation);
             }
 
             public String getMinSdkVersion() {
@@ -76,7 +77,7 @@ public class StubSampleProjectCreationPage extends NewProjectCreationPage {
             }
 
             public IAndroidTarget getSdkTarget() {
-                return null;
+                return mTarget;
             }
 
             public boolean isCreateActivity() {
