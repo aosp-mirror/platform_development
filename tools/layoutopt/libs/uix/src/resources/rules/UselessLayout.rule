@@ -5,13 +5,15 @@
 // Conditions:
 // - The node has children
 // - The node does not have siblings
+// - The node's parent is not a scroll view (horizontal or vertical)
 // - The node does not have a background or its parent does not have a
 //   background or neither the node and its parent have a background
 // - The parent is not a <merge/>
 
-if (!xml.isRoot() && xml['..'].name() != "merge" && xml['..']['*'].size() == 1 &&
-        xml['*'].size() > 0 && ((xml.'@android:background' || xml['..'].'@android:background') ||
-        (!xml.'@android:background' && !xml['..'].'@android:background'))) {
+if (!xml.isRoot() && !(xml['..'].name() in ["ScrollView", "HorizontalScrollView"]) &&
+        xml['..']['*'].size() == 1 && xml['*'].size() > 0 && ((xml.'@android:background' ||
+        xml['..'].'@android:background') || (!xml.'@android:background' &&
+        !xml['..'].'@android:background'))) {
     analysis << [node: node, description: "This ${xml.name()} layout or " +
             "its ${xml['..'].name()} parent is " +
             "${xml['..'].'@android:id' ? "possibly useless" : "useless"}"]

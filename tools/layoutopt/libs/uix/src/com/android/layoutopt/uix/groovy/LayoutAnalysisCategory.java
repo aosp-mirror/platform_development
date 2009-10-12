@@ -20,16 +20,30 @@ import com.android.layoutopt.uix.LayoutAnalysis;
 import com.android.layoutopt.uix.LayoutNode;
 
 import java.util.Map;
+import java.util.List;
+import java.util.ArrayList;
 
 import groovy.lang.GString;
+import groovy.xml.dom.DOMCategory;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.w3c.dom.Element;
 
 /**
  * Support class for Groovy rules. This class adds new Groovy capabilities
  * to {@link com.android.layoutopt.uix.LayoutAnalysis} and {@link org.w3c.dom.Node}.
  */
 public class LayoutAnalysisCategory {
+    public static List<Node> all(Element element) {
+        NodeList list = DOMCategory.depthFirst(element);
+        int count = list.getLength();
+        List<Node> nodes = new ArrayList<Node>(count - 1);
+        for (int i = 1; i < count; i++) {
+            nodes.add(list.item(i));
+        }
+        return nodes;
+    }
+    
     /**
      * xmlNode.isRoot()
      */
