@@ -35,8 +35,8 @@ import java.util.Properties;
  */
 public class PlatformPackage extends Package {
 
-    private static final String PROP_VERSION       = "Platform.Version";      //$NON-NLS-1$
-    private static final String PROP_MIN_TOOLS_REV = "Platform.MinToolsRev";  //$NON-NLS-1$
+    protected static final String PROP_VERSION       = "Platform.Version";      //$NON-NLS-1$
+    protected static final String PROP_MIN_TOOLS_REV = "Platform.MinToolsRev";  //$NON-NLS-1$
 
     /** The package version, for platform, add-on and doc packages. */
     private final AndroidVersion mVersion;
@@ -80,6 +80,8 @@ public class PlatformPackage extends Package {
      * must have {@link IAndroidTarget#isPlatform()} true) from the {@link SdkManager}.
      * This is used to list local SDK folders in which case there is one archive which
      * URL is the actual target location.
+     * <p/>
+     * By design, this creates a package with one and only one archive.
      */
     PlatformPackage(IAndroidTarget target, Properties props) {
         super(  null,                       //source
