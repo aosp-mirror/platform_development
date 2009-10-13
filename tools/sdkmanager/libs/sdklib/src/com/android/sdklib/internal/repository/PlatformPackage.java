@@ -119,24 +119,37 @@ public class PlatformPackage extends MinToolsPackage {
         String s;
 
         if (mVersion.isPreview()) {
-            s = String.format("SDK Platform Android %1$s (Preview)", getVersionName());
+            s = String.format("SDK Platform Android %1$s Preview, revision %2$s",
+                    getVersionName(),
+                    getRevision());
         } else {
-            s = String.format("SDK Platform Android %1$s, API %2$d",
+            s = String.format("SDK Platform Android %1$s, API %2$d, revision %3$s",
                 getVersionName(),
-                mVersion.getApiLevel());
-        }
-
-        if (getMinToolsRevision() != MIN_TOOLS_REV_NOT_SPECIFIED) {
-            s += String.format(" (tools rev: %1$d)", getMinToolsRevision());
+                mVersion.getApiLevel(),
+                getRevision());
         }
 
         return s;
     }
 
-    /** Returns a long description for an {@link IDescription}. */
+    /**
+     * Returns a long description for an {@link IDescription}.
+     *
+     * The long description is whatever the XML contains for the &lt;description&gt; field,
+     * or the short description if the former is empty.
+     */
     @Override
     public String getLongDescription() {
-        return getShortDescription() + ".";
+        String s = getDescription();
+        if (s == null || s.length() == 0) {
+            s = getShortDescription();
+        }
+
+        if (!s.endsWith(".")) {
+            s += ".";
+        }
+
+        return s;
     }
 
     /**
