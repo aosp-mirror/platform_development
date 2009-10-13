@@ -60,7 +60,11 @@ public class UpdaterWindowImpl {
     private ArrayList<Object[]> mExtraPages;
     /** A factory to create progress task dialogs. */
     private ProgressTaskFactory mTaskFactory;
-
+    /** The initial page to display. If null or not a know class, the first page will be displayed.
+     * Must be set before the first call to {@link #open()}. */
+    private Class<? extends Composite> mInitialPage;
+    /** Sets whether the auto-update wizard will be shown when opening the window. */
+    private boolean mRequestAutoUpdate;
 
     // --- UI members ---
 
@@ -148,7 +152,7 @@ public class UpdaterWindowImpl {
     // Hide everything down-below from SWT designer
     //$hide>>$
 
-    // --- UI Callbacks -----------
+    // --- Public API -----------
 
 
     /**
@@ -169,13 +173,41 @@ public class UpdaterWindowImpl {
         mExtraPages.add(new Object[]{ title, pageClass });
     }
 
+    /**
+     * Indicate the initial page that should be selected when the window opens.
+     * This must be called before the call to {@link #open()}.
+     * If null or if the page class is not found, the first page will be selected.
+     */
+    public void setInitialPage(Class<? extends Composite> pageClass) {
+        mInitialPage = pageClass;
+    }
+
+    /**
+     * Sets whether the auto-update wizard will be shown when opening the window.
+     * <p/>
+     * This must be called before the call to {@link #open()}.
+     */
+    public void setRequestAutoUpdate(boolean requestAutoUpdate) {
+        mRequestAutoUpdate = requestAutoUpdate;
+    }
+
+    /**
+     * Adds a new listener to be notified when a change is made to the content of the SDK.
+     */
     public void addListeners(ISdkListener listener) {
         mUpdaterData.addListeners(listener);
     }
 
+    /**
+     * Removes a new listener to be notified anymore when a change is made to the content of
+     * the SDK.
+     */
     public void removeListener(ISdkListener listener) {
         mUpdaterData.removeListener(listener);
     }
+
+    // --- Internals & UI Callbacks -----------
+
 
     /**
      * Helper to return the SWT shell.
@@ -230,12 +262,25 @@ public class UpdaterWindowImpl {
         addPage(mRemotePackagesPage, "Available Packages");
         addExtraPages();
 
-        displayPage(0);
-        mPageList.setSelection(0);
+        int pageIndex = 0;
+        int i = 0;
+        for (Composite p : mPages) {
+            if (p.getClass().equals(mInitialPage)) {
+                pageIndex = i;
+                break;
+            }
+            i++;
+        }
+        displayPage(pageIndex);
+        mPageList.setSelection(pageIndex);
 
         setupSources();
         initializeSettings();
         mUpdaterData.notifyListeners();
+
+        if (mRequestAutoUpdate) {
+            mUpdaterData.updateOrInstallAll(null /*selectedArchives*/);
+        }
     }
 
     /**
