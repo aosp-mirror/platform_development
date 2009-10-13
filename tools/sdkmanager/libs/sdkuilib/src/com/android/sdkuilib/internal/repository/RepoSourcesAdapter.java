@@ -252,6 +252,9 @@ public class RepoSourcesAdapter {
 
             } else if (element instanceof Package) {
                 return ((Package) element).getParentSource();
+
+            } else if (element instanceof Archive) {
+                return ((Archive) element).getParentPackage();
             }
             return null;
         }
