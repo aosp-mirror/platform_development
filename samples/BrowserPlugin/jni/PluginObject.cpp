@@ -35,6 +35,16 @@
 #include "main.h"
 #include "PluginObject.h"
 
+int SubPlugin::getPluginWidth() {
+    PluginObject *obj = (PluginObject*) inst()->pdata;
+    return obj->window->width;
+}
+
+int SubPlugin::getPluginHeight() {
+    PluginObject *obj = (PluginObject*) inst()->pdata;
+    return obj->window->height;
+}
+
 static void pluginInvalidate(NPObject *obj);
 static bool pluginHasProperty(NPObject *obj, NPIdentifier name);
 static bool pluginHasMethod(NPObject *obj, NPIdentifier name);

@@ -51,6 +51,16 @@ static void surfaceDestroyed(JNIEnv* env, jobject thiz, jint npp) {
     }
 }
 
+static jint getSurfaceWidth(JNIEnv* env, jobject thiz, jint npp) {
+    SurfaceSubPlugin* obj = getPluginObject(npp);
+    return obj->getPluginWidth();
+}
+
+static jint getSurfaceHeight(JNIEnv* env, jobject thiz, jint npp) {
+    SurfaceSubPlugin* obj = getPluginObject(npp);
+    return obj->getPluginHeight();
+}
+
 static jboolean isFixedSurface(JNIEnv* env, jobject thiz, jint npp) {
     SurfaceSubPlugin* obj = getPluginObject(npp);
     return obj->isFixedSurface();
@@ -63,6 +73,8 @@ static JNINativeMethod gJavaSamplePluginStubMethods[] = {
     { "nativeSurfaceCreated", "(ILandroid/view/View;)V", (void*) surfaceCreated },
     { "nativeSurfaceChanged", "(IIII)V", (void*) surfaceChanged },
     { "nativeSurfaceDestroyed", "(I)V", (void*) surfaceDestroyed },
+    { "nativeGetSurfaceWidth", "(I)I", (void*) getSurfaceWidth },
+    { "nativeGetSurfaceHeight", "(I)I", (void*) getSurfaceHeight },
     { "nativeIsFixedSurface", "(I)Z", (void*) isFixedSurface },
 };
 
