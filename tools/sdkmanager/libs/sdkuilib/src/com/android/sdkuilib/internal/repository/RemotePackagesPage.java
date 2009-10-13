@@ -272,7 +272,6 @@ public class RemotePackagesPage extends Composite implements ISdkListener {
     }
 
     private void selectCompatibleArchives(Object pkg, ITreeContentProvider provider) {
-        mTreeViewerSources.setExpandedState(pkg, true);
         for (Object archive : provider.getChildren(pkg)) {
             if (archive instanceof Archive) {
                 mTreeViewerSources.setChecked(archive, ((Archive) archive).isCompatible());
