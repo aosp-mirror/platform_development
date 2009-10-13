@@ -19,6 +19,7 @@ package com.android.sdkuilib.internal.repository;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.internal.repository.AddonPackage;
 import com.android.sdklib.internal.repository.Archive;
+import com.android.sdklib.internal.repository.ExtraPackage;
 import com.android.sdklib.internal.repository.MinToolsPackage;
 import com.android.sdklib.internal.repository.Package;
 import com.android.sdklib.internal.repository.PlatformPackage;
@@ -29,6 +30,7 @@ import com.android.sdklib.internal.repository.Package.UpdateInfo;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 
 /**
  * The logic to compute which packages to install, based on the choices
@@ -38,8 +40,6 @@ import java.util.Collection;
  * those that can be updated and compute dependencies too.
  */
 class UpdaterLogic {
-
-    private RepoSources mSources;
 
     /**
      * Compute which packages to install by taking the user selection
@@ -53,29 +53,127 @@ class UpdaterLogic {
             RepoSources sources,
             Package[] localPkgs) {
 
-        mSources = sources;
         ArrayList<ArchiveInfo> archives = new ArrayList<ArchiveInfo>();
         ArrayList<Package> remotePkgs = new ArrayList<Package>();
+        RepoSource[] remoteSources = sources.getSources();
 
         if (selectedArchives == null) {
-            selectedArchives = findUpdates(localPkgs, remotePkgs);
+            selectedArchives = findUpdates(localPkgs, remotePkgs, remoteSources);
         }
 
         for (Archive a : selectedArchives) {
-            insertArchive(a, archives, selectedArchives, remotePkgs, localPkgs, false);
+            insertArchive(a,
+                    archives,
+                    selectedArchives,
+                    remotePkgs,
+                    remoteSources,
+                    localPkgs,
+                    false /*automated*/);
         }
 
         return archives;
     }
 
+    /**
+     * Finds new platforms that the user does not have in his/her local SDK
+     * and adds them to the list of archives to install.
+     */
+    public void addNewPlatforms(ArrayList<ArchiveInfo> archives,
+            RepoSources sources,
+            Package[] localPkgs) {
+        // Find the highest platform installed
+        float currentPlatformScore = 0;
+        float currentAddonScore = 0;
+        HashMap<String, Float> currentExtraScore = new HashMap<String, Float>();
+        for (Package p : localPkgs) {
+            int rev = p.getRevision();
+            int api = 0;
+            boolean isPreview = false;
+            if (p instanceof PlatformPackage) {
+                AndroidVersion vers = ((PlatformPackage) p).getVersion();
+                api = vers.getApiLevel();
+                isPreview = vers.isPreview();
+            } else if (p instanceof AddonPackage) {
+                AndroidVersion vers = ((AddonPackage) p).getVersion();
+                api = vers.getApiLevel();
+                isPreview = vers.isPreview();
+            } else if (!(p instanceof ExtraPackage)) {
+                continue;
+            }
+
+            // The score is 10*api + (1 if preview) + rev/100
+            // This allows previews to rank above a non-preview and
+            // allows revisions to rank appropriately.
+            float score = api * 10 + (isPreview ? 1 : 0) + rev/100.f;
+
+            if (p instanceof PlatformPackage) {
+                currentPlatformScore = Math.max(currentPlatformScore, score);
+            } else if (p instanceof AddonPackage) {
+                currentAddonScore = Math.max(currentAddonScore, score);
+            } else if (p instanceof ExtraPackage) {
+                currentExtraScore.put(((ExtraPackage) p).getPath(), score);
+            }
+        }
+
+        RepoSource[] remoteSources = sources.getSources();
+        ArrayList<Package> remotePkgs = new ArrayList<Package>();
+        fetchRemotePackages(remotePkgs, remoteSources);
+
+        for (Package p : remotePkgs) {
+            int rev = p.getRevision();
+            int api = 0;
+            boolean isPreview = false;
+            if (p instanceof PlatformPackage) {
+                AndroidVersion vers = ((PlatformPackage) p).getVersion();
+                api = vers.getApiLevel();
+                isPreview = vers.isPreview();
+            } else if (p instanceof AddonPackage) {
+                AndroidVersion vers = ((AddonPackage) p).getVersion();
+                api = vers.getApiLevel();
+                isPreview = vers.isPreview();
+            } else if (!(p instanceof ExtraPackage)) {
+                continue;
+            }
+
+            float score = api * 10 + (isPreview ? 1 : 0) + rev/100.f;
+
+            boolean shouldAdd = false;
+            if (p instanceof PlatformPackage) {
+                shouldAdd = score > currentPlatformScore;
+            } else if (p instanceof AddonPackage) {
+                shouldAdd = score > currentAddonScore;
+            } else if (p instanceof ExtraPackage) {
+                String key = ((ExtraPackage) p).getPath();
+                shouldAdd = !currentExtraScore.containsKey(key) ||
+                    score > currentExtraScore.get(key).floatValue();
+            }
+
+            if (shouldAdd) {
+                // We should suggest this package for installation.
+                for (Archive a : p.getArchives()) {
+                    if (a.isCompatible()) {
+                        insertArchive(a,
+                                archives,
+                                null /*selectedArchives*/,
+                                remotePkgs,
+                                remoteSources,
+                                localPkgs,
+                                true /*automated*/);
+                    }
+                }
+            }
+        }
+    }
 
     /**
      * Find suitable updates to all current local packages.
      */
-    private Collection<Archive> findUpdates(Package[] localPkgs, ArrayList<Package> remotePkgs) {
+    private Collection<Archive> findUpdates(Package[] localPkgs,
+            ArrayList<Package> remotePkgs,
+            RepoSource[] remoteSources) {
         ArrayList<Archive> updates = new ArrayList<Archive>();
 
-        fetchRemotePackages(remotePkgs);
+        fetchRemotePackages(remotePkgs, remoteSources);
 
         for (Package localPkg : localPkgs) {
             for (Package remotePkg : remotePkgs) {
@@ -100,6 +198,7 @@ class UpdaterLogic {
             ArrayList<ArchiveInfo> outArchives,
             Collection<Archive> selectedArchives,
             ArrayList<Package> remotePkgs,
+            RepoSource[] remoteSources,
             Package[] localPkgs,
             boolean automated) {
         Package p = archive.getParentPackage();
@@ -114,15 +213,32 @@ class UpdaterLogic {
         }
 
         // find dependencies
-        ArchiveInfo dep = findDependency(p, outArchives, selectedArchives, remotePkgs, localPkgs);
+        ArchiveInfo dep = findDependency(p,
+                outArchives,
+                selectedArchives,
+                remotePkgs,
+                remoteSources,
+                localPkgs);
 
-        ArchiveInfo ai = new ArchiveInfo(
+        // Make sure it's not a dup
+        ArchiveInfo ai = null;
+
+        for (ArchiveInfo ai2 : outArchives) {
+            if (ai2.getNewArchive().getParentPackage().sameItemAs(archive.getParentPackage())) {
+                ai = ai2;
+                break;
+            }
+        }
+
+        if (ai == null) {
+            ai = new ArchiveInfo(
                 archive, //newArchive
                 updatedArchive, //replaced
                 dep //dependsOn
                 );
+            outArchives.add(ai);
+        }
 
-        outArchives.add(ai);
         if (dep != null) {
             dep.addDependencyFor(ai);
         }
@@ -134,6 +250,7 @@ class UpdaterLogic {
             ArrayList<ArchiveInfo> outArchives,
             Collection<Archive> selectedArchives,
             ArrayList<Package> remotePkgs,
+            RepoSource[] remoteSources,
             Package[] localPkgs) {
 
         // Current dependencies can be:
@@ -144,13 +261,23 @@ class UpdaterLogic {
             AddonPackage addon = (AddonPackage) pkg;
 
             return findPlatformDependency(
-                    addon, outArchives, selectedArchives, remotePkgs, localPkgs);
+                    addon,
+                    outArchives,
+                    selectedArchives,
+                    remotePkgs,
+                    remoteSources,
+                    localPkgs);
 
         } else if (pkg instanceof MinToolsPackage) {
             MinToolsPackage platformOrExtra = (MinToolsPackage) pkg;
 
             return findToolsDependency(
-                    platformOrExtra, outArchives, selectedArchives, remotePkgs, localPkgs);
+                    platformOrExtra,
+                    outArchives,
+                    selectedArchives,
+                    remotePkgs,
+                    remoteSources,
+                    localPkgs);
         }
 
         return null;
@@ -168,6 +295,7 @@ class UpdaterLogic {
             ArrayList<ArchiveInfo> outArchives,
             Collection<Archive> selectedArchives,
             ArrayList<Package> remotePkgs,
+            RepoSource[] remoteSources,
             Package[] localPkgs) {
         // This is the requirement to match.
         int rev = platformOrExtra.getMinToolsRevision();
@@ -200,20 +328,22 @@ class UpdaterLogic {
         }
 
         // Otherwise look in the selected archives.
-        for (Archive a : selectedArchives) {
-            Package p = a.getParentPackage();
-            if (p instanceof ToolPackage) {
-                if (((ToolPackage) p).getRevision() >= rev) {
-                    // It's not already in the list of things to install, so add it now
-                    return insertArchive(a, outArchives,
-                            selectedArchives, remotePkgs, localPkgs,
-                            true);
+        if (selectedArchives != null) {
+            for (Archive a : selectedArchives) {
+                Package p = a.getParentPackage();
+                if (p instanceof ToolPackage) {
+                    if (((ToolPackage) p).getRevision() >= rev) {
+                        // It's not already in the list of things to install, so add it now
+                        return insertArchive(a, outArchives,
+                                selectedArchives, remotePkgs, remoteSources, localPkgs,
+                                true /*automated*/);
+                    }
                 }
             }
         }
 
         // Finally nothing matched, so let's look at all available remote packages
-        fetchRemotePackages(remotePkgs);
+        fetchRemotePackages(remotePkgs, remoteSources);
         for (Package p : remotePkgs) {
             if (p instanceof ToolPackage) {
                 if (((ToolPackage) p).getRevision() >= rev) {
@@ -222,8 +352,8 @@ class UpdaterLogic {
                     for (Archive a : p.getArchives()) {
                         if (a.isCompatible()) {
                             return insertArchive(a, outArchives,
-                                    selectedArchives, remotePkgs, localPkgs,
-                                    true);
+                                    selectedArchives, remotePkgs, remoteSources, localPkgs,
+                                    true /*automated*/);
                         }
                     }
                 }
@@ -247,6 +377,7 @@ class UpdaterLogic {
             ArrayList<ArchiveInfo> outArchives,
             Collection<Archive> selectedArchives,
             ArrayList<Package> remotePkgs,
+            RepoSource[] remoteSources,
             Package[] localPkgs) {
         // This is the requirement to match.
         AndroidVersion v = addon.getVersion();
@@ -276,20 +407,22 @@ class UpdaterLogic {
         }
 
         // Otherwise look in the selected archives.
-        for (Archive a : selectedArchives) {
-            Package p = a.getParentPackage();
-            if (p instanceof PlatformPackage) {
-                if (v.equals(((PlatformPackage) p).getVersion())) {
-                    // It's not already in the list of things to install, so add it now
-                    return insertArchive(a, outArchives,
-                            selectedArchives, remotePkgs, localPkgs,
-                            true);
+        if (selectedArchives != null) {
+            for (Archive a : selectedArchives) {
+                Package p = a.getParentPackage();
+                if (p instanceof PlatformPackage) {
+                    if (v.equals(((PlatformPackage) p).getVersion())) {
+                        // It's not already in the list of things to install, so add it now
+                        return insertArchive(a, outArchives,
+                                selectedArchives, remotePkgs, remoteSources, localPkgs,
+                                true /*automated*/);
+                    }
                 }
             }
         }
 
         // Finally nothing matched, so let's look at all available remote packages
-        fetchRemotePackages(remotePkgs);
+        fetchRemotePackages(remotePkgs, remoteSources);
         for (Package p : remotePkgs) {
             if (p instanceof PlatformPackage) {
                 if (v.equals(((PlatformPackage) p).getVersion())) {
@@ -298,8 +431,8 @@ class UpdaterLogic {
                     for (Archive a : p.getArchives()) {
                         if (a.isCompatible()) {
                             return insertArchive(a, outArchives,
-                                    selectedArchives, remotePkgs, localPkgs,
-                                    true);
+                                    selectedArchives, remotePkgs, remoteSources, localPkgs,
+                                    true /*automated*/);
                         }
                     }
                 }
@@ -315,13 +448,10 @@ class UpdaterLogic {
     }
 
     /** Fetch all remote packages only if really needed. */
-    protected void fetchRemotePackages(ArrayList<Package> remotePkgs) {
+    protected void fetchRemotePackages(ArrayList<Package> remotePkgs, RepoSource[] remoteSources) {
         if (remotePkgs.size() > 0) {
             return;
         }
-
-        // Get all the available packages from all loaded sources
-        RepoSource[] remoteSources = mSources.getSources();
 
         for (RepoSource remoteSrc : remoteSources) {
             Package[] pkgs = remoteSrc.getPackages();
