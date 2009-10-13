@@ -44,7 +44,7 @@ elif [ "${HOST:0:6}" == "CYGWIN" ]; then
         cp -v "prebuilt/common/kxml2/kxml2-2.3.0.jar" "$DEST/"
     fi
 
-    LIBS="layoutlib.jar sdkuilib.jar"
+    LIBS="layoutlib.jar"
     NEED_MAKE="yes"
     for LIB in $LIBS ; do
         SRCJAR="out/host/windows-x86/framework/$LIB"
