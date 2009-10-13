@@ -28,6 +28,11 @@
 
     <!-- Properties -->
 
+    <!-- Tells adb which device to target. You can change this from the command line
+         by invoking "ant -Dadb.device.arg=-d" for device "ant -Dadb.device.arg=-e" for
+         the emulator. -->
+    <property name="adb.device.arg" value="" />
+
     <property name="android.tools.dir" location="${sdk.dir}/tools" />
     <!-- Name of the application package extracted from manifest file -->
     <xpath input="AndroidManifest.xml" expression="/manifest/@package"
@@ -177,6 +182,7 @@
         <sequential>
             <echo>Installing ${out.debug.package} onto default emulator or device...</echo>
             <exec executable="${adb}" failonerror="true">
+                <arg value="${adb.device.arg}" />
                 <arg value="install" />
                 <arg value="-r" />
                 <arg path="${out.debug.package}" />
