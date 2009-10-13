@@ -70,6 +70,25 @@ public class UpdaterWindow {
     }
 
     /**
+     * Indicate the initial page that should be selected when the window opens.
+     * <p/>
+     * This must be called before the call to {@link #open()}.
+     * If null or if the page class is not found, the first page will be selected.
+     */
+    public void setInitialPage(Class<? extends Composite> pageClass) {
+        mWindow.setInitialPage(pageClass);
+    }
+
+    /**
+     * Sets whether the auto-update wizard will be shown when opening the window.
+     * <p/>
+     * This must be called before the call to {@link #open()}.
+     */
+    public void setRequestAutoUpdate(boolean requestAutoUpdate) {
+        mWindow.setRequestAutoUpdate(requestAutoUpdate);
+    }
+
+    /**
      * Adds a new listener to be notified when a change is made to the content of the SDK.
      */
     public void addListeners(ISdkListener listener) {

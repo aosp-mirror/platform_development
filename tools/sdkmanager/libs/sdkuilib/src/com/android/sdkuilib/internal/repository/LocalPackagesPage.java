@@ -124,7 +124,7 @@ public class LocalPackagesPage extends Composite implements ISdkListener {
         mUpdateButton.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
-                onUpdateInstalledPackage();  //$hide$ (hide from SWT designer)
+                onUpdateSelected();  //$hide$ (hide from SWT designer)
             }
         });
 
@@ -255,7 +255,7 @@ public class LocalPackagesPage extends Composite implements ISdkListener {
         mDescriptionLabel.setText("");  //$NON-NLS1-$
     }
 
-    private void onUpdateInstalledPackage() {
+    private void onUpdateSelected() {
         mUpdaterData.updateOrInstallAll(null /*selectedArchives*/);
     }
 
