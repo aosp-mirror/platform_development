@@ -32,7 +32,9 @@
 
 (defgroup android nil
   "Support for android development in Emacs."
-  :group 'tools)
+  :prefix "android-"                    ; Currently unused.
+  :tag    "Android"
+  :group  'tools)
 
 ;;;###autoload
 (defcustom android-compilation-jobs 2
@@ -50,6 +52,10 @@ For instance if TARGET_PRODUCT is 'foo' but the build directory
   :type '(repeat (list (string :tag "Target")
                        (string :tag "Alias")))
   :group 'android)
+
+(defconst android-output-buffer-name "*Android Output*"
+  "Name of the default buffer for the output of the commands.
+There is only one instance of such a buffer.")
 
 (defun android-find-build-tree-root ()
   "Ascend the current path until the root of the android build tree is found.
@@ -147,14 +153,20 @@ If not in the build tree use the PATH env variable."
   "Execute 'adb COMMAND'.
 If the optional PRODUCT is not nil, -p (android-product-path) is used
 when adb is invoked."
+  (when (get-buffer android-output-buffer-name)
+    (with-current-buffer android-output-buffer-name
+      (erase-buffer)))
   (if product
       (shell-command (concat (android-adb) " -p " (android-product-path)
-                             " " command))
-    (shell-command (concat (android-adb) " " command))))
+                             " " command)
+                     android-output-buffer-name)
+    (shell-command (concat (android-adb) " " command)
+                   android-output-buffer-name)))
 
 (defun android-adb-shell-command (command)
   "Execute 'adb shell COMMAND'."
-  (android-adb-command (concat " shell " command)))
+  (android-adb-command (concat " shell " command)
+                       android-output-buffer-name))
 
 (provide 'android-common)
 
