@@ -605,8 +605,10 @@ public final class SdkManager {
                     if (m.matches()) {
                         map.put(m.group(1), m.group(2));
                     } else {
-                        log.warning("Error parsing '%1$s': \"%2$s\" is not a valid syntax",
-                                buildProp.getAbsolutePath(), line);
+                        if (log != null) {
+                            log.warning("Error parsing '%1$s': \"%2$s\" is not a valid syntax",
+                                    buildProp.getAbsolutePath(), line);
+                        }
                         return null;
                     }
                 }
