@@ -37,7 +37,7 @@
 ;; C-x a f android-fastboot-flashall
 ;;
 ;; android-fastboot-flashall is still work in progress, check the
-;; associated buffer (*Fastboot*) for errors when you use it.
+;; associated buffer (*Android Output*) for errors when you use it.
 
 ;;; Code:
 
@@ -99,14 +99,18 @@
 With no ARG, don't wipe the user data.
 With ARG, wipe the user data."
   (interactive "P")
-  (when (get-buffer "*Fastboot*")
-    (with-current-buffer "*Fastboot*" (erase-buffer)))
+  (when (get-buffer android-output-buffer-name)
+    (with-current-buffer android-output-buffer-name
+      (erase-buffer)))
   (let ((proc
          (if arg
              (start-process-shell-command
-              "fastboot" "*Fastboot*" (concat (android-fastboot) " flashall -w"))
+              "fastboot"
+              android-output-buffer-name
+              (concat (android-fastboot) " flashall -w"))
            (start-process-shell-command
-            "fastboot" "*Fastboot*" (concat (android-fastboot) " flashall")))))
+            "fastboot" android-output-buffer-name
+            (concat (android-fastboot) " flashall")))))
     (set-process-sentinel proc 'android-fastboot-sentinel)))
 
 

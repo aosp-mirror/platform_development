@@ -94,7 +94,7 @@ in a compilation."
         (set (make-local-variable 'compile-command)
              (if (cadr makefile)
                  ;; The root Makefile is not invoked using ONE_SHOT_MAKEFILE.
-                 (concat "make -C " topdir options " files ")
+                 (concat "make -C " topdir options) ; Build the whole image.
                (concat "ONE_SHOT_MAKEFILE=" (car makefile)
                        " make -C " topdir options " files ")))
         (if (interactive-p)
