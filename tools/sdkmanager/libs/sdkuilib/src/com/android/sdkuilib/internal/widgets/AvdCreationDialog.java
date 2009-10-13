@@ -19,14 +19,32 @@ package com.android.sdkuilib.internal.widgets;
 import com.android.prefs.AndroidLocation;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.IAndroidTarget;
+import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.avd.AvdManager;
+import com.android.sdklib.internal.avd.HardwareProperties;
 import com.android.sdklib.internal.avd.AvdManager.AvdInfo;
+import com.android.sdklib.internal.avd.HardwareProperties.HardwareProperty;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 import com.android.sdkuilib.internal.widgets.AvdSelector.SdkLog;
+import com.android.sdkuilib.ui.GridDialog;
 
-import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
+import org.eclipse.jface.viewers.CellEditor;
+import org.eclipse.jface.viewers.CellLabelProvider;
+import org.eclipse.jface.viewers.ComboBoxCellEditor;
+import org.eclipse.jface.viewers.EditingSupport;
+import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.ISelectionChangedListener;
+import org.eclipse.jface.viewers.IStructuredContentProvider;
+import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.viewers.TableViewer;
+import org.eclipse.jface.viewers.TableViewerColumn;
+import org.eclipse.jface.viewers.TextCellEditor;
+import org.eclipse.jface.viewers.Viewer;
+import org.eclipse.jface.viewers.ViewerCell;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
@@ -45,25 +63,35 @@ import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.Table;
+import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.Text;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.TreeMap;
+import java.util.Map.Entry;
 
 /**
  * AVD creator dialog.
  *
  * TODO:
- * - support custom hardware properties
  * - use SdkTargetSelector instead of Combo
  * - tooltips on widgets.
  *
  */
-final class AvdCreationDialog extends Dialog {
+final class AvdCreationDialog extends GridDialog {
 
     private final AvdManager mAvdManager;
     private final TreeMap<String, IAndroidTarget> mCurrentTargets =
         new TreeMap<String, IAndroidTarget>();
+
+    private final Map<String, HardwareProperty> mHardwareMap;
+    private final Map<String, String> mProperties = new HashMap<String, String>();
+    // a list of user-edited properties.
+    private final ArrayList<String> mEditedProperties = new ArrayList<String>();
 
     private Text mAvdName;
     private Combo mTargetCombo;
@@ -76,17 +104,22 @@ final class AvdCreationDialog extends Dialog {
     private Button mBrowseSdCard;
     private Button mSdCardFileRadio;
 
+    private Button mSkinListRadio;
     private Combo mSkinCombo;
+
+    private Button mSkinSizeRadio;
+    private Text mSkinSizeWidth;
+    private Text mSkinSizeHeight;
+
+    private TableViewer mHardwareViewer;
+    private Button mDeleteHardwareProp;
+
     private Button mForceCreation;
     private Button mOkButton;
     private Label mStatusIcon;
     private Label mStatusLabel;
     private Composite mStatusComposite;
     private final ImageFactory mImageFactory;
-    private Button mSkinListRadio;
-    private Button mSkinSizeRadio;
-    private Text mSkinSizeWidth;
-    private Text mSkinSizeHeight;
 
     /**
      * {@link VerifyListener} for {@link Text} widgets that should only contains numbers.
@@ -140,9 +173,14 @@ final class AvdCreationDialog extends Dialog {
 
     protected AvdCreationDialog(Shell parentShell, AvdManager avdManager,
             ImageFactory imageFactory) {
-        super(parentShell);
+        super(parentShell, 2, false);
         mAvdManager = avdManager;
         mImageFactory = imageFactory;
+
+        File hardwareDefs = new File (avdManager.getSdkManager().getLocation() + File.separator +
+                SdkConstants.OS_SDK_TOOLS_LIB_FOLDER, SdkConstants.FN_HARDWARE_INI);
+        mHardwareMap = HardwareProperties.parseHardwareDefinitions(
+                hardwareDefs, null /*sdkLog*/);
     }
 
     @Override
@@ -168,31 +206,21 @@ final class AvdCreationDialog extends Dialog {
     }
 
     @Override
-    protected Control createDialogArea(Composite parent) {
+    public void createDialogContent(final Composite parent) {
         GridData gd;
-        final int groupIndent = 30;
+        GridLayout gl;
 
-        Composite top = new Composite(parent, SWT.NONE);
-        GridLayout layout = new GridLayout(2, false);
-        layout.marginHeight = convertVerticalDLUsToPixels(IDialogConstants.VERTICAL_MARGIN);
-        layout.marginWidth = convertHorizontalDLUsToPixels(IDialogConstants.HORIZONTAL_MARGIN);
-        layout.verticalSpacing = convertVerticalDLUsToPixels(IDialogConstants.VERTICAL_SPACING);
-        layout.horizontalSpacing = convertHorizontalDLUsToPixels(
-                IDialogConstants.HORIZONTAL_SPACING);
-        top.setLayout(layout);
-        top.setLayoutData(new GridData(GridData.FILL_BOTH));
-
-        Label label = new Label(top, SWT.NONE);
+        Label label = new Label(parent, SWT.NONE);
         label.setText("Name:");
 
-        mAvdName = new Text(top, SWT.BORDER);
+        mAvdName = new Text(parent, SWT.BORDER);
         mAvdName.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         mAvdName.addModifyListener(new CreateNameModifyListener());
 
-        label = new Label(top, SWT.NONE);
+        label = new Label(parent, SWT.NONE);
         label.setText("Target:");
 
-        mTargetCombo = new Combo(top, SWT.READ_ONLY | SWT.DROP_DOWN);
+        mTargetCombo = new Combo(parent, SWT.READ_ONLY | SWT.DROP_DOWN);
         mTargetCombo.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         mTargetCombo.addSelectionListener(new SelectionAdapter() {
             @Override
@@ -204,15 +232,13 @@ final class AvdCreationDialog extends Dialog {
         });
 
         // --- sd card group
-        label = new Label(top, SWT.NONE);
+        label = new Label(parent, SWT.NONE);
         label.setText("SD Card:");
-        label.setLayoutData(gd = new GridData(GridData.FILL_HORIZONTAL));
-        gd.horizontalSpan = 2;
+        label.setLayoutData(new GridData(GridData.BEGINNING, GridData.BEGINNING,
+                false, false));
 
-        final Group sdCardGroup = new Group(top, SWT.NONE);
-        sdCardGroup.setLayoutData(gd = new GridData(GridData.FILL_HORIZONTAL));
-        gd.horizontalIndent = groupIndent;
-        gd.horizontalSpan = 2;
+        final Group sdCardGroup = new Group(parent, SWT.NONE);
+        sdCardGroup.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         sdCardGroup.setLayout(new GridLayout(3, false));
 
         mSdCardSizeRadio = new Button(sdCardGroup, SWT.RADIO);
@@ -233,8 +259,8 @@ final class AvdCreationDialog extends Dialog {
         mSdCardSize.addVerifyListener(mDigitVerifier);
 
         mSdCardSizeCombo = new Combo(sdCardGroup, SWT.DROP_DOWN | SWT.READ_ONLY);
-        mSdCardSizeCombo.add("K");
-        mSdCardSizeCombo.add("M");
+        mSdCardSizeCombo.add("KiB");
+        mSdCardSizeCombo.add("MiB");
         mSdCardSizeCombo.select(1);
 
         mSdCardFileRadio = new Button(sdCardGroup, SWT.RADIO);
@@ -258,15 +284,13 @@ final class AvdCreationDialog extends Dialog {
         enableSdCardWidgets(true);
 
         // --- skin group
-        label = new Label(top, SWT.NONE);
+        label = new Label(parent, SWT.NONE);
         label.setText("Skin:");
-        label.setLayoutData(gd = new GridData(GridData.FILL_HORIZONTAL));
-        gd.horizontalSpan = 2;
+        label.setLayoutData(new GridData(GridData.BEGINNING, GridData.BEGINNING,
+                false, false));
 
-        final Group skinGroup = new Group(top, SWT.NONE);
-        skinGroup.setLayoutData(gd = new GridData(GridData.FILL_HORIZONTAL));
-        gd.horizontalIndent = groupIndent;
-        gd.horizontalSpan = 2;
+        final Group skinGroup = new Group(parent, SWT.NONE);
+        skinGroup.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         skinGroup.setLayout(new GridLayout(4, false));
 
         mSkinListRadio = new Button(skinGroup, SWT.RADIO);
@@ -283,6 +307,13 @@ final class AvdCreationDialog extends Dialog {
         mSkinCombo = new Combo(skinGroup, SWT.READ_ONLY | SWT.DROP_DOWN);
         mSkinCombo.setLayoutData(gd = new GridData(GridData.FILL_HORIZONTAL));
         gd.horizontalSpan = 3;
+        mSkinCombo.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent arg0) {
+                // get the skin info
+                loadSkin();
+            }
+        });
 
         mSkinSizeRadio = new Button(skinGroup, SWT.RADIO);
         mSkinSizeRadio.setText("Size:");
@@ -302,9 +333,60 @@ final class AvdCreationDialog extends Dialog {
         mSkinListRadio.setSelection(true);
         enableSkinWidgets(true);
 
-        // --- end skin group
+        // --- hardware group
+        label = new Label(parent, SWT.NONE);
+        label.setText("Hardware:");
+        label.setLayoutData(new GridData(GridData.BEGINNING, GridData.BEGINNING,
+                false, false));
 
-        mForceCreation = new Button(top, SWT.CHECK);
+        final Group hwGroup = new Group(parent, SWT.NONE);
+        hwGroup.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        hwGroup.setLayout(new GridLayout(2, false));
+
+        createHardwareTable(hwGroup);
+
+        // composite for the side buttons
+        Composite hwButtons = new Composite(hwGroup, SWT.NONE);
+        hwButtons.setLayoutData(new GridData(GridData.FILL_VERTICAL));
+        hwButtons.setLayout(gl = new GridLayout(1, false));
+        gl.marginHeight = gl.marginWidth = 0;
+
+        Button b = new Button(hwButtons, SWT.PUSH | SWT.FLAT);
+        b.setText("New...");
+        b.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        b.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent event) {
+                HardwarePropertyChooser dialog = new HardwarePropertyChooser(parent.getShell(),
+                        mHardwareMap, mProperties.keySet());
+                if (dialog.open() == Window.OK) {
+                    HardwareProperty choice = dialog.getProperty();
+                    if (choice != null) {
+                        mProperties.put(choice.getName(), choice.getDefault());
+                        mHardwareViewer.refresh();
+                    }
+                }
+            }
+        });
+        mDeleteHardwareProp = new Button(hwButtons, SWT.PUSH | SWT.FLAT);
+        mDeleteHardwareProp.setText("Delete");
+        mDeleteHardwareProp.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        mDeleteHardwareProp.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent arg0) {
+                ISelection selection = mHardwareViewer.getSelection();
+                if (selection instanceof IStructuredSelection) {
+                    String hwName = (String)((IStructuredSelection)selection).getFirstElement();
+                    mProperties.remove(hwName);
+                    mHardwareViewer.refresh();
+                }
+            }
+        });
+        mDeleteHardwareProp.setEnabled(false);
+
+        // --- end hardware group
+
+        mForceCreation = new Button(parent, SWT.CHECK);
         mForceCreation.setText("Force create");
         mForceCreation.setToolTipText("Select this to override any existing AVD");
         mForceCreation.setLayoutData(new GridData(GridData.END, GridData.CENTER,
@@ -313,14 +395,13 @@ final class AvdCreationDialog extends Dialog {
         mForceCreation.addSelectionListener(validateListener);
 
         // add a separator to separate from the ok/cancel button
-        label = new Label(top, SWT.SEPARATOR | SWT.HORIZONTAL);
+        label = new Label(parent, SWT.SEPARATOR | SWT.HORIZONTAL);
         label.setLayoutData(new GridData(GridData.FILL, GridData.CENTER, true, false, 3, 1));
 
         // add stuff for the error display
-        mStatusComposite = new Composite(top, SWT.NONE);
+        mStatusComposite = new Composite(parent, SWT.NONE);
         mStatusComposite.setLayoutData(new GridData(GridData.FILL, GridData.CENTER,
                 true, false, 3, 1));
-        GridLayout gl;
         mStatusComposite.setLayout(gl = new GridLayout(2, false));
         gl.marginHeight = gl.marginWidth = 0;
 
@@ -332,9 +413,141 @@ final class AvdCreationDialog extends Dialog {
         mStatusLabel.setText(" \n "); //$NON-NLS-1$
 
         reloadTargetCombo();
+    }
 
-        applyDialogFont(top);
-        return top;
+    /**
+     * Creates the UI for the hardware properties table.
+     * This creates the {@link Table}, and several viewers ({@link TableViewer},
+     * {@link TableViewerColumn}) and adds edit support for the 2nd column
+     */
+    private void createHardwareTable(Composite parent) {
+        final Table hardwareTable = new Table(parent, SWT.SINGLE | SWT.FULL_SELECTION);
+        GridData gd = new GridData(GridData.FILL_HORIZONTAL | GridData.FILL_VERTICAL);
+        gd.widthHint = 200;
+        gd.heightHint = 100;
+        hardwareTable.setLayoutData(gd);
+        hardwareTable.setHeaderVisible(true);
+        hardwareTable.setLinesVisible(true);
+
+        // -- Table viewer
+        mHardwareViewer = new TableViewer(hardwareTable);
+        mHardwareViewer.addSelectionChangedListener(new ISelectionChangedListener() {
+            public void selectionChanged(SelectionChangedEvent event) {
+                // it's a single selection mode, we can just access the selection index
+                // from the table directly.
+                mDeleteHardwareProp.setEnabled(hardwareTable.getSelectionIndex() != -1);
+            }
+        });
+
+        // only a content provider. Use viewers per column below (for editing support)
+        mHardwareViewer.setContentProvider(new IStructuredContentProvider() {
+            public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
+                // we can just ignore this. we just use mProperties directly.
+            }
+
+            public Object[] getElements(Object arg0) {
+                return mProperties.keySet().toArray();
+            }
+
+            public void dispose() {
+                // pass
+            }
+        });
+
+        // -- column 1: prop abstract name
+        TableColumn col1 = new TableColumn(hardwareTable, SWT.LEFT);
+        col1.setText("Property");
+        col1.setWidth(150);
+        TableViewerColumn tvc1 = new TableViewerColumn(mHardwareViewer, col1);
+        tvc1.setLabelProvider(new CellLabelProvider() {
+            @Override
+            public void update(ViewerCell cell) {
+                HardwareProperty prop = mHardwareMap.get(cell.getElement());
+                cell.setText(prop != null ? prop.getAbstract() : "");
+            }
+        });
+
+        // -- column 2: prop value
+        TableColumn col2 = new TableColumn(hardwareTable, SWT.LEFT);
+        col2.setText("Value");
+        col2.setWidth(50);
+        TableViewerColumn tvc2 = new TableViewerColumn(mHardwareViewer, col2);
+        tvc2.setLabelProvider(new CellLabelProvider() {
+            @Override
+            public void update(ViewerCell cell) {
+                String value = mProperties.get(cell.getElement());
+                cell.setText(value != null ? value : "");
+            }
+        });
+
+        // add editing support to the 2nd column
+        tvc2.setEditingSupport(new EditingSupport(mHardwareViewer) {
+            @Override
+            protected void setValue(Object element, Object value) {
+                String hardwareName = (String)element;
+                HardwareProperty property = mHardwareMap.get(hardwareName);
+                switch (property.getType()) {
+                    case INTEGER:
+                        mProperties.put((String)element, (String)value);
+                        break;
+                    case DISKSIZE:
+                        if (HardwareProperties.DISKSIZE_PATTERN.matcher((String)value).matches()) {
+                            mProperties.put((String)element, (String)value);
+                        }
+                        break;
+                    case BOOLEAN:
+                        int index = (Integer)value;
+                        mProperties.put((String)element, HardwareProperties.BOOLEAN_VALUES[index]);
+                        break;
+                }
+                mHardwareViewer.refresh(element);
+            }
+
+            @Override
+            protected Object getValue(Object element) {
+                String hardwareName = (String)element;
+                HardwareProperty property = mHardwareMap.get(hardwareName);
+                String value = mProperties.get(hardwareName);
+                switch (property.getType()) {
+                    case INTEGER:
+                        // intended fall-through.
+                    case DISKSIZE:
+                        return value;
+                    case BOOLEAN:
+                        return HardwareProperties.getBooleanValueIndex(value);
+                }
+
+                return null;
+            }
+
+            @Override
+            protected CellEditor getCellEditor(Object element) {
+                String hardwareName = (String)element;
+                HardwareProperty property = mHardwareMap.get(hardwareName);
+                switch (property.getType()) {
+                    // TODO: custom TextCellEditor that restrict input.
+                    case INTEGER:
+                        // intended fall-through.
+                    case DISKSIZE:
+                        return new TextCellEditor(hardwareTable);
+                    case BOOLEAN:
+                        return new ComboBoxCellEditor(hardwareTable,
+                                HardwareProperties.BOOLEAN_VALUES,
+                                SWT.READ_ONLY | SWT.DROP_DOWN);
+                }
+                return null;
+            }
+
+            @Override
+            protected boolean canEdit(Object element) {
+                String hardwareName = (String)element;
+                HardwareProperty property = mHardwareMap.get(hardwareName);
+                return property != null;
+            }
+        });
+
+
+        mHardwareViewer.setInput(mProperties);
     }
 
     @Override
@@ -469,6 +682,7 @@ final class AvdCreationDialog extends Dialog {
                     mSkinCombo.select(index);
                 } else {
                     mSkinCombo.select(0);  // default
+                    loadSkin();
                 }
             }
         }
@@ -553,6 +767,78 @@ final class AvdCreationDialog extends Dialog {
         mStatusComposite.pack(true);
     }
 
+    private void loadSkin() {
+        int targetIndex = mTargetCombo.getSelectionIndex();
+        if (targetIndex < 0) {
+            return;
+        }
+
+        // resolve the target.
+        String targetName = mTargetCombo.getItem(targetIndex);
+        IAndroidTarget target = mCurrentTargets.get(targetName);
+        if (target == null) {
+            return;
+        }
+
+        // get the skin name
+        String skinName = null;
+        int skinIndex = mSkinCombo.getSelectionIndex();
+        if (skinIndex < 0) {
+            return;
+        } else if (skinIndex == 0) { // default skin for the target
+            skinName = target.getDefaultSkin();
+        } else {
+            skinName = mSkinCombo.getItem(skinIndex);
+        }
+
+        // load the skin properties
+        String path = target.getPath(IAndroidTarget.SKINS);
+        File skin = new File(path, skinName);
+        if (skin.isDirectory() == false && target.isPlatform() == false) {
+            // it's possible the skin is in the parent target
+            path = target.getParent().getPath(IAndroidTarget.SKINS);
+            skin = new File(path, skinName);
+        }
+
+        if (skin.isDirectory() == false) {
+            return;
+        }
+
+        // now get the hardware.ini from the add-on (if applicable) and from the skin
+        // (if applicable)
+        HashMap<String, String> hardwareValues = new HashMap<String, String>();
+        if (target.isPlatform() == false) {
+            File targetHardwareFile = new File(target.getLocation(), AvdManager.HARDWARE_INI);
+            if (targetHardwareFile.isFile()) {
+                Map<String, String> targetHardwareConfig = SdkManager.parsePropertyFile(
+                        targetHardwareFile, null /*log*/);
+                if (targetHardwareConfig != null) {
+                    hardwareValues.putAll(targetHardwareConfig);
+                }
+            }
+        }
+
+        // from the skin
+        File skinHardwareFile = new File(skin, AvdManager.HARDWARE_INI);
+        if (skinHardwareFile.isFile()) {
+            Map<String, String> skinHardwareConfig = SdkManager.parsePropertyFile(
+                    skinHardwareFile, null /*log*/);
+            if (skinHardwareConfig != null) {
+                hardwareValues.putAll(skinHardwareConfig);
+            }
+        }
+
+        // now set those values in the list of properties for the AVD.
+        // We just check that none of those properties have been edited by the user yet.
+        for (Entry<String, String> entry : hardwareValues.entrySet()) {
+            if (mEditedProperties.contains(entry.getKey()) == false) {
+                mProperties.put(entry.getKey(), entry.getValue());
+            }
+        }
+
+        mHardwareViewer.refresh();
+    }
+
     /**
      * Creates an AVD from the values in the UI. Called when the user presses the OK button.
      */
@@ -633,7 +919,7 @@ final class AvdCreationDialog extends Dialog {
                 target,
                 skinName,
                 sdName,
-                null, // hardwareConfig,
+                mProperties,
                 force,
                 log);
 
