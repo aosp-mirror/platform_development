@@ -28,6 +28,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.Toast;
+import android.database.Cursor;
+import android.provider.Contacts;
 
 import com.example.android.apis.R;
 
@@ -60,6 +63,7 @@ public class AlertDialogSamples extends Activity {
     private static final int DIALOG_SINGLE_CHOICE = 5;
     private static final int DIALOG_MULTIPLE_CHOICE = 6;
     private static final int DIALOG_TEXT_ENTRY = 7;
+    private static final int DIALOG_MULTIPLE_CHOICE_CURSOR = 8;
 
     private static final int MAX_PROGRESS = 100;
     
@@ -193,6 +197,28 @@ public class AlertDialogSamples extends Activity {
                     }
                 })
                .create();
+            case DIALOG_MULTIPLE_CHOICE_CURSOR:
+                String[] projection = new String[] {
+                        Contacts.People._ID,
+                        Contacts.People.NAME,
+                        Contacts.People.SEND_TO_VOICEMAIL
+                };
+                Cursor cursor = managedQuery(Contacts.People.CONTENT_URI, projection, null, null, null);
+                return new AlertDialog.Builder(AlertDialogSamples.this)
+                    .setIcon(R.drawable.ic_popup_reminder)
+                    .setTitle(R.string.alert_dialog_multi_choice_cursor)
+                    .setMultiChoiceItems(cursor,
+                            Contacts.People.SEND_TO_VOICEMAIL,
+                            Contacts.People.NAME,
+                            new DialogInterface.OnMultiChoiceClickListener() {
+                                public void onClick(DialogInterface dialog, int whichButton,
+                                        boolean isChecked) {
+                                    Toast.makeText(AlertDialogSamples.this,
+                                            "Readonly Demo Only - Data will not be updated",
+                                            Toast.LENGTH_SHORT).show();
+                                }
+                            })
+                   .create();
         case DIALOG_TEXT_ENTRY:
             // This example shows how to add a custom layout to an AlertDialog
             LayoutInflater factory = LayoutInflater.from(this);
@@ -281,6 +307,14 @@ public class AlertDialogSamples extends Activity {
             }
         });
         
+        /* Display a list of checkboxes, backed by a cursor */
+        Button checkBox2 = (Button) findViewById(R.id.checkbox_button2);
+        checkBox2.setOnClickListener(new OnClickListener() {
+            public void onClick(View v) {
+                showDialog(DIALOG_MULTIPLE_CHOICE_CURSOR);
+            }
+        });
+
         /* Display a text entry dialog */
         Button textEntry = (Button) findViewById(R.id.text_entry_button);
         textEntry.setOnClickListener(new OnClickListener() {
