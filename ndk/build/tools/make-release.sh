@@ -22,8 +22,11 @@
 NDK_ROOT_DIR=`dirname $0`/../..
 NDK_ROOT_DIR=`cd $NDK_ROOT_DIR && pwd`
 
-# the release name
-RELEASE=1.6_r1
+. $NDK_ROOT_DIR/build/core/ndk-common.sh
+force_32bit_binaries
+
+# the default release name (use today's date)
+RELEASE=`date +%Y%m%d`
 
 # the package prefix
 PREFIX=android-ndk
@@ -36,6 +39,13 @@ PREBUILT_PREFIX=android-ndk-prebuilt-20090323
 
 # the list of supported host development systems
 PREBUILT_SYSTEMS="linux-x86 darwin-x86 windows"
+
+# a prebuilt NDK archive (.zip file). empty means don't use any
+PREBUILT_NDK=
+
+# set to 'yes' if we should use 'git ls-files' to list the files to
+# be copied into the archive.
+USE_GIT_FILES=yes
 
 OPTION_HELP=no
 
@@ -55,11 +65,15 @@ for opt do
   ;;
   --prefix=*) PREFIX=$optarg
   ;;
+  --prebuilt-ndk=*) PREBUILT_NDK=$optarg
+  ;;
   --prebuilt-prefix=*) PREBUILT_PREFIX=$optarg
   ;;
   --prebuilt-path=*) PREBUILT_DIR=$optarg
   ;;
   --systems=*) PREBUILT_SYSTEMS=$optarg
+  ;;
+  --no-git) USE_GIT_FILES=no
   ;;
   *)
     echo "unknown option '$opt', use --help"
@@ -74,52 +88,87 @@ if [ $OPTION_HELP = yes ] ; then
     echo "You will need to specify the path of a directory containing"
     echo "prebuilt toolchain tarballs with the --prebuilt-path option."
     echo ""
+    echo "Alternatively, you can specify an existing NDK release package"
+    echo "with the --prebuilt-ndk option."
+    echo ""
     echo "Options: [defaults in brackets after descriptions]"
     echo ""
     echo "  --help                    Print this help message"
     echo "  --prefix=PREFIX           Package prefix name [$PREFIX]"
     echo "  --release=NAME            Specify release name [$RELEASE]"
     echo "  --systems=SYSTEMS         List of host system packages [$PREBUILT_SYSTEMS]"
+    echo "  --prebuilt-ndk=FILE       Specify a previous NDK package [$PREBUILT_NDK]"
     echo "  --prebuilt-path=PATH      Location of prebuilt binary tarballs [$PREBUILT_DIR]"
     echo "  --prebuilt-prefix=PREFIX  Prefix of prebuilt binary tarballs [$PREBUILT_PREFIX]"
+    echo "  --no-git                  Don't use git to list input files, take all of them."
     echo ""
     exit 1
 fi
 
 # Check the prebuilt path
 #
-if [ -z "$PREBUILT_DIR" ] ; then
+if [ -n "$PREBUILD_NDK" -a -n "$PREBUILT_DIR" ] ; then
+    echo "ERROR: You cannot use both --prebuilt-ndk and --prebuilt-path at the same time."
+    exit 1
+fi
+
+if [ -z "$PREBUILT_DIR" -a -z "$PREBUILT_NDK" ] ; then
     echo "ERROR: You must use --prebuilt-path=PATH to specify the path of prebuilt binary tarballs."
+    echo "       Or --prebuilt-ndk=FILE to specify an existing NDK release archive."
     exit 1
 fi
 
-if [ ! -d "$PREBUILT_DIR" ] ; then
-    echo "ERROR: the --prebuilt-path argument is not a directory path: $PREBUILT_DIR"
-    exit 1
-fi
-
-# Check the systems
-#
-if [ -z "$PREBUILT_SYSTEMS" ] ; then
-    echo "ERROR: Your systems list is empty, use --system=LIST to specify a different one."
-    exit 1
-fi
-
-if [ -z "$PREBUILT_PREFIX" ] ; then
-    echo "ERROR: Your prebuilt prefix is empty; use --prebuilt-prefix=PREFIX."
-    exit 1
-fi
-
-for SYS in $PREBUILT_SYSTEMS; do
-    if [ ! -f $PREBUILT_DIR/$PREBUILT_PREFIX-$SYS.tar.bz2 ] ; then
-        echo "ERROR: It seems there is no prebuilt binary tarball for the '$SYS' system"
-        echo "Please check the content of $PREBUILT_DIR for a file named $PREBUILT_PREFIX-$SYS.tar.bz2."
+if [ -n "$PREBUILT_DIR" ] ; then
+    if [ ! -d "$PREBUILT_DIR" ] ; then
+        echo "ERROR: the --prebuilt-path argument is not a directory path: $PREBUILT_DIR"
         exit 1
     fi
-done
+    if [ -z "$PREBUILT_PREFIX" ] ; then
+        echo "ERROR: Your prebuilt prefix is empty; use --prebuilt-prefix=PREFIX."
+        exit 1
+    fi
+    if [ -z "$PREBUILT_SYSTEMS" ] ; then
+        echo "ERROR: Your systems list is empty, use --system=LIST to specify a different one."
+        exit 1
+    fi
+    # Check the systems
+    #
+    for SYS in $PREBUILT_SYSTEMS; do
+        if [ ! -f $PREBUILT_DIR/$PREBUILT_PREFIX-$SYS.tar.bz2 ] ; then
+            echo "ERROR: It seems there is no prebuilt binary tarball for the '$SYS' system"
+            echo "Please check the content of $PREBUILT_DIR for a file named $PREBUILT_PREFIX-$SYS.tar.bz2."
+            exit 1
+        fi
+    done
+else
+    if [ ! -f "$PREBUILT_NDK" ] ; then
+        echo "ERROR: the --prebuilt-ndk argument is not a file: $PREBUILT_NDK"
+        exit 1
+    fi
+    # Check that the name ends with the proper host tag
+    HOST_NDK_SUFFIX="$HOST_TAG.zip"
+    echo "$PREBUILT_NDK" | grep -q "$HOST_NDK_SUFFIX"
+    if [ $? != 0 ] ; then
+        echo "ERROR: the name of the prebuilt NDK must end in $HOST_NDK_SUFFIX"
+        exit 1
+    fi
+    PREBUILT_SYSTEMS=$HOST_TAG
+fi
 
 # The list of git files to copy into the archives
-GIT_FILES=`cd $NDK_ROOT_DIR && git ls-files`
+if [ "$USE_GIT_FILES" = "yes" ] ; then
+    echo "Collecting sources from git (use --no-git to copy all files instead)."
+    GIT_FILES=`cd $NDK_ROOT_DIR && git ls-files`
+else
+    echo "Collecting all sources files under tree."
+    # Cleanup everything that is likely to not be part of the final NDK
+    # i.e. generated files...
+    rm -rf $NDK_ROOT_DIR/out
+    rm -rf $NDK_ROOT_DIR/apps/*/project/libs/armeabi
+    # Get all files under the NDK root
+    GIT_FILES=`cd $NDK_ROOT_DIR && find .`
+    GIT_FILES=`echo $GIT_FILES | sed -e "s!\./!!g"`
+fi
 
 # temporary directory used for packaging
 TMPDIR=/tmp/ndk-release
@@ -129,17 +178,17 @@ RELEASE_PREFIX=$PREFIX-$RELEASE
 rm -rf $TMPDIR && mkdir -p $TMPDIR
 
 # first create the reference ndk directory from the git reference
-echo "Creating reference from git files"
+echo "Creating reference from source files"
 REFERENCE=$TMPDIR/reference &&
 mkdir -p $REFERENCE &&
 (cd $NDK_ROOT_DIR && tar cf - $GIT_FILES) | (cd $REFERENCE && tar xf -) &&
 rm -f $REFERENCE/Android.mk
 if [ $? != 0 ] ; then
-    echo "Could not create git reference. Aborting."
+    echo "Could not create reference. Aborting."
     exit 2
 fi
 
-# now, for each system, create a preview package
+# now, for each system, create a package
 #
 for SYSTEM in $PREBUILT_SYSTEMS; do
     echo "Preparing package for system $SYSTEM."
@@ -153,11 +202,27 @@ for SYSTEM in $PREBUILT_SYSTEMS; do
         exit 2
     fi
 
-    echo "Unpacking $PREBUILT.tar.bz2"
-    (cd $DSTDIR && tar xjf $PREBUILT.tar.bz2) 2>/dev/null 1>&2
-    if [ $? != 0 ] ; then
-        echo "Could not unpack prebuilt for system $SYSTEM. Aborting."
-        exit 1
+    if [ -n "$PREBUILT_NDK" ] ; then
+        echo "Unpacking prebuilt toolchain from $PREBUILT_NDK"
+        UNZIP_DIR=$TMPDIR/prev-ndk
+        rm -rf $UNZIP_DIR && mkdir -p $UNZIP_DIR
+        if [ $? != 0 ] ; then
+            echo "Could not create temporary directory: $UNZIP_DIR"
+            exit 1
+        fi
+        cd $UNZIP_DIR && unzip -q $PREBUILT_NDK 1>/dev/null 2>&1
+        if [ $? != 0 ] ; then
+            echo "ERROR: Could not unzip NDK package $PREBUILT_NDK"
+            exit 1
+        fi
+        cd android-ndk-* && cp -rP build/prebuilt $DSTDIR/build
+    else
+        echo "Unpacking $PREBUILT.tar.bz2"
+        (cd $DSTDIR && tar xjf $PREBUILT.tar.bz2) 2>/dev/null 1>&2
+        if [ $? != 0 ] ; then
+            echo "Could not unpack prebuilt for system $SYSTEM. Aborting."
+            exit 1
+        fi
     fi
 
     ARCHIVE=$BIN_RELEASE.zip
@@ -173,6 +238,7 @@ done
 
 echo "Cleaning up."
 rm -rf $TMPDIR/reference
+rm -rf $TMPDIR/prev-ndk
 
 echo "Done, please see packages in $TMPDIR:"
 ls -l $TMPDIR
