@@ -32,7 +32,9 @@ set jarpath=lib\sdkmanager.jar
 rem Set SWT.Jar path based on current architecture (x86 or x86_64)
 for /f %%a in ('java -jar lib\archquery.jar') do set swt_path=lib\%%a
 
+if "%1 %2"=="update sdk" goto StartUi
 if not "%1"=="" goto EndTempCopy
+:StartUi
     echo Starting Android SDK and AVD Manager
 
     rem We're now going to create a temp dir to hold all the Jar files needed
