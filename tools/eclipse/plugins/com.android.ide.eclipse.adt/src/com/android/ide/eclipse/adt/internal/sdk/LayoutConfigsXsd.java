@@ -97,7 +97,7 @@ public class LayoutConfigsXsd {
     /** The screen-dimension element has 2 size element children. */
     public static final String NODE_SIZE = "size";                                  //$NON-NLS-1$
 
-    public static final String NODE_XPDI = "xdpi";                                  //$NON-NLS-1$
+    public static final String NODE_XDPI = "xdpi";                                  //$NON-NLS-1$
 
     public static final String NODE_YDPI = "ydpi";                                  //$NON-NLS-1$
 

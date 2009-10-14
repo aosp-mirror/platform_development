@@ -50,8 +50,8 @@ public class ConfigEditDialog extends GridDialog {
 
     private String mDeviceName;
     private String mConfigName;
-    private float mXDpi = 0f;
-    private float mYDpi = 0f;
+    private float mXDpi = Float.NaN;
+    private float mYDpi = Float.NaN;
 
 
     public ConfigEditDialog(Shell parentShell, FolderConfiguration config) {
@@ -140,13 +140,18 @@ public class ConfigEditDialog extends GridDialog {
 
         final Text deviceXDpiText = new Text(deviceGroup, SWT.BORDER);
         deviceXDpiText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-        if (mXDpi != 0f) {
+        if (Float.isNaN(mXDpi) == false) {
             deviceXDpiText.setText(String.format("%.1f", mXDpi)); //$NON-NLS-1$
         }
         deviceXDpiText.addVerifyListener(floatVerifier);
         deviceXDpiText.addModifyListener(new ModifyListener() {
             public void modifyText(ModifyEvent e) {
-                mXDpi = Float.parseFloat(deviceXDpiText.getText());
+                String value = deviceXDpiText.getText();
+                if (value.length() == 0) {
+                    mXDpi = Float.NaN;
+                } else {
+                    mXDpi = Float.parseFloat(value);
+                }
             }
         });
 
@@ -155,13 +160,18 @@ public class ConfigEditDialog extends GridDialog {
 
         final Text deviceYDpiText = new Text(deviceGroup, SWT.BORDER);
         deviceYDpiText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-        if (mYDpi != 0f) {
+        if (Float.isNaN(mYDpi) == false) {
             deviceYDpiText.setText(String.format("%.1f", mYDpi)); //$NON-NLS-1$
         }
         deviceYDpiText.addVerifyListener(floatVerifier);
         deviceYDpiText.addModifyListener(new ModifyListener() {
             public void modifyText(ModifyEvent e) {
-                mYDpi = Float.parseFloat(deviceYDpiText.getText());
+                String value = deviceYDpiText.getText();
+                if (value.length() == 0) {
+                    mYDpi = Float.NaN;
+                } else {
+                    mYDpi = Float.parseFloat(value);
+                }
             }
         });
 
@@ -185,11 +195,10 @@ public class ConfigEditDialog extends GridDialog {
             }
         });
 
-        mConfigSelector = new ConfigurationSelector(configGroup);
+        mConfigSelector = new ConfigurationSelector(configGroup, true /*deviceMode*/);
         // configure the selector to be in "device mode" and not accept language/region/version
         // since those are selected from a different combo
         // FIXME: add version combo.
-        mConfigSelector.setDeviceMode(true);
         mConfigSelector.setQualifierFilter(new IQualifierFilter() {
             public boolean accept(ResourceQualifier qualifier) {
                 if (qualifier instanceof LanguageQualifier ||
