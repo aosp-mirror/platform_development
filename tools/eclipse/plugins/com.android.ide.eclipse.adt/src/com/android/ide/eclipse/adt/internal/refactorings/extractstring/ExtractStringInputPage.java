@@ -208,7 +208,7 @@ class ExtractStringInputPage extends UserInputWizardPage implements IWizardPage 
         label = new Label(group, SWT.NONE);
         label.setText("&Configuration:");
 
-        mConfigSelector = new ConfigurationSelector(group);
+        mConfigSelector = new ConfigurationSelector(group, false /*deviceMode*/);
         GridData gd = new GridData(GridData.GRAB_HORIZONTAL | GridData.GRAB_VERTICAL);
         gd.horizontalSpan = 2;
         gd.widthHint = ConfigurationSelector.WIDTH_HINT;
