@@ -146,12 +146,14 @@ class UpdaterData {
         return mSettingsController;
     }
 
+    /** Adds a listener ({@link ISdkListener}) that is notified when the SDK is reloaded. */
     public void addListeners(ISdkListener listener) {
         if (mListeners.contains(listener) == false) {
             mListeners.add(listener);
         }
     }
 
+    /** Removes a listener ({@link ISdkListener}) that is notified when the SDK is reloaded. */
     public void removeListener(ISdkListener listener) {
         mListeners.remove(listener);
     }
@@ -444,9 +446,15 @@ class UpdaterData {
 
     /**
      * Tries to update all the *existing* local packages.
-     * This first refreshes all sources, then compares the available remote packages with
-     * the current local ones and suggest updates to be done to the user. Finally all
-     * selected updates are installed.
+     * <p/>
+     * There are two modes of operation:
+     * <ul>
+     * <li>If selectedArchives is null, refreshes all sources, compares the available remote
+     * packages with the current local ones and suggest updates to be done to the user (including
+     * new platforms that the users doesn't have yet).
+     * <li>If selectedArchives is not null, this represents a list of archives/packages that
+     * the user wants to install or update, so just process these.
+     * </ul>
      *
      * @param selectedArchives The list of remote archive to consider for the update.
      *  This can be null, in which case a list of remote archive is fetched from all
@@ -462,6 +470,13 @@ class UpdaterData {
                 selectedArchives,
                 getSources(),
                 getLocalSdkParser().getPackages());
+
+        if (selectedArchives == null) {
+            ul.addNewPlatforms(archives, getSources(), getLocalSdkParser().getPackages());
+        }
+
+        // TODO if selectedArchives is null and archives.len==0, find if there's
+        // any new platform we can suggest to install instead.
 
         UpdateChooserDialog dialog = new UpdateChooserDialog(getWindowShell(), this, archives);
         dialog.open();

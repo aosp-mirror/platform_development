@@ -25,12 +25,23 @@ import com.android.sdklib.SdkManager;
  */
 class SdkCommandLine extends CommandLineProcessor {
 
+    /*
+     * Steps needed to add a new action:
+     * - Each action is defined as a "verb object" followed by parameters.
+     * - Either reuse a VERB_ constant or define a new one.
+     * - Either reuse an OBJECT_ constant or define a new one.
+     * - Add a new entry to mAction with a one-line help summary.
+     * - In the constructor, add a define() call for each parameter (either mandatory
+     *   or optional) for the given action.
+     */
+
     public final static String VERB_LIST   = "list";
     public final static String VERB_CREATE = "create";
     public final static String VERB_MOVE   = "move";
     public final static String VERB_DELETE = "delete";
     public final static String VERB_UPDATE = "update";
 
+    public static final String OBJECT_SDK          = "sdk";
     public static final String OBJECT_AVD          = "avd";
     public static final String OBJECT_AVDS         = "avds";
     public static final String OBJECT_TARGET       = "target";
@@ -58,6 +69,10 @@ class SdkCommandLine extends CommandLineProcessor {
 
     /**
      * Action definitions for SdkManager command line.
+     * <p/>
+     * This list serves two purposes: first it is used to know which verb/object
+     * actions are acceptable on the command-line; second it provides a summary
+     * for each action that is printed in the help.
      * <p/>
      * Each entry is a string array with:
      * <ul>
@@ -98,10 +113,15 @@ class SdkCommandLine extends CommandLineProcessor {
 
             { VERB_UPDATE, OBJECT_ADB,
                 "Updates adb to support the USB devices declared in the SDK add-ons." },
+
+            { VERB_UPDATE, OBJECT_SDK,
+                "Updates the SDK by suggesting new platforms to install if available." }
         };
 
     public SdkCommandLine(ISdkLog logger) {
         super(logger, ACTIONS);
+
+        // The following defines the parameters of the actions defined in mAction.
 
         // --- create avd ---
 
@@ -175,6 +195,7 @@ class SdkCommandLine extends CommandLineProcessor {
                 "Project name", null);
 
         // --- create test-project ---
+
         define(Mode.STRING, true,
                 VERB_CREATE, OBJECT_TEST_PROJECT,
                 "p", KEY_PATH,
