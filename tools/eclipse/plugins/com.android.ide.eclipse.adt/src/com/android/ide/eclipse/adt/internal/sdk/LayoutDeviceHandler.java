@@ -154,6 +154,10 @@ class LayoutDeviceHandler extends DefaultHandler {
             if (qual != null) {
                 mCurrentConfig.setScreenDimensionQualifier(qual);
             }
+        } else if (LayoutConfigsXsd.NODE_XDPI.equals(localName)) {
+            mCurrentDevice.setXDpi(Float.parseFloat(mStringAccumulator.toString()));
+        } else if (LayoutConfigsXsd.NODE_YDPI.equals(localName)) {
+            mCurrentDevice.setYDpi(Float.parseFloat(mStringAccumulator.toString()));
         } else if (LayoutConfigsXsd.NODE_SIZE.equals(localName)) {
             if (mSize1 == null) {
                 mSize1 = mStringAccumulator.toString();

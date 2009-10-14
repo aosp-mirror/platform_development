@@ -69,7 +69,7 @@ public final class LayoutCreatorDialog extends GridDialog {
         new Label(parent, SWT.NONE).setText(
                 String.format("Configuration for the alternate version of %1$s", mFileName));
 
-        mSelector = new ConfigurationSelector(parent);
+        mSelector = new ConfigurationSelector(parent, false /*deviceMode*/);
         mSelector.setConfiguration(mConfig);
 
         // parent's layout is a GridLayout as specified in the javadoc.
