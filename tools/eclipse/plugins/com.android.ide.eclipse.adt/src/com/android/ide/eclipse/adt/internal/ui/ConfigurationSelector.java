@@ -109,8 +109,8 @@ public class ConfigurationSelector extends Composite {
 
     private final HashMap<Class<? extends ResourceQualifier>, QualifierEditBase> mUiMap =
         new HashMap<Class<? extends ResourceQualifier>, QualifierEditBase>();
+    private final boolean mDeviceMode;
     private Composite mQualifierEditParent;
-    private boolean mDeviceMode = false;
     private IQualifierFilter mQualifierFilter;
 
     /**
@@ -198,8 +198,20 @@ public class ConfigurationSelector extends Composite {
         boolean accept(ResourceQualifier qualifier);
     }
 
-    public ConfigurationSelector(Composite parent) {
+    /**
+     * Creates the selector.
+     *
+     * If the device mode is <code>true</code> then the configuration selector only
+     * allows to create configuration that are valid on a device (as opposed to resource
+     * configuration).
+     * For instance {@link Density#NODPI} is a valid qualifier for a resource configuration but
+     * this is not valid on a device.
+     * @param parent the composite parent.
+     * @param deviceMode the device mode.
+     */
+    public ConfigurationSelector(Composite parent, boolean deviceMode) {
         super(parent, SWT.NONE);
+        mDeviceMode  = deviceMode;
 
         mBaseConfiguration.createDefault();
 
@@ -386,19 +398,6 @@ public class ConfigurationSelector extends Composite {
         mUiMap.put(NavigationMethodQualifier.class, new NavigationEdit(mQualifierEditParent));
         mUiMap.put(ScreenDimensionQualifier.class, new ScreenDimensionEdit(mQualifierEditParent));
         mUiMap.put(VersionQualifier.class, new VersionEdit(mQualifierEditParent));
-    }
-
-    /**
-     * Sets the device mode. If <code>true</code> then the configuration selector only
-     * allows to create configuration that are valid on a device (as opposed to resource
-     * configuration).
-     * For instance {@link Density#NODPI} is a valid qualifier for a resource configuration but
-     * this is not valid on a device.
-     * Default is false.
-     * @param deviceMode the device mode.
-     */
-    public void setDeviceMode(boolean deviceMode) {
-        mDeviceMode  = deviceMode;
     }
 
     /**
