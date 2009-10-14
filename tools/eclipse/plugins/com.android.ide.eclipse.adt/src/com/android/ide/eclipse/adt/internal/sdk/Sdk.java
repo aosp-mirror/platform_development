@@ -41,30 +41,14 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
-import org.xml.sax.ErrorHandler;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-import org.xml.sax.SAXParseException;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
-import javax.xml.transform.Source;
-import javax.xml.transform.stream.StreamSource;
-import javax.xml.validation.Validator;
 
 /**
  * Central point to load, manipulate and deal with the Android SDK. Only one SDK can be used
@@ -89,7 +73,7 @@ public class Sdk implements IProjectListener {
             new HashMap<IProject, ApkSettings>();
     private final String mDocBaseUrl;
 
-    private List<DeviceConfiguration> mLayoutDevices = new ArrayList<DeviceConfiguration>();
+    private final LayoutDeviceManager mLayoutDeviceManager = new LayoutDeviceManager();
 
     /**
      * Classes implementing this interface will receive notification when targets are changed.
@@ -439,6 +423,10 @@ public class Sdk implements IProjectListener {
         }
     }
 
+    public LayoutDeviceManager getLayoutDeviceManager() {
+        return mLayoutDeviceManager;
+    }
+
     private Sdk(SdkManager manager, AvdManager avdManager) {
         mManager = manager;
         mAvdManager = avdManager;
@@ -451,8 +439,10 @@ public class Sdk implements IProjectListener {
         mDocBaseUrl = getDocumentationBaseUrl(mManager.getLocation() +
                 SdkConstants.OS_SDK_DOCS_FOLDER);
 
-        // load the built-in layout devices
-        loadDefaultLayoutDevices();
+        // load the built-in and user layout devices
+        mLayoutDeviceManager.load(mManager.getLocation());
+        // and the ones from the add-on
+        loadLayoutDevices();
     }
 
     /**
@@ -505,6 +495,24 @@ public class Sdk implements IProjectListener {
         return null;
     }
 
+    /**
+     * Parses the SDK add-ons to look for files called {@link SdkConstants#FN_DEVICES_XML} to
+     * load {@link LayoutDevice} from them.
+     */
+    private void loadLayoutDevices() {
+        IAndroidTarget[] targets = mManager.getTargets();
+        for (IAndroidTarget target : targets) {
+            if (target.isPlatform() == false) {
+                File deviceXml = new File(target.getLocation(), SdkConstants.FN_DEVICES_XML);
+                if (deviceXml.isFile()) {
+                    mLayoutDeviceManager.parseAddOnLayoutDevice(deviceXml);
+                }
+            }
+        }
+
+        mLayoutDeviceManager.sealAddonLayoutDevices();
+    }
+
     public void projectClosed(IProject project) {
         // get the target project
         synchronized (AdtPlugin.getDefault().getSdkLockObject()) {
@@ -538,129 +546,6 @@ public class Sdk implements IProjectListener {
     public void projectOpenedWithWorkspace(IProject project) {
         // ignore this. The project will be added to the map the first time the target needs
         // to be resolved.
-    }
-
-
-    // ---------- Device Configuration methods ----------
-
-    /**
-     * A SAX error handler that captures the errors and warnings.
-     * This allows us to capture *all* errors and just not get an exception on the first one.
-     */
-    private static class CaptureErrorHandler implements ErrorHandler {
-
-        private final String mSourceLocation;
-
-        private boolean mFoundError = false;
-
-        CaptureErrorHandler(String sourceLocation) {
-            mSourceLocation = sourceLocation;
-        }
-
-        public boolean foundError() {
-            return mFoundError;
-        }
-
-        /**
-         * @throws SAXException
-         */
-        public void error(SAXParseException ex) throws SAXException {
-            mFoundError = true;
-            AdtPlugin.log(ex, "Error validating %1$s", mSourceLocation);
-        }
-
-        /**
-         * @throws SAXException
-         */
-        public void fatalError(SAXParseException ex) throws SAXException {
-            mFoundError = true;
-            AdtPlugin.log(ex, "Error validating %1$s", mSourceLocation);
-        }
-
-        /**
-         * @throws SAXException
-         */
-        public void warning(SAXParseException ex) throws SAXException {
-            // ignore those for now.
-        }
-    }
-
-    /**
-     * Returns the list of {@link DeviceConfiguration} found in the SDK.
-     */
-    public List<DeviceConfiguration> getLayoutDevices() {
-        return mLayoutDevices;
-    }
-
-    /**
-     * Parses the SDK add-ons to look for files called {@link SdkConstants#FN_DEVICES_XML} to
-     * load {@link DeviceConfiguration} from them.
-     */
-    public void parseAddOnLayoutDevices() {
-        SAXParserFactory parserFactory = SAXParserFactory.newInstance();
-        parserFactory.setNamespaceAware(true);
-
-        IAndroidTarget[] targets = mManager.getTargets();
-        for (IAndroidTarget target : targets) {
-            if (target.isPlatform() == false) {
-                File deviceXml = new File(target.getLocation(), SdkConstants.FN_DEVICES_XML);
-                if (deviceXml.isFile()) {
-                    parseLayoutDevices(parserFactory, deviceXml);
-                }
-            }
-        }
-
-        mLayoutDevices = Collections.unmodifiableList(mLayoutDevices);
-    }
-
-    /**
-     * Does the actual parsing of a devices.xml file.
-     */
-    private void parseLayoutDevices(SAXParserFactory parserFactory, File deviceXml) {
-        // first we validate the XML
-        try {
-            Source source = new StreamSource(new FileReader(deviceXml));
-
-            CaptureErrorHandler errorHandler = new CaptureErrorHandler(deviceXml.getAbsolutePath());
-
-            Validator validator = LayoutConfigsXsd.getValidator(errorHandler);
-            validator.validate(source);
-
-            if (errorHandler.foundError() == false) {
-                // do the actual parsing
-                LayoutDeviceHandler handler = new LayoutDeviceHandler();
-
-                SAXParser parser = parserFactory.newSAXParser();
-                parser.parse(new InputSource(new FileInputStream(deviceXml)), handler);
-
-                // get the parsed devices
-                mLayoutDevices.addAll(handler.getDevices());
-            }
-        } catch (SAXException e) {
-            AdtPlugin.log(e, "Error parsing %1$s", deviceXml.getAbsoluteFile());
-        } catch (FileNotFoundException e) {
-            // this shouldn't happen as we check above.
-        } catch (IOException e) {
-            AdtPlugin.log(e, "Error reading %1$s", deviceXml.getAbsoluteFile());
-        } catch (ParserConfigurationException e) {
-            AdtPlugin.log(e, "Error parsing %1$s", deviceXml.getAbsoluteFile());
-        }
-    }
-
-    /**
-     * Creates some built-it layout devices.
-     */
-    private void loadDefaultLayoutDevices() {
-        SAXParserFactory parserFactory = SAXParserFactory.newInstance();
-        parserFactory.setNamespaceAware(true);
-
-        File toolsFolder = new File(mManager.getLocation(), SdkConstants.OS_SDK_TOOLS_LIB_FOLDER);
-        if (toolsFolder.isDirectory()) {
-            File deviceXml = new File(toolsFolder, SdkConstants.FN_DEVICES_XML);
-            if (deviceXml.isFile()) {
-                parseLayoutDevices(parserFactory, deviceXml);
-            }
-        }
     }
 }
 

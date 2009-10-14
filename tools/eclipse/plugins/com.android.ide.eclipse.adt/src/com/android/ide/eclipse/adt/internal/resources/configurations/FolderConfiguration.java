@@ -60,8 +60,10 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
      * @param config
      */
     public void set(FolderConfiguration config) {
-        for (int i = 0 ; i < INDEX_COUNT ; i++) {
-            mQualifiers[i] = config.mQualifiers[i];
+        if (config != null) {
+            for (int i = 0 ; i < INDEX_COUNT ; i++) {
+                mQualifiers[i] = config.mQualifiers[i];
+            }
         }
     }
 
