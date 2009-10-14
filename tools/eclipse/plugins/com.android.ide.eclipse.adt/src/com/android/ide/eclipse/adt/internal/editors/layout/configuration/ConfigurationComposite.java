@@ -29,7 +29,8 @@ import com.android.ide.eclipse.adt.internal.resources.configurations.VersionQual
 import com.android.ide.eclipse.adt.internal.resources.configurations.PixelDensityQualifier.Density;
 import com.android.ide.eclipse.adt.internal.resources.configurations.ScreenOrientationQualifier.ScreenOrientation;
 import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
-import com.android.ide.eclipse.adt.internal.sdk.DeviceConfiguration;
+import com.android.ide.eclipse.adt.internal.sdk.LayoutDevice;
+import com.android.ide.eclipse.adt.internal.sdk.LayoutDeviceManager;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.internal.ui.ConfigurationSelector.LanguageRegionVerifier;
 import com.android.layoutlib.api.IResourceValue;
@@ -77,7 +78,7 @@ public class ConfigurationComposite extends Composite {
     /** The {@link FolderConfiguration} representing the state of the UI controls */
     private final FolderConfiguration mCurrentConfig = new FolderConfiguration();
 
-    private List<DeviceConfiguration> mDevices;
+    private List<LayoutDevice> mDevices;
 
     private final ArrayList<ResourceQualifier[] > mLocaleList =
         new ArrayList<ResourceQualifier[]>();
@@ -86,7 +87,7 @@ public class ConfigurationComposite extends Composite {
 
     private boolean mClipping = true;
 
-    private DeviceConfiguration mCurrentDevice;
+    private LayoutDevice mCurrentDevice;
 
     /**
      * Interface implemented by the part which owns a {@link ConfigurationComposite}.
@@ -109,9 +110,6 @@ public class ConfigurationComposite extends Composite {
     public ConfigurationComposite(IConfigListener listener, Composite parent, int style) {
         super(parent, style);
         mListener = listener;
-        if (Sdk.getCurrent() != null) {
-            mDevices = Sdk.getCurrent().getLayoutDevices();
-        }
 
         GridLayout gl;
         GridData gd;
@@ -512,13 +510,23 @@ public class ConfigurationComposite extends Composite {
     }
 
     /**
-     * Reloads the list of {@link DeviceConfiguration} from the {@link Sdk}.
+     * Reloads the list of {@link LayoutDevice} from the {@link Sdk}.
      * @param notifyListener
      */
     public void reloadDevices(boolean notifyListener) {
-        mDevices = Sdk.getCurrent().getLayoutDevices();
+        loadDevices();
         initUiWithDevices();
         onDeviceChange(notifyListener);
+    }
+
+    private void loadDevices() {
+        mDevices = null;
+
+        Sdk sdk = Sdk.getCurrent();
+        if (sdk != null) {
+            LayoutDeviceManager manager = sdk.getLayoutDeviceManager();
+            mDevices = manager.getCombinedList();
+        }
     }
 
     /**
@@ -531,7 +539,7 @@ public class ConfigurationComposite extends Composite {
 
         // fill with the devices
         if (mDevices != null) {
-            for (DeviceConfiguration device : mDevices) {
+            for (LayoutDevice device : mDevices) {
                 mDeviceList.add(device.getName());
             }
             mDeviceList.select(0);
@@ -548,6 +556,9 @@ public class ConfigurationComposite extends Composite {
                 }
             }
         }
+
+        // add the custom item
+        mDeviceList.add("Custom...");
     }
 
     /**
@@ -575,6 +586,31 @@ public class ConfigurationComposite extends Composite {
 
         int deviceIndex = mDeviceList.getSelectionIndex();
         if (deviceIndex != -1) {
+            // check if the user is ask for the custom item
+            if (deviceIndex == mDeviceList.getItemCount() - 1) {
+                ConfigManagerDialog dialog = new ConfigManagerDialog(getShell());
+                dialog.open();
+
+                // reload the combo with the new content.
+                loadDevices();
+                initUiWithDevices();
+
+                // at this point we need to reset the combo to something (hopefully) valid.
+                // look for the previous selected device
+                int index = mDevices.indexOf(mCurrentDevice);
+                if (index != -1) {
+                    mDeviceList.select(index);
+                } else {
+                    // we should at least have one built-in device, so we select it
+                    mDeviceList.select(0);
+                }
+
+                // force a redraw
+                onDeviceChange(true /*recomputeLayout*/);
+
+                return;
+            }
+
             mCurrentDevice = mDevices.get(deviceIndex);
         } else {
             mCurrentDevice = null;
