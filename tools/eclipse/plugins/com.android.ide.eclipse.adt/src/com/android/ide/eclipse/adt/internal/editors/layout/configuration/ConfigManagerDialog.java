@@ -335,6 +335,8 @@ public class ConfigManagerDialog extends GridDialog {
                 DeviceSelection selection = getSelection();
                 ConfigEditDialog dlg = new ConfigEditDialog(parent.getShell(), null);
                 dlg.setDeviceName(selection.device.getName());
+                dlg.setXDpi(selection.device.getXDpi());
+                dlg.setYDpi(selection.device.getYDpi());
                 dlg.setConfigName(selection.entry.getKey());
                 dlg.setConfig(selection.entry.getValue());
 

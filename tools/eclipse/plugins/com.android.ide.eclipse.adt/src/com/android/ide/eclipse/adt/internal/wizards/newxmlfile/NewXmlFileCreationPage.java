@@ -620,7 +620,7 @@ class NewXmlFileCreationPage extends WizardPage {
 
         // configuration selector
         emptyCell(parent);
-        mConfigSelector = new ConfigurationSelector(parent);
+        mConfigSelector = new ConfigurationSelector(parent, false /* deviceMode*/);
         GridData gd = newGridData(2, GridData.GRAB_HORIZONTAL | GridData.GRAB_VERTICAL);
         gd.widthHint = ConfigurationSelector.WIDTH_HINT;
         gd.heightHint = ConfigurationSelector.HEIGHT_HINT;
