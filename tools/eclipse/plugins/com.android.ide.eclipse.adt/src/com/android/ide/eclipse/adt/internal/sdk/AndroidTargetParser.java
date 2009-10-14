@@ -254,9 +254,6 @@ public final class AndroidTargetParser {
             LayoutBridge layoutBridge = loadLayoutBridge();
             progress.worked(1);
 
-            // get the devices
-            DeviceConfiguration[] devices = getDevices();
-
             // and finally create the PlatformData with all that we loaded.
             targetData.setExtraData(frameworkRepository,
                     manifestDescriptors,
@@ -271,7 +268,6 @@ public final class AndroidTargetParser {
                     categories.toArray(new String[categories.size()]),
                     mAndroidTarget.getPlatformLibraries(),
                     mAndroidTarget.getOptionalLibraries(),
-                    devices,
                     resources,
                     layoutBridge);
 
@@ -705,10 +701,4 @@ public final class AndroidTargetParser {
 
         return layoutBridge;
     }
-
-    private DeviceConfiguration[] getDevices() {
-        // TODO: load this from the target.
-        return null;
-    }
-
 }

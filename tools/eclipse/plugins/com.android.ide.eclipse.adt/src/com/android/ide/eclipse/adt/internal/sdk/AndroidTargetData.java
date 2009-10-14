@@ -86,7 +86,6 @@ public class AndroidTargetData {
     private LayoutBridge mLayoutBridge;
 
     private boolean mLayoutBridgeInit = false;
-    private DeviceConfiguration[] mDevices;
 
     AndroidTargetData(IAndroidTarget androidTarget) {
         mTarget = androidTarget;
@@ -114,7 +113,6 @@ public class AndroidTargetData {
             String[] intentCategoryValues,
             String[] platformLibraries,
             IOptionalLibrary[] optionalLibraries,
-            DeviceConfiguration[] devices,
             ProjectResources resources,
             LayoutBridge layoutBridge) {
 
@@ -124,7 +122,6 @@ public class AndroidTargetData {
         mMenuDescriptors = menuDescriptors;
         mXmlDescriptors = xmlDescriptors;
         mEnumValueMap = enumValueMap;
-        mDevices = devices;
         mFrameworkResources = resources;
         mLayoutBridge = layoutBridge;
 
@@ -274,10 +271,6 @@ public class AndroidTargetData {
             mLayoutBridgeInit = true;
         }
         return mLayoutBridge;
-    }
-
-    public DeviceConfiguration[] getDevices() {
-        return mDevices;
     }
 
     /**
