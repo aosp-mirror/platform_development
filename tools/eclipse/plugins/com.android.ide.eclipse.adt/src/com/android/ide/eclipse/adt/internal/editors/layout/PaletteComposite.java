@@ -91,7 +91,7 @@ public class PaletteComposite extends Composite {
             gl.marginBottom = 2;
             setLayout(gl);
 
-            /* STOPSHIP */
+            /* TODO: All this is TEMPORARY. */
             Label l = new Label(this, SWT.NONE);
             l.setText("*** PLACEHOLDER ***");  //$NON-NLS-1$
             l.setToolTipText("Temporary mock for the palette. Needs to scroll, needs no buttons, needs to drag'n'drop."); //$NON-NLS-1$
