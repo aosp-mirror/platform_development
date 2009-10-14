@@ -186,7 +186,12 @@ public final class RawImage {
         int r = ((value >>> red_offset) & getMask(red_length)) << (8 - red_length);
         int g = ((value >>> green_offset) & getMask(green_length)) << (8 - green_length);
         int b = ((value >>> blue_offset) & getMask(blue_length)) << (8 - blue_length);
-        int a = ((value >>> alpha_offset) & getMask(alpha_length)) << (8 - alpha_length);
+        int a;
+        if (alpha_length == 0) {
+            a = 0xFF; // force alpha to opaque if there's no alpha value in the framebuffer.
+        } else {
+            a = ((value >>> alpha_offset) & getMask(alpha_length)) << (8 - alpha_length);
+        }
 
         return a << 24 | r << 16 | g << 8 | b;
     }
