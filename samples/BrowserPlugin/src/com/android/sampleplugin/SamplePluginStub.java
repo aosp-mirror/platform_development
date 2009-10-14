@@ -63,10 +63,12 @@ public class SamplePluginStub implements PluginStub {
             }
             
         });
-        
+
+        // TODO provide way for native plugin code to reset the size
         if (nativeIsFixedSurface(npp)) {
-            //TODO get the fixed dimensions from the plugin 
-            //view.getHolder().setFixedSize(width, height);
+            int width = nativeGetSurfaceWidth(npp);
+            int height = nativeGetSurfaceHeight(npp);
+            view.getHolder().setFixedSize(width, height);
         }
         
         return view;
@@ -114,5 +116,7 @@ public class SamplePluginStub implements PluginStub {
     private native void nativeSurfaceCreated(int npp, View surfaceView);
     private native void nativeSurfaceChanged(int npp, int format, int width, int height);
     private native void nativeSurfaceDestroyed(int npp);
+    private native int nativeGetSurfaceWidth(int npp);
+    private native int nativeGetSurfaceHeight(int npp);
     private native boolean nativeIsFixedSurface(int npp);
 }
