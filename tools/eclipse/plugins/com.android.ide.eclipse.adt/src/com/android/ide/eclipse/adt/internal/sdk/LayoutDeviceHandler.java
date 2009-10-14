@@ -58,16 +58,16 @@ class LayoutDeviceHandler extends DefaultHandler {
      * on the endElement, by using the content found in characters().
      */
 
-    private List<DeviceConfiguration> mDevices = new ArrayList<DeviceConfiguration>();
+    private List<LayoutDevice> mDevices = new ArrayList<LayoutDevice>();
 
-    private DeviceConfiguration mCurrentDevice;
+    private LayoutDevice mCurrentDevice;
     private FolderConfiguration mDefaultConfig;
     private FolderConfiguration mCurrentConfig;
     private final StringBuilder mStringAccumulator = new StringBuilder();
 
     private String mSize1, mSize2;
 
-    public List<DeviceConfiguration> getDevices() {
+    public List<LayoutDevice> getDevices() {
         return mDevices;
     }
 
@@ -79,7 +79,7 @@ class LayoutDeviceHandler extends DefaultHandler {
             String deviceName = attributes.getValue("", LayoutConfigsXsd.ATTR_NAME);
 
             // create a device and add it to the list
-            mCurrentDevice = new DeviceConfiguration(deviceName);
+            mCurrentDevice = new LayoutDevice(deviceName);
             mDevices.add(mCurrentDevice);
         } else if (LayoutConfigsXsd.NODE_DEFAULT.equals(localName)) {
             // create a new default config
