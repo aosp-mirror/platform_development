@@ -99,7 +99,7 @@ function build() {
         fastboot \
         hprof-conv \
         mksdcard \
-        sqlite3 \
+        sdklauncher sqlite3 \
         zipalign \
         || die "Build failed"
 }
@@ -152,6 +152,9 @@ function package() {
     cp -v prebuilt/windows/swt/swt.jar         "$LIB"/x86/
     mkdir -pv "$LIB"/x86_64
     cp -v prebuilt/windows-x86_64/swt/swt.jar  "$LIB"/x86_64/
+
+    # Move the SDK Setup (aka sdklauncher) to the root of the SDK (it was copied in tools above)
+    mv "$TOOLS/sdklauncher.exe" "$TEMP_SDK_DIR/SDK Setup.exe"    
 
     # If you want the emulator NOTICE in the tools dir, uncomment the following line:
     # cp -v external/qemu/NOTICE "$TOOLS"/emulator_NOTICE.txt
