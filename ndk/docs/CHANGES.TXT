@@ -12,6 +12,27 @@ IMPORTANT BUG FIXES:
 
 - Actually use the awk version detected by host-setup.sh during the build.
 
+OTHER FIXES & CHANGES:
+
+- Added --prebuilt-ndk=FILE option to build/tools/make-release.sh script to
+  package a new experimental NDK package archive from the current source tree
+  plus the toolchain binaries of an existing NDK release package. E.g.:
+
+    build/tools/make-release.sh \
+       --prebuilt-ndk=/path/to/android-ndk-1.6_r1-linux-x86.zip
+
+  will generate a new NDK package in /tmp/ndk-release that contains the most
+  up-to-date build scripts, plus the toolchain binaries from 1.6_r1 (which
+  are not in the git repository).
+
+  Also added the --no-git option to collect all sources from the current
+  NDK root directory, instead of the list given by 'git ls-files'. This can
+  be useful if you don't want to checkout the whole 'platform/development'
+  project from repo and still work on the NDK.
+
+  This change is to help people easily package experimental NDK releases to
+  test and distribute fixes and improvements.
+
 -------------------------------------------------------------------------------
 android-ndk-1.6_r1
 
