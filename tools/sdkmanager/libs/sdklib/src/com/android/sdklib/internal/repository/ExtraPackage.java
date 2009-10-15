@@ -165,13 +165,15 @@ public class ExtraPackage extends MinToolsPackage {
     public String getLongDescription() {
         String s = getDescription();
         if (s == null || s.length() == 0) {
-            s = String.format("Extra %1$s package, revision %2$d",
-                    getPath(),
-                    getRevision());
+            s = String.format("Extra %1$s package", getPath());
+        }
+
+        if (s.indexOf("revision") == -1) {
+            s += String.format("\nRevision %1$d", getRevision());
         }
 
         if (getMinToolsRevision() != MIN_TOOLS_REV_NOT_SPECIFIED) {
-            s += String.format(".\nRequires tools revision %1$d.", getMinToolsRevision());
+            s += String.format("\nRequires tools revision %1$d", getMinToolsRevision());
         }
 
         return s;

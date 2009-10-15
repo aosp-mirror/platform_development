@@ -32,7 +32,7 @@ import java.util.Properties;
 /**
  * Represents a doc XML node in an SDK repository.
  */
-public class DocPackage extends Package {
+public class DocPackage extends Package implements IPackageVersion {
 
     private final AndroidVersion mVersion;
 
@@ -126,8 +126,8 @@ public class DocPackage extends Package {
             s = getShortDescription();
         }
 
-        if (!s.endsWith(".")) {
-            s += ".";
+        if (s.indexOf("revision") == -1) {
+            s += String.format("\nRevision %1$d", getRevision());
         }
 
         return s;
