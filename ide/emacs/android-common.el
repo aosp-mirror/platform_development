@@ -43,6 +43,14 @@
   :group 'android)
 
 ;;;###autoload
+(defcustom android-compilation-no-buildenv-warning t
+  "If not nil, suppress warnings from the build env (Makefile,
+bash) from the compilation output since they interfere with
+`next-error'."
+  :type 'boolean
+  :group 'android)
+
+;;;###autoload
 (defcustom android-product-alias-map nil
   "Alist between product targets (declared in buildspec.mk) and actual
  product build directory used by `android-product'.
