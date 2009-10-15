@@ -15,17 +15,17 @@
  * limitations under the License.
 -->
 <xsd:schema
-    targetNamespace="http://schemas.android.com/sdk/android/layout-configs/1"
+    targetNamespace="http://schemas.android.com/sdk/android/layout-devices/1"
     xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-    xmlns:c="http://schemas.android.com/sdk/android/layout-configs/1"
+    xmlns:c="http://schemas.android.com/sdk/android/layout-devices/1"
     elementFormDefault="qualified"
     attributeFormDefault="unqualified"
     version="1">
 
-    <xsd:element name="layout-configs">
+    <xsd:element name="layout-devices">
         <xsd:annotation>
             <xsd:documentation xml:lang="en">
-                The "layout-configs" element is the root element of this schema.
+                The "layout-devices" element is the root element of this schema.
 
                 It must contain one or more "device" elements that each define the configurations
                 available for a given device.
@@ -37,7 +37,7 @@
 
         <xsd:complexType>
             <xsd:sequence>
-                <!-- layout-configs defines a sequence of 1..n device elements. -->
+                <!-- layout-devices defines a sequence of 1..n device elements. -->
                 <xsd:element name="device" minOccurs="1" maxOccurs="unbounded">
 
                     <xsd:annotation>
@@ -91,6 +91,34 @@
 
         <xsd:all>
             <!-- parametersType says that 0..1 of each of these elements must be declared. -->
+
+            <xsd:element name="country-code" minOccurs="0">
+                <xsd:annotation>
+                    <xsd:documentation xml:lang="en">
+                        Specifies the configuration is for a particular Mobile Country Code.
+                    </xsd:documentation>
+                </xsd:annotation>
+                <xsd:simpleType>
+                    <xsd:restriction base="xsd:float">
+                        <xsd:minInclusive value="100" />
+                        <xsd:maxInclusive value="999" />
+                    </xsd:restriction>
+                </xsd:simpleType>
+            </xsd:element>
+
+            <xsd:element name="network-code" minOccurs="0">
+                <xsd:annotation>
+                    <xsd:documentation xml:lang="en">
+                        Specifies the configuration is for a particular Mobile Network Code.
+                    </xsd:documentation>
+                </xsd:annotation>
+                <xsd:simpleType>
+                    <xsd:restriction base="xsd:float">
+                        <xsd:minExclusive value="0" />
+                        <xsd:maxExclusive value="1000" />
+                    </xsd:restriction>
+                </xsd:simpleType>
+            </xsd:element>
 
             <xsd:element name="screen-size" minOccurs="0">
                 <xsd:annotation>

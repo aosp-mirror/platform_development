@@ -30,9 +30,9 @@ import javax.xml.validation.Validator;
 import junit.framework.TestCase;
 
 /**
- * Tests local validation of a Layout-Configs sample XMLs using an XML Schema validator.
+ * Tests local validation of a Layout-Devices sample XMLs using an XML Schema validator.
  */
-public class TestLayoutConfisXsd extends TestCase {
+public class TestLayoutDevicesXsd extends TestCase {
 
     @Override
     protected void setUp() throws Exception {
@@ -117,7 +117,7 @@ public class TestLayoutConfisXsd extends TestCase {
         Source source = new StreamSource(new StringReader(document));
 
         // don't capture the validator errors, we want it to fail and catch the exception
-        Validator validator = LayoutConfigsXsd.getValidator(null);
+        Validator validator = LayoutDevicesXsd.getValidator(null);
         try {
             validator.validate(source);
         } catch (SAXParseException e) {
@@ -133,7 +133,7 @@ public class TestLayoutConfisXsd extends TestCase {
         Source source = new StreamSource(new StringReader(document));
 
         CaptureErrorHandler handler = new CaptureErrorHandler();
-        Validator validator = LayoutConfigsXsd.getValidator(null);
+        Validator validator = LayoutDevicesXsd.getValidator(null);
         validator.validate(source);
         handler.verify();
     }
@@ -144,11 +144,11 @@ public class TestLayoutConfisXsd extends TestCase {
     public void testValidateLocalRepositoryFile() throws Exception {
 
         InputStream xmlStream =
-            TestLayoutConfisXsd.class.getResourceAsStream("config_sample.xml");
+            TestLayoutDevicesXsd.class.getResourceAsStream("config_sample.xml");
         Source source = new StreamSource(xmlStream);
 
         CaptureErrorHandler handler = new CaptureErrorHandler();
-        Validator validator = LayoutConfigsXsd.getValidator(handler);
+        Validator validator = LayoutDevicesXsd.getValidator(handler);
         validator.validate(source);
         handler.verify();
     }
@@ -168,9 +168,9 @@ public class TestLayoutConfisXsd extends TestCase {
         checkFailure(
                 // document
                 "<?xml version=\"1.0\"?>" +
-                "<d:layout-configs xmlns:d=\"http://schemas.android.com/sdk/android/layout-configs/1\" >" +
+                "<d:layout-devices xmlns:d=\"http://schemas.android.com/sdk/android/layout-devices/1\" >" +
                 "<d:unknown />" +
-                "</d:layout-configs>",
+                "</d:layout-devices>",
 
                 // expected failure
                 "cvc-complex-type.2.4.a: Invalid content was found.*");
@@ -181,9 +181,9 @@ public class TestLayoutConfisXsd extends TestCase {
         checkFailure(
                 // document
                 "<?xml version=\"1.0\"?>" +
-                "<d:layout-configs xmlns:d=\"http://schemas.android.com/sdk/android/layout-configs/1\" >" +
+                "<d:layout-devices xmlns:d=\"http://schemas.android.com/sdk/android/layout-devices/1\" >" +
                 "<d:device />" +
-                "</d:layout-configs>",
+                "</d:layout-devices>",
 
                 // expected failure
                 "cvc-complex-type.4: Attribute 'name' must appear on element 'd:device'.");
@@ -194,10 +194,10 @@ public class TestLayoutConfisXsd extends TestCase {
         checkFailure(
                 // document
                 "<?xml version=\"1.0\"?>" +
-                "<d:layout-configs xmlns:d=\"http://schemas.android.com/sdk/android/layout-configs/1\" />",
+                "<d:layout-devices xmlns:d=\"http://schemas.android.com/sdk/android/layout-devices/1\" />",
 
                 // expected failure
-                "cvc-complex-type.2.4.b: The content of element 'd:layout-configs' is not complete.*");
+                "cvc-complex-type.2.4.b: The content of element 'd:layout-devices' is not complete.*");
     }
 
     /** A document with an empty device element is not valid. */
@@ -205,9 +205,9 @@ public class TestLayoutConfisXsd extends TestCase {
         checkFailure(
                 // document
                 "<?xml version=\"1.0\"?>" +
-                "<d:layout-configs xmlns:d=\"http://schemas.android.com/sdk/android/layout-configs/1\" >" +
+                "<d:layout-devices xmlns:d=\"http://schemas.android.com/sdk/android/layout-devices/1\" >" +
                 "<d:device name=\"foo\"/>" +
-                "</d:layout-configs>",
+                "</d:layout-devices>",
 
                 // expected failure
                 "cvc-complex-type.2.4.b: The content of element 'd:device' is not complete.*");
@@ -218,12 +218,12 @@ public class TestLayoutConfisXsd extends TestCase {
         checkFailure(
                 // document
                 "<?xml version=\"1.0\"?>" +
-                "<d:layout-configs xmlns:d=\"http://schemas.android.com/sdk/android/layout-configs/1\" >" +
+                "<d:layout-devices xmlns:d=\"http://schemas.android.com/sdk/android/layout-devices/1\" >" +
                 "<d:device name=\"foo\">" +
                 "  <d:default />" +
                 "  <d:default />" +
                 "</d:device>" +
-                "</d:layout-configs>",
+                "</d:layout-devices>",
 
                 // expected failure
                 "cvc-complex-type.2.4.a: Invalid content was found starting with element 'd:default'.*");
@@ -234,12 +234,12 @@ public class TestLayoutConfisXsd extends TestCase {
         checkFailure(
                 // document
                 "<?xml version=\"1.0\"?>" +
-                "<d:layout-configs xmlns:d=\"http://schemas.android.com/sdk/android/layout-configs/1\" >" +
+                "<d:layout-devices xmlns:d=\"http://schemas.android.com/sdk/android/layout-devices/1\" >" +
                 "<d:device name=\"foo\">" +
                 "  <d:config name=\"must-be-after-default\" />" +
                 "  <d:default />" +
                 "</d:device>" +
-                "</d:layout-configs>",
+                "</d:layout-devices>",
 
                 // expected failure
                 "cvc-complex-type.2.4.a: Invalid content was found starting with element 'd:default'.*");
@@ -250,13 +250,13 @@ public class TestLayoutConfisXsd extends TestCase {
         checkFailure(
                 // document
                 "<?xml version=\"1.0\"?>" +
-                "<d:layout-configs xmlns:d=\"http://schemas.android.com/sdk/android/layout-configs/1\" >" +
+                "<d:layout-devices xmlns:d=\"http://schemas.android.com/sdk/android/layout-devices/1\" >" +
                 "<d:device name=\"foo\">" +
                 "  <d:default>" +
                 "    <d:screen-dimension> <d:size>0</d:size> <d:size>1</d:size> </d:screen-dimension>" +
                 "  </d:default>" +
                 "</d:device>" +
-                "</d:layout-configs>",
+                "</d:layout-devices>",
 
                 // expected failure
                 "cvc-minInclusive-valid: Value '0' is not facet-valid with respect to minInclusive '1'.*");
@@ -267,13 +267,13 @@ public class TestLayoutConfisXsd extends TestCase {
         checkFailure(
                 // document
                 "<?xml version=\"1.0\"?>" +
-                "<d:layout-configs xmlns:d=\"http://schemas.android.com/sdk/android/layout-configs/1\" >" +
+                "<d:layout-devices xmlns:d=\"http://schemas.android.com/sdk/android/layout-devices/1\" >" +
                 "<d:device name=\"foo\">" +
                 "  <d:default>" +
                 "    <d:screen-dimension> <d:size>-5</d:size> <d:size>1</d:size> </d:screen-dimension>" +
                 "  </d:default>" +
                 "</d:device>" +
-                "</d:layout-configs>",
+                "</d:layout-devices>",
 
                 // expected failure
                 "cvc-minInclusive-valid: Value '-5' is not facet-valid with respect to minInclusive '1'.*");
@@ -284,13 +284,13 @@ public class TestLayoutConfisXsd extends TestCase {
         checkFailure(
                 // document
                 "<?xml version=\"1.0\"?>" +
-                "<d:layout-configs xmlns:d=\"http://schemas.android.com/sdk/android/layout-configs/1\" >" +
+                "<d:layout-devices xmlns:d=\"http://schemas.android.com/sdk/android/layout-devices/1\" >" +
                 "<d:device name=\"foo\">" +
                 "  <d:default>" +
                 "    <d:xdpi>0</d:xdpi>" +
                 "  </d:default>" +
                 "</d:device>" +
-                "</d:layout-configs>",
+                "</d:layout-devices>",
 
                 // expected failure
                 "cvc-minExclusive-valid: Value '0' is not facet-valid with respect to minExclusive '0.0E1'.*");
@@ -302,13 +302,13 @@ public class TestLayoutConfisXsd extends TestCase {
         checkFailure(
                 // document
                 "<?xml version=\"1.0\"?>" +
-                "<d:layout-configs xmlns:d=\"http://schemas.android.com/sdk/android/layout-configs/1\" >" +
+                "<d:layout-devices xmlns:d=\"http://schemas.android.com/sdk/android/layout-devices/1\" >" +
                 "<d:device name=\"foo\">" +
                 "  <d:default>" +
                 "    <d:xdpi>-3.1415926538</d:xdpi>" +
                 "  </d:default>" +
                 "</d:device>" +
-                "</d:layout-configs>",
+                "</d:layout-devices>",
 
                 // expected failure
                 "cvc-minExclusive-valid: Value '-3.1415926538' is not facet-valid with respect to minExclusive '0.0E1'.*");
@@ -319,13 +319,13 @@ public class TestLayoutConfisXsd extends TestCase {
         checkSuccess(
                 // document
                 "<?xml version=\"1.0\"?>" +
-                "<d:layout-configs xmlns:d=\"http://schemas.android.com/sdk/android/layout-configs/1\" >" +
+                "<d:layout-devices xmlns:d=\"http://schemas.android.com/sdk/android/layout-devices/1\" >" +
                 "<d:device name=\"foo\">" +
                 "  <d:config name='foo'>" +
                 "    <d:screen-ratio>  \n long \r </d:screen-ratio>" +
                 "  </d:config>" +
                 "</d:device>" +
-                "</d:layout-configs>");
+                "</d:layout-devices>");
     }
 
 }
