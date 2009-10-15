@@ -24,6 +24,7 @@ import android.graphics.Paint.FontMetricsInt;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MotionEvent;
+import android.view.ViewConfiguration;
 import android.view.WindowManager;
 import android.view.VelocityTracker;
 import android.view.View;
@@ -59,6 +60,7 @@ public class PointerLocation extends Activity {
     }
     
     public class MyView extends View {
+        private final ViewConfiguration mVC;
         private final Paint mTextPaint;
         private final Paint mTextBackgroundPaint;
         private final Paint mTextLevelPaint;
@@ -75,6 +77,7 @@ public class PointerLocation extends Activity {
         
         public MyView(Context c) {
             super(c);
+            mVC = ViewConfiguration.get(c);
             mTextPaint = new Paint();
             mTextPaint.setAntiAlias(true);
             mTextPaint.setTextSize(10
@@ -132,11 +135,24 @@ public class PointerLocation extends Activity {
                 canvas.drawText("P: " + mCurNumPointers + " / " + mMaxNumPointers,
                         1, base, mTextPaint);
                 
-                canvas.drawRect(itemW, 0, (itemW * 2) - 1, bottom, mTextBackgroundPaint);
-                canvas.drawText("X: " + ps.mCurX, 1 + itemW, base, mTextPaint);
-                
-                canvas.drawRect(itemW * 2, 0, (itemW * 3) - 1, bottom, mTextBackgroundPaint);
-                canvas.drawText("Y: " + ps.mCurY, 1 + itemW * 2, base, mTextPaint);
+                final int N = ps.mXs.size();
+                if ((mCurDown && ps.mCurDown) || N == 0) {
+                    canvas.drawRect(itemW, 0, (itemW * 2) - 1, bottom, mTextBackgroundPaint);
+                    canvas.drawText("X: " + ps.mCurX, 1 + itemW, base, mTextPaint);
+                    canvas.drawRect(itemW * 2, 0, (itemW * 3) - 1, bottom, mTextBackgroundPaint);
+                    canvas.drawText("Y: " + ps.mCurY, 1 + itemW * 2, base, mTextPaint);
+                } else {
+                    float dx = ps.mXs.get(N-1) - ps.mXs.get(0);
+                    float dy = ps.mYs.get(N-1) - ps.mYs.get(0);
+                    canvas.drawRect(itemW, 0, (itemW * 2) - 1, bottom,
+                            Math.abs(dx) < mVC.getScaledTouchSlop()
+                            ? mTextBackgroundPaint : mTextLevelPaint);
+                    canvas.drawText("dX: " + String.format("%.1f", dx), 1 + itemW, base, mTextPaint);
+                    canvas.drawRect(itemW * 2, 0, (itemW * 3) - 1, bottom,
+                            Math.abs(dy) < mVC.getScaledTouchSlop()
+                            ? mTextBackgroundPaint : mTextLevelPaint);
+                    canvas.drawText("dY: " + String.format("%.1f", dy), 1 + itemW * 2, base, mTextPaint);
+                }
                 
                 canvas.drawRect(itemW * 3, 0, (itemW * 4) - 1, bottom, mTextBackgroundPaint);
                 int velocity = ps.mVelocity == null ? 0 : (int) (ps.mVelocity.getXVelocity() * 1000);
@@ -237,6 +253,7 @@ public class PointerLocation extends Activity {
                 }
                 mPointers.get(0).mCurDown = true;
                 mMaxNumPointers = 0;
+                Log.i("Pointer", "Pointer 1: DOWN");
             }
             
             if ((action&MotionEvent.ACTION_MASK) == MotionEvent.ACTION_POINTER_DOWN) {
@@ -251,6 +268,7 @@ public class PointerLocation extends Activity {
                 final PointerState ps = mPointers.get(id);
                 ps.mVelocity = VelocityTracker.obtain();
                 ps.mCurDown = true;
+                Log.i("Pointer", "Pointer " + (id+1) + ": DOWN");
             }
             
             final int NI = event.getPointerCount();
@@ -268,9 +286,18 @@ public class PointerLocation extends Activity {
                 ps.mVelocity.computeCurrentVelocity(1);
                 final int N = event.getHistorySize();
                 for (int j=0; j<N; j++) {
+                    Log.i("Pointer", "Pointer " + (i+1) + ": ("
+                            + event.getHistoricalX(i, j)
+                            + ", " + event.getHistoricalY(i, j) + ")"
+                            + " Prs=" + event.getHistoricalPressure(i, j)
+                            + " Size=" + event.getHistoricalSize(i, j));
                     ps.mXs.add(event.getHistoricalX(i, j));
                     ps.mYs.add(event.getHistoricalY(i, j));
                 }
+                Log.i("Pointer", "Pointer " + (i+1) + ": ("
+                        + event.getX(i) + ", " + event.getY(i) + ")"
+                        + " Prs=" + event.getPressure(i)
+                        + " Size=" + event.getSize(i));
                 ps.mXs.add(event.getX(i));
                 ps.mYs.add(event.getY(i));
                 ps.mCurX = (int)event.getX(i);
@@ -289,6 +316,17 @@ public class PointerLocation extends Activity {
                 ps.mXs.add(Float.NaN);
                 ps.mYs.add(Float.NaN);
                 ps.mCurDown = false;
+                Log.i("Pointer", "Pointer " + (id+1) + ": UP");
+            }
+            
+            if (action == MotionEvent.ACTION_UP) {
+                for (int i=0; i<NI; i++) {
+                    final PointerState ps = mPointers.get(event.getPointerId(i));
+                    if (ps.mCurDown) {
+                        ps.mCurDown = false;
+                        Log.i("Pointer", "Pointer " + (i+1) + ": UP");
+                    }
+                }
             }
             
             //if (mCurDown) {
