@@ -69,8 +69,10 @@ DEST=$BASE/unittests/com/android
 cpdir $DEST development/tools/ddms/libs/ddmlib/tests/src/com/android/ddmlib
 cpdir $DEST development/tools/sdkmanager/libs/sdklib/tests/com/android/sdklib
 
+# Cleanup old obsolete symlink
+[[ -e $DEST/sdkuilib || -L $DEST/sdkuilib ]] && rm -rfv $DEST/sdkuilib
+
 DEST=$BASE/unittests/com/android/layoutlib
 mkdir -p $DEST
 cpdir $DEST frameworks/base/tools/layoutlib/bridge/tests/com/android/layoutlib/bridge
 cpdir $DEST frameworks/base/tools/layoutlib/bridge/tests/com/android/layoutlib/testdata
-
