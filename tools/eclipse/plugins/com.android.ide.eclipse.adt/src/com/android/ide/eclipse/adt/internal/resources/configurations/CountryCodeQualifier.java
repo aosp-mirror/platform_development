@@ -33,7 +33,7 @@ public final class CountryCodeQualifier extends ResourceQualifier {
 
     private final static Pattern sCountryCodePattern = Pattern.compile("^mcc(\\d{3})$");//$NON-NLS-1$
 
-    private int mCode = DEFAULT_CODE;
+    private final int mCode;
 
     public static final String NAME = "Mobile Country Code";
 
@@ -56,8 +56,7 @@ public final class CountryCodeQualifier extends ResourceQualifier {
                 return null;
             }
 
-            CountryCodeQualifier qualifier = new CountryCodeQualifier();
-            qualifier.mCode = code;
+            CountryCodeQualifier qualifier = new CountryCodeQualifier(code);
             return qualifier;
         }
 
@@ -75,6 +74,14 @@ public final class CountryCodeQualifier extends ResourceQualifier {
         }
 
         return ""; //$NON-NLS-1$
+    }
+
+    public CountryCodeQualifier() {
+        this(DEFAULT_CODE);
+    }
+
+    public CountryCodeQualifier(int code) {
+        mCode = code;
     }
 
     public int getCode() {
