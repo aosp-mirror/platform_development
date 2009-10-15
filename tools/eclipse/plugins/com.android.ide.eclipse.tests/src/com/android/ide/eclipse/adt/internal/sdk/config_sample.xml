@@ -14,9 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 -->
-<d:layout-configs
+<d:layout-devices
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xmlns:d="http://schemas.android.com/sdk/android/layout-configs/1">
+    xmlns:d="http://schemas.android.com/sdk/android/layout-devices/1">
 
     <d:device name="MyDevice">        <!-- 1..n -->
         <d:default>                   <!-- 0..1 -->
@@ -134,4 +134,4 @@
         </d:config>
     </d:device>
 
-</d:layout-configs>
+</d:layout-devices>
