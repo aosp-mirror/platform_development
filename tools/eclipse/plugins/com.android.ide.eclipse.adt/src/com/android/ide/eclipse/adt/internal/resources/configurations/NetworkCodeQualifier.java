@@ -33,7 +33,7 @@ public final class NetworkCodeQualifier extends ResourceQualifier {
 
     private final static Pattern sNetworkCodePattern = Pattern.compile("^mnc(\\d{1,3})$"); //$NON-NLS-1$
 
-    private int mCode = DEFAULT_CODE;
+    private final int mCode;
 
     public final static String NAME = "Mobile Network Code";
 
@@ -56,8 +56,7 @@ public final class NetworkCodeQualifier extends ResourceQualifier {
                 return null;
             }
 
-            NetworkCodeQualifier qualifier = new NetworkCodeQualifier();
-            qualifier.mCode = code;
+            NetworkCodeQualifier qualifier = new NetworkCodeQualifier(code);
             return qualifier;
         }
 
@@ -75,6 +74,14 @@ public final class NetworkCodeQualifier extends ResourceQualifier {
         }
 
         return ""; //$NON-NLS-1$
+    }
+
+    public NetworkCodeQualifier() {
+        this(DEFAULT_CODE);
+    }
+
+    public NetworkCodeQualifier(int code) {
+        mCode = code;
     }
 
     public int getCode() {
@@ -115,8 +122,7 @@ public final class NetworkCodeQualifier extends ResourceQualifier {
                 return false;
             }
 
-            NetworkCodeQualifier qualifier = new NetworkCodeQualifier();
-            qualifier.mCode = code;
+            NetworkCodeQualifier qualifier = new NetworkCodeQualifier(code);
             config.setNetworkCodeQualifier(qualifier);
             return true;
         }

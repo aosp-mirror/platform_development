@@ -31,14 +31,14 @@ import javax.xml.validation.Validator;
 /**
  * Public constants for the layout device description XML Schema.
  */
-public class LayoutConfigsXsd {
+public class LayoutDevicesXsd {
 
     /** The XML namespace of the layout-configs XML. */
-    public static final String NS_LAYOUT_CONFIG_XSD =
-        "http://schemas.android.com/sdk/android/layout-configs/1";                  //$NON-NLS-1$
+    public static final String NS_LAYOUT_DEVICE_XSD =
+        "http://schemas.android.com/sdk/android/layout-devices/1";                  //$NON-NLS-1$
 
     /**
-     * The "layout-configs" element is the root element of this schema.
+     * The "layout-devices" element is the root element of this schema.
      *
      * It must contain one or more "device" elements that each define the configurations
      * available for a given device.
@@ -46,7 +46,7 @@ public class LayoutConfigsXsd {
      * These definitions are used in the Graphical Layout Editor in the
      * Android Development Tools (ADT) plugin for Eclipse.
      */
-    public static final String NODE_LAYOUT_CONFIGS = "layout-configs";              //$NON-NLS-1$
+    public static final String NODE_LAYOUT_DEVICES = "layout-devices";              //$NON-NLS-1$
 
     /**
      * A device element must contain at most one "default" element followed
@@ -75,6 +75,10 @@ public class LayoutConfigsXsd {
      */
     public static final String NODE_CONFIG = "config";                              //$NON-NLS-1$
 
+
+    public static final String NODE_COUNTRY_CODE = "country-code";                  //$NON-NLS-1$
+
+    public static final String NODE_NETWORK_CODE = "network-code";                  //$NON-NLS-1$
 
     public static final String NODE_SCREEN_SIZE = "screen-size";                    //$NON-NLS-1$
 
@@ -111,7 +115,7 @@ public class LayoutConfigsXsd {
      * Helper to get an input stream of the layout config XML schema.
      */
     public static InputStream getXsdStream() {
-        return LayoutConfigsXsd.class.getResourceAsStream("layout-configs.xsd");    //$NON-NLS-1$
+        return LayoutDevicesXsd.class.getResourceAsStream("layout-devices.xsd");    //$NON-NLS-1$
     }
 
     /** Helper method that returns a {@link Validator} for our XSD */

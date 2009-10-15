@@ -440,7 +440,7 @@ public class Sdk implements IProjectListener {
                 SdkConstants.OS_SDK_DOCS_FOLDER);
 
         // load the built-in and user layout devices
-        mLayoutDeviceManager.load(mManager.getLocation());
+        mLayoutDeviceManager.loadDefaultAndUserDevices(mManager.getLocation());
         // and the ones from the add-on
         loadLayoutDevices();
     }
