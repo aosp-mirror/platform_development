@@ -33,6 +33,9 @@ OTHER FIXES & CHANGES:
   This change is to help people easily package experimental NDK releases to
   test and distribute fixes and improvements.
 
+- Remove bash-isms from build/tools/build-toolchain.sh. Now it's possible to
+  build it with the 'dash' shell on Debian-based systems (tested on Ubuntu 8.04)
+
 -------------------------------------------------------------------------------
 android-ndk-1.6_r1
 
