@@ -591,6 +591,9 @@ public class ConfigurationComposite extends Composite {
                 ConfigManagerDialog dialog = new ConfigManagerDialog(getShell());
                 dialog.open();
 
+                // save the user devices
+                Sdk.getCurrent().getLayoutDeviceManager().save();
+
                 // reload the combo with the new content.
                 loadDevices();
                 initUiWithDevices();
