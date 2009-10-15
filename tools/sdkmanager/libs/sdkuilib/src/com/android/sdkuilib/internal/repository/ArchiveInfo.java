@@ -94,11 +94,13 @@ class ArchiveInfo {
     }
 
     /**
-     * Set to true if this new archive is a dependency for <em>another</em> one that we
-     * want to install.
+     * Adds an {@link ArchiveInfo} for which <em>this</em> package is a dependency.
+     * This means the package added here depends on this package.
      */
     public void addDependencyFor(ArchiveInfo dependencyFor) {
-        mDependencyFor.add(dependencyFor);
+        if (!mDependencyFor.contains(dependencyFor)) {
+            mDependencyFor.add(dependencyFor);
+        }
     }
 
     public Collection<ArchiveInfo> getDependenciesFor() {
