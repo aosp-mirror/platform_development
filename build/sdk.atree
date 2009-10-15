@@ -159,6 +159,7 @@ external/qemu/android/avd/hardware-properties.ini tools/lib/hardware-properties.
 # emulator skins
 development/emulator/skins/QVGA      platforms/${PLATFORM_NAME}/skins/QVGA
 development/emulator/skins/WQVGA432  platforms/${PLATFORM_NAME}/skins/WQVGA432
+development/emulator/skins/WQVGA400  platforms/${PLATFORM_NAME}/skins/WQVGA400
 development/emulator/skins/HVGA      platforms/${PLATFORM_NAME}/skins/HVGA
 development/emulator/skins/WVGA800   platforms/${PLATFORM_NAME}/skins/WVGA800
 development/emulator/skins/WVGA854   platforms/${PLATFORM_NAME}/skins/WVGA854
