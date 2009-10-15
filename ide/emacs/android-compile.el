@@ -39,6 +39,13 @@
 (require 'compile)
 (require 'android-common)
 
+;; No need to be customized.
+(defvar android-compile-ignore-re
+  "\\(^\\(\\sw\\|[/_]\\)+\\(Makefile\\|\\.mk\\):[0-9]+:.*warning\\)\\|\\(^/bin/bash\\)"
+  "RE to match line to suppress during a compilation.
+During the compilation process line matching the above will be
+suppressed if `android-compilation-no-buildenv-warning' is non nil.")
+
 (defun android-makefile-exists-p (directory)
   "Return t if an Android makefile exists in DIRECTORY."
   ; Test for Android.mk first: more likely.
@@ -75,6 +82,45 @@ Signal an error if no Makefile was found."
       (setq file (concat default-directory "Android.mk"))
       (list file nil))))
 
+;; This filter is registered as a `compilation-filter-hook' and is
+;; called when new data has been inserted in the compile buffer. Don't
+;; assume that only one line has been inserted, typically more than
+;; one has changed since the last call due to stdout buffering.
+;; We store in a buffer local variable the process to detect a new
+;; compilation. We also store the point position to limit our
+;; search. On entry (point) is at the end of the last block inserted.
+(defun android-compile-filter ()
+  "Filter to discard unwanted lines from the compilation buffer.
+
+This filter is registered as a `compilation-filter-hook' and is
+called when new data has been inserted in the compile buffer.
+
+Has effect only if `android-compilation-no-buildenv-warning' is
+not nil."
+  ;; Currently we are looking only for compilation warnings from the
+  ;; build env. Move this test lower, near the while loop if we
+  ;; support more than one category of regexp.
+  (when android-compilation-no-buildenv-warning
+
+    ;; Check if android-compile-context does not exist or if the
+    ;; process has changed: new compilation.
+    (let ((proc (get-buffer-process (current-buffer))))
+      (unless (and (local-variable-p 'android-compile-context)
+                   (eq proc (cadr android-compile-context)))
+        (setq android-compile-context (list (point-min) proc))
+        (make-local-variable 'android-compile-context)))
+
+    (let ((beg (car android-compile-context))
+          (end (point)))
+      (save-excursion
+        (goto-char beg)
+        (while (search-forward-regexp android-compile-ignore-re end t)
+          ;; Nuke the line
+          (let ((bol (point-at-bol)))
+            (forward-line 1)
+            (delete-region bol (point)))))
+      ;; Remember the new end for next time around.
+      (setcar android-compile-context (point)))))
 
 (defun android-compile ()
   "Elisp equivalent of mm shell function.
@@ -91,6 +137,9 @@ in a compilation."
               (concat " -j " (number-to-string android-compilation-jobs))))
         (unless (file-exists-p (concat topdir "buildspec.mk"))
           (error "buildspec.mk missing in %s." topdir))
+        ;; Add-hook do not re-add if already present. The compile
+        ;; filter hooks run after the comint cleanup (^M).
+        (add-hook 'compilation-filter-hook 'android-compile-filter)
         (set (make-local-variable 'compile-command)
              (if (cadr makefile)
                  ;; The root Makefile is not invoked using ONE_SHOT_MAKEFILE.
