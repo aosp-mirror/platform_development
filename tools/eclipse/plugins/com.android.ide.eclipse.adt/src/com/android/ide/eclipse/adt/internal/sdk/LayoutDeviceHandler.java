@@ -16,9 +16,11 @@
 
 package com.android.ide.eclipse.adt.internal.sdk;
 
+import com.android.ide.eclipse.adt.internal.resources.configurations.CountryCodeQualifier;
 import com.android.ide.eclipse.adt.internal.resources.configurations.FolderConfiguration;
 import com.android.ide.eclipse.adt.internal.resources.configurations.KeyboardStateQualifier;
 import com.android.ide.eclipse.adt.internal.resources.configurations.NavigationMethodQualifier;
+import com.android.ide.eclipse.adt.internal.resources.configurations.NetworkCodeQualifier;
 import com.android.ide.eclipse.adt.internal.resources.configurations.PixelDensityQualifier;
 import com.android.ide.eclipse.adt.internal.resources.configurations.ScreenDimensionQualifier;
 import com.android.ide.eclipse.adt.internal.resources.configurations.ScreenOrientationQualifier;
@@ -44,7 +46,7 @@ import java.util.List;
 
 /**
  * {@link DefaultHandler} implementation to parse Layout Device XML file.
- * @see LayoutConfigsXsd
+ * @see LayoutDevicesXsd
  * @see Layout-configs.xsd
  */
 class LayoutDeviceHandler extends DefaultHandler {
@@ -74,17 +76,17 @@ class LayoutDeviceHandler extends DefaultHandler {
     @Override
     public void startElement(String uri, String localName, String name, Attributes attributes)
             throws SAXException {
-        if (LayoutConfigsXsd.NODE_DEVICE.equals(localName)) {
+        if (LayoutDevicesXsd.NODE_DEVICE.equals(localName)) {
             // get the deviceName, will not be null since we validated the XML.
-            String deviceName = attributes.getValue("", LayoutConfigsXsd.ATTR_NAME);
+            String deviceName = attributes.getValue("", LayoutDevicesXsd.ATTR_NAME);
 
             // create a device and add it to the list
             mCurrentDevice = new LayoutDevice(deviceName);
             mDevices.add(mCurrentDevice);
-        } else if (LayoutConfigsXsd.NODE_DEFAULT.equals(localName)) {
+        } else if (LayoutDevicesXsd.NODE_DEFAULT.equals(localName)) {
             // create a new default config
             mDefaultConfig = mCurrentConfig = new FolderConfiguration();
-        } else if (LayoutConfigsXsd.NODE_CONFIG.equals(localName)) {
+        } else if (LayoutDevicesXsd.NODE_CONFIG.equals(localName)) {
             // create a new config
             mCurrentConfig = new FolderConfiguration();
 
@@ -94,11 +96,11 @@ class LayoutDeviceHandler extends DefaultHandler {
             }
 
             // get the name of the config
-            String deviceName = attributes.getValue("", LayoutConfigsXsd.ATTR_NAME);
+            String deviceName = attributes.getValue("", LayoutDevicesXsd.ATTR_NAME);
 
             // give it to the current device.
             mCurrentDevice.addConfig(deviceName, mCurrentConfig);
-        } else if (LayoutConfigsXsd.NODE_SCREEN_DIMENSION.equals(localName)) {
+        } else if (LayoutDevicesXsd.NODE_SCREEN_DIMENSION.equals(localName)) {
             mSize1 = mSize2 = null;
         }
 
@@ -112,53 +114,61 @@ class LayoutDeviceHandler extends DefaultHandler {
 
     @Override
     public void endElement(String uri, String localName, String name) throws SAXException {
-        if (LayoutConfigsXsd.NODE_DEVICE.equals(localName)) {
+        if (LayoutDevicesXsd.NODE_DEVICE.equals(localName)) {
             mCurrentDevice = null;
             mDefaultConfig = null;
-        } else if (LayoutConfigsXsd.NODE_CONFIG.equals(localName)) {
+        } else if (LayoutDevicesXsd.NODE_CONFIG.equals(localName)) {
             mCurrentConfig = null;
-        } else if (LayoutConfigsXsd.NODE_SCREEN_SIZE.equals(localName)) {
+        } else if (LayoutDevicesXsd.NODE_COUNTRY_CODE.equals(localName)) {
+            CountryCodeQualifier ccq = new CountryCodeQualifier(
+                    Integer.parseInt(mStringAccumulator.toString()));
+            mCurrentConfig.setCountryCodeQualifier(ccq);
+        } else if (LayoutDevicesXsd.NODE_NETWORK_CODE.equals(localName)) {
+            NetworkCodeQualifier ncq = new NetworkCodeQualifier(
+                    Integer.parseInt(mStringAccumulator.toString()));
+            mCurrentConfig.setNetworkCodeQualifier(ncq);
+        } else if (LayoutDevicesXsd.NODE_SCREEN_SIZE.equals(localName)) {
             ScreenSizeQualifier ssq = new ScreenSizeQualifier(
                     ScreenSize.getEnum(mStringAccumulator.toString()));
             mCurrentConfig.setScreenSizeQualifier(ssq);
-        } else if (LayoutConfigsXsd.NODE_SCREEN_RATIO.equals(localName)) {
+        } else if (LayoutDevicesXsd.NODE_SCREEN_RATIO.equals(localName)) {
             ScreenRatioQualifier srq = new ScreenRatioQualifier(
                     ScreenRatio.getEnum(mStringAccumulator.toString()));
             mCurrentConfig.setScreenRatioQualifier(srq);
-        } else if (LayoutConfigsXsd.NODE_SCREEN_ORIENTATION.equals(localName)) {
+        } else if (LayoutDevicesXsd.NODE_SCREEN_ORIENTATION.equals(localName)) {
             ScreenOrientationQualifier soq = new ScreenOrientationQualifier(
                     ScreenOrientation.getEnum(mStringAccumulator.toString()));
             mCurrentConfig.setScreenOrientationQualifier(soq);
-        } else if (LayoutConfigsXsd.NODE_PIXEL_DENSITY.equals(localName)) {
+        } else if (LayoutDevicesXsd.NODE_PIXEL_DENSITY.equals(localName)) {
             PixelDensityQualifier pdq = new PixelDensityQualifier(
                     Density.getEnum(mStringAccumulator.toString()));
             mCurrentConfig.setPixelDensityQualifier(pdq);
-        } else if (LayoutConfigsXsd.NODE_TOUCH_TYPE.equals(localName)) {
+        } else if (LayoutDevicesXsd.NODE_TOUCH_TYPE.equals(localName)) {
             TouchScreenQualifier tsq = new TouchScreenQualifier(
                     TouchScreenType.getEnum(mStringAccumulator.toString()));
             mCurrentConfig.setTouchTypeQualifier(tsq);
-        } else if (LayoutConfigsXsd.NODE_KEYBOARD_STATE.equals(localName)) {
+        } else if (LayoutDevicesXsd.NODE_KEYBOARD_STATE.equals(localName)) {
             KeyboardStateQualifier ksq = new KeyboardStateQualifier(
                     KeyboardState.getEnum(mStringAccumulator.toString()));
             mCurrentConfig.setKeyboardStateQualifier(ksq);
-        } else if (LayoutConfigsXsd.NODE_TEXT_INPUT_METHOD.equals(localName)) {
+        } else if (LayoutDevicesXsd.NODE_TEXT_INPUT_METHOD.equals(localName)) {
             TextInputMethodQualifier timq = new TextInputMethodQualifier(
                     TextInputMethod.getEnum(mStringAccumulator.toString()));
             mCurrentConfig.setTextInputMethodQualifier(timq);
-        } else if (LayoutConfigsXsd.NODE_NAV_METHOD.equals(localName)) {
+        } else if (LayoutDevicesXsd.NODE_NAV_METHOD.equals(localName)) {
             NavigationMethodQualifier nmq = new NavigationMethodQualifier(
                     NavigationMethod.getEnum(mStringAccumulator.toString()));
             mCurrentConfig.setNavigationMethodQualifier(nmq);
-        } else if (LayoutConfigsXsd.NODE_SCREEN_DIMENSION.equals(localName)) {
+        } else if (LayoutDevicesXsd.NODE_SCREEN_DIMENSION.equals(localName)) {
             ScreenDimensionQualifier qual = ScreenDimensionQualifier.getQualifier(mSize1, mSize2);
             if (qual != null) {
                 mCurrentConfig.setScreenDimensionQualifier(qual);
             }
-        } else if (LayoutConfigsXsd.NODE_XDPI.equals(localName)) {
+        } else if (LayoutDevicesXsd.NODE_XDPI.equals(localName)) {
             mCurrentDevice.setXDpi(Float.parseFloat(mStringAccumulator.toString()));
-        } else if (LayoutConfigsXsd.NODE_YDPI.equals(localName)) {
+        } else if (LayoutDevicesXsd.NODE_YDPI.equals(localName)) {
             mCurrentDevice.setYDpi(Float.parseFloat(mStringAccumulator.toString()));
-        } else if (LayoutConfigsXsd.NODE_SIZE.equals(localName)) {
+        } else if (LayoutDevicesXsd.NODE_SIZE.equals(localName)) {
             if (mSize1 == null) {
                 mSize1 = mStringAccumulator.toString();
             } else if (mSize2 == null) {

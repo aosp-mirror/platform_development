@@ -18,8 +18,12 @@ package com.android.ide.eclipse.adt.internal.sdk;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.resources.configurations.FolderConfiguration;
+import com.android.prefs.AndroidLocation;
+import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.SdkConstants;
 
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -35,10 +39,17 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
+import javax.xml.transform.Result;
 import javax.xml.transform.Source;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Validator;
 
@@ -232,11 +243,43 @@ public class LayoutDeviceManager {
         }
     }
 
-    void load(String sdkOsLocation) {
+    /**
+     * Saves the user-made {@link LayoutDevice}s to disk.
+     */
+    public void save() {
+        try {
+            String userFolder = AndroidLocation.getFolder();
+            File deviceXml = new File(userFolder, SdkConstants.FN_DEVICES_XML);
+            if (deviceXml.isDirectory() == false) {
+                write(deviceXml, mUserLayoutDevices);
+            }
+        } catch (AndroidLocationException e) {
+            // no user folder? simply don't save the user layout device.
+            // we could display the error, but it's likely something else did before, as
+            // nothing will work w/o it.
+            AdtPlugin.log(e, "Unable to find user directory");
+        }
+    }
+
+    /**
+     * Loads the default built-in and user created Layout Devices.
+     * @param sdkOsLocation location of the SDK.
+     */
+    void loadDefaultAndUserDevices(String sdkOsLocation) {
         // load the default devices
         loadDefaultLayoutDevices(sdkOsLocation);
 
         // load the user devices;
+        try {
+            String userFolder = AndroidLocation.getFolder();
+            File deviceXml = new File(userFolder, SdkConstants.FN_DEVICES_XML);
+            if (deviceXml.isFile()) {
+                parseLayoutDevices(deviceXml, mUserLayoutDevices);
+            }
+        } catch (AndroidLocationException e) {
+            // no user folder? simply don't load the user layout device
+            AdtPlugin.log(e, "Unable to find user directory");
+        }
     }
 
     void parseAddOnLayoutDevice(File deviceXml) {
@@ -251,6 +294,8 @@ public class LayoutDeviceManager {
 
     /**
      * Does the actual parsing of a devices.xml file.
+     * @param deviceXml the {@link File} to load/parse. This must be an existing file.
+     * @param list the list in which to write the parsed {@link LayoutDevice}.
      */
     private void parseLayoutDevices(File deviceXml, List<LayoutDevice> list) {
         // first we validate the XML
@@ -259,7 +304,7 @@ public class LayoutDeviceManager {
 
             CaptureErrorHandler errorHandler = new CaptureErrorHandler(deviceXml.getAbsolutePath());
 
-            Validator validator = LayoutConfigsXsd.getValidator(errorHandler);
+            Validator validator = LayoutDevicesXsd.getValidator(errorHandler);
             validator.validate(source);
 
             if (errorHandler.foundError() == false) {
@@ -307,4 +352,45 @@ public class LayoutDeviceManager {
         mLayoutDevices = Collections.unmodifiableList(list);
     }
 
+    /**
+     * Writes the given {@link LayoutDevice}s into the given file.
+     * @param deviceXml the file to write.
+     * @param deviceList the LayoutDevice to write into the file.
+     */
+    private void write(File deviceXml, List<LayoutDevice> deviceList) {
+        try {
+            // create a new document
+            DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+            docFactory.setNamespaceAware(true);
+            DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+            Document doc = docBuilder.newDocument();
+
+            // create a base node
+            Element baseNode = doc.createElementNS(
+                    LayoutDevicesXsd.NS_LAYOUT_DEVICE_XSD,
+                    LayoutDevicesXsd.NODE_LAYOUT_DEVICES);
+            // create the prefix for the namespace
+            baseNode.setPrefix("d");
+            doc.appendChild(baseNode);
+
+            // fill it with the layout devices.
+            for (LayoutDevice device : deviceList) {
+                device.saveTo(doc, baseNode);
+            }
+
+            // save the document to disk
+            // Prepare the DOM document for writing
+            Source source = new DOMSource(doc);
+
+            // Prepare the output file
+            File file = new File(deviceXml.getAbsolutePath());
+            Result result = new StreamResult(file);
+
+            // Write the DOM document to the file
+            Transformer xformer = TransformerFactory.newInstance().newTransformer();
+            xformer.transform(source, result);
+        } catch (Exception e) {
+            AdtPlugin.log(e, "Failed to write %s", deviceXml.getAbsolutePath());
+        }
+    }
 }
