@@ -16,8 +16,11 @@
 
 package com.android.sdkuilib.internal.repository;
 
+import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.internal.repository.Archive;
+import com.android.sdklib.internal.repository.IPackageVersion;
+import com.android.sdklib.internal.repository.Package;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 
 import org.eclipse.jface.viewers.ISelection;
@@ -457,27 +460,50 @@ final class UpdateChooserDialog extends Dialog {
             return;
         }
 
-        Archive anew = ai.getNewArchive();
+        Archive aNew = ai.getNewArchive();
+        Package pNew = aNew.getParentPackage();
 
         mPackageText.setText("");                                                //$NON-NLS-1$
 
         addSectionTitle("Package Description\n");
-        addText(anew.getParentPackage().getLongDescription(), "\n\n");          //$NON-NLS-1$
+        addText(pNew.getLongDescription(), "\n\n");          //$NON-NLS-1$
 
-        Archive aold = ai.getReplaced();
-        if (aold != null) {
-            addText(String.format("This update will replace revision %1$s with revision %2$s.\n\n",
-                    aold.getParentPackage().getRevision(),
-                    anew.getParentPackage().getRevision()));
+        Archive aOld = ai.getReplaced();
+        if (aOld != null) {
+            Package pOld = aOld.getParentPackage();
+
+            int rOld = pOld.getRevision();
+            int rNew = pNew.getRevision();
+
+            boolean showRev = true;
+
+            if (pNew instanceof IPackageVersion && pOld instanceof IPackageVersion) {
+                AndroidVersion vOld = ((IPackageVersion) pOld).getVersion();
+                AndroidVersion vNew = ((IPackageVersion) pNew).getVersion();
+
+                if (!vOld.equals(vNew)) {
+                    // Versions are different, so indicate more than just the revision.
+                    addText(String.format("This update will replace API %1$s revision %2$d with API %3$s revision %4$d.\n\n",
+                            vOld.getApiString(), rOld,
+                            vNew.getApiString(), rNew));
+                    showRev = false;
+                }
+            }
+
+            if (showRev) {
+                addText(String.format("This update will replace revision %1$d with revision %2$d.\n\n",
+                        rOld,
+                        rNew));
+            }
         }
 
-        ArchiveInfo adep = ai.getDependsOn();
-        if (adep != null || ai.isDependencyFor()) {
+        ArchiveInfo aDep = ai.getDependsOn();
+        if (aDep != null || ai.isDependencyFor()) {
             addSectionTitle("Dependencies\n");
 
-            if (adep != null) {
+            if (aDep != null) {
                 addText(String.format("This package depends on %1$s.\n\n",
-                        adep.getNewArchive().getParentPackage().getShortDescription()));
+                        aDep.getNewArchive().getParentPackage().getShortDescription()));
             }
 
             if (ai.isDependencyFor()) {
@@ -491,9 +517,9 @@ final class UpdateChooserDialog extends Dialog {
         }
 
         addSectionTitle("Archive Description\n");
-        addText(anew.getLongDescription(), "\n\n");                             //$NON-NLS-1$
+        addText(aNew.getLongDescription(), "\n\n");                             //$NON-NLS-1$
 
-        String license = anew.getParentPackage().getLicense();
+        String license = pNew.getLicense();
         if (license != null) {
             addSectionTitle("License\n");
             addText(license.trim(), "\n");                                       //$NON-NLS-1$
