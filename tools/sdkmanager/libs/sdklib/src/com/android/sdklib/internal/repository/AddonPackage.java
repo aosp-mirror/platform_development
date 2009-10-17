@@ -35,7 +35,7 @@ import java.util.Properties;
 /**
  * Represents an add-on XML node in an SDK repository.
  */
-public class AddonPackage extends Package {
+public class AddonPackage extends Package implements IPackageVersion {
 
     private static final String PROP_NAME      = "Addon.Name";      //$NON-NLS-1$
     private static final String PROP_VENDOR    = "Addon.Vendor";    //$NON-NLS-1$
@@ -209,7 +209,11 @@ public class AddonPackage extends Package {
             s = getShortDescription();
         }
 
-        s += String.format(".\nRequires SDK Platform Android API %1$s.",
+        if (s.indexOf("revision") == -1) {
+            s += String.format("\nRevision %1$d", getRevision());
+        }
+
+        s += String.format("\nRequires SDK Platform Android API %1$s",
                 mVersion.getApiString());
         return s;
     }
