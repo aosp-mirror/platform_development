@@ -78,7 +78,16 @@ public class ToolPackage extends Package {
     /** Returns a long description for an {@link IDescription}. */
     @Override
     public String getLongDescription() {
-        return getShortDescription() + ".";
+        String s = getDescription();
+        if (s == null || s.length() == 0) {
+            s = getShortDescription();
+        }
+
+        if (s.indexOf("revision") == -1) {
+            s += String.format("\nRevision %1$d", getRevision());
+        }
+
+        return s;
     }
 
     /**
