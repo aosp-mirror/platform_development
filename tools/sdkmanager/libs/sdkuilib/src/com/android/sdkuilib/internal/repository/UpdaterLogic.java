@@ -19,7 +19,9 @@ package com.android.sdkuilib.internal.repository;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.internal.repository.AddonPackage;
 import com.android.sdklib.internal.repository.Archive;
+import com.android.sdklib.internal.repository.DocPackage;
 import com.android.sdklib.internal.repository.ExtraPackage;
+import com.android.sdklib.internal.repository.IPackageVersion;
 import com.android.sdklib.internal.repository.MinToolsPackage;
 import com.android.sdklib.internal.repository.Package;
 import com.android.sdklib.internal.repository.PlatformPackage;
@@ -81,24 +83,20 @@ class UpdaterLogic {
     public void addNewPlatforms(ArrayList<ArchiveInfo> archives,
             RepoSources sources,
             Package[] localPkgs) {
+
         // Find the highest platform installed
         float currentPlatformScore = 0;
         float currentAddonScore = 0;
+        float currentDocScore = 0;
         HashMap<String, Float> currentExtraScore = new HashMap<String, Float>();
         for (Package p : localPkgs) {
             int rev = p.getRevision();
             int api = 0;
             boolean isPreview = false;
-            if (p instanceof PlatformPackage) {
-                AndroidVersion vers = ((PlatformPackage) p).getVersion();
+            if (p instanceof  IPackageVersion) {
+                AndroidVersion vers = ((IPackageVersion) p).getVersion();
                 api = vers.getApiLevel();
                 isPreview = vers.isPreview();
-            } else if (p instanceof AddonPackage) {
-                AndroidVersion vers = ((AddonPackage) p).getVersion();
-                api = vers.getApiLevel();
-                isPreview = vers.isPreview();
-            } else if (!(p instanceof ExtraPackage)) {
-                continue;
             }
 
             // The score is 10*api + (1 if preview) + rev/100
@@ -112,6 +110,8 @@ class UpdaterLogic {
                 currentAddonScore = Math.max(currentAddonScore, score);
             } else if (p instanceof ExtraPackage) {
                 currentExtraScore.put(((ExtraPackage) p).getPath(), score);
+            } else if (p instanceof DocPackage) {
+                currentDocScore = Math.max(currentDocScore, score);
             }
         }
 
@@ -119,20 +119,16 @@ class UpdaterLogic {
         ArrayList<Package> remotePkgs = new ArrayList<Package>();
         fetchRemotePackages(remotePkgs, remoteSources);
 
+        Package suggestedDoc = null;
+
         for (Package p : remotePkgs) {
             int rev = p.getRevision();
             int api = 0;
             boolean isPreview = false;
-            if (p instanceof PlatformPackage) {
-                AndroidVersion vers = ((PlatformPackage) p).getVersion();
+            if (p instanceof  IPackageVersion) {
+                AndroidVersion vers = ((IPackageVersion) p).getVersion();
                 api = vers.getApiLevel();
                 isPreview = vers.isPreview();
-            } else if (p instanceof AddonPackage) {
-                AndroidVersion vers = ((AddonPackage) p).getVersion();
-                api = vers.getApiLevel();
-                isPreview = vers.isPreview();
-            } else if (!(p instanceof ExtraPackage)) {
-                continue;
             }
 
             float score = api * 10 + (isPreview ? 1 : 0) + rev/100.f;
@@ -146,6 +142,12 @@ class UpdaterLogic {
                 String key = ((ExtraPackage) p).getPath();
                 shouldAdd = !currentExtraScore.containsKey(key) ||
                     score > currentExtraScore.get(key).floatValue();
+            } else if (p instanceof DocPackage) {
+                // We don't want all the doc, only the most recent one
+                if (score > currentDocScore) {
+                    suggestedDoc = p;
+                    currentDocScore = score;
+                }
             }
 
             if (shouldAdd) {
@@ -163,6 +165,22 @@ class UpdaterLogic {
                 }
             }
         }
+
+        if (suggestedDoc != null) {
+            // We should suggest this package for installation.
+            for (Archive a : suggestedDoc.getArchives()) {
+                if (a.isCompatible()) {
+                    insertArchive(a,
+                            archives,
+                            null /*selectedArchives*/,
+                            remotePkgs,
+                            remoteSources,
+                            localPkgs,
+                            true /*automated*/);
+                }
+            }
+        }
+
     }
 
     /**
@@ -319,7 +337,7 @@ class UpdaterLogic {
         // Look in archives already scheduled for install
         for (ArchiveInfo ai : outArchives) {
             Package p = ai.getNewArchive().getParentPackage();
-            if (p instanceof PlatformPackage) {
+            if (p instanceof ToolPackage) {
                 if (((ToolPackage) p).getRevision() >= rev) {
                     // The dependency is already scheduled for install, nothing else to do.
                     return ai;

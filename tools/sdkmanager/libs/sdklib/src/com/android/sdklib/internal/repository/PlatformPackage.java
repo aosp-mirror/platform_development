@@ -33,7 +33,7 @@ import java.util.Properties;
 /**
  * Represents a platform XML node in an SDK repository.
  */
-public class PlatformPackage extends MinToolsPackage {
+public class PlatformPackage extends MinToolsPackage implements IPackageVersion {
 
     protected static final String PROP_VERSION       = "Platform.Version";      //$NON-NLS-1$
 
@@ -145,8 +145,8 @@ public class PlatformPackage extends MinToolsPackage {
             s = getShortDescription();
         }
 
-        if (!s.endsWith(".")) {
-            s += ".";
+        if (s.indexOf("revision") == -1) {
+            s += String.format("\nRevision %1$d", getRevision());
         }
 
         return s;
