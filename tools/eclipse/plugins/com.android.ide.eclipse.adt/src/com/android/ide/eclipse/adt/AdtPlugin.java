@@ -1045,12 +1045,12 @@ public class AdtPlugin extends AbstractUIPlugin {
                             }
                         }
 
+                        ArrayList<IJavaProject> list = new ArrayList<IJavaProject>();
                         synchronized (getSdkLockObject()) {
                             mSdkIsLoaded = LoadStatus.LOADED;
 
                             progress.setTaskName("Check Projects");
 
-                            ArrayList<IJavaProject> list = new ArrayList<IJavaProject>();
                             for (IJavaProject javaProject : mPostLoadProjectsToResolve) {
                                 if (javaProject.getProject().isOpen()) {
                                     list.add(javaProject);
@@ -1059,24 +1059,24 @@ public class AdtPlugin extends AbstractUIPlugin {
 
                             // done with this list.
                             mPostLoadProjectsToResolve.clear();
-
-                            // check the projects that need checking.
-                            // The method modifies the list (it removes the project that
-                            // do not need to be resolved again).
-                            AndroidClasspathContainerInitializer.checkProjectsCache(
-                                    mPostLoadProjectsToCheck);
-
-                            list.addAll(mPostLoadProjectsToCheck);
-
-                            // update the project that needs recompiling.
-                            if (list.size() > 0) {
-                                IJavaProject[] array = list.toArray(
-                                        new IJavaProject[list.size()]);
-                                AndroidClasspathContainerInitializer.updateProjects(array);
-                            }
-
-                            progress.worked(10);
                         }
+
+                        // check the projects that need checking.
+                        // The method modifies the list (it removes the project that
+                        // do not need to be resolved again).
+                        AndroidClasspathContainerInitializer.checkProjectsCache(
+                                mPostLoadProjectsToCheck);
+
+                        list.addAll(mPostLoadProjectsToCheck);
+
+                        // update the project that needs recompiling.
+                        if (list.size() > 0) {
+                            IJavaProject[] array = list.toArray(
+                                    new IJavaProject[list.size()]);
+                            AndroidClasspathContainerInitializer.updateProjects(array);
+                        }
+
+                        progress.worked(10);
                     }
 
                     // Notify resource changed listeners
