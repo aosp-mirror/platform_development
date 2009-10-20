@@ -16,6 +16,7 @@ function nothing() {}
      </ul>
      </li>
      <li><a href="<?cs var:toroot ?>guide/release_keys.html">Release Keys and Signing Builds</a></li> 
+     <li><a href="<?cs var:toroot ?>guide/release_checklist.html">Release Checklist</a></li>
  </ul>
 </li>
 
