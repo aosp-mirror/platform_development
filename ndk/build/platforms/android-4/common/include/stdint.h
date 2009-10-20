@@ -46,13 +46,17 @@
 #  define  __STDINT_MACROS
 #endif
 
+#if !defined __STRICT_ANSI__ || __STDC_VERSION__ >= 199901L
+#  define __STDC_INT64__
+#endif
+
 typedef __int8_t      int8_t;
 typedef __uint8_t     uint8_t;
 typedef __int16_t     int16_t;
 typedef __uint16_t    uint16_t;
 typedef __int32_t     int32_t;
 typedef __uint32_t    uint32_t;
-#if !defined(__STRICT_ANSI__)
+#if defined(__STDC_INT64__)
 typedef __int64_t     int64_t;
 typedef __uint64_t    uint64_t;
 #endif
@@ -157,7 +161,7 @@ typedef uint32_t      uint_fast32_t;
 #  define UINT_FAST32_C(c) UINT32_C(c)
 #endif
 
-#if !defined(__STRICT_ANSI__)
+#if defined(__STDC_INT64__)
 /*
  *  int64_t
  */
@@ -198,7 +202,7 @@ typedef uint64_t      uint_fast64_t;
 #  define __PRIFAST_RANK ""
 #  define __PRIPTR_RANK  ""
 
-#endif /* !__STRICT_ANSI__ */
+#endif /* __STDC_INT64__ */
 
 /*
  * intptr_t & uintptr_t
@@ -221,7 +225,7 @@ typedef unsigned int  uintptr_t;
  *  intmax_t & uintmax_t
  */
 
-#if !defined(__STRICT_ANSI__)
+#if defined(__STDC_INT64__)
 
 typedef uint64_t uintmax_t;
 typedef int64_t  intmax_t;
@@ -233,7 +237,7 @@ typedef int64_t  intmax_t;
 #define INTMAX_C(c)	INT64_C(c)
 #define UINTMAX_C(c)	UINT64_C(c)
 
-#else /* __STRICT_ANSI__ */
+#else /* !__STDC_INT64__ */
 
 typedef uint32_t  uintmax_t;
 typedef int32_t   intmax_t;
@@ -245,7 +249,7 @@ typedef int32_t   intmax_t;
 #define INTMAX_C(c)	INT32_C(c)
 #define UINTMAX_C(c)	UINT32_C(c)
 
-#endif /* __STRICT_ANSI__ */
+#endif /* !__STDC_INT64__ */
 
 
 /* size_t is defined by the GCC-specific <stddef.h> */
