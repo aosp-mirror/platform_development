@@ -267,7 +267,9 @@ final class UpdateChooserDialog extends Dialog {
         // Bottom buttons area
 
         placeholder = new Label(mDialogShell, SWT.NONE);
-        placeholder.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, true, false, 1, 1));
+        placeholder.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
+        placeholder.setText("[*] Something depends on this package");
+        placeholder.setEnabled(false);
 
         // for MacOS, the Cancel button should be left.
         if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_DARWIN) {
@@ -522,8 +524,11 @@ final class UpdateChooserDialog extends Dialog {
         String license = pNew.getLicense();
         if (license != null) {
             addSectionTitle("License\n");
-            addText(license.trim(), "\n");                                       //$NON-NLS-1$
+            addText(license.trim(), "\n\n");                                       //$NON-NLS-1$
         }
+
+        addSectionTitle("Site\n");
+        addText(pNew.getParentSource().getShortDescription());
     }
 
     /**
