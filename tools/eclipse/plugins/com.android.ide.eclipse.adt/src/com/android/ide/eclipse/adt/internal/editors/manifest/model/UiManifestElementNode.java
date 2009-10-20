@@ -21,6 +21,7 @@ import com.android.ide.eclipse.adt.internal.editors.manifest.descriptors.Android
 import com.android.ide.eclipse.adt.internal.editors.manifest.descriptors.ManifestElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiAttributeNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
+import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.sdklib.SdkConstants;
 
 import org.w3c.dom.Element;
@@ -41,10 +42,10 @@ import org.w3c.dom.Element;
  * {@link ElementDescriptor}.
  */
 public final class UiManifestElementNode extends UiElementNode {
-    
+
     /**
      * Creates a new {@link UiElementNode} described by a given {@link ElementDescriptor}.
-     * 
+     *
      * @param elementDescriptor The {@link ElementDescriptor} for the XML node. Cannot be null.
      */
     public UiManifestElementNode(ManifestElementDescriptor elementDescriptor) {
@@ -55,18 +56,23 @@ public final class UiManifestElementNode extends UiElementNode {
      * Computes a short string describing the UI node suitable for tree views.
      * Uses the element's attribute "android:name" if present, or the "android:label" one
      * followed by the element's name.
-     * 
+     *
      * @return A short string describing the UI node suitable for tree views.
      */
     @Override
     public String getShortDescription() {
-        if (getXmlNode() != null &&
+        AndroidTargetData target = getAndroidTarget();
+        AndroidManifestDescriptors manifestDescriptors = null;
+        if (target != null) {
+            manifestDescriptors = target.getManifestDescriptors();
+        }
+
+        if (manifestDescriptors != null &&
+                getXmlNode() != null &&
                 getXmlNode() instanceof Element &&
                 getXmlNode().hasAttributes()) {
 
-            AndroidManifestDescriptors manifestDescriptors =
-                    getAndroidTarget().getManifestDescriptors();
-            
+
             // Application and Manifest nodes have a special treatment: they are unique nodes
             // so we don't bother trying to differentiate their strings and we fall back to
             // just using the UI name below.
