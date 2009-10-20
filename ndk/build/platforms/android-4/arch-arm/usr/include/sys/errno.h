@@ -1,1 +1,1 @@
-../../../../common/include/sys/errno.h
+#include <errno.h>
