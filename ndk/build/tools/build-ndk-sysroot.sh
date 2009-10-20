@@ -28,7 +28,7 @@
 # WARNING: For now, only a single target ABI/Architecture us supported
 #
 
-source `dirname $0`/../core/ndk-common.sh
+. `dirname $0`/../core/ndk-common.sh
 
 # PLATFORM is the name of the current Android system platform
 PLATFORM=android-3
