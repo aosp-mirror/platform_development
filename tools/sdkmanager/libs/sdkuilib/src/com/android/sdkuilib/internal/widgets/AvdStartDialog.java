@@ -34,6 +34,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
@@ -202,13 +203,13 @@ final class AvdStartDialog extends GridDialog {
             }
         });
 
-        scaleGroup.setEnabled(defaultState);
+        enableGroup(scaleGroup, defaultState);
 
         mScaleButton.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent event) {
                 boolean enabled = mScaleButton.getSelection();
-                scaleGroup.setEnabled(enabled);
+                enableGroup(scaleGroup, enabled);
                 if (enabled) {
                     onScaleChange();
                 } else {
@@ -236,6 +237,14 @@ final class AvdStartDialog extends GridDialog {
         // if the scaling is enabled by default, we must initialize the value of mScale
         if (defaultState) {
             onScaleChange();
+        }
+    }
+
+    /** On Windows we need to manually enable/disable the children of a group */
+    private void enableGroup(final Group group, boolean enabled) {
+        group.setEnabled(enabled);
+        for (Control c : group.getChildren()) {
+            c.setEnabled(enabled);
         }
     }
 
