@@ -285,7 +285,7 @@ public class MonkeySourceRandom implements MonkeyEventSource {
     /**
      * set the factors
      *
-     * @param factors: percentages for each type of event
+     * @param factors percentages for each type of event
      */
     public void setFactors(float factors[]) {
         int c = FACTORZ_COUNT;
