@@ -306,7 +306,7 @@ class UpdaterData {
                         }
 
                         ArchiveInfo adep = ai.getDependsOn();
-                        if (adep != null && !installedArchives.contains(adep)) {
+                        if (adep != null && !installedArchives.contains(adep.getNewArchive())) {
                             // This archive depends on another one that was not installed.
                             // Skip it.
                             monitor.setResult("Skipping '%1$s'; it depends on '%2$s' which was not installed.",
@@ -435,8 +435,8 @@ class UpdaterData {
             public void run() {
                 MessageDialog.openInformation(mWindowShell,
                         "Android Tools Updated",
-                        "The Android SDK tool that you are currently using has been updated. " +
-                        "It is recommended that you now close the Android SDK window and re-open it. " +
+                        "The Android SDK and AVD Manager that you are currently using has been updated. " +
+                        "It is recommended that you now close the manager window and re-open it. " +
                         "If you started this window from Eclipse, please check if the Android " +
                         "plug-in needs to be updated.");
             }
