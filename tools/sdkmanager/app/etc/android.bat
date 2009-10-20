@@ -44,7 +44,7 @@ if not "%1"=="" goto EndTempCopy
     rem update the tools directory where the updater itself is located.
 
     set tmpdir=%TEMP%\temp-android-tool
-    xcopy lib\x86 %tmpdir%\lib\x86 /I /E /C /G /R /O /Y /Q > nul
+    xcopy lib\x86 %tmpdir%\lib\x86 /I /E /C /G /R /Y /Q > nul
     copy /B /D /Y lib\androidprefs.jar   %tmpdir%\lib\       > nul
     copy /B /D /Y lib\org.eclipse.*      %tmpdir%\lib\       > nul
     copy /B /D /Y lib\sdk*               %tmpdir%\lib\       > nul
