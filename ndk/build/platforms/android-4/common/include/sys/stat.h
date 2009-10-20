@@ -71,6 +71,13 @@ struct stat {
     unsigned long long  st_ino;
 };
 
+/* For compatibility with GLibc, we provide macro aliases
+ * for the non-Posix nano-seconds accessors.
+ */
+#define  st_atimensec  st_atime_nsec
+#define  st_mtimensec  st_mtime_nsec
+#define  st_ctimensec  st_ctime_nsec
+
 extern int    chmod(const char *, mode_t);
 extern int    fchmod(int, mode_t);
 extern int    mkdir(const char *, mode_t);

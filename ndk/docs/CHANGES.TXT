@@ -36,6 +36,15 @@ OTHER FIXES & CHANGES:
 - Remove bash-isms from build/tools/build-toolchain.sh. Now it's possible to
   build it with the 'dash' shell on Debian-based systems (tested on Ubuntu 8.04)
 
+- Refresh C library headers for all platforms:
+
+    - make <endian.h> simply include <sys/endian.h>
+    - make <stdint.h> properly declare 64-bit integer types with a C99 compiler
+    - add missing <sys/types.h> to <strings.h>
+    - add GLibc-compatible macro aliases (st_atimensec, st_mtimensec and
+      st_ctimensec) to <stat.h>
+    - add missing declaration for tzset() in <time.h>
+
 -------------------------------------------------------------------------------
 android-ndk-1.6_r1
 
