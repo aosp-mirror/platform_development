@@ -24,9 +24,7 @@ import xml.parsers
 # local imports
 import errors
 import logger
-from instrumentation_test import InstrumentationTestSuite
-from native_test import NativeTestSuite
-from host_test import HostTestSuite
+import xml_suite_helper
 
 
 class TestDefinitions(object):
@@ -74,21 +72,13 @@ class TestDefinitions(object):
 
   def _ParseDoc(self, doc):
     root_element = self._GetRootElement(doc)
+    suite_parser = xml_suite_helper.XmlSuiteParser()
     for element in root_element.childNodes:
       if element.nodeType != xml.dom.Node.ELEMENT_NODE:
         continue
-      test_suite = None
-      if element.nodeName == InstrumentationTestSuite.TAG_NAME:
-        test_suite = InstrumentationTestSuite()
-      elif element.nodeName == NativeTestSuite.TAG_NAME:
-        test_suite = NativeTestSuite()
-      elif element.nodeName == HostTestSuite.TAG_NAME:
-        test_suite = HostTestSuite()
-      else:
-        logger.Log("Unrecognized tag %s found" % element.nodeName)
-        continue
-      test_suite.Parse(element)
-      self._AddTest(test_suite)
+      test_suite = suite_parser.Parse(element)
+      if test_suite:
+        self._AddTest(test_suite)
 
   def _GetRootElement(self, doc):
     root_elements = doc.getElementsByTagName("test-definitions")

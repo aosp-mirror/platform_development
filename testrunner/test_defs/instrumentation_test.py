@@ -21,58 +21,65 @@
 import os
 
 # local imports
-from abstract_test import AbstractTestSuite
 import coverage
 import errors
 import logger
+import test_suite
 
 
-class InstrumentationTestSuite(AbstractTestSuite):
-  """Represents a java instrumentation test suite definition run on Android device."""
+class InstrumentationTestSuite(test_suite.AbstractTestSuite):
+  """Represents a java instrumentation test suite definition run on device."""
 
-  # for legacy reasons, the xml tag name for java (device) tests is "test:
-  TAG_NAME = "test"
-
-  _PKG_ATTR = "package"
-  _RUNNER_ATTR = "runner"
-  _CLASS_ATTR = "class"
-  _TARGET_ATTR = "coverage_target"
-
-  _DEFAULT_RUNNER = "android.test.InstrumentationTestRunner"
+  DEFAULT_RUNNER = "android.test.InstrumentationTestRunner"
 
     # build path to Emma target Makefile
   _EMMA_BUILD_PATH = os.path.join("external", "emma")
 
-  def _GetTagName(self):
-    return self._TAG_NAME
+  def __init__(self):
+    test_suite.AbstractTestSuite.__init__(self)
+    self._package_name = None
+    self._runner_name = self.DEFAULT_RUNNER
+    self._class_name = None
+    self._target_name = None
 
   def GetPackageName(self):
-    return self._GetAttribute(self._PKG_ATTR)
+    return self._package_name
+
+  def SetPackageName(self, package_name):
+    self._package_name = package_name
+    return self
 
   def GetRunnerName(self):
-    return self._GetAttribute(self._RUNNER_ATTR)
+    return self._runner_name
+
+  def SetRunnerName(self, runner_name):
+    self._runner_name = runner_name
+    return self
 
   def GetClassName(self):
-    return self._GetAttribute(self._CLASS_ATTR)
+    return self._class_name
+
+  def SetClassName(self, class_name):
+    self._class_name = class_name
+    return self
 
   def GetTargetName(self):
     """Retrieve module that this test is targeting.
 
     Used for generating code coverage metrics.
+    Returns:
+      the module target name
     """
-    return self._GetAttribute(self._TARGET_ATTR)
+    return self._target_name
+
+  def SetTargetName(self, target_name):
+    self._target_name = target_name
+    return self
 
   def GetBuildDependencies(self, options):
     if options.coverage:
       return [self._EMMA_BUILD_PATH]
     return []
-
-  def Parse(self, suite_element):
-    super(InstrumentationTestSuite, self).Parse(suite_element)
-    self._ParseAttribute(suite_element, self._PKG_ATTR, True)
-    self._ParseAttribute(suite_element, self._RUNNER_ATTR, False, self._DEFAULT_RUNNER)
-    self._ParseAttribute(suite_element, self._CLASS_ATTR, False)
-    self._ParseAttribute(suite_element, self._TARGET_ATTR, False)
 
   def Run(self, options, adb):
     """Run the provided test suite.
@@ -82,6 +89,9 @@ class InstrumentationTestSuite(AbstractTestSuite):
     Args:
       options: command line options to provide to test run
       adb: adb_interface to device under test
+
+    Raises:
+      errors.AbortError: if fatal error occurs
     """
 
     test_class = self.GetClassName()
@@ -122,10 +132,10 @@ class InstrumentationTestSuite(AbstractTestSuite):
       logger.Log("Running in coverage mode, suppressing test output")
       try:
         (test_results, status_map) = adb.StartInstrumentationForPackage(
-          package_name=self.GetPackageName(),
-          runner_name=self.GetRunnerName(),
-          timeout_time=60*60,
-          instrumentation_args=instrumentation_args)
+            package_name=self.GetPackageName(),
+            runner_name=self.GetRunnerName(),
+            timeout_time=60*60,
+            instrumentation_args=instrumentation_args)
       except errors.InstrumentationError, errors.DeviceUnresponsiveError:
         return
       self._PrintTestResults(test_results)
@@ -156,11 +166,11 @@ class InstrumentationTestSuite(AbstractTestSuite):
     error_count = 0
     fail_count = 0
     for test_result in test_results:
-      if test_result.GetStatusCode() == -1: # error
+      if test_result.GetStatusCode() == -1:  # error
         logger.Log("Error in %s: %s" % (test_result.GetTestName(),
                                         test_result.GetFailureReason()))
         error_count+=1
-      elif test_result.GetStatusCode() == -2: # failure
+      elif test_result.GetStatusCode() == -2:  # failure
         logger.Log("Failure in %s: %s" % (test_result.GetTestName(),
                                           test_result.GetFailureReason()))
         fail_count+=1

@@ -20,22 +20,14 @@
 # python imports
 import os
 
-# local imports
-from abstract_test import AbstractTestSuite
 import errors
 import logger
 import run_command
+import test_suite
 
 
-class HostTestSuite(AbstractTestSuite):
+class HostTestSuite(test_suite.AbstractTestSuite):
   """A test suite for running hosttestlib java tests."""
-
-  TAG_NAME = "test-host"
-
-  _CLASS_ATTR = "class"
-  # TODO: consider obsoleting in favor of parsing the Android.mk to find the
-  # jar name
-  _JAR_ATTR = "jar_name"
 
   _JUNIT_JAR_NAME = "junit.jar"
   _HOSTTESTLIB_NAME = "hosttestlib.jar"
@@ -54,21 +46,29 @@ class HostTestSuite(AbstractTestSuite):
   # the test suite?
   _TEST_RUNNER = "com.android.hosttest.DeviceTestRunner"
 
-  def Parse(self, suite_element):
-    super(HostTestSuite, self).Parse(suite_element)
-    self._ParseAttribute(suite_element, self._CLASS_ATTR, True)
-    self._ParseAttribute(suite_element, self._JAR_ATTR, True)
+  def __init__(self):
+    test_suite.AbstractTestSuite.__init__(self)
+    self._jar_name = None
+    self._class_name = None
 
   def GetBuildDependencies(self, options):
     """Override parent to tag on building host libs."""
     return self._LIB_BUILD_PATHS
 
-  def GetClass(self):
-    return self._GetAttribute(self._CLASS_ATTR)
+  def GetClassName(self):
+    return self._class_name
+
+  def SetClassName(self, class_name):
+    self._class_name = class_name
+    return self
 
   def GetJarName(self):
     """Returns the name of the host jar that contains the tests."""
-    return self._GetAttribute(self._JAR_ATTR)
+    return self._jar_name
+
+  def SetJarName(self, jar_name):
+    self._jar_name = jar_name
+    return self
 
   def Run(self, options, adb_interface):
     """Runs the host test.
@@ -77,11 +77,14 @@ class HostTestSuite(AbstractTestSuite):
 
     Args:
       options: command line options for running host tests. Expected member
-      fields:
+        fields:
         host_lib_path: path to directory that contains host library files
         test_data_path: path to directory that contains test data files
         preview: if true, do not execute, display commands only
       adb_interface: reference to device under test
+
+    Raises:
+      errors.AbortError: if fatal error occurs
     """
     # get the serial number of the device under test, so it can be passed to
     # hosttestlib.
@@ -100,7 +103,7 @@ class HostTestSuite(AbstractTestSuite):
     # -p <test data path>
     cmd = "java -cp %s %s %s -s %s -p %s" % (":".join(full_lib_paths),
                                              self._TEST_RUNNER,
-                                             self.GetClass(), serial_number,
+                                             self.GetClassName(), serial_number,
                                              options.test_data_path)
     logger.Log(cmd)
     if not options.preview:
