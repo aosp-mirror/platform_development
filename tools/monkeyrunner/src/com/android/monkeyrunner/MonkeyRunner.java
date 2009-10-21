@@ -69,7 +69,7 @@ public class MonkeyRunner {
   final static int KEY_INPUT_DELAY = 1000;
   
   // version of monkey runner
-  final static String monkeyRunnerVersion = "0.31";
+  final static String monkeyRunnerVersion = "0.4";
 
   // TODO: interface cmd; class xml tags; fix logger; test class/script
 
@@ -222,10 +222,9 @@ public class MonkeyRunner {
     press("home", false);
     
     // Start recording the script output, might want md5 signature of file for completeness
-    monkeyRecorder = new MonkeyRecorder(scriptName);
+    monkeyRecorder = new MonkeyRecorder(scriptName, monkeyRunnerVersion);
 
-    // Record what device and version of software we are running on
-    monkeyRecorder.addAttribute("monkeyRunnerVersion", monkeyRunnerVersion);
+    // Record what device we are running on
     addDeviceVars();
     monkeyRecorder.addComment("Script commands");
   }
