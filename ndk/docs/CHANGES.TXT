@@ -36,6 +36,8 @@ OTHER FIXES & CHANGES:
 - Remove bash-isms from build/tools/build-toolchain.sh. Now it's possible to
   build it with the 'dash' shell on Debian-based systems (tested on Ubuntu 8.04)
 
+- Remove bash-ism from build/tools/build-ndk-sysroot.sh
+
 - Refresh C library headers for all platforms:
 
     - make <endian.h> simply include <sys/endian.h>
