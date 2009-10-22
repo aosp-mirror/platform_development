@@ -52,7 +52,7 @@ class NativeTestSuite(test_suite.AbstractTestSuite):
     # find all test files, convert unicode names to ascii, take the basename
     # and drop the .cc/.cpp  extension.
     source_list = []
-    build_path = self.GetBuildPath()
+    build_path = os.path.join(android_build.GetTop(), self.GetBuildPath())
     os.path.walk(build_path, self._CollectTestSources, source_list)
     logger.SilentLog("Tests source %s" % source_list)
 
