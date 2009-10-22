@@ -22,13 +22,16 @@ import com.android.sdklib.internal.repository.Archive;
 import com.android.sdklib.internal.repository.IPackageVersion;
 import com.android.sdklib.internal.repository.Package;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
+import com.android.sdkuilib.ui.GridDialog;
 
+import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.Viewer;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.custom.StyleRange;
@@ -37,8 +40,6 @@ import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.ShellAdapter;
-import org.eclipse.swt.events.ShellEvent;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
@@ -46,8 +47,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Dialog;
-import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
@@ -60,25 +60,16 @@ import java.util.ArrayList;
 /**
  * Implements an {@link UpdateChooserDialog}.
  */
-final class UpdateChooserDialog extends Dialog {
-
-    /** Min Y location for dialog. Need to deal with the menu bar on mac os. */
-    private final static int MIN_Y =
-        SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_DARWIN ? 20 : 0;
+final class UpdateChooserDialog extends GridDialog {
 
     /** Last dialog size for this session. */
     private static Point sLastSize;
-    private boolean mCancelled = true;
-    private boolean mCompleted;
     private boolean mLicenseAcceptAll;
     private boolean mInternalLicenseRadioUpdate;
 
     // UI fields
-    private Shell mDialogShell;
     private SashForm mSashForm;
     private Composite mPackageRootComposite;
-    private Button mCancelButton;
-    private Button mInstallButton;
     private TableViewer mTableViewPackage;
     private Table mTablePackage;
     private TableColumn mTableColum;
@@ -114,10 +105,14 @@ final class UpdateChooserDialog extends Dialog {
     public UpdateChooserDialog(Shell parentShell,
             UpdaterData updaterData,
             ArrayList<ArchiveInfo> archives) {
-        super(parentShell,
-              SWT.APPLICATION_MODAL);
+        super(parentShell, 3, false/*makeColumnsEqual*/);
         mUpdaterData = updaterData;
         mArchives = archives;
+    }
+
+    @Override
+    protected boolean isResizable() {
+        return true;
     }
 
     /**
@@ -130,7 +125,7 @@ final class UpdateChooserDialog extends Dialog {
     public ArrayList<ArchiveInfo> getResult() {
         ArrayList<ArchiveInfo> ais = new ArrayList<ArchiveInfo>();
 
-        if (!mCancelled) {
+        if (getReturnCode() == Window.OK) {
             for (ArchiveInfo ai : mArchives) {
                 if (ai.isAccepted()) {
                     ais.add(ai);
@@ -142,45 +137,13 @@ final class UpdateChooserDialog extends Dialog {
     }
 
     /**
-     * Open the dialog and blocks till it gets closed
+     * Create the main content of the dialog.
+     * See also {@link #createButtonBar(Composite)} below.
      */
-    public void open() {
-        createContents();
-        positionShell();            //$hide$ (hide from SWT designer)
-        mDialogShell.open();
-        mDialogShell.layout();
-
-        postCreate();               //$hide$ (hide from SWT designer)
-
-        Display display = getParent().getDisplay();
-        while (!mDialogShell.isDisposed() && !mCompleted) {
-            if (!display.readAndDispatch()) {
-                display.sleep();
-            }
-        }
-
-        if (!mDialogShell.isDisposed()) {
-            mDialogShell.close();
-        }
-    }
-
-    /**
-     * Create contents of the dialog.
-     */
-    private void createContents() {
-        mDialogShell = new Shell(getParent(), SWT.DIALOG_TRIM | SWT.RESIZE | SWT.MIN | SWT.MAX);
-        mDialogShell.addShellListener(new ShellAdapter() {
-            @Override
-            public void shellClosed(ShellEvent e) {
-                onShellClosed(e);
-            }
-        });
-        mDialogShell.setLayout(new GridLayout(3, false/*makeColumnsEqual*/));
-        mDialogShell.setSize(600, 400);
-        mDialogShell.setText("Choose Packages to Install");
-
+    @Override
+    public void createDialogContent(Composite parent) {
         // Sash form
-        mSashForm = new SashForm(mDialogShell, SWT.NONE);
+        mSashForm = new SashForm(parent, SWT.NONE);
         mSashForm.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 3, 1));
 
 
@@ -223,7 +186,7 @@ final class UpdateChooserDialog extends Dialog {
 
         mPackageText = new StyledText(mPackageTextGroup,                        SWT.MULTI | SWT.READ_ONLY | SWT.WRAP | SWT.V_SCROLL);
         mPackageText.setBackground(
-                getParent().getDisplay().getSystemColor(SWT.COLOR_WIDGET_BACKGROUND));
+                getParentShell().getDisplay().getSystemColor(SWT.COLOR_WIDGET_BACKGROUND));
         mPackageText.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
 
         mLicenseRadioAccept = new Button(mPackageRootComposite, SWT.RADIO);
@@ -257,58 +220,67 @@ final class UpdateChooserDialog extends Dialog {
         });
 
         mSashForm.setWeights(new int[] {200, 300});
+    }
+
+    /**
+     * Creates and returns the contents of this dialog's button bar.
+     * <p/>
+     * This reimplements most of the code from the base class with a few exceptions:
+     * <ul>
+     * <li>Enforces 3 columns.
+     * <li>Inserts a full-width error label.
+     * <li>Inserts a help label on the left of the first button.
+     * <li>Renames the OK button into "Install"
+     * </ul>
+     */
+    @Override
+    protected Control createButtonBar(Composite parent) {
+
+        Composite composite = new Composite(parent, SWT.NONE);
+        GridLayout layout = new GridLayout();
+        layout.numColumns = 0; // this is incremented by createButton
+        layout.makeColumnsEqualWidth = false;
+        layout.marginWidth = convertHorizontalDLUsToPixels(IDialogConstants.HORIZONTAL_MARGIN);
+        layout.marginHeight = convertVerticalDLUsToPixels(IDialogConstants.VERTICAL_MARGIN);
+        layout.horizontalSpacing = convertHorizontalDLUsToPixels(IDialogConstants.HORIZONTAL_SPACING);
+        layout.verticalSpacing = convertVerticalDLUsToPixels(IDialogConstants.VERTICAL_SPACING);
+        composite.setLayout(layout);
+        GridData data = new GridData(SWT.FILL, SWT.CENTER, true, false, 3, 1);
+        composite.setLayoutData(data);
+        composite.setFont(parent.getFont());
 
         // Error message area
-
-        mErrorLabel = new Label(mDialogShell, SWT.NONE);
+        mErrorLabel = new Label(composite, SWT.NONE);
         mErrorLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 3, 1));
 
+        // Label at the left of the install/cancel buttons
+        Label label = new Label(composite, SWT.NONE);
+        label.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
+        label.setText("[*] Something depends on this package");
+        label.setEnabled(false);
+        layout.numColumns++;
 
-        // Bottom buttons area
+        // Add the ok/cancel to the button bar.
+        createButtonsForButtonBar(composite);
 
-        placeholder = new Label(mDialogShell, SWT.NONE);
-        placeholder.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
-        placeholder.setText("[*] Something depends on this package");
-        placeholder.setEnabled(false);
+        // the ok button should be an "install" button
+        Button button = getButton(IDialogConstants.OK_ID);
+        button.setText("Install");
 
-        // for MacOS, the Cancel button should be left.
-        if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_DARWIN) {
-            mCancelButton = new Button(mDialogShell, SWT.PUSH);
-        }
-
-        mInstallButton = new Button(mDialogShell, SWT.PUSH);
-        mInstallButton.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
-        mInstallButton.setText("Install Accepted");
-        mInstallButton.addSelectionListener(new SelectionAdapter() {
-            @Override
-            public void widgetSelected(SelectionEvent e) {
-                onInstallSelected();
-            }
-        });
-
-        // if we haven't created the cancel button yet (macos?), create it now.
-        if (mCancelButton == null) {
-            mCancelButton = new Button(mDialogShell, SWT.PUSH);
-        }
-        mCancelButton.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
-        mCancelButton.setText("Cancel");
-        mCancelButton.addSelectionListener(new SelectionAdapter() {
-            @Override
-            public void widgetSelected(SelectionEvent e) {
-                onCancelSelected();
-            }
-        });
+        return composite;
     }
 
     // -- End of UI, Start of internal logic ----------
     // Hide everything down-below from SWT designer
     //$hide>>$
 
-    /**
-     * Starts the thread that runs the task.
-     * This is deferred till the UI is created.
-     */
-    private void postCreate() {
+    @Override
+    public void create() {
+        super.create();
+
+        // set window title
+        getShell().setText("Choose Packages to Install");
+
         setWindowImage();
 
         // Automatically accept those with an empty license or no license
@@ -344,7 +316,7 @@ final class UpdateChooserDialog extends Dialog {
         if (mUpdaterData != null) {
             ImageFactory imgFactory = mUpdaterData.getImageFactory();
             if (imgFactory != null) {
-                mDialogShell.setImage(imgFactory.getImageByName(imageName));
+                getShell().setImage(imgFactory.getImageByName(imageName));
             }
         }
     }
@@ -369,66 +341,30 @@ final class UpdateChooserDialog extends Dialog {
     }
 
     /**
-     * Callback invoked when the shell is closed either by clicking the close button
-     * on by calling shell.close().
      * Captures the window size before closing this.
+     * @see #getInitialSize()
      */
-    private void onShellClosed(ShellEvent e) {
-        sLastSize = mDialogShell.getSize();
+    @Override
+    public boolean close() {
+        sLastSize = getShell().getSize();
+        return super.close();
     }
 
     /**
-     * Centers the dialog in its parent shell.
+     * Tries to reuse the last window size during this session.
+     * <p/>
+     * Note: the alternative would be to implement {@link #getDialogBoundsSettings()}
+     * since the default {@link #getDialogBoundsStrategy()} is to persist both location
+     * and size.
      */
-    private void positionShell() {
-        // Centers the dialog in its parent shell
-        Shell child = mDialogShell;
-        Shell parent = getParent();
-        if (child != null && parent != null) {
-
-            // get the parent client area with a location relative to the display
-            Rectangle parentArea = parent.getClientArea();
-            Point parentLoc = parent.getLocation();
-            int px = parentLoc.x;
-            int py = parentLoc.y;
-            int pw = parentArea.width;
-            int ph = parentArea.height;
-
-            // Reuse the last size if there's one, otherwise use the default
-            Point childSize = sLastSize != null ? sLastSize : child.getSize();
-            int cw = childSize.x;
-            int ch = childSize.y;
-
-            int x = px + (pw - cw) / 2;
-            int y = py + (ph - ch) / 2;
-
-            if (x < 0) {
-                x = 0;
-            }
-
-            if (y < MIN_Y) {
-                y = MIN_Y;
-            }
-
-            child.setLocation(x, y);
-            child.setSize(cw, ch);
+    @Override
+    protected Point getInitialSize() {
+        if (sLastSize != null) {
+            return sLastSize;
+        } else {
+            // Arbitrary values that look good on my screen and fit on 800x600
+            return new Point(740, 370);
         }
-    }
-
-    /**
-     * Callback invoked when the Install button is selected. Completes the dialog.
-     */
-    private void onInstallSelected() {
-        mCancelled = false;
-        mCompleted = true;
-    }
-
-    /**
-     * Callback invoked when the Cancel button is selected.
-     */
-    private void onCancelSelected() {
-        mCancelled = true;
-        mCompleted = true;
     }
 
     /**
@@ -634,7 +570,8 @@ final class UpdateChooserDialog extends Dialog {
                 }
             }
         }
-        mInstallButton.setEnabled(!missing && oneAccepted);
+
+        getButton(IDialogConstants.OK_ID).setEnabled(!missing && oneAccepted);
 
         mInternalLicenseRadioUpdate = false;
     }
