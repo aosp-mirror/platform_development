@@ -39,6 +39,7 @@
 #ifndef _STRINGS_H_
 #define _STRINGS_H_
 
+#include <sys/types.h>
 #include <sys/cdefs.h>
 
 __BEGIN_DECLS
