@@ -26,7 +26,8 @@ a given Android system platform release. The following levels are
 currently supported:
 
     android-3      -> Official Android 1.5 system images
-    android-4      -> Experimental Donut system images
+    android-4      -> Official Android 1.6 system images
+    android-5      -> Experimental Eclair system images
 
 II. Android-3 Stable Native APIs:
 ---------------------------------
@@ -122,8 +123,7 @@ III. Android-4 Stable Native APIs:
 ----------------------------------
 
 All the APIs listed below are available for developing native code that runs
-on the Donut experimental branch, which will be used to make the next official
-platform system images.
+on Android 1.6 system images and above,
 
 
 The OpenGL ES 1.x Library:
@@ -151,3 +151,32 @@ excellent "San Angeles Observation" demo program. For more information about
 it, see:
 
     http://jet.ro/visuals/san-angeles-observation/
+
+
+IV. Android-5 Stable Native APIs:
+----------------------------------
+
+All the APIs listed below are available for developing native code that runs
+on the Eclair experimental branch, which will be used to make the next official
+platform system images.
+
+
+The OpenGL ES 2.0 Library:
+--------------------------
+
+The standard OpenGL ES 2.0 headers <GLES2/gl2.h> and <GLES2/gl2ext.h> contain the
+declarations needed to perform OpenGL ES 2.0 rendering calls from native code.
+This includes the ability to define and use vertex and fragment shaders using the
+GLSL language.
+
+If you use them, your native module should link to /system/lib/libGLESv2.so
+as in:
+
+  LOCAL_LDLIBS := -lGLESv2.so
+
+Please note that, at the moment, native headers and libraries for the EGL APIs
+are *not* available. EGL is used to perform surface creation and flipping
+(instead of rendering). The corresponding operations must be performed in your
+VM application instead, for example with a GLSurfaceView, as described here:
+
+http://android-developers.blogspot.com/2009/04/introducing-glsurfaceview.html
