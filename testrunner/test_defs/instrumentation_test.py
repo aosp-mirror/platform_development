@@ -41,6 +41,7 @@ class InstrumentationTestSuite(test_suite.AbstractTestSuite):
     self._runner_name = self.DEFAULT_RUNNER
     self._class_name = None
     self._target_name = None
+    self._java_package = None
 
   def GetPackageName(self):
     return self._package_name
@@ -61,6 +62,14 @@ class InstrumentationTestSuite(test_suite.AbstractTestSuite):
 
   def SetClassName(self, class_name):
     self._class_name = class_name
+    return self
+
+  def GetJavaPackageFilter(self):
+    return self._java_package
+
+  def SetJavaPackageFilter(self, java_package_name):
+    """Configure the suite to only run tests in given java package."""
+    self._java_package = java_package_name
     return self
 
   def GetTargetName(self):
@@ -102,11 +111,18 @@ class InstrumentationTestSuite(test_suite.AbstractTestSuite):
     if options.test_method is not None:
       test_class = "%s#%s" % (test_class, options.test_method)
 
+    test_package = self.GetJavaPackageFilter()
+    if options.test_package:
+      test_package = options.test_package
+
+    if test_class and test_package:
+      logger.Log('Error: both class and java package options are specified')
+
     instrumentation_args = {}
     if test_class is not None:
       instrumentation_args["class"] = test_class
-    if options.test_package:
-      instrumentation_args["package"] = options.test_package
+    if test_package:
+      instrumentation_args["package"] = test_package
     if options.test_size:
       instrumentation_args["size"] = options.test_size
     if options.wait_for_debugger:
