@@ -397,7 +397,7 @@ public class Archive implements IDescription {
             archiveFile = downloadFile(monitor, forceHttp);
             if (archiveFile != null) {
                 if (unarchive(osSdkRoot, archiveFile, sdkManager, monitor)) {
-                    monitor.setResult("Installed: %1$s", name);
+                    monitor.setResult("Installed %1$s", name);
                     return true;
                 }
             }
@@ -424,6 +424,7 @@ public class Archive implements IDescription {
             String name = getParentPackage().getShortDescription();
             String desc = String.format("Downloading %1$s", name);
             monitor.setDescription(desc);
+            monitor.setResult(desc);
 
             String link = getUrl();
             if (!link.startsWith("http://")                          //$NON-NLS-1$
@@ -611,6 +612,7 @@ public class Archive implements IDescription {
         String pkgName = getParentPackage().getShortDescription();
         String pkgDesc = String.format("Installing %1$s", pkgName);
         monitor.setDescription(pkgDesc);
+        monitor.setResult(pkgDesc);
 
         // We always unzip in a temp folder which name depends on the package type
         // (e.g. addon, tools, etc.) and then move the folder to the destination folder.

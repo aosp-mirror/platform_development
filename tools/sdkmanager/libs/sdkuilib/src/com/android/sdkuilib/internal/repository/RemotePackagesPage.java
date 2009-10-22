@@ -103,7 +103,7 @@ public class RemotePackagesPage extends Composite implements ISdkListener {
 
         mColumnSource = new TreeColumn(mTreeSources, SWT.NONE);
         mColumnSource.setWidth(289);
-        mColumnSource.setText("Sources, Packages and Archives");
+        mColumnSource.setText("Sites, Packages and Archives");
 
         mDescriptionContainer = new Group(parent, SWT.NONE);
         mDescriptionContainer.setLayout(new GridLayout(1, false));
