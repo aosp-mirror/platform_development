@@ -14,9 +14,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Command line utility for running a pre-defined test.
+"""Command line utility for running Android tests
 
-Based on previous <androidroot>/development/tools/runtest shell script.
+runtest helps automate the instructions for building and running tests
+- It builds the corresponding test package for the code you want to test
+- It pushes the test package to your device or emulator
+- It launches InstrumentationTestRunner (or similar) to run the tests you
+specify.
+
+runtest supports running tests whose attributes have been pre-defined in
+_TEST_FILE_NAME files, (runtest <testname>), or by specifying the file
+system path to the test to run (runtest --path <path>).
+
+Do runtest --help to see full list of options.
 """
 
 # Python imports
@@ -34,6 +44,7 @@ import errors
 import logger
 import run_command
 from test_defs import test_defs
+from test_defs import test_walker
 
 
 class TestRunner(object):
@@ -57,7 +68,7 @@ class TestRunner(object):
       "for a list of tests, or you can launch one or more tests.")
 
   # default value for make -jX
-  _DEFAULT_JOBS=4
+  _DEFAULT_JOBS = 4
 
   def __init__(self):
     # disable logging of timestamp
@@ -67,6 +78,7 @@ class TestRunner(object):
     self._known_tests = None
     self._options = None
     self._test_args = None
+    self._tests_to_run = None
 
   def _ProcessOptions(self):
     """Processes command-line options."""
@@ -114,6 +126,8 @@ class TestRunner(object):
     parser.add_option("-o", "--coverage", dest="coverage",
                       default=False, action="store_true",
                       help="Generate code coverage metrics for test(s)")
+    parser.add_option("-x", "--path", dest="test_path",
+                      help="Run test(s) at given file system path")
     parser.add_option("-t", "--all-tests", dest="all_tests",
                       default=False, action="store_true",
                       help="Run all defined tests")
@@ -145,6 +159,7 @@ class TestRunner(object):
         and not self._options.all_tests
         and not self._options.continuous_tests
         and not self._options.cts_tests
+        and not self._options.test_path
         and len(self._test_args) < 1):
       parser.print_help()
       logger.SilentLog("at least one test name must be specified")
@@ -217,8 +232,8 @@ class TestRunner(object):
       # cts dependencies are removed
       if self._IsCtsTests(tests):
         # need to use make since these fail building with ONE_SHOT_MAKEFILE
-        cmd=('make -j%s CtsTestStubs android.core.tests.runner' %
-              self._options.make_jobs)
+        cmd = ('make -j%s CtsTestStubs android.core.tests.runner' %
+               self._options.make_jobs)
         logger.Log(cmd)
         if not self._options.preview:
           old_dir = os.getcwd()
@@ -262,21 +277,28 @@ class TestRunner(object):
 
   def _GetTestsToRun(self):
     """Get a list of TestSuite objects to run, based on command line args."""
+    if self._tests_to_run:
+      return self._tests_to_run
+
+    self._tests_to_run = []
     if self._options.all_tests:
-      return self._known_tests.GetTests()
+      self._tests_to_run = self._known_tests.GetTests()
     elif self._options.continuous_tests:
-      return self._known_tests.GetContinuousTests()
+      self._tests_to_run = self._known_tests.GetContinuousTests()
     elif self._options.cts_tests:
-      return self._known_tests.GetCtsTests()
-    tests = []
+      self._tests_to_run = self._known_tests.GetCtsTests()
+    elif self._options.test_path:
+      walker = test_walker.TestWalker()
+      self._tests_to_run = walker.FindTests(self._options.test_path)
+
     for name in self._test_args:
       test = self._known_tests.GetTest(name)
       if test is None:
         logger.Log("Error: Could not find test %s" % name)
         self._DumpTests()
         raise errors.AbortError
-      tests.append(test)
-    return tests
+      self._tests_to_run.append(test)
+    return self._tests_to_run
 
   def _IsCtsTests(self, test_list):
     """Check if any cts tests are included in given list of tests to run."""
