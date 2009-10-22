@@ -69,11 +69,14 @@ ifndef APP_PLATFORM
     endif
 endif
 
+# Check that the value of APP_PLATFORM corresponds to a known platform
+# If not, we're going to use the max supported platform value.
+#
 _bad_platform := $(strip $(filter-out $(NDK_ALL_PLATFORMS),$(APP_PLATFORM)))
 ifdef _bad_platform
-    $(call __ndk_info,Application $(_name) targets platform '$(_bad_platform)')
-    $(call __ndk_info,which is not supported by this release of the Android NDK)
-    $(call __ndk_error,Aborting...)
+    $(call __ndk_info,Application $(_name) targets unknown platform '$(_bad_platform)')
+    APP_PLATFORM := android-$(NDK_MAX_PLATFORM_LEVEL)
+    $(call __ndk_info,Switching to $(APP_PLATFORM))
 endif
 
 # If APP_BUILD_SCRIPT is defined, check that the file exists.
