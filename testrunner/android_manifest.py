@@ -36,6 +36,10 @@ class AndroidManifest(object):
     if app_path:
       self.ParseManifest(app_path)
 
+  def GetAppPath(self):
+    """Retrieve file system path to this manifest file's directory."""
+    return self._app_path
+
   def GetPackageName(self):
     """Retrieve package name defined at <manifest package="...">.
 
@@ -56,6 +60,7 @@ class AndroidManifest(object):
       IOError: AndroidManifest.xml cannot be found at given path, or cannot be
           opened for reading
     """
+    self._app_path = app_path
     self._manifest_path = os.path.join(app_path, self.FILENAME)
     self._dom = xml.dom.minidom.parse(self._manifest_path)
 
@@ -76,6 +81,18 @@ class AndroidManifest(object):
     uses_sdk_element.setAttribute('android:minSdkVersion', min_sdk_version)
     self._SaveXml()
 
+  def GetInstrumentationNames(self):
+    """Get the instrumentation names from manifest.
+
+    Returns:
+      list of names, might be empty
+    """
+    instr_elements = self._dom.getElementsByTagName('instrumentation')
+    instrs = []
+    for element in instr_elements:
+      instrs.append(element.getAttribute('android:name'))
+    return instrs
+
   def _GetManifestElement(self):
     """Retrieve the root manifest element.
 
@@ -90,3 +107,4 @@ class AndroidManifest(object):
   def _SaveXml(self):
     """Saves the manifest to disk."""
     self._dom.writexml(open(self._manifest_path, mode='w'), encoding='utf-8')
+
