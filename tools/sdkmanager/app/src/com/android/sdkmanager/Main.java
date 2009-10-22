@@ -291,11 +291,11 @@ public class Main {
         // get the target and try to resolve it.
         int targetId = resolveTargetName(mSdkCommandLine.getParamTargetId());
         IAndroidTarget[] targets = mSdkManager.getTargets();
-        if (targetId < 1 || targetId > targets.length) {
+        if (targetId == INVALID_TARGET_ID || targetId > targets.length) {
             errorAndExit("Target id is not valid. Use '%s list targets' to get the target ids.",
                     SdkConstants.androidCmdName());
         }
-        IAndroidTarget target = targets[targetId - 1];
+        IAndroidTarget target = targets[targetId - 1];  // target id is 1-based
 
         ProjectCreator creator = new ProjectCreator(mOsSdkFolder,
                 mSdkCommandLine.isVerbose() ? OutputLevel.VERBOSE :
@@ -462,14 +462,18 @@ public class Main {
     private void updateProject() {
         // get the target and try to resolve it.
         IAndroidTarget target = null;
-        int targetId = resolveTargetName(mSdkCommandLine.getParamTargetId());
-        if (targetId >= 0) {
+        String targetStr = mSdkCommandLine.getParamTargetId();
+        // For "update project" the target parameter is optional so having null is acceptable.
+        // However if there's a value, it must be valid.
+        if (targetStr != null) {
             IAndroidTarget[] targets = mSdkManager.getTargets();
-            if (targetId < 1 || targetId > targets.length) {
-                errorAndExit("Target id is not valid. Use '%s list targets' to get the target ids.",
+            int targetId = resolveTargetName(targetStr);
+            if (targetId == INVALID_TARGET_ID || targetId > targets.length) {
+                errorAndExit("Target id '%1$s' is not valid. Use '%2$s list targets' to get the target ids.",
+                        targetStr,
                         SdkConstants.androidCmdName());
             }
-            target = targets[targetId - 1];
+            target = targets[targetId - 1];  // target id is 1-based
         }
 
         ProjectCreator creator = new ProjectCreator(mOsSdkFolder,
@@ -715,14 +719,14 @@ public class Main {
     private void createAvd() {
         // find a matching target
         int targetId = resolveTargetName(mSdkCommandLine.getParamTargetId());
-        IAndroidTarget target = null;
+        IAndroidTarget[] targets = mSdkManager.getTargets();
 
-        if (targetId >= 1 && targetId <= mSdkManager.getTargets().length) {
-            target = mSdkManager.getTargets()[targetId-1]; // target it is 1-based
-        } else {
+        if (targetId == INVALID_TARGET_ID || targetId > targets.length) {
             errorAndExit("Target id is not valid. Use '%s list targets' to get the target ids.",
                     SdkConstants.androidCmdName());
         }
+
+        IAndroidTarget target = targets[targetId-1]; // target id is 1-based
 
         try {
             boolean removePrevious = mSdkCommandLine.getFlagForce();
