@@ -114,6 +114,18 @@ $(foreach _platform,$(NDK_ALL_PLATFORMS),\
   $(eval include $(BUILD_SYSTEM)/add-platform.mk)\
 )
 
+# we're going to find the maximum platform number of the form android-<number>
+# ignore others, which could correspond to special and experimental cases
+NDK_ALL_PLATFORM_LEVELS := $(filter android-%,$(NDK_ALL_PLATFORMS))
+NDK_ALL_PLATFORM_LEVELS := $(patsubst android-%,%,$(NDK_ALL_PLATFORM_LEVELS))
+$(call ndk_log,Found stable platform levels: $(NDK_ALL_PLATFORM_LEVELS))
+
+NDK_MAX_PLATFORM_LEVEL := 3
+$(foreach level,$(NDK_ALL_PLATFORM_LEVELS),\
+  $(eval NDK_MAX_PLATFORM_LEVEL := $$(call max,$$(NDK_MAX_PLATFORM_LEVEL),$$(level)))\
+)
+$(call ndk_log,Found max platform level: $(NDK_MAX_PLATFORM_LEVEL))
+
 # ====================================================================
 #
 # Read all application configuration files
