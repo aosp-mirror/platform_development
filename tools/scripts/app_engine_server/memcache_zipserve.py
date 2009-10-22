@@ -37,7 +37,7 @@ import zipfile
 from google.appengine.api import memcache
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import util
-
+from time import localtime, strftime
 
 def create_handler(zip_files, max_age=None, public=None):
   """Factory method to create a MemcachedZipHandler instance.
@@ -57,7 +57,6 @@ def create_handler(zip_files, max_age=None, public=None):
   """
   # verify argument integrity. If the argument is passed in list format,
   # convert it to list of lists format
-  
   if zip_files and type(zip_files).__name__ == 'list':
     num_items = len(zip_files)
     while num_items > 0:
@@ -72,7 +71,6 @@ def create_handler(zip_files, max_age=None, public=None):
 
     I'm still not sure why this is needed
     """
-    
     def get(self, name):
       self.zipfilenames = zip_files
       self.TrueGet(name)
@@ -96,12 +94,15 @@ class MemcachedZipHandler(webapp.RequestHandler):
   PUBLIC = True                     # public cache setting
   CACHE_PREFIX = 'cache://'         # memcache key prefix for actual URLs
   NEG_CACHE_PREFIX = 'noncache://'  # memcache key prefix for non-existant URL
-
-  def TrueGet(self, name):
+  intlString = 'intl/'
+  validLangs = ['en', 'de', 'es', 'fr','it','ja','zh-CN','zh-TW']
+  
+  def TrueGet(self, reqUri):
     """The top-level entry point to serving requests.
 
     Called 'True' get because it does the work when called from the wrapper
-    class' get method
+    class' get method. Some logic is applied to the request to serve files
+    from an intl/<lang>/... directory or fall through to the default language.
 
     Args:
       name: URL requested
@@ -109,37 +110,88 @@ class MemcachedZipHandler(webapp.RequestHandler):
     Returns:
       None
     """
-    name = self.PreprocessUrl(name)
+    langName = 'en'
+    resetLangCookie = False
+    urlLangName = None
+    retry = False
+    isValidIntl = False
 
-    # see if we have the page in the memcache
-    resp_data = self.GetFromCache(name)
-    if resp_data is None:
-      logging.info('Cache miss for %s', name)
-      resp_data = self.GetFromNegativeCache(name)
-      if resp_data is None:
-        resp_data = self.GetFromStore(name)
+    # Try to retrieve the user's lang pref from the cookie. If there is no
+    # lang pref cookie in the request, add set-cookie to the response with the 
+    # default value of 'en'.
+    try:
+      langName = self.request.cookies['android_developer_pref_lang']
+    except KeyError:
+      resetLangCookie = True
+      #logging.info('==========================EXCEPTION: NO LANG COOKIE FOUND, USING [%s]', langName)
+    logging.info('==========================REQ INIT name [%s] langName [%s]', reqUri, langName)
 
-        # IF we have the file, put it in the memcache
-        # ELSE put it in the negative cache
-        if resp_data is not None:
-          self.StoreOrUpdateInCache(name, resp_data)
-        else:
-          logging.info('Adding %s to negative cache, serving 404', name)
-          self.StoreInNegativeCache(name)
-          self.Write404Error()
-          return
+    # Preprocess the req url. If it references a directory or the domain itself,
+    # append '/index.html' to the url and 302 redirect. Otherwise, continue
+    # processing the request below.
+    name = self.PreprocessUrl(reqUri, langName)
+    if name:
+      # Do some prep for handling intl requests. Parse the url and validate
+      # the intl/lang substring, extract the url lang code (urlLangName) and the
+      # the uri that follows the intl/lang substring(contentUri)
+      sections = name.split("/", 2)
+      contentUri = 0
+      isIntl = len(sections) > 1 and (sections[0] == "intl")
+      if isIntl:
+        isValidIntl = sections[1] in self.validLangs
+        if isValidIntl:
+          urlLangName = sections[1]
+          contentUri = sections[2]
+          if (langName != urlLangName):
+            # if the lang code in the request is different from that in 
+            # the cookie, reset the cookie to the url lang value.
+            langName = urlLangName
+            resetLangCookie = True
+            #logging.info('INTL PREP resetting langName to urlLangName [%s]', langName)
+          #else: 
+          #  logging.info('INTL PREP no need to reset langName')
+
+      # Send for processing
+      if self.isCleanUrl(name, langName, isValidIntl):
+        # handle a 'clean' request.
+        # Try to form a response using the actual request url.
+        if not self.CreateResponse(name, langName, isValidIntl, resetLangCookie):
+          # If CreateResponse returns False, there was no such document
+          # in the intl/lang tree. Before going to 404, see if there is an
+          # English-language version of the doc in the default
+          # default tree and return it, else go to 404.
+          self.CreateResponse(contentUri, langName, False, resetLangCookie)
+
+      elif isIntl:
+        # handle the case where we need to pass through an invalid intl req 
+        # for processing (so as to get 404 as appropriate). This is needed
+        # because intl urls are passed through clean and retried in English,
+        # if necessary.
+        logging.info('  Handling an invalid intl request...')
+        self.CreateResponse(name, langName, isValidIntl, resetLangCookie)
+
       else:
-        self.Write404Error()
-        return
+        # handle the case where we have a non-clean url (usually a non-intl
+        # url) that we need to interpret in the context of any lang pref
+        # that is set. Prepend an intl/lang string to the request url and
+        # send it as a 302 redirect. After the redirect, the subsequent
+        # request will be handled as a clean url.
+        self.RedirToIntl(name, self.intlString, langName)
 
-    content_type, encoding = mimetypes.guess_type(name)
-    if content_type:
-      self.response.headers['Content-Type'] = content_type
-    self.SetCachingHeaders()
-    self.response.out.write(resp_data)
+  def isCleanUrl(self, name, langName, isValidIntl):
+    """Determine whether to pass an incoming url straight to processing. 
 
-  def PreprocessUrl(self, name):
-    """Any preprocessing work on the URL when it comes it.
+       Args:
+         name: The incoming URL
+
+       Returns:
+         boolean: Whether the URL should be sent straight to processing
+    """
+    if (langName == 'en') or isValidIntl or not ('.html' in name) or (not isValidIntl and not langName):
+      return True
+
+  def PreprocessUrl(self, name, langName):
+    """Any preprocessing work on the URL when it comes in.
 
     Put any work related to interpretting the incoming URL here. For example,
     this is used to redirect requests for a directory to the index.html file
@@ -150,12 +202,9 @@ class MemcachedZipHandler(webapp.RequestHandler):
       name: The incoming URL
 
     Returns:
-      The processed URL
+      False if the request was redirected to '/index.html', or
+      The processed URL, otherwise
     """
-    # handle special case of requesting the domain itself
-    if not name:
-      name = 'index.html'
-
     # determine if this is a request for a directory
     final_path_segment = name
     final_slash_offset = name.rfind('/')
@@ -164,11 +213,122 @@ class MemcachedZipHandler(webapp.RequestHandler):
       if final_path_segment.find('.') == -1:
         name = ''.join([name, '/'])
 
-    # if this is a directory, redirect to index.html
-    if name[len(name) - 1:] == '/':
-      return '%s%s' % (name, 'index.html')
+    # if this is a directory or the domain itself, redirect to /index.html
+    if not name or (name[len(name) - 1:] == '/'):
+      uri = ''.join(['/', name, 'index.html'])
+      logging.info('--->PREPROCESSING REDIRECT [%s] to [%s] with langName [%s]', name, uri, langName)
+      self.redirect(uri, False)
+      return False
     else:
       return name
+
+  def RedirToIntl(self, name, intlString, langName):
+    """Redirect an incoming request to the appropriate intl uri.
+
+       Builds the intl/lang string from a base (en) string
+       and redirects (302) the request to look for a version 
+       of the file in the language that matches the client-
+       supplied cookie value.
+
+    Args:
+      name: The incoming, preprocessed URL
+
+    Returns:
+      The lang-specific URL
+    """
+    builtIntlLangUri = ''.join([intlString, langName, '/', name, '?', self.request.query_string])
+    uri = ''.join(['/', builtIntlLangUri])
+    logging.info('-->>REDIRECTING %s to  %s', name, uri)
+    self.redirect(uri, False)
+    return uri
+
+  def CreateResponse(self, name, langName, isValidIntl, resetLangCookie):
+    """Process the url and form a response, if appropriate.
+
+       Attempts to retrieve the requested file (name) from cache, 
+       negative cache, or store (zip) and form the response. 
+       For intl requests that are not found (in the localized tree), 
+       returns False rather than forming a response, so that
+       the request can be retried with the base url (this is the 
+       fallthrough to default language). 
+
+       For requests that are found, forms the headers and
+       adds the content to the response entity. If the request was
+       for an intl (localized) url, also resets the language cookie 
+       to the language specified in the url if needed, to ensure that 
+       the client language and response data remain harmonious. 
+
+    Args:
+      name: The incoming, preprocessed URL
+      langName: The language id. Used as necessary to reset the
+                language cookie in the response.
+      isValidIntl: If present, indicates whether the request is
+                   for a language-specific url
+      resetLangCookie: Whether the response should reset the
+                       language cookie to 'langName'
+
+    Returns:
+      True: A response was successfully created for the request
+      False: No response was created.
+    """
+    # see if we have the page in the memcache
+    logging.info('PROCESSING %s langName [%s] isValidIntl [%s] resetLang [%s]', 
+      name, langName, isValidIntl, resetLangCookie)
+    resp_data = self.GetFromCache(name)
+    if resp_data is None:
+      logging.info('  Cache miss for %s', name)
+      resp_data = self.GetFromNegativeCache(name)
+      if resp_data is None:
+        resp_data = self.GetFromStore(name)
+
+        # IF we have the file, put it in the memcache
+        # ELSE put it in the negative cache
+        if resp_data is not None:
+          self.StoreOrUpdateInCache(name, resp_data)
+        elif isValidIntl:
+          # couldn't find the intl doc. Try to fall through to English.
+          #logging.info('  Retrying with base uri...')
+          return False
+        else:
+          logging.info('  Adding %s to negative cache, serving 404', name)
+          self.StoreInNegativeCache(name)
+          self.Write404Error()
+          return True
+      else:
+        # found it in negative cache
+        self.Write404Error()
+        return True
+
+    # found content from cache or store
+    logging.info('FOUND CLEAN')
+    if resetLangCookie:
+      logging.info('  Resetting android_developer_pref_lang cookie to [%s]',
+      langName)
+      expireDate = time.mktime(localtime()) + 60 * 60 * 24 * 365 * 10
+      self.response.headers.add_header('Set-Cookie', 
+      'android_developer_pref_lang=%s; path=/; expires=%s' % 
+      (langName, strftime("%a, %d %b %Y %H:%M:%S", localtime(expireDate))))
+    mustRevalidate = False
+    if ('.html' in name):
+      # revalidate html files -- workaround for cache inconsistencies for 
+      # negotiated responses
+      mustRevalidate = True
+      logging.info('  Adding [Vary: Cookie] to response...')
+      self.response.headers.add_header('Vary', 'Cookie')
+    content_type, encoding = mimetypes.guess_type(name)
+    if content_type:
+      self.response.headers['Content-Type'] = content_type
+      self.SetCachingHeaders(mustRevalidate)
+      self.response.out.write(resp_data)
+    elif (name == 'favicon.ico'):
+      self.response.headers['Content-Type'] = 'image/x-icon'
+      self.SetCachingHeaders(mustRevalidate)
+      self.response.out.write(resp_data)
+    elif name.endswith('.psd'):
+      self.response.headers['Content-Type'] = 'application/octet-stream'
+      self.SetCachingHeaders(mustRevalidate)
+      self.response.out.write(resp_data)
+    return True
 
   def GetFromStore(self, file_path):
     """Retrieve file from zip files.
@@ -192,7 +352,7 @@ class MemcachedZipHandler(webapp.RequestHandler):
     archive_name = self.MapFileToArchive(file_path)
     if not archive_name:
       archive_name = file_itr.next()[0]
-    
+
     while resp_data is None and archive_name:
       zip_archive = self.LoadZipFile(archive_name)
       if zip_archive:
@@ -326,15 +486,17 @@ class MemcachedZipHandler(webapp.RequestHandler):
         else:
           return 0
 
-  def SetCachingHeaders(self):
+  def SetCachingHeaders(self, revalidate):
     """Set caching headers for the request."""
     max_age = self.MAX_AGE
-    self.response.headers['Expires'] = email.Utils.formatdate(
-        time.time() + max_age, usegmt=True)
-    cache_control = []
+    #self.response.headers['Expires'] = email.Utils.formatdate(
+    #    time.time() + max_age, usegmt=True)
+	cache_control = []
     if self.PUBLIC:
       cache_control.append('public')
     cache_control.append('max-age=%d' % max_age)
+    if revalidate:
+      cache_control.append('must-revalidate')
     self.response.headers['Cache-Control'] = ', '.join(cache_control)
 
   def GetFromCache(self, filename):
@@ -400,7 +562,6 @@ class MemcachedZipHandler(webapp.RequestHandler):
       The file contents if present in the negative cache.
     """
     return memcache.get('%s%s' % (self.NEG_CACHE_PREFIX, filename))
-
 
 def main():
   application = webapp.WSGIApplication([('/([^/]+)/(.*)',
