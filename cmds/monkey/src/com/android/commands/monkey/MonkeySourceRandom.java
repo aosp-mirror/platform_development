@@ -475,7 +475,7 @@ public class MonkeySourceRandom implements MonkeyEventSource {
      */
     public MonkeyEvent getNextEvent() {
         if (mQ.isEmpty()) {
-                generateEvents();
+            generateEvents();
         }
         mEventCount++;
         MonkeyEvent e = mQ.getFirst();
