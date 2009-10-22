@@ -82,6 +82,8 @@ extern size_t      strftime(char *s, size_t max, const char *format, const struc
 extern char *ctime(const time_t *timep);
 extern char *ctime_r(const time_t *timep, char *buf);
 
+extern void  tzset(void);
+
 /* global includes */
 extern char*     tzname[];
 extern int       daylight;
@@ -89,7 +91,7 @@ extern long int  timezone;
 
 #define CLOCKS_PER_SEC     1000000
 
-extern clock_t   clock();
+extern clock_t   clock(void);
 
 /* BIONIC: extra linux clock goodies */
 extern int clock_getres(int, struct timespec *);
