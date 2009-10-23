@@ -12,6 +12,17 @@ IMPORTANT BUG FIXES:
 
 - Actually use the awk version detected by host-setup.sh during the build.
 
+
+IMPORTANT CHANGES:
+
+- Added platform eclair-5 to reflect the Eclair branch. This is merely a copy
+  of android-4 that also includes headers and libraries for OpenGL ES 2.0.
+
+  See the sample named "hello-gl2" for a *very* basic demonstration. Note that
+  OpenGL ES 2.0 is currently *not* available from Java, and must be used through
+  native code exclusively.
+
+
 OTHER FIXES & CHANGES:
 
 - Added --prebuilt-ndk=FILE option to build/tools/make-release.sh script to
