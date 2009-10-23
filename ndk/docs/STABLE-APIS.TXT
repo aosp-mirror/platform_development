@@ -180,3 +180,6 @@ are *not* available. EGL is used to perform surface creation and flipping
 VM application instead, for example with a GLSurfaceView, as described here:
 
 http://android-developers.blogspot.com/2009/04/introducing-glsurfaceview.html
+
+The "hello-gl2" sample application demonstrate this. It is used to draw a very
+simple triangle with the help of a vertex and fragment shaders.
