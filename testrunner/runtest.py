@@ -221,7 +221,10 @@ class TestRunner(object):
               self._options.make_jobs)
         logger.Log(cmd)
         if not self._options.preview:
+          old_dir = os.getcwd()
+          os.chdir(self._root_path)
           run_command.RunCommand(cmd, return_output=False)
+          os.chdir(old_dir)
       target_build_string = " ".join(list(target_set))
       extra_args_string = " ".join(list(extra_args_set))
       # mmm cannot be used from python, so perform a similar operation using
@@ -253,6 +256,8 @@ class TestRunner(object):
       if os.path.isfile(os.path.join(self._root_path, build_file_path)):
         target_set.add(build_file_path)
         return True
+      else:
+        logger.Log("%s has no Android.mk, skipping" % build_dir)
     return False
 
   def _GetTestsToRun(self):
