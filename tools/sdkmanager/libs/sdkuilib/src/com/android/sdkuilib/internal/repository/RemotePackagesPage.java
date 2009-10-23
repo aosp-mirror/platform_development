@@ -283,7 +283,32 @@ public class RemotePackagesPage extends Composite implements ISdkListener {
         SettingsController controller = mUpdaterData.getSettingsController();
         controller.setShowUpdateOnly(mUpdateOnlyCheckBox.getSelection());
         controller.saveSettings();
+
+        // Get the list of selected archives
+        ArrayList<Archive> archives = new ArrayList<Archive>();
+        for (Object element : mTreeViewerSources.getCheckedElements()) {
+            if (element instanceof Archive) {
+                archives.add((Archive) element);
+            }
+            // Deselect them all
+            mTreeViewerSources.setChecked(element, false);
+        }
+
         mTreeViewerSources.refresh();
+
+        // Now reselect those that still exist in the tree but only if they
+        // are compatible archives
+        for (Archive a : archives) {
+            if (a.isCompatible() && mTreeViewerSources.setChecked(a, true)) {
+                // If we managed to select the archive, also select the parent package.
+                // Technically we should only select the parent package if *all* the
+                // compatible archives children are selected. In practice we'll rarely
+                // have more than one compatible archive per package.
+                mTreeViewerSources.setChecked(a.getParentPackage(), true);
+            }
+        }
+
+        updateButtonsState();
     }
 
     private void onInstallSelectedArchives() {
