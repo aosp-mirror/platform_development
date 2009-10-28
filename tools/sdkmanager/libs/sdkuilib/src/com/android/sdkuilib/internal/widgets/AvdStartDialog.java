@@ -83,6 +83,7 @@ final class AvdStartDialog extends GridDialog {
     private int mSize2 = -1;
     private String mSkinDisplay;
     private boolean mEnableScaling = true;
+    private Label mScaleField;
 
     AvdStartDialog(Shell parentShell, AvdInfo avd, String sdkLocation,
             SettingsController settingsController) {
@@ -162,6 +163,7 @@ final class AvdStartDialog extends GridDialog {
                 onScaleChange();
             }
         });
+
         // empty composite, only 2 widgets on this line.
         new Composite(scaleGroup, SWT.NONE).setLayoutData(gd = new GridData());
         gd.widthHint = gd.heightHint = 0;
@@ -203,6 +205,16 @@ final class AvdStartDialog extends GridDialog {
             }
         });
 
+        l = new Label(scaleGroup, SWT.NONE);
+        l.setText("Scale:");
+        mScaleField = new Label(scaleGroup, SWT.NONE);
+        mScaleField.setLayoutData(new GridData(GridData.FILL, GridData.CENTER,
+                true /*grabExcessHorizontalSpace*/,
+                true /*grabExcessVerticalSpace*/,
+                2 /*horizontalSpan*/,
+                1 /*verticalSpan*/));
+        setScale(mScale); // set initial text value
+
         enableGroup(scaleGroup, defaultState);
 
         mScaleButton.addSelectionListener(new SelectionAdapter() {
@@ -213,7 +225,7 @@ final class AvdStartDialog extends GridDialog {
                 if (enabled) {
                     onScaleChange();
                 } else {
-                    mScale = 0.f;
+                    setScale(0);
                 }
             }
         });
@@ -308,13 +320,13 @@ final class AvdStartDialog extends GridDialog {
     private void onScaleChange() {
         String sizeStr = mScreenSize.getText();
         if (sizeStr.length() == 0) {
-            mScale = 0.f;
+            setScale(0);
             return;
         }
 
         String dpiStr = mMonitorDpi.getText();
         if (dpiStr.length() == 0) {
-            mScale = 0.f;
+            setScale(0);
             return;
         }
 
@@ -334,7 +346,21 @@ final class AvdStartDialog extends GridDialog {
         // the scale factor is a mix of adapting to the new density and to the new size.
         //    (size/diagonalIn) * (dpi/mDensity)
         // this can be simplified to:
-        mScale = (size * dpi) / diagonalPx;
+        setScale((size * dpi) / diagonalPx);
+    }
+
+    private void setScale(float scale) {
+        mScale = scale;
+
+        // Do the rounding exactly like AvdSelector will do.
+        scale = Math.round(scale * 100);
+        scale /=  100.f;
+
+        if (scale == 0.f) {
+            mScaleField.setText("default");  //$NON-NLS-1$
+        } else {
+            mScaleField.setText(String.format("%.2f", scale));  //$NON-NLS-1$
+        }
     }
 
     /**
@@ -348,7 +374,7 @@ final class AvdStartDialog extends GridDialog {
         }
 
         if (sMonitorDpi == -1) { // first time? try to get a value
-             sMonitorDpi = Toolkit.getDefaultToolkit().getScreenResolution();
+            sMonitorDpi = Toolkit.getDefaultToolkit().getScreenResolution();
         }
 
         return sMonitorDpi;
