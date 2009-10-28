@@ -628,10 +628,7 @@ public class ConfigurationComposite extends Composite {
             }
 
             mDeviceConfigs.select(0);
-            if (configNames.size() == 1) {
-                mDeviceConfigs.setEnabled(false);
-            }
-
+            mDeviceConfigs.setEnabled(configNames.size() > 1);
         }
         if (recomputeLayout) {
             onDeviceConfigChange();
