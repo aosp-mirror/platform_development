@@ -145,8 +145,11 @@ public class Monkey {
 
     long mDroppedFlipEvents = 0;
 
-    /** a filename to the script (if any) **/
-    private String mScriptFileName = null;
+    /** a filename to the setup script (if any) */
+    private String mSetupFileName = null;
+
+    /** filenames of the script (if any) */
+    private ArrayList<String> mScriptFileNames = new ArrayList<String>();
 
     /** a TCP port to listen on for remote commands. */
     private int mServerPort = -1;
@@ -402,11 +405,21 @@ public class Monkey {
             return -4;
         }
 
-        if (mScriptFileName != null) {
+        if (mScriptFileNames != null && mScriptFileNames.size() == 1) {
             // script mode, ignore other options
-            mEventSource = new MonkeySourceScript(mScriptFileName, mThrottle);
+            mEventSource = new MonkeySourceScript(mScriptFileNames.get(0), mThrottle);
             mEventSource.setVerbose(mVerbose);
 
+            mCountEvents = false;
+        } else if (mScriptFileNames != null) {
+            if (mSetupFileName != null) {
+                mEventSource = new MonkeySourceRandomScript(mSetupFileName, mScriptFileNames,
+                        mThrottle, mSeed);
+                mCount++;
+            } else {
+                mEventSource = new MonkeySourceRandomScript(mScriptFileNames, mThrottle, mSeed);
+            }
+            mEventSource.setVerbose(mVerbose);
             mCountEvents = false;
         } else if (mServerPort != -1) {
             try {
@@ -572,8 +585,10 @@ public class Monkey {
                     mSendNoEvents = true;
                 } else if (opt.equals("--port")) {
                     mServerPort = (int) nextOptionLong("Server port to listen on for commands");
+                } else if (opt.equals("--setup")) {
+                    mSetupFileName = nextOptionData();
                 } else if (opt.equals("-f")) {
-                    mScriptFileName = nextOptionData();
+                    mScriptFileNames.add(nextOptionData());
                 } else if (opt.equals("-h")) {
                     showUsage();
                     return false;
@@ -979,7 +994,8 @@ public class Monkey {
         usage.append("              [--pct-nav PERCENT] [--pct-majornav PERCENT]\n");
         usage.append("              [--pct-appswitch PERCENT] [--pct-flip PERCENT]\n");
         usage.append("              [--pct-anyevent PERCENT]\n");
-        usage.append("              [--wait-dbg] [--dbg-no-events] [-f scriptfile]\n");
+        usage.append("              [--wait-dbg] [--dbg-no-events]\n");
+        usage.append("              [--setup scriptfile] [-f scriptfile [-f scriptfile] ...]\n");
         usage.append("              [--port port]\n");
         usage.append("              [-s SEED] [-v [-v] ...] [--throttle MILLISEC]\n");
         usage.append("              COUNT");
