@@ -185,23 +185,32 @@ public class RepoSource implements IDescription {
             }
         }
 
-        if (!validated) {
+        // If any exception was handled during the URL fetch, display it now.
+        if (exception[0] != null) {
             mFetchError = "Failed to fetch URL";
 
-            String reason = "Unknown";
-            if (exception[0] != null) {
-                if (exception[0] instanceof FileNotFoundException) {
-                    reason = "File not found";
-                    mFetchError += ": " + reason;
-                } else if (exception[0] instanceof SSLKeyException) {
-                    reason = "HTTPS SSL error. You might want to force download through HTTP in the settings.";
-                    mFetchError += ": HTTPS SSL error";
-                } else if (exception[0].getMessage() != null) {
-                    reason = exception[0].getMessage();
-                }
+            String reason = null;
+            if (exception[0] instanceof FileNotFoundException) {
+                // FNF has no useful getMessage, so we need to special handle it.
+                reason = "File not found";
+                mFetchError += ": " + reason;
+            } else if (exception[0] instanceof SSLKeyException) {
+                // That's a common error and we have a pref for it.
+                reason = "HTTPS SSL error. You might want to force download through HTTP in the settings.";
+                mFetchError += ": HTTPS SSL error";
+            } else if (exception[0].getMessage() != null) {
+                reason = exception[0].getMessage();
+            } else {
+                // We don't know what's wrong. Let's give the exception class at least.
+                reason = String.format("Unknown (%1$s)", exception[0].getClass().getName());
             }
 
             monitor.setResult("Failed to fetch URL %1$s, reason: %2$s", url, reason);
+        }
+
+        // Stop here if we failed to validate the XML. We don't want to load it.
+        if (!validated) {
+            return;
         }
 
         monitor.incProgress(1);
@@ -276,7 +285,7 @@ public class RepoSource implements IDescription {
                 }
             }
 
-        } catch (IOException e) {
+        } catch (Exception e) {
             outException[0] = e;
         }
 
@@ -291,14 +300,26 @@ public class RepoSource implements IDescription {
 
         try {
             Validator validator = getValidator();
+
+            if (validator == null) {
+                monitor.setResult(
+                        "XML verification failed for %1$s.\nNo suitable XML Schema Validator could be found in your Java environment. Please consider updating your version of Java.",
+                        url);
+                return false;
+            }
+
             xml.reset();
             validator.validate(new StreamSource(xml));
             return true;
 
         } catch (Exception e) {
+            String s = e.getMessage();
+            if (s == null) {
+                s = e.getClass().getName();
+            }
             monitor.setResult("XML verification failed for %1$s.\nError: %2$s",
                     url,
-                    e.getMessage());
+                    s);
         }
 
         return false;
@@ -311,10 +332,14 @@ public class RepoSource implements IDescription {
         InputStream xsdStream = SdkRepository.getXsdStream();
         SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
 
+        if (factory == null) {
+            return null;
+        }
+
         // This may throw a SAX Exception if the schema itself is not a valid XSD
         Schema schema = factory.newSchema(new StreamSource(xsdStream));
 
-        Validator validator = schema.newValidator();
+        Validator validator = schema == null ? null : schema.newValidator();
 
         return validator;
     }
