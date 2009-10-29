@@ -54,7 +54,7 @@
             <property name="plugin-name" value="${plugin-name}" />
             <property name="classname" value="com.android.ide.eclipse.tests.AllTests" />
             <!-- pass extra vm arg to set sdk_home env and test_data env variable -->
-            <property name="extraVMargs" value="-Dsdk_home=${sdk_home} -Dtest_data=${test_data}" />
+            <property name="extraVMargs" value="-Dtest_data=${test_data}" />
         </ant>
     </target>
 
