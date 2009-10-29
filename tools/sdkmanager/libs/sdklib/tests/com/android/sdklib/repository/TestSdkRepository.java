@@ -16,6 +16,8 @@
 
 package com.android.sdklib.repository;
 
+import com.android.ide.eclipse.tests.AdtTestData;
+
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
@@ -123,9 +125,8 @@ public class TestSdkRepository extends TestCase {
 
     /** Validate a valid sample using an InputStream */
     public void testValidateLocalRepositoryFile() throws Exception {
-        InputStream xmlStream =
-            TestSdkRepository.class.getResourceAsStream(
-                    "/com/android/sdklib/testdata/repository_sample.xml");
+        InputStream xmlStream = AdtTestData.getInstance().getTestFileStream(
+                "repository_sample.xml");
         Source source = new StreamSource(xmlStream);
 
         CaptureErrorHandler handler = new CaptureErrorHandler();

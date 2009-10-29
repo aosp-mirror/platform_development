@@ -17,7 +17,7 @@ package com.android.ide.eclipse.tests.functests.sampleProjects;
 
 import com.android.ide.eclipse.adt.AndroidConstants;
 import com.android.ide.eclipse.adt.wizards.newproject.StubProjectWizard;
-import com.android.ide.eclipse.tests.AdtSdkTestCase;
+import com.android.ide.eclipse.tests.SdkTestCase;
 import com.android.sdklib.IAndroidTarget;
 
 import org.eclipse.core.resources.IMarker;
@@ -44,7 +44,7 @@ import java.util.logging.Logger;
  * execution there
  *
  */
-public class SampleProjectTest extends AdtSdkTestCase {
+public class SampleProjectTest extends SdkTestCase {
 
     private static final Logger sLogger = Logger.getLogger(SampleProjectTest.class.getName());
 
