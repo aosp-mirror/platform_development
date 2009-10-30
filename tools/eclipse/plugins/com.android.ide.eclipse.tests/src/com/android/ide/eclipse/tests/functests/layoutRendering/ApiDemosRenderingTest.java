@@ -39,7 +39,7 @@ import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.ide.eclipse.adt.internal.sdk.LoadStatus;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData.LayoutBridge;
-import com.android.ide.eclipse.tests.SdkEnvTestCase;
+import com.android.ide.eclipse.tests.SdkTestCase;
 import com.android.layoutlib.api.ILayoutResult;
 import com.android.layoutlib.api.IProjectCallback;
 import com.android.layoutlib.api.IResourceValue;
@@ -59,7 +59,7 @@ import java.util.Map;
 
 import javax.imageio.ImageIO;
 
-public class ApiDemosRenderingTest extends SdkEnvTestCase {
+public class ApiDemosRenderingTest extends SdkTestCase {
 
     /**
      * Custom parser that implements {@link IXmlPullParser} (which itself extends
