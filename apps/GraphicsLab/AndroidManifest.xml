@@ -1,0 +1,11 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.android.graphicslab">
+    <application android:label="Graphics Lab">
+		<activity android:name="GraphicsLab">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.TEST" />
+            </intent-filter>
+		</activity>
+    </application>
+</manifest>
