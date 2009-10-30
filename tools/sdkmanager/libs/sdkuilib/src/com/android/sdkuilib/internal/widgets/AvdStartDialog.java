@@ -120,7 +120,7 @@ final class AvdStartDialog extends GridDialog {
         l.setText("Skin:");
 
         l = new Label(parent, SWT.NONE);
-        l.setText(mSkinDisplay);
+        l.setText(mSkinDisplay == null ? "None" : mSkinDisplay);
         l.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
         l = new Label(parent, SWT.NONE);
@@ -417,27 +417,29 @@ final class AvdStartDialog extends GridDialog {
         Map<String, String> prop = mAvd.getProperties();
         String skinName = prop.get(AvdManager.AVD_INI_SKIN_NAME);
 
-        Matcher m = AvdManager.NUMERIC_SKIN_SIZE.matcher(skinName);
-        if (m.matches()) {
-            mSize1 = Integer.parseInt(m.group(1));
-            mSize2 = Integer.parseInt(m.group(2));
-            mSkinDisplay = skinName;
-            mEnableScaling = true;
-        } else {
-            // The resolution is inside the layout file of the skin.
-            mEnableScaling = false; // default to false for now.
+        if (skinName != null) {
+            Matcher m = AvdManager.NUMERIC_SKIN_SIZE.matcher(skinName);
+            if (m != null && m.matches()) {
+                mSize1 = Integer.parseInt(m.group(1));
+                mSize2 = Integer.parseInt(m.group(2));
+                mSkinDisplay = skinName;
+                mEnableScaling = true;
+            }
+        }
 
-            // path to the skin layout file.
-            File skinFolder = new File(mSdkLocation, prop.get(AvdManager.AVD_INI_SKIN_PATH));
-            if (skinFolder.isDirectory()) {
-                File layoutFile = new File(skinFolder, "layout");
-                if (layoutFile.isFile()) {
-                    if (parseLayoutFile(layoutFile)) {
-                        mSkinDisplay = String.format("%1$s (%2$dx%3$d)", skinName, mSize1, mSize2);
-                        mEnableScaling = true;
-                    } else {
-                        mSkinDisplay = skinName;
-                    }
+        // The resolution is inside the layout file of the skin.
+        mEnableScaling = false; // default to false for now.
+
+        // path to the skin layout file.
+        File skinFolder = new File(mSdkLocation, prop.get(AvdManager.AVD_INI_SKIN_PATH));
+        if (skinFolder.isDirectory()) {
+            File layoutFile = new File(skinFolder, "layout");
+            if (layoutFile.isFile()) {
+                if (parseLayoutFile(layoutFile)) {
+                    mSkinDisplay = String.format("%1$s (%2$dx%3$d)", skinName, mSize1, mSize2);
+                    mEnableScaling = true;
+                } else {
+                    mSkinDisplay = skinName;
                 }
             }
         }
