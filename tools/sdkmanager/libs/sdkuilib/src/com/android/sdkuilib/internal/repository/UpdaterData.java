@@ -64,7 +64,7 @@ class UpdaterData {
 
     private ImageFactory mImageFactory;
 
-    private final SettingsController mSettingsController = new SettingsController();
+    private final SettingsController mSettingsController;
 
     private final ArrayList<ISdkListener> mListeners = new ArrayList<ISdkListener>();
 
@@ -73,6 +73,8 @@ class UpdaterData {
     public UpdaterData(String osSdkRoot, ISdkLog sdkLog) {
         mOsSdkRoot = osSdkRoot;
         mSdkLog = sdkLog;
+
+        mSettingsController = new SettingsController(this);
 
         initSdk();
     }

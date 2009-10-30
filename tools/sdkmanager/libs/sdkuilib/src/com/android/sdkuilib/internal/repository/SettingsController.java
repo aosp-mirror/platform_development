@@ -18,9 +18,15 @@ package com.android.sdkuilib.internal.repository;
 
 import com.android.prefs.AndroidLocation;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
+import com.android.sdklib.ISdkLog;
+
+import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Shell;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Properties;
@@ -40,7 +46,10 @@ public class SettingsController {
 
     private ISettingsPage mSettingsPage;
 
-    public SettingsController() {
+    private final UpdaterData mUpdaterData;
+
+    public SettingsController(UpdaterData updaterData) {
+        mUpdaterData = updaterData;
     }
 
     //--- Access to settings ------------
@@ -144,9 +153,11 @@ public class SettingsController {
      */
     public void loadSettings() {
         FileInputStream fis = null;
+        String path = null;
         try {
             String folder = AndroidLocation.getFolder();
             File f = new File(folder, SETTINGS_FILENAME);
+            path = f.getPath();
             if (f.exists()) {
                 fis = new FileInputStream(f);
 
@@ -157,10 +168,11 @@ public class SettingsController {
                 setSetting(ISettingsPage.KEY_ASK_ADB_RESTART, getAskBeforeAdbRestart());
             }
 
-        } catch (AndroidLocationException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            ISdkLog log = mUpdaterData.getSdkLog();
+            if (log != null) {
+                log.error(e, "Failed to load settings from '%1$s'", path);
+            }
         } finally {
             if (fis != null) {
                 try {
@@ -177,18 +189,42 @@ public class SettingsController {
     public void saveSettings() {
 
         FileOutputStream fos = null;
+        String path = null;
         try {
             String folder = AndroidLocation.getFolder();
             File f = new File(folder, SETTINGS_FILENAME);
+            path = f.getPath();
 
             fos = new FileOutputStream(f);
 
             mProperties.store( fos, "## Settings for Android Tool");  //$NON-NLS-1$
 
-        } catch (AndroidLocationException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            ISdkLog log = mUpdaterData.getSdkLog();
+
+            if (log != null) {
+                log.error(e, "Failed to save settings at '%1$s'", path);
+            }
+
+            // This is important enough that we want to really nag the user about it
+            String reason = null;
+
+            if (e instanceof FileNotFoundException) {
+                reason = "File not found";
+            } else if (e instanceof AndroidLocationException) {
+                reason = ".android folder not found, please define ANDROID_SDK_HOME";
+            } else if (e.getMessage() != null) {
+                reason = String.format("%1$s: %2$s", e.getClass().getSimpleName(), e.getMessage());
+            } else {
+                reason = e.getClass().getName();
+            }
+
+            MessageDialog.openInformation(mUpdaterData.getWindowShell(),
+                    "SDK Manager Settings",
+                    String.format(
+                        "The Android SDK and AVD Manager failed to save its settings (%1$s) at %2$s",
+                        reason, path));
+
         } finally {
             if (fos != null) {
                 try {
@@ -202,7 +238,7 @@ public class SettingsController {
     /**
      * When settings have changed: retrieve the new settings, apply them and save them.
      *
-     * This updats Java system properties for the HTTP proxy.
+     * This updates Java system properties for the HTTP proxy.
      */
     private void onSettingsChanged() {
         if (mSettingsPage == null) {
