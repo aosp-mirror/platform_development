@@ -1044,7 +1044,13 @@ public final class AvdManager {
         }
 
         if (configIniFile != null) {
-            properties = SdkManager.parsePropertyFile(configIniFile, log);
+            if (!configIniFile.isFile()) {
+                if (log != null) {
+                    log.warning("Missing file '%1$s'.",  configIniFile.getPath());
+                }
+            } else {
+                properties = SdkManager.parsePropertyFile(configIniFile, log);
+            }
         }
 
         // get name
