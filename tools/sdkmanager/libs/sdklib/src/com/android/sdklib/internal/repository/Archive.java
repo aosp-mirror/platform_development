@@ -807,8 +807,12 @@ public class Archive implements IDescription {
                 }
 
                 // if needed set the permissions.
-                if (usingUnixPerm) {
-                    setPermission(destFile, entry.getUnixMode());
+                if (usingUnixPerm && destFile.isFile()) {
+                    // get the mode and test if it contains the executable bit
+                    int mode = entry.getUnixMode();
+                    if ((mode & 0111) != 0) {
+                        setExecutablePermission(destFile);
+                    }
                 }
 
                 // Increment progress bar to match. We update only between files.
@@ -928,19 +932,14 @@ public class Archive implements IDescription {
     }
 
     /**
-     * Sets the Unix permission on a file or folder.
+     * Sets the executable Unix permission (0777) on a file or folder.
      * @param file The file to set permissions on.
      * @param unixMode the permissions as received from {@link ZipArchiveEntry#getUnixMode()}.
      * @throws IOException
      */
-    private void setPermission(File file, int unixMode) throws IOException {
-        // permissions contains more than user/group/all, and we need the 777 display mode, so we
-        // convert it in octal string and take the last 3 digits.
-        String permission = String.format("%o", unixMode);
-        permission = permission.substring(permission.length() - 3, permission.length());
-
+    private void setExecutablePermission(File file) throws IOException {
         Runtime.getRuntime().exec(new String[] {
-           "chmod", permission, file.getAbsolutePath()
+           "chmod", "777", file.getAbsolutePath()
         });
     }
 }
