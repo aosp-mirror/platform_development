@@ -83,11 +83,17 @@ public class JavaResourceFilter implements IZipEntryFilter {
      * @param extension the extension of the file (excluding '.')
      * @return true if the file should be packaged as standard java resources.
      */
-    public static boolean checkFileForPackaging(String fileName, String extension) {
+    public  static boolean checkFileForPackaging(String fileName, String extension) {
+        // Note: this method is used by com.android.ide.eclipse.adt.internal.build.ApkBuilder
+        if (fileName.charAt(0) == '.') { // ignore hidden files.
+            return false;
+        }
+
         return "aidl".equalsIgnoreCase(extension) == false &&       // Aidl files
             "java".equalsIgnoreCase(extension) == false &&          // Java files
             "class".equalsIgnoreCase(extension) == false &&         // Java class files
             "scc".equalsIgnoreCase(extension) == false &&           // VisualSourceSafe
+            "swp".equalsIgnoreCase(extension) == false &&           // vi swap file
             "package.html".equalsIgnoreCase(fileName) == false &&   // Javadoc
             "overview.html".equalsIgnoreCase(fileName) == false &&  // Javadoc
             ".cvsignore".equalsIgnoreCase(fileName) == false &&     // CVS
