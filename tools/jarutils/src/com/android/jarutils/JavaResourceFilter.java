@@ -87,7 +87,8 @@ public class JavaResourceFilter implements IZipEntryFilter {
      * @param extension the extension of the file (excluding '.')
      * @return true if the file should be packaged as standard java resources.
      */
-    private static boolean checkFileForPackaging(String fileName, String extension) {
+    public static boolean checkFileForPackaging(String fileName, String extension) {
+        // Note: this method is used by ApkBuilder
         return "aidl".equalsIgnoreCase(extension) == false &&       // Aidl files
             "java".equalsIgnoreCase(extension) == false &&          // Java files
             "class".equalsIgnoreCase(extension) == false &&         // Java class files
