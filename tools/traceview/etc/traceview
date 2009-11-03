@@ -63,6 +63,10 @@ else
   javaOpts="-Xmx1600M"
 fi
 
+if [ `uname` = "Linux" ]; then
+    export GDK_NATIVE_WINDOWS=true
+fi
+
 while expr "x$1" : 'x-J' >/dev/null; do
     opt=`expr "x$1" : 'x-J\(.*\)'`
     javaOpts="${javaOpts} -${opt}"
