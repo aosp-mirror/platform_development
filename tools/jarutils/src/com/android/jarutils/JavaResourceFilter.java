@@ -68,10 +68,6 @@ public class JavaResourceFilter implements IZipEntryFilter {
      * @return true if the file should be packaged as standard java resources.
      */
     public static boolean checkFileForPackaging(String fileName) {
-        if (fileName.charAt(0) == '.') { // ignore hidden files.
-            return false;
-        }
-
         String[] fileSegments = fileName.split("\\.");
         String fileExt = "";
         if (fileSegments.length > 1) {
@@ -87,8 +83,12 @@ public class JavaResourceFilter implements IZipEntryFilter {
      * @param extension the extension of the file (excluding '.')
      * @return true if the file should be packaged as standard java resources.
      */
-    public static boolean checkFileForPackaging(String fileName, String extension) {
-        // Note: this method is used by ApkBuilder
+    public  static boolean checkFileForPackaging(String fileName, String extension) {
+        // Note: this method is used by com.android.ide.eclipse.adt.internal.build.ApkBuilder
+        if (fileName.charAt(0) == '.') { // ignore hidden files.
+            return false;
+        }
+
         return "aidl".equalsIgnoreCase(extension) == false &&       // Aidl files
             "java".equalsIgnoreCase(extension) == false &&          // Java files
             "class".equalsIgnoreCase(extension) == false &&         // Java class files
