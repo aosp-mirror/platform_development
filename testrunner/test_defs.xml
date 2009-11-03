@@ -354,8 +354,7 @@ See test_defs.xsd for more information.
 <test name="calprov"
     build_path="packages/providers/CalendarProvider/tests"
     package="com.android.providers.calendar.tests"
-    coverage_target="CalendarProvider"
-    continuous="true" />
+    coverage_target="CalendarProvider" />
 
 <test name="camerastress"
     build_path="packages/apps/Camera"
