@@ -407,7 +407,7 @@ public class Monkey {
             mEventSource.setVerbose(mVerbose);
 
             mCountEvents = false;
-        } else if (mScriptFileNames != null) {
+        } else if (mScriptFileNames != null && mScriptFileNames.size() > 1) {
             if (mSetupFileName != null) {
                 mEventSource = new MonkeySourceRandomScript(mSetupFileName, mScriptFileNames,
                         mThrottle, mSeed);
