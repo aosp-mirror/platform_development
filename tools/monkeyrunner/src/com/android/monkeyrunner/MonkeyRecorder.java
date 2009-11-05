@@ -52,12 +52,11 @@ import org.jheer.XMLWriter;
  *    mr.close();
  *
  *  With MonkeyRunner this should output an xml file, <script_name>-yyyyMMdd-HH:mm:ss.xml, into the
- *  directory out/<script_name>-yyyyMMdd-HH:mm:ss with the contents:
+ *  directory out/<script_name>-yyyyMMdd-HH:mm:ss with the contents like:
  *
  *  <?xml version="1.0" encoding='UTF-8'?>
- *  <script_run>
- *    script_name="filename"
- *    monkeyRunnerVersion="0.2"
+ *  <!-- Monkey Script Results -->
+ *  <script_run script_name="filename" monkeyRunnerVersion="0.2">
  *    <!-- Device specific variables -->
  *    <device_var var_name="name" var_value="value" />
  *    <device_var name="build.display" value="opal-userdebug 1.6 DRC79 14207 test-keys"/>
@@ -95,14 +94,15 @@ public class MonkeyRecorder {
   private static final String ROOT_DIR = "out";
   
   // for getting the date and time in now()
-  private static final SimpleDateFormat SIMPLE_DATE_TIME_FORMAT = new SimpleDateFormat("yyyyMMdd-HH:mm:ss");
+  private static final SimpleDateFormat SIMPLE_DATE_TIME_FORMAT =
+      new SimpleDateFormat("yyyyMMdd-HH:mm:ss");
   
   /**
    * Create a new MonkeyRecorder that records commands and zips up screenshots for submittal
    * 
    * @param scriptName filepath of the monkey script we are running
    */
-  public MonkeyRecorder(String scriptName) throws IOException {
+  public MonkeyRecorder(String scriptName, String version) throws IOException {
     // Create directory structure to store xml file, images and zips
     File scriptFile = new File(scriptName);
     scriptName = scriptFile.getName();  // Get rid of path
@@ -111,7 +111,7 @@ public class MonkeyRecorder {
     
     // Initialize xml file
     mXmlFilename = stampFilename(stripType(scriptName) + ".xml");
-    initXmlFile(scriptName);
+    initXmlFile(scriptName, version);
   }
 
   // Get the current date and time in a simple string format (used for timestamping filenames)
@@ -123,14 +123,16 @@ public class MonkeyRecorder {
    * Initialize the xml file writer
    * 
    * @param scriptName filename (not path) of the monkey script, stored as attribute in the xml file
+   * @param version of the monkey runner test system
    */
-  private static void initXmlFile(String scriptName) throws IOException {
+  private static void initXmlFile(String scriptName, String version) throws IOException {
+    String[] names = new String[] { "script_name", "monkeyRunnerVersion" };
+    String[] values = new String[] { scriptName, version };
     mXmlFile = new FileWriter(mDirname + "/" + mXmlFilename);
     mXmlWriter = new XMLWriter(mXmlFile);
     mXmlWriter.begin();
     mXmlWriter.comment("Monkey Script Results");
-    mXmlWriter.start("script_run");
-    mXmlWriter.addAttribute("script_name", scriptName);
+    mXmlWriter.start("script_run", names, values, names.length);
   }
   
   /**
@@ -146,8 +148,7 @@ public class MonkeyRecorder {
    * Begin writing a command xml element
    */
   public static void startCommand() throws IOException {
-    mXmlWriter.start("command");
-    mXmlWriter.addAttribute("dateTime", now());
+    mXmlWriter.start("command", "dateTime", now());
   }
   
   /**
@@ -187,7 +188,7 @@ public class MonkeyRecorder {
   }
   
   /**
-   * Add an attribut to an xml element. name="escaped_value"
+   * Add an attribut to an open xml element. name="escaped_value"
    * 
    * @param name name of the attribute
    * @param value value of the attribute
@@ -253,20 +254,6 @@ public class MonkeyRecorder {
       return filename;
     return filename.substring(0, typeIndex);
   }
-  
-   /**
-   * Add a signature element
-   *
-   * @param filename path of file to be signatured
-   */
-   private static void addMD5Signature(String filename) throws IOException {
-      String signature = "";
-      // find signature... MD5 sig = new MD5(filename); signature = sig.toString();
-      String[] names = new String[] { "type", "filename", "signature" };
-      String[] values = new String[] { "md5", filename, signature };
-      mXmlWriter.tag("Signature", names, values, values.length);
-   }
- 
 
   /**
    * Close the monkeyRecorder by closing the xml file and zipping it up with the screenshots.
