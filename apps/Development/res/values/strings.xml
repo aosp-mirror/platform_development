@@ -172,4 +172,25 @@
     <string name="accounts_tester_edit_properties">Properties</string>
     <string name="accounts_tester_desired_authtokentype_label">authtoken type:</string>
     <string name="accounts_tester_desired_features_label">features:</string>
+
+    <!-- SyncAdapterDriver -->
+    <string name="bind_button">bind</string>
+    <string name="unbind_button">unbind</string>
+    <string name="start_sync_button">start sync</string>
+    <string name="cancel_sync_button">cancel sync</string>
+    <string name="sync_adapters_spinner_label">Registered Sync Adapters:</string>
+    <string name="status_starting_sync_format">Starting a sync of account %s...</string>
+    <string name="status_remote_exception_while_starting_sync">Got a RemoteException while starting the sync</string>
+    <string name="status_canceled_sync">Canceled the sync</string>
+    <string name="status_remote_exception_while_canceling_sync">Got a RemoteException while canceling the sync</string>
+    <string name="status_received_heartbeat">Received heartbeat</string>
+    <string name="status_sync_failed_format">Sync failed: %s</string>
+    <string name="status_sync_succeeded_format">Sync succeeded: %s</string>
+    <string name="status_already_bound">Already bound to sync adapter</string>
+    <string name="status_sync_adapter_not_selected">No selected sync adapter</string>
+    <string name="binding_connected_format">Connected to Sync Adapter\n\tauthority: %s\n\taccount type: %s</string>
+    <string name="binding_not_connected">Not connected to a sync adapter</string>
+    <string name="binding_bind_failed">Bind failed</string>
+    <string name="binding_waiting_for_connection">Waiting for service to be connected...</string>
+    <string name="select_account_to_sync">Select account to sync</string>
 </resources>
