@@ -424,6 +424,7 @@ final class AvdStartDialog extends GridDialog {
                 mSize2 = Integer.parseInt(m.group(2));
                 mSkinDisplay = skinName;
                 mEnableScaling = true;
+                return;
             }
         }
 
@@ -431,15 +432,18 @@ final class AvdStartDialog extends GridDialog {
         mEnableScaling = false; // default to false for now.
 
         // path to the skin layout file.
-        File skinFolder = new File(mSdkLocation, prop.get(AvdManager.AVD_INI_SKIN_PATH));
-        if (skinFolder.isDirectory()) {
-            File layoutFile = new File(skinFolder, "layout");
-            if (layoutFile.isFile()) {
-                if (parseLayoutFile(layoutFile)) {
-                    mSkinDisplay = String.format("%1$s (%2$dx%3$d)", skinName, mSize1, mSize2);
-                    mEnableScaling = true;
-                } else {
-                    mSkinDisplay = skinName;
+        String skinPath = prop.get(AvdManager.AVD_INI_SKIN_PATH);
+        if (skinPath != null) {
+            File skinFolder = new File(mSdkLocation, skinPath);
+            if (skinFolder.isDirectory()) {
+                File layoutFile = new File(skinFolder, "layout");
+                if (layoutFile.isFile()) {
+                    if (parseLayoutFile(layoutFile)) {
+                        mSkinDisplay = String.format("%1$s (%2$dx%3$d)", skinName, mSize1, mSize2);
+                        mEnableScaling = true;
+                    } else {
+                        mSkinDisplay = skinName;
+                    }
                 }
             }
         }
