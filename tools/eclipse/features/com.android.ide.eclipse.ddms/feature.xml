@@ -2,7 +2,7 @@
 <feature
       id="com.android.ide.eclipse.ddms"
       label="Android DDMS"
-      version="0.9.4.qualifier"
+      version="0.9.5.qualifier"
       provider-name="The Android Open Source Project">
 
    <description>
