@@ -1,114 +1,55 @@
+page.title=Welcome to Android
 home=true
 @jd:body
+<div style="float: left; width: 45%; font-size: 1.3em;">
+  <p>Here you can find the source code and information you need to build an
+  Android-compatible device.</p>
+  <p>Android is an open-source software stack for mobile devices, maintained by
+  the Android Open Source Project (AOSP). We believe that users deserve to have
+  the source code to the devices they use on a daily basis, that developers
+  deserve an open and level playing field, and that OEMs and carriers deserve
+  the freedom to create innovative devices. That's why we created Android, and
+  made its source code open.</p>
+  <p><a href="{@docRoot}about/index.html">Learn more &raquo;</a></p>
+</div>
+<div style="float: right; width: 35%;">
+<h3 style="padding-top: 0px;">News crap here</h3>
+<p>This is a test of the emergency broadcast system. This is only a test. Had
+this been an actual emergency, we would have fled in terror, and you would not
+have been informed.</p>
+</div>
+<img style="float: right; padding-right: 1.5em;" src="{@docRoot}images/home-bugdroid.png" alt="Android Mascot"/>
 
+<div style="clear: both;"/>
 
-	<div id="mainBodyFixed" align="top">
-              <div id="mainBodyLeft">			
-                   <h2>Android Open Source Project</h2>
-                   <!-- total max width is 520px -->
-                   <p> Android is the first free, open source, and fully customizable mobile platform. 
-                       Android offers a full stack: an operating system, middleware and key mobile applications.
-                       It also contains a rich set of APIs that allows third-party developers to develop great
-                       applications. </p>
-              </div><!-- end mainBodyLeft -->
+<table border="0" style="border: 0px; margin: 0px; padding: 0px;"><tr><td align="center" style="border: 0px; margin: 0px; padding: 0px;">
+<div class="rebox lil" style="float: left; width: 30%; margin: 1em;"> 
+  <h2 style="color: white; background-color: #95C0D0; border: 0px;">Get Involved</h2> 
+  <div class="p"> 
+    <p><img src="images/lil-wrench.png" alt="" style="margin: 1em;"
+    />Learn how you, for one, can help welcome our new Android overlords.</p> 
+    <p><a href="{@docRoot}source/index.html">More &raquo;</a></p> 
+  </div> 
+</div> 
 
-              <div id="mainBodyRight">
-                      <table id="rightColumn">
-                              <tr>
-                                      <td class="imageCell"><a href="{@docRoot}sdk/index.html"><img src="{@docRoot}assets/images/icon_download.jpg" style="padding:0" /></a></td>
-                                      <td>
-                                              <h2 class="green">Download</h2>
-                                              <p>The Android SDK has the tools, sample code, and docs you need to create great apps.  </p>
-                                              <p><a href="http://developer.android.com">Learn more &raquo;</a></p>
-                                      </td>
-                              </tr>
-                              <tr>
-                                      <td colspan="2"><div class="seperator">&nbsp;</div></td>
-                              </tr>
-                              <tr>
-                                      <td class="imageCell"><a href="http://www.android.com/market.html"><img src="{@docRoot}assets/images/icon_market.jpg" style="padding:0" /></a></td>
-                                      <td>
-                                              <h2 class="green">Publish</h2>
-                                              <p>Android Market is an open service that lets you distribute your apps to handsets.</p>
-                                              <p><a href="http://www.android.com/market.html">Learn more &raquo;</a></p>
-                                      </td>
-                              </tr>
-                              <tr>
-                                      <td colspan="2"><div class="seperator">&nbsp;</div></td>
-                              </tr>
+<div class="rebox lil" style="float: left; width: 30%; margin: 1em;"> 
+  <h2 style="color: white; background-color: #95C0D0; border: 0px;">Build a Device</h2> 
+  <div class="p"> 
+    <p><img src="images/lil-wrench.png" alt="" style="margin: 1em;"/>So,
+    you think you have what it takes to build an Android device? We'll see;
+    we'll see.</p> 
+    <p><a href="{@docRoot}porting/index.html">More &raquo;</a></p> 
+  </div> 
+</div> 
 
-                      </table>
-              </div>
-	</div>
+<div class="rebox lil" style="float: left; width: 30%; margin: 1em;"> 
+  <h2 style="color: white; background-color: #95C0D0; border: 0px;">Compatibility</h2> 
+  <div class="p"> 
+    <p><img src="images/lil-wrench.png" alt="" style="margin: 1em;"/>There's more to this than
+    just booting the Linux kernel. Don't be evil, be compatible.</p> 
+    <p><a href="{@docRoot}compatibility/index.html">More &raquo;</a></p> 
+  </div> 
+</div> 
+</td></tr></table>
 
-<!--[if lte IE 6]>
-  <style>
-    #arrow-left {
-      margin:0 0 0 5px;
-    }
-    #arrow-right {
-      margin-left:0;
-    }
-    .app-list-container {
-      margin: 37px 0 0 23px;
-    }
-    div#list-clip { 
-      width:468px;
-    }
-  </style>
-<![endif]-->
-
-<script type="text/javascript">
-
-// * -- carousel dictionary -- * //
-  /* layout:  imgLeft, imgRight, imgTop
-     icon:    image for carousel entry. cropped (height:70px, width:90px)
-     name:    string for carousel entry
-     img:     image for bulletin post. cropped (height: 170, width:230px)
-     title:   header for bulletin (optional, insert "" value to skip
-     desc:    the bulletin post. must include html tags. 
-  */
-
-  var droidList = {
-    'sdk': {
-      'layout':"imgLeft",
-      'icon':"sdk-small.png",
-      'name':"SDK 1.5 r3",
-      'img':"sdk-large.png",
-      'title':"Android 1.5 SDK",
-      'desc': "<p>Android 1.5 SDK is now available. It includes new APIs for Android 1.5, updated developer tools, multiple platform versions, and a Google APIs add-on.</p><p><a href='{@docRoot}sdk/1.5_r3/index.html'>Download Android 1.5 SDK &raquo;</a></p>"
-    },
-    
-    'io': {
-      'layout':"imgLeft",
-      'icon':"io-small.png",
-      'name':"Google I/O",
-      'img':"io-large.png",
-      'title':"Google I/O Developer Conference",
-      'desc': "<p>The Google I/O developer conference took place May 27-28 in San Francisco. If you missed the conference, you can experience the Android sessions by viewing YouTube videos.</p><p><a href='{@docRoot}videos/index.html'>See the sessions from Google I/O &raquo;</a></p>"
-    },
-
-    'mapskey': {
-      'layout':"imgLeft",
-      'icon':"maps-small.png",
-      'name':"Maps API Key",
-      'img':"maps-large.png",
-      'title':"Maps API Key",
-      'desc':"<p>If you're writing an Android application that uses Google Maps (with MapView), you must register your application to obtain a Maps API Key. Without the key, your maps application will not work on Android devices. Obtaining a key requires just a couple of steps.</p><p><a href='http://code.google.com/android/add-ons/google-apis/maps-overview.html'>Learn more &raquo;</a></p>"
-    },
-
-    'devphone': {
-      'layout':"imgLeft",
-      'icon':"devphone-small.png",
-      'name':"Dev Phone 1",
-      'img':"devphone-large.png",
-      'title':"Android Dev Phone 1",
-      'desc': "<p>Run and debug your Android applications directly on this device. Modify and rebuild the Android operating system, and flash it onto the phone. The Android Dev Phone 1 is carrier independent, and available for purchase by any developer registered with <a href='http://market.android.com/publish'>Android Market</a>.</p><p><a href='/guide/developing/device.html#dev-phone-1'>Learn more about the Android Dev Phone 1 &raquo;</a></p>"
-    }
-
-  }
-</script>
-<script type="text/javascript" src="{@docRoot}assets/carousel.js"></script>
-<script type="text/javascript">
-  initCarousel("sdk");
-</script>
+<div style="clear: both;"/>

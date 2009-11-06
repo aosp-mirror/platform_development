@@ -1,0 +1,67 @@
+page.title=Sensors
+pdk.version=1.0
+doc.type=porting
+@jd:body
+
+<div id="qv-wrapper">
+<div id="qv">
+<h2>In this document</h2>
+<a name="toc"/>
+<ul>
+<li><a href="#androidSensorsInterface">Interface</a></li>
+</ul>
+</div>
+</div>
+
+<p>Android defines a user space C abstraction interface for sensor hardware. The interface header is defined in 
+<code>hardware/libhardware/include/hardware/sensors.h</code>.
+In order to integrate sensors with Android you need to build a shared library that implements this interface. 
+
+The types of sensors currently supported by Android include:
+<ul>
+<li>Accelerometer</li>
+<li>Magnetic Field</li>
+<li>Orientation</li>
+<li>Gyroscope</li>
+<li>Light</li>
+<li>Pressure</li>
+<li>Temperature</li>
+<li>Proximity</li>
+</ul>
+</p> 
+ 
+<a name="androidSensorBuildingDriver"></a><h3>Building a Sensor Library</h3>
+<p> To implement a Sensors driver, create a shared library that implements the interface defined in <code>sensors.h</code>. You must name your shared library 
+<code>libsensors.so</code> so that it will get loaded from <code>/system/lib</code> at runtime. 
+</p>
+
+<p> The following stub file, <code>Android.mk</code>, ensures that <code>libsensors</code> compiles and links to the appropriate libraries:</p>
+
+<pre>
+LOCAL_PATH := $(call my-dir)
+include $(CLEAR_VARS)
+
+LOCAL_MODULE := sensors
+
+LOCAL_PRELINK_MODULE := false
+
+LOCAL_MODULE_PATH := $(TARGET_OUT_SHARED_LIBRARIES)/hw
+
+LOCAL_SHARED_LIBRARIES := liblog
+# include any shared library dependencies
+
+LOCAL_SRC_FILES := sensors.c
+
+include $(BUILD_SHARED_LIBRARY)
+</pre>
+ 
+<a name="androidSensorsInterface"></a><h3>Interface</h3> 
+ 
+ 
+<p><span class="lh3"><a name="androidDoxygenNote"></a></span> 
+ 
+<p class="note"><strong>Note</strong>: This document relies on some Doxygen-generated content that appears in an iFrame below. To return to the Doxygen default content for this page, <a href="sensors.html">click here</a>.</p> 
+ 
+ 
+<iframe onLoad="resizeDoxFrameHeight();" src="sensors_8h.html" scrolling="no" scroll="no" id="doxygen" marginwidth="0" marginheight="0" 
+frameborder="0" style="width:100%;"></iframe> 

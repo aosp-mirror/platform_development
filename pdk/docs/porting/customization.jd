@@ -1,0 +1,321 @@
+page.title=Customization
+pdk.version=1.0
+doc.type=porting
+@jd:body
+
+<div id="qv-wrapper">
+<div id="qv">
+<h2>In this document</h2>
+<a name="toc"/>
+<ul>
+<li><a href="#androidBootScreenCustomization">Boot Screen Customization</a></li>
+<li><a href="#androidNetCustPlat">Network Customization Platform</a></li>
+<li><a href="#androidCustomizingPre-LoadedApps">Customizing pre-loaded applications</a></li> 
+<li><a href="#androidBrowserBookmarks">Customizing browser bookmarks</a></li> 
+<li><a href="#androidEmailProviderCustomization">Email Provider Customization</a></li>
+<li><a href="#androidThemes">Platform Themes</a></li>
+</ul>
+</div>
+</div>
+
+
+ 
+<a name="androidBootScreenCustomization"></a><h3>Boot Screen Customization</h3> 
+ 
+<p>At startup, Android displays a splashscreen image while booting the device. Do the following if you wish to modify the default splash screen:</p> 
+<p> 
+<ol><li>Create a 320x480 image, <code>splashscreen.jpg</code> in this example.</li> 
+<li>Using ImageMagick, convert your .jpg file to .r format:
+<pre class="prettify"> 
+convert screen.jpg screen.r
+</pre> 
+</li> 
+<li>Use the rgb2565 application to convert the image to 565 format:
+<pre class="prettify"> 
+rgb2565 < screen.rgb > screen.565
+</pre> 
+</li> 
+<li>Use fastboot to flash the image to the device:
+<pre class="prettify"> 
+fastboot flash splash1 screen.565
+</pre> 
+</li> 
+</ol> 
+ 
+ 
+<a name="androidNetCustPlat"></a><h3>Network Customization Platform</h3> 
+ 
+ 
+ 
+<a name="androidNetCustPlatNetworkConfig"></a><h4>Network Configuration</h4> 
+ 
+<p>Android stores network configurations as a resource that gets compiled into binary at form at build time. The XML representation of this resource is located at <code>//android/frameworks/base/core/res/res/xml/apns.xml</code>. This file does not include any configured APNs. You should not modify this file, but instead configure APNs by product at build time (see Build-time APN Configuration below).</p> 
+<p>Each network configuration is stored in an XML element following this syntax:</p> 
+<pre class="prettify"> 
+&lt;apn carrier="T-Mobile US"
+         mcc="310"
+         mnc="260"
+         apn=" wap.voicestream.com"
+         user="none"
+         server="*"
+         password="none"
+         proxy=" 216.155.165.50"
+         port="8080"
+         mmsc="http://216.155.174.84/servlets/mms"
+/&gt;
+</pre> 
+ 
+ 
+<a name="androidNetCustPlatAPNConfig"></a><h4>Build-time APN configuration</h4> 
+ 
+<p>To set the APN configuration for a particular product target, add an <code>apns-conf.xml</code> file to the product configuration (do not modify the default platform APNs). This allows multiple products, all with different APNs, to be built off the same code base.  </p> 
+ 
+<p>To configure APNs at the product level, add a line to the product configuration file like the example below (<code>vendor/&lt;vendor_name&gt;/products/myphone-us.mk</code>): </p> 
+ 
+<pre class="prettify"> 
+PRODUCT_COPY_FILES := vendor/acme/etc/apns-conf-us.xml:system/etc/apns-conf.xml
+</pre> 
+ 
+ 
+ 
+<a name="androidNetCustPlatAPNRunTime"></a><h4>APN configuration at run time</h4> 
+ 
+<p>At runtime, the Android reads APNs from the following file:</p> 
+<pre class="prettify"> 
+system/etc/apns-conf.xml
+</pre> 
+ 
+<p>Android supports the following run-time network configuration methods to choose the appropriate APN from the list of configured APNs:</p> 
+<p><ul> 
+<li><b>Automatic Configuration</b>: At boot time, Android determines the correct network configuration based on the MCC and MNC from the SIM card and automatically configure all network settings.</li> 
+<li><b>Manual Configuration</b>: The platform will also support runtime (user) manual selection of network settings by name, for example, "Company Name US," and will support manual network configuration entry.</li> 
+<li><b>WAP / SMS Push Configuration</b>: The network configurations are standard Android resources. You can upgrade a resource at runtime by installing a new system resource APK package. It will be possible to develop a network configuration service which listens to a specific binary SMS port for binary SMS messages containing the network configurations.  NOTE: The implementation will likely be network operator dependent due to inconsistent SMS ports, binary SMS formats, etc.</li> 
+</ul> 
+ 
+ 
+ 
+ 
+<a name="androidCustomizingPre-LoadedApps"></a><h3>Customizing pre-loaded applications</h3> 
+ 
+<p>To customize the list of Android packages for a particular product (applications, input methods, providers, services, etc.), set <code>PRODUCT_PACKAGES</code> property in the product configuration, as illustrated below:</p> 
+ 
+<pre class="prettify"> 
+PRODUCT_PACKAGES := \
+ &lt;company_name&gt;Mail \
+    &lt;company_name&gt;IM \
+ &lt;company_name&gt;HomeScreen \
+ &lt;company_name&gt;Maps \
+ &lt;company_name&gt;SystemUpdater
+</pre> 
+ 
+<p>Package names should correspond to the <code>LOCAL_PACKAGE_NAME</code> specified for each package's build target. For example, the <code>Android.mk</code> build target for &lt;company_name&gt;Mail, referenced above, could look like this:
+ 
+<pre class="prettify"> 
+# Build the &lt;company_name&gt;Mail application
+LOCAL_PATH:= $(call my-dir)
+include $(CLEAR_VARS)
+ 
+LOCAL_MODULE_TAGS := user development
+ 
+LOCAL_SRC_FILES := $(call all-java-files-under,src,tests)
+ 
+LOCAL_STATIC_JAVA_LIBRARIES := &lt;company_name&gt;login-client
+ 
+# Specify the package name
+LOCAL_PACKAGE_NAME := &lt;company_name&gt;Mail
+ 
+# Specify the certificate used to sign the application
+LOCAL_CERTIFICATE := vendor/&lt;company_name&gt;/certs/app
+ 
+include $(BUILD_PACKAGE)
+ 
+# Build the login client static library
+include $(LOCAL_PATH)/client/Android.mk
+</pre> 
+ 
+<p>Note that the home screen is just an Android application that can be replaced entirely or customized by changing source code and application resources (Java source, layouts, etc.).</p> 
+ 
+ 
+ 
+<a name="androidBrowserBookmarks"></a><h3>Customizing browser bookmarks</h3> 
+ 
+<p>Browser bookmarks are stored as string resources in the Browser application: <code>//android/packages/apps/Browser/res/values/strings.xml</code>.  Bookmarks are defined as simple value string arrays called &quot;bookmarks&quot;.  Each bookmark entry is stored as a pair of array values; the first represents the bookmark name and the second the bookmark URL.  For example:</p> 
+<pre class="prettify"> 
+&lt;!-- Bookmarks --&gt;
+&lt;string-array name=&quot;bookmarks&quot;&gt;
+    &lt;item&gt;Google&lt;/item&gt;
+    &lt;item&gt;http://www.google.com/&lt;/item&gt;
+    &lt;item&gt;Yahoo!&lt;/item&gt;
+    &lt;item&gt;http://www.yahoo.com/&lt;/item&gt;
+    &lt;item&gt;MSN&lt;/item&gt;
+    &lt;item&gt;http://www.msn.com/&lt;/item&gt;
+    &lt;item&gt;MySpace&lt;/item&gt;
+    &lt;item&gt;http://www.myspace.com/&lt;/item&gt;
+    &lt;item&gt;Facebook&lt;/item&gt;
+    &lt;item&gt;http://www.facebook.com/&lt;/item&gt;
+    &lt;item&gt;Wikipedia&lt;/item&gt;
+    &lt;item&gt;http://www.wikipedia.org/&lt;/item&gt;
+    &lt;item&gt;eBay&lt;/item&gt;
+    &lt;item&gt;http://www.ebay.com/&lt;/item&gt;
+    &lt;item&gt;CNN&lt;/item&gt;
+    &lt;item&gt;http://www.cnn.com/&lt;/item&gt;
+    &lt;item&gt;New York Times&lt;/item&gt;
+    &lt;item&gt;http://www.nytimes.com/&lt;/item&gt;
+    &lt;item&gt;ESPN&lt;/item&gt;
+    &lt;item&gt;http://espn.go.com/&lt;/item&gt;
+    &lt;item&gt;Amazon&lt;/item&gt;
+    &lt;item&gt;http://www.amazon.com/&lt;/item&gt;
+    &lt;item&gt;Weather Channel&lt;/item&gt;
+    &lt;item&gt;http://www.weather.com/&lt;/item&gt;
+    &lt;item&gt;BBC&lt;/item&gt;
+    &lt;item&gt;http://www.bbc.co.uk/&lt;/item&gt;
+&lt;/string-array&gt;
+</pre> 
+<p>Like and Android application resource, the platform will load alternate resources based on the platform configuration values.  See <a href="http://developer.android.com/guide/topics/resources/resources-i18n.html">Resources and Internationalization</a> in the Android SDK for details.  To configure bookmarks for a specific mobile network operator, place your customized bookmarks in a separate <code>strings.xml</code> file and place it under a Mobile Network Code (MNO) specific resource folder.  For example, <code>Browser/res/values-mccXXX-mncYYY/strings.xml</code> where XXX and YYY represent the three-digit MCC and two to three digit MNC values.</p> 
+<p>Android loads any configuration-specific resources as override values for the default values, so it is only necessary to include the bookmarks string-array values in this file.</p> 
+ 
+ 
+ 
+<a name="androidEmailProviderCustomization"></a>
+<h3>Email Provider Customization</h3> 
+ 
+<p>The default email provider settings are stored as string resources in the Email application (<code>//android/packages/apps/Email/res/xml/providers.xml</code>) as illustrated below.</p> 
+<p>&lt;providers&gt;</p> 
+<pre class="prettify"> 
+&lt;!-- Gmail variants --&gt;
+    &lt;provider id=&quot;gmail&quot; label=&quot;Gmail&quot; domain=&quot;gmail.com&quot;&gt;
+        &lt;incoming uri=&quot;imap+ssl+://imap.gmail.com&quot; username=&quot;$email&quot;/&gt;
+        &lt;outgoing uri=&quot;smtp+ssl+://smtp.gmail.com&quot; username=&quot;$email&quot;/&gt;
+    &lt;/provider&gt;
+    &lt;provider id=&quot;googlemail&quot; label=&quot;Google Mail&quot; domain=&quot;googlemail.com&quot;&gt;
+        &lt;incoming uri=&quot;imap+ssl+://imap.googlemail.com&quot; username=&quot;$email&quot;/&gt;
+        &lt;outgoing uri=&quot;smtp+ssl+://smtp.googlemail.com&quot; username=&quot;$email&quot;/&gt;
+    &lt;/provider&gt;
+    &lt;provider id=&quot;google&quot; label=&quot;Google&quot; domain=&quot;google.com&quot;&gt;
+        &lt;incoming uri=&quot;imap+ssl+://imap.gmail.com&quot; username=&quot;$email&quot;/&gt;
+        &lt;outgoing uri=&quot;smtp+ssl+://smtp.gmail.com&quot; username=&quot;$email&quot;/&gt;
+    &lt;/provider&gt;
+    &lt;provider id=&quot;android&quot; label=&quot;Android&quot; domain=&quot;android.com&quot;&gt;
+        &lt;incoming uri=&quot;imap+ssl+://imap.gmail.com&quot; username=&quot;$email&quot;/&gt;
+        &lt;outgoing uri=&quot;smtp+ssl+://smtp.gmail.com&quot; username=&quot;$email&quot;/&gt;
+    &lt;/provider&gt;</p> 
+ 
+    &lt;!-- Common US providers --&gt;
+    
+    &lt;provider id=&quot;aim&quot; label=&quot;AIM&quot; domain=&quot;aim.com&quot;&gt;
+        &lt;incoming uri=&quot;imap://imap.aim.com&quot; label=&quot;IMAP&quot; username=&quot;$email&quot;/&gt;
+        &lt;outgoing uri=&quot;smtp://smtp.aim.com:587&quot; username=&quot;$email&quot;/&gt;
+    &lt;/provider&gt;
+    &lt;provider id=&quot;aol&quot; label=&quot;AOL&quot; domain=&quot;aol.com&quot;&gt;
+        &lt;incoming uri=&quot;imap://imap.aol.com&quot; label=&quot;IMAP&quot; username=&quot;$email&quot;/&gt;
+        &lt;outgoing uri=&quot;smtp://smtp.aol.com:587&quot; username=&quot;$email&quot;/&gt;
+    &lt;/provider&gt;
+    &lt;provider id=&quot;comcast&quot; label=&quot;Comcast&quot; domain=&quot;comcast.net&quot;&gt;
+        &lt;incoming uri=&quot;pop3+ssl+://mail.comcast.net&quot; username=&quot;$user&quot;/&gt;
+        &lt;outgoing uri=&quot;smtp+ssl+://smtp.comcast.net&quot; username=&quot;$user&quot;/&gt;
+    &lt;/provider&gt;
+    &lt;provider id=&quot;compuserve&quot; label=&quot;CompuServe&quot; domain=&quot;cs.com&quot;&gt;
+        &lt;incoming uri=&quot;imap://imap.cs.com&quot; username=&quot;$user&quot;/&gt;
+        &lt;outgoing uri=&quot;smtp://smtp.cs.com&quot; username=&quot;$user&quot;/&gt;
+    &lt;/provider&gt;
+    &lt;provider id=&quot;dotmac&quot; label=&quot;.Mac&quot; domain=&quot;mac.com&quot;&gt;
+        &lt;incoming uri=&quot;imap+tls://mail.mac.com&quot; username=&quot;$email&quot;/&gt;
+        &lt;outgoing uri=&quot;smtp+tls://smtp.mac.com&quot; username=&quot;$email&quot;/&gt;
+    &lt;/provider&gt;
+    &lt;provider id=&quot;earthlink&quot; label=&quot;Earthlink&quot; domain=&quot;earthlink.net&quot;&gt;
+        &lt;incoming uri=&quot;pop3://pop.earthlink.net&quot; username=&quot;$email&quot;/&gt;
+        &lt;outgoing uri=&quot;smtp://smtpauth.earthlink.net:587&quot; username=&quot;$email&quot;/&gt;
+    &lt;/provider&gt;
+    &lt;provider id=&quot;juno&quot; label=&quot;Juno&quot; domain=&quot;juno.com&quot;&gt;
+        &lt;incoming uri=&quot;pop3://pop.juno.com&quot; username=&quot;$user&quot;/&gt;
+        &lt;outgoing uri=&quot;smtp://smtp.juno.com&quot; username=&quot;$user&quot;/&gt;
+    &lt;/provider&gt;
+    &lt;provider id=&quot;live&quot; label=&quot;Windows Live Hotmail Plus&quot; domain=&quot;live.com&quot; note=&quot;@string/provider_note_live&quot;&gt;
+        &lt;incoming uri=&quot;pop3+ssl+://pop3.live.com&quot; username=&quot;$email&quot;/&gt;
+        &lt;outgoing uri=&quot;smtp+tls+://smtp.live.com&quot; username=&quot;$email&quot;/&gt;
+    &lt;/provider&gt;
+    &lt;provider id=&quot;hotmail&quot; label=&quot;Windows Live Hotmail Plus&quot; domain=&quot;hotmail.com&quot; note=&quot;@string/provider_note_live&quot;&gt;
+        &lt;incoming uri=&quot;pop3+ssl+://pop3.live.com&quot; username=&quot;$email&quot;/&gt;
+        &lt;outgoing uri=&quot;smtp+tls+://smtp.live.com&quot; username=&quot;$email&quot;/&gt;
+    &lt;/provider&gt;
+    &lt;provider id=&quot;msn&quot; label=&quot;Windows Live Hotmail Plus&quot; domain=&quot;msn.com&quot; note=&quot;@string/provider_note_live&quot;&gt;
+        &lt;incoming uri=&quot;pop3+ssl+://pop3.live.com&quot; username=&quot;$email&quot;/&gt;
+        &lt;outgoing uri=&quot;smtp+tls+://smtp.live.com&quot; username=&quot;$email&quot;/&gt;
+    &lt;/provider&gt;
+    &lt;provider id=&quot;mobileme&quot; label=&quot;MobileMe&quot; domain=&quot;me.com&quot;&gt;
+        &lt;incoming uri=&quot;imap+tls://mail.me.com&quot; username=&quot;$email&quot;/&gt;
+        &lt;outgoing uri=&quot;smtp+tls://smtp.me.com&quot; username=&quot;$email&quot;/&gt;
+    &lt;/provider&gt;
+    &lt;provider id=&quot;netzero&quot; label=&quot;NetZero&quot; domain=&quot;netzero.com&quot;&gt;
+        &lt;incoming uri=&quot;pop3://pop.netzero.com&quot; username=&quot;$user&quot;/&gt;
+        &lt;outgoing uri=&quot;smtp://smtp.netzero.com&quot; username=&quot;$user&quot;/&gt;
+    &lt;/provider&gt;
+    &lt;provider id=&quot;sbcglobal&quot; label=&quot;SBC Global&quot; domain=&quot;sbcglobal.net&quot;&gt;
+        &lt;incoming uri=&quot;pop3://pop.sbcglobal.yahoo.com&quot; username=&quot;$email&quot;/&gt;
+        &lt;outgoing uri=&quot;smtp://smtp.sbcglobal.yahoo.com&quot; username=&quot;$email&quot;/&gt;
+    &lt;/provider&gt;
+    &lt;provider id=&quot;verizon&quot; label=&quot;Verizon&quot; domain=&quot;verizon.net&quot;&gt;
+        &lt;incoming uri=&quot;pop3://incoming.verizon.net&quot; username=&quot;$user&quot;/&gt;
+        &lt;outgoing uri=&quot;smtp://outgoing.verizon.net&quot; username=&quot;$user&quot;/&gt;
+    &lt;/provider&gt;
+    &lt;provider id=&quot;yahoo&quot; label=&quot;Yahoo Plus&quot; domain=&quot;yahoo.com&quot; note=&quot;@string/provider_note_yahoo&quot;&gt;
+        &lt;incoming uri=&quot;pop3+ssl+://plus.pop.mail.yahoo.com&quot; username=&quot;$user&quot;/&gt;
+        &lt;outgoing uri=&quot;smtp+ssl+://plus.smtp.mail.yahoo.com&quot; username=&quot;$user&quot;/&gt;
+    &lt;/provider&gt;
+  
+    &lt;!-- Common UK providers --&gt;
+    
+    &lt;provider id=&quot;aol-uk&quot; label=&quot;AOL&quot; domain=&quot;aol.co.uk&quot;&gt;
+        &lt;incoming uri=&quot;imap+ssl+://imap.uk.aol.com&quot; label=&quot;IMAP&quot; username=&quot;$user&quot;/&gt;
+        &lt;outgoing uri=&quot;smtp+ssl+://smtp.uk.aol.com&quot; username=&quot;$user&quot;/&gt;
+    &lt;/provider&gt;
+    &lt;provider id=&quot;bt&quot; label=&quot;BT Internet&quot; domain=&quot;btinternet.com&quot;&gt;
+        &lt;incoming uri=&quot;pop3://mail.btinternet.com&quot; username=&quot;$email&quot;/&gt;
+        &lt;outgoing uri=&quot;smtp://mail.btinternet.com&quot; username=&quot;&quot;/&gt;
+    &lt;/provider&gt;
+    &lt;provider id=&quot;tiscali&quot; label=&quot;Tiscali&quot; domain=&quot;tiscali.co.uk&quot;&gt;
+        &lt;incoming uri=&quot;pop3://pop.tiscali.co.uk&quot; username=&quot;$email&quot;/&gt;
+        &lt;outgoing uri=&quot;smtp://smtp.tiscali.co.uk&quot; username=&quot;$email:wq&quot;/&gt;
+    &lt;/provider&gt;
+    &lt;provider id=&quot;yahoo-uk&quot; label=&quot;Yahoo&quot; domain=&quot;yahoo.co.uk&quot; note=&quot;@string/provider_note_yahoo_uk&quot;&gt;
+        &lt;incoming uri=&quot;pop3+ssl+://pop.mail.yahoo.co.uk&quot; username=&quot;$user&quot;/&gt;
+        &lt;outgoing uri=&quot;smtp+ssl+://smtp.mail.yahoo.co.uk&quot; username=&quot;$user&quot;/&gt;
+    &lt;/provider&gt;
+    
+    &lt;!-- Common Germany providers --&gt;
+    
+    &lt;provider id=&quot;freenet&quot; label=&quot;Freenet&quot; domain=&quot;freenet.de&quot;&gt;
+        &lt;incoming uri=&quot;pop3://mx.freenet.de&quot; username=&quot;$user&quot;/&gt;
+        &lt;outgoing uri=&quot;smtp+ssl://mx.freenet.de&quot; username=&quot;$email&quot;/&gt;
+    &lt;/provider&gt;
+    &lt;provider id=&quot;gmx&quot; label=&quot;GMX&quot; domain=&quot;gmx.de&quot;&gt;
+        &lt;incoming uri=&quot;pop3+tls://pop.gmx.net&quot; username=&quot;$email&quot;/&gt;
+        &lt;outgoing uri=&quot;smtp+tls://mail.gmx.net&quot; username=&quot;$email&quot;/&gt;
+    &lt;/provider&gt;
+    &lt;provider id=&quot;T-Online&quot; label=&quot;T-Online&quot; domain=&quot;t-online.de&quot; note=&quot;@string/provider_note_t_online&quot;&gt;
+        &lt;incoming uri=&quot;pop3://popmail.t-online.de&quot; username=&quot;$email&quot;/&gt;
+        &lt;outgoing uri=&quot;smtp://smtpmail.t-online.de&quot; username=&quot;$email&quot;/&gt;
+    &lt;/provider&gt;
+    &lt;provider id=&quot;web.de&quot; label=&quot;Web.de&quot; domain=&quot;web.de&quot;&gt;
+        &lt;incoming uri=&quot;pop3+tls://pop3.web.de&quot; username=&quot;$user&quot;/&gt;
+        &lt;outgoing uri=&quot;smtp+tls://smtp.web.de&quot; username=&quot;$user&quot;/&gt;
+    &lt;/provider&gt;
+&lt;/providers&gt;
+</pre> 
+<p>As with all Android application resources, the platform will load alternate resources based on the platform configuration values.  See <a href="http://developer.android.com/guide/topics/resources/resources-i18n.html">Resources and Internationalization</a> in the Android SDK for details.  To configure email providers for a specific mobile network operator, place the customized providers in a separate <code>providers.xml</code> file and place it under  a Mobile Network Code (MNO) specific resource folder.  For example, <code>Email/res/xml-mccXXX-mncYYY/providers.xml</code> where XXX and YYY represent the three-digit MCC and two to three digit MNC values.</p> 
+ 
+ 
+ 
+<a name="androidThemes"></a><h3>Platform Themes</h3> 
+ 
+ 
+ 
+<a name="androidThemesStyles"></a><h4>Themes and Styles</h4> 
+ 
+<p>System level styles are defined in <code>//android/framework/base/core/res/res/values/styles.xml</code>.</p> 
+ 
+ 
+<a name="androidThemesAnimations"></a><h4>Animations</h4> 
+ 
+<p>Android supports configurable animations for window and view transitions.  System-level animations are defined in XML in global resource files located in <code>//android/framework/base/core/res/res/anim/</code>.</p> 
+ 

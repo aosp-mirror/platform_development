@@ -5,23 +5,17 @@ function nothing() {}
 </script>
 
 <ul>
-  <li> <h2>Program Details </h2>
-  <ul>
-    <li><a href="">Program Overview</a></li>
-    <li><a href="">Getting Started</a></li>
-    <li><a href="">Contact Us</a></li>
-  </ul>
-  </li>
+  <li><h2>Getting Started</h2><ul>
+    <li><a href="<?cs var:toroot ?>compatibility/overview.html">Compatibility Overview</a></li>
+    <li><a href="">Current CDD</a></li>
+    <li><a href="<?cs var:toroot ?>compatibility/cts-intro.html">CTS Introduction</a></li>
+  </ul></li>
 
-  <li> <h2>Compatibility Tools </h2>
-  <ul>
-    <li><a href="">Compatibility Definition</a></li>
-    <li><a href="">Compatibility Test Suite</a></li>
-    <li><a href="">Compatibility FAQ</a></li>
-    <li><a href="">Downloads</a></li>
-  </ul>
-  </li>
-
+  <li><h2>More Information</h2><ul>
+    <li><a href="<?cs var:toroot ?>downloads/index.html">Downloads</a></li>
+    <li><a href="<?cs var:toroot ?>compatibility/faq.html">FAQ</a></li>
+    <li><a href="<?cs var:toroot ?>compatibility/contact-us.html">Contact Us</a></li>
+  </ul></li>
 </ul>
 
 <script type="text/javascript">

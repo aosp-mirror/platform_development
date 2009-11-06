@@ -1,0 +1,128 @@
+page.title=Getting Source Code
+pdk.version=1.0
+doc.type=porting
+@jd:body
+
+<a name="toc"/>
+<div style="padding:10px">
+<a href="#androidSourceSetupBuildGitSetup">Introduction</a><br/>
+<a href="#androidSourceSetupBuildGitSetupInstall">Installing and Configuring Git</a><br/>
+<a href="#androidSourceSetupBuildGitSetupServer">Establishing Server Access</a><br/><div style="padding-left:40px">
+
+<a href="#androidSourceSetupBuildGitSetupServerRSAKeys">Generating RSA Keys</a><br/>
+<a href="#androidSourceSetupBuildGitSetupServerVerifyConnection">Verifying a Connection to the Git Server</a><br/></div>
+<a href="#androidSourceSetupGetCode">Downloading Code</a><br/>
+<a href="#androidSourceSetupExtractingPatch">Extracting an Android Patch</a><br/></div>
+
+<a name="androidSourceSetupBuildGitSetup"></a><h2>Introduction</h2>
+
+<p>Android relies on Git, a version control system, to install the Android platform. You will need to install Git 1.5.2 or greater in order to access the source tree. Please visit <a href="http://git.or.cz/">http://git.or.cz/</a> for more information regarding Git.</p>
+<p>Git permits you to control access to working directories, and we recommend that you use it to limit Android repository access to only a few people within your organization (please refer to your Google NDA for potential contractual restraints on sharing Android source access). </p>
+<p>You may clone Google's repository to a local copy for sharing internally (see Git documentation for details).</p>
+
+
+<a name="androidSourceSetupBuildGitSetupInstall"></a><h2>Installing and Configuring Git</h2>
+
+<p>To install the Git package, execute:</p>
+<pre class="prettyprint">
+% sudo apt-get install git-core
+</pre>
+
+
+<a name="androidSourceSetupBuildGitSetupServer"></a><h2>Establishing Server Access</h2>
+
+<p>Once Git is cleanly installed, you need to establish a connection with Google's Git server, a connection that requires an RSA key in order to authenticate requests.</p>
+
+
+<a name="androidSourceSetupBuildGitSetupServerRSAKeys"></a><h3>Generating RSA Keys</h3>
+
+<p>Each developer must have a unique RSA key in order to access Android source code. To generate an RSA key: </p>
+<p>
+<ol>
+<li>Type:<br/>
+<pre class="prettyprint">% ssh-keygen -t rsa -C  email@domain.com</pre><br/>
+You must use a valid email address to create your key.</li>
+<li>When prompted, indicate the file to which you wish to write your key (<code>id_rsa</code> in this example).</li>
+<li>When prompted, associate a passphrase with your key.</li>
+<li>Upon success, you should have two files saved to the designated directory:  </li>
+<ul>
+  <li><code>id_rsa</code>: This file contains the private half of your RSA key. You shouldn't share this file with anyone. </li>
+  <li><code>id_rsa.pub</code>: This is the public half or your RSA key and you should send it to your Google technical account manager.</li>
+  </ul>
+</ol>
+</p>
+<p>Send your Google Account Manager your public key file in order to establish Git server access. </p>
+
+
+<a name="androidSourceSetupBuildGitSetupServerVerifyConnection"></a><h3>Verifying a Connection to the Git Server</h3>
+
+<p>Once you have generated an RSA key and shared the public file with Google, you can test your connection with the Git server with the following command:</p>
+<pre class="prettyprint">
+% ssh  android-git.ext.google.com
+</pre>
+
+<p>You should receive one of the following results:</p>
+
+<table border=1 cellpadding=2 cellspacing=0>
+ <tbody><tr>
+  <th scope="col">Result</th>
+  <th scope="col">Cause</th>
+  <th  scope="col">Action</th>
+ </tr>
+  <tr>
+    <td>
+<code>fatal: What do you think I am? A shell?<BR>
+Connection to android-git closed.</code>
+</pre>	</td>
+    <td>Success</td>
+    <td>None. You successfully connected to the Git server. (You should not have shell access and it's expected to receive this error.)</td>
+  </tr>
+  <tr>
+    <td>ssh hangs and eventually times out. </td>
+    <td>Your setup is failing to locate and establish a basic connection. </td>
+    <td>Google needs to debug network settings. </td>
+  </tr>
+  <tr>
+    <td>Error: Permission denied &lt;public key&gt; </td>
+    <td>Either you are not using the matching username or the RSA private key does not match the public key. </td>
+    <td>Try executing:<BR> 
+	<code>
+% ssh $USER@android-
+  git.ext.google.com
+</code></td>
+  </tr>
+</table>
+
+
+<a name="androidSourceSetupGetCode"></a><h2>Downloading Code</h2>
+
+<p>Android source code is maintained in two repositories: <code>device</code> and <code>kernel</code>. The <code>device</code> repository includes the Android framework (things like the Activity Manager, Window Manager, Telephony Manager, View System, etc.). The <code>kernel</code> repository includes the core code necessary to run the operating system (things like the Display Driver, Camera Driver, Keypad Driver, Power Management, etc.). (Please see <a href="http://code.google.com/android/what-is-android.html">What is Android?</a> for details.)</p>
+
+<p>Save device and kernel code at the same directory level, for example:</p>
+<p>
+<ul><li><code>/home/joe/android/device</code></li>
+<li><code>/home/joe/android/kernel</code></li>
+</ul></p>
+<p><b>Device Code</b></p>
+<p>To download device code, you need your username and a unique <code>&lt;path&gt;</code> string supplied by Google to execute the following:</p>
+<pre class="prettyprint">
+% git-clone $USER@android-git.ext.google.com:&lt;path&gt;/device.git
+</pre>
+
+<p><b>Kernel Code</b></p>
+<p>To download kernel code, you need your username and a unique <code>&lt;path&gt;</code> string supplied by Google to execute the following:</p>
+<pre class="prettyprint">
+% git-clone $USER@android-git.ext.google.com:&lt;path&gt;/kernel.git
+</pre>
+ 
+
+
+<a name="androidSourceSetupExtractingPatch"></a><h2>Extracting an Android Patch</h2>
+
+<p>You likely already have Linux running on your platform and only need to integrate Android-specific changes. The following directions describe how to extract an Android patch.</p>
+<ol>
+  <li>Download a generic version  of the Linux kernel that matches the Linux version downloaded with the Android Kernel code.</li>
+  <li>Run <code>diff</code> on the two kernel packages to get Android-specific changes.</li>
+  <li>Apply the patch to your target kernel and build.</li>
+</ol>
+

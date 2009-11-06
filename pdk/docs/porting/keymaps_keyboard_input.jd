@@ -1,0 +1,504 @@
+page.title=Keymaps and Keyboard Input
+pdk.version=1.0
+doc.type=porting
+@jd:body
+
+
+<div id="qv-wrapper">
+<div id="qv">
+<h2>In this document</h2>
+<a name="toc"/>
+<ul>
+<li><a href="#androidKeymapFunctionality">Functionality</a></li>
+<li><a href="#androidKeymapKeyLayoutMapTitle">Key Layout Map</a></li>
+<li><a href="#androidKeymapKeyCharMap">Key Character Map</a></li>
+<li><a href="#androidKeymapDriverTemplate">Implementing Your Own Driver (Driver Template)</a></li>
+<li><a href="#androidKeymapKeyCharMapSampleImplementation">Sample Implementation</a></li>
+</ul>
+</div>
+</div>
+
+<p>This document describes how keyboard input gets translated into Android actions and how you can customize key layout and key character maps to match the needs of your own device. </p>
+<p>Android uses the standard Linux input event device (<code>/dev/event0</code>) and driver as described in the <code>linux/input.h</code> kernel header file. For more information regarding standard Linux input drivers, please see <a href="http://git.kernel.org/?p=linux/kernel/git/stable/linux-2.6.24.y.git;a=blob;f=Documentation/input/input.txt">Linux Input drivers</a> at <a href="http://kernel.org">http://kernel.org</a>.</p>
+
+
+
+
+<a name="androidKeymapFunctionality"></a><h3>Functionality</h3>
+
+<p>Android's input event device is structured around an interrupt or polling routine that captures the device-specific scancode and converts it to a standard form acceptable to Linux (as defined in <code>input.h</code>) before passing it to the kernel with <code>input_event()</code>.</p>
+<p>The keymap driver's other primary function is to establish a probe function that sets up the interrupt or polling function, handles hardware initialization, and attaches the driver to the input subsystem with <code>input_register_device()</code>.</p>
+<p>The table below describes the steps required to translate from keyboard input to application action: </p>
+<table border=1>
+    <tbody><tr>
+      <th scope="col">Step</th>
+        <th scope="col">Action</th>
+        <th scope="col">Explanation</th>
+    </tr>
+	<tr>
+	  <td>1.</td>
+	  <td>Window manager reads key event from Linux keyboard driver. </td>
+	  <td>Events are typically positional. For example, the top-left position on a keypad returns 16 regardless of whether that key is printed with a Q (as on a QWERTY keypad) or an A (as on an AZERTY keypads). This first conversion by the Linux Keyboard Driver yields a scancode (for example, 16).</td>
+	</tr>
+	<tr>
+	  <td>2. </td>
+	  <td>Window manager maps scancode to keycode.</td>
+	  <td>When the window manager reads a key event out of the driver, it maps the scancode to a keycode using a key layout map file. Typically, the keycode is the primary symbol screen-printed on a key. For example, <code>KEYCODE_DPAD_CENTER</code> is the center button on the five-way navigation control. Even though ALT + G generates a &quot;?&quot; character, <code>KEYCODE_G</code> is the keycode.</td>
+	  </tr>
+	<tr>
+	  <td>3. </td>
+	  <td>Window manager  sends both the scancode and the keycode to the application.</td>
+	  <td>Both the scancode and keycode are handled by the view with focus. 
+  How the application interprets both depend on the application.</td>
+	  </tr>
+</tbody>
+</table>
+
+
+<a name="androidKeymapKeyLayoutMapTitle"></a><h3>Key Layout Map</h3>
+
+
+
+<a name="androidKeymapKeyLayoutMapSelection"></a><h4>Selection of a Key Layout Map</h4>
+
+<p>Key layout maps are installed in <code>/system/usr/keylayout</code> and <code>/data/usr/keylayout</code>.</p>
+<p>For each keyboard device xxx, set the <code>android.keylayout.xxx</code> system property (see <a href="build_new_device.html">Building New Device</a> for help setting system properties). If you don't specify a keylayout file, Android will default to <code>/system/usr/keylayout/qwerty.kl</code>.</p>
+
+
+<a name="androidKeymapKeyLayoutMapFileFormat"></a><h4>File Format</h4>
+
+<p>Key layout maps are stored on the device as UTF-8 text files and have the following characteristics:</p>
+<p><ul>
+<li>Comments: The pound symbol (#) denotes a comment and everything after the pound symbol on a line is ignored.</li>
+<li>Whitespace: All empty lines are ignored.</li>
+<li>Key definitions: Key definitions follow the syntax <code>key SCANCODE KEYCODE [FLAGS...]</code>, where <code>SCANCODE</code> is a number, <code>KEYCODE</code> is defined in your specific keylayout file (<code>android.keylayout.xxx</code>), and potential <code>FLAGS</code> are defined as follows:
+<ul><li>SHIFT: While pressed, the shift key modifier is set</li>
+<li>ALT: While pressed, the alt key modifier is set</li>
+<li>CAPS: While pressed, the caps lock key modifier is set</li>
+<li>WAKE: When this key is pressed while the device is asleep, the device will wake up and the key event gets sent to the app.</li>
+<li>WAKE_DROPPED: When this key is pressed while the device is asleep, the device will wake up and the key event does not get sent to the app.</li>
+</ul>
+</li>
+</ul>
+</p>
+
+
+<a name="androidKeymapKeyLayoutMapExample"></a><h4>Example of a Key Layout Map File</h4>
+
+<p>The following code comes from  <code>android/src/device/product/generic/tuttle2.kl</code> and is an example of a complete key layout file:</p>
+<pre class="prettify">
+# Copyright 2007 Google Inc.
+
+key 2     1
+key 3     2
+key 4     3
+key 5     4
+key 6     5
+key 7     6
+key 8     7
+key 9     8
+key 10    9
+key 11    0
+key 158   BACK              WAKE_DROPPED
+key 230   SOFT_RIGHT        WAKE
+key 60    SOFT_RIGHT        WAKE
+key 107   ENDCALL           WAKE_DROPPED
+key 62    ENDCALL           WAKE_DROPPED
+key 229   MENU         WAKE_DROPPED
+key 59    MENU         WAKE_DROPPED
+key 228   POUND
+key 227   STAR
+key 231   CALL              WAKE_DROPPED
+key 61    CALL              WAKE_DROPPED
+key 232   DPAD_CENTER       WAKE_DROPPED
+key 108   DPAD_DOWN         WAKE_DROPPED
+key 103   DPAD_UP           WAKE_DROPPED
+key 102   HOME              WAKE
+key 105   DPAD_LEFT         WAKE_DROPPED
+key 106   DPAD_RIGHT        WAKE_DROPPED
+key 115   VOLUME_UP
+key 114   VOLUME_DOWN
+key 116   POWER             WAKE
+key 212   SLASH
+
+key 16    Q
+key 17    W
+key 18    E
+key 19    R
+key 20    T
+key 21    Y
+key 22    U
+key 23    I
+key 24    O
+key 25    P
+
+key 30    A
+key 31    S
+key 32    D
+key 33    F
+key 34    G
+key 35    H
+key 36    J
+key 37    K
+key 38    L
+key 14    DEL
+        
+key 44    Z
+key 45    X
+key 46    C
+key 47    V
+key 48    B
+key 49    N
+key 50    M
+key 51    COMMA
+key 52    PERIOD
+key 28    NEWLINE
+        
+key 56    ALT_LEFT
+key 42    SHIFT_LEFT
+key 215   AT
+key 57    SPACE
+key 53    SLASH
+key 127   SYM
+key 100   ALT_LEFT
+
+key 399   GRAVE
+</pre>
+
+
+<a name="androidKeymapKeyCharMap"></a><h3>Key Character Map</h3>
+
+
+
+<a name="androidKeymapKeyCharMapSelection"></a><h4>Selection of a Key Character Map</h4>
+
+<p>Key character maps are installed in <code>/system/usr/keychars</code> and <code>/data/usr/keychars</code>.</p>
+<p>For each keyboard device xxx, set the <code>android.keychar.xxx</code> system property to the full path of the desired keychar file. If you don't specify a keychar file, Android will default to <code>/system/usr/keychar/qwerty.kl</code>.
+
+
+<a name="androidKeymapKeyCharMapFileFormat"></a><h4>File Format</h4>
+
+<p>Key character maps are stored on the device as binary resources in order to reduce loading time. Key character maps have the following characteristics:</p>
+<p><ul>
+
+<li>Comments: The pound symbol (#) denotes a comment and everything after the pound symbol on a line is ignored.</li>
+<li>Whitespace: All empty lines are ignored.</li>
+<li>Column definitions: Column definitions follow the syntax <code>columns MODIFIERS [...]</code>, where <code>MODIFIERS</code> are defined as follows:
+<table border=1 cellpadding=2 cellspacing=0>
+    <tbody><tr>
+        <th scope="col">Character in MODIFIERS</th>
+        <th scope="col">Corresponding bit in the modifiers</th>
+    </tr>
+    <tr>
+        <td>O</td>
+        <td>no modifiers</td>
+    </tr>
+    <tr>
+        <td>S</td>
+        <td>MODIFIER_SHIFT</td>
+    </tr>
+    <tr>
+        <td>C</td>
+        <td>MODIFIER_CONTROL</td>
+    </tr>
+    <tr>
+        <td>L</td>
+        <td>MODIFIER_CAPS_LOCK</td>
+    </tr>
+    <tr>
+        <td>A</td>
+        <td>MODIFIER_ALT</td>
+    </tr>
+</table>
+</li>
+<li>Key definitions: Key definitions have the syntax <code>key SCANCODE CHARACTER [...]</code> where <code>SCANCODE</code> is a number and <code>CHARACTER</code> values are either UTF-8 characters in quotation marks (for example, "a") or a numeric value that <code>strtol</code> can parse.</li>
+</ul></p>
+
+
+<a name="androidKeymapKeyCharMapExample"></a><h4>Example of a Key Character Map File</h4>
+
+<p>The following code comes from <code>android/src/device/product/generic/tuttle2.kcm</code> and represents a complete key character file:</p>
+<p>The type line indicates what kind of keyboard your device implements. Possible types include:</p>
+<p><ul>
+<li><b>NUMERIC</b>: A numeric (12-key) keyboard.</li>
+<li><b>Q14</b>: A keyboard that includes all letters but multiple letters per key.</li>
+<li><b>QWERTY</b>: A keyboard with all letters and possibly numbers. This option applies to all full keyboard configurations, such as AZERTY.</li>
+</ul>
+</p>
+<pre class="prettify">
+# Copyright 2007 Google Inc.
+
+[type=QWERTY]
+
+# keycode   base    caps    fn      caps_fn number  display_label
+
+A           'a'     'A'     '%'     0x00    '%'     'A'
+B           'b'     'B'     '='     0x00    '='     'B'
+C           'c'     'C'     '8'     0x00E7  '8'     'C'
+D           'd'     'D'     '5'     0x00    '5'     'D'
+E           'e'     'E'     '2'     0x0301  '2'     'E'
+F           'f'     'F'     '6'     0x00A5  '6'     'F'
+G           'g'     'G'     '-'     '_'     '-'     'G'
+H           'h'     'H'     '['     '{'     '['     'H'
+I           'i'     'I'     '$'     0x0302  '$'     'I'
+J           'j'     'J'     ']'     '}'     ']'     'J'
+K           'k'     'K'     '"'     '~'     '"'     'K'
+L           'l'     'L'     '''     '`'     '''     'L'
+M           'm'     'M'     '>'     0x00    '>'     'M'
+N           'n'     'N'     '<'     0x0303  '<'     'N'
+O           'o'     'O'     '('     0x00    '('     'O'
+P           'p'     'P'     ')'     0x00    ')'     'P'
+Q           'q'     'Q'     '*'     0x0300  '*'     'Q'
+R           'r'     'R'     '3'     0x20AC  '3'     'R'
+S           's'     'S'     '4'     0x00DF  '4'     'S'
+T           't'     'T'     '+'     0x00A3  '+'     'T'
+U           'u'     'U'     '&'     0x0308  '&'     'U'
+V           'v'     'V'     '9'     '^'     '9'     'V'
+W           'w'     'W'     '1'     0x00    '1'     'W'
+X           'x'     'X'     '7'     0xEF00  '7'     'X'
+Y           'y'     'Y'     '!'     0x00A1  '!'     'Y'
+Z           'z'     'Z'     '#'     0x00    '#'     'Z'
+
+COMMA       ','     ';'     ';'     '|'     ','     ','
+PERIOD      '.'     ':'     ':'     0x2026  '.'     '.'
+AT          '@'     '0'     '0'     0x2022  '0'     '@'
+SLASH       '/'     '?'     '?'     '\'     '/'     '/'
+
+SPACE       0x20    0x20    0x9     0x9     0x20    0x20
+NEWLINE     0xa     0xa     0xa     0xa     0xa     0xa
+
+# on pc keyboards
+TAB         0x9     0x9     0x9     0x9     0x9     0x9
+0           '0'     ')'     ')'     ')'     '0'     '0'
+1           '1'     '!'     '!'     '!'     '1'     '1'
+2           '2'     '@'     '@'     '@'     '2'     '2'
+3           '3'     '#'     '#'     '#'     '3'     '3'
+4           '4'     '$'     '$'     '$'     '4'     '4'
+5           '5'     '%'     '%'     '%'     '5'     '5'
+6           '6'     '^'     '^'     '^'     '6'     '6'
+7           '7'     '&'     '&'     '&'     '7'     '7'
+8           '8'     '*'     '*'     '*'     '8'     '8'
+9           '9'     '('     '('     '('     '9'     '9'
+
+GRAVE         '`'     '~'     '`'     '~'     '`'     '`'
+MINUS         '-'     '_'     '-'     '_'     '-'     '-'
+EQUALS        '='     '+'     '='     '+'     '='     '='
+LEFT_BRACKET  '['     '{'     '['     '{'     '['     '['
+RIGHT_BRACKET ']'     '}'     ']'     '}'     ']'     ']'
+BACKSLASH     '\'     '|'     '\'     '|'     '\'     '\'
+SEMICOLON     ';'     ':'     ';'     ':'     ';'     ';'
+APOSTROPHE    '''     '"'     '''     '"'     '''     '''
+STAR          '*'     '*'     '*'     '*'     '*'     '*'
+POUND         '#'     '#'     '#'     '#'     '#'     '#'
+PLUS          '+'     '+'     '+'     '+'     '+'     '+'
+</pre>
+
+
+<a name="androidKeymapKeyCharMapResourceBinaryFileFormat"></a><h4>Resource Binary File Format</h4>
+
+<p>The file snippet above gets converted to the following by the <code>makekcharmap</code> tool as part of the build process. You can <code>mmap</code> this file in and share the approximately 4k of memory that it uses between processes to minimize load time.</p>
+<table>
+    <tbody><tr>
+        <th scope="col">Offset</th>
+
+        <th scope="col">Size (bytes)</th>
+        <th scope="col">Description</th>
+    </tr>
+    <tr>
+        <td>0x00-0x0b</td>
+        <td></td>
+        <td>The ascii value "keycharmap1" including the null character</td>
+
+    </tr>
+    <tr>
+        <td>0x0c-0x0f</td>
+        <td></td>
+        <td>padding</td>
+    </tr>
+    <tr>
+        <td>0x10-0x13</td>
+
+        <td></td>
+        <td>The number of entries in the modifiers table (COLS)</td>
+    </tr>
+    <tr>
+        <td>0x14-0x17</td>
+        <td></td>
+        <td>The number of entries in the characters table (ROWS)</td>
+
+    </tr>
+    <tr>
+        <td>0x18-0x1f</td>
+        <td></td>
+        <td>padding</td>
+    </tr>
+    <tr>
+        <td></td>
+
+        <td>4*COLS</td>
+        <td>Modifiers table.  The modifier mask values that each of the 
+            columns in the characters table correspond to.</td>
+    </tr>
+    <tr>
+        <td></td>
+        <td></td>
+        <td>padding to the next 16 byte boundary</td>
+
+    </tr>
+    <tr>
+        <td></td>
+        <td>4*COLS*ROWS</td>
+        <td>Characters table.  The modifier mask values that each of the
+            columns correspond to.</td>
+    </tr>
+</tbody></table>
+
+
+<a name="androidKeymapDriverTemplate"></a><h3>Implementing Your Own Driver (Driver Template)</h3>
+
+<p>The following file, <code>pguide_events.c</code>, illustrates how to implement an Android keymap driver.</p>
+<pre class="prettyprint">
+/*
+ * pguide_events.c
+ *
+ * ANDROID PORTING GUIDE: INPUT EVENTS DRIVER TEMPLATE
+ *
+ * This template is designed to an example of the functionality
+ * necessary for Android to recieve input events.  The PGUIDE_EVENT
+ * macros are meant as pointers indicating where to implement the
+ * hardware specific code necessary for the new device.  The existence
+ * of the macros is not meant to trivialize the work required, just as
+ * an indication of where the work needs to be done.
+ * 
+ * Copyright 2007, Google Inc.
+ * Based on goldfish-events.c
+ *
+ */
+
+#include <linux/module.h>
+#include <linux/init.h>
+#include <linux/interrupt.h>
+#include <linux/types.h>
+#include <linux/input.h>
+#include <linux/kernel.h>
+#include <linux/platform_device.h>
+
+
+#include <asm/irq.h>
+#include <asm/io.h>
+
+
+
+#define PGUIDE_EVENTS_INTERRUPT do{} while(0)
+#define PGUIDE_EVENTS_PROBE do{} while(0)
+
+struct event_dev {
+    struct input_dev *input;
+    int irq;
+};
+
+static irqreturn_t pguide_events_interrupt(int irq, void *dev_id)
+{
+    struct event_dev *edev = dev_id;
+    unsigned type=0, code=0, value=0;
+
+    /* Set up type, code, and value per input.h
+     */
+    PGUIDE_EVENTS_INTERRUPT;
+
+    input_event(edev->input, type, code, value);
+    return IRQ_HANDLED;
+}
+
+static int pguide_events_probe(struct platform_device *pdev)
+{
+    struct input_dev *input_dev;
+    struct event_dev *edev;
+    
+    printk("*** pguide events probe ***\n");
+
+    edev = kzalloc(sizeof(struct event_dev), GFP_KERNEL);
+    input_dev = input_allocate_device();
+
+    /* Setup edev->irq and do any hardware init */
+    PGUIDE_EVENTS_PROBE;
+
+    if(request_irq(edev->irq, pguide_events_interrupt, 0,
+                   "pguide_events", edev) < 0) {
+        goto fail;
+    }
+    
+        /* indicate that we generate key events */
+    set_bit(EV_KEY, input_dev->evbit);
+    set_bit(EV_REL, input_dev->evbit);
+    set_bit(EV_ABS, input_dev->evbit);
+
+    /* indicate that we generate *any* key event */
+
+    bitmap_fill(input_dev->keybit, KEY_MAX);
+    bitmap_fill(input_dev->relbit, REL_MAX);
+    bitmap_fill(input_dev->absbit, ABS_MAX);
+    
+    platform_set_drvdata(pdev, edev);
+
+    input_dev->name = "pguide_events";
+    input_dev->private = edev;
+    input_dev->cdev.dev = &pdev->dev;
+    
+    input_register_device(input_dev);
+    return 0;
+
+fail:
+    kfree(edev);
+    input_free_device(input_dev);
+    
+    return -EINVAL;
+}
+
+static struct platform_driver pguide_events_driver = {
+    .probe = pguide_events_probe,
+    .driver = {
+        .name = "pguide_events",
+    },
+};
+
+static int __devinit pguide_events_init(void)
+{
+    return platform_driver_register(&pguide_events_driver);
+}
+
+
+static void __exit pguide_events_exit(void)
+{
+}
+
+module_init(pguide_events_init);
+module_exit(pguide_events_exit);
+
+MODULE_DESCRIPTION("Pguide Event Device");
+MODULE_LICENSE("GPL");
+</pre>
+
+
+<a name="androidKeymapKeyCharMapSampleImplementation"></a><h3>Sample Implementation</h3>
+
+<p>Assume the following for the setup of a new keypad device:</p>
+<pre class="prettify">
+android.keylayout.partnerxx_keypad = /system/usr/keylayout/partnerxx_keypad.kl
+android.keychar.partnerxx_keypad = /system/usr/keychars/partnerxx.kcm
+</pre>
+<p>The following example log file indicates that you have correctly registered the new keypad:</p>
+<pre class="prettify">
+I/EventHub( 1548): New device: path=/dev/input/event0 name=partnerxx_keypad id=0x10000 (of 0x1) index=1 fd=30
+I/EventHub( 1548): new keyboard input device added, name = partnerxx_keypad
+D/WindowManager( 1548): Starting input thread.
+D/WindowManager( 1548): Startup complete!
+I/EventHub( 1548): New keyboard: name=partnerxx_keypad 
+  keymap=partnerxx_keypad.kl 
+  keymapPath=/system/usr/keychars/partnerxx_keypad.kcm.bin
+I/ServiceManager( 1535): ServiceManager: addService(window, 0x13610)
+I/EventHub( 1548): Reporting device opened: id=0x10000, name=/dev/input/event0
+I/KeyInputQueue( 1548): Device added: id=0x10000, name=partnerxx_keypad, classes=1
+I/KeyInputQueue( 1548):   Keymap: partnerxx_keypad.kl
+</pre>
+<p>The snippet above contains artificial line breaks to maintain a print-friendly document.</p>

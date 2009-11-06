@@ -1,0 +1,56 @@
+page.title=Android Compatibility - Compatibility Test Suite
+doc.type=source
+@jd:body
+<h3><b>Documentation</b>
+</h3>
+<div><p>
+              As this page grows, it will include resources for wireless operators and handset manufacturers as well as for platform developers.<br></p>
+<h3> 
+Resources for platform developers
+            </h3>
+
+            Google I/O videos:<br><ul><li><a href="http://sites.google.com/site/io/an-introduction-to-android">Introduction to Android</a>
+<img src="{@docRoot}images/documentation-0.png">
+<br></li>
+<li><a href="http://sites.google.com/site/io/anatomy--physiology-of-an-android">Anatomy  Physiology of an Android</a>
+<img src="{@docRoot}images/documentation-0.png">
+</li>
+<li><a href="http://sites.google.com/site/io/inside-the-android-application-framework">Inside the Android Application Framework</a>
+<img src="{@docRoot}images/documentation-0.png">
+</li>
+<li><a href="http://sites.google.com/site/io/dalvik-vm-internals">Dalvik VM Internals</a>
+<img src="{@docRoot}images/documentation-0.png">
+</li>
+</ul>
+
+            Getting started with the Android source code:<br><ul><li><a href="http://source.android.com/download">Get source</a>
+</li>
+<li><a href="http://source.android.com/submit-patches/code-style-guide">Code Style Guide</a>
+<br></li>
+</ul>
+
+            Repo and Git resources:<br><ul><li><a href="http://source.android.com/download/using-repo#TOC-Git-and-Repo-cheatsheet">Git and Repo cheat sheet</a>
+</li>
+<li><a href="http://source.android.com/download/using-repo">Using Repo and Git<br></a>
+</li>
+<li>
+                The<a href="http://book.git-scm.com/">Git Community Book</a>
+<img src="{@docRoot}images/documentation-0.png">
+maintained by Scott Chacon<br></li>
+<li><a href="http://git.or.cz/gitwiki/FrontPage">GitWiki</a>
+<img src="{@docRoot}images/documentation-0.png">
+</li>
+<li><a href="http://www.kernel.org/pub/software/scm/git/docs/">Git Manual Page</a>
+<img src="{@docRoot}images/documentation-0.png">
+</li>
+<li><a href="http://www.gitcasts.com/">GitCasts</a>
+<img src="{@docRoot}images/documentation-0.png">
+(Git how-to videos)
+              </li>
+</ul>
+
+            Documentation on specific tasks:<br><ul><li><a href="http://source.android.com/documentation/building-for-dream">Building for Dream</a>
+(Android Developer Phone 1)
+              </li>
+</ul>
+</div>

@@ -1,0 +1,5 @@
+page.title=Android Compatibility - Compatibility Test Suite
+doc.type=source
+@jd:body
+<h2>Workflow</h2>
+<img src="{@docRoot}images/workflow-0.png"/>

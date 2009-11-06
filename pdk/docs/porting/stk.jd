@@ -1,0 +1,508 @@
+page.title=Sim Toolkit Application (STK)
+pdk.version=1.0
+doc.type=porting
+@jd:body
+
+<div id="qv-wrapper">
+<div id="qv">
+<h2>In this document</h2>
+<a name="toc"/>
+<ul>
+<li><a href="#androidSTKRILRilUp">Communication from the RIL up</a></li>
+<li><a href="#androidSTKRILApplciationDown">Communication from the application down</a></li>
+<li><a href="#androidSTKTelephony">Telephony</a></li>
+<li><a href="#androidSTKFeatureList">Feature List</a></li>
+</ul>
+</div>
+</div>
+
+
+<p>This document offers a high-level overview of the SIM Toolkit Application for Android 1.0 and is primarily of interest for implementors of the Radio Interface Layer (RIL). The STK is  R96 compatible (3GPP TS 11.14 v5.9.0) and complies partially with R99 (3GPP TS 101.267 v8.17.0). See the <a href="#androidSTKFeatureList">STK Feature List</a> for the complete feature list. </p>.
+<p>The Android STK implementation includes three layers:</p> 
+<ul> 
+  <li> STK RIL: Low-level layer provided by the vendor plus <code>libril</code>.</li> 
+  <li>STK Telephony: Protocol translation layer that converts raw messages provided by the STK RIL to application level messages.</li> 
+  <li>STK Application: Provides the user interface interactions needed by the STK.</li> 
+</ul> 
+<p align="left"><br /> 
+    <img src="images/stk.gif" alt="STK schema" width="566" height="516" /><br /> 
+</p> 
+<p> The Sim Toolkit communication flow is bi-directional and commands can originate from the <code>STK RIL</code> packaged in <code>RIL_UNSOL_STK_PROACTIVE_COMMAND</code>, <code>RIL_UNSOL_STK_EVENT_NOTIFY</code>, <code>RIL_UNSOL_REFRESH</code> and <code>RIL_UNSOL_STK_SESSION_END</code> messages.</p> 
+<p align="left">Commands originating from the STK App or STK Telephony layers are packaged in <code>RIL_REQUEST_STK_SEND_TERMINAL_REPSONSE</code>, <code>RIL_REQUEST_SEND_ENVELOPE_COMMAND</code> or <code>RIL_REQUEST_HANDLE_CALL_SETUP_REQUESTED_FROM_SIM</code>.</p> 
+<p align="left">For commands sent or recieved by the STK RIL, it's not necessary to remove unused sub-commands because the upper layers will gracefully ignore unused information contained in the message. The content of each message is encoded in the BER-TLV format except for two:</p> 
+<ul> 
+  <li><code>RIL_UNSOL_STK_SESSION_END</code>: has no data </li> 
+  <li><code>RIL_REQUEST_HANDLE_CALL_SETUP_REQUESTED_FROM_SIM</code>: has a single byte of data that indicates accept/reject.</li> 
+</ul> 
+<p>See the <a href="http://pdk-docs.prom.corp.google.com/docs/telephony.html">Android Platform Development Kit</a> for details.</p> 
+ 
+ 
+<a name="androidSTKRILRilUp"></a><h4>Communication from the RIL up</h4> 
+ 
+<p>Communication to the upper layers is done using the <code>RIL_UNSOL_xxx</code> family of commands defined in <code>/hardware/ril/include/ril.h</code>. The payload for each command is encoded using BER-TLV. As stated above, it is not necessary to remove extraneous fields. This allows the SIM to pass a complete command to the upper layers and simplifies STK RIL code. Below is the mapping from RIL_UNSOL_xxx commands to the SIM commands.</p> 
+ 
+ 
+<a name="androidSTKRILRilUpUnsol"></a><h4>RIL_UNSOL_STK_PROACTIVE_COMMAND</h4> 
+ 
+<p> The Sim Toolkit communication flow is bi-directional and commands can originate from the <code>STK RIL</code> packaged in <code>RIL_UNSOL_STK_PROACTIVE_COMMAND</code>, <code>RIL_UNSOL_STK_EVENT_NOTIFY</code>, <code>RIL_UNSOL_REFRESH</code> and <code>RIL_UNSOL_STK_SESSION_END</code> messages.</p> 
+ 
+ 
+<a name="androidSTKRILRilUpDisplay"></a><h5>DISPLAY TEXT (6.4.1)</h5> 
+ 
+<p>This command is handled by <code>StkDialogActivity</code>. If the immediate response flag is set, the terminal response is sent with an "OK" <code>(0x00)</code> result code when the message is first received. Otherwise the terminal response is sent when the dialog is dismissed either from user action or it times out.</p> 
+<p>The user sees a dialog box with a message and / or icon, an OK button, and a Cancel button.</p> 
+<p>Terminal responses include:</p> 
+<ul> 
+  <li> "OK" (0x00)</li> 
+  <li> "Session terminated by user" (0x10)</li> 
+  <li> "Backward move by user" (0x11)</li> 
+  <li> "No response from user" (0x12)</li> 
+</ul> 
+ 
+<img src="images/stk_display_text.gif" border="1"> 
+ 
+ 
+<a name="androidSTKRILRilUpGetInKey"></a><h5>GET IN KEY (6.4.2)</h5> 
+ 
+<P>This command is processed by <code>StkInputActivity</code>. It displays a dialog box with a prompt and or an icon and yes and no buttons.</p> 
+<p>Terminal responses include:</p> 
+<p> 
+<ul> 
+  <li> “OK” (0x00) with “Yes” or “No” as the response text</li> 
+  <li> “Session terminated by user” (0x10) << Currently not supported</li> 
+  <li> “Backward move by user” (0x11)</li> 
+  <li> “No response from user” (0x12)</li> 
+</ul> 
+</p> 
+ 
+ 
+<a name="androidSTKRILRilUpGetInput"></a><h5>GET INPUT (6.4.3)</h5> 
+ 
+<p>This command is handled by <code>StkInputActivity</code>. 
+<p>The user sees a dialog box with a prompt and / or an icon, a text box with optional default text, and an OK button. 'digits only,' 'min,' 'max,' and 'hidden' modes are all supported.
+<p>Terminal responses include:</p> 
+	<ul> 
+	  <li>OK” (0x00) if the input criteria is met	</li> 
+      <li>“Session terminated by user” (0x10) << Currently not supported	</li> 
+      <li>“Backward move by user” (0x11)        </li> 
+      <li>“No response from user” (0x12) </li> 
+</ul> 
+ 
+ 
+<a name="androidSTKRILRilUpPlayTone"></a><h5>PLAY TONE (6.4.5)</h5> 
+ 
+<p>This command is processed by <code>ToneDialog</code>.</p> 
+<p>The user sees a dialog box with a prompt for the duration of the tone or until the user presses the back key.</p> 
+<p>Terminal responses include:</p> 
+	<ul> 
+	  <li>"OK" (0x00) if the tone is played to completion	</li> 
+      <li>“Session terminated by user” (0x10)  if back button is pressed </li> 
+</ul> 
+ 
+ 
+<a name="androidSTKRILRilUpSetMenu"></a><h5>SET UP MENU (6.4.8)</h5> 
+ 
+<p>This command is processed by <code>StkAppService</code>. It installs the STK ICON on the home page and prepares the Main menu for use when the ICON is selected. Typically this is the first RIL unsolicited command and should not be sent until after the <code>RIL_RadioFunctions.getVersion</code> routine is called.</p> 
+<p>Terminal reponses:</p> 
+<ul> 
+  <li>“OK” (0x00) </li> 
+</ul> 
+<p>At a later time, the STK ICON will be selected and <code>StkMenuActivity</code> will launch and display the Main menu to the user. If an item is selected, it will be returned to the RIL in <code>RIL_REQUEST_STK_SEND_ENVELOPE_COMMAND</code> with the item id. If no item is selected, the <code>StkMenuActivity</code> will receive a timeout message and return to the Main menu and no message will be sent to the RIL.</p> 
+<p>Depending upon what item is selected, the SIM may perform another action, such as sending another set of menu items via a SELECT ITEM command or performing an action like send an SMS or text display. </p> 
+ 
+ 
+<a name="androidSTKRILRilUpSelectItem"></a><h5>SELECT ITEM (6.4.9)</h5> 
+ 
+<p>This command is processed by <code>StkMenuActivity</code>. Instead of displaying the Main menu, the list of menu items provided in this command are displayed.</p> 
+<p>Terminal responses:
+<ul> 
+  <li> “OK” (0x00)    </li> 
+</ul> 
+<p>The command then proceeds as in the SETUP MENU. </p> 
+ 
+ 
+<a name="androidSTKRILRilUpSetIdle"></a><h5>SET UP IDLE MODE TEXT (6.4.22)</h5> 
+ 
+<p><code>StkAppService</code> displays the message and or icon as an Android notification.</p> 
+<p>Terminal responses include:</p> 
+	<ul> 
+	  <li>OK” (0x00)</li> 
+</ul> 
+ 
+ 
+<a name="androidSTKRILRilUpLaunchBrowser"></a><h5>LAUNCH BROWSER (6.4.26)</h5> 
+ 
+<p>This command is initially handled by <code>StkDialogActivity</code> and presents the user with a confirmation dialog, a URL, and OK, and cancel buttons. If the user presses OK, the browser is launched using the URL.</p> 
+<p>Terminal responses include:</p> 
+	<ul> 
+	  <li>“OK” (0x00) the browser has been launched	    </li> 
+      <li>“Session terminated by user” (0x10) </li> 
+      <li>“Backward move by user” (0x11)</li> 
+      <li>“No response from user” (0x12)</li> 
+</ul> 
+ 
+ 
+<a name="androidSTKRILRilUpEvent"></a><h4>RIL_UNSOL_STK_EVENT_NOTIFY</h4> 
+ 
+<p align="left">The commands in this section are proactive in nature. They are handled by the STK RIL and the upper layers and delivered using <code>RIL_UNSOL_STK_EVENT_NOTIFY</code> message. This distinction is an implementation detail of Android and is not defined in the 3GPP sepcifications.</p> 
+<p align="left">The upper layers handle the UI and the STK RIL handles all other aspects of each command, which means that the STK RIL sends the terminal response (it is never sent by the STK App). Each command must be a properlery-formed proactive command. It is not necessary to remove unused fields. The behavior of any other command <em>within this context </em>sent by <code>RIL_UNSOL_STK_EVENT_NOTIFY</code> is undefined. See Event Notify Command Details. </p> 
+<ul> 
+  <li>SEND SMS (6.4.10) – no response</li> 
+  <li>SEND SS (6.4.11) – no response</li> 
+  <li>SEND USSD (6.4.12) – no response</li> 
+  <li>SET UP CALL (6.4.13) – responds with <code>RIL_REQUEST_STK_HANDLE_CALL_SETUP_REQUESTED_FROM_SIM</code></li> 
+  <li>SEND DTMF (6.4.24) – no response</li> 
+</ul> 
+ 
+<img src="images/stk_send_SMS.gif"> 
+ 
+ 
+<a name="androidSTKRILRilUpUnsolSim"></a><h4>RIL_UNSOL_SIM_REFRESH</h4> 
+ 
+<p> Used to send the <code>REFRESH</code> command. No response.</p> 
+ 
+ 
+<a name="androidSTKRILRilUpRefresh"></a><h4>REFRESH (6.4.7)</h4> 
+ 
+<p><code>RIL_UNSOL_STK_SESSION_END</code></p> 
+<p>Sent by the SIM to signal the end of a session. No content and no response.</p> 
+<P><img src="images/stk_refresh_init.gif"></p>
+<p><img src="images/stk_refresh_update.gif"> </p>
+<p><img src="images/stk_refresh_reset.gif"> </p>
+ 
+ 
+ 
+<a name="androidSTKRILRilUpRilUnsol"></a><h4>RIL_UNSOL_STK_SESSION_END</h4> 
+ 
+<p>Sent by SIM to signal end of session. No content and no response.</p> 
+ 
+ 
+<a name="androidSTKRILApplciationDown"></a><h4>Communication from the application down</h4> 
+ 
+<p>Communication from the upper layers to the RIL uses the commands below (defined in <code>ril.h</code>):</p> 
+ 
+ 
+<a name="androidSTKRILApplciationDownTerminal"></a><h4>RIL_REQUEST_STK_SEND_TERMINAL_REPSONSE</h4> 
+ 
+<p> Used to send a terminal response for commands sent via <code>RIL_UNSOL_STK_PROACTIVE_COMMAND</code>. </P> 
+<P>Contents include TERMINAL RESPONSE (6.8).</p> 
+ 
+ 
+<a name="androidSTKRILApplciationDownEnvelope"></a><h4>RIL_REQUEST_STK_SEND_ENVELOPE_COMMAND</h4> 
+ 
+<p>Used to send information from to SIM encoded as BER-TLV tags (see R96  section 13). Two tags are supported:</p> 
+<ul> 
+  <li> BER_MENU_SELECTION_TAG (0xd3); Contents: MENU SELECTION (8)</li> 
+  <li>BER_EVENT_DOWNLOAD_TAG (0xd6); Contents: EVENT DOWNLOAD Language selection (11.8)</li> 
+</ul> 
+<P>Content for these tags include:
+<ul> 
+  <li>MENU SELECTION (8)</li> 
+  <li>EVENT DOWNLOAD Language selection (11.8)</li> 
+</ul> 
+ 
+ 
+ 
+<a name="androidSTKRILApplciationDownFromSim"></a><h4>RIL_REQUEST_HANDLE_CALL_SETUP_REQUESTED_FROM_SIM</h4> 
+ 
+<p>Returns a single-byte parameter:</p> 
+<ul> 
+  <li>1: accepted</li> 
+  <li>0: not accepted</li> 
+</ul> 
+<p> This should cause the terminal response to be sent to the SIM.</p> 
+ 
+ 
+<a name="androidSTKTelephony"></a><h3>Telephony</h3> 
+ 
+<p>STK Telephony is a protocol translation layer used to convert messages from BERL-TLV format to Application messages and back. </p> 
+<p>On the STK RIL side, STK Telphony receives raw buffer messages from RIL I/F and decodes them into a command parameters container before passing them on to the application. On the Application side, this layer receives application responses for commands and encodes them into raw buffer messages, which then get sent over the RIL I/F back to the SIM card.</p> 
+ 
+ 
+<a name="androidSTKFeatureList"></a><h3>Feature List</h3> 
+ 
+<table border="1" cellspacing="2" cellpadding="2"> 
+  <tr> 
+    <td><p align="center"><strong>Feature</strong></p></td> 
+    <td><p align="center"><strong>Support</strong></p></td> 
+    <td><p align="center"><strong>Implemented by</strong></p></td> 
+  </tr> 
+  <tr> 
+    <td nowrap="nowrap" valign="bottom"><p>PROFILE   DOWNLOAD - before radio turn-on</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">YES</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">Baseband</p></td> 
+  </tr> 
+  <tr> 
+    <td nowrap="nowrap" valign="bottom"><p>SET UP   MENU</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">YES</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">ME</p></td> 
+  </tr> 
+  <tr> 
+    <td nowrap="nowrap" valign="bottom" u1:str="SELECT ITEM "><p>SELECT   ITEM&nbsp;</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">YES</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">ME</p></td> 
+  </tr> 
+  <tr> 
+    <td nowrap="nowrap" valign="bottom"><p>GET INPUT</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">YES</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">ME</p></td> 
+  </tr> 
+  <tr> 
+    <td nowrap="nowrap" valign="bottom"><p>GET INKEY</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">YES</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">ME</p></td> 
+  </tr> 
+  <tr> 
+    <td nowrap="nowrap" valign="bottom"><p>DISPLAY   TEXT</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">YES</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">ME</p></td> 
+  </tr> 
+  <tr> 
+    <td nowrap="nowrap" valign="bottom" u1:str="SET UP IDLE MODE TEXT   "><p>SET UP   IDLE MODE TEXT&nbsp;&nbsp;&nbsp;</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">YES</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">ME</p></td> 
+  </tr> 
+  <tr> 
+    <td nowrap="nowrap" valign="bottom" u1:str="SEND SHORT MESSAGE "><p>SEND   SHORT MESSAGE&nbsp;</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">YES</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">Baseband – ME</p></td> 
+  </tr> 
+  <tr> 
+    <td nowrap="nowrap" valign="bottom" u1:str="SEND SS "><p>SEND   SS&nbsp;</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">YES</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">Baseband – ME</p></td> 
+  </tr> 
+  <tr> 
+    <td nowrap="nowrap" valign="bottom"><p>SEND USSD</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">YES</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">Baseband – ME</p></td> 
+  </tr> 
+  <tr> 
+    <td nowrap="nowrap" valign="bottom"><p>SEND DTMF</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">YES</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">Baseband – ME</p></td> 
+  </tr> 
+  <tr> 
+    <td nowrap="nowrap" valign="bottom"><p>LAUNCH   BROWSER</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">YES</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">ME</p></td> 
+  </tr> 
+  <tr> 
+    <td nowrap="nowrap" valign="bottom"><p>SET UP   CALL</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">YES</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">Baseband – ME</p></td> 
+  </tr> 
+  <tr> 
+    <td nowrap="nowrap" valign="bottom"><p>PLAY TONE</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">YES</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">ME</p></td> 
+  </tr> 
+  <tr> 
+    <td nowrap="nowrap" valign="bottom"><p>POLL   INTERVAL</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">YES</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">Baseband</p></td> 
+  </tr> 
+  <tr> 
+    <td nowrap="nowrap" valign="bottom"><p>POLLING   OFF</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">YES</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">Baseband</p></td> 
+  </tr> 
+  <tr> 
+    <td nowrap="nowrap" valign="bottom" u1:str="TIMER MANAGEMENT "><p>TIMER   MANAGEMENT&nbsp;</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">YES</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">Baseband</p></td> 
+  </tr> 
+  <tr> 
+    <td nowrap="nowrap" valign="bottom"><p>MORE TIME</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">YES</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">Baseband</p></td> 
+  </tr> 
+  <tr> 
+    <td nowrap="nowrap" valign="bottom"><p>PROVIDE   LOCAL INFORMATION (MCC, MNC, LAC, Cell ID &amp; IMEI)</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">YES</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">Baseband</p></td> 
+  </tr> 
+  <tr> 
+    <td nowrap="nowrap" valign="bottom"><p>PROVIDE   LOCAL INFORMATION (NMR)</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">YES</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">Baseband</p></td> 
+  </tr> 
+  <tr> 
+    <td nowrap="nowrap" valign="bottom"><p>PROVIDE   LOCAL INFORMATION (Timing Advance)</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">YES</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">Baseband</p></td> 
+  </tr> 
+  <tr> 
+    <td nowrap="nowrap" valign="bottom"><p>PROVIDE   LOCAL INFORMATION(battery state)</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">YES</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">Baseband</p></td> 
+  </tr> 
+  <tr> 
+    <td nowrap="nowrap" valign="bottom"><p>PROVIDE   LOCAL INFORMATION (IMEISV)</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">YES</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">Baseband</p></td> 
+  </tr> 
+  <tr> 
+    <td nowrap="nowrap" valign="bottom"><p>PROVIDE   LOCAL INFORMATION (NMR(UTRAN))</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">YES</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">Baseband</p></td> 
+  </tr> 
+  <tr> 
+    <td nowrap="nowrap" valign="bottom"><p>PROVIDE   LOCAL INFORMATION (Search Mode change)</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">YES</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">Baseband</p></td> 
+  </tr> 
+  <tr> 
+    <td nowrap="nowrap" valign="bottom"><p>REFRESH</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">YES</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">ME</p></td> 
+  </tr> 
+  
+  <tr> 
+    <td nowrap="nowrap" valign="bottom" u1:str="SET UP EVENT LIST "><p>SET UP   EVENT LIST&nbsp;</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">YES</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">Baseband – ME</p></td> 
+  </tr> 
+  <tr> 
+    <td nowrap="nowrap" valign="bottom"><p>Event: MT   call</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">YES</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">Baseband</p></td> 
+  </tr> 
+  <tr> 
+    <td nowrap="nowrap" valign="bottom"><p>Event:   Call connected (all modes)</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">YES</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">Baseband</p></td> 
+  </tr> 
+  <tr> 
+    <td nowrap="nowrap" valign="bottom"><p>Event:   Call disconnected (all modes)</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">YES</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">Baseband</p></td> 
+  </tr> 
+  <tr> 
+    <td nowrap="nowrap" valign="bottom"><p>Event:   Idle screen available</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">NO</p></td> 
+    <td nowrap="nowrap" valign="bottom">&nbsp;</td> 
+  </tr> 
+  <tr> 
+    <td nowrap="nowrap" valign="bottom"><p>Event:   Browser termination</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">NO</p></td> 
+    <td nowrap="nowrap" valign="bottom">&nbsp;</td> 
+  </tr> 
+  <tr> 
+    <td nowrap="nowrap" valign="bottom" u1:str="Event: Location status "><p>Event:   Location status&nbsp;</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">YES</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">Baseband</p></td> 
+  </tr> 
+  <tr> 
+    <td nowrap="nowrap" valign="bottom"><p>Event:   Data available</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">NO</p></td> 
+    <td nowrap="nowrap" valign="bottom">&nbsp;</td> 
+  </tr> 
+  <tr> 
+    <td nowrap="nowrap" valign="bottom"><p>Event:   Channel status</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">NO</p></td> 
+    <td nowrap="nowrap" valign="bottom">&nbsp;</td> 
+  </tr> 
+  <tr> 
+    <td nowrap="nowrap" valign="bottom"><p>Event:   Access Technology changed</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">YES</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">Baseband</p></td> 
+  </tr> 
+  <tr> 
+    <td nowrap="nowrap" valign="bottom"><p>Event:   Local Connection</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">NO</p></td> 
+    <td nowrap="nowrap" valign="bottom">&nbsp;</td> 
+  </tr> 
+  <tr> 
+    <td nowrap="nowrap" valign="bottom"><p>Event:   Network Search Mode Change</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">YES</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">Baseband</p></td> 
+  </tr> 
+  
+  <tr> 
+    <td nowrap="nowrap" valign="bottom"><p>GET   READER STATUS</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">NO</p></td> 
+    <td nowrap="nowrap" valign="bottom">&nbsp;</td> 
+  </tr> 
+  <tr> 
+    <td nowrap="nowrap" valign="bottom"><p>POWER ON   CARD</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">NO</p></td> 
+    <td nowrap="nowrap" valign="bottom">&nbsp;</td> 
+  </tr> 
+  <tr> 
+    <td nowrap="nowrap" valign="bottom"><p>POWER OFF   CARD</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">NO</p></td> 
+    <td nowrap="nowrap" valign="bottom">&nbsp;</td> 
+  </tr> 
+  <tr> 
+    <td nowrap="nowrap" valign="bottom"><p>PERFORM   CARD ADPU</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">NO</p></td> 
+    <td nowrap="nowrap" valign="bottom">&nbsp;</td> 
+  </tr> 
+  <tr> 
+    <td nowrap="nowrap" valign="bottom"><p>RUN AT   COMMAND</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">NO</p></td> 
+    <td nowrap="nowrap" valign="bottom">&nbsp;</td> 
+  </tr> 
+  <tr> 
+    <td nowrap="nowrap" valign="bottom"><p>OPEN   CHANNEL</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">NO</p></td> 
+    <td nowrap="nowrap" valign="bottom">&nbsp;</td> 
+  </tr> 
+  <tr> 
+    <td nowrap="nowrap" valign="bottom" u1:str="CLOSE CHANNEL "><p>CLOSE   CHANNEL&nbsp;</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">NO</p></td> 
+    <td nowrap="nowrap" valign="bottom">&nbsp;</td> 
+  </tr> 
+  <tr> 
+    <td nowrap="nowrap" valign="bottom"><p>RECEIVE   DATA</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">NO</p></td> 
+    <td nowrap="nowrap" valign="bottom">&nbsp;</td> 
+  </tr> 
+  <tr> 
+    <td nowrap="nowrap" valign="bottom"><p>SEND DATA</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">NO</p></td> 
+    <td nowrap="nowrap" valign="bottom">&nbsp;</td> 
+  </tr> 
+  <tr> 
+    <td nowrap="nowrap" valign="bottom"><p>GET   CHANNEL STATUS</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">NO</p></td> 
+    <td nowrap="nowrap" valign="bottom">&nbsp;</td> 
+  </tr> 
+  
+  <tr> 
+    <td nowrap="nowrap" valign="bottom"><p>CALL   CONTROL BY SIM</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">YES</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">Baseband</p></td> 
+  </tr> 
+  <tr> 
+    <td nowrap="nowrap" valign="bottom"><p>SMS-PP   data download</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">YES</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">Baseband</p></td> 
+  </tr> 
+  <tr> 
+    <td nowrap="nowrap" valign="bottom"><p>SMS-CB   data download</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">YES</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">Baseband</p></td> 
+  </tr> 
+  <tr> 
+    <td nowrap="nowrap" valign="bottom" u1:str="BIP over GPRS "><p>BIP over   GPRS&nbsp;</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">NO</p></td> 
+    <td nowrap="nowrap" valign="bottom">&nbsp;</td> 
+  </tr> 
+  <tr> 
+    <td nowrap="nowrap" valign="bottom"><p>BIP over   USB</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">NO</p></td> 
+    <td nowrap="nowrap" valign="bottom">&nbsp;</td> 
+  </tr> 
+  <tr> 
+    <td nowrap="nowrap" valign="bottom" u1:str="Text Attributes  "><p>Text   Attributes&nbsp;&nbsp;</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">NO</p></td> 
+    <td nowrap="nowrap" valign="bottom">&nbsp;</td> 
+  </tr> 
+  <tr> 
+    <td nowrap="nowrap" valign="bottom"><p>Color   icons</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">YES</p></td> 
+    <td nowrap="nowrap" valign="bottom"><p align="center">ME</p></td> 
+  </tr> 
+</table> 

@@ -1,0 +1,82 @@
+page.title=Creating Release Keys and Signing Builds
+pdk.version=1.0
+doc.type=porting
+@jd:body
+
+<div id="qv-wrapper">
+  <div id ="qv"> 
+<h2>In this document</h2>
+<a name="toc"/>
+    <ul>
+      <li><a href="#intro">Introduction</a></li>
+      <li><a href="#generatingKeys">Generating keys</a></li>
+      <li><a href="#signing">Signing a build for release</a></li>
+    </ul>
+  </div>
+</div>
+<a name="intro"></a>
+<h3>Introduction</h3>
+<p>Android requires that each application be signed with the developer's digital keys to enforce signature permissions and application request to use shared user ID or target process.  For more information on the general Android security principles and signing requirements, see the Android Security and Permissions section in the Android Developer Guide).  The core Android platform uses four keys to maintain security of core platform components:</p>
+<ul>
+  <li><strong>platform</strong>: a key for packages that are part of the core platform.</li>
+  <li><strong>shared</strong>: a key for things that are shared in the <code>home/contacts</code> process.</li>
+  <li><strong>media</strong>: a key for packages that are part of the <code>media/download</code> system.</li>
+  <li><strong>releasekey</strong>: the default key to sign with if not otherwise specified</li>
+</ul>
+<p>These keys are used to sign applications separately for release images and are not used by the Android build system.  The build system signs packages with the testkeys provided in <code>build/target/product/security/</code>.  Because the testkeys are part of the standard Android open source distribution, they should never be used for production devices.  Instead, device manufacturers should generate their own private keys for shipping release builds.</p>
+<a name="generatingKeys"></a>
+<h3>Generating keys</h3>
+<p>A device manufacturer's keys for each product should be stored under  <code>vendor/&lt;vendor_name&gt;/security/&lt;product_name&gt;</code>, where <code>&lt;vendor_name&gt;</code> and <code>&lt;product_name&gt;</code> represent the manufacturer and product names.  To simplify key creation, copy the script below to this directory in a file called <code>mkkey.sh</code>.  To customize your keys, change the line that starts with AUTH to reflect the correct information for your company:</p>
+<pre>
+#!/bin/sh
+AUTH='/C=US/ST=California/L=Mountain View/O=Android/OU=Android/CN=Android/emailAddress=android@android.com'
+if [ "$1" == "" ]; then
+        echo "Create a test certificate key."
+        echo "Usage: $0 NAME"
+        echo "Will generate NAME.pk8 and NAME.x509.pem"
+        echo "  $AUTH"
+        exit
+fi
+
+openssl genrsa -3 -out $1.pem 2048
+
+openssl req -new -x509 -key $1.pem -out $1.x509.pem -days 10000 \
+    -subj "$AUTH"
+
+echo "Please enter the password for this key:"
+openssl pkcs8 -in $1.pem -topk8 -outform DER -out $1.pk8 -passout stdin
+</pre>
+<p><code>mkkey.sh</code>  is a helper script to generate the platform's keys.  NOTE: the password you type will be visible in your terminal window.  Note the passwords you use as you will need them to sign release builds.</p>
+<p>To generate the required 4 platform keys, run <code>mkkey.sh</code> four times specifying the key name and password for each:</p>
+<pre>
+sh mkkey.sh platform # enter password
+sh mkkey.sh media # enter password
+sh mkkey.sh shared # enter password
+sh mkkey.sh release # enter password
+</pre>
+<p>You should now have new keys for your product.</p>
+<a name="signing"></a>
+<h3>Signing a build for release</h3>
+<p>Signing a build for a release is a two-step process.  </p>
+<ol>
+  <li>Sign all the individual parts of the build.</li>
+  <li>Put the parts back together into  image files.</li>
+</ol>
+<h4>Signing applications</h4>
+<p>Use <code>build/tools/releasetools/sign_target_files_apks</code> to sign a <code>target_files</code> package. The <code>target_files</code> package isn't built by default, you need to make sure to specify the "dist" target when you call make.  For example:</p>
+<pre>
+make -j4 PRODUCT-&lt;product_name&gt;-user dist
+</pre>
+<p>The command above creates a a file under <code>out/dist </code>called <code>&lt;product_name&gt;-target_files.zip</code>.  This is the file you need to pass to the <code>sign_target_files_apks</code> script.</p>
+<p>You would typically run the script like this:</p>
+<pre>
+./build/tools/releasetools/sign_target_files_apks -d vendor/&lt;vendor_name&gt;/security/&lt;product_name&gt; &lt;product_name&gt;-target_files.zip signed-target-files.zip
+</pre>
+<p>If you have prebuilt and pre-signed apk's in your build that you don't want re-signed, you must explicitly ignore them by adding <code>-e Foo.apk=</code> to the command line for each apk you wish to ignore.</p>
+<p><code>sign_target_files_apks</code> also has many other options that could be useful for signing release builds.  Run it with <code>-h</code> as the only option to see the full help.</p>
+<h4>Creating image files</h4>
+<p>Once you have <code>signed-target-files.zip</code>, create the images so you can put it onto a device with the command below:</p>
+<pre>
+build/tools/releasetools/img_from_target_files signed-target-files.zip signed-img.zip
+</pre>
+<p><code>signed-img.zip</code> contains all the <code>.img</code> files.  You can use <code>fastboot update signed-img.zip</code> to use fastboot to get them on the device.</p>
