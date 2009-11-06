@@ -28,10 +28,10 @@ public class ActivityLaunchAction implements IAndroidLaunchAction {
 
     private final String mActivity;
     private final ILaunchController mLaunchController;
-    
+
     /**
      * Creates a ActivityLaunchAction
-     * 
+     *
      * @param activity fully qualified activity name to launch
      * @param controller the {@link ILaunchController} that performs launch
      */
@@ -39,13 +39,13 @@ public class ActivityLaunchAction implements IAndroidLaunchAction {
         mActivity = activity;
         mLaunchController = controller;
     }
-    
+
     /**
      * Launches the activity on targeted device
-     * 
+     *
      * @param info the {@link DelayedLaunchInfo} that contains launch details
      * @param device the Android device to perform action on
-     * 
+     *
      * @see IAndroidLaunchAction#doLaunchAction(DelayedLaunchInfo, IDevice)
      */
     public boolean doLaunchAction(DelayedLaunchInfo info, IDevice device) {
@@ -65,7 +65,9 @@ public class ActivityLaunchAction implements IAndroidLaunchAction {
                             : "") //$NON-NLS-1$
                     + " -n " //$NON-NLS-1$
                     + info.getPackageName() + "/" //$NON-NLS-1$
-                    + mActivity.replaceAll("\\$", "\\\\\\$"), //$NON-NLS-1$ //$NON-NLS-2$
+                    + mActivity.replaceAll("\\$", "\\\\\\$") //$NON-NLS-1$ //$NON-NLS-2$
+                    + " -a android.intent.action.MAIN"  //$NON-NLS-1$
+                    + " -c android.intent.category.LAUNCHER",  //$NON-NLS-1$
                     new AMReceiver(info, device, mLaunchController));
 
             // if the app is not a debug app, we need to do some clean up, as
@@ -84,14 +86,14 @@ public class ActivityLaunchAction implements IAndroidLaunchAction {
         }
         return true;
     }
-    
+
     /**
      * Returns a description of the activity being launched
-     * 
+     *
      * @see IAndroidLaunchAction#getLaunchDescription()
      */
     public String getLaunchDescription() {
        return String.format("%1$s activity launch", mActivity);
     }
-    
+
 }
