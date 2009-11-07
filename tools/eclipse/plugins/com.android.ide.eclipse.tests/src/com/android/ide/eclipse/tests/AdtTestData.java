@@ -21,18 +21,14 @@ import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Platform;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URL;
 import java.util.logging.Logger;
 
 /**
  * Helper class for retrieving test data
- *
- * All tests which need to retrieve test data files should go through this class
- *
+ * <p/>
+ * All tests which need to retrieve paths to test data files should go through this class.
  */
 public class AdtTestData {
 
@@ -40,11 +36,8 @@ public class AdtTestData {
     private static AdtTestData sInstance = null;
     private static final Logger sLogger = Logger.getLogger(AdtTestData.class.getName());
 
-    /** the absolute file path to the /data directory in this test
-     * environment.
-     */
+    /** The absolute file path to the plugin's contents. */
     private String mOsRootDataPath;
-
 
     private AdtTestData() {
         // can set test_data env variable to override default behavior of
@@ -55,7 +48,7 @@ public class AdtTestData {
         mOsRootDataPath = System.getProperty("test_data");
         if (mOsRootDataPath == null) {
             sLogger.info("Cannot find test_data environment variable, init to class loader");
-            URL url = this.getClass().getClassLoader().getResource("data");  //$NON-NLS-1$
+            URL url = this.getClass().getClassLoader().getResource(".");  //$NON-NLS-1$
 
             if (Platform.isRunning()) {
                 sLogger.info("Running as an Eclipse Plug-in JUnit test, using FileLocator");
@@ -71,7 +64,7 @@ public class AdtTestData {
             }
         }
 
-        if (mOsRootDataPath.equals(AndroidConstants.WS_SEP + "data")) {
+        if (mOsRootDataPath.equals(AndroidConstants.WS_SEP)) {
             sLogger.warning("Resource data not found using class loader!, Defaulting to no path");
         }
 
@@ -90,27 +83,14 @@ public class AdtTestData {
     }
 
     /**
-     * Returns the absolute file path to a file located in this plugins "data" directory
+     * Returns the absolute file path to a file located in this plugin.
      *
-     * @param osRelativePath {@link String} path to file contained in /data. Must
+     * @param osRelativePath {@link String} path to file contained in plugin. Must
      * use path separators appropriate to host OS
      *
      * @return absolute OS path to test file
      */
     public String getTestFilePath(String osRelativePath) {
         return mOsRootDataPath + osRelativePath;
-    }
-
-    /**
-     * Helper method to get a {@link InputStream} to test data file.
-     *
-     * @param osRelativePath {@link String} path to file contained in /data. Must
-     * use path separators appropriate to host OS
-     *
-     * @return {@link InputStream} for test file
-     * @throws FileNotFoundException if test file could not be found
-     */
-    public InputStream getTestFileStream(String osRelativePath) throws FileNotFoundException {
-        return new FileInputStream(getTestFilePath(osRelativePath));
     }
 }
