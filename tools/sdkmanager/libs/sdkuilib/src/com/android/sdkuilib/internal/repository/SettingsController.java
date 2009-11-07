@@ -21,8 +21,6 @@ import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.ISdkLog;
 
 import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Shell;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -248,6 +246,10 @@ public class SettingsController {
         mSettingsPage.retrieveSettings(mProperties);
         applySettings();
         saveSettings();
+
+        // In case the HTTP/HTTPS setting change, force sources to be reloaded
+        // (this only refreshes sources that the user has already tried to open.)
+        mUpdaterData.refreshSources(false /*forceFetching*/);
     }
 
     /**
