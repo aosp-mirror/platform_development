@@ -157,9 +157,8 @@ NPError NPP_New(NPMIMEType pluginType, NPP instance, uint16 mode, int16 argc,
 
     // Scripting functions appeared in NPAPI version 14
     if (browser->version >= 14) {
-    instance->pdata = browser->createobject (instance, getPluginClass());
-    obj = static_cast<PluginObject*>(instance->pdata);
-    bzero(obj, sizeof(*obj));
+        instance->pdata = browser->createobject (instance, getPluginClass());
+        obj = static_cast<PluginObject*>(instance->pdata);
     }
     /* END: STANDARD PLUGIN FRAMEWORK */
 
@@ -407,9 +406,9 @@ NPError NPP_GetValue(NPP instance, NPPVariable variable, void *value)
         PluginObject *obj = (PluginObject*) instance->pdata;
 
         if (obj)
-            browser->retainobject((NPObject*)obj);
+            browser->retainobject(&obj->header);
 
-        *v = obj;
+        *v = &(obj->header);
         return NPERR_NO_ERROR;
     }
 
