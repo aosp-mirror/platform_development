@@ -28,6 +28,7 @@
 #include <npruntime.h>
 #include "android_npapi.h"
 #include "ANPSurface_npapi.h"
+#include "ANPSystem_npapi.h"
 
 extern NPNetscapeFuncs* browser;
 extern JavaVM* gVM;
