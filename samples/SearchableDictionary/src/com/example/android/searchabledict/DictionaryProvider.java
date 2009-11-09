@@ -106,16 +106,17 @@ public class DictionaryProvider extends ContentProvider {
         List<Dictionary.Word> words = Dictionary.getInstance().getMatches(processedQuery);
 
         MatrixCursor cursor = new MatrixCursor(COLUMNS);
+        long id = 0;
         for (Dictionary.Word word : words) {
-            cursor.addRow(columnValuesOfWord(word));
+            cursor.addRow(columnValuesOfWord(id++, word));
         }
 
         return cursor;
     }
 
-    private Object[] columnValuesOfWord(Dictionary.Word word) {
-        return new String[] {
-                word.word,           // _id
+    private Object[] columnValuesOfWord(long id, Dictionary.Word word) {
+        return new Object[] {
+                id,                  // _id
                 word.word,           // text1
                 word.definition,     // text2
                 word.word,           // intent_data (included when clicking on item)
