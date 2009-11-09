@@ -186,16 +186,21 @@ docs/service_actions.txt platforms/${PLATFORM_NAME}/data/service_actions.txt
 docs/categories.txt platforms/${PLATFORM_NAME}/data/categories.txt
 docs/widgets.txt platforms/${PLATFORM_NAME}/data/widgets.txt
 framework/layoutlib.jar platforms/${PLATFORM_NAME}/data/layoutlib.jar
+
+# framework resources for layoutlib
 frameworks/base/core/res/res platforms/${PLATFORM_NAME}/data/res
-frameworks/base/data/fonts/fonts.xml platforms/${PLATFORM_NAME}/data/fonts/fonts.xml
-frameworks/base/data/fonts/DroidSans.ttf platforms/${PLATFORM_NAME}/data/fonts/DroidSans.ttf
-frameworks/base/data/fonts/DroidSans-Bold.ttf platforms/${PLATFORM_NAME}/data/fonts/DroidSans-Bold.ttf
-frameworks/base/data/fonts/DroidSansFallback.ttf platforms/${PLATFORM_NAME}/data/fonts/DroidSansFallback.ttf
-frameworks/base/data/fonts/DroidSansMono.ttf platforms/${PLATFORM_NAME}/data/fonts/DroidSansMono.ttf
-frameworks/base/data/fonts/DroidSerif-Bold.ttf platforms/${PLATFORM_NAME}/data/fonts/DroidSerif-Bold.ttf
+
+# fonts for layoutlib.
+frameworks/base/data/fonts/fonts.xml                 platforms/${PLATFORM_NAME}/data/fonts/fonts.xml
+frameworks/base/data/fonts/DroidSans.ttf             platforms/${PLATFORM_NAME}/data/fonts/DroidSans.ttf
+frameworks/base/data/fonts/DroidSans-Bold.ttf        platforms/${PLATFORM_NAME}/data/fonts/DroidSans-Bold.ttf
+frameworks/base/data/fonts/DroidSansMono.ttf         platforms/${PLATFORM_NAME}/data/fonts/DroidSansMono.ttf
+frameworks/base/data/fonts/DroidSerif-Bold.ttf       platforms/${PLATFORM_NAME}/data/fonts/DroidSerif-Bold.ttf
 frameworks/base/data/fonts/DroidSerif-BoldItalic.ttf platforms/${PLATFORM_NAME}/data/fonts/DroidSerif-BoldItalic.ttf
-frameworks/base/data/fonts/DroidSerif-Italic.ttf platforms/${PLATFORM_NAME}/data/fonts/DroidSerif-Italic.ttf
-frameworks/base/data/fonts/DroidSerif-Regular.ttf platforms/${PLATFORM_NAME}/data/fonts/DroidSerif-Regular.ttf
+frameworks/base/data/fonts/DroidSerif-Italic.ttf     platforms/${PLATFORM_NAME}/data/fonts/DroidSerif-Italic.ttf
+frameworks/base/data/fonts/DroidSerif-Regular.ttf    platforms/${PLATFORM_NAME}/data/fonts/DroidSerif-Regular.ttf
+frameworks/base/data/fonts/DroidSansFallback.ttf     platforms/${PLATFORM_NAME}/data/fonts/DroidSansFallback.ttf
+frameworks/base/data/fonts/DroidSansJapanese.ttf     platforms/${PLATFORM_NAME}/data/fonts/DroidSansJapanese.ttf
 
 # empty add-on folder with just a readme
 development/tools/scripts/README_add-ons.txt add-ons/README.txt
