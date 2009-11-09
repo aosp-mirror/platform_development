@@ -1,0 +1,15 @@
+This directory contains the source for the source.android.com site contents.
+The Platform Development Kit (PDK, a set of tools for the convenience of
+engineers doing building devices) is also built as part of the site build.
+
+Subdirectories include:
+  about -- general information about the Android Open Source Project
+  community -- information about the AOSP mailing lists
+  compatibility -- information about building compatible devices
+  downloads -- links to download files of interest
+  images -- images used in docs; note: this is NOT for UI assets/skins
+  porting -- tips & guides for porting the Android source to hardware
+  source -- how to access & use the Android source
+
+This directory originated as the PDK home (hence the name) and grew to
+encompass source.android.com.
