@@ -1,0 +1,61 @@
+page.title=Audio
+pdk.version=1.0
+doc.type=porting
+@jd:body
+
+<div id="qv-wrapper">
+<div id="qv">
+<h2>In this document</h2>
+<a name="toc"/>
+<ul>
+<li><a href="#androidAudioBuildingDriver">Building an Audio Library</a></li>
+<li><a href="#androidAudioInterface">Interface</a></li>
+</ul>
+</div>
+</div>
+
+
+<p>AudioHardwareInterface serves as the glue between proprietary audio drivers and the Android AudioFlinger service, the core audio service that handles all audio-related requests from applications.</p>
+<p><img src="images/android_audio_architecture.gif"></p>
+
+Solid elements represent Android blocks and dashed elements represent partner-specific blocks.
+
+
+
+<a name="androidAudioBuildingDriver"></a><h3>Building an Audio Library</h3>
+
+<p>To implement an audio driver, create a shared library that implements the interface defined in <code>AudioHardwareInterface.h</code>. You must name your shared library <code>libaudio.so</code> so that it will get loaded from <code>/system/lib</code> at runtime.  Place libaudio sources and <code>Android.mk</code> in <code>vendor/acme/chipset_or_board/libaudio/</code>.</p>
+<p>The following stub <code>Android.mk</code> file ensures that <code>libaudio</code> compiles and links to the appropriate libraries:</p>
+
+<pre class="prettify">
+LOCAL_PATH := $(call my-dir)
+include $(CLEAR_VARS)
+
+LOCAL_MODULE := libaudio
+
+LOCAL_SHARED_LIBRARIES := \
+    libcutils \
+    libutils \
+    libmedia \
+    libhardware
+
+LOCAL_SRC_FILES += MyAudioHardware.cpp
+
+LOCAL_CFLAGS +=
+
+LOCAL_C_INCLUDES +=
+
+LOCAL_STATIC_LIBRARIES += libaudiointerface
+
+include $(BUILD_SHARED_LIBRARY)
+</pre>
+
+
+<a name="androidAudioInterface"></a><h3>Interface</h3>
+
+
+
+<p class="note"><strong>Note</strong>: This document relies on some Doxygen-generated content that appears in an iFrame below. To return to the Doxygen default content for this page, <a href="audio_sub_system.html">click here</a>.</p>
+
+
+<iframe onLoad="resizeDoxFrameHeight();" src="AudioHardwareInterface_8h.html" scrolling="no" scroll="no" id="doxygen" marginwidth="0" marginheight="0" frameborder="0" style="width:100%;"></iframe>

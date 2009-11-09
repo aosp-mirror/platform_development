@@ -1,0 +1,48 @@
+page.title=Lights
+pdk.version=1.0
+doc.type=porting
+@jd:body
+
+<div id="qv-wrapper">
+<div id="qv">
+<h2>In this document</h2>
+<a name="toc"/>
+<ul>
+<li><a href="#androidLightsBuildingDriver">Building a Lights Library</a></li>
+<li><a href="#androidLightsInterface">Interface</a></li>
+</ul>
+</div>
+</div>
+
+<p>Android defines a user space C abstraction interface for LED hardware. The interface header is defined in 
+<code>hardware/libhardware/include/hardware/lights.h</code>.
+In order to integrate LEDs with Android you need to build a shared library that implements this interface. 
+
+The types of logical lights currently supported by Android include:
+<ul>
+<li>Backlight</li>
+<li>Keyboard</li>
+<li>Buttons</li>
+<li>Battery</li>
+<li>Notifications</li>
+<li>Attention</li>
+</ul>
+</p> 
+ 
+<a name="androidLightsBuildingDriver"></a><h3>Building a Lights Library</h3>
+<p> To implement a Lights driver, create a shared library that implements the interface defined in <code>lights.h</code>. You must name your shared library 
+<code>liblights.so</code> so that it will get loaded from <code>/system/lib</code> at runtime. 
+</p
+
+ 
+<a name="androidLightsInterface"></a><h3>Interface</h3> 
+ 
+ 
+ 
+<p><span class="lh3"><a name="androidDoxygenNote"></a></span> 
+ 
+<p class="note"><strong>Note</strong>: This document relies on some Doxygen-generated content that appears in an iFrame below. To return to the Doxygen default content for this page, <a href="lights.html">click here</a>.</p> 
+ 
+ 
+<iframe onLoad="resizeDoxFrameHeight();" src="lights_8h.html" scrolling="no" scroll="no" id="doxygen" marginwidth="0" marginheight="0" 
+frameborder="0" style="width:100%;"></iframe> 

@@ -1,0 +1,146 @@
+page.title=Debugging with GDB
+pdk.version=1.0
+doc.type=porting
+@jd:body
+
+<div id="qv-wrapper">
+<div id="qv">
+<h2>In this document</h2>
+<a name="toc"/>
+<ul>
+<li><a href="#gdb">Debugging</a></li>
+  <li><a href="#justInTime">Just-In-Time Debug Feature</a></li>
+</ul>
+</div>
+</div>
+
+<p>The current version of <code>envsetup.sh</code> has a <code>gdbclient</code> command that handles much of the setup.  For example, to attach the
+  already-running <code>globaltime</code> application, execute the following, making sure that: 1) you do this from the same window used to build the software on the device you are debugging and 2) verify that the symbols in the object files in the build tree match up with what is installed on the device or emulator.</p>
+<pre class="prettify">
+gdbclient app_process :5039 globaltime
+</pre>
+<a name="gdb"></a><h3>Debugging</h3>
+<a name="gdbShort"></a>
+<h4>Short Instructions</h4>
+<p>Android runs <code>gdbserver</code> on the device and an ARM aware <code>gdb</code>, named <code>arm-eabi-gdb</code>, on the desktop machine.</p>
+<ol>
+  <li>First you need to
+    run <code>gdbserver</code> on the device:<BR>
+    <pre class="prettify">
+	gdbserver :5039 /system/bin/<i>executable</i>       
+  </pre>
+    <BR>
+    The <code>:5039</code> tells gdbserver to listen on port 5039 on the localhost, which adb bridges from the host to the device. <code>executable</code> represents the command to debug, a common one being runtime -s which starts the entire system all running in a single process. <br>
+    <br>
+  </li>
+  <li>Launch <code>gdb</code> on the desktop.
+    This can be
+    done easily with the following command in the shell from which you built:
+    <pre class="prettify">
+gdbclient <i>executable</i>
+</pre>
+  </li>
+</ol>
+<p>At this point <code>gdb</code> will connect with your device
+  and you should be
+  able to enter <code>c</code> to have the device start executing inside of the
+  desktop <code>gdb</code> session.</p>
+<a name="gdbDetailed"></a>
+<h4>Detailed Instructions</h4>
+<p>If the short instructions don't work, these detailed instructions should:
+<ol>
+  <li>On the device, launch a new command:
+    <pre class="prettify">gdbserver :5039 /system/bin/<i>executable</i></pre>
+    or attach to an existing process:
+    <pre class="prettify">gdbserver :5039 --attach <i>pid</i></pre>
+  </li>
+  <li>On your workstation, forward port 5039 to the device with adb:
+    <pre class="prettify">adb forward tcp:5039 tcp:5039</pre>
+  </li>
+  <li>Start a special version of <code>gdb</code> that lives in the "prebuilt" area of the source tree: <br>
+    <code>prebuilt/Linux/toolchain-eabi-4.2.1/bin/arm-eabi-gdb</code> (for Linux) <br>
+    <code>prebuilt/darwin-x86/toolchain-eabi-4.2.1/bin/arm-eabi-gdb</code> (for Darwin) </li>
+  <li>If you can't find either special version of <code>gdb</code>, run <code>find prebuilt -name arm-eabi-gdb</code> in your source tree to find and run the latest version:
+    <pre class="prettify">
+prebuilt/Linux/toolchain-eabi-4.2.1/bin/arm-eabi-gdb  out/target/product/<i>product-name</i>/symbols/system/bin/<i>executable</i>
+</pre>
+    <BR>
+    Where <i>product-name</i> is the name of the device product that you're building (for example, <code>sooner</code>),
+    and <i>executable</i> is the program to debug (usually <code>app_process</code> for an application).<br>
+    <br>
+    Make sure to use the copy of the executable in the symbols directory, not the
+    primary android directory, because the one in the primary directory has
+    been stripped of its debugging information.</li>
+  <li>In <code>gdb</code>, Tell <code>gdb</code> where to find the shared libraries that will get loaded:
+    <pre class="prettify">
+set solib-absolute-prefix /<i>absolute-source-path</i>/out/target/product/<i>product-name</i>/symbols
+set solib-search-path /<i>absolute-source-path</i>/out/target/product/<i>product-name</i>/symbols/system/lib
+</pre>
+    <BR>
+    <i>absolute-source-path</i> is the path to your source tree; for example, <code>/work/device</code> or <code>/Users/hoser/android/device</code>.<BR>
+    <i>product-name</i> is the same as above; for example, <code>sooner</code>. <BR>
+    <BR>
+    Make sure you specify the correct directories&#151;<code>gdb</code> may not tell you if you make a mistake.</li>
+  <li>Connect to the device by issuing the <code>gdb</code> command:<BR>
+    <pre class="prettify">
+target remote :5039
+</pre>
+    <BR>
+    <BR>
+    The <code>:5039</code> tells <code>gdb</code> to connect to the localhost port 5039, which is bridged to the device by <code>adb</code>.<BR>
+    <BR>
+    You may need to inspire gdb to load some symbols by typing:
+    <pre class="prettify">shared</pre>
+  </li>
+</ol>
+<p>You should be connected and able to debug as you normally would. You can ignore the error about not 
+  finding the location for the thread creation breakpoint. It will be found when
+  the linker loads <code>libc</code> into your process before hitting <code>main()</code>. Also note that
+  the <code>gdb</code> remote protocol doesn't have a way for the device to
+  tell the host about
+  newly created threads so you will not always see notifications about newly
+  created threads. Info about other threads will be queried from the
+  device when a
+  breakpoint is hit or you ask for it by running info thread. <a name="justInTime"></a>
+<h3>Just-In-Time Debug Feature</h3>
+If you see the red LED flashing it means a process is in that new
+state (crashed and waiting for GDB connection). If this happens to the
+system process, most likely your device will be frozen at this point. <strong>Do not press the home key</strong>. Bring the device to someone who can
+debug native crashes and ask for advice.
+If you're in the field and just want your device to continue as it
+would have without this feature (like cylonning), press home (a
+tombstone will be recorded as usual).
+
+To enable a process to be debugged this way, you need to set a property:
+<pre class="prettify">
+adb shell setprop debug.db.uid 10000
+</pre>
+and all processes with a <code>uid &lt;= 10000</code> will be trapped in this 
+manner.  When one of them crashes, the tombstone is processed as usual, an explicit message is printed into the log, and the red LED starts
+flashing waiting for the Home key to be depressed (in which case it
+continues execution as usual).
+<pre class="prettify">
+I/DEBUG   (   27): ********************************************************
+I/DEBUG   (   27): * process 82 crashed. debuggerd waiting for gdbserver
+I/DEBUG   (   27): *
+I/DEBUG   (   27): *     adb shell gdbserver :port --attach 82 &
+I/DEBUG   (   27): *
+I/DEBUG   (   27): * and press the HOME key.
+I/DEBUG   (   27): ********************************************************
+</pre>
+<p>When you see the entry above, make sure <code>adb</code> is forwarding port 5039 (you only need to do this once,
+  unless the ADB server dies) and execute:</p>
+<pre class="prettify">% adb forward tcp:5039 tcp:5039</pre>
+Execute the line shown in the debug output, substituting 5039  for the proper <code>port</code>:
+<pre class="prettify">
+% adb shell gdbserver :5039 --attach 82 &
+</pre>
+<p>If the crashing process is based off zygote (that is, system_server and all
+  applications), the default values for the <code>gdbclient</code> command, <code>app_process</code> binary and port <code>5039</code>, are correct, so you can execute:</p>
+<pre class="prettify">
+% cd &lt;top of device source tree&gt;
+% gdbclient
+</pre>
+<p>Otherwise you need to determine the path of the crashing binary and follow the
+  steps as mentioned above (for example, <code>gdbclient hoser :5039</code> if
+  the <code>hoser</code> command has failed).</p>

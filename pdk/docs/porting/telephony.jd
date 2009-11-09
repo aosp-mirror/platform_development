@@ -1,0 +1,230 @@
+page.title=Radio Layer Interface
+pdk.version=1.0
+doc.type=porting
+@jd:body
+
+<div id="qv-wrapper">
+<div id="qv">
+<h2>In this document</h2>
+<a name="toc"/>
+<ul>
+<li><a href="#androidTelephonyRILInitialization">RIL Initialization</a></li>
+<li><a href="#androidTelephonyRILIntro">RIL Interaction</a></li>
+<li><a href="#androidTelephonyRILImplementing">Implementing the RIL</a></li>
+<li><a href="#androidTelephonyRILFunctions">RIL Functions</a></li>
+</ul>
+</div>
+</div>
+
+<p>Android's Radio Interface Layer (RIL) provides an abstraction layer between Android telephony services (<a href="http://code.google.com/android/reference/android/telephony/package-descr.html">android.telephony</a>) and radio hardware. The RIL is radio agnostic, and includes support for Global System for Mobile communication (GSM)-based radios.&nbsp;</P>
+
+
+<p>The diagram below illustrates the RIL in the context of Android's Telephony system architecture.</p>
+<p><img src="images/telephony.gif"></p>
+
+Solid elements represent Android blocks and dashed elements represent partner-specific blocks.
+
+<p>The RIL consists of two primary components:</p>
+<p><ul>
+<li><b>RIL Daemon</b>: The RIL daemon initializes the Vendor RIL, processes all communication from Android telephony services, and dispatches calls to the Vendor RIL as solicited commands.</li>
+<li><b>Vendor RIL</b>: The radio-specific Vendor RIL of <code>ril.h</code> that processes all communication with radio hardware and dispatches calls to the RIL Daemon (<code>rild</code>) through unsolicited commands.</li>
+</ul>
+</p>
+
+
+<a name="androidTelephonyRILInitialization"></a><h3>RIL Initialization</h3>
+
+<p>Android initializes the telephony stack and the Vendor RIL at startup as described in the sequence below:</p>
+<p><ol>
+<li>RIL daemon reads <code>rild.lib</code> path and <code>rild.libargs</code> system properties to determine the Vendor RIL library to use and any initialization arguments to provide to the Vendor RIL</li>
+<li>RIL daemon loads the Vendor RIL library and calls <code>RIL_Init</code> to initialize the RIL and obtain a reference to RIL functions</li>
+<li>RIL daemon calls <code>RIL_register</code> on the Android telephony stack, providing a reference to the Vendor RIL functions</li></ol>
+</p>
+<p>See the RIL Daemon source code at <code>//device/commands/rild/rild.c</code> for details.</p>
+<p><b>System Properties</b></p>
+<p>The following RIL-related system properties are set by the RIL library:</p>
+<p><ul>
+<li><code>ro.ril.ecclist</code>: list of valid Emergency Call Codes, for example, 911. Values are read from <code>EF_ECC</code> on the SIM and possibly supplmented by tables based on operator, network, or manufacturing code.</li></ul></p>
+
+<p>The following RIL_related system properties are available to the RIL library:</p>
+<p><ul>
+<li><code>ro.ril.hsxpa</code>: inidcates <code>hsxpa</code> support of target network.</li>
+<li><code>ro.ril.gprsclass</code>: inidcates GPRS class of target network.</li>
+<li><code>ro.ril.enable.3g.prefix=1</code>: adds the 3G prefix to the operator name.</li>
+</ul></p>
+
+<a name="androidTelephonyRILIntro"></a><h3>RIL Interaction</h3>
+
+<p>There are two forms of communication that the RIL handles:</p>
+<ul>
+  <li>Solicited commands: Solicited commands originated by RIL lib, such as <code>DIAL</code> and <code>HANGUP</code>.</li>
+  <li>Unsolicited responses: Unsolicited responses that originate from the baseband, such as <code>CALL_STATE_CHANGED</code> and <code>NEW_SMS</code>.</li>
+</ul>
+
+
+<a name="androidTelephonyRILSolicited"></a><h4>Solicited</h4>
+
+<p>The following snippet illustrates the interface for solicited commands:</p>
+<pre class="prettify">
+void OnRequest (int request_id, void *data, size_t datalen, RIL_Token t);&#13;
+void OnRequestComplete (RIL_Token t, RIL_Error e, void *response, size_t responselen);&#13;
+</pre>
+<p>There are over sixty solicited commands grouped by the following families:</p>
+<p>
+<ul>
+  <li>SIM PIN, IO, and IMSI/IMEI (11)</li>
+  <li>Call status and handling (dial, answer, mute&hellip;) (16)</li>
+  <li>Network status query (4)</li>
+  <li>Network setting (barring, forwarding, selection&hellip;) (12)</li>
+  <li>SMS (3)</li>
+  <li>PDP connection (4)</li>
+  <li>Power and reset (2)</li>
+  <li>Supplementary Services (5)</li>
+  <li>Vendor defined and support (4)<br/>
+                    </li>
+</ul>
+</p>
+<p>The following diagram illustrates a solicited call in Android.</p>
+<p><img src="images/telephony_solicted_example.gif"></p>
+
+
+<a name="androidTelephonyRILUnsolicited"></a><h4>Unsolicited</h4>
+
+<p>The following snippet illustrates the interface for unsolicited commands:</p>
+<pre class="prettify">
+void OnUnsolicitedResponse (int unsolResponse, void *data, size_t datalen);
+</pre>
+<p>There are over ten unsolicited commands grouped by the following families:</p>
+<p>
+<ul>
+<li>Network status changed (4)</li>
+<li>New SMS notify (3)</li>
+<li>New USSD notify (2)</li>
+<li>Signal strength or time changed (2)</li>
+</ul>
+</p>
+<p>The following diagram illustrates an unsolicited call in Android.</p>
+<p><img src="images/telephony_unsolicted_example.gif"></p>
+
+
+<a name="androidTelephonyRILImplementing"></a><h3>Implementing the RIL</h3>
+
+<p>To implement a radio-specific RIL, create a shared library that implements a set of functions required by Android to process radio requests. The required functions are defined in the RIL header (<code>/include/telephony/ril.h</code>).</p>
+<p>The Android radio interface is radio-agnostic and the Vendor RIL can use any protocol to communicate with the radio.&nbsp;Android provides a reference Vendor RIL, using the Hayes AT command set, that you can use as a quick start for telephony testing and a guide for commercial vendor RILs. The source code for the reference RIL is found at <code>/commands/reference-ril/</code>.</p>
+<p>Compile your Vendor RIL as a shared library using the convention <code>libril-&lt;companyname&gt;-&lt;RIL version&gt;.so</code>, for example, libril-acme-124.so, where:</p>
+<p><ul>
+<li><b>libril</b>: all vendor RIL implementations start with 'libril'</li>
+<li><b>&lt;companyname&gt;</b>: a company-specific abbreviation</li>
+<li><b>&lt;RIL version&gt;</b>: RIL version number</li>
+<li><b>so</b>: file extension</li>
+</ul>
+</p>
+
+
+<a name="androidTelephonyRILInit"></a><h4>RIL_Init</h4>
+
+<p>Your Vendor RIL must define a RIL_Init function that provides a handle to the functions which will process all radio requests.  RIL_Init will be called by the Android RIL Daemon at boot time to initialize the RIL.</p>
+
+<pre class="prettify">
+RIL_RadioFunctions *RIL_Init (RIL_Env* env, int argc, char **argv);
+</pre>
+
+<p>RIL_Init should return a RIL_RadioFunctions structure containing the handles to the radio functions:</p>
+<pre class="prettify">
+type structure {
+	int RIL_version;
+	RIL_RequestFunc onRequest;
+	RIL_RadioStateRequest onStateRequest;      
+	RIL_Supports supports;
+	RIL_Cancel onCancel;
+	RIL_GetVersion getVersion;
+} 
+RIL_RadioFunctions;
+</pre>
+
+
+<a name="androidTelephonyRILFunctions"></a><h3>RIL Functions</h3>
+
+<p><code>ril.h</code> defines RIL states and variables, such as <code>RIL_UNSOL_STK_CALL_SETUP</code>, <code>RIL_SIM_READY</code>, <code>RIL_SIM_NOT_READY</code>, as well as the functions described in the tables below. Skim the header file (<code>/device/include/telephony/ril.h</code>) for details.</p>
+
+
+<a name="androidRilFunctionsSolicited"></a><h4>RIL Solicited Command Requests</h4>
+
+<p>The vendor RIL must provide the functions described in the table below to handle solicited commands. The RIL solicited command request types are defined in <code>ril.h</code> with the <code>RIL_REQUEST_</code> prefix. Check the header file for details.</p>
+<p><table>
+  <tr><th scope="col">Name</th><th scope="col">Description</th></tr>
+  <tr>
+    <td valign="top"><code> void (*RIL_RequestFunc) (int request, void *data, size_t datalen, RIL_Token t);</code></td>
+    <td valign="top">
+	<p>This is the RIL entry point for solicited commands and must be able to handle the various RIL solicited request types defined in <code>ril.h</code> with the <code>RIL_REQUEST_</code> prefix.</p>
+	<ul>
+        <li><code>request</code> is one of <code>RIL_REQUEST_*</code></li>
+        <li><code>data</code> is pointer to data defined for that <code>RIL_REQUEST_*</code></l>
+        <li><code>t</code> should be used in subsequent call to <code>RIL_onResponse</code></li>
+        <li><code>datalen</code> is owned by caller, and should not be modified or freed by callee</li>
+      </ul>
+	<p>Must be completed with a call to <code>RIL_onRequestComplete()</code>. &nbsp;<code>RIL_onRequestComplete()</code> may be called from any thread before or after this function returns. This will &nbsp;always be called from the same thread, so returning here implies that the radio is ready to process another command (whether or not the previous command has completed).</p></td>
+  </tr>
+  <tr>
+    <td valign="top"><code> RIL_RadioState (*RIL_RadioStateRequest)();</code></td>
+    <td valign="top">This function should return the current radio state synchronously.</td>
+  </tr>
+  <tr>
+    <td valign="top"><code> int (*RIL_Supports)(int requestCode);</code></td>
+    <td valign="top">This function returns "1" if the specified <code>RIL_REQUEST</code> code is supported and 0 if it is not.</td>
+  </tr>
+  <tr>
+    <td valign="top"><code> void (*RIL_Cancel)(RIL_Token t);</code></td>
+    <td valign="top"><p>This function is used to indicate that a pending request should be canceled. This function is called from a separate thread--not the thread that calls <code>RIL_RequestFunc</code>.</p>
+      <p>On cancel, the callee should do its best to abandon the request and call <code>RIL_onRequestComplete</code> with <code>RIL_Errno CANCELLED</code> at some later point.</p>
+      <p>Subsequent calls to <code>RIL_onRequestComplete</code> for this request with other results will be tolerated but ignored (that is, it is valid to ignore the cancellation request).</p>
+    <p><code>RIL_Cancel</code> calls should return immediately and not wait for cancellation.</p></td>
+  </tr>
+  <tr>
+    <td valign="top"><code> const char * (*RIL_GetVersion) (void);</code></td>
+    <td valign="top">Return a version string for your Vendor RIL</td>
+  </tr>
+</table>
+
+
+<p>The vendor RIL uses the following callback methods to communicate back to the Android RIL daemon.</p>
+<p>
+<table>
+  <tr>
+    <th scope="col">Name</th>
+    <th scope="col">Description</th>
+  </tr>
+  <tr>
+    <td><code>void RIL_onRequestComplete(RIL_Token t, RIL_Errno e, void *response, size_t responselen);</code></td>
+    <td><ul>
+      <li><code>t</code> is parameter passed in on previous call to <code>RIL_Notification</code> routine.</li>
+      <li>If <code>e</code> != SUCCESS, then response can be null and is ignored</li>
+      <li><code>response</code> is owned by caller, and should not be modified or freed by callee</li>
+      <li><code>RIL_onRequestComplete</code> will return as soon as possible</li>
+    </ul></td>
+  </tr>
+  <tr>
+    <td><code>void RIL_requestTimedCallback (RIL_TimedCallback callback, void *param, const struct timeval *relativeTime);</code></td>
+    <td>Call user-specified callback function on the same thread that <code>RIL_RequestFunc</code> is called. If <code>relativeTime</code> is specified, then it specifies a relative time value at which the callback is invoked. If <code>relativeTime</code> is NULL or points to a 0-filled structure, the callback will be invoked as soon as possible.</td>
+  </tr>
+</table></p>
+
+
+<a name="androidRilFunctionsUnsolicited"></a><h4>RIL Unsolicited Commands</h4>
+
+<p>The functions listed in the table below are call-back functions used by the Vendor RIL to invoke unsolicited commands on the Android platform. See <code>ril.h</code> for details. </p>
+<p>
+<table>
+  <tr>
+    <th scope="col">Name</th>
+    <th scope="col">Description</th>
+  </tr>
+  <tr>
+    <td><code>void RIL_onUnsolicitedResponse(int unsolResponse, const void *data, size_t datalen);</code></td>
+    <td><ul>
+      <li><code>unsolResponse</code> is one of <code>RIL_UNSOL_RESPONSE_*</code></li>
+      <li><code>data</code> is pointer to data defined for that <code>RIL_UNSOL_RESPONSE_*</code></li>
+      <li><code>data</code> is owned by caller, and should not be modified or freed by callee</li>
+    </ul></td>
+  </tr>
+</table></p>

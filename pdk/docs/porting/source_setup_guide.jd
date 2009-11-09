@@ -1,0 +1,118 @@
+page.title=Host System Setup
+pdk.version=1.0
+doc.type=porting
+@jd:body
+
+<a name="toc"/>
+<div style="padding:10px">
+<a href="#androidSourceSetupIntro">Introduction</a><br/>
+<a href="#androidSourceSetupBuildSystemSetupPackages">Installing Packages</a><br/><div style="padding-left:40px">
+
+<a href="#androidSourceSetupBuildSystemSetupRequiredPackages">Required Packages</a><br/>
+<a href="#androidSourceSetupUbuntu606Intro">Ubuntu 6.06 (Dapper)</a><br/>
+<a href="#androidSourceSetupUbuntu710Intro">Ubuntu 7.10</a><br/>
+<a href="#androidSourceSetupUbuntu804Intro">Ubuntu 8.04</a><br/></div>
+<a href="#androidSourceSetupBuildSystemSetupJavaIntro">Installing Java</a><br/></div>
+
+<a name="androidSourceSetupIntro"></a><h2>Introduction</h2>
+
+<p>This section provides instructions on how to configure your host system to build Android for mobile devices. While Android is designed as host-environment agnostic, it has been tested and is known to work on the following Linux operating system; Ubuntu 6.06 (Dapper), 7.10 (Gutsy), and 8.04. Cygwin is not recommended. </p>
+
+
+<a name="androidSourceSetupBuildSystemSetupPackages"></a><h2>Installing Packages</h2>
+
+
+
+<a name="androidSourceSetupBuildSystemSetupRequiredPackages"></a><h3>Required Packages</h3>
+
+<p>Android requires the following system packages:</p>
+<p><ul>
+<li>flex: This lexical analyzer generator is used to read a given input file for a description of a scanner to generate.</li>
+<li>bison: This is a general-purpose parser generator.</li>
+<li>gperf: This is a perfect hash function generator.</li>
+<li>libesd0-dev: This enlightened sound daemon (dev files) is used to mix digitized audio streams for playback by a single device.</li>
+<li>libwxgtk2.6-dev: This package provides GUI components and other facilities for many different platforms.</li>
+<li>build-essential: This package contains a list of packages considered fundamental to building Debian packages.</li>
+</ul></p>
+
+
+<a name="androidSourceSetupUbuntu606Intro"></a><h3>Ubuntu 6.06 (Dapper)</h3>
+
+<p>On a clean Dapper system, type the following:</p>
+<pre class="prettyprint">
+% sudo apt-get install flex bison gperf libesd0-dev libwxgtk2.6-dev zlib1g-dev 
+   build-essential
+</pre>
+<p>This snippet includes an artificial line break to maintain a print-friendly document.</p>
+
+
+<a name="androidSourceSetupUbuntu710Intro"></a><h3>Ubuntu 7.10</h3>
+
+<ol><li>The libwxgtk2.6-dev package will only work if the following code is included in your  /etc/apt/source file.
+<p><pre class="prettyprint">
+## N.B. software from this repository is ENTIRELY UNSUPPORTED by the Ubuntu
+## team, and may not be under a free license. Please satisfy yourself as to
+## your rights to use the software. Also, please note that software in
+## universe WILL NOT receive any review or updates from the Ubuntu security
+## team.
+# Line commented out by installer because it failed to verify:
+deb http://us.archive.ubuntu.com/ubuntu/ gutsy universe
+# Line commented out by installer because it failed to verify:
+deb-src http://us.archive.ubuntu.com/ubuntu/ gutsy universe
+# Line commented out by installer because it failed to verify:
+deb http://us.archive.ubuntu.com/ubuntu/ gutsy-updates universe
+# Line commented out by installer because it failed to verify:
+deb-src http://us.archive.ubuntu.com/ubuntu/ gutsy-updates universe
+</pre></p></li>
+<li>Install required packages with the following command:
+<p><pre class="prettyprint">
+% sudo apt-get install flex bison gperf libesd0-dev libwxgtk2.6-dev zlib1g-dev
+   build-essential
+</pre></p>
+This snippet includes an artificial line break to maintain a print-friendly document.
+</li>
+<li>
+<p>Install the X11 development environment with the following commands:</p>
+<p><pre class="prettyprint">
+% sudo apt-get install x-dev
+% sudo apt-get install libx11-dev
+% sudo apt-get install libncurses5-dev
+</pre></p>
+</li>
+</ol>
+
+
+<a name="androidSourceSetupUbuntu804Intro"></a><h3>Ubuntu 8.04</h3>
+
+<p>On a clean system, type the following:</p>
+<pre class="prettify">
+% sudo apt-get install flex bison gperf libesd0-dev libwxgtk2.6-dev
+zlib1g-dev build-essential
+% sudo apt-get install x-dev
+% sudo apt-get install libx11-dev
+% sudo apt-get install libncurses5-dev
+% sudo apt-get install sun-java5-jdk
+</pre>
+
+
+<a name="androidSourceSetupBuildSystemSetupJavaIntro"></a><h2>Installing Java</h2>
+
+<p>Android source code includes a hard dependency on the Java Developer Kit (JDK) 5.0 Update 12 or greater. The specific file name of the Update 12 package is <code>jdk-1_5_0_12-linux-i586.bin</code>. To download this version of the Java JDK:</p>
+<p><ol>
+<li>Navigate to: <a href="http://java.sun.com/products/archive/">http://java.sun.com/products/archive/</a>.</li>
+<li>Select '5.0 Update 12' from the 'Java 2 Platform Standard Edition (J2SE)' -> 'JDK/JRE - 5.0' field and click 'Go.'</li>
+<li>Click 'Download JDK.'</li>
+<li>In the 'Linux Platform' section, click 'Linux self-extracting file' associated with the jdk-1_5_0_12-linux-i586.bin package.</li>
+<li>Follow the installation instructions.</li>
+</ol>
+</p>
+
+<p>Once you have cleanly installed the JDK, modify your PATH environment variable to include <code>&lt;jdk-install-dir&gt;/jdk1.5.0_12/bin</code> at its beginning so that Dapper will use the correct installation. </p>
+<p><b>Ubuntu 7.10</b></p>
+<p>An alternative method to quickly install Java is to enable multiverse repo in <code>/etc/apt/sources.list</code> and then execute:</p>
+<pre class="prettyprint">
+% sudo apt-get install sun-java5-jdk
+</pre>
+
+
+

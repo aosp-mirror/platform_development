@@ -1,0 +1,556 @@
+page.title=Build Cookbook
+pdk.version=1.0
+doc.type=porting
+@jd:body
+
+<div id="qv-wrapper">
+<div id="qv">
+<h2>In this document</h2>
+<a name="toc"/>
+<ul>
+<li><a href="#simpleAPK">Simple APK</a></li>
+<li><a href="#APKJar">APK Dependent on static .jar file</a></li>
+    <li><a href="#APKPlatform">APK signed with the platform key</a></li>
+    <li><a href="#APKVendor">APK that signed with vendor key</a></li>
+    <li><a href="#prebuiltAPK">Prebuilt APK</a></li>
+    <li><a href="#staticJava">Adding a Static Java Library</a></li>
+    <li><a href="#mkVars">Android.mk variables</a></li>
+</ul>
+</div>
+</div>
+
+
+<p>The Android Build Cookbook offers code snippets to help you quickly implement some common build tasks. For additional instruction, please see the other build documents in this section.</p>  
+<h3><a name="simpleAPK"></a>Building a simple APK</h3>
+<pre>
+  LOCAL_PATH := $(call my-dir)
+  include $(CLEAR_VARS)
+  &nbsp;
+  # Build all java files in the java subdirectory
+  LOCAL_SRC_FILES := $(call all-subdir-java-files)
+  &nbsp;
+  # Name of the APK to build
+  LOCAL_PACKAGE_NAME := LocalPackage
+  &nbsp;
+  # Tell it to build an APK
+  include $(BUILD_PACKAGE)
+</pre>
+<h3><a name="APKJar"></a>Building a APK that depends on a static .jar file</h3>
+<pre>
+  LOCAL_PATH := $(call my-dir)
+  include $(CLEAR_VARS)
+  &nbsp;
+  # List of static libraries to include in the package
+  LOCAL_STATIC_JAVA_LIBRARIES := static-library
+  &nbsp;
+  # Build all java files in the java subdirectory
+  LOCAL_SRC_FILES := $(call all-subdir-java-files)
+  &nbsp;
+  # Name of the APK to build
+  LOCAL_PACKAGE_NAME := LocalPackage
+  &nbsp;
+  # Tell it to build an APK
+  include $(BUILD_PACKAGE)
+</pre>
+<h3><a name="APKPlatform"></a>Building a APK that should be signed with the platform key</h3>
+<pre>
+  LOCAL_PATH := $(call my-dir)
+  include $(CLEAR_VARS)
+  &nbsp;
+  # Build all java files in the java subdirectory
+  LOCAL_SRC_FILES := $(call all-subdir-java-files)
+  &nbsp;
+  # Name of the APK to build
+  LOCAL_PACKAGE_NAME := LocalPackage
+  &nbsp;
+  LOCAL_CERTIFICATE := platform
+  &nbsp;
+  # Tell it to build an APK
+  include $(BUILD_PACKAGE)
+</pre>
+<h3><a name="APKVendor"></a>Building a APK that should be signed with a specific vendor key</h3>
+<pre>
+  LOCAL_PATH := $(call my-dir)
+  include $(CLEAR_VARS)
+  &nbsp;
+  # Build all java files in the java subdirectory
+  LOCAL_SRC_FILES := $(call all-subdir-java-files)
+  &nbsp;
+  # Name of the APK to build
+  LOCAL_PACKAGE_NAME := LocalPackage
+  &nbsp;
+  LOCAL_CERTIFICATE := vendor/example/certs/app
+  &nbsp;
+  # Tell it to build an APK
+  include $(BUILD_PACKAGE)
+</pre>
+<h3><a name="prebuiltAPK"></a>Adding a prebuilt APK</h3>
+<pre>
+  LOCAL_PATH := $(call my-dir)
+  include $(CLEAR_VARS)
+  &nbsp;
+  # Module name should match apk name to be installed.
+  LOCAL_MODULE := LocalModuleName
+  LOCAL_SRC_FILES := $(LOCAL_MODULE).apk
+  LOCAL_MODULE_CLASS := APPS
+  LOCAL_MODULE_SUFFIX := $(COMMON_ANDROID_PACKAGE_SUFFIX)
+  &nbsp;
+  include $(BUILD_PREBUILT)
+</pre>
+<h3><a name="staticJava"></a>Adding a Static Java Library</h3>
+<pre>
+  LOCAL_PATH := $(call my-dir)
+  include $(CLEAR_VARS)
+  &nbsp;
+  # Build all java files in the java subdirectory
+  LOCAL_SRC_FILES := $(call all-subdir-java-files)
+  &nbsp;
+  # Any libraries that this library depends on
+  LOCAL_JAVA_LIBRARIES := android.test.runner
+  &nbsp;
+  # The name of the jar file to create
+  LOCAL_MODULE := sample
+  &nbsp;
+  # Build a static jar file.
+  include $(BUILD_STATIC_JAVA_LIBRARY)
+</pre>
+<h3><a name="mkVars"></a>Android.mk Variables</h3>
+
+<p>These are the variables that you'll commonly see in Android.mk files, listed
+alphabetically. First, a note on the variable naming: </p> 
+
+<ul> 
+    <li><b>LOCAL_</b> - These variables are set per-module.  They are cleared
+    by the <code>include $(CLEAR_VARS)</code> line, so you can rely on them
+    being empty after including that file.  Most of the variables you'll use
+    in most modules are LOCAL_ variables.</li> 
+    <li><b>PRIVATE_</b> - These variables are make-target-specific variables.  That
+    means they're only usable within the commands for that module.  It also
+    means that they're unlikely to change behind your back from modules that
+    are included after yours.  This 
+    <a href="http://www.gnu.org/software/make/manual/make.html#Target_002dspecific">link to the make documentation</a> 
+    describes more about target-specific variables.
+    </li> 
+    <li><b>HOST_</b> and <b>TARGET_</b> - These contain the directories
+    and definitions that are specific to either the host or the target builds.
+    Do not set variables that start with HOST_ or TARGET_ in your makefiles.
+    </li> 
+    <li><b>BUILD_</b> and <b>CLEAR_VARS</b> - These contain the names of
+    well-defined template makefiles to include.  Some examples are CLEAR_VARS
+    and BUILD_HOST_PACKAGE.</li> 
+    <li>Any other name is fair-game for you to use in your Android.mk.  However,
+    remember that this is a non-recursive build system, so it is possible that
+    your variable will be changed by another Android.mk included later, and be
+    different when the commands for your rule / module are executed.</li> 
+</ul>
+
+<table border=1 cellpadding=2 cellspacing=0>
+ <tbody><tr>
+  <th scope="col">Parameter</th>
+  <th scope="col">Description</th>
+ </tr>
+<tr>
+<td valign="top">LOCAL_AAPT_FLAGS</td>
+<td valign="top"></td>
+</tr>
+<tr>
+<td valign="top">LOCAL_ACP_UNAVAILABLE</td>
+<td valign="top"></td>
+</tr>
+<tr>
+<td valign="top">LOCAL_ADDITIONAL_JAVA_DIR</td>
+<td valign="top"></td>
+</tr>
+<tr>
+<td valign="top">LOCAL_AIDL_INCLUDES</td>
+<td valign="top"></td>
+</tr>
+<tr>
+<td valign="top">LOCAL_ALLOW_UNDEFINED_SYMBOLS</td>
+<td valign="top"></td>
+</tr>
+<tr>
+<td valign="top">LOCAL_ARM_MODE</td>
+<td valign="top"></td>
+</tr>
+<tr>
+<td valign="top">LOCAL_ASFLAGS</td>
+<td valign="top"></td>
+</tr>
+<tr>
+<td valign="top">LOCAL_ASSET_DIR</td>
+<td valign="top"></td>
+</tr>
+<tr>
+<td valign="top">LOCAL_ASSET_FILES</td>
+<td valign="top">In Android.mk files that <code>include $(BUILD_PACKAGE)</code> set this
+to the set of files you want built into your app.  Usually:</p> 
+<p><code>LOCAL_ASSET_FILES += $(call find-subdir-assets)</code></td>
+</tr>
+<tr>
+<td valign="top">LOCAL_BUILT_MODULE_STEM</td>
+<td valign="top"></td>
+</tr>
+<tr>
+<td valign="top">LOCAL_C_INCLUDES</td>
+<td valign="top"><p>Additional directories to instruct the C/C++ compilers to look for header
+files in.  These paths are rooted at the top of the tree.  Use
+<code>LOCAL_PATH</code> if you have subdirectories of your own that you
+want in the include paths.  For example:</p> 
+<p><code> 
+LOCAL_C_INCLUDES += extlibs/zlib-1.2.3<br/> 
+LOCAL_C_INCLUDES += $(LOCAL_PATH)/src
+</code></p> 
+<p>You should not add subdirectories of include to
+<code>LOCAL_C_INCLUDES</code>, instead you should reference those files
+in the <code>#include</code> statement with their subdirectories.  For
+example:</p> 
+<p><code>#include &lt;utils/KeyedVector.h&gt;</code><br/> 
+not <code><s>#include &lt;KeyedVector.h&gt;</s></code></p> </td>
+</tr>
+<tr>
+<td valign="top">LOCAL_CC</td>
+<td valign="top">If you want to use a different C compiler for this module, set LOCAL_CC
+to the path to the compiler.  If LOCAL_CC is blank, the appropriate default
+compiler is used.</td>
+</tr>
+<tr>
+<td valign="top">LOCAL_CERTIFICATE</td>
+<td valign="top"></td>
+</tr>
+<tr>
+<td valign="top">LOCAL_CFLAGS</td>
+<td valign="top">If you have additional flags to pass into the C or C++ compiler, add
+them here.  For example:</p> 
+<p><code>LOCAL_CFLAGS += -DLIBUTILS_NATIVE=1</code></td>
+</tr>
+<tr>
+<td valign="top">LOCAL_CLASSPATH</td>
+<td valign="top"></td>
+</tr>
+<tr>
+<td valign="top">LOCAL_COMPRESS_MODULE_SYMBOLS</td>
+<td valign="top"></td>
+</tr>
+<tr>
+<td valign="top">LOCAL_COPY_HEADERS</td>
+<td valign="top"><p>The set of files to copy to the install include tree.  You must also
+supply <code>LOCAL_COPY_HEADERS_TO</code>.</p> 
+<p>This is going away because copying headers messes up the error messages, and
+may lead to people editing those headers instead of the correct ones.  It also
+makes it easier to do bad layering in the system, which we want to avoid.  We
+also aren't doing a C/C++ SDK, so there is no ultimate requirement to copy any
+headers.</p></td>
+</tr>
+<tr>
+<td valign="top">LOCAL_COPY_HEADERS_TO</td>
+<td valign="top"><p>The directory within "include" to copy the headers listed in
+<code>LOCAL_COPY_HEADERS</code> to.</p> 
+<p>This is going away because copying headers messes up the error messages, and
+may lead to people editing those headers instead of the correct ones.  It also
+makes it easier to do bad layering in the system, which we want to avoid.  We
+also aren't doing a C/C++ SDK, so there is no ultimate requirement to copy any
+headers.</p></td>
+</tr>
+<tr>
+<td valign="top">LOCAL_CPP_EXTENSION</td>
+<td valign="top">If your C++ files end in something other than "<code>.cpp</code>",
+you can specify the custom extension here.  For example:
+<p><code>LOCAL_CPP_EXTENSION := .cc</code></p> 
+Note that all C++ files for a given module must have the same
+extension; it is not currently possible to mix different extensions.</td>
+</tr>
+<tr>
+<td valign="top">LOCAL_CPPFLAGS</td>
+<td valign="top">If you have additional flags to pass into <i>only</i> the C++ compiler, add
+them here.  For example:</p> 
+<p><code>LOCAL_CPPFLAGS += -ffriend-injection</code></p> 
+<code>LOCAL_CPPFLAGS</code> is guaranteed to be after <code>LOCAL_CFLAGS</code> 
+on the compile line, so you can use it to override flags listed in
+<code>LOCAL_CFLAGS</code></td>
+</tr>
+<tr>
+<td valign="top">LOCAL_CXX</td>
+<td valign="top">If you want to use a different C++ compiler for this module, set LOCAL_CXX
+to the path to the compiler.  If LOCAL_CXX is blank, the appropriate default
+compiler is used.</td>
+</tr>
+<tr>
+<td valign="top">LOCAL_DX_FLAGS</td>
+<td valign="top"></td>
+</tr>
+<tr>
+<td valign="top">LOCAL_EXPORT_PACKAGE_RESOURCES</td>
+<td valign="top"></td>
+</tr>
+<tr>
+<td valign="top">LOCAL_FORCE_STATIC_EXECUTABLE</td>
+<td valign="top"><p>If your executable should be linked statically, set 
+<code>LOCAL_FORCE_STATIC_EXECUTABLE:=true</code>.  There is a very short
+list of libraries that we have in static form (currently only libc).  This is
+really only used for executables in /sbin on the root filesystem.</p> </td>
+</tr>
+<tr>
+<td valign="top">LOCAL_GENERATED_SOURCES</td>
+<td valign="top"><p>Files that you add to <code>LOCAL_GENERATED_SOURCES</code> will be
+automatically generated and then linked in when your module is built.
+See the <a href="#custom-tools">Custom Tools</a> template makefile for an
+example.</p> </td>
+</tr>
+<tr>
+<td valign="top">LOCAL_INSTRUMENTATION_FOR</td>
+<td valign="top"></td>
+</tr>
+<tr>
+<td valign="top">LOCAL_INSTRUMENTATION_FOR_PACKAGE_NAME</td>
+<td valign="top"></td>
+</tr>
+<tr>
+<td valign="top">LOCAL_INTERMEDIATE_SOURCES</td>
+<td valign="top"></td>
+</tr>
+<tr>
+<td valign="top">LOCAL_INTERMEDIATE_TARGETS</td>
+<td valign="top"></td>
+</tr>
+<tr>
+<td valign="top">LOCAL_IS_HOST_MODULE</td>
+<td valign="top"></td>
+</tr>
+<tr>
+<td valign="top">LOCAL_JAR_MANIFEST</td>
+<td valign="top"></td>
+</tr>
+<tr>
+<td valign="top">LOCAL_JARJAR_RULES</td>
+<td valign="top"></td>
+</tr>
+<tr>
+<td valign="top">LOCAL_JAVA_LIBRARIES</td>
+<td valign="top"><p>When linking Java apps and libraries, <code>LOCAL_JAVA_LIBRARIES</code> 
+specifies which sets of java classes to include.  Currently there are
+two of these: <code>core</code> and <code>framework</code>.
+In most cases, it will look like this:</p> 
+<p><code>LOCAL_JAVA_LIBRARIES := core framework</code></p> 
+<p>Note that setting <code>LOCAL_JAVA_LIBRARIES</code> is not necessary
+(and is not allowed) when building an APK with
+"<code>include $(BUILD_PACKAGE)</code>".  The appropriate libraries
+will be included automatically.</p> </td>
+</tr>
+<tr>
+<td valign="top">LOCAL_JAVA_RESOURCE_DIRS</td>
+<td valign="top"></td>
+</tr>
+<tr>
+<td valign="top">LOCAL_JAVA_RESOURCE_FILES</td>
+<td valign="top"></td>
+</tr>
+<tr>
+<td valign="top">LOCAL_JNI_SHARED_LIBRARIES</td>
+<td valign="top"></td>
+</tr>
+<tr>
+<td valign="top">LOCAL_LDFLAGS</td>
+<td valign="top"><p>You can pass additional flags to the linker by setting
+<code>LOCAL_LDFLAGS</code>.  Keep in mind that the order of parameters is
+very important to ld, so test whatever you do on all platforms.</p> </td>
+</tr>
+<tr>
+<td valign="top">LOCAL_LDLIBS</td>
+<td valign="top"><p><code>LOCAL_LDLIBS</code> allows you to specify additional libraries
+that are not part of the build for your executable or library.  Specify
+the libraries you want in -lxxx format; they're passed directly to the 
+link line.  However, keep in mind that there will be no dependency generated
+for these libraries.  It's most useful in simulator builds where you want
+to use a library preinstalled on the host.  The linker (ld) is a particularly
+fussy beast, so it's sometimes necessary to pass other flags here if you're
+doing something sneaky. Some examples:</p> 
+<p><code>LOCAL_LDLIBS += -lcurses -lpthread<br/> 
+LOCAL_LDLIBS += -Wl,-z,origin
+</code></p> </td>
+</tr>
+<tr>
+<td valign="top">LOCAL_MODULE</td>
+<td valign="top"><code>LOCAL_MODULE</code> is the name of what's supposed to be generated
+from your Android.mk.  For exmample, for libkjs, the <code>LOCAL_MODULE</code> 
+is "libkjs" (the build system adds the appropriate suffix -- .so .dylib .dll).
+For app modules, use <code>LOCAL_PACKAGE_NAME</code> instead of 
+<code>LOCAL_MODULE</code>. </td>
+</tr>
+<tr>
+<td valign="top">LOCAL_MODULE_PATH</td>
+<td valign="top">Instructs the build system to put the module somewhere other than what's
+normal for its type.  If you override this, make sure you also set
+<code>LOCAL_UNSTRIPPED_PATH</code> if it's an executable or a shared library
+so the unstripped binary has somewhere to go.  An error will occur if you forget
+to.</p> 
+<p>See <a href="#moving-modules">Putting modules elsewhere</a> for more.</td>
+</tr>
+<tr>
+<td valign="top">LOCAL_MODULE_STEM</td>
+<td valign="top"></td>
+</tr>
+<tr>
+<td valign="top">LOCAL_MODULE_TAGS</td>
+<td valign="top"><p>Set <code>LOCAL_MODULE_TAGS</code> to any number of whitespace-separated
+tags.  <p>This variable controls what build flavors the package gets included in. For example:</p>
+<ul type="disc">
+  <li><code>user</code>: include this in user/userdebug builds</li>
+  <li><code>eng</code>: include this in eng builds</li>
+  <li><code>tests</code>: the target is a testing target and makes it available for tests</li>
+  <li><code>optional</code>: don't include this</li>
+</ul></td>
+</tr>
+<tr>
+<td valign="top">LOCAL_NO_DEFAULT_COMPILER_FLAGS</td>
+<td valign="top"></td>
+</tr>
+<tr>
+<td valign="top">LOCAL_NO_EMMA_COMPILE</td>
+<td valign="top"></td>
+</tr>
+<tr>
+<td valign="top">LOCAL_NO_EMMA_INSTRUMENT</td>
+<td valign="top"></td>
+</tr>
+<tr>
+<td valign="top">LOCAL_NO_STANDARD_LIBRARIES</td>
+<td valign="top"></td>
+</tr>
+<tr>
+<td valign="top">LOCAL_OVERRIDES_PACKAGES</td>
+<td valign="top"></td>
+</tr>
+<tr>
+<td valign="top">LOCAL_PACKAGE_NAME</td>
+<td valign="top"><code>LOCAL_PACKAGE_NAME</code> is the name of an app.  For example,
+Dialer, Contacts, etc. </td>
+</tr>
+<tr>
+<td valign="top">LOCAL_POST_PROCESS_COMMAND</td>
+<td valign="top"><p>For host executables, you can specify a command to run on the module
+after it's been linked.  You might have to go through some contortions
+to get variables right because of early or late variable evaluation:</p> 
+<p><code>module := $(HOST_OUT_EXECUTABLES)/$(LOCAL_MODULE)<br/> 
+LOCAL_POST_PROCESS_COMMAND := /Developer/Tools/Rez -d __DARWIN__ -t APPL\<br/> 
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-d __WXMAC__ -o $(module) Carbon.r
+</code></p> 
+ </td>
+</tr>
+<tr>
+<td valign="top">LOCAL_PREBUILT_EXECUTABLES</td>
+<td valign="top">When including $(BUILD_PREBUILT) or $(BUILD_HOST_PREBUILT), set these to
+executables that you want copied.  They're located automatically into the
+right bin directory.</td>
+</tr>
+<tr>
+<td valign="top">LOCAL_PREBUILT_JAVA_LIBRARIES</td>
+<td valign="top"></td>
+</tr>
+<tr>
+<td valign="top">LOCAL_PREBUILT_LIBS</td>
+<td valign="top">When including $(BUILD_PREBUILT) or $(BUILD_HOST_PREBUILT), set these to
+libraries that you want copied.  They're located automatically into the
+right lib directory.</td>
+</tr>
+<tr>
+<td valign="top">LOCAL_PREBUILT_OBJ_FILES</td>
+<td valign="top"></td>
+</tr>
+<tr>
+<td valign="top">LOCAL_PREBUILT_STATIC_JAVA_LIBRARIES</td>
+<td valign="top"></td>
+</tr>
+<tr>
+<td valign="top">LOCAL_PRELINK_MODULE</td>
+<td valign="top"></td>
+</tr>
+<tr>
+<td valign="top">LOCAL_REQUIRED_MODULES</td>
+<td valign="top"><p>Set <code>LOCAL_REQUIRED_MODULES</code> to any number of whitespace-separated
+module names, like "libblah" or "Email".  If this module is installed, all
+of the modules that it requires will be installed as well.  This can be
+used to, e.g., ensure that necessary shared libraries or providers are
+installed when a given app is installed.</td>
+</tr>
+<tr>
+<td valign="top">LOCAL_RESOURCE_DIR</td>
+<td valign="top"></td>
+</tr>
+<tr>
+<td valign="top">LOCAL_SDK_VERSION</td>
+<td valign="top"></td>
+</tr>
+<tr>
+<td valign="top">LOCAL_SHARED_LIBRARIES</td>
+<td valign="top">These are the libraries you directly link against.  You don't need to
+pass transitively included libraries.  Specify the name without the suffix:</p> 
+<p><code>LOCAL_SHARED_LIBRARIES := \<br/> 
+	&nbsp;&nbsp;&nbsp;&nbsp;libutils \<br/> 
+	&nbsp;&nbsp;&nbsp;&nbsp;libui \<br/> 
+	&nbsp;&nbsp;&nbsp;&nbsp;libaudio \<br/> 
+	&nbsp;&nbsp;&nbsp;&nbsp;libexpat \<br/> 
+	&nbsp;&nbsp;&nbsp;&nbsp;libsgl
+</code></td>
+</tr>
+<tr>
+<td valign="top">LOCAL_SRC_FILES</td>
+<td valign="top">The build system looks at <code>LOCAL_SRC_FILES</code> to know what source
+files to compile -- .cpp .c .y .l .java.  For lex and yacc files, it knows
+how to correctly do the intermediate .h and .c/.cpp files automatically.  If
+the files are in a subdirectory of the one containing the Android.mk, prefix
+them with the directory name:</p> 
+<p><code>LOCAL_SRC_FILES := \<br/> 
+	&nbsp;&nbsp;&nbsp;&nbsp;file1.cpp \<br/> 
+	&nbsp;&nbsp;&nbsp;&nbsp;dir/file2.cpp
+</code></td>
+</tr>
+<tr>
+<td valign="top">LOCAL_STATIC_JAVA_LIBRARIES</td>
+<td valign="top"></td>
+</tr>
+<tr>
+<td valign="top">LOCAL_STATIC_LIBRARIES</td>
+<td valign="top">These are the static libraries that you want to include in your module.
+Mostly, we use shared libraries, but there are a couple of places, like
+executables in sbin and host executables where we use static libraries instead.
+<p><code>LOCAL_STATIC_LIBRARIES := \<br/> 
+	&nbsp;&nbsp;&nbsp;&nbsp;libutils \<br/> 
+	&nbsp;&nbsp;&nbsp;&nbsp;libtinyxml
+</code></td>
+</tr>
+<tr>
+<td valign="top">LOCAL_UNINSTALLABLE_MODULE</td>
+<td valign="top"></td>
+</tr>
+<tr>
+<td valign="top">LOCAL_UNSTRIPPED_PATH</td>
+<td valign="top">Instructs the build system to put the unstripped version of the module
+somewhere other than what's normal for its type.  Usually, you override this
+because you overrode <code>LOCAL_MODULE_PATH</code> for an executable or a
+shared library.  If you overrode <code>LOCAL_MODULE_PATH</code>, but not 
+<code>LOCAL_UNSTRIPPED_PATH</code>, an error will occur.</p> 
+<p>See <a href="#moving-modules">Putting modules elsewhere</a> for more.</td>
+</tr>
+<tr>
+<td valign="top">LOCAL_WHOLE_STATIC_LIBRARIES</td>
+<td valign="top">These are the static libraries that you want to include in your module without allowing
+the linker to remove dead code from them. This is mostly useful if you want to add a static library
+to a shared library and have the static library's content exposed from the shared library.
+<p><code>LOCAL_WHOLE_STATIC_LIBRARIES := \<br/> 
+	&nbsp;&nbsp;&nbsp;&nbsp;libsqlite3_android<br/> 
+</code></td>
+</tr>
+<tr>
+<td valign="top">LOCAL_YACCFLAGS</td>
+<td valign="top">Any flags to pass to invocations of yacc for your module.  A known limitation
+here is that the flags will be the same for all invocations of YACC for your
+module.  This can be fixed.  If you ever need it to be, just ask.</p> 
+<p><code>LOCAL_YACCFLAGS := -p kjsyy</code></td>
+</tr>
+<tr>
+<td valign="top">OVERRIDE_BUILT_MODULE_PATH</td>
+<td valign="top"></td>
+</tr>
+
+</table>

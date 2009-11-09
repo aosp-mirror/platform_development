@@ -1,0 +1,60 @@
+page.title=Device Requirements
+pdk.version=1.0
+doc.type=porting
+@jd:body
+
+<p>While Android is designed to support a wide variety of hardware platforms and configurations, this section provides recommended minimum device requirements.</p>
+<table border=1 cellpadding=2 cellspacing=0>
+    <tbody><tr>
+      <th scope="col">Feature</th>
+        <th scope="col">Minimum Requirement</th>
+        <th scope="col">Notes</th>
+    </tr>
+	<tr>
+	  <td>Chipset</td>
+	  <td>ARM-based</td>
+	  <td>For the first release, Android is primarily targeted towards mobile handsets and portions of the platform, such as Dalvik VM graphics processing, currently assume an ARM architecture.</td>
+	</tr>
+	<tr>
+	  <td>Memory</td>
+	  <td>128 MB RAM; 256 MB Flash External</td>
+	  <td>Android can boot and run in configurations with less memory, but it isn't recommended.</td>
+	  </tr>
+	<tr>
+	  <td>Storage</td>
+	  <td>Mini or Micro SD </td>
+	  <td>Not necessary for basic bring up, but recommended.</td>
+	  </tr>
+	<tr>
+	  <td>Primary Display </td>
+	  <td>HVGA required</td>
+	  <td>The current Android interface targets a touch-based HVGA resolution display with a touch-interface no smaller than 2.8 inches in size. However, smaller displays will suffice for initial porting.</td>
+	  </tr>
+	<tr>
+	  <td>Navigation Keys </td>
+	  <td>5-way navigation with 5 application keys, power, camera and volume controls</td>
+	  <td>&nbsp;</td>
+	  </tr>
+	<tr>
+	  <td>Camera</td>
+	  <td>2MP CMOS</td>
+	  <td>Not required for basic bring up. </td>
+	  </tr>
+	<tr>
+	  <td>USB</td>
+	  <td>Standard mini-B USB interface</td>
+	  <td>Android uses the USB interface for flashing the device system images and debugging a running device.</td>
+	  </tr>
+	<tr>
+	  <td>Bluetooth</td>
+	  <td>1.2 or 2.0 </td>
+	  <td>Not required for initial bring up.</td>
+	  </tr>
+</tbody>
+</table>
+<p>If available, your Android device can also benefit from the following optional device characteristics:</p>
+<ul>
+  <li>QWERTY keyboard</li>
+  <li>WiFi</li>
+  <li>GPS</li>
+</ul>

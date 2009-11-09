@@ -54,7 +54,7 @@ pdk_hardware_dir := hardware/libhardware/include/hardware
 pdk_camera_dir := frameworks/base/include/ui
 
 # Destination directory for docs (templates + doxygenated headers)
-pdk_docs_dest_dir := $(pdk_docs_intermediates)/docs/guide
+pdk_docs_dest_dir := $(pdk_docs_intermediates)/docs/porting
 pdk_app_eng_root := $(pdk_docs_intermediates)/docs
 
 # Working directory for source to be doxygenated
@@ -188,12 +188,12 @@ LOCAL_DROIDDOC_HTML_DIR := ../../../$(pdk_app_eng_root)
 LOCAL_MODULE := online-pdk
 
 LOCAL_DROIDDOC_OPTIONS:= \
-		-toroot /online-pdk/ \
+		-toroot / \
 		-hdf android.whichdoc online \
 		-hdf android.whichmodule $(LOCAL_MODULE)
 
 LOCAL_DROIDDOC_CUSTOM_TEMPLATE_DIR := build/tools/droiddoc/templates-pdk
-LOCAL_DROIDDOC_CUSTOM_ASSET_DIR := assets-pdk
+LOCAL_DROIDDOC_CUSTOM_ASSET_DIR := assets
 
 include $(BUILD_DROIDDOC)
 
@@ -202,10 +202,6 @@ DOCS_OUT_DIR  := $(OUT_DOCS)/$(LOCAL_MODULE)
 
 # Copy appengine server files for new system
 $(OUT_DOCS)/app.yaml: $(pdk_hosting_dir)/app.yaml
-	@echo "PDK: $@"
-	$(copy-file-to-target-with-cp)
-
-$(OUT_DOCS)/pdk.py: $(pdk_hosting_dir)/pdk.py
 	@echo "PDK: $@"
 	$(copy-file-to-target-with-cp)
 
@@ -232,11 +228,11 @@ $(call dist-for-goals,pdk_docs,$(pdk_docs_tarfile_zipped))
 	$(hide) gzip -cf $< > $@
 
 # tar up all the files to make the pdk docs.
-$(pdk_docs_tarfile): $(DOCS_OUT_DIR)-timestamp $(OUT_DOCS)/app.yaml $(OUT_DOCS)/pdk.py
+$(pdk_docs_tarfile): $(DOCS_OUT_DIR)-timestamp $(OUT_DOCS)/app.yaml
 	@echo "PDK docs: $@"
 	@mkdir -p $(dir $@)
 	@rm -f $@
-	$(hide) tar rf $@ -C $(OUT_DOCS) $(LOCAL_MODULE) pdk.py  app.yaml
+	$(hide) tar rf $@ -C $(OUT_DOCS) $(LOCAL_MODULE) app.yaml
 
 # Debugging reporting can go here, add it as a target to get output.
 pdk_debug:

@@ -1,6 +1,122 @@
-home=true
+page.title=Community
+doc.type=community
 @jd:body
+<h1>Android Community</h1>
+<p>Welcome to the Android community!</p>
+<p>The key to any community is, obviously, communication. Like most projects,
+Android communicates via mailing lists. Because Android is an extremely large
+project with many components, we have many discussion forums, each focusing on
+a different topic.</p>
+<p>Please check out the groups below, and join any that seem interesting to
+you. Note that if you're a user looking for help with your Android device,
+this page probably isn't for you; you should contact your carrier or retailer
+for help with your phone.</p>
+<p>Please note that if you're looking for information about building
+applications for Android, you can find a separate set of groups for those at
+our sister site, developer.android.com: <a
+href="http://developer.android.com/community/index.html">http://developer.android.com/community/index.html</a></p>
 
-<p>
-  Some community information here
-</p>
+<h2>Getting the Most from Our Lists</h2>
+<p>Please consider the following before you post to our lists.</p>
+<ol>
+  <li><b>Read the <a
+  href="{@docRoot}community/groups-charter.html">Charter
+  for our forums.</a></b> This explains the (few) rules and guidelines for our
+  community.<br></li>
+  <li><b>Search the group archives to see whether your questions have already
+  been discussed.</b></li> This avoids time-wasting redundant discussions.
+  <li><b>Use a clear, relevant message subject.</b> This helps everyone,
+  both those trying to answer your question as well as those who may be
+  looking for information in the future.</li>
+  <li><b>Give plenty of details in your post.</b> Code or log snippets,
+  pointers to screenshots, and similar details will get better results and
+  make for better discussions. For a great guide to phrasing your questions,
+  read <a href="http://www.catb.org/%7Eesr/faqs/smart-questions.html">How To
+  Ask Questions The Smart Way</a>.</li>
+</ol>
+<h2>Open Source Project discussions</h2>
+<ul>
+<li><b>android-platform</b><br/>
+This list is for developers who want to contribute code to the Android
+user-space projects, such as the core system libraries, the Android
+services, the public APIs, or the built-in applications. Before posting,
+please be sure you've downloaded the source code, compiled it, read through
+it, and are at the point where you're going to be making changes of your own
+to contribute into the Android source code. You can use this list to
+coordinate your efforts with those of other contributors, and
+discuss architecture, design and implementation. Please use android-kernel for
+discussions about contributing to the kernel, android-porting if you're
+porting Android to your own hardware or making changes that you're not going
+to contribute back, android-developers if you're writing applications with the
+SDK, or android-discuss for everything else.<br/><br/>
+Subscribe using Google Groups: <a
+href="http://groups.google.com/group/android-platform">android-platform</a><br/>
+Subscribe via email: <a href="mailto:android-platform+subscribe@googlegroups.com">android-platform+subscribe@googlegroups.com</a>
+</li>
+
+<li><b>android-porting</b><br/>
+This list is for developers who want to port Android to a new device. If
+you're wondering how to combine the Android source code with your hardware,
+this is the right group for you. Discuss here the specifics of porting Android
+to individual devices, from obtaining toolchains and merging kernel drivers
+all the way to configuring or modifying applications for your specific
+configuration.<br/><br/>
+Subscribe using Google Groups: <a
+href="http://groups.google.com/group/android-porting">android-porting</a><br/>
+Subscribe via email: <a href="mailto:android-porting+subscribe@googlegroups.com">android-porting+subscribe@googlegroups.com</a>
+</li>
+
+<li><b>android-kernel</b><br/>
+This list is for deveopers who want to contribute to the Linux kernel that
+Android devices use. If you've downloaded the kernel code, if you know how to
+compile it, if you want to write kernel code to specifically support Android,
+this is your place. This group isn't for user-space topics (see
+android-platform for that), and people will shake their fingers at you and
+call you naughty if you ask user-space questions here.<br/><br/>
+Subscribe using Google Groups: <a
+href="http://groups.google.com/group/android-kernel">android-kernel</a><br/>
+Subscribe via email: <a href="mailto:android-kernel+subscribe@googlegroups.com">android-kernel+subscribe@googlegroups.com</a>
+</li>
+
+<li><b>Repo and Gerrit discussion</b><br/>
+This list is for discussions on everything related to the process used to
+manage the Android source code with repo and gerrit: downloading the source
+code, submitting changes for review, commenting on code being reviewed,
+submitting changes for the world to enjoy.<br/><br/>
+Subscribe using Google Groups: <a
+href="http://groups.google.com/group/repo-discuss">repo-discuss</a><br/>
+Subscribe via email: <a href="mailto:repo-discuss+subscribe@googlegroups.com">repo-discuss+subscribe@googlegroups.com</a>
+</li>
+</ul>
+
+<h2>Using email with Google Groups</h2>
+<p>Instead of using the <a href="http://groups.google.com/">Google Groups</a>
+site, you can use your email client of choice to participate in the mailing lists.</p>
+<p>To subscribe to a group without using the Google Groups site, use the link
+under "subscribe via email" in the lists above.</p>
+<p>To set up how you receive mailing list postings by email:</p>
+<ol>
+<li>Sign into the group via the Google Groups site. For example, for the android-framework group you would
+visit <a
+href="http://groups.google.com/group/android-framework">http://groups.google.com/group/android-framework</a>.</li>
+<li>Click "Edit my membership" on the right side.</li>
+<li>Under "How do you want to read this group?" select one of the email options.</li>
+</ol>
+
+<h2>Android on IRC</h2>
+<p>We also have a presence on IRC via Freenode. We maintain two official IRC
+channels on irc.freenode.net:</p>
+<ul>
+<li><b>#android</b> - dedicated to general Android discussion and porting concerns</li>
+<li><b>#android-dev</b> - dedicated to discussion about writing Android applications</li>
+</ul>
+<p>The channels above are official. There are a few other channels the
+community is using, but are not official. These aren't official or officially
+moderated/managed, so you use the channels below at your own risk. The Open
+Handset Alliance doesn't endorse these channels, there's no warranty express
+or implied, and so on. There may be more.</p>
+<ul>
+<li><b>#android-offtopic</b> - for, well, off-topic discussions</li>
+<li><b>#android-root</b> - for discussion related to off-label uses of hardware</li>
+<li><b>#androidfra</b> - pour discuter d'Android en français</li>
+</ul>

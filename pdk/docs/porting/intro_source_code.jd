@@ -1,0 +1,171 @@
+page.title=Source Code Overview
+pdk.version=1.0
+doc.type=porting
+@jd:body
+
+<a name="toc"/>
+<div style="padding:10px">
+<a href="#androidSourceCodeDirectories">Introduction</a><br/>
+<a href="#Android_Source">Android Source</a><br/><div style="padding-left:40px">
+
+<a href="#androidSourceCodeDirectoriesKernel">Linux Kernel</a><br/>
+<a href="#androidSourceCodeDirectoriesDevice">Android Platform and Applications</a><br/></div>
+<a href="#androidSourceGuidelines">Adding Source Code</a><br/></div>
+
+<a name="androidSourceCodeDirectories"></a><h2>Introduction</h2>
+
+<p>Android source code is maintained in two code bases: the Android Linux kernel (<code>kernel</code> directory) and Android platform and applications (<code>device</code> directory). This document provides a high-level introduction to the source code organization and an overview of the major components of each primary directory.</p>
+
+<a name="Android_Source"></a><h2>Android Source</h2>
+
+
+<a name="androidSourceCodeDirectoriesKernel"></a><h3>Linux Kernel</h3>
+
+<p>The Android Linux kernel includes enhancements to the Linux 2.6 kernel that provide additional drivers to support the Android platform, including:</p>
+<ul>
+  <li>Binder: an OpenBinder-based driver to facilitate inter-process communication (IPC) in the Android platform.</li>
+  <li>Android Power Management: a light weight power management driver built on top of standard Linux power management but optimized for embedded systems.</li>
+  <li>Low Memory Killer: Based on hints from the userspace, the low memory killer can kill off processes to free up memory as necessary. It is designed to provide more flexibility than the Out Of Memory (OOM) killer in the standard kernel.</li>
+  <li>Logger: A light weight logging device used to capture system, radio, logdata, etc.</li>
+  <li>USB Gadget: Uses the USB function framework.</li>
+  <li>Android/PMEM: The PMEM (physical memory) driver is used to provide contiguous physical memory regions to userspace libraries that interact with the digital signal processor (DSP) and other hardware that cannot cope with scatter-gather.</li>
+  <li>Android Alarm: A driver which provides timers that can wake the device up from sleep and a monotonic timebase that runs while the device is asleep.</li>
+</ul>
+<p>Look for Android-specific enhancements in the following directories:</p>
+<p><ul>
+<li><code>/drivers/android</code></li>
+<li><code>/drivers/misc</code></li>
+<li><code>/include/linux</code></li>
+</ul>
+</p>
+
+
+<a name="androidSourceCodeDirectoriesDevice"></a><h3>Android Platform and Applications</h3>
+
+<p>The following list outlines the directory structure found within the <code>device</code> branch of Android source code:</p>
+
+
+<p><span class="lh2"><a name="gmapiMobileTagsListStart"></a></span>
+
+<ul>
+
+
+<li>apps
+Core Android applications such as Phone, Camera, and Calendar.
+</li>
+
+
+<li>boot
+Reference Android bootloader and other boot-related source code.
+</li>
+
+
+<li>commands
+Common Android commands, the most important of which is the runtime command, which does much of the initialization of the system.
+</li>
+
+
+<li>config
+System-wide makefiles and linker scripts.
+</li>
+
+
+<li>content
+Standard Android ContentProvider modules.
+</li>
+
+
+<li>dalvik
+Android runtime Virtual Machine (VM).
+</li>
+
+
+<li>data
+Fonts, keymaps, sounds, timezone information, etc.
+</li>
+
+
+<li>docs
+Full set of Android documentation.
+</li>
+
+
+<li>extlibs
+Non-Android libraries. This directory is intended to host unmodified external code. None of the libraries included within this directory rely on Android headers or libraries.
+</li>
+
+
+<li>ide
+Tools for support of the IDE's used to write Android applications.
+</li>
+
+
+<li>include
+Android system headers for inclusion.
+</li>
+
+
+<li>java
+Android core APIs, as well as some external libraries.
+</li>
+
+
+<li>libs
+Android-specific C++ based libraries.
+</li>
+
+
+<li>partner
+Project-specific source code for various proprietary components.
+</li>
+
+
+<li>prebuilt
+Prebuilt tools, like the toolchains and emulator binary.
+</li>
+
+
+<li>product
+Device-specific configuration files. This directory will include a subdirectory for each new device.
+</li>
+
+
+<li>samples
+Sample applications.
+</li>
+
+
+<li>servers
+C++ based system servers.
+</li>
+
+
+<li>system
+Core of the embedded Linux platform at the heart of Android. These essential bits are required for basic booting, operation, and debugging.
+</li>
+
+
+<li>tests
+Platform and application test cases.
+</li>
+
+
+<li>tools
+Tools for building and debugging Android (of particular interest for porting are "adb" and "emulator").
+</li>
+
+
+
+<p><span class="lh2"><a name="gmapiMobileTagsListEnd"></a></span>
+
+</ul>
+
+
+<a name="androidSourceGuidelines"></a><h2>Adding Source Code</h2>
+
+<p>You can develop Android applications with the same standard tools you use to develop any Java application. The Android core libraries provide the functionality needed to build rich mobile applications and the Android development tools are designed to simplify running, debugging, and testing your applications.</p>
+
+<p>Add project-specific source code to the Android source tree under the <code>partner</code> directory in a directory specific to the application or service you are building. For example, all Google-specific applications would be placed under <code>vendor/google/</code>.  A Google search application would be placed under <code>vendor/google/apps/Search</code>.
+<p>See <a href="build_new_device.html">Building Android for a new Mobile Device</a> for detailed instructions.</p>
+
+

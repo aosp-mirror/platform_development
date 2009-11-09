@@ -1,0 +1,90 @@
+page.title=Debugging with tcpdump and other tools
+pdk.version=1.0
+doc.type=porting
+@jd:body
+
+
+<a name="toc"/>
+<div style="padding:10px">
+  <a href="#installing">Installing tcpdump</a><BR>
+  <a href="#running">Running tcpdump</a><br/>
+  <a href="#other">Other network debugging commands</a><br/>
+</div>
+
+<a name="installing"></a>
+<h3>Installing tcpdump</h3>
+<h4>Pushing the binary to an existing device</h4>
+<p>Download tcpdump from <a href="http://www.tcpdump.org/">http://www.tcpdump.org/</a>, then execute:</p>
+<pre>
+adb root
+adb remount
+adb push /wherever/you/put/tcpdump /system/xbin/tcpdump
+adb shell chmod 6755 /data/local/tmp/tcpdump
+</pre>
+<h4>Including tcpdump in the build image</h4>
+<p>If you are running your own build, execute:</p>
+<pre>
+mmm external/tcpdump  # install the binary in out/.../system/xbin
+make snod             # build a new system.img that includes it
+</pre>
+<p>Flash the device as usual, for example, <code>fastboot flashball</code>.</p>
+<p>If you want to build tcpdump by default, add <code>CUSTOM_TARGETS += tcpdump</code> to your <code>buildspec.mk</code>.</p>
+<h3><a name="running"></a>Running tcpdump</h3>
+<p>You need to have root access on your device. </p>
+<h4>Batch mode capture</h4>
+<p>The typical procedure is to capture packets to a file and then examine the file on the desktop, as illustrated below:</p>
+<pre>
+adb shell tcpdump -i any -p -s 0 -w /sdcard/capture.pcap
+# "-i any": listen on any network interface
+# "-p": disable promiscuous mode (doesn't work anyway)
+# "-s 0": capture the entire packet
+# "-w": write packets to a file (rather than printing to stdout)
+
+   ... do whatever you want to capture, then ^C to stop it ...
+
+adb pull /sdcard/capture.pcap .
+sudo apt-get install wireshark  # or ethereal, if you're still on dapper
+wireshark capture.pcap          # or ethereal
+
+   ... look at your packets and be wise ...
+</pre>
+<p>You can run <code>tcpdump</code> in the background from an interactive shell or from Terminal. By default, <code>tcpdump</code> captures all traffic without filtering. If you prefer, add an expression like port 80 to the <code>tcpdump</code> command line.</p>
+<h4>Real time packet monitoring</h4>
+<p>Execute the following if you would like to watch packets go by rather than capturing them to a file (<code>-n</code> skips DNS lookups. <code>-s 0</code> captures the entire packet rather than just the header):</p>
+<pre>
+adb shell tcpdump -n -s 0
+</pre>
+<p>Typical <code>tcpdump</code> options apply. For example, if you want to see HTTP traffic:</p>
+<pre>
+adb shell tcpdump -X -n -s 0 port 80
+</pre>
+<p>You can also monitor packets with <code>wireshark</code> or <code>ethereal</code>, as shown below:</p>
+<pre>
+# In one shell, start tcpdump.
+adb shell "tcpdump -n -s 0 -w - | nc -l -p 11233"
+
+# In a separate shell, forward data and run ethereal.
+adb forward tcp:11233 tcp:11233 && nc 127.0.0.1 11233 | ethereal -k -S -i -
+</pre>
+<p>Note that you can't restart capture via <code>ethereal</code>. If anything goes wrong, you will need to rerun both commands.</p>
+<p>For more immediate output, add <code>-l</code> to the <code>tcpdump</code> command line, but this can cause <code>adb</code> to choke (it helps to use a nonzero argument for <code>-s</code> to limit the amount of data captured per packet; <code>-s 100</code> is sufficient if you just want to see headers).</p>
+<h4>Disabling encryption</h4>
+<p>If your service runs over <code>https</code>, <code>tcpdump</code> is of limited use. In this case, you can rewrite some service URLs to use <code>http</code>, for example:</p>
+<pre>
+vendor/google/tools/override-gservices url:calendar_sync_https_proxy \
+  https://www.google.com/calendar rewrite http://android.clients.google.com/proxy/calendar
+</pre>
+<h3><a name="other"></a>Other network debugging commands</h3>
+<h4>On the device:</h4>
+<ul>
+  <li><code>ifconfig interface</code>: note that unlike Linux, you need to give <code>ifconfig</code> an argument</li>
+  <li><code>netcfg</code>: lists interfaces and IP addresses</li>
+  <li><code>iftop</code>: like top for network</li>
+  <li><code>route</code>: examine the routing table</li>
+  <li><code>netstat</code>: see active network connections</li>
+  <li><code>nc</code>: <code>netcat</code> connection utility</li>
+</ul>
+<h4>On the desktop:</h4>
+<ul>
+  <li> <code>curl</code>: fetch URLs directly to emulate device requests</li>
+</ul>

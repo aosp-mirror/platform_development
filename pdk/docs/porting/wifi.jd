@@ -1,0 +1,51 @@
+page.title=Wi-Fi
+pdk.version=1.0
+doc.type=porting
+@jd:body
+
+<div id="qv-wrapper">
+<div id="qv">
+<h2>In this document</h2>
+<a name="toc"/>
+<ul>
+<li><a href="#androidWifiBuildingDriver">Building a Wi-Fi Library</a></li>
+<li><a href="#androidWifiInterface">Interface</a></li>
+</ul>
+</div>
+</div>
+
+<p>Android uses wpa_supplicant as the platform interface to the Wi-Fi device. Your Wi-Fi driver must be compatible with the standard wpa_supplicant in addition to extensions added to the supplicant (specifically, the "DRIVER" commands described in <code>wifi.h/wifi_command()</code>).</p>
+
+
+<a name="androidWifiBuildingDriver"></a><h3>Building a Wi-Fi Library</h3>
+
+<p>To create a Wi-Fi driver for Android:</p>
+<p><ul>
+<li>create a shared library that implements the interface defined in <code>include/hardware/wifi.h</code>, which also defines the Wi-Fi supplicant.</li>
+<li>Follow the instructions posted at <a href="http://hostap.epitest.fi/wpa_supplicant/">http://hostap.epitest.fi/wpa_supplicant/</a>.</li>
+<li>Place your driver in <code>libs/hardware/wifi/</code></li>
+<li>Test your driver using the command line <code>wpa_cli</code> utilities.</li>
+</ul>
+
+<p>You can find the default implementation in <code>libs/hardware/wifi/wifi.c</code>. If you need to make changes, create a new source file similar to <code>wifi.c</code>, for example, <code>wifi_mywifi.c</code>. </p>
+
+<p>Update the default <code>Android.mk</code> file (<code>libs/hardware/wifi/Android.mk</code>) as shown below.</p>
+<pre class="prettify">
+LOCAL_SHARED_LIBRARIES += libnetutils
+
+ifeq ($(TARGET_PRODUCT),acme)
+LOCAL_SRC_FILES += wifi/wifi_mywifi.c
+else
+LOCAL_SRC_FILES += wifi/wifi.c
+endif
+</pre>
+
+
+<a name="androidWifiInterface"></a><h3>Interface</h3>
+
+
+
+<p class="note"><strong>Note</strong>: This document relies on some Doxygen-generated content that appears in an iFrame below. To return to the Doxygen default content for this page, <a href="wifi.html">click here</a>.</p>
+
+
+<iframe onLoad="resizeDoxFrameHeight();" src="wifi_8h.html" scrolling="no" scroll="no" id="doxygen" marginwidth="0" marginheight="0" frameborder="0" style="width:100%;"></iframe>

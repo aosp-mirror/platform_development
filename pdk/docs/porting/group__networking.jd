@@ -1,0 +1,26 @@
+page.title=Networking Support
+pdk.version=1.0
+doc.type=porting
+@jd:body
+
+<div class="navigation" id="top">
+  <div class="tabs">
+    <ul>
+      <li><a href="index.html"><span>Main&nbsp;Page</span></a></li>
+      <li><a href="modules.html"><span>Modules</span></a></li>
+      <li><a href="namespaces.html"><span>Namespaces</span></a></li>
+      <li><a href="annotated.html"><span>Data&nbsp;Structures</span></a></li>
+      <li><a href="files.html"><span>Files</span></a></li>
+    </ul>
+  </div>
+</div>
+
+<table border="0" cellpadding="0" cellspacing="0">
+<tr><td></td></tr>
+<tr><td colspan="2"><br><h2>Modules</h2></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__memory.html">Porividng Heap Memory</a></td></tr>
+
+</table>
+<hr><a name="_details"></a><h2>Detailed Description</h2>
+This is a text for the Networking Support Group </div>
+
