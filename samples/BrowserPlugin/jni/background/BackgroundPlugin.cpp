@@ -38,6 +38,7 @@ extern ANPCanvasInterfaceV0    gCanvasI;
 extern ANPLogInterfaceV0       gLogI;
 extern ANPPaintInterfaceV0     gPaintI;
 extern ANPSurfaceInterfaceV0   gSurfaceI;
+extern ANPSystemInterfaceV0    gSystemI;
 extern ANPTypefaceInterfaceV0  gTypefaceI;
 
 #define ARRAY_COUNT(array)      (sizeof(array) / sizeof(array[0]))
@@ -66,6 +67,7 @@ BackgroundPlugin::BackgroundPlugin(NPP inst) : SurfaceSubPlugin(inst) {
     test_bitmaps(); // android bitmaps
     test_domAccess();
     test_javascript();
+    test_loadJavaClass();
 }
 
 BackgroundPlugin::~BackgroundPlugin() {
@@ -420,4 +422,40 @@ void BackgroundPlugin::test_javascript() {
 
     // free the memory allocated within the browser
     browser->memfree(stringMem);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Load Java Classes Tests
+///////////////////////////////////////////////////////////////////////////////
+
+void BackgroundPlugin::test_loadJavaClass() {
+
+    JNIEnv* env = NULL;
+    if (gVM->GetEnv((void**) &env, JNI_VERSION_1_4) != JNI_OK) {
+        gLogI.log(inst(), kError_ANPLogType, " ---- LoadJavaTest: failed to get env");
+        return;
+    }
+
+    const char* className = "com.android.sampleplugin.BackgroundTest";
+    jclass backgroundClass = gSystemI.loadJavaClass(inst(), className);
+
+    if(!backgroundClass) {
+        gLogI.log(inst(), kError_ANPLogType, " ---- LoadJavaTest: failed to load class");
+        return;
+    }
+
+    jmethodID constructor = env->GetMethodID(backgroundClass, "<init>", "()V");
+    jmethodID addMethod = env->GetMethodID(backgroundClass, "addInt", "(II)I");
+    jobject backgroundObject = env->NewObject(backgroundClass, constructor);
+
+    if(!backgroundObject) {
+        gLogI.log(inst(), kError_ANPLogType, " ---- LoadJavaTest: failed to construct object");
+        return;
+    }
+
+    jint result = env->CallIntMethod(backgroundObject, addMethod, 2, 2);
+
+    if (result != 4) {
+        gLogI.log(inst(), kError_ANPLogType, " ---- LoadJavaTest: invalid result (%d != 4)", result);
+    }
 }

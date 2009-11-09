@@ -62,6 +62,7 @@ private:
     void test_bitmap_transparency(const ANPEvent* evt);
     void test_domAccess();
     void test_javascript();
+    void test_loadJavaClass();
 
 };
 
