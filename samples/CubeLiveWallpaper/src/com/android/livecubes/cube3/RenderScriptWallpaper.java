@@ -82,7 +82,8 @@ public abstract class RenderScriptWallpaper<T extends RenderScriptScene> extends
         }
 
         @Override
-        public void onOffsetsChanged(float xOffset, float yOffset, int xPixels, int yPixels) {
+        public void onOffsetsChanged(float xOffset, float yOffset,
+                float xStep, float yStep, int xPixels, int yPixels) {
             mRenderer.setOffset(xOffset, yOffset, xPixels, yPixels);
         }
 
