@@ -81,4 +81,17 @@ public interface ITaskMonitor {
      * tickCount must be 1 or more.
      */
     public ITaskMonitor createSubMonitor(int tickCount);
+
+    /**
+     * Display a yes/no question dialog box.
+     *
+     * Implementations MUST allow this to be called from any thread, e.g. by
+     * making sure the dialog is opened synchronously in the ui thread.
+     *
+     * @param title The title of the dialog box
+     * @param message The error message
+     * @return true if YES was clicked.
+     */
+    public boolean displayPrompt(final String title, final String message);
+
 }
