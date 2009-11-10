@@ -190,7 +190,8 @@ public class CubeWallpaper2 extends WallpaperService {
         }
 
         @Override
-        public void onOffsetsChanged(float xOffset, float yOffset, int xPixels, int yPixels) {
+        public void onOffsetsChanged(float xOffset, float yOffset,
+                float xStep, float yStep, int xPixels, int yPixels) {
             mOffset = xOffset;
             drawFrame();
         }
