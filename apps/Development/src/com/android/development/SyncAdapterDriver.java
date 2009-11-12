@@ -50,7 +50,8 @@ import android.view.LayoutInflater;
 import java.util.Collection;
 
 public class SyncAdapterDriver extends Activity
-        implements RegisteredServicesCacheListener, AdapterView.OnItemClickListener {
+        implements RegisteredServicesCacheListener<SyncAdapterType>,
+        AdapterView.OnItemClickListener {
     private Spinner mSyncAdapterSpinner;
 
     private Button mBindButton;
@@ -83,7 +84,7 @@ public class SyncAdapterDriver extends Activity
         mStatusTextView = (TextView) findViewById(R.id.status_text_view);
 
         getSyncAdapters();
-        mSyncAdaptersCache.setListener(this);
+        mSyncAdaptersCache.setListener(this, null /* Handler */);
     }
 
     protected void onDestroy() {
@@ -199,7 +200,7 @@ public class SyncAdapterDriver extends Activity
         updateUi();
     }
 
-    public void onRegisteredServicesCacheChanged() {
+    public void onServiceChanged(SyncAdapterType type, boolean removed) {
         getSyncAdapters();
     }
 
@@ -346,7 +347,7 @@ public class SyncAdapterDriver extends Activity
         private static final String ATTRIBUTES_NAME = "sync-adapter";
 
         SyncAdaptersCache(Context context) {
-            super(context, SERVICE_INTERFACE, SERVICE_META_DATA, ATTRIBUTES_NAME);
+            super(context, SERVICE_INTERFACE, SERVICE_META_DATA, ATTRIBUTES_NAME, null);
         }
 
         public SyncAdapterType parseServiceAttributes(String packageName, AttributeSet attrs) {
