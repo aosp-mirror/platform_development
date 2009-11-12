@@ -389,6 +389,12 @@ See test_defs.xsd for more information.
     description="Tests for the Contacts app."
     continuous="true" />
 
+<test name="contacts-launch"
+    build_path="packages/apps/Contacts"
+    package="com.android.contacts.tests"
+    runner="com.android.contacts.ContactsLaunchPerformance"
+    description="Launch performance for Contacts." />
+
 <test name="gcontactsprov"
     build_path="packages/providers/GoogleContactsProvider/tests"
     package="com.android.providers.contactstests"
