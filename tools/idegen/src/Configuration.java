@@ -123,7 +123,11 @@ public class Configuration {
          */
 
         boolean firstJavaFile = true;
-        for (File file : directory.listFiles()) {
+	File[] files = directory.listFiles();
+	if (files == null) {
+	    return;
+	}
+        for (File file : files) {
             // Trim preceding "./" from path.
             String path = file.getPath().substring(2);
 

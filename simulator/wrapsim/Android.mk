@@ -3,7 +3,6 @@
 #
 # Build instructions for simulator LD_PRELOAD wrapper.
 #
-ifneq ($(TARGET_ARCH),arm)
 ifeq ($(TARGET_SIMULATOR),true)
 
 LOCAL_PATH:= $(call my-dir)
@@ -23,7 +22,8 @@ LOCAL_SRC_FILES := \
 	Intercept.c \
 	Log.c \
 	SimMgr.c \
-	SysPower.c
+	SysPower.c \
+	Util.c
 
 LOCAL_C_INCLUDES += prebuilt/common/esd
 
@@ -55,5 +55,3 @@ LOCAL_MODULE := launch-wrapper
 include $(BUILD_EXECUTABLE)
 
 endif # ifeq ($(TARGET_SIMULATOR),true)
-endif
-# ifneq ($(TARGET_ARCH),arm)

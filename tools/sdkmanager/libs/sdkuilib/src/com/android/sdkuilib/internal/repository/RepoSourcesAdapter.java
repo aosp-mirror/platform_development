@@ -208,7 +208,7 @@ public class RepoSourcesAdapter {
                 packages = null;
             }
 
-            if (packages != null && source.getFetchError() != null) {
+            if (packages == null && source.getFetchError() != null) {
                 // Return a dummy entry to display the fetch error
                 return new Object[] { new RepoSourceError(source) };
             }
@@ -252,6 +252,9 @@ public class RepoSourcesAdapter {
 
             } else if (element instanceof Package) {
                 return ((Package) element).getParentSource();
+
+            } else if (element instanceof Archive) {
+                return ((Archive) element).getParentPackage();
             }
             return null;
         }

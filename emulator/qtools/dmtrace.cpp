@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <inttypes.h>
 #include <string.h>
+#include <unistd.h>
 #include "dmtrace.h"
 
 static const short kVersion = 2;
@@ -163,7 +164,7 @@ void DmTrace::parseAndAddFunction(int functionId, const char *name)
     //   sig = "()I"
 
     // Find the first parenthesis, the start of the signature.
-    char *paren = strchr(name, '(');
+    char *paren = (char*)strchr(name, '(');
 
     // If not found, then add the original name.
     if (paren == NULL) {
@@ -180,7 +181,7 @@ void DmTrace::parseAndAddFunction(int functionId, const char *name)
     *paren = 0;
 
     // Search for the last period, the start of the method name
-    char *dot = strrchr(name, '.');
+    char *dot = (char*)strrchr(name, '.');
 
     // If not found, then add the original name.
     if (dot == NULL || dot == name) {

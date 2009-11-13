@@ -9,8 +9,6 @@
 	<classpathentry kind="src" path="packages/apps/Email/src"/>
 	<classpathentry kind="src" path="packages/apps/GoogleSearch/src"/>
 	<classpathentry kind="src" path="packages/apps/HTMLViewer/src"/>
-	<classpathentry kind="src" path="packages/apps/IM/src"/>
-	<classpathentry kind="src" path="packages/apps/IM/plugin"/>
 	<classpathentry kind="src" path="packages/apps/Launcher/src"/>
 	<classpathentry kind="src" path="packages/apps/Music/src"/>
 	<classpathentry kind="src" path="packages/apps/Mms/src"/>
@@ -28,8 +26,6 @@
 	<classpathentry kind="src" path="packages/providers/ImProvider/src"/>
 	<classpathentry kind="src" path="packages/providers/MediaProvider/src"/>
 	<classpathentry kind="src" path="packages/providers/TelephonyProvider/src"/>
-	<classpathentry kind="src" path="vendor/google/apps/Street/src"/>
-	<classpathentry kind="src" path="vendor/google/apps/YouTube/src"/>
 	<classpathentry kind="src" path="frameworks/base/awt"/>
 	<classpathentry kind="src" path="frameworks/base/cmds/am/src"/>
 	<classpathentry kind="src" path="frameworks/base/cmds/input/src"/>
@@ -39,6 +35,7 @@
 	<classpathentry kind="src" path="frameworks/base/core/config/sdk"/>
 	<classpathentry kind="src" path="frameworks/base/graphics/java"/>
 	<classpathentry kind="src" path="frameworks/base/im/java"/>
+	<classpathentry kind="src" path="frameworks/base/keystore/java"/>
 	<classpathentry kind="src" path="frameworks/base/location/java"/>
 	<classpathentry kind="src" path="frameworks/base/media/java"/>
 	<classpathentry kind="src" path="frameworks/base/opengl/java"/>
@@ -49,6 +46,7 @@
 	<classpathentry kind="src" path="frameworks/base/telephony/java"/>
 	<classpathentry kind="src" path="frameworks/base/test-runner"/>
 	<classpathentry kind="src" path="frameworks/base/tts/java"/>
+	<classpathentry kind="src" path="frameworks/base/vpn/java"/>
 	<classpathentry kind="src" path="frameworks/base/wifi/java"/>
 	<classpathentry kind="src" path="frameworks/policies/base/phone"/>
 	<classpathentry kind="src" path="development/samples/ApiDemos/src"/>
@@ -94,17 +92,15 @@
 	<classpathentry kind="src" path="dalvik/libcore/x-net/src/main/java"/>
 	<classpathentry kind="src" path="dalvik/libcore/xml/src/main/java"/>
 	<classpathentry kind="src" path="out/target/common/obj/APPS/ApiDemos_intermediates/src/src"/>
-	<classpathentry kind="src" path="out/target/common/obj/APPS/Browser_intermediates/src/src"/>
-	<classpathentry kind="src" path="out/target/common/obj/APPS/IM_intermediates/src/src"/>
+	<classpathentry kind="src" path="out/target/common/obj/APPS/Email_intermediates/src/src"/>
 	<classpathentry kind="src" path="out/target/common/obj/APPS/Music_intermediates/src/src"/>
 	<classpathentry kind="src" path="out/target/common/obj/APPS/Phone_intermediates/src/src"/>
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/com.android.im.plugin_intermediates/src"/>
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src/core/java"/>
-	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src/im/java"/>
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src/location/java"/>
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src/media/java"/>
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src/telephony/java"/>
-	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src/tts/java"/>
+	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src/vpn/java"/>
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src/wifi/java"/>
 	<classpathentry kind="src" path="out/target/common/R"/>
 	<classpathentry kind="src" path="external/tagsoup/src"/>
@@ -114,6 +110,6 @@
 	<classpathentry kind="lib" path="external/googleclient/googleclient-lib.jar"/>
 	<classpathentry kind="lib" path="out/target/common/obj/JAVA_LIBRARIES/google-framework_intermediates/javalib.jar"/>
 	<classpathentry kind="lib" path="out/target/common/obj/JAVA_LIBRARIES/googlelogin-client_intermediates/javalib.jar"/>
-	<classpathentry kind="lib" path="packages/apps/Calculator/arity-1.3.1.jar"/>
+	<classpathentry kind="lib" path="packages/apps/Calculator/arity-1.3.3.jar"/>
 	<classpathentry kind="output" path="out/target/common/obj/JAVA_LIBRARIES/android_stubs_current_intermediates/classes"/>
 </classpath>

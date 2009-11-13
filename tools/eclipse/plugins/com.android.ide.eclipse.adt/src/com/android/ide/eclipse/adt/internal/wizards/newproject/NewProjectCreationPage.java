@@ -54,6 +54,7 @@ import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.DirectoryDialog;
 import org.eclipse.swt.widgets.Event;
@@ -65,6 +66,7 @@ import org.eclipse.swt.widgets.Text;
 import java.io.File;
 import java.io.FileFilter;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.regex.Pattern;
 
 /**
@@ -90,9 +92,12 @@ public class NewProjectCreationPage extends WizardPage {
     /** Initial value for all name fields (project, activity, application, package). Used
      * whenever a value is requested before controls are created. */
     private static final String INITIAL_NAME = "";  //$NON-NLS-1$
-    /** Initial value for the Create New Project radio; False means Create From Existing would be
-     * the default.*/
+    /** Initial value for the Create New Project radio. */
     private static final boolean INITIAL_CREATE_NEW_PROJECT = true;
+    /** Initial value for the Create Project From Sample. */
+    private static final boolean INITIAL_CREATE_FROM_SAMPLE = false;
+    /** Initial value for the Create Project From Existing Source. */
+    private static final boolean INITIAL_CREATE_FROM_SOURCE = false;
     /** Initial value for the Use Default Location check box. */
     private static final boolean INITIAL_USE_DEFAULT_LOCATION = true;
     /** Initial value for the Create Activity check box. */
@@ -127,6 +132,7 @@ public class NewProjectCreationPage extends WizardPage {
     private Text mActivityNameField;
     private Text mApplicationNameField;
     private Button mCreateNewProjectRadio;
+    private Button mCreateFromSampleRadio;
     private Button mUseDefaultLocation;
     private Label mLocationLabel;
     private Text mLocationPathField;
@@ -144,6 +150,10 @@ public class NewProjectCreationPage extends WizardPage {
     private boolean mProjectNameModifiedByUser;
     private boolean mApplicationNameModifiedByUser;
     private boolean mInternalMinSdkVersionUpdate;
+
+    private final ArrayList<String> mSamplesPaths = new ArrayList<String>();
+    private Combo mSamplesCombo;
+
 
 
     /**
@@ -249,6 +259,12 @@ public class NewProjectCreationPage extends WizardPage {
                                                   : mCreateNewProjectRadio.getSelection();
         }
 
+        /** Returns the value of the "Create from Existing Sample" radio. */
+        public boolean isCreateFromSample() {
+            return mCreateFromSampleRadio == null ? INITIAL_CREATE_FROM_SAMPLE
+                                                  : mCreateFromSampleRadio.getSelection();
+        }
+
         /** Returns the value of the "Create Activity" checkbox. */
         public boolean isCreateActivity() {
             return mCreateActivityCheck == null ? INITIAL_CREATE_ACTIVITY
@@ -330,6 +346,7 @@ public class NewProjectCreationPage extends WizardPage {
 
         // Update state the first time
         enableLocationWidgets();
+        loadSamplesForTarget(null /*target*/);
 
         // Show description the first time
         setErrorMessage(null);
@@ -407,9 +424,10 @@ public class NewProjectCreationPage extends WizardPage {
         mCreateNewProjectRadio = new Button(group, SWT.RADIO);
         mCreateNewProjectRadio.setText("Create new project in workspace");
         mCreateNewProjectRadio.setSelection(INITIAL_CREATE_NEW_PROJECT);
+
         Button existing_project_radio = new Button(group, SWT.RADIO);
         existing_project_radio.setText("Create project from existing source");
-        existing_project_radio.setSelection(!INITIAL_CREATE_NEW_PROJECT);
+        existing_project_radio.setSelection(INITIAL_CREATE_FROM_SOURCE);
 
         mUseDefaultLocation = new Button(group, SWT.CHECK);
         mUseDefaultLocation.setText("Use default location");
@@ -462,6 +480,33 @@ public class NewProjectCreationPage extends WizardPage {
                 onOpenDirectoryBrowser();
             }
         });
+
+        mCreateFromSampleRadio = new Button(group, SWT.RADIO);
+        mCreateFromSampleRadio.setText("Create project from existing sample");
+        mCreateFromSampleRadio.setSelection(INITIAL_CREATE_FROM_SAMPLE);
+        mCreateFromSampleRadio.addSelectionListener(location_listener);
+
+        Composite samples_group = new Composite(group, SWT.NONE);
+        samples_group.setLayout(new GridLayout(2, /* num columns */
+                false /* columns of not equal size */));
+        samples_group.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        samples_group.setFont(parent.getFont());
+
+        new Label(samples_group, SWT.NONE).setText("Samples:");
+
+        mSamplesCombo = new Combo(samples_group, SWT.DROP_DOWN | SWT.READ_ONLY);
+        mSamplesCombo.setEnabled(false);
+        mSamplesCombo.select(0);
+        mSamplesCombo.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        mSamplesCombo.setToolTipText("Select a sample");
+
+        mSamplesCombo.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                onSampleSelected();
+            }
+        });
+
     }
 
     /**
@@ -625,9 +670,22 @@ public class NewProjectCreationPage extends WizardPage {
         return mLocationPathField == null ? "" : mLocationPathField.getText().trim();  //$NON-NLS-1$
     }
 
-    /** Returns the current project location, depending on the Use Default Location check box. */
+    /** Returns the current selected sample path,
+     * or an empty string if there's no valid selection. */
+    private String getSelectedSamplePath() {
+        int selIndex = mSamplesCombo.getSelectionIndex();
+        if (selIndex >= 0 && selIndex < mSamplesPaths.size()) {
+            return mSamplesPaths.get(selIndex);
+        }
+        return "";
+    }
+
+    /** Returns the current project location, depending on the Use Default Location check box
+     * or the Create From Sample check box. */
     private String getProjectLocation() {
-        if (mInfo.isNewProject() && mInfo.useDefaultLocation()) {
+        if (mInfo.isCreateFromSample()) {
+            return getSelectedSamplePath();
+        } else if (mInfo.isNewProject() && mInfo.useDefaultLocation()) {
             return Platform.getLocation().toString();
         } else {
             return getLocationPathFieldValue();
@@ -681,14 +739,25 @@ public class NewProjectCreationPage extends WizardPage {
     }
 
     /**
+     * A sample was selected. Update the location field, manifest and validate.
+     */
+    private void onSampleSelected() {
+        // Note that getProjectLocation() is automatically updated to use the currently
+        // selected sample. We just need to refresh the manifest data & validate.
+        extractNamesFromAndroidManifest();
+        validatePageComplete();
+    }
+
+    /**
      * Enables or disable the location widgets depending on the user selection:
      * the location path is enabled when using the "existing source" mode (i.e. not new project)
      * or in new project mode with the "use default location" turned off.
      */
     private void enableLocationWidgets() {
         boolean is_new_project = mInfo.isNewProject();
-        boolean use_default = mInfo.useDefaultLocation();
-        boolean location_enabled = !is_new_project || !use_default;
+        boolean is_create_from_sample = mInfo.isCreateFromSample();
+        boolean use_default = mInfo.useDefaultLocation() && !is_create_from_sample;
+        boolean location_enabled = (!is_new_project || !use_default) && !is_create_from_sample;
         boolean create_activity = mInfo.isCreateActivity();
 
         mUseDefaultLocation.setEnabled(is_new_project);
@@ -696,6 +765,8 @@ public class NewProjectCreationPage extends WizardPage {
         mLocationLabel.setEnabled(location_enabled);
         mLocationPathField.setEnabled(location_enabled);
         mBrowseButton.setEnabled(location_enabled);
+
+        mSamplesCombo.setEnabled(is_create_from_sample && mSamplesPaths.size() > 0);
 
         mPackageNameField.setEnabled(is_new_project);
         mCreateActivityCheck.setEnabled(is_new_project);
@@ -718,6 +789,12 @@ public class NewProjectCreationPage extends WizardPage {
      * @param abs_dir A new absolute directory path or null to use the default.
      */
     private void updateLocationPathField(String abs_dir) {
+
+        // We don't touch the location path if using the "Create From Sample" mode
+        if (mInfo.isCreateFromSample()) {
+            return;
+        }
+
         boolean is_new_project = mInfo.isNewProject();
         boolean use_default = mInfo.useDefaultLocation();
         boolean custom_location = !is_new_project || !use_default;
@@ -872,6 +949,10 @@ public class NewProjectCreationPage extends WizardPage {
             mMinSdkVersionField.setText(target.getVersion().getApiString());
             mInternalMinSdkVersionUpdate = false;
         }
+
+        loadSamplesForTarget(target);
+        enableLocationWidgets();
+        onSampleSelected();
     }
 
     /**
@@ -969,15 +1050,15 @@ public class NewProjectCreationPage extends WizardPage {
                 String[] ids = activityName.split(AndroidConstants.RE_DOT);
                 activityName = ids[ids.length - 1];
             }
-            if (mProjectNameField.getText().length() == 0 ||
-                    !mProjectNameModifiedByUser) {
+            if (mProjectNameField.getText().length() == 0 || !mProjectNameModifiedByUser) {
                 mInternalProjectNameUpdate = true;
+                mProjectNameModifiedByUser = false;
                 mProjectNameField.setText(activityName);
                 mInternalProjectNameUpdate = false;
             }
-            if (mApplicationNameField.getText().length() == 0 ||
-                    !mApplicationNameModifiedByUser) {
+            if (mApplicationNameField.getText().length() == 0 || !mApplicationNameModifiedByUser) {
                 mInternalApplicationNameUpdate = true;
+                mApplicationNameModifiedByUser = false;
                 mApplicationNameField.setText(activityName);
                 mInternalApplicationNameUpdate = false;
             }
@@ -1004,8 +1085,7 @@ public class NewProjectCreationPage extends WizardPage {
 
                 // For the project name, remove any dots
                 packageName = packageName.replace('.', '_');
-                if (mProjectNameField.getText().length() == 0 ||
-                        !mProjectNameModifiedByUser) {
+                if (mProjectNameField.getText().length() == 0 || !mProjectNameModifiedByUser) {
                     mInternalProjectNameUpdate = true;
                     mProjectNameField.setText(packageName);
                     mInternalProjectNameUpdate = false;
@@ -1015,7 +1095,8 @@ public class NewProjectCreationPage extends WizardPage {
         }
 
         // Select the target matching the manifest's sdk or build properties, if any
-        boolean foundTarget = false;
+        IAndroidTarget foundTarget = null;
+        IAndroidTarget currentTarget = mInfo.getSdkTarget();
 
         ProjectProperties p = ProjectProperties.create(projectLocation, null);
         if (p != null) {
@@ -1023,38 +1104,146 @@ public class NewProjectCreationPage extends WizardPage {
             p.merge(PropertyType.BUILD).merge(PropertyType.DEFAULT);
             String v = p.getProperty(ProjectProperties.PROPERTY_TARGET);
             IAndroidTarget target = Sdk.getCurrent().getTargetFromHashString(v);
-            if (target != null) {
-                mSdkTargetSelector.setSelection(target);
-                foundTarget = true;
+            // We can change the current target if:
+            // - we found a new target
+            // - there is no current target
+            // - there is a current target but the new target is not <= to the current one.
+            if (target != null &&
+                    (currentTarget == null || !target.isCompatibleBaseFor(currentTarget))) {
+                foundTarget = target;
             }
         }
 
-        if (!foundTarget && minSdkVersion != null) {
+        if (foundTarget == null && minSdkVersion != null) {
+            // Otherwise try to match the requested sdk version
             for (IAndroidTarget target : mSdkTargetSelector.getTargets()) {
-                if (target.getVersion().equals(minSdkVersion)) {
-                    mSdkTargetSelector.setSelection(target);
-                    foundTarget = true;
+                if (target != null &&
+                        target.getVersion().equals(minSdkVersion) &&
+                        (currentTarget == null || !target.isCompatibleBaseFor(currentTarget))) {
+                    foundTarget = target;
                     break;
                 }
             }
         }
 
-        if (!foundTarget) {
+        if (foundTarget == null) {
+            // Or last attemp, try to match a sample project location
             for (IAndroidTarget target : mSdkTargetSelector.getTargets()) {
-                if (projectLocation.startsWith(target.getLocation())) {
-                    mSdkTargetSelector.setSelection(target);
-                    foundTarget = true;
+                if (target != null &&
+                        projectLocation.startsWith(target.getLocation()) &&
+                        (currentTarget == null || !target.isCompatibleBaseFor(currentTarget))) {
+                    foundTarget = target;
                     break;
                 }
             }
         }
 
-        if (!foundTarget) {
+        if (foundTarget != null) {
+            mSdkTargetSelector.setSelection(foundTarget);
+        } else {
             mInternalMinSdkVersionUpdate = true;
             if (minSdkVersion != null) {
                 mMinSdkVersionField.setText(minSdkVersion);
             }
             mInternalMinSdkVersionUpdate = false;
+        }
+    }
+
+    /**
+     * Updates the list of all samples for the given target SDK.
+     * The list is stored in mSamplesPaths as absolute directory paths.
+     * The combo is recreated to match this.
+     */
+    private void loadSamplesForTarget(IAndroidTarget target) {
+
+        // Keep the name of the old selection (if there were any samples)
+        String oldChoice = null;
+        if (mSamplesPaths.size() > 0) {
+            int selIndex = mSamplesCombo.getSelectionIndex();
+            if (selIndex > -1) {
+                oldChoice = mSamplesCombo.getItem(selIndex);
+            }
+        }
+
+        // Clear all current content
+        mSamplesCombo.removeAll();
+        mSamplesPaths.clear();
+
+        if (target != null) {
+            // Get the sample root path and recompute the list of samples
+            String samplesRootPath = target.getPath(IAndroidTarget.SAMPLES);
+
+            File samplesDir = new File(samplesRootPath);
+            findSamplesManifests(samplesDir, mSamplesPaths);
+
+            if (mSamplesPaths.size() == 0) {
+                // Odd, this target has no samples. Could happen with an addon.
+                mSamplesCombo.add("This target has no samples. Please select another target.");
+                mSamplesCombo.select(0);
+                return;
+            }
+
+            // Recompute the description of each sample (the relative path
+            // to the sample root). Also try to find the old selection.
+            int selIndex = 0;
+            int i = 0;
+            int n = samplesRootPath.length();
+            for (String path : mSamplesPaths) {
+                if (path.length() > n) {
+                    path = path.substring(n);
+                    if (path.charAt(0) == File.separatorChar) {
+                        path = path.substring(1);
+                    }
+                    if (path.endsWith(File.separator)) {
+                        path = path.substring(0, path.length() - 1);
+                    }
+                    path = path.replaceAll(Pattern.quote(File.separator), " > ");
+                }
+
+                if (oldChoice != null && oldChoice.equals(path)) {
+                    selIndex = i;
+                }
+
+                mSamplesCombo.add(path);
+                i++;
+            }
+
+            mSamplesCombo.select(selIndex);
+
+        } else {
+            mSamplesCombo.add("Please select a target.");
+            mSamplesCombo.select(0);
+        }
+    }
+
+    /**
+     * Recursively find potential sample directories under the given directory.
+     * Actually lists any directory that contains an android manifest.
+     * Paths found are added the samplesPaths list.
+     */
+    private void findSamplesManifests(File samplesDir, ArrayList<String> samplesPaths) {
+        if (!samplesDir.isDirectory()) {
+            return;
+        }
+
+        for (File f : samplesDir.listFiles()) {
+            if (f.isDirectory()) {
+                // Assume this is a sample if it contains an android manifest.
+                File manifestFile = new File(f, SdkConstants.FN_ANDROID_MANIFEST_XML);
+                if (manifestFile.isFile()) {
+                    samplesPaths.add(f.getPath());
+                }
+
+                // Recurse in the project, to find embedded tests sub-projects
+                // We can however skip this recursion for known android sub-dirs that
+                // can't have projects, namely for sources, assets and resources.
+                String leaf = f.getName();
+                if (!SdkConstants.FD_SOURCES.equals(leaf) &&
+                        !SdkConstants.FD_ASSETS.equals(leaf) &&
+                        !SdkConstants.FD_RES.equals(leaf)) {
+                    findSamplesManifests(f, samplesPaths);
+                }
+            }
         }
     }
 
@@ -1069,10 +1258,10 @@ public class NewProjectCreationPage extends WizardPage {
 
         int status = validateProjectField(workspace);
         if ((status & MSG_ERROR) == 0) {
-            status |= validateLocationPath(workspace);
+            status |= validateSdkTarget();
         }
         if ((status & MSG_ERROR) == 0) {
-            status |= validateSdkTarget();
+            status |= validateLocationPath(workspace);
         }
         if ((status & MSG_ERROR) == 0) {
             status |= validatePackageField();

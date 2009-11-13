@@ -6,7 +6,7 @@
 #ifndef _SIM_USER_EVENT_MESSAGE_H
 #define _SIM_USER_EVENT_MESSAGE_H
 
-#include <utils.h>
+#include "utils.h"
 #include "LogMessage.h"
 
 /*

@@ -40,6 +40,7 @@ static void initGlobals(void)
     _ws_open64 = dlsym(RTLD_NEXT, "open64");
 
     _ws_close = dlsym(RTLD_NEXT, "close");
+    _ws_dup = dlsym(RTLD_NEXT, "dup");
     _ws_read = dlsym(RTLD_NEXT, "read");
     _ws_readv = dlsym(RTLD_NEXT, "readv");
     _ws_write = dlsym(RTLD_NEXT, "write");
@@ -107,6 +108,8 @@ static void initGlobals(void)
     pthread_mutex_init(&gWrapSim.fakeFdLock, NULL);
     gWrapSim.fakeFdMap = wsAllocBitVector(kMaxFakeFdCount, 0);
     memset(gWrapSim.fakeFdList, 0, sizeof(gWrapSim.fakeFdList));
+
+    pthread_mutex_init(&gWrapSim.atomicLock, NULL);
 
     gWrapSim.numDisplays = 0;
 

@@ -16,7 +16,7 @@
 
 #include "MainFrame.h"
 #include "MyApp.h"
-#include <utils/executablepath.h>
+#include "executablepath.h"
 
 #include <stdio.h>
 #include <unistd.h>

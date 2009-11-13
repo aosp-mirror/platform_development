@@ -22,11 +22,13 @@ import org.eclipse.draw2d.Graphics;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.swt.SWT;
 
-    
+
 /**
  * The figure used to draw basic elements.
  * <p/>
  * The figure is totally empty and transparent except for the selection border.
+ *
+ * @since GLE1
  */
 class ElementFigure extends Figure {
 
@@ -36,18 +38,18 @@ class ElementFigure extends Figure {
     public ElementFigure() {
         setOpaque(false);
     }
-    
+
     public void setSelected(boolean isSelected) {
         if (isSelected != mIsSelected) {
             mIsSelected = isSelected;
             repaint();
         }
     }
-    
+
     @Override
     public void setBounds(Rectangle rect) {
         super.setBounds(rect);
-        
+
         mInnerBounds = getBounds().getCopy();
         if (mInnerBounds.width > 0) {
             mInnerBounds.width--;
@@ -56,11 +58,11 @@ class ElementFigure extends Figure {
             mInnerBounds.height--;
         }
     }
-    
+
     public Rectangle getInnerBounds() {
         return mInnerBounds;
     }
-    
+
     @Override
     protected void paintBorder(Graphics graphics) {
         super.paintBorder(graphics);

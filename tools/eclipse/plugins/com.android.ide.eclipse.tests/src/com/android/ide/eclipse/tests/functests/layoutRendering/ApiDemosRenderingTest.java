@@ -17,14 +17,29 @@
 package com.android.ide.eclipse.tests.functests.layoutRendering;
 
 import com.android.ide.eclipse.adt.internal.resources.configurations.FolderConfiguration;
+import com.android.ide.eclipse.adt.internal.resources.configurations.KeyboardStateQualifier;
+import com.android.ide.eclipse.adt.internal.resources.configurations.NavigationMethodQualifier;
+import com.android.ide.eclipse.adt.internal.resources.configurations.PixelDensityQualifier;
+import com.android.ide.eclipse.adt.internal.resources.configurations.ScreenDimensionQualifier;
+import com.android.ide.eclipse.adt.internal.resources.configurations.ScreenOrientationQualifier;
+import com.android.ide.eclipse.adt.internal.resources.configurations.ScreenRatioQualifier;
+import com.android.ide.eclipse.adt.internal.resources.configurations.ScreenSizeQualifier;
+import com.android.ide.eclipse.adt.internal.resources.configurations.TextInputMethodQualifier;
+import com.android.ide.eclipse.adt.internal.resources.configurations.TouchScreenQualifier;
+import com.android.ide.eclipse.adt.internal.resources.configurations.KeyboardStateQualifier.KeyboardState;
+import com.android.ide.eclipse.adt.internal.resources.configurations.NavigationMethodQualifier.NavigationMethod;
+import com.android.ide.eclipse.adt.internal.resources.configurations.PixelDensityQualifier.Density;
+import com.android.ide.eclipse.adt.internal.resources.configurations.ScreenOrientationQualifier.ScreenOrientation;
+import com.android.ide.eclipse.adt.internal.resources.configurations.ScreenRatioQualifier.ScreenRatio;
+import com.android.ide.eclipse.adt.internal.resources.configurations.ScreenSizeQualifier.ScreenSize;
+import com.android.ide.eclipse.adt.internal.resources.configurations.TextInputMethodQualifier.TextInputMethod;
+import com.android.ide.eclipse.adt.internal.resources.configurations.TouchScreenQualifier.TouchScreenType;
 import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
-import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetParser;
 import com.android.ide.eclipse.adt.internal.sdk.LoadStatus;
-import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData.LayoutBridge;
-import com.android.ide.eclipse.tests.FuncTestCase;
+import com.android.ide.eclipse.tests.SdkTestCase;
 import com.android.layoutlib.api.ILayoutResult;
 import com.android.layoutlib.api.IProjectCallback;
 import com.android.layoutlib.api.IResourceValue;
@@ -32,8 +47,6 @@ import com.android.layoutlib.api.IXmlPullParser;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkConstants;
 
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.NullProgressMonitor;
 import org.kxml2.io.KXmlParser;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -46,7 +59,7 @@ import java.util.Map;
 
 import javax.imageio.ImageIO;
 
-public class ApiDemosRenderingTest extends FuncTestCase {
+public class ApiDemosRenderingTest extends SdkTestCase {
 
     /**
      * Custom parser that implements {@link IXmlPullParser} (which itself extends
@@ -103,32 +116,12 @@ public class ApiDemosRenderingTest extends FuncTestCase {
 
     }
 
-    private Sdk mSdk;
-
     public void testApiDemos() throws IOException, XmlPullParserException {
-        loadSdk();
         findApiDemos();
     }
 
-    /**
-     * Loads the {@link Sdk}.
-     */
-    private void loadSdk() {
-        mSdk = Sdk.loadSdk(this.getOsSdkLocation());
-
-        int n = mSdk.getTargets().length;
-        if (n > 0) {
-            for (IAndroidTarget target : mSdk.getTargets()) {
-                IStatus status = new AndroidTargetParser(target).run(new NullProgressMonitor());
-                if (status.getCode() != IStatus.OK) {
-                    fail("Failed to parse targets data");
-                }
-            }
-        }
-    }
-
     private void findApiDemos() throws IOException, XmlPullParserException {
-        IAndroidTarget[] targets = mSdk.getTargets();
+        IAndroidTarget[] targets = getSdk().getTargets();
 
         for (IAndroidTarget target : targets) {
             String path = target.getPath(IAndroidTarget.SAMPLES);
@@ -148,7 +141,7 @@ public class ApiDemosRenderingTest extends FuncTestCase {
     }
 
     private void testSample(IAndroidTarget target, File sampleProject) throws IOException, XmlPullParserException {
-        AndroidTargetData data = mSdk.getTargetData(target);
+        AndroidTargetData data = getSdk().getTargetData(target);
         if (data == null) {
             fail("No AndroidData!");
         }
@@ -205,6 +198,7 @@ public class ApiDemosRenderingTest extends FuncTestCase {
                     null /*projectKey*/,
                     320,
                     480,
+                    false, //renderFullSize
                     160, //density
                     160, //xdpi
                     160, // ydpi
@@ -234,8 +228,25 @@ public class ApiDemosRenderingTest extends FuncTestCase {
         }
     }
 
+    /**
+     * Returns a config. This must be a valid config like a device would return. This is to
+     * prevent issues where some resources don't exist in all cases and not in the default
+     * (for instance only available in hdpi and mdpi but not in default).
+     * @return
+     */
     private FolderConfiguration getConfiguration() {
         FolderConfiguration config = new FolderConfiguration();
+
+        // this matches an ADP1.
+        config.addQualifier(new ScreenSizeQualifier(ScreenSize.NORMAL));
+        config.addQualifier(new ScreenRatioQualifier(ScreenRatio.NOTLONG));
+        config.addQualifier(new ScreenOrientationQualifier(ScreenOrientation.PORTRAIT));
+        config.addQualifier(new PixelDensityQualifier(Density.MEDIUM));
+        config.addQualifier(new TouchScreenQualifier(TouchScreenType.FINGER));
+        config.addQualifier(new KeyboardStateQualifier(KeyboardState.HIDDEN));
+        config.addQualifier(new TextInputMethodQualifier(TextInputMethod.QWERTY));
+        config.addQualifier(new NavigationMethodQualifier(NavigationMethod.TRACKBALL));
+        config.addQualifier(new ScreenDimensionQualifier(480, 320));
 
         return config;
     }

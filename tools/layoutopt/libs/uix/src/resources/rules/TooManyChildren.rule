@@ -1,0 +1,15 @@
+// Rule: TooManyChildren
+//
+// Description: Checks whether the layout has too many children.
+//
+// Conditions:
+// - The layout is a ScrollView and has more than 1 child
+// - The layout is a list or grid ans has at least 1 child
+
+if (node.name() in ["ScrollView", "HorizontalScrollView"] && node.'*'.size() > 1) {
+    analysis << "A scroll view can have only one child"
+}
+
+if (node.name() in ["ListView", "GridView"] && node.'*'.size() > 0) {
+    analysis << "A list/grid should have no children declared in node"
+}

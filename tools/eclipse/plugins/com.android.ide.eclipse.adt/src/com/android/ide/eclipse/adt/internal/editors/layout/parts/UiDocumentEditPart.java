@@ -46,27 +46,29 @@ import java.awt.image.DataBufferInt;
 /**
  * Graphical edit part for the root document.
  * <p/>
- * It acts as a simple container. 
+ * It acts as a simple container.
+ *
+ * @since GLE1
  */
 public class UiDocumentEditPart extends UiElementEditPart {
-    
+
     private Display mDisplay;
     private FreeformLayer mLayer;
     private ImageBackground mImage;
     private Label mChild = null;
-    
+
     final static class ImageBackground extends AbstractBackground {
-        
+
         private BufferedImage mBufferedImage;
         private Image mImage;
 
         ImageBackground() {
         }
-        
+
         ImageBackground(BufferedImage image, Display display) {
             setImage(image, display);
         }
-        
+
         @Override
         public void paintBackground(IFigure figure, Graphics graphics, Insets insets) {
             if (mImage != null) {
@@ -74,7 +76,7 @@ public class UiDocumentEditPart extends UiElementEditPart {
                 graphics.drawImage(mImage, rect.x, rect.y);
             }
         }
-        
+
         void setImage(BufferedImage image, Display display) {
             if (image != null) {
                 int[] data = ((DataBufferInt)image.getData().getDataBuffer()).getData();
@@ -104,27 +106,27 @@ public class UiDocumentEditPart extends UiElementEditPart {
     protected IFigure createFigure() {
         mLayer = new FreeformLayer();
         mLayer.setLayoutManager(new FreeformLayout());
-        
+
         mLayer.setOpaque(true);
         mLayer.setBackgroundColor(ColorConstants.lightGray);
-        
+
         return mLayer;
     }
-    
+
     @Override
     protected void refreshVisuals() {
         UiElementNode model = (UiElementNode)getModel();
-        
+
         Object editData = model.getEditData();
         if (editData instanceof BufferedImage) {
             BufferedImage image = (BufferedImage)editData;
-            
+
             if (mImage == null || image != mImage.getBufferedImage()) {
                 mImage = new ImageBackground(image, mDisplay);
             }
-            
+
             mLayer.setBorder(mImage);
-            
+
             if (mChild != null && mChild.getParent() == mLayer) {
                 mLayer.remove(mChild);
             }
@@ -156,7 +158,7 @@ public class UiDocumentEditPart extends UiElementEditPart {
     protected void showSelection() {
         // no selection at this level.
     }
-    
+
     @Override
     protected void createEditPolicies() {
         super.createEditPolicies();
@@ -168,12 +170,12 @@ public class UiDocumentEditPart extends UiElementEditPart {
     }
 
     /**
-     * Returns the EditPart that should be used as the target for the specified Request. 
+     * Returns the EditPart that should be used as the target for the specified Request.
      * For instance this is called during drag'n'drop with a CreateRequest.
      * <p/>
      * For the root document, we want the first child edit part to the be the target
      * since an XML document can have only one root element.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -194,7 +196,7 @@ public class UiDocumentEditPart extends UiElementEditPart {
                             return null;
                         }
                     }
-                    
+
                 }
             }
 

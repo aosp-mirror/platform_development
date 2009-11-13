@@ -19,6 +19,7 @@ package com.android.ide.eclipse.adt.internal.wizards.export;
 import com.android.ide.eclipse.adt.internal.project.ProjectHelper;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.internal.wizards.export.ExportWizard.ExportWizardPage;
+import com.android.sdklib.internal.project.ApkSettings;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.swt.SWT;
@@ -68,17 +69,17 @@ final class KeyCheckPage extends ExportWizardPage {
     private Text mDestination;
     private boolean mFatalSigningError;
     private FormText mDetailText;
-    /** The Apk Config map for the current project */
-    private Map<String, String> mApkConfig;
     private ScrolledComposite mScrolledComposite;
-    
+
+    private ApkSettings mApkSettings;
+
     private String mKeyDetails;
     private String mDestinationDetails;
 
     protected KeyCheckPage(ExportWizard wizard, String pageName) {
         super(pageName);
         mWizard = wizard;
-        
+
         setTitle("Destination and key/certificate checks");
         setDescription(""); // TODO
     }
@@ -93,7 +94,7 @@ final class KeyCheckPage extends ExportWizardPage {
         GridLayout gl = new GridLayout(3, false);
         gl.verticalSpacing *= 3;
         composite.setLayout(gl);
-        
+
         GridData gd;
 
         new Label(composite, SWT.NONE).setText("Destination APK file:");
@@ -110,26 +111,26 @@ final class KeyCheckPage extends ExportWizardPage {
             @Override
             public void widgetSelected(SelectionEvent e) {
                 FileDialog fileDialog = new FileDialog(browseButton.getShell(), SWT.SAVE);
-                
+
                 fileDialog.setText("Destination file name");
                 // get a default apk name based on the project
                 String filename = ProjectHelper.getApkFilename(mWizard.getProject(),
                         null /*config*/);
                 fileDialog.setFileName(filename);
-        
+
                 String saveLocation = fileDialog.open();
                 if (saveLocation != null) {
                     mDestination.setText(saveLocation);
                 }
             }
         });
-        
+
         mScrolledComposite = new ScrolledComposite(composite, SWT.V_SCROLL);
         mScrolledComposite.setLayoutData(gd = new GridData(GridData.FILL_BOTH));
         gd.horizontalSpan = 3;
         mScrolledComposite.setExpandHorizontal(true);
         mScrolledComposite.setExpandVertical(true);
-        
+
         mDetailText = new FormText(mScrolledComposite, SWT.NONE);
         mScrolledComposite.setContent(mDetailText);
 
@@ -139,18 +140,18 @@ final class KeyCheckPage extends ExportWizardPage {
                 updateScrolling();
             }
         });
-        
+
         setControl(composite);
     }
-    
+
     @Override
     void onShow() {
         // fill the texts with information loaded from the project.
         if ((mProjectDataChanged & DATA_PROJECT) != 0) {
             // reset the destination from the content of the project
             IProject project = mWizard.getProject();
-            mApkConfig = Sdk.getCurrent().getProjectApkConfigs(project);
-            
+            mApkSettings = Sdk.getCurrent().getApkSettings(project);
+
             String destination = ProjectHelper.loadStringProperty(project,
                     ExportWizard.PROPERTY_DESTINATION);
             String filename = ProjectHelper.loadStringProperty(project,
@@ -159,7 +160,7 @@ final class KeyCheckPage extends ExportWizardPage {
                 mDestination.setText(destination + File.separator + filename);
             }
         }
-        
+
         // if anything change we basically reload the data.
         if (mProjectDataChanged != 0) {
             mFatalSigningError = false;
@@ -170,7 +171,7 @@ final class KeyCheckPage extends ExportWizardPage {
             mPrivateKey = null;
             mCertificate = null;
             mKeyDetails = null;
-    
+
             if (mWizard.getKeystoreCreationMode() || mWizard.getKeyCreationMode()) {
                 int validity = mWizard.getValidity();
                 StringBuilder sb = new StringBuilder(
@@ -196,13 +197,13 @@ final class KeyCheckPage extends ExportWizardPage {
                             mWizard.getKeyAlias(),
                             new KeyStore.PasswordProtection(
                                     mWizard.getKeyPassword().toCharArray()));
-                    
+
                     if (entry != null) {
                         mPrivateKey = entry.getPrivateKey();
                         mCertificate = (X509Certificate)entry.getCertificate();
                     } else {
                         setErrorMessage("Unable to find key.");
-                        
+
                         setPageComplete(false);
                     }
                 } catch (FileNotFoundException e) {
@@ -220,33 +221,33 @@ final class KeyCheckPage extends ExportWizardPage {
                 } catch (IOException e) {
                     onException(e);
                 }
-                
+
                 if (mPrivateKey != null && mCertificate != null) {
                     Calendar expirationCalendar = Calendar.getInstance();
                     expirationCalendar.setTime(mCertificate.getNotAfter());
                     Calendar today = Calendar.getInstance();
-                    
+
                     if (expirationCalendar.before(today)) {
                         mKeyDetails = String.format(
                                 "<p>Certificate expired on %s</p>",
                                 mCertificate.getNotAfter().toString());
-                        
+
                         // fatal error = nothing can make the page complete.
                         mFatalSigningError = true;
-        
+
                         setErrorMessage("Certificate is expired.");
                         setPageComplete(false);
                     } else {
                         // valid, key/cert: put it in the wizard so that it can be finished
                         mWizard.setSigningInfo(mPrivateKey, mCertificate);
-        
+
                         StringBuilder sb = new StringBuilder(String.format(
                                 "<p>Certificate expires on %s.</p>",
                                 mCertificate.getNotAfter().toString()));
-                        
+
                         int expirationYear = expirationCalendar.get(Calendar.YEAR);
                         int thisYear = today.get(Calendar.YEAR);
-                        
+
                         if (thisYear + 25 < expirationYear) {
                             // do nothing
                         } else {
@@ -258,14 +259,14 @@ final class KeyCheckPage extends ExportWizardPage {
                                         "<p>The Certificate expires in %1$s %2$s.</p>",
                                         count, count == 1 ? "year" : "years"));
                             }
-                            
+
                             sb.append("<p>Make sure the certificate is valid for the planned lifetime of the product.</p>");
                             sb.append("<p>If the certificate expires, you will be forced to sign your application with a different one.</p>");
                             sb.append("<p>Applications cannot be upgraded if their certificate changes from one version to another, ");
                             sb.append("forcing a full uninstall/install, which will make the user lose his/her data.</p>");
                             sb.append("<p>Android Market currently requires certificates to be valid until 2033.</p>");
                         }
-                        
+
                         mKeyDetails = sb.toString();
                     }
                 } else {
@@ -277,7 +278,7 @@ final class KeyCheckPage extends ExportWizardPage {
 
         onDestinationChange(true /*forceDetailUpdate*/);
     }
-    
+
     /**
      * Callback for destination field edition
      * @param forceDetailUpdate if true, the detail {@link FormText} is updated even if a fatal
@@ -319,12 +320,12 @@ final class KeyCheckPage extends ExportWizardPage {
 
             // display the list of files that will actually be created
             Map<String, String[]> apkFileMap = getApkFileMap(file);
-            
+
             // display them
             boolean fileExists = false;
             StringBuilder sb = new StringBuilder(String.format(
                     "<p>This will create the following files:</p>"));
-            
+
             Set<Entry<String, String[]>> set = apkFileMap.entrySet();
             for (Entry<String, String[]> entry : set) {
                 String[] apkArray = entry.getValue();
@@ -360,7 +361,7 @@ final class KeyCheckPage extends ExportWizardPage {
             updateDetailText();
         }
     }
-    
+
     /**
      * Updates the scrollbar to match the content of the {@link FormText} or the new size
      * of the {@link ScrolledComposite}.
@@ -372,41 +373,40 @@ final class KeyCheckPage extends ExportWizardPage {
             mScrolledComposite.layout();
         }
     }
-    
+
     private void updateDetailText() {
         StringBuilder sb = new StringBuilder("<form>");
         if (mKeyDetails != null) {
             sb.append(mKeyDetails);
         }
-        
+
         if (mDestinationDetails != null && mFatalSigningError == false) {
             sb.append(mDestinationDetails);
         }
-        
+
         sb.append("</form>");
-        
+
         mDetailText.setText(sb.toString(), true /* parseTags */,
                 true /* expandURLs */);
 
         mDetailText.getParent().layout();
 
         updateScrolling();
-
     }
 
     /**
      * Creates the list of destination filenames based on the content of the destination field
      * and the list of APK configurations for the project.
-     * 
+     *
      * @param file File name from the destination field
      * @return A list of destination filenames based <code>file</code> and the list of APK
      *         configurations for the project.
      */
     private Map<String, String[]> getApkFileMap(File file) {
         String filename = file.getName();
-        
+
         HashMap<String, String[]> map = new HashMap<String, String[]>();
-        
+
         // add the default APK filename
         String[] apkArray = new String[ExportWizard.APK_COUNT];
         apkArray[ExportWizard.APK_FILE_SOURCE] = ProjectHelper.getApkFilename(
@@ -415,29 +415,32 @@ final class KeyCheckPage extends ExportWizardPage {
         map.put(null, apkArray);
 
         // add the APKs for each APK configuration.
-        if (mApkConfig != null && mApkConfig.size() > 0) {
-            // remove the extension.
-            int index = filename.lastIndexOf('.');
-            String base = filename.substring(0, index);
-            String extension = filename.substring(index);
-            
-            Set<Entry<String, String>> set = mApkConfig.entrySet();
-            for (Entry<String, String> entry : set) {
-                apkArray = new String[ExportWizard.APK_COUNT];
-                apkArray[ExportWizard.APK_FILE_SOURCE] = ProjectHelper.getApkFilename(
-                        mWizard.getProject(), entry.getKey());
-                apkArray[ExportWizard.APK_FILE_DEST] = base + "-" + entry.getKey() + extension;
-                map.put(entry.getKey(), apkArray);
+        if (mApkSettings != null) {
+            Map<String, String> apkFilters = mApkSettings.getResourceFilters();
+            if (apkFilters.size() > 0) {
+                // remove the extension from the user-chosen filename
+                int index = filename.lastIndexOf('.');
+                String base = filename.substring(0, index);
+                String extension = filename.substring(index);
+
+                for (Entry<String, String> entry : apkFilters.entrySet()) {
+                    apkArray = new String[ExportWizard.APK_COUNT];
+                    apkArray[ExportWizard.APK_FILE_SOURCE] = ProjectHelper.getApkFilename(
+                            mWizard.getProject(), entry.getKey());
+                    apkArray[ExportWizard.APK_FILE_DEST] = base + "-" + //$NON-NLS-1$
+                            entry.getKey() + extension;
+                    map.put(entry.getKey(), apkArray);
+                }
             }
         }
-        
+
         return map;
     }
-    
+
     @Override
     protected void onException(Throwable t) {
         super.onException(t);
-        
+
         mKeyDetails = String.format("ERROR: %1$s", ExportWizard.getExceptionMessage(t));
     }
 }

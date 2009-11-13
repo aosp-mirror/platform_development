@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- test launcher file for Android Eclipse functional tests -->
+<!-- test launcher file for Android Eclipse tests -->
 <project name="testsuite" default="run" basedir="."> 
     <!--The following properties should be passed into this script, set to some default value for now -->
     <property name="eclipse.home" value="/opt/eclipse" />
@@ -52,9 +52,9 @@
         <ant target="ui-test" antfile="${library-file}" dir="${eclipse.home}">
             <property name="data-dir" value="${test-folder}" />
             <property name="plugin-name" value="${plugin-name}" />
-            <property name="classname" value="com.android.ide.eclipse.tests.FuncTests" />
-            <!-- pass extra vm arg to set sdk_home env variable -->
-            <property name="extraVMargs" value="-Dsdk_home=${sdk_home}" />
+            <property name="classname" value="com.android.ide.eclipse.tests.AllTests" />
+            <!-- pass extra vm arg to set sdk_home env and test_data env variable -->
+            <property name="extraVMargs" value="-Dtest_data=${test_data}" />
         </ant>
     </target>
 

@@ -51,15 +51,17 @@ obj/framework.aidl platforms/${PLATFORM_NAME}/framework.aidl
 # sdk scripts
 development/tools/scripts/AndroidManifest.template platforms/${PLATFORM_NAME}/templates/AndroidManifest.template
 development/tools/scripts/AndroidManifest.tests.template platforms/${PLATFORM_NAME}/templates/AndroidManifest.tests.template
-development/tools/scripts/iml.template platforms/${PLATFORM_NAME}/templates/iml.template
-development/tools/scripts/ipr.template platforms/${PLATFORM_NAME}/templates/ipr.template
-development/tools/scripts/iws.template platforms/${PLATFORM_NAME}/templates/iws.template
 development/tools/scripts/java_file.template platforms/${PLATFORM_NAME}/templates/java_file.template
 development/tools/scripts/java_tests_file.template platforms/${PLATFORM_NAME}/templates/java_tests_file.template
 development/tools/scripts/layout.template platforms/${PLATFORM_NAME}/templates/layout.template
 development/tools/scripts/strings.template platforms/${PLATFORM_NAME}/templates/strings.template
 development/tools/scripts/android_rules.xml platforms/${PLATFORM_NAME}/templates/android_rules.xml
+development/tools/scripts/android_test_rules.xml platforms/${PLATFORM_NAME}/templates/android_test_rules.xml
+development/tools/scripts/icon_ldpi.png platforms/${PLATFORM_NAME}/templates/icon_ldpi.png
+development/tools/scripts/icon_mdpi.png platforms/${PLATFORM_NAME}/templates/icon_mdpi.png
+development/tools/scripts/icon_hdpi.png platforms/${PLATFORM_NAME}/templates/icon_hdpi.png
 development/tools/scripts/build.template tools/lib/build.template
+development/tools/scripts/devices.xml tools/lib/devices.xml
 
 # emacs support
 development/tools/scripts/android.el tools/lib/android.el
@@ -121,9 +123,20 @@ bin/draw9patch tools/draw9patch
 framework/draw9patch.jar tools/lib/draw9patch.jar
 framework/swing-worker-1.1.jar tools/lib/swing-worker-1.1.jar
 
+# layoutopt
+bin/layoutopt tools/layoutopt
+framework/layoutopt.jar tools/lib/layoutopt.jar
+framework/uix.jar tools/lib/uix.jar
+framework/groovy-all-1.6.5.jar tools/lib/groovy-all-1.6.5.jar
+
 # traceview
 bin/traceview tools/traceview
 framework/traceview.jar tools/lib/traceview.jar
+
+# emma lib for code coverage support
+framework/emmalib.jar tools/lib/emma_device.jar
+external/emma/lib/emma.jar tools/lib/emma.jar
+external/emma/lib/emma_ant.jar tools/lib/emma_ant.jar
 
 # custom ant tasks
 framework/anttasks.jar tools/lib/anttasks.jar
@@ -144,10 +157,12 @@ prebuilt/android-arm/kernel/kernel-qemu platforms/${PLATFORM_NAME}/images/kernel
 external/qemu/android/avd/hardware-properties.ini tools/lib/hardware-properties.ini
 
 # emulator skins
-development/emulator/skins/HVGA     platforms/${PLATFORM_NAME}/skins/HVGA
-development/emulator/skins/QVGA     platforms/${PLATFORM_NAME}/skins/QVGA
-development/emulator/skins/WVGA800  platforms/${PLATFORM_NAME}/skins/WVGA800
-development/emulator/skins/WVGA854  platforms/${PLATFORM_NAME}/skins/WVGA854
+development/emulator/skins/QVGA      platforms/${PLATFORM_NAME}/skins/QVGA
+development/emulator/skins/WQVGA432  platforms/${PLATFORM_NAME}/skins/WQVGA432
+development/emulator/skins/WQVGA400  platforms/${PLATFORM_NAME}/skins/WQVGA400
+development/emulator/skins/HVGA      platforms/${PLATFORM_NAME}/skins/HVGA
+development/emulator/skins/WVGA800   platforms/${PLATFORM_NAME}/skins/WVGA800
+development/emulator/skins/WVGA854   platforms/${PLATFORM_NAME}/skins/WVGA854
 
 # NOTICE files are copied by build/core/Makefile
 development/tools/scripts/sdk_files_NOTICE.txt platforms/${PLATFORM_NAME}/templates/NOTICE.txt
@@ -171,16 +186,21 @@ docs/service_actions.txt platforms/${PLATFORM_NAME}/data/service_actions.txt
 docs/categories.txt platforms/${PLATFORM_NAME}/data/categories.txt
 docs/widgets.txt platforms/${PLATFORM_NAME}/data/widgets.txt
 framework/layoutlib.jar platforms/${PLATFORM_NAME}/data/layoutlib.jar
+
+# framework resources for layoutlib
 frameworks/base/core/res/res platforms/${PLATFORM_NAME}/data/res
-frameworks/base/data/fonts/fonts.xml platforms/${PLATFORM_NAME}/data/fonts/fonts.xml
-frameworks/base/data/fonts/DroidSans.ttf platforms/${PLATFORM_NAME}/data/fonts/DroidSans.ttf
-frameworks/base/data/fonts/DroidSans-Bold.ttf platforms/${PLATFORM_NAME}/data/fonts/DroidSans-Bold.ttf
-frameworks/base/data/fonts/DroidSansFallback.ttf platforms/${PLATFORM_NAME}/data/fonts/DroidSansFallback.ttf
-frameworks/base/data/fonts/DroidSansMono.ttf platforms/${PLATFORM_NAME}/data/fonts/DroidSansMono.ttf
-frameworks/base/data/fonts/DroidSerif-Bold.ttf platforms/${PLATFORM_NAME}/data/fonts/DroidSerif-Bold.ttf
+
+# fonts for layoutlib.
+frameworks/base/data/fonts/fonts.xml                 platforms/${PLATFORM_NAME}/data/fonts/fonts.xml
+frameworks/base/data/fonts/DroidSans.ttf             platforms/${PLATFORM_NAME}/data/fonts/DroidSans.ttf
+frameworks/base/data/fonts/DroidSans-Bold.ttf        platforms/${PLATFORM_NAME}/data/fonts/DroidSans-Bold.ttf
+frameworks/base/data/fonts/DroidSansMono.ttf         platforms/${PLATFORM_NAME}/data/fonts/DroidSansMono.ttf
+frameworks/base/data/fonts/DroidSerif-Bold.ttf       platforms/${PLATFORM_NAME}/data/fonts/DroidSerif-Bold.ttf
 frameworks/base/data/fonts/DroidSerif-BoldItalic.ttf platforms/${PLATFORM_NAME}/data/fonts/DroidSerif-BoldItalic.ttf
-frameworks/base/data/fonts/DroidSerif-Italic.ttf platforms/${PLATFORM_NAME}/data/fonts/DroidSerif-Italic.ttf
-frameworks/base/data/fonts/DroidSerif-Regular.ttf platforms/${PLATFORM_NAME}/data/fonts/DroidSerif-Regular.ttf
+frameworks/base/data/fonts/DroidSerif-Italic.ttf     platforms/${PLATFORM_NAME}/data/fonts/DroidSerif-Italic.ttf
+frameworks/base/data/fonts/DroidSerif-Regular.ttf    platforms/${PLATFORM_NAME}/data/fonts/DroidSerif-Regular.ttf
+frameworks/base/data/fonts/DroidSansFallback.ttf     platforms/${PLATFORM_NAME}/data/fonts/DroidSansFallback.ttf
+frameworks/base/data/fonts/DroidSansJapanese.ttf     platforms/${PLATFORM_NAME}/data/fonts/DroidSansJapanese.ttf
 
 # empty add-on folder with just a readme
 development/tools/scripts/README_add-ons.txt add-ons/README.txt

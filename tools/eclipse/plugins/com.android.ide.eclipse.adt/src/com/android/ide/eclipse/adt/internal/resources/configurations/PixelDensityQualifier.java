@@ -17,6 +17,7 @@
 package com.android.ide.eclipse.adt.internal.resources.configurations;
 
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
+import com.android.layoutlib.api.IDensityBasedResourceValue;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 
@@ -39,19 +40,20 @@ public final class PixelDensityQualifier extends ResourceQualifier {
      * Screen Orientation enum.
      */
     public static enum Density {
-        HIGH("hdpi", 240, "High Density"), //$NON-NLS-1$
-        MEDIUM("mdpi", 160, "Medium Density"), //$NON-NLS-1$
-        LOW("ldpi", 120, "Low Density"), //$NON-NLS-1$
-        NODPI("nodpi", -1, "No Density"); //$NON-NLS-1$
+        HIGH("hdpi", "High Density", IDensityBasedResourceValue.Density.HIGH), //$NON-NLS-1$
+        MEDIUM("mdpi", "Medium Density", IDensityBasedResourceValue.Density.MEDIUM), //$NON-NLS-1$
+        LOW("ldpi", "Low Density", IDensityBasedResourceValue.Density.LOW), //$NON-NLS-1$
+        NODPI("nodpi", "No Density", IDensityBasedResourceValue.Density.NODPI); //$NON-NLS-1$
 
         private final String mValue;
         private final String mDisplayValue;
-        private final int mDpiValue;
+        private final IDensityBasedResourceValue.Density mDensity;
 
-        private Density(String value, int dpiValue, String displayValue) {
+        private Density(String value, String displayValue,
+                IDensityBasedResourceValue.Density density) {
             mValue = value;
-            mDpiValue = dpiValue;
             mDisplayValue = displayValue;
+            mDensity = density;
         }
 
         /**
@@ -59,7 +61,7 @@ public final class PixelDensityQualifier extends ResourceQualifier {
          * @param value The qualifier value.
          * @return the enum for the qualifier value or null if no matching was found.
          */
-        static Density getEnum(String value) {
+        public static Density getEnum(String value) {
             for (Density orient : values()) {
                 if (orient.mValue.equals(value)) {
                     return orient;
@@ -77,7 +79,7 @@ public final class PixelDensityQualifier extends ResourceQualifier {
                 try {
                     int density = Integer.parseInt(v);
                     for (Density orient : values()) {
-                        if (orient.mDpiValue == density) {
+                        if (orient.mDensity.getValue() == density) {
                             return orient;
                         }
                     }
@@ -94,12 +96,12 @@ public final class PixelDensityQualifier extends ResourceQualifier {
         }
 
         public int getDpiValue() {
-            return mDpiValue;
+            return mDensity.getValue();
         }
 
         public String getLegacyValue() {
             if (this != NODPI) {
-                return String.format("%1$ddpi", mDpiValue);
+                return String.format("%1$ddpi", getDpiValue());
             }
 
             return "";
@@ -107,6 +109,14 @@ public final class PixelDensityQualifier extends ResourceQualifier {
 
         public String getDisplayValue() {
             return mDisplayValue;
+        }
+
+        /**
+         * Returns the {@link com.android.layoutlib.api.IDensityBasedResourceValue.Density} value
+         * associated to this {@link Density}.
+         */
+        public IDensityBasedResourceValue.Density getDensity() {
+            return mDensity;
         }
 
         public static int getIndex(Density value) {
@@ -181,6 +191,38 @@ public final class PixelDensityQualifier extends ResourceQualifier {
         }
 
         return false;
+    }
+
+    @Override
+    public boolean isMatchFor(ResourceQualifier qualifier) {
+        if (qualifier instanceof PixelDensityQualifier) {
+            // as long as there's a density qualifier, it's always a match.
+            // The best match will be found later.
+            return true;
+        }
+
+        return false;
+    }
+
+    @Override
+    public boolean isBetterMatchThan(ResourceQualifier compareTo, ResourceQualifier reference) {
+        if (compareTo == null) {
+            return true;
+        }
+
+        PixelDensityQualifier compareQ = (PixelDensityQualifier)compareTo;
+        PixelDensityQualifier referenceQ = (PixelDensityQualifier)reference;
+
+        if (mValue == referenceQ.mValue && compareQ.mValue != referenceQ.mValue) {
+            // got exact value, this is the best!
+            return true;
+        } else {
+            // in all case we're going to prefer the higher dpi.
+            // if reference is high, we want highest dpi.
+            // if reference is medium, we'll prefer to scale down high dpi, than scale up low dpi
+            // if reference if low, we'll prefer to scale down high than medium (2:1 over 4:3)
+            return mValue.mDensity.getValue() > compareQ.mValue.mDensity.getValue();
+        }
     }
 
     @Override

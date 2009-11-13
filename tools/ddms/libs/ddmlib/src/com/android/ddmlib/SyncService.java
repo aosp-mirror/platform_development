@@ -222,7 +222,7 @@ public final class SyncService {
             AdbHelper.setDevice(mChannel, mDevice);
 
             byte[] request = AdbHelper.formAdbRequest("sync:"); // $NON-NLS-1$
-            AdbHelper.write(mChannel, request, -1, AdbHelper.STD_TIMEOUT);
+            AdbHelper.write(mChannel, request, -1, DdmPreferences.getTimeOut());
 
             AdbResponse resp = AdbHelper.readAdbResponse(mChannel, false /* readDiagString */);
 
@@ -368,6 +368,29 @@ public final class SyncService {
         monitor.start(total);
 
         SyncResult result = doPullFile(remote.getFullPath(), localFilename, monitor);
+
+        monitor.stop();
+        return result;
+    }
+
+    /**
+     * Pulls a single file.
+     * <p/>Because this method just deals with a String for the remote file instead of a
+     * {@link FileEntry}, the size of the file being pulled is unknown and the
+     * {@link ISyncProgressMonitor} will not properly show the progress
+     * @param remoteFilepath the full path to the remote file
+     * @param localFilename The local destination.
+     * @param monitor The progress monitor. Cannot be null.
+     * @return a {@link SyncResult} object with a code and an optional message.
+     *
+     * @see #getNullProgressMonitor()
+     */
+    public SyncResult pullFile(String remoteFilepath, String localFilename,
+            ISyncProgressMonitor monitor) {
+        monitor.start(0);
+        //TODO: use the {@link FileListingService} to get the file size.
+
+        SyncResult result = doPullFile(remoteFilepath, localFilename, monitor);
 
         monitor.stop();
         return result;
@@ -536,6 +559,9 @@ public final class SyncService {
             ISyncProgressMonitor monitor) {
         byte[] msg = null;
         byte[] pullResult = new byte[8];
+
+        final int timeOut = DdmPreferences.getTimeOut();
+
         try {
             byte[] remotePathContent = remotePath.getBytes(AdbHelper.DEFAULT_ENCODING);
 
@@ -547,11 +573,11 @@ public final class SyncService {
             msg = createFileReq(ID_RECV, remotePathContent);
 
             // and send it.
-            AdbHelper.write(mChannel, msg, -1, AdbHelper.STD_TIMEOUT);
+            AdbHelper.write(mChannel, msg, -1, timeOut);
 
             // read the result, in a byte array containing 2 ints
             // (id, size)
-            AdbHelper.read(mChannel, pullResult, -1, AdbHelper.STD_TIMEOUT);
+            AdbHelper.read(mChannel, pullResult, -1, timeOut);
 
             // check we have the proper data back
             if (checkResult(pullResult, ID_DATA) == false &&
@@ -603,10 +629,10 @@ public final class SyncService {
 
             try {
                 // now read the length we received
-                AdbHelper.read(mChannel, data, length, AdbHelper.STD_TIMEOUT);
+                AdbHelper.read(mChannel, data, length, timeOut);
 
                 // get the header for the next packet.
-                AdbHelper.read(mChannel, pullResult, -1, AdbHelper.STD_TIMEOUT);
+                AdbHelper.read(mChannel, pullResult, -1, timeOut);
             } catch (IOException e) {
                 return new SyncResult(RESULT_CONNECTION_ERROR, e);
             }
@@ -682,6 +708,8 @@ public final class SyncService {
         FileInputStream fis = null;
         byte[] msg;
 
+        final int timeOut = DdmPreferences.getTimeOut();
+
         try {
             byte[] remotePathContent = remotePath.getBytes(AdbHelper.DEFAULT_ENCODING);
 
@@ -710,7 +738,7 @@ public final class SyncService {
         // and send it. We use a custom try/catch block to make the difference between
         // file and network IO exceptions.
         try {
-            AdbHelper.write(mChannel, msg, -1, AdbHelper.STD_TIMEOUT);
+            AdbHelper.write(mChannel, msg, -1, timeOut);
         } catch (IOException e) {
             return new SyncResult(RESULT_CONNECTION_ERROR, e);
         }
@@ -748,7 +776,7 @@ public final class SyncService {
 
             // now write it
             try {
-                AdbHelper.write(mChannel, mBuffer, readCount+8, AdbHelper.STD_TIMEOUT);
+                AdbHelper.write(mChannel, mBuffer, readCount+8, timeOut);
             } catch (IOException e) {
                 return new SyncResult(RESULT_CONNECTION_ERROR, e);
             }
@@ -769,19 +797,19 @@ public final class SyncService {
             msg = createReq(ID_DONE, (int)time);
 
             // and send it.
-            AdbHelper.write(mChannel, msg, -1, AdbHelper.STD_TIMEOUT);
+            AdbHelper.write(mChannel, msg, -1, timeOut);
 
             // read the result, in a byte array containing 2 ints
             // (id, size)
             byte[] result = new byte[8];
-            AdbHelper.read(mChannel, result, -1 /* full length */, AdbHelper.STD_TIMEOUT);
+            AdbHelper.read(mChannel, result, -1 /* full length */, timeOut);
 
             if (checkResult(result, ID_OKAY) == false) {
                 if (checkResult(result, ID_FAIL)) {
                     // read some error message...
                     int len = ArrayHelper.swap32bitFromArray(result, 4);
 
-                    AdbHelper.read(mChannel, mBuffer, len, AdbHelper.STD_TIMEOUT);
+                    AdbHelper.read(mChannel, mBuffer, len, timeOut);
 
                     // output the result?
                     String message = new String(mBuffer, 0, len);
@@ -798,7 +826,6 @@ public final class SyncService {
         return new SyncResult(RESULT_OK);
     }
 
-
     /**
      * Returns the mode of the remote file.
      * @param path the remote file
@@ -810,12 +837,12 @@ public final class SyncService {
             // create the stat request message.
             byte[] msg = createFileReq(ID_STAT, path);
 
-            AdbHelper.write(mChannel, msg, -1 /* full length */, AdbHelper.STD_TIMEOUT);
+            AdbHelper.write(mChannel, msg, -1 /* full length */, DdmPreferences.getTimeOut());
 
             // read the result, in a byte array containing 4 ints
             // (id, mode, size, time)
             byte[] statResult = new byte[16];
-            AdbHelper.read(mChannel, statResult, -1 /* full length */, AdbHelper.STD_TIMEOUT);
+            AdbHelper.read(mChannel, statResult, -1 /* full length */, DdmPreferences.getTimeOut());
 
             // check we have the proper data back
             if (checkResult(statResult, ID_STAT) == false) {

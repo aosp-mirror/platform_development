@@ -56,6 +56,7 @@ public class AvdManagerPage extends Composite implements ISdkListener {
                 mUpdaterData.getOsSdkRoot(),
                 mUpdaterData.getAvdManager(),
                 DisplayMode.MANAGER);
+        mAvdSelector.setSettingsController(mUpdaterData.getSettingsController());
     }
 
     @Override

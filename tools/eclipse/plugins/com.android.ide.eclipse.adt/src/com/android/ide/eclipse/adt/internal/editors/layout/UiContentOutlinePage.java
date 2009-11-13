@@ -67,29 +67,31 @@ import java.util.List;
 
 /**
  * Implementation of the {@link ContentOutlinePage} to display {@link UiElementNode}.
+ *
+ * @since GLE1
  */
 class UiContentOutlinePage extends ContentOutlinePage {
 
-    private AbstractGraphicalLayoutEditor mEditor;
-    
+    private GraphicalLayoutEditor mEditor;
+
     private Action mAddAction;
     private Action mDeleteAction;
     private Action mUpAction;
     private Action mDownAction;
-    
+
     private UiOutlineActions mUiActions = new UiOutlineActions();
 
-    public UiContentOutlinePage(AbstractGraphicalLayoutEditor editor, final EditPartViewer viewer) {
+    public UiContentOutlinePage(GraphicalLayoutEditor editor, final EditPartViewer viewer) {
         super(viewer);
         mEditor = editor;
         IconFactory factory = IconFactory.getInstance();
-        
+
         mAddAction = new Action("Add...") {
             @Override
             public void run() {
                 List<UiElementNode> nodes = getModelSelections();
                 UiElementNode node = nodes != null && nodes.size() > 0 ? nodes.get(0) : null;
-                
+
                 mUiActions.doAdd(node, viewer.getControl().getShell());
             }
         };
@@ -100,7 +102,7 @@ class UiContentOutlinePage extends ContentOutlinePage {
             @Override
             public void run() {
                 List<UiElementNode> nodes = getModelSelections();
-                
+
                 mUiActions.doRemove(nodes, viewer.getControl().getShell());
             }
         };
@@ -111,7 +113,7 @@ class UiContentOutlinePage extends ContentOutlinePage {
             @Override
             public void run() {
                 List<UiElementNode> nodes = getModelSelections();
-                
+
                 mUiActions.doUp(nodes);
             }
         };
@@ -122,7 +124,7 @@ class UiContentOutlinePage extends ContentOutlinePage {
             @Override
             public void run() {
                 List<UiElementNode> nodes = getModelSelections();
-                
+
                 mUiActions.doDown(nodes);
             }
         };
@@ -138,7 +140,7 @@ class UiContentOutlinePage extends ContentOutlinePage {
         addSelectionChangedListener(new ISelectionChangedListener() {
             public void selectionChanged(SelectionChangedEvent event) {
                 ISelection selection = event.getSelection();
-                
+
                 // the selection is never empty. The least it'll contain is the
                 // UiDocumentTreeEditPart object.
                 if (selection instanceof StructuredSelection) {
@@ -162,7 +164,7 @@ class UiContentOutlinePage extends ContentOutlinePage {
             }
         });
     }
-    
+
 
     /* (non-Javadoc)
      * @see org.eclipse.ui.part.IPage#createControl(org.eclipse.swt.widgets.Composite)
@@ -184,7 +186,7 @@ class UiContentOutlinePage extends ContentOutlinePage {
     /*
      * (non-Javadoc)
      * @see org.eclipse.ui.part.Page#setActionBars(org.eclipse.ui.IActionBars)
-     * 
+     *
      * Called automatically after createControl
      */
     @Override
@@ -195,7 +197,7 @@ class UiContentOutlinePage extends ContentOutlinePage {
         toolBarManager.add(new Separator());
         toolBarManager.add(mUpAction);
         toolBarManager.add(mDownAction);
-        
+
         IMenuManager menuManager = actionBars.getMenuManager();
         menuManager.add(mAddAction);
         menuManager.add(mDeleteAction);
@@ -222,18 +224,19 @@ class UiContentOutlinePage extends ContentOutlinePage {
     public Control getControl() {
         return getViewer().getControl();
     }
-    
+
     void setNewEditor(GraphicalLayoutEditor editor) {
         mEditor = editor;
         setupOutline();
     }
-    
+
     void breakConnectionWithEditor() {
         // unhook outline viewer
         mEditor.getSelectionSynchronizer().removeViewer(getViewer());
     }
-    
+
     private void setupOutline() {
+
         getViewer().setEditDomain(mEditor.getEditDomain());
 
         // hook outline viewer
@@ -255,13 +258,13 @@ class UiContentOutlinePage extends ContentOutlinePage {
              */
            public void menuAboutToShow(IMenuManager manager) {
                List<UiElementNode> selected = getModelSelections();
-               
+
                if (selected != null) {
                    doCreateMenuAction(manager, selected);
                    return;
                }
                doCreateMenuAction(manager, null /* ui_node */);
-            } 
+            }
         });
         Control control = getControl();
         Menu contextMenu = menuManager.createContextMenu(control);
@@ -271,13 +274,13 @@ class UiContentOutlinePage extends ContentOutlinePage {
     /**
      * Adds the menu actions to the context menu when the given UI node is selected in
      * the tree view.
-     * 
+     *
      * @param manager The context menu manager
      * @param selected The UI node selected in the tree. Can be null, in which case the root
      *                is to be modified.
      */
     private void doCreateMenuAction(IMenuManager manager, List<UiElementNode> selected) {
-        
+
         if (selected != null) {
             boolean hasXml = false;
             for (UiElementNode uiNode : selected) {
@@ -323,14 +326,14 @@ class UiContentOutlinePage extends ContentOutlinePage {
         if (selected != null) {
             manager.add(mDeleteAction);
             manager.add(new Separator());
-            
+
             manager.add(mUpAction);
             manager.add(mDownAction);
         }
 
         if (selected != null && selected.size() == 1) {
             manager.add(new Separator());
-            
+
             Action propertiesAction = new Action("Properties") {
                 @Override
                 public void run() {
@@ -344,7 +347,7 @@ class UiContentOutlinePage extends ContentOutlinePage {
     }
 
     /**
-     * Updates the outline view with the model of the {@link GraphicalLayoutEditor}.
+     * Updates the outline view with the model of the {@link IGraphicalLayoutEditor}.
      * <p/>
      * This attemps to preserve the selection, if any.
      */
@@ -380,22 +383,22 @@ class UiContentOutlinePage extends ContentOutlinePage {
         ISelection selection = getSelection();
         if (selection instanceof StructuredSelection) {
             StructuredSelection structuredSelection = (StructuredSelection)selection;
-            
+
             if (structuredSelection.size() > 0) {
                 ArrayList<UiElementTreeEditPart> selected = new ArrayList<UiElementTreeEditPart>();
-                
+
                 for (Iterator it = structuredSelection.iterator(); it.hasNext(); ) {
                     Object selectedObj = it.next();
-                
+
                     if (selectedObj instanceof UiElementTreeEditPart) {
                         selected.add((UiElementTreeEditPart) selectedObj);
                     }
                 }
-                
+
                 return selected.size() > 0 ? selected : null;
             }
         }
-        
+
         return null;
     }
 
@@ -412,16 +415,16 @@ class UiContentOutlinePage extends ContentOutlinePage {
 
         if (parts != null) {
             ArrayList<UiElementNode> selected = new ArrayList<UiElementNode>();
-            
+
             for (UiElementTreeEditPart part : parts) {
                 if (part instanceof UiViewTreeEditPart || part instanceof UiLayoutTreeEditPart) {
                     selected.add((UiElementNode) part.getModel());
                 }
             }
-            
+
             return selected.size() > 0 ? selected : null;
         }
-        
+
         return null;
     }
 
@@ -440,17 +443,17 @@ class UiContentOutlinePage extends ContentOutlinePage {
         }
     }
 
-    /** 
+    /**
      * Selects the corresponding model element in the tree viewer.
      */
     private void setModelSelection(UiElementNode uiNodeToSelect) {
         if (uiNodeToSelect != null) {
-            
+
             // find an edit part that has the requested model element
             UiElementTreeEditPart part = findPartForModel(
                     (UiElementTreeEditPart) getViewer().getContents(),
                     uiNodeToSelect);
-            
+
             // if we found a part, select it and reveal it
             if (part != null) {
                 setViewerSelection(part);
@@ -461,7 +464,7 @@ class UiContentOutlinePage extends ContentOutlinePage {
 
     /**
      * Utility method that tries to find an edit part that matches a given model UI node.
-     * 
+     *
      * @param rootPart The root of the viewer edit parts
      * @param uiNode The UI node model to find
      * @return The part that matches the model or null if it's not in the sub tree.
@@ -471,7 +474,7 @@ class UiContentOutlinePage extends ContentOutlinePage {
         if (rootPart.getModel() == uiNode) {
             return rootPart;
         }
-        
+
         for (Object part : rootPart.getChildren()) {
             if (part instanceof UiElementTreeEditPart) {
                 UiElementTreeEditPart found = findPartForModel(
@@ -492,16 +495,16 @@ class UiContentOutlinePage extends ContentOutlinePage {
      */
     private void setupTooltip() {
         final Tree tree = (Tree) getControl();
-        
+
         /*
-         * Reference: 
+         * Reference:
          * http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.swt.snippets/src/org/eclipse/swt/snippets/Snippet125.java?view=markup
          */
-        
+
         final Listener listener = new Listener() {
             Shell tip = null;
             Label label  = null;
-            
+
             public void handleEvent(Event event) {
                 switch(event.type) {
                 case SWT.Dispose:
@@ -523,7 +526,7 @@ class UiContentOutlinePage extends ContentOutlinePage {
                     }
 
                     String tooltip = null;
-                    
+
                     TreeItem item = tree.getItem(new Point(event.x, event.y));
                     if (item != null) {
                         Object data = item.getData();
@@ -540,12 +543,12 @@ class UiContentOutlinePage extends ContentOutlinePage {
                             tooltip = item.getText() + ":\r" + tooltip;
                         }
                     }
-                    
-                    
+
+
                     if (tooltip != null) {
                         Shell shell = tree.getShell();
                         Display display = tree.getDisplay();
-                        
+
                         tip = new Shell(shell, SWT.ON_TOP | SWT.NO_FOCUS | SWT.TOOL);
                         tip.setBackground(display .getSystemColor(SWT.COLOR_INFO_BACKGROUND));
                         FillLayout layout = new FillLayout();
@@ -567,7 +570,7 @@ class UiContentOutlinePage extends ContentOutlinePage {
                 }
             }
         };
-        
+
         tree.addListener(SWT.Dispose, listener);
         tree.addListener(SWT.KeyDown, listener);
         tree.addListener(SWT.MouseMove, listener);
@@ -592,7 +595,7 @@ class UiContentOutlinePage extends ContentOutlinePage {
     }
 
     // ---------------
-    
+
     private class UiOutlineActions extends UiActions {
 
         @Override
@@ -610,6 +613,6 @@ class UiContentOutlinePage extends ContentOutlinePage {
         public void commitPendingXmlChanges() {
             // Pass. There is nothing to commit before the XML is changed here.
         }
-        
+
     }
 }

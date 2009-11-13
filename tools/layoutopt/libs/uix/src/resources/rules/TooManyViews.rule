@@ -1,0 +1,11 @@
+// Rule: TooManyViews
+//
+// Description: Checks whether the layout has too many views.
+//
+// Conditions:
+// - The document contains more than 80 views
+
+if (node.isRoot && (size = node.'**'.size()) > 80) {
+    analysis << [node: null,
+            description: "This layout has too many views: ${size} views, it should have <= 80!"]
+}

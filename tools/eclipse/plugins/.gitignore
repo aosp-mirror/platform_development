@@ -30,6 +30,7 @@ com.android.ide.eclipse.ddms/icons/forward.png
 com.android.ide.eclipse.ddms/icons/gc.png
 com.android.ide.eclipse.ddms/icons/halt.png
 com.android.ide.eclipse.ddms/icons/heap.png
+com.android.ide.eclipse.ddms/icons/hprof.png
 com.android.ide.eclipse.ddms/icons/i.png
 com.android.ide.eclipse.ddms/icons/importBug.png
 com.android.ide.eclipse.ddms/icons/load.png
@@ -39,6 +40,8 @@ com.android.ide.eclipse.ddms/icons/pull.png
 com.android.ide.eclipse.ddms/icons/push.png
 com.android.ide.eclipse.ddms/icons/save.png
 com.android.ide.eclipse.ddms/icons/thread.png
+com.android.ide.eclipse.ddms/icons/tracing_start.png
+com.android.ide.eclipse.ddms/icons/tracing_stop.png
 com.android.ide.eclipse.ddms/icons/up.png
 com.android.ide.eclipse.ddms/icons/v.png
 com.android.ide.eclipse.ddms/icons/w.png
@@ -50,4 +53,7 @@ com.android.ide.eclipse.ddms/src/com/android/ddmlib
 com.android.ide.eclipse.ddms/src/com/android/ddmuilib
 com.android.ide.eclipse.tests/kxml2-2.3.0.jar
 com.android.ide.eclipse.tests/unittests/com/android/ddmlib
+com.android.ide.eclipse.tests/unittests/com/android/sdklib
+com.android.ide.eclipse.tests/unittests/com/android/sdkuilib
+com.android.ide.eclipse.tests/unittests/com/android/layoutlib
 

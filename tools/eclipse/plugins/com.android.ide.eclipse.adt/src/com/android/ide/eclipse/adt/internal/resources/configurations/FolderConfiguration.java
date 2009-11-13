@@ -49,12 +49,21 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
     private final static int INDEX_COUNT              = 14;
 
     /**
+     * Returns the number of {@link ResourceQualifier} that make up a Folder configuration.
+     */
+    public static int getQualifierCount() {
+        return INDEX_COUNT;
+    }
+
+    /**
      * Sets the config from the qualifiers of a given <var>config</var>.
      * @param config
      */
     public void set(FolderConfiguration config) {
-        for (int i = 0 ; i < INDEX_COUNT ; i++) {
-            mQualifiers[i] = config.mQualifiers[i];
+        if (config != null) {
+            for (int i = 0 ; i < INDEX_COUNT ; i++) {
+                mQualifiers[i] = config.mQualifiers[i];
+            }
         }
     }
 
@@ -145,6 +154,16 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
                 return;
             }
         }
+    }
+
+    /**
+     * Returns a qualifier by its index. The total number of qualifiers can be accessed by
+     * {@link #getQualifierCount()}.
+     * @param index the index of the qualifier to return.
+     * @return the qualifier or null if there are none at the index.
+     */
+    public ResourceQualifier getQualifier(int index) {
+        return mQualifiers[index];
     }
 
     public void setCountryCodeQualifier(CountryCodeQualifier qualifier) {
@@ -314,8 +333,11 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
 
         for (ResourceQualifier qualifier : mQualifiers) {
             if (qualifier != null) {
-                result.append(QUALIFIER_SEP);
-                result.append(qualifier.getFolderSegment(target));
+                String segment = qualifier.getFolderSegment(target);
+                if (segment != null && segment.length() > 0) {
+                    result.append(QUALIFIER_SEP);
+                    result.append(segment);
+                }
             }
         }
 
@@ -443,37 +465,28 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
     }
 
     /**
-     * Returns whether the configuration match the given reference config.
-     * <p/>A match means that:
+     * Returns whether the configuration is a match for the given reference config.
+     * <p/>A match means that, for each qualifier of this config
      * <ul>
-     * <li>This config does not use any qualifier not used by the reference config</li>
-     * <li>The qualifier used by this config have the same values as the qualifiers of
-     * the reference config.</li>
+     * <li>The reference config has no value set
+     * <li>or, the qualifier of the reference config is a match. Depending on the qualifier type
+     * this does not mean the same exact value.</li>
      * </ul>
      * @param referenceConfig The reference configuration to test against.
-     * @return the number of matching qualifiers or -1 if the configurations are not compatible.
+     * @return true if the configuration matches.
      */
-    public int match(FolderConfiguration referenceConfig) {
-        int matchCount = 0;
-
+    public boolean isMatchFor(FolderConfiguration referenceConfig) {
         for (int i = 0 ; i < INDEX_COUNT ; i++) {
             ResourceQualifier testQualifier = mQualifiers[i];
             ResourceQualifier referenceQualifier = referenceConfig.mQualifiers[i];
 
-            // we only care if testQualifier is non null. If it's null, it's a match but
-            // without increasing the matchCount.
-            if (testQualifier != null) {
-                if (referenceQualifier == null) {
-                    return -1;
-                } else if (testQualifier.equals(referenceQualifier) == false) {
-                    return -1;
-                }
-
-                // the qualifier match, increment the count
-                matchCount++;
+            // it's only a non match if both qualifiers are non-null, and they don't match.
+            if (testQualifier != null && referenceQualifier != null &&
+                        testQualifier.isMatchFor(referenceQualifier) == false) {
+                return false;
             }
         }
-        return matchCount;
+        return true;
     }
 
     /**

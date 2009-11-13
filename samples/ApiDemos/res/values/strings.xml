@@ -38,12 +38,19 @@
             custom Theme.Dialog theme to make an activity that looks like a
             customized dialog, here with an ugly frame.</string>
 
+    <string name="activity_wallpaper">App/Activity/Wallpaper</string>
+    
     <string name="activity_translucent">App/Activity/Translucent</string>
     <string name="translucent_background">Example of how you can make an
             activity have a translucent background, compositing over
             whatever is behind it.</string>
 
     <string name="activity_translucent_blur">App/Activity/Translucent Blur</string>
+
+    <string name="activity_animation">App/Activity/Animation</string>
+    <string name="activity_animation_msg">Press a button to launch an activity with a custom animation.</string>
+    <string name="activity_animation_fade">Fade in</string>
+    <string name="activity_animation_zoom">Zoom in</string>
 
     <string name="activity_save_restore">App/Activity/Save &amp; Restore State</string>
     <string name="save_restore_msg">Demonstration of saving and restoring activity state in onSaveInstanceState() and onCreate().</string>
@@ -115,9 +122,6 @@
     <string name="remote_service_disconnected">Disconnected from remote service</string>
     <string name="remote_call_failed">Failure calling remote service</string>
 
-    <string name="service_arguments_started">"Started with arguments: "</string>
-    <string name="service_arguments_stopped">Finished arguments,
-        stopping.</string>
     <string name="service_start_arguments_label">Sample Service Start Arguments
     </string>
 
@@ -128,10 +132,13 @@
         service can be started with arguments, and run until all arguments are
         processed.
     </string>
-    <string name="start1_service">Start with \"One\"</string>
-    <string name="start2_service">Start with \"Two\"</string>
-    <string name="start3_service">Start with \"Three\"</string>
-
+    <string name="start1_service">Start \"One\" no redeliver</string>
+    <string name="start2_service">Start \"Two\" no redeliver</string>
+    <string name="start3_service">Start \"Three\" w/redeliver</string>
+    <string name="startfail_service">Start failed delivery</string>
+    <string name="service_created">Service created.</string>
+    <string name="service_destroyed">Service destroyed.</string>
+    
     <string name="one_shot_received">The one-shot alarm has gone off</string>
     <string name="repeating_received">The repeating alarm has gone off</string>
 
@@ -362,8 +369,8 @@
     <string name="summary_my_preference">This is a custom counter preference</string>
 
     <string name="title_advanced_toggle_preference">Haunted preference</string>
-    <string name="summary_on_advanced_toggle_preference">I'm on! :)</string>
-    <string name="summary_off_advanced_toggle_preference">I'm off! :(</string>
+    <string name="summary_on_advanced_toggle_preference">I\'m on! :)</string>
+    <string name="summary_off_advanced_toggle_preference">I\'m off! :(</string>
 
     <string name="title_parent_preference">Parent toggle</string>
     <string name="summary_parent_preference">This is visually a parent</string>
@@ -632,13 +639,13 @@
  using the Java programming language and run on Dalvik, a custom virtual
  machine designed for embedded use which runs on top of a Linux kernel.
 
- If you want to know how to develop applications for Android, you're in the
+ If you want to know how to develop applications for Android, you\'re in the
  right place. This site provides a variety of documentation that will help you
  learn about Android and develop mobile applications for the platform.
 
  An early look at the the Android SDK is also available. It includes sample
  projects with source code, development tools, an emulator, and of course all
- the libraries you'll need to build an Android application. What would it take
+ the libraries you\'ll need to build an Android application. What would it take
  to build a better mobile phone?
     </string>
     <string name="spinner_1_color">Color:</string>

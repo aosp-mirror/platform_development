@@ -583,7 +583,7 @@
                menubarPath="Window/additions"
                style="push"
                toolbarPath="android_project"
-               tooltip="Opens the Android Virtual Device (AVD) and SDK Manager">
+               tooltip="Opens the Android SDK and AVD Manager">
          </action>
       </actionSet>
    </extension>

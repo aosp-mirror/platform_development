@@ -99,6 +99,11 @@ static int noClose(FakeDev* dev, ...)
 {
     return 0;
 }
+static FakeDev* noDup(FakeDev* dev, ...)
+{
+    notImplemented(dev, "dup");
+    return NULL;
+}
 static int noRead(FakeDev* dev, ...)
 {
     return notImplemented(dev, "read");
@@ -146,6 +151,7 @@ FakeDev* wsCreateFakeDev(const char* debugName)
     newDev->state = NULL;
 
     newDev->close = (Fake_close) noClose;
+    newDev->dup = (Fake_dup) noDup;
     newDev->read = (Fake_read) noRead;
     newDev->readv = (Fake_readv) noReadv;
     newDev->write = (Fake_write) noWrite;

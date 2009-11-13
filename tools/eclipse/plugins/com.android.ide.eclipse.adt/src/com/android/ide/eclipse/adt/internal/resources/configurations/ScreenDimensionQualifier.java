@@ -48,6 +48,15 @@ public final class ScreenDimensionQualifier extends ResourceQualifier {
      * Default value is <code>DEFAULT_SIZE</code> */
     private int mValue2 = DEFAULT_SIZE;
 
+    public ScreenDimensionQualifier() {
+        // pass
+    }
+
+    public ScreenDimensionQualifier(int value1, int value2) {
+        mValue1 = value1;
+        mValue2 = value2;
+    }
+
     public int getValue1() {
         return mValue1;
     }

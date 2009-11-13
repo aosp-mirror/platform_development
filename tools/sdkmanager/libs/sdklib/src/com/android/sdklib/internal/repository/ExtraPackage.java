@@ -31,10 +31,9 @@ import java.util.Properties;
 /**
  * Represents a extra XML node in an SDK repository.
  */
-public class ExtraPackage extends Package {
+public class ExtraPackage extends MinToolsPackage {
 
     private static final String PROP_PATH          = "Extra.Path";         //$NON-NLS-1$
-    private static final String PROP_MIN_TOOLS_REV = "Extra.MinToolsRev";  //$NON-NLS-1$
 
     /**
      * The install folder name. It must be a single-segment path.
@@ -45,33 +44,22 @@ public class ExtraPackage extends Package {
     private final String mPath;
 
     /**
-     * The minimal revision of the tools package required by this extra package, if > 0,
-     * or {@link #MIN_TOOLS_REV_NOT_SPECIFIED} if there is no such requirement.
-     */
-    private final int mMinToolsRevision;
-
-    /**
-     * The value of {@link #mMinToolsRevision} when the {@link SdkRepository#NODE_MIN_TOOLS_REV}
-     * was not specified in the XML source.
-     */
-    public static final int MIN_TOOLS_REV_NOT_SPECIFIED = 0;
-
-    /**
      * Creates a new tool package from the attributes and elements of the given XML node.
      * <p/>
      * This constructor should throw an exception if the package cannot be created.
      */
     ExtraPackage(RepoSource source, Node packageNode, Map<String,String> licenses) {
         super(source, packageNode, licenses);
+
         mPath = XmlParserUtils.getXmlString(packageNode, SdkRepository.NODE_PATH);
-        mMinToolsRevision = XmlParserUtils.getXmlInt(packageNode, SdkRepository.NODE_MIN_TOOLS_REV,
-                MIN_TOOLS_REV_NOT_SPECIFIED);
     }
 
     /**
      * Manually create a new package with one archive and the given attributes or properties.
      * This is used to create packages from local directories in which case there must be
      * one archive which URL is the actual target location.
+     * <p/>
+     * By design, this creates a package with one and only one archive.
      */
     ExtraPackage(RepoSource source,
             Properties props,
@@ -92,11 +80,9 @@ public class ExtraPackage extends Package {
                 archiveOs,
                 archiveArch,
                 archiveOsPath);
+
         // The path argument comes before whatever could be in the properties
         mPath = path != null ? path : getProperty(props, PROP_PATH, path);
-
-        mMinToolsRevision = Integer.parseInt(getProperty(props, PROP_MIN_TOOLS_REV,
-                Integer.toString(MIN_TOOLS_REV_NOT_SPECIFIED)));
     }
 
     /**
@@ -109,8 +95,8 @@ public class ExtraPackage extends Package {
 
         props.setProperty(PROP_PATH, mPath);
 
-        if (mMinToolsRevision != MIN_TOOLS_REV_NOT_SPECIFIED) {
-            props.setProperty(PROP_MIN_TOOLS_REV, Integer.toString(mMinToolsRevision));
+        if (getMinToolsRevision() != MIN_TOOLS_REV_NOT_SPECIFIED) {
+            props.setProperty(PROP_MIN_TOOLS_REV, Integer.toString(getMinToolsRevision()));
         }
     }
 
@@ -135,14 +121,6 @@ public class ExtraPackage extends Package {
      */
     public String getPath() {
         return mPath;
-    }
-
-    /**
-     * The minimal revision of the tools package required by this extra package, if > 0,
-     * or {@link #MIN_TOOLS_REV_NOT_SPECIFIED} if there is no such requirement.
-     */
-    public int getMinToolsRevision() {
-        return mMinToolsRevision;
     }
 
     /** Returns a short description for an {@link IDescription}. */
@@ -174,25 +152,29 @@ public class ExtraPackage extends Package {
                 name,
                 getRevision());
 
-        if (mMinToolsRevision != MIN_TOOLS_REV_NOT_SPECIFIED) {
-            s += String.format(" (tools rev: %1$d)", mMinToolsRevision);
-        }
-
         return s;
     }
 
-    /** Returns a long description for an {@link IDescription}. */
+    /**
+     * Returns a long description for an {@link IDescription}.
+     *
+     * The long description is whatever the XML contains for the &lt;description&gt; field,
+     * or the short description if the former is empty.
+     */
     @Override
     public String getLongDescription() {
-        String s = String.format("Extra %1$s package, revision %2$d",
-                getPath(),
-                getRevision());
-
-        if (mMinToolsRevision != MIN_TOOLS_REV_NOT_SPECIFIED) {
-            s += String.format(" (min tools rev.: %1$d)", mMinToolsRevision);
+        String s = getDescription();
+        if (s == null || s.length() == 0) {
+            s = String.format("Extra %1$s package", getPath());
         }
 
-        s += ".";
+        if (s.indexOf("revision") == -1) {
+            s += String.format("\nRevision %1$d", getRevision());
+        }
+
+        if (getMinToolsRevision() != MIN_TOOLS_REV_NOT_SPECIFIED) {
+            s += String.format("\nRequires tools revision %1$d", getMinToolsRevision());
+        }
 
         return s;
     }

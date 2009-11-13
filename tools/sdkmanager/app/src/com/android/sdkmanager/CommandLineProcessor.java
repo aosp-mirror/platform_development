@@ -34,7 +34,17 @@ import java.util.Map.Entry;
  * To use, call {@link #parseArgs(String[])} and then
  * call {@link #getValue(String, String, String)}.
  */
-public class CommandLineProcessor {
+class CommandLineProcessor {
+
+    /*
+     * Steps needed to add a new action:
+     * - Each action is defined as a "verb object" followed by parameters.
+     * - Either reuse a VERB_ constant or define a new one.
+     * - Either reuse an OBJECT_ constant or define a new one.
+     * - Add a new entry to mAction with a one-line help summary.
+     * - In the constructor, add a define() call for each parameter (either mandatory
+     *   or optional) for the given action.
+     */
 
     /** Internal verb name for internally hidden flags. */
     public final static String GLOBAL_FLAG_VERB = "@@internal@@";
@@ -57,10 +67,14 @@ public class CommandLineProcessor {
     /**
      * Action definitions.
      * <p/>
+     * This list serves two purposes: first it is used to know which verb/object
+     * actions are acceptable on the command-line; second it provides a summary
+     * for each action that is printed in the help.
+     * <p/>
      * Each entry is a string array with:
      * <ul>
      * <li> the verb.
-     * <li> a direct object (use #NO_VERB_OBJECT if there's no object).
+     * <li> a direct object (use {@link #NO_VERB_OBJECT} if there's no object).
      * <li> a description.
      * <li> an alternate form for the object (e.g. plural).
      * </ul>
@@ -81,6 +95,15 @@ public class CommandLineProcessor {
     /** Logger */
     private final ISdkLog mLog;
 
+    /**
+     * Constructs a new command-line processor.
+     *
+     * @param logger An SDK logger object. Must not be null.
+     * @param actions The list of actions recognized on the command-line.
+     *                See the javadoc of {@link #mActions} for more details.
+     *
+     * @see #mActions
+     */
     public CommandLineProcessor(ISdkLog logger, String[][] actions) {
         mLog = logger;
         mActions = actions;
@@ -460,7 +483,7 @@ public class CommandLineProcessor {
             stdout("\nValid actions are composed of a verb and an optional direct object:");
             for (String[] action : mActions) {
 
-                stdout("- %1$6s %2$-7s: %3$s",
+                stdout("- %1$6s %2$-12s: %3$s",
                         action[ACTION_VERB_INDEX],
                         action[ACTION_OBJECT_INDEX],
                         action[ACTION_DESC_INDEX]);

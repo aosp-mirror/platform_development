@@ -16,6 +16,12 @@
 
 package com.android.term;
 
+import java.io.FileDescriptor;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
@@ -35,7 +41,6 @@ import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Exec;
 import android.os.Handler;
 import android.os.Message;
 import android.preference.PreferenceManager;
@@ -53,12 +58,6 @@ import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.ExtractedText;
 import android.view.inputmethod.ExtractedTextRequest;
 import android.view.inputmethod.InputConnection;
-
-import java.io.FileDescriptor;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.ArrayList;
 
 /**
  * A terminal emulator activity.
@@ -96,10 +95,7 @@ public class Term extends Activity {
 
     /**
      * The pseudo-teletype (pty) file descriptor that we use to communicate with
-     * another process, typically a shell. Currently we just use this to get the
-     * mTermIn / mTermOut file descriptors, but when we implement resizing of
-     * the terminal we will need it to issue the ioctl to inform the other
-     * process that we've changed the terminal size.
+     * another process, typically a shell.
      */
     private FileDescriptor mTermFd;
 
@@ -186,6 +182,15 @@ public class Term extends Activity {
         mEmulatorView.register(mKeyListener);
 
         updatePrefs();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (mTermFd != null) {
+            Exec.close(mTermFd);
+            mTermFd = null;
+        }
     }
 
     private void startListening() {

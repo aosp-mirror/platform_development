@@ -45,7 +45,7 @@ import javax.xml.parsers.SAXParserFactory;
 public final class MultiResourceFile extends ResourceFile implements IValueResourceRepository {
 
     private final static SAXParserFactory sParserFactory = SAXParserFactory.newInstance();
-    
+
     private final HashMap<ResourceType, HashMap<String, ResourceValue>> mResourceItems =
         new HashMap<ResourceType, HashMap<String, ResourceValue>>();
 
@@ -58,7 +58,7 @@ public final class MultiResourceFile extends ResourceFile implements IValueResou
         update();
 
         Set<ResourceType> keys = mResourceItems.keySet();
-        
+
         return keys.toArray(new ResourceType[keys.size()]);
     }
 
@@ -69,21 +69,21 @@ public final class MultiResourceFile extends ResourceFile implements IValueResou
         HashMap<String, ResourceValue> list = mResourceItems.get(type);
         return (list != null && list.size() > 0);
     }
-    
+
     @Override
     public Collection<ProjectResourceItem> getResources(ResourceType type,
             ProjectResources projectResources) {
         update();
 
         HashMap<String, ResourceValue> list = mResourceItems.get(type);
-        
+
         ArrayList<ProjectResourceItem> items = new ArrayList<ProjectResourceItem>();
-        
+
         if (list != null) {
             Collection<ResourceValue> values = list.values();
             for (ResourceValue res : values) {
                 ProjectResourceItem item = projectResources.findResourceItem(type, res.getName());
-                
+
                 if (item == null) {
                     if (type == ResourceType.ID) {
                         item = new IdResourceItem(res.getName(), false /* isDeclaredInline */);
@@ -99,7 +99,7 @@ public final class MultiResourceFile extends ResourceFile implements IValueResou
 
         return items;
     }
-    
+
     /**
      * Updates the Resource items if necessary.
      */
@@ -110,7 +110,7 @@ public final class MultiResourceFile extends ResourceFile implements IValueResou
 
             // need to parse the file and find the content.
             parseFile();
-            
+
             resetTouch();
         }
     }
@@ -128,7 +128,7 @@ public final class MultiResourceFile extends ResourceFile implements IValueResou
         } catch (CoreException e) {
         }
     }
-    
+
     /**
      * Adds a resource item to the list
      * @param resType The type of the resource
@@ -138,7 +138,7 @@ public final class MultiResourceFile extends ResourceFile implements IValueResou
         ResourceType type = ResourceType.getEnum(resType);
         if (type != null) {
             HashMap<String, ResourceValue> list = mResourceItems.get(type);
-    
+
             // if the list does not exist, create it.
             if (list == null) {
                 list = new HashMap<String, ResourceValue>();
@@ -146,13 +146,13 @@ public final class MultiResourceFile extends ResourceFile implements IValueResou
             } else {
                 // look for a possible value already existing.
                 ResourceValue oldValue = list.get(value.getName());
-                
+
                 if (oldValue != null) {
                     oldValue.replaceWith(value);
                     return;
                 }
             }
-            
+
             // empty list or no match found? add the given resource
             list.put(value.getName(), value);
         }
@@ -168,7 +168,7 @@ public final class MultiResourceFile extends ResourceFile implements IValueResou
         if (list != null) {
             return list.get(name);
         }
-        
+
         return null;
     }
 }

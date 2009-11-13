@@ -62,14 +62,17 @@ else
     java_debug=
 fi
 
+java_cmd="java"
+
 # Mac OS X needs an additional arg, or you get an "illegal thread" complaint.
 if [ `uname` = "Darwin" ]; then
     os_opts="-XstartOnFirstThread"
-    #because Java 1.6 is 64 bits only and SWT doesn't support this, we force the usage of java 1.5
-    java_cmd="/System/Library/Frameworks/JavaVM.framework/Versions/1.5/Commands/java"
 else
     os_opts=
-    java_cmd="java"
+fi
+
+if [ `uname` = "Linux" ]; then
+    export GDK_NATIVE_WINDOWS=true
 fi
 
 if [ "$OSTYPE" = "cygwin" ] ; then
@@ -87,7 +90,7 @@ swtpath=""
 if [ -n "$ANDROID_SWT" ]; then
     swtpath="$ANDROID_SWT"
 else
-    vmarch=`java -jar "${frameworkdir}"/archquery.jar`
+    vmarch=`${java_cmd} -jar "${frameworkdir}"/archquery.jar`
     if [ -n "$ANDROID_BUILD_TOP" ]; then
         osname=`uname -s | tr A-Z a-z`
         swtpath="${ANDROID_BUILD_TOP}/prebuilt/${osname}-${vmarch}/swt"
@@ -103,6 +106,10 @@ else
     echo "SWT folder '${swtpath}' does not exist."
     echo "Please export ANDROID_SWT to point to the folder containing swt.jar for your platform."
     exit 1
+fi
+
+if [ -z "$1" ]; then
+    echo "Starting Android SDK and AVD Manager"
 fi
 
 # need to use "java.ext.dirs" because "-jar" causes classpath to be ignored

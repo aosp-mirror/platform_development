@@ -30,6 +30,7 @@ import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.avd.AvdManager;
 import com.android.sdklib.internal.project.ApkConfigurationHelper;
+import com.android.sdklib.internal.project.ApkSettings;
 import com.android.sdklib.internal.project.ProjectProperties;
 import com.android.sdklib.internal.project.ProjectProperties.PropertyType;
 
@@ -68,9 +69,11 @@ public class Sdk implements IProjectListener {
             new HashMap<IProject, IAndroidTarget>();
     private final HashMap<IAndroidTarget, AndroidTargetData> mTargetDataMap =
             new HashMap<IAndroidTarget, AndroidTargetData>();
-    private final HashMap<IProject, Map<String, String>> mProjectApkConfigMap =
-            new HashMap<IProject, Map<String, String>>();
+    private final HashMap<IProject, ApkSettings> mApkSettingsMap =
+            new HashMap<IProject, ApkSettings>();
     private final String mDocBaseUrl;
+
+    private final LayoutDeviceManager mLayoutDeviceManager = new LayoutDeviceManager();
 
     /**
      * Classes implementing this interface will receive notification when targets are changed.
@@ -193,11 +196,9 @@ public class Sdk implements IProjectListener {
      * apk configurations should not be updated.
      */
     public void setProject(IProject project, IAndroidTarget target,
-            Map<String, String> apkConfigMap) {
+            ApkSettings settings) {
         synchronized (AdtPlugin.getDefault().getSdkLockObject()) {
             boolean resolveProject = false;
-            boolean compileProject = false;
-            boolean cleanProject = false;
 
             ProjectProperties properties = ProjectProperties.load(
                     project.getLocation().toOSString(), PropertyType.DEFAULT);
@@ -222,15 +223,17 @@ public class Sdk implements IProjectListener {
                 }
             }
 
-            if (apkConfigMap != null) {
-                // save the apk configs in the project persistent property
-                cleanProject = ApkConfigurationHelper.setConfigs(properties, apkConfigMap);
-
-                // put it in a local map for easy access.
-                mProjectApkConfigMap.put(project, apkConfigMap);
-
-                compileProject = true;
+            // if there's no settings, force default values (to reset possibly changed
+            // values in a previous call.
+            if (settings == null) {
+                settings = new ApkSettings();
             }
+
+            // save the project settings into the project persistent property
+            ApkConfigurationHelper.setProperties(properties, settings);
+
+            // put it in a local map for easy access.
+            mApkSettingsMap.put(project, settings);
 
             // we are done with the modification. Save the property file.
             try {
@@ -242,17 +245,14 @@ public class Sdk implements IProjectListener {
 
             if (resolveProject) {
                 // force a resolve of the project by updating the classpath container.
+                // This will also force a recompile.
                 IJavaProject javaProject = JavaCore.create(project);
                 AndroidClasspathContainerInitializer.updateProjects(
                         new IJavaProject[] { javaProject });
-            } else if (compileProject) {
-                // If there was removed configs, we clean instead of build
-                // (to remove the obsolete ap_ and apk file from removed configs).
+            } else {
+                // always do a full clean/build.
                 try {
-                    project.build(cleanProject ?
-                                IncrementalProjectBuilder.CLEAN_BUILD :
-                                IncrementalProjectBuilder.FULL_BUILD,
-                            null);
+                    project.build(IncrementalProjectBuilder.CLEAN_BUILD, null);
                 } catch (CoreException e) {
                     // failed to build? force resolve instead.
                     IJavaProject javaProject = JavaCore.create(project);
@@ -316,10 +316,10 @@ public class Sdk implements IProjectListener {
 
         if (sdkStorage != null) {
             synchronized (AdtPlugin.getDefault().getSdkLockObject()) {
-                Map<String, String> configMap = ApkConfigurationHelper.getConfigs(properties);
+                ApkSettings settings = ApkConfigurationHelper.getSettings(properties);
 
-                if (configMap != null) {
-                    sdkStorage.mProjectApkConfigMap.put(project, configMap);
+                if (settings != null) {
+                    sdkStorage.mApkSettingsMap.put(project, settings);
                 }
             }
         }
@@ -392,13 +392,11 @@ public class Sdk implements IProjectListener {
     }
 
     /**
-     * Returns the configuration map for a given project.
-     * <p/>The Map key are name to be used in the apk filename, while the values are comma separated
-     * config values. The config value can be passed directly to aapt through the -c option.
+     * Returns the APK settings for a given project.
      */
-    public Map<String, String> getProjectApkConfigs(IProject project) {
+    public ApkSettings getApkSettings(IProject project) {
         synchronized (AdtPlugin.getDefault().getSdkLockObject()) {
-            return mProjectApkConfigMap.get(project);
+            return mApkSettingsMap.get(project);
         }
     }
 
@@ -425,6 +423,10 @@ public class Sdk implements IProjectListener {
         }
     }
 
+    public LayoutDeviceManager getLayoutDeviceManager() {
+        return mLayoutDeviceManager;
+    }
+
     private Sdk(SdkManager manager, AvdManager avdManager) {
         mManager = manager;
         mAvdManager = avdManager;
@@ -436,6 +438,11 @@ public class Sdk implements IProjectListener {
         // pre-compute some paths
         mDocBaseUrl = getDocumentationBaseUrl(mManager.getLocation() +
                 SdkConstants.OS_SDK_DOCS_FOLDER);
+
+        // load the built-in and user layout devices
+        mLayoutDeviceManager.loadDefaultAndUserDevices(mManager.getLocation());
+        // and the ones from the add-on
+        loadLayoutDevices();
     }
 
     /**
@@ -488,6 +495,24 @@ public class Sdk implements IProjectListener {
         return null;
     }
 
+    /**
+     * Parses the SDK add-ons to look for files called {@link SdkConstants#FN_DEVICES_XML} to
+     * load {@link LayoutDevice} from them.
+     */
+    private void loadLayoutDevices() {
+        IAndroidTarget[] targets = mManager.getTargets();
+        for (IAndroidTarget target : targets) {
+            if (target.isPlatform() == false) {
+                File deviceXml = new File(target.getLocation(), SdkConstants.FN_DEVICES_XML);
+                if (deviceXml.isFile()) {
+                    mLayoutDeviceManager.parseAddOnLayoutDevice(deviceXml);
+                }
+            }
+        }
+
+        mLayoutDeviceManager.sealAddonLayoutDevices();
+    }
+
     public void projectClosed(IProject project) {
         // get the target project
         synchronized (AdtPlugin.getDefault().getSdkLockObject()) {
@@ -505,7 +530,7 @@ public class Sdk implements IProjectListener {
 
             // now remove the project for the maps.
             mProjectTargetMap.remove(project);
-            mProjectApkConfigMap.remove(project);
+            mApkSettingsMap.remove(project);
         }
     }
 
@@ -523,5 +548,4 @@ public class Sdk implements IProjectListener {
         // to be resolved.
     }
 }
-
 

@@ -34,6 +34,7 @@ import com.android.jarutils.SignedJarBuilder.IZipEntryFilter;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkConstants;
+import com.android.sdklib.internal.project.ApkSettings;
 
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
@@ -303,11 +304,15 @@ public class ApkBuilder extends BaseBuilder {
                 return referencedProjects;
             }
 
-            // get the extra configs for the project.
-            // The map contains (name, filter) where 'name' is a name to be used in the apk filename,
-            // and filter is the resource filter to be used in the aapt -c parameters to restrict
-            // which resource configurations to package in the apk.
-            Map<String, String> configs = Sdk.getCurrent().getProjectApkConfigs(project);
+            // get the APK configs for the project.
+            ApkSettings apkSettings = Sdk.getCurrent().getApkSettings(project);
+            Set<Entry<String, String>> apkfilters = null;
+            if (apkSettings != null) {
+                Map<String, String> filterMap = apkSettings.getResourceFilters();
+                if (filterMap != null && filterMap.size() > 0) {
+                    apkfilters = filterMap.entrySet();
+                }
+            }
 
             // do some extra check, in case the output files are not present. This
             // will force to recreate them.
@@ -320,19 +325,20 @@ public class ApkBuilder extends BaseBuilder {
                     mPackageResources = true;
                     mBuildFinalPackage = true;
                 } else {
-                    // if the full package is present, we check the filtered resource packages as well
-                    if (configs != null) {
-                        Set<Entry<String, String>> entrySet = configs.entrySet();
-
-                        for (Entry<String, String> entry : entrySet) {
+                    // if the full package is present, we check the filtered resource packages
+                    // as well
+                    if (apkfilters != null) {
+                        for (Entry<String, String> entry : apkfilters) {
                             String filename = String.format(AndroidConstants.FN_RESOURCES_S_AP_,
                                     entry.getKey());
 
                             tmp = outputFolder.findMember(filename);
                             if (tmp == null || (tmp instanceof IFile &&
                                     tmp.exists() == false)) {
-                                String msg = String.format(Messages.s_Missing_Repackaging, filename);
-                                AdtPlugin.printBuildToConsole(AdtConstants.BUILD_VERBOSE, project, msg);
+                                String msg = String.format(Messages.s_Missing_Repackaging,
+                                        filename);
+                                AdtPlugin.printBuildToConsole(AdtConstants.BUILD_VERBOSE,
+                                        project, msg);
                                 mPackageResources = true;
                                 mBuildFinalPackage = true;
                                 break;
@@ -360,11 +366,9 @@ public class ApkBuilder extends BaseBuilder {
                     String msg = String.format(Messages.s_Missing_Repackaging, finalPackageName);
                     AdtPlugin.printBuildToConsole(AdtConstants.BUILD_VERBOSE, project, msg);
                     mBuildFinalPackage = true;
-                } else if (configs != null) {
+                } else if (apkfilters != null) {
                     // if the full apk is present, we check the filtered apk as well
-                    Set<Entry<String, String>> entrySet = configs.entrySet();
-
-                    for (Entry<String, String> entry : entrySet) {
+                    for (Entry<String, String> entry : apkfilters) {
                         String filename = ProjectHelper.getApkFilename(project, entry.getKey());
 
                         tmp = outputFolder.findMember(filename);
@@ -411,9 +415,8 @@ public class ApkBuilder extends BaseBuilder {
                 // notified.
                 finalPackage.delete();
 
-                if (configs != null) {
-                    Set<Entry<String, String>> entrySet = configs.entrySet();
-                    for (Entry<String, String> entry : entrySet) {
+                if (apkfilters != null) {
+                    for (Entry<String, String> entry : apkfilters) {
                         String packageFilepath = osBinPath + File.separator +
                                 ProjectHelper.getApkFilename(project, entry.getKey());
 
@@ -477,9 +480,8 @@ public class ApkBuilder extends BaseBuilder {
                         }
 
                         // now do the same thing for all the configured resource packages.
-                        if (configs != null) {
-                            Set<Entry<String, String>> entrySet = configs.entrySet();
-                            for (Entry<String, String> entry : entrySet) {
+                        if (apkfilters != null) {
+                            for (Entry<String, String> entry : apkfilters) {
                                 String outPathFormat = osBinPath + File.separator +
                                         AndroidConstants.FN_RESOURCES_S_AP_;
                                 String outPath = String.format(outPathFormat, entry.getKey());
@@ -527,12 +529,11 @@ public class ApkBuilder extends BaseBuilder {
                 }
 
                 // now do the same thing for all the configured resource packages.
-                if (configs != null) {
+                if (apkfilters != null) {
                     String resPathFormat = osBinPath + File.separator +
                             AndroidConstants.FN_RESOURCES_S_AP_;
 
-                    Set<Entry<String, String>> entrySet = configs.entrySet();
-                    for (Entry<String, String> entry : entrySet) {
+                    for (Entry<String, String> entry : apkfilters) {
                         // make the filename for the resource package.
                         String resPath = String.format(resPathFormat, entry.getKey());
 

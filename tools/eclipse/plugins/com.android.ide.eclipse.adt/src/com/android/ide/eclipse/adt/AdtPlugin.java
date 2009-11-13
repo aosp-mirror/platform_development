@@ -244,6 +244,7 @@ public class AdtPlugin extends AbstractUIPlugin {
      * (non-Javadoc)
      * @see org.eclipse.ui.plugin.AbstractUIPlugin#start(org.osgi.framework.BundleContext)
      */
+    @SuppressWarnings("deprecation")
     @Override
     public void start(BundleContext context) throws Exception {
         super.start(context);
@@ -1025,10 +1026,13 @@ public class AdtPlugin extends AbstractUIPlugin {
 
                         progress.setTaskName(Messages.AdtPlugin_Parsing_Resources);
 
-                        int n = sdk.getTargets().length;
+                        final IAndroidTarget[] targets = sdk.getTargets();
+                        final int n = targets.length;
                         if (n > 0) {
+                            // load the rest of the targets.
+                            // TODO: make this on-demand.
                             int w = 60 / n;
-                            for (IAndroidTarget target : sdk.getTargets()) {
+                            for (IAndroidTarget target : targets) {
                                 SubMonitor p2 = progress.newChild(w);
                                 IStatus status = new AndroidTargetParser(target).run(p2);
                                 if (status.getCode() != IStatus.OK) {
@@ -1041,12 +1045,12 @@ public class AdtPlugin extends AbstractUIPlugin {
                             }
                         }
 
+                        ArrayList<IJavaProject> list = new ArrayList<IJavaProject>();
                         synchronized (getSdkLockObject()) {
                             mSdkIsLoaded = LoadStatus.LOADED;
 
                             progress.setTaskName("Check Projects");
 
-                            ArrayList<IJavaProject> list = new ArrayList<IJavaProject>();
                             for (IJavaProject javaProject : mPostLoadProjectsToResolve) {
                                 if (javaProject.getProject().isOpen()) {
                                     list.add(javaProject);
@@ -1055,24 +1059,24 @@ public class AdtPlugin extends AbstractUIPlugin {
 
                             // done with this list.
                             mPostLoadProjectsToResolve.clear();
-
-                            // check the projects that need checking.
-                            // The method modifies the list (it removes the project that
-                            // do not need to be resolved again).
-                            AndroidClasspathContainerInitializer.checkProjectsCache(
-                                    mPostLoadProjectsToCheck);
-
-                            list.addAll(mPostLoadProjectsToCheck);
-
-                            // update the project that needs recompiling.
-                            if (list.size() > 0) {
-                                IJavaProject[] array = list.toArray(
-                                        new IJavaProject[list.size()]);
-                                AndroidClasspathContainerInitializer.updateProjects(array);
-                            }
-
-                            progress.worked(10);
                         }
+
+                        // check the projects that need checking.
+                        // The method modifies the list (it removes the project that
+                        // do not need to be resolved again).
+                        AndroidClasspathContainerInitializer.checkProjectsCache(
+                                mPostLoadProjectsToCheck);
+
+                        list.addAll(mPostLoadProjectsToCheck);
+
+                        // update the project that needs recompiling.
+                        if (list.size() > 0) {
+                            IJavaProject[] array = list.toArray(
+                                    new IJavaProject[list.size()]);
+                            AndroidClasspathContainerInitializer.updateProjects(array);
+                        }
+
+                        progress.worked(10);
                     }
 
                     // Notify resource changed listeners

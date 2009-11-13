@@ -16,6 +16,9 @@
 
 package com.android.ddmlib;
 
+import com.android.ddmlib.ClientData.AllocationTrackingStatus;
+import com.android.ddmlib.ClientData.IHprofDumpHandler;
+
 import java.io.IOException;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
@@ -91,22 +94,18 @@ final class HandleHeap extends ChunkHandler {
 
         if (type == CHUNK_HPIF) {
             handleHPIF(client, data);
-            client.update(Client.CHANGE_HEAP_DATA);
         } else if (type == CHUNK_HPST) {
             handleHPST(client, data);
         } else if (type == CHUNK_HPEN) {
             handleHPEN(client, data);
-            client.update(Client.CHANGE_HEAP_DATA);
         } else if (type == CHUNK_HPSG) {
             handleHPSG(client, data);
         } else if (type == CHUNK_HPDU) {
             handleHPDU(client, data);
         } else if (type == CHUNK_REAQ) {
             handleREAQ(client, data);
-            client.update(Client.CHANGE_HEAP_ALLOCATION_STATUS);
         } else if (type == CHUNK_REAL) {
             handleREAL(client, data);
-            client.update(Client.CHANGE_HEAP_ALLOCATIONS);
         } else {
             handleUnknownChunk(client, type, data, isReply, msgId);
         }
@@ -133,6 +132,7 @@ final class HandleHeap extends ChunkHandler {
 
                 client.getClientData().setHeapInfo(heapId, maxHeapSize,
                         heapSize, bytesAllocated, objectsAllocated);
+                client.update(Client.CHANGE_HEAP_DATA);
             }
         } catch (BufferUnderflowException ex) {
             Log.w("ddm-heap", "malformed HPIF chunk from client");
@@ -174,6 +174,7 @@ final class HandleHeap extends ChunkHandler {
          */
 //xxx todo: only seal data that belongs to the heap mentioned in <data>.
         client.getClientData().getVmHeapData().sealHeapData();
+        client.update(Client.CHANGE_HEAP_DATA);
     }
 
     /*
@@ -243,6 +244,7 @@ final class HandleHeap extends ChunkHandler {
         finishChunkPacket(packet, CHUNK_HPDU, buf.position());
         Log.d("ddm-heap", "Sending " + name(CHUNK_HPDU) + " '" + fileName +"'");
         client.sendAndConsume(packet, mInst);
+        client.getClientData().setPendingHprofDump(fileName);
     }
 
     /*
@@ -251,13 +253,24 @@ final class HandleHeap extends ChunkHandler {
     private void handleHPDU(Client client, ByteBuffer data) {
         byte result;
 
+        // get the filename and make the client not have pending HPROF dump anymore.
+        String filename = client.getClientData().getPendingHprofDump();
+        client.getClientData().setPendingHprofDump(null);
+
+        // get the dump result
         result = data.get();
 
-        if (result == 0) {
-            Log.i("ddm-heap", "Heap dump request has finished");
-            // TODO: stuff
-        } else {
-            Log.w("ddm-heap", "Heap dump request failed (check device log)");
+        // get the app-level handler for HPROF dump
+        IHprofDumpHandler handler = ClientData.getHprofDumpHandler();
+        if (handler != null) {
+            if (result == 0) {
+                handler.onSuccess(filename, client);
+
+                Log.d("ddm-heap", "Heap dump request has finished");
+            } else {
+                handler.onFailure(client);
+                Log.w("ddm-heap", "Heap dump request failed (check device log)");
+            }
         }
     }
 
@@ -317,8 +330,10 @@ final class HandleHeap extends ChunkHandler {
 
         enabled = (data.get() != 0);
         Log.d("ddm-heap", "REAQ says: enabled=" + enabled);
-        
-        client.getClientData().setAllocationStatus(enabled);
+
+        client.getClientData().setAllocationStatus(enabled ?
+                AllocationTrackingStatus.ON : AllocationTrackingStatus.OFF);
+        client.update(Client.CHANGE_HEAP_ALLOCATION_STATUS);
     }
 
     /**
@@ -359,7 +374,7 @@ final class HandleHeap extends ChunkHandler {
                 str = "double";
             }
         }
-        
+
         // now add the array part
         for (int a = 0 ; a < array; a++) {
             str = str + "[]";
@@ -410,7 +425,7 @@ final class HandleHeap extends ChunkHandler {
      *   (xb) class name strings
      *   (xb) method name strings
      *   (xb) source file strings
-     * 
+     *
      *   As with other DDM traffic, strings are sent as a 4-byte length
      *   followed by UTF-16 data.
      */
@@ -498,11 +513,12 @@ final class HandleHeap extends ChunkHandler {
             list.add(new AllocationInfo(classNames[classNameIndex],
                 totalSize, (short) threadId, steArray));
         }
-        
+
         // sort biggest allocations first.
         Collections.sort(list);
-        
+
         client.getClientData().setAllocations(list.toArray(new AllocationInfo[numEntries]));
+        client.update(Client.CHANGE_HEAP_ALLOCATIONS);
     }
 
     /*
@@ -521,11 +537,11 @@ final class HandleHeap extends ChunkHandler {
 
             for (StackTraceElement ste: rec.getStackTrace()) {
                 if (ste.isNativeMethod()) {
-                    System.out.println("    " + ste.getClassName() 
+                    System.out.println("    " + ste.getClassName()
                         + "." + ste.getMethodName()
                         + " (Native method)");
                 } else {
-                    System.out.println("    " + ste.getClassName() 
+                    System.out.println("    " + ste.getClassName()
                         + "." + ste.getMethodName()
                         + " (" + ste.getFileName()
                         + ":" + ste.getLineNumber() + ")");

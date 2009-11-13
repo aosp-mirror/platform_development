@@ -50,16 +50,6 @@ public class SpriteTextRenderer implements GLSurfaceView.Renderer{
         mLabelPaint.setARGB(0xff, 0x00, 0x00, 0x00);
     }
 
-    public int[] getConfigSpec() {
-        // We don't need a depth buffer, and don't care about our
-        // color depth.
-        int[] configSpec = {
-                EGL10.EGL_DEPTH_SIZE, 0,
-                EGL10.EGL_NONE
-        };
-        return configSpec;
-    }
-
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
         /*
          * By default, OpenGL enables features that improve quality

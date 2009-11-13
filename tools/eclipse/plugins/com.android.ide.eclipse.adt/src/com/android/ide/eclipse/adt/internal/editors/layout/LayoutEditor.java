@@ -46,7 +46,7 @@ import org.eclipse.ui.views.properties.IPropertySheetPage;
 import org.w3c.dom.Document;
 
 /**
- * Multi-page form editor for /res/layout XML files. 
+ * Multi-page form editor for /res/layout XML files.
  */
 public class LayoutEditor extends AndroidEditor implements IShowEditorInput, IPartListener {
 
@@ -54,8 +54,8 @@ public class LayoutEditor extends AndroidEditor implements IShowEditorInput, IPa
 
     /** Root node of the UI element hierarchy */
     private UiDocumentNode mUiRootNode;
-    
-    private AbstractGraphicalLayoutEditor mGraphicalEditor;
+
+    private IGraphicalLayoutEditor mGraphicalEditor;
     private int mGraphicalEditorIndex;
     /** Implementation of the {@link IContentOutlinePage} for this editor */
     private UiContentOutlinePage mOutline;
@@ -63,7 +63,7 @@ public class LayoutEditor extends AndroidEditor implements IShowEditorInput, IPa
     private UiPropertySheetPage mPropertyPage;
 
     private UiEditorActions mUiEditorActions;
-   
+
     /**
      * Creates the form editor for resources XML files.
      */
@@ -87,7 +87,7 @@ public class LayoutEditor extends AndroidEditor implements IShowEditorInput, IPa
 
         super.dispose();
     }
-    
+
     /**
      * Save the XML.
      * <p/>
@@ -105,12 +105,12 @@ public class LayoutEditor extends AndroidEditor implements IShowEditorInput, IPa
             mGraphicalEditor.doSave(monitor);
         }
     }
-    
+
     /**
      * Returns whether the "save as" operation is supported by this editor.
      * <p/>
      * Save-As is a valid operation for the ManifestEditor since it acts on a
-     * single source file. 
+     * single source file.
      *
      * @see IEditorPart
      */
@@ -128,9 +128,15 @@ public class LayoutEditor extends AndroidEditor implements IShowEditorInput, IPa
             // The graphical layout editor is now enabled by default.
             // In case there's an issue we provide a way to disable it using an
             // env variable.
-            if (System.getenv("ANDROID_DISABLE_LAYOUT") == null) {
+            if (System.getenv("ANDROID_DISABLE_LAYOUT") == null) {      //$NON-NLS-1$
                 if (mGraphicalEditor == null) {
-                    mGraphicalEditor = new GraphicalLayoutEditor(this);
+
+                    if (System.getenv("USE_GLE2") != null) {            //$NON-NLS-1$ //$NON-NLS-2$
+                        mGraphicalEditor = new GraphicalEditorPart(this);
+                    } else {
+                        mGraphicalEditor = new GraphicalLayoutEditor(this);
+                    }
+
                     mGraphicalEditorIndex = addPage(mGraphicalEditor, getEditorInput());
                     setPageText(mGraphicalEditorIndex, mGraphicalEditor.getTitle());
                 } else {
@@ -174,7 +180,7 @@ public class LayoutEditor extends AndroidEditor implements IShowEditorInput, IPa
         super.setInputWithNotify(input);
         handleNewInput(input);
     }
-    
+
     /**
      * Called to replace the current {@link IEditorInput} with another one.
      * <p/>This is used when {@link MatchingStrategy} returned <code>true</code> which means we're
@@ -183,10 +189,10 @@ public class LayoutEditor extends AndroidEditor implements IShowEditorInput, IPa
     public void showEditorInput(IEditorInput editorInput) {
         // save the current editor input.
         doSave(new NullProgressMonitor());
-        
+
         // get the current page
         int currentPage = getActivePage();
-        
+
         // remove the pages, except for the graphical editor, which will be dynamically adapted
         // to the new model.
         // page after the graphical editor:
@@ -198,10 +204,10 @@ public class LayoutEditor extends AndroidEditor implements IShowEditorInput, IPa
         for (int i = mGraphicalEditorIndex - 1 ; i >= 0 ; i--) {
             removePage(i);
         }
-        
+
         // set the current input.
         setInputWithNotify(editorInput);
-        
+
         // re-create or reload the pages with the default page shown as the previous active page.
         createAndroidPages();
         selectDefaultPage(Integer.toString(currentPage));
@@ -211,10 +217,10 @@ public class LayoutEditor extends AndroidEditor implements IShowEditorInput, IPa
             mOutline.reloadModel();
         }
     }
-    
+
     /**
      * Processes the new XML Model, which XML root node is given.
-     * 
+     *
      * @param xml_doc The XML document, if available, or null if none exists.
      */
     @Override
@@ -226,16 +232,16 @@ public class LayoutEditor extends AndroidEditor implements IShowEditorInput, IPa
 
         // update the model first, since it is used by the viewers.
         super.xmlModelChanged(xml_doc);
-        
+
         if (mGraphicalEditor != null) {
             mGraphicalEditor.onXmlModelChanged();
         }
-        
+
         if (mOutline != null) {
             mOutline.reloadModel();
         }
     }
-    
+
     /* (non-java doc)
      * Returns the IContentOutlinePage when asked for it.
      */
@@ -246,29 +252,33 @@ public class LayoutEditor extends AndroidEditor implements IShowEditorInput, IPa
         // This fixes the case where a layout file is opened in XML view first and the outline
         // gets stuck in the XML outline.
         if (IContentOutlinePage.class == adapter && mGraphicalEditor != null) {
-            if (mOutline == null) {
-                mOutline = new UiContentOutlinePage(mGraphicalEditor, new TreeViewer());
+
+            if (mOutline == null && mGraphicalEditor instanceof GraphicalLayoutEditor) {
+                // TODO add support for GLE2
+                mOutline = new UiContentOutlinePage(
+                        (GraphicalLayoutEditor) mGraphicalEditor,
+                        new TreeViewer());
             }
-            
+
             return mOutline;
         }
-        
+
         if (IPropertySheetPage.class == adapter && mGraphicalEditor != null) {
             if (mPropertyPage == null) {
                 mPropertyPage = new UiPropertySheetPage();
             }
-            
+
             return mPropertyPage;
         }
 
         // return default
         return super.getAdapter(adapter);
     }
-    
+
     @Override
     protected void pageChange(int newPageIndex) {
         super.pageChange(newPageIndex);
-        
+
         if (mGraphicalEditor != null) {
             if (newPageIndex == mGraphicalEditorIndex) {
                 mGraphicalEditor.activated();
@@ -277,9 +287,9 @@ public class LayoutEditor extends AndroidEditor implements IShowEditorInput, IPa
             }
         }
     }
-    
+
     // ----- IPartListener Methods ----
-    
+
     public void partActivated(IWorkbenchPart part) {
         if (part == this) {
             if (mGraphicalEditor != null) {
@@ -312,7 +322,7 @@ public class LayoutEditor extends AndroidEditor implements IShowEditorInput, IPa
         EclipseUiHelper.showView(EclipseUiHelper.CONTENT_OUTLINE_VIEW_ID, false /* activate */);
         EclipseUiHelper.showView(EclipseUiHelper.PROPERTY_SHEET_VIEW_ID, false /* activate */);
     }
-    
+
     public class UiEditorActions extends UiActions {
 
         @Override
@@ -331,16 +341,16 @@ public class LayoutEditor extends AndroidEditor implements IShowEditorInput, IPa
             // Pass. There is nothing to commit before the XML is changed here.
         }
     }
-    
+
     public UiEditorActions getUiEditorActions() {
         if (mUiEditorActions == null) {
             mUiEditorActions = new UiEditorActions();
         }
         return mUiEditorActions;
     }
-    
+
     // ---- Local Methods ----
-    
+
     /**
      * Returns true if the Graphics editor page is visible. This <b>must</b> be
      * called from the UI thread.
@@ -357,20 +367,20 @@ public class LayoutEditor extends AndroidEditor implements IShowEditorInput, IPa
         }
 
         return false;
-    }   
-    
+    }
+
     @Override
     protected void initUiRootNode(boolean force) {
         // The root UI node is always created, even if there's no corresponding XML node.
         if (mUiRootNode == null || force) {
             // get the target data from the opened file (and its project)
             AndroidTargetData data = getTargetData();
-            
+
             Document doc = null;
             if (mUiRootNode != null) {
                 doc = mUiRootNode.getXmlDocument();
             }
-            
+
             DocumentDescriptor desc;
             if (data == null) {
                 desc = new DocumentDescriptor("temp", null /*children*/);
@@ -385,21 +395,22 @@ public class LayoutEditor extends AndroidEditor implements IShowEditorInput, IPa
             onDescriptorsChanged(doc);
         }
     }
-    
+
     private void onDescriptorsChanged(Document document) {
         if (document != null) {
             mUiRootNode.loadFromXmlNode(document);
         } else {
             mUiRootNode.reloadFromXmlNode(mUiRootNode.getXmlDocument());
         }
-        
+
         if (mOutline != null) {
             mOutline.reloadModel();
         }
-        
+
         if (mGraphicalEditor != null) {
             mGraphicalEditor.reloadEditor();
             mGraphicalEditor.reloadPalette();
+            mGraphicalEditor.reloadConfigurationUi(true /*notify listener */);
             mGraphicalEditor.recomputeLayout();
         }
     }

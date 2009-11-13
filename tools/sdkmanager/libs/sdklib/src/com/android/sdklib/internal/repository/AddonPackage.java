@@ -35,7 +35,7 @@ import java.util.Properties;
 /**
  * Represents an add-on XML node in an SDK repository.
  */
-public class AddonPackage extends Package {
+public class AddonPackage extends Package implements IPackageVersion {
 
     private static final String PROP_NAME      = "Addon.Name";      //$NON-NLS-1$
     private static final String PROP_VENDOR    = "Addon.Vendor";    //$NON-NLS-1$
@@ -89,6 +89,8 @@ public class AddonPackage extends Package {
      * {@link IAndroidTarget#isPlatform()} false) from the {@link SdkManager}.
      * This is used to list local SDK folders in which case there is one archive which
      * URL is the actual target location.
+     * <p/>
+     * By design, this creates a package with one and only one archive.
      */
     AddonPackage(IAndroidTarget target, Properties props) {
         super(  null,                       //source
@@ -187,18 +189,33 @@ public class AddonPackage extends Package {
     /** Returns a short description for an {@link IDescription}. */
     @Override
     public String getShortDescription() {
-        return String.format("%1$s by %2$s for Android API %3$s",
+        return String.format("%1$s by %2$s, Android API %3$s, revision %4$s",
                 getName(),
                 getVendor(),
-                mVersion.getApiString());
+                mVersion.getApiString(),
+                getRevision());
     }
 
-    /** Returns a long description for an {@link IDescription}. */
+    /**
+     * Returns a long description for an {@link IDescription}.
+     *
+     * The long description is whatever the XML contains for the &lt;description&gt; field,
+     * or the short description if the former is empty.
+     */
     @Override
     public String getLongDescription() {
-        return String.format("%1$s,\nRevision %2$d.",
-                getShortDescription(),
-                getRevision());
+        String s = getDescription();
+        if (s == null || s.length() == 0) {
+            s = getShortDescription();
+        }
+
+        if (s.indexOf("revision") == -1) {
+            s += String.format("\nRevision %1$d", getRevision());
+        }
+
+        s += String.format("\nRequires SDK Platform Android API %1$s",
+                mVersion.getApiString());
+        return s;
     }
 
     /**

@@ -26,6 +26,7 @@ import com.android.sdklib.internal.avd.AvdManager.AvdInfo;
 import com.android.sdklib.internal.avd.AvdManager.AvdInfo.AvdStatus;
 import com.android.sdklib.internal.repository.ITask;
 import com.android.sdklib.internal.repository.ITaskMonitor;
+import com.android.sdkuilib.internal.repository.SettingsController;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 import com.android.sdkuilib.internal.tasks.ProgressTask;
 import com.android.sdkuilib.repository.UpdaterWindow;
@@ -94,6 +95,8 @@ public final class AvdSelector {
     private ImageFactory mImageFactory;
     private Image mOkImage;
     private Image mBrokenImage;
+
+    private SettingsController mController;
 
 
     /**
@@ -379,6 +382,14 @@ public final class AvdSelector {
             IAndroidTarget filter,
             DisplayMode displayMode) {
         this(parent, osSdkPath, manager, new TargetBasedFilter(filter), displayMode);
+    }
+
+    /**
+     * Sets an optional SettingsController.
+     * @param controller the controller.
+     */
+    public void setSettingsController(SettingsController controller) {
+        mController = controller;
     }
     /**
      * Sets the table grid layout data.
@@ -898,52 +909,70 @@ public final class AvdSelector {
             return;
         }
 
-        String path = mOsSdkPath +
-            File.separator +
-            SdkConstants.OS_SDK_TOOLS_FOLDER +
-            SdkConstants.FN_EMULATOR;
+        AvdStartDialog dialog = new AvdStartDialog(mTable.getShell(), avdInfo, mOsSdkPath,
+                mController);
+        if (dialog.open() == Window.OK) {
+            String path = mOsSdkPath +
+                File.separator +
+                SdkConstants.OS_SDK_TOOLS_FOLDER +
+                SdkConstants.FN_EMULATOR;
 
-        final String avdName = avdInfo.getName();
+            final String avdName = avdInfo.getName();
 
-        // build the command line based on the available parameters.
-        ArrayList<String> list = new ArrayList<String>();
-        list.add(path);
-        list.add("-avd");   //$NON-NLS-1$
-        list.add(avdName);
+            // build the command line based on the available parameters.
+            ArrayList<String> list = new ArrayList<String>();
+            list.add(path);
+            list.add("-avd");                             //$NON-NLS-1$
+            list.add(avdName);
+            if (dialog.getWipeData()) {
+                list.add("-wipe-data");                   //$NON-NLS-1$
+            }
+            float scale = dialog.getScale();
+            if (scale != 0.f) {
+                // do the rounding ourselves. This is because %.1f will write .4899 as .4
+                scale = Math.round(scale * 100);
+                scale /=  100.f;
+                list.add("-scale");                       //$NON-NLS-1$
+                list.add(String.format("%.2f", scale));   //$NON-NLS-1$
+            }
 
-        // convert the list into an array for the call to exec.
-        final String[] command = list.toArray(new String[list.size()]);
+            // convert the list into an array for the call to exec.
+            final String[] command = list.toArray(new String[list.size()]);
 
-        // launch the emulator
-        new ProgressTask(mTable.getShell(),
-                "Starting Android Emulator",
-                new ITask() {
-                    public void run(ITaskMonitor monitor) {
-                        try {
-                            monitor.setDescription("Starting emulator for AVD '%1$s'", avdName);
-                            int n = 10;
-                            monitor.setProgressMax(n);
-                            Process process = Runtime.getRuntime().exec(command);
-                            grabEmulatorOutput(process, monitor);
+            // launch the emulator
+            new ProgressTask(mTable.getShell(),
+                    "Starting Android Emulator",
+                    new ITask() {
+                        public void run(ITaskMonitor monitor) {
+                            try {
+                                monitor.setDescription("Starting emulator for AVD '%1$s'",
+                                        avdName);
+                                int n = 10;
+                                monitor.setProgressMax(n);
+                                Process process = Runtime.getRuntime().exec(command);
+                                grabEmulatorOutput(process, monitor);
 
-                            // This small wait prevents the dialog from closing too fast:
-                            // When it works, the emulator returns immediately, even if no UI
-                            // is shown yet. And when it fails (because the AVD is locked/running)
-                            // if we don't have a wait we don't capture the error for some reason.
-                            for (int i = 0; i < n; i++) {
-                                try {
-                                    Thread.sleep(100);
-                                    monitor.incProgress(1);
-                                } catch (InterruptedException e) {
-                                    // ignore
+                                // This small wait prevents the dialog from closing too fast:
+                                // When it works, the emulator returns immediately, even if
+                                // no UI is shown yet. And when it fails (because the AVD is
+                                // locked/running)
+                                // if we don't have a wait we don't capture the error for
+                                // some reason.
+                                for (int i = 0; i < n; i++) {
+                                    try {
+                                        Thread.sleep(100);
+                                        monitor.incProgress(1);
+                                    } catch (InterruptedException e) {
+                                        // ignore
+                                    }
                                 }
+                            } catch (IOException e) {
+                                monitor.setResult("Failed to start emulator: %1$s",
+                                        e.getMessage());
                             }
-                        } catch (IOException e) {
-                            monitor.setResult("Failed to start emulator: %1$s", e.getMessage());
                         }
-                    }
-        });
-
+            });
+        }
     }
 
     /**

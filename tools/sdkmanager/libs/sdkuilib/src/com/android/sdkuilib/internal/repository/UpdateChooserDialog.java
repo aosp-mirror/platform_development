@@ -16,16 +16,22 @@
 
 package com.android.sdkuilib.internal.repository;
 
+import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.internal.repository.Archive;
+import com.android.sdklib.internal.repository.IPackageVersion;
+import com.android.sdklib.internal.repository.Package;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
+import com.android.sdkuilib.ui.GridDialog;
 
+import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.Viewer;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.custom.StyleRange;
@@ -34,8 +40,6 @@ import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.ShellAdapter;
-import org.eclipse.swt.events.ShellEvent;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
@@ -43,8 +47,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Dialog;
-import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
@@ -52,40 +55,21 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.TreeMap;
 
 
 /**
  * Implements an {@link UpdateChooserDialog}.
  */
-final class UpdateChooserDialog extends Dialog {
-
-    /**
-     * Min Y location for dialog. Need to deal with the menu bar on mac os.
-     */
-    private final static int MIN_Y = SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_DARWIN ?
-            20 : 0;
+final class UpdateChooserDialog extends GridDialog {
 
     /** Last dialog size for this session. */
     private static Point sLastSize;
-    private boolean mCompleted;
-    private final Map<Archive, Archive> mNewToOldArchiveMap;
     private boolean mLicenseAcceptAll;
     private boolean mInternalLicenseRadioUpdate;
-    private HashSet<Archive> mAccepted = new HashSet<Archive>();
-    private HashSet<Archive> mRejected = new HashSet<Archive>();
-    private ArrayList<Archive> mResult = new ArrayList<Archive>();
 
     // UI fields
-    private Shell mDialogShell;
     private SashForm mSashForm;
     private Composite mPackageRootComposite;
-    private Button mCancelButton;
-    private Button mInstallButton;
     private TableViewer mTableViewPackage;
     private Table mTablePackage;
     private TableColumn mTableColum;
@@ -96,82 +80,70 @@ final class UpdateChooserDialog extends Dialog {
     private Group mPackageTextGroup;
     private final UpdaterData mUpdaterData;
     private Group mTableGroup;
+    private Label mErrorLabel;
+
+    /**
+     * List of all archives to be installed with dependency information.
+     *
+     * Note: in a lot of cases, we need to find the archive info for a given archive. This
+     * is currently done using a simple linear search, which is fine since we only have a very
+     * limited number of archives to deal with (e.g. < 10 now). We might want to revisit
+     * this later if it becomes an issue. Right now just do the simple thing.
+     *
+     * Typically we could add a map Archive=>ArchiveInfo later.
+     */
+    private final ArrayList<ArchiveInfo> mArchives;
+
 
 
     /**
      * Create the dialog.
      * @param parentShell The shell to use, typically updaterData.getWindowShell()
      * @param updaterData The updater data
-     * @param newToOldUpdates The map [new archive => old archive] of potential updates
+     * @param archives The archives to be installed
      */
     public UpdateChooserDialog(Shell parentShell,
             UpdaterData updaterData,
-            Map<Archive, Archive> newToOldUpdates) {
-        super(parentShell,
-              SWT.APPLICATION_MODAL);
+            ArrayList<ArchiveInfo> archives) {
+        super(parentShell, 3, false/*makeColumnsEqual*/);
         mUpdaterData = updaterData;
+        mArchives = archives;
+    }
 
-        mNewToOldArchiveMap = new TreeMap<Archive, Archive>(new Comparator<Archive>() {
-            public int compare(Archive a1, Archive a2) {
-                // The items are archive but what we show are packages so we'll
-                // sort of packages short descriptions
-                String desc1 = a1.getParentPackage().getShortDescription();
-                String desc2 = a2.getParentPackage().getShortDescription();
-                return desc1.compareTo(desc2);
-            }
-        });
-        mNewToOldArchiveMap.putAll(newToOldUpdates);
+    @Override
+    protected boolean isResizable() {
+        return true;
     }
 
     /**
      * Returns the results, i.e. the list of selected new archives to install.
-     * The list is always non null. It is empty when cancel is selected or when
-     * all potential updates have been refused.
+     * This is similar to the {@link ArchiveInfo} list instance given to the constructor
+     * except only accepted archives are present.
+     *
+     * An empty list is returned if cancel was choosen.
      */
-    public Collection<Archive> getResult() {
-        return mResult;
-    }
+    public ArrayList<ArchiveInfo> getResult() {
+        ArrayList<ArchiveInfo> ais = new ArrayList<ArchiveInfo>();
 
-    /**
-     * Open the dialog and blocks till it gets closed
-     */
-    public void open() {
-        createContents();
-        positionShell();            //$hide$ (hide from SWT designer)
-        mDialogShell.open();
-        mDialogShell.layout();
-
-        postCreate();               //$hide$ (hide from SWT designer)
-
-        Display display = getParent().getDisplay();
-        while (!mDialogShell.isDisposed() && !mCompleted) {
-            if (!display.readAndDispatch()) {
-                display.sleep();
+        if (getReturnCode() == Window.OK) {
+            for (ArchiveInfo ai : mArchives) {
+                if (ai.isAccepted()) {
+                    ais.add(ai);
+                }
             }
         }
 
-        if (!mDialogShell.isDisposed()) {
-            mDialogShell.close();
-        }
+        return ais;
     }
 
     /**
-     * Create contents of the dialog.
+     * Create the main content of the dialog.
+     * See also {@link #createButtonBar(Composite)} below.
      */
-    private void createContents() {
-        mDialogShell = new Shell(getParent(), SWT.DIALOG_TRIM | SWT.RESIZE | SWT.MIN | SWT.MAX);
-        mDialogShell.addShellListener(new ShellAdapter() {
-            @Override
-            public void shellClosed(ShellEvent e) {
-                onShellClosed(e);
-            }
-        });
-        mDialogShell.setLayout(new GridLayout(3, false/*makeColumnsEqual*/));
-        mDialogShell.setSize(600, 400);
-        mDialogShell.setText("Choose Packages to Install");
-
+    @Override
+    public void createDialogContent(Composite parent) {
         // Sash form
-        mSashForm = new SashForm(mDialogShell, SWT.NONE);
+        mSashForm = new SashForm(parent, SWT.NONE);
         mSashForm.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 3, 1));
 
 
@@ -214,7 +186,7 @@ final class UpdateChooserDialog extends Dialog {
 
         mPackageText = new StyledText(mPackageTextGroup,                        SWT.MULTI | SWT.READ_ONLY | SWT.WRAP | SWT.V_SCROLL);
         mPackageText.setBackground(
-                getParent().getDisplay().getSystemColor(SWT.COLOR_WIDGET_BACKGROUND));
+                getParentShell().getDisplay().getSystemColor(SWT.COLOR_WIDGET_BACKGROUND));
         mPackageText.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
 
         mLicenseRadioAccept = new Button(mPackageRootComposite, SWT.RADIO);
@@ -248,69 +220,82 @@ final class UpdateChooserDialog extends Dialog {
         });
 
         mSashForm.setWeights(new int[] {200, 300});
+    }
 
-        // Bottom buttons
-        placeholder = new Label(mDialogShell, SWT.NONE);
-        placeholder.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, true, false, 1, 1));
+    /**
+     * Creates and returns the contents of this dialog's button bar.
+     * <p/>
+     * This reimplements most of the code from the base class with a few exceptions:
+     * <ul>
+     * <li>Enforces 3 columns.
+     * <li>Inserts a full-width error label.
+     * <li>Inserts a help label on the left of the first button.
+     * <li>Renames the OK button into "Install"
+     * </ul>
+     */
+    @Override
+    protected Control createButtonBar(Composite parent) {
 
-        // for MacOS, the Cancel button should be left.
-        if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_DARWIN) {
-            mCancelButton = new Button(mDialogShell, SWT.PUSH);
-        }
+        Composite composite = new Composite(parent, SWT.NONE);
+        GridLayout layout = new GridLayout();
+        layout.numColumns = 0; // this is incremented by createButton
+        layout.makeColumnsEqualWidth = false;
+        layout.marginWidth = convertHorizontalDLUsToPixels(IDialogConstants.HORIZONTAL_MARGIN);
+        layout.marginHeight = convertVerticalDLUsToPixels(IDialogConstants.VERTICAL_MARGIN);
+        layout.horizontalSpacing = convertHorizontalDLUsToPixels(IDialogConstants.HORIZONTAL_SPACING);
+        layout.verticalSpacing = convertVerticalDLUsToPixels(IDialogConstants.VERTICAL_SPACING);
+        composite.setLayout(layout);
+        GridData data = new GridData(SWT.FILL, SWT.CENTER, true, false, 3, 1);
+        composite.setLayoutData(data);
+        composite.setFont(parent.getFont());
 
-        mInstallButton = new Button(mDialogShell, SWT.PUSH);
-        mInstallButton.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
-        mInstallButton.setText("Install Accepted");
-        mInstallButton.addSelectionListener(new SelectionAdapter() {
-            @Override
-            public void widgetSelected(SelectionEvent e) {
-                onInstallSelected();
-            }
-        });
+        // Error message area
+        mErrorLabel = new Label(composite, SWT.NONE);
+        mErrorLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 3, 1));
 
-        // if we haven't created the cancel button yet (macos?), create it now.
-        if (mCancelButton == null) {
-            mCancelButton = new Button(mDialogShell, SWT.PUSH);
-        }
-        mCancelButton.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
-        mCancelButton.setText("Cancel");
-        mCancelButton.addSelectionListener(new SelectionAdapter() {
-            @Override
-            public void widgetSelected(SelectionEvent e) {
-                onCancelSelected();
-            }
-        });
+        // Label at the left of the install/cancel buttons
+        Label label = new Label(composite, SWT.NONE);
+        label.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
+        label.setText("[*] Something depends on this package");
+        label.setEnabled(false);
+        layout.numColumns++;
+
+        // Add the ok/cancel to the button bar.
+        createButtonsForButtonBar(composite);
+
+        // the ok button should be an "install" button
+        Button button = getButton(IDialogConstants.OK_ID);
+        button.setText("Install");
+
+        return composite;
     }
 
     // -- End of UI, Start of internal logic ----------
     // Hide everything down-below from SWT designer
     //$hide>>$
 
-    /**
-     * Starts the thread that runs the task.
-     * This is deferred till the UI is created.
-     */
-    private void postCreate() {
+    @Override
+    public void create() {
+        super.create();
+
+        // set window title
+        getShell().setText("Choose Packages to Install");
+
         setWindowImage();
 
-        // Automatically accept those with an empty license
-        for (Archive a : mNewToOldArchiveMap.keySet()) {
+        // Automatically accept those with an empty license or no license
+        for (ArchiveInfo ai : mArchives) {
+            Archive a = ai.getNewArchive();
+            assert a != null;
 
             String license = a.getParentPackage().getLicense();
-            if (license != null) {
-                license = license.trim();
-                if (license.length() == 0) {
-                    mAccepted.add(a);
-                }
-            } else {
-                mAccepted.add(a);
-            }
+            ai.setAccepted(license == null || license.trim().length() == 0);
         }
 
         // Fill the list with the replacement packages
         mTableViewPackage.setLabelProvider(new NewArchivesLabelProvider());
         mTableViewPackage.setContentProvider(new NewArchivesContentProvider());
-        mTableViewPackage.setInput(mNewToOldArchiveMap);
+        mTableViewPackage.setInput(mArchives);
 
         adjustColumnsWidth();
 
@@ -331,7 +316,7 @@ final class UpdateChooserDialog extends Dialog {
         if (mUpdaterData != null) {
             ImageFactory imgFactory = mUpdaterData.getImageFactory();
             if (imgFactory != null) {
-                mDialogShell.setImage(imgFactory.getImageByName(imageName));
+                getShell().setImage(imgFactory.getImageByName(imageName));
             }
         }
     }
@@ -356,116 +341,179 @@ final class UpdateChooserDialog extends Dialog {
     }
 
     /**
-     * Callback invoked when the shell is closed either by clicking the close button
-     * on by calling shell.close().
      * Captures the window size before closing this.
+     * @see #getInitialSize()
      */
-    private void onShellClosed(ShellEvent e) {
-        sLastSize = mDialogShell.getSize();
+    @Override
+    public boolean close() {
+        sLastSize = getShell().getSize();
+        return super.close();
     }
 
     /**
-     * Centers the dialog in its parent shell.
+     * Tries to reuse the last window size during this session.
+     * <p/>
+     * Note: the alternative would be to implement {@link #getDialogBoundsSettings()}
+     * since the default {@link #getDialogBoundsStrategy()} is to persist both location
+     * and size.
      */
-    private void positionShell() {
-        // Centers the dialog in its parent shell
-        Shell child = mDialogShell;
-        Shell parent = getParent();
-        if (child != null && parent != null) {
-
-            // get the parent client area with a location relative to the display
-            Rectangle parentArea = parent.getClientArea();
-            Point parentLoc = parent.getLocation();
-            int px = parentLoc.x;
-            int py = parentLoc.y;
-            int pw = parentArea.width;
-            int ph = parentArea.height;
-
-            // Reuse the last size if there's one, otherwise use the default
-            Point childSize = sLastSize != null ? sLastSize : child.getSize();
-            int cw = childSize.x;
-            int ch = childSize.y;
-
-            int x = px + (pw - cw) / 2;
-            int y = py + (ph - ch) / 2;
-
-            if (x < 0) {
-                x = 0;
-            }
-
-            if (y < MIN_Y) {
-                y = MIN_Y;
-            }
-
-            child.setLocation(x, y);
-            child.setSize(cw, ch);
+    @Override
+    protected Point getInitialSize() {
+        if (sLastSize != null) {
+            return sLastSize;
+        } else {
+            // Arbitrary values that look good on my screen and fit on 800x600
+            return new Point(740, 370);
         }
-    }
-
-    /**
-     * Callback invoked when the Install button is selected. Fills {@link #mResult} and
-     * completes the dialog.
-     */
-    private void onInstallSelected() {
-        // get list of accepted items
-        mResult.addAll(mAccepted);
-        mCompleted = true;
-    }
-
-    /**
-     * Callback invoked when the Cancel button is selected.
-     */
-    private void onCancelSelected() {
-        mCompleted = true;
     }
 
     /**
      * Callback invoked when a package item is selected in the list.
      */
     private void onPackageSelected() {
-        Archive a = getSelectedArchive();
-        displayInformation(a);
-        updateLicenceRadios(a);
+        ArchiveInfo ai = getSelectedArchive();
+        displayInformation(ai);
+        displayMissingDependency(ai);
+        updateLicenceRadios(ai);
     }
 
-    /** Returns the currently selected Archive or null. */
-    private Archive getSelectedArchive() {
+    /** Returns the currently selected {@link ArchiveInfo} or null. */
+    private ArchiveInfo getSelectedArchive() {
         ISelection sel = mTableViewPackage.getSelection();
         if (sel instanceof IStructuredSelection) {
             Object elem = ((IStructuredSelection) sel).getFirstElement();
-            if (elem instanceof Archive) {
-                return (Archive) elem;
+            if (elem instanceof ArchiveInfo) {
+                return (ArchiveInfo) elem;
             }
         }
         return null;
     }
 
-    private void displayInformation(Archive a) {
-        if (a == null) {
+    /**
+     * Updates the package description and license text depending on the selected package.
+     */
+    private void displayInformation(ArchiveInfo ai) {
+        if (ai == null) {
             mPackageText.setText("Please select a package.");
             return;
         }
 
-        mPackageText.setText("");                                               //$NON-NLS-1$
+        Archive aNew = ai.getNewArchive();
+        Package pNew = aNew.getParentPackage();
+
+        mPackageText.setText("");                                                //$NON-NLS-1$
 
         addSectionTitle("Package Description\n");
-        addText(a.getParentPackage().getLongDescription(), "\n\n");             //$NON-NLS-1$
+        addText(pNew.getLongDescription(), "\n\n");          //$NON-NLS-1$
 
-        Archive aold = mNewToOldArchiveMap.get(a);
-        if (aold != null) {
-            addText(String.format("This update will replace revision %1$s with revision %2$s.\n\n",
-                    aold.getParentPackage().getRevision(),
-                    a.getParentPackage().getRevision()));
+        Archive aOld = ai.getReplaced();
+        if (aOld != null) {
+            Package pOld = aOld.getParentPackage();
+
+            int rOld = pOld.getRevision();
+            int rNew = pNew.getRevision();
+
+            boolean showRev = true;
+
+            if (pNew instanceof IPackageVersion && pOld instanceof IPackageVersion) {
+                AndroidVersion vOld = ((IPackageVersion) pOld).getVersion();
+                AndroidVersion vNew = ((IPackageVersion) pNew).getVersion();
+
+                if (!vOld.equals(vNew)) {
+                    // Versions are different, so indicate more than just the revision.
+                    addText(String.format("This update will replace API %1$s revision %2$d with API %3$s revision %4$d.\n\n",
+                            vOld.getApiString(), rOld,
+                            vNew.getApiString(), rNew));
+                    showRev = false;
+                }
+            }
+
+            if (showRev) {
+                addText(String.format("This update will replace revision %1$d with revision %2$d.\n\n",
+                        rOld,
+                        rNew));
+            }
         }
 
+        ArchiveInfo aDep = ai.getDependsOn();
+        if (aDep != null || ai.isDependencyFor()) {
+            addSectionTitle("Dependencies\n");
+
+            if (aDep != null) {
+                addText(String.format("This package depends on %1$s.\n\n",
+                        aDep.getNewArchive().getParentPackage().getShortDescription()));
+            }
+
+            if (ai.isDependencyFor()) {
+                addText("This package is a dependency for:");
+                for (ArchiveInfo ai2 : ai.getDependenciesFor()) {
+                    addText("\n- " +
+                            ai2.getNewArchive().getParentPackage().getShortDescription());
+                }
+                addText("\n\n");
+            }
+        }
 
         addSectionTitle("Archive Description\n");
-        addText(a.getLongDescription(), "\n\n");                                //$NON-NLS-1$
+        addText(aNew.getLongDescription(), "\n\n");                             //$NON-NLS-1$
 
-        String license = a.getParentPackage().getLicense();
+        String license = pNew.getLicense();
         if (license != null) {
             addSectionTitle("License\n");
-            addText(license.trim(), "\n");                                      //$NON-NLS-1$
+            addText(license.trim(), "\n\n");                                       //$NON-NLS-1$
+        }
+
+        addSectionTitle("Site\n");
+        addText(pNew.getParentSource().getShortDescription());
+    }
+
+    /**
+     * Computes and display missing dependency.
+     * If there's a selected package, check the dependency for that one.
+     * Otherwise display the first missing dependency.
+     */
+    private void displayMissingDependency(ArchiveInfo ai) {
+        String error = null;
+
+        try {
+            if (ai != null) {
+
+                if (!ai.isAccepted()) {
+                    // Case where this package blocks another one when not accepted
+                    for (ArchiveInfo ai2 : ai.getDependenciesFor()) {
+                        // It only matters if the blocked one is accepted
+                        if (ai2.isAccepted()) {
+                            error = String.format("Package '%1$s' depends on this one.",
+                                    ai2.getNewArchive().getParentPackage().getShortDescription());
+                            return;
+                        }
+                    }
+                } else {
+                    // Case where this package is accepted but blocked by another non-accepted one
+                    ArchiveInfo adep = ai.getDependsOn();
+                    if (adep != null && !adep.isAccepted()) {
+                        error = String.format("This package depends on '%1$s'.",
+                                adep.getNewArchive().getParentPackage().getShortDescription());
+                        return;
+                    }
+                }
+            }
+
+            // If there's no selection, just find the first missing dependency of any accepted
+            // package.
+            for (ArchiveInfo ai2 : mArchives) {
+                if (ai2.isAccepted()) {
+                    ArchiveInfo adep = ai2.getDependsOn();
+                    if (adep != null && !adep.isAccepted()) {
+                        error = String.format("Package '%1$s' depends on '%2$s'",
+                                ai2.getNewArchive().getParentPackage().getShortDescription(),
+                                adep.getNewArchive().getParentPackage().getShortDescription());
+                        return;
+                    }
+                }
+            }
+        } finally {
+            mErrorLabel.setText(error == null ? "" : error);        //$NON-NLS-1$
         }
     }
 
@@ -488,25 +536,42 @@ final class UpdateChooserDialog extends Dialog {
         mPackageText.setStyleRange(sr);
     }
 
-    private void updateLicenceRadios(Archive a) {
+    private void updateLicenceRadios(ArchiveInfo ai) {
         if (mInternalLicenseRadioUpdate) {
             return;
         }
         mInternalLicenseRadioUpdate = true;
 
+        boolean oneAccepted = false;
+
         if (mLicenseAcceptAll) {
             mLicenseRadioAcceptAll.setSelection(true);
+            mLicenseRadioAccept.setEnabled(true);
+            mLicenseRadioReject.setEnabled(true);
             mLicenseRadioAccept.setSelection(false);
             mLicenseRadioReject.setSelection(false);
         } else {
             mLicenseRadioAcceptAll.setSelection(false);
-            mLicenseRadioAccept.setSelection(mAccepted.contains(a));
-            mLicenseRadioReject.setSelection(mRejected.contains(a));
+            oneAccepted = ai != null && ai.isAccepted();
+            mLicenseRadioAccept.setEnabled(ai != null);
+            mLicenseRadioReject.setEnabled(ai != null);
+            mLicenseRadioAccept.setSelection(oneAccepted);
+            mLicenseRadioReject.setSelection(ai != null && ai.isRejected());
         }
 
-        // The install button is enabled if there's at least one
-        // package accepted.
-        mInstallButton.setEnabled(mAccepted.size() > 0);
+        // The install button is enabled if there's at least one package accepted.
+        // If the current one isn't, look for another one.
+        boolean missing = mErrorLabel.getText() != null && mErrorLabel.getText().length() > 0;
+        if (!missing && !oneAccepted) {
+            for(ArchiveInfo ai2 : mArchives) {
+                if (ai2.isAccepted()) {
+                    oneAccepted = true;
+                    break;
+                }
+            }
+        }
+
+        getButton(IDialogConstants.OK_ID).setEnabled(!missing && oneAccepted);
 
         mInternalLicenseRadioUpdate = false;
     }
@@ -523,26 +588,28 @@ final class UpdateChooserDialog extends Dialog {
         }
         mInternalLicenseRadioUpdate = true;
 
-        Archive a = getSelectedArchive();
+        ArchiveInfo ai = getSelectedArchive();
         boolean needUpdate = true;
 
         if (!mLicenseAcceptAll && mLicenseRadioAcceptAll.getSelection()) {
             // Accept all has been switched on. Mark all packages as accepted
             mLicenseAcceptAll = true;
-            mAccepted.addAll(mNewToOldArchiveMap.keySet());
-            mRejected.clear();
+            for(ArchiveInfo ai2 : mArchives) {
+                ai2.setAccepted(true);
+                ai2.setRejected(false);
+            }
 
         } else if (mLicenseRadioAccept.getSelection()) {
             // Accept only this one
             mLicenseAcceptAll = false;
-            mAccepted.add(a);
-            mRejected.remove(a);
+            ai.setAccepted(true);
+            ai.setRejected(false);
 
         } else if (mLicenseRadioReject.getSelection()) {
             // Reject only this one
             mLicenseAcceptAll = false;
-            mAccepted.remove(a);
-            mRejected.add(a);
+            ai.setAccepted(false);
+            ai.setRejected(true);
 
         } else {
             needUpdate = false;
@@ -554,9 +621,10 @@ final class UpdateChooserDialog extends Dialog {
             if (mLicenseAcceptAll) {
                 mTableViewPackage.refresh();
             } else {
-               mTableViewPackage.refresh(a);
+               mTableViewPackage.refresh(ai);
             }
-            updateLicenceRadios(a);
+            displayMissingDependency(ai);
+            updateLicenceRadios(ai);
         }
     }
 
@@ -564,32 +632,29 @@ final class UpdateChooserDialog extends Dialog {
      * Callback invoked when a package item is double-clicked in the list.
      */
     private void onPackageDoubleClick() {
-        Archive a = getSelectedArchive();
+        ArchiveInfo ai = getSelectedArchive();
 
-        if (mAccepted.contains(a)) {
-            // toggle from accepted to rejected
-            mAccepted.remove(a);
-            mRejected.add(a);
-        } else {
-            // toggle from rejected or unknown to accepted
-            mAccepted.add(a);
-            mRejected.remove(a);
-        }
+        boolean wasAccepted = ai.isAccepted();
+        ai.setAccepted(!wasAccepted);
+        ai.setRejected(wasAccepted);
 
         // update state
         mLicenseAcceptAll = false;
-        mTableViewPackage.refresh(a);
-        updateLicenceRadios(a);
+        mTableViewPackage.refresh(ai);
+        updateLicenceRadios(ai);
     }
 
     private class NewArchivesLabelProvider extends LabelProvider {
         @Override
         public Image getImage(Object element) {
+            assert element instanceof ArchiveInfo;
+            ArchiveInfo ai = (ArchiveInfo) element;
+
             ImageFactory imgFactory = mUpdaterData.getImageFactory();
             if (imgFactory != null) {
-                if (mAccepted.contains(element)) {
+                if (ai.isAccepted()) {
                     return imgFactory.getImageByName("accept_icon16.png");
-                } else if (mRejected.contains(element)) {
+                } else if (ai.isRejected()) {
                     return imgFactory.getImageByName("reject_icon16.png");
                 }
                 return imgFactory.getImageByName("unknown_icon16.png");
@@ -599,10 +664,16 @@ final class UpdateChooserDialog extends Dialog {
 
         @Override
         public String getText(Object element) {
-            if (element instanceof Archive) {
-                return ((Archive) element).getParentPackage().getShortDescription();
+            assert element instanceof ArchiveInfo;
+            ArchiveInfo ai = (ArchiveInfo) element;
+
+            String desc = ai.getNewArchive().getParentPackage().getShortDescription();
+
+            if (ai.isDependencyFor()) {
+                desc += " [*]";
             }
-            return super.getText(element);
+
+            return desc;
         }
     }
 
@@ -613,11 +684,11 @@ final class UpdateChooserDialog extends Dialog {
         }
 
         public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
-            // Ignore. The input is always mNewArchives
+            // Ignore. The input is always mArchives
         }
 
         public Object[] getElements(Object inputElement) {
-            return mNewToOldArchiveMap.keySet().toArray();
+            return mArchives.toArray();
         }
     }
 

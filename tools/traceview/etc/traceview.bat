@@ -55,4 +55,4 @@ if exist %swt_path% goto SetPath
 :SetPath
 set javaextdirs=%swt_path%;%frameworkdir%
 
-call java -Djava.ext.dirs=%javaextdirs% -jar %jarpath% %*
+call java -Djava.ext.dirs=%javaextdirs% -Dcom.android.traceview.toolsdir= -jar %jarpath% %*

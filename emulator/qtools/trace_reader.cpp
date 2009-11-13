@@ -1009,10 +1009,10 @@ void TraceReaderBase::ParseDexList(const char *filename)
 // be freed by the caller after it is no longer needed.
 static char *ExtractDexPathFromMmap(const char *mmap_path)
 {
-    char *end = rindex(mmap_path, '@');
+    const char *end = rindex(mmap_path, '@');
     if (end == NULL)
         return NULL;
-    char *start = rindex(mmap_path, '/');
+    const char *start = rindex(mmap_path, '/');
     if (start == NULL)
         return NULL;
     int len = end - start;

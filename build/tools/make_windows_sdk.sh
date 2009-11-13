@@ -1,11 +1,17 @@
 #!/bin/bash
 # Quick semi-auto file to build Windows SDK tools.
 #
-# Limitations:
+# Limitations and requirements:
 # - Expects the emulator has been built first, will pick it up from prebuilt.
 # - Run in Cygwin
-# - Needs Cygwin package zip
 # - Expects to have one of the existing SDK (Darwin or Linux) to build the Windows one
+# - Needs Cygwin packages: autoconf, bison, curl, flex, gcc, g++, git,
+#   gnupg, make, mingw-zlib, python, zip, unzip
+# - Must NOT have cygwin package readline (its GPL license might taint the SDK if
+#   it gets compiled in)
+# - Does not need a Java Development Kit or any other tools outside of cygwin.
+# - If you think you may have Windows versions of tools (e.g. make) installed, it may
+#   reduce confusion levels to 'export PATH=/usr/bin'
 
 set -e  # Fail this script as soon as a command fails -- fail early, fail fast
 
@@ -60,6 +66,10 @@ function check() {
         # SDK number if you want, but not after, e.g these are valid:
         #    android_sdk_4242_platform.zip or blah_42_.zip
         #
+        # Note that the root directory name in the zip must match the zip
+        # name, too, so there's no point just changing the zip name to match
+        # the above format.
+        #
         # SDK_NUMBER will be empty if nothing matched.
         filename=`basename "$SDK_ZIP"`
         SDK_NUMBER=`echo $filename | sed -n 's/^.*_\([^_./]\+\)_[^_.]*\..*$/\1/p'`
@@ -89,7 +99,7 @@ function build() {
         fastboot \
         hprof-conv \
         mksdcard \
-        sqlite3 \
+        sdklauncher sqlite3 \
         zipalign \
         || die "Build failed"
 }
@@ -131,7 +141,7 @@ function package() {
     TOOLS="$TEMP_SDK_DIR/tools"
     LIB="$TEMP_SDK_DIR/tools/lib"
     rm -v "$TOOLS"/{adb,android,apkbuilder,ddms,dmtracedump,draw9patch,emulator}
-    rm -v "$TOOLS"/{hierarchyviewer,hprof-conv,mksdcard,sqlite3,traceview,zipalign}
+    rm -v "$TOOLS"/{hierarchyviewer,hprof-conv,layoutopt,mksdcard,sqlite3,traceview,zipalign}
     rm -v "$LIB"/*/swt.jar
     rm -v "$PLATFORM_TOOLS"/{aapt,aidl,dx,dexdump}
 
@@ -142,6 +152,9 @@ function package() {
     cp -v prebuilt/windows/swt/swt.jar         "$LIB"/x86/
     mkdir -pv "$LIB"/x86_64
     cp -v prebuilt/windows-x86_64/swt/swt.jar  "$LIB"/x86_64/
+
+    # Move the SDK Setup (aka sdklauncher) to the root of the SDK (it was copied in tools above)
+    mv "$TOOLS/sdklauncher.exe" "$TEMP_SDK_DIR/SDK Setup.exe"    
 
     # If you want the emulator NOTICE in the tools dir, uncomment the following line:
     # cp -v external/qemu/NOTICE "$TOOLS"/emulator_NOTICE.txt
@@ -154,6 +167,7 @@ function package() {
     cp -v development/tools/ddms/app/etc/ddms.bat                   "$TOOLS"/
     cp -v development/tools/traceview/etc/traceview.bat             "$TOOLS"/
     cp -v development/tools/hierarchyviewer/etc/hierarchyviewer.bat "$TOOLS"/
+    cp -v development/tools/layoutopt/app/etc/layoutopt.bat         "$TOOLS"/
     cp -v development/tools/draw9patch/etc/draw9patch.bat           "$TOOLS"/
     cp -v development/tools/sdkmanager/app/etc/android.bat          "$TOOLS"/
 

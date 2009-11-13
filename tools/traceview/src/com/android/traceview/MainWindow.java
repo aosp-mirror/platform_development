@@ -30,14 +30,16 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.util.HashMap;
+import java.util.Properties;
 
 public class MainWindow extends ApplicationWindow {
-    
+
     private final static String PING_NAME = "Traceview";
     private final static String PING_VERSION = "1.0";
 
@@ -99,10 +101,10 @@ public class MainWindow extends ApplicationWindow {
 
     /**
      * Convert the old two-file format into the current concatenated one.
-     * 
+     *
      * @param base Base path of the two files, i.e. base.key and base.data
      * @return Path to a temporary file that will be deleted on exit.
-     * @throws IOException 
+     * @throws IOException
      */
     private static String makeTempTraceFile(String base) throws IOException {
         // Make a temporary file that will go away on exit and prepare to
@@ -127,13 +129,45 @@ public class MainWindow extends ApplicationWindow {
         // Return the path of the temp file.
         return temp.getPath();
     }
-    
+
+    /**
+     * Returns the tools revision number.
+     */
+    private static String getRevision() {
+        Properties p = new Properties();
+        try{
+            String toolsdir = System.getProperty("com.android.traceview.toolsdir"); //$NON-NLS-1$
+            File sourceProp;
+            if (toolsdir == null || toolsdir.length() == 0) {
+                sourceProp = new File("source.properties"); //$NON-NLS-1$
+            } else {
+                sourceProp = new File(toolsdir, "source.properties"); //$NON-NLS-1$
+            }
+            p.load(new FileInputStream(sourceProp));
+            String revision = p.getProperty("Pkg.Revision"); //$NON-NLS-1$
+            if (revision != null && revision.length() > 0) {
+                return revision;
+            }
+        } catch (FileNotFoundException e) {
+            // couldn't find the file? don't ping.
+        } catch (IOException e) {
+            // couldn't find the file? don't ping.
+        }
+
+        return null;
+    }
+
+
     public static void main(String[] args) {
         TraceReader reader = null;
         boolean regression = false;
-        
+
         // ping the usage server
-        SdkStatsService.ping(PING_NAME, PING_VERSION, null);
+
+        String revision = getRevision();
+        if (revision != null) {
+            SdkStatsService.ping(PING_NAME, revision, null);
+        }
 
         // Process command line arguments
         int argc = 0;

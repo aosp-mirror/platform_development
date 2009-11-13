@@ -18,13 +18,18 @@ package com.android.ddms;
 
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.Client;
+import com.android.ddmlib.ClientData;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.Log;
+import com.android.ddmlib.SyncService;
+import com.android.ddmlib.AndroidDebugBridge.IClientChangeListener;
+import com.android.ddmlib.ClientData.IHprofDumpHandler;
+import com.android.ddmlib.ClientData.MethodProfilingStatus;
 import com.android.ddmlib.Log.ILogOutput;
 import com.android.ddmlib.Log.LogLevel;
+import com.android.ddmlib.SyncService.SyncResult;
 import com.android.ddmuilib.AllocationPanel;
 import com.android.ddmuilib.DevicePanel;
-import com.android.ddmuilib.DevicePanel.IUiSelectionListener;
 import com.android.ddmuilib.EmulatorControlPanel;
 import com.android.ddmuilib.HeapPanel;
 import com.android.ddmuilib.ITableFocusListener;
@@ -36,8 +41,11 @@ import com.android.ddmuilib.ScreenShotDialog;
 import com.android.ddmuilib.SysinfoPanel;
 import com.android.ddmuilib.TablePanel;
 import com.android.ddmuilib.ThreadPanel;
+import com.android.ddmuilib.DevicePanel.IUiSelectionListener;
 import com.android.ddmuilib.actions.ToolItemAction;
 import com.android.ddmuilib.explorer.DeviceExplorer;
+import com.android.ddmuilib.handler.BaseFileHandler;
+import com.android.ddmuilib.handler.MethodProfilingHandler;
 import com.android.ddmuilib.log.event.EventLogPanel;
 import com.android.ddmuilib.logcat.LogColors;
 import com.android.ddmuilib.logcat.LogFilter;
@@ -62,6 +70,7 @@ import org.eclipse.swt.events.ShellListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.FormAttachment;
@@ -92,7 +101,7 @@ import java.util.ArrayList;
  * SWT application. So this class mainly builds the ui, and manages communication between the panels
  * when {@link IDevice} / {@link Client} selection changes.
  */
-public class UIThread implements IUiSelectionListener {
+public class UIThread implements IUiSelectionListener, IClientChangeListener {
     /*
      * UI tab panel definitions. The constants here must match up with the array
      * indices in mPanels. PANEL_CLIENT_LIST is a "virtual" panel representing
@@ -164,6 +173,8 @@ public class UIThread implements IUiSelectionListener {
     private ToolItem mTBShowHeapUpdates;
     private ToolItem mTBHalt;
     private ToolItem mTBCauseGc;
+    private ToolItem mTBDumpHprof;
+    private ToolItem mTBProfiling;
 
     private ImageLoader mDdmsImageLoader;
     private ImageLoader mDdmuiLibImageLoader;
@@ -241,6 +252,10 @@ public class UIThread implements IUiSelectionListener {
 
     private EventLogPanel mEventLogPanel;
 
+    private Image mTracingStartImage;
+
+    private Image mTracingStopImage;
+
     private class TableFocusListener implements ITableFocusListener {
 
         private IFocusedTableActivator mCurrentActivator;
@@ -278,6 +293,71 @@ public class UIThread implements IUiSelectionListener {
             }
         }
 
+    }
+
+    /**
+     * Handler for HPROF dumps.
+     * This will always prompt the user to save the HPROF file.
+     */
+    private class HProfHandler extends BaseFileHandler implements IHprofDumpHandler {
+
+        public HProfHandler(Shell parentShell) {
+            super(parentShell);
+        }
+
+        public void onFailure(final Client client) {
+            mDisplay.asyncExec(new Runnable() {
+                public void run() {
+                    try {
+                        displayError("Unable to create HPROF file for application '%1$s'.\n" +
+                                "Check logcat for more information.",
+                                client.getClientData().getClientDescription());
+                    } finally {
+                        // this will make sure the dump hprof button is re-enabled for the
+                        // current selection. as the client is finished dumping an hprof file
+                        enableButtons();
+                    }
+                }
+            });
+        }
+
+        public void onSuccess(final String remoteFilePath, final Client client) {
+            mDisplay.asyncExec(new Runnable() {
+                public void run() {
+                    final IDevice device = client.getDevice();
+                    try {
+                        // get the sync service to pull the HPROF file
+                        final SyncService sync = client.getDevice().getSyncService();
+                        if (sync != null) {
+                            SyncResult result = promptAndPull(sync,
+                                    client.getClientData().getClientDescription() + ".hprof",
+                                    remoteFilePath, "Save HPROF file");
+                            if (result != null && result.getCode() != SyncService.RESULT_OK) {
+                                displayError(
+                                        "Unable to download HPROF file from device '%1$s'.\n\n%2$s",
+                                        device.getSerialNumber(), result.getMessage());
+                            }
+                        } else {
+                            displayError("Unable to download HPROF file from device '%1$s'.",
+                                    device.getSerialNumber());
+                        }
+                    } catch (Exception e) {
+                        displayError("Unable to download HPROF file from device '%1$s'.",
+                                device.getSerialNumber());
+
+                    } finally {
+                        // this will make sure the dump hprof button is re-enabled for the
+                        // current selection. as the client is finished dumping an hprof file
+                        enableButtons();
+                    }
+                }
+            });
+        }
+
+        private void displayError(String format, Object... args) {
+            MessageDialog.openError(mParentShell, "HPROF Error",
+                    String.format(format, args));
+        }
     }
 
 
@@ -324,11 +404,12 @@ public class UIThread implements IUiSelectionListener {
 
     /**
      * Create SWT objects and drive the user interface event loop.
+     * @param location location of the folder that contains ddms.
      */
-    public void runUI() {
+    public void runUI(String ddmsParentLocation) {
         Display.setAppName("ddms");
         mDisplay = new Display();
-        Shell shell = new Shell(mDisplay);
+        final Shell shell = new Shell(mDisplay);
 
         // create the image loaders for DDMS and DDMUILIB
         mDdmsImageLoader = new ImageLoader(this.getClass());
@@ -360,16 +441,23 @@ public class UIThread implements IUiSelectionListener {
             }
         });
 
+        // set the handler for hprof dump
+        ClientData.setHprofDumpHandler(new HProfHandler(shell));
+        ClientData.setMethodProfilingHandler(new MethodProfilingHandler(shell));
+
         // [try to] ensure ADB is running
-        String adbLocation = System.getProperty("com.android.ddms.bindir"); //$NON-NLS-1$
-        if (adbLocation != null && adbLocation.length() != 0) {
-            adbLocation += File.separator + "adb"; //$NON-NLS-1$
+        String adbLocation;
+        if (ddmsParentLocation != null && ddmsParentLocation.length() != 0) {
+            adbLocation = ddmsParentLocation + File.separator + "adb"; //$NON-NLS-1$
         } else {
             adbLocation = "adb"; //$NON-NLS-1$
         }
 
         AndroidDebugBridge.init(true /* debugger support */);
         AndroidDebugBridge.createBridge(adbLocation, true /* forceNewBridge */);
+
+        // we need to listen to client change to be notified of client status (profiling) change
+        AndroidDebugBridge.addClientChangeListener(this);
 
         shell.setText("Dalvik Debug Monitor");
         setConfirmClose(shell);
@@ -665,16 +753,16 @@ public class UIThread implements IUiSelectionListener {
         actionMenu.addMenuListener(new MenuAdapter() {
             @Override
             public void menuShown(MenuEvent e) {
-                actionHaltItem.setEnabled(mTBHalt.getEnabled());
-                actionCauseGcItem.setEnabled(mTBCauseGc.getEnabled());
+                actionHaltItem.setEnabled(mTBHalt.getEnabled() && mCurrentClient != null);
+                actionCauseGcItem.setEnabled(mTBCauseGc.getEnabled() && mCurrentClient != null);
             }
         });
 
         // create Device menu items
-        item = new MenuItem(deviceMenu, SWT.NONE);
-        item.setText("&Screen capture...\tCTrl-S");
-        item.setAccelerator('S' | SWT.CONTROL);
-        item.addSelectionListener(new SelectionAdapter() {
+        final MenuItem screenShotItem = new MenuItem(deviceMenu, SWT.NONE);
+        screenShotItem.setText("&Screen capture...\tCTrl-S");
+        screenShotItem.setAccelerator('S' | SWT.CONTROL);
+        screenShotItem.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
                 if (mCurrentDevice != null) {
@@ -686,9 +774,9 @@ public class UIThread implements IUiSelectionListener {
 
         new MenuItem(deviceMenu, SWT.SEPARATOR);
 
-        item = new MenuItem(deviceMenu, SWT.NONE);
-        item.setText("File Explorer...");
-        item.addSelectionListener(new SelectionAdapter() {
+        final MenuItem explorerItem = new MenuItem(deviceMenu, SWT.NONE);
+        explorerItem.setText("File Explorer...");
+        explorerItem.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
                 createFileExplorer();
@@ -697,9 +785,9 @@ public class UIThread implements IUiSelectionListener {
 
         new MenuItem(deviceMenu, SWT.SEPARATOR);
 
-        item = new MenuItem(deviceMenu, SWT.NONE);
-        item.setText("Show &process status...");
-        item.addSelectionListener(new SelectionAdapter() {
+        final MenuItem processItem = new MenuItem(deviceMenu, SWT.NONE);
+        processItem.setText("Show &process status...");
+        processItem.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
                 DeviceCommandDialog dlg;
@@ -708,9 +796,9 @@ public class UIThread implements IUiSelectionListener {
             }
         });
 
-        item = new MenuItem(deviceMenu, SWT.NONE);
-        item.setText("Dump &device state...");
-        item.addSelectionListener(new SelectionAdapter() {
+        final MenuItem deviceStateItem = new MenuItem(deviceMenu, SWT.NONE);
+        deviceStateItem.setText("Dump &device state...");
+        deviceStateItem.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
                 DeviceCommandDialog dlg;
@@ -720,10 +808,10 @@ public class UIThread implements IUiSelectionListener {
             }
         });
 
-        item = new MenuItem(deviceMenu, SWT.NONE);
-        item.setText("Dump &app state...");
-        item.setEnabled(false);
-        item.addSelectionListener(new SelectionAdapter() {
+        final MenuItem appStateItem = new MenuItem(deviceMenu, SWT.NONE);
+        appStateItem.setText("Dump &app state...");
+        appStateItem.setEnabled(false);
+        appStateItem.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
                 DeviceCommandDialog dlg;
@@ -732,9 +820,9 @@ public class UIThread implements IUiSelectionListener {
             }
         });
 
-        item = new MenuItem(deviceMenu, SWT.NONE);
-        item.setText("Dump &radio state...");
-        item.addSelectionListener(new SelectionAdapter() {
+        final MenuItem radioStateItem = new MenuItem(deviceMenu, SWT.NONE);
+        radioStateItem.setText("Dump &radio state...");
+        radioStateItem.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
                 DeviceCommandDialog dlg;
@@ -747,15 +835,30 @@ public class UIThread implements IUiSelectionListener {
             }
         });
 
-        item = new MenuItem(deviceMenu, SWT.NONE);
-        item.setText("Run &logcat...");
-        item.addSelectionListener(new SelectionAdapter() {
+        final MenuItem logCatItem = new MenuItem(deviceMenu, SWT.NONE);
+        logCatItem.setText("Run &logcat...");
+        logCatItem.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
                 DeviceCommandDialog dlg;
                 dlg = new DeviceCommandDialog("logcat '*:d jdwp:w'", "log.txt",
                         shell);
                 dlg.open(mCurrentDevice);
+            }
+        });
+
+        // configure Action items based on current state
+        deviceMenu.addMenuListener(new MenuAdapter() {
+            @Override
+            public void menuShown(MenuEvent e) {
+                boolean deviceEnabled = mCurrentDevice != null;
+                screenShotItem.setEnabled(deviceEnabled);
+                explorerItem.setEnabled(deviceEnabled);
+                processItem.setEnabled(deviceEnabled);
+                deviceStateItem.setEnabled(deviceEnabled);
+                appStateItem.setEnabled(deviceEnabled);
+                radioStateItem.setEnabled(deviceEnabled);
+                logCatItem.setEnabled(deviceEnabled);
             }
         });
 
@@ -893,6 +996,58 @@ public class UIThread implements IUiSelectionListener {
     private void createDevicePanelToolBar(ToolBar toolBar) {
         Display display = toolBar.getDisplay();
 
+        // add "show heap updates" button
+        mTBShowHeapUpdates = new ToolItem(toolBar, SWT.CHECK);
+        mTBShowHeapUpdates.setImage(ImageHelper.loadImage(mDdmuiLibImageLoader, display,
+                DevicePanel.ICON_HEAP, DevicePanel.ICON_WIDTH, DevicePanel.ICON_WIDTH, null));
+        mTBShowHeapUpdates.setToolTipText("Show heap updates");
+        mTBShowHeapUpdates.setEnabled(false);
+        mTBShowHeapUpdates.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                if (mCurrentClient != null) {
+                    // boolean status = ((ToolItem)e.item).getSelection();
+                    // invert previous state
+                    boolean enable = !mCurrentClient.isHeapUpdateEnabled();
+                    mCurrentClient.setHeapUpdateEnabled(enable);
+                } else {
+                    e.doit = false; // this has no effect?
+                }
+            }
+        });
+
+        // add "dump HPROF" button
+        mTBDumpHprof = new ToolItem(toolBar, SWT.PUSH);
+        mTBDumpHprof.setToolTipText("Dump HPROF file");
+        mTBDumpHprof.setEnabled(false);
+        mTBDumpHprof.setImage(ImageHelper.loadImage(mDdmuiLibImageLoader, display,
+                DevicePanel.ICON_HPROF, DevicePanel.ICON_WIDTH, DevicePanel.ICON_WIDTH, null));
+        mTBDumpHprof.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                mDevicePanel.dumpHprof();
+
+                // this will make sure the dump hprof button is disabled for the current selection
+                // as the client is already dumping an hprof file
+                enableButtons();
+            }
+        });
+
+        // add "cause GC" button
+        mTBCauseGc = new ToolItem(toolBar, SWT.PUSH);
+        mTBCauseGc.setToolTipText("Cause an immediate GC");
+        mTBCauseGc.setEnabled(false);
+        mTBCauseGc.setImage(ImageHelper.loadImage(mDdmuiLibImageLoader, display,
+                DevicePanel.ICON_GC, DevicePanel.ICON_WIDTH, DevicePanel.ICON_WIDTH, null));
+        mTBCauseGc.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                mDevicePanel.forceGcOnSelectedClient();
+            }
+        });
+
+        new ToolItem(toolBar, SWT.SEPARATOR);
+
         // add "show thread updates" button
         mTBShowThreadUpdates = new ToolItem(toolBar, SWT.CHECK);
         mTBShowThreadUpdates.setImage(ImageHelper.loadImage(mDdmuiLibImageLoader, display,
@@ -914,23 +1069,21 @@ public class UIThread implements IUiSelectionListener {
             }
         });
 
-        // add "show heap updates" button
-        mTBShowHeapUpdates = new ToolItem(toolBar, SWT.CHECK);
-        mTBShowHeapUpdates.setImage(ImageHelper.loadImage(mDdmuiLibImageLoader, display,
-                DevicePanel.ICON_HEAP, DevicePanel.ICON_WIDTH, DevicePanel.ICON_WIDTH, null));
-        mTBShowHeapUpdates.setToolTipText("Show heap updates");
-        mTBShowHeapUpdates.setEnabled(false);
-        mTBShowHeapUpdates.addSelectionListener(new SelectionAdapter() {
+        // add a start/stop method tracing
+        mTracingStartImage = ImageHelper.loadImage(mDdmuiLibImageLoader, display,
+                DevicePanel.ICON_TRACING_START,
+                DevicePanel.ICON_WIDTH, DevicePanel.ICON_WIDTH, null);
+        mTracingStopImage = ImageHelper.loadImage(mDdmuiLibImageLoader, display,
+                DevicePanel.ICON_TRACING_STOP,
+                DevicePanel.ICON_WIDTH, DevicePanel.ICON_WIDTH, null);
+        mTBProfiling = new ToolItem(toolBar, SWT.PUSH);
+        mTBProfiling.setToolTipText("Start Method Profiling");
+        mTBProfiling.setEnabled(false);
+        mTBProfiling.setImage(mTracingStartImage);
+        mTBProfiling.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
-                if (mCurrentClient != null) {
-                    // boolean status = ((ToolItem)e.item).getSelection();
-                    // invert previous state
-                    boolean enable = !mCurrentClient.isHeapUpdateEnabled();
-                    mCurrentClient.setHeapUpdateEnabled(enable);
-                } else {
-                    e.doit = false; // this has no effect?
-                }
+                mDevicePanel.toggleMethodProfiling();
             }
         });
 
@@ -947,21 +1100,6 @@ public class UIThread implements IUiSelectionListener {
             @Override
             public void widgetSelected(SelectionEvent e) {
                 mDevicePanel.killSelectedClient();
-            }
-        });
-
-        new ToolItem(toolBar, SWT.SEPARATOR);
-
-        // add "cause GC" button
-        mTBCauseGc = new ToolItem(toolBar, SWT.PUSH);
-        mTBCauseGc.setToolTipText("Cause an immediate GC in the target VM");
-        mTBCauseGc.setEnabled(false);
-        mTBCauseGc.setImage(ImageHelper.loadImage(mDdmuiLibImageLoader, display,
-                DevicePanel.ICON_GC, DevicePanel.ICON_WIDTH, DevicePanel.ICON_WIDTH, null));
-        mTBCauseGc.addSelectionListener(new SelectionAdapter() {
-            @Override
-            public void widgetSelected(SelectionEvent e) {
-                mDevicePanel.forceGcOnSelectedClient();
             }
         });
 
@@ -1305,15 +1443,33 @@ public class UIThread implements IUiSelectionListener {
 
             ToolItemAction pullAction = new ToolItemAction(toolBar, SWT.PUSH);
             pullAction.item.setToolTipText("Pull File from Device");
-            pullAction.item.setImage(mDdmuiLibImageLoader.loadImage("pull.png", mDisplay)); //$NON-NLS-1$
+            Image image = mDdmuiLibImageLoader.loadImage("pull.png", mDisplay); //$NON-NLS-1$
+            if (image != null) {
+                pullAction.item.setImage(image);
+            } else {
+                // this is for debugging purpose when the icon is missing
+                pullAction.item.setText("Pull"); //$NON-NLS-1$
+            }
 
             ToolItemAction pushAction = new ToolItemAction(toolBar, SWT.PUSH);
             pushAction.item.setToolTipText("Push file onto Device");
-            pushAction.item.setImage(mDdmuiLibImageLoader.loadImage("push.png", mDisplay)); //$NON-NLS-1$
+            image = mDdmuiLibImageLoader.loadImage("push.png", mDisplay); //$NON-NLS-1$
+            if (image != null) {
+                pushAction.item.setImage(image);
+            } else {
+                // this is for debugging purpose when the icon is missing
+                pushAction.item.setText("Push"); //$NON-NLS-1$
+            }
 
             ToolItemAction deleteAction = new ToolItemAction(toolBar, SWT.PUSH);
             deleteAction.item.setToolTipText("Delete");
-            deleteAction.item.setImage(mDdmuiLibImageLoader.loadImage("delete.png", mDisplay)); //$NON-NLS-1$
+            image = mDdmuiLibImageLoader.loadImage("delete.png", mDisplay); //$NON-NLS-1$
+            if (image != null) {
+                deleteAction.item.setImage(image);
+            } else {
+                // this is for debugging purpose when the icon is missing
+                deleteAction.item.setText("Delete"); //$NON-NLS-1$
+            }
 
             // device explorer
             mExplorer = new DeviceExplorer();
@@ -1438,6 +1594,31 @@ public class UIThread implements IUiSelectionListener {
             mTBShowHeapUpdates.setEnabled(true);
             mTBHalt.setEnabled(true);
             mTBCauseGc.setEnabled(true);
+
+            ClientData data = mCurrentClient.getClientData();
+
+            if (data.hasFeature(ClientData.FEATURE_HPROF)) {
+                mTBDumpHprof.setEnabled(data.hasPendingHprofDump() == false);
+                mTBDumpHprof.setToolTipText("Dump HPROF file");
+            } else {
+                mTBDumpHprof.setEnabled(false);
+                mTBDumpHprof.setToolTipText("Dump HPROF file (not supported by this VM)");
+            }
+
+            if (data.hasFeature(ClientData.FEATURE_PROFILING)) {
+                mTBProfiling.setEnabled(true);
+                if (data.getMethodProfilingStatus() == MethodProfilingStatus.ON) {
+                    mTBProfiling.setToolTipText("Stop Method Profiling");
+                    mTBProfiling.setImage(mTracingStopImage);
+                } else {
+                    mTBProfiling.setToolTipText("Start Method Profiling");
+                    mTBProfiling.setImage(mTracingStartImage);
+                }
+            } else {
+                mTBProfiling.setEnabled(false);
+                mTBProfiling.setImage(mTracingStartImage);
+                mTBProfiling.setToolTipText("Start Method Profiling (not supported by this VM)");
+            }
         } else {
             // list is empty, disable these
             mTBShowThreadUpdates.setSelection(false);
@@ -1446,6 +1627,13 @@ public class UIThread implements IUiSelectionListener {
             mTBShowHeapUpdates.setEnabled(false);
             mTBHalt.setEnabled(false);
             mTBCauseGc.setEnabled(false);
+
+            mTBDumpHprof.setEnabled(false);
+            mTBDumpHprof.setToolTipText("Dump HPROF file");
+
+            mTBProfiling.setEnabled(false);
+            mTBProfiling.setImage(mTracingStartImage);
+            mTBProfiling.setToolTipText("Start Method Profiling");
         }
     }
 
@@ -1486,6 +1674,20 @@ public class UIThread implements IUiSelectionListener {
             }
 
             enableButtons();
+        }
+    }
+
+    public void clientChanged(Client client, int changeMask) {
+        if ((changeMask & Client.CHANGE_METHOD_PROFILING_STATUS) ==
+                Client.CHANGE_METHOD_PROFILING_STATUS) {
+            if (mCurrentClient == client) {
+                mDisplay.asyncExec(new Runnable() {
+                    public void run() {
+                        // force refresh of the button enabled state.
+                        enableButtons();
+                    }
+                });
+            }
         }
     }
 }

@@ -44,6 +44,12 @@ See test_defs.xsd for more information.
     coverage_target="framework"
     continuous="true" />
 
+<test name="account"
+    build_path="frameworks/base/tests/AndroidTests"
+    package="com.android.unit_tests"
+    class="com.android.unit_tests.accounts.AccountManagerServiceTest"
+    coverage_target="framework" />
+
 <test name="smoke"
     build_path="frameworks/base/tests/SmokeTest"
     package="com.android.smoketest.tests"
@@ -66,8 +72,7 @@ See test_defs.xsd for more information.
 <test name="apidemos"
     build_path="development/samples/ApiDemos"
     package="com.example.android.apis.tests"
-    coverage_target="ApiDemos"
-    continuous="true" />
+    coverage_target="ApiDemos" />
 
 <test name="launchperf"
     build_path="development/apps/launchperf"
@@ -88,6 +93,13 @@ See test_defs.xsd for more information.
     class="com.android.unit_tests.activity.ActivityTests"
     coverage_target="framework" />
 
+<test name="keystore-unit"
+    build_path="frameworks/base/keystore/tests"
+    package="android.security.tests"
+    runner=".KeyStoreTestRunner"
+    coverage_target="framework"
+    continuous="true" />
+
 <test name="vpntests"
     build_path="frameworks/base/tests/AndroidTests"
     package="com.android.unit_tests"
@@ -102,6 +114,12 @@ See test_defs.xsd for more information.
     coverage_target="framework" />
  -->
 
+
+<test name="contentprovideroperation"
+    build_path="frameworks/base/tests/FrameworkTest"
+    package="com.android.frameworktest.tests"
+    class="android.content.ContentProviderOperationTest"
+    coverage_target="framework" />
 
 <test name="tablemerger"
     build_path="frameworks/base/tests/FrameworkTest"
@@ -125,7 +143,7 @@ See test_defs.xsd for more information.
 <!--  cts tests -->
 
 <test name="cts-permission"
-    build_path="cts/tests"
+    build_path="cts/tests/tests/permission"
     package="com.android.cts.permission"
     runner="android.test.InstrumentationTestRunner"
     coverage_target="framework"
@@ -141,49 +159,49 @@ See test_defs.xsd for more information.
     cts="true" />
 
 <test name="cts-process"
-    build_path="cts/tests"
+    build_path="cts/tests/tests/process"
     package="com.android.cts.process"
     coverage_target="framework"
     cts="true" />
 
 <test name="cts-api-signature"
-    build_path="cts/tests"
+    build_path="cts/tests/SignatureTest"
     package="android.tests.sigtest"
     runner=".InstrumentationRunner"
     cts="true" />
 
 <test name="cts-api-signature-func"
-    build_path="cts/tests"
+    build_path="cts/tests/SignatureTest"
     package="android.tests.sigtest.tests"
     cts="true" />
 
 <test name="cts-apidemos"
-    build_path="cts/tests"
+    build_path="cts/tests/ApiDemosReferenceTest"
     package="android.apidemos.cts"
     coverage_target="ApiDemos"
     cts="true" />
 
 <test name="cts-app"
-    build_path="cts/tests"
+    build_path="cts/tests/tests/app"
     package="com.android.cts.app"
     runner="android.test.InstrumentationCtsTestRunner"
     coverage_target="framework"
     cts="true" />
 
 <test name="cts-content"
-    build_path="cts/tests"
+    build_path="cts/tests/tests/content"
     package="com.android.cts.content"
     runner="android.test.InstrumentationCtsTestRunner"
     coverage_target="framework"
     cts="true" />
 
 <test name="cts-database"
-    build_path="cts/tests"
+    build_path="cts/tests/tests/database"
     package="com.android.cts.database"
     runner="android.test.InstrumentationCtsTestRunner"
     coverage_target="framework"
     cts="true" />
-    
+
 <test name="cts-gesture"
     build_path="cts/tests/tests/gesture"
     package="com.android.cts.gesture"
@@ -192,107 +210,121 @@ See test_defs.xsd for more information.
     cts="true" />
 
 <test name="cts-graphics"
-    build_path="cts/tests"
+    build_path="cts/tests/tests/graphics"
     package="com.android.cts.graphics"
     runner="android.test.InstrumentationCtsTestRunner"
     coverage_target="framework"
     cts="true" />
 
 <test name="cts-hardware"
-    build_path="cts/tests"
+    build_path="cts/tests/tests/hardware"
     package="com.android.cts.hardware"
     runner="android.test.InstrumentationCtsTestRunner"
     coverage_target="framework"
     cts="true" />
 
 <test name="cts-location"
-    build_path="cts/tests"
+    build_path="cts/tests/tests/location"
     package="com.android.cts.location"
     runner="android.test.InstrumentationCtsTestRunner"
     coverage_target="framework"
     cts="true" />
 
+<test name="cts-media"
+    build_path="cts/tests/tests/media"
+    package="com.android.cts.media"
+    runner="android.test.InstrumentationCtsTestRunner"
+    coverage_target="framework"
+    cts="true" />
+
 <test name="cts-net"
-    build_path="cts/tests"
+    build_path="cts/tests/tests/net"
     package="com.android.cts.net"
     runner="android.test.InstrumentationCtsTestRunner"
     coverage_target="framework"
     cts="true" />
 
 <test name="cts-os"
-    build_path="cts/tests"
+    build_path="cts/tests/tests/os"
     package="com.android.cts.os"
     runner="android.test.InstrumentationCtsTestRunner"
     coverage_target="framework"
     cts="true" />
 
 <test name="cts-perf1"
-    build_path="cts/tests"
+    build_path="cts/tests/tests/performance"
     package="com.android.cts.performance"
     runner="android.test.InstrumentationCtsTestRunner"
     cts="true" />
 
 <test name="cts-perf2"
-    build_path="cts/tests"
+    build_path="cts/tests/tests/performance2"
     package="com.android.cts.performance2"
     runner="android.test.InstrumentationCtsTestRunner"
     cts="true" />
 
 <test name="cts-perf3"
-    build_path="cts/tests"
+    build_path="cts/tests/tests/performance3"
     package="com.android.cts.performance3"
     runner="android.test.InstrumentationCtsTestRunner"
     cts="true" />
 
 <test name="cts-perf4"
-    build_path="cts/tests"
+    build_path="cts/tests/tests/performance4"
     package="com.android.cts.performance4"
     runner="android.test.InstrumentationCtsTestRunner"
     cts="true" />
 
 <test name="cts-perf5"
-    build_path="cts/tests"
+    build_path="cts/tests/tests/performance5"
     package="com.android.cts.performance5"
     runner="android.test.InstrumentationCtsTestRunner"
     cts="true" />
 
 <test name="cts-provider"
-    build_path="cts/tests"
+    build_path="cts/tests/tests/provider"
     package="com.android.cts.provider"
     runner="android.test.InstrumentationCtsTestRunner"
     coverage_target="framework"
     cts="true" />
 
 <test name="cts-text"
-    build_path="cts/tests"
+    build_path="cts/tests/tests/text"
     package="com.android.cts.text"
     runner="android.test.InstrumentationCtsTestRunner"
     coverage_target="framework"
     cts="true" />
 
 <test name="cts-telephony"
-    build_path="cts/tests"
+    build_path="cts/tests/tests/telephony"
     package="com.android.cts.telephony"
     runner="android.test.InstrumentationCtsTestRunner"
     coverage_target="framework"
     cts="true" />
 
 <test name="cts-util"
-    build_path="cts/tests"
+    build_path="cts/tests/tests/util"
     package="com.android.cts.util"
     runner="android.test.InstrumentationCtsTestRunner"
     coverage_target="framework"
     cts="true" />
 
 <test name="cts-view"
-    build_path="cts/tests"
+    build_path="cts/tests/tests/view"
     package="com.android.cts.view"
     runner="android.test.InstrumentationCtsTestRunner"
     coverage_target="framework"
     cts="true" />
 
+<test name="cts-webkit"
+    build_path="cts/tests/tests/webkit"
+    package="com.android.cts.webkit"
+    runner="android.test.InstrumentationCtsTestRunner"
+    coverage_target="framework"
+    cts="true" />
+
 <test name="cts-widget"
-    build_path="cts/tests"
+    build_path="cts/tests/tests/widget"
     package="com.android.cts.widget"
     runner="android.test.InstrumentationCtsTestRunner"
     coverage_target="framework"
@@ -322,8 +354,7 @@ See test_defs.xsd for more information.
 <test name="calprov"
     build_path="packages/providers/CalendarProvider/tests"
     package="com.android.providers.calendar.tests"
-    coverage_target="CalendarProvider"
-    continuous="true" />
+    coverage_target="CalendarProvider" />
 
 <test name="camerastress"
     build_path="packages/apps/Camera"
@@ -345,9 +376,23 @@ See test_defs.xsd for more information.
     coverage_target="Camera" />
 
 <test name="contactsprov"
+    build_path="packages/providers/ContactsProvider/tests"
+    package="com.android.providers.contacts.tests"
+    coverage_target="ContactsProvider"
+    continuous="true" />
+
+<test name="contacts"
+    build_path="packages/apps/Contacts"
+    package="com.android.contacts.tests"
+    runner="android.test.InstrumentationTestRunner"
+    coverage_target="Contacts"
+    description="Tests for the Contacts app."
+    continuous="true" />
+
+<test name="gcontactsprov"
     build_path="packages/providers/GoogleContactsProvider/tests"
     package="com.android.providers.contactstests"
-    coverage_target="ContactsProvider" />
+    coverage_target="GoogleContactsProvider" />
 
 <test name="downloadprovider-permission"
     build_path="packages/providers/DownloadProvider/tests/permission"
@@ -441,7 +486,6 @@ See test_defs.xsd for more information.
 <test name="mms"
     build_path="packages/apps/Mms"
     package="com.android.mms.tests"
-    runner="com.android.mms.ui.MMSInstrumentationTestRunner"
     coverage_target="Mms" />
 
 <test name="mmslaunch"
@@ -450,6 +494,11 @@ See test_defs.xsd for more information.
     runner="com.android.mms.SmsLaunchPerformance"
     coverage_target="Mms" />
 
+<test name="telephony-unit"
+    build_path="frameworks/base/telephony/tests/TelephonyTest"
+    package="com.android.telephonytest"
+    runner=".TelephonyUnitTestRunner"
+    coverage_target="framework" />
 
 <!-- obsolete?
 <test name="ringtone"
@@ -467,17 +516,15 @@ See test_defs.xsd for more information.
     description="Bionic libstdc++."
     extra_build_args="BIONIC_TESTS=1" />
 
+<test-native name="libskia"
+    build_path="external/skia/tests"
+    description="Skia tests." />
+
 <!--  Android STL tests -->
 <test-native name="astl"
     build_path="external/astl/tests"
     description="Android STL."
     extra_build_args="ASTL_TESTS=1" />
-
-<!-- Android Keystore tests -->
-<test-native name="netkeystore_test"
-    build_path="frameworks/base/cmds/keystore/tests"
-    description="Android keystore."
-    extra_build_args="KEYSTORE_TESTS=1" />
 
 <!-- pending patch 820
 <test-native name="gtest"

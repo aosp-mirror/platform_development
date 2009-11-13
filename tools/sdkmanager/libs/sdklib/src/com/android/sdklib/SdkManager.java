@@ -89,6 +89,16 @@ public final class SdkManager {
     private IAndroidTarget[] mTargets;
 
     /**
+     * Create a new {@link SdkManager} instance.
+     * External users should use {@link #createManager(String, ISdkLog)}.
+     *
+     * @param sdkLocation the location of the SDK.
+     */
+    private SdkManager(String sdkLocation) {
+        mSdkLocation = sdkLocation;
+    }
+
+    /**
      * Creates an {@link SdkManager} for a given sdk location.
      * @param sdkLocation the location of the SDK.
      * @param log the ISdkLog object receiving warning/error from the parsing.
@@ -125,9 +135,21 @@ public final class SdkManager {
 
     /**
      * Returns the targets that are available in the SDK.
+     * <p/>
+     * The array can be empty but not null.
      */
     public IAndroidTarget[] getTargets() {
         return mTargets;
+    }
+
+    /**
+     * Sets the targets that are available in the SDK.
+     * <p/>
+     * The array can be empty but not null.
+     */
+    private void setTargets(IAndroidTarget[] targets) {
+        assert targets != null;
+        mTargets = targets;
     }
 
     /**
@@ -200,14 +222,6 @@ public final class SdkManager {
         // sort the targets/add-ons
         Collections.sort(list);
         setTargets(list.toArray(new IAndroidTarget[list.size()]));
-    }
-
-    private SdkManager(String sdkLocation) {
-        mSdkLocation = sdkLocation;
-    }
-
-    private void setTargets(IAndroidTarget[] targets) {
-        mTargets = targets;
     }
 
     /**
@@ -591,8 +605,10 @@ public final class SdkManager {
                     if (m.matches()) {
                         map.put(m.group(1), m.group(2));
                     } else {
-                        log.warning("Error parsing '%1$s': \"%2$s\" is not a valid syntax",
-                                buildProp.getAbsolutePath(), line);
+                        if (log != null) {
+                            log.warning("Error parsing '%1$s': \"%2$s\" is not a valid syntax",
+                                    buildProp.getAbsolutePath(), line);
+                        }
                         return null;
                     }
                 }

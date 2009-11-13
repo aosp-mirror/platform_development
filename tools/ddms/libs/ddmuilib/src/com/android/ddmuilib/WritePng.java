@@ -68,7 +68,7 @@ public class WritePng {
         int height = imageData.height;
         byte[] out24;
 
-        Log.i("ddms-png", "Convert to 24bit from " + imageData.depth);
+        Log.d("ddms-png", "Convert to 24bit from " + imageData.depth);
 
         if (imageData.depth == 24 || imageData.depth == 32) {
             out24 = convertTo24ForPng(imageData.data, width, height,

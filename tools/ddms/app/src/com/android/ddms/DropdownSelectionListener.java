@@ -73,7 +73,7 @@ public class DropdownSelectionListener extends SelectionAdapter {
             mMenu.setVisible(true);
         } else {
             // button clicked
-            Log.i("ddms", mDropdown.getText() + " Pressed");
+            Log.d("ddms", mDropdown.getText() + " Pressed");
         }
     }
 }

@@ -17,7 +17,7 @@
 #error DO NOT USE THIS FILE IN THE DEVICE BUILD
 #endif
 
-#include <utils/Pipe.h>
+#include "Pipe.h"
 #include <stdlib.h>
 #include <cutils/uio.h>
 

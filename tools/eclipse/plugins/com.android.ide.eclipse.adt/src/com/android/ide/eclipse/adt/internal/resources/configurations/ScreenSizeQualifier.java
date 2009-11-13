@@ -52,7 +52,7 @@ public class ScreenSizeQualifier extends ResourceQualifier {
          * @param value The qualifier value.
          * @return the enum for the qualifier value or null if no matching was found.
          */
-        static ScreenSize getEnum(String value) {
+        public static ScreenSize getEnum(String value) {
             for (ScreenSize orient : values()) {
                 if (orient.mValue.equals(value)) {
                     return orient;

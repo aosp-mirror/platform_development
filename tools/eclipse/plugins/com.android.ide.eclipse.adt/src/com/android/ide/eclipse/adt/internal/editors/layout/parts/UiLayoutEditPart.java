@@ -29,10 +29,12 @@ import org.eclipse.gef.requests.CreateRequest;
 /**
  * Graphical edit part for an {@link UiElementNode} that represents a ViewLayout.
  * <p/>
- * It acts as a simple container. 
+ * It acts as a simple container.
+ *
+ * @since GLE1
  */
 public final class UiLayoutEditPart extends UiElementEditPart {
-    
+
     static class HighlightInfo {
         public boolean drawDropBorder;
         public UiElementEditPart[] childParts;
@@ -48,24 +50,24 @@ public final class UiLayoutEditPart extends UiElementEditPart {
             linePoints = null;
         }
     }
-    
+
     private final HighlightInfo mHighlightInfo = new HighlightInfo();
-    
+
     public UiLayoutEditPart(UiElementNode uiElementNode) {
         super(uiElementNode);
     }
-    
+
     @Override
     protected void createEditPolicies() {
         super.createEditPolicies();
-        
+
         installEditPolicy(EditPolicy.CONTAINER_ROLE, new ContainerEditPolicy() {
             @Override
             protected Command getCreateCommand(CreateRequest request) {
                 return null;
             }
         });
-        
+
         installLayoutEditPolicy(this);
     }
 

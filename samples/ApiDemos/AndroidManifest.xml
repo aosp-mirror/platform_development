@@ -24,15 +24,24 @@
 
     <uses-permission android:name="android.permission.READ_CONTACTS" />
     <uses-permission android:name="android.permission.WRITE_CONTACTS" />
-    <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <!-- We will request access to the camera, saying we require a camera
+         of some sort but not one with autofocus capability. -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" />
+    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
+    
     <application android:name="ApiDemosApplication"
             android:label="@string/activity_sample_code"
             android:icon="@drawable/app_sample_code" >
 
+        <!-- This is how we can request a library but still allow the app
+             to be installed if it doesn't exist. -->
+        <uses-library android:name="com.example.will.never.exist" android:required="false" />
+        
         <activity android:name="ApiDemos">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -72,6 +81,15 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".app.WallpaperActivity"
+                android:label="@string/activity_wallpaper"
+                android:theme="@style/Theme.Wallpaper">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
         <activity android:name=".app.TranslucentActivity"
                 android:label="@string/activity_translucent"
                 android:theme="@style/Theme.Translucent">
@@ -84,6 +102,13 @@
         <activity android:name=".app.TranslucentBlurActivity"
                 android:label="@string/activity_translucent_blur"
                 android:theme="@style/Theme.Transparent">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".app.Animation" android:label="@string/activity_animation">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -1556,6 +1581,13 @@
         </activity>
 
         <activity android:name=".graphics.BitmapDecode" android:label="Graphics/BitmapDecode">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".graphics.ColorFilters" android:label="Graphics/ColorFilters">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />

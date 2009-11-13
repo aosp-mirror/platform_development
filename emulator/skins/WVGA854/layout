@@ -394,6 +394,8 @@ layouts {
         color     0xe0e0e0
         event     EV_SW:0:0
 
+        dpad-rotation 3
+
         part1 {
             name    portrait
             x       900

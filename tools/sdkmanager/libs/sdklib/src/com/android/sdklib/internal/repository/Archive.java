@@ -23,6 +23,7 @@ import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipFile;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -369,42 +370,38 @@ public class Archive implements IDescription {
         Package pkg = getParentPackage();
 
         File archiveFile = null;
-        try {
-            String name = pkg.getShortDescription();
+        String name = pkg.getShortDescription();
 
-            if (pkg instanceof ExtraPackage && !((ExtraPackage) pkg).isPathValid()) {
-                monitor.setResult("Skipping %1$s: %2$s is not a valid install path.",
-                        name,
-                        ((ExtraPackage) pkg).getPath());
-                return false;
+        if (pkg instanceof ExtraPackage && !((ExtraPackage) pkg).isPathValid()) {
+            monitor.setResult("Skipping %1$s: %2$s is not a valid install path.",
+                    name,
+                    ((ExtraPackage) pkg).getPath());
+            return false;
+        }
+
+        if (isLocal()) {
+            // This should never happen.
+            monitor.setResult("Skipping already installed archive: %1$s for %2$s",
+                    name,
+                    getOsDescription());
+            return false;
+        }
+
+        if (!isCompatible()) {
+            monitor.setResult("Skipping incompatible archive: %1$s for %2$s",
+                    name,
+                    getOsDescription());
+            return false;
+        }
+
+        archiveFile = downloadFile(osSdkRoot, monitor, forceHttp);
+        if (archiveFile != null) {
+            if (unarchive(osSdkRoot, archiveFile, sdkManager, monitor)) {
+                monitor.setResult("Installed %1$s", name);
+                // Delete the temp archive if it exists, only on success
+                deleteFileOrFolder(archiveFile);
+                return true;
             }
-
-            if (isLocal()) {
-                // This should never happen.
-                monitor.setResult("Skipping already installed archive: %1$s for %2$s",
-                        name,
-                        getOsDescription());
-                return false;
-            }
-
-            if (!isCompatible()) {
-                monitor.setResult("Skipping incompatible archive: %1$s for %2$s",
-                        name,
-                        getOsDescription());
-                return false;
-            }
-
-            archiveFile = downloadFile(monitor, forceHttp);
-            if (archiveFile != null) {
-                if (unarchive(osSdkRoot, archiveFile, sdkManager, monitor)) {
-                    monitor.setResult("Installed: %1$s", name);
-                    return true;
-                }
-            }
-
-        } finally {
-            // Delete the temp archive if it exists
-            deleteFileOrFolder(archiveFile);
         }
 
         return false;
@@ -414,56 +411,134 @@ public class Archive implements IDescription {
      * Downloads an archive and returns the temp file with it.
      * Caller is responsible with deleting the temp file when done.
      */
-    private File downloadFile(ITaskMonitor monitor, boolean forceHttp) {
+    private File downloadFile(String osSdkRoot, ITaskMonitor monitor, boolean forceHttp) {
 
-        File tmpFileToDelete = null;
-        try {
-            File tmpFile = File.createTempFile("sdkupload", ".bin"); //$NON-NLS-1$ //$NON-NLS-2$
-            tmpFileToDelete = tmpFile;
+        String name = getParentPackage().getShortDescription();
+        String desc = String.format("Downloading %1$s", name);
+        monitor.setDescription(desc);
+        monitor.setResult(desc);
 
-            String name = getParentPackage().getShortDescription();
-            String desc = String.format("Downloading %1$s", name);
-            monitor.setDescription(desc);
-
-            String link = getUrl();
-            if (!link.startsWith("http://")                          //$NON-NLS-1$
-                    && !link.startsWith("https://")                  //$NON-NLS-1$
-                    && !link.startsWith("ftp://")) {                 //$NON-NLS-1$
-                // Make the URL absolute by prepending the source
-                Package pkg = getParentPackage();
-                RepoSource src = pkg.getParentSource();
-                if (src == null) {
-                    monitor.setResult("Internal error: no source for archive %1$s", name);
-                    return null;
-                }
-
-                // take the URL to the repository.xml and remove the last component
-                // to get the base
-                String repoXml = src.getUrl();
-                int pos = repoXml.lastIndexOf('/');
-                String base = repoXml.substring(0, pos + 1);
-
-                link = base + link;
+        String link = getUrl();
+        if (!link.startsWith("http://")                          //$NON-NLS-1$
+                && !link.startsWith("https://")                  //$NON-NLS-1$
+                && !link.startsWith("ftp://")) {                 //$NON-NLS-1$
+            // Make the URL absolute by prepending the source
+            Package pkg = getParentPackage();
+            RepoSource src = pkg.getParentSource();
+            if (src == null) {
+                monitor.setResult("Internal error: no source for archive %1$s", name);
+                return null;
             }
 
-            if (forceHttp) {
-                link = link.replaceAll("https://", "http://");  //$NON-NLS-1$ //$NON-NLS-2$
-            }
+            // take the URL to the repository.xml and remove the last component
+            // to get the base
+            String repoXml = src.getUrl();
+            int pos = repoXml.lastIndexOf('/');
+            String base = repoXml.substring(0, pos + 1);
 
-            if (fetchUrl(tmpFile, link, desc, monitor)) {
-                // Fetching was successful, don't delete the temp file here!
-                tmpFileToDelete = null;
+            link = base + link;
+        }
+
+        if (forceHttp) {
+            link = link.replaceAll("https://", "http://");  //$NON-NLS-1$ //$NON-NLS-2$
+        }
+
+        // Get the basename of the file we're downloading, i.e. the last component
+        // of the URL
+        int pos = link.lastIndexOf('/');
+        String base = link.substring(pos + 1);
+
+        // Rather than create a real temp file in the system, we simply use our
+        // temp folder (in the SDK base folder) and use the archive name for the
+        // download. This allows us to reuse or continue downloads.
+
+        File tmpFile = new File(getTempFolder(osSdkRoot), base);
+
+        // if the file exists, check if its checksum & size. Use it if complete
+        if (tmpFile.exists()) {
+            if (tmpFile.length() == getSize() &&
+                    fileChecksum(tmpFile, monitor).equalsIgnoreCase(getChecksum())) {
+                // File is good, let's use it.
                 return tmpFile;
             }
 
-        } catch (IOException e) {
+            // Existing file is either of different size or content.
+            // TODO: continue download when we support continue mode.
+            // Right now, let's simply remove the file and start over.
+            deleteFileOrFolder(tmpFile);
+        }
+
+        if (fetchUrl(tmpFile, link, desc, monitor)) {
+            // Fetching was successful, let's use this file.
+            return tmpFile;
+        } else {
+            // Delete the temp file if we aborted the download
+            // TODO: disable this when we want to support partial downloads!
+            deleteFileOrFolder(tmpFile);
+            return null;
+        }
+    }
+
+    /**
+     * Computes the SHA-1 checksum of the content of the given file.
+     * Returns an empty string on error (rather than null).
+     */
+    private String fileChecksum(File tmpFile, ITaskMonitor monitor) {
+        InputStream is = null;
+        try {
+            is = new FileInputStream(tmpFile);
+
+            MessageDigest digester = getChecksumType().getMessageDigest();
+
+            byte[] buf = new byte[65536];
+            int n;
+
+            while ((n = is.read(buf)) >= 0) {
+                if (n > 0) {
+                    digester.update(buf, 0, n);
+                }
+            }
+
+            return getDigestChecksum(digester);
+
+        } catch (FileNotFoundException e) {
+            // The FNF message is just the URL. Make it a bit more useful.
+            monitor.setResult("File not found: %1$s", e.getMessage());
+
+        } catch (Exception e) {
             monitor.setResult(e.getMessage());
 
         } finally {
-            deleteFileOrFolder(tmpFileToDelete);
+            if (is != null) {
+                try {
+                    is.close();
+                } catch (IOException e) {
+                    // pass
+                }
+            }
         }
 
-        return null;
+        return "";  //$NON-NLS-1$
+    }
+
+    /**
+     * Returns the SHA-1 from a {@link MessageDigest} as an hex string
+     * that can be compared with {@link #getChecksum()}.
+     */
+    private String getDigestChecksum(MessageDigest digester) {
+        int n;
+        // Create an hex string from the digest
+        byte[] digest = digester.digest();
+        n = digest.length;
+        String hex = "0123456789abcdef";                     //$NON-NLS-1$
+        char[] hexDigest = new char[n * 2];
+        for (int i = 0; i < n; i++) {
+            int b = digest[i] & 0x0FF;
+            hexDigest[i*2 + 0] = hex.charAt(b >>> 4);
+            hexDigest[i*2 + 1] = hex.charAt(b & 0x0f);
+        }
+
+        return new String(hexDigest);
     }
 
     /**
@@ -553,18 +628,8 @@ public class Archive implements IDescription {
             }
 
             // Create an hex string from the digest
-            byte[] digest = digester.digest();
-            n = digest.length;
-            String hex = "0123456789abcdef";                     //$NON-NLS-1$
-            char[] hexDigest = new char[n * 2];
-            for (int i = 0; i < n; i++) {
-                int b = digest[i] & 0x0FF;
-                hexDigest[i*2 + 0] = hex.charAt(b >>> 4);
-                hexDigest[i*2 + 1] = hex.charAt(b & 0x0f);
-            }
-
+            String actual   = getDigestChecksum(digester);
             String expected = getChecksum();
-            String actual   = new String(hexDigest);
             if (!actual.equalsIgnoreCase(expected)) {
                 monitor.setResult("Download finished with wrong checksum. Expected %1$s, got %2$s.",
                         expected, actual);
@@ -611,6 +676,7 @@ public class Archive implements IDescription {
         String pkgName = getParentPackage().getShortDescription();
         String pkgDesc = String.format("Installing %1$s", pkgName);
         monitor.setDescription(pkgDesc);
+        monitor.setResult(pkgDesc);
 
         // We always unzip in a temp folder which name depends on the package type
         // (e.g. addon, tools, etc.) and then move the folder to the destination folder.
@@ -625,7 +691,7 @@ public class Archive implements IDescription {
 
         try {
             // Find a new temp folder that doesn't exist yet
-            unzipDestFolder = findTempFolder(osSdkRoot, pkgKind, "new");  //$NON-NLS-1$
+            unzipDestFolder = createTempFolder(osSdkRoot, pkgKind, "new");  //$NON-NLS-1$
 
             if (unzipDestFolder == null) {
                 // this should not seriously happen.
@@ -660,39 +726,72 @@ public class Archive implements IDescription {
             }
 
             // Swap the old folder by the new one.
-            File renameFailedForDir = null;
-            if (destFolder.isDirectory()) {
-                renamedDestFolder = findTempFolder(osSdkRoot, pkgKind, "old");  //$NON-NLS-1$
-                if (renamedDestFolder == null) {
-                    // this should not seriously happen.
-                    monitor.setResult("Failed to find a temp directory in %1$s.", osSdkRoot);
+            // We have 2 "folder rename" (aka moves) to do.
+            // They must both succeed in the right order.
+            boolean move1done = false;
+            boolean move2done = false;
+            while (!move1done || !move2done) {
+                File renameFailedForDir = null;
+
+                // Case where the dest dir already exists
+                if (!move1done) {
+                    if (destFolder.isDirectory()) {
+                        // Create a new temp/old dir
+                        if (renamedDestFolder == null) {
+                            renamedDestFolder = createTempFolder(osSdkRoot, pkgKind, "old");  //$NON-NLS-1$
+                        }
+                        if (renamedDestFolder == null) {
+                            // this should not seriously happen.
+                            monitor.setResult("Failed to find a temp directory in %1$s.", osSdkRoot);
+                            return false;
+                        }
+
+                        // try to move the current dest dir to the temp/old one
+                        if (!destFolder.renameTo(renamedDestFolder)) {
+                            monitor.setResult("Failed to rename directory %1$s to %2$s.",
+                                    destFolder.getPath(), renamedDestFolder.getPath());
+                            renameFailedForDir = destFolder;
+                        }
+                    }
+
+                    move1done = (renameFailedForDir == null);
+                }
+
+                // Case where there's no dest dir or we successfully moved it to temp/old
+                // We not try to move the temp/unzip to the dest dir
+                if (move1done && !move2done) {
+                    if (renameFailedForDir == null && !unzipDestFolder.renameTo(destFolder)) {
+                        monitor.setResult("Failed to rename directory %1$s to %2$s",
+                                unzipDestFolder.getPath(), destFolder.getPath());
+                        renameFailedForDir = unzipDestFolder;
+                    }
+
+                    move2done = (renameFailedForDir == null);
+                }
+
+                if (renameFailedForDir != null) {
+                    if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
+
+                        String msg = String.format(
+                                "-= Warning ! =-\n" +
+                                "A folder failed to be renamed or moved. On Windows this " +
+                                "typically means that a program is using that folder (for example " +
+                                "Windows Explorer or your anti-virus software.)\n" +
+                                "Please momentarily deactivate your anti-virus software.\n" +
+                                "Please also close any running programs that may be accessing " +
+                                "the directory '%1$s'.\n" +
+                                "When ready, press YES to try again.",
+                                renameFailedForDir.getPath());
+
+                        if (monitor.displayPrompt("SDK Manager: failed to install", msg)) {
+                            // loop, trying to rename the temp dir into the destination
+                            continue;
+                        }
+
+                    }
                     return false;
                 }
-
-                if (!destFolder.renameTo(renamedDestFolder)) {
-                    monitor.setResult("Failed to rename directory %1$s to %2$s",
-                            destFolder.getPath(), renamedDestFolder.getPath());
-                    renameFailedForDir = destFolder;
-                }
-            }
-
-            if (renameFailedForDir == null && !unzipDestFolder.renameTo(destFolder)) {
-                monitor.setResult("Failed to rename directory %1$s to %2$s",
-                        unzipDestFolder.getPath(), destFolder.getPath());
-                renameFailedForDir = unzipDestFolder;
-            }
-
-            if (renameFailedForDir != null) {
-                if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
-                    monitor.setResult(
-                            "-= Warning ! =-\n" +
-                            "A folder failed to be renamed or moved. On Windows this " +
-                            "typically means that a program is using that folder (for example " +
-                            "Windows Explorer.) Please close all running programs that may be " +
-                            "locking the directory '%1$s' and try again.",
-                            renameFailedForDir.getPath());
-                }
-                return false;
+                break;
             }
 
             unzipDestFolder = null;
@@ -805,8 +904,12 @@ public class Archive implements IDescription {
                 }
 
                 // if needed set the permissions.
-                if (usingUnixPerm) {
-                    setPermission(destFile, entry.getUnixMode());
+                if (usingUnixPerm && destFile.isFile()) {
+                    // get the mode and test if it contains the executable bit
+                    int mode = entry.getUnixMode();
+                    if ((mode & 0111) != 0) {
+                        setExecutablePermission(destFile);
+                    }
                 }
 
                 // Increment progress bar to match. We update only between files.
@@ -844,7 +947,7 @@ public class Archive implements IDescription {
     }
 
     /**
-     * Finds a temp folder in the form of osBasePath/temp/prefix.suffixNNN.
+     * Creates a temp folder in the form of osBasePath/temp/prefix.suffixNNN.
      * <p/>
      * This operation is not atomic so there's no guarantee the folder can't get
      * created in between. This is however unlikely and the caller can assume the
@@ -853,8 +956,8 @@ public class Archive implements IDescription {
      * Returns null if no such folder can be found (e.g. if all candidates exist,
      * which is rather unlikely) or if the base temp folder cannot be created.
      */
-    private File findTempFolder(String osBasePath, String prefix, String suffix) {
-        File baseTempFolder = new File(osBasePath, "temp");
+    private File createTempFolder(String osBasePath, String prefix, String suffix) {
+        File baseTempFolder = getTempFolder(osBasePath);
 
         if (!baseTempFolder.isDirectory()) {
             if (!baseTempFolder.mkdirs()) {
@@ -870,6 +973,15 @@ public class Archive implements IDescription {
             }
         }
         return null;
+    }
+
+    /**
+     * Returns the temp folder used by the SDK Manager.
+     * This folder is always at osBasePath/temp.
+     */
+    private File getTempFolder(String osBasePath) {
+        File baseTempFolder = new File(osBasePath, "temp");     //$NON-NLS-1$
+        return baseTempFolder;
     }
 
     /**
@@ -926,19 +1038,14 @@ public class Archive implements IDescription {
     }
 
     /**
-     * Sets the Unix permission on a file or folder.
+     * Sets the executable Unix permission (0777) on a file or folder.
      * @param file The file to set permissions on.
      * @param unixMode the permissions as received from {@link ZipArchiveEntry#getUnixMode()}.
      * @throws IOException
      */
-    private void setPermission(File file, int unixMode) throws IOException {
-        // permissions contains more than user/group/all, and we need the 777 display mode, so we
-        // convert it in octal string and take the last 3 digits.
-        String permission = String.format("%o", unixMode);
-        permission = permission.substring(permission.length() - 3, permission.length());
-
+    private void setExecutablePermission(File file) throws IOException {
         Runtime.getRuntime().exec(new String[] {
-           "chmod", permission, file.getAbsolutePath()
+           "chmod", "777", file.getAbsolutePath()
         });
     }
 }

@@ -32,8 +32,10 @@ set jarpath=lib\sdkmanager.jar
 rem Set SWT.Jar path based on current architecture (x86 or x86_64)
 for /f %%a in ('java -jar lib\archquery.jar') do set swt_path=lib\%%a
 
+if "%1 %2"=="update sdk" goto StartUi
 if not "%1"=="" goto EndTempCopy
-    echo Starting Android SDK Updater
+:StartUi
+    echo Starting Android SDK and AVD Manager
 
     rem We're now going to create a temp dir to hold all the Jar files needed
     rem to run the android tool, copy them in the temp dir and finally execute
@@ -42,7 +44,7 @@ if not "%1"=="" goto EndTempCopy
     rem update the tools directory where the updater itself is located.
 
     set tmpdir=%TEMP%\temp-android-tool
-    xcopy lib\x86 %tmpdir%\lib\x86 /I /E /C /G /R /O /Y /Q > nul
+    xcopy lib\x86 %tmpdir%\lib\x86 /I /E /C /G /R /Y /Q > nul
     copy /B /D /Y lib\androidprefs.jar   %tmpdir%\lib\       > nul
     copy /B /D /Y lib\org.eclipse.*      %tmpdir%\lib\       > nul
     copy /B /D /Y lib\sdk*               %tmpdir%\lib\       > nul

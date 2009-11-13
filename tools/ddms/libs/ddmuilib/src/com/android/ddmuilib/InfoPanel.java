@@ -39,11 +39,15 @@ public class InfoPanel extends TablePanel {
         "App description:",
         "VM version:",
         "Process ID:",
+        "Supports Profiling Control:",
+        "Supports HPROF Control:",
     };
-    private static final int ENT_DDM_AWARE = 0;
-    private static final int ENT_APP_DESCR = 1;
-    private static final int ENT_VM_VERSION = 2;
-    private static final int ENT_PROCESS_ID = 3;
+    private static final int ENT_DDM_AWARE          = 0;
+    private static final int ENT_APP_DESCR          = 1;
+    private static final int ENT_VM_VERSION         = 2;
+    private static final int ENT_PROCESS_ID         = 3;
+    private static final int ENT_SUPPORTS_PROFILING = 4;
+    private static final int ENT_SUPPORTS_HPROF     = 5;
 
     /**
      * Create our control(s).
@@ -71,7 +75,7 @@ public class InfoPanel extends TablePanel {
 
         return mTable;
     }
-    
+
     /**
      * Sets the focus to the proper control inside the panel.
      */
@@ -88,7 +92,7 @@ public class InfoPanel extends TablePanel {
      * @param client the updated client.
      * @param changeMask the bit mask describing the changed properties. It can contain
      * any of the following values: {@link Client#CHANGE_PORT}, {@link Client#CHANGE_NAME}
-     * {@link Client#CHANGE_DEBUGGER_INTEREST}, {@link Client#CHANGE_THREAD_MODE},
+     * {@link Client#CHANGE_DEBUGGER_STATUS}, {@link Client#CHANGE_THREAD_MODE},
      * {@link Client#CHANGE_THREAD_DATA}, {@link Client#CHANGE_HEAP_MODE},
      * {@link Client#CHANGE_HEAP_DATA}, {@link Client#CHANGE_NATIVE_HEAP_DATA}
      *
@@ -160,6 +164,10 @@ public class InfoPanel extends TablePanel {
             item.setText(1, isDdmAware);
             item = mTable.getItem(ENT_PROCESS_ID);
             item.setText(1, pid);
+            item = mTable.getItem(ENT_SUPPORTS_PROFILING);
+            item.setText(1, Boolean.toString(cd.hasFeature(ClientData.FEATURE_PROFILING)));
+            item = mTable.getItem(ENT_SUPPORTS_HPROF);
+            item.setText(1, Boolean.toString(cd.hasFeature(ClientData.FEATURE_HPROF)));
         }
 
         mCol2.pack();

@@ -77,6 +77,7 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.Text;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 /**
@@ -108,7 +109,9 @@ public class ConfigurationSelector extends Composite {
 
     private final HashMap<Class<? extends ResourceQualifier>, QualifierEditBase> mUiMap =
         new HashMap<Class<? extends ResourceQualifier>, QualifierEditBase>();
+    private final boolean mDeviceMode;
     private Composite mQualifierEditParent;
+    private IQualifierFilter mQualifierFilter;
 
     /**
      * Basic of {@link VerifyListener} to only accept digits.
@@ -184,8 +187,31 @@ public class ConfigurationSelector extends Composite {
         OK, INVALID_CONFIG, REGION_WITHOUT_LANGUAGE;
     }
 
-    public ConfigurationSelector(Composite parent) {
+    /**
+     * A filter for {@link ResourceQualifier}.
+     * @see ConfigurationSelector#setQualifierFilter(IQualifierFilter)
+     */
+    public interface IQualifierFilter {
+        /**
+         * Returns true of the qualifier is accepted.
+         */
+        boolean accept(ResourceQualifier qualifier);
+    }
+
+    /**
+     * Creates the selector.
+     *
+     * If the device mode is <code>true</code> then the configuration selector only
+     * allows to create configuration that are valid on a device (as opposed to resource
+     * configuration).
+     * For instance {@link Density#NODPI} is a valid qualifier for a resource configuration but
+     * this is not valid on a device.
+     * @param parent the composite parent.
+     * @param deviceMode the device mode.
+     */
+    public ConfigurationSelector(Composite parent, boolean deviceMode) {
         super(parent, SWT.NONE);
+        mDeviceMode  = deviceMode;
 
         mBaseConfiguration.createDefault();
 
@@ -375,6 +401,15 @@ public class ConfigurationSelector extends Composite {
     }
 
     /**
+     * Sets a {@link IQualifierFilter}. If non null, this will restrict the qualifiers that
+     * can be chosen.
+     * @param filter the filter to set.
+     */
+    public void setQualifierFilter(IQualifierFilter filter) {
+        mQualifierFilter = filter;
+    }
+
+    /**
      * Sets a listener to be notified when the configuration changes.
      * @param listener A {@link Runnable} whose <code>run()</code> method is called when the
      * configuration is changed. The method is called from the UI thread.
@@ -492,7 +527,7 @@ public class ConfigurationSelector extends Composite {
     /**
      * Content provider around a {@link FolderConfiguration}.
      */
-    private static class QualifierContentProvider implements IStructuredContentProvider {
+    private class QualifierContentProvider implements IStructuredContentProvider {
 
         private FolderConfiguration mInput;
 
@@ -504,7 +539,20 @@ public class ConfigurationSelector extends Composite {
         }
 
         public Object[] getElements(Object inputElement) {
-            return mInput.getQualifiers();
+            // default easy case
+            if (mQualifierFilter == null) {
+                return mInput.getQualifiers();
+            }
+
+            // in this case we have to compute the list
+            ArrayList<ResourceQualifier> list = new ArrayList<ResourceQualifier>();
+            for (ResourceQualifier qual : mInput.getQualifiers()) {
+                if (mQualifierFilter.accept(qual)) {
+                    list.add(qual);
+                }
+            }
+
+            return list.toArray();
         }
 
         public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
@@ -1043,7 +1091,9 @@ public class ConfigurationSelector extends Composite {
             mDensity = new Combo(this, SWT.DROP_DOWN | SWT.READ_ONLY);
             Density[] soValues = Density.values();
             for (Density value : soValues) {
-                mDensity.add(value.getDisplayValue());
+                if (mDeviceMode == false || value != Density.NODPI) {
+                    mDensity.add(value.getDisplayValue());
+                }
             }
 
             mDensity.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
@@ -1055,7 +1105,6 @@ public class ConfigurationSelector extends Composite {
                     onDensityChange();
                 }
             });
-
         }
 
         private void onDensityChange() {
