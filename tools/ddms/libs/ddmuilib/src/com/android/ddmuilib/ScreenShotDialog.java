@@ -21,6 +21,7 @@ import com.android.ddmlib.Log;
 import com.android.ddmlib.RawImage;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.SWTException;
 import org.eclipse.swt.dnd.Clipboard;
 import org.eclipse.swt.dnd.ImageTransfer;
 import org.eclipse.swt.dnd.Transfer;
@@ -28,6 +29,7 @@ import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
+import org.eclipse.swt.graphics.ImageLoader;
 import org.eclipse.swt.graphics.PaletteData;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -292,10 +294,12 @@ public class ScreenShotDialog extends Dialog {
             ImageData imageData = mImageLabel.getImage().getImageData();
 
             try {
-                WritePng.savePng(fileName, imageData);
+                ImageLoader loader = new ImageLoader();
+                loader.data = new ImageData[] { imageData };
+                loader.save(fileName, SWT.IMAGE_PNG);
             }
-            catch (IOException ioe) {
-                Log.w("ddms", "Unable to save " + fileName + ": " + ioe);
+            catch (SWTException e) {
+                Log.w("ddms", "Unable to save " + fileName + ": " + e.getMessage());
             }
         }
     }
