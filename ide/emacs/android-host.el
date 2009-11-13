@@ -83,6 +83,10 @@
 (defun android-adb-sync ()
   "Execute 'adb sync'."
   (interactive)
+  ;; Always force root and remount, this way sync always works even on
+  ;; a device that has just rebooted or that runs a userdebug build.
+  (android-adb-root)
+  (android-adb-remount)
   (android-adb-command "sync" 'p))
 
 (defun android-fastboot-sentinel (process event)
