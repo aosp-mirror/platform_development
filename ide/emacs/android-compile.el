@@ -86,9 +86,13 @@ Signal an error if no Makefile was found."
 ;; called when new data has been inserted in the compile buffer. Don't
 ;; assume that only one line has been inserted, typically more than
 ;; one has changed since the last call due to stdout buffering.
-;; We store in a buffer local variable the process to detect a new
-;; compilation. We also store the point position to limit our
-;; search. On entry (point) is at the end of the last block inserted.
+;;
+;; We store in a buffer local variable `android-compile-context' a
+;; list with 2 elements, the process and point position at the end of
+;; the last invocation. The process is used to detect a new
+;; compilation. The point position is used to limit our search.
+;;
+;; On entry (point) is at the end of the last block inserted.
 (defun android-compile-filter ()
   "Filter to discard unwanted lines from the compilation buffer.
 
@@ -114,6 +118,14 @@ not nil."
           (end (point)))
       (save-excursion
         (goto-char beg)
+        ;; Need to go back at the beginning of the line before we
+        ;; start the search: because of the buffering, the previous
+        ;; block inserted may have ended in the middle of the
+        ;; expression we are trying to match. As result we missed it
+        ;; last time and we would miss it again if we started just
+        ;; where we left of. By processing the line from the start we
+        ;; are catching that case.
+        (forward-line 0)
         (while (search-forward-regexp android-compile-ignore-re end t)
           ;; Nuke the line
           (let ((bol (point-at-bol)))
