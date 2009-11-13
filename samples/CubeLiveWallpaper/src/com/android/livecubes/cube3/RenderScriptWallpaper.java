@@ -72,9 +72,6 @@ public abstract class RenderScriptWallpaper<T extends RenderScriptScene> extends
         @Override
         public void onSurfaceChanged(SurfaceHolder holder, int format, int width, int height) {
             super.onSurfaceChanged(holder, format, width, height);
-            if (mRs != null) {
-                mRs.contextSetSurface(width, height, holder.getSurface());
-            }
             if (mRenderer == null) {
                 mRenderer = createScene(width, height);
                 mRenderer.init(mRs, getResources(), isPreview());
@@ -98,7 +95,7 @@ public abstract class RenderScriptWallpaper<T extends RenderScriptScene> extends
             while (surface == null) {
                 surface = holder.getSurface();
             }
-            mRs = new RenderScript(false, false);
+            mRs = new RenderScript(surface, false, false);
         }
 
         @Override
