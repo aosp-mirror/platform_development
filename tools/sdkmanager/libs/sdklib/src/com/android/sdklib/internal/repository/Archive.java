@@ -452,7 +452,17 @@ public class Archive implements IDescription {
         // temp folder (in the SDK base folder) and use the archive name for the
         // download. This allows us to reuse or continue downloads.
 
-        File tmpFile = new File(getTempFolder(osSdkRoot), base);
+        File tmpFolder = getTempFolder(osSdkRoot);
+        if (!tmpFolder.isDirectory()) {
+            if (tmpFolder.isFile()) {
+                deleteFileOrFolder(tmpFolder);
+            }
+            if (!tmpFolder.mkdirs()) {
+                monitor.setResult("Failed to create directory %1$s", tmpFolder.getPath());
+                return null;
+            }
+        }
+        File tmpFile = new File(tmpFolder, base);
 
         // if the file exists, check if its checksum & size. Use it if complete
         if (tmpFile.exists()) {
@@ -960,6 +970,9 @@ public class Archive implements IDescription {
         File baseTempFolder = getTempFolder(osBasePath);
 
         if (!baseTempFolder.isDirectory()) {
+            if (baseTempFolder.isFile()) {
+                deleteFileOrFolder(baseTempFolder);
+            }
             if (!baseTempFolder.mkdirs()) {
                 return null;
             }
