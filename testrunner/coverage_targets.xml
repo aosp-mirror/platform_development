@@ -98,8 +98,6 @@
         type="APPS" />
     <coverage_target name="GmailProvider"
         build_path="partner/google/providers/gmail" type="APPS" />
-    <coverage_target name="ImProvider"
-        build_path="packages/providers/ImProvider" type="APPS" />
     <coverage_target name="MediaProvider"
         build_path="packages/providers/MediaProvider" type="APPS" />
     <coverage_target name="SettingsProvider"
