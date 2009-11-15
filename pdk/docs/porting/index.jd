@@ -21,7 +21,7 @@ doc.type=porting
 <p>If you are new to Android, start with the platform documentation on the following sites:
 <ul>
 <li><a href="http://developer.android.com">Android Developers site</a>:  This site offers high-level platform documentation and architecture concepts.</li>
-<li><a href="http://source.android.com">Android Open Source Project site</a>:  This site provides instructions on how to get the source code, establish a development environment, and perform a simple build.</li>
+<li><a href="{@docRoot}">Android Open Source Project site</a>:  This site provides instructions on how to get the source code, establish a development environment, and perform a simple build.</li>
 </ul>
 
 <p>When you are ready to start customizing the platform or porting to your target hardware, start in this guide with the <a href="build_system.html">Build System overview</a>.</p>

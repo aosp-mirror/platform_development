@@ -103,7 +103,7 @@ Solid elements represent Android blocks and dashed elements represent partner-sp
         <th scope="col">Description</th>
     </tr>
     <tr>
-      <td>ACQUIRE_CAUSES_WAKEUP<br/></td>
+      <td>ACQUIRE_CAUSES_WAKEUP <br/></td>
         <td>Normally wake locks don't actually wake the device, they just cause it to remain on once it's already on. Think of the video player app as the normal behavior. Notifications that pop up and want the device to be on are the exception; use this flag to be like them.</td>
     </tr>
     <tr>

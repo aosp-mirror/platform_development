@@ -211,7 +211,7 @@ currently-defined build variants:
 <table border=1> 
 <tr> 
     <td> 
-        <code>eng<code> 
+        <code>eng <code> 
     </td> 
     <td> 
         This is the default flavor. A plain <code>make</code> is the
@@ -230,7 +230,7 @@ currently-defined build variants:
 </tr> 
 <tr> 
     <td> 
-        <code>user<code> 
+        <code>user <code> 
     </td> 
     <td> 
         <code>make user</code>
@@ -248,7 +248,7 @@ currently-defined build variants:
 </tr> 
 <tr> 
     <td> 
-        <code>userdebug<code> 
+        <code>userdebug <code> 
     </td> 
     <td> 
         <code>make userdebug</code>

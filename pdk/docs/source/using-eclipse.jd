@@ -1,8 +1,6 @@
-page.title=Android Compatibility - Compatibility Test Suite
+page.title=Using Eclipse
 doc.type=source
 @jd:body
-<h3><b>Using Eclipse</b>
-</h3>
 <div><h2><a>About this Document</a>
 </h2>
 <p>This document will help you set up the Eclipse IDE for Android platform development.
@@ -16,13 +14,13 @@ Basic setup
 </h4>
 <p>First, it's important to make sure the regular Android development system is set up.
 </p>
-<pre>cd /path/to/android/root<br>make     # and wait a while, if you haven't done this<br></pre>
+<pre>cd /path/to/android/root <br>make     # and wait a while, if you haven't done this <br></pre>
 <p><b>Important</b>
 : You will still be using "make" to build the files you will actually run (in the emulator or on a device). You will be using Eclipse to edit files and verify that they compile, but when you want to run something you will need to make sure files are saved in Eclipse and run "make" in a shell. The Eclipse build is just for error checking.
 </p>
 <p>Eclipse needs a list of directories to search for Java files. This is called the "Java Build Path" and can be set with the .classpath file. We have a sample version to start you off.
 </p>
-<pre>cd /path/to/android/root<br>cp development/ide/eclipse/.classpath .<br>chmod u+w .classpath  # Make the copy writable<br></pre>
+<pre>cd /path/to/android/root <br>cp development/ide/eclipse/.classpath .<br>chmod u+w .classpath  # Make the copy writable <br></pre>
 <p>Now edit that copy of .classpath, if necessary.
 </p>
 <h5>
@@ -33,15 +31,15 @@ Increase Eclipse's Memory Settings
 <p>Memory-related defaults (as of Eclipse 3.4)
 </p>
 
-<pre>-Xms40m<br>-Xmx256m<br>-XX:MaxPermSize=256m<br></pre>
+<pre>-Xms40m <br>-Xmx256m <br>-XX:MaxPermSize=256m <br></pre>
 <p>Recommended settings for Android development
 </p>
-<pre>-Xms128m<br>-Xmx512m<br>-XX:MaxPermSize=256m<br></pre>
+<pre>-Xms128m <br>-Xmx512m <br>-XX:MaxPermSize=256m <br></pre>
 <p>These settings set Eclipse's minimum Java heap size to 128MB, set the maximum Java heap size to 512MB, and keep the maximum permanent generation size at the default of 256MB.
 </p>
 <p>Now start Eclipse:
 </p>
-<pre>eclipse  # or you can click some clicky thing instead, if you prefer<br></pre>
+<pre>eclipse  # or you can click some clicky thing instead, if you prefer <br></pre>
 <p>Now create a project for Android development:
 </p>
 <ol><li>If Eclipse asks you for a workspace location, choose the default.
@@ -111,7 +109,7 @@ Eclipse setup to work on developer tools
 </li>
 <li>Choose the "Source" tab.
 </li>
-<li>Expand the single<i>toolname</i>
+<li>Expand the single <i>toolname</i>
 /src entry.
 </li>
 <li>Double click the "Excluded: (none)" item.
@@ -120,14 +118,14 @@ Eclipse setup to work on developer tools
 </li>
 <li>Close the dialog.
 </li>
-<li>Back in the "Source" tab, click "Add Folder...", and add<i>toolname</i>
+<li>Back in the "Source" tab, click "Add Folder...", and add <i>toolname</i>
 /src/resources.
 </li>
 <li>Click OK.
 </li>
 </ol>
 <h4>
-Eclipse setup to work on DDMS<br></h4>
+Eclipse setup to work on DDMS <br></h4>
 <p>For DDMS, you will need to make a project for
 </p>
 <ol><li>development/tools/ddms/libs/ddmlib
@@ -156,10 +154,10 @@ Eclipse setup to work on DDMS<br></h4>
 </h2>
 <p>You can also use eclipse to debug the emulator and step through code. First, start the emulator running:
 </p>
-<pre>cd /path/to/android/root<br>. build/envsetup.sh<br>lunch 1   # to build the emulator<br>make      # if you didn't already do this<br>emulator  # you should see a GUI picture of a phone<br></pre>
+<pre>cd /path/to/android/root <br>. build/envsetup.sh <br>lunch 1   # to build the emulator <br>make      # if you didn't already do this <br>emulator  # you should see a GUI picture of a phone <br></pre>
 <p>In another shell, start DDMS (the Dalvik debug manager):
 </p>
-<pre>cd /path/to/android/root<br>ddms      # you should get a splufty debugging console<br></pre>
+<pre>cd /path/to/android/root <br>ddms      # you should get a splufty debugging console <br></pre>
 <p>Now, in eclipse, you can attach to the emulator:
 </p>
 <ol><li>Run Open Debug Dialog...
@@ -184,7 +182,7 @@ Eclipse setup to work on DDMS<br></h4>
 <p>Replace Ctrl with the Apple key on Mac.
 </p>
 
-<pre>Ctrl-Shift-o = Organize imports<br>Ctrl-Shift-t = load class by name<br>Ctrl-Shift-r = load non-class resource by name<br>Ctrl-1 = quick fix<br>Ctrl-e = Recently viewed files<br>Ctrl-space = auto complete<br>Shift-Alt-r = refactor:rename<br>Shift-Alt-v = refactor:move<br></pre>
+<pre>Ctrl-Shift-o = Organize imports <br>Ctrl-Shift-t = load class by name <br>Ctrl-Shift-r = load non-class resource by name <br>Ctrl-1 = quick fix <br>Ctrl-e = Recently viewed files <br>Ctrl-space = auto complete <br>Shift-Alt-r = refactor:rename <br>Shift-Alt-v = refactor:move <br></pre>
 
 <h2><a>Useful Plugins</a>
 </h2>

@@ -2,7 +2,6 @@ page.title=Downloads
 doc.type=downloads
 doc.hidenav=true
 @jd:body
-<div id="mainBodyFixed">
 <p>This page provides access to various downloads. Note that if you're looking
 for the Android SDK (for application developers), you should visit <a
 href="http://developer.android.com/sdk/index.html">developer.android.com</a>.</p>
@@ -43,4 +42,3 @@ there is no compatibility program for Android 1.5 and earlier. Note also that
 there is no compatibility program for Android 2.0, since it was superceded by
 Android 2.1 after only a few weeks.
 </p>
-</div>

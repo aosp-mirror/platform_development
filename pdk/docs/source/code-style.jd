@@ -1,8 +1,6 @@
-page.title=Android Compatibility - Compatibility Test Suite
+page.title=Code Style Guidelines for Contributors
 doc.type=source
 @jd:body
-<h3><b>Code Style Guide</b>
-</h3>
 <div>
 <h1>Android Code Style Rules</h1>
 <p>The rules below are not guidelines or recommendations, but strict rules.<b>You may not disregard the rules we list below</b>
@@ -29,12 +27,12 @@ except as approved on a need-to-use basis.
 </ol>
 <h1><a>Java Library Rules</a>
 </h1>
-<p>There are conventions for using Android's Java libraries and tools. In some cases, the convention has changed in important ways and older code might use a deprecated pattern or library. When working with such code, it's okay to continue the existing style (see<a href="#consistency">Consistency</a>
+<p>There are conventions for using Android's Java libraries and tools. In some cases, the convention has changed in important ways and older code might use a deprecated pattern or library. When working with such code, it's okay to continue the existing style (see <a href="#consistency">Consistency</a>
 ). When creating new components never use deprecated libraries.
 </p>
 <h1><a>Java Style Rules</a>
 </h1>
-<p>Programs are much easier to maintain when all files have a consistent style. We follow the standard Java coding style, as defined by Sun in their<a href="http://java.sun.com/docs/codeconv/html/CodeConvTOC.doc.html">Code Conventions for the Java Programming Language</a>
+<p>Programs are much easier to maintain when all files have a consistent style. We follow the standard Java coding style, as defined by Sun in their <a href="http://java.sun.com/docs/codeconv/html/CodeConvTOC.doc.html">Code Conventions for the Java Programming Language</a>
 , with a few exceptions and additions. This style guide is comprehensive and detailed and is in common usage in the Java community.
 </p>
 <p>In addition, we enforce the following style rules:
@@ -108,7 +106,7 @@ Sometimes it is tempting to write code that completely ignores an exception like
 <pre>void setServerPort(String value) throws ConfigurationException {<br>try {<br>serverPort = Integer.parseInt(value);<br>} catch (NumberFormatException e) {<br>throw new ConfigurationException("Port " + value + " is not valid.");<br>}<br><br></pre>
 </li>
 <li>Handle the error gracefully and substitute an appropriate value in the catch {} block.
-<pre>/** Set port. If value is not a valid number, 80 is substituted. */<br>void setServerPort(String value) {<br>try {<br>serverPort = Integer.parseInt(value);<br>} catch (NumberFormatException e) {<br>serverPort = 80;  // default port for server<br>}<br></pre>
+<pre>/** Set port. If value is not a valid number, 80 is substituted. */<br>void setServerPort(String value) {<br>try {<br>serverPort = Integer.parseInt(value);<br>} catch (NumberFormatException e) {<br>serverPort = 80;  // default port for server <br>}<br></pre>
 </li>
 <li>Catch the Exception and throw a new RuntimeException. This is dangerous: only do it if you are positive that if this error occurs, the appropriate thing to do is crash.
 <pre>/** Set port. If value is not a valid number, die. */<br>void setServerPort(String value) {<br>try {<br>serverPort = Integer.parseInt(value);<br>} catch (NumberFormatException e) {<br>throw new RuntimeException("port " + value " is invalid, ", e);<br>}<br></pre>
@@ -120,7 +118,7 @@ Note that the original exception is passed to the constructor for RuntimeExcepti
 <h2><a>Exceptions: do not catch generic Exception</a>
 </h2>
 Sometimes it is tempting to be lazy when catching exceptions and do something like this:
-<pre>try {<br>someComplicatedIOFunction();        // may throw IOException<br>someComplicatedParsingFunction();   // may throw ParsingException<br>someComplicatedSecurityFunction();  // may throw SecurityException<br>// phew, made it all the way<br>} catch (Exception e) {               // I'll just catch all exceptions<br>handleError();                      // with one generic handler!<br>}<br><br></pre>
+<pre>try {<br>someComplicatedIOFunction();        // may throw IOException <br>someComplicatedParsingFunction();   // may throw ParsingException <br>someComplicatedSecurityFunction();  // may throw SecurityException <br>// phew, made it all the way <br>} catch (Exception e) {               // I'll just catch all exceptions <br>handleError();                      // with one generic handler!<br>}<br><br></pre>
 You should not do this. In almost all cases it is inappropriate to catch generic Exception or Throwable, preferably not Throwable, because it includes Error exceptions as well. It is very dangerous. It means that Exceptions you never expected (including RuntimeExceptions like ClassCastException) end up getting caught in application-level error handling. It obscures the failure handling properties of your code. It means if someone adds a new type of Exception in the code you're calling, the compiler won't help you realize you need to handle that error differently. And in most cases you shouldn't be handling different types of exception the same way, anyway.
 <p>There are rare exceptions to this rule: certain test code and top-level code where you want to catch all kinds of errors (to prevent them from showing up in a UI, or to keep a batch job running). In that case you may catch generic Exception (or Throwable) and handle the error appropriately. You should think very carefully before doing this, though, and put in comments explaining why it is safe in this place.
 </p>
@@ -176,17 +174,17 @@ Wildcards in imports
 </h2>
 <p>Every file should have a copyright statement at the top. Then a package statement and import statements should follow, each block separated by a blank line. And then there is the class or interface declaration. In the Javadoc comments, describe what the class or interface does.
 </p>
-<pre>/*<br>* Copyright (C) 2007 The Android Open Source Project<br>*<br>* Licensed under the Apache License, Version 2.0 (the "License");<br>* you may not use this file except in compliance with the License.<br>* You may obtain a copy of the License at<br>*<br>*      http://www.apache.org/licenses/LICENSE-2.0<br>*<br>* Unless required by applicable law or agreed to in writing, software<br>* distributed under the License is distributed on an "AS IS" BASIS,<br>* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.<br>* See the License for the specific language governing permissions and<br>* limitations under the License.<br>*/<br><br>package com.android.internal.foo;<br><br>import android.os.Blah;<br>import android.view.Yada;<br><br>import java.sql.ResultSet;<br>import java.sql.SQLException;<br><br>/**<br>* Does X and Y and provides an abstraction for Z.<br>*/<br>public class Foo {<br>...<br>}<br></pre>
-<p>Every class and nontrivial public method you write<b>must</b>
+<pre>/*<br>* Copyright (C) 2007 The Android Open Source Project <br>*<br>* Licensed under the Apache License, Version 2.0 (the "License");<br>* you may not use this file except in compliance with the License.<br>* You may obtain a copy of the License at <br>*<br>*      http://www.apache.org/licenses/LICENSE-2.0<br>*<br>* Unless required by applicable law or agreed to in writing, software <br>* distributed under the License is distributed on an "AS IS" BASIS,<br>* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.<br>* See the License for the specific language governing permissions and <br>* limitations under the License.<br>*/<br><br>package com.android.internal.foo;<br><br>import android.os.Blah;<br>import android.view.Yada;<br><br>import java.sql.ResultSet;<br>import java.sql.SQLException;<br><br>/**<br>* Does X and Y and provides an abstraction for Z.<br>*/<br>public class Foo {<br>...<br>}<br></pre>
+<p>Every class and nontrivial public method you write <b>must</b>
 contain a Javadoc comment with at least one sentence describing what the class or method does. This sentence should start with a 3rd person descriptive verb. Examples:
 </p>
-<pre>/** Returns the correctly rounded positive square root of a double value. */<br>static double sqrt(double a) {<br>}<br><br>/**<br>* Constructs a new String by converting the specified array of<br>* bytes using the platform's default character encoding.<br>*/<br>public String(byte[] bytes) {<br>}<br></pre>
+<pre>/** Returns the correctly rounded positive square root of a double value. */<br>static double sqrt(double a) {<br>}<br><br>/**<br>* Constructs a new String by converting the specified array of <br>* bytes using the platform's default character encoding.<br>*/<br>public String(byte[] bytes) {<br>}<br></pre>
 <p>You do not need to write Javadoc for trivial get and set methods such as setFoo() if all your Javadoc would say is "sets Foo". If the method does something more complex (such as enforcing a constraint or having an important side effect), then you must document it. And if it's not obvious what the property "Foo" means, you should document it.
 </p>
 <p>Every method you write, whether public or otherwise, would benefit from Javadoc. Public methods are part of an API and therefore require Javadoc.
 </p>
-Android does not currently enforce a specific style for writing Javadoc comments, but you<b>should</b>
-follow the<a href="http://java.sun.com/j2se/javadoc/writingdoccomments/">Sun Javadoc conventions</a>
+Android does not currently enforce a specific style for writing Javadoc comments, but you <b>should</b>
+follow the <a href="http://java.sun.com/j2se/javadoc/writingdoccomments/">Sun Javadoc conventions</a>
 .
 <h2><a>Short methods</a>
 </h2>
@@ -199,10 +197,10 @@ Item 29). By doing so, you increase the readability and maintainability of your 
 </p>
 <p>One exception to this rule concerns try-catch statements. If a variable is initialized with the return value of a method that throws a checked exception, it must be initialized inside a try block. If the value must be used outside of the try block, then it must be declared before the try block, where it cannot yet be sensibly initialized:
 </p>
-<pre>// Instantiate class cl, which represents some sort of Set<br>Set s = null;<br>try {<br>s = (Set) cl.newInstance();<br>} catch(IllegalAccessException e) {<br>throw new IllegalArgumentException(cl + " not accessible");<br>} catch(InstantiationException e) {<br>throw new IllegalArgumentException(cl + " not instantiable");<br>}<br><br>// Exercise the set<br>s.addAll(Arrays.asList(args));<br></pre>
+<pre>// Instantiate class cl, which represents some sort of Set <br>Set s = null;<br>try {<br>s = (Set) cl.newInstance();<br>} catch(IllegalAccessException e) {<br>throw new IllegalArgumentException(cl + " not accessible");<br>} catch(InstantiationException e) {<br>throw new IllegalArgumentException(cl + " not instantiable");<br>}<br><br>// Exercise the set <br>s.addAll(Arrays.asList(args));<br></pre>
 <p>But even this case can be avoided by encapsulating the try-catch block in a method:
 </p>
-<pre>Set createSet(Class cl) {<br>// Instantiate class cl, which represents some sort of Set<br>try {<br>return (Set) cl.newInstance();<br>} catch(IllegalAccessException e) {<br>throw new IllegalArgumentException(cl + " not accessible");<br>} catch(InstantiationException e) {<br>throw new IllegalArgumentException(cl + " not instantiable");<br>}<br>}<br>...<br>// Exercise the set<br>Set s = createSet(cl);<br>s.addAll(Arrays.asList(args));<br></pre>
+<pre>Set createSet(Class cl) {<br>// Instantiate class cl, which represents some sort of Set <br>try {<br>return (Set) cl.newInstance();<br>} catch(IllegalAccessException e) {<br>throw new IllegalArgumentException(cl + " not accessible");<br>} catch(InstantiationException e) {<br>throw new IllegalArgumentException(cl + " not instantiable");<br>}<br>}<br>...<br>// Exercise the set <br>Set s = createSet(cl);<br>s.addAll(Arrays.asList(args));<br></pre>
 Loop variables should be declared in the for statement itself unless there is a compelling reason to do otherwise:
 <pre>for (int i = 0; i n; i++) {<br>doSomething(i);<br>}<br><br>for (Iterator i = c.iterator(); i.hasNext(); ) {<br>doSomethingElse(i.next());<br>}<br><br><br></pre>
 <h2><a>Imports</a>
@@ -232,9 +230,9 @@ The use and location of static imports have been mildly controversial issues. So
 </p>
 <p>We use 8 space indents for line wraps, including function calls and assignments. For example, this is correct:
 </p>
-<pre>Instrument i<br>= someLongExpression(that, wouldNotFit, on, one, line);</pre>
+<pre>Instrument i <br>= someLongExpression(that, wouldNotFit, on, one, line);</pre>
 and this is not correct:
-<pre>Instrument i<br>= someLongExpression(that, wouldNotFit, on, one, line);</pre>
+<pre>Instrument i <br>= someLongExpression(that, wouldNotFit, on, one, line);</pre>
 <h2><a>Field Names</a>
 </h2>
 <ul><li>Non-public, non-static field names start with m.
@@ -256,10 +254,10 @@ and this is not correct:
 <pre>class MyClass {<br>int func() {<br>if (something) {<br>// ...<br>} else if (somethingElse) {<br>// ...<br>} else {<br>// ...<br>}<br>}<br>}<br></pre>
 <p>We require braces around the statements for a conditional. Except, if the entire conditional (the condition and the body) fit on one line, you may (but are not obligated to) put it all on one line. That is, this is legal:
 </p>
-<pre>if (condition) {<br>body; // ok<br>}<br>if (condition) body; // ok</pre>
+<pre>if (condition) {<br>body; // ok <br>}<br>if (condition) body; // ok</pre>
 <p>but this is still illegal:
 </p>
-<pre>if (condition)<br>body; // bad<br></pre>
+<pre>if (condition)<br>body; // bad <br></pre>
 <h2><a>Line length</a>
 </h2>
 <p>Each line of text in your code should be at most 100 characters long.
@@ -277,18 +275,18 @@ Java 1.5 Annotations
 </p>
 <p>Android -standard practices for the three predefined annotations in Java 1.5's are:
 </p>
-@DeprecatedThe @Deprecated annotation must be used whenever the use of the annotated element is discouraged. If you use the @Deprecated annotation, you must also have a @deprecated Javadoc tag and it should name an alternate implementation. In addition, remember that a @Deprecated method is<b>still</b>
+@DeprecatedThe @Deprecated annotation must be used whenever the use of the annotated element is discouraged. If you use the @Deprecated annotation, you must also have a @deprecated Javadoc tag and it should name an alternate implementation. In addition, remember that a @Deprecated method is <b>still</b>
 supposed to work.
 <p>If you see old code that has a @deprecated Javadoc tag, please add the @Deprecated annotation.
 </p>
 @OverrideThe @Override annotation must be used whenever a method overrides the declaration or implementation from a super-class.
 <p>For example, if you use the {@inheritdocs} Javadoc tag, and derive from a class (not an interface), you must also annotate that the method @Overrides the parent class's method.
 </p>
-@SuppressWarningsThe @SuppressWarnings annotation should only be used under circumstances where it is impossible to eliminate a warning. If a warning passes this "impossible to eliminate" test, the@SuppressWarnings annotation<b>must</b>
+@SuppressWarningsThe @SuppressWarnings annotation should only be used under circumstances where it is impossible to eliminate a warning. If a warning passes this "impossible to eliminate" test, the@SuppressWarnings annotation <b>must</b>
 be used, so as to ensure that all warnings reflect actual problems in the code.
 <p>When a @SuppressWarnings annotation is necessary, it must be prefixed with a TODO comment that explains the "impossible to eliminate" condition. This will normally identify an offending class that has an awkward interface. For example:
 </p>
-<pre>// TODO: The third-party class com.third.useful.Utility.rotate() needs generics<br>@SuppressWarnings({"generic-cast"})<br>ListStringblix = Utility.rotate(blax);<br></pre>
+<pre>// TODO: The third-party class com.third.useful.Utility.rotate() needs generics <br>@SuppressWarnings({"generic-cast"})<br>ListStringblix = Utility.rotate(blax);<br></pre>
 When a @SuppressWarnings annotation is required, the code should be refactored to isolate the software elements where the annotation applies.
 <h2><a>Acronyms in names</a>
 </h2>
@@ -336,8 +334,8 @@ When a @SuppressWarnings annotation is required, the code should be refactored t
 
 <p>Both the JDK and the Android code bases are very inconsistent with regards to acronyms, therefore, it is virtually impossible to be consistent with the code around you. Bite the bullet, and treat acronyms as words.
 </p>
-<p>For further justifications of this style rule, see<i>Effective Java</i>
-Item 38 and<i>Java Puzzlers</i>
+<p>For further justifications of this style rule, see <i>Effective Java</i>
+Item 38 and <i>Java Puzzlers</i>
 Number 68.
 </p>
 <h2><a>TODO style</a>

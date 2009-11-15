@@ -1,17 +1,16 @@
-page.title=Android Compatibility - Compatibility Test Suite
+page.title=Android 1.0 Features
 doc.type=source
 @jd:body
-<h3><b>Release features - Android 1.0</b>
-</h3>
-<div><div><div><div>This page provides a high-level overview of Android 1.0 features. For a list of all the projects that make up the Android 1.0 source code, see<a href="http://source.android.com/projects">Project layout</a>
-. To see the code itself, you can either use the<a href="http://git.source.android.com/">GitWeb</a>
-interface to view snapshots of the files, or you can<a href="http://source.android.com/download">download</a>
+<div><div><div><div>This page provides a high-level overview of Android 1.0
+features. To see the code itself, you can either use the <a href="http://android.git.kernel.org/">GitWeb</a>
+interface to view snapshots of the files, or you can <a
+href="{@docRoot}source/download.html">download</a>
 the source code onto your local machine.<br><br><b>Applications</b>
 <br><br>The Android platform comes with a variety of applications written using the Java programming language:<br><ul><li><i>Home</i>
 displays applications, widgets, and shortcuts. It also supports customizable wall paper.
 </li>
 <li><i>Phone</i>
-supports regular telephony functions as well as call controls, conference calls, supplementary services, and easy integration with<i>Contacts</i>
+supports regular telephony functions as well as call controls, conference calls, supplementary services, and easy integration with <i>Contacts</i>
 .<br></li>
 <li><i>Web Browser</i>
 is a fully featured WebKit-based browser that supports HTML and XHTML.
@@ -27,7 +26,7 @@ enables managing, importing, and playing back content that has been encoded in v
 </ul>
 <b>Application framework</b>
 <br><br></div>
-<div>The Android Application Framework has been designed to provide a rich set of APIs for third-party application developers. For more information, visit the<a href="http://developer.android.com/guide/index.html">Android SDK developer guide</a>
+<div>The Android Application Framework has been designed to provide a rich set of APIs for third-party application developers. For more information, visit the <a href="http://developer.android.com/guide/index.html">Android SDK developer guide</a>
 .<b><br></b>
 </div>
 <div></div>
@@ -47,7 +46,7 @@ Dalvik has the following runtime characteristics:
 </li>
 <li>Efficient linkage to low-level native code.
 </li>
-<li>A familiar and rich set of core library functionality. For a complete list of supported libraries, see<a href="http://developer.android.com/reference/packages.html">http://developer.android.com/reference/packages.html</a>
+<li>A familiar and rich set of core library functionality. For a complete list of supported libraries, see <a href="http://developer.android.com/reference/packages.html">http://developer.android.com/reference/packages.html</a>
 .
 </li>
 <li>Enhanced JDWP support, enabling easier debugging of multiple processes simultaneously.
@@ -55,7 +54,7 @@ Dalvik has the following runtime characteristics:
 <li>JNI support.
 </li>
 </ul>
-<b>Native libraries<br></b>
+<b>Native libraries <br></b>
 <br>The Android platform makes use of many native libraries, including:<br><ul><li><i>Bionic</i>
 , a custom libc implementation optimized for embedded systems.
 </li>
@@ -72,9 +71,9 @@ Dalvik has the following runtime characteristics:
 <ul><li>Based on Linux 2.6.25 for ARM.<br></li>
 <li>Platform currently expects ARM V5T or better architecture. Support for earlier architectures could be added, but CPUs without an MMU would be difficult to support.
 </li>
-<li>A set of kernel enhancements are provided to support Android. The patches include alarm, ashmem, binder, power management, low memory killer, kernel degugger, and logger<b>.<br></b>
+<li>A set of kernel enhancements are provided to support Android. The patches include alarm, ashmem, binder, power management, low memory killer, kernel degugger, and logger <b>.<br></b>
 </li>
-<li>While the platform is designed to be chipset agnostic, and will run on virtually any ARM-based Linux kernel environment, version 1.0 of the platform has been tested and verified on the MSM 7K chipsets<b>.</b>
+<li>While the platform is designed to be chipset agnostic, and will run on virtually any ARM-based Linux kernel environment, version 1.0 of the platform has been tested and verified on the MSM 7K chipsets <b>.</b>
 Over time we expect to see support for other major chipsets.
 Kernel patches for MSM based chipsets are also available.
 </li>
@@ -92,7 +91,7 @@ Kernel patches for MSM based chipsets are also available.
 <li>Logging and crash logs supported for debugging.
 </li>
 </ul>
-<b>Supported hardware<br></b>
+<b>Supported hardware <br></b>
 <ul><li>The platform will run on almost on any ARM based Linux kernel environment.
 </li>
 <li>The platform requires a minimum of 128 MB of RAM and 256 MB ofFlash memory. AnOEM may want to support more Flash memory to make it possible to download more third-party applications to user devices.<br></li>
@@ -110,8 +109,8 @@ Kernel patches for MSM based chipsets are also available.
 </li>
 </ul>
 <b>Supported display</b>
-<br><ul><li>HVGA resolution<br></li>
-<li>16 bit color depth<br></li>
+<br><ul><li>HVGA resolution <br></li>
+<li>16 bit color depth <br></li>
 <li>Landscape and portrait orientation, including dynamic runtime switching
 </li>
 <li>Finger-based touchscreen navigation
@@ -141,12 +140,12 @@ Kernel patches for MSM based chipsets are also available.
 <li>Vibration
 </li>
 </ul>
-<b>Supported radio and telephony features<br></b>
+<b>Supported radio and telephony features <br></b>
 <ul><li>GPRS, EDGE, UMTS, HSDPA
 </li>
-<li>International roaming, SMS, MMS<br></li>
-<li>Emergency call support<br></li>
-<li>Supplementary Services for Telephony, for example call waiting and conference calling<br></li>
+<li>International roaming, SMS, MMS <br></li>
+<li>Emergency call support <br></li>
+<li>Supplementary Services for Telephony, for example call waiting and conference calling <br></li>
 <li>Unstructured Supplementary Service Data (USSD)
 </li>
 <li>Reference Radio Interface Layer (RIL)

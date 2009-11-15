@@ -1,7 +1,6 @@
 page.title=Philosophy and Goals
 doc.type=about
 @jd:body
-<div id="mainBodyFixed">
 <p>Android is an open-source software stack for mobile phones and similar
 devices. The Android Open Source Project is tasked with maintaining current
 and developing new versions of the Android software. We believe that users
@@ -77,4 +76,3 @@ we ship high-quality, flagship devices with an intense product and end-user
 focus. The "next release" of Android is driven by the product needs for the next
 generation of mobile devices; the resulting excellent product is then released
 to open source and becomes the new current version of the platform.</p>
-</div>

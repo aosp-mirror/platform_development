@@ -25,6 +25,7 @@ function nothing() {}
     <li><a href="<?cs var:toroot ?>source/life-of-a-patch.html">Life of a Patch</a></li>
     <li><a href="<?cs var:toroot ?>source/submit-patches.html">Submitting Patches</a></li>
     <li><a href="<?cs var:toroot ?>source/report-bugs.html">Reporting Bugs</a></li>
+    <li><a href="<?cs var:toroot ?>source/code-lines.html">Branches &amp; Releases</a></li>
   </ul>
 </ul>
 

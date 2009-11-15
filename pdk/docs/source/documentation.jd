@@ -1,8 +1,6 @@
-page.title=Android Compatibility - Compatibility Test Suite
+page.title=Documentation Resources
 doc.type=source
 @jd:body
-<h3><b>Documentation</b>
-</h3>
 <div><p>
               As this page grows, it will include resources for wireless operators and handset manufacturers as well as for platform developers.<br></p>
 <h3> 
@@ -31,12 +29,12 @@ Resources for platform developers
 
             Repo and Git resources:<br><ul><li><a href="http://source.android.com/download/using-repo#TOC-Git-and-Repo-cheatsheet">Git and Repo cheat sheet</a>
 </li>
-<li><a href="http://source.android.com/download/using-repo">Using Repo and Git<br></a>
+<li><a href="http://source.android.com/download/using-repo">Using Repo and Git <br></a>
 </li>
 <li>
-                The<a href="http://book.git-scm.com/">Git Community Book</a>
+                The <a href="http://book.git-scm.com/">Git Community Book</a>
 <img src="{@docRoot}images/documentation-0.png">
-maintained by Scott Chacon<br></li>
+maintained by Scott Chacon <br></li>
 <li><a href="http://git.or.cz/gitwiki/FrontPage">GitWiki</a>
 <img src="{@docRoot}images/documentation-0.png">
 </li>

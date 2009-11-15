@@ -1,83 +1,16 @@
-page.title=Android Compatibility - Compatibility Test Suite
+page.title=Get Android Source Code
 doc.type=source
 @jd:body
-<h3><span><b>Get source</b>
-</span>
-</h3>
-<div><div><div><div><div><div><div><div><p><b>Contents</b>
-</p>
-<ol><li><a href="#TOC-What-s-in-the-source-"><b>1</b>
-What's in the source?</a>
-</li>
-<li><a href="#TOC-Setting-up-your-machine"><b>2</b>
-Setting up your machine</a>
-<ol><li><a href="#TOC-Linux"><b>2.1</b>
-Linux</a>
-<ol><li><a href="#TOC-Ubuntu-Linux-32-bit-x86-"><b>2.1.1</b>
-Ubuntu Linux (32-bit x86)</a>
-</li>
-<li><a href="#TOC-Ubuntu-Linux-64-bit-x86-"><b>2.1.2</b>
-Ubuntu Linux (64-bit x86)</a>
-</li>
-<li><a href="#TOC-Running-Linux-in-a-virtual-machine"><b>2.1.3</b>
-Running Linux in a virtual machine</a>
-</li>
-<li><a href="#TOC-Other-Linux"><b>2.1.4</b>
-Other Linux</a>
-</li>
-</ol>
-</li>
-<li><a href="#TOC-Mac-OS"><b>2.2</b>
-Mac OS</a>
-</li>
-</ol>
-</li>
-<li><a href="#TOC-Installing-Repo"><b>3</b>
-Installing Repo</a>
-</li>
-<li><a href="#TOC-Initializing-a-Repo-client"><b>4</b>
-Initializing a Repo client</a>
-</li>
-<li><a href="#TOC-Getting-the-files"><b>5</b>
-Getting the files</a>
-</li>
-<li><a href="#TOC-Verifying-Git-Tags"><b>6</b>
-Verifying Git Tags</a>
-</li>
-<li><a href="#TOC-Building-the-code"><b>7</b>
-Building the code</a>
-</li>
-<li><a href="#TOC-Using-an-IDE"><b>8</b>
-Using an IDE</a>
-</li>
-<li><a href="#TOC-Troubleshooting"><b>9</b>
-Troubleshooting</a>
-</li>
-<li><a href="#TOC-What-s-next-"><b>10</b>
-What's next?</a>
-</li>
-</ol>
-</div>
-</div>
-</div>
-</div>
-</div>
-<div><table><tbody><tr><td>For information about current problems and fixes, see <a href="http://source.android.com/known-issues">Known issues</a>
-.</td>
-</tr>
-</tbody>
-</table>
-</div>
 <div><br>This document describes how to set up your local work environment, how to use Repo to get the Android files, and how to build the files on your machine.<br><br>Related reading:<br></div>
-<ul><li>For an overview of the entire code-review and code-update process, see <a href="http://source.android.com/submit-patches/workflow">Workflow</a>
+<ul><li>For an overview of the entire code-review and code-update process, see
+<a href="{@docRoot}source/life-of-a-patch.html">Life of a Patch</a>
 .</li>
-<li>For reference details about Repo, see <a href="http://source.android.com/download/using-repo">Using Repo and Git</a>
+<li>For reference details about Repo, see <a href="{@docRoot}source/git-repo.html">Using Repo and Git</a>
 .<br></li>
 </ul>
 <h2>
 What's in the source?</h2>
-<div>For a description of all the projects that make up the Android source code, see <a href="http://source.android.com/projects">Project layout</a>
-. To see snapshots and histories of the files available in the public Android repositories, visit the <a href="http://android.git.kernel.org/">GitWeb</a>
+<div>To see snapshots and histories of the files available in the public Android repositories, visit the <a href="http://android.git.kernel.org/">GitWeb</a>
 web interface.</div>
 <div></div>
 <div>The source is approximentely 2.1GB in size.You will need 6GB free to complete the build.<br><br></div>
@@ -241,7 +174,9 @@ file:<br># set the number of open files to be 1024<br>ulimit -S -n 1024</li>
 <div><br></div>
 <h2>
 Installing Repo <br></h2>
-<div><p>Repo is a tool that makes it easier to work with Git in the context of Android. For more information about Repo, see <a href="http://source.android.com/download/using-repo">Using Repo and Git</a>
+<div><p>Repo is a tool that makes it easier to work with Git in the context of
+Android. For more information about Repo, see <a
+href="{@docRoot}source/git-repo.html">Using Repo and Git</a>
 .<br></p>
 To install, initialize, and configure Repo, follow these steps:<br><br></div>
 <ol><li><span>Make sure you have a~/bindirectory in your home directory, and check to be sure that this bin directory is in your path:</span>
@@ -304,10 +239,10 @@ Getting the files</h2>
 <div><span><span>To pull down files to your working directory from the repositories as specified in the default manifest, run</span>
 <br><br>$ repo sync <i><br></i>
 <br><span>For more aboutrepo syncand other Repo commands, see</span>
-<a href="http://source.android.com/download/using-repo">Using Repo and Git</a>
+<a href="{@docRoot}source/git-repo.html">Using Repo and Git</a>
 <span>.</span>
-<br><br><span>The Android source files will be located in your working directory under their <a href="http://source.android.com/projects">project</a>
-names.</span>
+<br><br><span>The Android source files will be located in your working
+directory under their project names.</span>
 </span>
 <br></div>
 <span><h2>
@@ -335,7 +270,7 @@ Building the code</h2>
 <p>$ export ANDROID_JAVA_HOME=$JAVA_HOME</p>
 <h2>
 Using an IDE</h2>
-<ul><li><a href="http://source.android.com/using-eclipse">Using Eclipse</a>
+<ul><li><a href="{@docRoot}source/using-eclipse.html">Using Eclipse</a>
 for Android platform development <br></li>
 </ul>
 <h2>
@@ -357,9 +292,10 @@ What's next?</h2>
 </span>
 <span>To learn about reporting an issue and searching previously reported issues,</span>
 <span>see</span>
-<a href="http://source.android.com/report-bugs">Report bugs</a>
+<a href="{@docRoot}source/report-bugs.html">Report bugs</a>
 <span>.</span>
-<span>For information about editing the files and uploading changes to the code-review server, see <a href="http://source.android.com/submit-patches">Contribute</a>
+<span>For information about editing the files and uploading changes to the
+code-review server, see <a href="{@docRoot}source/submit-patches.html">Contribute</a>
 .</span>
 </div>
 </div>
