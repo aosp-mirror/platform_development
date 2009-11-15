@@ -19,8 +19,10 @@ read <a href="{@docRoot}source/life-of-a-bug.html">Life of a Bug</a>.</p>
 <p>We created Android so that all developers can distribute their applications
 to users on an open platform. One of the best ways you can help Android is to
 write cool apps that users love!</p>
-<p>To get started, visit our sister site, <a
-href="http://developer.android.com/">developer.android.com</a>.</p>
+<p>To get started, visit <a
+href="http://developer.android.com/">developer.android.com</a>. This site
+provides the information and tools you need to write applications for
+compatible Android devices, using the SDK.</p>
 
 <h2>Contribute to the Code</h2>
 <p>Code is King. We'd love to review any changes you submit, so please check

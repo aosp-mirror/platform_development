@@ -1,12 +1,14 @@
-page.title=Android Compatibility - Compatibility Test Suite
+page.title=Android 1.5 Features
 doc.type=source
 @jd:body
 <h3><b>Release features - Android 1.5</b>
 </h3>
 <div><div><div><div><b>Previous release highlights</b>
-:<a href="http://source.android.com/release-features---android-1-0">Android 1.0</a>
-<br><br>This page provides a high-level overview of the new features added to Android 1.5. To see the code itself, you can either use the<a href="http://git.source.android.com/">GitWeb</a>
-interface to view snapshots of the files, or you can<a href="http://source.android.com/download">download</a>
+:<a href="{@docRoot}source/overview-1.0.html">Android 1.0</a>
+<br><br>This page provides a high-level overview of the new features added to
+Android 1.5. To see the code itself, you can either use the<a href="http://android.git.kernel.org/">GitWeb</a>
+interface to view snapshots of the files, or you can<a
+href="{@docRoot}source/download.html">download</a>
 the source code onto your local machine. You can use<i>repo init -u</i>
 git://android.git.kernel.org/platform/manifest.git<i>-b android-1.5</i>
 to download the source code for Android 1.5.<br><br><b>User interface refinements:</b>

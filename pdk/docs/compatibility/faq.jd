@@ -1,41 +1,17 @@
-page.title=Android Compatibility - Frequently Asked Questions
+page.title=Frequently Asked Questions
 doc.type=compatibility
 @jd:body
 
-<h3><b>Compatibility FAQ</b></h3>
-<div><div><div><div><div><div><p><b>Contents</b>
-</p>
-<ol><li><a href="#TOC-The-CTS-report-shows-test-failures-"><b>1</b>
-The CTS report shows test failures -- what should I do now?</a>
-</li>
-<li><a href="#TOC-Android-1.5-CTS-r1-known-issues"><b>2</b>
-Android 1.5 CTS r1 known issues</a>
-</li>
-<li><a href="#TOC-Can-I-remove-the-final-modifier-fro"><b>3</b>
-Can I remove the 'final' modifier from classes in the Android public APIs and still be an Android-compatible device?</a>
-</li>
-<li><a href="#TOC-I-see-a-failure-in-my-report-with-t"><b>4</b>
-I see a failure in my report with the comment "A test that was a known failure actually passed. Please check." -- what does this mean?</a>
-</li>
-<li><a href="#TOC-Why-are-compass-and-accelerometer-r"><b>5</b>
-Why are compass and accelerometer required for Android compatibility?</a>
-</li>
-</ol>
-</div>
-</div>
-</div>
-</div>
-</div>
 <h3>
 The CTS report shows test failures -- what should I do now?
 </h3>
 <div><div><b>Step 1: Get the latest CTS version.</b>
-Make sure you are running the latest version of CTS -- check if your version is the same as the one posted on the<a href="http://sites.google.com/a/android.com/compatibility/download-cts">Downloads</a>
+Make sure you are running the latest version of CTS -- check if your version is the same as the one posted on the <a href="http://sites.google.com/a/android.com/compatibility/download-cts">Downloads</a>
 page. If not, make sure you update to the latest version and re-run CTS. As we find issues in CTS, we push out new versions with fixes to the tests and/or frame-work. Using the latest version minimizes the chances of you facing any CTS specific issues.
 </div>
 <div><br></div>
 <div><b>Step 2: Investigate the CTS source code.</b>
-Make sure you have grabbed the CTS sources provided on the<a href="http://sites.google.com/a/android.com/compatibility/download-cts">Download</a>
+Make sure you have grabbed the CTS sources provided on the <a href="http://sites.google.com/a/android.com/compatibility/download-cts">Download</a>
 page. Then unzip the CTS report zip$CTS_ROOT/repository/results/start time.zipand opentestResult.xmlin your favorite browser. Find the exception next to the failing test and check the corresponding source file for possible failure causes.</div>
 <div><br></div>
 <div><b>Step 3: Fix the error in your source and re-run CTS.</b>
@@ -54,7 +30,7 @@ Android 1.5 CTS r1 known issues
 <div><br></div>
 <div><b>The following tests have known issues with non en_US locales:</b>
 </div>
-<div>tests.api.java.io.PrintStreamTest#test_formatLjava_util_Locale_Ljava_lang_String_$Ljava_lang_Object<br>tests.api.java.io.PrintStreamTest#test_printfLjava_util_Locale_Ljava_lang_String_$Ljava_lang_Object<br>tests.api.java.io.PrintWriterTest#test_formatLjava_util_Locale_Ljava_lang_String_$Ljava_lang_Object<br>tests.api.java.io.PrintWriterTest#test_printfLjava_util_Locale_Ljava_lang_String_$Ljava_lang_Object<br>tests.api.java.util.CalendarTest#test_hashCode<br>tests.api.java.util.CalendarTest#test_getFirstDayOfWeek<br>tests.api.java.util.CalendarTest#test_getInstanceLjava_util_Locale<br>tests.api.java.util.CalendarTest#test_getInstanceLjava_util_TimeZoneLjava_util_Locale<br>tests.api.java.util.CalendarTest#test_getMinimalDaysInFirstWeek<br>tests.api.java.util.FormatterTest#test_formatLjava_lang_String$Ljava_lang_Object_ByteShortIntegerLongConversionD<br>tests.api.java.util.FormatterTest#test_formatLjava_lang_String$Ljava_lang_Object_DateTimeConversion<br>tests.api.java.util.FormatterTest#test_formatLjava_lang_String$LBigInteger<br>tests.api.java.util.FormatterTest#test_formatLjava_lang_String$Ljava_lang_Object_BigIntegerPaddingConversion<br>tests.api.java.util.FormatterTest#test_formatLjava_util_LocaleLjava_lang_StringLjava_lang_Object<br>tests.api.java.util.GregorianCalendarTest#test_ConstructorLjava_util_Locale<br>tests.api.java.util.LocaleTest#test_getDisplayCountryLjava_util_Locale<br>tests.api.java.util.LocaleTest#test_getDisplayLanguageLjava_util_Locale<br>tests.api.java.util.LocaleTest#test_getDisplayNameLjava_util_Locale<br>tests.api.java.util.ScannerTest#test_nextDouble<br>tests.api.java.util.ScannerTest#test_nextFloat<br>tests.api.java.util.ScannerTest#test_nextInt<br>tests.api.java.util.ScannerTest#test_nextIntI<br>tests.api.java.util.ScannerTest#test_nextLong<br>tests.api.java.util.ScannerTest#test_nextShortI<br>tests.api.java.util.ScannerTest#test_nextShort<br>tests.api.java.util.ScannerTest#test_nextLongI<br>tests.api.java.util.ScannerTest#test_hasNextIntI<br>tests.api.java.util.ScannerTest#test_hasNextInt<br>tests.api.java.util.ScannerTest#test_hasNextFloat<br>tests.api.java.util.ScannerTest#test_hasNextShortI<br>tests.api.java.util.ScannerTest#test_hasNextShort<br>tests.api.java.util.ScannerTest#test_hasNextLongI<br>tests.api.java.util.ScannerTest#test_hasNextLong<br>tests.api.java.util.ScannerTest#test_hasNextDouble<br>tests.api.java.util.ScannerTest#test_hasNextBigDecimal<br>tests.api.java.util.ScannerTest#test_nextBigDecimal<br>tests.api.java.util.TimeZoneTest#test_getDisplayNameLjava_util_Locale<br>tests.api.java.util.TimeZoneTest#test_getDisplayNameZILjava_util_Locale<br>org.apache.harmony.text.tests.java.text.DateFormatTest#test_getAvailableLocales<br>org.apache.harmony.text.tests.java.text.DecimalFormatSymbolsTest#test_getCurrency<br>org.apache.harmony.text.tests.java.text.DecimalFormatTest#test_formatToCharacterIteratorLjava_lang_Object<br>org.apache.harmony.text.tests.java.text.NumberFormatTest#test_getInstanceLjava_util_Locale<br>org.apache.harmony.text.tests.java.text.NumberFormatTest#test_parseObjectLjava_lang_StringLjava_text_ParsePosition<br>org.apache.harmony.text.tests.java.text.NumberFormatTest#test_getIntegerInstanceLjava_util_Locale<br>org.apache.harmony.text.tests.java.text.NumberFormatTest#test_formatLdouble<br>org.apache.harmony.text.tests.java.text.NumberFormatTest#test_formatLlong<br>org.apache.harmony.text.tests.java.text.NumberFormatTest#test_getCurrencyInstanceLjava_util_Locale<br>org.apache.harmony.text.tests.java.text.NumberFormatTest#test_getNumberInstanceLjava_util_Locale<br>org.apache.harmony.text.tests.java.text.NumberFormatTest#test_getPercentInstanceLjava_util_Locale<br>org.apache.harmony.text.tests.java.text.NumberFormatTest#test_setGroupingUsed<br><br></div>
+<div>tests.api.java.io.PrintStreamTest#test_formatLjava_util_Locale_Ljava_lang_String_$Ljava_lang_Object <br>tests.api.java.io.PrintStreamTest#test_printfLjava_util_Locale_Ljava_lang_String_$Ljava_lang_Object <br>tests.api.java.io.PrintWriterTest#test_formatLjava_util_Locale_Ljava_lang_String_$Ljava_lang_Object <br>tests.api.java.io.PrintWriterTest#test_printfLjava_util_Locale_Ljava_lang_String_$Ljava_lang_Object <br>tests.api.java.util.CalendarTest#test_hashCode <br>tests.api.java.util.CalendarTest#test_getFirstDayOfWeek <br>tests.api.java.util.CalendarTest#test_getInstanceLjava_util_Locale <br>tests.api.java.util.CalendarTest#test_getInstanceLjava_util_TimeZoneLjava_util_Locale <br>tests.api.java.util.CalendarTest#test_getMinimalDaysInFirstWeek <br>tests.api.java.util.FormatterTest#test_formatLjava_lang_String$Ljava_lang_Object_ByteShortIntegerLongConversionD <br>tests.api.java.util.FormatterTest#test_formatLjava_lang_String$Ljava_lang_Object_DateTimeConversion <br>tests.api.java.util.FormatterTest#test_formatLjava_lang_String$LBigInteger <br>tests.api.java.util.FormatterTest#test_formatLjava_lang_String$Ljava_lang_Object_BigIntegerPaddingConversion <br>tests.api.java.util.FormatterTest#test_formatLjava_util_LocaleLjava_lang_StringLjava_lang_Object <br>tests.api.java.util.GregorianCalendarTest#test_ConstructorLjava_util_Locale <br>tests.api.java.util.LocaleTest#test_getDisplayCountryLjava_util_Locale <br>tests.api.java.util.LocaleTest#test_getDisplayLanguageLjava_util_Locale <br>tests.api.java.util.LocaleTest#test_getDisplayNameLjava_util_Locale <br>tests.api.java.util.ScannerTest#test_nextDouble <br>tests.api.java.util.ScannerTest#test_nextFloat <br>tests.api.java.util.ScannerTest#test_nextInt <br>tests.api.java.util.ScannerTest#test_nextIntI <br>tests.api.java.util.ScannerTest#test_nextLong <br>tests.api.java.util.ScannerTest#test_nextShortI <br>tests.api.java.util.ScannerTest#test_nextShort <br>tests.api.java.util.ScannerTest#test_nextLongI <br>tests.api.java.util.ScannerTest#test_hasNextIntI <br>tests.api.java.util.ScannerTest#test_hasNextInt <br>tests.api.java.util.ScannerTest#test_hasNextFloat <br>tests.api.java.util.ScannerTest#test_hasNextShortI <br>tests.api.java.util.ScannerTest#test_hasNextShort <br>tests.api.java.util.ScannerTest#test_hasNextLongI <br>tests.api.java.util.ScannerTest#test_hasNextLong <br>tests.api.java.util.ScannerTest#test_hasNextDouble <br>tests.api.java.util.ScannerTest#test_hasNextBigDecimal <br>tests.api.java.util.ScannerTest#test_nextBigDecimal <br>tests.api.java.util.TimeZoneTest#test_getDisplayNameLjava_util_Locale <br>tests.api.java.util.TimeZoneTest#test_getDisplayNameZILjava_util_Locale <br>org.apache.harmony.text.tests.java.text.DateFormatTest#test_getAvailableLocales <br>org.apache.harmony.text.tests.java.text.DecimalFormatSymbolsTest#test_getCurrency <br>org.apache.harmony.text.tests.java.text.DecimalFormatTest#test_formatToCharacterIteratorLjava_lang_Object <br>org.apache.harmony.text.tests.java.text.NumberFormatTest#test_getInstanceLjava_util_Locale <br>org.apache.harmony.text.tests.java.text.NumberFormatTest#test_parseObjectLjava_lang_StringLjava_text_ParsePosition <br>org.apache.harmony.text.tests.java.text.NumberFormatTest#test_getIntegerInstanceLjava_util_Locale <br>org.apache.harmony.text.tests.java.text.NumberFormatTest#test_formatLdouble <br>org.apache.harmony.text.tests.java.text.NumberFormatTest#test_formatLlong <br>org.apache.harmony.text.tests.java.text.NumberFormatTest#test_getCurrencyInstanceLjava_util_Locale <br>org.apache.harmony.text.tests.java.text.NumberFormatTest#test_getNumberInstanceLjava_util_Locale <br>org.apache.harmony.text.tests.java.text.NumberFormatTest#test_getPercentInstanceLjava_util_Locale <br>org.apache.harmony.text.tests.java.text.NumberFormatTest#test_setGroupingUsed <br><br></div>
 <div><br></div>
 <h3>
 Can I remove the 'final' modifier from classes in the Android public APIs and still be an Android-compatible device?
@@ -107,18 +83,18 @@ I see a failure in my report with the comment "A test that was a known failure a
 <h3>
 Why are compass and accelerometer required for Android compatibility?
 </h3>
-<div>Whenever possible, we try to open up hardware options by making the Android software smarter.For example, in Android 1.5 we added an Input Method Framework and soft keyboard so that devices didn't need physical text input devices.The Android<i>Donut</i>
+<div>Whenever possible, we try to open up hardware options by making the Android software smarter.For example, in Android 1.5 we added an Input Method Framework and soft keyboard so that devices didn't need physical text input devices.The Android <i>Donut</i>
 release will the ability to scale application windows to different densities and resolutions so that devices aren't restricted to 160-180dpi HVGA displays.<br><br>Unfortunately, software can only do so much, and a compass and accelerometer are things Android cannot replace with software.These two input devices are now commonly used by applications.For example, many of the most popular applications in Android Market:<br><br>-<a href="http://www.android.com/market/featured.html#app=skymap"><i>Google Sky Map</i>
 </a>
-uses compass and accelerometer<br>-<a href="http://www.android.com/market/free.html#app=labyrinth"><i>Labyrinth</i>
+uses compass and accelerometer <br>-<a href="http://www.android.com/market/free.html#app=labyrinth"><i>Labyrinth</i>
 </a>
-uses accelerometer<br>-<a href="http://www.android.com/market/free.html#app=bonsaiblast"><i>Bonzai Blast</i>
+uses accelerometer <br>-<a href="http://www.android.com/market/free.html#app=bonsaiblast"><i>Bonzai Blast</i>
 </a>
-uses accelerometer<br>-<a href="http://www.android.com/market/featured.html#app=wikitude"><i>Wikitude</i>
+uses accelerometer <br>-<a href="http://www.android.com/market/featured.html#app=wikitude"><i>Wikitude</i>
 </a>
-uses compass and accelerometer<br>-<a href="http://www.android.com/market/featured.html#app=zagatnru"><i>Zagat</i>
+uses compass and accelerometer <br>-<a href="http://www.android.com/market/featured.html#app=zagatnru"><i>Zagat</i>
 </a>
-uses compass<br><br>As Market has no way of knowing whether an application uses these controls, we would not be able to filter these out of Android Market for devices which don't have the required hardware.This would create a bad user experience and could hurt the Android ecosystem if developers can no longer rely on these features in handsets, or receive bad reviews from consumers who have devices which can't support the features.<br></div>
+uses compass <br><br>As Market has no way of knowing whether an application uses these controls, we would not be able to filter these out of Android Market for devices which don't have the required hardware.This would create a bad user experience and could hurt the Android ecosystem if developers can no longer rely on these features in handsets, or receive bad reviews from consumers who have devices which can't support the features.<br></div>
 <div><br></div>
 </div>
 </div>

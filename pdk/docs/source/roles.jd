@@ -13,14 +13,6 @@ questions, contribute patches, report bugs, look at submitted patches, and use
 the tools. To get started with the Android code, see <a
 href="{@docRoot}source/index.html">Get Involved</a>.</p>
 
-<h2>AOSP Member</h2>
-<p>"AOSP Member" is a somewhat loose term, but generally refers to
-those organizations who are key contributors to Android, and who are managing
-the product requirements process and core engineering.  You can think of this
-group as the Android "core team" responsible for Android's overall success in
-the marketplace. One of the most prominent AOSP members is Google.</p>
-<p/>
-
 <h2>Contributor</h2>
 <p>A "Contributor" is anyone making contributions to the AOSP source code,
 including both employees or other affiliates of an AOSP Member, as well as

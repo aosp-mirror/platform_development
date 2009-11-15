@@ -34,21 +34,23 @@ href="http://developer.android.com/community/index.html">http://developer.androi
   read <a href="http://www.catb.org/%7Eesr/faqs/smart-questions.html">How To
   Ask Questions The Smart Way</a>.</li>
 </ol>
+
 <h2>Open Source Project discussions</h2>
 <ul>
+<li><b>android-building</b><br/>
+Subscribe to this list for discussion and help on building the Android source
+code, and on the build system. If you've just checked out the source code and
+have questions about how to turn it into binaries, start here.<br/><br/>
+Subscribe using Google Groups: <a
+href="http://groups.google.com/group/android-building">android-building</a><br/>
+Subscribe via email: <a href="mailto:android-building+subscribe@googlegroups.com">android-building+subscribe@googlegroups.com</a>
+</li>
+
 <li><b>android-platform</b><br/>
 This list is for developers who want to contribute code to the Android
 user-space projects, such as the core system libraries, the Android
-services, the public APIs, or the built-in applications. Before posting,
-please be sure you've downloaded the source code, compiled it, read through
-it, and are at the point where you're going to be making changes of your own
-to contribute into the Android source code. You can use this list to
-coordinate your efforts with those of other contributors, and
-discuss architecture, design and implementation. Please use android-kernel for
-discussions about contributing to the kernel, android-porting if you're
-porting Android to your own hardware or making changes that you're not going
-to contribute back, android-developers if you're writing applications with the
-SDK, or android-discuss for everything else.<br/><br/>
+services, the public APIs, or the built-in applications. Note: contributors
+to the Android kernel should go to the android-kernel list, below.<br/><br/>
 Subscribe using Google Groups: <a
 href="http://groups.google.com/group/android-platform">android-platform</a><br/>
 Subscribe via email: <a href="mailto:android-platform+subscribe@googlegroups.com">android-platform+subscribe@googlegroups.com</a>
@@ -76,16 +78,6 @@ call you naughty if you ask user-space questions here.<br/><br/>
 Subscribe using Google Groups: <a
 href="http://groups.google.com/group/android-kernel">android-kernel</a><br/>
 Subscribe via email: <a href="mailto:android-kernel+subscribe@googlegroups.com">android-kernel+subscribe@googlegroups.com</a>
-</li>
-
-<li><b>Repo and Gerrit discussion</b><br/>
-This list is for discussions on everything related to the process used to
-manage the Android source code with repo and gerrit: downloading the source
-code, submitting changes for review, commenting on code being reviewed,
-submitting changes for the world to enjoy.<br/><br/>
-Subscribe using Google Groups: <a
-href="http://groups.google.com/group/repo-discuss">repo-discuss</a><br/>
-Subscribe via email: <a href="mailto:repo-discuss+subscribe@googlegroups.com">repo-discuss+subscribe@googlegroups.com</a>
 </li>
 </ul>
 

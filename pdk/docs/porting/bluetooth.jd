@@ -170,7 +170,7 @@ sdptool records ADDRESS # request the SDP records of another BT device.
 
 <p><strong>Development Notes</strong></p>
 <ul>
-  <li><strong>HID Support<br />
+  <li><strong>HID Support <br />
   </strong>Cupcake features some early work&#151;Bluez has an HID plugin, <code>external/bluez/utils/input/Android.mk</code>, which gets compiled. <br />
     <br />
 You can interact directly with this plugin using <code>dbus-send</code></span> and <code>dbus-monitor</code>. While not officially supported, you should be able to connect and use a HID keyboard and mouse using the Bluez HID plugin API. Next steps include plumbing the plugin API in the Android Java framework and offering better support for HID input methods (new keymaps and mouse support).<br />

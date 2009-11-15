@@ -264,7 +264,7 @@ runs a service. Options are described in the table below:</p>
     </tr>
   </table>
   <p>    Properties</p>
-    Init updates some system properties to provide some insight into<br />
+    Init updates some system properties to provide some insight into <br />
     what it's doing:</p>
   <table>
     <tr>

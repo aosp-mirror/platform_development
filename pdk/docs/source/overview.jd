@@ -3,9 +3,9 @@ doc.type=source
 @jd:body
 <p>This page provides a high-level overview of the new features added to
 Android 1.6. To see the code itself, you can either use the <a
-href="http://git.source.android.com/">GitWeb</a>
+href="http://android.git.kernel.org/">GitWeb</a>
 interface to view snapshots of the files, or you can <a
-href="http://source.android.com/download/idex.html">download</a>
+href="{@docRoot}source/download.html">download</a>
 the source code onto your local machine. You can use <code>repo init -u
 git://android.git.kernel.org/platform/manifest.git -b android-1.6</code>
 to download the source code for Android 1.6.</p>

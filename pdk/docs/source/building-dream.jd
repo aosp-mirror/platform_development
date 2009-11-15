@@ -1,9 +1,12 @@
-page.title=Android Compatibility - Compatibility Test Suite
+page.title=Building for ADP1
 doc.type=source
 @jd:body
-<h3><b>Building For Dream</b>
-</h3>
-<div>The basic manifest for cupcake (and above) defines which projects are needed to do a generic build for the emulator or for unlocked Dream devices (e.g. the Android Dev Phone 1). You need to have an appropriate device running a matching official image.<br><br>To build donut or master for dream (your device needs to be an ADP1 running an official 1.6 system):<br><ol><li>Follow the<a href="http://source.android.com/download">normal steps</a>
+<div>The basic manifest for cupcake (and above) defines which projects are
+needed to do a generic build for the emulator or for unlocked Dream devices
+(e.g. the Android Dev Phone 1). You need to have an appropriate device running
+a matching official image.<br><br>To build donut or master for dream (your
+device needs to be an ADP1 running an official 1.6 system):<br><ol><li>Follow
+the <a href="{@docRoot}source/download.html">normal steps</a>
 to setup repo and check out the sources.
 </li>
 <li>At the root of your source tree, run ". build/envsetup.sh" like you normally would for an emulator build.
@@ -17,7 +20,7 @@ to setup repo and check out the sources.
 </li>
 <li>from this point, the fastboot tool (which is put automatically in your path) can be used to flash a device: boot the device into the bootloader by holding the back key while pressing the power key, and run "fastboot -w flashall".<br></li>
 </ol>
-To build cupcake for dream (your device needs to be an ADP1 running an official 1.5 system):<br><ol><li>Follow the<a href="http://source.android.com/download">normal steps</a>
+To build cupcake for dream (your device needs to be an ADP1 running an official 1.5 system):<br><ol><li>Follow the <a href="{@docRoot}source/download.html">normal steps</a>
 to setup repo and check out the sources.
 </li>
 <li>At the root of your source tree, run ". build/envsetup.sh" like you normally would for an emulator build.
