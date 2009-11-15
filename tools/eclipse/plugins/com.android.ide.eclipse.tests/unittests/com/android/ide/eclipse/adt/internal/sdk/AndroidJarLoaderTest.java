@@ -40,7 +40,8 @@ public class AndroidJarLoaderTest extends TestCase {
     /** Creates an instance of {@link AndroidJarLoader} on our test data JAR */ 
     @Override
     public void setUp() throws Exception {
-        String jarfilePath = AdtTestData.getInstance().getTestFilePath("jar_example.jar");  //$NON-NLS-1$
+        String jarfilePath = AdtTestData.getInstance().getTestFilePath(
+                "com/android/ide/eclipse/testdata/jar_example.jar");  //$NON-NLS-1$
         mFrameworkClassLoader = new AndroidJarLoader(jarfilePath);
     }
 

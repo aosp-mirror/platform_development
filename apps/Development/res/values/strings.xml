@@ -77,6 +77,9 @@
     <string name="development_settings_always_finish_text">Immediately destroy activities</string>
     <string name="development_settings_show_load_text">Show running processes</string>
     <string name="development_settings_show_updates_text">Show screen updates</string>
+    <string name="development_settings_compatibility_mode_text">Disable compatibility mode</string>
+    <string name="development_settings_compatibility_mode_toast">Reboot required for
+            change to take effect.</string>
     <string name="development_settings_enable_gl_text">Enable OpenGL ES (reboot needed)</string>
     <string name="development_settings_allow_mock_location_text">Allow mock locations for testing</string>
     <string name="development_settings_wait_for_debugger_text">Wait for debugger</string>
@@ -133,4 +136,44 @@
     <string name="perm_list_header_text">Apps using permission  </string>
     <string name="source_uid_text">Source uid :  </string>
     <string name="shared_pkgs_text">Packages accessing via shared uid :  </string>
+
+    <!-- AccountsTester -->
+    <string name="accounts_tester_app_name">Accounts Tester</string>
+    <string name="accounts_tester_get_accounts_by_type">Get By Type</string>
+    <string name="accounts_tester_get_all_accounts">Get All</string>
+    <string name="accounts_tester_add_account">Add</string>
+    <string name="accounts_tester_select_account_type">Select Account Type</string>
+    <string name="accounts_tester_process_name_header">Process Name:</string>
+    <string name="accounts_tester_remove_account">remove</string>
+    <string name="accounts_tester_get_auth_token">authenticate</string>
+    <string name="accounts_tester_invalidate_auth_token">invalidate token</string>
+    <string name="accounts_tester_account_context_menu_title">account operations</string>
+    <string name="accounts_tester_do_get_auth_token">Ok</string>
+    <string name="accounts_tester_enter_auth_token_type">Enter the authtoken type:</string>
+    <string name="accounts_tester_update_credentials">Update Credentials</string>
+    <string name="accounts_tester_confirm_credentials">Confirm Credentials</string>
+    <string name="accounts_tester_edit_properties">Properties</string>
+    <string name="accounts_tester_desired_authtokentype_label">authtoken type:</string>
+    <string name="accounts_tester_desired_features_label">features:</string>
+
+    <!-- SyncAdapterDriver -->
+    <string name="bind_button">bind</string>
+    <string name="unbind_button">unbind</string>
+    <string name="start_sync_button">start sync</string>
+    <string name="cancel_sync_button">cancel sync</string>
+    <string name="sync_adapters_spinner_label">Registered Sync Adapters:</string>
+    <string name="status_starting_sync_format">Starting a sync of account %s...</string>
+    <string name="status_remote_exception_while_starting_sync">Got a RemoteException while starting the sync</string>
+    <string name="status_canceled_sync">Canceled the sync</string>
+    <string name="status_remote_exception_while_canceling_sync">Got a RemoteException while canceling the sync</string>
+    <string name="status_received_heartbeat">Received heartbeat</string>
+    <string name="status_sync_failed_format">Sync failed: %s</string>
+    <string name="status_sync_succeeded_format">Sync succeeded: %s</string>
+    <string name="status_already_bound">Already bound to sync adapter</string>
+    <string name="status_sync_adapter_not_selected">No selected sync adapter</string>
+    <string name="binding_connected_format">Connected to Sync Adapter\n\tauthority: %s\n\taccount type: %s</string>
+    <string name="binding_not_connected">Not connected to a sync adapter</string>
+    <string name="binding_bind_failed">Bind failed</string>
+    <string name="binding_waiting_for_connection">Waiting for service to be connected...</string>
+    <string name="select_account_to_sync">Select account to sync</string>
 </resources>

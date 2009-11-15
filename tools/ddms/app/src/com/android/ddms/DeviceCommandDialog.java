@@ -138,7 +138,7 @@ public class DeviceCommandDialog extends Dialog {
         shell.addListener(SWT.Close, new Listener() {
             public void handleEvent(Event event) {
                 if (!mFinished) {
-                    Log.i("ddms", "NOT closing - cancelling command");
+                    Log.d("ddms", "NOT closing - cancelling command");
                     event.doit = false;
                     mCancel = true;
                 }
@@ -354,7 +354,7 @@ public class DeviceCommandDialog extends Dialog {
             PrefsDialog.getStore().setValue("lastTextSaveDir",
                                             dlg.getFilterPath());
 
-            Log.i("ddms", "Saving output to " + fileName);
+            Log.d("ddms", "Saving output to " + fileName);
 
             /*
              * Convert to 8-bit characters.

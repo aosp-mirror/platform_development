@@ -40,8 +40,6 @@ final class AdbHelper {
 
     static final int WAIT_TIME = 5; // spin-wait sleep, in ms
 
-    public static final int STD_TIMEOUT = 5000; // standard delay, in ms
-
     static final String DEFAULT_ENCODING = "ISO-8859-1"; //$NON-NLS-1$
 
     /** do not instantiate */
@@ -288,7 +286,8 @@ final class AdbHelper {
                 return null;
             }
 
-            reply = new byte[16];
+            // first the protocol version.
+            reply = new byte[4];
             if (read(adbChan, reply) == false) {
                 Log.w("ddms", "got partial reply from ADB fb:");
                 Log.hexDump("ddms", LogLevel.WARN, reply, 0, reply.length);
@@ -298,10 +297,27 @@ final class AdbHelper {
             ByteBuffer buf = ByteBuffer.wrap(reply);
             buf.order(ByteOrder.LITTLE_ENDIAN);
 
-            imageParams.bpp = buf.getInt();
-            imageParams.size = buf.getInt();
-            imageParams.width = buf.getInt();
-            imageParams.height = buf.getInt();
+            int version = buf.getInt();
+
+            // get the header size (this is a count of int)
+            int headerSize = RawImage.getHeaderSize(version);
+
+            // read the header
+            reply = new byte[headerSize * 4];
+            if (read(adbChan, reply) == false) {
+                Log.w("ddms", "got partial reply from ADB fb:");
+                Log.hexDump("ddms", LogLevel.WARN, reply, 0, reply.length);
+                adbChan.close();
+                return null;
+            }
+            buf = ByteBuffer.wrap(reply);
+            buf.order(ByteOrder.LITTLE_ENDIAN);
+
+            // fill the RawImage with the header
+            if (imageParams.readHeader(version, buf) == false) {
+                Log.e("Screenshot", "Unsupported protocol: " + version);
+                return null;
+            }
 
             Log.d("ddms", "image params: bpp=" + imageParams.bpp + ", size="
                     + imageParams.size + ", width=" + imageParams.width
@@ -316,6 +332,7 @@ final class AdbHelper {
                 adbChan.close();
                 return null;
             }
+
             imageParams.data = reply;
         } finally {
             if (adbChan != null) {
@@ -576,7 +593,7 @@ final class AdbHelper {
      */
     static boolean read(SocketChannel chan, byte[] data) {
        try {
-           read(chan, data, -1, STD_TIMEOUT);
+           read(chan, data, -1, DdmPreferences.getTimeOut());
        } catch (IOException e) {
            Log.d("ddms", "readAll: IOException: " + e.getMessage());
            return false;
@@ -613,7 +630,7 @@ final class AdbHelper {
             } else if (count == 0) {
                 // TODO: need more accurate timeout?
                 if (timeout != 0 && numWaits * WAIT_TIME > timeout) {
-                    Log.i("ddms", "read: timeout");
+                    Log.d("ddms", "read: timeout");
                     throw new IOException("timeout");
                 }
                 // non-blocking spin
@@ -636,7 +653,7 @@ final class AdbHelper {
      */
     static boolean write(SocketChannel chan, byte[] data) {
         try {
-            write(chan, data, -1, STD_TIMEOUT);
+            write(chan, data, -1, DdmPreferences.getTimeOut());
         } catch (IOException e) {
             Log.e("ddms", e);
             return false;
@@ -670,7 +687,7 @@ final class AdbHelper {
             } else if (count == 0) {
                 // TODO: need more accurate timeout?
                 if (timeout != 0 && numWaits * WAIT_TIME > timeout) {
-                    Log.i("ddms", "write: timeout");
+                    Log.d("ddms", "write: timeout");
                     throw new IOException("timeout");
                 }
                 // non-blocking spin

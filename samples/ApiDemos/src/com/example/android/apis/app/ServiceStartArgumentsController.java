@@ -21,13 +21,12 @@ package com.example.android.apis.app;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Process;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 
 import com.example.android.apis.R;
-
-import java.util.HashMap;
 
 /**
  * Example of explicitly starting the {@link ServiceStartArguments}.
@@ -46,26 +45,51 @@ public class ServiceStartArgumentsController extends Activity {
         button.setOnClickListener(mStart2Listener);
         button = (Button)findViewById(R.id.start3);
         button.setOnClickListener(mStart3Listener);
+        button = (Button)findViewById(R.id.startfail);
+        button.setOnClickListener(mStartFailListener);
+        button = (Button)findViewById(R.id.kill);
+        button.setOnClickListener(mKillListener);
     }
 
     private OnClickListener mStart1Listener = new OnClickListener() {
         public void onClick(View v) {
             startService(new Intent(ServiceStartArgumentsController.this,
-                    ServiceStartArguments.class).putExtra("name", "One"));
+                    ServiceStartArguments.class)
+                            .putExtra("name", "One"));
         }
     };
 
     private OnClickListener mStart2Listener = new OnClickListener() {
         public void onClick(View v) {
             startService(new Intent(ServiceStartArgumentsController.this,
-                    ServiceStartArguments.class).putExtra("name", "Two"));
+                    ServiceStartArguments.class)
+                            .putExtra("name", "Two"));
         }
     };
 
     private OnClickListener mStart3Listener = new OnClickListener() {
         public void onClick(View v) {
             startService(new Intent(ServiceStartArgumentsController.this,
-                    ServiceStartArguments.class).putExtra("name", "Three"));
+                    ServiceStartArguments.class)
+                            .putExtra("name", "Three")
+                            .putExtra("redeliver", true));
+        }
+    };
+
+    private OnClickListener mStartFailListener = new OnClickListener() {
+        public void onClick(View v) {
+            startService(new Intent(ServiceStartArgumentsController.this,
+                    ServiceStartArguments.class)
+                            .putExtra("name", "Failure")
+                            .putExtra("fail", true));
+        }
+    };
+
+    private OnClickListener mKillListener = new OnClickListener() {
+        public void onClick(View v) {
+            // This is to simulate the service being killed while it is
+            // running in the background.
+            Process.killProcess(Process.myPid());
         }
     };
 }

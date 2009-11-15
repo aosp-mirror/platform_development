@@ -499,7 +499,7 @@ final class MonitorThread extends Thread {
                     throw re;
                 }
             } else {
-                Log.i("ddms", "ignoring duplicate debugger");
+                Log.w("ddms", "ignoring duplicate debugger");
                 // new connection already closed
             }
         }
@@ -542,19 +542,19 @@ final class MonitorThread extends Thread {
              * this won't be necessary, and we can just send a "debugger
              * disconnected" message.
              */
-            Log.i("ddms", "Closing connection to debugger " + dbg);
+            Log.d("ddms", "Closing connection to debugger " + dbg);
             dbg.closeData();
             Client client = dbg.getClient();
             if (client.isDdmAware()) {
                 // TODO: soft-disconnect DDM-aware clients
-                Log.i("ddms", " (recycling client connection as well)");
+                Log.d("ddms", " (recycling client connection as well)");
 
                 // we should drop the client, but also attempt to reopen it.
                 // This is done by the DeviceMonitor.
                 client.getDeviceImpl().getMonitor().addClientToDropAndReopen(client,
                         IDebugPortProvider.NO_STATIC_PORT);
             } else {
-                Log.i("ddms", " (recycling client connection as well)");
+                Log.d("ddms", " (recycling client connection as well)");
                 // we should drop the client, but also attempt to reopen it.
                 // This is done by the DeviceMonitor.
                 client.getDeviceImpl().getMonitor().addClientToDropAndReopen(client,
@@ -747,7 +747,7 @@ final class MonitorThread extends Thread {
             Debugger dbg = mSelectedClient.getDebugger();
 
             if (dbg != null) {
-                Log.i("ddms", "Accepting connection on 'debug selected' port");
+                Log.d("ddms", "Accepting connection on 'debug selected' port");
                 try {
                     acceptNewDebugger(dbg, acceptChan);
                 } catch (IOException ioe) {

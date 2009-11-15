@@ -28,27 +28,40 @@ import com.android.sdklib.internal.avd.HardwareProperties;
 import com.android.sdklib.internal.avd.AvdManager.AvdInfo;
 import com.android.sdklib.internal.avd.HardwareProperties.HardwareProperty;
 import com.android.sdklib.internal.project.ProjectCreator;
+import com.android.sdklib.internal.project.ProjectProperties;
 import com.android.sdklib.internal.project.ProjectCreator.OutputLevel;
+import com.android.sdklib.internal.project.ProjectProperties.PropertyType;
+import com.android.sdklib.xml.AndroidXPathFactory;
 import com.android.sdkmanager.internal.repository.AboutPage;
 import com.android.sdkmanager.internal.repository.SettingsPage;
+import com.android.sdkuilib.internal.repository.LocalPackagesPage;
 import com.android.sdkuilib.repository.UpdaterWindow;
 
+import org.xml.sax.InputSource;
+
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathExpressionException;
 
 /**
  * Main class for the 'android' application.
  */
-class Main {
+public class Main {
 
     /** Java property that defines the location of the sdk/tools directory. */
-    private final static String TOOLSDIR = "com.android.sdkmanager.toolsdir";
+    public final static String TOOLSDIR = "com.android.sdkmanager.toolsdir";
     /** Java property that defines the working directory. On Windows the current working directory
      *  is actually the tools dir, in which case this is used to get the original CWD. */
     private final static String WORKDIR = "com.android.sdkmanager.workdir";
+
+    /** Value returned by {@link #resolveTargetName(String)} when the target id does not match. */
+    private final static int INVALID_TARGET_ID = 0;
 
     private final static String[] BOOLEAN_YES_REPLIES = new String[] { "yes", "y" };
     private final static String[] BOOLEAN_NO_REPLIES = new String[] { "no", "n" };
@@ -218,12 +231,24 @@ class Main {
                 SdkCommandLine.OBJECT_PROJECT.equals(directObject)) {
             createProject();
 
+        } else if (SdkCommandLine.VERB_CREATE.equals(verb) &&
+                SdkCommandLine.OBJECT_TEST_PROJECT.equals(directObject)) {
+            createTestProject();
+
         } else if (SdkCommandLine.VERB_UPDATE.equals(verb) &&
                 SdkCommandLine.OBJECT_PROJECT.equals(directObject)) {
             updateProject();
 
+        } else if (SdkCommandLine.VERB_UPDATE.equals(verb) &&
+                SdkCommandLine.OBJECT_TEST_PROJECT.equals(directObject)) {
+            updateTestProject();
+
         } else if (verb == null && directObject == null) {
-            showMainWindow();
+            showMainWindow(false /*autoUpdate*/);
+
+        } else if (SdkCommandLine.VERB_UPDATE.equals(verb) &&
+                SdkCommandLine.OBJECT_SDK.equals(directObject)) {
+            showMainWindow(true /*autoUpdate*/);
 
         } else if (SdkCommandLine.VERB_UPDATE.equals(verb) &&
                 SdkCommandLine.OBJECT_ADB.equals(directObject)) {
@@ -237,7 +262,7 @@ class Main {
     /**
      * Display the main SdkManager app window
      */
-    private void showMainWindow() {
+    private void showMainWindow(boolean autoUpdate) {
         try {
             // display a message talking about the command line version
             System.out.printf("No command line parameters provided, launching UI.\n" +
@@ -249,6 +274,10 @@ class Main {
                     false /*userCanChangeSdkRoot*/);
             window.registerPage("Settings", SettingsPage.class);
             window.registerPage("About", AboutPage.class);
+            if (autoUpdate) {
+                window.setInitialPage(LocalPackagesPage.class);
+                window.setRequestAutoUpdate(true);
+            }
             window.open();
         } catch (Exception e) {
             e.printStackTrace();
@@ -260,13 +289,13 @@ class Main {
      */
     private void createProject() {
         // get the target and try to resolve it.
-        int targetId = mSdkCommandLine.getParamTargetId();
+        int targetId = resolveTargetName(mSdkCommandLine.getParamTargetId());
         IAndroidTarget[] targets = mSdkManager.getTargets();
-        if (targetId < 1 || targetId > targets.length) {
+        if (targetId == INVALID_TARGET_ID || targetId > targets.length) {
             errorAndExit("Target id is not valid. Use '%s list targets' to get the target ids.",
                     SdkConstants.androidCmdName());
         }
-        IAndroidTarget target = targets[targetId - 1];
+        IAndroidTarget target = targets[targetId - 1];  // target id is 1-based
 
         ProjectCreator creator = new ProjectCreator(mOsSdkFolder,
                 mSdkCommandLine.isVerbose() ? OutputLevel.VERBOSE :
@@ -311,8 +340,121 @@ class Main {
                 packageName,
                 activityName,
                 target,
-                false /* isTestProject*/);
+                null /*pathToMain*/);
     }
+
+    /**
+     * Creates a new Android test project based on command-line parameters
+     */
+    private void createTestProject() {
+
+        String projectDir = getProjectLocation(mSdkCommandLine.getParamLocationPath());
+
+        // first check the path of the parent project, and make sure it's valid.
+        String pathToMainProject = mSdkCommandLine.getParamTestProjectMain();
+
+        File parentProject = new File(pathToMainProject);
+        if (parentProject.isAbsolute() == false) {
+            // if the path is not absolute, we need to resolve it based on the
+            // destination path of the project
+            try {
+                parentProject = new File(projectDir, pathToMainProject).getCanonicalFile();
+            } catch (IOException e) {
+                errorAndExit("Unable to resolve Main project's directory: %1$s",
+                        pathToMainProject);
+                return; // help Eclipse static analyzer understand we'll never execute the rest.
+            }
+        }
+
+        if (parentProject.isDirectory() == false) {
+            errorAndExit("Main project's directory does not exist: %1$s",
+                    pathToMainProject);
+            return;
+        }
+
+        // now look for a manifest in there
+        File manifest = new File(parentProject, SdkConstants.FN_ANDROID_MANIFEST_XML);
+        if (manifest.isFile() == false) {
+            errorAndExit("No AndroidManifest.xml file found in the main project directory: %1$s",
+                    parentProject.getAbsolutePath());
+            return;
+        }
+
+        // now query the manifest for the package file.
+        XPath xpath = AndroidXPathFactory.newXPath();
+        String packageName, activityName;
+
+        try {
+            packageName = xpath.evaluate("/manifest/@package",
+                    new InputSource(new FileInputStream(manifest)));
+
+            mSdkLog.printf("Found main project package: %1$s\n", packageName);
+
+            // now get the name of the first activity we find
+            activityName = xpath.evaluate("/manifest/application/activity[1]/@android:name",
+                    new InputSource(new FileInputStream(manifest)));
+            // xpath will return empty string when there's no match
+            if (activityName == null || activityName.length() == 0) {
+                activityName = null;
+            } else {
+                mSdkLog.printf("Found main project activity: %1$s\n", activityName);
+            }
+        } catch (FileNotFoundException e) {
+            // this shouldn't happen as we test it above.
+            errorAndExit("No AndroidManifest.xml file found in main project.");
+            return; // this is not strictly needed because errorAndExit will stop the execution,
+            // but this makes the java compiler happy, wrt to uninitialized variables.
+        } catch (XPathExpressionException e) {
+            // looks like the main manifest is not valid.
+            errorAndExit("Unable to parse main project manifest to get information.");
+            return; // this is not strictly needed because errorAndExit will stop the execution,
+                    // but this makes the java compiler happy, wrt to uninitialized variables.
+        }
+
+        // now get the target hash
+        ProjectProperties p = ProjectProperties.load(parentProject.getAbsolutePath(),
+                PropertyType.DEFAULT);
+        String targetHash = p.getProperty(ProjectProperties.PROPERTY_TARGET);
+        if (targetHash == null) {
+            errorAndExit("Couldn't find the main project target");
+            return;
+        }
+
+        // and resolve it.
+        IAndroidTarget target = mSdkManager.getTargetFromHashString(targetHash);
+        if (target == null) {
+            errorAndExit(
+                    "Unable to resolve main project target '%1$s'. You may want to install the platform in your SDK.",
+                    targetHash);
+            return;
+        }
+
+        mSdkLog.printf("Found main project target: %1$s\n", target.getFullName());
+
+        ProjectCreator creator = new ProjectCreator(mOsSdkFolder,
+                mSdkCommandLine.isVerbose() ? OutputLevel.VERBOSE :
+                    mSdkCommandLine.isSilent() ? OutputLevel.SILENT :
+                        OutputLevel.NORMAL,
+                mSdkLog);
+
+        String projectName = mSdkCommandLine.getParamName();
+
+        if (projectName != null &&
+                !ProjectCreator.RE_PROJECT_NAME.matcher(projectName).matches()) {
+            errorAndExit(
+                "Project name '%1$s' contains invalid characters.\nAllowed characters are: %2$s",
+                projectName, ProjectCreator.CHARS_PROJECT_NAME);
+            return;
+        }
+
+        creator.createProject(projectDir,
+                projectName,
+                packageName,
+                activityName,
+                target,
+                pathToMainProject);
+    }
+
 
     /**
      * Updates an existing Android project based on command-line parameters
@@ -320,14 +462,18 @@ class Main {
     private void updateProject() {
         // get the target and try to resolve it.
         IAndroidTarget target = null;
-        int targetId = mSdkCommandLine.getParamTargetId();
-        if (targetId >= 0) {
+        String targetStr = mSdkCommandLine.getParamTargetId();
+        // For "update project" the target parameter is optional so having null is acceptable.
+        // However if there's a value, it must be valid.
+        if (targetStr != null) {
             IAndroidTarget[] targets = mSdkManager.getTargets();
-            if (targetId < 1 || targetId > targets.length) {
-                errorAndExit("Target id is not valid. Use '%s list targets' to get the target ids.",
+            int targetId = resolveTargetName(targetStr);
+            if (targetId == INVALID_TARGET_ID || targetId > targets.length) {
+                errorAndExit("Target id '%1$s' is not valid. Use '%2$s list targets' to get the target ids.",
+                        targetStr,
                         SdkConstants.androidCmdName());
             }
-            target = targets[targetId - 1];
+            target = targets[targetId - 1];  // target id is 1-based
         }
 
         ProjectCreator creator = new ProjectCreator(mOsSdkFolder,
@@ -368,6 +514,21 @@ class Main {
             mSdkLog.printf("It seems that there are sub-projects. If you want to update them\nplease use the --%1$s parameter.",
                     SdkCommandLine.KEY_SUBPROJECTS);
         }
+    }
+
+    /**
+     * Updates an existing test project with a new path to the main project.
+     */
+    private void updateTestProject() {
+        ProjectCreator creator = new ProjectCreator(mOsSdkFolder,
+                mSdkCommandLine.isVerbose() ? OutputLevel.VERBOSE :
+                    mSdkCommandLine.isSilent() ? OutputLevel.SILENT :
+                        OutputLevel.NORMAL,
+                mSdkLog);
+
+        String projectDir = getProjectLocation(mSdkCommandLine.getParamLocationPath());
+
+        creator.updateTestProject(projectDir, mSdkCommandLine.getParamTestProjectMain());
     }
 
     /**
@@ -412,7 +573,7 @@ class Main {
 
         int index = 1;
         for (IAndroidTarget target : mSdkManager.getTargets()) {
-            mSdkLog.printf("id: %d\n", index);
+            mSdkLog.printf("id: %1$d or \"%2$s\"\n", index, target.hashString());
             mSdkLog.printf("     Name: %s\n", target.getName());
             if (target.isPlatform()) {
                 mSdkLog.printf("     Type: Platform\n");
@@ -557,15 +718,15 @@ class Main {
      */
     private void createAvd() {
         // find a matching target
-        int targetId = mSdkCommandLine.getParamTargetId();
-        IAndroidTarget target = null;
+        int targetId = resolveTargetName(mSdkCommandLine.getParamTargetId());
+        IAndroidTarget[] targets = mSdkManager.getTargets();
 
-        if (targetId >= 1 && targetId <= mSdkManager.getTargets().length) {
-            target = mSdkManager.getTargets()[targetId-1]; // target it is 1-based
-        } else {
+        if (targetId == INVALID_TARGET_ID || targetId > targets.length) {
             errorAndExit("Target id is not valid. Use '%s list targets' to get the target ids.",
                     SdkConstants.androidCmdName());
         }
+
+        IAndroidTarget target = targets[targetId-1]; // target id is 1-based
 
         try {
             boolean removePrevious = mSdkCommandLine.getFlagForce();
@@ -587,7 +748,9 @@ class Main {
                             "Android Virtual Device '%s' already exists and will be replaced.",
                             avdName);
                 } else {
-                    errorAndExit("Android Virtual Device '%s' already exists.", avdName);
+                    errorAndExit("Android Virtual Device '%s' already exists.\n" +
+                                 "Use --force if you want to replace it.",
+                                 avdName);
                     return;
                 }
             }
@@ -607,7 +770,8 @@ class Main {
             if (skin != null && skin.length() == 0) {
                 skin = null;
             }
-            if (skin != null) {
+
+            if (skin != null && target != null) {
                 boolean valid = false;
                 // Is it a know skin name for this target?
                 for (String s : target.getSkins()) {
@@ -639,7 +803,7 @@ class Main {
             }
 
             Map<String, String> hardwareConfig = null;
-            if (target.isPlatform()) {
+            if (target != null && target.isPlatform()) {
                 try {
                     hardwareConfig = promptForHardware(target, skinHardwareConfig);
                 } catch (IOException e) {
@@ -647,11 +811,13 @@ class Main {
                 }
             }
 
+            @SuppressWarnings("unused") // oldAvdInfo is never read, yet useful for debugging
             AvdInfo oldAvdInfo = null;
             if (removePrevious) {
                 oldAvdInfo = avdManager.getAvd(avdName, false /*validAvdOnly*/);
             }
 
+            @SuppressWarnings("unused") // newAvdInfo is never read, yet useful for debugging
             AvdInfo newAvdInfo = avdManager.createAvd(avdFolder,
                     avdName,
                     target,
@@ -845,13 +1011,16 @@ class Main {
         // get the list of possible hardware properties
         File hardwareDefs = new File (mOsSdkFolder + File.separator +
                 SdkConstants.OS_SDK_TOOLS_LIB_FOLDER, SdkConstants.FN_HARDWARE_INI);
-        List<HardwareProperty> list = HardwareProperties.parseHardwareDefinitions(hardwareDefs,
-                null /*sdkLog*/);
+        Map<String, HardwareProperty> hwMap = HardwareProperties.parseHardwareDefinitions(
+                hardwareDefs, null /*sdkLog*/);
 
         HashMap<String, String> map = new HashMap<String, String>();
 
-        for (int i = 0 ; i < list.size() ;) {
-            HardwareProperty property = list.get(i);
+        // we just want to loop on the HardwareProperties
+        HardwareProperty[] hwProperties = hwMap.values().toArray(
+                new HardwareProperty[hwMap.size()]);
+        for (int i = 0 ; i < hwProperties.length ;) {
+            HardwareProperty property = hwProperties[i];
 
             String description = property.getDescription();
             if (description != null) {
@@ -977,5 +1146,44 @@ class Main {
     private void errorAndExit(String format, Object...args) {
         mSdkLog.error(null, format, args);
         System.exit(1);
+    }
+
+    /**
+     * Converts a symbolic target name (such as those accepted by --target on the command-line)
+     * to an internal target index id. A valid target name is either a numeric target id (> 0)
+     * or a target hash string.
+     * <p/>
+     * If the given target can't be mapped, {@link #INVALID_TARGET_ID} (0) is returned.
+     * It's up to the caller to output an error.
+     * <p/>
+     * On success, returns a value > 0.
+     */
+    private int resolveTargetName(String targetName) {
+
+        if (targetName == null) {
+            return INVALID_TARGET_ID;
+        }
+
+        targetName = targetName.trim();
+
+        // Case of an integer number
+        if (targetName.matches("[0-9]*")) {
+            try {
+                int n = Integer.parseInt(targetName);
+                return n < 1 ? INVALID_TARGET_ID : n;
+            } catch (NumberFormatException e) {
+                // Ignore. Should not happen.
+            }
+        }
+
+        // Let's try to find a platform or addon name.
+        IAndroidTarget[] targets = mSdkManager.getTargets();
+        for (int i = 0; i < targets.length; i++) {
+            if (targetName.equals(targets[i].hashString())) {
+                return i + 1;
+            }
+        }
+
+        return INVALID_TARGET_ID;
     }
 }

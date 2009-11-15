@@ -16,6 +16,7 @@
 
 package com.android.commands.monkey;
 
+import android.content.ComponentName;
 import android.os.SystemClock;
 import android.view.KeyEvent;
 
@@ -28,6 +29,7 @@ import java.io.InputStreamReader;
 import java.util.LinkedList;
 import java.util.StringTokenizer;
 
+import android.view.KeyEvent;
 /**
  * monkey event queue. It takes a script to produce events
  * 
@@ -52,6 +54,8 @@ public class MonkeySourceScript implements MonkeyEventSource {
     private static final String HEADER_TYPE = "type=";
     private static final String HEADER_COUNT = "count=";
     private static final String HEADER_SPEED = "speed=";
+    // New script type
+    private static final String USER_EVENT_TYPE = "user";
     
     private long mLastRecordedDownTimeKey = 0;    
     private long mLastRecordedDownTimeMotion = 0;
@@ -59,6 +63,7 @@ public class MonkeySourceScript implements MonkeyEventSource {
     private long mLastExportDownTimeMotion = 0;
     private long mLastExportEventTime = -1;
     private long mLastRecordedEventTime = -1;
+    private String mScriptType = USER_EVENT_TYPE;
     
     private static final boolean THIS_DEBUG = false;
     // a parameter that compensates the difference of real elapsed time and 
@@ -77,10 +82,15 @@ public class MonkeySourceScript implements MonkeyEventSource {
     private static final String EVENT_KEYWORD_TRACKBALL = "DispatchTrackball";
     private static final String EVENT_KEYWORD_KEY = "DispatchKey";
     private static final String EVENT_KEYWORD_FLIP = "DispatchFlip";
-    
+    private static final String EVENT_KEYWORD_KEYPRESS = "DispatchPress";
+    private static final String EVENT_KEYWORD_ACTIVITY = "LaunchActivity";
+    private static final String EVENT_KEYWORD_WAIT = "UserWait";
+    private static final String EVENT_KEYWORD_LONGPRESS = "LongPress";
+
     // a line at the end of the header
     private static final String STARTING_DATA_LINE = "start data >>";    
     private boolean mFileOpened = false;    
+    private static int LONGPRESS_WAIT_TIME = 2000; // wait time for the long press
     
     FileInputStream mFStream;
     DataInputStream mInputStream;
@@ -125,7 +135,7 @@ public class MonkeySourceScript implements MonkeyEventSource {
             while ((sLine = mBufferReader.readLine()) != null) {
                 sLine = sLine.trim();
                 if (sLine.indexOf(HEADER_TYPE) >= 0) {
-                    // at this point, we only have one type of script
+                    mScriptType = sLine.substring(HEADER_TYPE.length() + 1).trim();
                 } else if (sLine.indexOf(HEADER_COUNT) >= 0) {
                     try {
                         mEventCountInScript = Integer.parseInt(sLine.substring(
@@ -161,21 +171,12 @@ public class MonkeySourceScript implements MonkeyEventSource {
         }        
         return false;        
     }    
-    
-    private void processLine(String s) {
-        int index1 = s.indexOf('(');
-        int index2 = s.indexOf(')');
-        
-        if (index1 < 0 || index2 < 0) {
-            return;
-        }
-        
-        StringTokenizer st = new StringTokenizer(
-                s.substring(index1 + 1, index2), ",");
-        
+
+    private void handleRawEvent(String s, StringTokenizer st) {
         if (s.indexOf(EVENT_KEYWORD_KEY) >= 0) {
             // key events
             try {
+                System.out.println(" old key\n");
                 long downTime = Long.parseLong(st.nextToken());
                 long eventTime = Long.parseLong(st.nextToken());
                 int action = Integer.parseInt(st.nextToken());
@@ -184,18 +185,22 @@ public class MonkeySourceScript implements MonkeyEventSource {
                 int metaState = Integer.parseInt(st.nextToken());
                 int device = Integer.parseInt(st.nextToken());
                 int scancode = Integer.parseInt(st.nextToken());
-                
-                MonkeyKeyEvent e = new MonkeyKeyEvent(downTime, eventTime,
-                        action, code, repeat, metaState, device, scancode);
+
+                MonkeyKeyEvent e =
+                        new MonkeyKeyEvent(downTime, eventTime, action, code, repeat, metaState,
+                                device, scancode);
+                System.out.println(" Key code " + code + "\n");
+
                 mQ.addLast(e);
-                
+                System.out.println("Added key up \n");
+
             } catch (NumberFormatException e) {
-                // something wrong with this line in the script               
+                // something wrong with this line in the script
             }
         } else if (s.indexOf(EVENT_KEYWORD_POINTER) >= 0 || 
                 s.indexOf(EVENT_KEYWORD_TRACKBALL) >= 0) {
-            // trackball/pointer event 
-            try {                
+            // trackball/pointer event
+            try {
                 long downTime = Long.parseLong(st.nextToken());
                 long eventTime = Long.parseLong(st.nextToken());
                 int action = Integer.parseInt(st.nextToken());
@@ -208,25 +213,78 @@ public class MonkeySourceScript implements MonkeyEventSource {
                 float yPrecision = Float.parseFloat(st.nextToken());
                 int device = Integer.parseInt(st.nextToken());
                 int edgeFlags = Integer.parseInt(st.nextToken());
-                
-                int type = MonkeyEvent.EVENT_TYPE_TRACKBALL;                
+
+                int type = MonkeyEvent.EVENT_TYPE_TRACKBALL;
                 if (s.indexOf("Pointer") > 0) {
                     type = MonkeyEvent.EVENT_TYPE_POINTER;
-                }                
-                MonkeyMotionEvent e = new MonkeyMotionEvent(type, downTime, eventTime,
-                        action, x, y, pressure, size, metaState, xPrecision, yPrecision,
-                        device, edgeFlags);
-                mQ.addLast(e);                
+                }
+                MonkeyMotionEvent e =
+                        new MonkeyMotionEvent(type, downTime, eventTime, action, x, y, pressure,
+                                size, metaState, xPrecision, yPrecision, device, edgeFlags);
+                mQ.addLast(e);
             } catch (NumberFormatException e) {
-                // we ignore this event                
+                // we ignore this event
             }
         } else if (s.indexOf(EVENT_KEYWORD_FLIP) >= 0) {
             boolean keyboardOpen = Boolean.parseBoolean(st.nextToken());
             MonkeyFlipEvent e = new MonkeyFlipEvent(keyboardOpen);
             mQ.addLast(e);
         }
+
     }
-    
+
+    private void handleUserEvent(String s, StringTokenizer st) {
+        if (s.indexOf(EVENT_KEYWORD_ACTIVITY) >= 0) {
+            String pkg_name = st.nextToken();
+            String cl_name = st.nextToken();
+            ComponentName mApp = new ComponentName(pkg_name, cl_name);
+            MonkeyActivityEvent e = new MonkeyActivityEvent(mApp);
+            mQ.addLast(e);
+
+        } else if (s.indexOf(EVENT_KEYWORD_WAIT) >= 0) {
+            long sleeptime = Integer.parseInt(st.nextToken());
+            MonkeyWaitEvent e = new MonkeyWaitEvent(sleeptime);
+            mQ.addLast(e);
+
+        } else if (s.indexOf(EVENT_KEYWORD_KEYPRESS) >= 0) {
+            String key_name = st.nextToken();
+            int keyCode = MonkeySourceRandom.getKeyCode(key_name);
+            MonkeyKeyEvent e = new MonkeyKeyEvent(KeyEvent.ACTION_DOWN, keyCode);
+            mQ.addLast(e);
+            e = new MonkeyKeyEvent(KeyEvent.ACTION_UP, keyCode);
+            mQ.addLast(e);
+        } else if (s.indexOf(EVENT_KEYWORD_LONGPRESS) >= 0) {
+            // handle the long press
+            MonkeyKeyEvent e = new MonkeyKeyEvent(KeyEvent.ACTION_DOWN,
+                    KeyEvent.KEYCODE_DPAD_CENTER);
+            mQ.addLast(e);
+            MonkeyWaitEvent we = new MonkeyWaitEvent(LONGPRESS_WAIT_TIME);
+            mQ.addLast(we);
+            e = new MonkeyKeyEvent(KeyEvent.ACTION_UP,
+                    KeyEvent.KEYCODE_DPAD_CENTER);
+            mQ.addLast(e);
+        }
+    }
+
+    private void processLine(String s) {
+        int index1 = s.indexOf('(');
+        int index2 = s.indexOf(')');
+
+        if (index1 < 0 || index2 < 0) {
+            return;
+        }
+
+        StringTokenizer st = new StringTokenizer(
+                s.substring(index1 + 1, index2), ",");
+        if (mScriptType.compareTo(USER_EVENT_TYPE) == 0) {
+            // User event type
+            handleUserEvent(s, st);
+        } else {
+            // Raw type
+            handleRawEvent(s,st);
+        }
+    }
+
     private void closeFile() {
         mFileOpened = false;        
         if (THIS_DEBUG) {
@@ -253,31 +311,27 @@ public class MonkeySourceScript implements MonkeyEventSource {
     }
     
     /**
-     * read next batch of events from the provided script file
+      * read next batch of events from the provided script file
      * @return true if success
      */
     private boolean readNextBatch() {
+        /*
+         * The script should restore the original state when it run multiple
+         * times.
+         */
         String sLine = null;
         int readCount = 0;
-        
+
         if (THIS_DEBUG) {
             System.out.println("readNextBatch(): reading next batch of events");
         }
-        
+
         if (!mFileOpened) {
             if (!readScriptHeader()) {
                 closeFile();
                 return false;
-            }             
+            }
             resetValue();
-            
-            /* 
-            * In order to allow the Monkey to replay captured events multiple times
-            * we need to define a default start UI, which is the home screen
-            * Otherwise, it won't be accurate since the captured events 
-            * could end anywhere
-            */
-            addHomeKeyEvent();
         }
         
         try {            
@@ -418,7 +472,6 @@ public class MonkeySourceScript implements MonkeyEventSource {
         }
         MonkeyEvent e = mQ.getFirst();
         mQ.removeFirst();
-        
         if (e.getEventType() == MonkeyEvent.EVENT_TYPE_KEY) {
             adjustKeyEventTime((MonkeyKeyEvent) e);        
         } else if (e.getEventType() == MonkeyEvent.EVENT_TYPE_POINTER || 

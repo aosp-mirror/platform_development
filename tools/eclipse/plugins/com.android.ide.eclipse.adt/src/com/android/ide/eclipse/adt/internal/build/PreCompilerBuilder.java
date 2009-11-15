@@ -27,7 +27,7 @@ import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkConstants;
-import com.android.sdklib.xml.ManifestConstants;
+import com.android.sdklib.xml.AndroidManifest;
 
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
@@ -335,8 +335,8 @@ public class PreCompilerBuilder extends BaseBuilder {
                     if (codename != null) {
                         // integer minSdk when the target is a preview => fatal error
                         String msg = String.format(
-                                "Platform %1$s is a preview and requires appication manifests to set %2$s to '%1$s'",
-                                codename, ManifestConstants.ATTRIBUTE_MIN_SDK_VERSION);
+                                "Platform %1$s is a preview and requires appication manifest to set %2$s to '%1$s'",
+                                codename, AndroidManifest.ATTRIBUTE_MIN_SDK_VERSION);
                         AdtPlugin.printErrorToConsole(project, msg);
                         BaseProjectHelper.addMarker(manifest, AdtConstants.MARKER_ADT, msg,
                                 IMarker.SEVERITY_ERROR);
@@ -344,8 +344,18 @@ public class PreCompilerBuilder extends BaseBuilder {
                     } else if (minSdkValue < projectVersion.getApiLevel()) {
                         // integer minSdk is not high enough for the target => warning
                         String msg = String.format(
-                                "Manifest min SDK version (%1$s) is lower than project target API level (%2$d)",
-                                minSdkVersion, projectVersion.getApiLevel());
+                                "Attribute %1$s (%2$d) is lower than the project target API level (%3$d)",
+                                AndroidManifest.ATTRIBUTE_MIN_SDK_VERSION,
+                                minSdkValue, projectVersion.getApiLevel());
+                        AdtPlugin.printBuildToConsole(AdtConstants.BUILD_VERBOSE, project, msg);
+                        BaseProjectHelper.addMarker(manifest, AdtConstants.MARKER_ADT, msg,
+                                IMarker.SEVERITY_WARNING);
+                    } else if (minSdkValue > projectVersion.getApiLevel()) {
+                        // integer minSdk is too high for the target => warning
+                        String msg = String.format(
+                                "Attribute %1$s (%2$d) is higher than the project target API level (%3$d)",
+                                AndroidManifest.ATTRIBUTE_MIN_SDK_VERSION,
+                                minSdkValue, projectVersion.getApiLevel());
                         AdtPlugin.printBuildToConsole(AdtConstants.BUILD_VERBOSE, project, msg);
                         BaseProjectHelper.addMarker(manifest, AdtConstants.MARKER_ADT, msg,
                                 IMarker.SEVERITY_WARNING);
@@ -358,7 +368,7 @@ public class PreCompilerBuilder extends BaseBuilder {
                         // platform is not a preview => fatal error
                         String msg = String.format(
                                 "Manifest attribute '%1$s' is set to '%2$s'. Integer is expected.",
-                                ManifestConstants.ATTRIBUTE_MIN_SDK_VERSION, minSdkVersion);
+                                AndroidManifest.ATTRIBUTE_MIN_SDK_VERSION, minSdkVersion);
                         AdtPlugin.printErrorToConsole(project, msg);
                         BaseProjectHelper.addMarker(manifest, AdtConstants.MARKER_ADT, msg,
                                 IMarker.SEVERITY_ERROR);
@@ -367,7 +377,7 @@ public class PreCompilerBuilder extends BaseBuilder {
                         // platform and manifest codenames don't match => fatal error.
                         String msg = String.format(
                                 "Value of manifest attribute '%1$s' does not match platform codename '%2$s'",
-                                ManifestConstants.ATTRIBUTE_MIN_SDK_VERSION, codename);
+                                AndroidManifest.ATTRIBUTE_MIN_SDK_VERSION, codename);
                         AdtPlugin.printErrorToConsole(project, msg);
                         BaseProjectHelper.addMarker(manifest, AdtConstants.MARKER_ADT, msg,
                                 IMarker.SEVERITY_ERROR);
@@ -380,7 +390,7 @@ public class PreCompilerBuilder extends BaseBuilder {
                 String codename = projectTarget.getVersion().getCodename();
                 String msg = String.format(
                         "Platform %1$s is a preview and requires appication manifests to set %2$s to '%1$s'",
-                        codename, ManifestConstants.ATTRIBUTE_MIN_SDK_VERSION);
+                        codename, AndroidManifest.ATTRIBUTE_MIN_SDK_VERSION);
                 AdtPlugin.printErrorToConsole(project, msg);
                 BaseProjectHelper.addMarker(manifest, AdtConstants.MARKER_ADT, msg,
                         IMarker.SEVERITY_ERROR);

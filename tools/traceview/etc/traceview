@@ -14,27 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# This script assumes that the path to this script is something like:
-#
-# /somepath/outdir/archdir/hostdir/bindir/traceview
-#
-# where "somepath" is some pathname (like "/work/android/device/")
-#       "outdir"   is a subdirectory (like "out")
-#       "archdir"  is a subdirectory (like "linux-x86-release")
-#       "hostdir"  is a subdirectory (like "host")
-#       "bindir"   is a subdirectory (like "bin")
-#
-# e.g. /work/android/device/out/linux-x86-release/host/bin/traceview
-#
-# and that the following directories also exist:
-#
-# /somepath/outdir/archdir/hostdir/lib/
-# /somepath/outdir/archdir/hostdir/framework/
-#
-# where:
-#       "lib", and "framework" are at the same level as "bindir",
-#        and are the literal names.
-
 # Set up prog to be the path of this script, including following symlinks,
 # and set up progdir to be the fully-qualified pathname of its directory.
 prog="$0"
@@ -75,13 +54,17 @@ then
     exit 1
 fi
 
+javaCmd="java"
+
 os=`uname`
 if [ $os == 'Darwin' ]; then
   javaOpts="-Xmx1600M -XstartOnFirstThread"
-  javaCmd="/System/Library/Frameworks/JavaVM.framework/Versions/1.5/Commands/java"
 else
   javaOpts="-Xmx1600M"
-  javaCmd="java"
+fi
+
+if [ `uname` = "Linux" ]; then
+    export GDK_NATIVE_WINDOWS=true
 fi
 
 while expr "x$1" : 'x-J' >/dev/null; do
@@ -90,12 +73,7 @@ while expr "x$1" : 'x-J' >/dev/null; do
     shift
 done
 
-if [ "$OSTYPE" = "cygwin" ] ; then
-    jarpath=`cygpath -w  "$frameworkdir/$jarfile"`
-    progdir=`cygpath -w  "$progdir"`
-else
-    jarpath="$frameworkdir/$jarfile"
-fi
+jarpath="$frameworkdir/$jarfile"
 
 # Figure out the path to the swt.jar for the current architecture.
 # if ANDROID_SWT is defined, then just use this.
@@ -105,7 +83,7 @@ swtpath=""
 if [ -n "$ANDROID_SWT" ]; then
     swtpath="$ANDROID_SWT"
 else
-    vmarch=`java -jar "${frameworkdir}"/archquery.jar`
+    vmarch=`${javaCmd} -jar "${frameworkdir}"/archquery.jar`
     if [ -n "$ANDROID_BUILD_TOP" ]; then
         osname=`uname -s | tr A-Z a-z`
         swtpath="${ANDROID_BUILD_TOP}/prebuilt/${osname}-${vmarch}/swt"
@@ -123,4 +101,4 @@ else
     exit 1
 fi
 
-exec "$javaCmd" $javaOpts -Djava.ext.dirs="$frameworkdir" -jar "$jarpath" "$@"
+exec "${javaCmd}" $javaOpts -Djava.ext.dirs="$frameworkdir" -Dcom.android.traceview.toolsdir="$progdir" -jar "$jarpath" "$@"

@@ -20,6 +20,7 @@ import com.android.apkbuilder.ApkBuilder.ApkCreationException;
 import com.android.apkbuilder.internal.ApkBuilderImpl;
 import com.android.apkbuilder.internal.ApkBuilderImpl.ApkFile;
 import com.android.sdklib.internal.project.ApkConfigurationHelper;
+import com.android.sdklib.internal.project.ApkSettings;
 import com.android.sdklib.internal.project.ProjectProperties;
 import com.android.sdklib.internal.project.ProjectProperties.PropertyType;
 
@@ -35,7 +36,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
 
 public class ApkBuilderTask extends Task {
@@ -68,7 +68,8 @@ public class ApkBuilderTask extends Task {
     private final ArrayList<Value> mZipList = new ArrayList<Value>();
     private final ArrayList<Value> mFileList = new ArrayList<Value>();
     private final ArrayList<Value> mSourceList = new ArrayList<Value>();
-    private final ArrayList<Value> mJarList = new ArrayList<Value>();
+    private final ArrayList<Value> mJarfolderList = new ArrayList<Value>();
+    private final ArrayList<Value> mJarfileList = new ArrayList<Value>();
     private final ArrayList<Value> mNativeList = new ArrayList<Value>();
 
     private final ArrayList<FileInputStream> mZipArchives = new ArrayList<FileInputStream>();
@@ -141,7 +142,16 @@ public class ApkBuilderTask extends Task {
      */
     public Object createJarfolder() {
         Value file = new Value();
-        mJarList.add(file);
+        mJarfolderList.add(file);
+        return file;
+    }
+
+    /**
+     * Returns an object representing a nested <var>jarfile</var> element.
+     */
+    public Object createJarfile() {
+        Value file = new Value();
+        mJarfileList.add(file);
         return file;
     }
 
@@ -183,8 +193,13 @@ public class ApkBuilderTask extends Task {
             }
 
             // now go through the list of jar folders.
-            for (Value v : mJarList) {
+            for (Value v : mJarfolderList) {
                 ApkBuilderImpl.processJarFolder(v.mPath, mResourcesJars);
+            }
+
+            // now go through the list of jar files.
+            for (Value v : mJarfileList) {
+                ApkBuilderImpl.processJarFile(v.mPath, mResourcesJars);
             }
 
             // now the native lib folder.
@@ -212,13 +227,14 @@ public class ApkBuilderTask extends Task {
             // release: {base}[-{config}]-unsigned.apk
             // Unfortunately for 1.5 projects and before the 'install' ant target expects the name
             // of the default debug package to be {base}-debug.apk
-            // In order to support those package, we look for the 'out-debug-unaligned-package'
+            // In order to support those package, we look for the 'out.debug.unaligned.package'
             // property. If this exist, then we generate {base}[-{config}]-debug-unaligned.apk
             // otherwise we generate {base}[-{config}]-debug.apk
             // FIXME: Make apkbuilder export the package name used instead of
             // having to keep apkbuilder and the rules file in sync
             String debugPackageSuffix = "-debug-unaligned.apk";
-            if (antProject.getProperty("out-debug-unaligned-package") == null) {
+            if (antProject.getProperty("out.debug.unaligned.package") == null
+                    && antProject.getProperty("out-debug-unaligned-package") == null) {
                 debugPackageSuffix = "-debug.apk";
             }
 
@@ -232,12 +248,14 @@ public class ApkBuilderTask extends Task {
             ProjectProperties properties = ProjectProperties.load(baseDir.getAbsolutePath(),
                     PropertyType.DEFAULT);
 
-            Map<String, String> apkConfigs = ApkConfigurationHelper.getConfigs(properties);
-            if (apkConfigs.size() > 0) {
-                Set<Entry<String, String>> entrySet = apkConfigs.entrySet();
-                for (Entry<String, String> entry : entrySet) {
-                    createApk(apkBuilder, entry.getKey(), entry.getValue(), path,
-                            debugPackageSuffix);
+            ApkSettings apkSettings = ApkConfigurationHelper.getSettings(properties);
+            if (apkSettings != null) {
+                Map<String, String> apkFilters = apkSettings.getResourceFilters();
+                if (apkFilters.size() > 0) {
+                    for (Entry<String, String> entry : apkFilters.entrySet()) {
+                        createApk(apkBuilder, entry.getKey(), entry.getValue(), path,
+                                debugPackageSuffix);
+                    }
                 }
             }
 

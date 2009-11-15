@@ -19,6 +19,8 @@ package com.android.sdkuilib.internal.tasks;
 import com.android.sdklib.internal.repository.ITask;
 import com.android.sdklib.internal.repository.ITaskMonitor;
 
+import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.ProgressBar;
 import org.eclipse.swt.widgets.Shell;
 
@@ -143,6 +145,30 @@ public final class ProgressTask implements ITaskMonitor {
     }
 
     /**
+     * Display a yes/no question dialog box.
+     *
+     * This implementation allow this to be called from any thread, it
+     * makes sure the dialog is opened synchronously in the ui thread.
+     *
+     * @param title The title of the dialog box
+     * @param message The error message
+     * @return true if YES was clicked.
+     */
+    public boolean displayPrompt(final String title, final String message) {
+        final Shell shell = mDialog.getParent();
+        Display display = shell.getDisplay();
+
+        // we need to ask the user what he wants to do.
+        final boolean[] result = new boolean[] { false };
+        display.syncExec(new Runnable() {
+            public void run() {
+                result[0] = MessageDialog.openQuestion(shell, title, message);
+            }
+        });
+        return result[0];
+    }
+
+    /**
      * Creates a sub-monitor that will use up to tickCount on the progress bar.
      * tickCount must be 1 or more.
      */
@@ -220,6 +246,10 @@ public final class ProgressTask implements ITaskMonitor {
             } else {
                 mRoot.internalIncProgress(realDelta);
             }
+        }
+
+        public boolean displayPrompt(String title, String message) {
+            return mRoot.displayPrompt(title, message);
         }
 
         public ITaskMonitor createSubMonitor(int tickCount) {

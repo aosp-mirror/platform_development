@@ -1,0 +1,137 @@
+<?xml version="1.0"?>
+<!--
+ * Copyright (C) 2009 The Android Open Source Project
+ *
+ * Licensed under the Eclipse Public License, Version 1.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.eclipse.org/org/documents/epl-v10.php
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+-->
+<d:layout-devices
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:d="http://schemas.android.com/sdk/android/layout-devices/1">
+
+    <d:device name="MyDevice">        <!-- 1..n -->
+        <d:default>                   <!-- 0..1 -->
+            <d:screen-size>small</d:screen-size>
+            <d:screen-ratio>long</d:screen-ratio>
+            <d:screen-orientation>port</d:screen-orientation>
+            <d:pixel-density>ldpi</d:pixel-density>
+            <d:touch-type>notouch</d:touch-type>
+            <d:keyboard-state>keysexposed</d:keyboard-state>
+            <d:text-input-method>nokeys</d:text-input-method>
+            <d:nav-method>dpad</d:nav-method>
+            <d:screen-dimension>
+                <d:size>240</d:size>    <!-- 2 * int>0 -->
+                <d:size>480</d:size>
+            </d:screen-dimension>
+            <d:xdpi>180.81234</d:xdpi>
+            <d:ydpi>180.81234</d:ydpi>
+        </d:default>
+
+        <d:config name="Portrait">
+            <d:keyboard-state>keyshidden</d:keyboard-state>
+            <d:screen-orientation>port</d:screen-orientation>
+        </d:config>
+        <d:config name="Landscape, closed">
+            <d:keyboard-state>keyshidden</d:keyboard-state>
+            <d:screen-orientation>land</d:screen-orientation>
+        </d:config>
+        <d:config name="Landscape, open">
+            <d:keyboard-state>keysexposed</d:keyboard-state>
+            <d:screen-orientation>land</d:screen-orientation>
+        </d:config>
+
+        <d:config name="screen-size-small">
+            <d:screen-size>small</d:screen-size>
+        </d:config>
+        <d:config name="screen-size-normal">
+            <d:screen-size>normal</d:screen-size>
+        </d:config>
+        <d:config name="screen-size-large">
+            <d:screen-size>large</d:screen-size>
+        </d:config>
+
+        <d:config name="screen-ratio-long">
+            <d:screen-ratio>long</d:screen-ratio>
+        </d:config>
+        <d:config name="screen-ratio-notlong">
+            <d:screen-ratio>notlong</d:screen-ratio>
+        </d:config>
+
+        <d:config name="screen-orientation-port">
+            <d:screen-orientation>port</d:screen-orientation>
+        </d:config>
+        <d:config name="screen-orientation-land">
+            <d:screen-orientation>land</d:screen-orientation>
+        </d:config>
+        <d:config name="screen-orientation-square">
+            <d:screen-orientation>square</d:screen-orientation>
+        </d:config>
+
+        <d:config name="pixel-density-ldpi">
+            <d:pixel-density>ldpi</d:pixel-density>
+        </d:config>
+        <d:config name="pixel-density-mdpi">
+            <d:pixel-density>mdpi</d:pixel-density>
+        </d:config>
+        <d:config name="pixel-density-hdpi">
+            <d:pixel-density>hdpi</d:pixel-density>
+        </d:config>
+
+        <d:config name="touch-type-notouch">
+            <d:touch-type>notouch</d:touch-type>
+        </d:config>
+        <d:config name="touch-type-stylus">
+            <d:touch-type>stylus</d:touch-type>
+        </d:config>
+        <d:config name="touch-type-finger">
+            <d:touch-type>finger</d:touch-type>
+        </d:config>
+
+        <d:config name="text-input-method-nokeys">
+            <d:text-input-method>nokeys</d:text-input-method>
+        </d:config>
+        <d:config name="text-input-method-qwerty">
+            <d:text-input-method>qwerty</d:text-input-method>
+        </d:config>
+        <d:config name="text-input-method-12key">
+            <d:text-input-method>12key</d:text-input-method>
+        </d:config>
+
+        <d:config name="nav-method-dpad">
+            <d:nav-method>dpad</d:nav-method>
+        </d:config>
+        <d:config name="nav-method-trackball">
+            <d:nav-method>trackball</d:nav-method>
+        </d:config>
+        <d:config name="nav-method-wheel">
+            <d:nav-method>wheel</d:nav-method>
+        </d:config>
+        <d:config name="nav-method-nonav">
+            <d:nav-method>nonav</d:nav-method>
+        </d:config>
+
+        <d:config name="xdpi">
+            <d:xdpi>240</d:xdpi>
+        </d:config>
+        <d:config name="ydpi">
+            <d:ydpi>2800</d:ydpi>
+        </d:config>
+
+    </d:device>
+
+    <d:device name="SomePhone">       <!-- 1..n -->
+        <d:config name="screen-size-normal">
+            <d:screen-size>normal</d:screen-size>
+        </d:config>
+    </d:device>
+
+</d:layout-devices>

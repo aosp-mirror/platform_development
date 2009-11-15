@@ -37,7 +37,8 @@ public final class KeyboardStateQualifier extends ResourceQualifier {
      */
     public static enum KeyboardState {
         EXPOSED("keysexposed", "Exposed"), //$NON-NLS-1$
-        HIDDEN("keyshidden", "Hidden"); //$NON-NLS-1$
+        HIDDEN("keyshidden", "Hidden"),    //$NON-NLS-1$
+        SOFT("keyssoft", "Soft");          //$NON-NLS-1$
 
         private String mValue;
         private String mDisplayValue;
@@ -52,7 +53,7 @@ public final class KeyboardStateQualifier extends ResourceQualifier {
          * @param value The qualifier value.
          * @return the enum for the qualifier value or null if no matching was found.
          */
-        static KeyboardState getEnum(String value) {
+        public static KeyboardState getEnum(String value) {
             for (KeyboardState orient : values()) {
                 if (orient.mValue.equals(value)) {
                     return orient;
@@ -135,6 +136,42 @@ public final class KeyboardStateQualifier extends ResourceQualifier {
             qualifier.mValue = orientation;
             config.setKeyboardStateQualifier(qualifier);
             return true;
+        }
+
+        return false;
+    }
+
+    @Override
+    public boolean isMatchFor(ResourceQualifier qualifier) {
+        if (qualifier instanceof KeyboardStateQualifier) {
+            KeyboardStateQualifier referenceQualifier = (KeyboardStateQualifier)qualifier;
+
+            // special case where EXPOSED can be used for SOFT
+            if (referenceQualifier.mValue == KeyboardState.SOFT &&
+                    mValue == KeyboardState.EXPOSED) {
+                return true;
+            }
+
+            return referenceQualifier.mValue == mValue;
+        }
+
+        return false;
+    }
+
+    @Override
+    public boolean isBetterMatchThan(ResourceQualifier compareTo, ResourceQualifier reference) {
+        if (compareTo == null) {
+            return true;
+        }
+
+        KeyboardStateQualifier compareQualifier = (KeyboardStateQualifier)compareTo;
+        KeyboardStateQualifier referenceQualifier = (KeyboardStateQualifier)reference;
+        if (referenceQualifier.mValue == KeyboardState.SOFT) { // only case where there could be a
+                                                               // better qualifier
+            // only return true if it's a better value.
+            if (compareQualifier.mValue == KeyboardState.EXPOSED && mValue == KeyboardState.SOFT) {
+                return true;
+            }
         }
 
         return false;

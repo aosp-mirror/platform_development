@@ -1,1 +1,1 @@
-__all__ = ['test_defs']
+__all__ = ['test_defs', 'test_walker']

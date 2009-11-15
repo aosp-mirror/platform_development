@@ -21,6 +21,7 @@ import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -33,7 +34,7 @@ public class NinePatch {
     public static final String EXTENSION_9PATCH = ".9.png";
 
     private BufferedImage mImage;
-    
+
     private int mMinWidth;
     private int mMinHeight;
 
@@ -50,7 +51,7 @@ public class NinePatch {
 
     private Pair<Integer> mHorizontalPadding;
     private Pair<Integer> mVerticalPadding;
-    
+
     private float mHorizontalPatchesSum;
     private float mVerticalPatchesSum;
 
@@ -58,12 +59,10 @@ public class NinePatch {
 
     private int mRemainderVertical;
 
-    private final URL mFileUrl;
-
     /**
      * Loads a 9 patch or regular bitmap.
      * @param fileUrl the URL of the file to load.
-     * @param convert if <code>true</code>, non 9-patch bitmpa will be converted into a 9 patch.
+     * @param convert if <code>true</code>, non 9-patch bitmap will be converted into a 9 patch.
      * If <code>false</code> and the bitmap is not a 9 patch, the method will return
      * <code>null</code>.
      * @return a {@link NinePatch} or <code>null</code>.
@@ -77,9 +76,46 @@ public class NinePatch {
             // really this shouldn't be happening since we're not creating the URL manually.
             return null;
         }
-        
+
         boolean is9Patch = fileUrl.getPath().toLowerCase().endsWith(EXTENSION_9PATCH);
-        
+
+        return load(image, is9Patch, convert);
+    }
+
+    /**
+     * Loads a 9 patch or regular bitmap.
+     * @param stream the {@link InputStream} of the file to load.
+     * @param is9Patch whether the file represents a 9-patch
+     * @param convert if <code>true</code>, non 9-patch bitmap will be converted into a 9 patch.
+     * If <code>false</code> and the bitmap is not a 9 patch, the method will return
+     * <code>null</code>.
+     * @return a {@link NinePatch} or <code>null</code>.
+     * @throws IOException
+     */
+    public static NinePatch load(InputStream stream, boolean is9Patch, boolean convert)
+            throws IOException {
+        BufferedImage image = null;
+        try {
+            image  = GraphicsUtilities.loadCompatibleImage(stream);
+        } catch (MalformedURLException e) {
+            // really this shouldn't be happening since we're not creating the URL manually.
+            return null;
+        }
+
+        return load(image, is9Patch, convert);
+    }
+
+    /**
+     * Loads a 9 patch or regular bitmap.
+     * @param image the source {@link BufferedImage}.
+     * @param is9Patch whether the file represents a 9-patch
+     * @param convert if <code>true</code>, non 9-patch bitmap will be converted into a 9 patch.
+     * If <code>false</code> and the bitmap is not a 9 patch, the method will return
+     * <code>null</code>.
+     * @return a {@link NinePatch} or <code>null</code>.
+     * @throws IOException
+     */
+    public static NinePatch load(BufferedImage image, boolean is9Patch, boolean convert) {
         if (is9Patch == false) {
             if (convert) {
                 image = convertTo9Patch(image);
@@ -90,10 +126,9 @@ public class NinePatch {
             ensure9Patch(image);
         }
 
-        
-        return new NinePatch(fileUrl, image);
+        return new NinePatch(image);
     }
-    
+
     public int getWidth() {
         return mImage.getWidth() - 2;
     }
@@ -101,9 +136,9 @@ public class NinePatch {
     public int getHeight() {
         return mImage.getHeight() - 2;
     }
-    
+
     /**
-     * 
+     *
      * @param padding array of left, top, right, bottom padding
      * @return
      */
@@ -124,7 +159,7 @@ public class NinePatch {
         Graphics2D g = (Graphics2D)graphics2D.create();
         g.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
                 RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-        
+
 
         try {
             if (mPatches.size() == 0) {
@@ -134,30 +169,30 @@ public class NinePatch {
 
             g.translate(x, y);
             x = y = 0;
-            
+
             computePatches(scaledWidth, scaledHeight);
-    
+
             int fixedIndex = 0;
             int horizontalIndex = 0;
             int verticalIndex = 0;
             int patchIndex = 0;
-    
+
             boolean hStretch;
             boolean vStretch;
-    
+
             float vWeightSum = 1.0f;
             float vRemainder = mRemainderVertical;
-    
+
             vStretch = mVerticalStartWithPatch;
             while (y < scaledHeight - 1) {
                 hStretch = mHorizontalStartWithPatch;
-    
+
                 int height = 0;
                 float vExtra = 0.0f;
-    
+
                 float hWeightSum = 1.0f;
                 float hRemainder = mRemainderHorizontal;
-    
+
                 while (x < scaledWidth - 1) {
                     Rectangle r;
                     if (!vStretch) {
@@ -197,7 +232,7 @@ public class NinePatch {
                                     r.x + r.width, r.y + r.height, null);
                             x += r.width;
                         }
-                        
+
                     }
                     hStretch = !hStretch;
                 }
@@ -209,12 +244,12 @@ public class NinePatch {
                 }
                 vStretch = !vStretch;
             }
-    
+
         } finally {
             g.dispose();
         }
     }
-    
+
     void computePatches(int scaledWidth, int scaledHeight) {
         boolean measuredWidth = false;
         boolean endRow = true;
@@ -283,14 +318,13 @@ public class NinePatch {
         }
     }
 
-    
-    private NinePatch(URL fileUrl, BufferedImage image) {
-        mFileUrl = fileUrl;
+
+    private NinePatch(BufferedImage image) {
         mImage = image;
-        
+
         findPatches();
     }
-    
+
     private void findPatches() {
         int width = mImage.getWidth();
         int height = mImage.getHeight();
@@ -462,7 +496,7 @@ public class NinePatch {
 
         return buffer;
     }
-    
+
     static class Pair<E> {
         E mFirst;
         E mSecond;

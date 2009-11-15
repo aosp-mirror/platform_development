@@ -28,58 +28,61 @@ import junit.framework.TestCase;
 public class AndroidManifestParserTest extends TestCase {
     private AndroidManifestParser mManifestTestApp;
     private AndroidManifestParser mManifestInstrumentation;
-    
-    private static final String INSTRUMENTATION_XML = "AndroidManifest-instrumentation.xml";  //$NON-NLS-1$
-    private static final String TESTAPP_XML = "AndroidManifest-testapp.xml";  //$NON-NLS-1$
+
+    private static final String TESTDATA_PATH =
+        "com/android/ide/eclipse/testdata/";  //$NON-NLS-1$
+    private static final String INSTRUMENTATION_XML = TESTDATA_PATH +
+        "AndroidManifest-instrumentation.xml";  //$NON-NLS-1$
+    private static final String TESTAPP_XML = TESTDATA_PATH +
+        "AndroidManifest-testapp.xml";  //$NON-NLS-1$
     private static final String PACKAGE_NAME =  "com.android.testapp"; //$NON-NLS-1$
     private static final String ACTIVITY_NAME = "com.android.testapp.MainActivity"; //$NON-NLS-1$
     private static final String LIBRARY_NAME = "android.test.runner"; //$NON-NLS-1$
     private static final String INSTRUMENTATION_NAME = "android.test.InstrumentationTestRunner"; //$NON-NLS-1$
     private static final String INSTRUMENTATION_TARGET = "com.android.AndroidProject"; //$NON-NLS-1$
+
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        
-        String testFilePath = AdtTestData.getInstance().getTestFilePath(
-                TESTAPP_XML);
+
+        String testFilePath = AdtTestData.getInstance().getTestFilePath(TESTAPP_XML);
         mManifestTestApp = AndroidManifestParser.parseForData(testFilePath);
         assertNotNull(mManifestTestApp);
-        
-        testFilePath = AdtTestData.getInstance().getTestFilePath(
-                INSTRUMENTATION_XML);
+
+        testFilePath = AdtTestData.getInstance().getTestFilePath(INSTRUMENTATION_XML);
         mManifestInstrumentation = AndroidManifestParser.parseForData(testFilePath);
         assertNotNull(mManifestInstrumentation);
     }
 
     public void testGetInstrumentationInformation() {
         assertEquals(1, mManifestInstrumentation.getInstrumentations().length);
-        assertEquals(INSTRUMENTATION_NAME, 
+        assertEquals(INSTRUMENTATION_NAME,
                 mManifestInstrumentation.getInstrumentations()[0].getName());
-        assertEquals(INSTRUMENTATION_TARGET, 
+        assertEquals(INSTRUMENTATION_TARGET,
                 mManifestInstrumentation.getInstrumentations()[0].getTargetPackage());
     }
-    
+
     public void testGetPackage() {
         assertEquals(PACKAGE_NAME, mManifestTestApp.getPackage());
     }
 
     public void testGetActivities() {
         assertEquals(1, mManifestTestApp.getActivities().length);
-        Activity activity = new AndroidManifestParser.Activity(ACTIVITY_NAME, true);
-        activity.setHasAction(true);
-        activity.setHasLauncherCategory(true);
-        activity.setHasMainAction(true);
+        AndroidManifestParser.Activity activity = mManifestTestApp.getActivities()[0];
+        assertEquals(ACTIVITY_NAME, activity.getName());
+        assertTrue(activity.hasAction());
+        assertTrue(activity.isHomeActivity());
+        assertTrue(activity.hasAction());
         assertEquals(activity, mManifestTestApp.getActivities()[0]);
     }
 
     public void testGetLauncherActivity() {
-        Activity activity = new AndroidManifestParser.Activity(ACTIVITY_NAME, true);
-        activity.setHasAction(true);
-        activity.setHasLauncherCategory(true);
-        activity.setHasMainAction(true);
-        assertEquals(activity, mManifestTestApp.getLauncherActivity()); 
+        Activity activity = mManifestTestApp.getLauncherActivity();
+        assertEquals(ACTIVITY_NAME, activity.getName());
+        assertTrue(activity.hasAction());
+        assertTrue(activity.isHomeActivity());
     }
-    
+
     private void assertEquals(Activity lhs, Activity rhs) {
         assertTrue(lhs == rhs || (lhs != null && rhs != null));
         if (lhs != null && rhs != null) {
@@ -92,7 +95,7 @@ public class AndroidManifestParserTest extends TestCase {
 
     public void testGetUsesLibraries() {
         assertEquals(1, mManifestTestApp.getUsesLibraries().length);
-        assertEquals(LIBRARY_NAME, mManifestTestApp.getUsesLibraries()[0]); 
+        assertEquals(LIBRARY_NAME, mManifestTestApp.getUsesLibraries()[0]);
     }
 
     public void testGetPackageName() {

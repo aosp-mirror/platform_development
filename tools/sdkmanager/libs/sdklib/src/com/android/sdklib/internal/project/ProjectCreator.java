@@ -20,6 +20,8 @@ import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.ISdkLog;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.internal.project.ProjectProperties.PropertyType;
+import com.android.sdklib.xml.AndroidManifest;
+import com.android.sdklib.xml.AndroidXPathFactory;
 
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
@@ -27,25 +29,22 @@ import org.xml.sax.InputSource;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-import javax.xml.XMLConstants;
-import javax.xml.namespace.NamespaceContext;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
 
 /**
- * Creates the basic files needed to get an Android project up and running. Also
- * allows creation of IntelliJ project files.
+ * Creates the basic files needed to get an Android project up and running.
  *
  * @hide
  */
@@ -55,12 +54,23 @@ public class ProjectCreator {
     private final static String PH_JAVA_FOLDER = "PACKAGE_PATH";
     /** Package name substitution string used in template files, i.e. "PACKAGE" */
     private final static String PH_PACKAGE = "PACKAGE";
-    /** Activity name substitution string used in template files, i.e. "ACTIVITY_NAME". */
+    /** Activity name substitution string used in template files, i.e. "ACTIVITY_NAME".
+     * @deprecated This is only used for older templates. For new ones see
+     * {@link #PH_ACTIVITY_ENTRY_NAME}, and {@link #PH_ACTIVITY_CLASS_NAME}. */
     private final static String PH_ACTIVITY_NAME = "ACTIVITY_NAME";
+    /** Activity name substitution string used in manifest templates, i.e. "ACTIVITY_ENTRY_NAME".*/
+    private final static String PH_ACTIVITY_ENTRY_NAME = "ACTIVITY_ENTRY_NAME";
+    /** Activity name substitution string used in class templates, i.e. "ACTIVITY_CLASS_NAME".*/
+    private final static String PH_ACTIVITY_CLASS_NAME = "ACTIVITY_CLASS_NAME";
+    /** Activity FQ-name substitution string used in class templates, i.e. "ACTIVITY_FQ_NAME".*/
+    private final static String PH_ACTIVITY_FQ_NAME = "ACTIVITY_FQ_NAME";
+    /** Original Activity class name substitution string used in class templates, i.e.
+     * "ACTIVITY_TESTED_CLASS_NAME".*/
+    private final static String PH_ACTIVITY_TESTED_CLASS_NAME = "ACTIVITY_TESTED_CLASS_NAME";
     /** Project name substitution string used in template files, i.e. "PROJECT_NAME". */
     private final static String PH_PROJECT_NAME = "PROJECT_NAME";
-
-    private final static String FOLDER_TESTS = "tests";
+    /** Application icon substitution string used in the manifest template */
+    private final static String PH_ICON = "ICON";
 
     /** Pattern for characters accepted in a project name. Since this will be used as a
      * directory name, we're being a bit conservative on purpose: dot and space cannot be used. */
@@ -101,6 +111,7 @@ public class ProjectCreator {
         /** default UID. This will not be serialized anyway. */
         private static final long serialVersionUID = 1L;
 
+        @SuppressWarnings("unused")
         ProjectCreateException(String message) {
             super(message);
         }
@@ -135,17 +146,16 @@ public class ProjectCreator {
      *          {@link #RE_PROJECT_NAME} regex.
      * @param packageName the package of the project. The name must match the
      *          {@link #RE_PACKAGE_NAME} regex.
-     * @param activityName the activity of the project as it will appear in the manifest. Can be
+     * @param activityEntry the activity of the project as it will appear in the manifest. Can be
      *          null if no activity should be created. The name must match the
      *          {@link #RE_ACTIVITY_NAME} regex.
      * @param target the project target.
-     * @param isTestProject whether the project to create is a test project. Caller should
-     *        initially call this will false. The method will call itself back to create
-     *        a test project as needed.
+     * @param pathToMainProject if non-null the project will be setup to test a main project
+     * located at the given path.
      */
     public void createProject(String folderPath, String projectName,
-            String packageName, String activityName, IAndroidTarget target,
-            boolean isTestProject) {
+            String packageName, String activityEntry, IAndroidTarget target,
+            String pathToMainProject) {
 
         // create project folder if it does not exist
         File projectFolder = new File(folderPath);
@@ -185,6 +195,8 @@ public class ProjectCreator {
         }
 
         try {
+            boolean isTestProject = pathToMainProject != null;
+
             // first create the project properties.
 
             // location of the SDK goes in localProperty
@@ -202,7 +214,18 @@ public class ProjectCreator {
             // create a build.properties file with just the application package
             ProjectProperties buildProperties = ProjectProperties.create(folderPath,
                     PropertyType.BUILD);
-            buildProperties.setProperty(ProjectProperties.PROPERTY_APP_PACKAGE, packageName);
+
+            // only put application.package for older target where the rules file didn't.
+            // grab it through xpath
+            if (target.getVersion().getApiLevel() < 4) {
+                buildProperties.setProperty(ProjectProperties.PROPERTY_APP_PACKAGE, packageName);
+            }
+
+            if (isTestProject) {
+                buildProperties.setProperty(ProjectProperties.PROPERTY_TESTED_PROJECT,
+                        pathToMainProject);
+            }
+
             buildProperties.save();
 
             // create the map for place-holders of values to replace in the templates
@@ -217,19 +240,76 @@ public class ProjectCreator {
             // put this path in the place-holder map for project files that needs to list
             // files manually.
             keywords.put(PH_JAVA_FOLDER, packagePath);
-
             keywords.put(PH_PACKAGE, packageName);
-            if (activityName != null) {
-                keywords.put(PH_ACTIVITY_NAME, activityName);
+
+
+            // compute some activity related information
+            String fqActivityName = null, activityPath = null, activityClassName = null;
+            String originalActivityEntry = activityEntry;
+            String originalActivityClassName = null;
+            if (activityEntry != null) {
+                if (isTestProject) {
+                    // append Test so that it doesn't collide with the main project activity.
+                    activityEntry += "Test";
+
+                    // get the classname from the original activity entry.
+                    int pos = originalActivityEntry.lastIndexOf('.');
+                    if (pos != -1) {
+                        originalActivityClassName = originalActivityEntry.substring(pos + 1);
+                    } else {
+                        originalActivityClassName = originalActivityEntry;
+                    }
+                }
+
+                // get the fully qualified name of the activity
+                fqActivityName = AndroidManifest.combinePackageAndClassName(packageName,
+                        activityEntry);
+
+                // get the activity path (replace the . to /)
+                activityPath = stripString(fqActivityName.replace(".", File.separator),
+                        File.separatorChar);
+
+                // remove the last segment, so that we only have the path to the activity, but
+                // not the activity filename itself.
+                activityPath = activityPath.substring(0,
+                        activityPath.lastIndexOf(File.separatorChar));
+
+                // finally, get the class name for the activity
+                activityClassName = fqActivityName.substring(fqActivityName.lastIndexOf('.') + 1);
+            }
+
+            // at this point we have the following for the activity:
+            // activityEntry: this is the manifest entry. For instance .MyActivity
+            // fqActivityName: full-qualified class name: com.foo.MyActivity
+            // activityClassName: only the classname: MyActivity
+            // originalActivityClassName: the classname of the activity being tested (if applicable)
+
+            // Add whatever activity info is needed in the place-holder map.
+            // Older templates only expect ACTIVITY_NAME to be the same (and unmodified for tests).
+            if (target.getVersion().getApiLevel() < 4) { // legacy
+                if (originalActivityEntry != null) {
+                    keywords.put(PH_ACTIVITY_NAME, originalActivityEntry);
+                }
+            } else {
+                // newer templates make a difference between the manifest entries, classnames,
+                // as well as the main and test classes.
+                if (activityEntry != null) {
+                    keywords.put(PH_ACTIVITY_ENTRY_NAME, activityEntry);
+                    keywords.put(PH_ACTIVITY_CLASS_NAME, activityClassName);
+                    keywords.put(PH_ACTIVITY_FQ_NAME, fqActivityName);
+                    if (originalActivityClassName != null) {
+                        keywords.put(PH_ACTIVITY_TESTED_CLASS_NAME, originalActivityClassName);
+                    }
+                }
             }
 
             // Take the project name from the command line if there's one
             if (projectName != null) {
                 keywords.put(PH_PROJECT_NAME, projectName);
             } else {
-                if (activityName != null) {
-                    // Use the activity as project name
-                    keywords.put(PH_PROJECT_NAME, activityName);
+                if (activityClassName != null) {
+                    // Use the activity class name as project name
+                    keywords.put(PH_PROJECT_NAME, activityClassName);
                 } else {
                     // We need a project name. Just pick up the basename of the project
                     // directory.
@@ -238,36 +318,43 @@ public class ProjectCreator {
                 }
             }
 
-            // create the source folder and the java package folders.
-            String srcFolderPath = SdkConstants.FD_SOURCES + File.separator + packagePath;
-            File sourceFolder = createDirs(projectFolder, srcFolderPath);
-            String javaTemplate = "java_file.template";
-            String activityFileName = activityName + ".java";
-            if (isTestProject) {
-                javaTemplate = "java_tests_file.template";
-                activityFileName = activityName + "Test.java";
-            }
-            installTemplate(javaTemplate, new File(sourceFolder, activityFileName),
-                    keywords, target);
+            // create the source folder for the activity
+            if (activityClassName != null) {
+                String srcActivityFolderPath = SdkConstants.FD_SOURCES + File.separator + activityPath;
+                File sourceFolder = createDirs(projectFolder, srcActivityFolderPath);
 
-            // create the generate source folder
-            srcFolderPath = SdkConstants.FD_GEN_SOURCES + File.separator + packagePath;
-            sourceFolder = createDirs(projectFolder, srcFolderPath);
+                String javaTemplate = isTestProject ? "java_tests_file.template"
+                        : "java_file.template";
+                String activityFileName = activityClassName + ".java";
+
+                installTemplate(javaTemplate, new File(sourceFolder, activityFileName),
+                        keywords, target);
+            } else {
+                // we should at least create 'src'
+                createDirs(projectFolder, SdkConstants.FD_SOURCES);
+            }
 
             // create other useful folders
-            File resourceFodler = createDirs(projectFolder, SdkConstants.FD_RESOURCES);
+            File resourceFolder = createDirs(projectFolder, SdkConstants.FD_RESOURCES);
             createDirs(projectFolder, SdkConstants.FD_OUTPUT);
             createDirs(projectFolder, SdkConstants.FD_NATIVE_LIBS);
 
             if (isTestProject == false) {
                 /* Make res files only for non test projects */
-                File valueFolder = createDirs(resourceFodler, SdkConstants.FD_VALUES);
+                File valueFolder = createDirs(resourceFolder, SdkConstants.FD_VALUES);
                 installTemplate("strings.template", new File(valueFolder, "strings.xml"),
                         keywords, target);
 
-                File layoutFolder = createDirs(resourceFodler, SdkConstants.FD_LAYOUT);
+                File layoutFolder = createDirs(resourceFolder, SdkConstants.FD_LAYOUT);
                 installTemplate("layout.template", new File(layoutFolder, "main.xml"),
                         keywords, target);
+
+                // create the icons
+                if (installIcons(resourceFolder, target)) {
+                    keywords.put(PH_ICON, "android:icon=\"@drawable/icon\"");
+                } else {
+                    keywords.put(PH_ICON, "");
+                }
             }
 
             /* Make AndroidManifest.xml and build.xml files */
@@ -283,16 +370,6 @@ public class ProjectCreator {
             installTemplate("build.template",
                     new File(projectFolder, SdkConstants.FN_BUILD_XML),
                     keywords);
-
-            // if this is not a test project, then we create one.
-            if (isTestProject == false) {
-                // create the test project folder.
-                createDirs(projectFolder, FOLDER_TESTS);
-                File testProjectFolder = new File(folderPath, FOLDER_TESTS);
-
-                createProject(testProjectFolder.getAbsolutePath(), projectName, packageName,
-                        activityName, target, true /*isTestProject*/);
-            }
         } catch (ProjectCreateException e) {
             mLog.error(e, null);
         } catch (IOException e) {
@@ -317,23 +394,14 @@ public class ProjectCreator {
      * @param projectName The project name from --name. Can be null.
      */
     public void updateProject(String folderPath, IAndroidTarget target, String projectName) {
-        // project folder must exist and be a directory, since this is an update
-        File projectFolder = new File(folderPath);
-        if (!projectFolder.isDirectory()) {
-            mLog.error(null, "Project folder '%1$s' is not a valid directory, this is not an Android project you can update.",
-                    projectFolder);
+        // since this is an update, check the folder does point to a project
+        File androidManifest = checkProjectFolder(folderPath);
+        if (androidManifest == null) {
             return;
         }
 
-        // Check AndroidManifest.xml is present
-        File androidManifest = new File(projectFolder, SdkConstants.FN_ANDROID_MANIFEST_XML);
-        if (!androidManifest.isFile()) {
-            mLog.error(null,
-                    "%1$s not found in '%2$s', this is not an Android project you can update.",
-                    SdkConstants.FN_ANDROID_MANIFEST_XML,
-                    folderPath);
-            return;
-        }
+        // get the parent File.
+        File projectFolder = androidManifest.getParentFile();
 
         // Check there's a default.properties with a target *or* --target was specified
         ProjectProperties props = ProjectProperties.load(folderPath, PropertyType.DEFAULT);
@@ -415,9 +483,16 @@ public class ProjectCreator {
                 keywords.put(PH_PROJECT_NAME, projectName);
             } else {
                 extractPackageFromManifest(androidManifest, keywords);
-                if (keywords.containsKey(PH_ACTIVITY_NAME)) {
+                if (keywords.containsKey(PH_ACTIVITY_ENTRY_NAME)) {
+                    String activity = keywords.get(PH_ACTIVITY_ENTRY_NAME);
+                    // keep only the last segment if applicable
+                    int pos = activity.lastIndexOf('.');
+                    if (pos != -1) {
+                        activity = activity.substring(pos + 1);
+                    }
+
                     // Use the activity as project name
-                    keywords.put(PH_PROJECT_NAME, keywords.get(PH_ACTIVITY_NAME));
+                    keywords.put(PH_PROJECT_NAME, activity);
                 } else {
                     // We need a project name. Just pick up the basename of the project
                     // directory.
@@ -440,6 +515,84 @@ public class ProjectCreator {
                 mLog.error(e, null);
             }
         }
+    }
+
+    /**
+     * Updates a test project with a new path to the main (tested) project.
+     * @param folderPath the path of the test project.
+     * @param pathToMainProject the path to the main project, relative to the test project.
+     */
+    public void updateTestProject(final String folderPath, final String pathToMainProject) {
+        // since this is an update, check the folder does point to a project
+        if (checkProjectFolder(folderPath) == null) {
+            return;
+        }
+
+        // check the path to the main project is valid.
+        File mainProject = new File(pathToMainProject);
+        String resolvedPath;
+        if (mainProject.isAbsolute() == false) {
+            mainProject = new File(folderPath, pathToMainProject);
+            try {
+                resolvedPath = mainProject.getCanonicalPath();
+            } catch (IOException e) {
+                mLog.error(e, "Unable to resolve path to main project: %1$s", pathToMainProject);
+                return;
+            }
+        } else {
+            resolvedPath = mainProject.getAbsolutePath();
+        }
+
+        println("Resolved location of main project to: %1$s", resolvedPath);
+
+        // check the main project exists
+        if (checkProjectFolder(resolvedPath) == null) {
+            return;
+        }
+
+        ProjectProperties props = ProjectProperties.create(folderPath, PropertyType.BUILD);
+
+        // set or replace the path to the main project
+        props.setProperty(ProjectProperties.PROPERTY_TESTED_PROJECT, pathToMainProject);
+        try {
+            props.save();
+            println("Updated %1$s", PropertyType.BUILD.getFilename());
+        } catch (IOException e) {
+            mLog.error(e, "Failed to write %1$s file in '%2$s'",
+                    PropertyType.BUILD.getFilename(),
+                    folderPath);
+            return;
+        }
+    }
+
+    /**
+     * Checks whether the give <var>folderPath</var> is a valid project folder, and returns
+     * a {@link File} to the AndroidManifest.xml file.
+     * <p/>This checks that the folder exists and contains an AndroidManifest.xml file in it.
+     * <p/>Any error are output using {@link #mLog}.
+     * @param folderPath the folder to check
+     * @return a {@link File} to the AndroidManifest.xml file, or null otherwise.
+     */
+    private File checkProjectFolder(String folderPath) {
+        // project folder must exist and be a directory, since this is an update
+        File projectFolder = new File(folderPath);
+        if (!projectFolder.isDirectory()) {
+            mLog.error(null, "Project folder '%1$s' is not a valid directory, this is not an Android project you can update.",
+                    projectFolder);
+            return null;
+        }
+
+        // Check AndroidManifest.xml is present
+        File androidManifest = new File(projectFolder, SdkConstants.FN_ANDROID_MANIFEST_XML);
+        if (!androidManifest.isFile()) {
+            mLog.error(null,
+                    "%1$s not found in '%2$s', this is not an Android project you can update.",
+                    SdkConstants.FN_ANDROID_MANIFEST_XML,
+                    folderPath);
+            return null;
+        }
+
+        return androidManifest;
     }
 
     /**
@@ -470,7 +623,7 @@ public class ProjectCreator {
      * Extracts a "full" package & activity name from an AndroidManifest.xml.
      * <p/>
      * The keywords dictionary is always filed the package name under the key {@link #PH_PACKAGE}.
-     * If an activity name can be found, it is filed under the key {@link #PH_ACTIVITY_NAME}.
+     * If an activity name can be found, it is filed under the key {@link #PH_ACTIVITY_ENTRY_NAME}.
      * When no activity is found, this key is not created.
      *
      * @param manifestFile The AndroidManifest.xml file
@@ -480,37 +633,7 @@ public class ProjectCreator {
     private boolean extractPackageFromManifest(File manifestFile,
             Map<String, String> outKeywords) {
         try {
-            final String nsPrefix = "android";
-            final String nsURI = SdkConstants.NS_RESOURCES;
-
-            XPath xpath = XPathFactory.newInstance().newXPath();
-
-            xpath.setNamespaceContext(new NamespaceContext() {
-                public String getNamespaceURI(String prefix) {
-                    if (nsPrefix.equals(prefix)) {
-                        return nsURI;
-                    }
-                    return XMLConstants.NULL_NS_URI;
-                }
-
-                public String getPrefix(String namespaceURI) {
-                    if (nsURI.equals(namespaceURI)) {
-                        return nsPrefix;
-                    }
-                    return null;
-                }
-
-                @SuppressWarnings("unchecked")
-                public Iterator getPrefixes(String namespaceURI) {
-                    if (nsURI.equals(namespaceURI)) {
-                        ArrayList<String> list = new ArrayList<String>();
-                        list.add(nsPrefix);
-                        return list.iterator();
-                    }
-                    return null;
-                }
-
-            });
+            XPath xpath = AndroidXPathFactory.newXPath();
 
             InputSource source = new InputSource(new FileReader(manifestFile));
             String packageName = xpath.evaluate("/manifest/@package", source);
@@ -524,7 +647,7 @@ public class ProjectCreator {
             String expression = String.format("/manifest/application/activity" +
                     "[intent-filter/action/@%1$s:name='android.intent.action.MAIN' and " +
                     "intent-filter/category/@%1$s:name='android.intent.category.LAUNCHER']" +
-                    "/@%1$s:name", nsPrefix);
+                    "/@%1$s:name", AndroidXPathFactory.DEFAULT_NS_PREFIX);
 
             NodeList activityNames = (NodeList) xpath.evaluate(expression, source,
                     XPathConstants.NODESET);
@@ -564,9 +687,9 @@ public class ProjectCreator {
             if (activityName.length() == 0) {
                 mLog.warning("Missing <activity %1$s:name=\"...\"> in '%2$s'.\n" +
                         "No activity will be generated.",
-                        nsPrefix, manifestFile.getName());
+                        AndroidXPathFactory.DEFAULT_NS_PREFIX, manifestFile.getName());
             } else {
-                outKeywords.put(PH_ACTIVITY_NAME, activityName);
+                outKeywords.put(PH_ACTIVITY_ENTRY_NAME, activityName);
             }
 
             outKeywords.put(PH_PACKAGE, packageName);
@@ -666,8 +789,10 @@ public class ProjectCreator {
             String line;
 
             while ((line = in.readLine()) != null) {
-                for (String key : placeholderMap.keySet()) {
-                    line = line.replace(key, placeholderMap.get(key));
+                if (placeholderMap != null) {
+                    for (String key : placeholderMap.keySet()) {
+                        line = line.replace(key, placeholderMap.get(key));
+                    }
                 }
 
                 out.write(line);
@@ -684,6 +809,85 @@ public class ProjectCreator {
         println("%1$s file %2$s",
                 existed ? "Updated" : "Added",
                 destFile);
+    }
+
+    /**
+     * Installs the project icons.
+     * @param resourceFolder the resource folder
+     * @param target the target of the project.
+     * @return true if any icon was installed.
+     */
+    private boolean installIcons(File resourceFolder, IAndroidTarget target)
+            throws ProjectCreateException {
+        // query the target for its template directory
+        String templateFolder = target.getPath(IAndroidTarget.TEMPLATES);
+
+        boolean installedIcon = false;
+
+        installedIcon |= installIcon(templateFolder, "icon_hdpi.png", resourceFolder, "drawable-hdpi");
+        installedIcon |= installIcon(templateFolder, "icon_mdpi.png", resourceFolder, "drawable-mdpi");
+        installedIcon |= installIcon(templateFolder, "icon_ldpi.png", resourceFolder, "drawable-ldpi");
+
+        return installedIcon;
+    }
+
+    /**
+     * Installs an Icon in the project.
+     * @return true if the icon was installed.
+     */
+    private boolean installIcon(String templateFolder, String iconName, File resourceFolder,
+            String folderName) throws ProjectCreateException {
+        File icon = new File(templateFolder, iconName);
+        if (icon.exists()) {
+            File drawable = createDirs(resourceFolder, folderName);
+            installBinaryFile(icon, new File(drawable, "icon.png"));
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Installs a binary file
+     * @param source the source file to copy
+     * @param destination the destination file to write
+     */
+    private void installBinaryFile(File source, File destination) {
+        byte[] buffer = new byte[8192];
+
+        FileInputStream fis = null;
+        FileOutputStream fos = null;
+        try {
+            fis = new FileInputStream(source);
+            fos = new FileOutputStream(destination);
+
+            int read;
+            while ((read = fis.read(buffer)) != -1) {
+                fos.write(buffer, 0, read);
+            }
+
+        } catch (FileNotFoundException e) {
+            // shouldn't happen since we check before.
+        } catch (IOException e) {
+            new ProjectCreateException(e, "Failed to read binary file: %1$s",
+                    source.getAbsolutePath());
+        } finally {
+            if (fis != null) {
+                try {
+                    fis.close();
+                } catch (IOException e) {
+                    // ignore
+                }
+            }
+            if (fos != null) {
+                try {
+                    fos.close();
+                } catch (IOException e) {
+                    // ignore
+                }
+            }
+        }
+        
     }
 
     /**

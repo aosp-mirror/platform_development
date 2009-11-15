@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="android_test_rules" default="run-tests">
+
+    <import file="android_rules.xml" />
+
+    <property name="tested.project.absolute.dir" location="${tested.project.dir}" />
+    <property name="instrumentation.dir" value="instrumented" />
+    <property name="instrumentation.absolute.dir" location="${instrumentation.dir}" />
+
+    <property name="test.runner" value="android.test.InstrumentationTestRunner" />
+    <!-- Application package of the tested project extracted from its manifest file -->
+    <xpath input="${tested.project.absolute.dir}/AndroidManifest.xml"
+                expression="/manifest/@package" output="tested.manifest.package" />
+
+    <!-- TODO: make it more configurable in the next CL's - now it is default for auto-generated
+         project -->
+    <property name="emma.dump.file"
+                  value="/data/data/${tested.manifest.package}/files/coverage.ec" />
+
+    <macrodef name="run-tests-helper">
+        <attribute name="emma.enabled" default="false" />
+        <element name="extra-instrument-args" optional="yes" />
+        <sequential>
+            <echo>Running tests ...</echo>
+            <exec executable="${adb}" failonerror="true">
+                <arg value="shell" />
+                <arg value="am" />
+                   <arg value="instrument" />
+                <arg value="-w" />
+                <arg value="-e" />
+                   <arg value="coverage" />
+                   <arg value="@{emma.enabled}" />
+                <extra-instrument-args />
+                <arg value="${manifest.package}/${test.runner}" />
+            </exec>
+        </sequential>
+    </macrodef>
+
+    <!-- Invoking this target sets the value of extensible.classpath, which is being added to javac
+         classpath in target 'compile' (android_rules.xml) -->
+    <target name="-set-coverage-classpath">
+        <property name="extensible.classpath"
+                      location="${instrumentation.absolute.dir}/classes" />
+    </target>
+
+    <!-- Ensures that tested project is installed on the device before we run the tests.
+         Used for ordinary tests, without coverage measurement -->
+    <target name="-install-tested-project">
+        <property name="do.not.compile.again" value="true" />
+        <subant target="install">
+            <fileset dir="${tested.project.absolute.dir}" includes="build.xml" />
+        </subant>
+    </target>
+
+    <target name="run-tests" depends="-install-tested-project, install"
+                description="Runs tests from the package defined in test.package property">
+        <run-tests-helper />
+    </target>
+
+    <target name="-install-instrumented">
+        <property name="do.not.compile.again" value="true" />
+        <subant target="-install-with-emma">
+            <property name="out.absolute.dir" value="${instrumentation.absolute.dir}" />
+            <fileset dir="${tested.project.absolute.dir}" includes="build.xml" />
+        </subant>
+    </target>
+
+    <target name="coverage" depends="-set-coverage-classpath, -install-instrumented, install"
+                description="Runs the tests against the instrumented code and generates
+                            code coverage report">
+        <run-tests-helper emma.enabled="true">
+            <extra-instrument-args>
+                <arg value="-e" />
+                   <arg value="coverageFile" />
+                   <arg value="${emma.dump.file}" />
+            </extra-instrument-args>
+        </run-tests-helper>
+        <echo>Downloading coverage file into project directory...</echo>
+        <exec executable="${adb}" failonerror="true">
+            <arg value="pull" />
+            <arg value="${emma.dump.file}" />
+            <arg value="coverage.ec" />
+        </exec>
+        <echo>Extracting coverage report...</echo>
+        <emma>
+            <report sourcepath="${tested.project.absolute.dir}/${source.dir}"
+                              verbosity="${verbosity}">
+                <!-- TODO: report.dir or something like should be introduced if necessary -->
+                <infileset dir=".">
+                    <include name="coverage.ec" />
+                    <include name="coverage.em" />
+                </infileset>
+                <!-- TODO: reports in other, indicated by user formats -->
+                <html outfile="coverage.html" />
+           </report>
+        </emma>
+        <echo>Cleaning up temporary files...</echo>
+        <delete dir="${instrumentation.absolute.dir}" />
+        <delete file="coverage.ec" />
+        <delete file="coverage.em" />
+        <echo>Saving the report file in ${basedir}/coverage/coverage.html</echo>
+    </target>
+
+</project>

@@ -1,0 +1,84 @@
+#!/bin/bash
+
+if ! which xmlstarlet > /dev/null
+then
+    echo "You need to have the 'xmlstarlet' command in your path"
+    exit
+fi
+
+apps=$1
+CWD=$(pwd)/
+if [ "$apps" = "" ]
+then
+    echo "Please specify the path to an application, or '--all' to process all applications"
+    exit
+elif [ "$apps" = "--all" ]
+then
+    apps=$ANDROID_BUILD_TOP/packages/apps/*
+fi
+
+BASE=$(pwd)/$(dirname $0)
+
+for app in $apps
+do
+    pushd $app
+    $BASE/findunusedresources -p . | {
+        read LINE NUM
+        while [ "$LINE" != "" ]
+        do
+            if [ "Z$LINE" = "Z-----------------------------------------------------------" ]
+            then
+                # skip
+                true
+            elif [ "$LINE" = "$app" ]
+            then
+                # skip
+                true
+            else
+                # try to find the missing resource
+                find res | grep -w $LINE  | {
+                    read RESLINE
+                    while [ "$RESLINE" != "" ]
+                    do
+                        if [ -f $RESLINE ]
+                        then
+                            echo REMOVING FILE: $RESLINE
+                            git rm $RESLINE > /dev/null
+                        else
+                            echo WARNING unexpected result for $LINE
+                        fi
+                        read RESLINE
+                    done
+                }
+                grep -Rwl $LINE res | {
+                    read RESLINE
+                    while [ "$RESLINE" != "" ]
+                    do
+                        ISSTRING=$(echo "$RESLINE" | grep -w "strings\.xml")
+                        if [ -n "$ISSTRING" ]
+                        then
+                            echo REMOVING STRING $LINE from $RESLINE
+                            xmlstarlet ed -P -S -d "/resources/string[@name='$LINE']" $RESLINE > tf$$
+                            mv tf$$ $RESLINE
+                            git add $RESLINE
+                        else
+                            echo REMOVING $LINE from $RESLINE
+                            xmlstarlet ed -P -S -d "/resources/*[@name='$LINE']" $RESLINE > tf$$
+                            mv tf$$ $RESLINE
+                            git add $RESLINE
+                        fi
+                        read RESLINE
+                    done
+                }
+            fi
+            read LINE NUM
+        done
+    }
+    popd
+done
+echo
+echo "Done."
+echo "Please rebuild the updated applications to make sure that everything still builds."
+echo "After rebuilding, rerun 'findunusedresources' or 'removeunusedresources' to see if any more resources are now unused."
+echo "When you're done, you can 'git commit' the change."
+echo

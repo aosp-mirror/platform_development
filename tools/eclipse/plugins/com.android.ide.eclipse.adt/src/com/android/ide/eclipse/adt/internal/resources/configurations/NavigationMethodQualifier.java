@@ -54,7 +54,7 @@ public final class NavigationMethodQualifier extends ResourceQualifier {
          * @param value The qualifier value.
          * @return the enum for the qualifier value or null if no matching was found.
          */
-        static NavigationMethod getEnum(String value) {
+        public static NavigationMethod getEnum(String value) {
             for (NavigationMethod orient : values()) {
                 if (orient.mValue.equals(value)) {
                     return orient;
@@ -134,8 +134,7 @@ public final class NavigationMethodQualifier extends ResourceQualifier {
     public boolean checkAndSet(String value, FolderConfiguration config) {
         NavigationMethod method = NavigationMethod.getEnum(value);
         if (method != null) {
-            NavigationMethodQualifier qualifier = new NavigationMethodQualifier();
-            qualifier.mValue = method;
+            NavigationMethodQualifier qualifier = new NavigationMethodQualifier(method);
             config.setNavigationMethodQualifier(qualifier);
             return true;
         }

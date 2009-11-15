@@ -38,6 +38,7 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.Spinner;
+import android.widget.Toast;
 import android.widget.AdapterView.OnItemSelectedListener;
 
 import java.io.FileInputStream;
@@ -58,6 +59,7 @@ public class DevelopmentSettings extends Activity {
     private CheckBox mShowBackgroundCB;
     private CheckBox mShowSleepCB;
     private CheckBox mShowXmppCB;
+    private CheckBox mCompatibilityModeCB;
     private Spinner mMaxProcsSpinner;
     private Spinner mWindowAnimationScaleSpinner;
     private Spinner mTransitionAnimationScaleSpinner;
@@ -69,6 +71,7 @@ public class DevelopmentSettings extends Activity {
     private int mProcessLimit;
     private boolean mShowSleep;
     private boolean mShowXmpp;
+    private boolean mCompatibilityMode;
     private AnimationScaleSelectedListener mWindowAnimationScale
             = new AnimationScaleSelectedListener(0);
     private AnimationScaleSelectedListener mTransitionAnimationScale
@@ -106,6 +109,8 @@ public class DevelopmentSettings extends Activity {
         mShowSleepCB.setOnClickListener(mShowSleepClicked);
         mShowXmppCB = (CheckBox)findViewById(R.id.show_xmpp);
         mShowXmppCB.setOnClickListener(mShowXmppClicked);
+        mCompatibilityModeCB = (CheckBox)findViewById(R.id.compatibility_mode);
+        mCompatibilityModeCB.setOnClickListener(mCompatibilityModeClicked);
         mMaxProcsSpinner = (Spinner)findViewById(R.id.max_procs);
         mMaxProcsSpinner.setOnItemSelectedListener(mMaxProcsChanged);
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(
@@ -168,7 +173,8 @@ public class DevelopmentSettings extends Activity {
         updateSharedOptions();
         updateFlingerOptions();
         updateSleepOptions();
-        updateXmppOptions();        
+        updateXmppOptions();
+        updateCompatibilityOptions();
 
         try {
             FileInputStream  in = new FileInputStream( FONT_HINTING_FILE );
@@ -233,6 +239,17 @@ public class DevelopmentSettings extends Activity {
     private void updateSharedOptions() {
         mShowLoadCB.setChecked(Settings.System.getInt(getContentResolver(),
                 Settings.System.SHOW_PROCESSES, 0) != 0);
+    }
+
+    private void writeCompatibilityOptions() {
+        Settings.System.putInt(getContentResolver(),
+                Settings.System.COMPATIBILITY_MODE, mCompatibilityMode ? 0 : 1);
+    }
+
+    private void updateCompatibilityOptions() {
+        mCompatibilityMode = Settings.System.getInt(
+            getContentResolver(), Settings.System.COMPATIBILITY_MODE, 1) == 0;
+        mCompatibilityModeCB.setChecked(mCompatibilityMode);
     }
 
     private void updateFlingerOptions() {
@@ -331,6 +348,19 @@ public class DevelopmentSettings extends Activity {
             updateFinishOptions();
         }
     };
+
+    private View.OnClickListener mCompatibilityModeClicked =
+        new View.OnClickListener() {
+    public void onClick(View v) {
+        mCompatibilityMode = ((CheckBox)v).isChecked();
+        writeCompatibilityOptions();
+        updateCompatibilityOptions();
+        Toast toast = Toast.makeText(DevelopmentSettings.this,
+                R.string.development_settings_compatibility_mode_toast,
+                Toast.LENGTH_LONG);
+        toast.show();
+    }
+};
 
     private View.OnClickListener mShowLoadClicked = new View.OnClickListener() {
         public void onClick(View v) {

@@ -17,9 +17,6 @@
 package com.android.ide.eclipse.adt.internal.resources;
 
 
-import com.android.ide.eclipse.adt.internal.resources.AttrsXmlParser;
-import com.android.ide.eclipse.adt.internal.resources.DeclareStyleableInfo;
-import com.android.ide.eclipse.adt.internal.resources.ViewClassInfo;
 import com.android.ide.eclipse.adt.internal.resources.DeclareStyleableInfo.AttributeInfo;
 import com.android.ide.eclipse.adt.internal.resources.DeclareStyleableInfo.AttributeInfo.Format;
 import com.android.ide.eclipse.tests.AdtTestData;
@@ -32,20 +29,23 @@ import java.util.Map;
 import junit.framework.TestCase;
 
 public class AttrsXmlParserTest extends TestCase {
-    
+
     private AttrsXmlParser mParser;
     private String mFilePath;
 
+    private static final String MOCK_DATA_PATH =
+        "com/android/ide/eclipse/testdata/mock_attrs.xml"; //$NON-NLS-1$
+
     @Override
     public void setUp() throws Exception {
-        mFilePath = AdtTestData.getInstance().getTestFilePath("mock_attrs.xml"); //$NON-NLS-1$
+        mFilePath = AdtTestData.getInstance().getTestFilePath(MOCK_DATA_PATH); //$NON-NLS-1$
         mParser = new AttrsXmlParser(mFilePath);
     }
 
     @Override
     public void tearDown() throws Exception {
     }
-    
+
     public final void testGetDocument() throws Exception {
         assertNotNull(_getDocument());
     }
@@ -53,12 +53,12 @@ public class AttrsXmlParserTest extends TestCase {
     public void testGetOsAttrsXmlPath() throws Exception {
         assertEquals(mFilePath, mParser.getOsAttrsXmlPath());
     }
-    
+
     public final void testPreload() throws Exception {
         assertSame(mParser, mParser.preload());
     }
-    
-    
+
+
     public final void testLoadViewAttributes() throws Exception {
         mParser.preload();
         ViewClassInfo info = new ViewClassInfo(
@@ -66,7 +66,7 @@ public class AttrsXmlParserTest extends TestCase {
                 "mock_android.something.Theme",      //$NON-NLS-1$
                 "Theme");                            //$NON-NLS-1$
         mParser.loadViewAttributes(info);
-        
+
         assertEquals("These are the standard attributes that make up a complete theme.", //$NON-NLS-1$
                 info.getJavaDoc());
         AttributeInfo[] attrs = info.getAttributes();
@@ -75,7 +75,7 @@ public class AttrsXmlParserTest extends TestCase {
         assertEquals(1, info.getAttributes()[0].getFormats().length);
         assertEquals(Format.DIMENSION, info.getAttributes()[0].getFormats()[0]);
     }
-    
+
     public final void testEnumFlagValues() throws Exception {
         /* The XML being read contains:
             <!-- Standard orientation constant. -->
@@ -90,32 +90,32 @@ public class AttrsXmlParserTest extends TestCase {
         mParser.preload();
         Map<String, Map<String, Integer>> attrMap = mParser.getEnumFlagValues();
         assertTrue(attrMap.containsKey("orientation"));
-        
+
         Map<String, Integer> valueMap = attrMap.get("orientation");
         assertTrue(valueMap.containsKey("horizontal"));
         assertTrue(valueMap.containsKey("vertical"));
         assertEquals(Integer.valueOf(0), valueMap.get("horizontal"));
         assertEquals(Integer.valueOf(1), valueMap.get("vertical"));
     }
-    
+
     public final void testDeprecated() throws Exception {
         mParser.preload();
-        
+
         DeclareStyleableInfo dep = mParser.getDeclareStyleableList().get("DeprecatedTest");
         assertNotNull(dep);
-        
+
         AttributeInfo[] attrs = dep.getAttributes();
         assertEquals(4, attrs.length);
 
         assertEquals("deprecated-inline", attrs[0].getName());
         assertEquals("In-line deprecated.", attrs[0].getDeprecatedDoc());
         assertEquals("Deprecated comments using delimiters.", attrs[0].getJavaDoc());
-        
+
         assertEquals("deprecated-multiline", attrs[1].getName());
         assertEquals("Multi-line version of deprecated that works till the next tag.",
                 attrs[1].getDeprecatedDoc());
         assertEquals("Deprecated comments on their own line.", attrs[1].getJavaDoc());
-        
+
         assertEquals("deprecated-not", attrs[2].getName());
         assertEquals(null, attrs[2].getDeprecatedDoc());
         assertEquals("This attribute is not deprecated.", attrs[2].getJavaDoc());
@@ -126,7 +126,7 @@ public class AttrsXmlParserTest extends TestCase {
     }
 
     //---- access to private methods
-    
+
     private Document _getDocument() throws Exception {
         Method method = AttrsXmlParser.class.getDeclaredMethod("getDocument"); //$NON-NLS-1$
         method.setAccessible(true);

@@ -22,13 +22,15 @@ import java.util.List;
 
 /**
  * Implementation of {@link UiElementTreeEditPart} for layout objects.
+ *
+ * @since GLE1
  */
 public class UiLayoutTreeEditPart extends UiElementTreeEditPart {
 
     public UiLayoutTreeEditPart(UiElementNode node) {
         super(node);
     }
-    
+
     @SuppressWarnings("unchecked")
     @Override
     protected List getModelChildren() {

@@ -21,7 +21,7 @@
 #
 
 # include common function and variable definitions
-source `dirname $0`/../core/ndk-common.sh
+. `dirname $0`/../core/ndk-common.sh
 
 # number of jobs to run in parallel when running make
 JOBS=$HOST_NUM_CPUS
@@ -424,9 +424,9 @@ if ! timestamp_check gdbserver configure; then
     echo "Configure: gdbserver build."
     mkdir -p $GDBSERVER_BUILD
     cd $GDBSERVER_BUILD &&
-    CFLAGS="-g -O2 -static -mandroid -I$ANDROID_SYSROOT/usr/include" \
-    LDFLAGS= \
-    CC="$TOOLCHAIN_PREFIX/bin/arm-eabi-gcc" \
+    export CC="$TOOLCHAIN_PREFIX/bin/arm-eabi-gcc" &&
+    export CFLAGS="-g -O2 -static -mandroid -I$ANDROID_SYSROOT/usr/include"  &&
+    export LDFLAGS= &&
     run $TOOLCHAIN_SRC/gdb-6.6/gdb/gdbserver/configure \
     --host=arm-eabi-linux \
     --with-sysroot=$ANDROID_SYSROOT

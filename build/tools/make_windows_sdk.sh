@@ -99,7 +99,7 @@ function build() {
         fastboot \
         hprof-conv \
         mksdcard \
-        sqlite3 \
+        sdklauncher sqlite3 \
         zipalign \
         || die "Build failed"
 }
@@ -141,7 +141,7 @@ function package() {
     TOOLS="$TEMP_SDK_DIR/tools"
     LIB="$TEMP_SDK_DIR/tools/lib"
     rm -v "$TOOLS"/{adb,android,apkbuilder,ddms,dmtracedump,draw9patch,emulator}
-    rm -v "$TOOLS"/{hierarchyviewer,hprof-conv,mksdcard,sqlite3,traceview,zipalign}
+    rm -v "$TOOLS"/{hierarchyviewer,hprof-conv,layoutopt,mksdcard,sqlite3,traceview,zipalign}
     rm -v "$LIB"/*/swt.jar
     rm -v "$PLATFORM_TOOLS"/{aapt,aidl,dx,dexdump}
 
@@ -152,6 +152,9 @@ function package() {
     cp -v prebuilt/windows/swt/swt.jar         "$LIB"/x86/
     mkdir -pv "$LIB"/x86_64
     cp -v prebuilt/windows-x86_64/swt/swt.jar  "$LIB"/x86_64/
+
+    # Move the SDK Setup (aka sdklauncher) to the root of the SDK (it was copied in tools above)
+    mv "$TOOLS/sdklauncher.exe" "$TEMP_SDK_DIR/SDK Setup.exe"    
 
     # If you want the emulator NOTICE in the tools dir, uncomment the following line:
     # cp -v external/qemu/NOTICE "$TOOLS"/emulator_NOTICE.txt
@@ -164,6 +167,7 @@ function package() {
     cp -v development/tools/ddms/app/etc/ddms.bat                   "$TOOLS"/
     cp -v development/tools/traceview/etc/traceview.bat             "$TOOLS"/
     cp -v development/tools/hierarchyviewer/etc/hierarchyviewer.bat "$TOOLS"/
+    cp -v development/tools/layoutopt/app/etc/layoutopt.bat         "$TOOLS"/
     cp -v development/tools/draw9patch/etc/draw9patch.bat           "$TOOLS"/
     cp -v development/tools/sdkmanager/app/etc/android.bat          "$TOOLS"/
 

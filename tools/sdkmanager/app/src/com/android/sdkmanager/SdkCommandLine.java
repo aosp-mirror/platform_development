@@ -23,7 +23,17 @@ import com.android.sdklib.SdkManager;
 /**
  * Specific command-line flags for the {@link SdkManager}.
  */
-public class SdkCommandLine extends CommandLineProcessor {
+class SdkCommandLine extends CommandLineProcessor {
+
+    /*
+     * Steps needed to add a new action:
+     * - Each action is defined as a "verb object" followed by parameters.
+     * - Either reuse a VERB_ constant or define a new one.
+     * - Either reuse an OBJECT_ constant or define a new one.
+     * - Add a new entry to mAction with a one-line help summary.
+     * - In the constructor, add a define() call for each parameter (either mandatory
+     *   or optional) for the given action.
+     */
 
     public final static String VERB_LIST   = "list";
     public final static String VERB_CREATE = "create";
@@ -31,31 +41,38 @@ public class SdkCommandLine extends CommandLineProcessor {
     public final static String VERB_DELETE = "delete";
     public final static String VERB_UPDATE = "update";
 
-    public static final String OBJECT_AVD      = "avd";
-    public static final String OBJECT_AVDS     = "avds";
-    public static final String OBJECT_TARGET   = "target";
-    public static final String OBJECT_TARGETS  = "targets";
-    public static final String OBJECT_PROJECT  = "project";
-    public static final String OBJECT_ADB      = "adb";
+    public static final String OBJECT_SDK          = "sdk";
+    public static final String OBJECT_AVD          = "avd";
+    public static final String OBJECT_AVDS         = "avds";
+    public static final String OBJECT_TARGET       = "target";
+    public static final String OBJECT_TARGETS      = "targets";
+    public static final String OBJECT_PROJECT      = "project";
+    public static final String OBJECT_TEST_PROJECT = "test-project";
+    public static final String OBJECT_ADB          = "adb";
 
-    public static final String ARG_ALIAS       = "alias";
-    public static final String ARG_ACTIVITY    = "activity";
+    public static final String ARG_ALIAS        = "alias";
+    public static final String ARG_ACTIVITY     = "activity";
 
-    public static final String KEY_ACTIVITY    = ARG_ACTIVITY;
-    public static final String KEY_PACKAGE     = "package";
-    public static final String KEY_MODE        = "mode";
-    public static final String KEY_TARGET_ID   = OBJECT_TARGET;
-    public static final String KEY_NAME        = "name";
-    public static final String KEY_PATH        = "path";
-    public static final String KEY_FILTER      = "filter";
-    public static final String KEY_SKIN        = "skin";
-    public static final String KEY_SDCARD      = "sdcard";
-    public static final String KEY_FORCE       = "force";
-    public static final String KEY_RENAME      = "rename";
-    public static final String KEY_SUBPROJECTS = "subprojects";
+    public static final String KEY_ACTIVITY     = ARG_ACTIVITY;
+    public static final String KEY_PACKAGE      = "package";
+    public static final String KEY_MODE         = "mode";
+    public static final String KEY_TARGET_ID    = OBJECT_TARGET;
+    public static final String KEY_NAME         = "name";
+    public static final String KEY_PATH         = "path";
+    public static final String KEY_FILTER       = "filter";
+    public static final String KEY_SKIN         = "skin";
+    public static final String KEY_SDCARD       = "sdcard";
+    public static final String KEY_FORCE        = "force";
+    public static final String KEY_RENAME       = "rename";
+    public static final String KEY_SUBPROJECTS  = "subprojects";
+    public static final String KEY_MAIN_PROJECT = "main";
 
     /**
      * Action definitions for SdkManager command line.
+     * <p/>
+     * This list serves two purposes: first it is used to know which verb/object
+     * actions are acceptable on the command-line; second it provides a summary
+     * for each action that is printed in the help.
      * <p/>
      * Each entry is a string array with:
      * <ul>
@@ -89,12 +106,22 @@ public class SdkCommandLine extends CommandLineProcessor {
             { VERB_UPDATE, OBJECT_PROJECT,
                 "Updates an Android Project (must have an AndroidManifest.xml)." },
 
+            { VERB_CREATE, OBJECT_TEST_PROJECT,
+                "Creates a new Android Test Project." },
+            { VERB_UPDATE, OBJECT_TEST_PROJECT,
+                "Updates an Android Test Project (must have an AndroidManifest.xml)." },
+
             { VERB_UPDATE, OBJECT_ADB,
                 "Updates adb to support the USB devices declared in the SDK add-ons." },
+
+            { VERB_UPDATE, OBJECT_SDK,
+                "Updates the SDK by suggesting new platforms to install if available." }
         };
 
     public SdkCommandLine(ISdkLog logger) {
         super(logger, ACTIONS);
+
+        // The following defines the parameters of the actions defined in mAction.
 
         // --- create avd ---
 
@@ -104,7 +131,7 @@ public class SdkCommandLine extends CommandLineProcessor {
         define(Mode.STRING, true,
                 VERB_CREATE, OBJECT_AVD, "n", KEY_NAME,
                 "Name of the new AVD", null);
-        define(Mode.INTEGER, true,
+        define(Mode.STRING, true,
                 VERB_CREATE, OBJECT_AVD, "t", KEY_TARGET_ID,
                 "Target id of the new AVD", null);
         define(Mode.STRING, false,
@@ -154,7 +181,7 @@ public class SdkCommandLine extends CommandLineProcessor {
                 VERB_CREATE, OBJECT_PROJECT,
                 "p", KEY_PATH,
                 "Location path of new project", null);
-        define(Mode.INTEGER, true,
+        define(Mode.STRING, true,
                 VERB_CREATE, OBJECT_PROJECT, "t", KEY_TARGET_ID,
                 "Target id of the new project", null);
         define(Mode.STRING, true,
@@ -167,16 +194,29 @@ public class SdkCommandLine extends CommandLineProcessor {
                 VERB_CREATE, OBJECT_PROJECT, "n", KEY_NAME,
                 "Project name", null);
 
+        // --- create test-project ---
+
+        define(Mode.STRING, true,
+                VERB_CREATE, OBJECT_TEST_PROJECT,
+                "p", KEY_PATH,
+                "Location path of new project", null);
+        define(Mode.STRING, false,
+                VERB_CREATE, OBJECT_TEST_PROJECT, "n", KEY_NAME,
+                "Project name", null);
+        define(Mode.STRING, true,
+                VERB_CREATE, OBJECT_TEST_PROJECT, "m", KEY_MAIN_PROJECT,
+                "Location path of the project to test, relative to the new project", null);
+
         // --- update project ---
 
         define(Mode.STRING, true,
                 VERB_UPDATE, OBJECT_PROJECT,
                 "p", KEY_PATH,
                 "Location path of the project", null);
-        define(Mode.INTEGER, true,
+        define(Mode.STRING, false,
                 VERB_UPDATE, OBJECT_PROJECT,
                 "t", KEY_TARGET_ID,
-                "Target id to set for the project", -1);
+                "Target id to set for the project", null);
         define(Mode.STRING, false,
                 VERB_UPDATE, OBJECT_PROJECT,
                 "n", KEY_NAME,
@@ -185,6 +225,17 @@ public class SdkCommandLine extends CommandLineProcessor {
                 VERB_UPDATE, OBJECT_PROJECT,
                 "s", KEY_SUBPROJECTS,
                 "Also update any projects in sub-folders, such as test projects.", false);
+
+        // --- update test project ---
+
+        define(Mode.STRING, true,
+                VERB_UPDATE, OBJECT_TEST_PROJECT,
+                "p", KEY_PATH,
+                "Location path of the project", null);
+        define(Mode.STRING, true,
+                VERB_UPDATE, OBJECT_TEST_PROJECT,
+                "m", KEY_MAIN_PROJECT,
+                "Location path of the project to test, relative to the new project", null);
     }
 
     @Override
@@ -196,27 +247,34 @@ public class SdkCommandLine extends CommandLineProcessor {
 
     /** Helper to retrieve the --path value. */
     public String getParamLocationPath() {
-        return ((String) getValue(null, null, KEY_PATH));
+        return (String) getValue(null, null, KEY_PATH);
     }
 
-    /** Helper to retrieve the --target id value. */
-    public int getParamTargetId() {
-        return ((Integer) getValue(null, null, KEY_TARGET_ID)).intValue();
+    /**
+     * Helper to retrieve the --target id value.
+     * The id is a string. It can be one of:
+     * - an integer, in which case it's the index of the target (cf "android list targets")
+     * - a symbolic name such as android-N for platforn API N
+     * - a symbolic add-on name such as written in the avd/*.ini files,
+     *   e.g. "Google Inc.:Google APIs:3"
+     */
+    public String getParamTargetId() {
+        return (String) getValue(null, null, KEY_TARGET_ID);
     }
 
     /** Helper to retrieve the --name value. */
     public String getParamName() {
-        return ((String) getValue(null, null, KEY_NAME));
+        return (String) getValue(null, null, KEY_NAME);
     }
 
     /** Helper to retrieve the --skin value. */
     public String getParamSkin() {
-        return ((String) getValue(null, null, KEY_SKIN));
+        return (String) getValue(null, null, KEY_SKIN);
     }
 
     /** Helper to retrieve the --sdcard value. */
     public String getParamSdCard() {
-        return ((String) getValue(null, null, KEY_SDCARD));
+        return (String) getValue(null, null, KEY_SDCARD);
     }
 
     /** Helper to retrieve the --force flag. */
@@ -228,7 +286,7 @@ public class SdkCommandLine extends CommandLineProcessor {
 
     /** Helper to retrieve the --rename value for a move verb. */
     public String getParamMoveNewName() {
-        return ((String) getValue(VERB_MOVE, null, KEY_RENAME));
+        return (String) getValue(VERB_MOVE, null, KEY_RENAME);
     }
 
 
@@ -247,5 +305,12 @@ public class SdkCommandLine extends CommandLineProcessor {
     /** Helper to retrieve the --subprojects for any project action. */
     public boolean getParamSubProject() {
         return ((Boolean) getValue(null, OBJECT_PROJECT, KEY_SUBPROJECTS)).booleanValue();
+    }
+
+    // -- some helpers for test-project action flags
+
+    /** Helper to retrieve the --main value. */
+    public String getParamTestProjectMain() {
+        return ((String) getValue(null, null, KEY_MAIN_PROJECT));
     }
 }

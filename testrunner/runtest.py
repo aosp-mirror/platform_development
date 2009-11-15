@@ -14,9 +14,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Command line utility for running a pre-defined test.
+"""Command line utility for running Android tests
 
-Based on previous <androidroot>/development/tools/runtest shell script.
+runtest helps automate the instructions for building and running tests
+- It builds the corresponding test package for the code you want to test
+- It pushes the test package to your device or emulator
+- It launches InstrumentationTestRunner (or similar) to run the tests you
+specify.
+
+runtest supports running tests whose attributes have been pre-defined in
+_TEST_FILE_NAME files, (runtest <testname>), or by specifying the file
+system path to the test to run (runtest --path <path>).
+
+Do runtest --help to see full list of options.
 """
 
 # Python imports
@@ -34,6 +44,7 @@ import errors
 import logger
 import run_command
 from test_defs import test_defs
+from test_defs import test_walker
 
 
 class TestRunner(object):
@@ -56,6 +67,9 @@ class TestRunner(object):
       "The runtest script works in two ways.  You can query it "
       "for a list of tests, or you can launch one or more tests.")
 
+  # default value for make -jX
+  _DEFAULT_JOBS = 4
+
   def __init__(self):
     # disable logging of timestamp
     self._root_path = android_build.GetTop()
@@ -64,6 +78,7 @@ class TestRunner(object):
     self._known_tests = None
     self._options = None
     self._test_args = None
+    self._tests_to_run = None
 
   def _ProcessOptions(self):
     """Processes command-line options."""
@@ -78,6 +93,9 @@ class TestRunner(object):
                       help="To view the list of tests")
     parser.add_option("-b", "--skip-build", dest="skip_build", default=False,
                       action="store_true", help="Skip build - just launch")
+    parser.add_option("-j", "--jobs", dest="make_jobs",
+                      metavar="X", default=self._DEFAULT_JOBS,
+                      help="Number of make jobs to use when building")
     parser.add_option("-n", "--skip_execute", dest="preview", default=False,
                       action="store_true",
                       help="Do not execute, just preview commands")
@@ -108,6 +126,8 @@ class TestRunner(object):
     parser.add_option("-o", "--coverage", dest="coverage",
                       default=False, action="store_true",
                       help="Generate code coverage metrics for test(s)")
+    parser.add_option("-x", "--path", dest="test_path",
+                      help="Run test(s) at given file system path")
     parser.add_option("-t", "--all-tests", dest="all_tests",
                       default=False, action="store_true",
                       help="Run all defined tests")
@@ -139,6 +159,7 @@ class TestRunner(object):
         and not self._options.all_tests
         and not self._options.continuous_tests
         and not self._options.cts_tests
+        and not self._options.test_path
         and len(self._test_args) < 1):
       parser.print_help()
       logger.SilentLog("at least one test name must be specified")
@@ -186,26 +207,46 @@ class TestRunner(object):
 
   def _DumpTests(self):
     """Prints out set of defined tests."""
-    print "The following tests are currently defined:"
+    print "The following tests are currently defined:\n"
+    print "%-25s %-40s %s" % ("name", "build path", "description")
+    print "-" * 80
     for test in self._known_tests:
-      print "%-15s %s" % (test.GetName(), test.GetDescription())
+      print "%-25s %-40s %s" % (test.GetName(), test.GetBuildPath(),
+                                test.GetDescription())
+    print "\nSee %s for more information" % self._TEST_FILE_NAME
 
   def _DoBuild(self):
     logger.SilentLog("Building tests...")
     target_set = Set()
     extra_args_set = Set()
-    for test_suite in self._GetTestsToRun():
+    tests = self._GetTestsToRun()
+    for test_suite in tests:
       self._AddBuildTarget(test_suite, target_set, extra_args_set)
 
     if target_set:
       if self._options.coverage:
         coverage.EnableCoverageBuild()
+
+      # hack to build cts dependencies
+      # TODO: remove this when build dependency support added to runtest or
+      # cts dependencies are removed
+      if self._IsCtsTests(tests):
+        # need to use make since these fail building with ONE_SHOT_MAKEFILE
+        cmd = ('make -j%s CtsTestStubs android.core.tests.runner' %
+               self._options.make_jobs)
+        logger.Log(cmd)
+        if not self._options.preview:
+          old_dir = os.getcwd()
+          os.chdir(self._root_path)
+          run_command.RunCommand(cmd, return_output=False)
+          os.chdir(old_dir)
       target_build_string = " ".join(list(target_set))
       extra_args_string = " ".join(list(extra_args_set))
       # mmm cannot be used from python, so perform a similar operation using
       # ONE_SHOT_MAKEFILE
-      cmd = 'ONE_SHOT_MAKEFILE="%s" make -C "%s" files %s' % (
-          target_build_string, self._root_path, extra_args_string)
+      cmd = 'ONE_SHOT_MAKEFILE="%s" make -j%s -C "%s" files %s' % (
+          target_build_string, self._options.make_jobs, self._root_path,
+          extra_args_string)
       logger.Log(cmd)
 
       if self._options.preview:
@@ -230,25 +271,41 @@ class TestRunner(object):
       if os.path.isfile(os.path.join(self._root_path, build_file_path)):
         target_set.add(build_file_path)
         return True
+      else:
+        logger.Log("%s has no Android.mk, skipping" % build_dir)
     return False
 
   def _GetTestsToRun(self):
     """Get a list of TestSuite objects to run, based on command line args."""
+    if self._tests_to_run:
+      return self._tests_to_run
+
+    self._tests_to_run = []
     if self._options.all_tests:
-      return self._known_tests.GetTests()
+      self._tests_to_run = self._known_tests.GetTests()
     elif self._options.continuous_tests:
-      return self._known_tests.GetContinuousTests()
+      self._tests_to_run = self._known_tests.GetContinuousTests()
     elif self._options.cts_tests:
-      return self._known_tests.GetCtsTests()
-    tests = []
+      self._tests_to_run = self._known_tests.GetCtsTests()
+    elif self._options.test_path:
+      walker = test_walker.TestWalker()
+      self._tests_to_run = walker.FindTests(self._options.test_path)
+
     for name in self._test_args:
       test = self._known_tests.GetTest(name)
       if test is None:
         logger.Log("Error: Could not find test %s" % name)
         self._DumpTests()
         raise errors.AbortError
-      tests.append(test)
-    return tests
+      self._tests_to_run.append(test)
+    return self._tests_to_run
+
+  def _IsCtsTests(self, test_list):
+    """Check if any cts tests are included in given list of tests to run."""
+    for test in test_list:
+      if test.IsCts():
+        return True
+    return False
 
   def RunTests(self):
     """Main entry method - executes the tests according to command line args."""

@@ -54,7 +54,7 @@ public final class TextInputMethodQualifier extends ResourceQualifier {
          * @param value The qualifier value.
          * @return the enum for the qualifier value or null if no matching was found.
          */
-        static TextInputMethod getEnum(String value) {
+        public static TextInputMethod getEnum(String value) {
             for (TextInputMethod orient : values()) {
                 if (orient.mValue.equals(value)) {
                     return orient;

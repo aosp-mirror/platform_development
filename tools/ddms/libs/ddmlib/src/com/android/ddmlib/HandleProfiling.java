@@ -16,6 +16,9 @@
 
 package com.android.ddmlib;
 
+import com.android.ddmlib.ClientData.IMethodProfilingHandler;
+import com.android.ddmlib.ClientData.MethodProfilingStatus;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
@@ -27,6 +30,7 @@ final class HandleProfiling extends ChunkHandler {
     public static final int CHUNK_MPRS = type("MPRS");
     public static final int CHUNK_MPRE = type("MPRE");
     public static final int CHUNK_MPRQ = type("MPRQ");
+    public static final int CHUNK_FAIL = type("FAIL");
 
     private static final HandleProfiling mInst = new HandleProfiling();
 
@@ -65,6 +69,8 @@ final class HandleProfiling extends ChunkHandler {
             handleMPRE(client, data);
         } else if (type == CHUNK_MPRQ) {
             handleMPRQ(client, data);
+        } else if (type == CHUNK_FAIL) {
+            handleFAIL(client, data);
         } else {
             handleUnknownChunk(client, type, data, isReply, msgId);
         }
@@ -73,11 +79,14 @@ final class HandleProfiling extends ChunkHandler {
     /**
      * Send a MPRS (Method PRofiling Start) request to the client.
      *
+     * The arguments to this method will eventually be passed to
+     * android.os.Debug.startMethodTracing() on the device.
+     *
      * @param fileName is the name of the file to which profiling data
      *          will be written (on the device); it will have ".trace"
      *          appended if necessary
      * @param bufferSize is the desired buffer size in bytes (8MB is good)
-     * @param flags should be zero
+     * @param flags see startMethodTracing() docs; use 0 for default behavior
      */
     public static void sendMPRS(Client client, String fileName, int bufferSize,
         int flags) throws IOException {
@@ -95,6 +104,13 @@ final class HandleProfiling extends ChunkHandler {
         Log.d("ddm-prof", "Sending " + name(CHUNK_MPRS) + " '" + fileName
             + "', size=" + bufferSize + ", flags=" + flags);
         client.sendAndConsume(packet, mInst);
+
+        // record the filename we asked for.
+        client.getClientData().setPendingMethodProfiling(fileName);
+
+        // send a status query. this ensure that the status is properly updated if for some
+        // reason starting the tracing failed.
+        sendMPRQ(client);
     }
 
     /**
@@ -119,15 +135,28 @@ final class HandleProfiling extends ChunkHandler {
     private void handleMPRE(Client client, ByteBuffer data) {
         byte result;
 
+        // get the filename and make the client not have pending HPROF dump anymore.
+        String filename = client.getClientData().getPendingMethodProfiling();
+        client.getClientData().setPendingMethodProfiling(null);
+
         result = data.get();
 
-        if (result == 0) {
-            Log.i("ddm-prof", "Method profiling has finished");
-        } else {
-            Log.w("ddm-prof", "Method profiling has failed (check device log)");
+        // get the app-level handler for method tracing dump
+        IMethodProfilingHandler handler = ClientData.getMethodProfilingHandler();
+        if (handler != null) {
+            if (result == 0) {
+                handler.onSuccess(filename, client);
+
+                Log.d("ddm-prof", "Method profiling has finished");
+            } else {
+                handler.onFailure(client);
+
+                Log.w("ddm-prof", "Method profiling has failed (check device log)");
+            }
         }
 
-        // TODO: stuff
+        client.getClientData().setMethodProfilingStatus(MethodProfilingStatus.OFF);
+        client.update(Client.CHANGE_METHOD_PROFILING_STATUS);
     }
 
     /**
@@ -154,9 +183,36 @@ final class HandleProfiling extends ChunkHandler {
         result = data.get();
 
         if (result == 0) {
-            Log.i("ddm-prof", "Method profiling is not running");
+            client.getClientData().setMethodProfilingStatus(MethodProfilingStatus.OFF);
+            Log.d("ddm-prof", "Method profiling is not running");
         } else {
-            Log.i("ddm-prof", "Method profiling is running");
+            client.getClientData().setMethodProfilingStatus(MethodProfilingStatus.ON);
+            Log.d("ddm-prof", "Method profiling is running");
+        }
+        client.update(Client.CHANGE_METHOD_PROFILING_STATUS);
+    }
+
+    private void handleFAIL(Client client, ByteBuffer data) {
+        // this can be sent if MPRS failed (like wrong permission)
+
+        String filename = client.getClientData().getPendingMethodProfiling();
+        if (filename != null) {
+            // reset the pending file.
+            client.getClientData().setPendingMethodProfiling(null);
+
+            // and notify of failure
+            IMethodProfilingHandler handler = ClientData.getMethodProfilingHandler();
+            if (handler != null) {
+                handler.onFailure(client);
+            }
+
+        }
+
+        // send a query to know the current status
+        try {
+            sendMPRQ(client);
+        } catch (IOException e) {
+            Log.e("HandleProfiling", e);
         }
     }
 }

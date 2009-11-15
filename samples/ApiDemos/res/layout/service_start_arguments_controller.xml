@@ -43,5 +43,15 @@
         android:text="@string/start3_service">
     </Button>
 
+    <Button android:id="@+id/startfail"
+        android:layout_width="wrap_content" android:layout_height="wrap_content" 
+        android:text="@string/startfail_service">
+    </Button>
+
+    <Button android:id="@+id/kill"
+        android:layout_width="wrap_content" android:layout_height="wrap_content" 
+        android:text="@string/kill_process">
+    </Button>
+
 </LinearLayout>
 

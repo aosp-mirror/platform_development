@@ -1,0 +1,15 @@
+// Rule: UseCompoundDrawables
+//
+// Description: Checks whether the current node can be replaced by a TextView
+//              using compound drawables.
+//
+// Conditions:
+// - The node is a LinearLayout
+// - The node has two children, ImageView and TextView
+// - The ImageView does not have a weight
+
+if (node.is("LinearLayout") && node.'*'.size() == 2 && node.'TextView'.size() == 1 &&
+        node.'ImageView'.size() == 1 && !node.'ImageView'[0].'@android:layout_weight') {
+    analysis << "This tag and its children can be replaced by one <TextView/> and " +
+            "a compound drawable"
+}

@@ -29,6 +29,8 @@ import org.eclipse.gef.commands.Command;
 /**
  * A command that knows how to instantiate a new element based on a given {@link ElementDescriptor},
  * the parent {@link UiElementEditPart} and an optional target location.
+ *
+ * @since GLE1
  */
 public class ElementCreateCommand extends Command {
 
@@ -41,7 +43,7 @@ public class ElementCreateCommand extends Command {
 
     /**
      * Creates a new {@link ElementCreateCommand}.
-     * 
+     *
      * @param descriptor Descriptor of the new element to create
      * @param targetPart The edit part that hosts the new edit part
      * @param targetPoint The drop location in parent coordinates
@@ -52,7 +54,7 @@ public class ElementCreateCommand extends Command {
                 mParentPart = targetPart;
                 mTargetPoint = targetPoint;
     }
-    
+
     // --- Methods inherited from Command ---
 
     @Override
@@ -82,14 +84,14 @@ public class ElementCreateCommand extends Command {
                     }
                 });
             }
-        }        
+        }
     }
 
     @Override
     public void redo() {
         throw new UnsupportedOperationException("redo not supported by this command"); //$NON-NLS-1$
     }
-    
+
     @Override
     public void undo() {
         throw new UnsupportedOperationException("undo not supported by this command"); //$NON-NLS-1$

@@ -17,38 +17,60 @@
 
 package com.android.ide.eclipse.ddms.views;
 
+import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.Client;
 import com.android.ddmlib.ClientData;
-import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.IDevice;
+import com.android.ddmlib.SyncService;
+import com.android.ddmlib.AndroidDebugBridge.IClientChangeListener;
+import com.android.ddmlib.ClientData.IHprofDumpHandler;
+import com.android.ddmlib.ClientData.MethodProfilingStatus;
+import com.android.ddmlib.SyncService.SyncResult;
+import com.android.ddmuilib.handler.BaseFileHandler;
+import com.android.ddmuilib.handler.MethodProfilingHandler;
 import com.android.ddmuilib.DevicePanel;
 import com.android.ddmuilib.ScreenShotDialog;
 import com.android.ddmuilib.DevicePanel.IUiSelectionListener;
 import com.android.ide.eclipse.ddms.DdmsPlugin;
 import com.android.ide.eclipse.ddms.DdmsPlugin.IDebugLauncher;
+import com.android.ide.eclipse.ddms.preferences.PreferenceInitializer;
 
+import org.eclipse.core.filesystem.EFS;
+import org.eclipse.core.filesystem.IFileStore;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.ISharedImages;
+import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.ide.IDE;
 import org.eclipse.ui.part.ViewPart;
 
-public class DeviceView extends ViewPart implements IUiSelectionListener {
+import java.io.File;
+import java.io.IOException;
+
+public class DeviceView extends ViewPart implements IUiSelectionListener, IClientChangeListener {
 
     private final static boolean USE_SELECTED_DEBUG_PORT = true;
 
     public static final String ID =
         "com.android.ide.eclipse.ddms.views.DeviceView"; //$NON-NLS-1$
 
+    private static DeviceView sThis;
+
+    private Shell mParentShell;
     private DevicePanel mDeviceList;
+
     private Action mResetAdbAction;
     private Action mCaptureAction;
     private Action mUpdateThreadAction;
@@ -56,9 +78,117 @@ public class DeviceView extends ViewPart implements IUiSelectionListener {
     private Action mGcAction;
     private Action mKillAppAction;
     private Action mDebugAction;
+    private Action mHprofAction;
+    private Action mTracingAction;
     private IDebugLauncher mDebugLauncher;
 
-    private static DeviceView sThis;
+    private ImageDescriptor mTracingStartImage;
+    private ImageDescriptor mTracingStopImage;
+
+    public class HProfHandler extends BaseFileHandler implements IHprofDumpHandler {
+        public final static String ACTION_SAVE ="hprof.save"; //$NON-NLS-1$
+        public final static String ACTION_OPEN = "hprof.open"; //$NON-NLS-1$
+
+        public final static String DOT_HPROF = ".hprof"; //$NON-NLS-1$
+
+        HProfHandler(Shell parentShell) {
+            super(parentShell);
+        }
+
+        public void onFailure(final Client client) {
+            mParentShell.getDisplay().asyncExec(new Runnable() {
+                public void run() {
+                    try {
+                        displayError("Unable to create HPROF file for application '%1$s'.\n" +
+                                "Check logcat for more information.",
+                                client.getClientData().getClientDescription());
+                    } finally {
+                        // this will make sure the dump hprof button is re-enabled for the
+                        // current selection. as the client is finished dumping an hprof file
+                        doSelectionChanged(mDeviceList.getSelectedClient());
+                    }
+                }
+            });
+        }
+
+        public void onSuccess(final String remoteFilePath, final Client client) {
+            mParentShell.getDisplay().asyncExec(new Runnable() {
+                public void run() {
+                    final IDevice device = client.getDevice();
+                    try {
+                        // get the sync service to pull the HPROF file
+                        final SyncService sync = client.getDevice().getSyncService();
+                        if (sync != null) {
+                            // get from the preference what action to take
+                            IPreferenceStore store = DdmsPlugin.getDefault().getPreferenceStore();
+                            String value = store.getString(PreferenceInitializer.ATTR_HPROF_ACTION);
+
+                            SyncResult result = null;
+                            if (ACTION_OPEN.equals(value)) {
+                                File temp = File.createTempFile("android", DOT_HPROF); //$NON-NLS-1$
+                                String tempPath = temp.getAbsolutePath();
+                                result = pull(sync, tempPath, remoteFilePath);
+                                if (result != null && result.getCode() == SyncService.RESULT_OK) {
+                                    open(tempPath);
+                                }
+                            } else {
+                                // default action is ACTION_SAVE
+                                result = promptAndPull(sync,
+                                        client.getClientData().getClientDescription() + DOT_HPROF,
+                                        remoteFilePath, "Save HPROF file");
+
+                            }
+
+                            if (result != null && result.getCode() != SyncService.RESULT_OK) {
+                                displayError(
+                                        "Unable to download HPROF file from device '%1$s'.\n\n%2$s",
+                                        device.getSerialNumber(), result.getMessage());
+                            }
+                        } else {
+                            displayError("Unable to download HPROF file from device '%1$s'.",
+                                    device.getSerialNumber());
+                        }
+                    } catch (Exception e) {
+                        displayError("Unable to download HPROF file from device '%1$s'.",
+                                device.getSerialNumber());
+
+                    } finally {
+                        // this will make sure the dump hprof button is re-enabled for the
+                        // current selection. as the client is finished dumping an hprof file
+                        doSelectionChanged(mDeviceList.getSelectedClient());
+                    }
+                }
+            });
+        }
+
+        private void open(String path) throws IOException, InterruptedException, PartInitException {
+            // make a temp file to convert the hprof into something
+            // readable by normal tools
+            File temp = File.createTempFile("android", DOT_HPROF);
+            String tempPath = temp.getAbsolutePath();
+
+            String[] command = new String[3];
+            command[0] = DdmsPlugin.getHprofConverter();
+            command[1] = path;
+            command[2] = tempPath;
+
+            Process p = Runtime.getRuntime().exec(command);
+            p.waitFor();
+
+            IFileStore fileStore =  EFS.getLocalFileSystem().getStore(new Path(tempPath));
+            if (!fileStore.fetchInfo().isDirectory() && fileStore.fetchInfo().exists()) {
+                IDE.openEditorOnFileStore(
+                        getSite().getWorkbenchWindow().getActivePage(),
+                        fileStore);
+            }
+        }
+
+        private void displayError(String format, Object... args) {
+            MessageDialog.openError(mParentShell, "HPROF Error",
+                    String.format(format, args));
+        }
+    }
+
 
     public DeviceView() {
         // the view is declared with allowMultiple="false" so we
@@ -86,6 +216,11 @@ public class DeviceView extends ViewPart implements IUiSelectionListener {
 
     @Override
     public void createPartControl(Composite parent) {
+        mParentShell = parent.getShell();
+        ClientData.setHprofDumpHandler(new HProfHandler(mParentShell));
+        AndroidDebugBridge.addClientChangeListener(this);
+        ClientData.setMethodProfilingHandler(new MethodProfilingHandler(mParentShell));
+
         mDeviceList = new DevicePanel(DdmsPlugin.getImageLoader(), USE_SELECTED_DEBUG_PORT);
         mDeviceList.createPanel(parent);
         mDeviceList.addSelectionListener(this);
@@ -156,6 +291,18 @@ public class DeviceView extends ViewPart implements IUiSelectionListener {
         mGcAction.setImageDescriptor(DdmsPlugin.getImageLoader()
                 .loadDescriptor(DevicePanel.ICON_GC));
 
+        mHprofAction = new Action() {
+            @Override
+            public void run() {
+                mDeviceList.dumpHprof();
+                doSelectionChanged(mDeviceList.getSelectedClient());
+            }
+        };
+        mHprofAction.setText("Dump HPROF file");
+        mHprofAction.setToolTipText("Dump HPROF file");
+        mHprofAction.setImageDescriptor(DdmsPlugin.getImageLoader()
+                .loadDescriptor(DevicePanel.ICON_HPROF));
+
         mUpdateHeapAction = new Action("Update Heap", IAction.AS_CHECK_BOX) {
             @Override
             public void run() {
@@ -178,6 +325,20 @@ public class DeviceView extends ViewPart implements IUiSelectionListener {
         mUpdateThreadAction.setImageDescriptor(DdmsPlugin.getImageLoader()
                 .loadDescriptor(DevicePanel.ICON_THREAD));
 
+        mTracingAction = new Action() {
+            @Override
+            public void run() {
+                mDeviceList.toggleMethodProfiling();
+            }
+        };
+        mTracingAction.setText("Start Method Profiling");
+        mTracingAction.setToolTipText("Start Method Profiling");
+        mTracingStartImage = DdmsPlugin.getImageLoader().loadDescriptor(
+                DevicePanel.ICON_TRACING_START);
+        mTracingStopImage = DdmsPlugin.getImageLoader().loadDescriptor(
+                DevicePanel.ICON_TRACING_STOP);
+        mTracingAction.setImageDescriptor(mTracingStartImage);
+
         // check if there's already a debug launcher set up in the plugin class
         mDebugLauncher = DdmsPlugin.getRunningAppDebugLauncher();
 
@@ -191,14 +352,14 @@ public class DeviceView extends ViewPart implements IUiSelectionListener {
 
                         // make sure the client can be debugged
                         switch (clientData.getDebuggerConnectionStatus()) {
-                            case ClientData.DEBUGGER_ERROR: {
+                            case ERROR: {
                                 Display display = DdmsPlugin.getDisplay();
                                 Shell shell = display.getActiveShell();
                                 MessageDialog.openError(shell, "Process Debug",
                                         "The process debug port is already in use!");
                                 return;
                             }
-                            case ClientData.DEBUGGER_ATTACHED: {
+                            case ATTACHED: {
                                 Display display = DdmsPlugin.getDisplay();
                                 Shell shell = display.getActiveShell();
                                 MessageDialog.openError(shell, "Process Debug",
@@ -270,6 +431,34 @@ public class DeviceView extends ViewPart implements IUiSelectionListener {
 
             mUpdateThreadAction.setEnabled(true);
             mUpdateThreadAction.setChecked(selectedClient.isThreadUpdateEnabled());
+
+            ClientData data = selectedClient.getClientData();
+
+            if (data.hasFeature(ClientData.FEATURE_HPROF)) {
+                mHprofAction.setEnabled(data.hasPendingHprofDump() == false);
+                mHprofAction.setToolTipText("Dump HPROF file");
+            } else {
+                mHprofAction.setEnabled(false);
+                mHprofAction.setToolTipText("Dump HPROF file (not supported by this VM)");
+            }
+
+            if (data.hasFeature(ClientData.FEATURE_PROFILING)) {
+                mTracingAction.setEnabled(true);
+                if (data.getMethodProfilingStatus() == MethodProfilingStatus.ON) {
+                    mTracingAction.setToolTipText("Stop Method Profiling");
+                    mTracingAction.setText("Stop Method Profiling");
+                    mTracingAction.setImageDescriptor(mTracingStopImage);
+                } else {
+                    mTracingAction.setToolTipText("Start Method Profiling");
+                    mTracingAction.setImageDescriptor(mTracingStartImage);
+                    mTracingAction.setText("Start Method Profiling");
+                }
+            } else {
+                mTracingAction.setEnabled(false);
+                mTracingAction.setImageDescriptor(mTracingStartImage);
+                mTracingAction.setToolTipText("Start Method Profiling (not supported by this VM)");
+                mTracingAction.setText("Start Method Profiling");
+            }
         } else {
             if (USE_SELECTED_DEBUG_PORT) {
                 // set the client as the debug client
@@ -286,6 +475,15 @@ public class DeviceView extends ViewPart implements IUiSelectionListener {
             mUpdateHeapAction.setEnabled(false);
             mUpdateThreadAction.setEnabled(false);
             mUpdateThreadAction.setChecked(false);
+            mHprofAction.setEnabled(false);
+
+            mHprofAction.setEnabled(false);
+            mHprofAction.setToolTipText("Dump HPROF file");
+
+            mTracingAction.setEnabled(false);
+            mTracingAction.setImageDescriptor(mTracingStartImage);
+            mTracingAction.setToolTipText("Start Method Profiling");
+            mTracingAction.setText("Start Method Profiling");
         }
     }
 
@@ -301,12 +499,15 @@ public class DeviceView extends ViewPart implements IUiSelectionListener {
 
         // first in the menu
         IMenuManager menuManager = actionBars.getMenuManager();
+        menuManager.removeAll();
         menuManager.add(mDebugAction);
         menuManager.add(new Separator());
-        menuManager.add(mUpdateThreadAction);
         menuManager.add(mUpdateHeapAction);
-        menuManager.add(new Separator());
+        menuManager.add(mHprofAction);
         menuManager.add(mGcAction);
+        menuManager.add(new Separator());
+        menuManager.add(mUpdateThreadAction);
+        menuManager.add(mTracingAction);
         menuManager.add(new Separator());
         menuManager.add(mKillAppAction);
         menuManager.add(new Separator());
@@ -316,14 +517,32 @@ public class DeviceView extends ViewPart implements IUiSelectionListener {
 
         // and then in the toolbar
         IToolBarManager toolBarManager = actionBars.getToolBarManager();
+        toolBarManager.removeAll();
         toolBarManager.add(mDebugAction);
         toolBarManager.add(new Separator());
-        toolBarManager.add(mUpdateThreadAction);
         toolBarManager.add(mUpdateHeapAction);
+        toolBarManager.add(mHprofAction);
+        toolBarManager.add(mGcAction);
+        toolBarManager.add(new Separator());
+        toolBarManager.add(mUpdateThreadAction);
+        toolBarManager.add(mTracingAction);
         toolBarManager.add(new Separator());
         toolBarManager.add(mKillAppAction);
         toolBarManager.add(new Separator());
         toolBarManager.add(mCaptureAction);
     }
 
+    public void clientChanged(final Client client, int changeMask) {
+        if ((changeMask & Client.CHANGE_METHOD_PROFILING_STATUS) ==
+                Client.CHANGE_METHOD_PROFILING_STATUS) {
+            if (mDeviceList.getSelectedClient() == client) {
+                mParentShell.getDisplay().asyncExec(new Runnable() {
+                    public void run() {
+                        // force refresh of the button enabled state.
+                        doSelectionChanged(client);
+                    }
+                });
+            }
+        }
+    }
 }

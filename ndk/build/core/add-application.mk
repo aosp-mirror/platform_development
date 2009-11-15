@@ -61,7 +61,7 @@ APP_PLATFORM := $(strip $(APP_PLATFORM))
 ifndef APP_PLATFORM
     _local_props := $(strip $(wildcard $(APP_PROJECT_PATH)/default.properties))
     ifdef _local_props
-        APP_PLATFORM := $(strip $(shell awk -f $(BUILD_SYSTEM)/extract-platform.awk < $(_local_props)))
+        APP_PLATFORM := $(strip $(shell $(HOST_AWK) -f $(BUILD_SYSTEM)/extract-platform.awk < $(_local_props)))
         $(call ndk_log,  Found APP_PLATFORM=$(APP_PLATFORM) in $(_local_props))
     else
         APP_PLATFORM := android-3
@@ -69,11 +69,14 @@ ifndef APP_PLATFORM
     endif
 endif
 
+# Check that the value of APP_PLATFORM corresponds to a known platform
+# If not, we're going to use the max supported platform value.
+#
 _bad_platform := $(strip $(filter-out $(NDK_ALL_PLATFORMS),$(APP_PLATFORM)))
 ifdef _bad_platform
-    $(call __ndk_info,Application $(_name) targets platform '$(_bad_platform)')
-    $(call __ndk_info,which is not supported by this release of the Android NDK)
-    $(call __ndk_error,Aborting...)
+    $(call __ndk_info,Application $(_name) targets unknown platform '$(_bad_platform)')
+    APP_PLATFORM := android-$(NDK_MAX_PLATFORM_LEVEL)
+    $(call __ndk_info,Switching to $(APP_PLATFORM))
 endif
 
 # If APP_BUILD_SCRIPT is defined, check that the file exists.

@@ -32,7 +32,7 @@ import java.util.Properties;
 /**
  * Represents a doc XML node in an SDK repository.
  */
-public class DocPackage extends Package {
+public class DocPackage extends Package implements IPackageVersion {
 
     private final AndroidVersion mVersion;
 
@@ -56,6 +56,8 @@ public class DocPackage extends Package {
      * Manually create a new package with one archive and the given attributes.
      * This is used to create packages from local directories in which case there must be
      * one archive which URL is the actual target location.
+     * <p/>
+     * By design, this creates a package with one and only one archive.
      */
     DocPackage(RepoSource source,
             Properties props,
@@ -101,21 +103,34 @@ public class DocPackage extends Package {
     @Override
     public String getShortDescription() {
         if (mVersion.isPreview()) {
-            return String.format("Documentation for Android '%1$s' Preview SDK",
-                    mVersion.getCodename());
-        } else if (mVersion.getApiLevel() != 0) {
-            return String.format("Documentation for Android SDK, API %1$d", mVersion.getApiLevel());
+            return String.format("Documentation for Android '%1$s' Preview SDK, revision %2$s",
+                    mVersion.getCodename(),
+                    getRevision());
         } else {
-            return String.format("Documentation for Android SDK");
+            return String.format("Documentation for Android SDK, API %1$d, revision %2$s",
+                    mVersion.getApiLevel(),
+                    getRevision());
         }
     }
 
-    /** Returns a long description for an {@link IDescription}. */
+    /**
+     * Returns a long description for an {@link IDescription}.
+     *
+     * The long description is whatever the XML contains for the &lt;description&gt; field,
+     * or the short description if the former is empty.
+     */
     @Override
     public String getLongDescription() {
-        return String.format("%1$s,\nRevision %2$d.",
-                getShortDescription(),
-                getRevision());
+        String s = getDescription();
+        if (s == null || s.length() == 0) {
+            s = getShortDescription();
+        }
+
+        if (s.indexOf("revision") == -1) {
+            s += String.format("\nRevision %1$d", getRevision());
+        }
+
+        return s;
     }
 
     /**

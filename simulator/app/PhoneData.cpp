@@ -19,7 +19,7 @@
 #include "PhoneCollection.h"
 #include "MyApp.h"
 
-#include <utils.h>
+#include "utils.h"
 #include <utils/AssetManager.h>
 #include <utils/String8.h>
 

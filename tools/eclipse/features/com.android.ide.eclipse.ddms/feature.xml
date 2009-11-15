@@ -2,7 +2,7 @@
 <feature
       id="com.android.ide.eclipse.ddms"
       label="Android DDMS"
-      version="0.9.3.qualifier"
+      version="0.9.5.qualifier"
       provider-name="The Android Open Source Project">
 
    <description>
@@ -230,6 +230,9 @@
       <import plugin="org.eclipse.ui"/>
       <import plugin="org.eclipse.core.runtime"/>
       <import plugin="org.eclipse.ui.console"/>
+      <import plugin="org.eclipse.core.resources"/>
+      <import plugin="org.eclipse.ui.ide"/>
+      <import plugin="org.eclipse.core.filesystem"/>
    </requires>
 
    <plugin

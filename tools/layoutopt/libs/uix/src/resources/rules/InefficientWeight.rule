@@ -1,0 +1,19 @@
+// Rule: InefficientWeight
+//
+// Description: Checks whether a layout_weight is declared inefficiently.
+//
+// Conditions:
+// - The node has a LinearLayout parent
+// - The node is the only sibling with a weight
+// - The node has a height/width != 0
+
+def parent = node.'..'
+if (parent.is("LinearLayout") && node.'@android:layout_weight' &&
+        parent.'*'.findAll{ it.'@android:layout_weight' }.size() == 1) {
+    def dimension = parent.'@android:orientation' == "vertical" ?
+        "android:layout_height" : "android:layout_width"
+    if (node."@${dimension}"[0] != '0') {
+        analysis << "Use an ${dimension} of 0dip instead of ${node."@${dimension}"} " +
+                "for better performance"
+    }
+}

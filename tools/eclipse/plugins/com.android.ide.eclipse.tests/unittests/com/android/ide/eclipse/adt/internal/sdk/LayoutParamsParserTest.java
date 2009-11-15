@@ -19,15 +19,12 @@ package com.android.ide.eclipse.adt.internal.sdk;
 import com.android.ide.eclipse.adt.internal.resources.AttrsXmlParser;
 import com.android.ide.eclipse.adt.internal.resources.ViewClassInfo;
 import com.android.ide.eclipse.adt.internal.resources.ViewClassInfo.LayoutParamsInfo;
-import com.android.ide.eclipse.adt.internal.sdk.AndroidJarLoader;
-import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetParser;
-import com.android.ide.eclipse.adt.internal.sdk.LayoutParamsParser;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidJarLoader.ClassWrapper;
 import com.android.ide.eclipse.adt.internal.sdk.IAndroidClassLoader.IClassDescriptor;
+import com.android.ide.eclipse.tests.AdtTestData;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.TreeMap;
@@ -36,7 +33,7 @@ import junit.framework.TestCase;
 
 /**
  * Test the inner private methods of PlatformDataParser.
- * 
+ *
  * Convention: method names that start with an underscore are actually local wrappers
  * that call private methods from {@link AndroidTargetParser} using reflection.
  * This is inspired by the Python coding rule which mandates underscores prefixes for
@@ -44,30 +41,26 @@ import junit.framework.TestCase;
  */
 public class LayoutParamsParserTest extends TestCase {
 
+    private static final String MOCK_DATA_PATH =
+        "com/android/ide/eclipse/testdata/mock_attrs.xml"; //$NON-NLS-1$
+
     private static class MockFrameworkClassLoader extends AndroidJarLoader {
         MockFrameworkClassLoader() {
             super(null /* osFrameworkLocation */);
         }
-        
+
         @Override
         public HashMap<String, ArrayList<IClassDescriptor>> findClassesDerivingFrom(
                 String rootPackage, String[] superClasses) throws ClassFormatError {
             return new HashMap<String, ArrayList<IClassDescriptor>>();
         }
     }
-    
-    private static class MockAttrsXmlPath {
-        public String getPath() {
-            ClassLoader cl = this.getClass().getClassLoader();
-            URL res = cl.getResource("data/mock_attrs.xml");  //$NON-NLS-1$
-            return res.getFile();
-        }
-    }
-    
+
     private static class MockLayoutParamsParser extends LayoutParamsParser {
         public MockLayoutParamsParser() {
             super(new MockFrameworkClassLoader(),
-                  new AttrsXmlParser(new MockAttrsXmlPath().getPath()).preload());
+                  new AttrsXmlParser(
+                          AdtTestData.getInstance().getTestFilePath(MOCK_DATA_PATH)).preload());
 
             mTopViewClass = new ClassWrapper(mock_android.view.View.class);
             mTopGroupClass = new ClassWrapper(mock_android.view.ViewGroup.class);
@@ -82,7 +75,7 @@ public class LayoutParamsParserTest extends TestCase {
     }
 
     private MockLayoutParamsParser mParser;
-    
+
     @Override
     public void setUp() throws Exception {
         mParser = new MockLayoutParamsParser();
@@ -91,7 +84,7 @@ public class LayoutParamsParserTest extends TestCase {
     @Override
     public void tearDown() throws Exception {
     }
-    
+
     public final void testFindLayoutParams() throws Exception {
         assertEquals(mock_android.view.ViewGroup.LayoutParams.class,
             ((ClassWrapper)_findLayoutParams(mock_android.view.ViewGroup.class)).wrappedClass());
@@ -102,7 +95,7 @@ public class LayoutParamsParserTest extends TestCase {
         assertEquals(mock_android.widget.TableLayout.LayoutParams.class,
             ((ClassWrapper)_findLayoutParams(mock_android.widget.TableLayout.class)).wrappedClass());
     }
-    
+
     public final void testGetLayoutParamsInfo() throws Exception {
         LayoutParamsInfo info1 = _getLayoutParamsInfo(
                 mock_android.view.ViewGroup.LayoutParams.class);
@@ -115,7 +108,7 @@ public class LayoutParamsParserTest extends TestCase {
         assertNotNull(info2);
         // LinearLayout.LayoutData links to ViewGroup.LayoutParams
         assertSame(info1, info2.getSuperClass());
-        
+
         LayoutParamsInfo info3 = _getLayoutParamsInfo(
                 mock_android.widget.TableLayout.LayoutParams.class);
         assertNotNull(info3);
@@ -124,7 +117,7 @@ public class LayoutParamsParserTest extends TestCase {
         assertNotSame(info1, info3.getSuperClass());
         assertNotSame(info2, info3.getSuperClass());
         // TableLayout.LayoutParams => ViewGroup.MarginLayoutParams => ViewGroup.LayoutParams
-        assertSame(info1, info3.getSuperClass().getSuperClass());        
+        assertSame(info1, info3.getSuperClass().getSuperClass());
     }
 
     public final void testGetLayoutClasses() throws Exception {
@@ -132,7 +125,7 @@ public class LayoutParamsParserTest extends TestCase {
     }
 
     //---- access to private methods
-    
+
     /** Calls the private constructor of the parser */
     @SuppressWarnings("unused")
     private AndroidTargetParser _Constructor(String osJarPath) throws Exception {
@@ -141,7 +134,7 @@ public class LayoutParamsParserTest extends TestCase {
         constructor.setAccessible(true);
         return constructor.newInstance(osJarPath);
     }
-    
+
     /** calls the private getLayoutClasses() of the parser */
     @SuppressWarnings("unused")
     private void _getLayoutClasses() throws Exception {
@@ -149,7 +142,7 @@ public class LayoutParamsParserTest extends TestCase {
         method.setAccessible(true);
         method.invoke(mParser);
     }
-    
+
     /** calls the private addGroup() of the parser */
     @SuppressWarnings("unused")
     private ViewClassInfo _addGroup(Class<?> groupClass) throws Exception {
@@ -175,7 +168,7 @@ public class LayoutParamsParserTest extends TestCase {
         method.setAccessible(true);
         return (LayoutParamsInfo) method.invoke(mParser, new ClassWrapper(layoutParamsClass));
     }
-    
+
     /** calls the private findLayoutParams() of the parser */
     private IClassDescriptor _findLayoutParams(Class<?> groupClass) throws Exception {
         Method method = LayoutParamsParser.class.getDeclaredMethod("findLayoutParams",  //$NON-NLS-1$

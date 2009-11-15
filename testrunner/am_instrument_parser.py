@@ -80,7 +80,7 @@ def _ParseInstrumentationFinishedBundle(result):
     code.
   """
 
-  re_result = re.compile(r'INSTRUMENTATION_RESULT: ([^=]+)=(.+)$')
+  re_result = re.compile(r'INSTRUMENTATION_RESULT: ([^=]+)=(.*)$')
   re_code = re.compile(r'INSTRUMENTATION_CODE: (\-?\d)$')
   result_dict = {}
   key = ''
@@ -135,38 +135,26 @@ class TestResult(object):
     self._test_name = None
     self._status_code = None
     self._failure_reason = None
+    self._fields_map = {}
 
-    re_start_block = re.compile(
-       r'\s*INSTRUMENTATION_STATUS: stream=(?P<stream>.*)'
-        'INSTRUMENTATION_STATUS: test=(?P<test>\w+)\s+'
-        'INSTRUMENTATION_STATUS: class=(?P<class>[\w\.]+)\s+'
-        'INSTRUMENTATION_STATUS: current=(?P<current>\d+)\s+'
-        'INSTRUMENTATION_STATUS: numtests=(?P<numtests>\d+)\s+'
-        'INSTRUMENTATION_STATUS: id=.*\s+'
-        'INSTRUMENTATION_STATUS_CODE: 1\s*', re.DOTALL)
+    re_status_code = re.search(r'INSTRUMENTATION_STATUS_CODE: '
+        '(?P<status_code>1|0|-1|-2)', result_block_string)
+    re_fields = re.compile(r'INSTRUMENTATION_STATUS: '
+        '(?P<key>[\w.]+)=(?P<value>.*?)(?=\nINSTRUMENTATION_STATUS)', re.DOTALL)
 
-    re_end_block = re.compile(
-       r'\s*INSTRUMENTATION_STATUS: stream=(?P<stream>.*)'
-        'INSTRUMENTATION_STATUS: test=(?P<test>\w+)\s+'
-        '(INSTRUMENTATION_STATUS: stack=(?P<stack>.*))?'
-        'INSTRUMENTATION_STATUS: class=(?P<class>[\w\.]+)\s+'
-        'INSTRUMENTATION_STATUS: current=(?P<current>\d+)\s+'
-        'INSTRUMENTATION_STATUS: numtests=(?P<numtests>\d+)\s+'
-        'INSTRUMENTATION_STATUS: id=.*\s+'
-        'INSTRUMENTATION_STATUS_CODE: (?P<status_code>0|-1|-2)\s*', re.DOTALL)
+    for field in re_fields.finditer(result_block_string):
+      key, value = (field.group('key').strip(), field.group('value').strip())
+      if key.startswith('performance.'):
+        key = key[len('performance.'):]
+      self._fields_map[key] = value
+    self._fields_map.setdefault('class')
+    self._fields_map.setdefault('test')
 
-    start_block_match = re_start_block.match(result_block_string)
-    end_block_match = re_end_block.match(result_block_string)
-
-    if start_block_match:
-      self._test_name = "%s:%s" % (start_block_match.group('class'),
-                                   start_block_match.group('test'))
-      self._status_code = 1
-    elif end_block_match:
-      self._test_name = "%s:%s" % (end_block_match.group('class'),
-                                   end_block_match.group('test'))
-      self._status_code = int(end_block_match.group('status_code'))
-      self._failure_reason = end_block_match.group('stack')
+    self._test_name = '%s:%s' % (self._fields_map['class'],
+                                 self._fields_map['test'])
+    self._status_code = int(re_status_code.group('status_code'))
+    if 'stack' in self._fields_map:
+      self._failure_reason = self._fields_map['stack']
 
   def GetTestName(self):
     return self._test_name
@@ -176,3 +164,6 @@ class TestResult(object):
 
   def GetFailureReason(self):
     return self._failure_reason
+
+  def GetResultFields(self):
+    return self._fields_map

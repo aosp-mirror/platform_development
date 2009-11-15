@@ -16,6 +16,7 @@
 
 package com.android.ddmlib;
 
+import com.android.ddmlib.ClientData.MethodProfilingStatus;
 import com.android.ddmlib.DebugPortManager.IDebugPortProvider;
 import com.android.ddmlib.AndroidDebugBridge.IClientChangeListener;
 
@@ -40,32 +41,34 @@ public class Client {
     private static final int SERVER_PROTOCOL_VERSION = 1;
 
     /** Client change bit mask: application name change */
-    public static final int CHANGE_NAME = 0x0001;
-    /** Client change bit mask: debugger interest change */
-    public static final int CHANGE_DEBUGGER_INTEREST = 0x0002;
+    public static final int CHANGE_NAME                       = 0x0001;
+    /** Client change bit mask: debugger status change */
+    public static final int CHANGE_DEBUGGER_STATUS            = 0x0002;
     /** Client change bit mask: debugger port change */
-    public static final int CHANGE_PORT = 0x0004;
+    public static final int CHANGE_PORT                       = 0x0004;
     /** Client change bit mask: thread update flag change */
-    public static final int CHANGE_THREAD_MODE = 0x0008;
+    public static final int CHANGE_THREAD_MODE                = 0x0008;
     /** Client change bit mask: thread data updated */
-    public static final int CHANGE_THREAD_DATA = 0x0010;
+    public static final int CHANGE_THREAD_DATA                = 0x0010;
     /** Client change bit mask: heap update flag change */
-    public static final int CHANGE_HEAP_MODE = 0x0020;
+    public static final int CHANGE_HEAP_MODE                  = 0x0020;
     /** Client change bit mask: head data updated */
-    public static final int CHANGE_HEAP_DATA = 0x0040;
+    public static final int CHANGE_HEAP_DATA                  = 0x0040;
     /** Client change bit mask: native heap data updated */
-    public static final int CHANGE_NATIVE_HEAP_DATA = 0x0080;
+    public static final int CHANGE_NATIVE_HEAP_DATA           = 0x0080;
     /** Client change bit mask: thread stack trace updated */
-    public static final int CHANGE_THREAD_STACKTRACE = 0x0100;
+    public static final int CHANGE_THREAD_STACKTRACE          = 0x0100;
     /** Client change bit mask: allocation information updated */
-    public static final int CHANGE_HEAP_ALLOCATIONS = 0x0200;
+    public static final int CHANGE_HEAP_ALLOCATIONS           = 0x0200;
     /** Client change bit mask: allocation information updated */
-    public static final int CHANGE_HEAP_ALLOCATION_STATUS = 0x0400;
+    public static final int CHANGE_HEAP_ALLOCATION_STATUS     = 0x0400;
+    /** Client change bit mask: allocation information updated */
+    public static final int CHANGE_METHOD_PROFILING_STATUS    = 0x0800;
 
     /** Client change bit mask: combination of {@link Client#CHANGE_NAME},
-     * {@link Client#CHANGE_DEBUGGER_INTEREST}, and {@link Client#CHANGE_PORT}.
+     * {@link Client#CHANGE_DEBUGGER_STATUS}, and {@link Client#CHANGE_PORT}.
      */
-    public static final int CHANGE_INFO = CHANGE_NAME | CHANGE_DEBUGGER_INTEREST | CHANGE_PORT;
+    public static final int CHANGE_INFO = CHANGE_NAME | CHANGE_DEBUGGER_STATUS | CHANGE_PORT;
 
     private SocketChannel mChan;
 
@@ -222,6 +225,52 @@ public class Client {
             // ignore
         }
     }
+
+    /**
+     * Makes the VM dump an HPROF file
+     */
+    public void dumpHprof() {
+        try {
+            String file = "/sdcard/" + mClientData.getClientDescription().replaceAll("\\:.*", "") +
+                ".hprof";
+            HandleHeap.sendHPDU(this, file);
+        } catch (IOException e) {
+            Log.w("ddms", "Send of HPDU message failed");
+            // ignore
+        }
+    }
+
+    public void toggleMethodProfiling() {
+        try {
+            if (mClientData.getMethodProfilingStatus() == MethodProfilingStatus.ON) {
+                HandleProfiling.sendMPRE(this);
+            } else {
+                String file = "/sdcard/" + mClientData.getClientDescription().replaceAll("\\:.*", "") +
+                ".trace";
+                HandleProfiling.sendMPRS(this, file, 8*1024*1024, 0 /*flags*/);
+            }
+        } catch (IOException e) {
+            Log.w("ddms", "Toggle method profiling failed");
+            // ignore
+        }
+    }
+
+    /**
+     * Sends a request to the VM to send the enable status of the method profiling.
+     * This is asynchronous.
+     * <p/>The allocation status can be accessed by {@link ClientData#getAllocationStatus()}.
+     * The notification that the new status is available will be received through
+     * {@link IClientChangeListener#clientChanged(Client, int)} with a <code>changeMask</code>
+     * containing the mask {@link #CHANGE_HEAP_ALLOCATION_STATUS}.
+     */
+    public void requestMethodProfilingStatus() {
+        try {
+            HandleHeap.sendREAQ(this);
+        } catch (IOException e) {
+            Log.e("ddmlib", e);
+        }
+    }
+
 
     /**
      * Enables or disables the thread update.
@@ -527,7 +576,7 @@ public class Client {
         Debugger dbg = mDebugger;
 
         if (dbg == null) {
-            Log.i("ddms", "Discarding packet");
+            Log.d("ddms", "Discarding packet");
             packet.consume();
         } else {
             dbg.sendAndConsume(packet);
@@ -600,15 +649,15 @@ public class Client {
             //Log.v("ddms", "findHand: " + result);
             switch (result) {
                 case JdwpPacket.HANDSHAKE_GOOD:
-                    Log.i("ddms",
+                    Log.d("ddms",
                         "Good handshake from client, sending HELO to " + mClientData.getPid());
                     JdwpPacket.consumeHandshake(mReadBuffer);
                     mConnState = ST_NEED_DDM_PKT;
-                    HandleHello.sendHELO(this, SERVER_PROTOCOL_VERSION);
+                    HandleHello.sendHelloCommands(this, SERVER_PROTOCOL_VERSION);
                     // see if we have another packet in the buffer
                     return getJdwpPacket();
                 case JdwpPacket.HANDSHAKE_BAD:
-                    Log.i("ddms", "Bad handshake from client");
+                    Log.d("ddms", "Bad handshake from client");
                     if (MonitorThread.getInstance().getRetryOnBadHandshake()) {
                         // we should drop the client, but also attempt to reopen it.
                         // This is done by the DeviceMonitor.
@@ -621,7 +670,7 @@ public class Client {
                     }
                     break;
                 case JdwpPacket.HANDSHAKE_NOTYET:
-                    Log.i("ddms", "No handshake from client yet.");
+                    Log.d("ddms", "No handshake from client yet.");
                     break;
                 default:
                     Log.e("ddms", "Unknown packet while waiting for client handshake");
@@ -699,7 +748,7 @@ public class Client {
      */
     void packetFailed(JdwpPacket reply) {
         if (mConnState == ST_NEED_DDM_PKT) {
-            Log.i("ddms", "Marking " + this + " as non-DDM client");
+            Log.d("ddms", "Marking " + this + " as non-DDM client");
             mConnState = ST_NOT_DDM;
         } else if (mConnState != ST_NOT_DDM) {
             Log.w("ddms", "WEIRD: got JDWP failure packet on DDM req");
@@ -737,7 +786,7 @@ public class Client {
      * @param notify Whether or not to notify the listeners of a change.
      */
     void close(boolean notify) {
-        Log.i("ddms", "Closing " + this.toString());
+        Log.d("ddms", "Closing " + this.toString());
 
         mOutstandingReqs.clear();
 

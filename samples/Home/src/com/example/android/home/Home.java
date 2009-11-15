@@ -110,6 +110,9 @@ public class Home extends Activity {
 
     private boolean mBlockAnimation;
 
+    private boolean mHomeDown;
+    private boolean mBackDown;
+    
     private View mShowApplications;
     private CheckBox mShowApplicationsCheck;
 
@@ -396,19 +399,44 @@ public class Home extends Activity {
     }
 
     @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        if (!hasFocus) {
+            mBackDown = mHomeDown = false;
+        }
+    }
+
+    @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
         if (event.getAction() == KeyEvent.ACTION_DOWN) {
             switch (event.getKeyCode()) {
                 case KeyEvent.KEYCODE_BACK:
+                    mBackDown = true;
                     return true;
                 case KeyEvent.KEYCODE_HOME:
+                    mHomeDown = true;
+                    return true;
+            }
+        } else if (event.getAction() == KeyEvent.ACTION_UP) {
+            switch (event.getKeyCode()) {
+                case KeyEvent.KEYCODE_BACK:
+                    if (!event.isCanceled()) {
+                        // Do BACK behavior.
+                    }
+                    mBackDown = true;
+                    return true;
+                case KeyEvent.KEYCODE_HOME:
+                    if (!event.isCanceled()) {
+                        // Do HOME behavior.
+                    }
+                    mHomeDown = true;
                     return true;
             }
         }
 
         return super.dispatchKeyEvent(event);
     }
-
+    
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);

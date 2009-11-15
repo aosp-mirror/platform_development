@@ -229,8 +229,14 @@ public class DisplaySync extends SyncCommon {
                 sb.append("sync already in progress\n");
             } else if ("I".equals(key)) {
                 sb.append("io exception\n");
+            } else if (auth == CONTACTS && "g".equals(key)) {
+                sb.append("aggregation query: ").append(val).append("\n");
+            } else if (auth == CONTACTS && "G".equals(key)) {
+                sb.append("aggregation merge: ").append(val).append("\n");
+            } else if (auth == CONTACTS && "n".equals(key)) {
+                sb.append("num entries: ").append(val).append("\n");
             } else if (auth == CONTACTS && "p".equals(key)) {
-                sb.append("photos uploaded from client: ").append(val).append("\n");
+                sb.append("photos uploaded from server: ").append(val).append("\n");
             } else if (auth == CONTACTS && "P".equals(key)) {
                 sb.append("photos downloaded from server: ").append(val).append("\n");
             } else if (auth == CALENDAR && "F".equals(key)) {

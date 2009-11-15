@@ -133,7 +133,12 @@ public final class ApkBuilderImpl {
                     throw new WrongOptionException("Missing value for -rj");
                 }
 
-                processJarFolder(args[index++], resourcesJars);
+                File f = new File(args[index]);
+                if (f.isDirectory()) {
+                    processJarFolder(args[index++], resourcesJars);
+                } else if (f.isFile()) {
+                    processJarFile(args[index++], resourcesJars);
+                }
             } else if ("-nf".equals(argument)) {
                 // quick check on the next argument.
                 if (index == args.length) {
@@ -249,15 +254,18 @@ public final class ApkBuilderImpl {
 
             for (String file : files) {
                 String path = f.getAbsolutePath() + File.separator + file;
-                FileInputStream input = new FileInputStream(path);
-                resourcesJars.add(input);
+                processJarFile(path, resourcesJars);
             }
         } else {
-            FileInputStream input = new FileInputStream(parameter);
-            resourcesJars.add(input);
+            processJarFile(parameter, resourcesJars);
         }
     }
 
+    public static void processJarFile(String jarfilePath, Collection<FileInputStream> resourcesJars)
+            throws FileNotFoundException {
+        FileInputStream input = new FileInputStream(jarfilePath);
+        resourcesJars.add(input);
+    }
 
     /**
      * Processes a {@link File} that could be a {@link ApkFile}, or a folder containing

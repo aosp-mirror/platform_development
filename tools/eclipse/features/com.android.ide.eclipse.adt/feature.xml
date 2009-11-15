@@ -2,7 +2,7 @@
 <feature
       id="com.android.ide.eclipse.adt"
       label="Android Development Tools"
-      version="0.9.3.qualifier"
+      version="0.9.5.qualifier"
       provider-name="The Android Open Source Project"
       plugin="com.android.ide.eclipse.adt">
 

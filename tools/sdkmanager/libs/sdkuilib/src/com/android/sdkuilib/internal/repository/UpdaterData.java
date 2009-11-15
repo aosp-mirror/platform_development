@@ -30,7 +30,6 @@ import com.android.sdklib.internal.repository.Package;
 import com.android.sdklib.internal.repository.RepoSource;
 import com.android.sdklib.internal.repository.RepoSources;
 import com.android.sdklib.internal.repository.ToolPackage;
-import com.android.sdklib.internal.repository.Package.UpdateInfo;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 import com.android.sdkuilib.repository.UpdaterWindow.ISdkListener;
 
@@ -42,8 +41,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.HashSet;
 
 /**
  * Data shared between {@link UpdaterWindowImpl} and its pages.
@@ -66,7 +64,7 @@ class UpdaterData {
 
     private ImageFactory mImageFactory;
 
-    private final SettingsController mSettingsController = new SettingsController();
+    private final SettingsController mSettingsController;
 
     private final ArrayList<ISdkListener> mListeners = new ArrayList<ISdkListener>();
 
@@ -75,6 +73,8 @@ class UpdaterData {
     public UpdaterData(String osSdkRoot, ISdkLog sdkLog) {
         mOsSdkRoot = osSdkRoot;
         mSdkLog = sdkLog;
+
+        mSettingsController = new SettingsController(this);
 
         initSdk();
     }
@@ -148,12 +148,14 @@ class UpdaterData {
         return mSettingsController;
     }
 
+    /** Adds a listener ({@link ISdkListener}) that is notified when the SDK is reloaded. */
     public void addListeners(ISdkListener listener) {
         if (mListeners.contains(listener) == false) {
             mListeners.add(listener);
         }
     }
 
+    /** Removes a listener ({@link ISdkListener}) that is notified when the SDK is reloaded. */
     public void removeListener(ISdkListener listener) {
         mListeners.remove(listener);
     }
@@ -268,9 +270,9 @@ class UpdaterData {
      * Install the list of given {@link Archive}s. This is invoked by the user selecting some
      * packages in the remote page and then clicking "install selected".
      *
-     * @param archives The archives to install. Incompatible ones will be skipped.
+     * @param result The archives to install. Incompatible ones will be skipped.
      */
-    public void installArchives(final Collection<Archive> archives) {
+    public void installArchives(final ArrayList<ArchiveInfo> result) {
         if (mTaskFactory == null) {
             throw new IllegalArgumentException("Task Factory is null");
         }
@@ -281,14 +283,23 @@ class UpdaterData {
             public void run(ITaskMonitor monitor) {
 
                 final int progressPerArchive = 2 * Archive.NUM_MONITOR_INC;
-                monitor.setProgressMax(archives.size() * progressPerArchive);
+                monitor.setProgressMax(result.size() * progressPerArchive);
                 monitor.setDescription("Preparing to install archives");
 
                 boolean installedAddon = false;
                 boolean installedTools = false;
 
+                // Mark all current local archives as already installed.
+                HashSet<Archive> installedArchives = new HashSet<Archive>();
+                for (Package p : getInstalledPackage()) {
+                    for (Archive a : p.getArchives()) {
+                        installedArchives.add(a);
+                    }
+                }
+
                 int numInstalled = 0;
-                for (Archive archive : archives) {
+                for (ArchiveInfo ai : result) {
+                    Archive archive = ai.getNewArchive();
 
                     int nextProgress = monitor.getProgress() + progressPerArchive;
                     try {
@@ -296,8 +307,23 @@ class UpdaterData {
                             break;
                         }
 
+                        ArchiveInfo adep = ai.getDependsOn();
+                        if (adep != null && !installedArchives.contains(adep.getNewArchive())) {
+                            // This archive depends on another one that was not installed.
+                            // Skip it.
+                            monitor.setResult("Skipping '%1$s'; it depends on '%2$s' which was not installed.",
+                                    archive.getParentPackage().getShortDescription(),
+                                    adep.getNewArchive().getParentPackage().getShortDescription());
+                        }
+
                         if (archive.install(mOsSdkRoot, forceHttp, mSdkManager, monitor)) {
+                            // We installed this archive.
+                            installedArchives.add(archive);
                             numInstalled++;
+
+                            // If this package was replacing an existing one, the old one
+                            // is no longer installed.
+                            installedArchives.remove(ai.getReplaced());
 
                             // Check if we successfully installed a tool or add-on package.
                             if (archive.getParentPackage() instanceof AddonPackage) {
@@ -411,8 +437,8 @@ class UpdaterData {
             public void run() {
                 MessageDialog.openInformation(mWindowShell,
                         "Android Tools Updated",
-                        "The Android SDK tool that you are currently using has been updated. " +
-                        "It is recommended that you now close the Android SDK window and re-open it. " +
+                        "The Android SDK and AVD Manager that you are currently using has been updated. " +
+                        "It is recommended that you now close the manager window and re-open it. " +
                         "If you started this window from Eclipse, please check if the Android " +
                         "plug-in needs to be updated.");
             }
@@ -422,9 +448,15 @@ class UpdaterData {
 
     /**
      * Tries to update all the *existing* local packages.
-     * This first refreshes all sources, then compares the available remote packages with
-     * the current local ones and suggest updates to be done to the user. Finally all
-     * selected updates are installed.
+     * <p/>
+     * There are two modes of operation:
+     * <ul>
+     * <li>If selectedArchives is null, refreshes all sources, compares the available remote
+     * packages with the current local ones and suggest updates to be done to the user (including
+     * new platforms that the users doesn't have yet).
+     * <li>If selectedArchives is not null, this represents a list of archives/packages that
+     * the user wants to install or update, so just process these.
+     * </ul>
      *
      * @param selectedArchives The list of remote archive to consider for the update.
      *  This can be null, in which case a list of remote archive is fetched from all
@@ -435,28 +467,27 @@ class UpdaterData {
             refreshSources(true);
         }
 
-        final Map<Archive, Archive> updates = findUpdates(selectedArchives);
+        UpdaterLogic ul = new UpdaterLogic();
+        ArrayList<ArchiveInfo> archives = ul.computeUpdates(
+                selectedArchives,
+                getSources(),
+                getLocalSdkParser().getPackages());
 
-        if (selectedArchives != null) {
-            // Not only we want to perform updates but we also want to install the
-            // selected archives. If they do not match an update, list them anyway
-            // except they map themselves to null (no "old" archive)
-            for (Archive a : selectedArchives) {
-                if (!updates.containsKey(a)) {
-                    updates.put(a, null);
-                }
-            }
+        if (selectedArchives == null) {
+            ul.addNewPlatforms(archives, getSources(), getLocalSdkParser().getPackages());
         }
 
-        UpdateChooserDialog dialog = new UpdateChooserDialog(getWindowShell(), this, updates);
+        // TODO if selectedArchives is null and archives.len==0, find if there's
+        // any new platform we can suggest to install instead.
+
+        UpdateChooserDialog dialog = new UpdateChooserDialog(getWindowShell(), this, archives);
         dialog.open();
 
-        Collection<Archive> result = dialog.getResult();
+        ArrayList<ArchiveInfo> result = dialog.getResult();
         if (result != null && result.size() > 0) {
             installArchives(result);
         }
     }
-
     /**
      * Refresh all sources. This is invoked either internally (reusing an existing monitor)
      * or as a UI callback on the remote page "Refresh" button (in which case the monitor is
@@ -484,109 +515,5 @@ class UpdaterData {
                 }
             }
         });
-    }
-
-    /**
-     * Check the local archives vs the remote available packages to find potential updates.
-     * Return a map [remote archive => local archive] of suitable update candidates.
-     * Returns null if there's an unexpected error. Otherwise returns a map that can be
-     * empty but not null.
-     *
-     * @param selectedArchives The list of remote archive to consider for the update.
-     *  This can be null, in which case a list of remote archive is fetched from all
-     *  available sources.
-     */
-    private Map<Archive, Archive> findUpdates(Collection<Archive> selectedArchives) {
-        // Map [remote archive => local archive] of suitable update candidates
-        Map<Archive, Archive> result = new HashMap<Archive, Archive>();
-
-        // First go thru all sources and make a list of all available remote archives
-        // sorted by package class.
-        HashMap<Class<? extends Package>, ArrayList<Archive>> availablePkgs =
-            new HashMap<Class<? extends Package>, ArrayList<Archive>>();
-
-        if (selectedArchives != null) {
-            // Only consider the archives given
-
-            for (Archive a : selectedArchives) {
-                // Only add compatible archives
-                if (a.isCompatible()) {
-                    Class<? extends Package> clazz = a.getParentPackage().getClass();
-
-                    ArrayList<Archive> list = availablePkgs.get(clazz);
-                    if (list == null) {
-                        availablePkgs.put(clazz, list = new ArrayList<Archive>());
-                    }
-
-                    list.add(a);
-                }
-            }
-
-        } else {
-            // Get all the available archives from all loaded sources
-            RepoSource[] remoteSources = getSources().getSources();
-
-            for (RepoSource remoteSrc : remoteSources) {
-                Package[] remotePkgs = remoteSrc.getPackages();
-                if (remotePkgs != null) {
-                    for (Package remotePkg : remotePkgs) {
-                        Class<? extends Package> clazz = remotePkg.getClass();
-
-                        ArrayList<Archive> list = availablePkgs.get(clazz);
-                        if (list == null) {
-                            availablePkgs.put(clazz, list = new ArrayList<Archive>());
-                        }
-
-                        for (Archive a : remotePkg.getArchives()) {
-                            // Only add compatible archives
-                            if (a.isCompatible()) {
-                                list.add(a);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        Package[] localPkgs = getLocalSdkParser().getPackages();
-        if (localPkgs == null) {
-            // This is unexpected. The local sdk parser should have been called first.
-            return null;
-        }
-
-        for (Package localPkg : localPkgs) {
-            // get the available archive list for this package type
-            ArrayList<Archive> list = availablePkgs.get(localPkg.getClass());
-
-            // if this list is empty, we'll never find anything that matches
-            if (list == null || list.size() == 0) {
-                continue;
-            }
-
-            // local packages should have one archive at most
-            Archive[] localArchives = localPkg.getArchives();
-            if (localArchives != null && localArchives.length > 0) {
-                Archive localArchive = localArchives[0];
-                // only consider archives compatible with the current platform
-                if (localArchive != null && localArchive.isCompatible()) {
-
-                    // We checked all this archive stuff because that's what eventually gets
-                    // installed, but the "update" mechanism really works on packages. So now
-                    // the real question: is there a remote package that can update this
-                    // local package?
-
-                    for (Archive availArchive : list) {
-                        UpdateInfo info = localPkg.canBeUpdatedBy(availArchive.getParentPackage());
-                        if (info == UpdateInfo.UPDATE) {
-                            // Found one!
-                            result.put(availArchive, localArchive);
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-
-        return result;
     }
 }

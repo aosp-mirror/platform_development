@@ -17,6 +17,7 @@
 package com.android.ant;
 
 import com.android.sdklib.internal.project.ApkConfigurationHelper;
+import com.android.sdklib.internal.project.ApkSettings;
 import com.android.sdklib.internal.project.ProjectProperties;
 import com.android.sdklib.internal.project.ProjectProperties.PropertyType;
 
@@ -28,7 +29,6 @@ import org.apache.tools.ant.types.Path;
 
 import java.io.File;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
 
 /**
@@ -38,7 +38,7 @@ import java.util.Map.Entry;
  *
  */
 public final class AaptExecLoopTask extends Task {
-    
+
     private String mExecutable;
     private String mCommand;
     private String mManifest;
@@ -55,7 +55,7 @@ public final class AaptExecLoopTask extends Task {
     public void setExecutable(String executable) {
         mExecutable = executable;
     }
-    
+
     /**
      * Sets the value of the "command" attribute.
      * @param command the value.
@@ -63,7 +63,7 @@ public final class AaptExecLoopTask extends Task {
     public void setCommand(String command) {
         mCommand = command;
     }
-    
+
     /**
      * Sets the value of the "manifest" attribute.
      * @param manifest the value.
@@ -71,7 +71,7 @@ public final class AaptExecLoopTask extends Task {
     public void setManifest(Path manifest) {
         mManifest = manifest.toString();
     }
-    
+
     /**
      * Sets the value of the "resources" attribute.
      * @param resources the value.
@@ -79,7 +79,7 @@ public final class AaptExecLoopTask extends Task {
     public void setResources(Path resources) {
         mResources = resources.toString();
     }
-    
+
     /**
      * Sets the value of the "assets" attribute.
      * @param assets the value.
@@ -87,7 +87,7 @@ public final class AaptExecLoopTask extends Task {
     public void setAssets(Path assets) {
         mAssets = assets.toString();
     }
-    
+
     /**
      * Sets the value of the "androidjar" attribute.
      * @param androidJar the value.
@@ -95,7 +95,7 @@ public final class AaptExecLoopTask extends Task {
     public void setAndroidjar(Path androidJar) {
         mAndroidJar = androidJar.toString();
     }
-    
+
     /**
      * Sets the value of the "outfolder" attribute.
      * @param outFolder the value.
@@ -103,7 +103,7 @@ public final class AaptExecLoopTask extends Task {
     public void setOutfolder(Path outFolder) {
         mOutFolder = outFolder.toString();
     }
-    
+
     /**
      * Sets the value of the "basename" attribute.
      * @param baseName the value.
@@ -111,19 +111,19 @@ public final class AaptExecLoopTask extends Task {
     public void setBasename(String baseName) {
         mBaseName = baseName;
     }
-    
+
     /*
      * (non-Javadoc)
-     * 
+     *
      * Executes the loop. Based on the values inside default.properties, this will
      * create alternate temporary ap_ files.
-     * 
+     *
      * @see org.apache.tools.ant.Task#execute()
      */
     @Override
     public void execute() throws BuildException {
         Project taskProject = getProject();
-        
+
         // first do a full resource package
         createPackage(null /*configName*/, null /*resourceFilter*/);
 
@@ -132,12 +132,15 @@ public final class AaptExecLoopTask extends Task {
         File baseDir = taskProject.getBaseDir();
         ProjectProperties properties = ProjectProperties.load(baseDir.getAbsolutePath(),
                 PropertyType.DEFAULT);
-        
-        Map<String, String> apkConfigs = ApkConfigurationHelper.getConfigs(properties);
-        if (apkConfigs.size() > 0) {
-            Set<Entry<String, String>> entrySet = apkConfigs.entrySet();
-            for (Entry<String, String> entry : entrySet) {
-                createPackage(entry.getKey(), entry.getValue());
+
+
+        ApkSettings apkSettings = ApkConfigurationHelper.getSettings(properties);
+        if (apkSettings != null) {
+            Map<String, String> apkFilters = apkSettings.getResourceFilters();
+            if (apkFilters.size() > 0) {
+                for (Entry<String, String> entry : apkFilters.entrySet()) {
+                    createPackage(entry.getKey(), entry.getValue());
+                }
             }
         }
     }
@@ -164,19 +167,19 @@ public final class AaptExecLoopTask extends Task {
         ExecTask task = new ExecTask();
         task.setExecutable(mExecutable);
         task.setFailonerror(true);
-        
+
         // aapt command. Only "package" is supported at this time really.
         task.createArg().setValue(mCommand);
-        
+
         // filters if needed
         if (configName != null && resourceFilter != null) {
             task.createArg().setValue("-c");
             task.createArg().setValue(resourceFilter);
         }
-        
+
         // force flag
         task.createArg().setValue("-f");
-        
+
         // manifest location
         task.createArg().setValue("-M");
         task.createArg().setValue(mManifest);
@@ -187,18 +190,18 @@ public final class AaptExecLoopTask extends Task {
             task.createArg().setValue("-S");
             task.createArg().setValue(mResources);
         }
-        
+
         // assets location. This may not exists, and aapt doesn't like it, so we check first.
         File assets = new File(mAssets);
         if (assets.isDirectory()) {
             task.createArg().setValue("-A");
             task.createArg().setValue(mAssets);
         }
-        
+
         // android.jar
         task.createArg().setValue("-I");
         task.createArg().setValue(mAndroidJar);
-        
+
         // out file. This is based on the outFolder, baseName, and the configName (if applicable)
         String filename;
         if (configName != null && resourceFilter != null) {
@@ -206,15 +209,15 @@ public final class AaptExecLoopTask extends Task {
         } else {
             filename = mBaseName + ".ap_";
         }
-        
+
         File file = new File(mOutFolder, filename);
         task.createArg().setValue("-F");
         task.createArg().setValue(file.getAbsolutePath());
-        
+
         // final setup of the task
         task.setProject(taskProject);
         task.setOwningTarget(getOwningTarget());
-        
+
         // execute it.
         task.execute();
     }

@@ -65,12 +65,12 @@ for i in \
     e.png edit.png empty.png emulator.png \
     forward.png \
     gc.png \
-    heap.png halt.png \
+    heap.png halt.png hprof.png \
     i.png importBug.png \
     load.png \
     pause.png play.png pull.png push.png \
     save.png \
-    thread.png \
+    thread.png tracing_start.png tracing_stop.png \
     up.png \
     v.png \
     w.png warning.png ; do

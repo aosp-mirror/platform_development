@@ -123,9 +123,9 @@ public class TestSdkRepository extends TestCase {
 
     /** Validate a valid sample using an InputStream */
     public void testValidateLocalRepositoryFile() throws Exception {
-
         InputStream xmlStream =
-            TestSdkRepository.class.getResourceAsStream("repository_sample.xml");
+            this.getClass().getClassLoader().getResourceAsStream(
+                             "com/android/sdklib/testdata/repository_sample.xml");
         Source source = new StreamSource(xmlStream);
 
         CaptureErrorHandler handler = new CaptureErrorHandler();

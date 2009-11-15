@@ -21,10 +21,15 @@ import com.android.ddmlib.DebugPortManager;
 import com.android.ddmlib.Log;
 import com.android.sdkstats.SdkStatsService;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
+import java.util.Properties;
 
 
 /**
@@ -32,8 +37,7 @@ import java.lang.management.RuntimeMXBean;
  */
 public class Main {
 
-    /** User visible version number. */
-    public static final String VERSION = "0.8.1";
+    public static String sRevision;
 
     public Main() {
     }
@@ -67,7 +71,7 @@ public class Main {
                     "JAVA_STARTED_ON_FIRST_THREAD_" + (rt.getName().split("@"))[0], //$NON-NLS-1$
                     "1"); //$NON-NLS-1$
         }
-        
+
         Thread.setDefaultUncaughtExceptionHandler(new UncaughtHandler());
 
         // load prefs and init the default values
@@ -85,8 +89,12 @@ public class Main {
             System.exit(1);
         }
 
-        // ddms itself is wanted: send a ping for ourselves
-        SdkStatsService.ping("ddms", VERSION, null);  //$NON-NLS-1$
+        // get the ddms parent folder location
+        String ddmsParentLocation = System.getProperty("com.android.ddms.bindir"); //$NON-NLS-1$
+
+        // we're past the point where ddms can be called just to send a ping, so we can
+        // ping for ddms itself.
+        ping(ddmsParentLocation);
 
         DebugPortManager.setProvider(DebugPortProvider.getInstance());
 
@@ -94,17 +102,38 @@ public class Main {
         UIThread ui = UIThread.getInstance();
 
         try {
-            ui.runUI();
+            ui.runUI(ddmsParentLocation);
         } finally {
             PrefsDialog.save();
-    
+
             AndroidDebugBridge.terminate();
         }
 
         Log.d("ddms", "Bye");
-        
+
         // this is kinda bad, but on MacOS the shutdown doesn't seem to finish because of
         // a thread called AWT-Shutdown. This will help while I track this down.
         System.exit(0);
+    }
+
+    public static void ping(String ddmsParentLocation) {
+        Properties p = new Properties();
+        try{
+            File sourceProp;
+            if (ddmsParentLocation != null && ddmsParentLocation.length() > 0) {
+                sourceProp = new File(ddmsParentLocation, "source.properties"); //$NON-NLS-1$
+            } else {
+                sourceProp = new File("source.properties"); //$NON-NLS-1$
+            }
+            p.load(new FileInputStream(sourceProp));
+            sRevision = p.getProperty("Pkg.Revision"); //$NON-NLS-1$
+            if (sRevision != null && sRevision.length() > 0) {
+                SdkStatsService.ping("ddms", sRevision, null);  //$NON-NLS-1$
+            }
+        } catch (FileNotFoundException e) {
+            // couldn't find the file? don't ping.
+        } catch (IOException e) {
+            // couldn't find the file? don't ping.
+        }
     }
 }

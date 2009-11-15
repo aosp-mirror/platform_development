@@ -29,6 +29,7 @@ typedef int     (*Func_open)(const char*, int, mode_t);
 typedef int     (*Func_open64)(const char*, int, mode_t);
 
 typedef int     (*Func_close)(int);
+typedef int     (*Func_dup)(int);
 typedef ssize_t (*Func_read)(int, void*, size_t);
 typedef ssize_t (*Func_readv)(int, const struct iovec*, int);
 typedef ssize_t (*Func_write)(int, const void*, size_t);
@@ -95,6 +96,7 @@ EXTERN_FUNC Func_open _ws_open;
 EXTERN_FUNC Func_open64 _ws_open64;
 
 EXTERN_FUNC Func_close _ws_close;
+EXTERN_FUNC Func_dup _ws_dup;
 EXTERN_FUNC Func_read _ws_read;
 EXTERN_FUNC Func_readv _ws_readv;
 EXTERN_FUNC Func_write _ws_write;
@@ -201,6 +203,9 @@ struct WrapSimGlobals {
     pthread_mutex_t fakeFdLock;
     BitVector*  fakeFdMap;
     FakeDev*    fakeFdList[kMaxFakeFdCount];
+
+    /* used for wsAtomicAdd */
+    pthread_mutex_t atomicLock;
 };
 
 extern struct WrapSimGlobals gWrapSim;

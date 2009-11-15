@@ -31,6 +31,9 @@
     <uses-permission android:name="com.google.android.googleapps.permission.GOOGLE_AUTH.ALL_SERVICES" />
     <uses-permission android:name="com.google.android.googleapps.permission.GOOGLE_AUTH.YouTubeUser" />
     <uses-permission android:name="com.google.android.googleapps.permission.ACCESS_GOOGLE_PASSWORD" />
+    <uses-permission android:name="android.permission.GET_ACCOUNTS" />
+    <uses-permission android:name="android.permission.USE_CREDENTIALS" />
+    <uses-permission android:name="android.permission.MANAGE_ACCOUNTS" />
 
     <application android:label="Dev Tools"
             android:icon="@drawable/ic_launcher_devtools">
@@ -67,6 +70,22 @@
         <activity android:name="PointerLocation" android:label="Pointer Location"
                 android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen"
                 android:configChanges="keyboard|keyboardHidden|navigation|orientation">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.TEST" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name="AccountsTester" android:label="AccountsTester"
+                  android:theme="@android:style/Theme.Light">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.TEST" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name="SyncAdapterDriver" android:label="Sync Tester"
+                  android:theme="@android:style/Theme.Light">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.TEST" />

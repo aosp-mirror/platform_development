@@ -21,11 +21,13 @@ import com.android.ddmlib.Log;
 import com.android.ddmlib.RawImage;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.dnd.Clipboard;
+import org.eclipse.swt.dnd.ImageTransfer;
+import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
-import org.eclipse.swt.graphics.ImageLoader;
 import org.eclipse.swt.graphics.PaletteData;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -48,6 +50,8 @@ public class ScreenShotDialog extends Dialog {
     private Label mImageLabel;
     private Button mSave;
     private IDevice mDevice;
+    private RawImage mRawImage;
+    private Clipboard mClipboard;
 
 
     /**
@@ -55,6 +59,7 @@ public class ScreenShotDialog extends Dialog {
      */
     public ScreenShotDialog(Shell parent) {
         this(parent, SWT.DIALOG_TRIM | SWT.APPLICATION_MODAL);
+        mClipboard = new Clipboard(parent.getDisplay());
     }
 
     /**
@@ -95,22 +100,9 @@ public class ScreenShotDialog extends Dialog {
     private void createContents(final Shell shell) {
         GridData data;
 
-        shell.setLayout(new GridLayout(3, true));
+        final int colCount = 5;
 
-        // title/"capturing" label
-        mBusyLabel = new Label(shell, SWT.NONE);
-        mBusyLabel.setText("Preparing...");
-        data = new GridData(GridData.HORIZONTAL_ALIGN_BEGINNING);
-        data.horizontalSpan = 3;
-        mBusyLabel.setLayoutData(data);
-
-        // space for the image
-        mImageLabel = new Label(shell, SWT.BORDER);
-        data = new GridData(GridData.HORIZONTAL_ALIGN_CENTER);
-        data.horizontalSpan = 3;
-        mImageLabel.setLayoutData(data);
-        Display display = shell.getDisplay();
-        mImageLabel.setImage(ImageHelper.createPlaceHolderArt(display, 50, 50, display.getSystemColor(SWT.COLOR_BLUE)));
+        shell.setLayout(new GridLayout(colCount, true));
 
         // "refresh" button
         Button refresh = new Button(shell, SWT.PUSH);
@@ -122,6 +114,22 @@ public class ScreenShotDialog extends Dialog {
             @Override
             public void widgetSelected(SelectionEvent e) {
                 updateDeviceImage(shell);
+            }
+        });
+
+        // "rotate" button
+        Button rotate = new Button(shell, SWT.PUSH);
+        rotate.setText("Rotate");
+        data = new GridData(GridData.HORIZONTAL_ALIGN_CENTER);
+        data.widthHint = 80;
+        rotate.setLayoutData(data);
+        rotate.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                if (mRawImage != null) {
+                    mRawImage = mRawImage.getRotated();
+                    updateImageDisplay(shell);
+                }
             }
         });
 
@@ -138,6 +146,20 @@ public class ScreenShotDialog extends Dialog {
             }
         });
 
+        Button copy = new Button(shell, SWT.PUSH);
+        copy.setText("Copy");
+        copy.setToolTipText("Copy the screenshot to the clipboard");
+        data = new GridData(GridData.HORIZONTAL_ALIGN_CENTER);
+        data.widthHint = 80;
+        copy.setLayoutData(data);
+        copy.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                copy();
+            }
+        });
+
+
         // "done" button
         Button done = new Button(shell, SWT.PUSH);
         done.setText("Done");
@@ -151,24 +173,75 @@ public class ScreenShotDialog extends Dialog {
             }
         });
 
+        // title/"capturing" label
+        mBusyLabel = new Label(shell, SWT.NONE);
+        mBusyLabel.setText("Preparing...");
+        data = new GridData(GridData.HORIZONTAL_ALIGN_BEGINNING);
+        data.horizontalSpan = colCount;
+        mBusyLabel.setLayoutData(data);
+
+        // space for the image
+        mImageLabel = new Label(shell, SWT.BORDER);
+        data = new GridData(GridData.HORIZONTAL_ALIGN_CENTER);
+        data.horizontalSpan = colCount;
+        mImageLabel.setLayoutData(data);
+        Display display = shell.getDisplay();
+        mImageLabel.setImage(ImageHelper.createPlaceHolderArt(
+                display, 50, 50, display.getSystemColor(SWT.COLOR_BLUE)));
+
+
         shell.setDefaultButton(done);
     }
 
-    /*
-     * Capture a new image from the device.
+    /**
+     * Copies the content of {@link #mImageLabel} to the clipboard.
+     */
+    private void copy() {
+        mClipboard.setContents(
+                new Object[] {
+                        mImageLabel.getImage().getImageData()
+                }, new Transfer[] {
+                        ImageTransfer.getInstance()
+                });
+    }
+
+    /**
+     * Captures a new image from the device, and display it.
      */
     private void updateDeviceImage(Shell shell) {
         mBusyLabel.setText("Capturing...");     // no effect
 
         shell.setCursor(shell.getDisplay().getSystemCursor(SWT.CURSOR_WAIT));
 
-        Image image = getDeviceImage();
-        if (image == null) {
+        mRawImage = getDeviceImage();
+
+        updateImageDisplay(shell);
+    }
+
+    /**
+     * Updates the display with {@link #mRawImage}.
+     * @param shell
+     */
+    private void updateImageDisplay(Shell shell) {
+        Image image;
+        if (mRawImage == null) {
             Display display = shell.getDisplay();
-            image = ImageHelper.createPlaceHolderArt(display, 320, 240, display.getSystemColor(SWT.COLOR_BLUE));
+            image = ImageHelper.createPlaceHolderArt(
+                    display, 320, 240, display.getSystemColor(SWT.COLOR_BLUE));
+
             mSave.setEnabled(false);
             mBusyLabel.setText("Screen not available");
         } else {
+            // convert raw data to an Image.
+            PaletteData palette = new PaletteData(
+                    mRawImage.getRedMask(),
+                    mRawImage.getGreenMask(),
+                    mRawImage.getBlueMask());
+
+            ImageData imageData = new ImageData(mRawImage.width, mRawImage.height,
+                    mRawImage.bpp, palette, 1, mRawImage.data);
+            image = new Image(getParent().getDisplay(), imageData);
+
             mSave.setEnabled(true);
             mBusyLabel.setText("Captured image:");
         }
@@ -181,31 +254,17 @@ public class ScreenShotDialog extends Dialog {
         shell.setCursor(shell.getDisplay().getSystemCursor(SWT.CURSOR_ARROW));
     }
 
-    /*
-     * Grab an image from an ADB-connected device.
+    /**
+     * Grabs an image from an ADB-connected device and returns it as a {@link RawImage}.
      */
-    private Image getDeviceImage() {
-        RawImage rawImage;
-
+    private RawImage getDeviceImage() {
         try {
-            rawImage = mDevice.getScreenshot();
+            return mDevice.getScreenshot();
         }
         catch (IOException ioe) {
             Log.w("ddms", "Unable to get frame buffer: " + ioe.getMessage());
             return null;
         }
-
-        // device/adb not available?
-        if (rawImage == null)
-            return null;
-
-        // convert raw data to an Image
-        assert rawImage.bpp == 16;
-        PaletteData palette = new PaletteData(0xf800, 0x07e0, 0x001f);
-        ImageData imageData = new ImageData(rawImage.width, rawImage.height,
-            rawImage.bpp, palette, 1, rawImage.data);
-
-        return new Image(getParent().getDisplay(), imageData);
     }
 
     /*
@@ -229,7 +288,7 @@ public class ScreenShotDialog extends Dialog {
         if (fileName != null) {
             DdmUiPreferences.getStore().setValue("lastImageSaveDir", dlg.getFilterPath());
 
-            Log.i("ddms", "Saving image to " + fileName);
+            Log.d("ddms", "Saving image to " + fileName);
             ImageData imageData = mImageLabel.getImage().getImageData();
 
             try {
@@ -237,17 +296,6 @@ public class ScreenShotDialog extends Dialog {
             }
             catch (IOException ioe) {
                 Log.w("ddms", "Unable to save " + fileName + ": " + ioe);
-            }
-
-            if (false) {
-                ImageLoader loader = new ImageLoader();
-                loader.data = new ImageData[] { imageData };
-                // PNG writing not available until 3.3?  See bug at:
-                //  https://bugs.eclipse.org/bugs/show_bug.cgi?id=24697
-                // GIF writing only works for 8 bits
-                // JPEG uses lossy compression
-                // BMP has screwed-up colors
-                loader.save(fileName, SWT.IMAGE_JPEG);
             }
         }
     }

@@ -1,0 +1,19 @@
+// Rule: UselessLayout
+//
+// Description: Checks whether current node can be removed.
+//
+// Conditions:
+// - The node has children
+// - The node does not have siblings
+// - The node's parent is not a scroll view (horizontal or vertical)
+// - The node does not have a background or its parent does not have a
+//   background or neither the node and its parent have a background
+// - The parent is not a <merge/>
+
+if (!node.isRoot() && !(node['..'].name() in ["ScrollView", "HorizontalScrollView"]) &&
+        node['..']['*'].size() == 1 && node['*'].size() > 0 && ((node.'@android:background' ||
+        node['..'].'@android:background') || (!node.'@android:background' &&
+        !node['..'].'@android:background'))) {
+    analysis << "This ${node.name()} layout or its ${node['..'].name()} parent is " +
+            "${node['..'].'@android:id' ? "possibly useless" : "useless"}"
+}

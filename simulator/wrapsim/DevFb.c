@@ -14,6 +14,10 @@
 #include <linux/fb.h>
 
 typedef struct FbState {
+
+    /* refcount for dup() */
+    int refCount;
+
     /* index into gWrapSim.display[] */
     int     displayIdx;
 
@@ -77,7 +81,13 @@ static void configureInitialState(int displayIdx, FbState* fbState)
  */
 static void freeState(FbState* fbState)
 {
-    free(fbState);
+    int oldcount;
+
+    oldcount = wsAtomicAdd(&fbState->refCount, -1);
+
+    if (oldcount == 0) {
+        free(fbState);
+    }
 }
 
 /*
@@ -242,6 +252,28 @@ static int closeFb(FakeDev* dev, int fd)
 }
 
 /*
+ * dup() an existing fake descriptor
+ */
+static FakeDev* dupFb(FakeDev* dev, int fd)
+{
+    FakeDev* newDev = wsCreateFakeDev(dev->debugName);
+    if (newDev != NULL) {
+        newDev->mmap = mmapFb;
+        newDev->ioctl = ioctlFb;
+        newDev->close = closeFb;
+        newDev->dup = dupFb;
+
+        /* use state from existing FakeDev */
+        FbState* fbState = dev->state;
+        wsAtomicAdd(&fbState->refCount, 1);
+
+        newDev->state = fbState;
+    }
+
+    return newDev;
+}
+
+/*
  * Open the console TTY device, which responds to a collection of ioctl()s.
  */
 FakeDev* wsOpenDevFb(const char* pathName, int flags)
@@ -251,6 +283,7 @@ FakeDev* wsOpenDevFb(const char* pathName, int flags)
         newDev->mmap = mmapFb;
         newDev->ioctl = ioctlFb;
         newDev->close = closeFb;
+        newDev->dup = dupFb;
 
         FbState* fbState = calloc(1, sizeof(FbState));
 

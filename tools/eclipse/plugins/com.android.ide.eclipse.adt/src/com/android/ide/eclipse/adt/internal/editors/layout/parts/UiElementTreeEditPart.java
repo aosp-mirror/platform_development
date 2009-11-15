@@ -25,6 +25,8 @@ import org.eclipse.ui.views.contentoutline.IContentOutlinePage;
 /**
  * Base {@link AbstractTreeEditPart} to represent {@link UiElementNode} objects in the
  * {@link IContentOutlinePage} linked to the layout editor.
+ *
+ * @since GLE1
  */
 public class UiElementTreeEditPart extends AbstractTreeEditPart {
 

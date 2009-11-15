@@ -18,27 +18,18 @@
 """TestSuite for running native Android tests."""
 
 # python imports
-import re
 import os
+import re
 
 # local imports
-from abstract_test import AbstractTestSuite
 import android_build
 import logger
 import run_command
+import test_suite
 
 
-class NativeTestSuite(AbstractTestSuite):
+class NativeTestSuite(test_suite.AbstractTestSuite):
   """A test suite for running native aka C/C++ tests on device."""
-
-  TAG_NAME = "test-native"
-
-  def _GetTagName(self):
-    return self._TAG_NAME
-
-  def Parse(self, suite_element):
-    super(NativeTestSuite, self).Parse(suite_element)
-
 
   def Run(self, options, adb):
     """Run the provided *native* test suite.
@@ -61,7 +52,7 @@ class NativeTestSuite(AbstractTestSuite):
     # find all test files, convert unicode names to ascii, take the basename
     # and drop the .cc/.cpp  extension.
     source_list = []
-    build_path = self.GetBuildPath()
+    build_path = os.path.join(android_build.GetTop(), self.GetBuildPath())
     os.path.walk(build_path, self._CollectTestSources, source_list)
     logger.SilentLog("Tests source %s" % source_list)
 

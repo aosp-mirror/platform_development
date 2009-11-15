@@ -23,6 +23,8 @@ import org.eclipse.draw2d.XYLayout;
 
 /**
  * Graphical edit part for an {@link UiElementNode} that represents a View.
+ *
+ * @since GLE1
  */
 public class UiViewEditPart extends UiElementEditPart {
 

@@ -16,6 +16,8 @@
 
 package com.android.ddmlib;
 
+import com.android.ddmlib.ClientData.DebuggerStatus;
+
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -78,7 +80,7 @@ class Debugger {
         mPreDataBuffer = ByteBuffer.allocate(PRE_DATA_BUF_SIZE);
         mConnState = ST_NOT_CONNECTED;
 
-        Log.i("ddms", "Created: " + this.toString());
+        Log.d("ddms", "Created: " + this.toString());
     }
 
     /**
@@ -137,7 +139,7 @@ class Debugger {
 
         if (listenChan != null) {
             SocketChannel newChan;
-    
+
             newChan = listenChan.accept();
             if (mChannel != null) {
                 Log.w("ddms", "debugger already talking to " + mClient
@@ -150,7 +152,7 @@ class Debugger {
             mConnState = ST_AWAIT_SHAKE;
             return mChannel;
         }
-        
+
         return null;
     }
 
@@ -165,8 +167,8 @@ class Debugger {
                 mConnState = ST_NOT_CONNECTED;
 
                 ClientData cd = mClient.getClientData();
-                cd.setDebuggerConnectionStatus(ClientData.DEBUGGER_DEFAULT);
-                mClient.update(Client.CHANGE_DEBUGGER_INTEREST);
+                cd.setDebuggerConnectionStatus(DebuggerStatus.DEFAULT);
+                mClient.update(Client.CHANGE_DEBUGGER_STATUS);
             }
         } catch (IOException ioe) {
             Log.w("ddms", "Failed to close data " + this);
@@ -243,20 +245,20 @@ class Debugger {
             //Log.v("ddms", "findHand: " + result);
             switch (result) {
                 case JdwpPacket.HANDSHAKE_GOOD:
-                    Log.i("ddms", "Good handshake from debugger");
+                    Log.d("ddms", "Good handshake from debugger");
                     JdwpPacket.consumeHandshake(mReadBuffer);
                     sendHandshake();
                     mConnState = ST_READY;
 
                     ClientData cd = mClient.getClientData();
-                    cd.setDebuggerConnectionStatus(ClientData.DEBUGGER_ATTACHED);
-                    mClient.update(Client.CHANGE_DEBUGGER_INTEREST);
+                    cd.setDebuggerConnectionStatus(DebuggerStatus.ATTACHED);
+                    mClient.update(Client.CHANGE_DEBUGGER_STATUS);
 
                     // see if we have another packet in the buffer
                     return getJdwpPacket();
                 case JdwpPacket.HANDSHAKE_BAD:
                     // not a debugger, throw an exception so we drop the line
-                    Log.i("ddms", "Bad handshake from debugger");
+                    Log.d("ddms", "Bad handshake from debugger");
                     throw new IOException("bad handshake");
                 case JdwpPacket.HANDSHAKE_NOTYET:
                     break;
@@ -272,7 +274,7 @@ class Debugger {
         } else {
             Log.e("ddms", "Receiving data in state = " + mConnState);
         }
-        
+
         return null;
     }
 

@@ -5,22 +5,22 @@ THIS FILE IS CURRENTLY BROKEN AND SHOULD NOT BE USED.
 -->
 <project name="alias_rules" default="package">
 
-    <!-- No user servicable parts below. -->
+    <!-- No user serviceable parts below. -->
 
     <!-- Input directories -->
-    <property name="resource-dir" value="res" />
+    <property name="resource.dir" value="res" />
 
     <!-- The final package file to generate -->
-    <property name="out-package" value="${ant.project.name}.apk" />
+    <property name="out.package" value="${ant.project.name}.apk" />
 
     <!-- Tools -->
-    <condition property="aapt" value="${android-tools}/aapt.exe" else="${android-tools}/aapt" >
-        <os family="windows"/>
+    <condition property="aapt" value="${android.tools.dir}/aapt.exe" else="${android.tools.dir}/aapt">
+        <os family="windows" />
     </condition>
-    <condition property="adb" value="${android-tools}/adb.exe" else="${android-tools}/adb" >
-        <os family="windows"/>
+    <condition property="adb" value="${android.tools.dir}/adb.exe" else="${android.tools.dir}/adb">
+        <os family="windows" />
     </condition>
-    <property name="android-jar" value="${sdk-folder}/android.jar" />
+    <property name="android.jar" value="${sdk.dir}/android.jar" />
 
     <!-- Rules -->
 
@@ -33,11 +33,11 @@ THIS FILE IS CURRENTLY BROKEN AND SHOULD NOT BE USED.
             <arg value="-M" />
             <arg value="AndroidManifest.xml" />
             <arg value="-S" />
-            <arg value="${resource-dir}" />
+            <arg value="${resource.dir}" />
             <arg value="-I" />
-            <arg value="${android-jar}" />
+            <arg value="${android.jar}" />
             <arg value="-F" />
-            <arg value="${out-package}" />
+            <arg value="${out.package}" />
         </exec>
     </target>
 
@@ -49,7 +49,7 @@ THIS FILE IS CURRENTLY BROKEN AND SHOULD NOT BE USED.
         <echo>Sending package to default emulator...</echo>
         <exec executable="${adb}" failonerror="true">
             <arg value="install" />
-            <arg value="${out-package}" />
+            <arg value="${out.package}" />
         </exec>
     </target>
 

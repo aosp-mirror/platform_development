@@ -14,5 +14,6 @@
 #include "Log.h"
 #include "SimMgr.h"
 #include "Globals.h"
+#include "Util.h"
 
 #endif /*_WRAPSIM_COMMON_H*/
