@@ -65,18 +65,16 @@ image, complying with these requirements ends up restricting OEMs' designs.
 (For instance, it's difficult for a user to replace a library on read-only
 flash storage.)</li>
 <li>LGPL requires allowance of customer modification and reverse
-engineering for debugging those modifications.  Most app producers do
-want to have to be bound by these terms, and the more userspace libs
-that are LGPL, the more they would have to be to use Android
-userspace.</li>
+engineering for debugging those modifications.  Most device makers do
+not want to have to be bound by these terms, so to minimize the burden on
+these companies we minimize usage of LGPL software in userspace.</li>
 <li>Historically, LGPL libraries have been the source of a large number
 of compliance problems for downstream device makers and application
-developers (due to ignorance and disbelief, usually).  Education is
-slow going, sadly.  Part of android being successful as a platform is
-that we want to make it easy for our device makers to comply with the
-licenses in Android.  Given the difficulties with complying with LGPL
-in the past, it is easiest to simply not use LGPL libraries if we can
-avoid it.</li>
+developers. Educating engineers on these issues is difficult and slow-going,
+unfortunately. It's critical to Android's success that it be as easy as
+possible for device makers to comply with the licenses.  Given the
+difficulties with complying with LGPL in the past, it is most prudent to
+simply not use LGPL libraries if we can avoid it.</li>
 </ol>
 <p>The issues discussed above are our reasons for preferring ASL2.0 for
 our own code. They aren't criticisms of LGPL or other licenses. We do

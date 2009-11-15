@@ -1,27 +1,31 @@
 page.title=Contact Us
 doc.type=compatibility
 @jd:body
-<h3><b>Mailing list</b></h3>
-<div><div>Welcome to the Android compatibility mailing list!<br>
-To get the most out of the mailing list discussions, please do the following before you post:
-<ol><li><b>Read the <a href="http://sites.google.com/a/android.com/opensource/discuss/android-discussion-groups-charter">mailing list charter</a>
-</b>
-that covers the community guidelines.<br><br></li>
-<li><b>Search the mailing list archives</b>
-to see whether your questions have already been discussed.<br><br></li>
-<li><b>Be very clear</b>
-about your question in the subject -- it helps everyone, both those trying to answer your question as well as those who may be looking for information in the future.<br><br></li>
-<li><b>Give plenty of details</b>
-in your post to help others understand your problem. Code or log snippets, as well as pointers to screenshots, may also be helpful. For a great guide to phrasing your questions, read <a href="http://www.google.com/url?q=http%3A%2F%2Fwww.catb.org%2F%257Eesr%2Ffaqs%2Fsmart-questions.html&amp;sa=D&amp;sntz=1&amp;usg=AFrqEzd169OWM-dgsNW_9rDKrOgOJqgpEA">How To Ask Questions The Smart Way</a>
-.
-</li>
-</ol>
-<br>There are two ways to join the Android compatibility mailing list:<br></div>
-<ul><li>Visit the <a href="http://groups.google.com/group/android-compatibility">android-compatibility sign-up page</a>
-on Google Groups, or
-</li>
-<li>Send email to <a href="mailto:android-compatibility-subscribe@googlegroups.com">android-compatibility-subscribe@googlegroups.com</a>
-.
-</li>
-</ul>
-</div>
+<p>Thanks for your interest in Android compatibility!</p>
+<p>If you have questions about Android compatibility that aren't covered in
+this site, you can reach us in one of a few different ways. To get the most
+out of any of these options, please first read "Getting the Most from Our
+Lists" on the <a href="{@docRoot}community/index.html">Community page.</a></p>
+
+<h3>Discussion Group</h3>
+<p>The preferred way to reach us is via the <a
+href="http://groups.google.com/group/android-compatibility">android-compatibility
+mailing list</a>. Use this list for all your compatibility-related questions.
+Please be aware that this is a public forum.</p>
+
+<h3>CTS Technical Questions</h3>
+<p>If you have specific issues with the Compatibility Test Suite that require
+you to disclose information you'd prefer not to be public, you can contact an
+email address we've set up specifically this purpose: <a
+href="mailto:cts@android.com">cts@android.com</a>. This email address is for
+cases that require disclosure of confidential information only, so general
+questions will be directed back to the public android-compatibility
+list. Note also that this list is for specific technical questions; general
+inquiries will also be directed back to the android-compatibility list.</p>
+
+<h3>Private Inquiries</h3>
+<p>Finally, business inquiries about the compatibility program, including
+requests to use branding elements and so on, can be sent to the address <a
+href="mailto:compatibility@android.com">compatibility@android.com</a>. Like
+the CTS address, this address is for specific, private inquiries; general
+questions will be directed back to the android-compatibility list.</p>

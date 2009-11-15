@@ -13,7 +13,7 @@ function nothing() {}
 
   <li><h2>More Information</h2><ul>
     <li><a href="<?cs var:toroot ?>downloads/index.html">Downloads</a></li>
-    <li><a href="<?cs var:toroot ?>compatibility/faq.html">FAQ</a></li>
+    <li><a href="<?cs var:toroot ?>faqs.html#compatibility">FAQs</a></li>
     <li><a href="<?cs var:toroot ?>compatibility/contact-us.html">Contact Us</a></li>
   </ul></li>
 </ul>

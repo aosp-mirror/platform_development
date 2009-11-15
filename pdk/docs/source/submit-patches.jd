@@ -8,13 +8,10 @@ local working environment and get the Android source files. For instructions,
 see <a href="{@docRoot}source/download.html">Get source</a>
 .<br><br>Other recommended reading:<br><ul><li>For an overview of the code
 contribution and review process, see <a
-href="{@docRoot}source/submit-patches.html">Workflow</a>
-.</li>
-<li>For details about Repo, see <a href="{@docRoot}source/git-repo.html">Using Repo and Git</a>
-.<br></li>
+href="{@docRoot}source/life-of-a-patch.html">Life of a Patch</a>.</li>
+<li>For details about Repo, see <a href="{@docRoot}source/git-repo.html">Using Repo and Git</a>.<br></li>
 <li>For information about the different roles you can play within the Android
-Open Source community, see <a href="{@docRoot}source/roles.html">Project roles</a>
-.</li>
+Open Source community, see <a href="{@docRoot}source/roles.html">Project roles</a>.</li>
 <li>If you plan to contribute code to the Android platform, be sure to read
 the <a href="{@docRoot}source/licenses.html">AOSP's licensing information</a>.</li>
 </ul>
@@ -40,16 +37,14 @@ to start a new topic branch.</li>
 </ol>
 You can track your uploaded changes using the Gerrit code-review tool. When it's time to work on the code again, run repo sync, then go back to step 1 above and start another topic branch.<br><br>The steps will not always come in the order shown--for example, you might run git diff at several points in the process.<br><br><h3>
 Starting a topic branch</h3>
-Start a topic branch called default in your local work environment:<br><br>$ repo start default <br><br>For more about topic branches, see <a href="{@docRoot}source/git-repo.html">Using Repo and Git</a>
-.<br><h3>
+Start a topic branch called default in your local work environment:<br><br>$ repo start default <br><br>For more about topic branches, see <a href="{@docRoot}source/git-repo.html">Using Repo and Git</a>.<br><h3>
 Editing the files</h3>
 You do not need to check files out before working on them. Edit the files using vim, emacs, or any other editor.<br><br><h3>
 Staging changes</h3>
 To indicate that every new and modified file in your working directory should be "staged" for inclusion in the next commit, run git add without any arguments. You can also specify files or filetypes. For example, the following command would stage all the new and modified files under the bionic directory and its subdirectories:<br><br>$ git add bionic/*<br><br>Run git help add to see more ways to use git add.<br><br><b>When is git add optional?<br></b>
 <br>If you add new files, you must stage them using git add before you run git commit. However, if you are only modifying or deleting files, you can skip git add if you use the -a option with git commit. For more details, see the "Committing changes" section further down.<br><br><h3>
 Using repo status <br></h3>
-To see the status of the current branch, run <br><br>$ repo status .<br><br>For information about how to interpret the results of repo status, see <a href="{@docRoot}source/git-repo.html#TOC-status">Using Repo and Git</a>
-.<br><br><h3>
+To see the status of the current branch, run <br><br>$ repo status .<br><br>For information about how to interpret the results of repo status, see <a href="{@docRoot}source/git-repo.html#TOC-status">Using Repo and Git</a>.<br><br><h3>
 Using git diff</h3>
 To see uncommitted changes, cd into the project directory and run <br><br>$ git
 diff <br><br>Without any arguments, git diff will show you the differences
@@ -113,8 +108,7 @@ To download a specific change from Gerrit, run <br><br>$ repo download <i>target
 . For more information, see <a href="{@docRoot}source/git-repo.html#TOC-download">Using Repo and Git</a>
 .<br><br><h2>
 Using the Gerrit code-review tool <br></h2>
-You can open Gerrit by visiting whatever URL is returned to you from the repo upload command, or by visiting <a href="https://review.source.android.com/">https://review.source.android.com</a>
-/.<br><br><h3>
+You can open Gerrit by visiting whatever URL is returned to you from the repo upload command, or by visiting <a href="https://review.source.android.com/">https://review.source.android.com</a>.<br><br><h3>
 Viewing the status of uploaded changes <br></h3>
 To check the status of a change that you uploaded, open <a href="https://review.source.android.com/mine">Gerrit</a>
 , sign in, and click MyChanges.<br><b><br></b>

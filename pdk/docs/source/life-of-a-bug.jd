@@ -53,8 +53,10 @@ priority, at least insofar that if they were high priority, they'd be assigned
 to a contributor.</p></li>
 <li><b>Reviewed</b><p>Like <code>Unassigned</code>, but the issue
 represented is being tracked in a separate bug database. For example, the bug
-might have been reported via an AOSP member's internal bug-tracking system,
-which is considered the "master" copy.</p></li>
+might have been reported via an internal bug-tracking system,
+which is considered the "master" copy. (For instance, Google maintains one
+such private issue tracker, intended primarily for bugs which contain
+sensitive information which can't be revealed publicly.)</p></li>
 <li><b>Assigned</b><li>Like <code>Unassigned</code>, but the bug has been
 actually assigned to a specific contributor to fix.</p></li>
 </ul>
@@ -120,7 +122,7 @@ however, we'll be sure to update this page as well.</p>
 actually multiple issue trackers for Android-related issues. The <a
 href="http://code.google.com/p/android/issues/list">Google Code Project
 Hosting Issue Tracker</a> is the <b>only</b> official public issue tracker; however,
-many of the AOSP Member organizations maintain their own, as do most OEMs. We
-try to keep the public issue tracker in sync with private issue trackers
+Google also maintains a private issue tracker, own, as do most OEMs. We try to
+keep the public issue tracker in sync with private issue trackers
 wherever possible, but in cases where confidential information and security
 issues are involved, this isn't always possible.</p>

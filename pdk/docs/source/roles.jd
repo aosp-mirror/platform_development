@@ -1,12 +1,12 @@
 page.title=People and Roles
 doc.type=source
 @jd:body
-<div>
 <p>The Android Open Source Project (AOSP) includes individuals working in a variety
 of roles. As noted in <a href="{@docRoot}about/philosophy.html">Our
-Philosophy</a>, the core AOSP members operate the Android product management
-and engineering process. This page describes these roles in a bit more
-detail.</p>
+Philosophy</a>, Google is responsible for Android product management
+and the engineering process for the core framework and platform; however,
+the project considers contributions from any source, not just Google. This
+page describes the kinds of roles that interested parties can take on.</p>
 <p>Anyone who is interested in exploring and contributing to Android can use the
 Android Open Source Project resources. Anyone can join the mailing lists, ask
 questions, contribute patches, report bugs, look at submitted patches, and use
@@ -15,10 +15,10 @@ href="{@docRoot}source/index.html">Get Involved</a>.</p>
 
 <h2>Contributor</h2>
 <p>A "Contributor" is anyone making contributions to the AOSP source code,
-including both employees or other affiliates of an AOSP Member, as well as
+including both employees of Google or other companies, as well as
 external developers who are contributing to Android on their own behalf.
-There is no distinction between Contributors who are affiliated with an AOSP
-Member, and those who are not: all engineers use the same git/gerrit tools, 
+There is no distinction between Contributors who are employed by 
+Google, and those who are not: all engineers use the same git/gerrit tools, 
 follow the same code review process, and are subject to the same requirements
 on code style and so on.</p>
 <p/>
@@ -26,9 +26,9 @@ on code style and so on.</p>
 <h2>Developer</h2>
 <p>A "Developer" is an engineer writing applications that run on Android
 devices. There is, of course, no difference in skillset between a "Developer"
-and a "Contributor"; we simply use "Developer" to help identify our audience.
+and a "Contributor"; AOSP simply uses "Developer" to help identify our audience.
 Since the key purpose of Android is to cultivate an open development platform,
-"Developers" are one of the key customers of the Android project. As such, we
+"Developers" are one of the key customers of the Android platform. As such, we
 talk about them a lot, though this isn't technically a separate role in the
 AOSP <i>per se.</i></p>
 <p/>
@@ -44,18 +44,17 @@ time, generally Verifiers are the same as Approvers.</i></p>
 "Approvers" are experienced members of the project who have demonstrated their
 design skills and have made significant technical contributions to the
 project. In the code-review process, an Approver decides whether to include or
-exclude a change. Project Leads (typically employed by an AOSP Member) choose
+exclude a change. Project Leads (who are typically employed by Google) choose
 the Approvers, sometimes promoting to this position Verifiers who have
 demonstrated their expertise within a specific project.</p>
 <p/>
 
 <h2>Project Leads</h2>
 <p>Android consists of a number of sub-projects; you can see these in the git
-repository, as individual .git files. The AOSP Members generally assign tech
-leads or product leads who oversee the engineering for individual Android
-projects. Typically these tech leads will be employees of an AOSP Member
-company.  A Project Lead for an individual project is responsible for the
-following:</p>
+repository, as individual .git files. Tech Leads are senior Contributors who
+oversee the engineering for individual Android projects. Typically these tech
+leads will be Google employees.  A Project Lead for an individual project is
+responsible for the following:</p>
 <ul>
   <li>Lead all technical aspects of the project; for example, the project
   roadmap, development, release cycles, versioning, and QA.</li>
@@ -72,4 +71,3 @@ following:</p>
   <li>Be the public face for the project and the go-to person for questions
   related to the project.</li>
 </ul>
-</div>

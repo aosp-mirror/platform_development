@@ -2,12 +2,11 @@ page.title=Code Style Guidelines for Contributors
 doc.type=source
 @jd:body
 <div>
-<h1>Android Code Style Rules</h1>
-<p>The rules below are not guidelines or recommendations, but strict rules.<b>You may not disregard the rules we list below</b>
-except as approved on a need-to-use basis.
+<p>The rules below are not guidelines or recommendations, but strict rules.
+Contributions to Android generally <b>will not be accepted if they do not
+adhere to these rules.</b>
 </p>
-<p>Not all existing code follows these rules, but all new code is expected to.
-</p>
+<p>Not all existing code follows these rules, but all new code is expected to.</p>
 <h1><a>Java Language Rules</a>
 </h1>
 <p>We follow standard Java coding conventions. We add a few rules:

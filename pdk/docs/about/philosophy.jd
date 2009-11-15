@@ -1,13 +1,9 @@
 page.title=Philosophy and Goals
 doc.type=about
+doc.hidenav=true
 @jd:body
 <p>Android is an open-source software stack for mobile phones and similar
-devices. The Android Open Source Project is tasked with maintaining current
-and developing new versions of the Android software. We believe that users
-deserve to have the source code to the software they run on their devices,
-that developers deserve an open, level playing field for their apps, and that
-OEMs and carriers deserve the freedom to differentiate and innovate. That's
-why we created Android, and made the source code open.</p>
+devices.</p>
 <h2>Origin and Goal</h2>
 <p>Android was originated by a group of companies known as the Open Handset
 Alliance, led by Google. Today, many companies -- both original members of the
@@ -25,20 +21,20 @@ real users by facilitating innovation. Accordingly, the primary goal of the
 AOSP is to make sure Android is a success as an end user product.</p>
 <h2>Governance Philosophy</h2>
 <p>The companies that have invested in Android have done so on its merits,
-because we collectively believe that an open platform is necessary. In some
-ways, Android is the purest form of an open-source (as opposed to free
-software) effort: a group of organizations with shared needs has pooled
-resources to collaborate on a single implementation of a shared product. That
-is, the Android philosophy is pragmatic, first and foremost. The objective is
+because we collectively believe that an open platform is necessary. Android is
+intentionally and explicitly an open-source -- as opposed to free software --
+effort: a group of organizations with shared needs has pooled
+resources to collaborate on a single implementation of a shared product. 
+The Android philosophy is pragmatic, first and foremost. The objective is
 a shared product that each contributor can tailor and customize.</p>
-<p>Uncontrolled customization can, of course, lead to incompatibile
+<p>Uncontrolled customization can, of course, lead to incompatible
 implementations. To prevent this, the AOSP also maintains the Android
 Compatibility Program, which spells out what it means to be "Android
 compatible", and what is required of device builders to achieve that status.
 Anyone can (and will!) use the Android source code for any purpose, and we
 welcome all such uses. However, in order to take part in the shared
-ecosystem that we are building around Android, device builders can take
-advantage of the Compatibility Program.</p>
+ecosystem of applications that we are building around Android, device builders
+can take advantage of the Compatibility Program.</p>
 <p>Though Android consists of multiple sub-projects, this is strictly a
 project-management technique. We view and manage Android as a single,
 holistic software product, not a "distribution", specification, or collection
@@ -46,20 +42,19 @@ of replaceable parts. Conceptually, our notion is that device builders port
 Android to a device; they don't implement a specification or curate a
 distribution.</p>
 <h2>How We Work</h2>
-<p>We know that quality does not come without hard work. The
-members of the Android Open Source Project have contributed full-time
-engineers, product managers, UI designers, Quality Assurance, and all the
-other roles required to launch modern devices in the modern marketplace.
-We integrate the open source administration and maintenance into the larger
-product development cycle.</p>
+<p>We know that quality does not come without hard work. Along with many
+partners, Google has contributed full-time engineers, product managers, UI
+designers, Quality Assurance, and all the other roles required to bring
+modern devices to market.  We integrate the open source administration and
+maintenance into the larger product development cycle.</p>
 <p>In a nutshell:</p>
 <ul>
 <li>At any given moment, there is a current latest release of the Android
 platform. This typically takes the form of a branch in the tree.</li>
-<li>AOSP members, device builders, and contributors work with the current
+<li>Device builders and Contributors work with the current
 latest release, fixing bugs, launching new devices, experimenting with new
 features, and so on.</li>
-<li>In parallel, the AOSP members work internally on the next version of the
+<li>In parallel, Google works internally on the next version of the
 Android platform and framework, working according to the product's needs and
 goals. Some of the work from the current latest tree will promoted into these
 releases.</li>

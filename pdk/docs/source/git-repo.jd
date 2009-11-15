@@ -19,11 +19,15 @@ Why Git?
 One of the challenges in setting up the Android project was figuring out how to best support the outside community--from the hobbiest community to large OEMs building mass-market consumer devices. We wanted components to be replaceable, and we wanted interesting components to be able to grow a life of their own outside of Android. We first chose a distributed revision control system, then further narrowed it down to Git.<br><h3>
 Already a Git user?
 </h3>
-In most situations, you can use Git instead of Repo, or mix Repo and Git commands to form complex commands. Using Repo for basic across-network operations will make your work much simpler, however. For more information about Git, see the list of resources on our <a href="http://sites.google.com/a/android.com/opensource/documentation">Documentation</a>
-page.<br></div>
+In most situations, you can use Git instead of Repo, or mix Repo and Git
+commands to form complex commands. Using Repo for basic across-network
+operations will make your work much simpler, however.
+<br></div>
 <div><div><h2>
 Task reference <br></h2>
-The task list below shows a summary of how to do common Repo and Git tasks. For complete quick-start information and examples, see <a href="http://sites.google.com/a/android.com/opensource/download">Get source</a>
+The task list below shows a summary of how to do common Repo and Git tasks.
+For complete quick-start information and examples, see <a
+href="{@docRoot}source/download.html">Get source</a>
 .
 <h3>
 Installing Repo <br></h3>
@@ -33,8 +37,9 @@ $ mkdir <i>working-directory-name</i>
 $ repo init-u git://android.git.kernel.org/platform/manifest.git <br><br><h3>
 Synchronizing your client
 </h3>
-To synchronize the files for all available <a href="http://sites.google.com/a/android.com/opensource/projects">projects</a>
-:<br>$ repo sync <br><br>To synchronize the files for selected projects:<br>$ repo sync <i>project1 project2 ...</i>
+To synchronize the files for all available projects:<br>$ repo sync <br><br>To
+synchronize the files for selected projects:<br>$ repo sync <i>project1
+project2 ...</i>
 <i><br></i>
 <br><h3>
 Why use topic branches?
@@ -269,6 +274,40 @@ Click on the cheatsheet to open it in a new window for easier printing.
 
 <div><img src="{@docRoot}images/git-repo-1.png">
 </div>
+
+<!--
+<h2>Additional Resources</h2>
+<h3>Resources for platform developers</h3> 
+Google I/O videos:
+<ul>
+  <li><a href="http://sites.google.com/site/io/an-introduction-to-android">Introduction to Android</a></li> 
+  <li><a href="http://sites.google.com/site/io/anatomy-physiology-of-an-android">Anatomy Physiology of an Android</a></li> 
+  <li><a href="http://sites.google.com/site/io/inside-the-android-application-framework">Inside the Android Application Framework</a></li> 
+  <li><a href="http://sites.google.com/site/io/dalvik-vm-internals">Dalvik VM Internals</a></li> 
+</ul> 
+ 
+Getting started with the Android source code:
+<ul>
+  <li><a href="http://source.android.com/download">Get source</a></li> 
+  <li><a href="http://source.android.com/submit-patches/code-style-guide">Code Style Guide</a></li> 
+</ul> 
+ 
+Repo and Git resources:
+<ul>
+  <li><a href="http://source.android.com/download/using-repo#TOC-Git-and-Repo-cheatsheet">Git and Repo cheat sheet</a></li> 
+  <li><a href="http://source.android.com/download/using-repo">Using Repo and Git</a></li> 
+  <li>The <a href="http://book.git-scm.com/">Git Community Book</a> maintained by Scott Chacon</li> 
+  <li><a href="http://git.or.cz/gitwiki/FrontPage">GitWiki</a></li> 
+  <li><a href="http://www.kernel.org/pub/software/scm/git/docs/">Git Manual Page</a></li> 
+  <li><a href="http://www.gitcasts.com/">GitCasts</a> (Git how-to videos)</li> 
+</ul> 
+ 
+Documentation on specific tasks:
+<ul>
+  <li><a href="http://source.android.com/documentation/building-for-dream">Building for an Android Developer Phone</a></li> 
+</ul> 
+-->
+
 <h2>
 <b>Terminology</b>
 </h2>

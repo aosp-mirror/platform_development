@@ -1,6 +1,8 @@
-page.title=Building for ADP1
+page.title=Building for an Android Dev Phone
 doc.type=source
 @jd:body
+<p><i>The information on this page is a bit out of date. We'll update this
+page as soon as we can.</i></p>
 <div>The basic manifest for cupcake (and above) defines which projects are
 needed to do a generic build for the emulator or for unlocked Dream devices
 (e.g. the Android Dev Phone 1). You need to have an appropriate device running

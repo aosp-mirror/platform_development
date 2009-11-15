@@ -3,9 +3,9 @@ doc.type=source
 @jd:body
 <div>
 <p>Thanks for your interest in Android! Here are some ways you can get involved
-and help us improve Android. For background on the Android project and our
-goals, check out <a href="{@docRoot}about/philosophy.html">Our
-Philosophy</a>.</p>
+and help Google improve Android. For background on the Android project and our
+goals, check out the <a href="{@docRoot}about/philosophy.html">Project
+Philosophy page</a>.</p>
 
 <h2>Report Bugs</h2>
 <p>One of the easiest and most effective ways you can help improve Android is

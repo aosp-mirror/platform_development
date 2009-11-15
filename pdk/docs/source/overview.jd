@@ -9,6 +9,11 @@ href="{@docRoot}source/download.html">download</a>
 the source code onto your local machine. You can use <code>repo init -u
 git://android.git.kernel.org/platform/manifest.git -b android-1.6</code>
 to download the source code for Android 1.6.</p>
+<p><i>Note: platform overview information for Android 2.x has not yet been
+published, since the <a
+href="{@docRoot}compatibility/index.html">Compatibility Program</a> for
+Android 2.x has not yet launched. When the Compatibilty Definition Document
+for 2.x is released, this page will be updated to match.</i></p>
 <p>Information about older Android releases is also available:<ul>
 <li><a href="{@docRoot}source/overview-1.5.html">Android 1.5 Platform Overview</a></li>
 <li><a href="{@docRoot}source/overview-1.0.html">Android 1.0 Platform Overview</a></li>

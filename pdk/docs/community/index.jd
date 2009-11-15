@@ -46,16 +46,6 @@ href="http://groups.google.com/group/android-building">android-building</a><br/>
 Subscribe via email: <a href="mailto:android-building+subscribe@googlegroups.com">android-building+subscribe@googlegroups.com</a>
 </li>
 
-<li><b>android-platform</b><br/>
-This list is for developers who want to contribute code to the Android
-user-space projects, such as the core system libraries, the Android
-services, the public APIs, or the built-in applications. Note: contributors
-to the Android kernel should go to the android-kernel list, below.<br/><br/>
-Subscribe using Google Groups: <a
-href="http://groups.google.com/group/android-platform">android-platform</a><br/>
-Subscribe via email: <a href="mailto:android-platform+subscribe@googlegroups.com">android-platform+subscribe@googlegroups.com</a>
-</li>
-
 <li><b>android-porting</b><br/>
 This list is for developers who want to port Android to a new device. If
 you're wondering how to combine the Android source code with your hardware,
@@ -66,6 +56,16 @@ configuration.<br/><br/>
 Subscribe using Google Groups: <a
 href="http://groups.google.com/group/android-porting">android-porting</a><br/>
 Subscribe via email: <a href="mailto:android-porting+subscribe@googlegroups.com">android-porting+subscribe@googlegroups.com</a>
+</li>
+
+<li><b>android-platform</b><br/>
+This list is for developers who want to contribute code to the Android
+user-space projects, such as the core system libraries, the Android
+services, the public APIs, or the built-in applications. Note: contributors
+to the Android kernel should go to the android-kernel list, below.<br/><br/>
+Subscribe using Google Groups: <a
+href="http://groups.google.com/group/android-platform">android-platform</a><br/>
+Subscribe via email: <a href="mailto:android-platform+subscribe@googlegroups.com">android-platform+subscribe@googlegroups.com</a>
 </li>
 
 <li><b>android-kernel</b><br/>

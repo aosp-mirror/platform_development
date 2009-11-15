@@ -2,21 +2,27 @@ page.title=Welcome to Android
 home=true
 @jd:body
 <div style="float: left; width: 45%; font-size: 1.3em;">
-  <p>Here you can find the source code and information you need to build an
+  <p>Here you can find the information and source code you need to build an
   Android-compatible device.</p>
-  <p>Android is an open-source software stack for mobile devices, maintained by
-  the Android Open Source Project (AOSP). We believe that users deserve to have
-  the source code to the devices they use on a daily basis, that developers
-  deserve an open and level playing field, and that OEMs and carriers deserve
-  the freedom to create innovative devices. That's why we created Android, and
-  made its source code open.</p>
+  <p>Android is an open-source software stack for mobile devices, and a
+  corresponding open-source project led by Google. We created Android in
+  response to our own experiences launching mobile apps. We wanted to make
+  sure that there was no central point of failure, so that no industry player
+  can restrict or control the innovations of any other.  That's why we
+  created Android, and made its source code open.</p>
   <p><a href="{@docRoot}about/index.html">Learn more &raquo;</a></p>
 </div>
 <div style="float: right; width: 35%;">
-<h3 style="padding-top: 0px;">News crap here</h3>
-<p>This is a test of the emergency broadcast system. This is only a test. Had
-this been an actual emergency, we would have fled in terror, and you would not
-have been informed.</p>
+<h3 style="padding-top: 0px;">News</h3>
+<p><b>Site redesign</b><br/>
+You're looking at the new and improved source.android.com! We've updated
+the layout and site design, and also added new information. We hope you find
+these improvements helpful.</p>
+<p><b>Introducing the Compatibility Program</b><br/>
+We're pleased to introduce the Android Compatibility Program. We've released
+two tools -- the Compatibility Definition Document and the Compatibility Test
+Suite -- to help device manufacturers build compatible devices. Full details
+of the Compatibility Program will be available in the first quarter of 2010.</p>
 </div>
 <img style="float: right; padding-right: 1.5em;" src="{@docRoot}images/home-bugdroid.png" alt="Android Mascot"/>
 
@@ -26,8 +32,9 @@ have been informed.</p>
 <div class="rebox lil" style="float: left; width: 30%; margin: 1em;"> 
   <h2 style="color: white; background-color: #95C0D0; border: 0px;">Get Involved</h2> 
   <div class="p"> 
-    <p><img src="images/lil-wrench.png" alt="" style="margin: 1em;"
-    />Learn how you, for one, can help welcome our new Android overlords.</p> 
+    <p><img src="images/lil-wrench.png" alt="" style="margin: 1em;"/>
+    If you're interested in contributing to the Android source code or helping
+    out with the project in some other way, click here.</p> 
     <p><a href="{@docRoot}source/index.html">More &raquo;</a></p> 
   </div> 
 </div> 
@@ -35,9 +42,9 @@ have been informed.</p>
 <div class="rebox lil" style="float: left; width: 30%; margin: 1em;"> 
   <h2 style="color: white; background-color: #95C0D0; border: 0px;">Build a Device</h2> 
   <div class="p"> 
-    <p><img src="images/lil-wrench.png" alt="" style="margin: 1em;"/>So,
-    you think you have what it takes to build an Android device? We'll see;
-    we'll see.</p> 
+    <p><img src="images/lil-wrench.png" alt="" style="margin: 1em;"/>
+    If you're an engineer building a device intended to run the Android
+    software stack, click here to find porting information and tips.</p> 
     <p><a href="{@docRoot}porting/index.html">More &raquo;</a></p> 
   </div> 
 </div> 
@@ -45,8 +52,10 @@ have been informed.</p>
 <div class="rebox lil" style="float: left; width: 30%; margin: 1em;"> 
   <h2 style="color: white; background-color: #95C0D0; border: 0px;">Compatibility</h2> 
   <div class="p"> 
-    <p><img src="images/lil-wrench.png" alt="" style="margin: 1em;"/>There's more to this than
-    just booting the Linux kernel. Don't be evil, be compatible.</p> 
+    <p><img src="images/lil-wrench.png" alt="" style="margin: 1em;"/>
+    If you're an OEM or other organization building an Android device, click
+    here to find out how to ensure that your device is fully compatible, and
+    how to take advantage of the benefits of compatibility.</p> 
     <p><a href="{@docRoot}compatibility/index.html">More &raquo;</a></p> 
   </div> 
 </div> 

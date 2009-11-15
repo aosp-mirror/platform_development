@@ -21,13 +21,16 @@ attribution for any issues you report.</p>
   templates:<ul>
     <li><a
     href="http://code.google.com/p/android/issues/entry?template=User%20bug%20report">Bugs
-    in your Device (for users)</a></li>
+    in your Device (for users)</a> - use this if you want to report a bug in a
+    device you own</li>
     <li><a
     href="http://code.google.com/p/android/issues/entry?template=Developer%20bug%20report">Bugs
-    in the Software (for developers)</a></li>
+    in the Software (for developers)</a> - use this if you found a bug in the
+    course of developing an app</li>
     <li><a
     href="http://code.google.com/p/android/issues/entry?template=Feature%20request">Request
-    a New Feature</a></li>
+    a New Feature</a> - use this for a feature you'd like to see in a future
+    verison</li>
   </ul></li>
 </ol>
 <p>Please note that we can't guarantee that any particular bug can be fixed in
@@ -54,6 +57,11 @@ I wouldn't get the error message--would work with Object o = null.
 Observed results:
 See above.
 </pre>
+<p>This is a poor bug report because it doesn't provide any context for the
+issue; is it a problem in the Dalvik virtual machine, the core framework, or
+something else? It also doesn't provide any code or hint on how to reproduce
+it. In other words, this bug report doesn't provide enough information for
+anyone to take action on, so it would be ignored.</p>
 <h3>A Good Bug Report</h3>
 <pre>
 Title: Stepping over "Object o = null" causes Eclipse "Internal Error"
