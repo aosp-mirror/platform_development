@@ -211,12 +211,13 @@ public abstract class Package implements IDescription {
         ArrayList<Archive> archives = new ArrayList<Archive>();
 
         if (archivesNode != null) {
+            String nsUri = archivesNode.getNamespaceURI();
             for(Node child = archivesNode.getFirstChild();
                 child != null;
                 child = child.getNextSibling()) {
 
                 if (child.getNodeType() == Node.ELEMENT_NODE &&
-                        SdkRepository.NS_SDK_REPOSITORY.equals(child.getNamespaceURI()) &&
+                        nsUri.equals(child.getNamespaceURI()) &&
                         SdkRepository.NODE_ARCHIVE.equals(child.getLocalName())) {
                     archives.add(parseArchive(child));
                 }

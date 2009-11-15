@@ -38,7 +38,7 @@ import junit.framework.TestCase;
  * References:
  * http://www.ibm.com/developerworks/xml/library/x-javaxmlvalidapi.html
  */
-public class TestSdkRepository extends TestCase {
+public class SdkRepositoryTest extends TestCase {
 
     @Override
     protected void setUp() throws Exception {
@@ -59,10 +59,12 @@ public class TestSdkRepository extends TestCase {
         private String mWarnings = "";
         private String mErrors = "";
 
+        @SuppressWarnings("unused")
         public String getErrors() {
             return mErrors;
         }
 
+        @SuppressWarnings("unused")
         public String getWarnings() {
             return mWarnings;
         }
@@ -109,8 +111,8 @@ public class TestSdkRepository extends TestCase {
     // --- Helpers ------------
 
     /** Helper method that returns a validator for our XSD */
-    private Validator getValidator(CaptureErrorHandler handler) throws SAXException {
-        InputStream xsdStream = SdkRepository.getXsdStream();
+    private Validator getValidator(int version, CaptureErrorHandler handler) throws SAXException {
+        InputStream xsdStream = SdkRepository.getXsdStream(version);
         SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
         Schema schema = factory.newSchema(new StreamSource(xsdStream));
         Validator validator = schema.newValidator();
@@ -119,19 +121,6 @@ public class TestSdkRepository extends TestCase {
         }
 
         return validator;
-    }
-
-    /** Validate a valid sample using an InputStream */
-    public void testValidateLocalRepositoryFile() throws Exception {
-        InputStream xmlStream =
-            TestSdkRepository.class.getResourceAsStream(
-                    "/com/android/sdklib/testdata/repository_sample.xml");
-        Source source = new StreamSource(xmlStream);
-
-        CaptureErrorHandler handler = new CaptureErrorHandler();
-        Validator validator = getValidator(handler);
-        validator.validate(source);
-        handler.verify();
     }
 
     /** An helper that validates a string against an expected regexp. */
@@ -145,6 +134,49 @@ public class TestSdkRepository extends TestCase {
 
     // --- Tests ------------
 
+    /** Validate a valid sample using namespace version 1 using an InputStream */
+    public void testValidateLocalRepositoryFile1() throws Exception {
+        InputStream xmlStream = this.getClass().getResourceAsStream(
+                    "/com/android/sdklib/testdata/repository_sample_1.xml");
+        Source source = new StreamSource(xmlStream);
+
+        CaptureErrorHandler handler = new CaptureErrorHandler();
+        Validator validator = getValidator(1, handler);
+        validator.validate(source);
+        handler.verify();
+    }
+
+    /** Validate a valid sample using namespace version 2 using an InputStream */
+    public void testValidateLocalRepositoryFile2() throws Exception {
+        InputStream xmlStream = this.getClass().getResourceAsStream(
+                    "/com/android/sdklib/testdata/repository_sample_2.xml");
+        Source source = new StreamSource(xmlStream);
+
+        CaptureErrorHandler handler = new CaptureErrorHandler();
+        Validator validator = getValidator(2, handler);
+        validator.validate(source);
+        handler.verify();
+    }
+
+    /** Test that validating a v2 file using the v1 schema fails. */
+    public void testValidateFile2UsingNs1() throws Exception {
+        InputStream xmlStream = this.getClass().getResourceAsStream(
+                    "/com/android/sdklib/testdata/repository_sample_2.xml");
+        Source source = new StreamSource(xmlStream);
+
+        Validator validator = getValidator(1, null); // validate v2 against v1... fail!
+
+        try {
+            validator.validate(source);
+        } catch (SAXParseException e) {
+            // We expect to get this specific exception message
+            assertRegex("cvc-elt.1: Cannot find the declaration of element 'sdk:sdk-repository'.*", e.getMessage());
+            return;
+        }
+        // We shouldn't get here
+        fail();
+    }
+
     /** A document should at least have a root to be valid */
     public void testEmptyXml() throws Exception {
         String document = "<?xml version=\"1.0\"?>";
@@ -152,7 +184,7 @@ public class TestSdkRepository extends TestCase {
         Source source = new StreamSource(new StringReader(document));
 
         CaptureErrorHandler handler = new CaptureErrorHandler();
-        Validator validator = getValidator(handler);
+        Validator validator = getValidator(SdkRepository.XSD_LATEST_VERSION, handler);
 
         try {
             validator.validate(source);
@@ -166,15 +198,23 @@ public class TestSdkRepository extends TestCase {
         fail();
     }
 
+    private static String OPEN_TAG =
+        "<r:sdk-repository xmlns:r=\"http://schemas.android.com/sdk/android/repository/" +
+        Integer.toString(SdkRepository.XSD_LATEST_VERSION) +
+        "\">";
+
+    private static String CLOSE_TAG = "</r:sdk-repository>";
+
     /** A document with a root element containing no platform, addon, etc., is valid. */
     public void testEmptyRootXml() throws Exception {
         String document = "<?xml version=\"1.0\"?>" +
-            "<r:sdk-repository xmlns:r=\"http://schemas.android.com/sdk/android/repository/1\" />";
+            OPEN_TAG +
+            CLOSE_TAG;
 
         Source source = new StreamSource(new StringReader(document));
 
         CaptureErrorHandler handler = new CaptureErrorHandler();
-        Validator validator = getValidator(handler);
+        Validator validator = getValidator(SdkRepository.XSD_LATEST_VERSION, handler);
         validator.validate(source);
         handler.verify();
     }
@@ -182,14 +222,14 @@ public class TestSdkRepository extends TestCase {
     /** A document with an unknown element. */
     public void testUnknownContentXml() throws Exception {
         String document = "<?xml version=\"1.0\"?>" +
-            "<r:sdk-repository xmlns:r=\"http://schemas.android.com/sdk/android/repository/1\" >" +
+            OPEN_TAG +
             "<r:unknown />" +
-            "</r:sdk-repository>";
+            CLOSE_TAG;
 
         Source source = new StreamSource(new StringReader(document));
 
         // don't capture the validator errors, we want it to fail and catch the exception
-        Validator validator = getValidator(null);
+        Validator validator = getValidator(SdkRepository.XSD_LATEST_VERSION, null);
         try {
             validator.validate(source);
         } catch (SAXParseException e) {
@@ -204,14 +244,14 @@ public class TestSdkRepository extends TestCase {
     /** A document with an incomplete element. */
     public void testIncompleteContentXml() throws Exception {
         String document = "<?xml version=\"1.0\"?>" +
-            "<r:sdk-repository xmlns:r=\"http://schemas.android.com/sdk/android/repository/1\" >" +
+            OPEN_TAG +
             "<r:platform> <r:api-level>1</r:api-level> <r:libs /> </r:platform>" +
-            "</r:sdk-repository>";
+            CLOSE_TAG;
 
         Source source = new StreamSource(new StringReader(document));
 
         // don't capture the validator errors, we want it to fail and catch the exception
-        Validator validator = getValidator(null);
+        Validator validator = getValidator(SdkRepository.XSD_LATEST_VERSION, null);
         try {
             validator.validate(source);
         } catch (SAXParseException e) {
@@ -226,14 +266,14 @@ public class TestSdkRepository extends TestCase {
     /** A document with a wrong type element. */
     public void testWrongTypeContentXml() throws Exception {
         String document = "<?xml version=\"1.0\"?>" +
-            "<r:sdk-repository xmlns:r=\"http://schemas.android.com/sdk/android/repository/1\" >" +
+            OPEN_TAG +
             "<r:platform> <r:api-level>NotAnInteger</r:api-level> <r:libs /> </r:platform>" +
-            "</r:sdk-repository>";
+            CLOSE_TAG;
 
         Source source = new StreamSource(new StringReader(document));
 
         // don't capture the validator errors, we want it to fail and catch the exception
-        Validator validator = getValidator(null);
+        Validator validator = getValidator(SdkRepository.XSD_LATEST_VERSION, null);
         try {
             validator.validate(source);
         } catch (SAXParseException e) {
@@ -250,17 +290,17 @@ public class TestSdkRepository extends TestCase {
     public void testLicenseIdNotFound() throws Exception {
         // we define a license named "lic1" and then reference "lic2" instead
         String document = "<?xml version=\"1.0\"?>" +
-            "<r:sdk-repository xmlns:r=\"http://schemas.android.com/sdk/android/repository/1\" >" +
+            OPEN_TAG +
             "<r:license id=\"lic1\"> some license </r:license> " +
             "<r:tool> <r:uses-license ref=\"lic2\" /> <r:revision>1</r:revision> " +
             "<r:archives> <r:archive os=\"any\"> <r:size>1</r:size> <r:checksum>2822ae37115ebf13412bbef91339ee0d9454525e</r:checksum> " +
             "<r:url>url</r:url> </r:archive> </r:archives> </r:tool>" +
-            "</r:sdk-repository>";
+            CLOSE_TAG;
 
         Source source = new StreamSource(new StringReader(document));
 
         // don't capture the validator errors, we want it to fail and catch the exception
-        Validator validator = getValidator(null);
+        Validator validator = getValidator(SdkRepository.XSD_LATEST_VERSION, null);
         try {
             validator.validate(source);
         } catch (SAXParseException e) {
@@ -277,16 +317,16 @@ public class TestSdkRepository extends TestCase {
     public void testExtraPathWithSlash() throws Exception {
         // we define a license named "lic1" and then reference "lic2" instead
         String document = "<?xml version=\"1.0\"?>" +
-            "<r:sdk-repository xmlns:r=\"http://schemas.android.com/sdk/android/repository/1\" >" +
+            OPEN_TAG +
             "<r:extra> <r:revision>1</r:revision> <r:path>path/cannot\\contain\\segments</r:path> " +
             "<r:archives> <r:archive os=\"any\"> <r:size>1</r:size> <r:checksum>2822ae37115ebf13412bbef91339ee0d9454525e</r:checksum> " +
             "<r:url>url</r:url> </r:archive> </r:archives> </r:extra>" +
-            "</r:sdk-repository>";
+            CLOSE_TAG;
 
         Source source = new StreamSource(new StringReader(document));
 
         // don't capture the validator errors, we want it to fail and catch the exception
-        Validator validator = getValidator(null);
+        Validator validator = getValidator(SdkRepository.XSD_LATEST_VERSION, null);
         try {
             validator.validate(source);
         } catch (SAXParseException e) {
