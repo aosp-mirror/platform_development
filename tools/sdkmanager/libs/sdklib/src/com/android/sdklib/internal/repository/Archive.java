@@ -96,6 +96,11 @@ public class Archive implements IDescription {
             return mUiName;
         }
 
+        /** Returns the XML name of the OS. */
+        public String getXmlName() {
+            return toString().toLowerCase();
+        }
+
         /**
          * Returns the current OS as one of the {@link Os} enum values or null.
          */
@@ -112,6 +117,16 @@ public class Archive implements IDescription {
             }
 
             return null;
+        }
+
+        /** Returns true if this OS is compatible with the current one. */
+        public boolean isCompatible() {
+            if (this == ANY) {
+                return true;
+            }
+
+            Os os = getCurrentOs();
+            return this == os;
         }
     }
 
@@ -131,6 +146,11 @@ public class Archive implements IDescription {
         /** Returns the UI name of the architecture. */
         public String getUiName() {
             return mUiName;
+        }
+
+        /** Returns the XML name of the architecture. */
+        public String getXmlName() {
+            return toString().toLowerCase();
         }
 
         /**
@@ -153,6 +173,16 @@ public class Archive implements IDescription {
             }
 
             return null;
+        }
+
+        /** Returns true if this architecture is compatible with the current one. */
+        public boolean isCompatible() {
+            if (this == ANY) {
+                return true;
+            }
+
+            Arch arch = getCurrentArch();
+            return this == arch;
         }
     }
 
@@ -324,27 +354,7 @@ public class Archive implements IDescription {
      * Returns true if this archive can be installed on the current platform.
      */
     public boolean isCompatible() {
-        // Check OS
-        Os os = getOs();
-
-        if (os != Os.ANY) {
-            Os os2 = Os.getCurrentOs();
-            if (os2 != os) {
-                return false;
-            }
-        }
-
-        // Check Arch
-        Arch arch = getArch();
-
-        if (arch != Arch.ANY) {
-            Arch arch2 = Arch.getCurrentArch();
-            if (arch2 != arch) {
-                return false;
-            }
-        }
-
-        return true;
+        return getOs().isCompatible() && getArch().isCompatible();
     }
 
     /**
@@ -1053,8 +1063,7 @@ public class Archive implements IDescription {
     /**
      * Sets the executable Unix permission (0777) on a file or folder.
      * @param file The file to set permissions on.
-     * @param unixMode the permissions as received from {@link ZipArchiveEntry#getUnixMode()}.
-     * @throws IOException
+     * @throws IOException If an I/O error occurs
      */
     private void setExecutablePermission(File file) throws IOException {
         Runtime.getRuntime().exec(new String[] {
