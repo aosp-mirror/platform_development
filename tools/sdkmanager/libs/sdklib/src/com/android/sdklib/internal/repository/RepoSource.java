@@ -322,7 +322,7 @@ public class RepoSource implements IDescription {
 
         String lastError = null;
         String extraError = null;
-        for (int version = SdkRepository.XSD_LATEST_VERSION; version >= 1; version--) {
+        for (int version = SdkRepository.NS_LATEST_VERSION; version >= 1; version--) {
             try {
                 Validator validator = getValidator(version);
 
