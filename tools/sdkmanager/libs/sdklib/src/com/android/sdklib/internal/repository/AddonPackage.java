@@ -143,12 +143,13 @@ public class AddonPackage extends Package implements IPackageVersion {
         ArrayList<Lib> libs = new ArrayList<Lib>();
 
         if (libsNode != null) {
+            String nsUri = libsNode.getNamespaceURI();
             for(Node child = libsNode.getFirstChild();
                 child != null;
                 child = child.getNextSibling()) {
 
                 if (child.getNodeType() == Node.ELEMENT_NODE &&
-                        SdkRepository.NS_SDK_REPOSITORY.equals(child.getNamespaceURI()) &&
+                        nsUri.equals(child.getNamespaceURI()) &&
                         SdkRepository.NODE_LIB.equals(child.getLocalName())) {
                     libs.add(parseLib(child));
                 }
