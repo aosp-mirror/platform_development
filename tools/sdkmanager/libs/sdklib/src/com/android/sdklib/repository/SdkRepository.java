@@ -26,30 +26,24 @@ public class SdkRepository {
 
     /** The URL of the official Google sdk-repository site. */
     public static final String URL_GOOGLE_SDK_REPO_SITE =
-        "https://dl-ssl.google.com/android/repository/";      //$NON-NLS-1$
+        "https://dl-ssl.google.com/android/repository/";                        //$NON-NLS-1$
 
     public static final String URL_DEFAULT_XML_FILE = "repository.xml";         //$NON-NLS-1$
 
-    /** The XML namespace of the sdk-repository XML version 1.
-     * @deprecated
-     */
-    public static final String NS_SDK_REPOSITORY_1 = getSchemaUri(1);
-
-    /** The XML namespace of the sdk-repository XML version 2.
-     * @deprecated
-     */
-    public static final String NS_SDK_REPOSITORY_2 = getSchemaUri(2);
-
-    /** The XML namespace of the latest sdk-repository XML. */
-    public static final String NS_SDK_REPOSITORY = NS_SDK_REPOSITORY_2;
+    /** The base of our XML namespace. */
+    private static final String NS_SDK_REPOSITORY_BASE =
+        "http://schemas.android.com/sdk/android/repository/";                   //$NON-NLS-1$
 
     /** The pattern of our XML namespace. */
     public static final String NS_SDK_REPOSITORY_PATTERN =
-        "http://schemas.android.com/sdk/android/repository/[1-9][0-9]*";        //$NON-NLS-1$
+        NS_SDK_REPOSITORY_BASE + "[1-9][0-9]*";        //$NON-NLS-1$
 
-    /** The latest version of the sdk-repository XML Schema, currently 2.
+    /** The latest version of the sdk-repository XML Schema.
      *  Valid version numbers are between 1 and this number, included. */
-    public static final int XSD_LATEST_VERSION = 2;
+    public static final int NS_LATEST_VERSION = 1;
+
+    /** The XML namespace of the latest sdk-repository XML. */
+    public static final String NS_SDK_REPOSITORY = getSchemaUri(NS_LATEST_VERSION);
 
     /** The root sdk-repository element */
     public static final String NODE_SDK_REPOSITORY = "sdk-repository";          //$NON-NLS-1$
@@ -135,8 +129,7 @@ public class SdkRepository {
     /**
      * Returns a stream to the requested repository XML Schema.
      *
-     * @param version 1 for {@link #NS_SDK_REPOSITORY_1}, 2 for {@link #NS_SDK_REPOSITORY_2}.
-     *        You can use {@link #XSD_LATEST_VERSION} to always get the latest version.
+     * @param version Between 1 and {@link #NS_LATEST_VERSION}, included.
      * @return An {@link InputStream} object for the local XSD file or
      *         null if there is no schema for the requested version.
      */
@@ -147,11 +140,10 @@ public class SdkRepository {
 
     /**
      * Returns the URI of the SDK Repository schema for the given version number.
-     * @param version Between 1 and {@link #XSD_LATEST_VERSION} included.
+     * @param version Between 1 and {@link #NS_LATEST_VERSION} included.
      */
     public static String getSchemaUri(int version) {
-        return String.format("http://schemas.android.com/sdk/android/repository/%d",  //$NON-NLS-1$
-                version); //
+        return String.format(NS_SDK_REPOSITORY_BASE + "%d", version);           //$NON-NLS-1$
     }
 
 }
