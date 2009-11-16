@@ -16,8 +16,6 @@
 
 package com.android.sdklib.internal.repository;
 
-import com.android.sdklib.repository.SdkRepository;
-
 import org.w3c.dom.Node;
 
 /**
@@ -31,9 +29,10 @@ class XmlParserUtils {
      */
     public static Node getFirstChild(Node node, String xmlLocalName) {
 
+        String nsUri = node.getNamespaceURI();
         for(Node child = node.getFirstChild(); child != null; child = child.getNextSibling()) {
             if (child.getNodeType() == Node.ELEMENT_NODE &&
-                    SdkRepository.NS_SDK_REPOSITORY.equals(child.getNamespaceURI())) {
+                    nsUri.equals(child.getNamespaceURI())) {
                 if (xmlLocalName == null || xmlLocalName.equals(child.getLocalName())) {
                     return child;
                 }
