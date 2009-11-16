@@ -34,7 +34,7 @@
         </d:config>
     </d:device>
 
-    <d:device name="Ion">
+    <d:device name="ADP2">
         <d:default>
             <d:screen-size>normal</d:screen-size>
             <d:screen-ratio>notlong</d:screen-ratio>
