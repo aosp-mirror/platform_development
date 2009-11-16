@@ -30,9 +30,26 @@ public class SdkRepository {
 
     public static final String URL_DEFAULT_XML_FILE = "repository.xml";         //$NON-NLS-1$
 
-    /** The XML namespace of the sdk-repository XML. */
-    public static final String NS_SDK_REPOSITORY =
-        "http://schemas.android.com/sdk/android/repository/1";                  //$NON-NLS-1$
+    /** The XML namespace of the sdk-repository XML version 1.
+     * @deprecated
+     */
+    public static final String NS_SDK_REPOSITORY_1 = getSchemaUri(1);
+
+    /** The XML namespace of the sdk-repository XML version 2.
+     * @deprecated
+     */
+    public static final String NS_SDK_REPOSITORY_2 = getSchemaUri(2);
+
+    /** The XML namespace of the latest sdk-repository XML. */
+    public static final String NS_SDK_REPOSITORY = NS_SDK_REPOSITORY_2;
+
+    /** The pattern of our XML namespace. */
+    public static final String NS_SDK_REPOSITORY_PATTERN =
+        "http://schemas.android.com/sdk/android/repository/[1-9][0-9]*";        //$NON-NLS-1$
+
+    /** The latest version of the sdk-repository XML Schema, currently 2.
+     *  Valid version numbers are between 1 and this number, included. */
+    public static final int XSD_LATEST_VERSION = 2;
 
     /** The root sdk-repository element */
     public static final String NODE_SDK_REPOSITORY = "sdk-repository";          //$NON-NLS-1$
@@ -108,9 +125,33 @@ public class SdkRepository {
     /** A license reference. */
     public static final String ATTR_REF = "ref";                                //$NON-NLS-1$
 
+    /** Type of a sha1 checksum. */
+    public static final String SHA1_TYPE = "sha1";                              //$NON-NLS-1$
 
-    public static InputStream getXsdStream() {
-        return SdkRepository.class.getResourceAsStream("sdk-repository.xsd");   //$NON-NLS-1$
+    /** Length of a string representing a SHA1 checksum; always 40 characters long. */
+    public static final int SHA1_CHECKSUM_LEN = 40;
+
+
+    /**
+     * Returns a stream to the requested repository XML Schema.
+     *
+     * @param version 1 for {@link #NS_SDK_REPOSITORY_1}, 2 for {@link #NS_SDK_REPOSITORY_2}.
+     *        You can use {@link #XSD_LATEST_VERSION} to always get the latest version.
+     * @return An {@link InputStream} object for the local XSD file or
+     *         null if there is no schema for the requested version.
+     */
+    public static InputStream getXsdStream(int version) {
+        String filename = String.format("sdk-repository-%d.xsd", version);      //$NON-NLS-1$
+        return SdkRepository.class.getResourceAsStream(filename);
+    }
+
+    /**
+     * Returns the URI of the SDK Repository schema for the given version number.
+     * @param version Between 1 and {@link #XSD_LATEST_VERSION} included.
+     */
+    public static String getSchemaUri(int version) {
+        return String.format("http://schemas.android.com/sdk/android/repository/%d",  //$NON-NLS-1$
+                version); //
     }
 
 }
