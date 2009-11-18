@@ -1,0 +1,44 @@
+application: samplesyncadapter
+version: 1
+runtime: python
+api_version: 1
+
+handlers:
+- url: /auth
+  script: main.py
+
+- url: /login
+  script: main.py
+
+- url: /fetch_friend_updates
+  script: main.py
+
+- url: /fetch_status
+  script: main.py
+
+- url: /add_user
+  script: dashboard.py
+
+- url: /edit_user
+  script: dashboard.py
+
+- url: /users
+  script: dashboard.py
+
+- url: /delete_friend
+  script: dashboard.py
+
+- url: /edit_user
+  script: dashboard.py
+
+- url: /add_credentials
+  script: dashboard.py
+
+- url: /user_credentials
+  script: dashboard.py
+
+- url: /add_friend
+  script: dashboard.py
+
+- url: /user_friends
+  script: dashboard.py

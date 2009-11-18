@@ -1,0 +1,17 @@
+<html>
+<body>
+<h1> Sample Sync Adapter </h1>
+
+<p>
+
+{{user}}'s friends 
+<table>
+{% for friend in friends %}
+  <tr><td>
+  {{ friend.friend_handle }} </td><td> <a href="/delete_friend?user={{ user }}&friend={{friend.friend_handle}}">Remove</a>  
+  </td></tr>
+{% endfor %}
+</table>
+</p>
+
+<a href = "/add_friend?user={{user}}"> Add More </a>
