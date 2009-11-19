@@ -44,6 +44,12 @@ See test_defs.xsd for more information.
     coverage_target="framework"
     continuous="true" />
 
+<!-- subset of the android tests for just the database tests -->
+<test name="database"
+    build_path="frameworks/base/tests/AndroidTests"
+    package="com.android.unit_tests"
+    class="com.android.unit_tests.DatabaseTests" />
+
 <test name="account"
     build_path="frameworks/base/tests/AndroidTests"
     package="com.android.unit_tests"
