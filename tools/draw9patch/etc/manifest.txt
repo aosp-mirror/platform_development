@@ -1,2 +1,0 @@
-Main-Class: com.android.draw9patch.Application
-Class-Path: swing-worker-1.1.jar
