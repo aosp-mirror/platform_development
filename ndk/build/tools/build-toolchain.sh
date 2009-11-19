@@ -26,11 +26,13 @@
 # number of jobs to run in parallel when running make
 JOBS=$HOST_NUM_CPUS
 
-TOOLCHAIN_NAME=arm-eabi-4.2.1
 PLATFORM=android-3
 ABI=arm
 GCC_VERSION=4.2.1
 GDB_VERSION=6.6
+BINUTILS_VERSION=2.17
+RELEASE=`date +%Y%m%d`
+BUILD_OUT=`mktemp -d /tmp/ndk-toolchain-XXX`
 
 OPTION_HELP=no
 OPTION_PLATFORM=
@@ -38,8 +40,9 @@ OPTION_FORCE_32=no
 OPTION_REBUILD=no
 OPTION_GCC_VERSION=
 OPTION_GDB_VERSION=
-OPTION_TOOLCHAIN_NAME=
 OPTION_PACKAGE=
+OPTION_RELEASE=
+OPTION_BUILD_OUT=
 
 VERBOSE=no
 for opt do
@@ -60,17 +63,20 @@ for opt do
     --gdb-version=*)
         OPTION_GDB_VERSION=$optarg
         ;;
-    --toolchain=*)
-        OPTION_TOOLCHAIN_NAME=$optarg
-        ;;
     --package=*)
         OPTION_PACKAGE="$optarg"
         ;;
     --platform=*)
         PLATFORM=$optarg
         ;;
+    --build-out=*)
+        OPTION_BUILD_OUT="$optarg"
+        ;;
     --abi=*)
         ABI=$optarg
+        ;;
+    --release=*)
+        OPTION_RELEASE=$optarg
         ;;
     --force-download)
         OPTION_FORCE_DOWNLOAD=yes
@@ -103,11 +109,11 @@ if [ $OPTION_HELP = "yes" ] ; then
     echo "  --help                   print this message"
     echo "  --gcc-version=<version>  select GCC version [$GCC_VERSION]"
     echo "  --gdb-version=<version>  select GDB version [$GDB_VERSION]"
-    echo "  --toolchain=<name>       toolchain name (default is $TOOLCHAIN_NAME)"
     echo "  --package=<file>         specify download source package"
-    echo "  --platform=<name>        generate toolchain from platform <name> (default is $PLATFORM)"
-    echo "  --abi=<name>             generate toolchain from abi <name> (default is $ABI)"
-    echo "  --build-out=<path>       set Android build out directory"
+    echo "  --platform=<name>        generate toolchain from platform <name> [$PLATFORM]"
+    echo "  --abi=<name>             generate toolchain from abi <name> [$ABI]"
+    echo "  --release=<name>         specify prebuilt release name [$RELEASE]"
+    echo "  --build-out=<path>       set temporary build out directory [/tmp/<random>]"
     echo "  --force-download         force a download and unpacking of the toolchain sources"
     echo "  --force-build            force a rebuild of the sources"
     echo ""
@@ -165,12 +171,11 @@ else
     log "Using default gdb version $GDB_VERSION"
 fi
 
-if [ -n "$OPTION_TOOLCHAIN_NAME" ] ; then
-    TOOLCHAIN_NAME="$OPTION_TOOLCHAIN_NAME"
-    log "Using toolchain name '$TOOLCHAIN_NAME'"
+if [ -n "$OPTION_RELEASE" ] ; then
+    RELEASE="$RELEASE"
+    log "Using toolchain release name '$RELEASE'"
 else
-    TOOLCHAIN_NAME=arm-eabi-$GCC_VERSION
-    log "Using default toolchain name '$TOOLCHAIN_NAME'"
+    log "Using default toolchain name '$RELEASE'"
 fi
 
 if [ -n "$OPTION_PACKAGE" ] ; then
@@ -180,27 +185,25 @@ if [ -n "$OPTION_PACKAGE" ] ; then
     fi
 fi
 
+if [ -n "$OPTION_BUILD_OUT" ] ; then
+    BUILD_OUT=$OPTION_BUILD_OUT
+    log "Using specific build out directory: $BUILD_OUT"
+else
+    log "Using default random build out directory: $BUILD_OUT"
+fi
+
 ANDROID_NDK_ROOT=`cd $ANDROID_NDK_ROOT && pwd`
 ANDROID_NDK_ARCHIVE=$ANDROID_NDK_ROOT/build/toolchains/archive
 ANDROID_PLATFORMS_ROOT=$ANDROID_NDK_ROOT/build/platforms
 
 # where all generated files will be placed
-OUT=$ANDROID_NDK_ROOT/out/$TOOLCHAIN_NAME
+OUT=$BUILD_OUT
 PACKAGE_OUT=$OUT/packages
 TIMESTAMP_OUT=$OUT/timestamps
 
 # where the sysroot is located
+ANDROID_TOOLCHAIN_SRC=$OUT/src
 ANDROID_SYSROOT=$ANDROID_NDK_ROOT/build/platforms/$PLATFORM/arch-$ABI
-
-# where the toolchain binaries will be placed
-ANDROID_TOOLCHAIN_OUT=$OUT/toolchain
-ANDROID_TOOLCHAIN_SRC=$ANDROID_TOOLCHAIN_OUT/src
-ANDROID_TOOLCHAIN_BUILD=$ANDROID_TOOLCHAIN_OUT/build
-
-# where the gdbserver binaries will be placed
-ANDROID_GDBSERVER_OUT=$OUT/gdbserver
-ANDROID_GDBSERVER_BUILD=$ANDROID_GDBSERVER_OUT/build
-ANDROID_GDBSERVER_DEST=$ANDROID_SYSROOT/usr/bin
 
 # Let's check that we have a working md5sum here
 A_MD5=`echo "A" | md5sum | cut -d' ' -f1`
@@ -252,12 +255,6 @@ download_file ()
     fi
 }
 
-TOOLCHAIN_SRC=$ANDROID_TOOLCHAIN_SRC
-TOOLCHAIN_BUILD=$ANDROID_TOOLCHAIN_BUILD
-TOOLCHAIN_PREFIX=$ANDROID_NDK_ROOT/build/prebuilt/$HOST_TAG/$TOOLCHAIN_NAME
-TOOLCHAIN_LICENSES=$ANDROID_NDK_ROOT/build/tools/toolchain-licenses
-
-GDBSERVER_BUILD=$ANDROID_GDBSERVER_BUILD
 
 timestamp_check ()
 {
@@ -281,8 +278,9 @@ timestamp_force ()
 }
 
 # this function will be used to download and verify a toolchain
-# package 
-# $1: directory name under build/archive  (e.g. 'android-toolchain')
+# package.
+#
+# $1: directory name under build/archive  (e.g. 'toolchain')
 #
 download_package ()
 {
@@ -419,7 +417,7 @@ else
     download_package toolchain
 fi
 
-unpack_package   toolchain $ANDROID_TOOLCHAIN_SRC
+unpack_package toolchain $ANDROID_TOOLCHAIN_SRC
 
 # remove all info files from the unpacked toolchain sources
 # they create countless little problems during the build
@@ -428,130 +426,206 @@ unpack_package   toolchain $ANDROID_TOOLCHAIN_SRC
 #
 find $ANDROID_TOOLCHAIN_SRC -type f -a -name "*.info" -print0 | xargs -0 rm -f
 
-# configure the toolchain
-if ! timestamp_check toolchain configure; then
-    echo "Configure: toolchain build"
-    BUILD_SRCDIR=$TOOLCHAIN_SRC/build
-	if [ ! -d $BUILD_SRCDIR ] ; then
-        BUILD_SRCDIR=$TOOLCHAIN_SRC
+
+# Setup variables to properly build a new toolchain
+# $1: toolchain name, e.g. arm-eabi-4.2.1
+build_toolchain ()
+{
+    TOOLCHAIN_NAME=$1
+
+    # where the toolchain is going to be built
+    TOOLCHAIN_BUILD=$OUT/$TOOLCHAIN_NAME
+
+    # where the gdbserver binaries will be placed
+    GDBSERVER_BUILD=$TOOLCHAIN_BUILD/gdbserver
+
+    TOOLCHAIN_SRC=$ANDROID_TOOLCHAIN_SRC
+    TOOLCHAIN_PREFIX=$OUT/build/prebuilt/$HOST_TAG/$TOOLCHAIN_NAME
+    TOOLCHAIN_LICENSES=$ANDROID_NDK_ROOT/build/tools/toolchain-licenses
+
+    # configure the toolchain
+    if ! timestamp_check $TOOLCHAIN_NAME configure; then
+        echo "Configure: $TOOLCHAIN_NAME toolchain build"
+        # Old versions of the toolchain source packages placed the
+        # configure script at the top-level. Newer ones place it under
+        # the build directory though. Probe the file system to check
+        # this.
+        BUILD_SRCDIR=$TOOLCHAIN_SRC/build
+        if [ ! -d $BUILD_SRCDIR ] ; then
+            BUILD_SRCDIR=$TOOLCHAIN_SRC
+        fi
+        OLD_ABI="$ABI"
+        OLD_CFLAGS="$CFLAGS"
+        OLD_LDFLAGS="$LDFLAGS"
+        mkdir -p $TOOLCHAIN_BUILD &&
+        cd $TOOLCHAIN_BUILD &&
+        export ABI="32" &&  # needed to build a 32-bit gmp
+        export CFLAGS="$HOST_CFLAGS" &&
+        export LDFLAGS="$HOST_LDFLAGS" && run \
+        $BUILD_SRCDIR/configure --target=arm-eabi \
+                                --disable-nls \
+                                --prefix=$TOOLCHAIN_PREFIX \
+                                --with-sysroot=$ANDROID_SYSROOT \
+                                --with-binutils-version=$BINUTILS_VERSION \
+                                --with-gcc-version=$GCC_VERSION \
+                                --with-gdb-version=$GDB_VERSION
+        if [ $? != 0 ] ; then
+            echo "Error while trying to configure toolchain build. See $TMPLOG"
+            exit 1
+        fi
+        ABI="$OLD_ABI"
+        CFLAGS="$OLD_CFLAGS"
+        LDFLAGS="$OLD_LDFLAGS"
+        timestamp_set   $TOOLCHAIN_NAME configure
+        timestamp_force $TOOLCHAIN_NAME build
     fi
-    mkdir -p $TOOLCHAIN_BUILD &&
-    cd $TOOLCHAIN_BUILD &&
-    export ABI="32" &&  # needed to build a 32-bit gmp
-    export CFLAGS="$HOST_CFLAGS" &&
-    export LDFLAGS="$HOST_LDFLAGS" && run \
-    $BUILD_SRCDIR/configure --target=arm-eabi \
-                             --disable-nls \
-                             --prefix=$TOOLCHAIN_PREFIX \
-                             --with-sysroot=$ANDROID_SYSROOT \
-                             --with-gcc-version=$GCC_VERSION \
-                             --with-gdb-version=$GDB_VERSION
-    if [ $? != 0 ] ; then
-        echo "Error while trying to configure toolchain build. See $TMPLOG"
-        exit 1
+
+    # build the toolchain
+    if ! timestamp_check $TOOLCHAIN_NAME build ; then
+        echo "Building : $TOOLCHAIN_NAME toolchain [this can take a long time]."
+        OLD_CFLAGS="$CFLAGS"
+        OLD_LDFLAGS="$LDFLAGS"
+        OLD_ABI="$ABI"
+        cd $TOOLCHAIN_BUILD &&
+        export CFLAGS="$HOST_CFLAGS" &&
+        export LDFLAGS="$HOST_LDFLAGS" &&
+        export ABI="32" &&
+        run make -j$JOBS
+        if [ $? != 0 ] ; then
+            echo "Error while building toolchain. See $TMPLOG"
+            exit 1
+        fi
+        CFLAGS="$OLD_CFLAGS"
+        LDFLAGS="$OLD_LDFLAGS"
+        ABI="$OLD_ABI"
+        timestamp_set   $TOOLCHAIN_NAME build
+        timestamp_force $TOOLCHAIN_NAME install
     fi
-    timestamp_set   toolchain configure
-    timestamp_force toolchain build
+
+    # install the toolchain to its final location
+    if ! timestamp_check $TOOLCHAIN_NAME install ; then
+        echo "Install  : $TOOLCHAIN_NAME toolchain binaries."
+        cd $TOOLCHAIN_BUILD &&
+        run make install
+        if [ $? != 0 ] ; then
+            echo "Error while installing toolchain. See $TMPLOG"
+            exit 1
+        fi
+        # don't forget to copy the GPL and LGPL license files
+        cp -f $TOOLCHAIN_LICENSES/COPYING $TOOLCHAIN_LICENSES/COPYING.LIB $TOOLCHAIN_PREFIX
+        # remove some unneeded files
+        rm -f $TOOLCHAIN_PREFIX/bin/*-gccbug
+        rm -rf $TOOLCHAIN_PREFIX/man $TOOLCHAIN_PREFIX/info
+        # strip binaries to reduce final package size
+        strip $TOOLCHAIN_PREFIX/bin/*
+        strip $TOOLCHAIN_PREFIX/arm-eabi/bin/*
+        strip $TOOLCHAIN_PREFIX/libexec/gcc/*/*/cc1
+        strip $TOOLCHAIN_PREFIX/libexec/gcc/*/*/cc1plus
+        strip $TOOLCHAIN_PREFIX/libexec/gcc/*/*/collect2
+        timestamp_set   $TOOLCHAIN_NAME install
+        timestamp_force $TOOLCHAIN_NAME-gdbserver configure
+    fi
+
+    # configure the gdbserver build now
+    if ! timestamp_check $TOOLCHAIN_NAME-gdbserver configure; then
+        echo "Configure: $TOOLCHAIN_NAME gdbserver build."
+        # Old toolchain source packages placed the gdb sources at
+        # the top-level, while newer ones place them under the 'gdb'
+        # directory. Probe the filesystem to check which one is appropriate.
+        GDB_SRCDIR=$TOOLCHAIN_SRC/gdb/gdb-$GDB_VERSION
+        if [ ! -d $GDB_SRCDIR ] ; then
+            GDB_SRCDIR=$TOOLCHAIN_SRC/gdb-$GDB_VERSION
+        fi
+        mkdir -p $GDBSERVER_BUILD
+        OLD_CC="$CC"
+        OLD_CFLAGS="$CFLAGS"
+        OLD_LDFLAGS="$LDFLAGS"
+        cd $GDBSERVER_BUILD &&
+        export CC="$TOOLCHAIN_PREFIX/bin/arm-eabi-gcc" &&
+        export CFLAGS="-g -O2 -static -mandroid"  &&
+        export LDFLAGS= &&
+        run $GDB_SRCDIR/gdb/gdbserver/configure \
+        --host=arm-eabi-linux \
+        --with-sysroot=$ANDROID_SYSROOT
+        if [ $? != 0 ] ; then
+            echo "Could not configure gdbserver build. See $TMPLOG"
+            exit 1
+        fi
+        CC="$OLD_CC"
+        CFLAGS="$OLD_CFLAGS"
+        LDFLAGS="$OLD_LDFLAGS"
+        timestamp_set   $TOOLCHAIN_NAME-gdbserver configure
+        timestamp_force $TOOLCHAIN_NAME-gdbserver build
+    fi
+
+    # build gdbserver
+    if ! timestamp_check $TOOLCHAIN_NAME-gdbserver build; then
+        echo "Building : $TOOLCHAIN_NAME gdbserver."
+        cd $GDBSERVER_BUILD &&
+        run make -j$JOBS
+        if [ $? != 0 ] ; then
+            echo "Could not build $TOOLCHAIN_NAME gdbserver. See $TMPLOG"
+            exit 1
+        fi
+        timestamp_set   $TOOLCHAIN_NAME-gdbserver build
+        timestamp_force $TOOLCHAIN_NAME-gdbserver install
+    fi
+
+    # install gdbserver
+    #
+    # note that we install it in the toolchain bin directory
+    # not in $SYSROOT/usr/bin
+    #
+    if ! timestamp_check $TOOLCHAIN_NAME-gdbserver install; then
+        echo "Install  : $TOOLCHAIN_NAME gdbserver."
+        DEST=$TOOLCHAIN_PREFIX/bin
+        mkdir -p $DEST &&
+        $TOOLCHAIN_PREFIX/bin/arm-eabi-strip $GDBSERVER_BUILD/gdbserver &&
+        run cp -f $GDBSERVER_BUILD/gdbserver $DEST/gdbserver
+        if [ $? != 0 ] ; then
+            echo "Could not install gdbserver. See $TMPLOG"
+            exit 1
+        fi
+        timestamp_set   $TOOLCHAIN_NAME-gdbserver install
+        timestamp_force package toolchain
+    fi
+}
+
+# Look at the toolchains available from the source package
+#
+# The old source tarball only contained gcc 4.2.1, the new
+# ones contain multiple toolchains
+#
+if [ -d $ANDROID_TOOLCHAIN_SRC/gcc-4.2.1 ] ; then
+    # An old toolchain source package
+    ANDROID_TOOLCHAIN_LIST=arm-eabi-4.2.1
+else
+    ANDROID_TOOLCHAIN_LIST="arm-eabi-4.2.1 arm-eabi-4.4.0"
 fi
 
-# build the toolchain
-if ! timestamp_check toolchain build ; then
-    echo "Building : toolchain [this can take a long time]."
-    cd $TOOLCHAIN_BUILD &&
-    export CFLAGS="$HOST_CFLAGS" &&
-    export LDFLAGS="$HOST_LDFLAGS" &&
-    run make -j$JOBS
-    if [ $? != 0 ] ; then
-        echo "Error while building toolchain. See $TMPLOG"
-        exit 1
+for _toolchain in $ANDROID_TOOLCHAIN_LIST; do
+    if timestamp_check toolchain build; then
+        timestamp_force ${_toolchain} configure
+        timestamp_force ${_toolchain}-gdbserver configure
     fi
-    timestamp_set   toolchain build
-    timestamp_force toolchain install
-fi
-
-# install the toolchain to its final location
-if ! timestamp_check toolchain install ; then
-    echo "Install  : toolchain binaries."
-    cd $TOOLCHAIN_BUILD &&
-    run make install
-    if [ $? != 0 ] ; then
-        echo "Error while installing toolchain. See $TMPLOG"
-        exit 1
-    fi
-    # don't forget to copy the GPL and LGPL license files
-    cp -f $TOOLCHAIN_LICENSES/COPYING $TOOLCHAIN_LICENSES/COPYING.LIB $TOOLCHAIN_PREFIX
-    # remove some unneeded files
-    rm -f $TOOLCHAIN_PREFIX/bin/*-gccbug
-    rm -rf $TOOLCHAIN_PREFIX/man $TOOLCHAIN_PREFIX/info
-    # strip binaries to reduce final package size
-    strip $TOOLCHAIN_PREFIX/bin/*
-    strip $TOOLCHAIN_PREFIX/arm-eabi/bin/*
-    strip $TOOLCHAIN_PREFIX/libexec/gcc/*/*/cc1
-    strip $TOOLCHAIN_PREFIX/libexec/gcc/*/*/cc1plus
-    strip $TOOLCHAIN_PREFIX/libexec/gcc/*/*/collect2
-    timestamp_set   toolchain install
-    timestamp_force gdbserver configure
-fi
-
-# configure the gdbserver build now
-if ! timestamp_check gdbserver configure; then
-    echo "Configure: gdbserver build."
-	if [ -d $TOOLCHAIN_SRC/gdb ] ; then
-		GDB_SRCDIR=$TOOLCHAIN_SRC/gdb/gdb-$GDB_VERSION
+    # Gcc 4.2.1 needs binutils 2.17
+    if [ ${_toolchain} = arm-eabi-4.2.1 ] ; then
+        GCC_VERSION=4.2.1
+        BINUTILS_VERSION=2.17
     else
-        GDB_SRCDIR=$TOOLCHAIN_SRC/gdb-$GDB_VERSION
+        GCC_VERSION=4.4.0
+        BINUTILS_VERSION=2.19
     fi
-    mkdir -p $GDBSERVER_BUILD
-    cd $GDBSERVER_BUILD &&
-    export CC="$TOOLCHAIN_PREFIX/bin/arm-eabi-gcc" &&
-    export CFLAGS="-g -O2 -static -mandroid"  &&
-    export LDFLAGS= &&
-    run $GDB_SRCDIR/gdb/gdbserver/configure \
-    --host=arm-eabi-linux \
-    --with-sysroot=$ANDROID_SYSROOT
-    if [ $? != 0 ] ; then
-        echo "Could not configure gdbserver build. See $TMPLOG"
-        exit 1
-    fi
-    timestamp_set   gdbserver configure
-    timestamp_force gdbserver build
-fi
-
-# build gdbserver
-if ! timestamp_check gdbserver build; then
-    echo "Building : gdbserver."
-    cd $GDBSERVER_BUILD &&
-    run make -j$JOBS
-    if [ $? != 0 ] ; then
-        echo "Could not build gdbserver. See $TMPLOG"
-        exit 1
-    fi
-    timestamp_set   gdbserver build
-    timestamp_force gdbserver install
-fi
-
-# install gdbserver
-#
-# note that we install it in the toolchain bin directory
-# not in $SYSROOT/usr/bin
-#
-if ! timestamp_check gdbserver install; then
-    echo "Install  : gdbserver."
-    DEST=$TOOLCHAIN_PREFIX/bin
-    mkdir -p $DEST &&
-    $TOOLCHAIN_PREFIX/bin/arm-eabi-strip $GDBSERVER_BUILD/gdbserver &&
-    run cp -f $GDBSERVER_BUILD/gdbserver $DEST/gdbserver
-    if [ $? != 0 ] ; then
-        echo "Could not install gdbserver. See $TMPLOG"
-        exit 1
-    fi
-    timestamp_set   gdbserver install
-    timestamp_force package toolchain
-fi
+    build_toolchain ${_toolchain}
+done
 
 # package the toolchain
-TOOLCHAIN_TARBALL=/tmp/android-ndk-prebuilt-$TOOLCHAIN_NAME-$HOST_TAG.tar.bz2
+TOOLCHAIN_TARBALL=/tmp/android-ndk-prebuilt-$RELEASE-$HOST_TAG.tar.bz2
 if ! timestamp_check package toolchain; then
+    echo "Cleanup  : Removing unuseful stuff"
+    rm -rf $OUT/build/prebuilt/$HOST_TAG/*/share
+    find $OUT/build/prebuilt/$HOST_TAG -name "libiberty.a" | xargs rm -f
+    find $OUT/build/prebuilt/$HOST_TAG -name "libarm-elf-linux-sim.a" | xargs rm -f
     echo "Package  : $HOST_ARCH toolchain binaries"
     echo "           into $TOOLCHAIN_TARBALL"
     cd $ANDROID_NDK_ROOT &&
@@ -559,7 +633,11 @@ if ! timestamp_check package toolchain; then
     if [ $VERBOSE = yes ] ; then
       TARFLAGS="v$TARFLAGS"
     fi
-    run tar $TARFLAGS $TOOLCHAIN_TARBALL build/prebuilt/$HOST_TAG/$TOOLCHAIN_NAME
+    TOOLCHAIN_SRC_DIRS=
+    for _toolchain in $ANDROID_TOOLCHAIN_LIST; do
+        TOOLCHAIN_SRC_DIRS="$TOOLCHAIN_SRC_DIRS build/prebuilt/$HOST_TAG/${_toolchain}"
+    done
+    run tar $TARFLAGS $TOOLCHAIN_TARBALL -C $OUT $TOOLCHAIN_SRC_DIRS
     if [ $? != 0 ] ; then
         echo "ERROR: Cannot package prebuilt toolchain binaries. See $TMPLOG"
         exit 1
@@ -568,6 +646,13 @@ if ! timestamp_check package toolchain; then
     echo "prebuilt toolchain is in $TOOLCHAIN_TARBALL"
 else
     echo "prebuilt toolchain is in $TOOLCHAIN_TARBALL"
+fi
+
+if [ -z "$OPTION_BUILD_OUT" ] ; then
+    echo "Cleaning temporary directory $OUT"
+    rm -rf $OUT
+else
+    echo "Don't forget to clean build directory $OUT"
 fi
 
 echo "Done."
