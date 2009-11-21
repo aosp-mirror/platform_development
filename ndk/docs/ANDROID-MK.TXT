@@ -209,14 +209,25 @@ TARGET_ARCH
 
 TARGET_PLATFORM
     Name of the target Android platform when this Android.mk is parsed.
-    For now, only 'android-3' is supported, which corresponds to the
-    Android 1.5 platform.
+    For example, 'android-3' correspond to Android 1.5 system images. For
+    a complete list of platform names and corresponding Android system
+    images, read docs/STABLE-APIS.TXT.
 
 TARGET_ARCH_ABI
     Name of the target CPU+ABI when this Android.mk is parsed.
-    For now, only 'arm' is supported, which really means the following:
+    Two values are supported at the moment:
 
-       ARMv5TE or higher CPU, with 'softfloat' floating point support
+       armeabi
+            For Armv5TE
+
+       armeabi-v7a
+
+    NOTE: Up to Android NDK 1.6_r1, this variable was simply defined
+          as 'arm'. However, the value has been redefined to better
+          match what is used internally by the Android platform.
+
+    For more details about architecture ABIs and corresponding
+    compatibility issues, please read docs/CPU-ARCH-ABIS.TXT
 
     Other target ABIs will be introduced in future releases of the NDK
     and will have a different name. Note that all ARM-based ABIs will
@@ -228,8 +239,9 @@ TARGET_ABI
     as $(TARGET_PLATFORM)-$(TARGET_ARCH_ABI) and is useful when you want
     to test against a specific target system image for a real device.
 
-    By default, this will be 'android-3-arm'
+    By default, this will be 'android-3-armeabi'
 
+    (Up to Android NDK 1.6_r1, this used to be 'android-3-arm' by default)
 
 NDK-provided function macros:
 - - - - - - - - - - - - - - -

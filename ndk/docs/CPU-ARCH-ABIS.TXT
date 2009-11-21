@@ -1,0 +1,225 @@
+Android Native CPU ABI Management
+
+
+Introduction:
+=============
+
+Every piece of native code generated with the Android NDK matches a given
+"Application Binary Interface" (ABI) that defines exactly how your
+application's machine code is expected to interact with the system at
+runtime.
+
+A typical ABI describes things in *excruciating* details, and will typically
+include the following information:
+
+  - the CPU instruction set that the machine code should use
+
+  - the endianess of memory stores and loads at runtime
+
+  - the format of executable binaries (shared libraries, programs, etc...)
+    and what type of content is allowed/supported in them.
+
+  - various conventions used to pass data between your code and
+    the system (e.g. how registers and/or the stack are used when functions
+    are called, alignment constraints, etc...)
+
+  - alignment and size constraints for enum types, structure fields and
+    arrays.
+
+  - the list of function symbols available to your machine code at runtime,
+    generally from a very specific selected set of libraries.
+
+This document lists the exact ABIs supported by the Android NDK and the
+official Android platform releases.
+
+
+I. Supported ABIs:
+==================
+
+Each supported ABI is identified by a unique name.
+
+
+ I.1. 'armeabi'
+ --------------
+
+  This is the name of an ABI for ARM-based CPUs that support *at* *least*
+  the ARMv5TE instruction set. Please refer to following documentation for
+  more details:
+
+   - ARM Architecture Reference manual                (a.k.a  ARMARM)
+   - Procedure Call Standard for the ARM Architecture (a.k.a. AAPCS)
+   - ELF for the ARM Architecture                     (a.k.a. ARMELF)
+   - ABI for the ARM Architecture                     (a.k.a. BSABI)
+   - Base Platform ABI for the ARM Architecture       (a.k.a. BPABI)
+   - C Library ABI for the ARM Architecture           (a.k.a. CLIABI)
+   - C++ ABI for the ARM Architecture                 (a.k.a. CPPABI)
+   - Runtime ABI for the ARM Architecture             (a.k.a. RTABI)
+
+   - ELF System V Application Binary Interface
+     (DRAFT - 24 April 2001)
+
+   - Generic C++ ABI  (http://www.codesourcery.com/public/cxx-abi/abi.html)
+
+  Note that the AAPCS standard defines 'EABI' as a moniker used to specify
+  a _family_ of similar but distinct ABIs. Android follows the little-endian
+  ARM GNU/Linux ABI as documented in the following document:
+
+      http://www.codesourcery.com/gnu_toolchains/arm/arm_gnu_linux_abi.pdf
+
+  With the exception that wchar_t is only one byte. This should not matter
+  in practice since wchar_t is simply *not* really supported by the Android
+  platform anyway.
+
+  This ABI does *not* support hardware-assisted floating point computations.
+  Instead, all FP operations are performed through software helper functions
+  that come from the compiler's libgcc.a static library.
+
+  Thumb (a.k.a. Thumb-1) instructions are supported. Note that the NDK
+  will generate thumb code by default, unless you define LOCAL_ARM_MODE
+  in your Android.mk (see docs/ANDROID-MK.TXT for all details).
+
+
+ I.2. 'armeabi-v7a'
+ ------------------
+
+  This is the name of another ARM-based CPU ABI that *extends* 'armeabi' to
+  include a few CPU instruction set extensions as described in the following
+  document:
+
+  - ARM Architecture v7-a Reference Manual
+
+  The instruction extensions supported by this Android-specific ABI are:
+
+     - The Thumb-2 instruction set extension.
+     - The VFP hardware FPU instructions.
+
+  More specifically, VFPv3-D32 is being used, which corresponds to 32
+  dedicated 64-bit floating point registers provided by the CPU.
+
+  Other extensions described by the v7-a ARM like Advanced SIMD (a.k.a. NEON)
+  or ThumbEE are optional to this ABI, which means that developers should
+  check *at* *runtime* whether the extensions are available and provide
+  alternative code paths if this is not the case.
+
+  (Just like one typically does on x86 systems to check/use MMX/SSE2/etc...
+   specialized instructions).
+
+  IMPORTANT NOTE: This ABI enforces that all double values are passed during
+  function calls in 'core' register pairs, instead of dedicated FP ones.
+  However, all internal computations can be performed with the FP registers
+  and will be greatly sped up.
+
+  This little constraint, while resulting in a slight decrease of
+  performance, ensures binary compatibility with all existing 'armeabi'
+  binaries.
+
+  IMPORTANT NOTE: The 'armeabi-v7a' machine code will *not* run on ARMv5 or
+                  ARMv6 based devices.
+
+
+II. Generating code for a specific ABI:
+=======================================
+
+By default, the NDK will generate machine code for the 'armeabi' ABI.
+You can however add the following line to your Application.mk to generate
+ARMv7-a compatible machine code instead:
+
+   APP_ABI := armeabi-v7a
+
+It is also possible to build machine code for *two* distinct ABIs by using:
+
+   APP_ABI := armeabi armeabi-v7a
+
+This will instruct the NDK to build two versions of your machine code: one for
+each ABI listed on this line. Both libraries will be copied to your application
+project path and will be ultimately packaged into your .apk.
+
+Such a package is called a "fat binary" in Android speak since it contains
+machine code for more than one CPU architecture. At installation time, the
+package manager will only unpack the most appropriate machine code for the
+target device. See below for details.
+
+
+
+III. ABI Management on the Android platform:
+============================================
+
+This section provides specific details about how the Android platform manages
+native code in application packages.
+
+
+  III.1. Native code in Application Packages:
+  -------------------------------------------
+
+    It is expected that shared libraries generated with the NDK are stored in
+    the final application package (.apk) at locations of the form:
+
+       lib/<abi>/lib<name>.so
+
+    Where <abi> is one of the ABI names listed in section II above, and <name>
+    is a name that can be used when loading the shared library from the VM
+    as in:
+
+        System.loadLibrary("<name>");
+
+    Since .apk files are just zip files, you can trivially list their content
+    with a command like:
+
+        unzip -l <apk>
+
+    to verify that the native shared libraries you want are indeed at the
+    proper location. You can also place native shared libraries at other
+    locations within the .apk, but they will be ignored by the system, or more
+    precisely by the steps described below; you will need to extract/install
+    them manually in your application.
+
+    In the case of a "fat" binary, two distinct libraries are thus placed in
+    the  .apk, for example at:
+
+        lib/armeabi/libfoo.so
+        lib/armeabi-v7a/libfoo.so
+
+
+  III.2. Android Platform ABI support:
+  ------------------------------------
+
+    The Android system knows at runtime which ABI(s) it supports. More
+    precisely, up to two build-specific system properties are used to
+    indicate:
+
+    - the 'primary' ABI for the device, corresponding to the machine
+      code used in the system image itself.
+
+    - an optional 'secondary' ABI, corresponding to another ABI that
+      is also supported by the system image.
+
+    For example, a typical ARMv5TE-based device would only define
+    the primary ABI as 'armeabi' and not define a secondary one.
+
+    On the other hand, a typical ARMv7-based device would define the
+    primary ABI to 'armeabi-v7a' and the secondary one to 'armeabi'
+    since it can run application native binaries generated for both
+    of them.
+
+
+  III.3. Automatic extraction of native code at install time:
+  -----------------------------------------------------------
+
+    When installing an application, the package manager service will scan
+    the .apk and look for any shared library of the form:
+
+         lib/<primary-abi>/lib<name>.so
+
+    If one is found, then it is copied under $APPDIR/lib/lib<name>.so,
+    where $APPDIR corresponds to the application's specific data directory.
+
+    If none is found, and a secondary ABI is defined, the service will
+    then scan for shared libraries of the form:
+
+        lib/<secondary-abi>/lib<name>.so
+
+    If anything is found, then it is copied under $APPDIR/lib/lib<name>.so
+
+    This mechanism ensures that the best machine code for the target
+    device is automatically extracted from the package at installation
+    time.
