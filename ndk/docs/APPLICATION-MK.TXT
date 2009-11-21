@@ -114,6 +114,25 @@ APP_BUILD_SCRIPT
     to point to an alternate build script. A non-absolute path will always
     be interpreated as relative to the NDK's top-level directory.
 
+APP_ABI
+    By default, the NDK build system will generate machine code for the
+    'armeabi' ABI. This corresponds to an ARMv5TE based CPU with software
+    floating point operations. You can use APP_ABI to select a different
+    ABI.
+
+    For example, to support hardware FPU instructions on ARMv7 based devices,
+    use:
+
+        APP_ABI := armeabi-v7a
+
+    Or to support both ARMv5TE and ARMv7 based devices, use:
+
+        APP_ABI := armeabi armeabi-v7a
+
+    For the list of all supported ABIs and details about their usage / limitations
+    please read docs/CPU-ARCH-ABIS.TXT
+
+
 A trivial Application.mk file would be:
 
 -------------- cut here -------------------------

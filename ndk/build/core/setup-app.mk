@@ -21,21 +21,6 @@ $(call assert-defined,_app)
 
 _map := NDK_APP.$(_app)
 
-# which platform/abi/toolchain are we going to use?
-TARGET_PLATFORM := $(call get,$(_map),APP_PLATFORM)
-TARGET_ARCH_ABI  := arm
-TARGET_ARCH      := arm
-TARGET_TOOLCHAIN := $(NDK_TARGET_TOOLCHAIN)
-
-# the location of generated files for this app
-HOST_OUT    := $(NDK_APP_OUT)/$(_app)/$(HOST_TAG)
-HOST_OBJS   := $(HOST_OUT)/objs
-
-TARGET_OUT  := $(NDK_APP_OUT)/$(_app)/$(TARGET_ABI)
-TARGET_OBJS := $(TARGET_OUT)/objs
-
-TARGET_GDB_SETUP := $(TARGET_OUT)/setup.gdb
-
 # ok, let's parse all Android.mk source files in order to build
 # the modules for this app.
 #
@@ -62,4 +47,33 @@ endif
 ndk-app-$(_app): $(NDK_APP_MODULES)
 all: ndk-app-$(_app)
 
-include $(BUILD_SYSTEM)/setup-toolchain.mk
+# which platform/abi/toolchain are we going to use?
+TARGET_PLATFORM := $(call get,$(_map),APP_PLATFORM)
+
+# the location of generated files for this app
+HOST_OUT    := $(NDK_APP_OUT)/$(_app)/$(HOST_TAG)
+HOST_OBJS   := $(HOST_OUT)/objs
+
+# the target to use
+TARGET_TOOLCHAIN := $(NDK_TARGET_TOOLCHAIN)
+
+APP_ABI := $(strip $(APP_ABI))
+ifndef APP_ABI
+    # the default ABI for now is armeabi
+    APP_ABI := armeabi
+endif
+
+# check the target ABIs for this application
+_bad_abis = $(strip $(filter-out $(NDK_ALL_ABIS),$(APP_ABI)))
+ifneq ($(_bad_abis),)
+    $(info _bad_abis = '$(_bad_abis)')
+    $(call __ndk_info,NDK Application '$(_app)' targets unknown ABI(s): $(_bad_abis))
+    $(call __ndk_info,Please fix the APP_ABI definition in $(NDK_APP_APPLICATION_MK))
+    $(call __ndk_error,Aborting)
+endif
+
+$(foreach _abi,$(APP_ABI),\
+    $(eval TARGET_ARCH_ABI := $(_abi))\
+    $(eval include $(BUILD_SYSTEM)/setup-abi.mk) \
+)
+
