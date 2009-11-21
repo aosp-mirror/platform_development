@@ -13,12 +13,20 @@
 # limitations under the License.
 #
 
-# this file is included repeatedly from build/core/main.mk and is used
+# this file is included repeatedly from build/core/setup-abi.mk and is used
 # to setup the target toolchain for a given platform/abi combination.
 #
 
 $(call assert-defined,TARGET_TOOLCHAIN TARGET_PLATFORM TARGET_ARCH TARGET_ARCH_ABI)
 $(call assert-defined,NDK_APPS)
+
+# Check that the toolchain supports the current ABI
+$(if $(filter-out $(NDK_TOOLCHAIN.$(NDK_TARGET_TOOLCHAIN).abis),$(TARGET_ARCH_ABI)),\
+    $(call __ndk_info,The $(NDK_TARGET_TOOLCHAIN) toolchain does not support the $(TARGET_ARCH_ABI) ABI.)\
+    $(call __ndk_info,Please modify the APP_ABI definition in $(NDK_APP_APPLICATION_MK) to fix this)\
+    $(call __ndk_info,Valid ABIs values for $(NDK_TARGET_TOOLCHAIN) are: $(NDK_TARGET_TOOLCHAIN.$(NDK_TOOLCHAIN).abis))\
+    $(call __ndk_error,Aborting)\
+,)
 
 TARGET_ABI := $(TARGET_PLATFORM)-$(TARGET_ARCH_ABI)
 
@@ -27,7 +35,7 @@ TARGET_ABI := $(TARGET_PLATFORM)-$(TARGET_ARCH_ABI)
 # some libraries and object files used for linking the generated
 # target files properly.
 #
-SYSROOT := build/platforms/$(TARGET_PLATFORM)/arch-$(TARGET_ARCH_ABI)
+SYSROOT := build/platforms/$(TARGET_PLATFORM)/arch-$(TARGET_ARCH)
 
 TARGET_CRTBEGIN_STATIC_O  := $(SYSROOT)/usr/lib/crtbegin_static.o
 TARGET_CRTBEGIN_DYNAMIC_O := $(SYSROOT)/usr/lib/crtbegin_dynamic.o
@@ -40,7 +48,7 @@ TARGET_PREBUILT_SHARED_LIBRARIES := $(TARGET_PREBUILT_SHARED_LIBRARIES:%=$(SYSRO
 include $(NDK_TOOLCHAIN.$(TARGET_TOOLCHAIN).setup)
 
 # compute NDK_APP_DEST as the destination directory for the generated files
-NDK_APP_DEST := $(NDK_APP_PROJECT_PATH)/libs/$(TARGET_ABI_SUBDIR)
+NDK_APP_DEST := $(NDK_APP_PROJECT_PATH)/libs/$(TARGET_ARCH_ABI)
 
 # free the dictionary of LOCAL_MODULE definitions
 $(call modules-clear)
