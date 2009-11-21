@@ -27,7 +27,7 @@ currently supported:
 
     android-3      -> Official Android 1.5 system images
     android-4      -> Official Android 1.6 system images
-    android-5      -> Experimental Eclair system images
+    android-5      -> Official Android 2.0 system images
 
 II. Android-3 Stable Native APIs:
 ---------------------------------

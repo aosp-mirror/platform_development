@@ -13,7 +13,16 @@
 # limitations under the License.
 #
 
-# config file for the arm-eabi-4.2.1 toolchain for the Android NDK
-# the real meat is in the setup.mk file adjacent to this one
+# this file is included multiple times by build/core/setup-app.mk
 #
-TOOLCHAIN_ABIS := armeabi
+
+$(call ndk_log,Building application '$(NDK_APP_NAME)' for ABI '$(TARGET_ARCH_ABI)')
+
+TARGET_ARCH := arm
+
+TARGET_OUT  := $(NDK_APP_OUT)/$(_app)/$(TARGET_ARCH_ABI)
+TARGET_OBJS := $(TARGET_OUT)/objs
+
+TARGET_GDB_SETUP := $(TARGET_OUT)/setup.gdb
+
+include $(BUILD_SYSTEM)/setup-toolchain.mk
