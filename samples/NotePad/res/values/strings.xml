@@ -30,6 +30,7 @@
 	<string name="title_edit_title">Note title:</string>  
 	
 	<string name="app_name">Note Pad</string>  
+	<string name="live_folder_name">Notes</string>
 	
 	<string name="button_ok">OK</string>  
 	
