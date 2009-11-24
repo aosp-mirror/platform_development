@@ -30,6 +30,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
+import android.provider.LiveFolders;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -48,9 +49,11 @@ public class NotePadProvider extends ContentProvider {
     private static final String NOTES_TABLE_NAME = "notes";
 
     private static HashMap<String, String> sNotesProjectionMap;
+    private static HashMap<String, String> sLiveFolderProjectionMap;
 
     private static final int NOTES = 1;
     private static final int NOTE_ID = 2;
+    private static final int LIVE_FOLDER_NOTES = 3;
 
     private static final UriMatcher sUriMatcher;
 
@@ -95,17 +98,20 @@ public class NotePadProvider extends ContentProvider {
     public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs,
             String sortOrder) {
         SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
+        qb.setTables(NOTES_TABLE_NAME);
 
         switch (sUriMatcher.match(uri)) {
         case NOTES:
-            qb.setTables(NOTES_TABLE_NAME);
             qb.setProjectionMap(sNotesProjectionMap);
             break;
 
         case NOTE_ID:
-            qb.setTables(NOTES_TABLE_NAME);
             qb.setProjectionMap(sNotesProjectionMap);
             qb.appendWhere(Notes._ID + "=" + uri.getPathSegments().get(1));
+            break;
+
+        case LIVE_FOLDER_NOTES:
+            qb.setProjectionMap(sLiveFolderProjectionMap);
             break;
 
         default:
@@ -133,6 +139,7 @@ public class NotePadProvider extends ContentProvider {
     public String getType(Uri uri) {
         switch (sUriMatcher.match(uri)) {
         case NOTES:
+        case LIVE_FOLDER_NOTES:
             return Notes.CONTENT_TYPE;
 
         case NOTE_ID:
@@ -238,6 +245,7 @@ public class NotePadProvider extends ContentProvider {
         sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sUriMatcher.addURI(NotePad.AUTHORITY, "notes", NOTES);
         sUriMatcher.addURI(NotePad.AUTHORITY, "notes/#", NOTE_ID);
+        sUriMatcher.addURI(NotePad.AUTHORITY, "live_folders/notes", LIVE_FOLDER_NOTES);
 
         sNotesProjectionMap = new HashMap<String, String>();
         sNotesProjectionMap.put(Notes._ID, Notes._ID);
@@ -245,5 +253,13 @@ public class NotePadProvider extends ContentProvider {
         sNotesProjectionMap.put(Notes.NOTE, Notes.NOTE);
         sNotesProjectionMap.put(Notes.CREATED_DATE, Notes.CREATED_DATE);
         sNotesProjectionMap.put(Notes.MODIFIED_DATE, Notes.MODIFIED_DATE);
+
+        // Support for Live Folders.
+        sLiveFolderProjectionMap = new HashMap<String, String>();
+        sLiveFolderProjectionMap.put(LiveFolders._ID, Notes._ID + " AS " +
+                LiveFolders._ID);
+        sLiveFolderProjectionMap.put(LiveFolders.NAME, Notes.TITLE + " AS " +
+                LiveFolders.NAME);
+        // Add more columns here for more robust Live Folders.
     }
 }
