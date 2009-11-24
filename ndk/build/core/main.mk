@@ -224,7 +224,8 @@ $(call __ndk_info,Building for application '$(NDK_APPS)')
         executables libraries static_libraries shared_libraries \
         clean clean-config clean-objs-dir \
         clean-executables clean-libraries \
-        clean-installed-modules
+        clean-installed-modules \
+        clean-installed-binaries
 
 # These macros are used in Android.mk to include the corresponding
 # build script that will parse the LOCAL_XXX variable definitions.

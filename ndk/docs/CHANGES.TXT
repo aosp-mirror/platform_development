@@ -56,6 +56,15 @@ IMPORTANT CHANGES:
   OpenGL ES 2.0 is currently *not* available from Java, and must be used
   through native code exclusively.
 
+- The NDK build script will now remove installed binaries from the application
+  project's path before starting the build. This ensures that:
+
+  - if the build fails for some reason, a stale/obsolete file is not left in
+    your application project tree by mistake.
+
+  - if you change the target ABI, a stale/obsolete file is not left into the
+    folder corresponding to the old ABI.
+
 
 OTHER FIXES & CHANGES:
 
