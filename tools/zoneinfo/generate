@@ -20,7 +20,7 @@ do
     zic -d data $i
 done
 
-javac -target 1.5 ZoneCompactor.java
+javac -target 1.5 ZoneCompactor.java ZoneInfo.java
 
 (
     cat $version/* | grep '^Link' | awk '{print $1, $2, $3}'
