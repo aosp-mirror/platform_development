@@ -48,8 +48,11 @@ public class ZoneCompactor {
     private static final int MAXNAME = 40;
 
     // Concatenate the contents of 'inFile' onto 'out'
-    private static void copyFile(File inFile, OutputStream out)
+    // and return the contents as a byte array.
+    private static byte[] copyFile(File inFile, OutputStream out)
         throws Exception {
+        byte[] ret = new byte[0];
+
         InputStream in = new FileInputStream(inFile);
         byte[] buf = new byte[8192];
         while (true) {
@@ -58,9 +61,14 @@ public class ZoneCompactor {
                 break;
             }
             out.write(buf, 0, nbytes);
+
+            byte[] nret = new byte[ret.length + nbytes];
+            System.arraycopy(ret, 0, nret, 0, ret.length);
+            System.arraycopy(buf, 0, nret, ret.length, nbytes);
+            ret = nret;
         }
         out.flush();
-        return;
+        return ret;
     }
     
     // Write a 32-bit integer in network byte order
@@ -96,12 +104,12 @@ public class ZoneCompactor {
                     starts.put(s, new Integer(start));
                     lengths.put(s, new Integer((int)length));
 
-                    TimeZone tz = TimeZone.getTimeZone(s);
+                    start += length;
+                    byte[] data = copyFile(f, zoneInfo);
+
+                    TimeZone tz = ZoneInfo.make(s, data);
                     int gmtOffset = tz.getRawOffset();
                     offsets.put(s, new Integer(gmtOffset));
-
-                    start += length;
-                    copyFile(f, zoneInfo);
                 }
             }
         }
