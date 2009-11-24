@@ -57,7 +57,7 @@ HOST_OBJS   := $(HOST_OUT)/objs
 # the target to use
 TARGET_TOOLCHAIN := $(NDK_TARGET_TOOLCHAIN)
 
-APP_ABI := $(strip $(APP_ABI))
+APP_ABI := $(strip $(NDK_APP_ABI))
 ifndef APP_ABI
     # the default ABI for now is armeabi
     APP_ABI := armeabi
@@ -66,10 +66,20 @@ endif
 # check the target ABIs for this application
 _bad_abis = $(strip $(filter-out $(NDK_ALL_ABIS),$(APP_ABI)))
 ifneq ($(_bad_abis),)
-    $(info _bad_abis = '$(_bad_abis)')
     $(call __ndk_info,NDK Application '$(_app)' targets unknown ABI(s): $(_bad_abis))
     $(call __ndk_info,Please fix the APP_ABI definition in $(NDK_APP_APPLICATION_MK))
     $(call __ndk_error,Aborting)
+endif
+
+# Clear all installed binaries for this application
+# This ensures that if the build fails, you're not going to mistakenly
+# package an obsolete version of it. Or if you change the ABIs you're targetting,
+# you're not going to leave a stale shared library for the old one.
+#
+ifeq ($($(_map).cleaned_binaries),)
+    $(_map).cleaned_binaries := true
+    clean-installed-binaries:
+	$(hide) rm -f $(NDK_ALL_ABIS:%=$(NDK_APP_PROJECT_PATH)/libs/%/lib*.so)
 endif
 
 $(foreach _abi,$(APP_ABI),\
