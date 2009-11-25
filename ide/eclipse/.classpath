@@ -31,6 +31,7 @@
 	<classpathentry kind="src" path="frameworks/base/cmds/input/src"/>
 	<classpathentry kind="src" path="frameworks/base/cmds/pm/src"/>
 	<classpathentry kind="src" path="frameworks/base/cmds/svc/src"/>
+	<classpathentry kind="src" path="frameworks/base/common/java"/>
 	<classpathentry kind="src" path="frameworks/base/core/java"/>
 	<classpathentry kind="src" path="frameworks/base/core/config/sdk"/>
 	<classpathentry kind="src" path="frameworks/base/graphics/java"/>
@@ -107,7 +108,6 @@
 	<classpathentry kind="src" path="external/protobuf/src"/>
 	<classpathentry kind="src" path="external/gdata/src"/>
 	<classpathentry kind="src" path="external/apache-http/src"/>
-	<classpathentry kind="lib" path="external/googleclient/googleclient-lib.jar"/>
 	<classpathentry kind="lib" path="out/target/common/obj/JAVA_LIBRARIES/google-framework_intermediates/javalib.jar"/>
 	<classpathentry kind="lib" path="out/target/common/obj/JAVA_LIBRARIES/googlelogin-client_intermediates/javalib.jar"/>
 	<classpathentry kind="lib" path="packages/apps/Calculator/arity-1.3.3.jar"/>
