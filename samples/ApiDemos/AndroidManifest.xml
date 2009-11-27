@@ -1416,6 +1416,16 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".graphics.GLES20Activity"
+                android:label="Graphics/OpenGL ES/OpenGL ES 2.0"
+                android:theme="@android:style/Theme.NoTitleBar"
+                android:configChanges="orientation|keyboardHidden">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+        
         <activity android:name=".graphics.TranslucentGLSurfaceViewActivity"
                 android:label="Graphics/OpenGL ES/Translucent GLSurfaceView"
                 android:theme="@style/Theme.Translucent"
