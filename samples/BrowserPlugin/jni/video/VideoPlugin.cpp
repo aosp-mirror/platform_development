@@ -39,7 +39,7 @@ extern ANPLogInterfaceV0       gLogI;
 extern ANPPaintInterfaceV0     gPaintI;
 extern ANPSurfaceInterfaceV0   gSurfaceI;
 extern ANPTypefaceInterfaceV0  gTypefaceI;
-extern ANPWindowInterfaceV0  gWindowI;
+extern ANPWindowInterfaceV0    gWindowI;
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -52,7 +52,7 @@ VideoPlugin::VideoPlugin(NPP inst) : SurfaceSubPlugin(inst) {
     ANPEventFlags flags = kTouch_ANPEventFlag;
     NPError err = browser->setvalue(inst, kAcceptEvents_ANPSetValue, &flags);
     if (err != NPERR_NO_ERROR) {
-        gLogI.log(inst, kError_ANPLogType, "Error selecting input events.");
+        gLogI.log(kError_ANPLogType, "Error selecting input events.");
     }
 }
 
@@ -74,7 +74,7 @@ void VideoPlugin::surfaceCreated(jobject surface) {
 }
 
 void VideoPlugin::surfaceChanged(int format, int width, int height) {
-    gLogI.log(inst(), kDebug_ANPLogType, "----%p SurfaceChanged Event: %d",
+    gLogI.log(kDebug_ANPLogType, "----%p SurfaceChanged Event: %d",
               inst(), format);
     drawPlugin();
 }
@@ -93,7 +93,7 @@ void VideoPlugin::drawPlugin() {
     JNIEnv* env = NULL;
     if (!m_surface || gVM->GetEnv((void**) &env, JNI_VERSION_1_4) != JNI_OK ||
         !gSurfaceI.lock(env, m_surface, &bitmap, NULL)) {
-            gLogI.log(inst(), kError_ANPLogType, "----%p Unable to Lock Surface", inst());
+            gLogI.log(kError_ANPLogType, "----%p Unable to Lock Surface", inst());
             return;
     }
 
@@ -106,7 +106,7 @@ void VideoPlugin::drawPlugin() {
 
     // compare DOM dimensions to the plugin's surface dimensions
     if (pW != bitmap.width || pH != bitmap.height)
-        gLogI.log(inst(), kError_ANPLogType,
+        gLogI.log(kError_ANPLogType,
                   "----%p Invalid Surface Dimensions (%d,%d):(%d,%d)",
                   inst(), pW, pH, bitmap.width, bitmap.height);
 
@@ -141,16 +141,16 @@ void VideoPlugin::drawPlugin() {
 int16 VideoPlugin::handleEvent(const ANPEvent* evt) {
     switch (evt->eventType) {
         case kDraw_ANPEventType:
-            gLogI.log(inst(), kError_ANPLogType, " ------ %p the plugin did not request draw events", inst());
+            gLogI.log(kError_ANPLogType, " ------ %p the plugin did not request draw events", inst());
             break;
         case kTouch_ANPEventType:
             if (kDown_ANPTouchAction == evt->data.touch.action) {
-                gLogI.log(inst(), kDebug_ANPLogType, " ------ %p requesting fullscreen mode", inst());
+                gLogI.log(kDebug_ANPLogType, " ------ %p requesting fullscreen mode", inst());
                 gWindowI.requestFullScreen(inst());
             }
             return 1;
         case kKey_ANPEventType:
-            gLogI.log(inst(), kError_ANPLogType, " ------ %p the plugin did not request key events", inst());
+            gLogI.log(kError_ANPLogType, " ------ %p the plugin did not request key events", inst());
             break;
         default:
             break;

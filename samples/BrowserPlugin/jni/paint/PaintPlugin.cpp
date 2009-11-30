@@ -56,7 +56,7 @@ PaintPlugin::PaintPlugin(NPP inst) : SurfaceSubPlugin(inst) {
     // initialize the path
     m_touchPath = gPathI.newPath();
     if(!m_touchPath)
-        gLogI.log(inst, kError_ANPLogType, "----%p Unable to create the touch path", inst);
+        gLogI.log(kError_ANPLogType, "----%p Unable to create the touch path", inst);
 
     // initialize the paint colors
     m_paintSurface = gPaintI.newPaint();
@@ -77,7 +77,7 @@ PaintPlugin::PaintPlugin(NPP inst) : SurfaceSubPlugin(inst) {
     ANPEventFlags flags = kTouch_ANPEventFlag;
     NPError err = browser->setvalue(inst, kAcceptEvents_ANPSetValue, &flags);
     if (err != NPERR_NO_ERROR) {
-        gLogI.log(inst, kError_ANPLogType, "Error selecting input events.");
+        gLogI.log(kError_ANPLogType, "Error selecting input events.");
     }
 }
 
@@ -227,7 +227,7 @@ void PaintPlugin::surfaceChanged(int format, int width, int height) {
     const int pH = obj->window->height;
     // compare to the plugin's surface dimensions
     if (pW != width || pH != height)
-        gLogI.log(inst(), kError_ANPLogType,
+        gLogI.log(kError_ANPLogType,
                   "----%p Invalid Surface Dimensions (%d,%d):(%d,%d)",
                   inst(), pW, pH, width, height);
 }
@@ -275,7 +275,7 @@ int16 PaintPlugin::handleEvent(const ANPEvent* evt) {
         case kMouse_ANPEventType: {
 
             if (m_isTouchActive)
-                gLogI.log(inst(), kError_ANPLogType, "----%p Received unintended mouse event", inst());
+                gLogI.log(kError_ANPLogType, "----%p Received unintended mouse event", inst());
 
             if (kDown_ANPMouseAction == evt->data.mouse.action) {
                 ANPRectF* rect = validTouch(evt->data.mouse.x, evt->data.mouse.y);
