@@ -57,10 +57,14 @@ Android.mk: specifies the name of the APK (SampleBrowserPlugin) as well as which
             shared libraries to include.
 
 AndroidManifest.xml: similar to a standard android manifest file, except that it
-                     must contain the "uses-permission" and "intent-filter"
-                     elements that are plugin specific.
+                     must contain the "uses-permission" and "service"
+                     elements that are plugin specific. The "service" element
+                     contains sub-elements that describe the java component of
+                     the service.
 
-src/*: location of the java files which in our case is just an empty service
+src/*: location of the java source files.  This contains the SamplePlugin.class
+       which is the java component of our plugin.  The component must exist and
+       implement the required interfaces, though simply returning null is valid.
 
 res/*: location of the static resources (e.g. an icon for the plugin)
 
