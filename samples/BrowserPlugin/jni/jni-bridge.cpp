@@ -69,7 +69,7 @@ static jboolean isFixedSurface(JNIEnv* env, jobject thiz, jint npp) {
 /*
  * JNI registration.
  */
-static JNINativeMethod gJavaSamplePluginStubMethods[] = {
+static JNINativeMethod gJavaSamplePluginMethods[] = {
     { "nativeSurfaceCreated", "(ILandroid/view/View;)V", (void*) surfaceCreated },
     { "nativeSurfaceChanged", "(IIII)V", (void*) surfaceChanged },
     { "nativeSurfaceDestroyed", "(I)V", (void*) surfaceDestroyed },
@@ -86,8 +86,8 @@ EXPORT jint JNI_OnLoad(JavaVM* vm, void* reserved) {
         return -1;
     }
 
-    jniRegisterNativeMethods(env, "com/android/sampleplugin/SamplePluginStub",
-                             gJavaSamplePluginStubMethods, NELEM(gJavaSamplePluginStubMethods));
+    jniRegisterNativeMethods(env, "com/android/sampleplugin/SamplePlugin",
+                             gJavaSamplePluginMethods, NELEM(gJavaSamplePluginMethods));
 
     return JNI_VERSION_1_4;
 }

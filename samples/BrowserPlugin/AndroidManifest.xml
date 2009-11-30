@@ -24,11 +24,12 @@
     <uses-sdk android:minSdkVersion="3" />
 
     <application android:icon="@drawable/sample_browser_plugin"
-                android:label="@string/sample_browser_plugin">
-        <service android:name="SamplePlugin">
+                 android:label="@string/sample_browser_plugin">
+        <service android:name=".SamplePlugin">
             <intent-filter>
                 <action android:name="android.webkit.PLUGIN" />
             </intent-filter>
+            <meta-data android:name="type" android:value="native" />
         </service>
     </application>
 

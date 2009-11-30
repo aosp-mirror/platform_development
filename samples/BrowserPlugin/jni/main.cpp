@@ -178,15 +178,6 @@ NPError NPP_New(NPMIMEType pluginType, NPP instance, uint16 mode, int16 argc,
         }
     }
 
-    // notify the plugin API of the location of the java interface
-    char* className = "com.android.sampleplugin.SamplePluginStub";
-    NPError npErr = browser->setvalue(instance, kSetPluginStubJavaClassName_ANPSetValue,
-                                      reinterpret_cast<void*>(className));
-    if (npErr) {
-        gLogI.log(instance, kError_ANPLogType, "set class err %d", npErr);
-        return npErr;
-    }
-
     // notify the plugin API of the drawing model we wish to use. This must be
     // done prior to creating certain subPlugin objects (e.g. surfaceViews)
     NPError err = browser->setvalue(instance, kRequestDrawingModel_ANPSetValue,
