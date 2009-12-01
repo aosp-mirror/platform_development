@@ -173,7 +173,7 @@ NPError NPP_New(NPMIMEType pluginType, NPP instance, uint16 mode, int16 argc,
             else if (!strcmp(argv[i], "Surface")) {
                model = kSurface_ANPDrawingModel;
             }
-            gLogI.log(instance, kDebug_ANPLogType, "------ %p DrawingModel is %d", instance, model);
+            gLogI.log(kDebug_ANPLogType, "------ %p DrawingModel is %d", instance, model);
             break;
         }
     }
@@ -183,15 +183,15 @@ NPError NPP_New(NPMIMEType pluginType, NPP instance, uint16 mode, int16 argc,
     NPError err = browser->setvalue(instance, kRequestDrawingModel_ANPSetValue,
                             reinterpret_cast<void*>(model));
     if (err) {
-        gLogI.log(instance, kError_ANPLogType, "request model %d err %d", model, err);
+        gLogI.log(kError_ANPLogType, "request model %d err %d", model, err);
         return err;
     }
 
     const char* path = gSystemI.getApplicationDataDirectory();
     if (path) {
-        gLogI.log(instance, kDebug_ANPLogType, "Application data dir is %s", path);
+        gLogI.log(kDebug_ANPLogType, "Application data dir is %s", path);
     } else {
-        gLogI.log(instance, kError_ANPLogType, "Can't find Application data dir");
+        gLogI.log(kError_ANPLogType, "Can't find Application data dir");
     }
 
     // select the pluginType
@@ -221,21 +221,21 @@ NPError NPP_New(NPMIMEType pluginType, NPP instance, uint16 mode, int16 argc,
                 obj->pluginType = kVideo_PluginType;
                 obj->activePlugin = new VideoPlugin(instance);
             }
-            gLogI.log(instance, kDebug_ANPLogType, "------ %p PluginType is %d", instance, obj->pluginType);
+            gLogI.log(kDebug_ANPLogType, "------ %p PluginType is %d", instance, obj->pluginType);
             break;
         }
     }
 
     // if no pluginType is specified then default to Animation
     if (!obj->pluginType) {
-        gLogI.log(instance, kError_ANPLogType, "------ %p No PluginType attribute was found", instance);
+        gLogI.log(kError_ANPLogType, "------ %p No PluginType attribute was found", instance);
         obj->pluginType = kAnimation_PluginType;
         obj->activePlugin = new BallAnimation(instance);
     }
 
     // check to ensure the pluginType supports the model
     if (!obj->activePlugin->supportsDrawingModel(model)) {
-        gLogI.log(instance, kError_ANPLogType, "------ %p Unsupported DrawingModel (%d)", instance, model);
+        gLogI.log(kError_ANPLogType, "------ %p Unsupported DrawingModel (%d)", instance, model);
         return NPERR_GENERIC_ERROR;
     }
 
@@ -307,7 +307,7 @@ int16 NPP_HandleEvent(NPP instance, void* event)
                 static ANPBitmapFormat currentFormat = -1;
                 if (evt->data.draw.data.bitmap.format != currentFormat) {
                     currentFormat = evt->data.draw.data.bitmap.format;
-                    gLogI.log(instance, kDebug_ANPLogType, "---- %p Draw (bitmap)"
+                    gLogI.log(kDebug_ANPLogType, "---- %p Draw (bitmap)"
                               " clip=%d,%d,%d,%d format=%d", instance,
                               evt->data.draw.clip.left,
                               evt->data.draw.clip.top,
@@ -319,7 +319,7 @@ int16 NPP_HandleEvent(NPP instance, void* event)
             break;
 
         case kKey_ANPEventType:
-            gLogI.log(instance, kDebug_ANPLogType, "---- %p Key action=%d"
+            gLogI.log(kDebug_ANPLogType, "---- %p Key action=%d"
                       " code=%d vcode=%d unichar=%d repeat=%d mods=%x", instance,
                       evt->data.key.action,
                       evt->data.key.nativeCode,
@@ -330,37 +330,37 @@ int16 NPP_HandleEvent(NPP instance, void* event)
             break;
 
         case kLifecycle_ANPEventType:
-            gLogI.log(instance, kDebug_ANPLogType, "---- %p Lifecycle action=%d",
+            gLogI.log(kDebug_ANPLogType, "---- %p Lifecycle action=%d",
                                 instance, evt->data.lifecycle.action);
             break;
 
        case kTouch_ANPEventType:
-            gLogI.log(instance, kDebug_ANPLogType, "---- %p Touch action=%d [%d %d]",
+            gLogI.log(kDebug_ANPLogType, "---- %p Touch action=%d [%d %d]",
                       instance, evt->data.touch.action, evt->data.touch.x,
                       evt->data.touch.y);
             break;
 
        case kMouse_ANPEventType:
-            gLogI.log(instance, kDebug_ANPLogType, "---- %p Mouse action=%d [%d %d]",
+            gLogI.log(kDebug_ANPLogType, "---- %p Mouse action=%d [%d %d]",
                       instance, evt->data.mouse.action, evt->data.mouse.x,
                       evt->data.mouse.y);
             break;
 
        case kVisibleRect_ANPEventType:
-            gLogI.log(instance, kDebug_ANPLogType, "---- %p VisibleRect [%d %d %d %d]",
+            gLogI.log(kDebug_ANPLogType, "---- %p VisibleRect [%d %d %d %d]",
                       instance, evt->data.visibleRect.rect.left, evt->data.visibleRect.rect.top,
                       evt->data.visibleRect.rect.right, evt->data.visibleRect.rect.bottom);
             break;
 
         default:
-            gLogI.log(instance, kError_ANPLogType, "---- %p Unknown Event [%d]",
+            gLogI.log(kError_ANPLogType, "---- %p Unknown Event [%d]",
                       instance, evt->eventType);
             break;
     }
 #endif
 
     if(!obj->activePlugin) {
-        gLogI.log(instance, kError_ANPLogType, "the active plugin is null.");
+        gLogI.log(kError_ANPLogType, "the active plugin is null.");
         return 0; // unknown or unhandled event
     }
     else {

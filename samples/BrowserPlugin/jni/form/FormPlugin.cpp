@@ -100,7 +100,7 @@ FormPlugin::FormPlugin(NPP inst) : SubPlugin(inst) {
     ANPEventFlags flags = kKey_ANPEventFlag;
     NPError err = browser->setvalue(inst, kAcceptEvents_ANPSetValue, &flags);
     if (err != NPERR_NO_ERROR) {
-        gLogI.log(inst, kError_ANPLogType, "Error selecting input events.");
+        gLogI.log(kError_ANPLogType, "Error selecting input events.");
     }
 }
 
@@ -215,7 +215,7 @@ int16 FormPlugin::handleEvent(const ANPEvent* evt) {
 
         case kLifecycle_ANPEventType:
             if (evt->data.lifecycle.action == kLoseFocus_ANPLifecycleAction) {
-                gLogI.log(instance, kDebug_ANPLogType, "----%p Loosing Focus", instance);
+                gLogI.log(kDebug_ANPLogType, "----%p Loosing Focus", instance);
 
                 if (m_activeInput) {
                     // hide the keyboard
@@ -230,7 +230,7 @@ int16 FormPlugin::handleEvent(const ANPEvent* evt) {
                 return 1;
             }
             else if (evt->data.lifecycle.action == kGainFocus_ANPLifecycleAction) {
-                gLogI.log(instance, kDebug_ANPLogType, "----%p Gaining Focus", instance);
+                gLogI.log(kDebug_ANPLogType, "----%p Gaining Focus", instance);
                 m_hasFocus = true;
                 inval(instance);
                 return 1;
@@ -300,7 +300,7 @@ void FormPlugin::switchActiveInput(TextInput* newInput) {
 bool FormPlugin::handleNavigation(ANPKeyCode keyCode) {
     NPP instance = this->inst();
 
-    gLogI.log(instance, kDebug_ANPLogType, "----%p Recvd Nav Key %d", instance, keyCode);
+    gLogI.log(kDebug_ANPLogType, "----%p Recvd Nav Key %d", instance, keyCode);
 
     if (!m_activeInput) {
         gWindowI.showKeyboard(instance, true);
@@ -350,7 +350,7 @@ void FormPlugin::handleTextInput(TextInput* input, ANPKeyCode keyCode, int32_t u
     input->text[input->charPtr] = static_cast<char>(unichar);
     input->charPtr++;
 
-    gLogI.log(instance, kDebug_ANPLogType, "----%p Text:  %c", instance, unichar);
+    gLogI.log(kDebug_ANPLogType, "----%p Text:  %c", instance, unichar);
 }
 
 void FormPlugin::scrollIntoView(TextInput* input) {

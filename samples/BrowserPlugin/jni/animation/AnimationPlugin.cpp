@@ -85,7 +85,7 @@ BallAnimation::BallAnimation(NPP inst) : SubPlugin(inst) {
     ANPEventFlags flags = kTouch_ANPEventFlag;
     NPError err = browser->setvalue(inst, kAcceptEvents_ANPSetValue, &flags);
     if (err != NPERR_NO_ERROR) {
-        gLogI.log(inst, kError_ANPLogType, "Error selecting input events.");
+        gLogI.log(kError_ANPLogType, "Error selecting input events.");
     }
 }
 

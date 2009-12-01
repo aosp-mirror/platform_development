@@ -99,7 +99,7 @@ AudioPlugin::AudioPlugin(NPP inst) : SubPlugin(inst) {
 
     // open a file stream
     FILE* f = fopen(path, "r");
-    gLogI.log(inst, kDebug_ANPLogType, "--- path %s FILE %p", path, f);
+    gLogI.log(kDebug_ANPLogType, "--- path %s FILE %p", path, f);
 
     // setup our private audio struct's default values
     m_soundPlay = new SoundPlay;
@@ -123,13 +123,13 @@ AudioPlugin::AudioPlugin(NPP inst) : SubPlugin(inst) {
     struct stat fileStatus;
 
     if(fileDescriptor <= 0) {
-        gLogI.log(inst, kError_ANPLogType, "fopen error");
+        gLogI.log(kError_ANPLogType, "fopen error");
     }
     else if (fstat(fileDescriptor, &fileStatus) != 0) {
-        gLogI.log(inst, kDebug_ANPLogType, "File Size: %d", fileStatus.st_size);
+        gLogI.log(kDebug_ANPLogType, "File Size: %d", fileStatus.st_size);
         m_soundPlay->fileSize = fileStatus.st_size;
     } else {
-        gLogI.log(inst, kError_ANPLogType, "fstat error");
+        gLogI.log(kError_ANPLogType, "fstat error");
     }
 
     // configure the UI elements
@@ -169,7 +169,7 @@ AudioPlugin::AudioPlugin(NPP inst) : SubPlugin(inst) {
     ANPEventFlags flags = kTouch_ANPEventFlag;
     NPError err = browser->setvalue(inst, kAcceptEvents_ANPSetValue, &flags);
     if (err != NPERR_NO_ERROR) {
-        gLogI.log(inst, kError_ANPLogType, "Error selecting input events.");
+        gLogI.log(kError_ANPLogType, "Error selecting input events.");
     }
 }
 
@@ -203,10 +203,10 @@ void AudioPlugin::drawPlugin(const ANPBitmap& bitmap, const ANPRectI& clip) {
 }
 
 void AudioPlugin::draw(ANPCanvas* canvas) {
-    NPP instance = this->inst();
-    PluginObject *obj = (PluginObject*) instance->pdata;
 
-    gLogI.log(instance, kError_ANPLogType, "Drawing");
+    PluginObject *obj = (PluginObject*) this->inst()->pdata;
+
+    gLogI.log(kError_ANPLogType, "Drawing");
 
     const float trackHeight = 30;
     const float buttonWidth = 60;
@@ -332,7 +332,7 @@ void AudioPlugin::handleTouch(int x, int y) {
 
     // if the track is null then return
     if (NULL == m_soundPlay->track) {
-        gLogI.log(instance, kError_ANPLogType, "---- %p unable to create track",
+        gLogI.log(kError_ANPLogType, "---- %p unable to create track",
                   instance);
         return;
     }
@@ -344,7 +344,7 @@ void AudioPlugin::handleTouch(int x, int y) {
 
     if (currentRect == &m_playRect) {
 
-        gLogI.log(instance, kDebug_ANPLogType, "---- %p starting track (%d)",
+        gLogI.log(kDebug_ANPLogType, "---- %p starting track (%d)",
                   m_soundPlay->track, gSoundI.isStopped(m_soundPlay->track));
 
         if (gSoundI.isStopped(m_soundPlay->track)) {
@@ -353,7 +353,7 @@ void AudioPlugin::handleTouch(int x, int y) {
     }
     else if (currentRect == &m_pauseRect) {
 
-        gLogI.log(instance, kDebug_ANPLogType, "---- %p pausing track (%d)",
+        gLogI.log(kDebug_ANPLogType, "---- %p pausing track (%d)",
                   m_soundPlay->track, gSoundI.isStopped(m_soundPlay->track));
 
         if (!gSoundI.isStopped(m_soundPlay->track)) {
@@ -362,7 +362,7 @@ void AudioPlugin::handleTouch(int x, int y) {
     }
     else if (currentRect == &m_stopRect) {
 
-        gLogI.log(instance, kDebug_ANPLogType, "---- %p stopping track (%d)",
+        gLogI.log(kDebug_ANPLogType, "---- %p stopping track (%d)",
                   m_soundPlay->track, gSoundI.isStopped(m_soundPlay->track));
 
         if (!gSoundI.isStopped(m_soundPlay->track)) {
