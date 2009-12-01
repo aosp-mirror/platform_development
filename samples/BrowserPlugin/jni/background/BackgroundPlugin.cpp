@@ -111,7 +111,7 @@ void BackgroundPlugin::drawPlugin(int surfaceWidth, int surfaceHeight) {
 
     // check to make sure the zoom level is uniform
     if (zoomFactorW + .01 < zoomFactorH && zoomFactorW - .01 > zoomFactorH)
-        gLogI.log(inst(), kError_ANPLogType, " ------ %p zoom is out of sync (%f,%f)",
+        gLogI.log(kError_ANPLogType, " ------ %p zoom is out of sync (%f,%f)",
                   inst(), zoomFactorW, zoomFactorH);
 
     // scale the variables based on the zoom level
@@ -123,7 +123,7 @@ void BackgroundPlugin::drawPlugin(int surfaceWidth, int surfaceHeight) {
     JNIEnv* env = NULL;
     if (!m_surface || gVM->GetEnv((void**) &env, JNI_VERSION_1_4) != JNI_OK ||
         !gSurfaceI.lock(env, m_surface, &bitmap, NULL)) {
-        gLogI.log(inst(), kError_ANPLogType, " ------ %p unable to lock the plugin", inst());
+        gLogI.log(kError_ANPLogType, " ------ %p unable to lock the plugin", inst());
         return;
     }
 
@@ -156,19 +156,19 @@ void BackgroundPlugin::drawPlugin(int surfaceWidth, int surfaceHeight) {
 int16 BackgroundPlugin::handleEvent(const ANPEvent* evt) {
     switch (evt->eventType) {
         case kDraw_ANPEventType:
-            gLogI.log(inst(), kError_ANPLogType, " ------ %p the plugin did not request draw events", inst());
+            gLogI.log(kError_ANPLogType, " ------ %p the plugin did not request draw events", inst());
             break;
         case kLifecycle_ANPEventType:
             if (evt->data.lifecycle.action == kOnLoad_ANPLifecycleAction) {
-                gLogI.log(inst(), kDebug_ANPLogType, " ------ %p the plugin received an onLoad event", inst());
+                gLogI.log(kDebug_ANPLogType, " ------ %p the plugin received an onLoad event", inst());
                 return 1;
             }
             break;
         case kTouch_ANPEventType:
-            gLogI.log(inst(), kError_ANPLogType, " ------ %p the plugin did not request touch events", inst());
+            gLogI.log(kError_ANPLogType, " ------ %p the plugin did not request touch events", inst());
             break;
         case kKey_ANPEventType:
-            gLogI.log(inst(), kError_ANPLogType, " ------ %p the plugin did not request key events", inst());
+            gLogI.log(kError_ANPLogType, " ------ %p the plugin did not request key events", inst());
             break;
         default:
             break;
@@ -185,9 +185,9 @@ void BackgroundPlugin::test_logging() {
     NPP instance = this->inst();
 
     //LOG_ERROR(instance, " ------ %p Testing Log Error", instance);
-    gLogI.log(instance, kError_ANPLogType, " ------ %p Testing Log Error", instance);
-    gLogI.log(instance, kWarning_ANPLogType, " ------ %p Testing Log Warning", instance);
-    gLogI.log(instance, kDebug_ANPLogType, " ------ %p Testing Log Debug", instance);
+    gLogI.log(kError_ANPLogType, " ------ %p Testing Log Error", instance);
+    gLogI.log(kWarning_ANPLogType, " ------ %p Testing Log Warning", instance);
+    gLogI.log(kDebug_ANPLogType, " ------ %p Testing Log Debug", instance);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -225,13 +225,13 @@ void BackgroundPlugin::test_timers() {
 }
 
 static void timer_oneshot(NPP instance, uint32 timerID) {
-    gLogI.log(instance, kDebug_ANPLogType, "-------- oneshot timer\n");
+    gLogI.log(kDebug_ANPLogType, "-------- oneshot timer\n");
 }
 
 static void timer_repeat(NPP instance, uint32 timerID) {
     BackgroundPlugin *obj = ((BackgroundPlugin*) ((PluginObject*) instance->pdata)->activePlugin);
 
-    gLogI.log(instance, kDebug_ANPLogType, "-------- repeat timer %d\n",
+    gLogI.log(kDebug_ANPLogType, "-------- repeat timer %d\n",
               obj->mTimerRepeatCount);
     if (--obj->mTimerRepeatCount == 0) {
         browser->unscheduletimer(instance, timerID);
@@ -239,7 +239,7 @@ static void timer_repeat(NPP instance, uint32 timerID) {
 }
 
 static void timer_neverfires(NPP instance, uint32 timerID) {
-    gLogI.log(instance, kError_ANPLogType, "-------- timer_neverfires!!!\n");
+    gLogI.log(kError_ANPLogType, "-------- timer_neverfires!!!\n");
 }
 
 static void timer_latency(NPP instance, uint32 timerID) {
@@ -256,7 +256,7 @@ static void timer_latency(NPP instance, uint32 timerID) {
 
     obj->mPrevTime = now;
 
-    gLogI.log(instance, kDebug_ANPLogType,
+    gLogI.log(kDebug_ANPLogType,
               "-------- latency test: [%3d] interval %d expected %d, total %d expected %d, drift %d avg %d\n",
               obj->mTimerLatencyCurrentCount, interval, TIMER_INTERVAL, dur,
               expectedDur, drift, avgDrift);
@@ -291,7 +291,7 @@ static void test_formats(NPP instance) {
     ANPPixelPacking packing;
     for (size_t i = 0; i < ARRAY_COUNT(gRecs); i++) {
         if (gBitmapI.getPixelPacking(gRecs[i].fFormat, &packing)) {
-            gLogI.log(instance, kDebug_ANPLogType,
+            gLogI.log(kDebug_ANPLogType,
                       "pixel format [%d] %s has packing ARGB [%d %d] [%d %d] [%d %d] [%d %d]\n",
                       gRecs[i].fFormat, gRecs[i].fName,
                       packing.AShift, packing.ABits,
@@ -299,7 +299,7 @@ static void test_formats(NPP instance) {
                       packing.GShift, packing.GBits,
                       packing.BShift, packing.BBits);
         } else {
-            gLogI.log(instance, kDebug_ANPLogType,
+            gLogI.log(kDebug_ANPLogType,
                       "pixel format [%d] %s has no packing\n",
                       gRecs[i].fFormat, gRecs[i].fName);
         }
@@ -312,18 +312,18 @@ void BackgroundPlugin::test_bitmap_transparency(const ANPEvent* evt) {
     // check default & set transparent
     if (!mFinishedStageOne) {
 
-        gLogI.log(instance, kDebug_ANPLogType, "BEGIN: testing bitmap transparency");
+        gLogI.log(kDebug_ANPLogType, "BEGIN: testing bitmap transparency");
 
         //check to make sure it is not transparent
         if (evt->data.draw.data.bitmap.format == kRGBA_8888_ANPBitmapFormat) {
-            gLogI.log(instance, kError_ANPLogType, "bitmap default format is transparent");
+            gLogI.log(kError_ANPLogType, "bitmap default format is transparent");
         }
 
         //make it transparent (any non-null value will set it to true)
         bool value = true;
         NPError err = browser->setvalue(instance, NPPVpluginTransparentBool, &value);
         if (err != NPERR_NO_ERROR) {
-            gLogI.log(instance, kError_ANPLogType, "Error setting transparency.");
+            gLogI.log(kError_ANPLogType, "Error setting transparency.");
         }
 
         mFinishedStageOne = true;
@@ -334,13 +334,13 @@ void BackgroundPlugin::test_bitmap_transparency(const ANPEvent* evt) {
 
         //check to make sure it is transparent
         if (evt->data.draw.data.bitmap.format != kRGBA_8888_ANPBitmapFormat) {
-            gLogI.log(instance, kError_ANPLogType, "bitmap did not change to transparent format");
+            gLogI.log(kError_ANPLogType, "bitmap did not change to transparent format");
         }
 
         //make it opaque
         NPError err = browser->setvalue(instance, NPPVpluginTransparentBool, NULL);
         if (err != NPERR_NO_ERROR) {
-            gLogI.log(instance, kError_ANPLogType, "Error setting transparency.");
+            gLogI.log(kError_ANPLogType, "Error setting transparency.");
         }
 
         mFinishedStageTwo = true;
@@ -350,10 +350,10 @@ void BackgroundPlugin::test_bitmap_transparency(const ANPEvent* evt) {
 
         //check to make sure it is not transparent
         if (evt->data.draw.data.bitmap.format == kRGBA_8888_ANPBitmapFormat) {
-            gLogI.log(instance, kError_ANPLogType, "bitmap default format is transparent");
+            gLogI.log(kError_ANPLogType, "bitmap default format is transparent");
         }
 
-        gLogI.log(instance, kDebug_ANPLogType, "END: testing bitmap transparency");
+        gLogI.log(kDebug_ANPLogType, "END: testing bitmap transparency");
 
         mFinishedStageThree = true;
     }
@@ -366,14 +366,14 @@ void BackgroundPlugin::test_bitmap_transparency(const ANPEvent* evt) {
 void BackgroundPlugin::test_domAccess() {
     NPP instance = this->inst();
 
-    gLogI.log(instance, kDebug_ANPLogType, " ------ %p Testing DOM Access", instance);
+    gLogI.log(kDebug_ANPLogType, " ------ %p Testing DOM Access", instance);
 
     // Get the plugin's DOM object
     NPObject* windowObject = NULL;
     browser->getvalue(instance, NPNVWindowNPObject, &windowObject);
 
     if (!windowObject)
-        gLogI.log(instance, kError_ANPLogType, " ------ %p Unable to retrieve DOM Window", instance);
+        gLogI.log(kError_ANPLogType, " ------ %p Unable to retrieve DOM Window", instance);
 
     // Retrieve a property from the plugin's DOM object
     NPIdentifier topIdentifier = browser->getstringidentifier("top");
@@ -381,7 +381,7 @@ void BackgroundPlugin::test_domAccess() {
     browser->getproperty(instance, windowObject, topIdentifier, &topObjectVariant);
 
     if (topObjectVariant.type != NPVariantType_Object)
-        gLogI.log(instance, kError_ANPLogType, " ------ %p Invalid Variant type for DOM Property: %d,%d", instance, topObjectVariant.type, NPVariantType_Object);
+        gLogI.log(kError_ANPLogType, " ------ %p Invalid Variant type for DOM Property: %d,%d", instance, topObjectVariant.type, NPVariantType_Object);
 }
 
 
@@ -393,14 +393,14 @@ void BackgroundPlugin::test_domAccess() {
 void BackgroundPlugin::test_javascript() {
     NPP instance = this->inst();
 
-    gLogI.log(instance, kDebug_ANPLogType, " ------ %p Testing JavaScript Access", instance);
+    gLogI.log(kDebug_ANPLogType, " ------ %p Testing JavaScript Access", instance);
 
     // Get the plugin's DOM object
     NPObject* windowObject = NULL;
     browser->getvalue(instance, NPNVWindowNPObject, &windowObject);
 
     if (!windowObject)
-        gLogI.log(instance, kError_ANPLogType, " ------ %p Unable to retrieve DOM Window", instance);
+        gLogI.log(kError_ANPLogType, " ------ %p Unable to retrieve DOM Window", instance);
 
     // create a string (JS code) that is stored in memory allocated by the browser
     const char* jsString = "1200 + 34";
@@ -411,13 +411,13 @@ void BackgroundPlugin::test_javascript() {
     NPString script = { (char*)stringMem, strlen(jsString) };
     NPVariant scriptVariant;
     if (!browser->evaluate(instance, windowObject, &script, &scriptVariant))
-        gLogI.log(instance, kError_ANPLogType, " ------ %p Unable to eval the JS.", instance);
+        gLogI.log(kError_ANPLogType, " ------ %p Unable to eval the JS.", instance);
 
     if (scriptVariant.type == NPVariantType_Int32) {
         if (scriptVariant.value.intValue != 1234)
-            gLogI.log(instance, kError_ANPLogType, " ------ %p Invalid Value for JS Return: %d,1234", instance, scriptVariant.value.intValue);
+            gLogI.log(kError_ANPLogType, " ------ %p Invalid Value for JS Return: %d,1234", instance, scriptVariant.value.intValue);
     } else {
-        gLogI.log(instance, kError_ANPLogType, " ------ %p Invalid Variant type for JS Return: %d,%d", instance, scriptVariant.type, NPVariantType_Int32);
+        gLogI.log(kError_ANPLogType, " ------ %p Invalid Variant type for JS Return: %d,%d", instance, scriptVariant.type, NPVariantType_Int32);
     }
 
     // free the memory allocated within the browser
@@ -432,7 +432,7 @@ void BackgroundPlugin::test_loadJavaClass() {
 
     JNIEnv* env = NULL;
     if (gVM->GetEnv((void**) &env, JNI_VERSION_1_4) != JNI_OK) {
-        gLogI.log(inst(), kError_ANPLogType, " ---- LoadJavaTest: failed to get env");
+        gLogI.log(kError_ANPLogType, " ---- LoadJavaTest: failed to get env");
         return;
     }
 
@@ -440,7 +440,7 @@ void BackgroundPlugin::test_loadJavaClass() {
     jclass backgroundClass = gSystemI.loadJavaClass(inst(), className);
 
     if(!backgroundClass) {
-        gLogI.log(inst(), kError_ANPLogType, " ---- LoadJavaTest: failed to load class");
+        gLogI.log(kError_ANPLogType, " ---- LoadJavaTest: failed to load class");
         return;
     }
 
@@ -449,13 +449,13 @@ void BackgroundPlugin::test_loadJavaClass() {
     jobject backgroundObject = env->NewObject(backgroundClass, constructor);
 
     if(!backgroundObject) {
-        gLogI.log(inst(), kError_ANPLogType, " ---- LoadJavaTest: failed to construct object");
+        gLogI.log(kError_ANPLogType, " ---- LoadJavaTest: failed to construct object");
         return;
     }
 
     jint result = env->CallIntMethod(backgroundObject, addMethod, 2, 2);
 
     if (result != 4) {
-        gLogI.log(inst(), kError_ANPLogType, " ---- LoadJavaTest: invalid result (%d != 4)", result);
+        gLogI.log(kError_ANPLogType, " ---- LoadJavaTest: invalid result (%d != 4)", result);
     }
 }
