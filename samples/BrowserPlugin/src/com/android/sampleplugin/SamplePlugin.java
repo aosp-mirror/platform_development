@@ -50,10 +50,14 @@ public class SamplePlugin implements NativePlugin {
 
     private int npp;
     private Context context;
+    
+    private boolean validNPP = false;
+    private Object nppLock = new Object();
 
     public void initializePlugin(int npp, Context context) {
         this.npp = npp;
         this.context = context;
+        this.validNPP = nativeJavaInit(npp);
     }
 
     public SurfaceDrawingModel getEmbeddedSurface() {
@@ -64,6 +68,14 @@ public class SamplePlugin implements NativePlugin {
         return new FullScreenSurface();
     }
 
+    // called by JNI
+    private void invalidateNPP() {
+        synchronized (nppLock) {
+            validNPP = false;
+        }
+    }
+    
+    private native boolean nativeJavaInit(int npp);
     private native void nativeSurfaceCreated(int npp, View surfaceView);
     private native void nativeSurfaceChanged(int npp, int format, int width, int height);
     private native void nativeSurfaceDestroyed(int npp);
@@ -85,15 +97,27 @@ public class SamplePlugin implements NativePlugin {
             view.getHolder().addCallback(new Callback() {
 
                 public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-                    nativeSurfaceChanged(npp, format, width, height);
+                    synchronized (nppLock) {
+                        if (validNPP) {
+                            nativeSurfaceChanged(npp, format, width, height);
+                        }
+                    }
                 }
 
                 public void surfaceCreated(SurfaceHolder holder) {
-                    nativeSurfaceCreated(npp, view);
+                    synchronized (nppLock) {
+                        if (validNPP) {
+                            nativeSurfaceCreated(npp, view);
+                        }
+                    }
                 }
 
                 public void surfaceDestroyed(SurfaceHolder holder) {
-                    nativeSurfaceDestroyed(npp);
+                    synchronized (nppLock) {
+                        if (validNPP) {
+                            nativeSurfaceDestroyed(npp);
+                        }
+                    }
                 }
             });
 

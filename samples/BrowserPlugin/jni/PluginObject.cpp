@@ -45,6 +45,27 @@ int SubPlugin::getPluginHeight() {
     return obj->window->height;
 }
 
+void SurfaceSubPlugin::setJavaInterface(jobject javaInterface) {
+
+    // if one exists then free its reference and notify the object that it is no
+    // longer attached to the native instance
+    JNIEnv* env = NULL;
+    if (m_javaInterface && gVM->GetEnv((void**) &env, JNI_VERSION_1_4) == JNI_OK) {
+
+        // detach the native code from the object
+        jclass javaClass = env->GetObjectClass(m_javaInterface);
+        jmethodID invalMethod = env->GetMethodID(javaClass, "invalidateNPP", "()V");
+        env->CallVoidMethod(m_javaInterface, invalMethod);
+
+        // delete the reference
+        env->DeleteGlobalRef(m_javaInterface);
+        m_javaInterface = NULL;
+    }
+
+    //set the value
+    m_javaInterface = javaInterface;
+}
+
 static void pluginInvalidate(NPObject *obj);
 static bool pluginHasProperty(NPObject *obj, NPIdentifier name);
 static bool pluginHasMethod(NPObject *obj, NPIdentifier name);
