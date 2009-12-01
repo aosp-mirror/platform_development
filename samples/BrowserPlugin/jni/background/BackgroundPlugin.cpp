@@ -40,6 +40,7 @@ extern ANPPaintInterfaceV0     gPaintI;
 extern ANPSurfaceInterfaceV0   gSurfaceI;
 extern ANPSystemInterfaceV0    gSystemI;
 extern ANPTypefaceInterfaceV0  gTypefaceI;
+extern ANPWindowInterfaceV0    gWindowI;
 
 #define ARRAY_COUNT(array)      (sizeof(array) / sizeof(array[0]))
 
@@ -52,6 +53,9 @@ static uint32_t getMSecs() {
 ///////////////////////////////////////////////////////////////////////////////
 
 BackgroundPlugin::BackgroundPlugin(NPP inst) : SurfaceSubPlugin(inst) {
+
+    // initialize the java interface
+    m_javaInterface = NULL;
 
     // initialize the drawing surface
     m_surface = NULL;
@@ -71,6 +75,7 @@ BackgroundPlugin::BackgroundPlugin(NPP inst) : SurfaceSubPlugin(inst) {
 }
 
 BackgroundPlugin::~BackgroundPlugin() {
+    setJavaInterface(NULL);
     surfaceDestroyed();
 }
 

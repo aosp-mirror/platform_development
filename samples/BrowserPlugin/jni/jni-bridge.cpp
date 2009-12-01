@@ -33,6 +33,18 @@ static SurfaceSubPlugin* getPluginObject(int npp) {
     return NULL;
 }
 
+static jboolean javaInit(JNIEnv* env, jobject thiz, jint npp) {
+    SurfaceSubPlugin* obj = getPluginObject(npp);
+
+    if (obj) {
+        jobject globalObject = env->NewGlobalRef(thiz);
+        obj->setJavaInterface(globalObject);
+        return true;
+    } else {
+        return false;
+    }
+}
+
 static void surfaceCreated(JNIEnv* env, jobject thiz, jint npp, jobject surface) {
     SurfaceSubPlugin* obj = getPluginObject(npp);
     jobject globalSurface = env->NewGlobalRef(surface);
@@ -70,6 +82,7 @@ static jboolean isFixedSurface(JNIEnv* env, jobject thiz, jint npp) {
  * JNI registration.
  */
 static JNINativeMethod gJavaSamplePluginMethods[] = {
+    { "nativeJavaInit", "(I)Z", (void*) javaInit },
     { "nativeSurfaceCreated", "(ILandroid/view/View;)V", (void*) surfaceCreated },
     { "nativeSurfaceChanged", "(IIII)V", (void*) surfaceChanged },
     { "nativeSurfaceDestroyed", "(I)V", (void*) surfaceDestroyed },

@@ -45,6 +45,9 @@ extern ANPWindowInterfaceV0    gWindowI;
 
 VideoPlugin::VideoPlugin(NPP inst) : SurfaceSubPlugin(inst) {
 
+    // initialize the java interface
+    m_javaInterface = NULL;
+
     // initialize the drawing surface
     m_surface = NULL;
 
@@ -57,6 +60,7 @@ VideoPlugin::VideoPlugin(NPP inst) : SurfaceSubPlugin(inst) {
 }
 
 VideoPlugin::~VideoPlugin() {
+    setJavaInterface(NULL);
     surfaceDestroyed();
 }
 
