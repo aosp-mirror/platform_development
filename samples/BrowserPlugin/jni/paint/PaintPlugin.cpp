@@ -50,6 +50,9 @@ PaintPlugin::PaintPlugin(NPP inst) : SurfaceSubPlugin(inst) {
     memset(&m_colorToggle, 0, sizeof(m_colorToggle));
     memset(&m_clearSurface,  0, sizeof(m_clearSurface));
 
+    // initialize the java interface
+    m_javaInterface = NULL;
+
     // initialize the drawing surface
     m_surface = NULL;
 
@@ -85,6 +88,7 @@ PaintPlugin::~PaintPlugin() {
     gPathI.deletePath(m_touchPath);
     gPaintI.deletePaint(m_paintSurface);
     gPaintI.deletePaint(m_paintButton);
+    setJavaInterface(NULL);
     surfaceDestroyed();
 }
 

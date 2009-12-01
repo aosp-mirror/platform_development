@@ -61,6 +61,10 @@ public:
     virtual void surfaceCreated(jobject) = 0;
     virtual void surfaceChanged(int format, int width, int height) = 0;
     virtual void surfaceDestroyed() = 0;
+
+    void setJavaInterface(jobject);
+
+    jobject m_javaInterface;
 };
 
 enum PluginTypes {
