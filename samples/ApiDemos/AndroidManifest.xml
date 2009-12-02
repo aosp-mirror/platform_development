@@ -249,6 +249,15 @@
             </intent-filter>
         </activity>
 
+        <service android:name=".app.ForegroundService" />
+        
+        <activity android:name=".app.ForegroundServiceController" android:label="@string/activity_foreground_service_controller">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
         <!-- Alarm Samples -->
 
         <receiver android:name=".app.OneShotAlarm" android:process=":remote" />
