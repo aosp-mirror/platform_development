@@ -139,6 +139,15 @@
     <string name="service_created">Service created.</string>
     <string name="service_destroyed">Service destroyed.</string>
     
+    <string name="foreground_service_started">Service is in the foreground</string>
+    <string name="foreground_service_label">Sample Foreground Service</string>
+
+    <string name="activity_foreground_service_controller">App/Service/Foreground Service Controller</string>
+    <string name="foreground_service_controller">This demonstrates how you can
+            implement services that run in the foreground when needed.</string>
+    <string name="start_service_foreground">Start Service Foreground</string>
+    <string name="start_service_background">Start Service Background</string>
+
     <string name="one_shot_received">The one-shot alarm has gone off</string>
     <string name="repeating_received">The repeating alarm has gone off</string>
 
