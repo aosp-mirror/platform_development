@@ -1,0 +1,128 @@
+#!/usr/bin/env python
+#
+# Copyright (C) 2008 The Android Open Source Project
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+"""
+A faux Setup Wizard.  Stuffs one or two usernames + passwords into the
+database on the device.
+"""
+
+import sys
+if sys.hexversion < 0x02040000:
+  print "This script requires python 2.4 or higher."
+  sys.exit(1)
+
+import getpass
+import subprocess
+import time
+import sha
+
+DB = "/data/data/com.google.android.googleapps/databases/accounts.db"
+
+def RunCmd(args):
+  proc = subprocess.Popen(args, stdout=subprocess.PIPE)
+  out = proc.stdout.read()
+  if proc.wait():
+    print
+    print "failed: %s" % " ".join(args)
+    return None
+  return out
+
+def GetProp(adb_flags, name):
+  args = ("adb",) + adb_flags + ("shell", "/system/bin/getprop", name)
+  return RunCmd(args)
+
+def SetProp(adb_flags, name, value):
+  args = ("adb",) + adb_flags + ("shell", "/system/bin/setprop", name, value)
+  return RunCmd(args)
+
+def DbExists(adb_flags):
+  args = ("adb",) + adb_flags + ("shell", "/system/bin/ls", DB)
+  result = RunCmd(args)
+  if result is None: return None
+  return "No such file" not in result
+
+def main(argv):
+  if len(argv) == 1:
+    print ("usage: %s [adb flags] "
+           "[<hosted address[:password]>] "
+           "[<gmail address[:password]>]") % (argv[0],)
+    sys.exit(2)
+
+  argv = argv[1:]
+
+  gmail = None
+  hosted = None
+  while argv and "@" in argv[-1]:
+    addr = argv.pop()
+    if "@gmail.com" in addr or "@googlemail.com" in addr:
+      gmail = addr
+    else:
+      hosted = addr
+
+  adb_flags = tuple(argv)
+
+  while True:
+    db = DbExists(adb_flags)
+    if db is None:
+      print "failed to contact device; will retry in 3 seconds"
+      time.sleep(3)
+      continue
+
+    if db:
+      print
+      print "GoogleLoginService has already started on this device;"
+      print "it's too late to use this script to add accounts."
+      print
+      print "This script only works on a freshly-wiped device (or "
+      print "emulator) while booting for the first time."
+      print
+      break
+
+    hosted_account = GetProp(adb_flags, "ro.config.hosted_account").strip()
+    google_account = GetProp(adb_flags, "ro.config.google_account").strip()
+
+    if hosted and hosted_account:
+      print
+      print "A hosted account is already configured on this device;"
+      print "can't add", hosted_account
+      print
+      hosted = None
+
+    if gmail and google_account:
+      print
+      print "A google account is already configured on this device;"
+      print "can't add", google_account
+      print
+      gmail = None
+
+    if not gmail and not hosted: break
+
+    if hosted:
+      SetProp(adb_flags, "ro.config.hosted_account", hosted)
+      print "set hosted_account to", hosted
+    if gmail:
+      SetProp(adb_flags, "ro.config.google_account", gmail)
+      print "set google_account to", gmail
+
+    break
+
+
+
+
+
+
+if __name__ == "__main__":
+  main(sys.argv)
