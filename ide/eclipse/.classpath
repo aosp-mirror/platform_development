@@ -106,10 +106,11 @@
 	<classpathentry kind="src" path="out/target/common/R"/>
 	<classpathentry kind="src" path="external/tagsoup/src"/>
 	<classpathentry kind="src" path="external/protobuf/src"/>
-	<classpathentry kind="src" path="external/gdata/src"/>
 	<classpathentry kind="src" path="external/apache-http/src"/>
+	<classpathentry kind="lib" path="out/target/common/obj/JAVA_LIBRARIES/google-common_intermediates/javalib.jar"/>
 	<classpathentry kind="lib" path="out/target/common/obj/JAVA_LIBRARIES/google-framework_intermediates/javalib.jar"/>
 	<classpathentry kind="lib" path="out/target/common/obj/JAVA_LIBRARIES/googlelogin-client_intermediates/javalib.jar"/>
+	<classpathentry kind="lib" path="out/target/common/obj/JAVA_LIBRARIES/gsf-client_intermediates/javalib.jar"/>
 	<classpathentry kind="lib" path="packages/apps/Calculator/arity-1.3.3.jar"/>
 	<classpathentry kind="output" path="out/target/common/obj/JAVA_LIBRARIES/android_stubs_current_intermediates/classes"/>
 </classpath>
