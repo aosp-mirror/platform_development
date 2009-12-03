@@ -19,9 +19,9 @@
 #
 
 # version files for the SDK updater, from sdk.git
-sdk/files/doc_source.properties docs/source.properties
+development/sdk/doc_source.properties docs/source.properties
+development/sdk/platform_source.properties platforms/${PLATFORM_NAME}/source.properties
 sdk/files/tools_source.properties tools/source.properties
-sdk/files/platform_source.properties platforms/${PLATFORM_NAME}/source.properties
 
 # host tools from out/host/$(HOST_OS)-$(HOST_ARCH)/
 bin/aapt platforms/${PLATFORM_NAME}/tools/aapt
