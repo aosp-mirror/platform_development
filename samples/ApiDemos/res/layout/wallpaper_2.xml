@@ -15,13 +15,13 @@
             android:id="@+id/randomize"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Randomize"
+            android:text="@string/randomize"
             android:layout_gravity="bottom" />
         <Button
             android:id="@+id/setwallpaper"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Set Wallpaper"
+            android:text="@string/set_wallpaper"
             android:layout_gravity="bottom" />
     </LinearLayout>
 </FrameLayout>
