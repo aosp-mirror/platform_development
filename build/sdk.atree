@@ -73,7 +73,7 @@ sdk/files/android.el tools/lib/android.el
 
 # samples
 development/apps/GestureBuilder platforms/${PLATFORM_NAME}/samples/GestureBuilder
-development/samples/HelloActivity platforms/${PLATFORM_NAME}/samples/HelloActivity
+development/samples/BluetoothChat platforms/${PLATFORM_NAME}/samples/BluetoothChat
 development/samples/Home platforms/${PLATFORM_NAME}/samples/Home
 development/samples/LunarLander platforms/${PLATFORM_NAME}/samples/LunarLander
 development/samples/NotePad platforms/${PLATFORM_NAME}/samples/NotePad
