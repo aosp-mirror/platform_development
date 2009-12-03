@@ -40,7 +40,8 @@
 
     <string name="activity_wallpaper">App/Activity/Wallpaper</string>
     <string name="activity_setwallpaper">App/Activity/SetWallpaper</string>
-    
+    <string name="randomize">Randomize</string>
+    <string name="set_wallpaper">Set Wallpaper</string>
     <string name="activity_translucent">App/Activity/Translucent</string>
     <string name="translucent_background">Example of how you can make an
             activity have a translucent background, compositing over
