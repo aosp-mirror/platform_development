@@ -19,9 +19,9 @@
 #
 
 # version files for the SDK updater, from sdk.git
-sdk/scripts/doc_source.properties docs/source.properties
-sdk/scripts/tools_source.properties tools/source.properties
-sdk/scripts/platform_source.properties platforms/${PLATFORM_NAME}/source.properties
+sdk/files/doc_source.properties docs/source.properties
+sdk/files/tools_source.properties tools/source.properties
+sdk/files/platform_source.properties platforms/${PLATFORM_NAME}/source.properties
 
 # host tools from out/host/$(HOST_OS)-$(HOST_ARCH)/
 bin/aapt platforms/${PLATFORM_NAME}/tools/aapt
@@ -46,28 +46,30 @@ framework/osgi.jar tools/lib/osgi.jar
 sdk/sdk-build.prop platforms/${PLATFORM_NAME}/build.prop
 
 # copy plugin.prop from sdk.git
-sdk/scripts/plugin.prop tools/lib/plugin.prop
+sdk/files/plugin.prop tools/lib/plugin.prop
 
 # the aidl precompiled include
 obj/framework.aidl platforms/${PLATFORM_NAME}/framework.aidl
 
-# sdk.git scripts
-sdk/scripts/AndroidManifest.template platforms/${PLATFORM_NAME}/templates/AndroidManifest.template
-sdk/scripts/AndroidManifest.tests.template platforms/${PLATFORM_NAME}/templates/AndroidManifest.tests.template
-sdk/scripts/java_file.template platforms/${PLATFORM_NAME}/templates/java_file.template
-sdk/scripts/java_tests_file.template platforms/${PLATFORM_NAME}/templates/java_tests_file.template
-sdk/scripts/layout.template platforms/${PLATFORM_NAME}/templates/layout.template
-sdk/scripts/strings.template platforms/${PLATFORM_NAME}/templates/strings.template
-sdk/scripts/android_rules.xml platforms/${PLATFORM_NAME}/templates/android_rules.xml
-sdk/scripts/android_test_rules.xml platforms/${PLATFORM_NAME}/templates/android_test_rules.xml
-sdk/scripts/icon_ldpi.png platforms/${PLATFORM_NAME}/templates/icon_ldpi.png
-sdk/scripts/icon_mdpi.png platforms/${PLATFORM_NAME}/templates/icon_mdpi.png
-sdk/scripts/icon_hdpi.png platforms/${PLATFORM_NAME}/templates/icon_hdpi.png
-sdk/scripts/build.template tools/lib/build.template
-sdk/scripts/devices.xml tools/lib/devices.xml
+# sdk.git Ant templates
+sdk/templates/AndroidManifest.template platforms/${PLATFORM_NAME}/templates/AndroidManifest.template
+sdk/templates/AndroidManifest.tests.template platforms/${PLATFORM_NAME}/templates/AndroidManifest.tests.template
+sdk/templates/java_file.template platforms/${PLATFORM_NAME}/templates/java_file.template
+sdk/templates/java_tests_file.template platforms/${PLATFORM_NAME}/templates/java_tests_file.template
+sdk/templates/layout.template platforms/${PLATFORM_NAME}/templates/layout.template
+sdk/templates/strings.template platforms/${PLATFORM_NAME}/templates/strings.template
+sdk/templates/build.template tools/lib/build.template
+sdk/templates/icon_ldpi.png platforms/${PLATFORM_NAME}/templates/icon_ldpi.png
+sdk/templates/icon_mdpi.png platforms/${PLATFORM_NAME}/templates/icon_mdpi.png
+sdk/templates/icon_hdpi.png platforms/${PLATFORM_NAME}/templates/icon_hdpi.png
+
+# sdk.git files
+sdk/files/android_rules.xml platforms/${PLATFORM_NAME}/templates/android_rules.xml
+sdk/files/android_test_rules.xml platforms/${PLATFORM_NAME}/templates/android_test_rules.xml
+sdk/files/devices.xml tools/lib/devices.xml
 
 # emacs support from sdk.git
-sdk/scripts/android.el tools/lib/android.el
+sdk/files/android.el tools/lib/android.el
 
 # samples
 development/apps/GestureBuilder platforms/${PLATFORM_NAME}/samples/GestureBuilder
@@ -168,11 +170,11 @@ sdk/emulator/skins/WVGA800   platforms/${PLATFORM_NAME}/skins/WVGA800
 sdk/emulator/skins/WVGA854   platforms/${PLATFORM_NAME}/skins/WVGA854
 
 # NOTICE files are copied by build/core/Makefile from sdk.git
-sdk/scripts/sdk_files_NOTICE.txt platforms/${PLATFORM_NAME}/templates/NOTICE.txt
-sdk/scripts/sdk_files_NOTICE.txt platforms/${PLATFORM_NAME}/samples/NOTICE.txt
-sdk/scripts/sdk_files_NOTICE.txt platforms/${PLATFORM_NAME}/data/NOTICE.txt
-sdk/scripts/sdk_files_NOTICE.txt platforms/${PLATFORM_NAME}/skins/NOTICE.txt
-sdk/scripts/sdk_files_NOTICE.txt platforms/${PLATFORM_NAME}/tools/NOTICE.txt
+sdk/files/sdk_files_NOTICE.txt platforms/${PLATFORM_NAME}/templates/NOTICE.txt
+sdk/files/sdk_files_NOTICE.txt platforms/${PLATFORM_NAME}/samples/NOTICE.txt
+sdk/files/sdk_files_NOTICE.txt platforms/${PLATFORM_NAME}/data/NOTICE.txt
+sdk/files/sdk_files_NOTICE.txt platforms/${PLATFORM_NAME}/skins/NOTICE.txt
+sdk/files/sdk_files_NOTICE.txt platforms/${PLATFORM_NAME}/tools/NOTICE.txt
 
 # the readme
 development/docs/SDK_RELEASE_NOTES RELEASE_NOTES.html
@@ -206,4 +208,4 @@ frameworks/base/data/fonts/DroidSansFallback.ttf     platforms/${PLATFORM_NAME}/
 frameworks/base/data/fonts/DroidSansJapanese.ttf     platforms/${PLATFORM_NAME}/data/fonts/DroidSansJapanese.ttf
 
 # empty add-on folder with just a readme copied from sdk.git
-sdk/scripts/README_add-ons.txt add-ons/README.txt
+sdk/files/README_add-ons.txt add-ons/README.txt
