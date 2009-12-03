@@ -543,6 +543,15 @@
             </intent-filter>
         </activity>
 
+        <!-- Text-To-Speech Samples -->
+
+        <activity android:name=".app.TextToSpeechActivity" android:label="@string/text_to_speech">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
         <!-- ************************************* -->
         <!--        CONTENT PACKAGE SAMPLES        -->
         <!-- ************************************* -->
