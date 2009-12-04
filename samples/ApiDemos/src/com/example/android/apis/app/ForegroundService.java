@@ -16,13 +16,18 @@
 
 package com.example.android.apis.app;
 
+import android.app.Activity;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
+import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.Button;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -43,6 +48,7 @@ public class ForegroundService extends Service {
     static final String ACTION_FOREGROUND = "com.example.android.apis.FOREGROUND";
     static final String ACTION_BACKGROUND = "com.example.android.apis.BACKGROUND";
     
+ // BEGIN_INCLUDE(foreground_compatibility)
     private static final Class[] mStartForegroundSignature = new Class[] {
         int.class, Notification.class};
     private static final Class[] mStopForegroundSignature = new Class[] {
@@ -53,60 +59,6 @@ public class ForegroundService extends Service {
     private Method mStopForeground;
     private Object[] mStartForegroundArgs = new Object[2];
     private Object[] mStopForegroundArgs = new Object[1];
-    
-    @Override
-    public void onCreate() {
-        mNM = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
-        try {
-            mStartForeground = getClass().getMethod("startForeground",
-                    mStartForegroundSignature);
-            mStopForeground = getClass().getMethod("stopForeground",
-                    mStopForegroundSignature);
-        } catch (NoSuchMethodException e) {
-            // Running on an older platform.
-            mStartForeground = mStopForeground = null;
-        }
-    }
-
-    // This is the old onStart method that will be called on the pre-2.0
-    // platform.  On 2.0 or later we override onStartCommand() so this
-    // method will not be called.
-    @Override
-    public void onStart(Intent intent, int startId) {
-        handleCommand(intent);
-    }
-
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        handleCommand(intent);
-        // We want this service to continue running until it is explicitly
-        // stopped, so return sticky.
-        return START_STICKY;
-    }
-
-    void handleCommand(Intent intent) {
-        if (ACTION_FOREGROUND.equals(intent.getAction())) {
-            // In this sample, we'll use the same text for the ticker and the expanded notification
-            CharSequence text = getText(R.string.foreground_service_started);
-
-            // Set the icon, scrolling text and timestamp
-            Notification notification = new Notification(R.drawable.stat_sample, text,
-                    System.currentTimeMillis());
-
-            // The PendingIntent to launch our activity if the user selects this notification
-            PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
-                    new Intent(this, ForegroundServiceController.class), 0);
-
-            // Set the info for the views that show in the notification panel.
-            notification.setLatestEventInfo(this, getText(R.string.local_service_label),
-                           text, contentIntent);
-            
-            startForegroundCompat(R.string.foreground_service_started, notification);
-            
-        } else if (ACTION_BACKGROUND.equals(intent.getAction())) {
-            stopForegroundCompat(R.string.foreground_service_started);
-        }
-    }
     
     /**
      * This is a wrapper around the new startForeground method, using the older
@@ -161,13 +113,118 @@ public class ForegroundService extends Service {
     }
     
     @Override
+    public void onCreate() {
+        mNM = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
+        try {
+            mStartForeground = getClass().getMethod("startForeground",
+                    mStartForegroundSignature);
+            mStopForeground = getClass().getMethod("stopForeground",
+                    mStopForegroundSignature);
+        } catch (NoSuchMethodException e) {
+            // Running on an older platform.
+            mStartForeground = mStopForeground = null;
+        }
+    }
+
+    @Override
     public void onDestroy() {
         // Make sure our notification is gone.
         stopForegroundCompat(R.string.foreground_service_started);
     }
+// END_INCLUDE(foreground_compatibility)
 
+// BEGIN_INCLUDE(start_compatibility)
+    // This is the old onStart method that will be called on the pre-2.0
+    // platform.  On 2.0 or later we override onStartCommand() so this
+    // method will not be called.
+    @Override
+    public void onStart(Intent intent, int startId) {
+        handleCommand(intent);
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        handleCommand(intent);
+        // We want this service to continue running until it is explicitly
+        // stopped, so return sticky.
+        return START_STICKY;
+    }
+// END_INCLUDE(start_compatibility)
+
+    void handleCommand(Intent intent) {
+        if (ACTION_FOREGROUND.equals(intent.getAction())) {
+            // In this sample, we'll use the same text for the ticker and the expanded notification
+            CharSequence text = getText(R.string.foreground_service_started);
+
+            // Set the icon, scrolling text and timestamp
+            Notification notification = new Notification(R.drawable.stat_sample, text,
+                    System.currentTimeMillis());
+
+            // The PendingIntent to launch our activity if the user selects this notification
+            PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
+                    new Intent(this, Controller.class), 0);
+
+            // Set the info for the views that show in the notification panel.
+            notification.setLatestEventInfo(this, getText(R.string.local_service_label),
+                           text, contentIntent);
+            
+            startForegroundCompat(R.string.foreground_service_started, notification);
+            
+        } else if (ACTION_BACKGROUND.equals(intent.getAction())) {
+            stopForegroundCompat(R.string.foreground_service_started);
+        }
+    }
+    
     @Override
     public IBinder onBind(Intent intent) {
         return null;
+    }
+    
+    // ----------------------------------------------------------------------
+
+    /**
+     * <p>Example of explicitly starting and stopping the {@link ForegroundService}.
+     * 
+     * <p>Note that this is implemented as an inner class only keep the sample
+     * all together; typically this code would appear in some separate class.
+     */
+    public static class Controller extends Activity {
+        @Override
+        protected void onCreate(Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+
+            setContentView(R.layout.foreground_service_controller);
+
+            // Watch for button clicks.
+            Button button = (Button)findViewById(R.id.start_foreground);
+            button.setOnClickListener(mForegroundListener);
+            button = (Button)findViewById(R.id.start_background);
+            button.setOnClickListener(mBackgroundListener);
+            button = (Button)findViewById(R.id.stop);
+            button.setOnClickListener(mStopListener);
+        }
+
+        private OnClickListener mForegroundListener = new OnClickListener() {
+            public void onClick(View v) {
+                Intent intent = new Intent(ForegroundService.ACTION_FOREGROUND);
+                intent.setClass(Controller.this, ForegroundService.class);
+                startService(intent);
+            }
+        };
+
+        private OnClickListener mBackgroundListener = new OnClickListener() {
+            public void onClick(View v) {
+                Intent intent = new Intent(ForegroundService.ACTION_BACKGROUND);
+                intent.setClass(Controller.this, ForegroundService.class);
+                startService(intent);
+            }
+        };
+
+        private OnClickListener mStopListener = new OnClickListener() {
+            public void onClick(View v) {
+                stopService(new Intent(Controller.this,
+                        ForegroundService.class));
+            }
+        };
     }
 }
