@@ -212,10 +212,35 @@ if [ "$A_MD5" != "bf072e9119077b4e76437a93986787ef" ] ; then
     exit 2
 fi
 
+# Find if a given shell program is available.
+# We need to take care of the fact that the 'which <foo>' command
+# may return either an empty string (Linux) or something like
+# "no <foo> in ..." (Darwin). Also, we need to redirect stderr
+# to /dev/null for Cygwin
+#
+# $1: variable name
+# $2: program name
+#
+# Result: set $1 to the full path of the corresponding command
+#         or to the empty/undefined string if not available
+#
+find_program ()
+{
+    local PROG
+    PROG=`which $2 2>/dev/null`
+    if [ -n "$PROG" ] ; then
+        echo "$PROG" | grep -q -e '^no '
+        if [ $? = 0 ] ; then
+            PROG=
+        fi
+    fi
+    eval $1="$PROG"
+}
+
 # And wget too
-WGET=`which wget`
-CURL=`which curl`
-SCP=`which scp`
+find_program WGET wget
+find_program CURL curl
+find_program SCP scp
 
 # download a file with either 'curl', 'wget' or 'scp'
 # $1: source
