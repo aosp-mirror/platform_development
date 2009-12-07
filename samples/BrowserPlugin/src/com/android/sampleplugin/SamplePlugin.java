@@ -35,6 +35,7 @@ import android.view.View;
 import android.view.WindowManager;
 import android.view.SurfaceHolder.Callback;
 import android.view.ViewGroup.LayoutParams;
+import android.webkit.plugin.FullScreenDrawingModel;
 import android.webkit.plugin.NativePlugin;
 import android.webkit.plugin.SurfaceDrawingModel;
 import android.widget.FrameLayout;
@@ -51,6 +52,9 @@ public class SamplePlugin implements NativePlugin {
     private int npp;
     private Context context;
     
+    private SurfaceDrawingModel embeddedSurface;
+    private FullScreenDrawingModel fullScreenSurface;
+    
     private boolean validNPP = false;
     private Object nppLock = new Object();
 
@@ -61,11 +65,17 @@ public class SamplePlugin implements NativePlugin {
     }
 
     public SurfaceDrawingModel getEmbeddedSurface() {
-        return new EmbeddedSurface();
+        if (embeddedSurface == null) {
+            embeddedSurface = new EmbeddedSurface();
+        }
+        return embeddedSurface;
     }
 
-    public SurfaceDrawingModel getFullScreenSurface() {
-        return new FullScreenSurface();
+    public FullScreenDrawingModel getFullScreenSurface() {
+        if (fullScreenSurface == null) {
+            fullScreenSurface = new FullScreenSurface();
+        }
+        return fullScreenSurface;
     }
 
     // called by JNI
@@ -127,12 +137,15 @@ public class SamplePlugin implements NativePlugin {
                 int height = nativeGetSurfaceHeight(npp);
                 view.getHolder().setFixedSize(width, height);
             }
-
+            
+            // ensure that the view system is aware that we will be drawing
+            view.setWillNotDraw(false);
+            
             return view;
         }
     }
 
-    private class FullScreenSurface implements SurfaceDrawingModel {
+    private class FullScreenSurface implements FullScreenDrawingModel {
 
         public View getSurface() {
             /* TODO make this aware of the plugin instance and get the video file
@@ -168,7 +181,12 @@ public class SamplePlugin implements NativePlugin {
             video.setMediaController(new MediaController(context));
             video.requestFocus();
 
+            // ensure that the view system is aware that we will be drawing
+            layout.setWillNotDraw(false);
+            
             return layout;
         }
+
+        public void onSurfaceRemoved() { }
     }
 }
