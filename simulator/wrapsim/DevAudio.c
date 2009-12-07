@@ -83,7 +83,7 @@ static ssize_t writeAudio(FakeDev* dev, int fd, const void* buf, size_t count)
         return _ws_write(state->fd, buf, count);
 
     // fake timing
-    usleep(count * 10000 / 441 * 4);
+    usleep(count * 10000 / (441 * 4));
     return count;
 #endif
 }
