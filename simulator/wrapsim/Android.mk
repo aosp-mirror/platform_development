@@ -25,8 +25,6 @@ LOCAL_SRC_FILES := \
 	SysPower.c \
 	Util.c
 
-LOCAL_C_INCLUDES += prebuilt/common/esd
-
 LOCAL_MODULE := libwrapsim
 
 # Relying on other Android libraries is probably a bad idea, since any
@@ -36,7 +34,7 @@ LOCAL_LDLIBS += -lpthread -ldl
 ifeq ($(BUILD_SIM_WITHOUT_AUDIO),true)
 LOCAL_CFLAGS += -DBUILD_SIM_WITHOUT_AUDIO=1
 else
-LOCAL_LDLIBS += -lesd
+LOCAL_LDLIBS += -lasound
 endif
 
 include $(BUILD_SHARED_LIBRARY)

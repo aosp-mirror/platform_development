@@ -19,3 +19,6 @@ To debug wrapsim, set WRAPSIM_LOG to a log file before launching, e.g.
 For more verbose logging, you can enable the verbose forms of CALLTRACE
 and CALLTRACEV in Intercept.c.
 
+To build, you will need to have the 32-bit libaudio2 development package
+installed. On Ubuntu Hardy, do something like:
+% sudo apt-get install lib32asound2-dev
