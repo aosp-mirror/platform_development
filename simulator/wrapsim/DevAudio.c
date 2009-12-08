@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <esd.h>
+#include <alsa/asoundlib.h>
 
 #include <fcntl.h>
 #include <sys/ioctl.h>
@@ -19,10 +19,7 @@
  * Input event device state.
  */
 typedef struct AudioState {
-    int fd;
-    int sourceId;
-    int esdVol;
-    int streamType;
+    snd_pcm_t *handle;
 } AudioState;
 
 /*
@@ -33,45 +30,31 @@ static int configureInitialState(const char* pathName, AudioState* audioState)
 #if BUILD_SIM_WITHOUT_AUDIO
     return 0;
 #else
-    esd_player_info_t *pi; 
-    audioState->fd = -1;
-    audioState->sourceId = -1;
-    audioState->esdVol = -1;
-    audioState->streamType = 0;
+    audioState->handle = NULL;
 
-    int format = ESD_BITS16 | ESD_STEREO | ESD_STREAM | ESD_PLAY;
-    char namestring[] = "Android Audio XXXXXXXX";
-    sprintf(namestring,"Android Audio %08x", (unsigned int)audioState);
-    int esd_fd = esd_play_stream_fallback(format, 44100, NULL, namestring);
-    if (esd_fd > 0) {
-        // find the source_id for this stream
-        int mix = esd_open_sound(NULL);
-        if (mix > 0) {
-            esd_info_t *info = esd_get_all_info(mix);
+    snd_pcm_open(&audioState->handle, "default", SND_PCM_STREAM_PLAYBACK, 0);
 
-            if (info) {
-                for(pi = info->player_list; pi; pi = pi->next) {
-                    if(strcmp(pi->name, namestring) == 0) {
-                        audioState->sourceId = pi->source_id;
-                        break;
-                    }
-                }
-                esd_free_all_info(info);
-            }
-            esd_close(mix);
-        }
-        audioState->fd = esd_fd;
-        return 0;
+    if (audioState->handle) {
+        snd_pcm_hw_params_t *params;
+        snd_pcm_hw_params_malloc(&params);
+        snd_pcm_hw_params_any(audioState->handle, params);
+        snd_pcm_hw_params_set_access(audioState->handle, params, SND_PCM_ACCESS_RW_INTERLEAVED);
+        snd_pcm_hw_params_set_format(audioState->handle, params, SND_PCM_FORMAT_S16_LE);
+        unsigned int rate = 44100;
+        snd_pcm_hw_params_set_rate_near(audioState->handle, params, &rate, NULL);
+        snd_pcm_hw_params_set_channels(audioState->handle, params, 2);
+        snd_pcm_hw_params(audioState->handle, params);
+        snd_pcm_hw_params_free(params);
+    } else {
+        wsLog("Couldn't open audio hardware, faking it\n");
     }
-    printf("Couldn't open audio device. Faking it.\n");
+
     return 0;
 #endif
 }
 
 /*
- * Return the next available input event.
- *
- * We just pass this through to the real "write", since "fd" is real.
+ * Write audio data.
  */
 static ssize_t writeAudio(FakeDev* dev, int fd, const void* buf, size_t count)
 {
@@ -79,8 +62,10 @@ static ssize_t writeAudio(FakeDev* dev, int fd, const void* buf, size_t count)
     return 0;
 #else
     AudioState *state = (AudioState*)dev->state;
-    if (state->fd >= 0)
-        return _ws_write(state->fd, buf, count);
+    if (state->handle != NULL) {
+        snd_pcm_writei(state->handle, buf, count / 4);
+        return count;
+    }
 
     // fake timing
     usleep(count * 10000 / (441 * 4));
@@ -105,7 +90,7 @@ static int closeAudio(FakeDev* dev, int fd)
     return 0;
 #else
     AudioState *state = (AudioState*)dev->state;
-    close(state->fd);
+    snd_pcm_close(state->handle);
     free(state);
     dev->state = NULL;
     return 0;
