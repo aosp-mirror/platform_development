@@ -57,7 +57,7 @@ public class BluetoothChatService {
     private int mState;
 
     // Constants that indicate the current connection state
-    public static final int STATE_NONE = 0;       // we're doing nothing. only valid during setup/shutdown
+    public static final int STATE_NONE = 0;       // we're doing nothing
     public static final int STATE_LISTEN = 1;     // now listening for incoming connections
     public static final int STATE_CONNECTING = 2; // now initiating an outgoing connection
     public static final int STATE_CONNECTED = 3;  // now connected to a remote device
@@ -397,10 +397,8 @@ public class BluetoothChatService {
                     bytes = mmInStream.read(buffer);
 
                     // Send the obtained bytes to the UI Activity
-                    mHandler.obtainMessage(BluetoothChat.MESSAGE_READ, bytes, -1, buffer).sendToTarget();
-
-                    // Reload the buffer to clear extra bytes from the previous read
-                    buffer = new byte[1024];
+                    mHandler.obtainMessage(BluetoothChat.MESSAGE_READ, bytes, -1, buffer)
+                            .sendToTarget();
                 } catch (IOException e) {
                     Log.e(TAG, "disconnected", e);
                     connectionLost();
@@ -411,18 +409,15 @@ public class BluetoothChatService {
 
         /**
          * Write to the connected OutStream.
-         * @param b  The bytes to write
+         * @param buffer  The bytes to write
          */
-        public void write(byte[] b) {
+        public void write(byte[] buffer) {
             try {
-                mmOutStream.write(b);
+                mmOutStream.write(buffer);
 
                 // Share the sent message back to the UI Activity
-                Message msg = mHandler.obtainMessage(BluetoothChat.MESSAGE_OUTGOING_STRING);
-                Bundle bundle = new Bundle();
-                bundle.putByteArray(BluetoothChat.MESSAGE_WRITE, b);
-                msg.setData(bundle);
-                mHandler.sendMessage(msg);
+                mHandler.obtainMessage(BluetoothChat.MESSAGE_WRITE, -1, -1, buffer)
+                        .sendToTarget();
             } catch (IOException e) {
                 Log.e(TAG, "Exception during write", e);
             }
