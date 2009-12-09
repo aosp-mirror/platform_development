@@ -1407,6 +1407,15 @@
             </intent-filter>
         </activity>
         
+        <activity android:name=".graphics.MatrixPaletteActivity"
+                android:label="Graphics/OpenGL ES/Matrix Palette Skinning"
+                android:configChanges="orientation|keyboardHidden">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+        
         <activity android:name=".graphics.TranslucentGLSurfaceViewActivity"
                 android:label="Graphics/OpenGL ES/Translucent GLSurfaceView"
                 android:theme="@style/Theme.Translucent"
