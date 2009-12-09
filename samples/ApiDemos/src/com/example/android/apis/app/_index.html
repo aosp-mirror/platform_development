@@ -41,55 +41,44 @@
 
 <h3>Service</h3>
 <dl>
-  <dt><a href="LocalServiceController.html">Local Service Controller</a></dt>
-  <dd>Starts and stops the service class
-  <a href="LocalService.html">LocalService</a> that runs in the same
-  process as the activity, to demonstrate a service's
-  lifecycle when using {@link android.content.Context#startService
+  <dt><a href="LocalService.html">Local Service Controller and
+        Local Service Binding</a></dt>
+  <dd>Demonstrate the implementation of a service that runs in the same
+  process as its client(s).  Shows how those clients can either start/stop it
+  with {@link android.content.Context#startService
   Context.startService} and {@link android.content.Context#stopService
-  Context.stopService}.</dd>
-
-  <dt><a href="LocalServiceBinding.html">Local Service Binding</a></dt>
-  <dd>Demonstrates binding to a service class
-  <a href="LocalService.html">LocalService</a> that runs in the same
-  process as the activity, to demonstrate using the
+  Context.stopService}, or bind and call it with
   {@link android.content.Context#bindService Context.bindService} and
-  {@link android.content.Context#unbindService Context.unindService}
-  methods with a service.  This also shows how you can simplify working
+  {@link android.content.Context#unbindService Context.unindService}.
+  This also shows how you can simplify working
   with a service when you know it will only run in your own process.</dd>
-
-  <dt><a href="RemoteServiceController.html">Remote Service Controller</a></dt>
+  
+  <dt><a href="RemoteService.html">Remote Service Controller and
+        Remove Service Binding</a></dt>
   <dd>Demonstrates starting a service in a separate process, by assigning
   <code>android:process=&quot;:remote&quot;</code> to the service in the
-  AndroidManifest.xml file. </dd>
-
-  <dt><a href="RemoteServiceBinding.html">Remote Service Binding</a></dt>
-  <dd>Demonstrates binding to a remote service, similar to the Local Service
-  Binding sample, but illustrating the additional work (defining aidl
+  AndroidManifest.xml file.  Shows how those clients can either start/stop it
+  with {@link android.content.Context#startService
+  Context.startService} and {@link android.content.Context#stopService
+  Context.stopService}, or bind and call it with
+  {@link android.content.Context#bindService Context.bindService} and
+  {@link android.content.Context#unbindService Context.unindService}.
+  Binding is similar to the local service sample,
+  but illustrates the additional work (defining aidl
   interfaces) needed to interact with a service in another process.  Also
   shows how a service can publish multiple interfaces and implement
   callbacks to its clients.</dd>
 
-  <dt><a href="ServiceStartArgumentsController.html">Service Start Arguments Controller</a></dt>
+  <dt><a href="ServiceStartArguments.html">Service Start Arguments Controller</a></dt>
   <dd>Demonstrates how you can use a Service as a job queue, where you 
   submit jobs to it with {@link android.content.Context#startService
   Context.startService} instead of binding to the service.  Such a service
   automatically stops itself once all jobs have been processed.  This can be
   a very convenient way to interact with a service when you do not need
-  a result back from it.
-  <dl>
-  <dt>Code:
-  <dd> <a href="ServiceStartArgumentsController.html">ServiceStartArgumentsController.java</a>
-  <dd> <a href="ServiceStartArguments.html">ServiceStartArguments.java</a>
-  <dt>Layout:
-  <dd> <a href="/guide/samples/ApiDemos/res/layout/service_start_arguments_controller.html">
-  service_start_arguments_controller.xml</a>
-  </dl>
-  </dd>
+  a result back from it.</dd>
   
-  <dt><a href="ForegroundServiceController.html">Foreground Service Controller</a></dt>
-  <dd>Controls the service class 
-  <a href="ForegroundService.html">ForegroundService</a>, which shows how you
+  <dt><a href="ForegroundService.html">Foreground Service Controller</a></dt>
+  <dd>Shows how you
   can write a Service that runs in the foreground and works on both pre-2.0
   and post-2.0 versions of the platform.  This example will selectively use
   the new foreground APIs that were introduced in Android 2.0 if they are

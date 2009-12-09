@@ -16,6 +16,7 @@
 
 package com.example.android.apis.app;
 
+import android.app.Activity;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -29,13 +30,16 @@ import android.os.Looper;
 import android.os.Message;
 import android.os.Process;
 import android.util.Log;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.Button;
 import android.widget.Toast;
 
 import com.example.android.apis.R;
 
 /**
  * This is an example of implementing an application service that runs locally
- * in the same process as the application.  The {@link ServiceStartArgumentsController}
+ * in the same process as the application.  The {@link Controller}
  * class shows how to interact with the service. 
  *
  * <p>Notice the use of the {@link NotificationManager} when interesting things
@@ -44,7 +48,7 @@ import com.example.android.apis.R;
  * calling startActivity().
  * 
  * <p>For applications targeting Android 1.5 or beyond, you may want consider
- * using the android.app.IntentService class, which takes care of all the
+ * using the {@link android.app.IntentService} class, which takes care of all the
  * work of creating the extra thread and dispatching commands to it.
  */
 public class ServiceStartArguments extends Service {
@@ -59,8 +63,7 @@ public class ServiceStartArguments extends Service {
         }
         
         @Override
-        public void handleMessage(Message msg)
-        {
+        public void handleMessage(Message msg) {
             Bundle arguments = (Bundle)msg.obj;
         
             String txt = arguments.getString("name");
@@ -105,7 +108,7 @@ public class ServiceStartArguments extends Service {
         
         // This is who should be launched if the user selects our persistent
         // notification.
-        mInvokeIntent = new Intent(this, ServiceStartArgumentsController.class);
+        mInvokeIntent = new Intent(this, Controller.class);
 
         // Start up the thread running the service.  Note that we create a
         // separate thread because the service normally runs in the process's
@@ -177,7 +180,7 @@ public class ServiceStartArguments extends Service {
 
         // The PendingIntent to launch our activity if the user selects this notification
         PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
-                new Intent(this, AlarmService.class), 0);
+                new Intent(this, Controller.class), 0);
 
         // Set the info for the views that show in the notification panel.
         notification.setLatestEventInfo(this, getText(R.string.service_start_arguments_label),
@@ -193,6 +196,77 @@ public class ServiceStartArguments extends Service {
     
     private void hideNotification() {
         mNM.cancel(R.string.service_created);
+    }
+    
+    // ----------------------------------------------------------------------
+
+    /**
+     * Example of explicitly starting the {@link ServiceStartArguments}.
+     * 
+     * <p>Note that this is implemented as an inner class only keep the sample
+     * all together; typically this code would appear in some separate class.
+     */
+    public static class Controller extends Activity {
+        @Override
+        protected void onCreate(Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+
+            setContentView(R.layout.service_start_arguments_controller);
+
+            // Watch for button clicks.
+            Button button = (Button)findViewById(R.id.start1);
+            button.setOnClickListener(mStart1Listener);
+            button = (Button)findViewById(R.id.start2);
+            button.setOnClickListener(mStart2Listener);
+            button = (Button)findViewById(R.id.start3);
+            button.setOnClickListener(mStart3Listener);
+            button = (Button)findViewById(R.id.startfail);
+            button.setOnClickListener(mStartFailListener);
+            button = (Button)findViewById(R.id.kill);
+            button.setOnClickListener(mKillListener);
+        }
+
+        private OnClickListener mStart1Listener = new OnClickListener() {
+            public void onClick(View v) {
+                startService(new Intent(Controller.this,
+                        ServiceStartArguments.class)
+                                .putExtra("name", "One"));
+            }
+        };
+
+        private OnClickListener mStart2Listener = new OnClickListener() {
+            public void onClick(View v) {
+                startService(new Intent(Controller.this,
+                        ServiceStartArguments.class)
+                                .putExtra("name", "Two"));
+            }
+        };
+
+        private OnClickListener mStart3Listener = new OnClickListener() {
+            public void onClick(View v) {
+                startService(new Intent(Controller.this,
+                        ServiceStartArguments.class)
+                                .putExtra("name", "Three")
+                                .putExtra("redeliver", true));
+            }
+        };
+
+        private OnClickListener mStartFailListener = new OnClickListener() {
+            public void onClick(View v) {
+                startService(new Intent(Controller.this,
+                        ServiceStartArguments.class)
+                                .putExtra("name", "Failure")
+                                .putExtra("fail", true));
+            }
+        };
+
+        private OnClickListener mKillListener = new OnClickListener() {
+            public void onClick(View v) {
+                // This is to simulate the service being killed while it is
+                // running in the background.
+                Process.killProcess(Process.myPid());
+            }
+        };
     }
 }
 
