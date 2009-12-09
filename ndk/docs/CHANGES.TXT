@@ -56,6 +56,10 @@ IMPORTANT CHANGES:
   OpenGL ES 2.0 is currently *not* available from Java, and must be used
   through native code exclusively.
 
+  IMPORTANT: OpenGL ES 2.0 is not supported in the Android emulator at this
+             time. Running/testing any native code that depends on it thus
+             requires a real device.
+
 - The NDK build script will now remove installed binaries from the application
   project's path before starting the build. This ensures that:
 
