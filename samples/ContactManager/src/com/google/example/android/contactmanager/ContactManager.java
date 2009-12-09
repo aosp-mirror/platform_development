@@ -103,7 +103,7 @@ public final class ContactManager extends Activity
         // Run query
         Uri uri = ContactsContract.Contacts.CONTENT_URI;
         String[] projection = new String[] {
-                ContactsContract.Contacts.LOOKUP_KEY,
+                ContactsContract.Contacts._ID,
                 ContactsContract.Contacts.DISPLAY_NAME
         };
         String selection = ContactsContract.Contacts.IN_VISIBLE_GROUP + " = '" +
