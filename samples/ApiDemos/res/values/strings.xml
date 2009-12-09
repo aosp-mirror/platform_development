@@ -221,6 +221,9 @@
 
     <string name="voice_recognition">App/Voice Recognition</string>
 
+    <string name="text_to_speech">App/Text-To-Speech</string>
+    <string name="again">Again</string>
+
     <!-- ============================== -->
     <!--  app/content examples strings  -->
     <!-- ============================== -->
