@@ -72,6 +72,13 @@ BackgroundPlugin::BackgroundPlugin(NPP inst) : SurfaceSubPlugin(inst) {
     test_domAccess();
     test_javascript();
     test_loadJavaClass();
+
+    //register for touch events
+    ANPEventFlags flags = kTouch_ANPEventFlag;
+    NPError err = browser->setvalue(inst, kAcceptEvents_ANPSetValue, &flags);
+    if (err != NPERR_NO_ERROR) {
+        gLogI.log(kError_ANPLogType, "Error selecting input events.");
+    }
 }
 
 BackgroundPlugin::~BackgroundPlugin() {
@@ -170,7 +177,12 @@ int16 BackgroundPlugin::handleEvent(const ANPEvent* evt) {
             }
             break;
         case kTouch_ANPEventType:
-            gLogI.log(kError_ANPLogType, " ------ %p the plugin did not request touch events", inst());
+            if (kDown_ANPTouchAction == evt->data.touch.action)
+                return kHandleLongPress_ANPTouchResult | kHandleDoubleTap_ANPTouchResult;
+            else if (kLongPress_ANPTouchAction == evt->data.touch.action)
+                browser->geturl(inst(), "javascript:alert('Detected long press event.')", 0);
+            else if (kDoubleTap_ANPTouchAction == evt->data.touch.action)
+                browser->geturl(inst(), "javascript:alert('Detected double tap event.')", 0);
             break;
         case kKey_ANPEventType:
             gLogI.log(kError_ANPLogType, " ------ %p the plugin did not request key events", inst());
