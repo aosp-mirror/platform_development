@@ -11,7 +11,8 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.ui.console,
  org.eclipse.core.resources,
  org.eclipse.ui.ide,
- org.eclipse.core.filesystem
+ org.eclipse.core.filesystem,
+ org.eclipse.jdt.core
 Eclipse-LazyStart: true
 Export-Package: com.android.ddmlib,
  com.android.ddmlib.log,

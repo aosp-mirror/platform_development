@@ -16,16 +16,27 @@
 
 package com.android.ide.eclipse.ddms.views;
 
-import com.android.ide.eclipse.ddms.CommonAction;
-import com.android.ide.eclipse.ddms.DdmsPlugin;
-import com.android.ide.eclipse.ddms.ImageLoader;
-import com.android.ide.eclipse.ddms.preferences.PreferenceInitializer;
 import com.android.ddmlib.Log.LogLevel;
 import com.android.ddmuilib.logcat.LogColors;
 import com.android.ddmuilib.logcat.LogFilter;
 import com.android.ddmuilib.logcat.LogPanel;
 import com.android.ddmuilib.logcat.LogPanel.ILogFilterStorageManager;
+import com.android.ide.eclipse.ddms.CommonAction;
+import com.android.ide.eclipse.ddms.DdmsPlugin;
+import com.android.ide.eclipse.ddms.ImageLoader;
+import com.android.ide.eclipse.ddms.preferences.PreferenceInitializer;
 
+import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IMarker;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.jdt.core.search.IJavaSearchConstants;
+import org.eclipse.jdt.core.search.SearchEngine;
+import org.eclipse.jdt.core.search.SearchMatch;
+import org.eclipse.jdt.core.search.SearchParticipant;
+import org.eclipse.jdt.core.search.SearchPattern;
+import org.eclipse.jdt.core.search.SearchRequestor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.action.IMenuManager;
@@ -38,9 +49,18 @@ import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IActionBars;
+import org.eclipse.ui.IPerspectiveRegistry;
+import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.actions.ActionFactory;
+import org.eclipse.ui.ide.IDE;
+import org.eclipse.ui.internal.WorkbenchPlugin;
+import org.eclipse.ui.internal.registry.PerspectiveDescriptor;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * The log cat view displays log output from the current device selection.
@@ -72,6 +92,7 @@ public final class LogCatView extends SelectionDependentViewPart {
     private CommonAction mDeleteFilterAction;
     private CommonAction mEditFilterAction;
     private CommonAction mExportAction;
+    private CommonAction gotoLineAction;
 
     private CommonAction[] mLogLevelActions;
     private String[] mLogLevelIcons = {
@@ -208,6 +229,13 @@ public final class LogCatView extends SelectionDependentViewPart {
         mExportAction.setToolTipText("Export Selection As Text...");
         mExportAction.setImageDescriptor(loader.loadDescriptor("save.png")); // $NON-NLS-1$
 
+        gotoLineAction = new CommonAction("Go to Problem") {
+            @Override
+            public void run() {
+                goToErrorLine();
+            }
+        };
+
         LogLevel[] levels = LogLevel.values();
         mLogLevelActions = new CommonAction[mLogLevelIcons.length];
         for (int i = 0 ; i < mLogLevelActions.length; i++) {
@@ -311,6 +339,7 @@ public final class LogCatView extends SelectionDependentViewPart {
         menuManager.add(mClearAction);
         menuManager.add(new Separator());
         menuManager.add(mExportAction);
+        menuManager.add(gotoLineAction);
 
         // and then in the toolbar
         IToolBarManager toolBarManager = actionBars.getToolBarManager();
@@ -323,6 +352,111 @@ public final class LogCatView extends SelectionDependentViewPart {
         toolBarManager.add(mDeleteFilterAction);
         toolBarManager.add(new Separator());
         toolBarManager.add(mClearAction);
+    }
+
+    IMarker createMarkerFromSearchMatch(IFile file, SearchMatch match) {
+        HashMap<String, Object> map = new HashMap<String, Object>();
+        map.put(IMarker.CHAR_START, new Integer(match.getOffset()));
+        map.put(IMarker.CHAR_END, new Integer(match.getOffset()
+                + match.getLength()));
+        IMarker marker = null;
+        try {
+            marker = file.createMarker(IMarker.TEXT);
+            marker.setAttributes(map);
+        } catch (CoreException e) {
+            Status s = new Status(Status.ERROR, DdmsPlugin.PLUGIN_ID, e.getMessage(), e);
+            DdmsPlugin.getDefault().getLog().log(s);
+        }
+        return marker;
+    }
+
+    void openFile(IFile file, IMarker marker) {
+        try {
+            IWorkbenchPage page = getViewSite().getWorkbenchWindow()
+                    .getActivePage();
+            if (page != null) {
+                IDE.openEditor(page, marker);
+                marker.delete();
+            }
+        } catch (CoreException e) {
+            Status s = new Status(Status.ERROR, DdmsPlugin.PLUGIN_ID, e.getMessage(), e);
+            DdmsPlugin.getDefault().getLog().log(s);
+        }
+    }
+
+    void switchPerspective() {
+
+        IWorkbenchWindow window = getViewSite().getWorkbenchWindow()
+                .getWorkbench().getActiveWorkbenchWindow();
+        String rtPerspectiveId = "org.eclipse.jdt.ui.JavaPerspective";
+        IPerspectiveRegistry reg = WorkbenchPlugin.getDefault()
+                .getPerspectiveRegistry();
+        PerspectiveDescriptor rtPerspectiveDesc = (PerspectiveDescriptor) reg
+                .findPerspectiveWithId(rtPerspectiveId);
+        if (window != null) {
+            IWorkbenchPage page = window.getActivePage();
+            page.setPerspective(rtPerspectiveDesc);
+        }
+    }
+
+    void goToErrorLine() {
+        try {
+            String msg = mLogPanel.getSelectedErrorLineMessage();
+            if (msg != null) {
+                String error_line_matcher_string = "\\s*at\\ (.*)\\((.*\\.java)\\:(\\d+)\\)";
+                Matcher error_line_matcher = Pattern.compile(
+                        error_line_matcher_string).matcher(msg);
+
+                if (error_line_matcher.find()) {
+                    String class_name = error_line_matcher.group(1);
+
+                    // TODO: Search currently only matches the class declaration (using
+                    // IJavaSearchConstants.DECLARATIONS). We may want to jump to the
+                    // "reference" of the class instead (IJavaSearchConstants.REFERENCES)
+                    // using the filename and line number to disambiguate the search results.
+//                  String filename = error_line_matcher.group(2);
+//                  int line_number = Integer.parseInt(error_line_matcher.group(3));
+
+                    SearchEngine se = new SearchEngine();
+                    se.search(SearchPattern.createPattern(class_name,
+                            IJavaSearchConstants.METHOD,
+                            IJavaSearchConstants.DECLARATIONS,
+                            SearchPattern.R_EXACT_MATCH
+                                    | SearchPattern.R_CASE_SENSITIVE),
+                            new SearchParticipant[] { SearchEngine
+                                    .getDefaultSearchParticipant() },
+                            SearchEngine.createWorkspaceScope(),
+                            new SearchRequestor() {
+                                boolean found_first_match = false;
+
+                                @Override
+                                public void acceptSearchMatch(
+                                        SearchMatch match)
+                                        throws CoreException {
+
+                                    if (match.getResource() instanceof IFile
+                                            && !found_first_match) {
+                                        found_first_match = true;
+
+                                        IFile matched_file = (IFile) match
+                                                .getResource();
+                                        IMarker marker = createMarkerFromSearchMatch(
+                                                matched_file, match);
+
+                                        // There should only be one exact match,
+                                        // so we go immediately to that one.
+                                        switchPerspective();
+                                        openFile(matched_file, marker);
+                                    }
+                                }
+                            }, new NullProgressMonitor());
+
+                }
+            }
+        } catch (Exception e) {
+            Status s = new Status(Status.ERROR, DdmsPlugin.PLUGIN_ID, e.getMessage(), e);
+            DdmsPlugin.getDefault().getLog().log(s);
+        }
     }
  }
 

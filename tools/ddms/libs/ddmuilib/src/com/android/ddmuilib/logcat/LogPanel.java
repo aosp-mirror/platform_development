@@ -1568,4 +1568,17 @@ public class LogPanel extends SelectionDependentPanel {
             mEditFilterAction.setEnabled(selectedFilter.supportsEdit());
         }
     }
+
+    public String getSelectedErrorLineMessage() {
+        Table table = mCurrentFilter.getTable();
+        int[] selection = table.getSelectionIndices();
+
+        if (selection.length == 1) {
+            TableItem item = table.getItem(selection[0]);
+            LogMessage msg = (LogMessage)item.getData();
+            if (msg.data.logLevel == LogLevel.ERROR || msg.data.logLevel == LogLevel.WARN)
+                return msg.msg;
+        }
+        return null;
+    }
 }
