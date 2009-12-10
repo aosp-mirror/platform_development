@@ -217,14 +217,17 @@
 
         <service android:name=".app.LocalService" />
 
-        <activity android:name=".app.LocalServiceController" android:label="@string/activity_local_service_controller">
+        <activity android:name=".app.LocalService$Controller"
+                android:label="@string/activity_local_service_controller"
+                android:launchMode="singleTop">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
             </intent-filter>
         </activity>
 
-        <activity android:name=".app.LocalServiceBinding" android:label="@string/activity_local_service_binding">
+        <activity android:name=".app.LocalService$Binding"
+                android:label="@string/activity_local_service_binding">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -243,14 +246,17 @@
             </intent-filter>
         </service>
 
-        <activity android:name=".app.RemoteServiceController" android:label="@string/activity_remote_service_controller">
+        <activity android:name=".app.RemoteService$Controller"
+                android:label="@string/activity_remote_service_controller"
+                android:launchMode="singleTop">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
             </intent-filter>
         </activity>
 
-        <activity android:name=".app.RemoteServiceBinding" android:label="@string/activity_remote_service_binding">
+        <activity android:name=".app.RemoteService$Binding"
+                android:label="@string/activity_remote_service_binding">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -259,7 +265,9 @@
 
         <service android:name=".app.ServiceStartArguments" />
 
-        <activity android:name=".app.ServiceStartArgumentsController" android:label="@string/activity_service_start_arguments_controller">
+        <activity android:name=".app.ServiceStartArguments$Controller"
+                android:label="@string/activity_service_start_arguments_controller"
+                android:launchMode="singleTop">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -268,7 +276,9 @@
 
         <service android:name=".app.ForegroundService" />
         
-        <activity android:name=".app.ForegroundServiceController" android:label="@string/activity_foreground_service_controller">
+        <activity android:name=".app.ForegroundService$Controller"
+                android:label="@string/activity_foreground_service_controller"
+                android:launchMode="singleTop">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
