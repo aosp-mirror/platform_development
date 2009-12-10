@@ -511,6 +511,13 @@ See test_defs.xsd for more information.
     runner="com.android.mms.SmsLaunchPerformance"
     coverage_target="Mms" />
 
+<!-- Unit tests for the phone application. -->
+<test name="phone-unit"
+    build_path="packages/apps/Phone"
+    package="com.android.phone.tests"
+    continuous="true"
+    coverage_target="Phone" />
+
 <test name="telephony-unit"
     build_path="frameworks/base/telephony/tests/TelephonyTest"
     package="com.android.telephonytest"
