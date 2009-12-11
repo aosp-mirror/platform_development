@@ -193,4 +193,9 @@
     <string name="binding_bind_failed">Bind failed</string>
     <string name="binding_waiting_for_connection">Waiting for service to be connected...</string>
     <string name="select_account_to_sync">Select account to sync</string>
+
+    <!-- BadBehaviorActivity -->
+    <string name="bad_behavior_crash_main_label">Crash the main thread</string>
+    <string name="bad_behavior_crash_thread_label">Crash an auxiliary thread</string>
+    <string name="bad_behavior_anr_label">Stop responding for 20 seconds (ANR)</string>
 </resources>
