@@ -83,6 +83,10 @@ development/samples/Snake platforms/${PLATFORM_NAME}/samples/Snake
 development/samples/SoftKeyboard platforms/${PLATFORM_NAME}/samples/SoftKeyboard
 development/samples/JetBoy platforms/${PLATFORM_NAME}/samples/JetBoy
 development/samples/SearchableDictionary platforms/${PLATFORM_NAME}/samples/SearchableDictionary
+development/samples/ContactManager platforms/${PLATFORM_NAME}/samples/ContactManager
+development/samples/MultiResolution platforms/${PLATFORM_NAME}/samples/MultiResolution
+development/samples/Wiktionary platforms/${PLATFORM_NAME}/samples/Wiktionary
+development/samples/WiktionarySimple platforms/${PLATFORM_NAME}/samples/WiktionarySimple
 
 # dx
 bin/dx platforms/${PLATFORM_NAME}/tools/dx
