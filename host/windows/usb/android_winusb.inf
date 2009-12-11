@@ -34,11 +34,14 @@ HKR,,Icon,,-1
 %CompositeAdbInterface%     = USB_Install, USB\VID_0BB4&PID_0C03&MI_01
 ;
 ;Moto Sholes
-%SingleBootLoaderInterface% = USB_Install, USB\VID_18D1&PID_D00D
-%SingleAdbInterface%        = USB_Install, USB\VID_18D1&PID_0002
-%CompositeAdbInterface%     = USB_Install, USB\VID_18D1&PID_0002&MI_01
 %SingleAdbInterface%        = USB_Install, USB\VID_22B8&PID_41DB
 %CompositeAdbInterface%     = USB_Install, USB\VID_22B8&PID_41DB&MI_01
+;
+;Google NexusOne
+%SingleAdbInterface%        = USB_Install, USB\VID_18D1&PID_0D02
+%CompositeAdbInterface%     = USB_Install, USB\VID_18D1&PID_0D02&MI_01
+%SingleAdbInterface%        = USB_Install, USB\VID_18D1&PID_4E11
+%CompositeAdbInterface%     = USB_Install, USB\VID_18D1&PID_4E12&MI_01
 
 [Google.NTamd64]
 ; HTC Dream
@@ -49,11 +52,14 @@ HKR,,Icon,,-1
 %CompositeAdbInterface%     = USB_Install, USB\VID_0BB4&PID_0C03&MI_01
 ;
 ;Moto Sholes
-%SingleBootLoaderInterface% = USB_Install, USB\VID_18D1&PID_D00D
-%SingleAdbInterface%        = USB_Install, USB\VID_18D1&PID_0002
-%CompositeAdbInterface%     = USB_Install, USB\VID_18D1&PID_0002&MI_01
 %SingleAdbInterface%        = USB_Install, USB\VID_22B8&PID_41DB
 %CompositeAdbInterface%     = USB_Install, USB\VID_22B8&PID_41DB&MI_01
+;
+;Google NexusOne
+%SingleAdbInterface%        = USB_Install, USB\VID_18D1&PID_0D02
+%CompositeAdbInterface%     = USB_Install, USB\VID_18D1&PID_0D02&MI_01
+%SingleAdbInterface%        = USB_Install, USB\VID_18D1&PID_4E11
+%CompositeAdbInterface%     = USB_Install, USB\VID_18D1&PID_4E12&MI_01
 
 [USB_Install]
 Include = winusb.inf
