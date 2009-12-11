@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Notepad v1</string>
+    <string name="no_notes">No Notes Yet</string>
+    <string name="menu_insert">Add Item</string>
+</resources>
