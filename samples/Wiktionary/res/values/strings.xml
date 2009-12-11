@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright (C) 2009 The Android Open Source Project
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
+
+<resources>
+    <string name="app_name">Wiktionary example</string>
+    <string name="app_descrip">Example of a fast Wiktionary browser and Word-of-day widget</string>
+    <string name="app_credits">"All dictionary content provided by Wiktionary under a GFDL license.  http://en.wiktionary.org\n\nIcon derived from Tango Desktop Project under a public domain license.  http://tango.freedesktop.org"</string>
+
+    <string name="template_user_agent">"%s/%s (Linux; Android)"</string>
+    <string name="template_wotd_title">"Wiktionary:Word of the day/%s %s"</string>
+    <string name="template_define_url">"http://en.wiktionary.org/wiki/%s"</string>
+
+    <string name="widget_name">Wiktionary</string>
+
+    <string name="widget_loading">"Loading word\nof day\u2026"</string>
+    <string name="widget_error">No word of day found</string>
+
+    <string-array name="month_names">
+        <item>January</item>
+        <item>February</item>
+        <item>March</item>
+        <item>April</item>
+        <item>May</item>
+        <item>June</item>
+        <item>July</item>
+        <item>August</item>
+        <item>September</item>
+        <item>October</item>
+        <item>November</item>
+        <item>December</item>
+    </string-array>
+
+
+    <string name="search_label">Wiktionary search</string>
+    <string name="search_hint">Define word</string>
+
+    <string name="lookup_search">Search</string>
+    <string name="lookup_random">Random</string>
+    <string name="lookup_about">About</string>
+
+    <string name="empty_result">No entry found for this word, or problem reading data.</string>
+
+</resources>
