@@ -43,8 +43,8 @@ public class NoteEdit extends Activity {
       
         Button confirmButton = (Button) findViewById(R.id.confirm);
        
-        mRowId = savedInstanceState != null ? savedInstanceState.getLong(NotesDbAdapter.KEY_ROWID) 
-                							: null;
+        mRowId = (savedInstanceState == null) ? null :
+            (Long) savedInstanceState.getSerializable(NotesDbAdapter.KEY_ROWID);
 		if (mRowId == null) {
 			Bundle extras = getIntent().getExtras();            
 			mRowId = extras != null ? extras.getLong(NotesDbAdapter.KEY_ROWID) 
@@ -77,7 +77,8 @@ public class NoteEdit extends Activity {
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putLong(NotesDbAdapter.KEY_ROWID, mRowId);
+        saveState();
+        outState.putSerializable(NotesDbAdapter.KEY_ROWID, mRowId);
     }
     
     @Override
