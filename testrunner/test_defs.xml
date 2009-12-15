@@ -130,7 +130,7 @@ See test_defs.xsd for more information.
 <test name="tablemerger"
     build_path="frameworks/base/tests/FrameworkTest"
     package="com.android.frameworktest.tests"
-    class="android.content.AbstractTableMergerTest"
+    class="com.google.android.gsf.AbstractTableMergerTest"
     coverage_target="framework" />
 
 <test name="imf"
