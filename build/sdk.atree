@@ -194,6 +194,7 @@ docs/broadcast_actions.txt platforms/${PLATFORM_NAME}/data/broadcast_actions.txt
 docs/service_actions.txt platforms/${PLATFORM_NAME}/data/service_actions.txt
 docs/categories.txt platforms/${PLATFORM_NAME}/data/categories.txt
 docs/widgets.txt platforms/${PLATFORM_NAME}/data/widgets.txt
+docs/features.txt platforms/${PLATFORM_NAME}/data/features.txt
 framework/layoutlib.jar platforms/${PLATFORM_NAME}/data/layoutlib.jar
 
 # framework resources for layoutlib
