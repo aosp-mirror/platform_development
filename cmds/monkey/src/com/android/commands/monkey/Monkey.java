@@ -23,11 +23,11 @@ import android.content.ComponentName;
 import android.content.Intent;
 import android.content.pm.IPackageManager;
 import android.content.pm.ResolveInfo;
+import android.os.Build;
 import android.os.Debug;
 import android.os.Process;
 import android.os.RemoteException;
 import android.os.ServiceManager;
-import android.server.data.CrashData;
 import android.view.IWindowManager;
 
 import java.io.BufferedReader;
@@ -225,26 +225,18 @@ public class Monkey {
             return allow;
         }
 
-        public boolean appCrashed(String processName, int pid, String shortMsg, String longMsg,
-                byte[] crashData) {
+        public boolean appCrashed(String processName, int pid,
+                String tag, String shortMsg, String longMsg,
+                long timeMillis, String stackTrace) {
             System.err.println("// CRASH: " + processName + " (pid " + pid + ")");
             System.err.println("// Short Msg: " + shortMsg);
             System.err.println("// Long Msg: " + longMsg);
-            if (crashData != null) {
-                try {
-                    CrashData cd = new CrashData(new DataInputStream(new ByteArrayInputStream(
-                            crashData)));
-                    System.err.println("// Build Label: " + cd.getBuildData().getFingerprint());
-                    System.err.println("// Build Changelist: "
-                            + cd.getBuildData().getIncrementalVersion());
-                    System.err.println("// Build Time: " + cd.getBuildData().getTime());
-                    System.err.println("// ID: " + cd.getId());
-                    System.err.println("// Tag: " + cd.getActivity());
-                    System.err.println(cd.getThrowableData().toString("// "));
-                } catch (IOException e) {
-                    System.err.println("// BAD STACK CRAWL");
-                }
-            }
+            System.err.println("// Build Label: " + Build.FINGERPRINT);
+            System.err.println("// Build Changelist: " + Build.VERSION.INCREMENTAL);
+            System.err.println("// Build Time: " + Build.TIME);
+            System.err.println("// ID: ");  // TODO: This was never set -- remove?
+            System.err.println("// Tag: " + tag);
+            System.err.println("// " + stackTrace.replace("\n", "\n// "));
 
             if (!mIgnoreCrashes) {
                 synchronized (Monkey.this) {

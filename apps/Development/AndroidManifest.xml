@@ -58,13 +58,6 @@
                 <category android:name="android.intent.category.TEST" />
             </intent-filter>
         </activity>
-        <activity android:name="ExceptionBrowser" android:label="Exception Browser">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.TEST" />
-            </intent-filter>
-        </activity>
-        <activity android:name="StacktraceViewer" android:label="Stacktrace Viewer"/>
         <activity android:name="PackageSummary" android:label="Package Summary">
         </activity>
         <activity android:name="ShowActivity" android:label="Activity">
@@ -128,44 +121,50 @@
             </intent-filter>
         </activity>
 
-    <activity android:name="GLSTester" android:label="Google Login Service">
+        <activity android:name="GLSTester" android:label="Google Login Service">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.TEST" />
             </intent-filter>
         </activity>
 
-    <activity android:name="RunningProcesses" android:label="Running processes">
+        <activity android:name="RunningProcesses" android:label="Running processes">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.TEST" />
             </intent-filter>
         </activity>
-    <activity android:name="ProcessInfo" android:label="Process Information">
+        <activity android:name="ProcessInfo" android:label="Process Information">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
-    </activity>
+        </activity>
     <!--
-    <activity android:name="AppHwConfigList" android:label="Applications Hw Configuration">
+        <activity android:name="AppHwConfigList" android:label="Applications Hw Configuration">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.TEST" />
             </intent-filter>
-    </activity>
+        </activity>
     -->
-    <activity android:name="AppHwPref" android:label="Applications Hardware Preferences">
+        <activity android:name="AppHwPref" android:label="Applications Hardware Preferences">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
-    </activity>
-    <activity android:name="PermissionDetails" android:label="Permission Info">
+        </activity>
+        <activity android:name="PermissionDetails" android:label="Permission Info">
             <intent-filter>
                 <action android:name="com.android.development.VIEW_PERMISSION" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
-    </activity>
+        </activity>
+        <activity android:name="BadBehaviorActivity" android:label="Bad Behavior">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.TEST" />
+            </intent-filter>
+        </activity>
     </application>
 </manifest>
