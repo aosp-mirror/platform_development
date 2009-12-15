@@ -19,7 +19,7 @@
 -->
 <manifest
     xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.android.livecubes">
+    package="com.example.android.livecubes">
 
     <application
         android:label="@string/wallpapers"
@@ -46,21 +46,10 @@
         </service>
         <activity
             android:label="@string/cube2_settings"
-            android:name="com.android.livecubes.cube2.CubeWallpaper2Settings"
+            android:name=".cube2.CubeWallpaper2Settings"
             android:theme="@android:style/Theme.Light.WallpaperSettings"
             android:exported="true">
         </activity>
 
-        <service
-            android:label="@string/wallpaper_cube3"
-            android:name=".cube3.CubeWallpaper3"
-            android:permission="android.permission.BIND_WALLPAPER">
-            <intent-filter>
-                <action android:name="android.service.wallpaper.WallpaperService" />
-            </intent-filter>
-            <meta-data android:name="android.service.wallpaper" android:resource="@xml/cube3" />
-        </service>
-
     </application>
-
 </manifest>
