@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.example.android.contactmanager;
+package com.example.android.contactmanager;
 
 import android.app.Activity;
 import android.content.Intent;

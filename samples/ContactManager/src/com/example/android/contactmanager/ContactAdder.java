@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.example.android.contactmanager;
+package com.example.android.contactmanager;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
@@ -48,9 +48,9 @@ public final class ContactAdder extends Activity implements OnAccountsUpdateList
 {
     public static final String TAG = "ContactsAdder";
     public static final String ACCOUNT_NAME =
-            "com.google.example.android.contactmanager.ContactsAdder.ACCOUNT_NAME";
+            "com.example.android.contactmanager.ContactsAdder.ACCOUNT_NAME";
     public static final String ACCOUNT_TYPE =
-            "com.google.example.android.contactmanager.ContactsAdder.ACCOUNT_TYPE";
+            "com.example.android.contactmanager.ContactsAdder.ACCOUNT_TYPE";
 
     private ArrayList<AccountData> mAccounts;
     private AccountAdapter mAccountAdapter;
