@@ -14,11 +14,8 @@
  * limitations under the License.
  */
 
-package com.android.livecubes.cube2;
+package com.example.android.livecubes.cube1;
 
-import com.android.livecubes.R;
-
-import android.content.SharedPreferences;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
@@ -30,25 +27,11 @@ import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 
 /*
- * This animated wallpaper draws a rotating wireframe shape. It is similar to
- * example #1, but has a choice of 2 shapes, which are user selectable and
- * defined in resources instead of in code.
+ * This animated wallpaper draws a rotating wireframe cube.
  */
+public class CubeWallpaper1 extends WallpaperService {
 
-public class CubeWallpaper2 extends WallpaperService {
-
-    public static final String SHARED_PREFS_NAME="cube2settings";
-
-    static class ThreeDPoint {
-        float x;
-        float y;
-        float z;
-    }
-
-    static class ThreeDLine {
-        int startPoint;
-        int endPoint;
-    }
+    private final Handler mHandler = new Handler();
 
     @Override
     public void onCreate() {
@@ -65,14 +48,8 @@ public class CubeWallpaper2 extends WallpaperService {
         return new CubeEngine();
     }
 
-    class CubeEngine extends Engine 
-        implements SharedPreferences.OnSharedPreferenceChangeListener {
+    class CubeEngine extends Engine {
 
-        private final Handler mHandler = new Handler();
-
-        ThreeDPoint [] mOriginalPoints;
-        ThreeDPoint [] mRotatedPoints;
-        ThreeDLine [] mLines;
         private final Paint mPaint = new Paint();
         private float mOffset;
         private float mTouchX = -1;
@@ -87,7 +64,6 @@ public class CubeWallpaper2 extends WallpaperService {
             }
         };
         private boolean mVisible;
-        private SharedPreferences mPrefs;
 
         CubeEngine() {
             // Create a Paint to draw the lines for our cube
@@ -99,56 +75,13 @@ public class CubeWallpaper2 extends WallpaperService {
             paint.setStyle(Paint.Style.STROKE);
 
             mStartTime = SystemClock.elapsedRealtime();
-
-            mPrefs = CubeWallpaper2.this.getSharedPreferences(SHARED_PREFS_NAME, 0);
-            mPrefs.registerOnSharedPreferenceChangeListener(this);
-            onSharedPreferenceChanged(mPrefs, null);
-        }
-
-        public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
-
-            String shape = prefs.getString("cube2_shape", "cube");
-
-            // read the 3D model from the resource
-            readModel(shape);
-        }
-
-        private void readModel(String prefix) {
-            // Read the model definition in from a resource.
-
-            // get the resource identifiers for the arrays for the selected shape
-            int pid = getResources().getIdentifier(prefix + "points", "array", getPackageName());
-            int lid = getResources().getIdentifier(prefix + "lines", "array", getPackageName());
-
-            String [] p = getResources().getStringArray(pid);
-            int numpoints = p.length;
-            mOriginalPoints = new ThreeDPoint[numpoints];
-            mRotatedPoints = new ThreeDPoint[numpoints];
-
-            for (int i = 0; i < numpoints; i++) {
-                mOriginalPoints[i] = new ThreeDPoint();
-                mRotatedPoints[i] = new ThreeDPoint();
-                String [] coord = p[i].split(" ");
-                mOriginalPoints[i].x = Float.valueOf(coord[0]);
-                mOriginalPoints[i].y = Float.valueOf(coord[1]);
-                mOriginalPoints[i].z = Float.valueOf(coord[2]);
-            }
-
-            String [] l = getResources().getStringArray(lid);
-            int numlines = l.length;
-            mLines = new ThreeDLine[numlines];
-
-            for (int i = 0; i < numlines; i++) {
-                mLines[i] = new ThreeDLine();
-                String [] idx = l[i].split(" ");
-                mLines[i].startPoint = Integer.valueOf(idx[0]);
-                mLines[i].endPoint = Integer.valueOf(idx[1]);
-            }
         }
 
         @Override
         public void onCreate(SurfaceHolder surfaceHolder) {
             super.onCreate(surfaceHolder);
+
+            // By default we don't get touch events, so enable them.
             setTouchEventsEnabled(true);
         }
 
@@ -218,9 +151,6 @@ public class CubeWallpaper2 extends WallpaperService {
          */
         void drawFrame() {
             final SurfaceHolder holder = getSurfaceHolder();
-            final Rect frame = holder.getSurfaceFrame();
-            final int width = frame.width();
-            final int height = frame.height();
 
             Canvas c = null;
             try {
@@ -234,64 +164,78 @@ public class CubeWallpaper2 extends WallpaperService {
                 if (c != null) holder.unlockCanvasAndPost(c);
             }
 
+            // Reschedule the next redraw
             mHandler.removeCallbacks(mDrawCube);
             if (mVisible) {
                 mHandler.postDelayed(mDrawCube, 1000 / 25);
             }
         }
 
+        /*
+         * Draw a wireframe cube by drawing 12 3 dimensional lines between
+         * adjacent corners of the cube
+         */
         void drawCube(Canvas c) {
             c.save();
             c.translate(mCenterX, mCenterY);
             c.drawColor(0xff000000);
+            drawLine(c, -400, -400, -400,  400, -400, -400);
+            drawLine(c,  400, -400, -400,  400,  400, -400);
+            drawLine(c,  400,  400, -400, -400,  400, -400);
+            drawLine(c, -400,  400, -400, -400, -400, -400);
 
-            long now = SystemClock.elapsedRealtime();
-            float xrot = ((float)(now - mStartTime)) / 1000;
-            float yrot = (0.5f - mOffset) * 2.0f;
-            rotateAndProjectPoints(xrot, yrot);
-            drawLines(c);
+            drawLine(c, -400, -400,  400,  400, -400,  400);
+            drawLine(c,  400, -400,  400,  400,  400,  400);
+            drawLine(c,  400,  400,  400, -400,  400,  400);
+            drawLine(c, -400,  400,  400, -400, -400,  400);
+
+            drawLine(c, -400, -400,  400, -400, -400, -400);
+            drawLine(c,  400, -400,  400,  400, -400, -400);
+            drawLine(c,  400,  400,  400,  400,  400, -400);
+            drawLine(c, -400,  400,  400, -400,  400, -400);
             c.restore();
         }
 
-        void rotateAndProjectPoints(float xrot, float yrot) {
-            int n = mOriginalPoints.length;
-            for (int i = 0; i < n; i++) {
-                // rotation around X-axis
-                ThreeDPoint p = mOriginalPoints[i];
-                float x = p.x;
-                float y = p.y;
-                float z = p.z;
-                float newy = (float)(Math.sin(xrot) * z + Math.cos(xrot) * y);
-                float newz = (float)(Math.cos(xrot) * z - Math.sin(xrot) * y);
+        /*
+         * Draw a 3 dimensional line on to the screen
+         */
+        void drawLine(Canvas c, int x1, int y1, int z1, int x2, int y2, int z2) {
+            long now = SystemClock.elapsedRealtime();
+            float xrot = ((float)(now - mStartTime)) / 1000;
+            float yrot = (0.5f - mOffset) * 2.0f;
+            float zrot = 0;
 
-                // rotation around Y-axis
-                float newx = (float)(Math.sin(yrot) * newz + Math.cos(yrot) * x);
-                newz = (float)(Math.cos(yrot) * newz - Math.sin(yrot) * x);
+            // 3D transformations
 
-                // 3D-to-2D projection
-                float screenX = newx / (4 - newz / 400);
-                float screenY = newy / (4 - newz / 400);
+            // rotation around X-axis
+            float newy1 = (float)(Math.sin(xrot) * z1 + Math.cos(xrot) * y1);
+            float newy2 = (float)(Math.sin(xrot) * z2 + Math.cos(xrot) * y2);
+            float newz1 = (float)(Math.cos(xrot) * z1 - Math.sin(xrot) * y1);
+            float newz2 = (float)(Math.cos(xrot) * z2 - Math.sin(xrot) * y2);
 
-                mRotatedPoints[i].x = screenX;
-                mRotatedPoints[i].y = screenY;
-                mRotatedPoints[i].z = 0;
-            }
+            // rotation around Y-axis
+            float newx1 = (float)(Math.sin(yrot) * newz1 + Math.cos(yrot) * x1);
+            float newx2 = (float)(Math.sin(yrot) * newz2 + Math.cos(yrot) * x2);
+            newz1 = (float)(Math.cos(yrot) * newz1 - Math.sin(yrot) * x1);
+            newz2 = (float)(Math.cos(yrot) * newz2 - Math.sin(yrot) * x2);
+
+            // 3D-to-2D projection
+            float startX = newx1 / (4 - newz1 / 400);
+            float startY = newy1 / (4 - newz1 / 400);
+            float stopX =  newx2 / (4 - newz2 / 400);
+            float stopY =  newy2 / (4 - newz2 / 400);
+
+            c.drawLine(startX, startY, stopX, stopY, mPaint);
         }
 
-        void drawLines(Canvas c) {
-            int n = mLines.length;
-            for (int i = 0; i < n; i++) {
-                ThreeDLine l = mLines[i];
-                ThreeDPoint start = mRotatedPoints[l.startPoint];
-                ThreeDPoint end = mRotatedPoints[l.endPoint];
-                c.drawLine(start.x, start.y, end.x, end.y, mPaint);
-            }
-        }
-
+        /*
+         * Draw a circle around the current touch point, if any.
+         */
         void drawTouchPoint(Canvas c) {
             if (mTouchX >=0 && mTouchY >= 0) {
                 c.drawCircle(mTouchX, mTouchY, 80, mPaint);
             }
         }
+
     }
 }

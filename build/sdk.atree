@@ -87,6 +87,7 @@ development/samples/ContactManager platforms/${PLATFORM_NAME}/samples/ContactMan
 development/samples/MultiResolution platforms/${PLATFORM_NAME}/samples/MultiResolution
 development/samples/Wiktionary platforms/${PLATFORM_NAME}/samples/Wiktionary
 development/samples/WiktionarySimple platforms/${PLATFORM_NAME}/samples/WiktionarySimple
+development/samples/CubeLiveWallpaper platforms/${PLATFORM_NAME}/samples/CubeLiveWallpaper
 
 # dx
 bin/dx platforms/${PLATFORM_NAME}/tools/dx
