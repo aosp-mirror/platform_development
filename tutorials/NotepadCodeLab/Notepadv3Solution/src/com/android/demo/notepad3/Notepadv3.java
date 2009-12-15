@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2008 Google Inc.
  *
- * Licensed under the Apache License, Version 2.0 (the "License")savedInstanceState;
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -32,12 +32,12 @@ import android.widget.AdapterView.AdapterContextMenuInfo;
 public class Notepadv3 extends ListActivity {
     private static final int ACTIVITY_CREATE=0;
     private static final int ACTIVITY_EDIT=1;
-    
+
     private static final int INSERT_ID = Menu.FIRST;
     private static final int DELETE_ID = Menu.FIRST + 1;
 
     private NotesDbAdapter mDbHelper;
-    
+
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -48,23 +48,23 @@ public class Notepadv3 extends ListActivity {
         fillData();
         registerForContextMenu(getListView());
     }
-    
+
     private void fillData() {
         Cursor notesCursor = mDbHelper.fetchAllNotes();
         startManagingCursor(notesCursor);
-        
+
         // Create an array to specify the fields we want to display in the list (only TITLE)
         String[] from = new String[]{NotesDbAdapter.KEY_TITLE};
-        
+
         // and an array of the fields we want to bind those fields to (in this case just text1)
         int[] to = new int[]{R.id.text1};
-        
+
         // Now create a simple cursor adapter and set it to display
         SimpleCursorAdapter notes = 
-        	    new SimpleCursorAdapter(this, R.layout.notes_row, notesCursor, from, to);
+            new SimpleCursorAdapter(this, R.layout.notes_row, notesCursor, from, to);
         setListAdapter(notes);
     }
-    
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
@@ -75,38 +75,38 @@ public class Notepadv3 extends ListActivity {
     @Override
     public boolean onMenuItemSelected(int featureId, MenuItem item) {
         switch(item.getItemId()) {
-        case INSERT_ID:
-            createNote();
-            return true;
+            case INSERT_ID:
+                createNote();
+                return true;
         }
-       
+
         return super.onMenuItemSelected(featureId, item);
     }
-	
-    @Override
-	public void onCreateContextMenu(ContextMenu menu, View v,
-			ContextMenuInfo menuInfo) {
-		super.onCreateContextMenu(menu, v, menuInfo);
-        menu.add(0, DELETE_ID, 0, R.string.menu_delete);
-	}
 
     @Override
-	public boolean onContextItemSelected(MenuItem item) {
-		switch(item.getItemId()) {
-    	case DELETE_ID:
-    		AdapterContextMenuInfo info = (AdapterContextMenuInfo) item.getMenuInfo();
-	        mDbHelper.deleteNote(info.id);
-	        fillData();
-	        return true;
-		}
-		return super.onContextItemSelected(item);
-	}
-	
+    public void onCreateContextMenu(ContextMenu menu, View v,
+            ContextMenuInfo menuInfo) {
+        super.onCreateContextMenu(menu, v, menuInfo);
+        menu.add(0, DELETE_ID, 0, R.string.menu_delete);
+    }
+
+    @Override
+    public boolean onContextItemSelected(MenuItem item) {
+        switch(item.getItemId()) {
+            case DELETE_ID:
+                AdapterContextMenuInfo info = (AdapterContextMenuInfo) item.getMenuInfo();
+                mDbHelper.deleteNote(info.id);
+                fillData();
+                return true;
+        }
+        return super.onContextItemSelected(item);
+    }
+
     private void createNote() {
         Intent i = new Intent(this, NoteEdit.class);
         startActivityForResult(i, ACTIVITY_CREATE);
     }
-    
+
     @Override
     protected void onListItemClick(ListView l, View v, int position, long id) {
         super.onListItemClick(l, v, position, id);
@@ -116,8 +116,7 @@ public class Notepadv3 extends ListActivity {
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, 
-                                    Intent intent) {
+    protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
         super.onActivityResult(requestCode, resultCode, intent);
         fillData();
     }
