@@ -14,15 +14,15 @@
  * the License.
  */
 
-package com.android.livecubes.cube2;
+package com.example.android.livecubes.cube2;
 
-import com.android.livecubes.R;
+import com.example.android.livecubes.R;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.service.wallpaper.WallpaperSettingsActivity;
+import android.preference.PreferenceActivity;
 
-public class CubeWallpaper2Settings extends WallpaperSettingsActivity
+public class CubeWallpaper2Settings extends PreferenceActivity
     implements SharedPreferences.OnSharedPreferenceChangeListener {
 
     @Override
@@ -49,6 +49,5 @@ public class CubeWallpaper2Settings extends WallpaperSettingsActivity
 
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences,
             String key) {
-        //(new BackupManager(this)).dataChanged();
     }
 }
