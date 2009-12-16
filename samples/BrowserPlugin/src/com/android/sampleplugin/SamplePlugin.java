@@ -35,7 +35,6 @@ import android.view.View;
 import android.view.WindowManager;
 import android.view.SurfaceHolder.Callback;
 import android.view.ViewGroup.LayoutParams;
-import android.webkit.plugin.FullScreenDrawingModel;
 import android.webkit.plugin.NativePlugin;
 import android.webkit.plugin.SurfaceDrawingModel;
 import android.widget.FrameLayout;
@@ -53,7 +52,7 @@ public class SamplePlugin implements NativePlugin {
     private Context context;
     
     private SurfaceDrawingModel embeddedSurface;
-    private FullScreenDrawingModel fullScreenSurface;
+    private SurfaceDrawingModel fullScreenSurface;
     
     private boolean validNPP = false;
     private Object nppLock = new Object();
@@ -71,7 +70,7 @@ public class SamplePlugin implements NativePlugin {
         return embeddedSurface;
     }
 
-    public FullScreenDrawingModel getFullScreenSurface() {
+    public SurfaceDrawingModel getFullScreenSurface() {
         if (fullScreenSurface == null) {
             fullScreenSurface = new FullScreenSurface();
         }
@@ -145,7 +144,7 @@ public class SamplePlugin implements NativePlugin {
         }
     }
 
-    private class FullScreenSurface implements FullScreenDrawingModel {
+    private class FullScreenSurface implements SurfaceDrawingModel {
 
         public View getSurface() {
             /* TODO make this aware of the plugin instance and get the video file
@@ -156,37 +155,30 @@ public class SamplePlugin implements NativePlugin {
             LayoutParams fp = new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT);
             layout.setLayoutParams(fp);
 
-            VideoView video = new VideoView(context);
-            LayoutParams vp = new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT);
-            layout.setLayoutParams(vp);
+//            VideoView video = new VideoView(context);
+//            LayoutParams vp = new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT);
+//            layout.setLayoutParams(vp);
 
             GLSurfaceView gl = new GLSurfaceView(context);
             LayoutParams gp = new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT);
             layout.setLayoutParams(gp);
 
-            layout.addView(video);
             layout.addView(gl);
+//            layout.addView(video);
 
-            // We want an 8888 pixel format because that's required for a translucent 
-            // window. And we want a depth buffer.
-            gl.setEGLConfigChooser(8, 8, 8, 8, 16, 0);
             // Tell the cube renderer that we want to render a translucent version
             // of the cube:
-            gl.setRenderer(new CubeRenderer(true));
-            // Use a surface format with an Alpha channel:
-            gl.getHolder().setFormat(PixelFormat.TRANSLUCENT);
+            gl.setRenderer(new CubeRenderer(false));
             gl.setWindowType(WindowManager.LayoutParams.TYPE_APPLICATION_MEDIA_OVERLAY);
 
-            video.setVideoPath("/sdcard/test_video.3gp");
-            video.setMediaController(new MediaController(context));
-            video.requestFocus();
+//            video.setVideoPath("/sdcard/test_video.3gp");
+//            video.setMediaController(new MediaController(context));
+//            video.requestFocus();
 
             // ensure that the view system is aware that we will be drawing
             layout.setWillNotDraw(false);
             
             return layout;
         }
-
-        public void onSurfaceRemoved() { }
     }
 }
