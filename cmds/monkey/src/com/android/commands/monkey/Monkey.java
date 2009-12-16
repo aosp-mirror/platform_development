@@ -34,6 +34,7 @@ import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -117,8 +118,17 @@ public class Monkey {
     /** Generate hprof reports before/after monkey runs */
     private boolean mGenerateHprof;
 
+    /** Package blacklist file. */
+    private String mPkgBlacklistFile;
+
+    /** Package whitelist file. */
+    private String mPkgWhitelistFile;
+
     /** Packages we are allowed to run, or empty if no restriction. */
     private HashSet<String> mValidPackages = new HashSet<String>();
+
+    /** Packages we are not allowed to run. */
+    private HashSet<String> mInvalidPackages = new HashSet<String>();
 
     /** Categories we are allowed to launch **/
     private ArrayList<String> mMainCategories = new ArrayList<String>();
@@ -169,6 +179,25 @@ public class Monkey {
     public static String currentPackage;
 
     /**
+     * Check whether we should run against the givn package.
+     *
+     * @param pkg The package name.
+     * @return Returns true if we should run against pkg.
+     */
+    private boolean checkEnteringPackage(String pkg) {
+        if (mInvalidPackages.size() > 0) {
+            if (mInvalidPackages.contains(pkg)) {
+                return false;
+            }
+        } else if (mValidPackages.size() > 0) {
+            if (!mValidPackages.contains(pkg)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
      * Monitor operations happening in the system.
      */
     private class ActivityController extends IActivityController.Stub {
@@ -194,19 +223,6 @@ public class Monkey {
             }
             currentPackage = pkg;
             return allow;
-        }
-
-        private boolean checkEnteringPackage(String pkg) {
-            if (pkg == null) {
-                return true;
-            }
-            // preflight the hash lookup to avoid the cost of hash key
-            // generation
-            if (mValidPackages.size() == 0) {
-                return true;
-            } else {
-                return mValidPackages.contains(pkg);
-            }
         }
 
         public boolean appCrashed(String processName, int pid,
@@ -359,6 +375,10 @@ public class Monkey {
             return -1;
         }
 
+        if (!loadPackageLists()) {
+            return -1;
+        }
+
         // now set up additional data in preparation for launch
         if (mMainCategories.size() == 0) {
             mMainCategories.add(Intent.CATEGORY_LAUNCHER);
@@ -371,6 +391,12 @@ public class Monkey {
                 Iterator<String> it = mValidPackages.iterator();
                 while (it.hasNext()) {
                     System.out.println(":AllowPackage: " + it.next());
+                }
+            }
+            if (mInvalidPackages.size() > 0) {
+                Iterator<String> it = mInvalidPackages.iterator();
+                while (it.hasNext()) {
+                    System.out.println(":DisallowPackage: " + it.next());
                 }
             }
             if (mMainCategories.size() != 0) {
@@ -565,6 +591,10 @@ public class Monkey {
                 } else if (opt.equals("--pct-anyevent")) {
                     int i = MonkeySourceRandom.FACTOR_ANYTHING;
                     mFactors[i] = -nextOptionLong("any events percentage");
+                } else if (opt.equals("--pkg-blacklist-file")) {
+                    mPkgBlacklistFile = nextOptionData();
+                } else if (opt.equals("--pkg-whitelist-file")) {
+                    mPkgWhitelistFile = nextOptionData();
                 } else if (opt.equals("--throttle")) {
                     mThrottle = nextOptionLong("delay (in milliseconds) to wait between events");
                 } else if (opt.equals("--wait-dbg")) {
@@ -611,6 +641,62 @@ public class Monkey {
             }
         }
 
+        return true;
+    }
+
+    /**
+     * Load a list of package names from a file.
+     *
+     * @param fileName The file name, with package names separated by new line.
+     * @param list The destination list.
+     * @return Returns false if any error occurs.
+     */
+    private static boolean loadPackageListFromFile(String fileName, HashSet<String> list) {
+        BufferedReader reader = null;
+        try {
+            reader = new BufferedReader(new FileReader(fileName));
+            String s;
+            while ((s = reader.readLine()) != null) {
+                s = s.trim();
+                if ((s.length() > 0) && (!s.startsWith("#"))) {
+                    list.add(s);
+                }
+            }
+        } catch (IOException ioe) {
+            System.err.println(ioe);
+            return false;
+        } finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException ioe) {
+                    System.err.println(ioe);
+                }
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Load package blacklist or whitelist (if specified).
+     *
+     * @return Returns false if any error occurs.
+     */
+    private boolean loadPackageLists() {
+        if (((mPkgWhitelistFile != null) || (mValidPackages.size() > 0))
+                && (mPkgBlacklistFile != null)) {
+            System.err.println("** Error: you can not specify a package blacklist "
+                    + "together with a whitelist or individual packages (via -p).");
+            return false;
+        }
+        if ((mPkgWhitelistFile != null)
+                && (!loadPackageListFromFile(mPkgWhitelistFile, mValidPackages))) {
+            return false;
+        }
+        if ((mPkgBlacklistFile != null)
+                && (!loadPackageListFromFile(mPkgBlacklistFile, mInvalidPackages))) {
+            return false;
+        }
         return true;
     }
 
@@ -700,20 +786,17 @@ public class Monkey {
                 final int NA = mainApps.size();
                 for (int a = 0; a < NA; a++) {
                     ResolveInfo r = mainApps.get(a);
-                    if (mValidPackages.size() == 0
-                            || mValidPackages.contains(r.activityInfo.applicationInfo.packageName)) {
+                    String packageName = r.activityInfo.applicationInfo.packageName;
+                    if (checkEnteringPackage(packageName)) {
                         if (mVerbose >= 2) { // very verbose
                             System.out.println("//   + Using main activity " + r.activityInfo.name
-                                    + " (from package "
-                                    + r.activityInfo.applicationInfo.packageName + ")");
+                                    + " (from package " + packageName + ")");
                         }
-                        mMainApps.add(new ComponentName(r.activityInfo.applicationInfo.packageName,
-                                r.activityInfo.name));
+                        mMainApps.add(new ComponentName(packageName, r.activityInfo.name));
                     } else {
                         if (mVerbose >= 3) { // very very verbose
                             System.out.println("//   - NOT USING main activity "
-                                    + r.activityInfo.name + " (from package "
-                                    + r.activityInfo.applicationInfo.packageName + ")");
+                                    + r.activityInfo.name + " (from package " + packageName + ")");
                         }
                     }
                 }
@@ -974,6 +1057,8 @@ public class Monkey {
         usage.append("              [--pct-nav PERCENT] [--pct-majornav PERCENT]\n");
         usage.append("              [--pct-appswitch PERCENT] [--pct-flip PERCENT]\n");
         usage.append("              [--pct-anyevent PERCENT]\n");
+        usage.append("              [--pkg-blacklist-file PACKAGE_BLACKLIST_FILE]\n");
+        usage.append("              [--pkg-whitelist-file PACKAGE_WHITELIST_FILE]\n");
         usage.append("              [--wait-dbg] [--dbg-no-events]\n");
         usage.append("              [--setup scriptfile] [-f scriptfile [-f scriptfile] ...]\n");
         usage.append("              [--port port]\n");
