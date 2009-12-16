@@ -7,6 +7,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".NoteEdit"/>
+        <activity android:name=".NoteEdit" />
     </application>
 </manifest> 

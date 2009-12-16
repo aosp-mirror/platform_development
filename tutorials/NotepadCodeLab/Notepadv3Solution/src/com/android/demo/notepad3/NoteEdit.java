@@ -25,7 +25,7 @@ import android.widget.EditText;
 
 public class NoteEdit extends Activity {
 
-	private EditText mTitleText;
+    private EditText mTitleText;
     private EditText mBodyText;
     private Long mRowId;
     private NotesDbAdapter mDbHelper;
@@ -36,63 +36,62 @@ public class NoteEdit extends Activity {
         mDbHelper = new NotesDbAdapter(this);
         mDbHelper.open();
         setContentView(R.layout.note_edit);
-        
-       
+
+
         mTitleText = (EditText) findViewById(R.id.title);
         mBodyText = (EditText) findViewById(R.id.body);
-      
+
         Button confirmButton = (Button) findViewById(R.id.confirm);
-       
         mRowId = (savedInstanceState == null) ? null :
             (Long) savedInstanceState.getSerializable(NotesDbAdapter.KEY_ROWID);
 		if (mRowId == null) {
-			Bundle extras = getIntent().getExtras();            
-			mRowId = extras != null ? extras.getLong(NotesDbAdapter.KEY_ROWID) 
+			Bundle extras = getIntent().getExtras();
+			mRowId = extras != null ? extras.getLong(NotesDbAdapter.KEY_ROWID)
 									: null;
 		}
 
 		populateFields();
-		
+
         confirmButton.setOnClickListener(new View.OnClickListener() {
 
-        	public void onClick(View view) {
-        	    setResult(RESULT_OK);
-        	    finish();
-        	}
-          
+            public void onClick(View view) {
+                setResult(RESULT_OK);
+                finish();
+            }
+
         });
     }
-    
+
     private void populateFields() {
         if (mRowId != null) {
             Cursor note = mDbHelper.fetchNote(mRowId);
             startManagingCursor(note);
             mTitleText.setText(note.getString(
-    	            note.getColumnIndexOrThrow(NotesDbAdapter.KEY_TITLE)));
+                    note.getColumnIndexOrThrow(NotesDbAdapter.KEY_TITLE)));
             mBodyText.setText(note.getString(
                     note.getColumnIndexOrThrow(NotesDbAdapter.KEY_BODY)));
         }
     }
-    
+
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         saveState();
         outState.putSerializable(NotesDbAdapter.KEY_ROWID, mRowId);
     }
-    
+
     @Override
     protected void onPause() {
         super.onPause();
         saveState();
     }
-    
+
     @Override
     protected void onResume() {
         super.onResume();
         populateFields();
     }
-    
+
     private void saveState() {
         String title = mTitleText.getText().toString();
         String body = mBodyText.getText().toString();
@@ -106,5 +105,5 @@ public class NoteEdit extends Activity {
             mDbHelper.updateNote(mRowId, title, body);
         }
     }
-    
+
 }

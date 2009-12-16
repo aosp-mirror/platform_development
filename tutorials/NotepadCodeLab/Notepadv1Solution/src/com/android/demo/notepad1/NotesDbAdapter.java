@@ -43,13 +43,13 @@ public class NotesDbAdapter {
     private static final String TAG = "NotesDbAdapter";
     private DatabaseHelper mDbHelper;
     private SQLiteDatabase mDb;
-    
+
     /**
      * Database creation sql statement
      */
     private static final String DATABASE_CREATE =
-            "create table notes (_id integer primary key autoincrement, "
-                    + "title text not null, body text not null);";
+        "create table notes (_id integer primary key autoincrement, "
+        + "title text not null, body text not null);";
 
     private static final String DATABASE_NAME = "data";
     private static final String DATABASE_TABLE = "notes";
@@ -102,7 +102,7 @@ public class NotesDbAdapter {
         mDb = mDbHelper.getWritableDatabase();
         return this;
     }
-    
+
     public void close() {
         mDbHelper.close();
     }
@@ -158,9 +158,9 @@ public class NotesDbAdapter {
 
         Cursor mCursor =
 
-                mDb.query(true, DATABASE_TABLE, new String[] {KEY_ROWID,
-                        KEY_TITLE, KEY_BODY}, KEY_ROWID + "=" + rowId, null,
-                        null, null, null, null);
+            mDb.query(true, DATABASE_TABLE, new String[] {KEY_ROWID,
+                    KEY_TITLE, KEY_BODY}, KEY_ROWID + "=" + rowId, null,
+                    null, null, null, null);
         if (mCursor != null) {
             mCursor.moveToFirst();
         }
