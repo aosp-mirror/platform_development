@@ -19,6 +19,11 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent">
 
+    <Button android:id="@+id/bad_behavior_crash_system"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/bad_behavior_crash_system_label" />
+
     <Button android:id="@+id/bad_behavior_crash_main"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -28,6 +33,11 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/bad_behavior_crash_thread_label" />
+
+    <Button android:id="@+id/bad_behavior_wtf"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/bad_behavior_wtf_label" />
 
     <Button android:id="@+id/bad_behavior_anr"
             android:layout_width="wrap_content"

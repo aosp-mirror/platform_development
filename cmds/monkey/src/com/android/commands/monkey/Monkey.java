@@ -226,7 +226,7 @@ public class Monkey {
         }
 
         public boolean appCrashed(String processName, int pid,
-                String tag, String shortMsg, String longMsg,
+                String shortMsg, String longMsg,
                 long timeMillis, String stackTrace) {
             System.err.println("// CRASH: " + processName + " (pid " + pid + ")");
             System.err.println("// Short Msg: " + shortMsg);
@@ -234,8 +234,6 @@ public class Monkey {
             System.err.println("// Build Label: " + Build.FINGERPRINT);
             System.err.println("// Build Changelist: " + Build.VERSION.INCREMENTAL);
             System.err.println("// Build Time: " + Build.TIME);
-            System.err.println("// ID: ");  // TODO: This was never set -- remove?
-            System.err.println("// Tag: " + tag);
             System.err.println("// " + stackTrace.replace("\n", "\n// "));
 
             if (!mIgnoreCrashes) {

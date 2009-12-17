@@ -195,7 +195,9 @@
     <string name="select_account_to_sync">Select account to sync</string>
 
     <!-- BadBehaviorActivity -->
-    <string name="bad_behavior_crash_main_label">Crash the main thread</string>
-    <string name="bad_behavior_crash_thread_label">Crash an auxiliary thread</string>
+    <string name="bad_behavior_crash_system_label">Crash the system server</string>
+    <string name="bad_behavior_crash_main_label">Crash the main app thread</string>
+    <string name="bad_behavior_crash_thread_label">Crash an auxiliary app thread</string>
+    <string name="bad_behavior_wtf_label">Report a WTF condition</string>
     <string name="bad_behavior_anr_label">Stop responding for 20 seconds (ANR)</string>
 </resources>

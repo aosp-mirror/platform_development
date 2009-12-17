@@ -18,8 +18,13 @@ package com.android.development;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.widget.Button;
+import android.os.IBinder;
+import android.os.IPowerManager;
+import android.os.RemoteException;
+import android.os.ServiceManager;
+import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 
 public class BadBehaviorActivity extends Activity {
     static class BadBehaviorException extends RuntimeException {
@@ -34,6 +39,19 @@ public class BadBehaviorActivity extends Activity {
         super.onCreate(icicle);
         setContentView(R.layout.bad_behavior);
 
+        Button crash_system = (Button) findViewById(R.id.bad_behavior_crash_system);
+        crash_system.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                try {
+                    IBinder b = ServiceManager.getService(POWER_SERVICE);
+                    IPowerManager pm = IPowerManager.Stub.asInterface(b);
+                    pm.crash("Crashed by BadBehaviorActivity");
+                } catch (RemoteException e) {
+                    Log.e("BadBehavior", "Can't call IPowerManager.crash()", e);
+                }
+            }
+        });
+
         Button crash_main = (Button) findViewById(R.id.bad_behavior_crash_main);
         crash_main.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) { throw new BadBehaviorException(); }
@@ -47,6 +65,11 @@ public class BadBehaviorActivity extends Activity {
                     public void run() { throw new BadBehaviorException(); }
                 }.start();
             }
+        });
+
+        Button wtf = (Button) findViewById(R.id.bad_behavior_wtf);
+        wtf.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) { Log.wtf("BadBehavior", "Apps Behaving Badly"); }
         });
 
         Button anr = (Button) findViewById(R.id.bad_behavior_anr);
