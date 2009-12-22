@@ -351,17 +351,12 @@ public class LabelMaker {
      */
     public void draw(GL10 gl, float x, float y, int labelID) {
         checkState(STATE_DRAWING, STATE_DRAWING);
-        gl.glPushMatrix();
-        float snappedX = (float) Math.floor(x);
-        float snappedY = (float) Math.floor(y);
-        gl.glTranslatef(snappedX, snappedY, 0.0f);
         Label label = mLabels.get(labelID);
         gl.glEnable(GL10.GL_TEXTURE_2D);
         ((GL11)gl).glTexParameteriv(GL10.GL_TEXTURE_2D,
                 GL11Ext.GL_TEXTURE_CROP_RECT_OES, label.mCrop, 0);
-        ((GL11Ext)gl).glDrawTexiOES((int) snappedX, (int) snappedY, 0,
+        ((GL11Ext)gl).glDrawTexiOES((int) x, (int) y, 0,
                 (int) label.width, (int) label.height);
-        gl.glPopMatrix();
     }
 
     /**
