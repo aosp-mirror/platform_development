@@ -50,9 +50,25 @@ import com.example.android.apis.R;
  */
 public class StaticTriangleRenderer implements GLSurfaceView.Renderer{
 
+    public interface TextureLoader {
+        /**
+         * Load a texture into the currently bound OpenGL texture.
+         */
+        void load(GL10 gl);
+    }
+
     public StaticTriangleRenderer(Context context) {
+        init(context, new RobotTextureLoader());
+    }
+
+    public StaticTriangleRenderer(Context context, TextureLoader loader) {
+        init(context, loader);
+    }
+
+    private void init(Context context, TextureLoader loader) {
         mContext = context;
         mTriangle = new Triangle();
+        mTextureLoader = loader;
     }
 
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
@@ -99,22 +115,7 @@ public class StaticTriangleRenderer implements GLSurfaceView.Renderer{
 
         glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE,
                 GL_REPLACE);
-
-        InputStream is = mContext.getResources()
-                .openRawResource(R.raw.robot);
-        Bitmap bitmap;
-        try {
-            bitmap = BitmapFactory.decodeStream(is);
-        } finally {
-            try {
-                is.close();
-            } catch(IOException e) {
-                // Ignore.
-            }
-        }
-
-        GLUtils.texImage2D(GL_TEXTURE_2D, 0, bitmap, 0);
-        bitmap.recycle();
+        mTextureLoader.load(gl);
     }
 
     public void onDrawFrame(GL10 gl) {
@@ -181,6 +182,27 @@ public class StaticTriangleRenderer implements GLSurfaceView.Renderer{
     private Context mContext;
     private Triangle mTriangle;
     private int mTextureID;
+    private TextureLoader mTextureLoader;
+
+    private class RobotTextureLoader implements TextureLoader {
+        public void load(GL10 gl) {
+            InputStream is = mContext.getResources().openRawResource(
+                    R.raw.robot);
+            Bitmap bitmap;
+            try {
+                bitmap = BitmapFactory.decodeStream(is);
+            } finally {
+                try {
+                    is.close();
+                } catch (IOException e) {
+                    // Ignore.
+                }
+            }
+
+            GLUtils.texImage2D(GL_TEXTURE_2D, 0, bitmap, 0);
+            bitmap.recycle();
+        }
+    }
 
     static class Triangle {
         public Triangle() {

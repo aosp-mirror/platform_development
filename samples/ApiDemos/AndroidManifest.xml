@@ -1405,7 +1405,17 @@
                 <category android:name="android.intent.category.SAMPLE_CODE" />
             </intent-filter>
         </activity>
-
+        
+        <activity android:name=".graphics.CompressedTextureActivity"
+                android:label="Graphics/OpenGL ES/Compressed Texture"
+                android:theme="@android:style/Theme.NoTitleBar"
+                android:configChanges="orientation|keyboardHidden">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+        
         <activity android:name=".graphics.GLSurfaceViewActivity"
                 android:label="Graphics/OpenGL ES/GLSurfaceView"
                 android:theme="@android:style/Theme.NoTitleBar"
