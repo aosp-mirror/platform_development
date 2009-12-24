@@ -40,7 +40,6 @@ See test_defs.xsd for more information.
 <test name="android"
     build_path="frameworks/base/tests/AndroidTests"
     package="com.android.unit_tests"
-    class="com.android.unit_tests.AndroidTests"
     coverage_target="framework"
     continuous="true" />
 
