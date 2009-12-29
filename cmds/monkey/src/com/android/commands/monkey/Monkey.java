@@ -717,7 +717,6 @@ public class Monkey {
      */
     private int runMonkeyCycles() {
         int i = 0;
-        int lastKey = 0;
 
         boolean systemCrashed = false;
 
@@ -753,7 +752,7 @@ public class Monkey {
                 continue;
             }
 
-            if ((mVerbose > 0) && (i % 100) == 0 && i != 0 && lastKey == 0) {
+            if ((mVerbose > 0) && (i % 100) == 0 && i != 0) {
                 System.out.println("    // Sending event #" + i);
             }
 
@@ -774,16 +773,21 @@ public class Monkey {
                     }
                 } else if (injectCode == MonkeyEvent.INJECT_ERROR_REMOTE_EXCEPTION) {
                     systemCrashed = true;
+                    System.err.println("** Error: RemoteException while injecting event.");
                 } else if (injectCode == MonkeyEvent.INJECT_ERROR_SECURITY_EXCEPTION) {
                     systemCrashed = !mIgnoreSecurityExceptions;
+                    if (systemCrashed) {
+                        System.err.println("** Error: SecurityException while injecting event.");
+                    }
                 }
             } else {
                 // Event Source has signaled that we have no more events to process
+                System.err.println("** Error: Event source exhausted.");
                 break;
             }
         }
-        // If we got this far, we succeeded!
-        return mCount;
+        System.out.println("Events injected: " + i);
+        return i;
     }
 
     /**
