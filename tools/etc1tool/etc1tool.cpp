@@ -142,6 +142,7 @@ int read_PNG_File(const char* pInput, etc1_byte** ppImageData,
     png_bytep* row_pointers = NULL; // Does not need to be deallocated.
     png_uint_32 width = 0;
     png_uint_32 height = 0;
+    png_uint_32 stride = 0;
     int result = -1;
     etc1_byte* pSourceImage = 0;
 
@@ -196,7 +197,7 @@ int read_PNG_File(const char* pInput, etc1_byte** ppImageData,
                 &color_type, NULL, NULL, NULL);
     }
 
-    png_uint_32 stride = 3 * width;
+    stride = 3 * width;
 
     pSourceImage = new etc1_byte[stride * height];
     if (! pSourceImage) {
