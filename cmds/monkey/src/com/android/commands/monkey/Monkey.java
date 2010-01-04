@@ -28,6 +28,7 @@ import android.os.Debug;
 import android.os.Process;
 import android.os.RemoteException;
 import android.os.ServiceManager;
+import android.os.SystemProperties;
 import android.server.data.CrashData;
 import android.view.IWindowManager;
 
@@ -300,6 +301,15 @@ public class Monkey {
      * @param args The command-line arguments
      */
     public static void main(String[] args) {
+        // Tell the system that Monkey is running.
+        SystemProperties.set("monkey.running", "true");
+        // Add a hook to tell the system that Monkey has finished running.
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            public void run() {
+                SystemProperties.set("monkey.running", null);
+            }
+        });
+
         int resultCode = (new Monkey()).run(args);
         System.exit(resultCode);
     }
