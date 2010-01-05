@@ -152,7 +152,7 @@ public class PackageSummary extends Activity {
             mRestart.setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {
                     try {
-                        ActivityManagerNative.getDefault().restartPackage(mPackageName);
+                        ActivityManagerNative.getDefault().killBackgroundProcesses(mPackageName);
                     } catch (RemoteException e) {
                     }
                 }
