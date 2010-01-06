@@ -301,14 +301,8 @@ public class Monkey {
      * @param args The command-line arguments
      */
     public static void main(String[] args) {
-        // Tell the system that Monkey is running.
-        SystemProperties.set("monkey.running", "true");
-        // Add a hook to tell the system that Monkey has finished running.
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            public void run() {
-                SystemProperties.set("monkey.running", null);
-            }
-        });
+        // Set ro.monkey if it's not set yet.
+        SystemProperties.set("ro.monkey", "true");
 
         int resultCode = (new Monkey()).run(args);
         System.exit(resultCode);
