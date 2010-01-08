@@ -44,4 +44,19 @@
             android:layout_height="wrap_content"
             android:text="@string/bad_behavior_anr_label" />
 
+    <Button android:id="@+id/bad_behavior_anr_activity"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/bad_behavior_anr_activity_label" />
+
+    <Button android:id="@+id/bad_behavior_anr_broadcast"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/bad_behavior_anr_broadcast_label" />
+
+    <Button android:id="@+id/bad_behavior_anr_service"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/bad_behavior_anr_service_label" />
+
 </LinearLayout>

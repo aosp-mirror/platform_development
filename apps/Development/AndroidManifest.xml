@@ -161,11 +161,18 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
+
         <activity android:name="BadBehaviorActivity" android:label="Bad Behavior">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.TEST" />
             </intent-filter>
         </activity>
+        <receiver android:name="BadBehaviorActivity$BadReceiver">
+            <intent-filter>
+                <action android:name="com.android.development.BAD_BEHAVIOR" />
+            </intent-filter>
+        </receiver>
+        <service android:name="BadBehaviorActivity$BadService" />
     </application>
 </manifest>
