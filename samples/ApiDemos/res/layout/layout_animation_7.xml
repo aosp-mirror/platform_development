@@ -19,8 +19,8 @@
     android:animationCache="false"
     android:clipToPadding="false"
     android:padding="12dp"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
     android:stretchColumns="1">
 
     <TableRow

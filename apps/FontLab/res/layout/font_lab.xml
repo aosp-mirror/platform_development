@@ -16,14 +16,14 @@
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/content"
-    android:layout_width="fill_parent" android:layout_height="fill_parent"
+    android:layout_width="match_parent" android:layout_height="match_parent"
     android:orientation="vertical"
     android:paddingLeft="4dip" android:paddingRight="4dip"
     android:paddingTop="4dip" android:paddingBottom="4dip">
         
-    <TextView android:id="@+id/column1" android:layout_width="fill_parent" android:layout_height="0dip" android:layout_weight="1"
+    <TextView android:id="@+id/column1" android:layout_width="match_parent" android:layout_height="0dip" android:layout_weight="1"
         android:layout_marginBottom="8dip" />
-    <TextView android:id="@+id/column2" android:layout_width="fill_parent" android:layout_height="0dip" android:layout_weight="1" />
+    <TextView android:id="@+id/column2" android:layout_width="match_parent" android:layout_height="0dip" android:layout_weight="1" />
         
 </LinearLayout>
 

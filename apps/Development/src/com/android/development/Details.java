@@ -27,7 +27,6 @@ import android.widget.ScrollView;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
@@ -75,8 +74,8 @@ public class Details extends Activity
         }
         mLinearLayout = new LinearLayout(this);
         mScrollView.addView(mLinearLayout, new ViewGroup.LayoutParams(
-                                        ViewGroup.LayoutParams.FILL_PARENT,
-                                        ViewGroup.LayoutParams.FILL_PARENT));
+                                        ViewGroup.LayoutParams.MATCH_PARENT,
+                                        ViewGroup.LayoutParams.MATCH_PARENT));
         mLinearLayout.setOrientation(LinearLayout.VERTICAL);
 
         // Here in onStart, we're given data.  We use that because some
@@ -109,7 +108,7 @@ public class Details extends Activity
     
     LinearLayout.LayoutParams lazy()
     {
-        return new LinearLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT,
+        return new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
                                  ViewGroup.LayoutParams.WRAP_CONTENT, 0);
     }
 

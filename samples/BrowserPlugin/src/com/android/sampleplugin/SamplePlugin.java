@@ -38,8 +38,6 @@ import android.view.ViewGroup.LayoutParams;
 import android.webkit.plugin.NativePlugin;
 import android.webkit.plugin.SurfaceDrawingModel;
 import android.widget.FrameLayout;
-import android.widget.MediaController;
-import android.widget.VideoView;
 
 public class SamplePlugin implements NativePlugin {
 
@@ -152,15 +150,15 @@ public class SamplePlugin implements NativePlugin {
              */
 
             FrameLayout layout = new FrameLayout(context);
-            LayoutParams fp = new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT);
+            LayoutParams fp = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
             layout.setLayoutParams(fp);
 
 //            VideoView video = new VideoView(context);
-//            LayoutParams vp = new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT);
+//            LayoutParams vp = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
 //            layout.setLayoutParams(vp);
 
             GLSurfaceView gl = new GLSurfaceView(context);
-            LayoutParams gp = new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT);
+            LayoutParams gp = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
             layout.setLayoutParams(gp);
 
             layout.addView(gl);

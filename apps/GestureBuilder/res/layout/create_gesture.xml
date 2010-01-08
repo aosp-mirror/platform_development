@@ -17,13 +17,13 @@
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
 
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
     
     android:orientation="vertical">
 
     <LinearLayout
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
 
         android:orientation="horizontal">
@@ -49,7 +49,7 @@
     
     <android.gesture.GestureOverlayView
         android:id="@+id/gestures_overlay"
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="0dip"
         android:layout_weight="1.0"
 
@@ -58,7 +58,7 @@
     <LinearLayout
         style="@android:style/ButtonBar"
 
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
 
         android:orientation="horizontal">

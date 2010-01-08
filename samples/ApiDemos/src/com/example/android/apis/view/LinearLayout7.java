@@ -25,7 +25,7 @@ import android.os.Bundle;
 
 
 /**
- * Demonstrates using fill_parent within a linear layout whose size is not fixed.
+ * Demonstrates using match_parent within a linear layout whose size is not fixed.
  *
  */
 public class LinearLayout7 extends Activity {

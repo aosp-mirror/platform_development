@@ -16,12 +16,12 @@
 
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent">
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
 
     <LinearLayout
         android:orientation="vertical"
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content">
     
         <Button android:id="@+id/button"
@@ -30,7 +30,7 @@
             android:layout_height="wrap_content"/>
     
         <EditText android:id="@+id/edit"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
             
         <CheckBox android:id="@+id/check1"
@@ -46,7 +46,7 @@
             android:text="@string/controls_1_checkbox_2" />
     
         <RadioGroup
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
     
@@ -77,13 +77,13 @@
             android:layout_height="wrap_content" />
              
         <Spinner android:id="@+id/spinner1"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:drawSelectorOnTop="true"
         />
 
         <TextView
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="5dip"
             android:text="@string/textColorPrimary"
@@ -92,7 +92,7 @@
         />
 
         <TextView
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="5dip"
             android:text="@string/textColorSecondary"
@@ -102,7 +102,7 @@
         />
 
         <TextView
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="5dip"
             android:text="@string/textColorTertiary"

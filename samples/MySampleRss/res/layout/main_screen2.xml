@@ -15,19 +15,19 @@
 -->
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:layout_height="fill_parent" 
-              android:layout_width="fill_parent"
+              android:layout_height="match_parent" 
+              android:layout_width="match_parent"
               android:orientation="vertical"
               android:scrollbars="vertical">
 	                 
 	       <ListView android:id="@+id/rssListView" 
 	                 android:layout_height="0px"
-	                 android:layout_width="fill_parent"
+	                 android:layout_width="match_parent"
 	                 android:layout_weight="1"
 	                 android:background="#9900FF00"/>
                   
 				<WebView android:id="@+id/rssWebView"
 				         android:layout_height="0px"
-				         android:layout_width="fill_parent"
+				         android:layout_width="match_parent"
 				         android:layout_weight="2"/>
 </LinearLayout>

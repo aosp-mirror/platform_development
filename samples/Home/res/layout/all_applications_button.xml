@@ -28,7 +28,7 @@
         android:id="@+id/show_all_apps_check"
         android:focusable="false"
         android:clickable="false"
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@drawable/all_applications_background"
         android:button="@drawable/all_applications"

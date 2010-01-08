@@ -16,7 +16,7 @@
 
 <!--
     LinearLayout which uses a combination of wrap_content on itself and
-    fill_parent on its children to get every item to be the same width.
+    match_parent on its children to get every item to be the same width.
 -->
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -28,25 +28,25 @@
 
     <TextView
         android:background="@drawable/box"
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/linear_layout_6_one"/>
 
     <TextView
         android:background="@drawable/box"
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/linear_layout_6_two"/>
 
     <TextView
         android:background="@drawable/box"
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/linear_layout_6_three"/>
 
     <TextView
         android:background="@drawable/box"
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/linear_layout_6_four"/>
 

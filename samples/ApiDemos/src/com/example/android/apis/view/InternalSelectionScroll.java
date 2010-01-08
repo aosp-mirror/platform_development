@@ -44,7 +44,7 @@ public class InternalSelectionScroll extends Activity {
 
         ScrollView sv = new ScrollView(this);
         ViewGroup.LayoutParams svLp = new ScrollView.LayoutParams(
-                ViewGroup.LayoutParams.FILL_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT);
 
         LinearLayout ll = new LinearLayout(this);
@@ -54,7 +54,7 @@ public class InternalSelectionScroll extends Activity {
         InternalSelectionView isv = new InternalSelectionView(this, 10);
         int screenHeight = getWindowManager().getDefaultDisplay().getHeight();
         LinearLayout.LayoutParams llLp = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.FILL_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT,
                 2 * screenHeight);  // 2x screen height to ensure scrolling
         isv.setLayoutParams(llLp);
         ll.addView(isv);

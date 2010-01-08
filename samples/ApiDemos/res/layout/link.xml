@@ -16,7 +16,7 @@
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
               android:orientation="vertical"
-              android:layout_width="fill_parent"
+              android:layout_width="match_parent"
               android:layout_height="wrap_content">
 
   <!-- Four TextView widgets, each one displaying text containing links. -->
@@ -24,8 +24,8 @@
   <!-- text1 automatically linkifies things like URLs and phone numbers. -->
   <TextView xmlns:android="http://schemas.android.com/apk/res/android"
             android:id="@+id/text1"
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
             android:autoLink="all"
             android:text="@string/link_text_auto"
             />
@@ -34,23 +34,23 @@
        specify links. -->
   <TextView xmlns:android="http://schemas.android.com/apk/res/android"
             android:id="@+id/text2"
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
             android:text="@string/link_text_manual"
             />
 
   <!-- text3 builds the text in the Java code using HTML. -->
   <TextView xmlns:android="http://schemas.android.com/apk/res/android"
             android:id="@+id/text3"
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
             />
 
   <!-- text4 builds the text in the Java code without using HTML. -->
   <TextView xmlns:android="http://schemas.android.com/apk/res/android"
             android:id="@+id/text4"
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
             />
 
 </LinearLayout>

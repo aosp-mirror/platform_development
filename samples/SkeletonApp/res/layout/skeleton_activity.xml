@@ -22,7 +22,7 @@
      a row, here set to be vertical (so the first is at the top) -->
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent" android:layout_height="fill_parent"
+    android:layout_width="match_parent" android:layout_height="match_parent"
     android:orientation="vertical">
 
     <!-- First view is a text editor.  We want it to use all available
@@ -30,7 +30,7 @@
          is available to it.  Note the use of the "id" attribute, which
          allows us to find this object from the Java code. -->
     <EditText android:id="@+id/editor"
-        android:layout_width="fill_parent" android:layout_height="0dip"
+        android:layout_width="match_parent" android:layout_height="0dip"
         android:autoText="true"
         android:capitalize="sentences"
         android:layout_weight="1"

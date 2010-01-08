@@ -15,19 +15,19 @@
 -->
 
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android" 
-    android:layout_width="fill_parent" 
-    android:layout_height="fill_parent"> 
+    android:layout_width="match_parent" 
+    android:layout_height="match_parent"> 
     
     <ImageSwitcher android:id="@+id/switcher"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:layout_alignParentTop="true"
         android:layout_alignParentLeft="true"
     />
     
     <Gallery android:id="@+id/gallery"
         android:background="#55000000"
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="60dp"
         android:layout_alignParentBottom="true"
         android:layout_alignParentLeft="true"

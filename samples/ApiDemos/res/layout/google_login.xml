@@ -18,8 +18,8 @@
      See corresponding Java code com.android.sdk.content.StyledText -->
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
     android:orientation="vertical">
 
     <Button
@@ -46,14 +46,14 @@
     <TextView
         android:id="@+id/username_label"
         android:visibility="gone"
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/googlelogin_user"/>
 
     <TextView
         android:id="@+id/username"
         android:visibility="gone"
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/google_login_username_text"/>
 

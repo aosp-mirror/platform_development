@@ -28,7 +28,6 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 import android.widget.LinearLayout.LayoutParams;
 
 /**
@@ -63,11 +62,11 @@ public class LaunchingPreferences extends Activity implements OnClickListener {
         Button launchPreferences = new Button(this);
         launchPreferences.setText(getString(R.string.launch_preference_activity));
         launchPreferences.setOnClickListener(this);
-        layout.addView(launchPreferences, new LayoutParams(LayoutParams.FILL_PARENT,
+        layout.addView(launchPreferences, new LayoutParams(LayoutParams.MATCH_PARENT,
                 LayoutParams.WRAP_CONTENT));
         
         mCounterText = new TextView(this);
-        layout.addView(mCounterText, new LayoutParams(LayoutParams.FILL_PARENT,
+        layout.addView(mCounterText, new LayoutParams(LayoutParams.MATCH_PARENT,
                 LayoutParams.WRAP_CONTENT));
         
         updateCounterText();

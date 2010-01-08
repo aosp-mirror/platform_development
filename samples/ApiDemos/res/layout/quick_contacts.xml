@@ -16,7 +16,7 @@
 
 <RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
+    android:layout_width="match_parent"
     android:paddingLeft="0dip"
     android:paddingRight="9dip"
     android:layout_height= "wrap_content"
@@ -41,7 +41,7 @@
         android:paddingLeft="2dip"
         android:layout_centerVertical="true"
         android:layout_toRightOf="@id/badge"
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 
 </RelativeLayout>

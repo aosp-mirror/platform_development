@@ -15,19 +15,19 @@
 -->
 
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
+    android:layout_width="match_parent"
     android:layout_height="?android:attr/listPreferredItemHeight"
     android:padding="6dip">
     <ImageView
         android:id="@+id/accountIcon"
         android:layout_width="wrap_content"
-        android:layout_height="fill_parent"
+        android:layout_height="match_parent"
         android:layout_alignParentTop="true"
         android:layout_alignParentBottom="true"
         android:layout_marginRight="6dip" />
     <TextView
         android:id="@+id/secondAccountLine"
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="26dip"
         android:layout_toRightOf="@id/accountIcon"
         android:layout_alignParentBottom="true"
@@ -37,7 +37,7 @@
         android:textColor="@android:color/secondary_text_light" />
     <TextView
         android:id="@+id/firstAccountLine"
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_toRightOf="@id/accountIcon"
         android:layout_alignParentRight="true"

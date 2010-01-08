@@ -374,11 +374,11 @@ public class List6 extends ListActivity
             
             mTitle = new TextView(context);
             mTitle.setText(title);
-            addView(mTitle, new LinearLayout.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT));
+            addView(mTitle, new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
             
             mDialogue = new TextView(context);
             mDialogue.setText(dialogue);
-            addView(mDialogue, new LinearLayout.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT));
+            addView(mDialogue, new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
             
             mDialogue.setVisibility(expanded ? VISIBLE : GONE);
         }

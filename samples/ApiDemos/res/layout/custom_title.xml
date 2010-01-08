@@ -19,10 +19,10 @@
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" 
     android:id="@+id/screen"
-    android:layout_width="fill_parent" 
-    android:layout_height="fill_parent"
+    android:layout_width="match_parent" 
+    android:layout_height="match_parent"
     android:orientation="vertical">
-    <LinearLayout android:layout_width="fill_parent" 
+    <LinearLayout android:layout_width="match_parent" 
         android:layout_height="wrap_content"
         android:baselineAligned="false">
         <EditText android:id="@+id/left_text_edit"
@@ -38,7 +38,7 @@
             android:layout_gravity="center_vertical"
             android:text="@string/custom_title_left_button"/>
     </LinearLayout>
-    <LinearLayout android:layout_width="fill_parent" 
+    <LinearLayout android:layout_width="match_parent" 
         android:layout_height="wrap_content"
         android:baselineAligned="false">
         <EditText android:id="@+id/right_text_edit"

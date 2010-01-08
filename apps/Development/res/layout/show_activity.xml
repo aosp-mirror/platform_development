@@ -19,20 +19,20 @@
 -->
 
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent">
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
 
     <LinearLayout
-        android:layout_width="fill_parent" android:layout_height="fill_parent"
+        android:layout_width="match_parent" android:layout_height="match_parent"
         android:orientation="vertical"
         android:paddingTop="8dip" android:paddingLeft="2dip" android:paddingRight="2dip" >
     
         <TextView android:id="@+id/packageView"
-            android:layout_width="fill_parent" android:layout_height="wrap_content"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
             android:textStyle="bold" />
     
         <LinearLayout
-            android:layout_width="fill_parent" android:layout_height="wrap_content"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:paddingTop="4dip"
             android:paddingBottom="6dip" >
@@ -42,63 +42,63 @@
                 android:paddingRight="8dip" />
                  
             <LinearLayout
-                android:layout_width="fill_parent" android:layout_height="wrap_content"
+                android:layout_width="match_parent" android:layout_height="wrap_content"
                 android:orientation="vertical">
     
                 <TextView android:id="@+id/classView"
-                    android:layout_width="fill_parent" android:layout_height="wrap_content" />
+                    android:layout_width="match_parent" android:layout_height="wrap_content" />
     
                 <TextView android:id="@+id/label"
-                    android:layout_width="fill_parent" android:layout_height="wrap_content" />
+                    android:layout_width="match_parent" android:layout_height="wrap_content" />
     
                 <TextView android:id="@+id/launch"
-                    android:layout_width="fill_parent" android:layout_height="wrap_content" />
+                    android:layout_width="match_parent" android:layout_height="wrap_content" />
 
             </LinearLayout>
     
         </LinearLayout>
     
         <TextView style="@style/SummaryCategoryLayout"
-            android:layout_width="fill_parent" android:layout_height="wrap_content"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
             android:textStyle="bold" android:text="@string/show_activity_process_label" />
     
         <TextView android:id="@+id/process"
-            android:layout_width="fill_parent" android:layout_height="wrap_content" />
+            android:layout_width="match_parent" android:layout_height="wrap_content" />
     
         <TextView style="@style/SummaryCategoryLayout"
-            android:layout_width="fill_parent" android:layout_height="wrap_content"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
             android:textStyle="bold" android:text="@string/show_activity_task_affinity_label" />
     
         <TextView android:id="@+id/taskAffinity"
-            android:layout_width="fill_parent" android:layout_height="wrap_content" />
+            android:layout_width="match_parent" android:layout_height="wrap_content" />
     
         <TextView style="@style/SummaryCategoryLayout"
-            android:layout_width="fill_parent" android:layout_height="wrap_content"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
             android:textStyle="bold" android:text="@string/show_activity_required_permission_label" />
     
         <TextView android:id="@+id/permission"
-            android:layout_width="fill_parent" android:layout_height="wrap_content" />
+            android:layout_width="match_parent" android:layout_height="wrap_content" />
     
         <TextView style="@style/SummaryCategoryLayout"
-            android:layout_width="fill_parent" android:layout_height="wrap_content"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
             android:textStyle="bold" android:text="@string/show_activity_multiprocess_label" />
     
         <TextView android:id="@+id/multiprocess"
-            android:layout_width="fill_parent" android:layout_height="wrap_content" />
+            android:layout_width="match_parent" android:layout_height="wrap_content" />
     
         <TextView style="@style/SummaryCategoryLayout"
-            android:layout_width="fill_parent" android:layout_height="wrap_content"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
             android:textStyle="bold" android:text="@string/show_activity_clear_on_background_label" />
     
         <TextView android:id="@+id/clearOnBackground"
-            android:layout_width="fill_parent" android:layout_height="wrap_content" />
+            android:layout_width="match_parent" android:layout_height="wrap_content" />
     
         <TextView style="@style/SummaryCategoryLayout"
-            android:layout_width="fill_parent" android:layout_height="wrap_content"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
             android:textStyle="bold" android:text="@string/show_activity_state_not_needed_label" />
     
         <TextView android:id="@+id/stateNotNeeded"
-            android:layout_width="fill_parent" android:layout_height="wrap_content" />
+            android:layout_width="match_parent" android:layout_height="wrap_content" />
     
     </LinearLayout>
 

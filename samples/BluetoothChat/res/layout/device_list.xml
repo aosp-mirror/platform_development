@@ -15,11 +15,11 @@
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
     >
     <TextView android:id="@+id/title_paired_devices"
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/title_paired_devices"
         android:visibility="gone"
@@ -28,13 +28,13 @@
         android:paddingLeft="5dp"
     />
     <ListView android:id="@+id/paired_devices"
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:stackFromBottom="true"
         android:layout_weight="1"
     />
     <TextView android:id="@+id/title_new_devices"
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/title_other_devices"
         android:visibility="gone"
@@ -43,13 +43,13 @@
         android:paddingLeft="5dp"
     />
     <ListView android:id="@+id/new_devices"
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:stackFromBottom="true"
         android:layout_weight="2"
     />
     <Button android:id="@+id/button_scan"
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/button_scan"
     />

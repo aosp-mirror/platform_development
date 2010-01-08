@@ -15,75 +15,75 @@
 -->
 
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent">
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
 
     <LinearLayout
         android:orientation="vertical"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:padding="4dip" >
     
         <TextView android:id="@+id/attr_package_label"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/package_label"
             android:textStyle="bold" />
         <TextView android:id="@+id/attr_package"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
 
         <TextView android:id="@+id/attr_touchscreen_label"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/touchscreen_label"
             android:textStyle="bold" />
         <TextView android:id="@+id/attr_touchscreen"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
 
         <TextView android:id="@+id/attr_input_method_label"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/input_method_label"
             android:textStyle="bold" />
         <TextView android:id="@+id/attr_input_method"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
 
         <TextView android:id="@+id/attr_hard_keyboard_label"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/hard_keyboard_label"
             android:textStyle="bold" />
         <TextView android:id="@+id/attr_hard_keyboard"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
 
         <TextView android:id="@+id/attr_navigation_label"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/navigation_label"
             android:textStyle="bold" />
         <TextView android:id="@+id/attr_navigation"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
 
         <TextView android:id="@+id/attr_five_way_nav_label"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/five_way_nav_label"
             android:textStyle="bold" />
         <TextView android:id="@+id/attr_five_way_nav"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
         <TextView android:id="@+id/attr_gles_version_label"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/gles_version_label"
             android:textStyle="bold" />
         <TextView android:id="@+id/attr_gles_version"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
     </LinearLayout>
 </ScrollView>

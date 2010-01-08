@@ -18,27 +18,27 @@
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
         android:orientation="vertical"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent">
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
 
     <!-- Here is where we put the SurfaceView, in a frame so that we can
          stack other views on top of it. -->
     <FrameLayout
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="0px"
             android:layout_weight="1">
 
         <android.opengl.GLSurfaceView android:id="@+id/glsurfaceview"
-                android:layout_width="fill_parent"
-                android:layout_height="fill_parent" />
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
 
         <LinearLayout android:id="@+id/hidecontainer"
                 android:orientation="vertical"
                 android:visibility="gone"
                 android:background="@drawable/translucent_background"
                 android:gravity="center"
-                android:layout_width="fill_parent"
-                android:layout_height="fill_parent">
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
 
             <Button android:id="@+id/hideme1"
                     android:layout_width="wrap_content"

@@ -21,7 +21,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
     android:background="@drawable/blue"
-    android:layout_width="fill_parent"
+    android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:padding="10dip">
 
@@ -29,7 +29,7 @@
         TextView goes on top...
     -->
     <TextView
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/linear_layout_5_instructions"/>
 
@@ -42,7 +42,7 @@
         an application resource.
     -->
     <EditText
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@android:drawable/editbox_background"/>
 
@@ -51,7 +51,7 @@
         This item has layout_gravity="right". This means the whole
         horizontal LinearLayout is right aligned, not the individual
         items within it. The horizontal LinearLayout's width is set to
-        wrap_content. (If it was fill_parent it would not have any
+        wrap_content. (If it was match_parent it would not have any
         room to slide to the right.)
     -->
     <LinearLayout

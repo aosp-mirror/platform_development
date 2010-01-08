@@ -346,12 +346,12 @@ public class List4 extends ListActivity {
             mTitle = new TextView(context);
             mTitle.setText(title);
             addView(mTitle, new LinearLayout.LayoutParams(
-                    LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT));
+                    LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
 
             mDialogue = new TextView(context);
             mDialogue.setText(words);
             addView(mDialogue, new LinearLayout.LayoutParams(
-                    LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT));
+                    LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
         }
 
         /**

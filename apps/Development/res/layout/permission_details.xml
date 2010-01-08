@@ -16,16 +16,16 @@
 
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:fillViewport="true"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent">
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
 
     <LinearLayout android:orientation="vertical"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:padding="4dip" >
 
         <LinearLayout android:orientation="horizontal"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:padding="4dip" >
             <TextView android:id="@+id/perm_name_label"
@@ -39,7 +39,7 @@
         </LinearLayout>
 
         <LinearLayout android:orientation="horizontal"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:padding="4dip" >
             <TextView android:id="@+id/perm_desc_label"
@@ -53,7 +53,7 @@
         </LinearLayout>
 
         <LinearLayout android:orientation="horizontal"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:padding="4dip" >
             <TextView android:id="@+id/perm_group_label"
@@ -67,7 +67,7 @@
         </LinearLayout>
 
         <LinearLayout android:orientation="horizontal"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:padding="4dip" >
             <TextView android:id="@+id/perm_protection_label"
@@ -81,7 +81,7 @@
         </LinearLayout>
 
         <LinearLayout android:orientation="horizontal"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:padding="4dip" >
             <TextView android:id="@+id/perm_source_label"
@@ -95,7 +95,7 @@
         </LinearLayout>
 
         <LinearLayout android:orientation="horizontal"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:padding="4dip" >
             <TextView android:id="@+id/source_uid_label"
@@ -109,7 +109,7 @@
         </LinearLayout>
         <LinearLayout android:id="@+id/shared_pkgs_panel"
             android:orientation="vertical"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:padding="4dip" >
             <TextView android:id="@+id/shared_pkgs_label"
@@ -128,7 +128,7 @@
             android:text="@string/perm_list_header_text"
             android:textStyle="bold" />
         <ListView android:id="@android:id/list"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
         </LinearLayout>
 </ScrollView>

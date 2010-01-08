@@ -19,14 +19,14 @@
 -->
 
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent">
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
 
     <!-- view1 goes on top -->
     <TextView
         android:id="@+id/view1"
         android:background="@drawable/red"
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
         android:text="@string/relative_layout_1_top"/>
@@ -35,7 +35,7 @@
     <TextView
         android:id="@+id/view2"
         android:background="@drawable/green"
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:text="@string/relative_layout_1_bottom"/>
@@ -44,7 +44,7 @@
     <TextView
         android:id="@+id/view3"
         android:background="@drawable/yellow"
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="0dip"
         android:layout_above="@id/view2"
         android:layout_below="@id/view1"

@@ -19,14 +19,11 @@ package com.example.android.apis.app;
 import com.example.android.apis.R;
 
 import android.app.Activity;
-import android.app.NotificationManager;
-import android.content.Context;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.ArrayAdapter;
-import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -93,7 +90,7 @@ public class MenuInflateFromXml extends Activity {
         // Add the spinner
         layout.addView(mSpinner,
                 new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.FILL_PARENT,
+                        LinearLayout.LayoutParams.MATCH_PARENT,
                         LinearLayout.LayoutParams.WRAP_CONTENT));
 
         // Create help text
@@ -103,7 +100,7 @@ public class MenuInflateFromXml extends Activity {
         
         // Add the help, make it look decent
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.FILL_PARENT,
+                LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT);
         lp.setMargins(10, 10, 10, 10);
         layout.addView(mInstructionsText, lp);

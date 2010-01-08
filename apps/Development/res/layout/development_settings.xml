@@ -18,12 +18,12 @@
 */
 -->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent">
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
 
     <RelativeLayout 
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent">
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
 
         <TextView android:id="@+id/debug_app_label"
             android:layout_width="wrap_content"
@@ -76,7 +76,7 @@
             android:text="@string/development_settings_compatibility_mode_text" />
 
         <Spinner android:id="@+id/max_procs"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_below="@id/compatibility_mode"
             android:layout_alignParentLeft="true" />
@@ -123,21 +123,21 @@
             android:text="@string/development_settings_show_sleep_text" />
             
         <Spinner android:id="@+id/window_animation_scale"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_below="@id/show_sleep"
             android:layout_alignParentLeft="true">
         </Spinner>
 
         <Spinner android:id="@+id/transition_animation_scale"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_below="@id/window_animation_scale"
             android:layout_alignParentLeft="true">
         </Spinner>
 
         <Spinner android:id="@+id/font_hinting"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_below="@id/transition_animation_scale"
             android:layout_alignParentLeft="true">

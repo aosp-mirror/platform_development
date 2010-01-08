@@ -20,7 +20,6 @@ import com.example.android.apis.R;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Button;
@@ -41,7 +40,7 @@ public class ScrollView2 extends Activity {
             TextView textView = new TextView(this);
             textView.setText("Text View " + i);
             LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.FILL_PARENT,
+                    LinearLayout.LayoutParams.MATCH_PARENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT
             );
             layout.addView(textView, p);

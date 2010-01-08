@@ -26,28 +26,28 @@
      a row, here set to be vertical (so the first is at the top) -->
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
     android:orientation="vertical">
     
     <RelativeLayout
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent">
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
 
 
         <RelativeLayout android:id="@+id/replay_pane"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_alignParentBottom="True"
             android:background="@color/replay_background">
 
             <TextView android:id="@+id/instructions"
-                android:layout_width="fill_parent"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/response" />
 
             <EditText android:id="@+id/entry"
-                android:layout_width="fill_parent" 
+                android:layout_width="match_parent" 
                 android:layout_height="44dip" 
                 android:layout_below="@id/instructions"/>
   
@@ -68,13 +68,13 @@
         </RelativeLayout>
 
         <ScrollView android:id="@+id/scroll_pane"
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
             android:layout_above="@id/replay_pane">
 
             <TextView android:id="@+id/text_field"
-                android:layout_width="fill_parent"
-                android:layout_height="fill_parent"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
                 android:text="@string/text"/>
             
             <requestFocus/>

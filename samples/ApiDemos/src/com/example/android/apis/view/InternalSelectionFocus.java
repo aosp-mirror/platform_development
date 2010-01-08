@@ -46,11 +46,11 @@ public class InternalSelectionFocus extends Activity {
         final LinearLayout layout = new LinearLayout(this);
         layout.setOrientation(LinearLayout.HORIZONTAL);
         layout.setLayoutParams(new ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.FILL_PARENT,
-                ViewGroup.LayoutParams.FILL_PARENT));
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT));
 
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(0,
-                ViewGroup.LayoutParams.FILL_PARENT, 1);
+                ViewGroup.LayoutParams.MATCH_PARENT, 1);
 
         final InternalSelectionView leftColumn = new InternalSelectionView(this, 5, "left column");
         leftColumn.setLayoutParams(params);

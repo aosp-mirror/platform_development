@@ -17,20 +17,20 @@
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent">
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
 
     <LinearLayout
        android:orientation="vertical"
-       android:layout_width="fill_parent"
+       android:layout_width="match_parent"
        android:layout_height="wrap_content">
 
         <ListView android:id="@+id/accounts_tester_authenticators_list"
-           android:layout_width="fill_parent" android:layout_height="fill_parent"/>
+           android:layout_width="match_parent" android:layout_height="match_parent"/>
 
       <LinearLayout
          android:orientation="horizontal"
-         android:layout_width="fill_parent"
+         android:layout_width="match_parent"
          android:layout_height="wrap_content">
 
           <TextView android:id="@+id/accounts_tester_account_types_spinner_label"
@@ -45,11 +45,11 @@
 
       <LinearLayout
          android:orientation="vertical"
-         android:layout_width="fill_parent"
+         android:layout_width="match_parent"
          android:layout_height="wrap_content">
           <LinearLayout
              android:orientation="horizontal"
-             android:layout_width="fill_parent"
+             android:layout_width="match_parent"
              android:layout_height="wrap_content">
          <Button
             android:id="@+id/accounts_tester_get_accounts_by_type"
@@ -75,7 +75,7 @@
 
           <LinearLayout
              android:orientation="horizontal"
-             android:layout_width="fill_parent"
+             android:layout_width="match_parent"
              android:layout_height="wrap_content">
               <TextView android:id="@+id/accounts_tester_desiredFeatures"
                        android:layout_width="wrap_content"
@@ -89,7 +89,7 @@
           </LinearLayout>
           <LinearLayout
              android:orientation="horizontal"
-             android:layout_width="fill_parent"
+             android:layout_width="match_parent"
              android:layout_height="wrap_content">
               <TextView android:id="@+id/accounts_tester_desiredFeatures"
                        android:layout_width="wrap_content"
@@ -106,11 +106,11 @@
 
     <LinearLayout
        android:orientation="horizontal"
-       android:layout_width="fill_parent"
+       android:layout_width="match_parent"
        android:layout_height="wrap_content">
 
        <ListView android:id="@+id/accounts_tester_accounts_list"
-           android:layout_width="fill_parent" android:layout_height="fill_parent"/>
+           android:layout_width="match_parent" android:layout_height="match_parent"/>
 
     </LinearLayout>
 

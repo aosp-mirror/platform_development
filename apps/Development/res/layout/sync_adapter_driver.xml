@@ -17,11 +17,11 @@
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent">
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
 
     <LinearLayout android:orientation="vertical"
-		  android:layout_width="fill_parent"
+		  android:layout_width="match_parent"
 		  android:layout_height="wrap_content">
         <TextView android:id="@+id/sync_adapters_spinner_label"
 		android:layout_width="wrap_content"
@@ -34,7 +34,7 @@
                  android:layout_height="wrap_content"/>
         <LinearLayout
 	   android:orientation="horizontal"
-           android:layout_width="fill_parent"
+           android:layout_width="match_parent"
            android:layout_height="52dip">
             <Button
 	       android:id="@+id/bind_button"
@@ -60,7 +60,7 @@
 
         <LinearLayout
            android:orientation="horizontal"
-           android:layout_width="fill_parent"
+           android:layout_width="match_parent"
            android:layout_height="52dip">
             <Button
                android:id="@+id/start_sync_button"

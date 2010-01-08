@@ -15,17 +15,17 @@
 -->
 
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent">
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
     
     <com.example.android.lunarlander.LunarView
       android:id="@+id/lunar"
-      android:layout_width="fill_parent"
-      android:layout_height="fill_parent"/>
+      android:layout_width="match_parent"
+      android:layout_height="match_parent"/>
     
     <RelativeLayout
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent" >
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" >
         <TextView
           android:id="@+id/text"
 		  android:text="@string/lunar_layout_text_text"

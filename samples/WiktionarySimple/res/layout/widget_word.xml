@@ -16,7 +16,7 @@
 
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget"
-    android:layout_width="fill_parent"
+    android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:focusable="true"
     style="@style/WidgetBackground">
@@ -64,7 +64,7 @@
 
     <TextView
         android:id="@+id/definition"
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@id/word_title"
         android:layout_toRightOf="@id/bullet"

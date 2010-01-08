@@ -19,10 +19,10 @@
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:orientation="vertical" android:padding="4dip"
     android:gravity="center_horizontal"
-    android:layout_width="fill_parent" android:layout_height="fill_parent">
+    android:layout_width="match_parent" android:layout_height="match_parent">
 
     <TextView
-        android:layout_width="fill_parent" android:layout_height="wrap_content"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
         android:layout_weight="0"
         android:paddingBottom="4dip"
         android:text="@string/redirect_enter"/>

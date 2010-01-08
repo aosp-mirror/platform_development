@@ -15,18 +15,18 @@
 -->
 
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent">
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
     
     <LinearLayout
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:orientation="vertical">
         
         <!-- The following four examples use a large image -->
         <!-- 1. Non-scaled view, for reference -->
         <TextView
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:paddingTop="10dip"
             android:text="@string/image_view_large_normal"/>
@@ -38,7 +38,7 @@
             
         <!-- 2. Limit to at most 50x50 -->
         <TextView
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:paddingTop="10dip"
             android:text="@string/image_view_large_at_most"/>
@@ -52,7 +52,7 @@
 
        <!-- 3. Limit to at most 70x70, with 10 pixels of padding all around -->
         <TextView
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:paddingTop="10dip"
             android:text="@string/image_view_large_at_most_padded"/>
@@ -68,7 +68,7 @@
             
         <!-- 4. Limit to exactly 70x70, with 10 pixels of padding all around -->
         <TextView
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:paddingTop="10dip"
             android:text="@string/image_view_large_exactly_padded"/>
@@ -83,7 +83,7 @@
         <!-- Repeating the previous four examples with small image -->
         <!-- 1. Non-scaled view, for reference -->
         <TextView
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:paddingTop="10dip"
             android:text="@string/image_view_small_normal"/>
@@ -96,7 +96,7 @@
             
         <!-- 2. Limit to at most 50x50 -->
         <TextView
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:paddingTop="10dip"
             android:text="@string/image_view_small_at_most"/>
@@ -111,7 +111,7 @@
 
        <!-- 3. Limit to at most 70x70, with 10 pixels of padding all around -->
         <TextView
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:paddingTop="10dip"
             android:text="@string/image_view_small_at_most_padded"/>
@@ -127,7 +127,7 @@
             
         <!-- 4. Limit to exactly 70x70, with 10 pixels of padding all around -->
         <TextView
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:paddingTop="10dip"
             android:text="@string/image_view_small_exactly_padded"/>
