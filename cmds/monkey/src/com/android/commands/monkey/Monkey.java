@@ -870,7 +870,6 @@ public class Monkey {
 
             MonkeyEvent ev = mEventSource.getNextEvent();
             if (ev != null) {
-
                 int injectCode = ev.injectEvent(mWm, mAm, mVerbose);
                 if (injectCode == MonkeyEvent.INJECT_FAIL) {
                     if (ev instanceof MonkeyKeyEvent) {
@@ -882,8 +881,12 @@ public class Monkey {
                     }
                 } else if (injectCode == MonkeyEvent.INJECT_ERROR_REMOTE_EXCEPTION) {
                     systemCrashed = true;
+                    System.err.println("** Error: RemoteException while injecting event.");
                 } else if (injectCode == MonkeyEvent.INJECT_ERROR_SECURITY_EXCEPTION) {
                     systemCrashed = !mIgnoreSecurityExceptions;
+                    if (systemCrashed) {
+                        System.err.println("** Error: SecurityException while injecting event.");
+                    }
                 }
 
                 // Don't count throttling as an event.
@@ -897,11 +900,12 @@ public class Monkey {
                 if (!mCountEvents) {
                     cycleCounter++;
                 } else {
+                    // Event Source has signaled that we have no more events to process
                     break;
                 }
             }
         }
-        // If we got this far, we succeeded!
+        System.out.println("Events injected: " + eventCounter);
         return eventCounter;
     }
 
