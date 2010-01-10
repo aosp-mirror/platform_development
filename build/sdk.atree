@@ -29,6 +29,7 @@ bin/aidl platforms/${PLATFORM_NAME}/tools/aidl
 bin/adb tools/adb
 bin/sqlite3 tools/sqlite3
 bin/dmtracedump tools/dmtracedump
+bin/etc1tool tools/etc1tool
 bin/hprof-conv tools/hprof-conv
 bin/mksdcard tools/mksdcard
 bin/zipalign tools/zipalign
