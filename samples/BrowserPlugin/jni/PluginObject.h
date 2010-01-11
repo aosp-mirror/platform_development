@@ -6,7 +6,7 @@
  redistribute this Apple software.
 
  In consideration of your agreement to abide by the following terms, and subject to these
- terms, Apple grants you a personal, non-exclusive license, under AppleÕs copyrights in
+ terms, Apple grants you a personal, non-exclusive license, under Appleï¿½s copyrights in
  this original Apple software (the "Apple Software"), to use, reproduce, modify and
  redistribute the Apple Software, with or without modifications, in source and/or binary
  forms; provided that if you redistribute the Apple Software in its entirety and without
@@ -37,6 +37,13 @@
 #include "main.h"
 #include <jni.h>
 
+enum CustomEventTypes {
+    kSurfaceCreated_CustomEvent     = 0,
+    kSurfaceChanged_CustomEvent     = 1,
+    kSurfaceDestroyed_CustomEvent   = 2,
+};
+typedef int32_t CustomEventType;
+
 class SubPlugin {
 public:
     SubPlugin(NPP inst) : m_inst(inst) {}
@@ -55,16 +62,14 @@ private:
 
 class SurfaceSubPlugin : public SubPlugin {
 public:
-    SurfaceSubPlugin(NPP inst) : SubPlugin(inst) {}
+    SurfaceSubPlugin(NPP inst) : SubPlugin(inst) { m_context = NULL; }
     virtual ~SurfaceSubPlugin() {}
-    virtual bool isFixedSurface() = 0;
-    virtual void surfaceCreated(jobject) = 0;
-    virtual void surfaceChanged(int format, int width, int height) = 0;
-    virtual void surfaceDestroyed() = 0;
+    virtual jobject getSurface() = 0;
+    virtual bool supportsDrawingModel(ANPDrawingModel);
 
-    void setJavaInterface(jobject);
+    void setContext(jobject context);
 
-    jobject m_javaInterface;
+    jobject m_context;
 };
 
 enum PluginTypes {

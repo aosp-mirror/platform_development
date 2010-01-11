@@ -33,18 +33,15 @@ class PaintPlugin : public SurfaceSubPlugin {
 public:
     PaintPlugin(NPP inst);
     virtual ~PaintPlugin();
-    virtual bool supportsDrawingModel(ANPDrawingModel);
     virtual int16 handleEvent(const ANPEvent* evt);
-    virtual void surfaceCreated(jobject surface);
-    virtual void surfaceChanged(int format, int width, int height);
-    virtual void surfaceDestroyed();
-    virtual bool isFixedSurface();
+    virtual jobject getSurface();
 
 private:
     void        drawCleanPlugin(ANPCanvas* canvas = NULL);
     ANPCanvas*  getCanvas(ANPRectI* dirtyRect = NULL);
     ANPCanvas*  getCanvas(ANPRectF* dirtyRect);
     const char* getColorText();
+    void        destroySurface();
     void        paintMouse(int x, int y);
     void        paintTouch();
     void        releaseCanvas(ANPCanvas*);

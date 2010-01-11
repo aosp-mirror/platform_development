@@ -68,6 +68,7 @@ EXPORT void NP_Shutdown(void);
 ANPAudioTrackInterfaceV0    gSoundI;
 ANPBitmapInterfaceV0        gBitmapI;
 ANPCanvasInterfaceV0        gCanvasI;
+ANPEventInterfaceV0         gEventI;
 ANPLogInterfaceV0           gLogI;
 ANPPaintInterfaceV0         gPaintI;
 ANPPathInterfaceV0          gPathI;
@@ -115,6 +116,7 @@ NPError NP_Initialize(NPNetscapeFuncs* browserFuncs, NPPluginFuncs* pluginFuncs,
         { kAudioTrackInterfaceV0_ANPGetValue,   sizeof(gSoundI),    &gSoundI },
         { kBitmapInterfaceV0_ANPGetValue,       sizeof(gBitmapI),   &gBitmapI },
         { kCanvasInterfaceV0_ANPGetValue,       sizeof(gCanvasI),   &gCanvasI },
+        { kEventInterfaceV0_ANPGetValue,        sizeof(gEventI),    &gEventI },
         { kLogInterfaceV0_ANPGetValue,          sizeof(gLogI),      &gLogI },
         { kPaintInterfaceV0_ANPGetValue,        sizeof(gPaintI),    &gPaintI },
         { kPathInterfaceV0_ANPGetValue,         sizeof(gPathI),     &gPathI },
@@ -238,6 +240,22 @@ NPError NPP_New(NPMIMEType pluginType, NPP instance, uint16 mode, int16 argc,
         gLogI.log(kError_ANPLogType, "------ %p Unsupported DrawingModel (%d)", instance, model);
         return NPERR_GENERIC_ERROR;
     }
+
+    // if the plugin uses the surface drawing model then set the java context
+    if (model == kSurface_ANPDrawingModel) {
+        SurfaceSubPlugin* surfacePlugin = static_cast<SurfaceSubPlugin*>(obj->activePlugin);
+
+        jobject context;
+        NPError err = browser->getvalue(instance, kJavaContext_ANPGetValue,
+                                        static_cast<void*>(&context));
+        if (err) {
+            gLogI.log(kError_ANPLogType, "request context err: %d", err);
+            return err;
+        }
+
+        surfacePlugin->setContext(context);
+    }
+
 
     return NPERR_NO_ERROR;
 }
@@ -393,7 +411,7 @@ EXPORT NPError NP_GetValue(NPP instance, NPPVariable variable, void *value) {
     return NPERR_GENERIC_ERROR;
 }
 
-NPError NPP_GetValue(NPP instance, NPPVariable variable, void *value)
+NPError NPP_GetValue(NPP instance, NPPVariable variable, void* value)
 {
     if (variable == NPPVpluginScriptableNPObject) {
         void **v = (void **)value;
@@ -404,6 +422,24 @@ NPError NPP_GetValue(NPP instance, NPPVariable variable, void *value)
 
         *v = &(obj->header);
         return NPERR_NO_ERROR;
+    }
+
+    if (variable == kJavaSurface_ANPGetValue) {
+        //get the surface sub-plugin
+        PluginObject* obj = static_cast<PluginObject*>(instance->pdata);
+        if (obj && obj->activePlugin) {
+
+            if(obj->activePlugin->supportsDrawingModel(kSurface_ANPDrawingModel)) {
+                SurfaceSubPlugin* plugin = static_cast<SurfaceSubPlugin*>(obj->activePlugin);
+                jobject* surface = static_cast<jobject*>(value);
+                *surface = plugin->getSurface();
+                return NPERR_NO_ERROR;
+            } else {
+                gLogI.log(kError_ANPLogType,
+                          "-- %p Tried to retrieve surface for non-surface plugin",
+                          instance);
+            }
+        }
     }
 
     return NPERR_GENERIC_ERROR;

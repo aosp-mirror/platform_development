@@ -32,12 +32,8 @@ class BackgroundPlugin : public SurfaceSubPlugin {
 public:
     BackgroundPlugin(NPP inst);
     virtual ~BackgroundPlugin();
-    virtual bool supportsDrawingModel(ANPDrawingModel);
     virtual int16 handleEvent(const ANPEvent* evt);
-    virtual void surfaceCreated(jobject surface);
-    virtual void surfaceChanged(int format, int width, int height);
-    virtual void surfaceDestroyed();
-    virtual bool isFixedSurface();
+    virtual jobject getSurface();
 
     // Timer Testing Variables
     uint32_t mStartTime;
@@ -53,6 +49,7 @@ public:
 
 private:
     void drawPlugin(int surfaceWidth, int surfaceHeight);
+    void destroySurface();
 
     jobject     m_surface;
 

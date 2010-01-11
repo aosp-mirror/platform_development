@@ -35,6 +35,7 @@ extern ANPCanvasInterfaceV0     gCanvasI;
 extern ANPPaintInterfaceV0      gPaintI;
 extern ANPPathInterfaceV0       gPathI;
 extern ANPSurfaceInterfaceV0    gSurfaceI;
+extern ANPSystemInterfaceV0     gSystemI;
 extern ANPTypefaceInterfaceV0   gTypefaceI;
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -49,9 +50,6 @@ PaintPlugin::PaintPlugin(NPP inst) : SurfaceSubPlugin(inst) {
     memset(&m_inputToggle,  0, sizeof(m_inputToggle));
     memset(&m_colorToggle, 0, sizeof(m_colorToggle));
     memset(&m_clearSurface,  0, sizeof(m_clearSurface));
-
-    // initialize the java interface
-    m_javaInterface = NULL;
 
     // initialize the drawing surface
     m_surface = NULL;
@@ -88,12 +86,9 @@ PaintPlugin::~PaintPlugin() {
     gPathI.deletePath(m_touchPath);
     gPaintI.deletePaint(m_paintSurface);
     gPaintI.deletePaint(m_paintButton);
-    setJavaInterface(NULL);
-    surfaceDestroyed();
-}
 
-bool PaintPlugin::supportsDrawingModel(ANPDrawingModel model) {
-    return (model == kSurface_ANPDrawingModel);
+    setContext(NULL);
+    destroySurface();
 }
 
 ANPCanvas* PaintPlugin::getCanvas(ANPRectI* dirtyRect) {
@@ -215,29 +210,51 @@ const char* PaintPlugin::getColorText() {
         return "Red";
 }
 
-bool PaintPlugin::isFixedSurface() {
-    return true;
-}
+jobject PaintPlugin::getSurface() {
+    if (m_surface) {
+        return m_surface;
+    }
 
-void PaintPlugin::surfaceCreated(jobject surface) {
-    m_surface = surface;
-    drawCleanPlugin();
-}
+    // load the appropriate java class and instantiate it
+    JNIEnv* env = NULL;
+    if (gVM->GetEnv((void**) &env, JNI_VERSION_1_4) != JNI_OK) {
+        gLogI.log(kError_ANPLogType, " ---- getSurface: failed to get env");
+        return NULL;
+    }
 
-void PaintPlugin::surfaceChanged(int format, int width, int height) {
-    // get the plugin's dimensions according to the DOM
+    const char* className = "com.android.sampleplugin.PaintSurface";
+    jclass paintClass = gSystemI.loadJavaClass(inst(), className);
+
+    if(!paintClass) {
+        gLogI.log(kError_ANPLogType, " ---- getSurface: failed to load class");
+        return NULL;
+    }
+
     PluginObject *obj = (PluginObject*) inst()->pdata;
     const int pW = obj->window->width;
     const int pH = obj->window->height;
-    // compare to the plugin's surface dimensions
-    if (pW != width || pH != height)
-        gLogI.log(kError_ANPLogType,
-                  "----%p Invalid Surface Dimensions (%d,%d):(%d,%d)",
-                  inst(), pW, pH, width, height);
+
+    jmethodID constructor = env->GetMethodID(paintClass, "<init>", "(Landroid/content/Context;III)V");
+    jobject paintSurface = env->NewObject(paintClass, constructor, m_context, (int)inst(), pW, pH);
+
+    if(!paintSurface) {
+        gLogI.log(kError_ANPLogType, " ---- getSurface: failed to construct object");
+        return NULL;
+    }
+
+    m_surface = env->NewGlobalRef(paintSurface);
+    return m_surface;
 }
-void PaintPlugin::surfaceDestroyed() {
+
+void PaintPlugin::destroySurface() {
     JNIEnv* env = NULL;
     if (m_surface && gVM->GetEnv((void**) &env, JNI_VERSION_1_4) == JNI_OK) {
+
+        // detach the native code from the object
+        jclass javaClass = env->GetObjectClass(m_surface);
+        jmethodID invalMethod = env->GetMethodID(javaClass, "invalidateNPP", "()V");
+        env->CallVoidMethod(m_surface, invalMethod);
+
         env->DeleteGlobalRef(m_surface);
         m_surface = NULL;
     }
@@ -293,6 +310,35 @@ int16 PaintPlugin::handleEvent(const ANPEvent* evt) {
                     drawCleanPlugin();
             }
             return 1;
+        }
+        case kCustom_ANPEventType: {
+
+            switch (evt->data.other[0]) {
+                case kSurfaceCreated_CustomEvent:
+                    gLogI.log(kDebug_ANPLogType, " ---- customEvent: surfaceCreated");
+                    drawCleanPlugin();
+                    break;
+                case kSurfaceChanged_CustomEvent: {
+                    gLogI.log(kDebug_ANPLogType, " ---- customEvent: surfaceChanged");
+
+                    int width = evt->data.other[1];
+                    int height = evt->data.other[2];
+
+                    PluginObject *obj = (PluginObject*) inst()->pdata;
+                    const int pW = obj->window->width;
+                    const int pH = obj->window->height;
+                    // compare to the plugin's surface dimensions
+                    if (pW != width || pH != height)
+                        gLogI.log(kError_ANPLogType,
+                                  "----%p Invalid Surface Dimensions (%d,%d):(%d,%d)",
+                                  inst(), pW, pH, width, height);
+                    break;
+                }
+                case kSurfaceDestroyed_CustomEvent:
+                    gLogI.log(kDebug_ANPLogType, " ---- customEvent: surfaceDestroyed");
+                    break;
+            }
+            break; // end KCustom_ANPEventType
         }
         default:
             break;
