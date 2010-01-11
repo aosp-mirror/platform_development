@@ -32,15 +32,11 @@ class VideoPlugin : public SurfaceSubPlugin {
 public:
     VideoPlugin(NPP inst);
     virtual ~VideoPlugin();
-    virtual bool supportsDrawingModel(ANPDrawingModel);
     virtual int16 handleEvent(const ANPEvent* evt);
-    virtual void surfaceCreated(jobject surface);
-    virtual void surfaceChanged(int format, int width, int height);
-    virtual void surfaceDestroyed();
-    virtual bool isFixedSurface();
+    virtual jobject getSurface();
 
 private:
-    void drawPlugin();
+    void destroySurface();
 
     jobject     m_surface;
 };

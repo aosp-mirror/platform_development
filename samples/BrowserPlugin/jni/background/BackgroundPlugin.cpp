@@ -54,9 +54,6 @@ static uint32_t getMSecs() {
 
 BackgroundPlugin::BackgroundPlugin(NPP inst) : SurfaceSubPlugin(inst) {
 
-    // initialize the java interface
-    m_javaInterface = NULL;
-
     // initialize the drawing surface
     m_surface = NULL;
 
@@ -82,27 +79,44 @@ BackgroundPlugin::BackgroundPlugin(NPP inst) : SurfaceSubPlugin(inst) {
 }
 
 BackgroundPlugin::~BackgroundPlugin() {
-    setJavaInterface(NULL);
-    surfaceDestroyed();
+    setContext(NULL);
+    destroySurface();
 }
 
-bool BackgroundPlugin::supportsDrawingModel(ANPDrawingModel model) {
-    return (model == kSurface_ANPDrawingModel);
+jobject BackgroundPlugin::getSurface() {
+
+    if (m_surface) {
+        return m_surface;
+    }
+
+    // load the appropriate java class and instantiate it
+    JNIEnv* env = NULL;
+    if (gVM->GetEnv((void**) &env, JNI_VERSION_1_4) != JNI_OK) {
+        gLogI.log(kError_ANPLogType, " ---- getSurface: failed to get env");
+        return NULL;
+    }
+
+    const char* className = "com.android.sampleplugin.BackgroundSurface";
+    jclass backgroundClass = gSystemI.loadJavaClass(inst(), className);
+
+    if(!backgroundClass) {
+        gLogI.log(kError_ANPLogType, " ---- getSurface: failed to load class");
+        return NULL;
+    }
+
+    jmethodID constructor = env->GetMethodID(backgroundClass, "<init>", "(Landroid/content/Context;)V");
+    jobject backgroundSurface = env->NewObject(backgroundClass, constructor, m_context);
+
+    if(!backgroundSurface) {
+        gLogI.log(kError_ANPLogType, " ---- getSurface: failed to construct object");
+        return NULL;
+    }
+
+    m_surface = env->NewGlobalRef(backgroundSurface);
+    return m_surface;
 }
 
-bool BackgroundPlugin::isFixedSurface() {
-    return false;
-}
-
-void BackgroundPlugin::surfaceCreated(jobject surface) {
-    m_surface = surface;
-}
-
-void BackgroundPlugin::surfaceChanged(int format, int width, int height) {
-    drawPlugin(width, height);
-}
-
-void BackgroundPlugin::surfaceDestroyed() {
+void BackgroundPlugin::destroySurface() {
     JNIEnv* env = NULL;
     if (m_surface && gVM->GetEnv((void**) &env, JNI_VERSION_1_4) == JNI_OK) {
         env->DeleteGlobalRef(m_surface);
@@ -179,8 +193,10 @@ int16 BackgroundPlugin::handleEvent(const ANPEvent* evt) {
         case kTouch_ANPEventType:
             if (kDown_ANPTouchAction == evt->data.touch.action)
                 return kHandleLongPress_ANPTouchResult | kHandleDoubleTap_ANPTouchResult;
-            else if (kLongPress_ANPTouchAction == evt->data.touch.action)
+            else if (kLongPress_ANPTouchAction == evt->data.touch.action) {
                 browser->geturl(inst(), "javascript:alert('Detected long press event.')", 0);
+                gWindowI.requestFullScreen(inst());
+            }
             else if (kDoubleTap_ANPTouchAction == evt->data.touch.action)
                 browser->geturl(inst(), "javascript:alert('Detected double tap event.')", 0);
             break;
