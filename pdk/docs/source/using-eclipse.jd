@@ -149,7 +149,11 @@ Eclipse setup to work on DDMS <br></h4>
 </ol>
 <h2><a>Eclipse formatting</a>
 </h2>
-<p>You can use a preference file in Eclipse to automatically set the formatter to the Android style guide.Import the files android-formatting.xml and android.importorder, which live underdevelopment/ide/eclipse.
+<p>You can import files in development/ide/eclipse to make Eclipse
+follow the Android style rules.  Select
+"Window &rsaquo; Preferences &rsaquo; Java &rsaquo; Code Style".
+Use "Formatter &rsaquo; Import" to import android-formatting.xml
+and "Organize Imports &rsaquo; Import" to import android.importorder.
 </p>
 <h2><a>Debugging the emulator with Eclipse</a>
 </h2>
