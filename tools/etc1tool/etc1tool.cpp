@@ -145,6 +145,7 @@ int read_PNG_File(const char* pInput, etc1_byte** ppImageData,
     png_uint_32 stride = 0;
     int result = -1;
     etc1_byte* pSourceImage = 0;
+    png_uint_32 stride = 0;
 
     if ((pIn = fopen(pInput, "rb")) == NULL) {
         fprintf(stderr, "Could not open input file %s for reading: %d\n",
