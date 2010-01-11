@@ -6,7 +6,7 @@
  redistribute this Apple software.
 
  In consideration of your agreement to abide by the following terms, and subject to these
- terms, Apple grants you a personal, non-exclusive license, under AppleÕs copyrights in
+ terms, Apple grants you a personal, non-exclusive license, under AppleÃ•s copyrights in
  this original Apple software (the "Apple Software"), to use, reproduce, modify and
  redistribute the Apple Software, with or without modifications, in source and/or binary
  forms; provided that if you redistribute the Apple Software in its entirety and without
@@ -45,25 +45,28 @@ int SubPlugin::getPluginHeight() {
     return obj->window->height;
 }
 
-void SurfaceSubPlugin::setJavaInterface(jobject javaInterface) {
+bool SurfaceSubPlugin::supportsDrawingModel(ANPDrawingModel model) {
+    return (model == kSurface_ANPDrawingModel);
+}
 
-    // if one exists then free its reference and notify the object that it is no
-    // longer attached to the native instance
+void SurfaceSubPlugin::setContext(jobject context) {
     JNIEnv* env = NULL;
-    if (m_javaInterface && gVM->GetEnv((void**) &env, JNI_VERSION_1_4) == JNI_OK) {
+    if (gVM->GetEnv((void**) &env, JNI_VERSION_1_4) == JNI_OK) {
 
-        // detach the native code from the object
-        jclass javaClass = env->GetObjectClass(m_javaInterface);
-        jmethodID invalMethod = env->GetMethodID(javaClass, "invalidateNPP", "()V");
-        env->CallVoidMethod(m_javaInterface, invalMethod);
+        // if one exists then free its global reference
+        if (m_context) {
+            env->DeleteGlobalRef(m_context);
+            m_context = NULL;
+        }
 
-        // delete the reference
-        env->DeleteGlobalRef(m_javaInterface);
-        m_javaInterface = NULL;
+        // create a new global ref
+        if (context) {
+            context = env->NewGlobalRef(context);
+        }
+
+        // set the value
+        m_context = context;
     }
-
-    //set the value
-    m_javaInterface = javaInterface;
 }
 
 static void pluginInvalidate(NPObject *obj);

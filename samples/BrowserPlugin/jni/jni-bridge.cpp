@@ -23,72 +23,48 @@
 
 #define EXPORT __attribute__((visibility("default")))
 
-static SurfaceSubPlugin* getPluginObject(int npp) {
-    NPP instance = (NPP)npp;
-    PluginObject* obj = static_cast<PluginObject*>(instance->pdata);
-    if (obj && obj->activePlugin
-            && obj->activePlugin->supportsDrawingModel(kSurface_ANPDrawingModel)) {
-        return static_cast<SurfaceSubPlugin*>(obj->activePlugin);
-    }
-    return NULL;
-}
-
-static jboolean javaInit(JNIEnv* env, jobject thiz, jint npp) {
-    SurfaceSubPlugin* obj = getPluginObject(npp);
-
-    if (obj) {
-        jobject globalObject = env->NewGlobalRef(thiz);
-        obj->setJavaInterface(globalObject);
-        return true;
-    } else {
-        return false;
-    }
-}
+extern ANPEventInterfaceV0         gEventI;
 
 static void surfaceCreated(JNIEnv* env, jobject thiz, jint npp, jobject surface) {
-    SurfaceSubPlugin* obj = getPluginObject(npp);
-    jobject globalSurface = env->NewGlobalRef(surface);
-    obj->surfaceCreated(globalSurface);
+
+    // send custom event
+    ANPEvent event;
+    event.inSize = sizeof(ANPEvent);
+    event.eventType = kCustom_ANPEventType;
+    event.data.other[0] = kSurfaceCreated_CustomEvent;
+
+    gEventI.postEvent((NPP)npp, &event);
 }
 
 static void surfaceChanged(JNIEnv* env, jobject thiz, jint npp, jint format, jint width, jint height) {
-    SurfaceSubPlugin* obj = getPluginObject(npp);
-    obj->surfaceChanged(format, width, height);
+    // send custom event
+    ANPEvent event;
+    event.inSize = sizeof(ANPEvent);
+    event.eventType = kCustom_ANPEventType;
+    event.data.other[0] = kSurfaceChanged_CustomEvent;
+    event.data.other[1] = width;
+    event.data.other[2] = height;
+
+    gEventI.postEvent((NPP)npp, &event);
 }
 
 static void surfaceDestroyed(JNIEnv* env, jobject thiz, jint npp) {
-    SurfaceSubPlugin* obj = getPluginObject(npp);
-    if (obj) {
-        obj->surfaceDestroyed();
-    }
-}
+    // send custom event
+    ANPEvent event;
+    event.inSize = sizeof(ANPEvent);
+    event.eventType = kCustom_ANPEventType;
+    event.data.other[0] = kSurfaceDestroyed_CustomEvent;
 
-static jint getSurfaceWidth(JNIEnv* env, jobject thiz, jint npp) {
-    SurfaceSubPlugin* obj = getPluginObject(npp);
-    return obj->getPluginWidth();
-}
-
-static jint getSurfaceHeight(JNIEnv* env, jobject thiz, jint npp) {
-    SurfaceSubPlugin* obj = getPluginObject(npp);
-    return obj->getPluginHeight();
-}
-
-static jboolean isFixedSurface(JNIEnv* env, jobject thiz, jint npp) {
-    SurfaceSubPlugin* obj = getPluginObject(npp);
-    return obj->isFixedSurface();
+    gEventI.postEvent((NPP)npp, &event);
 }
 
 /*
  * JNI registration.
  */
-static JNINativeMethod gJavaSamplePluginMethods[] = {
-    { "nativeJavaInit", "(I)Z", (void*) javaInit },
-    { "nativeSurfaceCreated", "(ILandroid/view/View;)V", (void*) surfaceCreated },
+static JNINativeMethod gPaintSurfaceMethods[] = {
+    { "nativeSurfaceCreated", "(I)V", (void*) surfaceCreated },
     { "nativeSurfaceChanged", "(IIII)V", (void*) surfaceChanged },
     { "nativeSurfaceDestroyed", "(I)V", (void*) surfaceDestroyed },
-    { "nativeGetSurfaceWidth", "(I)I", (void*) getSurfaceWidth },
-    { "nativeGetSurfaceHeight", "(I)I", (void*) getSurfaceHeight },
-    { "nativeIsFixedSurface", "(I)Z", (void*) isFixedSurface },
 };
 
 EXPORT jint JNI_OnLoad(JavaVM* vm, void* reserved) {
@@ -99,8 +75,8 @@ EXPORT jint JNI_OnLoad(JavaVM* vm, void* reserved) {
         return -1;
     }
 
-    jniRegisterNativeMethods(env, "com/android/sampleplugin/SamplePlugin",
-                             gJavaSamplePluginMethods, NELEM(gJavaSamplePluginMethods));
+    jniRegisterNativeMethods(env, "com/android/sampleplugin/PaintSurface",
+                             gPaintSurfaceMethods, NELEM(gPaintSurfaceMethods));
 
     return JNI_VERSION_1_4;
 }
