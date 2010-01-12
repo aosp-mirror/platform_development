@@ -147,6 +147,8 @@ void PropertyServer::SetDefaultProperties(void)
         { "debug.sf.showbackground", "0" },
         { "debug.sf.showfps", "0" },
         { "default", "default" },
+
+        { "media.stagefright.enable-player", "true" },
     };
 
     for (int i = 0; i < NELEM(propList); i++)
