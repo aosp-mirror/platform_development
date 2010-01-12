@@ -163,13 +163,13 @@ function package() {
     cp -v /cygdrive/c/cygwin/bin/mgwz.dll "$TOOLS"/
 
     # Update a bunch of bat files
-    cp -v development/tools/apkbuilder/etc/apkbuilder.bat           "$TOOLS"/
-    cp -v development/tools/ddms/app/etc/ddms.bat                   "$TOOLS"/
-    cp -v development/tools/traceview/etc/traceview.bat             "$TOOLS"/
-    cp -v development/tools/hierarchyviewer/etc/hierarchyviewer.bat "$TOOLS"/
-    cp -v development/tools/layoutopt/app/etc/layoutopt.bat         "$TOOLS"/
-    cp -v development/tools/draw9patch/etc/draw9patch.bat           "$TOOLS"/
-    cp -v development/tools/sdkmanager/app/etc/android.bat          "$TOOLS"/
+    cp -v sdk/apkbuilder/etc/apkbuilder.bat           "$TOOLS"/
+    cp -v sdk/ddms/app/etc/ddms.bat                   "$TOOLS"/
+    cp -v sdk/traceview/etc/traceview.bat             "$TOOLS"/
+    cp -v sdk/hierarchyviewer/etc/hierarchyviewer.bat "$TOOLS"/
+    cp -v sdk/layoutopt/app/etc/layoutopt.bat         "$TOOLS"/
+    cp -v sdk/draw9patch/etc/draw9patch.bat           "$TOOLS"/
+    cp -v sdk/sdkmanager/app/etc/android.bat          "$TOOLS"/
 
     # Put the JetCreator tools, content and docs (not available in the linux SDK)
     JET="$TOOLS/Jet"

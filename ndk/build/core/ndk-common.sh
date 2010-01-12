@@ -135,8 +135,6 @@ case "$HOST_OS" in
         HOST_EXE=.exe
         if [ "x$OSTYPE" = xcygwin ] ; then
             HOST_OS=cygwin
-            HOST_CFLAGS="$CFLAGS -mno-cygwin"
-            HOST_LDFLAGS="$LDFLAGS -mno-cygwin"
         fi
         ;;
 esac

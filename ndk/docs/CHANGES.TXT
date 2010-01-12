@@ -7,23 +7,72 @@ IMPORTANT BUG FIXES:
 
 - Fix build/host-setup.sh to execute as a Bourne shell script (again)
 
-- Make target shared libraries portable to systems that don't use the exact same
-  toolchain (GCC 4.2.1) .
-
-- Actually use the awk version detected by host-setup.sh during the build.
+- Make target shared libraries portable to systems that don't use the exact
+  same toolchain. This is needed due to differences in libgcc.a implementations
+  between gcc 4.2.1 and 4.4.0. This change ensures that generated machine
+  code doesn't depend on helper functions provided by the Android platform
+  runtime.
 
 
 IMPORTANT CHANGES:
 
-- Added platform eclair-5 to reflect the Eclair branch. This is merely a copy
+- Support for hardware FPU. This is through the new 'armeabi-v7a' ABI
+  corresponding to ARMv7-a class devices.
+
+  Note that by default, the NDK will still generate machine code for the old
+  'armeabi' ABI (ARMv5TE based) which is supported by all official Android
+  system images to date.
+
+  You will need to define APP_ABI in your Application.mk file to change this.
+  See docs/APPLICATION-MK.TXT
+
+  More details about ABIs is now available in docs/CPU-ARCH-ABIS.TXT
+
+- GCC 4.4.0 is now used by default by the NDK. It generates better code than
+  GCC 4.2.1, which was used in previous releases. However, the compiler's C++
+  frontend is also a lot more pedantic regarding certain template constructs
+  and will even refuse to build some of them.
+
+  For this reason, the NDK also comes with GCC 4.2.1 prebuilt binaries, and
+  you can force its usage by defining NDK_TOOLCHAIN in your environment to
+  the value 'arm-eabi-4.2.1'. For example:
+
+        export NDK_TOOLCHAIN=arm-eabi-4.2.1
+        make APP=hello-jni
+
+  Note that only the 'armeabi' ABI is supported by the 4.2.1 toolchain. We
+  recommend switching to 4.2.1 *only* if you encounter compilation problems
+  with 4.4.0.
+
+  The 4.2.1 prebuilt binaries will probably be removed from a future release
+  of the Android NDK, we thus *strongly* invite you to fix your code if such
+  problems happen.
+
+- Support for OpenGL ES 2.0. This is through the new 'android-5' platform to
+  reflect Android 2.0 (previously the Eclair branch). This is merely a copy
   of android-4 that also includes headers and libraries for OpenGL ES 2.0.
 
   See the sample named "hello-gl2" for a *very* basic demonstration. Note that
-  OpenGL ES 2.0 is currently *not* available from Java, and must be used through
-  native code exclusively.
+  OpenGL ES 2.0 is currently *not* available from Java, and must be used
+  through native code exclusively.
+
+  IMPORTANT: OpenGL ES 2.0 is not supported in the Android emulator at this
+             time. Running/testing any native code that depends on it thus
+             requires a real device.
+
+- The NDK build script will now remove installed binaries from the application
+  project's path before starting the build. This ensures that:
+
+  - if the build fails for some reason, a stale/obsolete file is not left in
+    your application project tree by mistake.
+
+  - if you change the target ABI, a stale/obsolete file is not left into the
+    folder corresponding to the old ABI.
 
 
 OTHER FIXES & CHANGES:
+
+- Actually use the awk version detected by host-setup.sh during the build.
 
 - Added --prebuilt-ndk=FILE option to build/tools/make-release.sh script to
   package a new experimental NDK package archive from the current source tree
@@ -57,6 +106,17 @@ OTHER FIXES & CHANGES:
     - add GLibc-compatible macro aliases (st_atimensec, st_mtimensec and
       st_ctimensec) to <stat.h>
     - add missing declaration for tzset() in <time.h>
+
+- Added build/tools/download-toolchain-sources.sh, a script that allows you
+  to download the toolchain sources from the official open-source repository
+  at android.git.kernel.org and nicely package them into a tarball that can
+  later be used by build/tools/build-toolchain.sh to rebuild the prebuilt
+  binaries for your system.
+
+- Updated build/tools/build-toolchain.sh to support the tarballs generated
+  by download-toolchain-sources.sh with the --package=<file> option. This
+  also builds both gcc 4.2.1 and 4.4.0, adding support for armeabi-v7a to
+  gcc 4.4.0.
 
 -------------------------------------------------------------------------------
 android-ndk-1.6_r1

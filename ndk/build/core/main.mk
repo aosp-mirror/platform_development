@@ -83,12 +83,30 @@ $(foreach _config_mk,$(TOOLCHAIN_CONFIGS),\
   $(eval include $(BUILD_SYSTEM)/add-toolchain.mk)\
 )
 
-#$(info ALL_TOOLCHAINS=$(ALL_TOOLCHAINS))
-NDK_TARGET_TOOLCHAIN := $(firstword $(NDK_ALL_TOOLCHAINS))
-$(call ndk_log, Default toolchain is $(NDK_TARGET_TOOLCHAIN))
-
 NDK_ALL_TOOLCHAINS   := $(call uniq,$(NDK_ALL_TOOLCHAINS))
 NDK_ALL_ABIS         := $(call uniq,$(NDK_ALL_ABIS))
+
+# The default toolchain is now arm-eabi-4.4.0, however its
+# C++ compiler is a tad bit more pedantic with certain
+# constructs (e.g. templates) so allow users to switch back
+# to the old 4.2.1 instead if they really want to.
+#
+# NOTE: you won't get armeabi-v7a support though !
+#
+NDK_TOOLCHAIN := $(strip $(NDK_TOOLCHAIN))
+ifndef NDK_TOOLCHAIN
+    NDK_TARGET_TOOLCHAIN := arm-eabi-4.4.0
+    $(call ndk_log, Default toolchain is $(NDK_TARGET_TOOLCHAIN))
+else
+    # check that the toolchain name is supported
+    $(if $(filter-out $(NDK_ALL_TOOLCHAINS),$(NDK_TOOLCHAIN)),\
+      $(call __ndk_info,NDK_TOOLCHAIN is defined to the unsupported value $(NDK_TOOLCHAIN)) \
+      $(call __ndk_info,Please use one of the following values: $(NDK_ALL_TOOLCHAINS))\
+      $(call __ndk_error,Aborting)\
+    ,)
+    NDK_TARGET_TOOLCHAIN=$(NDK_TOOLCHAIN)
+    $(call ndk_log, Using specific toolchain $(NDK_TARGET_TOOLCHAIN))
+endif
 
 $(call ndk_log, This NDK supports the following toolchains and target ABIs:)
 $(foreach tc,$(NDK_ALL_TOOLCHAINS),\
@@ -206,7 +224,8 @@ $(call __ndk_info,Building for application '$(NDK_APPS)')
         executables libraries static_libraries shared_libraries \
         clean clean-config clean-objs-dir \
         clean-executables clean-libraries \
-        clean-installed-modules
+        clean-installed-modules \
+        clean-installed-binaries
 
 # These macros are used in Android.mk to include the corresponding
 # build script that will parse the LOCAL_XXX variable definitions.

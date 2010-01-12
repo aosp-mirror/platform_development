@@ -1,6 +1,6 @@
 #!/bin/sh
 
-version=tzdata2008h
+version=tzdata2009s
 
 mkdir data
 
@@ -20,7 +20,7 @@ do
     zic -d data $i
 done
 
-javac -target 1.5 ZoneCompactor.java
+javac -target 1.5 ZoneCompactor.java ZoneInfo.java
 
 (
     cat $version/* | grep '^Link' | awk '{print $1, $2, $3}'
@@ -32,4 +32,6 @@ javac -target 1.5 ZoneCompactor.java
 
 java ZoneCompactor setup data
 
-cp zoneinfo.dat zoneinfo.idx ../../../data/zoneinfo
+cp zoneinfo.dat zoneinfo.idx ../../../bionic/libc/zoneinfo
+
+echo $version | sed 's/tzdata//' > ../../../bionic/libc/zoneinfo/zoneinfo.version

@@ -321,7 +321,7 @@ def Run():
 
     options, args = parser.parse_args()
 
-    coverage = CoverageGenerator(android_build.GetTop(), None)
+    coverage = CoverageGenerator(None)
     if options.combine_coverage:
       coverage.CombineCoverage()
     if options.tidy:

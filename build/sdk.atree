@@ -18,10 +18,10 @@
 # These are the files that comprise that SDK
 #
 
-# version files for the SDK updater
-development/tools/scripts/doc_source.properties docs/source.properties
-development/tools/scripts/tools_source.properties tools/source.properties
-development/tools/scripts/platform_source.properties platforms/${PLATFORM_NAME}/source.properties
+# version files for the SDK updater, from sdk.git
+development/sdk/doc_source.properties docs/source.properties
+development/sdk/platform_source.properties platforms/${PLATFORM_NAME}/source.properties
+sdk/files/tools_source.properties tools/source.properties
 
 # host tools from out/host/$(HOST_OS)-$(HOST_ARCH)/
 bin/aapt platforms/${PLATFORM_NAME}/tools/aapt
@@ -42,33 +42,38 @@ framework/org.eclipse.equinox.common_3.4.0.v20080421-2006.jar tools/lib/org.ecli
 framework/org.eclipse.jface_3.4.2.M20090107-0800.jar tools/lib/org.eclipse.jface_3.4.2.M20090107-0800.jar
 framework/osgi.jar tools/lib/osgi.jar
 
+# copy build prop from out/.../sdk/
 sdk/sdk-build.prop platforms/${PLATFORM_NAME}/build.prop
-development/tools/scripts/plugin.prop tools/lib/plugin.prop
+
+# copy plugin.prop from sdk.git
+sdk/files/plugin.prop tools/lib/plugin.prop
 
 # the aidl precompiled include
 obj/framework.aidl platforms/${PLATFORM_NAME}/framework.aidl
 
-# sdk scripts
-development/tools/scripts/AndroidManifest.template platforms/${PLATFORM_NAME}/templates/AndroidManifest.template
-development/tools/scripts/AndroidManifest.tests.template platforms/${PLATFORM_NAME}/templates/AndroidManifest.tests.template
-development/tools/scripts/java_file.template platforms/${PLATFORM_NAME}/templates/java_file.template
-development/tools/scripts/java_tests_file.template platforms/${PLATFORM_NAME}/templates/java_tests_file.template
-development/tools/scripts/layout.template platforms/${PLATFORM_NAME}/templates/layout.template
-development/tools/scripts/strings.template platforms/${PLATFORM_NAME}/templates/strings.template
-development/tools/scripts/android_rules.xml platforms/${PLATFORM_NAME}/templates/android_rules.xml
-development/tools/scripts/android_test_rules.xml platforms/${PLATFORM_NAME}/templates/android_test_rules.xml
-development/tools/scripts/icon_ldpi.png platforms/${PLATFORM_NAME}/templates/icon_ldpi.png
-development/tools/scripts/icon_mdpi.png platforms/${PLATFORM_NAME}/templates/icon_mdpi.png
-development/tools/scripts/icon_hdpi.png platforms/${PLATFORM_NAME}/templates/icon_hdpi.png
-development/tools/scripts/build.template tools/lib/build.template
-development/tools/scripts/devices.xml tools/lib/devices.xml
+# sdk.git Ant templates
+sdk/templates/AndroidManifest.template platforms/${PLATFORM_NAME}/templates/AndroidManifest.template
+sdk/templates/AndroidManifest.tests.template platforms/${PLATFORM_NAME}/templates/AndroidManifest.tests.template
+sdk/templates/java_file.template platforms/${PLATFORM_NAME}/templates/java_file.template
+sdk/templates/java_tests_file.template platforms/${PLATFORM_NAME}/templates/java_tests_file.template
+sdk/templates/layout.template platforms/${PLATFORM_NAME}/templates/layout.template
+sdk/templates/strings.template platforms/${PLATFORM_NAME}/templates/strings.template
+sdk/templates/build.template tools/lib/build.template
+sdk/templates/icon_ldpi.png platforms/${PLATFORM_NAME}/templates/icon_ldpi.png
+sdk/templates/icon_mdpi.png platforms/${PLATFORM_NAME}/templates/icon_mdpi.png
+sdk/templates/icon_hdpi.png platforms/${PLATFORM_NAME}/templates/icon_hdpi.png
 
-# emacs support
-development/tools/scripts/android.el tools/lib/android.el
+# sdk.git files
+sdk/files/android_rules.xml platforms/${PLATFORM_NAME}/templates/android_rules.xml
+sdk/files/android_test_rules.xml platforms/${PLATFORM_NAME}/templates/android_test_rules.xml
+sdk/files/devices.xml tools/lib/devices.xml
+
+# emacs support from sdk.git
+sdk/files/android.el tools/lib/android.el
 
 # samples
 development/apps/GestureBuilder platforms/${PLATFORM_NAME}/samples/GestureBuilder
-development/samples/HelloActivity platforms/${PLATFORM_NAME}/samples/HelloActivity
+development/samples/BluetoothChat platforms/${PLATFORM_NAME}/samples/BluetoothChat
 development/samples/Home platforms/${PLATFORM_NAME}/samples/Home
 development/samples/LunarLander platforms/${PLATFORM_NAME}/samples/LunarLander
 development/samples/NotePad platforms/${PLATFORM_NAME}/samples/NotePad
@@ -78,6 +83,11 @@ development/samples/Snake platforms/${PLATFORM_NAME}/samples/Snake
 development/samples/SoftKeyboard platforms/${PLATFORM_NAME}/samples/SoftKeyboard
 development/samples/JetBoy platforms/${PLATFORM_NAME}/samples/JetBoy
 development/samples/SearchableDictionary platforms/${PLATFORM_NAME}/samples/SearchableDictionary
+development/samples/ContactManager platforms/${PLATFORM_NAME}/samples/ContactManager
+development/samples/MultiResolution platforms/${PLATFORM_NAME}/samples/MultiResolution
+development/samples/Wiktionary platforms/${PLATFORM_NAME}/samples/Wiktionary
+development/samples/WiktionarySimple platforms/${PLATFORM_NAME}/samples/WiktionarySimple
+development/samples/CubeLiveWallpaper platforms/${PLATFORM_NAME}/samples/CubeLiveWallpaper
 
 # dx
 bin/dx platforms/${PLATFORM_NAME}/tools/dx
@@ -156,20 +166,20 @@ userdata.img platforms/${PLATFORM_NAME}/images/userdata.img
 prebuilt/android-arm/kernel/kernel-qemu platforms/${PLATFORM_NAME}/images/kernel-qemu
 external/qemu/android/avd/hardware-properties.ini tools/lib/hardware-properties.ini
 
-# emulator skins
-development/emulator/skins/QVGA      platforms/${PLATFORM_NAME}/skins/QVGA
-development/emulator/skins/WQVGA432  platforms/${PLATFORM_NAME}/skins/WQVGA432
-development/emulator/skins/WQVGA400  platforms/${PLATFORM_NAME}/skins/WQVGA400
-development/emulator/skins/HVGA      platforms/${PLATFORM_NAME}/skins/HVGA
-development/emulator/skins/WVGA800   platforms/${PLATFORM_NAME}/skins/WVGA800
-development/emulator/skins/WVGA854   platforms/${PLATFORM_NAME}/skins/WVGA854
+# emulator skins from sdk.git
+sdk/emulator/skins/QVGA      platforms/${PLATFORM_NAME}/skins/QVGA
+sdk/emulator/skins/WQVGA432  platforms/${PLATFORM_NAME}/skins/WQVGA432
+sdk/emulator/skins/WQVGA400  platforms/${PLATFORM_NAME}/skins/WQVGA400
+sdk/emulator/skins/HVGA      platforms/${PLATFORM_NAME}/skins/HVGA
+sdk/emulator/skins/WVGA800   platforms/${PLATFORM_NAME}/skins/WVGA800
+sdk/emulator/skins/WVGA854   platforms/${PLATFORM_NAME}/skins/WVGA854
 
-# NOTICE files are copied by build/core/Makefile
-development/tools/scripts/sdk_files_NOTICE.txt platforms/${PLATFORM_NAME}/templates/NOTICE.txt
-development/tools/scripts/sdk_files_NOTICE.txt platforms/${PLATFORM_NAME}/samples/NOTICE.txt
-development/tools/scripts/sdk_files_NOTICE.txt platforms/${PLATFORM_NAME}/data/NOTICE.txt
-development/tools/scripts/sdk_files_NOTICE.txt platforms/${PLATFORM_NAME}/skins/NOTICE.txt
-development/tools/scripts/sdk_files_NOTICE.txt platforms/${PLATFORM_NAME}/tools/NOTICE.txt
+# NOTICE files are copied by build/core/Makefile from sdk.git
+sdk/files/sdk_files_NOTICE.txt platforms/${PLATFORM_NAME}/templates/NOTICE.txt
+sdk/files/sdk_files_NOTICE.txt platforms/${PLATFORM_NAME}/samples/NOTICE.txt
+sdk/files/sdk_files_NOTICE.txt platforms/${PLATFORM_NAME}/data/NOTICE.txt
+sdk/files/sdk_files_NOTICE.txt platforms/${PLATFORM_NAME}/skins/NOTICE.txt
+sdk/files/sdk_files_NOTICE.txt platforms/${PLATFORM_NAME}/tools/NOTICE.txt
 
 # the readme
 development/docs/SDK_RELEASE_NOTES RELEASE_NOTES.html
@@ -185,6 +195,7 @@ docs/broadcast_actions.txt platforms/${PLATFORM_NAME}/data/broadcast_actions.txt
 docs/service_actions.txt platforms/${PLATFORM_NAME}/data/service_actions.txt
 docs/categories.txt platforms/${PLATFORM_NAME}/data/categories.txt
 docs/widgets.txt platforms/${PLATFORM_NAME}/data/widgets.txt
+docs/features.txt platforms/${PLATFORM_NAME}/data/features.txt
 framework/layoutlib.jar platforms/${PLATFORM_NAME}/data/layoutlib.jar
 
 # framework resources for layoutlib
@@ -202,5 +213,5 @@ frameworks/base/data/fonts/DroidSerif-Regular.ttf    platforms/${PLATFORM_NAME}/
 frameworks/base/data/fonts/DroidSansFallback.ttf     platforms/${PLATFORM_NAME}/data/fonts/DroidSansFallback.ttf
 frameworks/base/data/fonts/DroidSansJapanese.ttf     platforms/${PLATFORM_NAME}/data/fonts/DroidSansJapanese.ttf
 
-# empty add-on folder with just a readme
-development/tools/scripts/README_add-ons.txt add-ons/README.txt
+# empty add-on folder with just a readme copied from sdk.git
+sdk/files/README_add-ons.txt add-ons/README.txt

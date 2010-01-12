@@ -1,0 +1,135 @@
+Building native code applications and libraries
+
+STEP 1
+Building an application.
+--------
+
+0) set the environment variable PREBUILT to point to the Android prebuilt directory
+  export PREBUILT=<path_to_android_src>/prebuilt/<platform>
+
+where you type in the actual path to the android source in place of <path_to_android_src>
+and the platform you are using instead of <platform>: either linux-x86 or darwin-x86
+
+1) Test the pndk install by building the hello world sample application:
+
+  cd <your_pndk_base>/samples/sample
+  make clean
+  make
+
+The sample application uses hello.c to construct the hello binary,  which you 
+can load and run on the ARM device. To achieve proper runtime behavior, verify
+that:
+  * crtbegin_dynamic.o is the first linked object file
+  * crtend_android.o is last linked object.
+Both are set by the config.mk file in pndk/config.
+
+2) Test that this works correctly by attaching your ARM-based device to the USB 
+port and installing the application (hello) you just made by (in the commands
+below # is the ARM device's shell prompt):
+
+NOTE: need a development build so remount opens system permissions
+
+  adb remount
+  adb push hello system/app
+  adb shell
+  # cd system/app
+  # ./hello
+  Hello from the NDK; no user libraries.
+  # exit
+
+3) You may also build the c++ binary hello_cpp.cpp into an application:
+
+  make -f Makefile.hello_cpp clean
+  make -f Makefile.hello_cpp hello_cpp
+
+This uses the hello_cpp.cpp and hello_cpp.h files to construct the hello_cpp 
+binary application, which you can load and run on the ARM device.  Note that
+we do not provide for C++ exceptions thus you must use the -fno-exceptions flag
+when compiling.
+
+  adb push hello_cpp system/app
+  adb shell
+  # cd system/app
+  # ./hello_cpp
+  C++ example printing message: Hello world!
+  # exit
+
+
+STEP 2
+Building and using a library 
+-------
+
+Makefile.lib in pndk/sample shows how to make either a shared library or a 
+static library from the hellolibrary.c source.  The example makes the libraries
+libhello-shared.so and libhello-static.a .
+
+Makefile.uselib then shows how to make an application that links against either
+a shared or a static library.  They examples shows how to build the two
+applications use_hellolibrary-so and use-hellolibrary-a from the source
+use_hellolibrary.c.
+
+1) To make a shared library and an application that uses it:
+
+  make -f Makefile.lib clean
+  make -f Makefile.lib sharedlib
+  make -f Makefile.uselib clean
+  make -f Makefile.uselib use_hellolibrary-so
+
+2) Copy the shared library libhello-shared.so to /system/lib (or the location 
+in which shared libraries are found by the kernel on your ARM-based device.) 
+
+  adb push libhello-shared.so system/lib
+ 
+You would not typically use the -shared or -static extensions in the filename, 
+but the distinction is important in the case where a static and shared library 
+are made in the same directory. Giving the files different names allows you to 
+override the link defaults that default to a static library of the same name.
+
+3) The application, use_hellolibrary-so, can now be tested by loading and 
+running on the ARM device. 
+
+  adb push use_hellolibrary-so /system/app
+  adb shell
+  # cd system/app
+  # ./use_hellolibrary-so
+  Library printing message: Hello from the NDK.
+  # exit
+
+4) To make a static library:
+
+  make -f Makefile.lib clean
+  make -f Makefile.lib staticlib
+  make -f Makefile.uselib clean
+  make -f Makefile.uselib use_hellolibrary-a
+
+5) Test the application use_hellolibrary-a by loading and running it on the ARM
+device.
+
+  adb push use_hellolibrary-a system/app
+  adb shell
+  # cd system/app
+  # ./use_hellolibrary-a
+  Library printing message: Hello from the NDK.
+  # exit
+
+
+SUMMARY:
+---------
+
+To make everything execute the following:
+
+make clean
+make
+make -f Makefile.lib clean
+make -f Makefile.lib
+make -f Makefile.uselib clean
+make -f Makefile.uselib
+make -f Makefile.hello_cpp clean
+make -f Makefile.hello_cpp hello_cpp
+
+
+You should have:
+	* The libraries libhello-static.a and libhello-shared.so built, the latter
+			ready for installation,
+	* The applications hello, use_hellolibrary-a, and use_hellolibrary-so 
+			available for installation on the ARM device.

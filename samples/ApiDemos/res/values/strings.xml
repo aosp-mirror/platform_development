@@ -32,13 +32,17 @@
     <string name="dialog_activity_text">Example of how you can use the
             Theme.Dialog theme to make an activity that looks like a
             dialog.</string>
-
     <string name="activity_custom_dialog">App/Activity/Custom Dialog</string>
     <string name="custom_dialog_activity_text">Example of how you can use a
             custom Theme.Dialog theme to make an activity that looks like a
             customized dialog, here with an ugly frame.</string>
 
+    <string name="quick_contacts_demo">App/Activity/QuickContactsDemo</string>
+
     <string name="activity_wallpaper">App/Activity/Wallpaper</string>
+    <string name="activity_setwallpaper">App/Activity/SetWallpaper</string>
+    <string name="set_wallpaper">Set Wallpaper</string>
+    <string name="randomize">Randomize</string>
     
     <string name="activity_translucent">App/Activity/Translucent</string>
     <string name="translucent_background">Example of how you can make an
@@ -139,6 +143,15 @@
     <string name="service_created">Service created.</string>
     <string name="service_destroyed">Service destroyed.</string>
     
+    <string name="foreground_service_started">Service is in the foreground</string>
+    <string name="foreground_service_label">Sample Foreground Service</string>
+
+    <string name="activity_foreground_service_controller">App/Service/Foreground Service Controller</string>
+    <string name="foreground_service_controller">This demonstrates how you can
+            implement services that run in the foreground when needed.</string>
+    <string name="start_service_foreground">Start Service Foreground</string>
+    <string name="start_service_background">Start Service Background</string>
+
     <string name="one_shot_received">The one-shot alarm has gone off</string>
     <string name="repeating_received">The repeating alarm has gone off</string>
 
@@ -207,6 +220,9 @@
     <string name="menu_from_xml_instructions_go_back">If you want to choose another menu resource, go back and re-run this activity.</string>
 
     <string name="voice_recognition">App/Voice Recognition</string>
+
+    <string name="text_to_speech">App/Text-To-Speech</string>
+    <string name="again">Again</string>
 
     <!-- ============================== -->
     <!--  app/content examples strings  -->

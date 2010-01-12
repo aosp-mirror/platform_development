@@ -27,6 +27,7 @@
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.SET_WALLPAPER" />
 
     <!-- We will request access to the camera, saying we require a camera
          of some sort but not one with autofocus capability. -->
@@ -75,6 +76,14 @@
         <activity android:name=".app.CustomDialogActivity"
                 android:label="@string/activity_custom_dialog"
                 android:theme="@style/Theme.CustomDialog">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+       <activity android:name=".app.QuickContactsDemo"
+                android:label="@string/quick_contacts_demo">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -187,6 +196,14 @@
         <activity android:name=".app.ReorderThree" />
         <activity android:name=".app.ReorderFour" />
         
+        <activity android:name=".app.SetWallpaperActivity"
+                  android:label="@string/activity_setwallpaper">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
         <!-- Intent Samples -->
 
         <activity android:name=".app.Intents" android:label="@string/activity_intents">
@@ -243,6 +260,15 @@
         <service android:name=".app.ServiceStartArguments" />
 
         <activity android:name=".app.ServiceStartArgumentsController" android:label="@string/activity_service_start_arguments_controller">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <service android:name=".app.ForegroundService" />
+        
+        <activity android:name=".app.ForegroundServiceController" android:label="@string/activity_foreground_service_controller">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -511,6 +537,15 @@
         <!-- Voice Recognition Samples -->
 
         <activity android:name=".app.VoiceRecognition" android:label="@string/voice_recognition">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <!-- Text-To-Speech Samples -->
+
+        <activity android:name=".app.TextToSpeechActivity" android:label="@string/text_to_speech">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />

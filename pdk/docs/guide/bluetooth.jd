@@ -1,0 +1,193 @@
+page.title=Bluetooth
+pdk.version=1.0
+doc.type=guide
+@jd:body
+
+<div id="qv-wrapper">
+<div id="qv">
+<h2>In this document</h2>
+<a name="toc"/>
+<ul>
+<li><a href="#androidBluetoothPorting">Porting</a></li>
+<li><a href="#androidBluetoothCompiling">Compiling</a></li>
+<li><a href="#androidBluetoothTroubleshooting">Troubleshooting</a></li>
+<li><a href="#androidBluetoothTools">Tools</a></li>
+<li><a href="#androidBluetoothFeatures">Feature Support</a></li>
+</ul>
+</div>
+</div>
+
+<p>Android's Bluetooth stack uses BlueZ version 3.36 for GAP, SDP, and RFCOMM profiles, and is a SIG-qualified Bluetooth 2.0 + EDR host stack.</p>
+
+<p>Bluez is GPL licensed, so the Android framework interacts with userspace bluez code through D-BUS IPC to avoid proprietary code.</p>
+
+<p>Headset and Handsfree (v1.5) profiles are implemented in the Android framework and are both tightly coupled with the Phone App. These profiles are also SIG qualified.</p>
+
+<p>The diagram below offers a library-oriented view of the Bluetooth stack. Click <a href="bluetooth/bluetooth_process.html">Bluetooth Process Diagram</a> for a process-oriented view.</p>
+
+<p><img src="images/androidBluetooth.gif"></p>
+
+Solid elements represent Android blocks and dashed elements represent partner-specific blocks.
+
+
+
+<a name="androidBluetoothPorting"></a><h3>Porting</h3>
+
+<p>BlueZ is Bluetooth 2.0 compatible and should work with any 2.0 chipset. There are two integration points:</p>
+<p><ul>
+<li>UART driver</li>
+<li>Bluetooth Power On / Off</li>
+</ul>
+</p>
+
+
+<a name="androidBluetoothPortingDriver"></a><h4>UART Driver</h4>
+
+<p>The BlueZ kernel sub-system attaches to your hardware-specific UART driver using the <code>hciattach</code> daemon.</p>
+<p>For example, for MSM7201A, this is <code>drivers/serial/msm_serial.c</code>. You may also need to edit command line options to <code>hciattach</code> via <code>init.rc</code>.</p>
+
+
+<a name="androidBluetoothPortingPowerOnOff"></a><h4>Bluetooth Power On / Off</h4>
+
+<p>The method for powering on and off your bluetooth chip varies from Android V 1.0 to post 1.0.</p>
+
+<p><ul>
+<li><b>1.0</b>: Android framework writes a 0 or 1 to <code>/sys/modules/board_[PLATFORM]/parameters/bluetooth_power_on</code>.</li>
+
+<li><b>Post 1.0</b>: Android framework uses the linux <code>rfkill</code> API. See <code>arch/arm/mach-msm/board-trout-rfkill.c</code> for an example.</li>
+</ul>
+</p>
+
+<a name="androidBluetoothCompiling"></a><h4>Compiling</h4>
+
+<p>To compile Android with Bluetooth support enabled, add the following line to <code>BoardConfig.mk</code>.
+<pre>
+BOARD_HAVE_BLUETOOTH := true
+</pre>
+
+<a name="androidBluetoothTroubleshooting"></a><h3>Troubleshooting</h3>
+<p><strong>Debugging</strong></p>
+<p>To debug your bluetooth implementation, start by reading the logs (<code>adb logcat</code>) and look for ERRROR and WARNING messages regarding Bluetooth. 
+  Andoird uses Bluez, which comes with some useful debugging tools. The snippet below provides examples in a suggested order:</p>
+<pre>
+hciconfig -a  			# print BT chipset address and features. Useful to check if you can communicate with your BT chipset.
+hcidump -XVt  			# print live HCI UART traffic.
+hcitool scan  			# scan for local devices. Useful to check if RX/TX works.
+l2ping ADDRESS  		# ping another BT device. Useful to check if RX/TX works.
+sdptool records ADDRESS # request the SDP records of another BT device.
+</pre>
+
+<p><strong>Deamon Logs</strong></p>
+<p>Deamon logs for <code>hcid</code> (<code>STDOUT</code>) and <code>hciattach</code> (<code>STDERR</code>) are sent to <code>/dev/null</code> by default. Edit <code>init.rc</code></span> and <code>init.PLATFORM.rc</code></span> to run these daemons under <code>logwrapper</code>, which redirects output to <code>logcat</code>.</p>
+<p><strong>hciconfig -a and hcitool</strong></p>
+<p>If you compile your own system.img for Android, and <code>hciconfig -a</code> works but <code>hcitool</code> scan doesn't, try installing the firmware for the Bluetooth chipset. This firmware isn't yet available in the open source codebase, but you can <code>adb pull</code> and then <code>adb push</code>it from a stock T-Mobile G1 (located in <code>/etc/firmware/brf6300.bin</code>).<br />
+  <a name="androidBluetoothTools"></a></p>
+<h3>Tools</h3>
+
+<p>BlueZ provides a rich set of command line tools for debugging and interacting with the Bluetooth sub-system, including:</p>
+<p><ul>
+<li><code>hciconfig</code></li>
+<li><code>hcitool</code></li>
+<li><code>hcidump</code></li>
+<li><code>sdptool</code></li>
+<li><code>dbus-send</code></li>
+<li><code>dbus-monitor</code></li>
+</ul>
+</p>
+
+<a name="androidBluetoothFeatures"></a>
+<h3>Feature Support</h3>
+<p>This section provides a change history of Bluetooth features added in each Android release and provides some rough guidance as to future features. </p>
+<h4>Android 1.0 release</h4>
+<h5>Platform features</h5>
+<ul>
+  <li>Based on Bluez 3.36 and Linux Kernel 2.6.25</li>
+  <li>Bluetooth 2.0+EDR host stack</li>
+  <li>Headset Profile 1.0 in Audio Gateway role</li>
+  <li>Handsfree Profile 1.5 in Audio Gateway role</li>
+  <ul>
+    <li>Three-way calling</li>
+    <li>Phonebook over AT commands
+    </li>
+  </ul>
+</ul>
+<h5>Qualifications</h5>
+<ul>
+  <li>QDID B014524: Host stack (SDP, L2CAP, GAP, RFCOMM, SPP)</li>
+  <li>QDID B014624: EPL for HTC Dream (HSP, HFP)</li>
+</ul>
+<h5>Example products</h5>
+<ul>
+  <li>HTC Dream / T-Mobile G1</li>
+</ul>
+<h4>&nbsp;</h4>
+<h4>Android 1.1 release</h4>
+<p>No Bluetooth changes since 1.0</p>
+<h4>&nbsp;</h4>
+<h4>Android 1.5 release (cupcake)</h4>
+<h4>Platform features</h4>
+<ul>
+  <li>Based on Bluez 3.36 with Linux Kernel 2.6.27</li>
+  <li>Bluetooth 2.0+EDR host stack</li>
+  <ul>
+    <li>Support for auto-pairing with '0000' devices</li>
+  </ul>
+  <li>Headset Profile 1.1 in Audio Gateway role</li>
+  <li>Handsfree Profile 1.5 in Audio Gateway role</li>
+  <ul>
+    <li>Three-way calling    </li>
+    <li>Phonebook over AT commands    </li>
+    <li>Volume synchronization</li>
+    <li>eSCO</li>
+    <li>Extensive bug fixes and compatibility improvements</li>
+  </ul>
+  <li>Stereo Bluetooth (A2DP 1.2) in Source role</li>
+  <ul>
+    <li>AVDTP 1.2 in Acceptor and Initiator roles</li>
+    <li>GAVDTP 1.0 in Acceptor and Initiator roles</li>
+    <li>44.1 khz, stereo, software SBC codec</li>
+  </ul>
+  <li>Remote Control (AVRCP 1.0) in Target role</li>
+  <ul>
+    <li>AVCTP 1.3 in Target role</li>
+    <li>play/pause/stop/prev/next</li>
+  </ul>
+</ul>
+<h4>Qualifications</h4>
+<ul>
+  <li>QDID B015261: Host stack (SDP, L2CAP, GAP, RFCOMM, SPP, AVCTP, AVRCP, GAVDP, AVDTP, A2DP)</li>
+  <li>QDID B015262: EPL for HTC Sapphire (HSP, HFP)</li>
+</ul>
+<h5>&nbsp;</h5>
+<h4>Future releases</h4>
+<p>This section offers a rough guide of which features the team is developing for the next release. This feature list may change without notice. It isn't possible to post scheduling advice to the mailing lists.</p>
+<ul>
+  <li>Java Bluetooth API</li>
+  <li>Bluez 4.x with Linux Kernel 2.6.29</li>
+  <li>More profiles...</li>
+  <li>Bluetooth 2.1+EDR</li>
+</ul>
+
+<p><strong>Development Notes</strong></p>
+<ul>
+  <li><strong>HID Support<br />
+  </strong>Cupcake features some early work&#151;Bluez has an HID plugin, <code>external/bluez/utils/input/Android.mk</code>, which gets compiled. <br />
+    <br />
+You can interact directly with this plugin using <code>dbus-send</code></span> and <code>dbus-monitor</code>. While not officially supported, you should be able to connect and use a HID keyboard and mouse using the Bluez HID plugin API. Next steps include plumbing the plugin API in the Android Java framework and offering better support for HID input methods (new keymaps and mouse support).<br />
+  <br />
+  </li>
+  <li>  <strong>Tethering - DUN and PAN Support</strong><br />
+    Cupcake features some early work&#151;Bluez has has DUN and PAN daemons which get compiled and <code>external/bluez/utils/dun/Android.mk
+  external/bluez/utils/pan/Android.mk
+BNEP</code> support is compiled into the kernel with cupcake. <br />
+<br />
+While not officially supported, you should be able to run <code>dund</code> or <code>pand</code> daemons and, using <code>pppd</code> or <code>iptables</code>, test tethering support. Next steps include plubming the DBUS APIs to these daemons up into the Android Java framework and adding code to setup the network paths via <code>pppd</code> and / or <code>iptables</code>.<br />
+  <br />
+  </li>
+  <li><strong>Emulator Support</strong><br />
+  The Android emulator does not support Bluetooth at this time and there currently aren't any plans for its support.<br />
+    <br />
+  </li>
+  <li><strong>Bluetooth 2.1 and Simple Pairing Support</strong><br />
+  In order to support these features, Android needs to move to a Bluez 4.x version. This change is not scheduled at this time.</li>
+</ul>

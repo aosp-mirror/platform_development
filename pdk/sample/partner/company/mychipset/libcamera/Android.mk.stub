@@ -1,0 +1,15 @@
+LOCAL_PATH:= $(call my-dir)
+
+include $(CLEAR_VARS)
+
+LOCAL_SRC_FILES:= MyCameraHardware.cpp
+
+LOCAL_STATIC_LIBRARIES:= \
+	libcamera-common
+ 
+LOCAL_SHARED_LIBRARIES:= libutils liblog
+
+LOCAL_MODULE:= libcamera
+
+include $(BUILD_SHARED_LIBRARY)
+

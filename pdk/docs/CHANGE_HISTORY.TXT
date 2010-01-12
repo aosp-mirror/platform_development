@@ -1,0 +1,23 @@
+V 0.9 MWR Apr 6, 2009
+#####################
+
+* New files for new css files using droiddoc/clearsilver
+
+V 0.3 - June 9, 2008
+####################
+
+* Architectural diagrams now include a legend that describes the difference 
+  between solid and dashed elements
+
+* Removed Puppetmaster document
+
+* Removed external link to Android Architecture from the left navigation bar
+
+* small changes to Radio Layer Interface
+
+* Updated Host System Setup (source_setup_guide.html) to include mention of Linux 8.04 and Cygwin.
+
+* Updated Build System (build_system.html): Switched Device code options 1 & 2 to emphasize that 
+  the new first option yields more consistent results. 
+
+* Updated Bring Up (bring_up.html): removed "hotplugd" from step 7.

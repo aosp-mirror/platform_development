@@ -1,0 +1,23 @@
+
+NDK_BASE   := ../..
+
+include $(NDK_BASE)/config/config.mk
+
+SOURCES    := use_hellolibrary.c
+OBJECTS    := $(SOURCES:.c=.o)
+LIBS       := -lc -lm 
+
+all: use_hellolibrary-a use_hellolibrary-so
+
+# need $(LINK) before all objects and $(POSTLINK) after all objects for 
+# android runtime setup.
+
+use_hellolibrary-a: $(OBJECTS)
+	$(CC) $(LINK) -o $@ $(OBJECTS) $(LIBS) -L. -lhello-static $(POSTLINK)
+
+use_hellolibrary-so: $(OBJECTS)
+	$(CC) $(LINK) -o $@ $(OBJECTS) $(LIBS) -L. -lhello-shared $(POSTLINK)
+
+clean:
+	rm -rf *.o use_hellolibrary-a use_hellolibrary-so
+
