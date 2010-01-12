@@ -86,14 +86,21 @@ function check() {
 
 function build() {
 
+    # IMPORTANT: For Cygwin to be able to build Android targets here,
+    # you will generally need to edit build/core/main.mk and add directories
+    # where Android.mk makefiles are to be found to the SDK_ONLY==true section.
+
     echo 
     echo "Building..."
     [ -n "$MAKE_OPT" ] && echo "Make options: $MAKE_OPT"
+
     . build/envsetup.sh
-    make -j 4 emulator || die "Build failed"
+
     # Disable parallel build: it generates "permission denied" issues when
     # multiple "ar.exe" are running in parallel.
-    make aapt adb aidl \
+    make \
+        aapt adb aidl \
+        etc1tool \
         prebuilt \
         dexdump dmtracedump \
         fastboot \
@@ -102,6 +109,9 @@ function build() {
         sdklauncher sqlite3 \
         zipalign \
         || die "Build failed"
+
+    # It's worth building the emulator with -j 4 so do it separately
+    make -j 4 emulator || die "Build failed"
 }
 
 function package() {
@@ -140,7 +150,7 @@ function package() {
     # Remove obsolete stuff from tools & platform
     TOOLS="$TEMP_SDK_DIR/tools"
     LIB="$TEMP_SDK_DIR/tools/lib"
-    rm -v "$TOOLS"/{adb,android,apkbuilder,ddms,dmtracedump,draw9patch,emulator}
+    rm -v "$TOOLS"/{adb,android,apkbuilder,ddms,dmtracedump,draw9patch,emulator,etc1tool}
     rm -v "$TOOLS"/{hierarchyviewer,hprof-conv,layoutopt,mksdcard,sqlite3,traceview,zipalign}
     rm -v "$LIB"/*/swt.jar
     rm -v "$PLATFORM_TOOLS"/{aapt,aidl,dx,dexdump}
