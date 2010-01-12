@@ -73,22 +73,23 @@ sdk/files/devices.xml tools/lib/devices.xml
 sdk/files/android.el tools/lib/android.el
 
 # samples
-development/apps/GestureBuilder platforms/${PLATFORM_NAME}/samples/GestureBuilder
-development/samples/BluetoothChat platforms/${PLATFORM_NAME}/samples/BluetoothChat
-development/samples/Home platforms/${PLATFORM_NAME}/samples/Home
-development/samples/LunarLander platforms/${PLATFORM_NAME}/samples/LunarLander
-development/samples/NotePad platforms/${PLATFORM_NAME}/samples/NotePad
-development/samples/ApiDemos platforms/${PLATFORM_NAME}/samples/ApiDemos
-development/samples/SkeletonApp platforms/${PLATFORM_NAME}/samples/SkeletonApp
-development/samples/Snake platforms/${PLATFORM_NAME}/samples/Snake
-development/samples/SoftKeyboard platforms/${PLATFORM_NAME}/samples/SoftKeyboard
-development/samples/JetBoy platforms/${PLATFORM_NAME}/samples/JetBoy
-development/samples/SearchableDictionary platforms/${PLATFORM_NAME}/samples/SearchableDictionary
-development/samples/ContactManager platforms/${PLATFORM_NAME}/samples/ContactManager
-development/samples/MultiResolution platforms/${PLATFORM_NAME}/samples/MultiResolution
-development/samples/Wiktionary platforms/${PLATFORM_NAME}/samples/Wiktionary
-development/samples/WiktionarySimple platforms/${PLATFORM_NAME}/samples/WiktionarySimple
-development/samples/CubeLiveWallpaper platforms/${PLATFORM_NAME}/samples/CubeLiveWallpaper
+development/samples/source.properties     samples/${PLATFORM_NAME}/source.properties
+development/apps/GestureBuilder           samples/${PLATFORM_NAME}/GestureBuilder
+development/samples/BluetoothChat         samples/${PLATFORM_NAME}/BluetoothChat
+development/samples/Home                  samples/${PLATFORM_NAME}/Home
+development/samples/LunarLander           samples/${PLATFORM_NAME}/LunarLander
+development/samples/NotePad               samples/${PLATFORM_NAME}/NotePad
+development/samples/ApiDemos              samples/${PLATFORM_NAME}/ApiDemos
+development/samples/SkeletonApp           samples/${PLATFORM_NAME}/SkeletonApp
+development/samples/Snake                 samples/${PLATFORM_NAME}/Snake
+development/samples/SoftKeyboard          samples/${PLATFORM_NAME}/SoftKeyboard
+development/samples/JetBoy                samples/${PLATFORM_NAME}/JetBoy
+development/samples/SearchableDictionary  samples/${PLATFORM_NAME}/SearchableDictionary
+development/samples/ContactManager        samples/${PLATFORM_NAME}/ContactManager
+development/samples/MultiResolution       samples/${PLATFORM_NAME}/MultiResolution
+development/samples/Wiktionary            samples/${PLATFORM_NAME}/Wiktionary
+development/samples/WiktionarySimple      samples/${PLATFORM_NAME}/WiktionarySimple
+development/samples/CubeLiveWallpaper     samples/${PLATFORM_NAME}/CubeLiveWallpaper
 
 # dx
 bin/dx platforms/${PLATFORM_NAME}/tools/dx
@@ -177,10 +178,10 @@ sdk/emulator/skins/WVGA854   platforms/${PLATFORM_NAME}/skins/WVGA854
 
 # NOTICE files are copied by build/core/Makefile from sdk.git
 sdk/files/sdk_files_NOTICE.txt platforms/${PLATFORM_NAME}/templates/NOTICE.txt
-sdk/files/sdk_files_NOTICE.txt platforms/${PLATFORM_NAME}/samples/NOTICE.txt
 sdk/files/sdk_files_NOTICE.txt platforms/${PLATFORM_NAME}/data/NOTICE.txt
 sdk/files/sdk_files_NOTICE.txt platforms/${PLATFORM_NAME}/skins/NOTICE.txt
 sdk/files/sdk_files_NOTICE.txt platforms/${PLATFORM_NAME}/tools/NOTICE.txt
+sdk/files/sdk_files_NOTICE.txt samples/${PLATFORM_NAME}/NOTICE.txt
 
 # the readme
 development/docs/SDK_RELEASE_NOTES RELEASE_NOTES.html
