@@ -26,117 +26,131 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.LinkedList;
-import java.util.StringTokenizer;
 
-import android.view.KeyEvent;
 /**
- * monkey event queue. It takes a script to produce events
- * 
- * sample script format:
- *      type= raw events
- *      count= 10
- *      speed= 1.0
- *      start data >>
- *      captureDispatchPointer(5109520,5109520,0,230.75429,458.1814,0.20784314,
- *          0.06666667,0,0.0,0.0,65539,0)
- *      captureDispatchKey(5113146,5113146,0,20,0,0,0,0)
- *      captureDispatchFlip(true)
- *      ...
+ * monkey event queue. It takes a script to produce events sample script format:
+ *
+ * <pre>
+ * type= raw events
+ * count= 10
+ * speed= 1.0
+ * start data &gt;&gt;
+ * captureDispatchPointer(5109520,5109520,0,230.75429,458.1814,0.20784314,0.06666667,0,0.0,0.0,65539,0)
+ * captureDispatchKey(5113146,5113146,0,20,0,0,0,0)
+ * captureDispatchFlip(true)
+ * ...
+ * </pre>
  */
-public class MonkeySourceScript implements MonkeyEventSource {    
-    private int mEventCountInScript = 0;  //total number of events in the file
+public class MonkeySourceScript implements MonkeyEventSource {
+    private int mEventCountInScript = 0; // total number of events in the file
+
     private int mVerbose = 0;
+
     private double mSpeed = 1.0;
-    private String mScriptFileName; 
+
+    private String mScriptFileName;
+
     private MonkeyEventQueue mQ;
-    
-    private static final String HEADER_TYPE = "type=";
+
     private static final String HEADER_COUNT = "count=";
+
     private static final String HEADER_SPEED = "speed=";
-    // New script type
-    private static final String USER_EVENT_TYPE = "user";
-    
-    private long mLastRecordedDownTimeKey = 0;    
+
+    private long mLastRecordedDownTimeKey = 0;
+
     private long mLastRecordedDownTimeMotion = 0;
+
     private long mLastExportDownTimeKey = 0;
+
     private long mLastExportDownTimeMotion = 0;
+
     private long mLastExportEventTime = -1;
+
     private long mLastRecordedEventTime = -1;
-    private String mScriptType = USER_EVENT_TYPE;
-    
+
     private static final boolean THIS_DEBUG = false;
-    // a parameter that compensates the difference of real elapsed time and 
+
+    // a parameter that compensates the difference of real elapsed time and
     // time in theory
-    private static final long SLEEP_COMPENSATE_DIFF = 16;    
-    
+    private static final long SLEEP_COMPENSATE_DIFF = 16;
+
     // maximum number of events that we read at one time
     private static final int MAX_ONE_TIME_READS = 100;
-    
-    // number of additional events added to the script 
-    // add HOME_KEY down and up events to make start UI consistent in each round 
-    private static final int POLICY_ADDITIONAL_EVENT_COUNT = 2;
 
-    // event key word in the capture log    
+    // number of additional events added to the script
+    // add HOME_KEY down and up events to make start UI consistent in each round
+    private static final int POLICY_ADDITIONAL_EVENT_COUNT = 0;
+
+    // event key word in the capture log
     private static final String EVENT_KEYWORD_POINTER = "DispatchPointer";
+
     private static final String EVENT_KEYWORD_TRACKBALL = "DispatchTrackball";
+
     private static final String EVENT_KEYWORD_KEY = "DispatchKey";
+
     private static final String EVENT_KEYWORD_FLIP = "DispatchFlip";
+
     private static final String EVENT_KEYWORD_KEYPRESS = "DispatchPress";
+
     private static final String EVENT_KEYWORD_ACTIVITY = "LaunchActivity";
+
     private static final String EVENT_KEYWORD_WAIT = "UserWait";
+
     private static final String EVENT_KEYWORD_LONGPRESS = "LongPress";
 
     // a line at the end of the header
-    private static final String STARTING_DATA_LINE = "start data >>";    
-    private boolean mFileOpened = false;    
-    private static int LONGPRESS_WAIT_TIME = 2000; // wait time for the long press
-    
+    private static final String STARTING_DATA_LINE = "start data >>";
+
+    private boolean mFileOpened = false;
+
+    private static int LONGPRESS_WAIT_TIME = 2000; // wait time for the long
+
+    // press
+
     FileInputStream mFStream;
+
     DataInputStream mInputStream;
+
     BufferedReader mBufferReader;
-    
+
     public MonkeySourceScript(String filename, long throttle) {
         mScriptFileName = filename;
         mQ = new MonkeyEventQueue(throttle);
     }
-    
+
     /**
-     * 
-     * @return the number of total events that will be generated in a round 
+     * @return the number of total events that will be generated in a round
      */
     public int getOneRoundEventCount() {
-        //plus one home key down and up event
-        return mEventCountInScript + POLICY_ADDITIONAL_EVENT_COUNT; 
+        // plus one home key down and up event
+        return mEventCountInScript + POLICY_ADDITIONAL_EVENT_COUNT;
     }
-    
+
     private void resetValue() {
-        mLastRecordedDownTimeKey = 0;    
+        mLastRecordedDownTimeKey = 0;
         mLastRecordedDownTimeMotion = 0;
         mLastExportDownTimeKey = 0;
-        mLastExportDownTimeMotion = 0;    
-        mLastRecordedEventTime = -1;        
+        mLastExportDownTimeMotion = 0;
+        mLastRecordedEventTime = -1;
         mLastExportEventTime = -1;
     }
-    
+
     private boolean readScriptHeader() {
         mEventCountInScript = -1;
-        mFileOpened = false;        
+        mFileOpened = false;
         try {
             if (THIS_DEBUG) {
                 System.out.println("reading script header");
             }
-            
-            mFStream  =  new FileInputStream(mScriptFileName);
-            mInputStream  = new DataInputStream(mFStream);
-            mBufferReader = new BufferedReader(
-                    new InputStreamReader(mInputStream));
+
+            mFStream = new FileInputStream(mScriptFileName);
+            mInputStream = new DataInputStream(mFStream);
+            mBufferReader = new BufferedReader(new InputStreamReader(mInputStream));
             String sLine;
             while ((sLine = mBufferReader.readLine()) != null) {
                 sLine = sLine.trim();
-                if (sLine.indexOf(HEADER_TYPE) >= 0) {
-                    mScriptType = sLine.substring(HEADER_TYPE.length() + 1).trim();
-                } else if (sLine.indexOf(HEADER_COUNT) >= 0) {
+
+                if (sLine.indexOf(HEADER_COUNT) >= 0) {
                     try {
                         mEventCountInScript = Integer.parseInt(sLine.substring(
                                 HEADER_COUNT.length() + 1).trim());
@@ -145,9 +159,9 @@ public class MonkeySourceScript implements MonkeyEventSource {
                     }
                 } else if (sLine.indexOf(HEADER_SPEED) >= 0) {
                     try {
-                        mSpeed = Double.parseDouble(sLine.substring(
-                                HEADER_SPEED.length() + 1).trim());
-                        
+                        mSpeed = Double.parseDouble(sLine.substring(HEADER_SPEED.length() + 1)
+                                .trim());
+
                     } catch (NumberFormatException e) {
                         System.err.println(e);
                     }
@@ -156,112 +170,123 @@ public class MonkeySourceScript implements MonkeyEventSource {
                     mFileOpened = true;
                     if (THIS_DEBUG) {
                         System.out.println("read script header success");
-                    }    
+                    }
                     return true;
                 }
-            }            
+            }
         } catch (FileNotFoundException e) {
             System.err.println(e);
         } catch (IOException e) {
             System.err.println(e);
         }
-        
+
         if (THIS_DEBUG) {
             System.out.println("Error in reading script header");
-        }        
-        return false;        
-    }    
+        }
+        return false;
+    }
 
-    private void handleRawEvent(String s, StringTokenizer st) {
-        if (s.indexOf(EVENT_KEYWORD_KEY) >= 0) {
-            // key events
+    private void handleEvent(String s, String[] args) {
+        // Handle key event
+        if (s.indexOf(EVENT_KEYWORD_KEY) >= 0 && args.length == 8) {
             try {
                 System.out.println(" old key\n");
-                long downTime = Long.parseLong(st.nextToken());
-                long eventTime = Long.parseLong(st.nextToken());
-                int action = Integer.parseInt(st.nextToken());
-                int code = Integer.parseInt(st.nextToken());
-                int repeat = Integer.parseInt(st.nextToken());
-                int metaState = Integer.parseInt(st.nextToken());
-                int device = Integer.parseInt(st.nextToken());
-                int scancode = Integer.parseInt(st.nextToken());
+                long downTime = Long.parseLong(args[0]);
+                long eventTime = Long.parseLong(args[1]);
+                int action = Integer.parseInt(args[2]);
+                int code = Integer.parseInt(args[3]);
+                int repeat = Integer.parseInt(args[4]);
+                int metaState = Integer.parseInt(args[5]);
+                int device = Integer.parseInt(args[6]);
+                int scancode = Integer.parseInt(args[7]);
 
-                MonkeyKeyEvent e =
-                        new MonkeyKeyEvent(downTime, eventTime, action, code, repeat, metaState,
-                                device, scancode);
+                MonkeyKeyEvent e = new MonkeyKeyEvent(downTime, eventTime, action, code, repeat,
+                        metaState, device, scancode);
                 System.out.println(" Key code " + code + "\n");
 
                 mQ.addLast(e);
                 System.out.println("Added key up \n");
-
             } catch (NumberFormatException e) {
-                // something wrong with this line in the script
             }
-        } else if (s.indexOf(EVENT_KEYWORD_POINTER) >= 0 || 
-                s.indexOf(EVENT_KEYWORD_TRACKBALL) >= 0) {
-            // trackball/pointer event
+            return;
+        }
+
+        // Handle trackball or pointer events
+        if ((s.indexOf(EVENT_KEYWORD_POINTER) >= 0 || s.indexOf(EVENT_KEYWORD_TRACKBALL) >= 0)
+                && args.length == 12) {
             try {
-                long downTime = Long.parseLong(st.nextToken());
-                long eventTime = Long.parseLong(st.nextToken());
-                int action = Integer.parseInt(st.nextToken());
-                float x = Float.parseFloat(st.nextToken());
-                float y = Float.parseFloat(st.nextToken());
-                float pressure = Float.parseFloat(st.nextToken());
-                float size = Float.parseFloat(st.nextToken());
-                int metaState = Integer.parseInt(st.nextToken());
-                float xPrecision = Float.parseFloat(st.nextToken());
-                float yPrecision = Float.parseFloat(st.nextToken());
-                int device = Integer.parseInt(st.nextToken());
-                int edgeFlags = Integer.parseInt(st.nextToken());
+                long downTime = Long.parseLong(args[0]);
+                long eventTime = Long.parseLong(args[1]);
+                int action = Integer.parseInt(args[2]);
+                float x = Float.parseFloat(args[3]);
+                float y = Float.parseFloat(args[4]);
+                float pressure = Float.parseFloat(args[5]);
+                float size = Float.parseFloat(args[6]);
+                int metaState = Integer.parseInt(args[7]);
+                float xPrecision = Float.parseFloat(args[8]);
+                float yPrecision = Float.parseFloat(args[9]);
+                int device = Integer.parseInt(args[10]);
+                int edgeFlags = Integer.parseInt(args[11]);
 
                 int type = MonkeyEvent.EVENT_TYPE_TRACKBALL;
                 if (s.indexOf("Pointer") > 0) {
                     type = MonkeyEvent.EVENT_TYPE_POINTER;
                 }
-                MonkeyMotionEvent e =
-                        new MonkeyMotionEvent(type, downTime, eventTime, action, x, y, pressure,
-                                size, metaState, xPrecision, yPrecision, device, edgeFlags);
+                MonkeyMotionEvent e = new MonkeyMotionEvent(type, downTime, eventTime, action, x,
+                        y, pressure, size, metaState, xPrecision, yPrecision, device, edgeFlags);
                 mQ.addLast(e);
             } catch (NumberFormatException e) {
-                // we ignore this event
             }
-        } else if (s.indexOf(EVENT_KEYWORD_FLIP) >= 0) {
-            boolean keyboardOpen = Boolean.parseBoolean(st.nextToken());
+            return;
+        }
+
+        // Handle flip events
+        if (s.indexOf(EVENT_KEYWORD_FLIP) >= 0 && args.length == 1) {
+            boolean keyboardOpen = Boolean.parseBoolean(args[0]);
             MonkeyFlipEvent e = new MonkeyFlipEvent(keyboardOpen);
             mQ.addLast(e);
         }
 
-    }
-
-    private void handleUserEvent(String s, StringTokenizer st) {
-        if (s.indexOf(EVENT_KEYWORD_ACTIVITY) >= 0) {
-            String pkg_name = st.nextToken();
-            String cl_name = st.nextToken();
+        // Handle launch events
+        if (s.indexOf(EVENT_KEYWORD_ACTIVITY) >= 0 && args.length == 2) {
+            String pkg_name = args[0];
+            String cl_name = args[1];
             ComponentName mApp = new ComponentName(pkg_name, cl_name);
             MonkeyActivityEvent e = new MonkeyActivityEvent(mApp);
             mQ.addLast(e);
+            return;
+        }
 
-        } else if (s.indexOf(EVENT_KEYWORD_WAIT) >= 0) {
-            long sleeptime = Integer.parseInt(st.nextToken());
-            MonkeyWaitEvent e = new MonkeyWaitEvent(sleeptime);
-            mQ.addLast(e);
+        // Handle wait events
+        if (s.indexOf(EVENT_KEYWORD_WAIT) >= 0 && args.length == 1) {
+            try {
+                long sleeptime = Integer.parseInt(args[0]);
+                MonkeyWaitEvent e = new MonkeyWaitEvent(sleeptime);
+                mQ.addLast(e);
+            } catch (NumberFormatException e) {
+            }
+            return;
+        }
 
-        } else if (s.indexOf(EVENT_KEYWORD_KEYPRESS) >= 0) {
-            String key_name = st.nextToken();
+        // Handle keypress events
+        if (s.indexOf(EVENT_KEYWORD_KEYPRESS) >= 0 && args.length == 1) {
+            String key_name = args[0];
             int keyCode = MonkeySourceRandom.getKeyCode(key_name);
             MonkeyKeyEvent e = new MonkeyKeyEvent(KeyEvent.ACTION_DOWN, keyCode);
             mQ.addLast(e);
             e = new MonkeyKeyEvent(KeyEvent.ACTION_UP, keyCode);
             mQ.addLast(e);
-        } else if (s.indexOf(EVENT_KEYWORD_LONGPRESS) >= 0) {
-            // handle the long press
-            MonkeyKeyEvent e = new MonkeyKeyEvent(KeyEvent.ACTION_DOWN,
-                    KeyEvent.KEYCODE_DPAD_CENTER);
+            return;
+        }
+
+        // Handle longpress events
+        if (s.indexOf(EVENT_KEYWORD_LONGPRESS) >= 0) {
+            MonkeyKeyEvent e;
+            e = new MonkeyKeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DPAD_CENTER);
             mQ.addLast(e);
             MonkeyWaitEvent we = new MonkeyWaitEvent(LONGPRESS_WAIT_TIME);
             mQ.addLast(we);
-            e = new MonkeyKeyEvent(KeyEvent.ACTION_UP,
-                    KeyEvent.KEYCODE_DPAD_CENTER);
+            e = new MonkeyKeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_DPAD_CENTER);
             mQ.addLast(e);
         }
     }
@@ -274,23 +299,17 @@ public class MonkeySourceScript implements MonkeyEventSource {
             return;
         }
 
-        StringTokenizer st = new StringTokenizer(
-                s.substring(index1 + 1, index2), ",");
-        if (mScriptType.compareTo(USER_EVENT_TYPE) == 0) {
-            // User event type
-            handleUserEvent(s, st);
-        } else {
-            // Raw type
-            handleRawEvent(s,st);
-        }
+        String[] args = s.substring(index1 + 1, index2).split(",");
+
+        handleEvent(s, args);
     }
 
     private void closeFile() {
-        mFileOpened = false;        
+        mFileOpened = false;
         if (THIS_DEBUG) {
             System.out.println("closing script file");
         }
-        
+
         try {
             mFStream.close();
             mInputStream.close();
@@ -298,20 +317,10 @@ public class MonkeySourceScript implements MonkeyEventSource {
             System.out.println(e);
         }
     }
-    
+
     /**
-     * add home key press/release event to the queue
-     */
-    private void addHomeKeyEvent() {        
-        MonkeyKeyEvent e = new MonkeyKeyEvent(KeyEvent.ACTION_DOWN, 
-                KeyEvent.KEYCODE_HOME);
-        mQ.addLast(e);        
-        e = new MonkeyKeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_HOME);
-        mQ.addLast(e);
-    }
-    
-    /**
-      * read next batch of events from the provided script file
+     * read next batch of events from the provided script file
+     *
      * @return true if success
      */
     private boolean readNextBatch() {
@@ -333,149 +342,150 @@ public class MonkeySourceScript implements MonkeyEventSource {
             }
             resetValue();
         }
-        
-        try {            
-            while (readCount++ < MAX_ONE_TIME_READS &&                    
-                   (sLine = mBufferReader.readLine()) != null) {
-                sLine = sLine.trim();                        
+
+        try {
+            while (readCount++ < MAX_ONE_TIME_READS && (sLine = mBufferReader.readLine()) != null) {
+                sLine = sLine.trim();
                 processLine(sLine);
             }
         } catch (IOException e) {
             System.err.println(e);
             return false;
         }
-        
+
         if (sLine == null) {
             // to the end of the file
             if (THIS_DEBUG) {
                 System.out.println("readNextBatch(): to the end of file");
             }
             closeFile();
-        }        
+        }
         return true;
     }
-    
+
     /**
      * sleep for a period of given time, introducing latency among events
+     *
      * @param time to sleep in millisecond
      */
-    private void needSleep(long time) {        
+    private void needSleep(long time) {
         if (time < 1) {
-            return;    
-        }        
+            return;
+        }
         try {
             Thread.sleep(time);
-        } catch (InterruptedException e) {            
-        }        
-    }    
-    
+        } catch (InterruptedException e) {
+        }
+    }
+
     /**
      * check whether we can successfully read the header of the script file
      */
     public boolean validate() {
-        boolean b = readNextBatch(); 
+        boolean b = readNextBatch();
         if (mVerbose > 0) {
-            System.out.println("Replaying " + mEventCountInScript + 
-                    " events with speed " + mSpeed);
+            System.out.println("Replaying " + mEventCountInScript + " events with speed " + mSpeed);
         }
-        return b;        
+        return b;
     }
-    
+
     public void setVerbose(int verbose) {
         mVerbose = verbose;
     }
-    
+
     /**
-     * adjust key downtime and eventtime according to both  
-     * recorded values and current system time 
+     * adjust key downtime and eventtime according to both recorded values and
+     * current system time
+     *
      * @param e KeyEvent
      */
     private void adjustKeyEventTime(MonkeyKeyEvent e) {
         if (e.getEventTime() < 0) {
             return;
-        }      
+        }
         long thisDownTime = 0;
         long thisEventTime = 0;
         long expectedDelay = 0;
-        
+
         if (mLastRecordedEventTime <= 0) {
-            // first time event            
+            // first time event
             thisDownTime = SystemClock.uptimeMillis();
             thisEventTime = thisDownTime;
-        } else {            
+        } else {
             if (e.getDownTime() != mLastRecordedDownTimeKey) {
                 thisDownTime = e.getDownTime();
             } else {
                 thisDownTime = mLastExportDownTimeKey;
-            }            
-            expectedDelay = (long) ((e.getEventTime() - 
-                    mLastRecordedEventTime) * mSpeed);            
+            }
+            expectedDelay = (long) ((e.getEventTime() - mLastRecordedEventTime) * mSpeed);
             thisEventTime = mLastExportEventTime + expectedDelay;
             // add sleep to simulate everything in recording
             needSleep(expectedDelay - SLEEP_COMPENSATE_DIFF);
-        }        
+        }
         mLastRecordedDownTimeKey = e.getDownTime();
-        mLastRecordedEventTime = e.getEventTime();         
+        mLastRecordedEventTime = e.getEventTime();
         e.setDownTime(thisDownTime);
-        e.setEventTime(thisEventTime);        
+        e.setEventTime(thisEventTime);
         mLastExportDownTimeKey = thisDownTime;
-        mLastExportEventTime =  thisEventTime;
+        mLastExportEventTime = thisEventTime;
     }
-    
+
     /**
-     * adjust motion downtime and eventtime according to both  
-     * recorded values and current system time 
+     * adjust motion downtime and eventtime according to both recorded values
+     * and current system time
+     *
      * @param e KeyEvent
      */
     private void adjustMotionEventTime(MonkeyMotionEvent e) {
         if (e.getEventTime() < 0) {
             return;
-        }      
+        }
         long thisDownTime = 0;
         long thisEventTime = 0;
         long expectedDelay = 0;
-        
+
         if (mLastRecordedEventTime <= 0) {
-            // first time event            
+            // first time event
             thisDownTime = SystemClock.uptimeMillis();
             thisEventTime = thisDownTime;
-        } else {            
+        } else {
             if (e.getDownTime() != mLastRecordedDownTimeMotion) {
                 thisDownTime = e.getDownTime();
             } else {
                 thisDownTime = mLastExportDownTimeMotion;
-            }            
-            expectedDelay = (long) ((e.getEventTime() - 
-                    mLastRecordedEventTime) * mSpeed);            
+            }
+            expectedDelay = (long) ((e.getEventTime() - mLastRecordedEventTime) * mSpeed);
             thisEventTime = mLastExportEventTime + expectedDelay;
             // add sleep to simulate everything in recording
             needSleep(expectedDelay - SLEEP_COMPENSATE_DIFF);
         }
-        
+
         mLastRecordedDownTimeMotion = e.getDownTime();
-        mLastRecordedEventTime = e.getEventTime();         
+        mLastRecordedEventTime = e.getEventTime();
         e.setDownTime(thisDownTime);
-        e.setEventTime(thisEventTime);        
+        e.setEventTime(thisEventTime);
         mLastExportDownTimeMotion = thisDownTime;
-        mLastExportEventTime =  thisEventTime;
-    }    
-    
+        mLastExportEventTime = thisEventTime;
+    }
+
     /**
      * if the queue is empty, we generate events first
-     * @return the first event in the queue, if null, indicating the system crashes 
+     *
+     * @return the first event in the queue, if null, indicating the system
+     *         crashes
      */
     public MonkeyEvent getNextEvent() {
         long recordedEventTime = -1;
-        
+
         if (mQ.isEmpty()) {
             readNextBatch();
         }
         MonkeyEvent e = mQ.getFirst();
         mQ.removeFirst();
         if (e.getEventType() == MonkeyEvent.EVENT_TYPE_KEY) {
-            adjustKeyEventTime((MonkeyKeyEvent) e);        
-        } else if (e.getEventType() == MonkeyEvent.EVENT_TYPE_POINTER || 
-                e.getEventType() == MonkeyEvent.EVENT_TYPE_TRACKBALL) {
+            adjustKeyEventTime((MonkeyKeyEvent) e);
+        } else if (e.getEventType() == MonkeyEvent.EVENT_TYPE_POINTER
+                || e.getEventType() == MonkeyEvent.EVENT_TYPE_TRACKBALL) {
             adjustMotionEventTime((MonkeyMotionEvent) e);
         }
         return e;
