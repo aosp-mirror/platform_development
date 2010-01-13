@@ -19,23 +19,24 @@ package com.android.commands.monkey;
 /**
  * event source interface
  */
-public interface MonkeyEventSource {    
+public interface MonkeyEventSource {
     /**
-     * 
      * @return the next monkey event from the source
      */
     public MonkeyEvent getNextEvent();
-    
+
     /**
      * set verbose to allow different level of log
+     *
      * @param verbose output mode? 1= verbose, 2=very verbose
      */
     public void setVerbose(int verbose);
-    
+
     /**
      * check whether precondition is satisfied
-     * @return false if something fails, e.g. factor failure in random source
-     * or file can not open from script source etc
+     *
+     * @return false if something fails, e.g. factor failure in random source or
+     *         file can not open from script source etc
      */
     public boolean validate();
 }

@@ -23,9 +23,9 @@ import android.view.KeyEvent;
 import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.NoSuchElementException;
 
 /**
  * monkey event queue. It takes a script to produce events sample script format:
@@ -77,10 +77,6 @@ public class MonkeySourceScript implements MonkeyEventSource {
     // maximum number of events that we read at one time
     private static final int MAX_ONE_TIME_READS = 100;
 
-    // number of additional events added to the script
-    // add HOME_KEY down and up events to make start UI consistent in each round
-    private static final int POLICY_ADDITIONAL_EVENT_COUNT = 0;
-
     // event key word in the capture log
     private static final String EVENT_KEYWORD_POINTER = "DispatchPointer";
 
@@ -111,81 +107,99 @@ public class MonkeySourceScript implements MonkeyEventSource {
 
     DataInputStream mInputStream;
 
-    BufferedReader mBufferReader;
+    BufferedReader mBufferedReader;
 
+    /**
+     * Creates a MonkeySourceScript instance.
+     *
+     * @param filename The filename of the script (on the device).
+     * @param throttle The amount of time in ms to sleep between events.
+     */
     public MonkeySourceScript(String filename, long throttle) {
         mScriptFileName = filename;
         mQ = new MonkeyEventQueue(throttle);
     }
 
     /**
-     * @return the number of total events that will be generated in a round
+     * Resets the globals used to timeshift events.
      */
-    public int getOneRoundEventCount() {
-        // plus one home key down and up event
-        return mEventCountInScript + POLICY_ADDITIONAL_EVENT_COUNT;
-    }
-
     private void resetValue() {
         mLastRecordedDownTimeKey = 0;
         mLastRecordedDownTimeMotion = 0;
+        mLastRecordedEventTime = -1;
         mLastExportDownTimeKey = 0;
         mLastExportDownTimeMotion = 0;
-        mLastRecordedEventTime = -1;
         mLastExportEventTime = -1;
     }
 
-    private boolean readScriptHeader() {
-        mEventCountInScript = -1;
-        mFileOpened = false;
-        try {
-            if (THIS_DEBUG) {
-                System.out.println("reading script header");
-            }
+    /**
+     * Reads the header of the script file.
+     *
+     * @return True if the file header could be parsed, and false otherwise.
+     * @throws IOException If there was an error reading the file.
+     */
+    private boolean readHeader() throws IOException {
+        mFileOpened = true;
 
-            mFStream = new FileInputStream(mScriptFileName);
-            mInputStream = new DataInputStream(mFStream);
-            mBufferReader = new BufferedReader(new InputStreamReader(mInputStream));
-            String sLine;
-            while ((sLine = mBufferReader.readLine()) != null) {
-                sLine = sLine.trim();
+        mFStream = new FileInputStream(mScriptFileName);
+        mInputStream = new DataInputStream(mFStream);
+        mBufferedReader = new BufferedReader(new InputStreamReader(mInputStream));
 
-                if (sLine.indexOf(HEADER_COUNT) >= 0) {
-                    try {
-                        mEventCountInScript = Integer.parseInt(sLine.substring(
-                                HEADER_COUNT.length() + 1).trim());
-                    } catch (NumberFormatException e) {
-                        System.err.println(e);
-                    }
-                } else if (sLine.indexOf(HEADER_SPEED) >= 0) {
-                    try {
-                        mSpeed = Double.parseDouble(sLine.substring(HEADER_SPEED.length() + 1)
-                                .trim());
+        String line;
 
-                    } catch (NumberFormatException e) {
-                        System.err.println(e);
-                    }
-                } else if (sLine.indexOf(STARTING_DATA_LINE) >= 0) {
-                    // header ends until we read the start data mark
-                    mFileOpened = true;
-                    if (THIS_DEBUG) {
-                        System.out.println("read script header success");
-                    }
-                    return true;
+        while ((line = mBufferedReader.readLine()) != null) {
+            line = line.trim();
+
+            if (line.indexOf(HEADER_COUNT) >= 0) {
+                try {
+                    String value = line.substring(HEADER_COUNT.length() + 1).trim();
+                    mEventCountInScript = Integer.parseInt(value);
+                } catch (NumberFormatException e) {
+                    System.err.println(e);
+                    return false;
                 }
+            } else if (line.indexOf(HEADER_SPEED) >= 0) {
+                try {
+                    String value = line.substring(HEADER_COUNT.length() + 1).trim();
+                    mSpeed = Double.parseDouble(value);
+                } catch (NumberFormatException e) {
+                    System.err.println(e);
+                    return false;
+                }
+            } else if (line.indexOf(STARTING_DATA_LINE) >= 0) {
+                return true;
             }
-        } catch (FileNotFoundException e) {
-            System.err.println(e);
-        } catch (IOException e) {
-            System.err.println(e);
         }
 
-        if (THIS_DEBUG) {
-            System.out.println("Error in reading script header");
-        }
         return false;
     }
 
+    /**
+     * Reads a number of lines and passes the lines to be processed.
+     *
+     * @return The number of lines read.
+     * @throws IOException If there was an error reading the file.
+     */
+    private int readLines() throws IOException {
+        String line;
+        for (int i = 0; i < MAX_ONE_TIME_READS; i++) {
+            line = mBufferedReader.readLine();
+            if (line == null) {
+                return i;
+            }
+            line.trim();
+            processLine(line);
+        }
+        return MAX_ONE_TIME_READS;
+    }
+
+    /**
+     * Creates an event and adds it to the event queue. If the parameters are
+     * not understood, they are ignored and no events are added.
+     *
+     * @param s The entire string from the script file.
+     * @param args An array of arguments extracted from the script file line.
+     */
     private void handleEvent(String s, String[] args) {
         // Handle key event
         if (s.indexOf(EVENT_KEYWORD_KEY) >= 0 && args.length == 8) {
@@ -291,82 +305,77 @@ public class MonkeySourceScript implements MonkeyEventSource {
         }
     }
 
-    private void processLine(String s) {
-        int index1 = s.indexOf('(');
-        int index2 = s.indexOf(')');
+    /**
+     * Extracts an event and a list of arguments from a line. If the line does
+     * not match the format required, it is ignored.
+     *
+     * @param line A string in the form {@code cmd(arg1,arg2,arg3)}.
+     */
+    private void processLine(String line) {
+        int index1 = line.indexOf('(');
+        int index2 = line.indexOf(')');
 
         if (index1 < 0 || index2 < 0) {
             return;
         }
 
-        String[] args = s.substring(index1 + 1, index2).split(",");
+        String[] args = line.substring(index1 + 1, index2).split(",");
 
-        handleEvent(s, args);
+        for (int i = 0; i < args.length; i++) {
+            args[i] = args[i].trim();
+        }
+
+        handleEvent(line, args);
     }
 
-    private void closeFile() {
+    /**
+     * Closes the script file.
+     *
+     * @throws IOException If there was an error closing the file.
+     */
+    private void closeFile() throws IOException {
         mFileOpened = false;
-        if (THIS_DEBUG) {
-            System.out.println("closing script file");
-        }
 
         try {
             mFStream.close();
             mInputStream.close();
-        } catch (IOException e) {
-            System.out.println(e);
+        } catch (NullPointerException e) {
+            // File was never opened so it can't be closed.
         }
     }
 
     /**
-     * read next batch of events from the provided script file
+     * Read next batch of events from the script file into the event queue.
+     * Checks if the script is open and then reads the next MAX_ONE_TIME_READS
+     * events or reads until the end of the file. If no events are read, then
+     * the script is closed.
      *
-     * @return true if success
+     * @throws IOException If there was an error reading the file.
      */
-    private boolean readNextBatch() {
-        /*
-         * The script should restore the original state when it run multiple
-         * times.
-         */
-        String sLine = null;
-        int readCount = 0;
+    private void readNextBatch() throws IOException {
+        int linesRead = 0;
 
         if (THIS_DEBUG) {
             System.out.println("readNextBatch(): reading next batch of events");
         }
 
         if (!mFileOpened) {
-            if (!readScriptHeader()) {
-                closeFile();
-                return false;
-            }
             resetValue();
+            readHeader();
         }
 
-        try {
-            while (readCount++ < MAX_ONE_TIME_READS && (sLine = mBufferReader.readLine()) != null) {
-                sLine = sLine.trim();
-                processLine(sLine);
-            }
-        } catch (IOException e) {
-            System.err.println(e);
-            return false;
-        }
+        linesRead = readLines();
 
-        if (sLine == null) {
-            // to the end of the file
-            if (THIS_DEBUG) {
-                System.out.println("readNextBatch(): to the end of file");
-            }
+        if (linesRead == 0) {
             closeFile();
         }
-        return true;
     }
 
     /**
-     * sleep for a period of given time, introducing latency among events
+     * Sleep for a period of given time. Used to introduce latency between
+     * events.
      *
-     * @param time to sleep in millisecond
+     * @param time The amount of time to sleep in ms
      */
     private void needSleep(long time) {
         if (time < 1) {
@@ -379,14 +388,23 @@ public class MonkeySourceScript implements MonkeyEventSource {
     }
 
     /**
-     * check whether we can successfully read the header of the script file
+     * Checks if the file can be opened and if the header is valid.
+     *
+     * @return True if the file exists and the header is valid, false otherwise.
      */
     public boolean validate() {
-        boolean b = readNextBatch();
+        boolean validHeader;
+        try {
+            validHeader = readHeader();
+            closeFile();
+        } catch (IOException e) {
+            return false;
+        }
+
         if (mVerbose > 0) {
             System.out.println("Replaying " + mEventCountInScript + " events with speed " + mSpeed);
         }
-        return b;
+        return validHeader;
     }
 
     public void setVerbose(int verbose) {
@@ -394,10 +412,10 @@ public class MonkeySourceScript implements MonkeyEventSource {
     }
 
     /**
-     * adjust key downtime and eventtime according to both recorded values and
-     * current system time
+     * Adjust key downtime and eventtime according to both recorded values and
+     * current system time.
      *
-     * @param e KeyEvent
+     * @param e A KeyEvent
      */
     private void adjustKeyEventTime(MonkeyKeyEvent e) {
         if (e.getEventTime() < 0) {
@@ -431,10 +449,10 @@ public class MonkeySourceScript implements MonkeyEventSource {
     }
 
     /**
-     * adjust motion downtime and eventtime according to both recorded values
-     * and current system time
+     * Adjust motion downtime and eventtime according to both recorded values
+     * and current system time.
      *
-     * @param e KeyEvent
+     * @param e A KeyEvent
      */
     private void adjustMotionEventTime(MonkeyMotionEvent e) {
         if (e.getEventTime() < 0) {
@@ -469,25 +487,40 @@ public class MonkeySourceScript implements MonkeyEventSource {
     }
 
     /**
-     * if the queue is empty, we generate events first
+     * Gets the next event to be injected from the script. If the event queue is
+     * empty, reads the next n events from the script into the queue, where n is
+     * the lesser of the number of remaining events and the value specified by
+     * MAX_ONE_TIME_READS. If the end of the file is reached, no events are
+     * added to the queue and null is returned.
      *
-     * @return the first event in the queue, if null, indicating the system
-     *         crashes
+     * @return The first event in the event queue or null if the end of the file
+     *         is reached or if an error is encountered reading the file.
      */
     public MonkeyEvent getNextEvent() {
         long recordedEventTime = -1;
+        MonkeyEvent ev;
 
         if (mQ.isEmpty()) {
-            readNextBatch();
+            try {
+                readNextBatch();
+            } catch (IOException e) {
+                return null;
+            }
         }
-        MonkeyEvent e = mQ.getFirst();
-        mQ.removeFirst();
-        if (e.getEventType() == MonkeyEvent.EVENT_TYPE_KEY) {
-            adjustKeyEventTime((MonkeyKeyEvent) e);
-        } else if (e.getEventType() == MonkeyEvent.EVENT_TYPE_POINTER
-                || e.getEventType() == MonkeyEvent.EVENT_TYPE_TRACKBALL) {
-            adjustMotionEventTime((MonkeyMotionEvent) e);
+
+        try {
+            ev = mQ.getFirst();
+            mQ.removeFirst();
+        } catch (NoSuchElementException e) {
+            return null;
         }
-        return e;
+
+        if (ev.getEventType() == MonkeyEvent.EVENT_TYPE_KEY) {
+            adjustKeyEventTime((MonkeyKeyEvent) ev);
+        } else if (ev.getEventType() == MonkeyEvent.EVENT_TYPE_POINTER
+                || ev.getEventType() == MonkeyEvent.EVENT_TYPE_TRACKBALL) {
+            adjustMotionEventTime((MonkeyMotionEvent) ev);
+        }
+        return ev;
     }
 }
