@@ -138,6 +138,29 @@ as in:
 
   LOCAL_LDLIBS := -lGLESv1_CM.so
 
+
+The '1.x' here refers to both versions 1.0 and 1.1 of the OpenGL ES APIs.
+Please note that:
+
+  - OpenGL ES 1.0 is supported on *all* Android-based devices.
+  - OpenGL ES 1.1 is fully supported only on specific devices that
+    have the corresponding GPU.
+
+This is because Android comes with a 1.0-capable software renderer that can
+be used on GPU-less devices.
+
+Developers should query the OpenGL ES version string and extension string
+to know if the current device supports the features they need. See the
+description of glGetString() in the specification to see how to do that:
+
+    http://www.khronos.org/opengles/sdk/1.1/docs/man/glGetString.xml
+
+Additionally, developers must put a <uses-feature> tag in their manifest
+file to indicate which version of OpenGL ES their application requires. See
+the documentation linked below for details:
+
+ http://developer.android.com/guide/topics/manifest/uses-feature-element.html
+
 Please note that, at the moment, native headers and libraries for the EGL APIs
 are *not* available. EGL is used to perform surface creation and flipping
 (instead of rendering). The corresponding operations must be performed in your
@@ -172,6 +195,10 @@ If you use them, your native module should link to /system/lib/libGLESv2.so
 as in:
 
   LOCAL_LDLIBS := -lGLESv2.so
+
+Not all devices support OpenGL ES 2.0, developers should thus query the
+implementation's version and extension strings, and put a <uses-feature>
+tag in their Android manifest. See Section III above for details.
 
 Please note that, at the moment, native headers and libraries for the EGL APIs
 are *not* available. EGL is used to perform surface creation and flipping
