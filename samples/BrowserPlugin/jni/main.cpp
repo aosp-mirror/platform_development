@@ -32,6 +32,7 @@
 #include "AudioPlugin.h"
 #include "BackgroundPlugin.h"
 #include "FormPlugin.h"
+#include "NavigationPlugin.h"
 #include "PaintPlugin.h"
 #include "VideoPlugin.h"
 
@@ -214,6 +215,10 @@ NPError NPP_New(NPMIMEType pluginType, NPP instance, uint16 mode, int16 argc,
             else if (!strcmp(argv[i], "Form")) {
                 obj->pluginType = kForm_PluginType;
                 obj->activePlugin = new FormPlugin(instance);
+            }
+            else if (!strcmp(argv[i], "Navigation")) {
+                obj->pluginType = kNavigation_PluginType;
+                obj->activePlugin = new NavigationPlugin(instance);
             }
             else if (!strcmp(argv[i], "Paint")) {
                 obj->pluginType = kPaint_PluginType;

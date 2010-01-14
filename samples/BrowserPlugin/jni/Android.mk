@@ -34,6 +34,7 @@ LOCAL_SRC_FILES := \
 	audio/AudioPlugin.cpp \
 	background/BackgroundPlugin.cpp \
 	form/FormPlugin.cpp \
+	navigation/NavigationPlugin.cpp \
 	paint/PaintPlugin.cpp \
 	video/VideoPlugin.cpp \
 	jni-bridge.cpp \
@@ -45,6 +46,7 @@ LOCAL_C_INCLUDES += \
 	$(LOCAL_PATH)/audio \
 	$(LOCAL_PATH)/background \
 	$(LOCAL_PATH)/form \
+	$(LOCAL_PATH)/navigation \
 	$(LOCAL_PATH)/paint \
 	$(LOCAL_PATH)/video \
 	external/webkit/WebCore/bridge \
