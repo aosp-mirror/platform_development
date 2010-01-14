@@ -1,7 +1,7 @@
 Android NDK ChangeLog:
 
 -------------------------------------------------------------------------------
-current version
+android-ndk-r3
 
 IMPORTANT BUG FIXES:
 
@@ -68,6 +68,11 @@ IMPORTANT CHANGES:
 
   - if you change the target ABI, a stale/obsolete file is not left into the
     folder corresponding to the old ABI.
+
+
+- Updated the STABLE-APIS.TXT document to clarify the OpenGL ES 1.0/1.1/2.0
+  issues regarding specific devices (i.e. 1.0 supported everywhere, 1.1 and
+  2.0 on specific devices only, need for <uses-feature> tag in manifest).
 
 
 OTHER FIXES & CHANGES:
