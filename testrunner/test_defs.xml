@@ -43,6 +43,27 @@ See test_defs.xsd for more information.
     coverage_target="framework"
     continuous="true" />
 
+<!-- frameworks tests -->
+<test name="frameworks-core"
+    build_path="frameworks/base/core/tests/coretests"
+    package="com.android.frameworks.coretests"
+    coverage_target="framework"
+    continuous="true" />
+
+<test name="frameworks-location"
+    build_path="frameworks/base/location/tests/locationtests"
+    package="com.android.frameworks.locationtests"
+    coverage_target="framework"
+    continuous="true" />
+
+<test name="frameworks-telephony"
+    build_path="frameworks/base/telephony/tests/telephonytests"
+    package="com.android.frameworks.telephonytests"
+    coverage_target="framework"
+    continuous="true" />
+
+<!--  end of framework tests -->
+
 <!-- subset of the android tests for just the database tests -->
 <test name="database"
     build_path="frameworks/base/tests/AndroidTests"
@@ -64,15 +85,8 @@ See test_defs.xsd for more information.
 <test name="core"
     build_path="frameworks/base/tests/CoreTests"
     package="android.core"
-    class="android.core.CoreTests"
     coverage_target="framework"
     continuous="true" />
-
-<test name="libcore"
-    build_path="frameworks/base/tests/CoreTests"
-    package="android.core"
-    class="android.core.JavaTests"
-    coverage_target="framework" />
 
 <test name="apidemos"
     build_path="development/samples/ApiDemos"
@@ -510,12 +524,6 @@ See test_defs.xsd for more information.
     package="com.android.phone.tests"
     continuous="true"
     coverage_target="Phone" />
-
-<test name="telephony-unit"
-    build_path="frameworks/base/telephony/tests/TelephonyTest"
-    package="com.android.telephonytest"
-    runner=".TelephonyUnitTestRunner"
-    coverage_target="framework" />
 
 <!-- obsolete?
 <test name="ringtone"
