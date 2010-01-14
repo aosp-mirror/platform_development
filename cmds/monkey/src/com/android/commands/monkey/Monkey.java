@@ -1,19 +1,18 @@
-/**
-** Copyright 2007, The Android Open Source Project
-**
-** Licensed under the Apache License, Version 2.0 (the "License");
-** you may not use this file except in compliance with the License.
-** You may obtain a copy of the License at
-**
-**     http://www.apache.org/licenses/LICENSE-2.0
-**
-** Unless required by applicable law or agreed to in writing, software
-** distributed under the License is distributed on an "AS IS" BASIS,
-** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-** See the License for the specific language governing permissions and
-** limitations under the License.
-*/
-
+/*
+ * Copyright 2007, The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package com.android.commands.monkey;
 
@@ -51,19 +50,25 @@ public class Monkey {
 
     /**
      * Monkey Debugging/Dev Support
-     *
+     * <p>
      * All values should be zero when checking in.
      */
     private final static int DEBUG_ALLOW_ANY_STARTS = 0;
+
     private final static int DEBUG_ALLOW_ANY_RESTARTS = 0;
+
     private IActivityManager mAm;
+
     private IWindowManager mWm;
+
     private IPackageManager mPm;
 
     /** Command line arguments */
     private String[] mArgs;
+
     /** Current argument being parsed */
     private int mNextArg;
+
     /** Data of current argument */
     private String mCurArgData;
 
@@ -83,16 +88,28 @@ public class Monkey {
     /** Monitor /data/tombstones and stop the monkey if new files appear. */
     private boolean mMonitorNativeCrashes;
 
-    /** Send no events.  Use with long throttle-time to watch user operations */
+    /** Send no events. Use with long throttle-time to watch user operations */
     private boolean mSendNoEvents;
 
     /** This is set when we would like to abort the running of the monkey. */
     private boolean mAbort;
 
-    /** This is set by the ActivityController thread to request collection of ANR trace files */
+    /**
+     * Count each event as a cycle. Set to false for scripts so that each time
+     * through the script increments the count.
+     */
+    private boolean mCountEvents = true;
+
+    /**
+     * This is set by the ActivityController thread to request collection of ANR
+     * trace files
+     */
     private boolean mRequestAnrTraces = false;
 
-    /** This is set by the ActivityController thread to request a "dumpsys meminfo" */
+    /**
+     * This is set by the ActivityController thread to request a
+     * "dumpsys meminfo"
+     */
     private boolean mRequestDumpsysMemInfo = false;
 
     /** Kill the process after a timeout or crash. */
@@ -103,8 +120,10 @@ public class Monkey {
 
     /** Packages we are allowed to run, or empty if no restriction. */
     private HashSet<String> mValidPackages = new HashSet<String>();
+
     /** Categories we are allowed to launch **/
-    ArrayList<String> mMainCategories = new ArrayList<String>();
+    private ArrayList<String> mMainCategories = new ArrayList<String>();
+
     /** Applications we can switch to. */
     private ArrayList<ComponentName> mMainApps = new ArrayList<ComponentName>();
 
@@ -119,8 +138,11 @@ public class Monkey {
 
     /** Dropped-event statistics **/
     long mDroppedKeyEvents = 0;
+
     long mDroppedPointerEvents = 0;
+
     long mDroppedTrackballEvents = 0;
+
     long mDroppedFlipEvents = 0;
 
     /** a filename to the script (if any) **/
@@ -130,14 +152,18 @@ public class Monkey {
     private int mServerPort = -1;
 
     private static final File TOMBSTONES_PATH = new File("/data/tombstones");
+
     private HashSet<String> mTombstones = null;
 
     float[] mFactors = new float[MonkeySourceRandom.FACTORZ_COUNT];
+
     MonkeyEventSource mEventSource;
+
     private MonkeyNetworkMonitor mNetworkMonitor = new MonkeyNetworkMonitor();
 
     // information on the current activity.
     public static Intent currentIntent;
+
     public static String currentPackage;
 
     /**
@@ -147,8 +173,8 @@ public class Monkey {
         public boolean activityStarting(Intent intent, String pkg) {
             boolean allow = checkEnteringPackage(pkg) || (DEBUG_ALLOW_ANY_STARTS != 0);
             if (mVerbose > 0) {
-                System.out.println("    // " + (allow ? "Allowing" : "Rejecting")
-                        + " start of " + intent + " in package " + pkg);
+                System.out.println("    // " + (allow ? "Allowing" : "Rejecting") + " start of "
+                        + intent + " in package " + pkg);
             }
             currentPackage = pkg;
             currentIntent = intent;
@@ -161,7 +187,7 @@ public class Monkey {
             if (!allow) {
                 if (mVerbose > 0) {
                     System.out.println("    // " + (allow ? "Allowing" : "Rejecting")
-                                       + " resume of package " + pkg);
+                            + " resume of package " + pkg);
                 }
             }
             currentPackage = pkg;
@@ -172,7 +198,8 @@ public class Monkey {
             if (pkg == null) {
                 return true;
             }
-            // preflight the hash lookup to avoid the cost of hash key generation
+            // preflight the hash lookup to avoid the cost of hash key
+            // generation
             if (mValidPackages.size() == 0) {
                 return true;
             } else {
@@ -180,26 +207,22 @@ public class Monkey {
             }
         }
 
-        public boolean appCrashed(String processName, int pid, String shortMsg,
-                String longMsg, byte[] crashData) {
-            System.err.println("// CRASH: " + processName + " (pid " + pid
-                    + ")");
+        public boolean appCrashed(String processName, int pid, String shortMsg, String longMsg,
+                byte[] crashData) {
+            System.err.println("// CRASH: " + processName + " (pid " + pid + ")");
             System.err.println("// Short Msg: " + shortMsg);
             System.err.println("// Long Msg: " + longMsg);
             if (crashData != null) {
                 try {
-                    CrashData cd = new CrashData(new DataInputStream(
-                            new ByteArrayInputStream(crashData)));
-                    System.err.println("// Build Label: "
-                            + cd.getBuildData().getFingerprint());
+                    CrashData cd = new CrashData(new DataInputStream(new ByteArrayInputStream(
+                            crashData)));
+                    System.err.println("// Build Label: " + cd.getBuildData().getFingerprint());
                     System.err.println("// Build Changelist: "
                             + cd.getBuildData().getIncrementalVersion());
-                    System.err.println("// Build Time: "
-                            + cd.getBuildData().getTime());
+                    System.err.println("// Build Time: " + cd.getBuildData().getTime());
                     System.err.println("// ID: " + cd.getId());
                     System.err.println("// Tag: " + cd.getActivity());
-                    System.err.println(cd.getThrowableData().toString(
-                            "// "));
+                    System.err.println(cd.getThrowableData().toString("// "));
                 } catch (IOException e) {
                     System.err.println("// BAD STACK CRAWL");
                 }
@@ -215,10 +238,8 @@ public class Monkey {
             return false;
         }
 
-        public int appNotResponding(String processName, int pid,
-                String processStats) {
-            System.err.println("// NOT RESPONDING: " + processName
-                    + " (pid " + pid + ")");
+        public int appNotResponding(String processName, int pid, String processStats) {
+            System.err.println("// NOT RESPONDING: " + processName + " (pid " + pid + ")");
             System.err.println(processStats);
             reportProcRank();
             synchronized (Monkey.this) {
@@ -236,15 +257,16 @@ public class Monkey {
     }
 
     /**
-     * Run the procrank tool to insert system status information into the debug report.
+     * Run the procrank tool to insert system status information into the debug
+     * report.
      */
     private void reportProcRank() {
-      commandLineReport("procrank", "procrank");
+        commandLineReport("procrank", "procrank");
     }
 
     /**
-     * Run "cat /data/anr/traces.txt".  Wait about 5 seconds first, to let the asynchronous
-     * report writing complete.
+     * Run "cat /data/anr/traces.txt". Wait about 5 seconds first, to let the
+     * asynchronous report writing complete.
      */
     private void reportAnrTraces() {
         try {
@@ -256,9 +278,10 @@ public class Monkey {
 
     /**
      * Run "dumpsys meminfo"
-     *
-     * NOTE:  You cannot perform a dumpsys call from the ActivityController callback, as it will
-     * deadlock.  This should only be called from the main loop of the monkey.
+     * <p>
+     * NOTE: You cannot perform a dumpsys call from the ActivityController
+     * callback, as it will deadlock. This should only be called from the main
+     * loop of the monkey.
      */
     private void reportDumpsysMemInfo() {
         commandLineReport("meminfo", "dumpsys meminfo");
@@ -266,16 +289,20 @@ public class Monkey {
 
     /**
      * Print report from a single command line.
-     * @param reportName Simple tag that will print before the report and in various annotations.
+     * <p>
+     * TODO: Use ProcessBuilder & redirectErrorStream(true) to capture both
+     * streams (might be important for some command lines)
+     *
+     * @param reportName Simple tag that will print before the report and in
+     *            various annotations.
      * @param command Command line to execute.
-     * TODO: Use ProcessBuilder & redirectErrorStream(true) to capture both streams (might be
-     * important for some command lines)
      */
     private void commandLineReport(String reportName, String command) {
         System.err.println(reportName + ":");
         Runtime rt = Runtime.getRuntime();
         try {
-            // Process must be fully qualified here because android.os.Process is used elsewhere
+            // Process must be fully qualified here because android.os.Process
+            // is used elsewhere
             java.lang.Process p = Runtime.getRuntime().exec(command);
 
             // pipe everything from process stdout -> System.err
@@ -312,7 +339,7 @@ public class Monkey {
      * Run the command!
      *
      * @param args The command-line arguments
-     * @return Returns a posix-style result code.  0 for no error.
+     * @return Returns a posix-style result code. 0 for no error.
      */
     private int run(String[] args) {
         // Super-early debugger wait
@@ -332,7 +359,7 @@ public class Monkey {
         mArgs = args;
         mNextArg = 0;
 
-        //set a positive value, indicating none of the factors is provided yet
+        // set a positive value, indicating none of the factors is provided yet
         for (int i = 0; i < MonkeySourceRandom.FACTORZ_COUNT; i++) {
             mFactors[i] = 1.0f;
         }
@@ -379,6 +406,8 @@ public class Monkey {
             // script mode, ignore other options
             mEventSource = new MonkeySourceScript(mScriptFileName, mThrottle);
             mEventSource.setVerbose(mVerbose);
+
+            mCountEvents = false;
         } else if (mServerPort != -1) {
             try {
                 mEventSource = new MonkeySourceNetwork(mServerPort);
@@ -389,37 +418,29 @@ public class Monkey {
             mCount = Integer.MAX_VALUE;
         } else {
             // random source by default
-            if (mVerbose >= 2) {    // check seeding performance
+            if (mVerbose >= 2) { // check seeding performance
                 System.out.println("// Seeded: " + mSeed);
             }
             mEventSource = new MonkeySourceRandom(mSeed, mMainApps, mThrottle);
             mEventSource.setVerbose(mVerbose);
-            //set any of the factors that has been set
+            // set any of the factors that has been set
             for (int i = 0; i < MonkeySourceRandom.FACTORZ_COUNT; i++) {
                 if (mFactors[i] <= 0.0f) {
                     ((MonkeySourceRandom) mEventSource).setFactors(i, mFactors[i]);
                 }
             }
 
-            //in random mode, we start with a random activity
+            // in random mode, we start with a random activity
             ((MonkeySourceRandom) mEventSource).generateActivity();
         }
 
-        //validate source generator
+        // validate source generator
         if (!mEventSource.validate()) {
             return -5;
         }
 
-        if (mScriptFileName != null) {
-            // in random mode, count is the number of single events
-            // while in script mode, count is the number of repetition
-            // for a sequence of events, so we need do multiply the length of
-            // that sequence
-            mCount = mCount * ((MonkeySourceScript) mEventSource)
-                .getOneRoundEventCount();
-        }
-
-        // If we're profiling, do it immediately before/after the main monkey loop
+        // If we're profiling, do it immediately before/after the main monkey
+        // loop
         if (mGenerateHprof) {
             signalPersistentProcesses();
         }
@@ -473,9 +494,9 @@ public class Monkey {
         mNetworkMonitor.dump();
 
         if (crashedAtCycle < mCount - 1) {
-            System.err.println("** System appears to have crashed at event "
-                    + crashedAtCycle + " of " + mCount + " using seed " + mSeed);
-           return crashedAtCycle;
+            System.err.println("** System appears to have crashed at event " + crashedAtCycle
+                    + " of " + mCount + " using seed " + mSeed);
+            return crashedAtCycle;
         } else {
             if (mVerbose > 0) {
                 System.out.println("// Monkey finished");
@@ -520,29 +541,29 @@ public class Monkey {
                 } else if (opt.equals("--hprof")) {
                     mGenerateHprof = true;
                 } else if (opt.equals("--pct-touch")) {
-                    mFactors[MonkeySourceRandom.FACTOR_TOUCH] =
-                        -nextOptionLong("touch events percentage");
+                    int i = MonkeySourceRandom.FACTOR_TOUCH;
+                    mFactors[i] = -nextOptionLong("touch events percentage");
                 } else if (opt.equals("--pct-motion")) {
-                    mFactors[MonkeySourceRandom.FACTOR_MOTION] =
-                        -nextOptionLong("motion events percentage");
+                    int i = MonkeySourceRandom.FACTOR_MOTION;
+                    mFactors[i] = -nextOptionLong("motion events percentage");
                 } else if (opt.equals("--pct-trackball")) {
-                    mFactors[MonkeySourceRandom.FACTOR_TRACKBALL] =
-                        -nextOptionLong("trackball events percentage");
+                    int i = MonkeySourceRandom.FACTOR_TRACKBALL;
+                    mFactors[i] = -nextOptionLong("trackball events percentage");
                 } else if (opt.equals("--pct-nav")) {
-                    mFactors[MonkeySourceRandom.FACTOR_NAV] =
-                        -nextOptionLong("nav events percentage");
+                    int i = MonkeySourceRandom.FACTOR_NAV;
+                    mFactors[i] = -nextOptionLong("nav events percentage");
                 } else if (opt.equals("--pct-majornav")) {
-                    mFactors[MonkeySourceRandom.FACTOR_MAJORNAV] =
-                        -nextOptionLong("major nav events percentage");
+                    int i = MonkeySourceRandom.FACTOR_MAJORNAV;
+                    mFactors[i] = -nextOptionLong("major nav events percentage");
                 } else if (opt.equals("--pct-appswitch")) {
-                    mFactors[MonkeySourceRandom.FACTOR_APPSWITCH] =
-                        -nextOptionLong("app switch events percentage");
+                    int i = MonkeySourceRandom.FACTOR_APPSWITCH;
+                    mFactors[i] = -nextOptionLong("app switch events percentage");
                 } else if (opt.equals("--pct-flip")) {
-                    mFactors[MonkeySourceRandom.FACTOR_FLIP] =
-                        -nextOptionLong("keyboard flip percentage");
+                    int i = MonkeySourceRandom.FACTOR_FLIP;
+                    mFactors[i] = -nextOptionLong("keyboard flip percentage");
                 } else if (opt.equals("--pct-anyevent")) {
-                    mFactors[MonkeySourceRandom.FACTOR_ANYTHING] =
-                        -nextOptionLong("any events percentage");
+                    int i = MonkeySourceRandom.FACTOR_ANYTHING;
+                    mFactors[i] = -nextOptionLong("any events percentage");
                 } else if (opt.equals("--throttle")) {
                     mThrottle = nextOptionLong("delay (in milliseconds) to wait between events");
                 } else if (opt.equals("--wait-dbg")) {
@@ -619,19 +640,22 @@ public class Monkey {
     private boolean getSystemInterfaces() {
         mAm = ActivityManagerNative.getDefault();
         if (mAm == null) {
-            System.err.println("** Error: Unable to connect to activity manager; is the system running?");
+            System.err.println("** Error: Unable to connect to activity manager; is the system "
+                    + "running?");
             return false;
         }
 
         mWm = IWindowManager.Stub.asInterface(ServiceManager.getService("window"));
         if (mWm == null) {
-            System.err.println("** Error: Unable to connect to window manager; is the system running?");
+            System.err.println("** Error: Unable to connect to window manager; is the system "
+                    + "running?");
             return false;
         }
 
         mPm = IPackageManager.Stub.asInterface(ServiceManager.getService("package"));
         if (mPm == null) {
-            System.err.println("** Error: Unable to connect to package manager; is the system running?");
+            System.err.println("** Error: Unable to connect to package manager; is the system "
+                    + "running?");
             return false;
         }
 
@@ -647,15 +671,16 @@ public class Monkey {
     }
 
     /**
-     * Using the restrictions provided (categories & packages), generate a list of activities
-     * that we can actually switch to.
+     * Using the restrictions provided (categories & packages), generate a list
+     * of activities that we can actually switch to.
      *
-     * @return Returns true if it could successfully build a list of target activities
+     * @return Returns true if it could successfully build a list of target
+     *         activities
      */
     private boolean getMainApps() {
         try {
             final int N = mMainCategories.size();
-            for (int i = 0; i< N; i++) {
+            for (int i = 0; i < N; i++) {
                 Intent intent = new Intent(Intent.ACTION_MAIN);
                 String category = mMainCategories.get(i);
                 if (category.length() > 0) {
@@ -666,31 +691,26 @@ public class Monkey {
                     System.err.println("// Warning: no activities found for category " + category);
                     continue;
                 }
-                if (mVerbose >= 2) {     // very verbose
+                if (mVerbose >= 2) { // very verbose
                     System.out.println("// Selecting main activities from category " + category);
                 }
                 final int NA = mainApps.size();
                 for (int a = 0; a < NA; a++) {
                     ResolveInfo r = mainApps.get(a);
-                    if (mValidPackages.size() == 0 ||
-                            mValidPackages.contains(r.activityInfo.applicationInfo.packageName)) {
-                        if (mVerbose >= 2) {     // very verbose
-                            System.out.println("//   + Using main activity "
-                                    + r.activityInfo.name
+                    if (mValidPackages.size() == 0
+                            || mValidPackages.contains(r.activityInfo.applicationInfo.packageName)) {
+                        if (mVerbose >= 2) { // very verbose
+                            System.out.println("//   + Using main activity " + r.activityInfo.name
                                     + " (from package "
-                                    + r.activityInfo.applicationInfo.packageName
-                                    + ")");
+                                    + r.activityInfo.applicationInfo.packageName + ")");
                         }
-                        mMainApps.add(new ComponentName(
-                                r.activityInfo.applicationInfo.packageName,
+                        mMainApps.add(new ComponentName(r.activityInfo.applicationInfo.packageName,
                                 r.activityInfo.name));
                     } else {
-                        if (mVerbose >= 3) {     // very very verbose
+                        if (mVerbose >= 3) { // very very verbose
                             System.out.println("//   - NOT USING main activity "
-                                    + r.activityInfo.name
-                                    + " (from package "
-                                    + r.activityInfo.applicationInfo.packageName
-                                    + ")");
+                                    + r.activityInfo.name + " (from package "
+                                    + r.activityInfo.applicationInfo.packageName + ")");
                         }
                     }
                 }
@@ -710,17 +730,20 @@ public class Monkey {
 
     /**
      * Run mCount cycles and see if we hit any crashers.
-     *
+     * <p>
      * TODO: Meta state on keys
      *
-     * @return Returns the last cycle which executed. If the value == mCount, no errors detected.
+     * @return Returns the last cycle which executed. If the value == mCount, no
+     *         errors detected.
      */
     private int runMonkeyCycles() {
-        int i = 0;
+
+        int eventCounter = 0;
+        int cycleCounter = 0;
 
         boolean systemCrashed = false;
 
-        while (!systemCrashed && i < mCount) {
+        while (!systemCrashed && cycleCounter < mCount) {
             synchronized (this) {
                 if (mRequestAnrTraces) {
                     reportAnrTraces();
@@ -731,37 +754,36 @@ public class Monkey {
                     mRequestDumpsysMemInfo = false;
                 }
                 if (mMonitorNativeCrashes) {
-                    // first time through, when i == 0, just set up the watcher (ignore the error)
-                    if (checkNativeCrashes() && (i > 0)) {
+                    // first time through, when eventCounter == 0, just set up
+                    // the watcher (ignore the error)
+                    if (checkNativeCrashes() && (eventCounter > 0)) {
                         System.out.println("** New native crash detected.");
                         mAbort = mAbort || mKillProcessAfterError;
                     }
                 }
                 if (mAbort) {
                     System.out.println("** Monkey aborted due to error.");
-                    System.out.println("Events injected: " + i);
-                    return i;
+                    System.out.println("Events injected: " + eventCounter);
+                    return eventCounter;
                 }
             }
 
-            // In this debugging mode, we never send any events.  This is primarily
-            // here so you can manually test the package or category limits, while manually
-            // exercising the system.
+            // In this debugging mode, we never send any events. This is
+            // primarily here so you can manually test the package or category
+            // limits, while manually exercising the system.
             if (mSendNoEvents) {
-                i++;
+                eventCounter++;
+                cycleCounter++;
                 continue;
             }
 
-            if ((mVerbose > 0) && (i % 100) == 0 && i != 0) {
-                System.out.println("    // Sending event #" + i);
+            if ((mVerbose > 0) && (eventCounter % 100) == 0 && eventCounter != 0) {
+                System.out.println("    // Sending event #" + eventCounter);
             }
 
             MonkeyEvent ev = mEventSource.getNextEvent();
             if (ev != null) {
-                // We don't want to count throttling as an event.
-                if (!(ev instanceof MonkeyThrottleEvent)) {
-                    i++;
-                }
+
                 int injectCode = ev.injectEvent(mWm, mAm, mVerbose);
                 if (injectCode == MonkeyEvent.INJECT_FAIL) {
                     if (ev instanceof MonkeyKeyEvent) {
@@ -780,19 +802,32 @@ public class Monkey {
                         System.err.println("** Error: SecurityException while injecting event.");
                     }
                 }
+
+                // Don't count throttling as an event.
+                if (!(ev instanceof MonkeyThrottleEvent)) {
+                    eventCounter++;
+                    if (mCountEvents) {
+                        cycleCounter++;
+                    }
+                }
             } else {
-                // Event Source has signaled that we have no more events to process
-                System.err.println("** Error: Event source exhausted.");
-                break;
+                if (!mCountEvents) {
+                    cycleCounter++;
+                } else {
+                    System.err.println("** Error: Event source exhausted.");
+                    break;
+                }
             }
         }
-        System.out.println("Events injected: " + i);
-        return i;
+
+        // If we got this far, we succeeded!
+        System.out.println("Events injected: " + eventCounter);
+        return eventCounter;
     }
 
     /**
-     * Send SIGNAL_USR1 to all processes.  This will generate large (5mb) profiling reports
-     * in data/misc, so use with care.
+     * Send SIGNAL_USR1 to all processes. This will generate large (5mb)
+     * profiling reports in data/misc, so use with care.
      */
     private void signalPersistentProcesses() {
         try {
@@ -808,14 +843,16 @@ public class Monkey {
     }
 
     /**
-     * Watch for appearance of new tombstone files, which indicate native crashes.
+     * Watch for appearance of new tombstone files, which indicate native
+     * crashes.
      *
      * @return Returns true if new files have appeared in the list
      */
     private boolean checkNativeCrashes() {
         String[] tombstones = TOMBSTONES_PATH.list();
 
-        // shortcut path for usually empty directory, so we don't waste even more objects
+        // shortcut path for usually empty directory, so we don't waste even
+        // more objects
         if ((tombstones == null) || (tombstones.length == 0)) {
             mTombstones = null;
             return false;
@@ -836,17 +873,20 @@ public class Monkey {
     }
 
     /**
-     * Return the next command line option.  This has a number of special cases which
-     * closely, but not exactly, follow the POSIX command line options patterns:
+     * Return the next command line option. This has a number of special cases
+     * which closely, but not exactly, follow the POSIX command line options
+     * patterns:
      *
+     * <pre>
      * -- means to stop processing additional options
      * -z means option z
      * -z ARGS means option z with (non-optional) arguments ARGS
      * -zARGS means option z with (optional) arguments ARGS
      * --zz means option zz
      * --zz ARGS means option zz with (non-optional) arguments ARGS
+     * </pre>
      *
-     * Note that you cannot combine single letter options;  -abc != -a -b -c
+     * Note that you cannot combine single letter options; -abc != -a -b -c
      *
      * @return Returns the option string, or null if there are no more options.
      */
@@ -893,7 +933,8 @@ public class Monkey {
     }
 
     /**
-     * Returns a long converted from the next data argument, with error handling if not available.
+     * Returns a long converted from the next data argument, with error handling
+     * if not available.
      *
      * @param opt The name of the option.
      * @return Returns a long converted from the argument.
@@ -927,19 +968,21 @@ public class Monkey {
      * Print how to use this command.
      */
     private void showUsage() {
-      System.err.println("usage: monkey [-p ALLOWED_PACKAGE [-p ALLOWED_PACKAGE] ...]");
-      System.err.println("              [-c MAIN_CATEGORY [-c MAIN_CATEGORY] ...]");
-      System.err.println("              [--ignore-crashes] [--ignore-timeouts]");
-      System.err.println("              [--ignore-security-exceptions] [--monitor-native-crashes]");
-      System.err.println("              [--kill-process-after-error] [--hprof]");
-      System.err.println("              [--pct-touch PERCENT] [--pct-motion PERCENT]");
-      System.err.println("              [--pct-trackball PERCENT] [--pct-syskeys PERCENT]");
-      System.err.println("              [--pct-nav PERCENT] [--pct-majornav PERCENT]");
-      System.err.println("              [--pct-appswitch PERCENT] [--pct-flip PERCENT]");
-      System.err.println("              [--pct-anyevent PERCENT]");
-      System.err.println("              [--wait-dbg] [--dbg-no-events] [-f scriptfile]");
-      System.err.println("              [--port port]");
-      System.err.println("              [-s SEED] [-v [-v] ...] [--throttle MILLISEC]");
-      System.err.println("              COUNT");
-  }
+        StringBuffer usage = new StringBuffer();
+        usage.append("usage: monkey [-p ALLOWED_PACKAGE [-p ALLOWED_PACKAGE] ...]\n");
+        usage.append("              [-c MAIN_CATEGORY [-c MAIN_CATEGORY] ...]\n");
+        usage.append("              [--ignore-crashes] [--ignore-timeouts]\n");
+        usage.append("              [--ignore-security-exceptions] [--monitor-native-crashes]\n");
+        usage.append("              [--kill-process-after-error] [--hprof]\n");
+        usage.append("              [--pct-touch PERCENT] [--pct-motion PERCENT]\n");
+        usage.append("              [--pct-trackball PERCENT] [--pct-syskeys PERCENT]\n");
+        usage.append("              [--pct-nav PERCENT] [--pct-majornav PERCENT]\n");
+        usage.append("              [--pct-appswitch PERCENT] [--pct-flip PERCENT]\n");
+        usage.append("              [--pct-anyevent PERCENT]\n");
+        usage.append("              [--wait-dbg] [--dbg-no-events] [-f scriptfile]\n");
+        usage.append("              [--port port]\n");
+        usage.append("              [-s SEED] [-v [-v] ...] [--throttle MILLISEC]\n");
+        usage.append("              COUNT");
+        System.err.println(usage.toString());
+    }
 }
