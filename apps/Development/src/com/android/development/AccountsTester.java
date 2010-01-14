@@ -46,8 +46,11 @@ public class AccountsTester extends Activity implements OnAccountsUpdateListener
     private static final int GET_AUTH_TOKEN_DIALOG_ID = 1;
     private static final int UPDATE_CREDENTIALS_DIALOG_ID = 2;
     private static final int INVALIDATE_AUTH_TOKEN_DIALOG_ID = 3;
+    private static final int TEST_HAS_FEATURES_DIALOG_ID = 4;
+    private static final int MESSAGE_DIALOG_ID = 5;
     private EditText mDesiredAuthTokenTypeEditText;
     private EditText mDesiredFeaturesEditText;
+    private volatile CharSequence mDialogMessage;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -268,6 +271,8 @@ public class AccountsTester extends Activity implements OnAccountsUpdateListener
             }, null /* handler */);
         } else if (item.getItemId() == R.id.accounts_tester_get_auth_token) {
             showDialog(GET_AUTH_TOKEN_DIALOG_ID);
+        } else if (item.getItemId() == R.id.accounts_tester_test_has_features) {
+            showDialog(TEST_HAS_FEATURES_DIALOG_ID);
         } else if (item.getItemId() == R.id.accounts_tester_invalidate_auth_token) {
             showDialog(INVALIDATE_AUTH_TOKEN_DIALOG_ID);
         } else if (item.getItemId() == R.id.accounts_tester_update_credentials) {
@@ -282,7 +287,7 @@ public class AccountsTester extends Activity implements OnAccountsUpdateListener
     @Override
     protected Dialog onCreateDialog(final int id) {
         if (id == GET_AUTH_TOKEN_DIALOG_ID || id == INVALIDATE_AUTH_TOKEN_DIALOG_ID
-                || id == UPDATE_CREDENTIALS_DIALOG_ID) {
+                || id == UPDATE_CREDENTIALS_DIALOG_ID || id == TEST_HAS_FEATURES_DIALOG_ID) {
             final View view = LayoutInflater.from(this).inflate(R.layout.get_auth_token_view, null);
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setPositiveButton(R.string.accounts_tester_do_get_auth_token,
@@ -316,6 +321,10 @@ public class AccountsTester extends Activity implements OnAccountsUpdateListener
                             } else if (id == INVALIDATE_AUTH_TOKEN_DIALOG_ID) {
                                 mAccountManager.getAuthToken(account, authTokenType, false,
                                         new GetAndInvalidateAuthTokenCallback(), null);
+                            } else if (id == TEST_HAS_FEATURES_DIALOG_ID) {
+                                String[] features = TextUtils.split(authTokenType, ",");
+                                mAccountManager.testHasFeatures(account, features,
+                                        new TestHasFeaturesCallback(), null);
                             } else {
                                 mAccountManager.updateCredentials(
                                         account,
@@ -325,6 +334,11 @@ public class AccountsTester extends Activity implements OnAccountsUpdateListener
                         }
             });
             builder.setView(view);
+            return builder.create();
+        }
+        if (id == MESSAGE_DIALOG_ID) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setMessage(mDialogMessage);
             return builder.create();
         }
         return super.onCreateDialog(id);
@@ -409,6 +423,31 @@ public class AccountsTester extends Activity implements OnAccountsUpdateListener
                 Log.d(TAG, "invalidate: error getting authToken", e);
             } catch (AuthenticatorException e) {
                 Log.d(TAG, "invalidate: error getting authToken", e);
+            }
+        }
+    }
+
+    private void showMessageDialog(String message) {
+        mDialogMessage = message;
+        removeDialog(MESSAGE_DIALOG_ID);
+        showDialog(MESSAGE_DIALOG_ID);
+    }
+
+    private class TestHasFeaturesCallback implements AccountManagerCallback<Boolean> {
+        public void run(AccountManagerFuture<Boolean> future) {
+            try {
+                Boolean hasFeatures = future.getResult();
+                Log.d(TAG, "hasFeatures: " + hasFeatures);
+                showMessageDialog("hasFeatures: " + hasFeatures);
+            } catch (OperationCanceledException e) {
+                Log.d(TAG, "interrupted");
+                showMessageDialog("operation was canceled");
+            } catch (IOException e) {
+                Log.d(TAG, "error", e);
+                showMessageDialog("operation got an IOException");
+            } catch (AuthenticatorException e) {
+                Log.d(TAG, "error", e);
+                showMessageDialog("operation got an AuthenticationException");
             }
         }
     }
