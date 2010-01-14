@@ -162,7 +162,8 @@
     <string name="accounts_tester_select_account_type">Select Account Type</string>
     <string name="accounts_tester_process_name_header">Process Name:</string>
     <string name="accounts_tester_remove_account">remove</string>
-    <string name="accounts_tester_get_auth_token">authenticate</string>
+    <string name="accounts_tester_get_auth_token">get authtoken</string>
+    <string name="accounts_tester_test_has_features">test has features</string>
     <string name="accounts_tester_invalidate_auth_token">invalidate token</string>
     <string name="accounts_tester_account_context_menu_title">account operations</string>
     <string name="accounts_tester_do_get_auth_token">Ok</string>
