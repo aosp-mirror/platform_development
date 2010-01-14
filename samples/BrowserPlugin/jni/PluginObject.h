@@ -80,6 +80,7 @@ enum PluginTypes {
     kText_PluginType       = 5,
     kPaint_PluginType      = 6,
     kVideo_PluginType      = 7,
+    kNavigation_PluginType = 8,
 };
 typedef uint32_t PluginType;
 
