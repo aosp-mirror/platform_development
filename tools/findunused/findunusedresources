@@ -1,5 +1,7 @@
 #!/bin/sh
 
+LANG=C
+
 if [ "$1" == "-h" ]
 then
     cat <<- EOH
