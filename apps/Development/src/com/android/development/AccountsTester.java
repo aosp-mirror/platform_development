@@ -323,7 +323,7 @@ public class AccountsTester extends Activity implements OnAccountsUpdateListener
                                         new GetAndInvalidateAuthTokenCallback(), null);
                             } else if (id == TEST_HAS_FEATURES_DIALOG_ID) {
                                 String[] features = TextUtils.split(authTokenType, ",");
-                                mAccountManager.testHasFeatures(account, features,
+                                mAccountManager.hasFeatures(account, features,
                                         new TestHasFeaturesCallback(), null);
                             } else {
                                 mAccountManager.updateCredentials(
