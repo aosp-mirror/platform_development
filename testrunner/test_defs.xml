@@ -33,7 +33,6 @@ See test_defs.xsd for more information.
 <test name="framework"
     build_path="frameworks/base/tests/FrameworkTest"
     package="com.android.frameworktest.tests"
-    class="com.android.frameworktest.AllTests"
     coverage_target="framework"
     continuous="true" />
 
@@ -135,8 +134,8 @@ See test_defs.xsd for more information.
 
 
 <test name="contentprovideroperation"
-    build_path="frameworks/base/tests/FrameworkTest"
-    package="com.android.frameworktest.tests"
+    build_path="frameworks/base/core/tests/coretests"
+    package="com.android.frameworks.coretests"
     class="android.content.ContentProviderOperationTest"
     coverage_target="framework" />
 
