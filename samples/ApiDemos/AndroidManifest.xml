@@ -543,6 +543,31 @@
             </intent-filter>
         </activity>
 
+        <!-- Device Admin Samples -->
+
+        <activity android:name=".app.SampleDeviceAdmin$Controller"
+                android:label="@string/activity_sample_device_admin">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+<!-- 
+// BEGIN_INCLUDE(device_admin_declaration)
+-->
+        <receiver android:name=".app.SampleDeviceAdmin"
+                android:label="@string/sample_device_admin"
+                android:permission="android.permission.BIND_DEVICE_ADMIN">
+            <meta-data android:name="android.app.device_admin"
+                       android:resource="@xml/sample_device_admin" />
+            <intent-filter>
+                <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
+            </intent-filter>
+        </receiver>
+<!-- 
+// END_INCLUDE(device_admin_declaration)
+-->
 
         <!-- Voice Recognition Samples -->
 
