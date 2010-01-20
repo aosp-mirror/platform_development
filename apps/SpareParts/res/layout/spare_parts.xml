@@ -38,13 +38,6 @@
             android:layout_alignParentLeft="true">
         </Spinner>
 
-        <CheckBox android:id="@+id/show_maps_compass"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/transition_animation_scale"
-            android:layout_alignParentLeft="true"
-            android:text="@string/development_settings_show_maps_compass_text" />
-            
     </RelativeLayout>
 
 </ScrollView>

@@ -101,16 +101,5 @@
                 android:summaryOn="@string/compatibility_mode_summary_on"
                 android:summaryOff="@string/compatibility_mode_summary_off" />
     </PreferenceCategory>
-            
-    <PreferenceCategory
-        android:title="@string/applications_title">
-                
-        <CheckBoxPreference 
-            android:key="maps_compass" 
-            android:title="@string/title_maps_compass" 
-            android:summaryOn="@string/summary_on_maps_compass"
-            android:summaryOff="@string/summary_off_maps_compass"/>
-        
-    </PreferenceCategory>
-        
+
 </PreferenceScreen>
