@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007 The Android Open Source Project
+ * Copyright (C) 2010 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,17 +19,27 @@ package com.example.android.apis.app;
 import com.example.android.apis.R;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.DeviceAdmin;
 import android.app.DevicePolicyManager;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.Toast;
+import android.widget.AdapterView.OnItemSelectedListener;
 
 /**
  * Example of a do-nothing admin class.  When enabled, it lets you control
@@ -37,6 +47,13 @@ import android.widget.Toast;
  */
 public class SampleDeviceAdmin extends DeviceAdmin {
 
+    static SharedPreferences getSamplePreferences(Context context) {
+        return context.getSharedPreferences(DeviceAdmin.class.getName(), 0);
+    }
+    
+    static String PREF_PASSWORD_MODE = "password_mode";
+    static String PREF_PASSWORD_LENGTH = "password_length";
+    
     void showToast(Context context, CharSequence msg) {
         Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
     }
@@ -61,11 +78,15 @@ public class SampleDeviceAdmin extends DeviceAdmin {
         showToast(context, "Sample Device Admin: pw failed");
     }
 
+    @Override
+    public void onPasswordSucceeded(Context context, Intent intent) {
+        showToast(context, "Sample Device Admin: pw succeeded");
+    }
+
     /**
-     * <p>Example of explicitly starting and stopping the local service.
-     * This demonstrates the implementation of a service that runs in the same
-     * process as the rest of the application, which is explicitly started and stopped
-     * as desired.</p>
+     * <p>UI control for the sample device admin.  This provides an interface
+     * to enable, disable, and perform other operations with it to see
+     * their effect.</p>
      * 
      * <p>Note that this is implemented as an inner class only keep the sample
      * all together; typically this code would appear in some separate class.
@@ -78,6 +99,24 @@ public class SampleDeviceAdmin extends DeviceAdmin {
         
         Button mEnableButton;
         Button mDisableButton;
+        
+        // Password mode spinner choices
+        // This list must match the list found in samples/ApiDemos/res/values/arrays.xml
+        final static int mPasswordModeValues[] = new int[] {
+            DevicePolicyManager.PASSWORD_MODE_UNSPECIFIED,
+            DevicePolicyManager.PASSWORD_MODE_SOMETHING,
+            DevicePolicyManager.PASSWORD_MODE_NUMERIC,
+            DevicePolicyManager.PASSWORD_MODE_ALPHANUMERIC
+        };
+        Spinner mPasswordMode;
+        EditText mPasswordLength;
+        Button mSetPasswordButton;
+        
+        EditText mPassword;
+        Button mResetPasswordButton;
+        
+        Button mForceLockButton;
+        Button mWipeDataButton;
         
         @Override
         protected void onCreate(Bundle savedInstanceState) {
@@ -93,6 +132,47 @@ public class SampleDeviceAdmin extends DeviceAdmin {
             mEnableButton.setOnClickListener(mEnableListener);
             mDisableButton = (Button)findViewById(R.id.disable);
             mDisableButton.setOnClickListener(mDisableListener);
+            
+            mPasswordMode = (Spinner)findViewById(R.id.password_mode);
+            ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
+                    this, R.array.password_modes, android.R.layout.simple_spinner_item);
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            mPasswordMode.setAdapter(adapter);
+            mPasswordMode.setOnItemSelectedListener(
+                    new OnItemSelectedListener() {
+                        public void onItemSelected(
+                                AdapterView<?> parent, View view, int position, long id) {
+                            setPasswordMode(mPasswordModeValues[position]);
+                        }
+
+                        public void onNothingSelected(AdapterView<?> parent) {
+                            setPasswordMode(DevicePolicyManager.PASSWORD_MODE_UNSPECIFIED);
+                        }
+                    });
+            mPasswordLength = (EditText)findViewById(R.id.password_length);
+            mPasswordLength.addTextChangedListener(new TextWatcher() {
+                public void afterTextChanged(Editable s) {
+                }
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                }
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    try {
+                        setPasswordLength(Integer.parseInt(s.toString()));
+                    } catch (NumberFormatException e) {
+                    }
+                }
+            });
+            mSetPasswordButton = (Button)findViewById(R.id.set_password);
+            mSetPasswordButton.setOnClickListener(mSetPasswordListener);
+            
+            mPassword = (EditText)findViewById(R.id.password);
+            mResetPasswordButton = (Button)findViewById(R.id.reset_password);
+            mResetPasswordButton.setOnClickListener(mResetPasswordListener);
+            
+            mForceLockButton = (Button)findViewById(R.id.force_lock);
+            mForceLockButton.setOnClickListener(mForceLockListener);
+            mWipeDataButton = (Button)findViewById(R.id.wipe_data);
+            mWipeDataButton.setOnClickListener(mWipeDataListener);
         }
 
         void updateButtonStates() {
@@ -100,10 +180,62 @@ public class SampleDeviceAdmin extends DeviceAdmin {
             if (active) {
                 mEnableButton.setEnabled(false);
                 mDisableButton.setEnabled(true);
+                mPasswordMode.setEnabled(true);
+                mPasswordLength.setEnabled(true);
+                mSetPasswordButton.setEnabled(true);
+                mPassword.setEnabled(true);
+                mResetPasswordButton.setEnabled(true);
+                mForceLockButton.setEnabled(true);
+                mWipeDataButton.setEnabled(true);
             } else {
                 mEnableButton.setEnabled(true);
                 mDisableButton.setEnabled(false);
+                mPasswordMode.setEnabled(false);
+                mPasswordLength.setEnabled(false);
+                mSetPasswordButton.setEnabled(false);
+                mPassword.setEnabled(false);
+                mResetPasswordButton.setEnabled(false);
+                mForceLockButton.setEnabled(false);
+                mWipeDataButton.setEnabled(false);
             }
+        }
+        
+        void updateControls() {
+            SharedPreferences prefs = getSamplePreferences(this);
+            final int pwMode = prefs.getInt(PREF_PASSWORD_MODE,
+                    DevicePolicyManager.PASSWORD_MODE_UNSPECIFIED);
+            final int pwLength = prefs.getInt(PREF_PASSWORD_LENGTH, 0);
+            for (int i=0; i<mPasswordModeValues.length; i++) {
+                if (mPasswordModeValues[i] == pwMode) {
+                    mPasswordMode.setSelection(i);
+                }
+            }
+            mPasswordLength.setText(Integer.toString(pwLength));
+        }
+        
+        void updatePolicies() {
+            SharedPreferences prefs = getSamplePreferences(this);
+            final int pwMode = prefs.getInt(PREF_PASSWORD_MODE,
+                    DevicePolicyManager.PASSWORD_MODE_UNSPECIFIED);
+            final int pwLength = prefs.getInt(PREF_PASSWORD_LENGTH, 0);
+            
+            boolean active = mDPM.isAdminActive(mSampleDeviceAdmin);
+            if (active) {
+                mDPM.setPasswordMode(mSampleDeviceAdmin, pwMode);
+                mDPM.setMinimumPasswordLength(mSampleDeviceAdmin, pwLength);
+            }
+        }
+        
+        void setPasswordMode(int mode) {
+            SharedPreferences prefs = getSamplePreferences(this);
+            prefs.edit().putInt(PREF_PASSWORD_MODE, mode).commit();
+            updatePolicies();
+        }
+        
+        void setPasswordLength(int length) {
+            SharedPreferences prefs = getSamplePreferences(this);
+            prefs.edit().putInt(PREF_PASSWORD_LENGTH, length).commit();
+            updatePolicies();
         }
         
         @Override
@@ -143,7 +275,48 @@ public class SampleDeviceAdmin extends DeviceAdmin {
                 updateButtonStates();
             }
         };
-    }
 
-    
+        private OnClickListener mSetPasswordListener = new OnClickListener() {
+            public void onClick(View v) {
+                // Launch the activity to have the user set a new password.
+                Intent intent = new Intent(DevicePolicyManager.ACTION_SET_NEW_PASSWORD);
+                startActivity(intent);
+            }
+        };
+
+        private OnClickListener mResetPasswordListener = new OnClickListener() {
+            public void onClick(View v) {
+                boolean active = mDPM.isAdminActive(mSampleDeviceAdmin);
+                if (active) {
+                    mDPM.resetPassword(mPassword.getText().toString());
+                }
+            }
+        };
+
+        private OnClickListener mForceLockListener = new OnClickListener() {
+            public void onClick(View v) {
+                boolean active = mDPM.isAdminActive(mSampleDeviceAdmin);
+                if (active) {
+                    mDPM.lockNow();
+                }
+            }
+        };
+
+        private OnClickListener mWipeDataListener = new OnClickListener() {
+            public void onClick(View v) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(Controller.this);
+                builder.setMessage("This will erase all of your data.  Are you sure?");
+                builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        boolean active = mDPM.isAdminActive(mSampleDeviceAdmin);
+                        if (active) {
+                            mDPM.wipeData(0);
+                        }
+                    }
+                });
+                builder.setNegativeButton("No way!", null);
+                builder.show();
+            }
+        };
+    }
 }

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Copyright (C) 2007 The Android Open Source Project
+<!-- Copyright (C) 2010 The Android Open Source Project
 
      Licensed under the Apache License, Version 2.0 (the "License");
      you may not use this file except in compliance with the License.
@@ -14,10 +14,10 @@
      limitations under the License.
 -->
 
-<!-- Demonstrates starting and stopping a local service.
-     See corresponding Java code com.android.sdk.app.LocalSerice.java. -->
+<!-- Demonstrates implementation of a DeviceAdmin. -->
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:orientation="vertical" android:padding="4dip"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:padding="4dip"
     android:gravity="center_horizontal"
     android:layout_width="match_parent" android:layout_height="match_parent">
 
@@ -27,16 +27,82 @@
         android:paddingBottom="4dip"
         android:text="@string/sample_device_admin_summary"/>
 
-    <Button android:id="@+id/enable"
-        android:layout_width="wrap_content" android:layout_height="wrap_content" 
-        android:text="@string/enable_admin">
-        <requestFocus />
-    </Button>
+	<LinearLayout android:orientation="horizontal" android:gravity="center"
+	    android:layout_width="match_parent" android:layout_height="wrap_content">
 
-    <Button android:id="@+id/disable"
-        android:layout_width="wrap_content" android:layout_height="wrap_content" 
-        android:text="@string/disable_admin">
-    </Button>
+	    <Button android:id="@+id/enable"
+	        android:layout_width="wrap_content" android:layout_height="wrap_content" 
+	        android:text="@string/enable_admin">
+	        <requestFocus />
+	    </Button>
+	
+	    <Button android:id="@+id/disable"
+	        android:layout_width="wrap_content" android:layout_height="wrap_content" 
+	        android:text="@string/disable_admin">
+	    </Button>
+	    
+    </LinearLayout>
 
+    <LinearLayout android:orientation="horizontal" android:gravity="center"
+        android:layout_width="match_parent" android:layout_height="wrap_content">
+
+	    <Spinner android:id="@+id/password_mode"
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content"
+	        android:drawSelectorOnTop="true"
+	        android:prompt="@string/password_mode">
+	    </Spinner>
+    
+        <EditText android:id="@+id/password_length"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:hint="@string/password_length_hint"
+            android:inputType="number">
+        </EditText>
+            
+    </LinearLayout>
+
+    <Button android:id="@+id/set_password"
+        android:layout_width="wrap_content" android:layout_height="wrap_content" 
+        android_layout_gravity="east|center_vertical"
+        android:text="@string/set_password">
+    </Button>
+        
+    <LinearLayout android:orientation="horizontal" android:gravity="center"
+        android:layout_width="match_parent" android:layout_height="wrap_content">
+
+        <EditText android:id="@+id/password"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:hint="@string/password_hint"
+            android:freezesText="true">
+        </EditText>
+            
+        <Button android:id="@+id/reset_password"
+            android:layout_width="wrap_content" android:layout_height="wrap_content" 
+            android:layout_weight="0"
+            android:text="@string/reset_password">
+        </Button>
+        
+    </LinearLayout>
+        
+    <LinearLayout android:orientation="horizontal" android:gravity="center"
+        android:layout_width="match_parent" android:layout_height="wrap_content">
+
+        <Button android:id="@+id/force_lock"
+            android:layout_width="wrap_content" android:layout_height="wrap_content" 
+            android:layout_weight="0"
+            android:text="@string/force_lock">
+        </Button>
+        
+        <Button android:id="@+id/wipe_data"
+            android:layout_width="wrap_content" android:layout_height="wrap_content" 
+            android:layout_weight="0"
+            android:text="@string/wipe_data">
+        </Button>
+        
+    </LinearLayout>
+    
 </LinearLayout>
 

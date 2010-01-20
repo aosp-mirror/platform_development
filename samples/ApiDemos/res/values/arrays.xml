@@ -85,4 +85,12 @@
         <item>charlie</item>  
     </string-array>
     
+    <!-- Used in app/Sample Device Admin -->
+    <string-array name="password_modes">
+        <item>Unspecified</item>
+        <item>Something</item>
+        <item>Numeric</item>
+        <item>Alphanumeric</item>
+    </string-array>
+
 </resources>
