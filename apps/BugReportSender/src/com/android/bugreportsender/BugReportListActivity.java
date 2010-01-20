@@ -1,0 +1,118 @@
+/*
+ * Copyright (C) 2009 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.android.bugreportsender;
+
+import android.app.ListActivity;
+import android.content.Intent;
+import android.net.Uri;
+import android.os.Build;
+import android.os.Bundle;
+import android.os.FileObserver;
+import android.os.Handler;
+import android.util.Log;
+import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Comparator;
+
+/**
+ * Shows a list of bug reports currently in /sdcard/bugreports
+ */
+public class BugReportListActivity extends ListActivity {
+    private static final String TAG = "BugReportListActivity";
+    private static final File REPORT_DIR = new File("/sdcard/bugreports");
+
+    private ArrayAdapter<String> mAdapter = null;
+    private ArrayList<File> mFiles = null;
+    private Handler mHandler = null;
+    private FileObserver mObserver = null;
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        mAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1);
+        mFiles = new ArrayList<File>();
+        mHandler = new Handler();
+
+        int flags = FileObserver.CREATE | FileObserver.MOVED_TO;
+        mObserver = new FileObserver(REPORT_DIR.getPath(), flags) {
+            public void onEvent(int event, String path) {
+                mHandler.post(new Runnable() { public void run() { scanDirectory(); } });
+            }
+        };
+
+        setListAdapter(mAdapter);
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        mObserver.startWatching();
+        scanDirectory();
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        mObserver.stopWatching();
+    }
+
+    @Override
+    protected void onListItemClick(ListView l, View v, int position, long id) {
+        super.onListItemClick(l, v, position, id);
+        if (position < mFiles.size()) {
+            File file = mFiles.get(position);
+            Intent intent = new Intent(Intent.ACTION_SEND);
+            intent.putExtra("subject", file.getName());
+            intent.putExtra("body", "Build: " + Build.DISPLAY + "\n(Sent by BugReportSender)");
+            intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(file));
+            if (file.getName().endsWith(".gz")) {
+                intent.setType("application/x-gzip");
+            } else if (file.getName().endsWith(".txt")) {
+                intent.setType("text/plain");
+            } else {
+                intent.setType("application/octet-stream");
+            }
+            startActivity(intent);
+        }
+    }
+
+    private void scanDirectory() {
+        File[] files = REPORT_DIR.listFiles();
+        mAdapter.clear();
+        mFiles.clear();
+        for (int i = 0; i < files.length; i++) {
+            String name = files[i].getName();
+            if (name.endsWith(".gz")) name = name.substring(0, name.length() - 3);
+            if (!name.startsWith("bugreport-") || !name.endsWith(".txt")) {
+                Log.w(TAG, "Ignoring non-bugreport: " + files[i]);
+                continue;
+            }
+
+            mAdapter.add(name.substring(10, name.length() - 4));
+            mFiles.add(files[i]);
+        }
+
+        // Reverse sort order: newest first.
+        mAdapter.sort(new Comparator<String>() {
+            public int compare(String a, String b) { return b.compareTo(a); }
+        });
+    }
+}
