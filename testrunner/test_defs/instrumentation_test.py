@@ -160,7 +160,8 @@ class InstrumentationTestSuite(test_suite.AbstractTestSuite):
         logger.Log("Error: could not find coverage data on device")
         return
 
-      coverage_file = coverage_gen.ExtractReport(self, device_coverage_path)
+      coverage_file = coverage_gen.ExtractReport(
+          self, device_coverage_path, test_qualifier=options.test_size)
       if coverage_file is not None:
         logger.Log("Coverage report generated at %s" % coverage_file)
     else:
