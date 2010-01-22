@@ -30,7 +30,8 @@ import android.widget.ListView;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Comparator;
+import java.util.Arrays;
+import java.util.Collections;
 
 /**
  * Shows a list of bug reports currently in /sdcard/bugreports
@@ -95,9 +96,14 @@ public class BugReportListActivity extends ListActivity {
     }
 
     private void scanDirectory() {
-        File[] files = REPORT_DIR.listFiles();
         mAdapter.clear();
         mFiles.clear();
+
+        File[] files = REPORT_DIR.listFiles();
+        if (files == null) return;
+
+        // Sort in reverse order: newest bug reports first
+        Arrays.sort(files, Collections.reverseOrder());
         for (int i = 0; i < files.length; i++) {
             String name = files[i].getName();
             if (name.endsWith(".gz")) name = name.substring(0, name.length() - 3);
@@ -106,13 +112,9 @@ public class BugReportListActivity extends ListActivity {
                 continue;
             }
 
+            // Make sure to keep the parallel arrays in sync
             mAdapter.add(name.substring(10, name.length() - 4));
             mFiles.add(files[i]);
         }
-
-        // Reverse sort order: newest first.
-        mAdapter.sort(new Comparator<String>() {
-            public int compare(String a, String b) { return b.compareTo(a); }
-        });
     }
 }
