@@ -86,7 +86,8 @@ class CoverageGenerator(object):
 
   def ExtractReport(self, test_suite,
                     device_coverage_path,
-                    output_path=None):
+                    output_path=None,
+                    test_qualifier=None):
     """Extract runtime coverage data and generate code coverage report.
 
     Assumes test has just been executed.
@@ -94,25 +95,30 @@ class CoverageGenerator(object):
       test_suite: TestSuite to generate coverage data for
       device_coverage_path: location of coverage file on device
       output_path: path to place output files in. If None will use
-        <android_root_path>/<_COVERAGE_REPORT_PATH>/<target>/<test>
+        <android_root_path>/<_COVERAGE_REPORT_PATH>/<target>/<test[-qualifier]>
+      test_qualifier: designates mode test was run with. e.g size=small.
+        If not None, this will be used to customize output_path as shown above.
 
     Returns:
       absolute file path string of generated html report file.
     """
     if output_path is None:
+      report_name = test_suite.GetName()
+      if test_qualifier:
+        report_name = report_name + "-" + test_qualifier
       output_path = os.path.join(self._root_path,
                                  self._COVERAGE_REPORT_PATH,
                                  test_suite.GetTargetName(),
-                                 test_suite.GetName())
+                                 report_name)
 
-    coverage_local_name = "%s.%s" % (test_suite.GetName(),
+    coverage_local_name = "%s.%s" % (report_name,
                                      self._TEST_COVERAGE_EXT)
     coverage_local_path = os.path.join(output_path,
                                        coverage_local_name)
     if self._adb.Pull(device_coverage_path, coverage_local_path):
 
       report_path = os.path.join(output_path,
-                                 test_suite.GetName())
+                                 report_name)
       target = self._targets_manifest.GetTarget(test_suite.GetTargetName())
       if target is None:
         msg = ["Error: test %s references undefined target %s."
