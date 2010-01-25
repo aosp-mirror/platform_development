@@ -57,8 +57,6 @@
     </coverage_target>
    
    <!-- apps -->
-    <coverage_target name="AlarmClock" build_path="packages/apps/AlarmClock"
-        type="APPS" />
     <coverage_target name="ApiDemos" build_path="development/samples/ApiDemos"
         type="APPS" />
     <coverage_target name="Browser" build_path="packages/apps/Browser"
@@ -71,13 +69,15 @@
         type="APPS" />
     <coverage_target name="Contacts" build_path="packages/apps/Contacts"
         type="APPS" />
+    <coverage_target name="DeskClock" build_path="packages/apps/DeskClock"
+        type="APPS" />
     <coverage_target name="Email" build_path="packages/apps/Email"
         type="APPS" />
     <coverage_target name="Settings" build_path="packages/apps/Settings"
         type="APPS" />
     <coverage_target name="Phone" build_path="packages/apps/Phone"
         type="APPS" />
-    <coverage_target name="Launcher" build_path="packages/apps/Home"
+    <coverage_target name="Launcher2" build_path="packages/apps/Launcher2"
         type="APPS" />
     <coverage_target name="Mms" build_path="packages/apps/Mms" type="APPS" />
     <coverage_target name="Music" build_path="packages/apps/Music"
@@ -90,14 +90,10 @@
         build_path="packages/providers/calendar" type="APPS" />
     <coverage_target name="ContactsProvider"
         build_path="packages/providers/ContactsProvider" type="APPS" />
-    <coverage_target name="GoogleContactsProvider"
-        build_path="packages/providers/GoogleContactsProvider" type="APPS" />
     <coverage_target name="DownloadProvider"
         build_path="packages/providers/DownloadProvider" type="APPS" />
     <coverage_target name="DrmProvider" build_path="packages/providers/drm"
         type="APPS" />
-    <coverage_target name="GmailProvider"
-        build_path="partner/google/providers/gmail" type="APPS" />
     <coverage_target name="MediaProvider"
         build_path="packages/providers/MediaProvider" type="APPS" />
     <coverage_target name="SettingsProvider"
