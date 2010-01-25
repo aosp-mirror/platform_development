@@ -440,12 +440,6 @@ See test_defs.xsd for more information.
     coverage_target="GlobalSearch"
     continuous="true" />
 
-<test name="improvider-permission"
-    build_path="packages/providers/ImProvider/tests/permission"
-    package="com.android.providers.im.permission.tests"
-    coverage_target="ImProvider"
-    continuous="true" />
-
 <test name="media"
     build_path="frameworks/base/media/tests/MediaFrameworkTest"
     package="com.android.mediaframeworktest"
