@@ -49,9 +49,21 @@ See test_defs.xsd for more information.
     coverage_target="framework"
     continuous="true" />
 
+<test name="frameworks-graphics"
+    build_path="frameworks/base/graphics/tests/graphicstests"
+    package="com.android.frameworks.graphicstests"
+    coverage_target="framework"
+    continuous="true" />
+
 <test name="frameworks-location"
     build_path="frameworks/base/location/tests/locationtests"
     package="com.android.frameworks.locationtests"
+    coverage_target="framework"
+    continuous="true" />
+
+<test name="frameworks-sax"
+    build_path="frameworks/base/sax/tests/saxtests"
+    package="com.android.frameworks.saxtests"
     coverage_target="framework"
     continuous="true" />
 
@@ -61,18 +73,24 @@ See test_defs.xsd for more information.
     coverage_target="framework"
     continuous="true" />
 
+<test name="frameworks-vpn"
+    build_path="frameworks/base/vpn/tests/vpntests"
+    package="com.android.frameworks.vpntests"
+    coverage_target="framework"
+    continuous="true" />
+
 <!--  end of framework tests -->
 
 <!-- subset of the android tests for just the database tests -->
-<test name="database"
-    build_path="frameworks/base/tests/AndroidTests"
-    package="com.android.unit_tests"
-    class="com.android.unit_tests.DatabaseTests" />
+<!--test name="database"
+    build_path="frameworks/base/core/tests/coretests"
+    package="com.android.frameworks.coretests"
+    coverage_target="framework" /-->
 
 <test name="account"
-    build_path="frameworks/base/tests/AndroidTests"
-    package="com.android.unit_tests"
-    class="com.android.unit_tests.accounts.AccountManagerServiceTest"
+    build_path="frameworks/base/core/tests/coretests"
+    package="com.android.frameworks.coretests"
+    class="android.accounts.AccountManagerServiceTest"
     coverage_target="framework" />
 
 <test name="smoke"
@@ -105,23 +123,16 @@ See test_defs.xsd for more information.
     class="com.android.unit_tests.HeapTest"
     coverage_target="framework" />
 
-<test name="activity"
+<!--test name="activity"
     build_path="frameworks/base/tests/AndroidTests"
     package="com.android.unit_tests"
     class="com.android.unit_tests.activity.ActivityTests"
-    coverage_target="framework" />
+    coverage_target="framework" /-->
 
 <test name="keystore-unit"
     build_path="frameworks/base/keystore/tests"
     package="android.security.tests"
     runner=".KeyStoreTestRunner"
-    coverage_target="framework"
-    continuous="true" />
-
-<test name="vpntests"
-    build_path="frameworks/base/tests/AndroidTests"
-    package="com.android.unit_tests"
-    class="com.android.unit_tests.VpnTest"
     coverage_target="framework"
     continuous="true" />
 
