@@ -320,7 +320,10 @@ class TestRunner(object):
         self._DoBuild()
 
       for test_suite in self._GetTestsToRun():
-        test_suite.Run(self._options, self._adb)
+        try:
+          test_suite.Run(self._options, self._adb)
+        except errors.WaitForResponseTimedOutError:
+          logger.Log("Timed out waiting for response")
 
     except KeyboardInterrupt:
       logger.Log("Exiting...")
