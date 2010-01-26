@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Text" />
+
+    <style name="Text.BuildInfo">
+<!--        <item name="android:typeface">monospace</item>-->
+        <item name="android:textSize">12sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/droidgreen</item>
+        <item name="android:shadowColor">@android:color/black</item>
+        <item name="android:shadowDx">0</item>
+        <item name="android:shadowDy">0</item>
+        <item name="android:shadowRadius">3.0</item>
+    </style>
+
+    <style name="Text.BuildInfo.Fancy">
+        <item name="android:textColor">@android:color/white</item>
+        <item name="android:shadowColor">@color/droidgreen</item>
+    </style>
+</resources>
