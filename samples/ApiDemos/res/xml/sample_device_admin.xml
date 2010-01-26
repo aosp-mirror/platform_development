@@ -17,8 +17,16 @@
 <!-- 
 // BEGIN_INCLUDE(meta_data)
 -->
-<device-admin xmlns:android="http://schemas.android.com/apk/res/android"
-/>
+<device-admin xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-policies>
+        <limit-password />
+        <watch-login />
+        <reset-password />
+        <limit-unlock />
+        <force-lock />
+        <wipe-data />
+    </uses-policies>
+</device-admin>
 <!-- 
 // END_INCLUDE(meta_data)
 -->

@@ -439,6 +439,10 @@
     
     <string name="activity_sample_device_admin">App/Device Admin</string>
     <string name="sample_device_admin">Sample Device Admin</string>
+    <string name="sample_device_admin_description">Sample code for writing
+        a DeviceAdmin class.  This implementation provides a UI (in ApiDemos)
+        for you to directly control what the DeviceAdmin does with the
+        system.</string>
         
     <string name="sample_device_admin_summary">Demonstration of a DeviceAdmin
         class for administering the user\'s device.</string>
