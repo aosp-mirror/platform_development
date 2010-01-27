@@ -453,6 +453,7 @@
     <string name="set_password">Set Password</string>
     <string name="password_hint">Password</string>
     <string name="reset_password">Reset Password</string>
+    <string name="max_failed_pw_hint">Password Attempts Wipe Data</string>
     <string name="force_lock">Force Lock</string>
     <string name="wipe_data">Wipe Data</string>
     

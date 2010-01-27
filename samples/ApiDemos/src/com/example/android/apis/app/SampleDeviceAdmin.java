@@ -53,6 +53,7 @@ public class SampleDeviceAdmin extends DeviceAdmin {
     
     static String PREF_PASSWORD_MODE = "password_mode";
     static String PREF_PASSWORD_LENGTH = "password_length";
+    static String PREF_MAX_FAILED_PW = "max_failed_pw";
     
     void showToast(Context context, CharSequence msg) {
         Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
@@ -61,6 +62,11 @@ public class SampleDeviceAdmin extends DeviceAdmin {
     @Override
     public void onEnabled(Context context, Intent intent) {
         showToast(context, "Sample Device Admin: enabled");
+    }
+
+    @Override
+    public CharSequence onDisableRequested(Context context, Intent intent) {
+        return "This is an optional message to warn the user about disabling.";
     }
 
     @Override
@@ -114,6 +120,8 @@ public class SampleDeviceAdmin extends DeviceAdmin {
         
         EditText mPassword;
         Button mResetPasswordButton;
+        
+        EditText mMaxFailedPw;
         
         Button mForceLockButton;
         Button mWipeDataButton;
@@ -169,6 +177,20 @@ public class SampleDeviceAdmin extends DeviceAdmin {
             mResetPasswordButton = (Button)findViewById(R.id.reset_password);
             mResetPasswordButton.setOnClickListener(mResetPasswordListener);
             
+            mMaxFailedPw = (EditText)findViewById(R.id.max_failed_pw);
+            mMaxFailedPw.addTextChangedListener(new TextWatcher() {
+                public void afterTextChanged(Editable s) {
+                }
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                }
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    try {
+                        setMaxFailedPw(Integer.parseInt(s.toString()));
+                    } catch (NumberFormatException e) {
+                    }
+                }
+            });
+            
             mForceLockButton = (Button)findViewById(R.id.force_lock);
             mForceLockButton.setOnClickListener(mForceLockListener);
             mWipeDataButton = (Button)findViewById(R.id.wipe_data);
@@ -205,12 +227,15 @@ public class SampleDeviceAdmin extends DeviceAdmin {
             final int pwMode = prefs.getInt(PREF_PASSWORD_MODE,
                     DevicePolicyManager.PASSWORD_MODE_UNSPECIFIED);
             final int pwLength = prefs.getInt(PREF_PASSWORD_LENGTH, 0);
+            final int maxFailedPw = prefs.getInt(PREF_MAX_FAILED_PW, 0);
+            
             for (int i=0; i<mPasswordModeValues.length; i++) {
                 if (mPasswordModeValues[i] == pwMode) {
                     mPasswordMode.setSelection(i);
                 }
             }
             mPasswordLength.setText(Integer.toString(pwLength));
+            mMaxFailedPw.setText(Integer.toString(maxFailedPw));
         }
         
         void updatePolicies() {
@@ -218,11 +243,13 @@ public class SampleDeviceAdmin extends DeviceAdmin {
             final int pwMode = prefs.getInt(PREF_PASSWORD_MODE,
                     DevicePolicyManager.PASSWORD_MODE_UNSPECIFIED);
             final int pwLength = prefs.getInt(PREF_PASSWORD_LENGTH, 0);
+            final int maxFailedPw = prefs.getInt(PREF_PASSWORD_LENGTH, 0);
             
             boolean active = mDPM.isAdminActive(mSampleDeviceAdmin);
             if (active) {
                 mDPM.setPasswordMode(mSampleDeviceAdmin, pwMode);
                 mDPM.setMinimumPasswordLength(mSampleDeviceAdmin, pwLength);
+                mDPM.setMaximumFailedPasswordsForWipe(mSampleDeviceAdmin, maxFailedPw);
             }
         }
         
@@ -235,6 +262,12 @@ public class SampleDeviceAdmin extends DeviceAdmin {
         void setPasswordLength(int length) {
             SharedPreferences prefs = getSamplePreferences(this);
             prefs.edit().putInt(PREF_PASSWORD_LENGTH, length).commit();
+            updatePolicies();
+        }
+        
+        void setMaxFailedPw(int length) {
+            SharedPreferences prefs = getSamplePreferences(this);
+            prefs.edit().putInt(PREF_MAX_FAILED_PW, length).commit();
             updatePolicies();
         }
         
@@ -265,6 +298,8 @@ public class SampleDeviceAdmin extends DeviceAdmin {
                 Intent intent = new Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
                 intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN,
                         mSampleDeviceAdmin);
+                intent.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION,
+                        "Additional text explaining why this needs to be added.");
                 startActivityForResult(intent, RESULT_ENABLE);
             }
         };
