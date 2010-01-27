@@ -173,6 +173,7 @@ function package() {
     cp -v /cygdrive/c/cygwin/bin/mgwz.dll "$TOOLS"/
 
     # Update a bunch of bat files
+    cp -v sdk/files/find_java.bat                     "$TOOLS"/
     cp -v sdk/apkbuilder/etc/apkbuilder.bat           "$TOOLS"/
     cp -v sdk/ddms/app/etc/ddms.bat                   "$TOOLS"/
     cp -v sdk/traceview/etc/traceview.bat             "$TOOLS"/
