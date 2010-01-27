@@ -34,6 +34,11 @@
             android:layout_height="wrap_content"
             android:text="@string/bad_behavior_crash_thread_label" />
 
+    <Button android:id="@+id/bad_behavior_crash_native"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/bad_behavior_crash_native_label" />
+
     <Button android:id="@+id/bad_behavior_wtf"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

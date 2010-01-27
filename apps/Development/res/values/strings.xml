@@ -199,6 +199,7 @@
     <string name="bad_behavior_crash_system_label">Crash the system server</string>
     <string name="bad_behavior_crash_main_label">Crash the main app thread</string>
     <string name="bad_behavior_crash_thread_label">Crash an auxiliary app thread</string>
+    <string name="bad_behavior_crash_native_label">Crash the native process</string>
     <string name="bad_behavior_wtf_label">Report a WTF condition</string>
     <string name="bad_behavior_anr_label">ANR (Stop responding for 20 seconds)</string>
     <string name="bad_behavior_anr_activity_label">ANR launching a new Activity</string>
