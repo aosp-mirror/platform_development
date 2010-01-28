@@ -25,6 +25,7 @@ import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.IPowerManager;
+import android.os.Process;
 import android.os.RemoteException;
 import android.os.ServiceManager;
 import android.util.Log;
@@ -102,6 +103,17 @@ public class BadBehaviorActivity extends Activity {
                     @Override
                     public void run() { throw new BadBehaviorException(); }
                 }.start();
+            }
+        });
+
+        Button crash_native = (Button) findViewById(R.id.bad_behavior_crash_native);
+        crash_native.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                // For some reason, the JVM needs two of these to get the hint
+                Log.i(TAG, "Native crash pressed -- about to kill -11 self");
+                Process.sendSignal(Process.myPid(), 11);
+                Process.sendSignal(Process.myPid(), 11);
+                Log.i(TAG, "Finished kill -11, should be dead or dying");
             }
         });
 
