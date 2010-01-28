@@ -191,7 +191,7 @@ See test_defs.xsd for more information.
 <test name="cts-content"
     build_path="cts/tests/tests/content"
     package="com.android.cts.content"
-    runner="android.test.InstrumentationCtsTestRunner"
+    runner="android.test.InstrumentationTestRunner"
     coverage_target="framework"
     cts="true" />
 
