@@ -21,6 +21,8 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.android.livecubes">
 
+    <uses-feature android:name="android.software.live_wallpaper" />
+
     <application
         android:label="@string/wallpapers"
         android:icon="@drawable/ic_launcher_wallpaper">
