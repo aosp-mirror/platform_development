@@ -248,7 +248,7 @@ public class SampleDeviceAdmin extends DeviceAdmin {
             boolean active = mDPM.isAdminActive(mSampleDeviceAdmin);
             if (active) {
                 mDPM.setPasswordMode(mSampleDeviceAdmin, pwMode);
-                mDPM.setMinimumPasswordLength(mSampleDeviceAdmin, pwLength);
+                mDPM.setPasswordMinimumLength(mSampleDeviceAdmin, pwLength);
                 mDPM.setMaximumFailedPasswordsForWipe(mSampleDeviceAdmin, maxFailedPw);
             }
         }
