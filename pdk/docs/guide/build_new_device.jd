@@ -62,7 +62,6 @@ file.
   # These definitions override the defaults in config/config.make for &lt;board_name&gt;
   #
   # TARGET_NO_BOOTLOADER := false
-  # TARGET_HARDWARE_3D := false 
   #
   TARGET_USE_GENERIC_AUDIO := true</pre></li>  
   <li>If you wish to modify system properties, create a <code>system.prop</code> file in your <code>&lt;board_name&gt;</code> directory(<code>vendor/&lt;company_name&gt;/&lt;board_name&gt;</code>).<BR>
