@@ -71,7 +71,8 @@ public class DeviceTestRunner extends TestRunner {
                 parentArgs.add(args[i]);
             }
         }
-        mDevice = connectToDevice(mDeviceSerial);
+        DeviceConnector connector = new DeviceConnector();
+        mDevice = connector.connectToDevice(mDeviceSerial);
         return super.start(parentArgs.toArray(new String[parentArgs.size()]));
     }
 
@@ -83,77 +84,6 @@ public class DeviceTestRunner extends TestRunner {
         return args[index];
     }
 
-    /**
-     * Initializes DDMS library, and connects to specified Android device
-     * @param deviceSerial
-     * @return {@link IDevice}
-     * @throws IllegalArgumentException if specified device cannot be found
-     */
-    private IDevice connectToDevice(String deviceSerial) {
-        // initialize DDMS with no clientSupport aka debugger support
-        AndroidDebugBridge.init(false /* clientSupport */);
-        AndroidDebugBridge adbBridge = AndroidDebugBridge.createBridge();
-        for (IDevice device : adbBridge.getDevices()) {
-            if (deviceSerial == null) {
-                return device;
-            } else if (deviceSerial.equals(device.getSerialNumber())) {
-                return device;
-            }
-        }
-        System.out.println("Waiting for device...");
-        NewDeviceListener listener = new NewDeviceListener(deviceSerial);
-        AndroidDebugBridge.addDeviceChangeListener(listener);
-        IDevice device = listener.waitForDevice(5000);
-        AndroidDebugBridge.removeDeviceChangeListener(listener);
-        if (device == null) {
-            throw new IllegalArgumentException("Could not connect to device");
-        }
-        return device;
-    }
-
-    /**
-     * Listener for new Android devices
-     */
-    private static class NewDeviceListener implements IDeviceChangeListener {
-        private IDevice mDevice;
-        private String mSerial;
-
-        public NewDeviceListener(String serial) {
-            mSerial = serial;
-        }
-
-        public void deviceChanged(IDevice device, int changeMask) {
-        }
-
-        public void deviceConnected(IDevice device) {
-            if (mSerial == null) {
-                setDevice(device);
-            } else if (mSerial.equals(device.getSerialNumber())) {
-                setDevice(device);
-            }
-        }
-
-        private synchronized void setDevice(IDevice device) {
-            mDevice = device;
-            notify();
-        }
-
-        public void deviceDisconnected(IDevice device) {
-        }
-
-        public IDevice waitForDevice(long waitTime) {
-            synchronized(this) {
-                if (mDevice == null) {
-                    try {
-                        wait(waitTime);
-                    } catch (InterruptedException e) {
-                        System.out.println("Waiting for device interrupted");
-                    }
-                }
-            }
-            return mDevice;
-        }
-    }
 
     /**
      * Main entry point.
@@ -202,6 +132,7 @@ public class DeviceTestRunner extends TestRunner {
     /**
      * Override parent to create DeviceTestSuite wrapper, instead of TestSuite
      */
+    @SuppressWarnings("unchecked")
     @Override
     protected TestResult runSingleMethod(String testCase, String method, boolean wait)
     throws Exception {
