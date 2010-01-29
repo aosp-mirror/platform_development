@@ -86,7 +86,7 @@
     </string-array>
     
     <!-- Used in app/Sample Device Admin -->
-    <string-array name="password_modes">
+    <string-array name="password_qualities">
         <item>Unspecified</item>
         <item>Something</item>
         <item>Numeric</item>

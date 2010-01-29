@@ -46,11 +46,11 @@
     <LinearLayout android:orientation="horizontal" android:gravity="center"
         android:layout_width="match_parent" android:layout_height="wrap_content">
 
-	    <Spinner android:id="@+id/password_mode"
+	    <Spinner android:id="@+id/password_quality"
 	        android:layout_width="wrap_content"
 	        android:layout_height="wrap_content"
 	        android:drawSelectorOnTop="true"
-	        android:prompt="@string/password_mode">
+	        android:prompt="@string/password_quality">
 	    </Spinner>
     
         <EditText android:id="@+id/password_length"

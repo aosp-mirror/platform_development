@@ -19,6 +19,7 @@ package com.example.android.apis.app;
 import com.example.android.apis.R;
 
 import android.app.Activity;
+import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.app.DeviceAdmin;
 import android.app.DevicePolicyManager;
@@ -28,6 +29,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Debug;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -51,7 +53,7 @@ public class SampleDeviceAdmin extends DeviceAdmin {
         return context.getSharedPreferences(DeviceAdmin.class.getName(), 0);
     }
     
-    static String PREF_PASSWORD_MODE = "password_mode";
+    static String PREF_PASSWORD_QUALITY = "password_quality";
     static String PREF_PASSWORD_LENGTH = "password_length";
     static String PREF_MAX_FAILED_PW = "max_failed_pw";
     
@@ -101,20 +103,21 @@ public class SampleDeviceAdmin extends DeviceAdmin {
         static final int RESULT_ENABLE = 1;
         
         DevicePolicyManager mDPM;
+        ActivityManager mAM;
         ComponentName mSampleDeviceAdmin;
         
         Button mEnableButton;
         Button mDisableButton;
         
-        // Password mode spinner choices
+        // Password quality spinner choices
         // This list must match the list found in samples/ApiDemos/res/values/arrays.xml
-        final static int mPasswordModeValues[] = new int[] {
-            DevicePolicyManager.PASSWORD_MODE_UNSPECIFIED,
-            DevicePolicyManager.PASSWORD_MODE_SOMETHING,
-            DevicePolicyManager.PASSWORD_MODE_NUMERIC,
-            DevicePolicyManager.PASSWORD_MODE_ALPHANUMERIC
+        final static int mPasswordQualityValues[] = new int[] {
+            DevicePolicyManager.PASSWORD_QUALITY_UNSPECIFIED,
+            DevicePolicyManager.PASSWORD_QUALITY_SOMETHING,
+            DevicePolicyManager.PASSWORD_QUALITY_NUMERIC,
+            DevicePolicyManager.PASSWORD_QUALITY_ALPHANUMERIC
         };
-        Spinner mPasswordMode;
+        Spinner mPasswordQuality;
         EditText mPasswordLength;
         Button mSetPasswordButton;
         
@@ -131,6 +134,7 @@ public class SampleDeviceAdmin extends DeviceAdmin {
             super.onCreate(savedInstanceState);
 
             mDPM = (DevicePolicyManager)getSystemService(Context.DEVICE_POLICY_SERVICE);
+            mAM = (ActivityManager)getSystemService(Context.ACTIVITY_SERVICE);
             mSampleDeviceAdmin = new ComponentName(Controller.this, SampleDeviceAdmin.class);
             
             setContentView(R.layout.sample_device_admin);
@@ -141,20 +145,20 @@ public class SampleDeviceAdmin extends DeviceAdmin {
             mDisableButton = (Button)findViewById(R.id.disable);
             mDisableButton.setOnClickListener(mDisableListener);
             
-            mPasswordMode = (Spinner)findViewById(R.id.password_mode);
+            mPasswordQuality = (Spinner)findViewById(R.id.password_quality);
             ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
-                    this, R.array.password_modes, android.R.layout.simple_spinner_item);
+                    this, R.array.password_qualities, android.R.layout.simple_spinner_item);
             adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-            mPasswordMode.setAdapter(adapter);
-            mPasswordMode.setOnItemSelectedListener(
+            mPasswordQuality.setAdapter(adapter);
+            mPasswordQuality.setOnItemSelectedListener(
                     new OnItemSelectedListener() {
                         public void onItemSelected(
                                 AdapterView<?> parent, View view, int position, long id) {
-                            setPasswordMode(mPasswordModeValues[position]);
+                            setPasswordQuality(mPasswordQualityValues[position]);
                         }
 
                         public void onNothingSelected(AdapterView<?> parent) {
-                            setPasswordMode(DevicePolicyManager.PASSWORD_MODE_UNSPECIFIED);
+                            setPasswordQuality(DevicePolicyManager.PASSWORD_QUALITY_UNSPECIFIED);
                         }
                     });
             mPasswordLength = (EditText)findViewById(R.id.password_length);
@@ -202,7 +206,7 @@ public class SampleDeviceAdmin extends DeviceAdmin {
             if (active) {
                 mEnableButton.setEnabled(false);
                 mDisableButton.setEnabled(true);
-                mPasswordMode.setEnabled(true);
+                mPasswordQuality.setEnabled(true);
                 mPasswordLength.setEnabled(true);
                 mSetPasswordButton.setEnabled(true);
                 mPassword.setEnabled(true);
@@ -212,7 +216,7 @@ public class SampleDeviceAdmin extends DeviceAdmin {
             } else {
                 mEnableButton.setEnabled(true);
                 mDisableButton.setEnabled(false);
-                mPasswordMode.setEnabled(false);
+                mPasswordQuality.setEnabled(false);
                 mPasswordLength.setEnabled(false);
                 mSetPasswordButton.setEnabled(false);
                 mPassword.setEnabled(false);
@@ -224,14 +228,14 @@ public class SampleDeviceAdmin extends DeviceAdmin {
         
         void updateControls() {
             SharedPreferences prefs = getSamplePreferences(this);
-            final int pwMode = prefs.getInt(PREF_PASSWORD_MODE,
-                    DevicePolicyManager.PASSWORD_MODE_UNSPECIFIED);
+            final int pwQuality = prefs.getInt(PREF_PASSWORD_QUALITY,
+                    DevicePolicyManager.PASSWORD_QUALITY_UNSPECIFIED);
             final int pwLength = prefs.getInt(PREF_PASSWORD_LENGTH, 0);
             final int maxFailedPw = prefs.getInt(PREF_MAX_FAILED_PW, 0);
             
-            for (int i=0; i<mPasswordModeValues.length; i++) {
-                if (mPasswordModeValues[i] == pwMode) {
-                    mPasswordMode.setSelection(i);
+            for (int i=0; i<mPasswordQualityValues.length; i++) {
+                if (mPasswordQualityValues[i] == pwQuality) {
+                    mPasswordQuality.setSelection(i);
                 }
             }
             mPasswordLength.setText(Integer.toString(pwLength));
@@ -240,22 +244,22 @@ public class SampleDeviceAdmin extends DeviceAdmin {
         
         void updatePolicies() {
             SharedPreferences prefs = getSamplePreferences(this);
-            final int pwMode = prefs.getInt(PREF_PASSWORD_MODE,
-                    DevicePolicyManager.PASSWORD_MODE_UNSPECIFIED);
+            final int pwQuality = prefs.getInt(PREF_PASSWORD_QUALITY,
+                    DevicePolicyManager.PASSWORD_QUALITY_UNSPECIFIED);
             final int pwLength = prefs.getInt(PREF_PASSWORD_LENGTH, 0);
             final int maxFailedPw = prefs.getInt(PREF_PASSWORD_LENGTH, 0);
             
             boolean active = mDPM.isAdminActive(mSampleDeviceAdmin);
             if (active) {
-                mDPM.setPasswordMode(mSampleDeviceAdmin, pwMode);
+                mDPM.setPasswordQuality(mSampleDeviceAdmin, pwQuality);
                 mDPM.setPasswordMinimumLength(mSampleDeviceAdmin, pwLength);
                 mDPM.setMaximumFailedPasswordsForWipe(mSampleDeviceAdmin, maxFailedPw);
             }
         }
         
-        void setPasswordMode(int mode) {
+        void setPasswordQuality(int quality) {
             SharedPreferences prefs = getSamplePreferences(this);
-            prefs.edit().putInt(PREF_PASSWORD_MODE, mode).commit();
+            prefs.edit().putInt(PREF_PASSWORD_QUALITY, quality).commit();
             updatePolicies();
         }
         
@@ -321,6 +325,14 @@ public class SampleDeviceAdmin extends DeviceAdmin {
 
         private OnClickListener mResetPasswordListener = new OnClickListener() {
             public void onClick(View v) {
+                if (mAM.isUserAMonkey()) {
+                    // Don't trust monkeys to do the right thing!
+                    AlertDialog.Builder builder = new AlertDialog.Builder(Controller.this);
+                    builder.setMessage("You can't reset my password because you are a monkey!");
+                    builder.setPositiveButton("I admit defeat", null);
+                    builder.show();
+                    return;
+                }
                 boolean active = mDPM.isAdminActive(mSampleDeviceAdmin);
                 if (active) {
                     mDPM.resetPassword(mPassword.getText().toString());
@@ -330,6 +342,14 @@ public class SampleDeviceAdmin extends DeviceAdmin {
 
         private OnClickListener mForceLockListener = new OnClickListener() {
             public void onClick(View v) {
+                if (mAM.isUserAMonkey()) {
+                    // Don't trust monkeys to do the right thing!
+                    AlertDialog.Builder builder = new AlertDialog.Builder(Controller.this);
+                    builder.setMessage("You can't lock my screen because you are a monkey!");
+                    builder.setPositiveButton("I admit defeat", null);
+                    builder.show();
+                    return;
+                }
                 boolean active = mDPM.isAdminActive(mSampleDeviceAdmin);
                 if (active) {
                     mDPM.lockNow();
@@ -339,14 +359,32 @@ public class SampleDeviceAdmin extends DeviceAdmin {
 
         private OnClickListener mWipeDataListener = new OnClickListener() {
             public void onClick(View v) {
+                if (mAM.isUserAMonkey()) {
+                    // Don't trust monkeys to do the right thing!
+                    AlertDialog.Builder builder = new AlertDialog.Builder(Controller.this);
+                    builder.setMessage("You can't wipe my data because you are a monkey!");
+                    builder.setPositiveButton("I admit defeat", null);
+                    builder.show();
+                    return;
+                }
                 AlertDialog.Builder builder = new AlertDialog.Builder(Controller.this);
                 builder.setMessage("This will erase all of your data.  Are you sure?");
                 builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
-                        boolean active = mDPM.isAdminActive(mSampleDeviceAdmin);
-                        if (active) {
-                            mDPM.wipeData(0);
-                        }
+                        AlertDialog.Builder builder = new AlertDialog.Builder(Controller.this);
+                        builder.setMessage("This is not a test.  "
+                                + "This WILL erase all of your data!  "
+                                + "Are you really absolutely sure?");
+                        builder.setPositiveButton("BOOM!", new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                                boolean active = mDPM.isAdminActive(mSampleDeviceAdmin);
+                                if (active) {
+                                    mDPM.wipeData(0);
+                                }
+                            }
+                        });
+                        builder.setNegativeButton("Oops, run away!", null);
+                        builder.show();
                     }
                 });
                 builder.setNegativeButton("No way!", null);

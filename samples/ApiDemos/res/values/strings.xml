@@ -448,7 +448,7 @@
         class for administering the user\'s device.</string>
     <string name="enable_admin">Enable Admin</string>
     <string name="disable_admin">Disable Admin</string>
-    <string name="password_mode">Password Mode</string>
+    <string name="password_quality">Password Quality</string>
     <string name="password_length_hint">Minimum Length</string>
     <string name="set_password">Set Password</string>
     <string name="password_hint">Password</string>
