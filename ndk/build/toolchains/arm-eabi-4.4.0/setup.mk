@@ -39,8 +39,8 @@ TARGET_CFLAGS.common := \
 
 ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
     TARGET_ARCH_CFLAGS := -march=armv7-a \
-                            -mfloat-abi=softfp \
-                            -mfpu=neon
+                          -mfloat-abi=softfp \
+                          -mfpu=vfp
     TARGET_ARCH_LDFLAGS := -Wl,--fix-cortex-a8
 else
     TARGET_ARCH_CFLAGS := -march=armv5te \
