@@ -93,12 +93,12 @@ Each supported ABI is identified by a unique name.
      - The Thumb-2 instruction set extension.
      - The VFP hardware FPU instructions.
 
-  More specifically, VFPv3-D32 is being used, which corresponds to 32
+  More specifically, VFPv3-D16 is being used, which corresponds to 16
   dedicated 64-bit floating point registers provided by the CPU.
 
-  Other extensions described by the v7-a ARM like Advanced SIMD (a.k.a. NEON)
-  or ThumbEE are optional to this ABI, which means that developers should
-  check *at* *runtime* whether the extensions are available and provide
+  Other extensions described by the v7-a ARM like Advanced SIMD (a.k.a. NEON),
+  VFPv3-D32 or ThumbEE are optional to this ABI, which means that developers
+  should check *at* *runtime* whether the extensions are available and provide
   alternative code paths if this is not the case.
 
   (Just like one typically does on x86 systems to check/use MMX/SSE2/etc...
