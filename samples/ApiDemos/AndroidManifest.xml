@@ -553,9 +553,7 @@
             </intent-filter>
         </activity>
 
-<!-- 
-// BEGIN_INCLUDE(device_admin_declaration)
--->
+<!-- BEGIN_INCLUDE(device_admin_declaration) -->
         <receiver android:name=".app.SampleDeviceAdmin"
                 android:label="@string/sample_device_admin"
                 android:description="@string/sample_device_admin_description"
@@ -566,9 +564,7 @@
                 <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
             </intent-filter>
         </receiver>
-<!-- 
-// END_INCLUDE(device_admin_declaration)
--->
+<!-- END_INCLUDE(device_admin_declaration) -->
 
         <!-- Voice Recognition Samples -->
 

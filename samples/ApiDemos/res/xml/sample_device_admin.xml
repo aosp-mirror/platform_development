@@ -14,9 +14,7 @@
      limitations under the License.
 -->
 
-<!-- 
-// BEGIN_INCLUDE(meta_data)
--->
+<!-- BEGIN_INCLUDE(meta_data) -->
 <device-admin xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-policies>
         <limit-password />
@@ -27,6 +25,4 @@
         <wipe-data />
     </uses-policies>
 </device-admin>
-<!-- 
-// END_INCLUDE(meta_data)
--->
+<!-- END_INCLUDE(meta_data) -->
