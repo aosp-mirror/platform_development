@@ -16,8 +16,8 @@
 
 package com.android.commands.monkey;
 
-import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.Random;
 
 /**
  * Class for generating MonkeyEvents from multiple scripts.
@@ -36,7 +36,7 @@ public class MonkeySourceRandomScript implements MonkeyEventSource {
     private MonkeySourceScript mCurrentSource = null;
 
     /** The random number generator */
-    private SecureRandom mRandom;
+    private Random mRandom;
 
     /**
      * Creates a MonkeySourceRandomScript instance with an additional setup script.
@@ -44,21 +44,23 @@ public class MonkeySourceRandomScript implements MonkeyEventSource {
      * @param setupFileName The name of the setup script file on the device.
      * @param scriptFileNames An ArrayList of the names of the script files to be run randomly.
      * @param throttle The amount of time to sleep in ms between events.
-     * @param seed The seed of the random number generator.
+     * @param randomizeThrottle Whether to randomize throttle.
+     * @param random The random number generator.
      */
     public MonkeySourceRandomScript(String setupFileName, ArrayList<String> scriptFileNames,
-            long throttle, long seed) {
+            long throttle, boolean randomizeThrottle, Random random) {
         if (setupFileName != null) {
-            mSetupSource = new MonkeySourceScript(setupFileName, throttle);
+            mSetupSource = new MonkeySourceScript(random, setupFileName, throttle,
+                    randomizeThrottle);
             mCurrentSource = mSetupSource;
         }
 
         for (String fileName: scriptFileNames) {
-            mScriptSources.add(new MonkeySourceScript(fileName, throttle));
+            mScriptSources.add(new MonkeySourceScript(random, fileName, throttle,
+                      randomizeThrottle));
         }
 
-        mRandom = new SecureRandom();
-        mRandom.setSeed((seed == 0) ? -1 : seed);
+        mRandom = random;
     }
 
     /**
@@ -66,10 +68,12 @@ public class MonkeySourceRandomScript implements MonkeyEventSource {
      *
      * @param scriptFileNames An ArrayList of the names of the script files to be run randomly.
      * @param throttle The amount of time to sleep in ms between events.
-     * @param seed The seed of the random number generator.
+     * @param randomizeThrottle Whether to randomize throttle.
+     * @param random The random number generator.
      */
-    public MonkeySourceRandomScript(ArrayList<String> scriptFileNames, long throttle, long seed) {
-        this(null, scriptFileNames, throttle, seed);
+    public MonkeySourceRandomScript(ArrayList<String> scriptFileNames, long throttle,
+            boolean randomizeThrottle, Random random) {
+        this(null, scriptFileNames, throttle, randomizeThrottle, random);
     }
 
     /**

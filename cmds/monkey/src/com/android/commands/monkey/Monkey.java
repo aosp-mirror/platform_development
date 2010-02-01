@@ -39,10 +39,12 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
 
 /**
  * Application that injects random key events and other actions into the system.
@@ -140,11 +142,17 @@ public class Monkey {
     /** The delay between event inputs **/
     long mThrottle = 0;
 
+    /** Whether to randomize each throttle (0-mThrottle ms) inserted between events. */
+    boolean mRandomizeThrottle = false;
+
     /** The number of iterations **/
     int mCount = 1000;
 
     /** The random number seed **/
     long mSeed = 0;
+
+    /** The random number generator **/
+    Random mRandom = null;
 
     /** Dropped-event statistics **/
     long mDroppedKeyEvents = 0;
@@ -421,19 +429,24 @@ public class Monkey {
             return -4;
         }
 
+        mRandom = new SecureRandom();
+        mRandom.setSeed((mSeed == 0) ? -1 : mSeed);
+
         if (mScriptFileNames != null && mScriptFileNames.size() == 1) {
             // script mode, ignore other options
-            mEventSource = new MonkeySourceScript(mScriptFileNames.get(0), mThrottle);
+            mEventSource = new MonkeySourceScript(mRandom, mScriptFileNames.get(0), mThrottle,
+                    mRandomizeThrottle);
             mEventSource.setVerbose(mVerbose);
 
             mCountEvents = false;
         } else if (mScriptFileNames != null && mScriptFileNames.size() > 1) {
             if (mSetupFileName != null) {
                 mEventSource = new MonkeySourceRandomScript(mSetupFileName, mScriptFileNames,
-                        mThrottle, mSeed);
+                        mThrottle, mRandomizeThrottle, mRandom);
                 mCount++;
             } else {
-                mEventSource = new MonkeySourceRandomScript(mScriptFileNames, mThrottle, mSeed);
+                mEventSource = new MonkeySourceRandomScript(mScriptFileNames, mThrottle,
+                        mRandomizeThrottle, mRandom);
             }
             mEventSource.setVerbose(mVerbose);
             mCountEvents = false;
@@ -450,7 +463,7 @@ public class Monkey {
             if (mVerbose >= 2) { // check seeding performance
                 System.out.println("// Seeded: " + mSeed);
             }
-            mEventSource = new MonkeySourceRandom(mSeed, mMainApps, mThrottle);
+            mEventSource = new MonkeySourceRandom(mRandom, mMainApps, mThrottle, mRandomizeThrottle);
             mEventSource.setVerbose(mVerbose);
             // set any of the factors that has been set
             for (int i = 0; i < MonkeySourceRandom.FACTORZ_COUNT; i++) {
@@ -599,6 +612,8 @@ public class Monkey {
                     mPkgWhitelistFile = nextOptionData();
                 } else if (opt.equals("--throttle")) {
                     mThrottle = nextOptionLong("delay (in milliseconds) to wait between events");
+                } else if (opt.equals("--randomize-throttle")) {
+                    mRandomizeThrottle = true;
                 } else if (opt.equals("--wait-dbg")) {
                     // do nothing - it's caught at the very start of run()
                 } else if (opt.equals("--dbg-no-events")) {
@@ -1068,7 +1083,8 @@ public class Monkey {
         usage.append("              [--wait-dbg] [--dbg-no-events]\n");
         usage.append("              [--setup scriptfile] [-f scriptfile [-f scriptfile] ...]\n");
         usage.append("              [--port port]\n");
-        usage.append("              [-s SEED] [-v [-v] ...] [--throttle MILLISEC]\n");
+        usage.append("              [-s SEED] [-v [-v] ...]\n");
+        usage.append("              [--throttle MILLISEC] [--randomize-throttle]\n");
         usage.append("              COUNT");
         System.err.println(usage.toString());
     }

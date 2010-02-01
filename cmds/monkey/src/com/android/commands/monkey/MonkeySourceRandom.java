@@ -23,9 +23,7 @@ import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.WindowManagerImpl;
 
-import java.security.SecureRandom;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.Random;
 
 /**
@@ -202,7 +200,8 @@ public class MonkeySourceRandom implements MonkeyEventSource {
         return -1;
     }
 
-    public MonkeySourceRandom(long seed, ArrayList<ComponentName> MainApps, long throttle) {
+    public MonkeySourceRandom(Random random, ArrayList<ComponentName> MainApps,
+            long throttle, boolean randomizeThrottle) {
         // default values for random distributions
         // note, these are straight percentages, to match user input (cmd line args)
         // but they will be converted to 0..1 values before the main loop runs.
@@ -216,10 +215,9 @@ public class MonkeySourceRandom implements MonkeyEventSource {
         mFactors[FACTOR_FLIP] = 1.0f;
         mFactors[FACTOR_ANYTHING] = 15.0f;
 
-        mRandom = new SecureRandom();
-        mRandom.setSeed((seed == 0) ? -1 : seed);
+        mRandom = random;
         mMainApps = MainApps;
-        mQ = new MonkeyEventQueue(throttle);
+        mQ = new MonkeyEventQueue(random, throttle, randomizeThrottle);
     }
 
     /**

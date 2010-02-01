@@ -26,6 +26,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.NoSuchElementException;
+import java.util.Random;
 
 /**
  * monkey event queue. It takes a script to produce events sample script format:
@@ -115,9 +116,10 @@ public class MonkeySourceScript implements MonkeyEventSource {
      * @param filename The filename of the script (on the device).
      * @param throttle The amount of time in ms to sleep between events.
      */
-    public MonkeySourceScript(String filename, long throttle) {
+    public MonkeySourceScript(Random random, String filename, long throttle,
+            boolean randomizeThrottle) {
         mScriptFileName = filename;
-        mQ = new MonkeyEventQueue(throttle);
+        mQ = new MonkeyEventQueue(random, throttle, randomizeThrottle);
     }
 
     /**
