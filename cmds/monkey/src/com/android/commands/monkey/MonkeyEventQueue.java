@@ -49,7 +49,7 @@ public class MonkeyEventQueue extends LinkedList<MonkeyEvent> {
                 throttle %= mThrottle;
                 ++throttle;
             }
-            super.add(new MonkeyThrottleEvent(mThrottle));
+            super.add(new MonkeyThrottleEvent(throttle));
         }
     }
 }
