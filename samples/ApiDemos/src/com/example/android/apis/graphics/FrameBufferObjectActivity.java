@@ -48,13 +48,20 @@ public class FrameBufferObjectActivity extends Activity {
         private Triangle mTriangle;
         private Cube mCube;
         private float mAngle;
-        private boolean mDebugOffscreenRenderer = false;
+        /**
+         * Setting this to true will change the behavior  of this sample. It
+         * will suppress the normally onscreen rendering, and it will cause the
+         * rendering that would normally be done to the offscreen FBO
+         * be rendered onscreen instead. This can be helpful in debugging the
+         * rendering algorithm.
+         */
+        private static final boolean DEBUG_RENDER_OFFSCREEN_ONSCREEN = false;
 
         public void onDrawFrame(GL10 gl) {
             checkGLError(gl);
             if (mContextSupportsFrameBufferObject) {
                 GL11ExtensionPack gl11ep = (GL11ExtensionPack) gl;
-                if (mDebugOffscreenRenderer) {
+                if (DEBUG_RENDER_OFFSCREEN_ONSCREEN) {
                     drawOffscreenImage(gl, mSurfaceWidth, mSurfaceHeight);
                 } else {
                     gl11ep.glBindFramebufferOES(GL11ExtensionPack.GL_FRAMEBUFFER_OES, mFramebuffer);
@@ -231,8 +238,10 @@ public class FrameBufferObjectActivity extends Activity {
             String extensions = " " + gl.glGetString(GL10.GL_EXTENSIONS) + " ";
             // The extensions string is padded with spaces between extensions, but not
             // necessarily at the beginning or end. For simplicity, add spaces at the
-            // beginning and end of the extensions string to make it easy to find an
-            // extension.
+            // beginning and end of the extensions string and the extension string.
+            // This means we can avoid special-case checks for the first or last
+            // extension, as well as avoid special-case checks when an extension name
+            // is the same as the first part of another extension name.
             return extensions.indexOf(" " + extension + " ") >= 0;
         }
     }

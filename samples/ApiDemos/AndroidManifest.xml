@@ -4,9 +4,9 @@
      Licensed under the Apache License, Version 2.0 (the "License");
      you may not use this file except in compliance with the License.
      You may obtain a copy of the License at
-  
+
           http://www.apache.org/licenses/LICENSE-2.0
-  
+
      Unless required by applicable law or agreed to in writing, software
      distributed under the License is distributed on an "AS IS" BASIS,
      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -34,7 +34,7 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-feature android:name="android.hardware.camera" />
     <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
-    
+
     <application android:name="ApiDemosApplication"
             android:label="@string/activity_sample_code"
             android:icon="@drawable/app_sample_code" >
@@ -42,7 +42,7 @@
         <!-- This is how we can request a library but still allow the app
              to be installed if it doesn't exist. -->
         <uses-library android:name="com.example.will.never.exist" android:required="false" />
-        
+
         <activity android:name="ApiDemos">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -191,11 +191,11 @@
                 <category android:name="android.intent.category.SAMPLE_CODE" />
             </intent-filter>
         </activity>
-        
+
         <activity android:name=".app.ReorderTwo" />
         <activity android:name=".app.ReorderThree" />
         <activity android:name=".app.ReorderFour" />
-        
+
         <activity android:name=".app.SetWallpaperActivity"
                   android:label="@string/activity_setwallpaper">
             <intent-filter>
@@ -275,7 +275,7 @@
         </activity>
 
         <service android:name=".app.ForegroundService" />
-        
+
         <activity android:name=".app.ForegroundService$Controller"
                 android:label="@string/activity_foreground_service_controller"
                 android:launchMode="singleTop">
@@ -402,11 +402,11 @@
             <!-- whenever the user invokes search while in this Activity. -->
             <meta-data android:name="android.app.default_searchable"
                        android:value=".app.SearchQueryResults" />
-            
+
             <!-- This is not the typical way to define android.app.default_searchable, -->
             <!-- and we show it here only because we wish to confine the search demo to this -->
             <!-- section of the ApiDemos application. -->
-            
+
             <!-- For typical applications, it's simpler to define android.app.default_searchable -->
             <!-- just once, at the application level, where it serves as a default for all of -->
             <!-- the Activities in your package. -->
@@ -421,24 +421,24 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
             </intent-filter>
-            
+
             <!-- This intent-filter identifies this activity as "searchable" -->
-            
+
             <intent-filter>
                 <action android:name="android.intent.action.SEARCH" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
-            
+
             <!-- This metadata entry provides further configuration details for searches -->
             <!-- that are handled by this activity. -->
-            
+
             <meta-data android:name="android.app.searchable"
                        android:resource="@xml/searchable" />
         </activity>
 
         <!-- This provider declaration informs the Search Manager that you have a provider of -->
         <!-- Search suggestions, and provides information about how to access it. -->
-        
+
         <provider android:name=".app.SearchSuggestionSampleProvider"
                   android:authorities="com.example.android.apis.SuggestionProvider" />
 
@@ -446,12 +446,12 @@
 
         <!-- This section of sample code shows how your application can add shortcuts to -->
         <!-- the launcher (home screen).  Shortcuts have a three step life cycle. -->
-        
+
         <!-- 1.  Your application offers to provide shortcuts to the launcher.  When -->
         <!--     the user installs a shortcut, an activity within your application -->
         <!--     generates the actual shortcut and returns it to the launcher, where it -->
         <!--     is shown to the user as an icon. -->
-        
+
         <!-- 2.  Any time the user clicks on an installed shortcut, an intent is sent. -->
         <!--     Typically this would then be handled as necessary by an activity within -->
         <!--     your application. -->
@@ -1427,7 +1427,7 @@
                 <category android:name="android.intent.category.SAMPLE_CODE" />
             </intent-filter>
         </activity>
-        
+
         <activity android:name=".graphics.CompressedTextureActivity"
                 android:label="Graphics/OpenGL ES/Compressed Texture"
                 android:theme="@android:style/Theme.NoTitleBar"
@@ -1437,7 +1437,7 @@
                 <category android:name="android.intent.category.SAMPLE_CODE" />
             </intent-filter>
         </activity>
-                
+
         <activity android:name=".graphics.CubeMapActivity"
                 android:label="Graphics/OpenGL ES/Cube Map"
                 android:theme="@android:style/Theme.NoTitleBar"
@@ -1447,8 +1447,8 @@
                 <category android:name="android.intent.category.SAMPLE_CODE" />
             </intent-filter>
         </activity>
-        
-                        
+
+
         <activity android:name=".graphics.FrameBufferObjectActivity"
                 android:label="Graphics/OpenGL ES/Frame Buffer Object"
                 android:theme="@android:style/Theme.NoTitleBar"
@@ -1458,7 +1458,7 @@
                 <category android:name="android.intent.category.SAMPLE_CODE" />
             </intent-filter>
         </activity>
-        
+
         <activity android:name=".graphics.GLSurfaceViewActivity"
                 android:label="Graphics/OpenGL ES/GLSurfaceView"
                 android:theme="@android:style/Theme.NoTitleBar"
@@ -1478,7 +1478,7 @@
                 <category android:name="android.intent.category.SAMPLE_CODE" />
             </intent-filter>
         </activity>
-        
+
         <activity android:name=".graphics.MatrixPaletteActivity"
                 android:label="Graphics/OpenGL ES/Matrix Palette Skinning"
                 android:configChanges="orientation|keyboardHidden">
@@ -1487,7 +1487,7 @@
                 <category android:name="android.intent.category.SAMPLE_CODE" />
             </intent-filter>
         </activity>
-        
+
         <activity android:name=".graphics.TranslucentGLSurfaceViewActivity"
                 android:label="Graphics/OpenGL ES/Translucent GLSurfaceView"
                 android:theme="@style/Theme.Translucent"
@@ -1497,7 +1497,7 @@
                 <category android:name="android.intent.category.SAMPLE_CODE" />
             </intent-filter>
         </activity>
-        
+
         <activity android:name=".graphics.TriangleActivity"
                 android:label="Graphics/OpenGL ES/Textured Triangle"
                 android:theme="@android:style/Theme.NoTitleBar"
@@ -1507,7 +1507,7 @@
                 <category android:name="android.intent.category.SAMPLE_CODE" />
             </intent-filter>
         </activity>
-        
+
         <activity android:name=".graphics.spritetext.SpriteTextActivity"
                 android:label="Graphics/OpenGL ES/Sprite Text"
                 android:theme="@android:style/Theme.NoTitleBar"
@@ -1517,7 +1517,7 @@
                 <category android:name="android.intent.category.SAMPLE_CODE" />
             </intent-filter>
         </activity>
-        
+
         <activity android:name=".graphics.TouchRotateActivity"
                 android:label="Graphics/OpenGL ES/Touch Rotate"
                 android:theme="@android:style/Theme.NoTitleBar"
@@ -1527,7 +1527,7 @@
                 <category android:name="android.intent.category.SAMPLE_CODE" />
             </intent-filter>
         </activity>
-        
+
         <activity android:name=".graphics.PolyToPoly" android:label="Graphics/PolyToPoly">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -1761,7 +1761,7 @@
                 <category android:name="android.intent.category.SAMPLE_CODE" />
             </intent-filter>
         </activity>
-        
+
         <activity android:name=".graphics.PurgeableBitmap" android:label="Graphics/PurgeableBitmap/NonPurgeable">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -1855,7 +1855,7 @@
                 <category android:name="android.intent.category.SAMPLE_CODE" />
             </intent-filter>
         </activity>
-        
+
         <activity android:name=".text.LogTextBox1" android:label="Text/LogTextBox">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

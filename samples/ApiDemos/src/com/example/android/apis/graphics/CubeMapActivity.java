@@ -208,8 +208,10 @@ public class CubeMapActivity extends Activity {
             String extensions = " " + gl.glGetString(GL10.GL_EXTENSIONS) + " ";
             // The extensions string is padded with spaces between extensions, but not
             // necessarily at the beginning or end. For simplicity, add spaces at the
-            // beginning and end of the extensions string to make it easy to find an
-            // extension.
+            // beginning and end of the extensions string and the extension string.
+            // This means we can avoid special-case checks for the first or last
+            // extension, as well as avoid special-case checks when an extension name
+            // is the same as the first part of another extension name.
             return extensions.indexOf(" " + extension + " ") >= 0;
         }
     }
