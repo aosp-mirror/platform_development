@@ -1,0 +1,19 @@
+<html>
+<body>
+<h1> Sample Sync Adapter </h1>
+
+<p>
+<h3> List of Users </h3>
+<table>
+
+{% for user in users %}
+  <tr><td>
+  <a
+  href="/edit_user?user={{ user.key.id}}">{{ user.firstname }}&nbsp; {{ user.lastname }} </a>
+  </td><td>&nbsp;&nbsp;<a href="/user_friends?user={{ user.handle }}">Friends</a> </td>
+  </tr>
+{% endfor %}
+</table>
+</p>
+
+<a href = "/add_user"> Insert More </a>
