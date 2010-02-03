@@ -67,6 +67,12 @@ See test_defs.xsd for more information.
     coverage_target="framework"
     continuous="true" />
 
+<test name="frameworks-services"
+    build_path="frameworks/base/services/tests/servicestests"
+    package="com.android.frameworks.servicestests"
+    coverage_target="framework"
+    continuous="true" />
+
 <test name="frameworks-telephony"
     build_path="frameworks/base/telephony/tests/telephonytests"
     package="com.android.frameworks.telephonytests"
