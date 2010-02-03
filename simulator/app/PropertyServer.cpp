@@ -148,7 +148,11 @@ void PropertyServer::SetDefaultProperties(void)
         { "debug.sf.showfps", "0" },
         { "default", "default" },
 
+        /* Stagefright options */
         { "media.stagefright.enable-player", "true" },
+        { "media.stagefright.enable-meta", "true" },
+        { "media.stagefright.enable-scan", "true" },
+        { "media.stagefright.enable-http", "true" },
     };
 
     for (int i = 0; i < NELEM(propList); i++)
