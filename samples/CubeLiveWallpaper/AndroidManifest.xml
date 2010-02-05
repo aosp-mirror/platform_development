@@ -23,6 +23,8 @@
 
     <uses-feature android:name="android.software.live_wallpaper" />
 
+    <uses-feature android:name="android.software.live_wallpaper" />
+
     <application
         android:label="@string/wallpapers"
         android:icon="@drawable/ic_launcher_wallpaper">
