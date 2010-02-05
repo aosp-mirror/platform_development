@@ -77,6 +77,8 @@
         type="APPS" />
     <coverage_target name="Phone" build_path="packages/apps/Phone"
         type="APPS" />
+    <coverage_target name="QuickSearchBox" build_path="packages/apps/QuickSearchBox"
+        type="APPS" />
     <coverage_target name="Launcher2" build_path="packages/apps/Launcher2"
         type="APPS" />
     <coverage_target name="Mms" build_path="packages/apps/Mms" type="APPS" />

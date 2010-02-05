@@ -458,18 +458,6 @@ See test_defs.xsd for more information.
     class="com.android.email.SmallTests"
     coverage_target="Email" />
 
-<test name="globalsearch"
-    build_path="packages/apps/GlobalSearch"
-    package="com.android.globalsearch.tests"
-    coverage_target="GlobalSearch"
-    continuous="true" />
-
-<test name="globalsearch-permission"
-    build_path="packages/apps/GlobalSearch"
-    package="com.android.globalsearch.permission.tests"
-    coverage_target="GlobalSearch"
-    continuous="true" />
-
 <test name="media"
     build_path="frameworks/base/media/tests/MediaFrameworkTest"
     package="com.android.mediaframeworktest"
@@ -540,6 +528,12 @@ See test_defs.xsd for more information.
     package="com.android.phone.tests"
     continuous="true"
     coverage_target="Phone" />
+
+<test name="quicksearchbox"
+    build_path="packages/apps/QuickSearchBox"
+    package="com.android.quicksearchbox.tests"
+    coverage_target="QuickSearchBox"
+    continuous="true" />
 
 <!-- obsolete?
 <test name="ringtone"
