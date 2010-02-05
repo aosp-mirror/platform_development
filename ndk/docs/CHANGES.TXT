@@ -28,6 +28,14 @@ IMPORTANT CHANGES:
 
   More details about ABIs is now available in docs/CPU-ARCH-ABIS.TXT
 
+- Added a new sample static library, named "cpufeatures" to detect
+  CPU Features at runtime. For now, this can be used to detect the
+  availability of ARM Advanced SIMD (a.k.a. NEON) instruction support
+  at runtime in order to provide optimized code paths for specific
+  operations.
+
+  See docs/CPU-FEATURES.TXT for details.
+
 - GCC 4.4.0 is now used by default by the NDK. It generates better code than
   GCC 4.2.1, which was used in previous releases. However, the compiler's C++
   frontend is also a lot more pedantic regarding certain template constructs
