@@ -1,0 +1,92 @@
+Android NDK CPU Features detection library:
+-------------------------------------------
+
+This NDK provides a small library named "cpufeatures" that can be used at
+runtime to detect the target device's CPU family and the optional features
+it supports.
+
+Usage:
+------
+
+The library is available from sources/cpufeatures. It provides an Android.mk
+build script that can be used to build it as a static library.
+
+To use it, you must:
+
+  * add 'cpufeatures' to your APP_MODULES list in your Application.mk
+
+  * include 'sources/cpufeatures/Android.mk' at the start or end of your
+    Android.mk file.
+
+  * add 'sources/cpufeatures' to your LOCAL_C_INCLUDES definition.
+
+  * add 'cpufeatures' to your LOCAL_STATIC_LIBRARIES definition when building
+    your final shared library.
+
+  your source code can then #include <cpu-features.h> to compile against it.
+
+Here is a simple example:
+
+<NDK>/apps/<appname>/Application.mk:
+    APP_PROJECT_PATH := <project-path>
+    APP_MODULES      := <your-modules> cpufeatures
+
+<project-path>/jni/Android.mk:
+    LOCAL_PATH := $(call my-dir)
+
+    include $(CLEAR_VARS)
+    LOCAL_MODULE := <your-module-name>
+    LOCAL_C_INCLUDES += sources/cpufeatures
+    LOCAL_SRC_FILES := <your-source-files>
+    LOCAL_STATIC_LIBRARIES += cpufeatures
+    include $(BUILD_SHARED_LIBRARY)
+
+    include sources/cpufeature/Android.mk
+
+
+Features:
+---------
+
+Two functions are provided for now:
+
+   AndroidCpuFamily   android_getCpuFamily();
+
+Returns the target device's CPU Family as an enum. For now, the only
+supported family is ANDROID_CPU_FAMILY_ARM.
+
+
+   uint64_t   android_getCpuFeatures();
+
+Returns the set of optional features supported by the device's CPU.
+The result is a set of bit-flags, each corresponding to one CPU
+Family-specific optional feature.
+
+Currently, only the following flags are defined, for the ARM CPU Family:
+
+   ANDROID_CPU_ARM_FEATURE_ARMv7
+      Indicates that the device's CPU supports the ARMv7-A instruction
+      set as supported by the "armeabi-v7a" abi (see CPU-ARCH-ABIS.TXT). 
+      This corresponds to Thumb-2 and VFPv3-D16 instructions.
+
+   ANDROID_CPU_ARM_FEATURE_VFPv3
+      Indicates that the device's CPU supports the VFPv3 hardware FPU
+      instruction set extension. Due to the definition of 'armeabi-v7a',
+      this will always be the case if ANDROID_CPU_ARM_FEATURE_ARMv7 is
+      returned.
+
+      Note that this corresponds to the minimum profile VFPv3-D16 that
+      only provides 16 hardware FP registers.
+
+   ANDROID_CPU_ARM_FEATURE_NEON
+      Indicates that the device's CPU supports the ARM Advanced SIMD
+      (a.k.a. NEON) vector instruction set extension. Note that ARM
+      mandates that such CPUs also implement VFPv3-D32, which provides
+      32 hardware FP registers (shared with the NEON unit).
+
+
+Important Note:
+---------------
+
+The cpufeatures library will be updated to support more CPU families and
+optional features in the future. It is designed to work as-is on all
+official Android platform versions.
