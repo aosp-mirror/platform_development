@@ -105,8 +105,6 @@
 	<classpathentry kind="src" path="external/tagsoup/src"/>
 	<classpathentry kind="src" path="external/apache-http/src"/>
 	<classpathentry kind="lib" path="out/target/common/obj/JAVA_LIBRARIES/google-common_intermediates/javalib.jar"/>
-	<classpathentry kind="lib" path="out/target/common/obj/JAVA_LIBRARIES/google-framework_intermediates/javalib.jar"/>
-	<classpathentry kind="lib" path="out/target/common/obj/JAVA_LIBRARIES/googlelogin-client_intermediates/javalib.jar"/>
 	<classpathentry kind="lib" path="out/target/common/obj/JAVA_LIBRARIES/gsf-client_intermediates/javalib.jar"/>
 	<classpathentry kind="lib" path="out/target/common/obj/JAVA_LIBRARIES/mms-common_intermediates/javalib.jar"/>
 	<classpathentry kind="lib" path="packages/apps/Calculator/arity-2.0.2.jar"/>
