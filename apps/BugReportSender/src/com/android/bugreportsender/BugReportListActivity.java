@@ -24,7 +24,10 @@ import android.os.Bundle;
 import android.os.FileObserver;
 import android.os.Handler;
 import android.util.Log;
+import android.view.ContextMenu;
+import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
@@ -32,6 +35,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 
 /**
  * Shows a list of bug reports currently in /sdcard/bugreports
@@ -39,6 +43,18 @@ import java.util.Collections;
 public class BugReportListActivity extends ListActivity {
     private static final String TAG = "BugReportListActivity";
     private static final File REPORT_DIR = new File("/sdcard/bugreports");
+    private static final int SYSTEM_LOG_ID = 1;
+    private static final int MEMORY_ID = 2;
+    private static final int CPU_ID = 3;
+    private static final int PROCRANK_ID = 4;
+    private static final HashMap<Integer, String> ID_MAP = new HashMap<Integer, String>();
+
+    static {
+        ID_MAP.put(SYSTEM_LOG_ID, "SYSTEM LOG");
+        ID_MAP.put(MEMORY_ID, "MEMORY INFO");
+        ID_MAP.put(CPU_ID, "CPU INFO");
+        ID_MAP.put(PROCRANK_ID, "PROCRANK");
+    }
 
     private ArrayAdapter<String> mAdapter = null;
     private ArrayList<File> mFiles = null;
@@ -60,6 +76,17 @@ public class BugReportListActivity extends ListActivity {
         };
 
         setListAdapter(mAdapter);
+        registerForContextMenu(getListView());
+    }
+
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View v,
+                                    ContextMenu.ContextMenuInfo menuInfo) {
+        super.onCreateContextMenu(menu, v, menuInfo);
+        menu.add(0, SYSTEM_LOG_ID, 0, "System Log");
+        menu.add(0, CPU_ID, 0, "CPU Info");
+        menu.add(0, MEMORY_ID, 0, "Memory Info");
+        menu.add(0, PROCRANK_ID, 0, "Procrank");
     }
 
     @Override
@@ -93,6 +120,31 @@ public class BugReportListActivity extends ListActivity {
             }
             startActivity(intent);
         }
+    }
+
+
+    @Override
+    public boolean onContextItemSelected(MenuItem item) {
+      AdapterView.AdapterContextMenuInfo info =
+              (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
+      if (info.position >= mFiles.size()) {
+        return true;
+      }
+      int id = item.getItemId();
+      switch (id) {
+          case SYSTEM_LOG_ID: // drop down
+          case MEMORY_ID:     // drop down
+          case CPU_ID:        // drop down
+          case PROCRANK_ID:
+          File file = mFiles.get(info.position);
+          Intent intent = new Intent(Intent.ACTION_VIEW);
+          intent.setDataAndType(Uri.fromFile(file), "vnd.android/bugreport");
+          intent.putExtra("section", ID_MAP.get(id));
+          startActivity(intent);
+          return true;
+      default:
+        return super.onContextItemSelected(item);
+      }
     }
 
     private void scanDirectory() {
