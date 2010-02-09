@@ -250,6 +250,156 @@ all-makefiles-under = $(wildcard $1/*/Android.mk)
 # -----------------------------------------------------------------------------
 all-subdir-makefiles = $(call all-makefiles-under,$(call my-dir))
 
+# =============================================================================
+#
+# Source file tagging support.
+#
+# Each source file listed in LOCAL_SRC_FILES can have any number of
+# 'tags' associated to it. A tag name must not contain space, and its
+# usage can vary.
+#
+# For example, the 'debug' tag is used to sources that must be built
+# in debug mode, the 'arm' tag is used for sources that must be built
+# using the 32-bit instruction set on ARM platforms, and 'neon' is used
+# for sources that must be built with ARM Advanced SIMD (a.k.a. NEON)
+# support.
+#
+# More tags might be introduced in the future.
+#
+#  LOCAL_SRC_TAGS contains the list of all tags used (initially empty)
+#  LOCAL_SRC_FILES contains the list of all source files.
+#  LOCAL_SRC_TAG.<tagname> contains the set of source file names tagged
+#      with <tagname>
+#  LOCAL_SRC_FILES_TAGS.<filename> contains the set of tags for a given
+#      source file name
+#
+# Tags are processed by a toolchain-specific function (e.g. TARGET-compute-cflags)
+# which will call various functions to compute source-file specific settings.
+# These are currently stored as:
+#
+#  LOCAL_SRC_FILES_TARGET_CFLAGS.<filename> contains the list of
+#      target-specific C compiler flags used to compile a given
+#      source file. This is set by the function TARGET-set-cflags
+#      defined in the toolchain's setup.mk script.
+#
+#  LOCAL_SRC_FILES_TEXT.<filename> contains the 'text' that will be
+#      displayed along the label of the build output line. For example
+#      'thumb' or 'arm  ' with ARM-based toolchains.
+#
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Macro    : clear-all-src-tags
+# Returns  : remove all source file tags and associated data.
+# Usage    : $(clear-all-src-tags)
+# -----------------------------------------------------------------------------
+clear-all-src-tags = \
+$(foreach __tag,$(LOCAL_SRC_TAGS), \
+    $(eval LOCAL_SRC_TAG.$(__tag) := $(empty)) \
+) \
+$(foreach __src,$(LOCAL_SRC_FILES), \
+    $(eval LOCAL_SRC_FILES_TAGS.$(__src) := $(empty)) \
+    $(eval LOCAL_SRC_FILES_TARGET_CFLAGS.$(__src) := $(empty)) \
+    $(eval LOCAL_SRC_FILES_TEXT.$(__src) := $(empty)) \
+) \
+$(eval LOCAL_SRC_TAGS := $(empty_set))
+
+# -----------------------------------------------------------------------------
+# Macro    : tag-src-files
+# Arguments: 1: list of source files to tag
+#            2: tag name (must not contain space)
+# Usage    : $(call tag-src-files,<list-of-source-files>,<tagname>)
+# Rationale: Add a tag to a list of source files
+# -----------------------------------------------------------------------------
+tag-src-files = \
+$(eval LOCAL_SRC_TAGS := $(call set_insert,$2,$(LOCAL_SRC_TAGS))) \
+$(eval LOCAL_SRC_TAG.$2 := $(call set_union,$1,$(LOCAL_SRC_TAG.$2))) \
+$(foreach __src,$1, \
+    $(eval LOCAL_SRC_FILES_TAGS.$(__src) += $2) \
+)
+
+# -----------------------------------------------------------------------------
+# Macro    : get-src-files-with-tag
+# Arguments: 1: tag name
+# Usage    : $(call get-src-files-with-tag,<tagname>)
+# Return   : The list of source file names that have been tagged with <tagname>
+# -----------------------------------------------------------------------------
+get-src-files-with-tag = $(LOCAL_SRC_TAG.$1)
+
+# -----------------------------------------------------------------------------
+# Macro    : get-src-files-without-tag
+# Arguments: 1: tag name
+# Usage    : $(call get-src-files-without-tag,<tagname>)
+# Return   : The list of source file names that have NOT been tagged with <tagname>
+# -----------------------------------------------------------------------------
+get-src-files-without-tag = $(filter-out $(LOCAL_SRC_TAG.$1),$(LOCAL_SRC_FILES))
+
+# -----------------------------------------------------------------------------
+# Macro    : set-src-files-target-cflags
+# Arguments: 1: list of source files
+#            2: list of compiler flags
+# Usage    : $(call set-src-files-target-cflags,<sources>,<flags>)
+# Rationale: Set or replace the set of compiler flags that will be applied
+#            when building a given set of source files. This function should
+#            normally be called from the toolchain-specific function that
+#            computes all compiler flags for all source files.
+# -----------------------------------------------------------------------------
+set-src-files-target-cflags = $(foreach __src,$1,$(eval LOCAL_SRC_FILES_TARGET_CFLAGS.$(__src) := $2))
+
+# -----------------------------------------------------------------------------
+# Macro    : add-src-files-target-cflags
+# Arguments: 1: list of source files
+#            2: list of compiler flags
+# Usage    : $(call add-src-files-target-cflags,<sources>,<flags>)
+# Rationale: A variant of set-src-files-target-cflags that can be used
+#            to append, instead of replace, compiler flags for specific
+#            source files.
+# -----------------------------------------------------------------------------
+add-src-files-target-cflags = $(foreach __src,$1,$(eval LOCAL_SRC_FILES_TARGET_CFLAGS.$(__src) += $2))
+
+# -----------------------------------------------------------------------------
+# Macro    : get-src-file-target-cflags
+# Arguments: 1: single source file name
+# Usage    : $(call get-src-file-target-cflags,<source>)
+# Rationale: Return the set of target-specific compiler flags that must be
+#            applied to a given source file. These must be set prior to this
+#            call using set-src-files-target-cflags or add-src-files-target-cflags
+# -----------------------------------------------------------------------------
+get-src-file-target-cflags = $(LOCAL_SRC_FILES_TARGET_CFLAGS.$1)
+
+# -----------------------------------------------------------------------------
+# Macro    : set-src-files-text
+# Arguments: 1: list of source files
+#            2: text
+# Usage    : $(call set-src-files-text,<sources>,<text>)
+# Rationale: Set or replace the 'text' associated to a set of source files.
+#            The text is a very short string that complements the build
+#            label. For example, it will be either 'thumb' or 'arm  ' for
+#            ARM-based toolchains. This function must be called by the
+#            toolchain-specific functions that processes all source files.
+# -----------------------------------------------------------------------------
+set-src-files-text = $(foreach __src,$1,$(eval LOCAL_SRC_FILES_TEXT.$(__src) := $2))
+
+# -----------------------------------------------------------------------------
+# Macro    : get-src-file-text
+# Arguments: 1: single source file
+# Usage    : $(call get-src-file-text,<source>)
+# Rationale: Return the 'text' associated to a given source file when
+#            set-src-files-text was called.
+# -----------------------------------------------------------------------------
+get-src-file-text = $(LOCAL_SRC_FILES_TEXT.$1)
+
+# This should only be called for debugging the source files tagging system
+dump-src-file-tags = \
+$(info LOCAL_SRC_TAGS := $(LOCAL_SRC_TAGS)) \
+$(info LOCAL_SRC_FILES = $(LOCAL_SRC_FILES)) \
+$(foreach __tag,$(LOCAL_SRC_TAGS),$(info LOCAL_SRC_TAG.$(__tag) = $(LOCAL_SRC_TAG.$(__tag)))) \
+$(foreach __src,$(LOCAL_SRC_FILES),$(info LOCAL_SRC_FILES_TAGS.$(__src) = $(LOCAL_SRC_FILES_TAGS.$(__src)))) \
+$(info WITH arm = $(call get-src-files-with-tag,arm)) \
+$(info WITHOUT arm = $(call get-src-files-without-tag,arm)) \
+$(foreach __src,$(LOCAL_SRC_FILES),$(info LOCAL_SRC_FILES_TARGET_CFLAGS.$(__src) = $(LOCAL_SRC_FILES_TARGET_CFLAGS.$(__src)))) \
+$(foreach __src,$(LOCAL_SRC_FILES),$(info LOCAL_SRC_FILES_TEXT.$(__src) = $(LOCAL_SRC_FILES_TEXT.$(__src)))) \
+
 
 # =============================================================================
 #
@@ -366,10 +516,10 @@ $$(_OBJ): PRIVATE_SRC      := $$(_SRC)
 $$(_OBJ): PRIVATE_OBJ      := $$(_OBJ)
 $$(_OBJ): PRIVATE_MODULE   := $$(LOCAL_MODULE)
 $$(_OBJ): PRIVATE_ARM_MODE := $$(LOCAL_ARM_MODE)
-$$(_OBJ): PRIVATE_ARM_TEXT := $$(LOCAL_ARM_TEXT)
+$$(_OBJ): PRIVATE_ARM_TEXT := $$(call get-src-file-text,$1)
 $$(_OBJ): PRIVATE_CC       := $$($$(my)CC)
 $$(_OBJ): PRIVATE_CFLAGS   := $$($$(my)CFLAGS) \
-                              $$($$(my)$(LOCAL_ARM_MODE)_$(LOCAL_BUILD_MODE)_CFLAGS) \
+                              $$(call get-src-file-target-cflags,$(1)) \
                               $$(LOCAL_C_INCLUDES:%=-I%) \
                               -I$$(LOCAL_PATH) \
                               $$(LOCAL_CFLAGS) \
@@ -424,10 +574,10 @@ $$(_OBJ): PRIVATE_SRC      := $$(_SRC)
 $$(_OBJ): PRIVATE_OBJ      := $$(_OBJ)
 $$(_OBJ): PRIVATE_MODULE   := $$(LOCAL_MODULE)
 $$(_OBJ): PRIVATE_ARM_MODE := $$(LOCAL_ARM_MODE)
-$$(_OBJ): PRIVATE_ARM_TEXT := $$(LOCAL_ARM_TEXT)
+$$(_OBJ): PRIVATE_ARM_TEXT := $$(call get-src-file-text,$1)
 $$(_OBJ): PRIVATE_CXX      := $$($$(my)CXX)
 $$(_OBJ): PRIVATE_CXXFLAGS := $$($$(my)CXXFLAGS) \
-                              $$($$(my)$(LOCAL_ARM_MODE)_$(LOCAL_BUILD_MODE)_CFLAGS) \
+                              $$(call get-src-file-target-cflags,$(1)) \
                               $$(LOCAL_C_INCLUDES:%=-I%) \
                               -I$$(LOCAL_PATH) \
                               $$(LOCAL_CFLAGS) \

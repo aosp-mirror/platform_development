@@ -441,3 +441,28 @@ LOCAL_ARM_MODE
     NOTE: Setting APP_OPTIM to 'debug' in your Application.mk will also force
           the generation of ARM binaries as well. This is due to bugs in the
           toolchain debugger that don't deal too well with thumb code.
+
+LOCAL_ARM_NEON
+    Defining this variable to 'true' allows the use of ARM Advanced SIMD
+    (a.k.a. NEON) GCC intrinsics in your C and C++ sources, as well as
+    NEON instructions in Assembly files.
+
+    You should only define it when targetting the 'armeabi-v7a' ABI that
+    corresponds to the ARMv7 instruction set. Note that not all ARMv7
+    based CPUs support the NEON instruction set extensions and that you
+    should perform runtime detection to be able to use this code at runtime
+    safely. To lean more about this, please read the documentation at
+    docs/CPU-ARM-NEON.TXT and docs/CPU-FEATURES.TXT.
+
+    Alternatively, you can also specify that only specific source files
+    may be compiled with NEON support by using the '.neon' suffix, as
+    in:
+
+        LOCAL_SRC_FILES = foo.c.neon bar.c zoo.c.arm.neon
+
+    In this example, 'foo.c' will be compiled in thumb+neon mode,
+    'bar.c' will be compiled in 'thumb' mode, and 'zoo.c' will be
+    compiled in 'arm+neon' mode.
+
+    Note that the '.neon' suffix must appear after the '.arm' suffix
+    if you use both (i.e. foo.c.arm.neon works, but not foo.c.neon.arm !)

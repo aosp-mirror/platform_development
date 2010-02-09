@@ -104,6 +104,10 @@ Each supported ABI is identified by a unique name.
   (Just like one typically does on x86 systems to check/use MMX/SSE2/etc...
    specialized instructions).
 
+  You can check docs/CPU-FEATURES.TXT to see how to perform these runtime
+  checks, and docs/CPU-ARM-NEON.TXT to learn about the NDK's support for
+  building NEON-capable machine code too.
+
   IMPORTANT NOTE: This ABI enforces that all double values are passed during
   function calls in 'core' register pairs, instead of dedicated FP ones.
   However, all internal computations can be performed with the FP registers
