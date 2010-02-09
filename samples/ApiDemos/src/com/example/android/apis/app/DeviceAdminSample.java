@@ -29,7 +29,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.os.Debug;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -47,7 +46,7 @@ import android.widget.AdapterView.OnItemSelectedListener;
  * Example of a do-nothing admin class.  When enabled, it lets you control
  * some of its policy and reports when there is interesting activity.
  */
-public class SampleDeviceAdmin extends DeviceAdmin {
+public class DeviceAdminSample extends DeviceAdmin {
 
     static SharedPreferences getSamplePreferences(Context context) {
         return context.getSharedPreferences(DeviceAdmin.class.getName(), 0);
@@ -104,7 +103,7 @@ public class SampleDeviceAdmin extends DeviceAdmin {
         
         DevicePolicyManager mDPM;
         ActivityManager mAM;
-        ComponentName mSampleDeviceAdmin;
+        ComponentName mDeviceAdminSample;
         
         Button mEnableButton;
         Button mDisableButton;
@@ -135,9 +134,9 @@ public class SampleDeviceAdmin extends DeviceAdmin {
 
             mDPM = (DevicePolicyManager)getSystemService(Context.DEVICE_POLICY_SERVICE);
             mAM = (ActivityManager)getSystemService(Context.ACTIVITY_SERVICE);
-            mSampleDeviceAdmin = new ComponentName(Controller.this, SampleDeviceAdmin.class);
+            mDeviceAdminSample = new ComponentName(Controller.this, DeviceAdminSample.class);
             
-            setContentView(R.layout.sample_device_admin);
+            setContentView(R.layout.device_admin_sample);
 
             // Watch for button clicks.
             mEnableButton = (Button)findViewById(R.id.enable);
@@ -189,7 +188,12 @@ public class SampleDeviceAdmin extends DeviceAdmin {
                 }
                 public void onTextChanged(CharSequence s, int start, int before, int count) {
                     try {
-                        setMaxFailedPw(Integer.parseInt(s.toString()));
+                        int maxFailCount = Integer.parseInt(s.toString());
+                        if (maxFailCount > 0) {
+                            Toast.makeText(Controller.this, "WARNING: Phone will wipe after " +
+                                    s + " incorrect passwords", Toast.LENGTH_SHORT).show();
+                        }
+                        setMaxFailedPw(maxFailCount);
                     } catch (NumberFormatException e) {
                     }
                 }
@@ -202,7 +206,7 @@ public class SampleDeviceAdmin extends DeviceAdmin {
         }
 
         void updateButtonStates() {
-            boolean active = mDPM.isAdminActive(mSampleDeviceAdmin);
+            boolean active = mDPM.isAdminActive(mDeviceAdminSample);
             if (active) {
                 mEnableButton.setEnabled(false);
                 mDisableButton.setEnabled(true);
@@ -247,13 +251,13 @@ public class SampleDeviceAdmin extends DeviceAdmin {
             final int pwQuality = prefs.getInt(PREF_PASSWORD_QUALITY,
                     DevicePolicyManager.PASSWORD_QUALITY_UNSPECIFIED);
             final int pwLength = prefs.getInt(PREF_PASSWORD_LENGTH, 0);
-            final int maxFailedPw = prefs.getInt(PREF_PASSWORD_LENGTH, 0);
+            final int maxFailedPw = prefs.getInt(PREF_MAX_FAILED_PW, 0);
             
-            boolean active = mDPM.isAdminActive(mSampleDeviceAdmin);
+            boolean active = mDPM.isAdminActive(mDeviceAdminSample);
             if (active) {
-                mDPM.setPasswordQuality(mSampleDeviceAdmin, pwQuality);
-                mDPM.setPasswordMinimumLength(mSampleDeviceAdmin, pwLength);
-                mDPM.setMaximumFailedPasswordsForWipe(mSampleDeviceAdmin, maxFailedPw);
+                mDPM.setPasswordQuality(mDeviceAdminSample, pwQuality);
+                mDPM.setPasswordMinimumLength(mDeviceAdminSample, pwLength);
+                mDPM.setMaximumFailedPasswordsForWipe(mDeviceAdminSample, maxFailedPw);
             }
         }
         
@@ -286,9 +290,9 @@ public class SampleDeviceAdmin extends DeviceAdmin {
             switch (requestCode) {
                 case RESULT_ENABLE:
                     if (resultCode == Activity.RESULT_OK) {
-                        Log.i("SampleDeviceAdmin", "Admin enabled!");
+                        Log.i("DeviceAdminSample", "Admin enabled!");
                     } else {
-                        Log.i("SampleDeviceAdmin", "Admin enable FAILED!");
+                        Log.i("DeviceAdminSample", "Admin enable FAILED!");
                     }
                     return;
             }
@@ -301,7 +305,7 @@ public class SampleDeviceAdmin extends DeviceAdmin {
                 // Launch the activity to have the user enable our admin.
                 Intent intent = new Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
                 intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN,
-                        mSampleDeviceAdmin);
+                        mDeviceAdminSample);
                 intent.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION,
                         "Additional text explaining why this needs to be added.");
                 startActivityForResult(intent, RESULT_ENABLE);
@@ -310,7 +314,7 @@ public class SampleDeviceAdmin extends DeviceAdmin {
 
         private OnClickListener mDisableListener = new OnClickListener() {
             public void onClick(View v) {
-                mDPM.removeActiveAdmin(mSampleDeviceAdmin);
+                mDPM.removeActiveAdmin(mDeviceAdminSample);
                 updateButtonStates();
             }
         };
@@ -333,7 +337,7 @@ public class SampleDeviceAdmin extends DeviceAdmin {
                     builder.show();
                     return;
                 }
-                boolean active = mDPM.isAdminActive(mSampleDeviceAdmin);
+                boolean active = mDPM.isAdminActive(mDeviceAdminSample);
                 if (active) {
                     mDPM.resetPassword(mPassword.getText().toString());
                 }
@@ -350,7 +354,7 @@ public class SampleDeviceAdmin extends DeviceAdmin {
                     builder.show();
                     return;
                 }
-                boolean active = mDPM.isAdminActive(mSampleDeviceAdmin);
+                boolean active = mDPM.isAdminActive(mDeviceAdminSample);
                 if (active) {
                     mDPM.lockNow();
                 }
@@ -377,7 +381,7 @@ public class SampleDeviceAdmin extends DeviceAdmin {
                                 + "Are you really absolutely sure?");
                         builder.setPositiveButton("BOOM!", new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int which) {
-                                boolean active = mDPM.isAdminActive(mSampleDeviceAdmin);
+                                boolean active = mDPM.isAdminActive(mDeviceAdminSample);
                                 if (active) {
                                     mDPM.wipeData(0);
                                 }

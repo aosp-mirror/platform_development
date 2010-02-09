@@ -545,7 +545,7 @@
 
         <!-- Device Admin Samples -->
 
-        <activity android:name=".app.SampleDeviceAdmin$Controller"
+        <activity android:name=".app.DeviceAdminSample$Controller"
                 android:label="@string/activity_sample_device_admin">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -554,12 +554,12 @@
         </activity>
 
 <!-- BEGIN_INCLUDE(device_admin_declaration) -->
-        <receiver android:name=".app.SampleDeviceAdmin"
+        <receiver android:name=".app.DeviceAdminSample"
                 android:label="@string/sample_device_admin"
                 android:description="@string/sample_device_admin_description"
                 android:permission="android.permission.BIND_DEVICE_ADMIN">
             <meta-data android:name="android.app.device_admin"
-                       android:resource="@xml/sample_device_admin" />
+                       android:resource="@xml/device_admin_sample" />
             <intent-filter>
                 <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
             </intent-filter>
