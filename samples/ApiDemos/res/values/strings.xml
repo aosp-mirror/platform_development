@@ -228,6 +228,10 @@
     <!--  app/content examples strings  -->
     <!-- ============================== -->
 
+    <string name="activity_external_storage">Content/Storage/External Storage</string>
+    <string name="create">Create</string>
+    <string name="delete">Delete</string>
+    
     <string name="activity_styled_text">Content/Resources/<i>Styled</i> <b>Text</b></string>
     <string name="styled_text_rsrc">Initialized from a resource:</string>
     <string name="styled_text">Plain, <b>bold</b>, <i>italic</i>, <b><i>bold-italic</i></b></string>

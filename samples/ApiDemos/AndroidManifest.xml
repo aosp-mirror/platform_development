@@ -28,6 +28,7 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.SET_WALLPAPER" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <!-- We will request access to the camera, saying we require a camera
          of some sort but not one with autofocus capability. -->
@@ -587,6 +588,14 @@
         <!-- ************************************* -->
         <!--        CONTENT PACKAGE SAMPLES        -->
         <!-- ************************************* -->
+
+        <activity android:name=".content.ExternalStorage" android:label="@string/activity_external_storage">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+                <category android:name="android.intent.category.EMBED" />
+            </intent-filter>
+        </activity>
 
         <activity android:name=".content.StyledText" android:label="@string/activity_styled_text">
             <intent-filter>
