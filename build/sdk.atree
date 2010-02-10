@@ -72,7 +72,10 @@ sdk/files/devices.xml tools/lib/devices.xml
 # emacs support from sdk.git
 sdk/files/android.el tools/lib/android.el
 
-# samples
+# samples to include in the sdk samples package
+#
+# the list here should match the list of samples that we generate docs for, 
+# (see web_docs_sample_code_flags in frameworks/base/Android.mk)
 development/samples/source.properties     samples/${PLATFORM_NAME}/source.properties
 development/apps/GestureBuilder           samples/${PLATFORM_NAME}/GestureBuilder
 development/samples/BluetoothChat         samples/${PLATFORM_NAME}/BluetoothChat
@@ -80,6 +83,7 @@ development/samples/Home                  samples/${PLATFORM_NAME}/Home
 development/samples/LunarLander           samples/${PLATFORM_NAME}/LunarLander
 development/samples/NotePad               samples/${PLATFORM_NAME}/NotePad
 development/samples/ApiDemos              samples/${PLATFORM_NAME}/ApiDemos
+development/samples/SampleSyncAdapter     samples/${PLATFORM_NAME}/SampleSyncAdapter
 development/samples/SkeletonApp           samples/${PLATFORM_NAME}/SkeletonApp
 development/samples/Snake                 samples/${PLATFORM_NAME}/Snake
 development/samples/SoftKeyboard          samples/${PLATFORM_NAME}/SoftKeyboard
