@@ -1,0 +1,83 @@
+<p>This sample demonstrates how to create a live wallpaper and bundle it in an
+<code>.apk</code> that users can install on their devices.</p>
+
+<p>In terms of implementation, a live wallpaper is very similar to a regular
+Android <a href="../../../reference/android/app/Service.html">service</a>. The
+only difference is the addition of a new method, <a
+href="../../../reference/android/service/wallpaper/WallpaperService.
+html#onCreateEngine()"><code>onCreateEngine()</code></a>, whose goal is to
+create a <a
+href="../../../reference/android/service/wallpaper/WallpaperService.Engine.html">
+<code>WallpaperService.Engine</code></a>. The engine is responsible for
+handling the lifecycle and drawing of a wallpaper. The system provides a surface
+on which you can draw, just like you would with a <a
+href="../../../reference/android/view/SurfaceView.html"><code>SurfaceView</code></a>.
+The wallpapers you create can respond to touch events on the screen and
+have access to all the facilities of the platform: SGL (2D drawing), OpenGL (3D
+drawing), GPS, accelerometers, network access, and so on. </p>
+
+<p>The examples in this application show how to set up a wallpaper service that
+creates a <code>WallpaperService.Engine</code> to manage the service lifecycle,
+render the wallpaper, handle touch events, and so on. The examples also show how
+a wallpaper should stop drawing when its visibility changes, for example, when
+the user launches an application that covers the home screen. Drawing only when
+visible is an important implementation guideline for live wallpapers because it
+minimizes the wallpaper's impact on system performance and battery life.
+</p>
+
+<p>The application includes two wallpaper services and a wallpaper settings 
+activity:<p>
+
+<ul>
+<li><a
+href="src/com/example/android/livecubes/cube1/CubeWallpaper1.html"><code>
+CubeWallpaper1</code></a> &mdash; a wallpaper service that draws and animates a
+wire-frame cube to a <a
+href="../../../reference/android/graphics/Canvas.html"><code>Canvas</code></a>.
+</li>
+<li><a
+href="src/com/example/android/livecubes/cube2/CubeWallpaper2.html"><code>CubeWallpaper2</code></a>
+&mdash; a wallpaper service that draws and animates a
+wire-frame shape to a <code>Canvas</code>. The shape is set by the user, by means
+of the <code>cube2.CubeWallpaper2Settings</code> settings activity (see below). The
+wallpaper service implements a listener callback method that captures the user's
+wallpaper shape preference. </li>
+<li><a
+href="src/com/example/android/livecubes/cube2/CubeWallpaper2Settings.html"><code>CubeWallpaper2Settings</code></a>
+&mdash; a wallpaper service that draws and
+animates a wire-frame shape to a <code>Canvas</code>. The shape is set by the
+user through a simple settings activity,
+<code>cube2.CubeWallpaper2Settings</code>, also included in the app. The
+wallpaper service implements a listener callback method that captures the user's
+wallpaper shape preference. </li>
+</ul>
+
+<p>If you are developing a live wallpaper, remember that the feature is
+supported only on Android 2.1 (API level 7) and higher versions of the platform.
+To ensure that your application can only be installed on devices that support
+live wallpapers, remember to add the following to the application's manifest
+before publishing to Android Market:</p>
+
+<ul>
+<li><code>&lt;uses-sdk android:minSdkVersion="7" /&gt;</code>, which indicates 
+to Android Market and the platform that your application requires Android 2.1 or 
+higher. For more information, see the <a href="../../../guide/appendix/api-levels.html">API Levels</a>
+and the documentation for the 
+<a href="../../../guide/topics/manifest/uses-sdk-element.html"><code>&lt;uses-sdk&gt;</code></a>
+element.</li>
+<li><code>&lt;uses-feature android:name="android.software.live_wallpaper" /&gt;</code>, 
+which tells Android Market that your application includes a live wallpaper.
+Android Market uses this feature as a filter, when presenting users lists of
+available applications. When you declaring this feature, Android Market
+displays your application only to users whose devices support live wallpapers,
+while hiding it from other devices on which it would not be able to run. For
+more information, see the documentation for the
+<a href="../../../guide/topics/manifest/uses-feature-element.html"><code>&lt;uses-feature&gt;</code></a>
+element.</li>
+</ul>
+
+<p>For more information about live wallpapers, see the 
+<a href="../../articles/live-wallpapers.html">Live Wallpapers</a> article. </p>
+
+<img alt="Screenshot 1" src="../images/CubeLiveWallpaper1.png" />
+<img alt="Screenshot 3" src="../images/CubeLiveWallpaper3.png" />
