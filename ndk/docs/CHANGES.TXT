@@ -28,13 +28,23 @@ IMPORTANT CHANGES:
 
   More details about ABIs is now available in docs/CPU-ARCH-ABIS.TXT
 
-- Added a new sample static library, named "cpufeatures" to detect
-  CPU Features at runtime. For now, this can be used to detect the
-  availability of ARM Advanced SIMD (a.k.a. NEON) instruction support
-  at runtime in order to provide optimized code paths for specific
-  operations.
+- A small static library named 'cpufeatures' is provided with source code
+  and can be used at runtime to determine the CPU features supported by the
+  target device. It should run on all Android platforms, starting from 1.5.
 
-  See docs/CPU-FEATURES.TXT for details.
+  For more information, see docs/CPU-FEATURES.TXT
+
+- Support for the optional ARM Advanced SIMD (a.k.a. NEON) instruction set
+  extension through the use the LOCAL_ARM_NEON variable in Android.mk, or
+  the '.neon' suffix when listing source files.
+
+  Neon is an *optional* instruction set extension, and not all Android ARMv7
+  devices will support it. You will need to use the 'cpufeatures' library to
+  determine if such code can be used at runtime, and provide alternate code
+  paths if this is not the case. This is similar to MMX/SSE/3DNow on x86
+  platforms.
+
+  For more information, see docs/CPU-ARM-NEON.TXT
 
 - GCC 4.4.0 is now used by default by the NDK. It generates better code than
   GCC 4.2.1, which was used in previous releases. However, the compiler's C++
@@ -86,6 +96,10 @@ IMPORTANT CHANGES:
 OTHER FIXES & CHANGES:
 
 - Actually use the awk version detected by host-setup.sh during the build.
+
+- Only allow undefined symbols when LOCAL_ALLOW_UNDEFINED_SYMBOLS is set
+  to 'true', just like the documentation says it works. Also fix a typo
+  in CLEAR_VARS that prevented this variable from being cleared properly.
 
 - Added --prebuilt-ndk=FILE option to build/tools/make-release.sh script to
   package a new experimental NDK package archive from the current source tree

@@ -60,6 +60,34 @@ TARGET_thumb_debug_CFLAGS := $(TARGET_thumb_release_CFLAGS) \
                              -marm \
                              -fno-omit-frame-pointer
 
+# This function will be called to determine the target CFLAGS used to build
+# a C or Assembler source file, based on its tags.
+#
+# NOTE: ARM Advanced SIMD (a.k.a. NEON) is not supported with this toolchain.
+#
+TARGET-process-src-files-tags = \
+$(eval __arm_sources := $(call get-src-files-with-tag,arm)) \
+$(eval __thumb_sources := $(call get-src-files-without-tag,arm)) \
+$(eval __debug_sources := $(call get-src-files-with-tag,debug)) \
+$(eval __release_sources := $(call get-src-files-without-tag,debug)) \
+$(call set-src-files-target-cflags, \
+    $(call set_intersection,$(__arm_sources),$(__debug_sources)), \
+    $(TARGET_arm_debug_CFLAGS)) \
+$(call set-src-files-target-cflags,\
+    $(call set_intersection,$(__arm_sources),$(__release_sources)),\
+    $(TARGET_arm_release_CFLAGS)) \
+$(call set-src-files-target-cflags,\
+    $(call set_intersection,$(__arm_sources),$(__debug_sources)),\
+    $(TARGET_arm_debug_CFLAGS)) \
+$(call set-src-files-target-cflags,\
+    $(call set_intersection,$(__thumb_sources),$(__release_sources)),\
+    $(TARGET_thumb_release_CFLAGS)) \
+$(call set-src-files-target-cflags,\
+    $(call set_intersection,$(__thumb_sources),$(__debug_sources)),\
+    $(TARGET_thumb_debug_CFLAGS)) \
+$(call set-src-files-text,$(__arm_sources),arm$(space)$(space)) \
+$(call set-src-files-text,$(__thumb_sources),thumb)
+
 TARGET_CC       := $(TOOLCHAIN_PREFIX)gcc
 TARGET_CFLAGS   := $(TARGET_CFLAGS.common)
 
