@@ -20,7 +20,6 @@
         <limit-password />
         <watch-login />
         <reset-password />
-        <limit-unlock />
         <force-lock />
         <wipe-data />
     </uses-policies>
