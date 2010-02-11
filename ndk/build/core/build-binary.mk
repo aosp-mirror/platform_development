@@ -59,10 +59,10 @@ else
 endif
 
 #
-# If LOCAL_ALLOW_UNDEFINED_SYMBOLS, the linker will allow the generation
+# If LOCAL_ALLOW_UNDEFINED_SYMBOLS is not true, the linker will allow the generation
 # of a binary that uses undefined symbols.
 #
-ifeq ($(strip $(LOCAL_ALLOW_UNDEFINED_SYMBOLS)),)
+ifneq ($(LOCAL_ALLOW_UNDEFINED_SYMBOLS),true)
   LOCAL_LDFLAGS := $(LOCAL_LDFLAGS) $($(my)NO_UNDEFINED_LDFLAGS)
 endif
 
@@ -75,9 +75,7 @@ endif
 # We make the default 'thumb'
 #
 LOCAL_ARM_MODE := $(strip $(LOCAL_ARM_MODE))
-ifeq ($(LOCAL_ARM_MODE),)
-  LOCAL_ARM_MODE := thumb
-else
+ifdef LOCAL_ARM_MODE
   ifneq ($(words $(LOCAL_ARM_MODE)),1)
       $(call __ndk_info,   LOCAL_ARM_MODE in $(LOCAL_MAKEFILE) must be one word, not '$(LOCAL_ARM_MODE)')
       $(call __ndk_error, Aborting)
@@ -89,12 +87,6 @@ else
   )
 endif
 
-LOCAL_ARM_TEXT_arm   = arm$(space)$(space)
-LOCAL_ARM_TEXT_thumb = thumb
-
-LOCAL_ARM_CFLAGS := $(TARGET_$(LOCAL_ARM_MODE)_$(LOCAL_BUILD_MODE)_CFLAGS)
-LOCAL_ARM_TEXT   := $(LOCAL_ARM_TEXT_$(LOCAL_ARM_MODE))
-
 # As a special case, the original Android build system
 # allows one to specify that certain source files can be
 # forced to build in ARM mode by using a '.arm' suffix
@@ -105,36 +97,70 @@ LOCAL_ARM_TEXT   := $(LOCAL_ARM_TEXT_$(LOCAL_ARM_MODE))
 # to build source file $(LOCAL_PATH)/foo.c as ARM
 #
 
+# As a special extension, the NDK also supports the .neon extension suffix
+# to indicate that a single file can be compiled with ARM NEON support
+# We must support both foo.c.neon and foo.c.arm.neon here
 #
-# Build C source files into .o
+# Also, if LOCAL_ARM_NEON is set to 'true', force Neon mode for all source
+# files
 #
 
-ifeq ($(LOCAL_ARM_MODE),arm)
-    arm_sources   := $(LOCAL_SRC_FILES)
-else
-    arm_sources   := $(filter %.arm,$(LOCAL_SRC_FILES))
-    thumb_sources := $(filter-out %.arm,$(LOCAL_SRC_FILES))
+neon_sources  := $(filter %.neon,$(LOCAL_SRC_FILES))
+neon_sources  := $(neon_sources:%.neon=%)
+
+LOCAL_ARM_NEON := $(strip $(LOCAL_ARM_NEON))
+ifdef LOCAL_ARM_NEON
+  $(if $(filter-out true false,$(LOCAL_ARM_NEON)),\
+    $(call __ndk_info,LOCAL_ARM_NEON must be defined either to 'true' or 'false' in $(LOCAL_MAKEFILE), not '$(LOCAL_ARM_NEON)')\
+    $(call __ndk_error,Aborting) \
+  )
+endif
+ifeq ($(LOCAL_ARM_NEON),true)
+  neon_sources += $(LOCAL_SRC_FILES:%.neon=%))
 endif
 
-# First, build the 'thumb' sources
+neon_sources := $(strip $(neon_sources))
+ifdef neon_sources
+  ifneq ($(TARGET_ARCH_ABI),armeabi-v7a)
+    $(call __ndk_info,NEON support is only possible for armeabi-v7a ABI)
+    $(call __ndk_info,Please add checks afainst TARGET_ARCH_ABI in $(LOCAL_MAKEFILE))
+    $(call __ndk_error,Aborting)
+  endif
+  $(call tag-src-files,$(neon_sources:%.arm=%),neon)
+endif
+
+LOCAL_SRC_FILES := $(LOCAL_SRC_FILES:%.neon=%)
+
+# strip the .arm suffix from LOCAL_SRC_FILES
+# and tag the relevant sources with the 'arm' tag
 #
-LOCAL_ARM_MODE := thumb
+arm_sources     := $(filter %.arm,$(LOCAL_SRC_FILES))
+arm_sources     := $(arm_sources:%.arm=%)
+thumb_sources   := $(filter-out %.arm,$(LOCAL_SRC_FILES))
+LOCAL_SRC_FILES := $(arm_sources) $(thumb_sources)
 
-$(foreach src,$(filter %.c,$(thumb_sources)), $(call compile-c-source,$(src)))
-$(foreach src,$(filter %.S,$(thumb_sources)), $(call compile-s-source,$(src)))
+ifeq ($(LOCAL_ARM_MODE),arm)
+    arm_sources := $(LOCAL_SRC_FILES)
+endif
+ifeq ($(LOCAL_ARM_MODE),thumb)
+    arm_sources := $(empty)
+endif
+$(call tag-src-files,$(arm_sources),arm)
 
-$(foreach src,$(filter %$(LOCAL_CPP_EXTENSION),$(thumb_sources)),\
-    $(call compile-cpp-source,$(src)))
-
-# Then, the 'ARM' ones
+# Process all source file tags to determine toolchain-specific
+# target compiler flags, and text.
 #
-LOCAL_ARM_MODE := arm
-arm_sources := $(arm_sources:%.arm=%)
+$(call TARGET-process-src-files-tags)
 
-$(foreach src,$(filter %.c,$(arm_sources)), $(call compile-c-source,$(src)))
-$(foreach src,$(filter %.S,$(arm_sources)), $(call compile-s-source,$(src)))
+# only call dump-src-file-tags during debugging
+#$(dump-src-file-tags)
 
-$(foreach src,$(filter %$(LOCAL_CPP_EXTENSION),$(arm_sources)),\
+# Build the sources to object files
+#
+$(foreach src,$(filter %.c,$(LOCAL_SRC_FILES)), $(call compile-c-source,$(src)))
+$(foreach src,$(filter %.S,$(LOCAL_SRC_FILES)), $(call compile-s-source,$(src)))
+
+$(foreach src,$(filter %$(LOCAL_CPP_EXTENSION),$(LOCAL_SRC_FILES)),\
     $(call compile-cpp-source,$(src)))
 
 #
