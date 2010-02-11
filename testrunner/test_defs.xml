@@ -561,12 +561,12 @@ See test_defs.xsd for more information.
     description="Android STL."
     extra_build_args="ASTL_TESTS=1" />
 
-<!-- pending patch 820
+<!-- Google Test -->
 <test-native name="gtest"
     build_path="external/gtest"
     description="Google test."
     extra_build_args="GTEST_TESTS=1" />
--->
+
 
 <!-- host java tests -->
 <test-host name="cts-appsecurity"

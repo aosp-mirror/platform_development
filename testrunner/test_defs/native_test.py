@@ -86,7 +86,7 @@ class NativeTestSuite(test_suite.AbstractTestSuite):
 
       # Single quotes are needed to prevent the shell splitting it.
       output = adb.SendShellCommand("'%s 2>&1;echo -n exit code:$?'" %
-                                    full_path,
+                                    "(cd /sdcard;%s)" % full_path,
                                     int(options.timeout))
       success = output.endswith("exit code:0")
       logger.Log("%s... %s" % (f, success and "ok" or "failed"))
