@@ -54,10 +54,16 @@
             android:layout_below="@id/wait_for_debugger"
             android:layout_alignParentLeft="true" />
 
+        <Spinner android:id="@+id/pointer_location"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/separator"
+            android:layout_alignParentLeft="true" />
+
         <CheckBox android:id="@+id/show_load"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@id/separator"
+            android:layout_below="@id/pointer_location"
             android:layout_alignParentLeft="true"
             android:text="@string/development_settings_show_load_text" />
 
