@@ -52,6 +52,7 @@ public class DevelopmentSettings extends Activity {
     private Button mDebugAppButton;
     private CheckBox mWaitForDebuggerCB;
     private CheckBox mAlwaysFinishCB;
+    private Spinner mPointerLocationSpinner;
     private CheckBox mShowLoadCB;
     private CheckBox mShowCpuCB;
     private CheckBox mEnableGLCB;
@@ -68,6 +69,7 @@ public class DevelopmentSettings extends Activity {
     private String mDebugApp;
     private boolean mWaitForDebugger;
     private boolean mAlwaysFinish;
+    private int mPointerLocation;
     private int mProcessLimit;
     private boolean mShowSleep;
     private boolean mShowXmpp;
@@ -94,6 +96,16 @@ public class DevelopmentSettings extends Activity {
         mWaitForDebuggerCB.setOnClickListener(mWaitForDebuggerClicked);
         mAlwaysFinishCB = (CheckBox)findViewById(R.id.always_finish);
         mAlwaysFinishCB.setOnClickListener(mAlwaysFinishClicked);
+        mPointerLocationSpinner = (Spinner)findViewById(R.id.pointer_location);
+        mPointerLocationSpinner.setOnItemSelectedListener(mPointerLocationChanged);
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(
+                this,
+                android.R.layout.simple_spinner_item,
+                new String[] {
+                        "No Pointer Location",
+                        "Pointer Location" });
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        mPointerLocationSpinner.setAdapter(adapter);
         mShowLoadCB = (CheckBox)findViewById(R.id.show_load);
         mShowLoadCB.setOnClickListener(mShowLoadClicked);
         mShowCpuCB = (CheckBox)findViewById(R.id.show_cpu);
@@ -113,7 +125,7 @@ public class DevelopmentSettings extends Activity {
         mCompatibilityModeCB.setOnClickListener(mCompatibilityModeClicked);
         mMaxProcsSpinner = (Spinner)findViewById(R.id.max_procs);
         mMaxProcsSpinner.setOnItemSelectedListener(mMaxProcsChanged);
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(
+        adapter = new ArrayAdapter<String>(
                 this,
                 android.R.layout.simple_spinner_item,
                 new String[] {
@@ -169,6 +181,7 @@ public class DevelopmentSettings extends Activity {
         super.onResume();
         updateDebugOptions();
         updateFinishOptions();
+        updatePointerLocationOptions();
         updateProcessLimitOptions();
         updateSharedOptions();
         updateFlingerOptions();
@@ -219,6 +232,17 @@ public class DevelopmentSettings extends Activity {
         mAlwaysFinish = Settings.System.getInt(
             getContentResolver(), Settings.System.ALWAYS_FINISH_ACTIVITIES, 0) != 0;
         mAlwaysFinishCB.setChecked(mAlwaysFinish);
+    }
+
+    private void writePointerLocationOptions() {
+        Settings.System.putInt(getContentResolver(),
+                Settings.System.POINTER_LOCATION, mPointerLocation);
+    }
+
+    private void updatePointerLocationOptions() {
+        mPointerLocation = Settings.System.getInt(getContentResolver(),
+                Settings.System.POINTER_LOCATION, 0);
+        mPointerLocationSpinner.setSelection(mPointerLocation);
     }
 
     private void writeProcessLimitOptions() {
@@ -417,6 +441,18 @@ public class DevelopmentSettings extends Activity {
             // other development settings code.
             writeXmppOptions();
             updateXmppOptions();
+        }
+    };
+
+    private Spinner.OnItemSelectedListener mPointerLocationChanged
+                                    = new Spinner.OnItemSelectedListener() {
+        public void onItemSelected(android.widget.AdapterView av, View v,
+                                    int position, long id) {
+            mPointerLocation = position;
+            writePointerLocationOptions();
+        }
+
+        public void onNothingSelected(android.widget.AdapterView av) {
         }
     };
 
