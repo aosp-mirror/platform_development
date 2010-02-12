@@ -1,12 +1,27 @@
 <p>A sample application that demonstrates Android's pluggable voice recognition framework.</p>
 
-<p>This application includes a sample voice recognition service, and a settings activity
-for that service. It shows the basic skeleton for setting up a recognition service and
-exposing its settings activity to settings.</p>
+<p>This application includes a 
+<a href="src/com/example/android/voicerecognitionservice/VoiceRecognitionService.html">
+sample voice recognition service</a> (a subclass of 
+<code><a href="../../../reference/android/speech/RecognitionService.html">RecognitionService</a></code>),
+and a <a href="src/com/example/android/voicerecognitionservice/VoiceRecognitionSettings.html">
+settings activity</a> for that service. It shows the basic skeleton for setting up a recognition
+service and exposing its settings activity to settings.</p>
 
 <p>The behavior is extremely simple - it does no real voice recognition, and just returns a
 fixed set of results immediately. The results can be either a set of letters or numbers, as
 chosen by the user in the simplistic settings activity.</p>
+
+<p>Installing this application onto a device that already has a voice recognition service
+available will expose a new option under "voice input &amp; output" settings, to let the
+user choose between the multiple services.</p>
+
+<p>Note that due to its simplicity, this voice recognition service is not compatible with
+every application that wishes to use voice recognition. For example, because Google's
+VoiceSearch application relies on more than just simple text results, it may not work
+as expected if this sample recognition service is chosen in settings. Other simpler
+applications, like voice input on the keyboard (e.g., in LatinIME), are more likely to
+work as expected - returning just the very simple list of results to the application.</p>
 	
 <p>See also:</p>
 <ul>
