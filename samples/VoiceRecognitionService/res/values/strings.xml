@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+/*
+** Copyright 2010, The Android Open Source Project
+**
+** Licensed under the Apache License, Version 2.0 (the "License");
+** you may not use this file except in compliance with the License.
+** You may obtain a copy of the License at
+**
+**     http://www.apache.org/licenses/LICENSE-2.0
+**
+** Unless required by applicable law or agreed to in writing, software
+** distributed under the License is distributed on an "AS IS" BASIS,
+** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+** See the License for the specific language governing permissions and
+** limitations under the License.
+*/
+-->
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    
+    <!-- The name for the recognizer - to be shown in system settings. -->
+    <string name="service_name">Sample Recognizer</string>
+        
+    <!-- The name of the settings activity. -->
+    <string name="settings_name">Voice Recognition Settings</string>
+    
+    <!-- The title of the preference for the type of results to return (letters or numbers). -->
+    <string name="results_type_title">Results type</string>
+    
+    <!-- The entry names of the preference for the type of results to return
+         (letters or numbers). -->
+    <string-array name="results_type_entries">
+        <item>Letters</item>
+        <item>Numbers</item>
+    </string-array>
+    
+    <!-- The entry values of the preference for the type of results to return
+         (letters or numbers). -->
+    <string-array name="results_type_values">
+        <item>0</item>
+        <item>1</item>
+    </string-array>
+    
+    <!-- The default value of the preference for the type of results to return
+         (letters or numbers). -->
+    <string name="results_type_default_value">0</string>
+
+</resources>
