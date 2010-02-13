@@ -116,3 +116,12 @@ that has the ANDROID_CPU_ARM_FEATURE_NEON flag set, as  in:
     }
 
     ...
+
+Sample code:
+------------
+
+Look at the source code for the "hello-neon" sample in this NDK for an example
+on how to use the 'cpufeatures' library and Neon intrinsics at the same time.
+
+This implements a tiny benchmark for a FIR filter loop using a C version, and
+a NEON-optimized one for devices that support it.
