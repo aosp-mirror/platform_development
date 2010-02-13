@@ -46,6 +46,9 @@ IMPORTANT CHANGES:
 
   For more information, see docs/CPU-ARM-NEON.TXT
 
+- Added a new sample (hello-neon) to demonstrate usage of 'cpufeatures'
+  and NEON intrinsics & build support.
+
 - GCC 4.4.0 is now used by default by the NDK. It generates better code than
   GCC 4.2.1, which was used in previous releases. However, the compiler's C++
   frontend is also a lot more pedantic regarding certain template constructs
@@ -100,6 +103,10 @@ OTHER FIXES & CHANGES:
 - Only allow undefined symbols when LOCAL_ALLOW_UNDEFINED_SYMBOLS is set
   to 'true', just like the documentation says it works. Also fix a typo
   in CLEAR_VARS that prevented this variable from being cleared properly.
+
+- Simplified build/tools/make-release.sh, the --prebuilt-dir option is
+  gone, and --help will dump a clearer description of expected options
+  and input files.
 
 - Added --prebuilt-ndk=FILE option to build/tools/make-release.sh script to
   package a new experimental NDK package archive from the current source tree

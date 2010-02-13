@@ -31,11 +31,8 @@ RELEASE=`date +%Y%m%d`
 # the package prefix
 PREFIX=android-ndk
 
-# the directory containing the prebuilt toolchain tarballs
-PREBUILT_DIR=
-
-# the prefix of prebuilt toolchain tarballs in $PREBUILT_DIR
-PREBUILT_PREFIX=android-ndk-prebuilt-20090323
+# the prefix of prebuilt toolchain tarballs
+PREBUILT_PREFIX=
 
 # the list of supported host development systems
 PREBUILT_SYSTEMS="linux-x86 darwin-x86 windows"
@@ -69,8 +66,6 @@ for opt do
   ;;
   --prebuilt-prefix=*) PREBUILT_PREFIX=$optarg
   ;;
-  --prebuilt-path=*) PREBUILT_DIR=$optarg
-  ;;
   --systems=*) PREBUILT_SYSTEMS=$optarg
   ;;
   --no-git) USE_GIT_FILES=no
@@ -85,21 +80,31 @@ if [ $OPTION_HELP = yes ] ; then
     echo "Usage: make-release.sh [options]"
     echo ""
     echo "Package a new set of release packages for the Android NDK."
-    echo "You will need to specify the path of a directory containing"
-    echo "prebuilt toolchain tarballs with the --prebuilt-path option."
     echo ""
-    echo "Alternatively, you can specify an existing NDK release package"
-    echo "with the --prebuilt-ndk option."
+    echo "You will need to have generated one or more prebuilt toolchain tarballs"
+    echo "with the build/tools/build-toolchain.sh script. These files should be"
+    echo "named like <prefix>-<system>.tar.bz2, where <prefix> is an arbitrary"
+    echo "prefix and <system> is one of: $PREBUILT_SYSTEMS"
+    echo ""
+    echo "Use the --prebuilt-prefix=<path>/<prefix> option to build release"
+    echo "packages from these tarballs."
+    echo ""
+    echo "Alternatively, you can use --prebuilt-ndk=<file> where <file> is the"
+    echo "path to a previous official NDK release package. It will be used to"
+    echo "extract the toolchain binaries and copy them to your new release."
+    echo "Only use this for experimental release packages !"
+    echo ""
+    echo "The generated release packages will be stored in a temporary directory"
+    echo "that will be printed at the end of the generation process."
     echo ""
     echo "Options: [defaults in brackets after descriptions]"
     echo ""
     echo "  --help                    Print this help message"
-    echo "  --prefix=PREFIX           Package prefix name [$PREFIX]"
+    echo "  --prefix=PREFIX           Release package prefix name [$PREFIX]"
     echo "  --release=NAME            Specify release name [$RELEASE]"
-    echo "  --systems=SYSTEMS         List of host system packages [$PREBUILT_SYSTEMS]"
-    echo "  --prebuilt-ndk=FILE       Specify a previous NDK package [$PREBUILT_NDK]"
-    echo "  --prebuilt-path=PATH      Location of prebuilt binary tarballs [$PREBUILT_DIR]"
     echo "  --prebuilt-prefix=PREFIX  Prefix of prebuilt binary tarballs [$PREBUILT_PREFIX]"
+    echo "  --prebuilt-ndk=FILE       Specify a previous NDK package [$PREBUILT_NDK]"
+    echo "  --systems=SYSTEMS         List of host system packages [$PREBUILT_SYSTEMS]"
     echo "  --no-git                  Don't use git to list input files, take all of them."
     echo ""
     exit 1
@@ -107,24 +112,24 @@ fi
 
 # Check the prebuilt path
 #
-if [ -n "$PREBUILD_NDK" -a -n "$PREBUILT_DIR" ] ; then
-    echo "ERROR: You cannot use both --prebuilt-ndk and --prebuilt-path at the same time."
+if [ -n "$PREBUILD_NDK" -a -n "$PREBUILT_PREFIX" ] ; then
+    echo "ERROR: You cannot use both --prebuilt-ndk and --prebuilt-prefix at the same time."
     exit 1
 fi
 
-if [ -z "$PREBUILT_DIR" -a -z "$PREBUILT_NDK" ] ; then
-    echo "ERROR: You must use --prebuilt-path=PATH to specify the path of prebuilt binary tarballs."
-    echo "       Or --prebuilt-ndk=FILE to specify an existing NDK release archive."
+if [ -z "$PREBUILT_PREFIX" -a -z "$PREBUILT_NDK" ] ; then
+    echo "ERROR: You must use one of --prebuilt-prefix or --prebuilt-ndk. See --help for details."
     exit 1
 fi
 
-if [ -n "$PREBUILT_DIR" ] ; then
-    if [ ! -d "$PREBUILT_DIR" ] ; then
-        echo "ERROR: the --prebuilt-path argument is not a directory path: $PREBUILT_DIR"
+if [ -n "$PREBUILT_PREFIX" ] ; then
+    if [ -d "$PREBUILT_PREFIX" ] ; then
+        echo "ERROR: the --prebuilt-prefix argument must not be a direct directory path: $PREBUILT_PREFIX."
         exit 1
     fi
-    if [ -z "$PREBUILT_PREFIX" ] ; then
-        echo "ERROR: Your prebuilt prefix is empty; use --prebuilt-prefix=PREFIX."
+    PREBUILT_DIR=`dirname $PREBUILT_PREFIX`
+    if [ ! -d "$PREBUILT_DIR" ] ; then
+        echo "ERROR: the --prebuilt-prefix argument does not point to a directory: $PREBUILT_DIR"
         exit 1
     fi
     if [ -z "$PREBUILT_SYSTEMS" ] ; then
@@ -134,7 +139,7 @@ if [ -n "$PREBUILT_DIR" ] ; then
     # Check the systems
     #
     for SYS in $PREBUILT_SYSTEMS; do
-        if [ ! -f $PREBUILT_DIR/$PREBUILT_PREFIX-$SYS.tar.bz2 ] ; then
+        if [ ! -f $PREBUILT_PREFIX-$SYS.tar.bz2 ] ; then
             echo "ERROR: It seems there is no prebuilt binary tarball for the '$SYS' system"
             echo "Please check the content of $PREBUILT_DIR for a file named $PREBUILT_PREFIX-$SYS.tar.bz2."
             exit 1
@@ -165,6 +170,7 @@ else
     # i.e. generated files...
     rm -rf $NDK_ROOT_DIR/out
     rm -rf $NDK_ROOT_DIR/apps/*/project/libs/armeabi
+    rm -rf $NDK_ROOT_DIR/apps/*/project/libs/armeabi-v7a
     # Get all files under the NDK root
     GIT_FILES=`cd $NDK_ROOT_DIR && find .`
     GIT_FILES=`echo $GIT_FILES | sed -e "s!\./!!g"`
@@ -193,7 +199,7 @@ fi
 for SYSTEM in $PREBUILT_SYSTEMS; do
     echo "Preparing package for system $SYSTEM."
     BIN_RELEASE=$RELEASE_PREFIX-$SYSTEM
-    PREBUILT=$PREBUILT_DIR/$PREBUILT_PREFIX-$SYSTEM
+    PREBUILT=$PREBUILT_PREFIX-$SYSTEM
     DSTDIR=$TMPDIR/$RELEASE_PREFIX
     rm -rf $DSTDIR && mkdir -p $DSTDIR &&
     cp -rp $REFERENCE/* $DSTDIR
