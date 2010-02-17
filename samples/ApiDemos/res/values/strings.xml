@@ -109,6 +109,10 @@
     <string name="local_service_connected">Connected to local service</string>
     <string name="local_service_disconnected">Disconnected from local service</string>
 
+    <string name="activity_messenger_service_binding">App/Service/Messenger Service</string>
+    <string name="messenger_service_binding">This demonstrates how you can communicate with
+        a remote service using Messenger.</string>
+
     <string name="remote_service_started">Remote service has started</string>
     <string name="remote_service_stopped">Remote service has stopped</string>
     <string name="remote_service_label">Sample Remote Service</string>

@@ -218,7 +218,7 @@
 
         <service android:name=".app.LocalService" />
 
-        <activity android:name=".app.LocalService$Controller"
+        <activity android:name=".app.LocalServiceActivities$Controller"
                 android:label="@string/activity_local_service_controller"
                 android:launchMode="singleTop">
             <intent-filter>
@@ -227,8 +227,21 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".app.LocalService$Binding"
+        <activity android:name=".app.LocalServiceActivities$Binding"
                 android:label="@string/activity_local_service_binding">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+<!-- BEGIN_INCLUDE(remote_service_declaration) -->
+        <service android:name=".app.MessengerService"
+                android:process=":remote" />
+<!-- END_INCLUDE(remote_service_declaration) -->
+
+        <activity android:name=".app.MessengerServiceActivities$Binding"
+                android:label="@string/activity_messenger_service_binding">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
