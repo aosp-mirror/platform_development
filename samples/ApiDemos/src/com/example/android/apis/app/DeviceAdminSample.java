@@ -21,7 +21,7 @@ import com.example.android.apis.R;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.AlertDialog;
-import android.app.DeviceAdmin;
+import android.app.DeviceAdminReceiver;
 import android.app.DevicePolicyManager;
 import android.content.ComponentName;
 import android.content.Context;
@@ -46,10 +46,10 @@ import android.widget.AdapterView.OnItemSelectedListener;
  * Example of a do-nothing admin class.  When enabled, it lets you control
  * some of its policy and reports when there is interesting activity.
  */
-public class DeviceAdminSample extends DeviceAdmin {
+public class DeviceAdminSample extends DeviceAdminReceiver {
 
     static SharedPreferences getSamplePreferences(Context context) {
-        return context.getSharedPreferences(DeviceAdmin.class.getName(), 0);
+        return context.getSharedPreferences(DeviceAdminReceiver.class.getName(), 0);
     }
     
     static String PREF_PASSWORD_QUALITY = "password_quality";
