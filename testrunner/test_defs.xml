@@ -575,4 +575,9 @@ See test_defs.xsd for more information.
     jar_name="CtsAppSecurityTests.jar"
     cts="true" />
 
+<test-host name="frameworks-core-host"
+    build_path="frameworks/base/core/tests/hosttests"
+    class="android.content.pm.PackageManagerHostTests"
+    jar_name="FrameworkCoreHostTests.jar" />
+
 </test-definitions>
