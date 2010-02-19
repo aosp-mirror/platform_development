@@ -48,9 +48,8 @@
         <xs:attribute name="continuous" type="xs:boolean" use="optional"
             default="false" />
 
-        <!-- Include test in compatibility test suite. -->
-        <xs:attribute name="cts" type="xs:boolean" use="optional"
-            default="false" />
+        <!-- Include test as part of named suite. -->
+        <xs:attribute name="suite" type="xs:string" use="optional" />
 
         <!--  Short description (typically less than 60 characters) about this
         test. -->

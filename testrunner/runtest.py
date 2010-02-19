@@ -138,10 +138,9 @@ class TestRunner(object):
     parser.add_option("--timeout", dest="timeout",
                       default=300, help="Set a timeout limit (in sec) for "
                       "running native tests on a device (default: 300 secs)")
-    parser.add_option("--cts", dest="cts_tests",
-                      default=False, action="store_true",
+    parser.add_option("--suite", dest="suite",
                       help="Run all tests defined as part of the "
-                      "compatibility test suite")
+                      "the given test suite")
     group = optparse.OptionGroup(
         parser, "Targets", "Use these options to direct tests to a specific "
         "Android target")
@@ -158,7 +157,7 @@ class TestRunner(object):
     if (not self._options.only_list_tests
         and not self._options.all_tests
         and not self._options.continuous_tests
-        and not self._options.cts_tests
+        and not self._options.suite
         and not self._options.test_path
         and len(self._test_args) < 1):
       parser.print_help()
@@ -285,8 +284,9 @@ class TestRunner(object):
       self._tests_to_run = self._known_tests.GetTests()
     elif self._options.continuous_tests:
       self._tests_to_run = self._known_tests.GetContinuousTests()
-    elif self._options.cts_tests:
-      self._tests_to_run = self._known_tests.GetCtsTests()
+    elif self._options.suite:
+      self._tests_to_run = \
+          self._known_tests.GetTestsInSuite(self._options.suite)
     elif self._options.test_path:
       walker = test_walker.TestWalker()
       self._tests_to_run = walker.FindTests(self._options.test_path)
@@ -303,7 +303,7 @@ class TestRunner(object):
   def _IsCtsTests(self, test_list):
     """Check if any cts tests are included in given list of tests to run."""
     for test in test_list:
-      if test.IsCts():
+      if test.GetSuite() == 'cts':
         return True
     return False
 

@@ -36,7 +36,7 @@ class XmlSuiteParser(object):
   _NAME_ATTR = 'name'
   _BUILD_ATTR = 'build_path'
   _CONTINUOUS_ATTR = 'continuous'
-  _CTS_ATTR = 'cts'
+  _SUITE_ATTR = 'suite'
   _DESCRIPTION_ATTR = 'description'
   _EXTRA_BUILD_ARGS_ATTR = 'extra_build_args'
 
@@ -71,8 +71,8 @@ class XmlSuiteParser(object):
     test_suite.SetContinuous(self._ParseAttribute(suite_element,
                                                   self._CONTINUOUS_ATTR,
                                                   False, default_value=False))
-    test_suite.SetCts(self._ParseAttribute(suite_element, self._CTS_ATTR, False,
-                                           default_value=False))
+    test_suite.SetSuite(self._ParseAttribute(suite_element, self._SUITE_ATTR, False,
+                                           default_value=None))
     test_suite.SetDescription(self._ParseAttribute(suite_element,
                                                    self._DESCRIPTION_ATTR,
                                                    False,

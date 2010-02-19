@@ -290,7 +290,8 @@ class TestWalker(object):
       # package name, this is a cts test
       # this logic can be removed altogether when cts tests no longer require
       # custom build steps
-      suite.SetCts(suite.GetPackageName().startswith('com.android.cts'))
+      if suite.GetPackageName().startswith('com.android.cts'):
+        suite.SetSuite('cts')
       tests.append(suite)
     return tests
 

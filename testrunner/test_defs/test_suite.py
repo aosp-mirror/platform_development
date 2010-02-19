@@ -19,14 +19,17 @@
 
 
 class AbstractTestSuite(object):
-  """Represents a generic test suite definition."""
+  """Represents a generic test suite definition.
+
+  TODO: rename this as AbstractTestDef.
+  """
 
   def __init__(self):
     self._name = None
     self._build_path = None
     self._build_dependencies = []
     self._is_continuous = False
-    self._is_cts = False
+    self._suite = None
     self._description = ''
     self._extra_build_args = ''
 
@@ -61,12 +64,12 @@ class AbstractTestSuite(object):
     self._is_continuous = continuous
     return self._is_continuous
 
-  def IsCts(self):
-    """Returns true if test is part of the compatibility test suite"""
-    return self._is_cts
+  def GetSuite(self):
+    """Returns the name of test' suite, or None."""
+    return self._suite
 
-  def SetCts(self, cts):
-    self._is_cts = cts
+  def SetSuite(self, suite):
+    self._suite = suite
     return self
 
   def GetDescription(self):
