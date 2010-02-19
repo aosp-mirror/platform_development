@@ -109,13 +109,9 @@ class TestDefinitions(object):
         con_tests.append(test)
     return con_tests
 
-  def GetCtsTests(self):
-    """Return list of cts tests."""
-    cts_tests = []
-    for test in self.GetTests():
-      if test.IsCts():
-        cts_tests.append(test)
-    return cts_tests
+  def GetTestsInSuite(self, suite):
+    """Return list of tests in given suite."""
+    return [t for t in self.GetTests() if t.GetSuite() == suite]
 
   def GetTest(self, name):
     return self._testname_map.get(name, None)
