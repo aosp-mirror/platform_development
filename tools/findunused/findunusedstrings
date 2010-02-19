@@ -28,7 +28,8 @@ do
     if [ -d $app/res ]
     then
         pushd $app > /dev/null
-        for i in $(grep -Rs "\(string\|plurals\) name=" res | sed 's/.*<\(string\|plurals\) name="//'|sed 's/".*$//'|sort -u)
+        # Two sed's were needed because the | operator is not supported on the mac
+        for i in $(grep -Rs "\(string\|plurals\) name=" res | sed 's/.*string name=\"//' | sed 's/.*plurals name=\"//'|sed 's/".*$//'|sort -u)
         do
             echo $i $(grep -Rws R.plurals.$i\\\|R.string.$i\\\|@string/$i .|wc -l)
         done | grep ' 0$' | {
