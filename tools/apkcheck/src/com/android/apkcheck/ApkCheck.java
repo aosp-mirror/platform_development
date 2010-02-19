@@ -18,8 +18,11 @@ package com.android.apkcheck;
 
 import org.xml.sax.*;
 import org.xml.sax.helpers.*;
-import java.io.*;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.Reader;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 
 
@@ -44,6 +47,10 @@ public class ApkCheck {
     private static boolean sShowWarnings = false;
     /* show errors? */
     private static boolean sShowErrors = true;
+
+    /* names of packages we're allowed to ignore */
+    private static HashSet<String> sIgnorablePackages = new HashSet<String>();
+
 
     /**
      * Program entry point.
@@ -72,6 +79,9 @@ public class ApkCheck {
                     if (!parseApiDescr(apiDescr, libName))
                         return;
                 }
+            } else if (args[idx].startsWith("--ignore-package=")) {
+                String pkgName = args[idx].substring(args[idx].indexOf('=')+1);
+                sIgnorablePackages.add(pkgName);
             } else if (args[idx].equals("--warn")) {
                 sShowWarnings = true;
             } else if (args[idx].equals("--no-warn")) {
@@ -137,6 +147,7 @@ public class ApkCheck {
         System.err.println("Options:");
         System.err.println("  --help                  show this message");
         System.err.println("  --uses-library=lib.xml  load additional public API list");
+        System.err.println("  --ignore-package=pkg    don't show errors for references to this package");
         System.err.println("  --[no-]warn             enable or disable display of warnings");
         System.err.println("  --[no-]error            enable or disable display of errors");
     }
@@ -255,9 +266,18 @@ public class ApkCheck {
                 ClassInfo apkClassInfo = classIter.next();
 
                 if (badPackage) {
-                    /* list the offending classes */
-                    apkError("Illegal class ref: " +
-                        apkPkgInfo.getName() + "." + apkClassInfo.getName());
+                    /*
+                     * The package is not present in the public API file,
+                     * but simply saying "bad package" isn't all that
+                     * useful, so we emit the names of each of the classes.
+                     */
+                    if (isIgnorable(apkPkgInfo)) {
+                        apkWarning("Ignoring class ref: " +
+                            apkPkgInfo.getName() + "." + apkClassInfo.getName());
+                    } else {
+                        apkError("Illegal class ref: " +
+                            apkPkgInfo.getName() + "." + apkClassInfo.getName());
+                    }
                 } else {
                     checkClass(pubPkgInfo, apkClassInfo);
                 }
@@ -276,7 +296,10 @@ public class ApkCheck {
         ClassInfo pubClassInfo = pubPkgInfo.getClass(classInfo.getName());
 
         if (pubClassInfo == null) {
-            if (classInfo.hasNoFieldMethod()) {
+            if (isIgnorable(pubPkgInfo)) {
+                apkWarning("Ignoring class ref: " +
+                    pubPkgInfo.getName() + "." + classInfo.getName());
+            } else if (classInfo.hasNoFieldMethod()) {
                 apkWarning("Hidden class referenced: " +
                     pubPkgInfo.getName() + "." + classInfo.getName());
             } else {
@@ -328,6 +351,12 @@ public class ApkCheck {
         return true;
     }
 
+    /**
+     * Returns true if the package is in the "ignored" list.
+     */
+    static boolean isIgnorable(PackageInfo pkgInfo) {
+        return sIgnorablePackages.contains(pkgInfo.getName());
+    }
 
     /**
      * Prints a warning message about an APK problem.
