@@ -28,9 +28,9 @@ do
     if [ -d $app/res ]
     then
         pushd $app > /dev/null
-        for i in $(grep -R "\(string\|plurals\) name=" res | sed 's/.*<\(string\|plurals\) name="//'|sed 's/".*$//'|sort -u)
+        for i in $(grep -Rs "\(string\|plurals\) name=" res | sed 's/.*<\(string\|plurals\) name="//'|sed 's/".*$//'|sort -u)
         do
-            echo $i $(grep -Rw R.plurals.$i\\\|R.string.$i\\\|@string/$i .|wc -l)
+            echo $i $(grep -Rws R.plurals.$i\\\|R.string.$i\\\|@string/$i .|wc -l)
         done | grep ' 0$' | {
             if [ "$showall" == "yes" ]
             then
