@@ -319,7 +319,7 @@ public class ApkCheck {
             String nameAndType = apkFieldInfo.getNameAndType();
             FieldInfo pubFieldInfo = pubClassInfo.getField(nameAndType);
             if (pubFieldInfo == null) {
-                if ("java.lang.Enum".equals(pubClassInfo.getSuperclassName())) {
+                if (pubClassInfo.isEnum()) {
                     apkWarning("Enum field ref: " + pubPkgInfo.getName() +
                         "." + classInfo.getName() + "." + nameAndType);
                 } else {
@@ -337,8 +337,14 @@ public class ApkCheck {
             if (pubMethodInfo == null) {
                 pubMethodInfo = pubClassInfo.getMethodIgnoringReturn(nameAndDescr);
                 if (pubMethodInfo == null) {
-                    apkError("Illegal method ref: " + pubPkgInfo.getName() +
-                        "." + classInfo.getName() + "." + nameAndDescr);
+                    if (pubClassInfo.isAnnotation()) {
+                        apkWarning("Annotation method ref: " +
+                            pubPkgInfo.getName() + "." + classInfo.getName() +
+                            "." + nameAndDescr);
+                    } else {
+                        apkError("Illegal method ref: " + pubPkgInfo.getName() +
+                            "." + classInfo.getName() + "." + nameAndDescr);
+                    }
                 } else {
                     apkWarning("Possibly covariant method ref: " +
                         pubPkgInfo.getName() + "." + classInfo.getName() +

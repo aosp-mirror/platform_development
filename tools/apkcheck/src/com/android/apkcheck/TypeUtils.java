@@ -145,12 +145,14 @@ public class TypeUtils {
         /*
          * In some cases this can be a generic signature:
          *   <parameter name="collection" type="java.util.Collection&lt;? extends E&gt;">
+         *   <parameter name="interfaces" type="java.lang.Class&lt;?&gt;[]">
          *   <parameter name="object" type="E">
          *
-         * If we see a '<', truncate the string at that point.  That does
-         * pretty much the right thing.
+         * If we see a '<', strip out everything from it to the '>'.  That
+         * does pretty much the right thing, though we have to deal with
+         * nested stuff like "<? extends Map<String>>".
          *
-         * Handling the second item is ugly.  If the string is a single
+         * Handling the third item is ugly.  If the string is a single
          * character, change it to java.lang.Object.  This is generally
          * insufficient and also ambiguous with respect to classes in the
          * default package, but we don't have much choice here, and it gets
@@ -158,11 +160,7 @@ public class TypeUtils {
          * if somebody tries to normalize a string twice, since we could be
          * "promoting" a primitive type.
          */
-        int ltOffset = typeName.indexOf('<');
-        if (ltOffset >= 0) {
-            //System.out.println("stripping: " + typeName);
-            typeName = typeName.substring(0, ltOffset);
-        }
+        typeName = stripAngleBrackets(typeName);
         if (typeName.length() == 1) {
             //System.out.println("converting X to Object: " + typeName);
             typeName = "java.lang.Object";
@@ -248,6 +246,34 @@ public class TypeUtils {
         }
 
         return typeName;
+    }
+
+    /**
+     * Strips out everything between '<' and '>'.  This will handle
+     * nested brackets, but we're not expecting to see multiple instances
+     * in series (i.e. "&lt;foo&lt;bar&gt;&gt;" is expected, but
+     * "&lt;foo&gt;STUFF&lt;bar&gt; is not).
+     *
+     * @return the stripped string
+     */
+    private static String stripAngleBrackets(String str) {
+        /*
+         * Since we only expect to see one "run", we can just find the
+         * first '<' and the last '>'.  Ideally we'd verify that they're
+         * not mismatched, but we're assuming the input file is generally
+         * correct.
+         */
+        int ltIndex = str.indexOf('<');
+        if (ltIndex < 0)
+            return str;
+
+        int gtIndex = str.lastIndexOf('>');
+        if (gtIndex < 0) {
+            System.err.println("ERROR: found '<' without '>': " + str);
+            return str;     // not much we can do
+        }
+
+        return str.substring(0, ltIndex) + str.substring(gtIndex+1);
     }
 }
 

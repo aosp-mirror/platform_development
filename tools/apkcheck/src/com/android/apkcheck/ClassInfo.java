@@ -40,6 +40,11 @@ public class ClassInfo {
     // holds the name of the superclass and all declared interfaces
     private ArrayList<String> mSuperNames;
 
+    // is this an enumerated type?
+    private boolean mIsEnum;
+    // is this an annotation type?
+    private boolean mIsAnnotation;
+
     private boolean mFlattening = false;
     private boolean mFlattened = false;
 
@@ -101,6 +106,22 @@ public class ClassInfo {
      */
     public String getStatic() {
         return mIsStatic;
+    }
+
+    /**
+     * Returns whether or not this class is an enumerated type.
+     */
+    public boolean isEnum() {
+        assert mFlattened;
+        return mIsEnum;
+    }
+
+    /**
+     * Returns whether or not this class is an annotation type.
+     */
+    public boolean isAnnotation() {
+        assert mFlattened;
+        return mIsAnnotation;
     }
 
     /**
@@ -194,6 +215,8 @@ public class ClassInfo {
      * superclasses and interfaces) into the local structure.
      *
      * The public API file must be fully parsed before calling here.
+     *
+     * This also detects if we're an Enum or Annotation.
      */
     public void flattenClass(ApiList apiList) {
         if (mFlattened)
@@ -215,6 +238,25 @@ public class ClassInfo {
          * hash table key.
          */
         normalizeTypes(apiList);
+
+        /*
+         * Figure out if this class is an enumerated type.
+         */
+        mIsEnum = "java.lang.Enum".equals(mSuperclassName);
+
+        /*
+         * Figure out if this class is an annotation type.  We expect it
+         * to extend Object, implement java.lang.annotation.Annotation,
+         * and declare no fields or methods.  (If the API XML file is
+         * fixed, it will declare methods; but at that point having special
+         * handling for annotations will be unnecessary.)
+         */
+        if ("java.lang.Object".equals(mSuperclassName) &&
+            mSuperNames.contains("java.lang.annotation.Annotation") &&
+            hasNoFieldMethod())
+        {
+            mIsAnnotation = true;
+        }
 
         /*
          * Flatten our superclass and interfaces.
