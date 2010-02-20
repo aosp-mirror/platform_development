@@ -92,12 +92,23 @@ and "values").  What isn't included are entries for the fields representing
 the enumeration values.  This makes it look like an APK is referring
 to non-public fields in the class.
 
-If apkcheck sees a reference to an unknown field, and the superclass of
-the field's defining class is java.lang.Enum, we emit a warning instead
-of an error.
+If apkcheck sees a reference to an unknown field, and the field's defining
+class appears to be an Enum (the superclass is java.lang.Enum), we emit
+a warning instead of an error.
 
 
-(3) Covariant return types
+(3) Public annotation methods are not listed
+
+Annotation classes have trivial entries that show only the class name
+and "implements java.lang.annotation.Annotation".  It is not possible
+to verify that a method call on an annotation is valid.
+
+If apkcheck sees a method call to an unknown method, and the class appears
+to be an annotation (extends Object, implements Annotation, defines no
+fields or methods), we emit a warning instead of an error.
+
+
+(4) Covariant return types
 
 Suppose a class defines a method "public Foo gimmeFoo()".  Any subclass
 that overrides that method must also return Foo, so it would seem that
@@ -115,7 +126,7 @@ to verify that the return types are related, but that's more trouble than
 it's worth.)
 
 
-(4) Generic signatures
+(5) Generic signatures
 
 When generic signatures are used, the public API file will contain
 entries like these:
@@ -153,7 +164,7 @@ signatures into the code (--uses-library=BUILTIN).  (At some point it
 may be worthwhile to try a little harder here.)
 
 
-(5) Use of opaque non-public types
+(6) Use of opaque non-public types
 
 Some classes are not meant for public consumption, but are still referred
 to by application code.  For example, an opaque type might be passed to
