@@ -80,9 +80,9 @@ See test_defs.xsd for more information.
     continuous="true" />
 
 <test name="frameworks-testrunner"
-    build_path="frameworks/base/test-runner/tests"
+    build_path="frameworks/base/test-runner"
     package="com.android.frameworks.testrunner.tests"
-    coverage_target="framework"
+    coverage_target="android.test.runner"
     continuous="true" />
 
 <test name="frameworks-vpn"
