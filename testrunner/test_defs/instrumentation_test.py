@@ -131,6 +131,10 @@ class InstrumentationTestSuite(test_suite.AbstractTestSuite):
       instrumentation_args["suiteAssignment"] = "true"
     if options.coverage:
       instrumentation_args["coverage"] = "true"
+    if options.test_annotation:
+      instrumentation_args["annotation"] = options.test_annotation
+    if options.test_not_annotation:
+      instrumentation_args["notAnnotation"] = options.test_not_annotation
     if options.preview:
       adb_cmd = adb.PreviewInstrumentationCommand(
           package_name=self.GetPackageName(),
