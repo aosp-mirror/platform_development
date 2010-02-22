@@ -52,9 +52,7 @@
         <src path="wifi/java" />
     </coverage_target>
     <coverage_target name="android.test.runner"
-        build_path="frameworks/base/test-runner" type="JAVA_LIBRARIES">
-        <src path="." />
-    </coverage_target>
+        build_path="frameworks/base/test-runner" type="JAVA_LIBRARIES" />
    
    <!-- apps -->
     <coverage_target name="ApiDemos" build_path="development/samples/ApiDemos"
