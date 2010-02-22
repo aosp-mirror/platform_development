@@ -879,5 +879,21 @@
     <string name="appwidget_configure_instructions">This text will be shown before the date in our example widget.</string>
     <string name="appwidget_prefix_default">Oh hai</string>
     <string name="appwidget_text_format"><xliff:g id="prefix">%1$s</xliff:g>: <xliff:g id="time">%2$s</xliff:g></string>
+
+    <!-- ============================ -->
+    <!--  SMS Messaging examples strings  -->
+    <!-- ============================ -->
+
+    <string name="sms_warning">
+      WARNING: this demo can send actual text messages (one at a time), so be sure to
+      test with the Android emulator or have a text messaging plan with your carrier.
+    </string>
+    <string name="sms_enable_receiver">Enable SMS broadcast receiver</string>
+    <string name="sms_recipient_label">Recipient #</string>
+    <string name="sms_content_label">Message Body</string>
+    <string name="sms_send_message">Send</string>
+    <string name="sms_speak_string_format">Message from "%1$s": %2$s</string>
+    <string name="reply">Reply</string>
+    <string name="dismiss">Dismiss</string>
 </resources>
 
