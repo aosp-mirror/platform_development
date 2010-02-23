@@ -124,7 +124,7 @@ class TestRunner(object):
                       help="Include only those tests tagged with a specific"
                       " annotation")
     parser.add_option("--not-annotation", dest="test_not_annotation",
-                      help="Excludes any tests tagged with a specific"
+                      help="Exclude any tests tagged with a specific"
                       " annotation")
     parser.add_option("-u", "--user-tests-file", dest="user_tests_file",
                       metavar="FILE", default=user_test_default,
