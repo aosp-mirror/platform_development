@@ -120,6 +120,12 @@ class TestRunner(object):
                       help="Restrict test to a specific java package")
     parser.add_option("-z", "--size", dest="test_size",
                       help="Restrict test to a specific test size")
+    parser.add_option("--annotation", dest="test_annotation",
+                      help="Include only those tests tagged with a specific"
+                      " annotation")
+    parser.add_option("--not-annotation", dest="test_not_annotation",
+                      help="Excludes any tests tagged with a specific"
+                      " annotation")
     parser.add_option("-u", "--user-tests-file", dest="user_tests_file",
                       metavar="FILE", default=user_test_default,
                       help="Alternate source of user test definitions")
