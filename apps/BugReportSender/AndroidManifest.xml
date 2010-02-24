@@ -15,16 +15,16 @@
 -->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-        package="com.android.bugreportsender" >
+        package="com.android.bugreportsender"
+        android:versionCode="10" >
 
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
+    <uses-sdk android:minSdkVersion="4" />
+
     <application
             android:icon="@drawable/icon"
-            android:label="Bug Report Sender"
-            android:versionCode="1" >
-
-        <uses-sdk android:minSdkVersion="4" />
+            android:label="Bug Report Sender" >
 
         <activity android:name="BugReportListActivity">
             <intent-filter>

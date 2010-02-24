@@ -18,6 +18,6 @@ include $(CLEAR_VARS)
 LOCAL_CERTIFICATE := platform
 LOCAL_MODULE_TAGS := eng
 LOCAL_PACKAGE_NAME := BugReportSender
-LOCAL_SDK_VERSION := current
+LOCAL_SDK_VERSION := 4
 LOCAL_SRC_FILES := $(call all-subdir-java-files)
 include $(BUILD_PACKAGE)
