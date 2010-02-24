@@ -185,11 +185,18 @@ int16 BackgroundPlugin::handleEvent(const ANPEvent* evt) {
             gLogI.log(kError_ANPLogType, " ------ %p the plugin did not request draw events", inst());
             break;
         case kLifecycle_ANPEventType:
-            if (evt->data.lifecycle.action == kOnLoad_ANPLifecycleAction) {
-                gLogI.log(kDebug_ANPLogType, " ------ %p the plugin received an onLoad event", inst());
-                return 1;
+            switch (evt->data.lifecycle.action)  {
+                case kOnLoad_ANPLifecycleAction:
+                    gLogI.log(kDebug_ANPLogType, " ------ %p onLoad", inst());
+                    return 1;
+                case kOnScreen_ANPLifecycleAction:
+                    gLogI.log(kDebug_ANPLogType, " ------ %p onScreen", inst());
+                    return 1;
+                case kOffScreen_ANPLifecycleAction:
+                    gLogI.log(kDebug_ANPLogType, " ------ %p offScreen", inst());
+                    return 1;
             }
-            break;
+            break; // end kLifecycle_ANPEventType
         case kTouch_ANPEventType:
             if (kDown_ANPTouchAction == evt->data.touch.action)
                 return kHandleLongPress_ANPTouchResult | kHandleDoubleTap_ANPTouchResult;
