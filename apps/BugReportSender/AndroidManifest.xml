@@ -16,11 +16,12 @@
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
         package="com.android.bugreportsender"
-        android:versionCode="10" >
+        android:versionCode="11" >
 
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
-    <uses-sdk android:minSdkVersion="4" />
+    <!-- Minimum Donut, target Froyo -->
+    <uses-sdk android:minSdkVersion="4" android:targetSdkVersion="7" />
 
     <application
             android:icon="@drawable/icon"
