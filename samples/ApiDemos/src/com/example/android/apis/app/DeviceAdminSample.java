@@ -21,8 +21,8 @@ import com.example.android.apis.R;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.AlertDialog;
-import android.app.DeviceAdminReceiver;
-import android.app.DevicePolicyManager;
+import android.app.admin.DeviceAdminReceiver;
+import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -339,7 +339,8 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
                 }
                 boolean active = mDPM.isAdminActive(mDeviceAdminSample);
                 if (active) {
-                    mDPM.resetPassword(mPassword.getText().toString());
+                    mDPM.resetPassword(mPassword.getText().toString(),
+                            DevicePolicyManager.RESET_PASSWORD_REQUIRE_ENTRY);
                 }
             }
         };
