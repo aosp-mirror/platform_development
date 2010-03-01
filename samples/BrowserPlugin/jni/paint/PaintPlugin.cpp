@@ -37,6 +37,7 @@ extern ANPPathInterfaceV0       gPathI;
 extern ANPSurfaceInterfaceV0    gSurfaceI;
 extern ANPSystemInterfaceV0     gSystemI;
 extern ANPTypefaceInterfaceV0   gTypefaceI;
+extern ANPWindowInterfaceV0     gWindowI;
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -49,6 +50,7 @@ PaintPlugin::PaintPlugin(NPP inst) : SurfaceSubPlugin(inst) {
     memset(&m_drawingSurface, 0, sizeof(m_drawingSurface));
     memset(&m_inputToggle,  0, sizeof(m_inputToggle));
     memset(&m_colorToggle, 0, sizeof(m_colorToggle));
+    memset(&m_fullScreenToggle, 0, sizeof(m_fullScreenToggle));
     memset(&m_clearSurface,  0, sizeof(m_clearSurface));
 
     // initialize the drawing surface
@@ -170,7 +172,7 @@ void PaintPlugin::drawCleanPlugin(ANPCanvas* canvas) {
                       m_inputToggle.top - fontMetrics.fTop, m_paintSurface);
 
     // draw the color selector button
-    m_colorToggle.left = (W/2) - (buttonWidth/2);
+    m_colorToggle.left = (W/3) - (buttonWidth/2);
     m_colorToggle.top = H - buttonHeight - 5;
     m_colorToggle.right = m_colorToggle.left + buttonWidth;
     m_colorToggle.bottom = m_colorToggle.top + buttonHeight;
@@ -178,6 +180,17 @@ void PaintPlugin::drawCleanPlugin(ANPCanvas* canvas) {
     const char* colorText = getColorText();
     gCanvasI.drawText(canvas, colorText, strlen(colorText), m_colorToggle.left + 5,
                       m_colorToggle.top - fontMetrics.fTop, m_paintSurface);
+
+    // draw the full-screen toggle button
+    m_fullScreenToggle.left = ((W*2)/3) - (buttonWidth/2);
+    m_fullScreenToggle.top = H - buttonHeight - 5;
+    m_fullScreenToggle.right = m_fullScreenToggle.left + buttonWidth;
+    m_fullScreenToggle.bottom = m_fullScreenToggle.top + buttonHeight;
+    gCanvasI.drawRect(canvas, &m_fullScreenToggle, m_paintButton);
+    const char* fullScreenText = "Full";
+    gCanvasI.drawText(canvas, fullScreenText, strlen(fullScreenText),
+                      m_fullScreenToggle.left + 5,
+                      m_fullScreenToggle.top - fontMetrics.fTop, m_paintSurface);
 
     // draw the clear canvas button
     m_clearSurface.left = W - buttonWidth - 5;
@@ -306,6 +319,8 @@ int16 PaintPlugin::handleEvent(const ANPEvent* evt) {
                     toggleInputMethod();
                 else if (rect == &m_colorToggle)
                     togglePaintColor();
+                else if (rect == &m_fullScreenToggle)
+                    gWindowI.requestFullScreen(inst());
                 else if (rect == &m_clearSurface)
                     drawCleanPlugin();
             }
@@ -316,6 +331,12 @@ int16 PaintPlugin::handleEvent(const ANPEvent* evt) {
             switch (evt->data.other[0]) {
                 case kSurfaceCreated_CustomEvent:
                     gLogI.log(kDebug_ANPLogType, " ---- customEvent: surfaceCreated");
+                    /* The second draw call is added to cover up a problem in this
+                       plugin and is not a recommended usage pattern. This plugin
+                       does not correctly make partial updates to the double
+                       buffered surface and this second call hides that problem.
+                     */
+                    drawCleanPlugin();
                     drawCleanPlugin();
                     break;
                 case kSurfaceChanged_CustomEvent: {
@@ -358,6 +379,8 @@ ANPRectF* PaintPlugin::validTouch(int x, int y) {
         return &m_inputToggle;
     else if (fx > m_colorToggle.left && fx < m_colorToggle.right && fy > m_colorToggle.top && fy < m_colorToggle.bottom)
         return &m_colorToggle;
+    else if (fx > m_fullScreenToggle.left && fx < m_fullScreenToggle.right && fy > m_fullScreenToggle.top && fy < m_fullScreenToggle.bottom)
+        return &m_fullScreenToggle;
     else if (fx > m_clearSurface.left && fx < m_clearSurface.right && fy > m_clearSurface.top && fy < m_clearSurface.bottom)
         return &m_clearSurface;
     else
