@@ -29,6 +29,8 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.SET_WALLPAPER" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.SEND_SMS" />
+    <uses-permission android:name="android.permission.RECEIVE_SMS" />
 
     <!-- We will request access to the camera, saying we require a camera
          of some sort but not one with autofocus capability. -->
@@ -650,6 +652,23 @@
                 <category android:name="android.intent.category.SAMPLE_CODE" />
             </intent-filter>
         </activity>
+
+        <activity android:name=".os.SmsMessagingDemo" android:label="OS/SMS Messaging">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".os.SmsReceivedDialog"
+                  android:theme="@android:style/Theme.Translucent.NoTitleBar"
+                  android:launchMode="singleInstance" />
+
+        <receiver android:name=".os.SmsMessageReceiver" android:enabled="false">
+            <intent-filter>
+                <action android:name="android.provider.Telephony.SMS_RECEIVED" />
+            </intent-filter>
+        </receiver>
 
         <!-- ************************************* -->
         <!--     ANIMATION PACKAGE SAMPLES         -->
