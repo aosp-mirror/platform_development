@@ -15,14 +15,11 @@
 
 set -e  # Fail this script as soon as a command fails -- fail early, fail fast
 
-# Set to 1 to force removal of old unzipped SDK. Only disable for debugging, as it
-# will make some rm/mv commands to fail.
-FORCE="1" 
 
 PROG_NAME="$0"
-SDK_ZIP="$1"
-DIST_DIR="$2"
-TEMP_DIR="$3"
+SDK_ZIP="$1"; shift
+DIST_DIR="$1"; shift
+TEMP_DIR="$1"; shift
 [ -z "$TEMP_DIR" ] && TEMP_DIR=${TMP:-/tmp}
 
 function die() {
@@ -50,6 +47,18 @@ function status() {
 function check() {
     [ -f "$SDK_ZIP" ] || usage
     [ -d "$DIST_DIR" ] || usage
+
+
+    # We need mgwz.dll in the SDK when compiling with Cygwin 1.5
+    # Right now we don't support building with Cygwin 1.7 yet, as it lacks this DLL.
+    NEED_MGWZ=1
+    # We can skip this check for debug purposes.
+    echo $*
+    [[ "$1" == "-no-mgwz" ]] && NEED_MGWZ=""
+    CYG_MGWZ_PATH=/cygdrive/c/cygwin/bin/mgwz.dll
+    [[ -n $NEED_MGWZ && ! -f $CYG_MGWZ_PATH ]] && \
+        die "Cygwin is missing $CYG_MGWZ_PATH. Use -no-mgwz to override."
+
 
     # Use the BUILD_ID as SDK_NUMBER if defined, otherwise try to get it from the
     # provided zip filename.
@@ -110,6 +119,9 @@ function build() {
         zipalign \
         || die "Build failed"
 
+    # Fix permissions. Git/cygwin may not make this +x as needed.
+    chmod +x prebuilt/windows/sdl/bin/sdl-config
+
     # It's worth building the emulator with -j 4 so do it separately
     make -j 4 emulator || die "Build failed"
 }
@@ -123,14 +135,12 @@ function package() {
     TEMP_SDK_DIR="$TEMP_DIR/$DEST_NAME"
 
     # Unzip current linux/mac SDK and rename using the windows name
-    if [[ -n "$FORCE" || ! -d "$TEMP_SDK_DIR" ]]; then
-        [ -e "$TEMP_SDK_DIR" ] && rm -rfv "$TEMP_SDK_DIR"  # cleanup dest first if exists
-        UNZIPPED=`basename "$SDK_ZIP"`
-        UNZIPPED="$TEMP_DIR/${UNZIPPED/.zip/}"
-        [ -e "$UNZIPPED" ] && rm -rfv "$UNZIPPED"  # cleanup unzip dir (if exists)
-        unzip "$SDK_ZIP" -d "$TEMP_DIR"
-        mv -v "$UNZIPPED" "$TEMP_SDK_DIR"
-    fi
+    [ -e "$TEMP_SDK_DIR" ] && rm -rfv "$TEMP_SDK_DIR"  # cleanup dest first if exists
+    UNZIPPED=`basename "$SDK_ZIP"`
+    UNZIPPED="$TEMP_DIR/${UNZIPPED/.zip/}"
+    [ -e "$UNZIPPED" ] && rm -rfv "$UNZIPPED"  # cleanup unzip dir (if exists)
+    unzip "$SDK_ZIP" -d "$TEMP_DIR"
+    mv -v "$UNZIPPED" "$TEMP_SDK_DIR"
     
     # Assert that the package contains only one platform
     PLATFORMS="$TEMP_SDK_DIR/platforms"
@@ -172,7 +182,7 @@ function package() {
     # cp -v external/qemu/NOTICE "$TOOLS"/emulator_NOTICE.txt
 
     # We currently need libz from MinGW for aapt
-    cp -v /cygdrive/c/cygwin/bin/mgwz.dll "$TOOLS"/
+    [[ -n $NEED_MGWZ ]] && cp -v $CYG_MGWZ_PATH "$TOOLS"/
 
     # Update a bunch of bat files
     cp -v sdk/files/post_tools_install.bat            "$LIB"/
@@ -215,7 +225,7 @@ function package() {
     cp -v dalvik/dx/etc/dx.bat "$PLATFORM_TOOLS"/
     mv -v "$TOOLS"/{aapt.exe,aidl.exe,dexdump.exe} "$PLATFORM_TOOLS"/
     # Note: mgwz.dll must be both in SDK/tools for zipalign and in SDK/platform/XYZ/tools/ for aapt
-    cp -v "$TOOLS"/mgwz.dll "$PLATFORM_TOOLS"/
+    [[ -n $NEED_MGWZ ]] && cp -v "$TOOLS"/mgwz.dll "$PLATFORM_TOOLS"/
 
     # Fix EOL chars to make window users happy - fix all files at the top level only
     # as well as all batch files including those in platforms/<name>/tools/
@@ -241,7 +251,7 @@ function package() {
     echo "Resulting SDK is in $DIST_DIR/$DEST_NAME_ZIP"
 }
 
-check
+check $*
 status
 build
 package
