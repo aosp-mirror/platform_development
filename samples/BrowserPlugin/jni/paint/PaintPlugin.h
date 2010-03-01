@@ -58,6 +58,7 @@ private:
     ANPRectF    m_drawingSurface;
     ANPRectF    m_inputToggle;
     ANPRectF    m_colorToggle;
+    ANPRectF    m_fullScreenToggle;
     ANPRectF    m_clearSurface;
 
     ANPPaint*   m_paintSurface;
