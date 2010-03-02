@@ -107,6 +107,6 @@
 	<classpathentry kind="lib" path="out/target/common/obj/JAVA_LIBRARIES/google-common_intermediates/javalib.jar"/>
 	<classpathentry kind="lib" path="out/target/common/obj/JAVA_LIBRARIES/gsf-client_intermediates/javalib.jar"/>
 	<classpathentry kind="lib" path="out/target/common/obj/JAVA_LIBRARIES/mms-common_intermediates/javalib.jar"/>
-	<classpathentry kind="lib" path="packages/apps/Calculator/arity-2.0.2.jar"/>
+	<classpathentry kind="lib" path="packages/apps/Calculator/arity-2.1.2.jar"/>
 	<classpathentry kind="output" path="out/target/common/obj/JAVA_LIBRARIES/android_stubs_current_intermediates/classes"/>
 </classpath>
