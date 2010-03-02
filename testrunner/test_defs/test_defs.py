@@ -96,7 +96,7 @@ class TestDefinitions(object):
       test: TestSuite to add
     """
     if self.GetTest(test.GetName()) is not None:
-      logger.Log("Overriding test definition %s" % test.GetName())
+      logger.SilentLog("Overriding test definition %s" % test.GetName())
     self._testname_map[test.GetName()] = test
 
   def GetTests(self):
