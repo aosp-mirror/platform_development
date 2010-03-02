@@ -32,6 +32,8 @@ LOCAL_PACKAGE_NAME := SimpleJNI
 
 LOCAL_JNI_SHARED_LIBRARIES := libsimplejni
 
+LOCAL_PROGUARD_ENABLED := disabled
+
 include $(BUILD_PACKAGE)
 
 # ============================================================
