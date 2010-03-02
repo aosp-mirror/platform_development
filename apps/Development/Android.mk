@@ -3,7 +3,6 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE_TAGS := eng
 
-LOCAL_STATIC_JAVA_LIBRARIES := android-common
 LOCAL_JAVA_LIBRARIES := android.test.runner
 
 LOCAL_SRC_FILES := $(call all-subdir-java-files) \

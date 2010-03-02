@@ -16,7 +16,7 @@
 
 package com.android.development;
 
-import com.android.common.ui.PointerLocationView;
+import com.android.internal.widget.PointerLocationView;
 
 import android.app.Activity;
 import android.os.Bundle;
