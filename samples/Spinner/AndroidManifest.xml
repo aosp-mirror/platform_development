@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright (C) 2010 The Android Open Source Project
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
+
+<!--
+    Declares the contents of this Android application. The "namespace"
+    attribute brings in the Android platform namespace, and the
+    "package" attribute provides a unique Android name for the application.
+    If you use this file as a template in your own application, you must change
+    the package name from "com.android.example" to one that you own or have
+    control over.
+ -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+      package="com.android.example.spinner"
+      android:versionCode="1"
+      android:versionName="1.0">
+    <!--
+        Sets the application's user-readable label
+     -->
+    <application android:label="@string/app_name">
+        <!--
+            Sets the activity's name and label
+         -->
+        <activity android:name=".SpinnerActivity"
+                  android:label="@string/app_name">
+            <!--
+                This activity responds to MAIN and LAUNCHER intents
+             -->
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+    </application>
+    <!--
+        Requires a minimum platform version of Android-3 (SDK 1.5) to run
+    -->
+    <uses-sdk android:minSdkVersion="3"/>
+
+</manifest>
