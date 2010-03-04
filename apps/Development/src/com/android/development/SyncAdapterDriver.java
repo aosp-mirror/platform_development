@@ -20,6 +20,7 @@ import android.app.Activity;
 import android.app.PendingIntent;
 import android.app.Dialog;
 import android.app.AlertDialog;
+import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.content.pm.RegisteredServicesCache;
 import android.content.pm.RegisteredServicesCacheListener;
@@ -350,8 +351,9 @@ public class SyncAdapterDriver extends Activity
             super(context, SERVICE_INTERFACE, SERVICE_META_DATA, ATTRIBUTES_NAME, null);
         }
 
-        public SyncAdapterType parseServiceAttributes(String packageName, AttributeSet attrs) {
-            TypedArray sa = mContext.getResources().obtainAttributes(attrs,
+        public SyncAdapterType parseServiceAttributes(Resources res,
+                String packageName, AttributeSet attrs) {
+            TypedArray sa = res.obtainAttributes(attrs,
                     com.android.internal.R.styleable.SyncAdapter);
             try {
                 final String authority =
