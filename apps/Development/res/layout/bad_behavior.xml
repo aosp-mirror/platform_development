@@ -14,54 +14,70 @@
      limitations under the License.
 -->
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <Button android:id="@+id/bad_behavior_crash_system"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/bad_behavior_crash_system_label" />
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
 
-    <Button android:id="@+id/bad_behavior_crash_main"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/bad_behavior_crash_main_label" />
+        <Button android:id="@+id/bad_behavior_crash_main"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/bad_behavior_crash_main_label" />
 
-    <Button android:id="@+id/bad_behavior_crash_thread"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/bad_behavior_crash_thread_label" />
+        <Button android:id="@+id/bad_behavior_crash_thread"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/bad_behavior_crash_thread_label" />
 
-    <Button android:id="@+id/bad_behavior_crash_native"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/bad_behavior_crash_native_label" />
+        <Button android:id="@+id/bad_behavior_crash_native"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/bad_behavior_crash_native_label" />
 
-    <Button android:id="@+id/bad_behavior_wtf"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/bad_behavior_wtf_label" />
+        <Button android:id="@+id/bad_behavior_crash_system"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/bad_behavior_crash_system_label" />
 
-    <Button android:id="@+id/bad_behavior_anr"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/bad_behavior_anr_label" />
+        <Button android:id="@+id/bad_behavior_wtf"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/bad_behavior_wtf_label" />
 
-    <Button android:id="@+id/bad_behavior_anr_activity"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/bad_behavior_anr_activity_label" />
+        <Button android:id="@+id/bad_behavior_anr"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/bad_behavior_anr_label" />
 
-    <Button android:id="@+id/bad_behavior_anr_broadcast"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/bad_behavior_anr_broadcast_label" />
+        <Button android:id="@+id/bad_behavior_anr_activity"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/bad_behavior_anr_activity_label" />
 
-    <Button android:id="@+id/bad_behavior_anr_service"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/bad_behavior_anr_service_label" />
+        <Button android:id="@+id/bad_behavior_anr_broadcast"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/bad_behavior_anr_broadcast_label" />
 
-</LinearLayout>
+        <Button android:id="@+id/bad_behavior_anr_service"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/bad_behavior_anr_service_label" />
+
+        <Button android:id="@+id/bad_behavior_anr_system"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/bad_behavior_anr_system_label" />
+
+        <Button android:id="@+id/bad_behavior_wedge_system"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/bad_behavior_wedge_system_label" />
+
+    </LinearLayout>
+
+</ScrollView>
