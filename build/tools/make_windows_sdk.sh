@@ -13,14 +13,13 @@
 # - If you think you may have Windows versions of tools (e.g. make) installed, it may
 #   reduce confusion levels to 'export PATH=/usr/bin'
 
-set -e  # Fail this script as soon as a command fails -- fail early, fail fast
-
-
 PROG_NAME="$0"
 SDK_ZIP="$1"; shift
 DIST_DIR="$1"; shift
 TEMP_DIR="$1"; shift
 [ -z "$TEMP_DIR" ] && TEMP_DIR=${TMP:-/tmp}
+
+set -e  # Fail this script as soon as a command fails -- fail early, fail fast
 
 function die() {
     echo "Error:" $*
