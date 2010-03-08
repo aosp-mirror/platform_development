@@ -25,9 +25,6 @@
        android:layout_width="match_parent"
        android:layout_height="wrap_content">
 
-        <ListView android:id="@+id/accounts_tester_authenticators_list"
-           android:layout_width="match_parent" android:layout_height="match_parent"/>
-
       <LinearLayout
          android:orientation="horizontal"
          android:layout_width="match_parent"

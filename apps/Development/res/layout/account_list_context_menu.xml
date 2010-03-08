@@ -25,6 +25,9 @@
     <item android:id="@+id/accounts_tester_test_has_features"
         android:title="@string/accounts_tester_test_has_features" />
 
+    <item android:id="@+id/accounts_tester_clear_password"
+        android:title="@string/accounts_tester_clear_password" />
+
     <item android:id="@+id/accounts_tester_invalidate_auth_token"
         android:title="@string/accounts_tester_invalidate_auth_token" />
 
