@@ -198,9 +198,7 @@ int16 BackgroundPlugin::handleEvent(const ANPEvent* evt) {
             }
             break; // end kLifecycle_ANPEventType
         case kTouch_ANPEventType:
-            if (kDown_ANPTouchAction == evt->data.touch.action)
-                return kHandleLongPress_ANPTouchResult | kHandleDoubleTap_ANPTouchResult;
-            else if (kLongPress_ANPTouchAction == evt->data.touch.action) {
+            if (kLongPress_ANPTouchAction == evt->data.touch.action) {
                 browser->geturl(inst(), "javascript:alert('Detected long press event.')", 0);
                 gWindowI.requestFullScreen(inst());
             }
