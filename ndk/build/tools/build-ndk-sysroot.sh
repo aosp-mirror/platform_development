@@ -36,13 +36,12 @@ PLATFORM=android-3
 # ABI is the target ABI name for the NDK
 ABI=arm
 
-# ARCH is the target ABI name in the Android sources
-ARCH=arm
-
 OPTION_HELP=no
 OPTION_BUILD_OUT=
 OPTION_PLATFORM=
 OPTION_PACKAGE=no
+OPTION_ABI=
+
 for opt do
   optarg=`expr "x$opt" : 'x[^=]*=\(.*\)'`
   case "$opt" in
@@ -64,6 +63,9 @@ for opt do
   --package)
     OPTION_PACKAGE=yes
     ;;
+  --abi=*)
+    OPTION_ABI=$optarg
+    ;;
   *)
     echo "unknown option '$opt', use --help"
     exit 1
@@ -80,6 +82,7 @@ if [ $OPTION_HELP = "yes" ] ; then
     echo "  --help             print this message"
     echo "  --verbose          enable verbose messages"
     echo "  --platform=<name>  generate sysroot for platform <name> (default is $PLATFORM)"
+    echo "  --abi=<name>       generate sysroot for abi <name> (default is $ABI)"
     echo "  --build-out=<path> set Android build out directory"
     echo "  --package          generate sysroot package tarball"
     echo ""
@@ -89,6 +92,20 @@ fi
 if [ -n "$OPTION_PLATFORM" ] ; then
     PLATFORM=$OPTION_PLATFORM
 fi
+
+if [ -n "$OPTION_ABI" ] ; then
+    ABI=$OPTION_ABI
+fi
+
+case "$ABI" in
+arm*)
+    ARCH=arm
+    ;;
+*)
+    ARCH=$ABI
+    ;;
+esac
+
 
 # Get the root of the NDK from the current program location
 NDK_ROOT=`dirname $0`
@@ -258,14 +275,18 @@ common_headers $BIONIC_ROOT/libthread_db/include
 
 # for libm, just copy math.h and fenv.h
 common_header $BIONIC_ROOT/libm/include math.h
-arch_header   $BIONIC_ROOT/libm/include $ARCH/fenv.h
+if [ "$ARCH" = "x86" ]; then
+    arch_header   $BIONIC_ROOT/libm/include i387/fenv.h
+else
+    arch_header   $BIONIC_ROOT/libm/include $ARCH/fenv.h
+fi
 
 # our tiny C++ standard library
 common_headers $BIONIC_ROOT/libstdc++/include
 
 # C library kernel headers
 common_headers $LIBC_ROOT/kernel/common
-arch_headers   $LIBC_ROOT/kernel/arch-arm
+arch_headers   $LIBC_ROOT/kernel/arch-$ARCH
 
 # C library headers
 common_headers $LIBC_ROOT/include
@@ -275,6 +296,6 @@ arch_headers   $LIBC_ROOT/arch-$ARCH/include
 if [ $OPTION_PACKAGE = yes ] ; then
     DATE=`date +%Y%m%d`
     PKGFILE=/tmp/android-ndk-sysroot-$DATE.tar.bz2
-    tar cjf $PKGFILE build/platforms/$PLATFORM
+    tar cjf $PKGFILE build/platforms/$PLATFORM/arch-$ARCH
     echo "Packaged in $PKGFILE"
 fi
