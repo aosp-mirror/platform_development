@@ -91,6 +91,9 @@ public class Monkey {
     /** Monitor /data/tombstones and stop the monkey if new files appear. */
     private boolean mMonitorNativeCrashes;
 
+    /** Ignore any native crashes while running? */
+    private boolean mIgnoreNativeCrashes;
+
     /** Send no events. Use with long throttle-time to watch user operations */
     private boolean mSendNoEvents;
 
@@ -578,6 +581,8 @@ public class Monkey {
                     mIgnoreSecurityExceptions = true;
                 } else if (opt.equals("--monitor-native-crashes")) {
                     mMonitorNativeCrashes = true;
+                } else if (opt.equals("--ignore-native-crashes")) {
+                    mIgnoreNativeCrashes = true;
                 } else if (opt.equals("--kill-process-after-error")) {
                     mKillProcessAfterError = true;
                 } else if (opt.equals("--hprof")) {
@@ -860,7 +865,7 @@ public class Monkey {
                     // the watcher (ignore the error)
                     if (checkNativeCrashes() && (eventCounter > 0)) {
                         System.out.println("** New native crash detected.");
-                        mAbort = mAbort || mKillProcessAfterError;
+                        mAbort = mAbort || !mIgnoreNativeCrashes || mKillProcessAfterError;
                     }
                 }
                 if (mAbort) {
@@ -1071,7 +1076,8 @@ public class Monkey {
         usage.append("usage: monkey [-p ALLOWED_PACKAGE [-p ALLOWED_PACKAGE] ...]\n");
         usage.append("              [-c MAIN_CATEGORY [-c MAIN_CATEGORY] ...]\n");
         usage.append("              [--ignore-crashes] [--ignore-timeouts]\n");
-        usage.append("              [--ignore-security-exceptions] [--monitor-native-crashes]\n");
+        usage.append("              [--ignore-security-exceptions]\n");
+        usage.append("              [--monitor-native-crashes] [--ignore-native-crashes]\n");
         usage.append("              [--kill-process-after-error] [--hprof]\n");
         usage.append("              [--pct-touch PERCENT] [--pct-motion PERCENT]\n");
         usage.append("              [--pct-trackball PERCENT] [--pct-syskeys PERCENT]\n");
