@@ -302,11 +302,8 @@ int16 PaintPlugin::handleEvent(const ANPEvent* evt) {
                 m_isTouchActive = false;
                 gPathI.reset(m_touchPath);
                 return 1;
-            } else if (kDoubleTap_ANPTouchAction == evt->data.touch.action) {
-                gWindowI.requestCenterFitZoom(inst());
-                return 1;
-
             }
+
             break;
         }
         case kMouse_ANPEventType: {
