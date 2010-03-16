@@ -278,6 +278,8 @@ class TestWalker(object):
     tests = []
     for instr_name in manifest.GetInstrumentationNames():
       pkg_name = manifest.GetPackageName()
+      if instr_name.find(".") < 0:
+        instr_name = "." + instr_name
       logger.SilentLog('Found instrumentation %s/%s' % (pkg_name, instr_name))
       suite = instrumentation_test.InstrumentationTestSuite()
       suite.SetPackageName(pkg_name)
@@ -294,4 +296,3 @@ class TestWalker(object):
         suite.SetSuite('cts')
       tests.append(suite)
     return tests
-
