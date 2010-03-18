@@ -65,10 +65,16 @@ sdk/templates/icon_mdpi.png platforms/${PLATFORM_NAME}/templates/icon_mdpi.png
 sdk/templates/icon_hdpi.png platforms/${PLATFORM_NAME}/templates/icon_hdpi.png
 
 # sdk.git files
+# SDK properties
 sdk/files/sdk.properties         platforms/${PLATFORM_NAME}/sdk.properties
-sdk/files/android_rules.xml      platforms/${PLATFORM_NAME}/templates/android_rules.xml
-sdk/files/android_lib_rules.xml  platforms/${PLATFORM_NAME}/templates/android_lib_rules.xml
-sdk/files/android_test_rules.xml platforms/${PLATFORM_NAME}/templates/android_test_rules.xml
+# legacy Ant build rules, copied under the old name
+sdk/files/ant_rules_r1.xml       platforms/${PLATFORM_NAME}/templates/android_rules.xml
+sdk/files/ant_test_rules_r1.xml  platforms/${PLATFORM_NAME}/templates/android_test_rules.xml
+# newer Ant rules.
+sdk/files/ant_rules_r2.xml       platforms/${PLATFORM_NAME}/ant/ant_rules_r2.xml
+sdk/files/ant_test_rules_r2.xml  platforms/${PLATFORM_NAME}/ant/ant_test_rules_r2.xml
+sdk/files/ant_lib_rules_r2.xml   platforms/${PLATFORM_NAME}/ant/ant_lib_rules_r2.xml
+# layout device definitiion
 sdk/files/devices.xml            tools/lib/devices.xml
 
 # emacs support from sdk.git
@@ -184,6 +190,7 @@ sdk/emulator/skins/WVGA800   platforms/${PLATFORM_NAME}/skins/WVGA800
 sdk/emulator/skins/WVGA854   platforms/${PLATFORM_NAME}/skins/WVGA854
 
 # NOTICE files are copied by build/core/Makefile from sdk.git
+sdk/files/sdk_files_NOTICE.txt platforms/${PLATFORM_NAME}/ant/NOTICE.txt
 sdk/files/sdk_files_NOTICE.txt platforms/${PLATFORM_NAME}/templates/NOTICE.txt
 sdk/files/sdk_files_NOTICE.txt platforms/${PLATFORM_NAME}/data/NOTICE.txt
 sdk/files/sdk_files_NOTICE.txt platforms/${PLATFORM_NAME}/skins/NOTICE.txt
