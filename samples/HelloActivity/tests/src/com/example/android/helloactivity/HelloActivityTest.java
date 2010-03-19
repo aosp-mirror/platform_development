@@ -16,18 +16,25 @@
 
 package com.example.android.helloactivity;
 
-import android.test.ActivityInstrumentationTestCase;
-
-import com.example.android.helloactivity.HelloActivity;
+import android.test.ActivityInstrumentationTestCase2;
 
 /**
  * Make sure that the main launcher activity opens up properly, which will be
- * verified by {@link ActivityTestCase#testActivityTestCaseSetUpProperly}.
+ * verified by {@link #testActivityTestCaseSetUpProperly}.
  */
-public class HelloActivityTest extends ActivityInstrumentationTestCase<HelloActivity> {
+public class HelloActivityTest extends ActivityInstrumentationTestCase2<HelloActivity> {
 
-  public HelloActivityTest() {
-      super("com.example.android.helloactivity", HelloActivity.class);
-  }
-  
+    /**
+     * Creates an {@link ActivityInstrumentationTestCase2} for the {@link HelloActivity} activity.
+     */
+    public HelloActivityTest() {
+        super(HelloActivity.class);
+    }
+
+    /**
+     * Verifies that the activity under test can be launched.
+     */
+    public void testActivityTestCaseSetUpProperly() {
+        assertNotNull("activity should be launched successfully", getActivity());
+    }
 }

@@ -18,7 +18,7 @@ package com.example.android.apis.view;
 
 import com.example.android.apis.R;
 
-import android.test.ActivityInstrumentationTestCase;
+import android.test.ActivityInstrumentationTestCase2;
 import android.test.suitebuilder.annotation.MediumTest;
 import android.view.KeyEvent;
 import android.widget.Button;
@@ -42,26 +42,25 @@ import android.widget.Button;
  * See {@link com.example.android.apis.AllTests} for documentation on running
  * all tests and individual tests in this application.
  */
-public class Focus2ActivityTest extends ActivityInstrumentationTestCase<Focus2> {
+public class Focus2ActivityTest extends ActivityInstrumentationTestCase2<Focus2> {
 
     private Button mLeftButton;
     private Button mCenterButton;
     private Button mRightButton;
 
     /**
-     * The first constructor parameter must refer to the package identifier of the
-     * package hosting the activity to be launched, which is specified in the AndroidManifest.xml
-     * file.  This is not necessarily the same as the java package name of the class - in fact, in
-     * some cases it may not match at all.
+     * Creates an {@link ActivityInstrumentationTestCase2} that tests the {@link Focus2} activity.
      */
     public Focus2ActivityTest() {
-        super("com.example.android.apis", Focus2.class);
+        super(Focus2.class);
     }
 
     @Override
     protected void setUp() throws Exception {
         super.setUp();
         final Focus2 a = getActivity();
+        // ensure a valid handle to the activity has been returned
+        assertNotNull(a);
         mLeftButton = (Button) a.findViewById(R.id.leftButton);
         mCenterButton = (Button) a.findViewById(R.id.centerButton);
         mRightButton = (Button) a.findViewById(R.id.rightButton);

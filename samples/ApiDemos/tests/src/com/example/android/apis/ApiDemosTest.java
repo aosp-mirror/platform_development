@@ -16,22 +16,25 @@
 
 package com.example.android.apis;
 
-import android.test.ActivityInstrumentationTestCase;
+import android.test.ActivityInstrumentationTestCase2;
 
 /**
  * Make sure that the main launcher activity opens up properly, which will be
- * verified by {@link ActivityInstrumentationTestCase#testActivityTestCaseSetUpProperly}.
+ * verified by {@link #testActivityTestCaseSetUpProperly}.
  */
-public class ApiDemosTest extends ActivityInstrumentationTestCase<ApiDemos> {
+public class ApiDemosTest extends ActivityInstrumentationTestCase2<ApiDemos> {
 
     /**
-     * The first constructor parameter must refer to the package identifier of the
-     * package hosting the activity to be launched, which is specified in the AndroidManifest.xml
-     * file.  This is not necessarily the same as the java package name of the class - in fact, in
-     * some cases it may not match at all.
+     * Create an {@link ActivityInstrumentationTestCase2} that tests the {@link ApiDemos} activity.
      */
     public ApiDemosTest() {
-        super("com.example.android.apis", ApiDemos.class);
+        super(ApiDemos.class);
     }
 
+    /**
+     * Verifies that activity under test can be launched.
+     */
+    public void testActivityTestCaseSetUpProperly() {
+        assertNotNull("activity should be launched successfully", getActivity());
+    }
 }
