@@ -16,18 +16,27 @@
 
 package com.example.android.notepad;
 
-import android.test.ActivityInstrumentationTestCase;
+import android.test.ActivityInstrumentationTestCase2;
 
 import com.example.android.notepad.NotesList;
 
 /**
  * Make sure that the main launcher activity opens up properly, which will be
- * verified by {@link ActivityTestCase#testActivityTestCaseSetUpProperly}.
+ * verified by {@link #testActivityTestCaseSetUpProperly}.
  */
-public class NotePadTest extends ActivityInstrumentationTestCase<NotesList> {
+public class NotePadTest extends ActivityInstrumentationTestCase2<NotesList> {
 
-  public NotePadTest() {
-      super("com.example.android.notepad", NotesList.class);
-  }
+    /**
+     * Creates an {@link ActivityInstrumentationTestCase2} for the {@link NotesList} activity.
+     */
+    public NotePadTest() {
+        super(NotesList.class);
+    }
 
+    /**
+     * Verifies that the activity under test can be launched.
+     */
+    public void testActivityTestCaseSetUpProperly() {
+        assertNotNull("activity should be launched successfully", getActivity());
+    }
 }

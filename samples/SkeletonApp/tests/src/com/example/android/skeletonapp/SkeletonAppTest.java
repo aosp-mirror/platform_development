@@ -16,17 +16,26 @@
 
 package com.example.android.skeletonapp;
 
-import android.test.ActivityInstrumentationTestCase;
-
-import com.example.android.skeletonapp.SkeletonActivity;
+import android.test.ActivityInstrumentationTestCase2;
 
 /**
  * Make sure that the main launcher activity opens up properly, which will be
- * verified by {@link ActivityTestCase#testActivityTestCaseSetUpProperly}.
+ * verified by {@link #testActivityTestCaseSetUpProperly}.
  */
-public class SkeletonAppTest extends ActivityInstrumentationTestCase<SkeletonActivity> {
+public class SkeletonAppTest extends ActivityInstrumentationTestCase2<SkeletonActivity> {
 
-  public SkeletonAppTest() {
-      super("com.example.android.skeletonapp", SkeletonActivity.class);
-  }
+    /**
+     * Creates an {@link ActivityInstrumentationTestCase2} for the {@link SkeletonActivity}
+     * activity.
+     */
+    public SkeletonAppTest() {
+        super(SkeletonActivity.class);
+    }
+
+    /**
+     * Verifies that the activity under test can be launched.
+     */
+    public void testActivityTestCaseSetUpProperly() {
+        assertNotNull("activity should be launched successfully", getActivity());
+    }
 }
