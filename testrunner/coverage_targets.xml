@@ -87,7 +87,7 @@
 
    <!-- content providers -->
     <coverage_target name="CalendarProvider"
-        build_path="packages/providers/calendar" type="APPS" />
+        build_path="packages/providers/CalendarProvider" type="APPS" />
     <coverage_target name="ContactsProvider"
         build_path="packages/providers/ContactsProvider" type="APPS" />
     <coverage_target name="DownloadProvider"

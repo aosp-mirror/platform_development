@@ -391,19 +391,19 @@ See test_defs.xsd for more information.
     coverage_target="Browser" />
 
 <test name="calendar"
-    build_path="packages/apps/Calendar/tests"
+    build_path="packages/apps/Calendar"
     package="com.android.calendar.tests"
     coverage_target="Calendar"
     continuous="true" />
 
 <test name="calprov"
-    build_path="packages/providers/CalendarProvider/tests"
+    build_path="packages/providers/CalendarProvider"
     package="com.android.providers.calendar.tests"
     coverage_target="CalendarProvider"
     continuous="true" />
 
 <test name="contactsprov"
-    build_path="packages/providers/ContactsProvider/tests"
+    build_path="packages/providers/ContactsProvider"
     package="com.android.providers.contacts.tests"
     coverage_target="ContactsProvider"
     continuous="true" />
