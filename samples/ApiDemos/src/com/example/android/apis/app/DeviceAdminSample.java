@@ -114,6 +114,7 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
             DevicePolicyManager.PASSWORD_QUALITY_UNSPECIFIED,
             DevicePolicyManager.PASSWORD_QUALITY_SOMETHING,
             DevicePolicyManager.PASSWORD_QUALITY_NUMERIC,
+            DevicePolicyManager.PASSWORD_QUALITY_ALPHABETIC,
             DevicePolicyManager.PASSWORD_QUALITY_ALPHANUMERIC
         };
         Spinner mPasswordQuality;

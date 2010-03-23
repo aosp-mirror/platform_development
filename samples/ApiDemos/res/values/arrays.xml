@@ -90,6 +90,7 @@
         <item>Unspecified</item>
         <item>Something</item>
         <item>Numeric</item>
+        <item>Alphabetic</item>
         <item>Alphanumeric</item>
     </string-array>
 
