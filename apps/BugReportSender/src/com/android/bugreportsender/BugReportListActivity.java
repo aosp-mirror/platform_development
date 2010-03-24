@@ -21,6 +21,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.FileObserver;
 import android.os.Handler;
 import android.util.Log;
@@ -42,7 +43,6 @@ import java.util.HashMap;
  */
 public class BugReportListActivity extends ListActivity {
     private static final String TAG = "BugReportListActivity";
-    private static final File REPORT_DIR = new File("/sdcard/bugreports");
     private static final int SYSTEM_LOG_ID = 1;
     private static final int MEMORY_ID = 2;
     private static final int CPU_ID = 3;
@@ -56,6 +56,7 @@ public class BugReportListActivity extends ListActivity {
         ID_MAP.put(PROCRANK_ID, "PROCRANK");
     }
 
+    private File mReportDir = null;
     private ArrayAdapter<String> mAdapter = null;
     private ArrayList<File> mFiles = null;
     private Handler mHandler = null;
@@ -64,12 +65,13 @@ public class BugReportListActivity extends ListActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        mReportDir = new File(Environment.getExternalStorageDirectory(), "bugreports");
         mAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1);
         mFiles = new ArrayList<File>();
         mHandler = new Handler();
 
         int flags = FileObserver.CREATE | FileObserver.MOVED_TO;
-        mObserver = new FileObserver(REPORT_DIR.getPath(), flags) {
+        mObserver = new FileObserver(mReportDir.getPath(), flags) {
             public void onEvent(int event, String path) {
                 mHandler.post(new Runnable() { public void run() { scanDirectory(); } });
             }
@@ -151,7 +153,7 @@ public class BugReportListActivity extends ListActivity {
         mAdapter.clear();
         mFiles.clear();
 
-        File[] files = REPORT_DIR.listFiles();
+        File[] files = mReportDir.listFiles();
         if (files == null) return;
 
         // Sort in reverse order: newest bug reports first
