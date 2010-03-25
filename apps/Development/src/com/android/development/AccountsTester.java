@@ -221,6 +221,14 @@ public class AccountsTester extends Activity implements OnAccountsUpdateListener
         mLongPressedAccount = holder.account;
     }
 
+    protected void onSaveInstanceState(Bundle outState) {
+        outState.putParcelable("account", mLongPressedAccount);
+    }
+
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        mLongPressedAccount = savedInstanceState.getParcelable("account");
+    }
+
     @Override
     public boolean onContextItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.accounts_tester_remove_account) {
