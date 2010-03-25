@@ -51,7 +51,7 @@ pdk_config_dir := development/pdk/doxygen_config
 pdk_docsfile_dir := $(pdk_config_dir)/docsfiles
 pdk_legacy_hardware_dir := hardware/libhardware_legacy/include/hardware_legacy
 pdk_hardware_dir := hardware/libhardware/include/hardware
-pdk_camera_dir := frameworks/base/include/ui
+pdk_camera_dir := frameworks/base/include/camera
 
 # Destination directory for docs (templates + doxygenated headers)
 pdk_docs_dest_dir := $(pdk_docs_intermediates)/docs/porting
