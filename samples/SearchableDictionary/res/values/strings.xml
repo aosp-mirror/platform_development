@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
 /*
-** Copyright 2009, The Android Open Source Project
+** Copyright 2010, The Android Open Source Project
 **
 ** Licensed under the Apache License, Version 2.0 (the "License");
 ** you may not use this file except in compliance with the License.
@@ -16,13 +16,16 @@
 ** limitations under the License.
 */
 -->
-<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+<resources>
 
     <!-- The name of the application. -->
     <string name="app_name">Searchable Dictionary</string>
 
-    <!-- The label for the search results for this app (see searchable.xml for more details). -->
+    <!-- The label for use as a searchable item -->
     <string name="search_label">Dictionary</string>
+
+    <!-- The hint text that appears in the search box. -->
+    <string name="search_hint">Search the dictionary</string>
 
     <!-- The menu entry that invokes search. -->
     <string name="menu_search">Search</string>
@@ -34,5 +37,12 @@
     <string name="search_instructions">Press the search key to look up a word</string>
 
     <!-- Shown above search results when we receive a search request. -->
-    <string name="search_results">Search results for \'<xliff:g id="string">%s</xliff:g>\': </string>
+    <plurals name="search_results">
+      <item quantity="one">%d result for \"%s\": </item>
+      <item quantity="other">%d results for \"%s\": </item>
+    </plurals>
+
+    <!-- Search failure message. -->
+    <string name="no_results">No results found for \"%s\"</string>
+
 </resources>
