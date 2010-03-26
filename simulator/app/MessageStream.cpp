@@ -8,6 +8,7 @@
 
 #include "utils/Log.h"
 
+#include <stdint.h>
 #include <string.h>
 #include <assert.h>
 
@@ -338,7 +339,7 @@ bool MessageStream::init(Pipe* readPipe, Pipe* writePipe, bool initiateHello)
      * and capability flags.
      */
     if (initiateHello) {
-        long data = kHelloMsg;
+        int32_t data = kHelloMsg;
         Message msg;
 
         /* send hello */
@@ -357,14 +358,15 @@ bool MessageStream::init(Pipe* readPipe, Pipe* writePipe, bool initiateHello)
             return false;
         }
 
-        const long* pAck;
-        pAck = (const long*) msg.getData();
+        const int32_t* pAck;
+        pAck = (const int32_t*) msg.getData();
         if (pAck == NULL || *pAck != kHelloAckMsg) {
-            LOG(LOG_WARN, "", "hello ack was bad\n");
+            LOG(LOG_WARN, "", "hello ack was bad (%08x vs %08x)\n",
+                *pAck, kHelloAckMsg);
             return false;
         }
     } else {
-        long data = kHelloAckMsg;
+        int32_t data = kHelloAckMsg;
         Message msg;
 
         LOG(LOG_DEBUG, "", "waiting for hello from peer\n");
@@ -375,8 +377,8 @@ bool MessageStream::init(Pipe* readPipe, Pipe* writePipe, bool initiateHello)
             return false;
         }
 
-        const long* pAck;
-        pAck = (const long*) msg.getData();
+        const int32_t* pAck;
+        pAck = (const int32_t*) msg.getData();
         if (pAck == NULL || *pAck != kHelloMsg) {
             LOG(LOG_WARN, "", "hello was bad\n");
             return false;
