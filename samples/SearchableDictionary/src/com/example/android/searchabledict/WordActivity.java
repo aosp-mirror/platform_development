@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 The Android Open Source Project
+ * Copyright (C) 2010 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,33 +17,58 @@
 package com.example.android.searchabledict;
 
 import android.app.Activity;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.widget.TextView;
-import android.content.Intent;
 
 /**
  * Displays a word and its definition.
  */
 public class WordActivity extends Activity {
 
-    private TextView mWord;
-    private TextView mDefinition;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         setContentView(R.layout.word);
 
-        mWord = (TextView) findViewById(R.id.word);
-        mDefinition = (TextView) findViewById(R.id.definition);
+        Uri uri = getIntent().getData();
+        Cursor cursor = managedQuery(uri, null, null, null, null);
 
-        Intent intent = getIntent();
+        if (cursor == null) {
+            finish();
+        } else {
+            cursor.moveToFirst();
 
-        String word = intent.getStringExtra("word");
-        String definition = intent.getStringExtra("definition");
+            TextView word = (TextView) findViewById(R.id.word);
+            TextView definition = (TextView) findViewById(R.id.definition);
 
-        mWord.setText(word);
-        mDefinition.setText(definition);
+            int wIndex = cursor.getColumnIndexOrThrow(DictionaryDatabase.KEY_WORD);
+            int dIndex = cursor.getColumnIndexOrThrow(DictionaryDatabase.KEY_DEFINITION);
+
+            word.setText(cursor.getString(wIndex));
+            definition.setText(cursor.getString(dIndex));
+        }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.options_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.search:
+                onSearchRequested();
+                return true;
+            default:
+                return false;
+        }
     }
 }
