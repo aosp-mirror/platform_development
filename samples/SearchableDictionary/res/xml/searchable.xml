@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
 /*
-** Copyright 2009, The Android Open Source Project
+** Copyright 2010, The Android Open Source Project
 **
 ** Licensed under the Apache License, Version 2.0 (the "License");
 ** you may not use this file except in compliance with the License.
@@ -17,24 +17,20 @@
 */
 -->
 
-<!-- The attributes below configure how the search results will work:
- - the 'label' points to a short description used when searching within the application if
-   'badge mode' is used as specified with android:searchMode="useLabelAsBadge" (which it is not for
-    this application).
- - the 'searchSettingsDescription' points to a string that will be displayed underneath the
-   name of this application in the search settings to describe what content will be searched.
- - 'includeInGlobalSearch' will include this app's search suggestions in Quick Search Box.
- - 'searchSuggestAuthority' specifies the authority matching the authority of the
-   "DictionaryProvider" specified in the manifest.  This means the DictionaryProvider will be
-   queried for search suggestions.
- - 'searchSuggestIntentAction' the default intent action used in the intent that is launched based
-   on a user cilcking on a search suggestion.  This saves us from manually having to fill in the
-   SUGGEST_COLUMN_INTENT_ACTION column for each suggestion returned by the provider.
+<!-- The attributes below configure the Android search box appearance
+     and the search suggestions settings.
+     See the Developer Guide for more information
+     http://developer.android.com/guide/topics/search/
  -->
 <searchable xmlns:android="http://schemas.android.com/apk/res/android"
         android:label="@string/search_label"
+        android:hint="@string/search_hint"
         android:searchSettingsDescription="@string/settings_description"
+        android:searchSuggestAuthority="com.example.android.searchabledict.DictionaryProvider"
+        android:searchSuggestIntentAction="android.intent.action.VIEW"
+        android:searchSuggestIntentData="content://com.example.android.searchabledict.DictionaryProvider/dictionary"
+        android:searchSuggestSelection=" ?"
+        android:searchSuggestThreshold="1"
         android:includeInGlobalSearch="true"
-        android:searchSuggestAuthority="dictionary"
-        android:searchSuggestIntentAction="android.intent.action.VIEW">
-</searchable>
+        >
+ </searchable>
