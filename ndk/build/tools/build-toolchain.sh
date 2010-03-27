@@ -63,7 +63,7 @@ BUILD_OUT=`mktemp -d /tmp/ndk-toolchain-XXX`
 OPTION_HELP=no
 OPTION_PLATFORM=
 OPTION_FORCE_32=no
-OPTION_REBUILD=no
+OPTION_FORCE_BUILD=no
 OPTION_GCC_VERSION=
 OPTION_GDB_VERSION=
 OPTION_PACKAGE=
@@ -492,7 +492,7 @@ if [ $OPTION_FORCE_DOWNLOAD ] ; then
     timestamp_force toolchain verify
 fi
 
-if [ $OPTION_FORCE_BUILD ] ; then
+if [ $OPTION_FORCE_BUILD = "yes" ] ; then
     rm -rf $ANDROID_TOOLCHAIN_BUILD
     timestamp_clear toolchain
     timestamp_clear gdbserver
@@ -705,7 +705,7 @@ else
 fi
 
 for _toolchain in $ANDROID_TOOLCHAIN_LIST; do
-    if timestamp_check toolchain build; then
+    if [ $OPTION_FORCE_BUILD = "yes" ] ; then
         timestamp_force ${_toolchain} configure
         timestamp_force ${_toolchain}-gdbserver configure
     fi
