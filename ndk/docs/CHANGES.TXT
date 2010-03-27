@@ -1,6 +1,21 @@
 Android NDK ChangeLog:
 
 -------------------------------------------------------------------------------
+android-ndk-r4
+
+IMPORTANT BUG FIXES:
+
+IMPORTANT CHANGES:
+
+OTHER:
+
+- build-toolchain.sh: Allow ad-hoc patching of toolchain sources when rebuilding
+  them. This is primarily to ease development. All you need to do is put a patch
+  under build/tools/toolchain-patches/<foo>/<name>.patch, and it will be applied
+  with 'patch -p1' into the <foo> directory of the unpacked toolchain sources
+  before the configure step. 
+
+-------------------------------------------------------------------------------
 android-ndk-r3
 
 IMPORTANT BUG FIXES:
