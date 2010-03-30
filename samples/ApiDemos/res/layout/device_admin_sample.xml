@@ -4,9 +4,9 @@
      Licensed under the Apache License, Version 2.0 (the "License");
      you may not use this file except in compliance with the License.
      You may obtain a copy of the License at
-  
+
           http://www.apache.org/licenses/LICENSE-2.0
-  
+
      Unless required by applicable law or agreed to in writing, software
      distributed under the License is distributed on an "AS IS" BASIS,
      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,47 +27,47 @@
         android:paddingBottom="4dip"
         android:text="@string/sample_device_admin_summary"/>
 
-	<LinearLayout android:orientation="horizontal" android:gravity="center"
-	    android:layout_width="match_parent" android:layout_height="wrap_content">
+    <LinearLayout android:orientation="horizontal" android:gravity="center"
+        android:layout_width="match_parent" android:layout_height="wrap_content">
 
-	    <Button android:id="@+id/enable"
-	        android:layout_width="wrap_content" android:layout_height="wrap_content" 
-	        android:text="@string/enable_admin">
-	        <requestFocus />
-	    </Button>
-	
-	    <Button android:id="@+id/disable"
-	        android:layout_width="wrap_content" android:layout_height="wrap_content" 
-	        android:text="@string/disable_admin">
-	    </Button>
-	    
+        <Button android:id="@+id/enable"
+            android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="@string/enable_admin">
+            <requestFocus />
+        </Button>
+
+        <Button android:id="@+id/disable"
+            android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="@string/disable_admin">
+        </Button>
+
     </LinearLayout>
 
     <LinearLayout android:orientation="horizontal" android:gravity="center"
         android:layout_width="match_parent" android:layout_height="wrap_content">
 
-	    <Spinner android:id="@+id/password_quality"
-	        android:layout_width="wrap_content"
-	        android:layout_height="wrap_content"
-	        android:drawSelectorOnTop="true"
-	        android:prompt="@string/password_quality">
-	    </Spinner>
-    
+        <Spinner android:id="@+id/password_quality"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:drawSelectorOnTop="true"
+            android:prompt="@string/password_quality">
+        </Spinner>
+
         <EditText android:id="@+id/password_length"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:hint="@string/password_length_hint"
             android:inputType="number">
         </EditText>
-            
+
     </LinearLayout>
 
     <Button android:id="@+id/set_password"
-        android:layout_width="wrap_content" android:layout_height="wrap_content" 
+        android:layout_width="wrap_content" android:layout_height="wrap_content"
         android_layout_gravity="east|center_vertical"
         android:text="@string/set_password">
     </Button>
-        
+
     <LinearLayout android:orientation="horizontal" android:gravity="center"
         android:layout_width="match_parent" android:layout_height="wrap_content">
 
@@ -78,15 +78,15 @@
             android:hint="@string/password_hint"
             android:freezesText="true">
         </EditText>
-            
+
         <Button android:id="@+id/reset_password"
-            android:layout_width="wrap_content" android:layout_height="wrap_content" 
+            android:layout_width="wrap_content" android:layout_height="wrap_content"
             android:layout_weight="0"
             android:text="@string/reset_password">
         </Button>
-        
+
     </LinearLayout>
-        
+
     <LinearLayout android:orientation="horizontal" android:gravity="center"
         android:layout_width="match_parent" android:layout_height="wrap_content">
 
@@ -96,25 +96,45 @@
             android:hint="@string/max_failed_pw_hint"
             android:inputType="number">
         </EditText>
-            
+
     </LinearLayout>
-        
+
     <LinearLayout android:orientation="horizontal" android:gravity="center"
         android:layout_width="match_parent" android:layout_height="wrap_content">
 
         <Button android:id="@+id/force_lock"
-            android:layout_width="wrap_content" android:layout_height="wrap_content" 
+            android:layout_width="wrap_content" android:layout_height="wrap_content"
             android:layout_weight="0"
             android:text="@string/force_lock">
         </Button>
-        
+
         <Button android:id="@+id/wipe_data"
-            android:layout_width="wrap_content" android:layout_height="wrap_content" 
+            android:layout_width="wrap_content" android:layout_height="wrap_content"
             android:layout_weight="0"
             android:text="@string/wipe_data">
         </Button>
-        
+
     </LinearLayout>
-    
+
+    <LinearLayout android:orientation="horizontal" android:gravity="center"
+        android:layout_width="match_parent" android:layout_height="wrap_content">
+
+        <EditText android:id="@+id/timeout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:hint="@string/timeout_hint"
+            android:inputType="number"
+            android:freezesText="true">
+        </EditText>
+
+        <Button android:id="@+id/set_timeout"
+            android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:layout_weight="0"
+            android:text="@string/set_timeout_label">
+        </Button>
+
+    </LinearLayout>
+
 </LinearLayout>
 
