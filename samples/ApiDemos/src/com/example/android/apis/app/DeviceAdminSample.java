@@ -51,15 +51,15 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
     static SharedPreferences getSamplePreferences(Context context) {
         return context.getSharedPreferences(DeviceAdminReceiver.class.getName(), 0);
     }
-    
+
     static String PREF_PASSWORD_QUALITY = "password_quality";
     static String PREF_PASSWORD_LENGTH = "password_length";
     static String PREF_MAX_FAILED_PW = "max_failed_pw";
-    
+
     void showToast(Context context, CharSequence msg) {
         Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
     }
-    
+
     @Override
     public void onEnabled(Context context, Intent intent) {
         showToast(context, "Sample Device Admin: enabled");
@@ -94,20 +94,20 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
      * <p>UI control for the sample device admin.  This provides an interface
      * to enable, disable, and perform other operations with it to see
      * their effect.</p>
-     * 
+     *
      * <p>Note that this is implemented as an inner class only keep the sample
      * all together; typically this code would appear in some separate class.
      */
     public static class Controller extends Activity {
         static final int RESULT_ENABLE = 1;
-        
+
         DevicePolicyManager mDPM;
         ActivityManager mAM;
         ComponentName mDeviceAdminSample;
-        
+
         Button mEnableButton;
         Button mDisableButton;
-        
+
         // Password quality spinner choices
         // This list must match the list found in samples/ApiDemos/res/values/arrays.xml
         final static int mPasswordQualityValues[] = new int[] {
@@ -120,15 +120,19 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
         Spinner mPasswordQuality;
         EditText mPasswordLength;
         Button mSetPasswordButton;
-        
+
         EditText mPassword;
         Button mResetPasswordButton;
-        
+
         EditText mMaxFailedPw;
-        
+
         Button mForceLockButton;
         Button mWipeDataButton;
-        
+
+        private Button mTimeoutButton;
+
+        private EditText mTimeout;
+
         @Override
         protected void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
@@ -136,7 +140,7 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
             mDPM = (DevicePolicyManager)getSystemService(Context.DEVICE_POLICY_SERVICE);
             mAM = (ActivityManager)getSystemService(Context.ACTIVITY_SERVICE);
             mDeviceAdminSample = new ComponentName(Controller.this, DeviceAdminSample.class);
-            
+
             setContentView(R.layout.device_admin_sample);
 
             // Watch for button clicks.
@@ -144,7 +148,7 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
             mEnableButton.setOnClickListener(mEnableListener);
             mDisableButton = (Button)findViewById(R.id.disable);
             mDisableButton.setOnClickListener(mDisableListener);
-            
+
             mPasswordQuality = (Spinner)findViewById(R.id.password_quality);
             ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
                     this, R.array.password_qualities, android.R.layout.simple_spinner_item);
@@ -176,11 +180,11 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
             });
             mSetPasswordButton = (Button)findViewById(R.id.set_password);
             mSetPasswordButton.setOnClickListener(mSetPasswordListener);
-            
+
             mPassword = (EditText)findViewById(R.id.password);
             mResetPasswordButton = (Button)findViewById(R.id.reset_password);
             mResetPasswordButton.setOnClickListener(mResetPasswordListener);
-            
+
             mMaxFailedPw = (EditText)findViewById(R.id.max_failed_pw);
             mMaxFailedPw.addTextChangedListener(new TextWatcher() {
                 public void afterTextChanged(Editable s) {
@@ -199,11 +203,15 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
                     }
                 }
             });
-            
+
             mForceLockButton = (Button)findViewById(R.id.force_lock);
             mForceLockButton.setOnClickListener(mForceLockListener);
             mWipeDataButton = (Button)findViewById(R.id.wipe_data);
             mWipeDataButton.setOnClickListener(mWipeDataListener);
+
+            mTimeout = (EditText) findViewById(R.id.timeout);
+            mTimeoutButton = (Button) findViewById(R.id.set_timeout);
+            mTimeoutButton.setOnClickListener(mSetTimeoutListener);
         }
 
         void updateButtonStates() {
@@ -230,14 +238,14 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
                 mWipeDataButton.setEnabled(false);
             }
         }
-        
+
         void updateControls() {
             SharedPreferences prefs = getSamplePreferences(this);
             final int pwQuality = prefs.getInt(PREF_PASSWORD_QUALITY,
                     DevicePolicyManager.PASSWORD_QUALITY_UNSPECIFIED);
             final int pwLength = prefs.getInt(PREF_PASSWORD_LENGTH, 0);
             final int maxFailedPw = prefs.getInt(PREF_MAX_FAILED_PW, 0);
-            
+
             for (int i=0; i<mPasswordQualityValues.length; i++) {
                 if (mPasswordQualityValues[i] == pwQuality) {
                     mPasswordQuality.setSelection(i);
@@ -246,14 +254,14 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
             mPasswordLength.setText(Integer.toString(pwLength));
             mMaxFailedPw.setText(Integer.toString(maxFailedPw));
         }
-        
+
         void updatePolicies() {
             SharedPreferences prefs = getSamplePreferences(this);
             final int pwQuality = prefs.getInt(PREF_PASSWORD_QUALITY,
                     DevicePolicyManager.PASSWORD_QUALITY_UNSPECIFIED);
             final int pwLength = prefs.getInt(PREF_PASSWORD_LENGTH, 0);
             final int maxFailedPw = prefs.getInt(PREF_MAX_FAILED_PW, 0);
-            
+
             boolean active = mDPM.isAdminActive(mDeviceAdminSample);
             if (active) {
                 mDPM.setPasswordQuality(mDeviceAdminSample, pwQuality);
@@ -261,25 +269,25 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
                 mDPM.setMaximumFailedPasswordsForWipe(mDeviceAdminSample, maxFailedPw);
             }
         }
-        
+
         void setPasswordQuality(int quality) {
             SharedPreferences prefs = getSamplePreferences(this);
             prefs.edit().putInt(PREF_PASSWORD_QUALITY, quality).commit();
             updatePolicies();
         }
-        
+
         void setPasswordLength(int length) {
             SharedPreferences prefs = getSamplePreferences(this);
             prefs.edit().putInt(PREF_PASSWORD_LENGTH, length).commit();
             updatePolicies();
         }
-        
+
         void setMaxFailedPw(int length) {
             SharedPreferences prefs = getSamplePreferences(this);
             prefs.edit().putInt(PREF_MAX_FAILED_PW, length).commit();
             updatePolicies();
         }
-        
+
         @Override
         protected void onResume() {
             super.onResume();
@@ -297,7 +305,7 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
                     }
                     return;
             }
-            
+
             super.onActivityResult(requestCode, resultCode, data);
         }
 
@@ -395,6 +403,25 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
                 });
                 builder.setNegativeButton("No way!", null);
                 builder.show();
+            }
+        };
+
+        private OnClickListener mSetTimeoutListener = new OnClickListener() {
+
+            public void onClick(View v) {
+                if (mAM.isUserAMonkey()) {
+                    // Don't trust monkeys to do the right thing!
+                    AlertDialog.Builder builder = new AlertDialog.Builder(Controller.this);
+                    builder.setMessage("You can't lock my screen because you are a monkey!");
+                    builder.setPositiveButton("I admit defeat", null);
+                    builder.show();
+                    return;
+                }
+                boolean active = mDPM.isAdminActive(mDeviceAdminSample);
+                if (active) {
+                    long timeMs = 1000L*Long.parseLong(mTimeout.getText().toString());
+                    mDPM.setMaximumTimeToLock(mDeviceAdminSample, timeMs);
+                }
             }
         };
     }

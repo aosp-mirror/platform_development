@@ -43,7 +43,7 @@
     <string name="activity_setwallpaper">App/Activity/SetWallpaper</string>
     <string name="set_wallpaper">Set Wallpaper</string>
     <string name="randomize">Randomize</string>
-    
+
     <string name="activity_translucent">App/Activity/Translucent</string>
     <string name="translucent_background">Example of how you can make an
             activity have a translucent background, compositing over
@@ -146,7 +146,7 @@
     <string name="startfail_service">Start failed delivery</string>
     <string name="service_created">Service created.</string>
     <string name="service_destroyed">Service destroyed.</string>
-    
+
     <string name="foreground_service_started">Service is in the foreground</string>
     <string name="foreground_service_label">Sample Foreground Service</string>
 
@@ -235,7 +235,7 @@
     <string name="activity_external_storage">Content/Storage/External Storage</string>
     <string name="create">Create</string>
     <string name="delete">Delete</string>
-    
+
     <string name="activity_styled_text">Content/Resources/<i>Styled</i> <b>Text</b></string>
     <string name="styled_text_rsrc">Initialized from a resource:</string>
     <string name="styled_text">Plain, <b>bold</b>, <i>italic</i>, <b><i>bold-italic</i></b></string>
@@ -249,11 +249,11 @@
     <!-- ============================== -->
     <!--  app/intents examples strings     -->
     <!-- ============================== -->
-    
+
     <string name="activity_intents">App/Intents</string>
     <string name="intents">Example of launching various Intents.</string>
     <string name="get_music">Get Music</string>
-        
+
     <!-- =================================== -->
     <!--  app/notification examples strings  -->
     <!-- =================================== -->
@@ -440,18 +440,18 @@
 
     <string name="msg_launcher_shortcuts">This activity creates shortcuts for the launcher (home screen), and receives intents from those shortcuts.  To try it, return to the launcher and long-press to create a shortcut.</string>
     <string name="label_intent">Intent:</string>
-    
+
     <!-- ============================== -->
     <!--  app/device policies examples strings     -->
     <!-- ============================== -->
-    
+
     <string name="activity_sample_device_admin">App/Device Admin</string>
     <string name="sample_device_admin">Sample Device Admin</string>
     <string name="sample_device_admin_description">Sample code for writing
         a DeviceAdmin class.  This implementation provides a UI (in ApiDemos)
         for you to directly control what the DeviceAdmin does with the
         system.</string>
-        
+
     <string name="sample_device_admin_summary">Demonstration of a DeviceAdmin
         class for administering the user\'s device.</string>
     <string name="enable_admin">Enable Admin</string>
@@ -464,7 +464,9 @@
     <string name="max_failed_pw_hint">Password Attempts Wipe Data</string>
     <string name="force_lock">Force Lock</string>
     <string name="wipe_data">Wipe Data</string>
-    
+    <string name="timeout_hint">Max screen timeout</string>
+    <string name="set_timeout_label">Set Timeout</string>
+
     <!-- ============================== -->
     <!--  app/voice recognition examples strings  -->
     <!-- ============================== -->
@@ -472,7 +474,7 @@
     <string name="voice_recognition_prompt">This activity demonstrates the voice recognition APIs.</string>
     <string name="speak_button">Speak!</string>
     <string name="voice_recognition_results">Results:</string>
-    
+
     <!-- ============================ -->
     <!--  graphics examples strings  -->
     <!-- ============================ -->
@@ -480,7 +482,7 @@
     <string name="hide_me">Hide Me!</string>
 
     <string name="density_title">Density: Unknown Screen</string>
-    
+
     <!-- ============================ -->
     <!--  media examples strings  -->
     <!-- ============================ -->
