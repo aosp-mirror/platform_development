@@ -1,5 +1,21 @@
+Copyright (C) 2009 The Android Open Source Project
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+
 Subject: How to build an Android SDK & ADT Eclipse plugin.
 Date:    2009/03/27
+Updated: 2010/03/30
 
 
 Table of content:
@@ -105,8 +121,16 @@ binaries by Windows binaries.
 B- Cygwin pre-requisite & code checkout
 ---------------------------------------
 
-Second you need to install Cygwin and configure it:
-- Get the installer at http://sources.redhat.com/cygwin/
+You must have Cygwin installed. But wait! You CANNOT use the latest Cygwin 1.7.
+Instead you MUST use the "legacy Cygwin 1.5" that you can find at this page:
+
+  http://cygwin.org/win-9x.html
+
+Don't mind the page title, just grab setup-legacy.exe and it will works just fine
+under XP or Vista.
+
+  
+Now configure it:
 - When installing Cygwin, set Default Text File Type to Unix/binary, not DOS/text.
   This is really important, otherwise you will get errors when trying to
   checkout code using git.
