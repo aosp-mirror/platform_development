@@ -23,7 +23,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.RemoteException;
-import android.speech.RecognitionManager;
+import android.speech.SpeechRecognizer;
 import android.speech.RecognitionService;
 
 /**
@@ -65,7 +65,7 @@ public class VoiceRecognitionService extends RecognitionService {
         }
         
         Bundle bundle = new Bundle();
-        bundle.putStringArrayList(RecognitionManager.RESULTS_RECOGNITION, results);
+        bundle.putStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION, results);
         
         try {
             listener.results(bundle);
