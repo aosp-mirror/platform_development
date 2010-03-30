@@ -31,7 +31,7 @@ OPTION_BRANCH=
 RELEASE=`date +%Y%m%d`
 
 # the default branch to use
-BRANCH=eclair
+BRANCH=master
 
 GITCMD=git
 
@@ -161,10 +161,12 @@ toolchain_clone ()
     fi
     log "checking out $BRANCH branch of $1.git"
     cd $1
-    run git checkout -b $BRANCH origin/$BRANCH
-    if [ $? != 0 ] ; then
-        echo "Could not checkout $1 ?"
-        exit 1
+    if [ "$BRANCH" != "master" ] ; then
+        run git checkout -b $BRANCH origin/$BRANCH
+        if [ $? != 0 ] ; then
+            echo "Could not checkout $1 ?"
+            exit 1
+        fi
     fi
     # get rid of .git directory, we won't need it.
     cd ..

@@ -122,6 +122,23 @@ check_awk ()
     log2 "    Check $result"
 }
 
+bad_toolchain()
+{
+    tc=$1	# Toolchain
+    ht=$2	# Host Tag
+    echo ""
+    echo "ERROR: Toolchain compiler not found"
+    echo "It seems you do not have the correct $tc toolchain binaries."
+    echo "This may be the result of incorrect unzipping of the NDK archive."
+    echo "Please go to the official Android NDK web site and download the"
+    echo "appropriate NDK package for your platform ($ht)."
+    echo "See http://developer.android.com/sdk/index.html"
+    echo ""
+    echo "ABORTING."
+    echo ""
+}
+
+
 OPTION_HELP=no
 OPTION_NO_MAKE_CHECK=no
 OPTION_NO_AWK_CHECK=no
@@ -216,10 +233,15 @@ add_config "HOST_ARCH     := $HOST_ARCH"
 add_config "HOST_TAG      := $HOST_TAG"
 add_config "HOST_AWK      := $AWK"
 
-## Check that the toolchains we need are installed
+## Determine which toolchains are installed and verify their integrity.
 ## Otherwise, instruct the user to download them from the web site
 
-TOOLCHAINS=arm-eabi-4.2.1
+TOOLCHAINS=`ls build/prebuilt/$HOST_TAG`
+
+if [ -z "$TOOLCHAINS" ]; then
+    bad_toolchain NONE_FOUND $HOST_TAG
+    exit 1
+fi
 
 for tc in $TOOLCHAINS; do
     echo "Toolchain  : Checking for $tc prebuilt binaries"
@@ -228,16 +250,7 @@ for tc in $TOOLCHAINS; do
     COMPILER_PATTERN=$ANDROID_NDK_ROOT/$PREBUILT_BIN/*-gcc$HOST_EXE
     COMPILERS=`ls $COMPILER_PATTERN 2> /dev/null`
     if [ -z $COMPILERS ] ; then
-        echo ""
-        echo "ERROR: Toolchain compiler not found"
-        echo "It seems you do not have the correct $tc toolchain binaries."
-        echo "This may be the result of incorrect unzipping of the NDK archive."
-        echo "Please go to the official Android NDK web site and download the"
-        echo "appropriate NDK package for your platform ($HOST_TAG)."
-        echo "See http://developer.android.com/sdk/index.html"
-        echo ""
-        echo "ABORTING."
-        echo ""
+        bad_toolchain $tc $HOST_TAG
         exit 1
     fi
 done
