@@ -264,8 +264,9 @@ See test_defs.xsd for more information.
 <test name="cts-hardware"
     build_path="cts/tests/tests/hardware"
     package="com.android.cts.hardware"
-    runner="android.test.InstrumentationCtsTestRunner"
+    runner="android.test.InstrumentationTestRunner"
     coverage_target="framework"
+    continuous="true"
     suite="cts" />
 
 <test name="cts-location"
