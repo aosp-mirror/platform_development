@@ -60,7 +60,8 @@ public class LayoutAnimation4 extends Activity {
 
             i.setImageDrawable(info.activityInfo.loadIcon(getPackageManager()));
             i.setScaleType(ImageView.ScaleType.FIT_CENTER);
-            i.setLayoutParams(new GridView.LayoutParams(36, 36));
+            final int w = (int) (36 * getResources().getDisplayMetrics().density + 0.5f);
+            i.setLayoutParams(new GridView.LayoutParams(w, w));
             return i;
         }
 
