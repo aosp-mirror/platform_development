@@ -118,6 +118,11 @@ public class Monkey {
      */
     private boolean mRequestDumpsysMemInfo = false;
 
+    /**
+     * This is set by the ActivityController thread to request a "procrank"
+     */
+    private boolean mRequestProcRank = false;
+
     /** Kill the process after a timeout or crash. */
     private boolean mKillProcessAfterError;
 
@@ -261,10 +266,10 @@ public class Monkey {
         public int appNotResponding(String processName, int pid, String processStats) {
             System.err.println("// NOT RESPONDING: " + processName + " (pid " + pid + ")");
             System.err.println(processStats);
-            reportProcRank();
             synchronized (Monkey.this) {
                 mRequestAnrTraces = true;
                 mRequestDumpsysMemInfo = true;
+                mRequestProcRank = true;
             }
             if (!mIgnoreTimeouts) {
                 synchronized (Monkey.this) {
@@ -852,6 +857,10 @@ public class Monkey {
 
         while (!systemCrashed && cycleCounter < mCount) {
             synchronized (this) {
+                if (mRequestProcRank) {
+                    reportProcRank();
+                    mRequestProcRank = false;
+                }
                 if (mRequestAnrTraces) {
                     reportAnrTraces();
                     mRequestAnrTraces = false;
