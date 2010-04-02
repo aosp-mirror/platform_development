@@ -104,9 +104,11 @@ See test_defs.xsd for more information.
     coverage_target="framework"
     continuous="true" />
 
-<test name="common"
+<test name="framework-common"
     build_path="frameworks/base/common/tests"
-    package="com.android.common.tests" />
+    package="com.android.common.tests"
+    coverage_target="framework"
+    continuous="true" />
 
 <!--  end of framework tests -->
 
@@ -377,14 +379,7 @@ See test_defs.xsd for more information.
 
 <test name="browser"
     build_path="packages/apps/Browser"
-    package="com.android.browser"
-    runner=".BrowserTestRunner"
-    coverage_target="Browser" />
-
-<test name="browserfunc"
-    build_path="packages/apps/Browser"
-    package="com.android.browser"
-    runner=".BrowserFunctionalTestRunner"
+    package="com.android.browser.tests"
     coverage_target="Browser" />
 
 <test name="calendar"
@@ -419,11 +414,6 @@ See test_defs.xsd for more information.
     runner="com.android.contacts.ContactsLaunchPerformance"
     description="Launch performance for Contacts." />
 
-<test name="gcontactsprov"
-    build_path="packages/providers/GoogleContactsProvider/tests"
-    package="com.android.providers.contactstests"
-    coverage_target="GoogleContactsProvider" />
-
 <test name="downloadprovider-permission"
     build_path="packages/providers/DownloadProvider/tests/permission"
     package="com.android.providers.downloads.permission.tests"
@@ -442,7 +432,6 @@ See test_defs.xsd for more information.
     class="com.android.email.SmallTests"
     coverage_target="Email" />
 
-
 <test name="musicplayer"
     build_path="packages/apps/Music"
     package="com.android.music.tests"
@@ -452,12 +441,6 @@ See test_defs.xsd for more information.
 <test name="mms"
     build_path="packages/apps/Mms"
     package="com.android.mms.tests"
-    coverage_target="Mms" />
-
-<test name="mmslaunch"
-    build_path="packages/apps/Mms"
-    package="com.android.mms.tests"
-    runner="com.android.mms.SmsLaunchPerformance"
     coverage_target="Mms" />
 
 <!-- Unit tests for the phone application. -->
