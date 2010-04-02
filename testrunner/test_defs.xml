@@ -29,19 +29,6 @@ See test_defs.xsd for more information.
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://schemas.android.com/testrunner/test_defs/1.0 test_defs.xsd">
 
-<!-- system-wide tests -->
-<test name="framework"
-    build_path="frameworks/base/tests/FrameworkTest"
-    package="com.android.frameworktest.tests"
-    coverage_target="framework"
-    continuous="true" />
-
-<test name="android"
-    build_path="frameworks/base/tests/AndroidTests"
-    package="com.android.unit_tests"
-    coverage_target="framework"
-    continuous="true" />
-
 <!-- frameworks tests -->
 <test name="frameworks-core"
     build_path="frameworks/base/core/tests/coretests"
@@ -91,55 +78,11 @@ See test_defs.xsd for more information.
     coverage_target="framework"
     continuous="true" />
 
-<!--  end of framework tests -->
-
-<!-- subset of the android tests for just the database tests -->
-<!--test name="database"
-    build_path="frameworks/base/core/tests/coretests"
-    package="com.android.frameworks.coretests"
-    coverage_target="framework" /-->
-
-<test name="account"
-    build_path="frameworks/base/core/tests/coretests"
-    package="com.android.frameworks.coretests"
-    class="android.accounts.AccountManagerServiceTest"
-    coverage_target="framework" />
-
-<test name="smoke"
-    build_path="frameworks/base/tests/SmokeTest"
-    package="com.android.smoketest.tests"
-    coverage_target="framework"
-    continuous="true" />
-
 <test name="core"
     build_path="frameworks/base/tests/CoreTests"
     package="android.core"
     coverage_target="framework"
     continuous="true" />
-
-<test name="apidemos"
-    build_path="development/samples/ApiDemos"
-    package="com.example.android.apis.tests"
-    coverage_target="ApiDemos" />
-
-<test name="launchperf"
-    build_path="development/apps/launchperf"
-    package="com.android.launchperf"
-    runner=".SimpleActivityLaunchPerformance"
-    coverage_target="framework" />
-
-<!--  targeted framework tests -->
-<test name="heap"
-    build_path="frameworks/base/tests/AndroidTests"
-    package="com.android.unit_tests"
-    class="com.android.unit_tests.HeapTest"
-    coverage_target="framework" />
-
-<!--test name="activity"
-    build_path="frameworks/base/tests/AndroidTests"
-    package="com.android.unit_tests"
-    class="com.android.unit_tests.activity.ActivityTests"
-    coverage_target="framework" /-->
 
 <test name="keystore-unit"
     build_path="frameworks/base/keystore/tests"
@@ -147,26 +90,6 @@ See test_defs.xsd for more information.
     runner=".KeyStoreTestRunner"
     coverage_target="framework"
     continuous="true" />
-
-<!--  obsolete?
-<test name="deadlock"
-    build_path="frameworks/base/tests/Deadlock"
-    package="com.android.deadlock.tests"
-    coverage_target="framework" />
- -->
-
-
-<test name="contentprovideroperation"
-    build_path="frameworks/base/core/tests/coretests"
-    package="com.android.frameworks.coretests"
-    class="android.content.ContentProviderOperationTest"
-    coverage_target="framework" />
-
-<test name="tablemerger"
-    build_path="frameworks/base/tests/FrameworkTest"
-    package="com.android.frameworktest.tests"
-    class="com.google.android.gsf.AbstractTableMergerTest"
-    coverage_target="framework" />
 
 <test name="imf"
     build_path="frameworks/base/tests/ImfTest"
@@ -185,6 +108,75 @@ See test_defs.xsd for more information.
     build_path="frameworks/base/common/tests"
     package="com.android.common.tests" />
 
+<!--  end of framework tests -->
+
+<!-- media framework tests -->
+<test name="media"
+    build_path="frameworks/base/media/tests/MediaFrameworkTest"
+    package="com.android.mediaframeworktest"
+    runner=".MediaFrameworkTestRunner"
+    coverage_target="framework"
+    continuous="true" />
+
+<test name="mediaapitest"
+    build_path="frameworks/base/media/tests/MediaFrameworkTest"
+    package="com.android.mediaframeworktest"
+    class="com.android.mediaframeworktest.functional.MediaPlayerApiTest"
+    runner=".MediaFrameworkTestRunner"
+    coverage_target="framework" />
+
+<test name="mediarecordertest"
+    build_path="frameworks/base/media/tests/MediaFrameworkTest"
+    package="com.android.mediaframeworktest"
+    class="com.android.mediaframeworktest.functional.MediaRecorderTest"
+    runner=".MediaFrameworkTestRunner"
+    coverage_target="framework" />
+
+<test name="mediastresstest"
+    build_path="frameworks/base/media/tests/MediaFrameworkTest"
+    package="com.android.mediaframeworktest"
+    runner=".MediaRecorderStressTestRunner"
+    coverage_target="framework" />
+
+<test name="mediamemorystress"
+    build_path="frameworks/base/media/tests/MediaFrameworkTest"
+    package="com.android.mediaframeworktest"
+    runner=".MediaFrameworkPerfTestRunner"
+    coverage_target="framework" />
+
+<test name="mediaunit"
+    build_path="frameworks/base/media/tests/MediaFrameworkTest"
+    package="com.android.mediaframeworktest"
+    runner=".MediaFrameworkUnitTestRunner"
+    coverage_target="framework" />
+
+<!--  end of media framework tests -->
+
+<!--  targeted framework tests -->
+<test name="account"
+    build_path="frameworks/base/core/tests/coretests"
+    package="com.android.frameworks.coretests"
+    class="android.accounts.AccountManagerServiceTest"
+    coverage_target="framework" />
+
+<test name="smoke"
+    build_path="frameworks/base/tests/SmokeTest"
+    package="com.android.smoketest.tests"
+    coverage_target="framework"
+    continuous="true" />
+
+<test name="launchperf"
+    build_path="development/apps/launchperf"
+    package="com.android.launchperf"
+    runner=".SimpleActivityLaunchPerformance"
+    coverage_target="framework" />
+
+<test name="contentprovideroperation"
+    build_path="frameworks/base/core/tests/coretests"
+    package="com.android.frameworks.coretests"
+    class="android.content.ContentProviderOperationTest"
+    coverage_target="framework" />
+
 <!--  cts tests -->
 
 <test name="cts-permission"
@@ -201,7 +193,7 @@ See test_defs.xsd for more information.
     runner="android.test.InstrumentationTestRunner"
     coverage_target="framework"
     continuous="true"
-    cts="true" />
+    suite="true" />
 
 <test name="cts-process"
     build_path="cts/tests/tests/process"
@@ -379,6 +371,10 @@ See test_defs.xsd for more information.
 <!--  end of cts tests -->
 
 <!--  selected app tests -->
+<test name="apidemos"
+    build_path="development/samples/ApiDemos"
+    package="com.example.android.apis.tests" />
+
 <test name="browser"
     build_path="packages/apps/Browser"
     package="com.android.browser"
@@ -446,58 +442,12 @@ See test_defs.xsd for more information.
     class="com.android.email.SmallTests"
     coverage_target="Email" />
 
-<test name="media"
-    build_path="frameworks/base/media/tests/MediaFrameworkTest"
-    package="com.android.mediaframeworktest"
-    runner=".MediaFrameworkTestRunner"
-    coverage_target="framework"
-    continuous="true" />
-
-<test name="mediaapitest"
-    build_path="frameworks/base/media/tests/MediaFrameworkTest"
-    package="com.android.mediaframeworktest"
-    class="com.android.mediaframeworktest.functional.MediaPlayerApiTest"
-    runner=".MediaFrameworkTestRunner"
-    coverage_target="framework" />
-
-<test name="mediarecordertest"
-    build_path="frameworks/base/media/tests/MediaFrameworkTest"
-    package="com.android.mediaframeworktest"
-    class="com.android.mediaframeworktest.functional.MediaRecorderTest"
-    runner=".MediaFrameworkTestRunner"
-    coverage_target="framework" />
-
-<test name="mediastresstest"
-    build_path="frameworks/base/media/tests/MediaFrameworkTest"
-    package="com.android.mediaframeworktest"
-    runner=".MediaRecorderStressTestRunner"
-    coverage_target="framework" />
-
-<test name="mediamemorystress"
-    build_path="frameworks/base/media/tests/MediaFrameworkTest"
-    package="com.android.mediaframeworktest"
-    runner=".MediaFrameworkPerfTestRunner"
-    coverage_target="framework" />
-
-<test name="mediaunit"
-    build_path="frameworks/base/media/tests/MediaFrameworkTest"
-    package="com.android.mediaframeworktest"
-    runner=".MediaFrameworkUnitTestRunner"
-    coverage_target="framework" />
 
 <test name="musicplayer"
     build_path="packages/apps/Music"
     package="com.android.music.tests"
     runner=".MusicPlayerFunctionalTestRunner"
     coverage_target="Music" />
-
-<!-- obsolete?
-<test name="mediaprov"
-    build_path="tests/MediaProvider"
-    package="com.android.mediaprovidertests"
-    runner=".MediaProviderTestsInstrumentation"
-    coverage_target="MediaProvider" />
- -->
 
 <test name="mms"
     build_path="packages/apps/Mms"
@@ -522,14 +472,6 @@ See test_defs.xsd for more information.
     package="com.android.quicksearchbox.tests"
     coverage_target="QuickSearchBox"
     continuous="true" />
-
-<!-- obsolete?
-<test name="ringtone"
-    build_path="tests/RingtoneSettings"
-    package="com.android.ringtonesettingstests"
-    runner=".RingtoneSettingsInstrumentationTestRunner"
-    coverage_target="Settings" />
--->
 
 <!--  native tests  -->
 
