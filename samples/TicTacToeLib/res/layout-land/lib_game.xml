@@ -16,35 +16,45 @@
 -->
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
+    android:orientation="horizontal"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
-    android:gravity="center_horizontal"
+    android:gravity="center_vertical|center_horizontal"
     >
 
     <com.example.tictactoe.library.GameView
         android:id="@+id/game_view"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_margin="20dip"
+        />
+
+
+    <LinearLayout
+        android:orientation="vertical"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_margin="20dip"
-        android:layout_weight="1"
-        />
-
-    <TextView
-        android:id="@+id/info_turn"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
         android:gravity="center_horizontal"
-        android:layout_marginBottom="10dip"
-        />
+        >
 
-    <Button
-        android:id="@+id/next_turn"
-        android:text="I'm done"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="20dip"
-        android:layout_marginRight="20dip"
-        />
+        <TextView
+            android:id="@+id/info_turn"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:layout_marginBottom="10dip"
+            />
+
+        <Button
+            android:id="@+id/next_turn"
+            android:text="I'm done"
+            android:minEms="10"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="20dip"
+            android:layout_marginRight="20dip"
+            />
+
+    </LinearLayout>
 
 </LinearLayout>
