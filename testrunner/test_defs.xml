@@ -380,7 +380,8 @@ See test_defs.xsd for more information.
 <test name="browser"
     build_path="packages/apps/Browser"
     package="com.android.browser.tests"
-    coverage_target="Browser" />
+    coverage_target="Browser"
+    continuous="true" />
 
 <test name="calendar"
     build_path="packages/apps/Calendar"
