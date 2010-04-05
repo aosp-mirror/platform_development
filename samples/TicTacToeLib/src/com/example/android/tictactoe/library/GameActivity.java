@@ -106,11 +106,11 @@ public class GameActivity extends Activity {
         mButtonNext.setEnabled(false);
 
         if (player == State.PLAYER1) {
-            mInfoView.setText("Player 1's turn -- that's you!");
+            mInfoView.setText(R.string.player1_turn);
             mGameView.setEnabled(true);
 
         } else if (player == State.PLAYER2) {
-            mInfoView.setText("Player 2's turn (that's the computer)");
+            mInfoView.setText(R.string.player2_turn);
             mGameView.setEnabled(false);
         }
 
@@ -248,11 +248,11 @@ public class GameActivity extends Activity {
         String text;
 
         if (player == State.EMPTY) {
-            text = "This is a tie! No one wins!";
+            text = getString(R.string.tie);
         } else if (player == State.PLAYER1) {
-            text = "Player 1 (you) wins!";
+            text = getString(R.string.player1_win);
         } else {
-            text = "Player 2 (computer) wins!";
+            text = getString(R.string.player2_win);
         }
         mInfoView.setText(text);
     }
