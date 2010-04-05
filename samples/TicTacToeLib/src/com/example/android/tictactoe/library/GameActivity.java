@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.example.tictactoe.library;
+package com.example.android.tictactoe.library;
 
 import java.util.Random;
 
@@ -28,15 +28,15 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.TextView;
 
-import com.example.tictactoe.library.GameView.ICellListener;
-import com.example.tictactoe.library.GameView.State;
+import com.example.android.tictactoe.library.GameView.ICellListener;
+import com.example.android.tictactoe.library.GameView.State;
 
 
 public class GameActivity extends Activity {
 
     /** Start player. Must be 1 or 2. Default is 1. */
     public static final String EXTRA_START_PLAYER =
-        "com.example.tictactoe.library.GameActivity.EXTRA_START_PLAYER";
+        "com.example.android.tictactoe.library.GameActivity.EXTRA_START_PLAYER";
 
     private static final int MSG_COMPUTER_TURN = 1;
     private static final long COMPUTER_DELAY_MS = 500;

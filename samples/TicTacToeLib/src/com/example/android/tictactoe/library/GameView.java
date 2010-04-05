@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.example.tictactoe.library;
+package com.example.android.tictactoe.library;
 
 import java.util.Random;
 
