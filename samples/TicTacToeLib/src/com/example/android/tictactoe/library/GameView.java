@@ -35,15 +35,12 @@ import android.os.Message;
 import android.os.Parcelable;
 import android.os.Handler.Callback;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
 //-----------------------------------------------
 
 public class GameView extends View {
-
-    private static final String TAG = "GameView";
 
     public static final long FPS_MS = 1000/2;
 
@@ -280,7 +277,6 @@ public class GameView extends View {
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
-        Log.d(TAG, String.format("onSizeChanged: %dx%d", w, h));
 
         int sx = (w - 2 * MARGIN) / 3;
         int sy = (h - 2 * MARGIN) / 3;
