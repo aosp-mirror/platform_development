@@ -30,7 +30,7 @@
 
         <!-- This is defined in TicTacToeLib. Right now we need to manually
              copy it here. Eventually it should get merged automatically. -->
-        <activity android:name=".library.GameActivity" />
+        <activity android:name="com.example.tictactoe.library.GameActivity" />
 
 
     </application>
