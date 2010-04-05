@@ -16,6 +16,7 @@
 package com.example.tictactoe;
 
 import com.example.tictactoe.library.GameActivity;
+import com.example.tictactoe.library.GameView.State;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -47,7 +48,8 @@ public class MainActivity extends Activity {
 
     private void startGame(boolean startWithHuman) {
         Intent i = new Intent(this, GameActivity.class);
-        i.putExtra(GameActivity.EXTRA_START_WITH_HUMAN, startWithHuman);
+        i.putExtra(GameActivity.EXTRA_START_PLAYER,
+                startWithHuman ? State.PLAYER1.getValue() : State.PLAYER2.getValue());
         startActivity(i);
     }
 }
