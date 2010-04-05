@@ -19,7 +19,4 @@
       package="com.example.tictactoe.library"
       android:versionCode="1"
       android:versionName="1.0">
-    <application>
-        <activity android:name="GameActivity" />
-    </application>
 </manifest>
