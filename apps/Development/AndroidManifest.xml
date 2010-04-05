@@ -117,7 +117,7 @@
             </intent-filter>
         </activity>
 
-        <activity android:name="MediaScannerActivity" android:label="Media Scanner">
+        <activity android:name="MediaScannerActivity" android:label="Media Provider">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.TEST" />
