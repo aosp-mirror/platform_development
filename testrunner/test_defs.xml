@@ -104,7 +104,7 @@ See test_defs.xsd for more information.
     coverage_target="framework"
     continuous="true" />
 
-<test name="framework-common"
+<test name="android-common"
     build_path="frameworks/base/common/tests"
     package="com.android.common.tests"
     coverage_target="framework"
