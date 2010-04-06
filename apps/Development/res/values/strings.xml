@@ -208,4 +208,9 @@
     <string name="bad_behavior_anr_service_label">ANR starting a Service</string>
     <string name="bad_behavior_anr_system_label">System ANR (in ActivityManager)</string>
     <string name="bad_behavior_wedge_system_label">Wedge system (5 minute system ANR)</string>
+
+    <!-- MediaScannerActivity -->
+    <string name="scancard">Scan SD card</string>
+    <string name="numsongs"># of albums</string>
+    <string name="insertbutton">Insert %1s albums</string>
 </resources>
