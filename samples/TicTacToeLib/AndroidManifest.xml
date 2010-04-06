@@ -16,7 +16,14 @@
 -->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-      package="com.example.android.tictactoe.library"
-      android:versionCode="1"
-      android:versionName="1.0">
+      package="com.example.android.tictactoe.library">
+    <application>
+        <!-- The activity tag here is currently not used. The main project TicTacToeMain
+             must currently redefine the activities to be used from the libraries.
+             However later the tools will pick up the activities from here and merge them
+             automatically, so it's best to define your activities here like for any
+             regular Android project.
+        -->
+        <activity android:name="GameActivity" />
+    </application>
 </manifest>
