@@ -454,8 +454,7 @@ See test_defs.xsd for more information.
 <test name="quicksearchbox"
     build_path="packages/apps/QuickSearchBox"
     package="com.android.quicksearchbox.tests"
-    coverage_target="QuickSearchBox"
-    continuous="true" />
+    coverage_target="QuickSearchBox" />
 
 <!--  native tests  -->
 
