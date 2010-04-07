@@ -48,17 +48,17 @@ import java.io.OutputStream;
 */
 public class ExternalStorage extends Activity {
     ViewGroup mLayout;
-    
+
     static class Item {
         View mRoot;
         Button mCreate;
         Button mDelete;
     }
-    
+
     Item mExternalStoragePublicPicture;
     Item mExternalStoragePrivatePicture;
     Item mExternalStoragePrivateFile;
-    
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -114,10 +114,10 @@ public class ExternalStorage extends Activity {
                     }
                 });
         mLayout.addView(mExternalStoragePrivateFile.mRoot);
-        
+
         startWatchingExternalStorage();
     }
-    
+
     @Override
     protected void onDestroy() {
         super.onDestroy();
@@ -135,12 +135,12 @@ public class ExternalStorage extends Activity {
         mExternalStoragePrivateFile.mCreate.setEnabled(writeable && !has);
         mExternalStoragePrivateFile.mDelete.setEnabled(writeable && has);
     }
-    
+
 // BEGIN_INCLUDE(monitor_storage)
     BroadcastReceiver mExternalStorageReceiver;
     boolean mExternalStorageAvailable = false;
     boolean mExternalStorageWriteable = false;
-    
+
     void updateExternalStorageState() {
         String state = Environment.getExternalStorageState();
         if (Environment.MEDIA_MOUNTED.equals(state)) {
@@ -154,7 +154,7 @@ public class ExternalStorage extends Activity {
         handleExternalStorageState(mExternalStorageAvailable,
                 mExternalStorageWriteable);
     }
-    
+
     void startWatchingExternalStorage() {
         mExternalStorageReceiver = new BroadcastReceiver() {
             @Override
@@ -169,12 +169,12 @@ public class ExternalStorage extends Activity {
         registerReceiver(mExternalStorageReceiver, filter);
         updateExternalStorageState();
     }
-    
+
     void stopWatchingExternalStorage() {
         unregisterReceiver(mExternalStorageReceiver);
     }
  // END_INCLUDE(monitor_storage)
-    
+
  // BEGIN_INCLUDE(public_picture)
     void createExternalStoragePublicPicture() {
         // Create a path where we will place our picture in the user's
@@ -185,11 +185,11 @@ public class ExternalStorage extends Activity {
         File path = Environment.getExternalStoragePublicDirectory(
                 Environment.DIRECTORY_PICTURES);
         File file = new File(path, "DemoPicture.jpg");
-        
+
         try {
             // Make sure the Pictures directory exists.
             path.mkdirs();
-            
+
             // Very simple code to copy a picture from the application's
             // resource into the external file.  Note that this code does
             // no error checking, and assumes the picture is small (does not
@@ -202,12 +202,12 @@ public class ExternalStorage extends Activity {
             os.write(data);
             is.close();
             os.close();
-            
+
             // Tell the media scanner about the new file so that it is
             // immediately available to the user.
             MediaScannerConnection.scanFile(this,
                     new String[] { file.toString() }, null,
-                    new MediaScannerConnection.ScanResultListener() {
+                    new MediaScannerConnection.OnScanCompletedListener() {
                 public void onScanCompleted(String path, Uri uri) {
                     Log.i("ExternalStorage", "Scanned " + path + ":");
                     Log.i("ExternalStorage", "-> uri=" + uri);
@@ -219,7 +219,7 @@ public class ExternalStorage extends Activity {
             Log.w("ExternalStorage", "Error writing " + file, e);
         }
     }
-    
+
     void deleteExternalStoragePublicPicture() {
         // Create a path where we will place our picture in the user's
         // public pictures directory and delete the file.  If external
@@ -229,7 +229,7 @@ public class ExternalStorage extends Activity {
         File file = new File(path, "DemoPicture.jpg");
         file.delete();
     }
-    
+
     boolean hasExternalStoragePublicPicture() {
         // Create a path where we will place our picture in the user's
         // public pictures directory and check if the file exists.  If
@@ -241,7 +241,7 @@ public class ExternalStorage extends Activity {
         return file.exists();
     }
 // END_INCLUDE(public_picture)
-    
+
 // BEGIN_INCLUDE(private_picture)
     void createExternalStoragePrivatePicture() {
         // Create a path where we will place our picture in our own private
@@ -252,7 +252,7 @@ public class ExternalStorage extends Activity {
         // your media for display to the user.
         File path = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
         File file = new File(path, "DemoPicture.jpg");
-        
+
         try {
             // Very simple code to copy a picture from the application's
             // resource into the external file.  Note that this code does
@@ -266,12 +266,12 @@ public class ExternalStorage extends Activity {
             os.write(data);
             is.close();
             os.close();
-            
+
             // Tell the media scanner about the new file so that it is
             // immediately available to the user.
             MediaScannerConnection.scanFile(this,
                     new String[] { file.toString() }, null,
-                    new MediaScannerConnection.ScanResultListener() {
+                    new MediaScannerConnection.OnScanCompletedListener() {
                 public void onScanCompleted(String path, Uri uri) {
                     Log.i("ExternalStorage", "Scanned " + path + ":");
                     Log.i("ExternalStorage", "-> uri=" + uri);
@@ -283,7 +283,7 @@ public class ExternalStorage extends Activity {
             Log.w("ExternalStorage", "Error writing " + file, e);
         }
     }
-    
+
     void deleteExternalStoragePrivatePicture() {
         // Create a path where we will place our picture in the user's
         // public pictures directory and delete the file.  If external
@@ -294,7 +294,7 @@ public class ExternalStorage extends Activity {
             file.delete();
         }
     }
-    
+
     boolean hasExternalStoragePrivatePicture() {
         // Create a path where we will place our picture in the user's
         // public pictures directory and check if the file exists.  If
@@ -308,13 +308,13 @@ public class ExternalStorage extends Activity {
         return false;
     }
 // END_INCLUDE(private_picture)
-        
+
 // BEGIN_INCLUDE(private_file)
      void createExternalStoragePrivateFile() {
          // Create a path where we will place our private file on external
          // storage.
          File file = new File(getExternalFilesDir(null), "DemoFile.jpg");
-         
+
          try {
              // Very simple code to copy a picture from the application's
              // resource into the external file.  Note that this code does
@@ -334,7 +334,7 @@ public class ExternalStorage extends Activity {
              Log.w("ExternalStorage", "Error writing " + file, e);
          }
      }
-     
+
      void deleteExternalStoragePrivateFile() {
          // Get path for the file on external storage.  If external
          // storage is not currently mounted this will fail.
@@ -343,7 +343,7 @@ public class ExternalStorage extends Activity {
              file.delete();
          }
      }
-     
+
      boolean hasExternalStoragePrivateFile() {
          // Get path for the file on external storage.  If external
          // storage is not currently mounted this will fail.
@@ -354,7 +354,7 @@ public class ExternalStorage extends Activity {
          return false;
      }
  // END_INCLUDE(private_file)
-     
+
     Item createStorageControls(CharSequence label, File path,
             View.OnClickListener createClick,
             View.OnClickListener deleteClick) {
