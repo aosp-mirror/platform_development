@@ -1,3 +1,0 @@
-android-ndk-toolchain-20090323.tar.bz2
-d56abac4df36271ae0c961d21d0847db
-http://android.git.kernel.org/pub/android-ndk-toolchain-20090323.tar.bz2
