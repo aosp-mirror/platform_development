@@ -143,7 +143,7 @@ framework/swing-worker-1.1.jar tools/lib/swing-worker-1.1.jar
 bin/layoutopt tools/layoutopt
 framework/layoutopt.jar tools/lib/layoutopt.jar
 framework/uix.jar tools/lib/uix.jar
-framework/groovy-all-1.6.5.jar tools/lib/groovy-all-1.6.5.jar
+framework/groovy-all-1.7.0.jar tools/lib/groovy-all-1.7.0.jar
 
 # traceview
 bin/traceview tools/traceview
