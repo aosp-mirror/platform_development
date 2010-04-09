@@ -65,20 +65,20 @@ class TestWalker(object):
     if not os.path.exists(path):
       logger.Log('%s does not exist' % path)
       return []
-    abspath = os.path.abspath(path)
+    realpath = os.path.realpath(path)
     # ensure path is in ANDROID_BUILD_ROOT
-    self._build_top = android_build.GetTop()
-    if not self._IsPathInBuildTree(abspath):
+    self._build_top = os.path.realpath(android_build.GetTop())
+    if not self._IsPathInBuildTree(realpath):
       logger.Log('%s is not a sub-directory of build root %s' %
                  (path, self._build_top))
       return []
 
     # first, assume path is a parent directory, which specifies to run all
     # tests within this directory
-    tests = self._FindSubTests(abspath, [])
+    tests = self._FindSubTests(realpath, [])
     if not tests:
       logger.SilentLog('No tests found within %s, searching upwards' % path)
-      tests = self._FindUpstreamTests(abspath)
+      tests = self._FindUpstreamTests(realpath)
     return tests
 
   def _IsPathInBuildTree(self, path):
