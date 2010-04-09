@@ -480,6 +480,12 @@ See test_defs.xsd for more information.
     description="Google test."
     extra_build_args="GTEST_TESTS=1" />
 
+<!-- Libjingle -->
+<test-native name="libjingle"
+    build_path="vendor/google/libraries/libjingle"
+    description="Libjingle."
+    extra_build_args="LIBJINGLE_TESTS=1" />
+
 
 <!-- host java tests -->
 <test-host name="cts-appsecurity"
