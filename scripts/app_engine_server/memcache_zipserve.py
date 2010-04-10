@@ -115,6 +115,7 @@ class MemcachedZipHandler(webapp.RequestHandler):
     urlLangName = None
     retry = False
     isValidIntl = False
+    isStripped = False
 
     # Try to retrieve the user's lang pref from the cookie. If there is no
     # lang pref cookie in the request, add set-cookie to the response with the 
@@ -124,7 +125,7 @@ class MemcachedZipHandler(webapp.RequestHandler):
     except KeyError:
       resetLangCookie = True
       #logging.info('==========================EXCEPTION: NO LANG COOKIE FOUND, USING [%s]', langName)
-    logging.info('==========================REQ INIT name [%s] langName [%s]', reqUri, langName)
+    logging.info('==========================REQ INIT name [%s] langName [%s] resetLangCookie [%s]', reqUri, langName, resetLangCookie)
 
     # Preprocess the req url. If it references a directory or the domain itself,
     # append '/index.html' to the url and 302 redirect. Otherwise, continue
@@ -142,19 +143,23 @@ class MemcachedZipHandler(webapp.RequestHandler):
         if isValidIntl:
           urlLangName = sections[1]
           contentUri = sections[2]
-          if (langName != urlLangName):
+          logging.info('  Content URI is [%s]...', contentUri)
+          if (urlLangName != langName) or (langName == 'en'):
             # if the lang code in the request is different from that in 
-            # the cookie, reset the cookie to the url lang value.
-            langName = urlLangName
-            resetLangCookie = True
-            #logging.info('INTL PREP resetting langName to urlLangName [%s]', langName)
-          #else: 
-          #  logging.info('INTL PREP no need to reset langName')
+            # the cookie, or if the target lang is en, strip the 
+            # intl/nn substring. It will later be redirected to
+            # the user's preferred language url. 
+            # logging.info('  Handling a MISMATCHED intl request')
+            name = contentUri
+            isStripped = True
+            isValidIntl = False
+            isIntl = False
 
       # Send for processing
-      if self.isCleanUrl(name, langName, isValidIntl):
+      if self.isCleanUrl(name, langName, isValidIntl, isStripped):
         # handle a 'clean' request.
         # Try to form a response using the actual request url.
+        # logging.info('  Request being handled as clean: [%s]', name)
         if not self.CreateResponse(name, langName, isValidIntl, resetLangCookie):
           # If CreateResponse returns False, there was no such document
           # in the intl/lang tree. Before going to 404, see if there is an
@@ -167,7 +172,7 @@ class MemcachedZipHandler(webapp.RequestHandler):
         # for processing (so as to get 404 as appropriate). This is needed
         # because intl urls are passed through clean and retried in English,
         # if necessary.
-        logging.info('  Handling an invalid intl request...')
+        # logging.info('  Handling an invalid intl request...')
         self.CreateResponse(name, langName, isValidIntl, resetLangCookie)
 
       else:
@@ -178,7 +183,7 @@ class MemcachedZipHandler(webapp.RequestHandler):
         # request will be handled as a clean url.
         self.RedirToIntl(name, self.intlString, langName)
 
-  def isCleanUrl(self, name, langName, isValidIntl):
+  def isCleanUrl(self, name, langName, isValidIntl, isStripped):
     """Determine whether to pass an incoming url straight to processing. 
 
        Args:
@@ -187,13 +192,14 @@ class MemcachedZipHandler(webapp.RequestHandler):
        Returns:
          boolean: Whether the URL should be sent straight to processing
     """
-    if (langName == 'en') or isValidIntl or not ('.html' in name) or (not isValidIntl and not langName):
+    # logging.info('  >>>> isCleanUrl name [%s] langName [%s] isValidIntl [%s]', name, langName, isValidIntl)
+    if (langName == 'en' and not isStripped) or isValidIntl or not ('.html' in name) or (not isValidIntl and not langName):
       return True
 
   def PreprocessUrl(self, name, langName):
     """Any preprocessing work on the URL when it comes in.
 
-    Put any work related to interpretting the incoming URL here. For example,
+    Put any work related to interpreting the incoming URL here. For example,
     this is used to redirect requests for a directory to the index.html file
     in that directory. Subclasses should override this method to do different
     preprocessing.
@@ -216,7 +222,7 @@ class MemcachedZipHandler(webapp.RequestHandler):
     # if this is a directory or the domain itself, redirect to /index.html
     if not name or (name[len(name) - 1:] == '/'):
       uri = ''.join(['/', name, 'index.html'])
-      logging.info('--->PREPROCESSING REDIRECT [%s] to [%s] with langName [%s]', name, uri, langName)
+      # logging.info('--->PREPROCESSING REDIRECT [%s] to [%s] with langName [%s]', name, uri, langName)
       self.redirect(uri, False)
       return False
     else:
@@ -225,10 +231,10 @@ class MemcachedZipHandler(webapp.RequestHandler):
   def RedirToIntl(self, name, intlString, langName):
     """Redirect an incoming request to the appropriate intl uri.
 
-       Builds the intl/lang string from a base (en) string
-       and redirects (302) the request to look for a version 
-       of the file in the language that matches the client-
-       supplied cookie value.
+       For non-en langName, builds the intl/lang string from a
+       base (en) string and redirects (302) the request to look for 
+       a version of the file in langName. For en langName, simply 
+       redirects a stripped uri string (intl/nn removed).
 
     Args:
       name: The incoming, preprocessed URL
@@ -236,7 +242,10 @@ class MemcachedZipHandler(webapp.RequestHandler):
     Returns:
       The lang-specific URL
     """
-    builtIntlLangUri = ''.join([intlString, langName, '/', name, '?', self.request.query_string])
+    if not (langName == 'en'):
+      builtIntlLangUri = ''.join([intlString, langName, '/', name, '?', self.request.query_string])
+    else:
+      builtIntlLangUri = name
     uri = ''.join(['/', builtIntlLangUri])
     logging.info('-->>REDIRECTING %s to  %s', name, uri)
     self.redirect(uri, False)
@@ -313,7 +322,7 @@ class MemcachedZipHandler(webapp.RequestHandler):
       # revalidate html files -- workaround for cache inconsistencies for 
       # negotiated responses
       mustRevalidate = True
-      logging.info('  Adding [Vary: Cookie] to response...')
+      #logging.info('  Adding [Vary: Cookie] to response...')
       self.response.headers.add_header('Vary', 'Cookie')
     content_type, encoding = mimetypes.guess_type(name)
     if content_type:
@@ -491,7 +500,7 @@ class MemcachedZipHandler(webapp.RequestHandler):
     max_age = self.MAX_AGE
     #self.response.headers['Expires'] = email.Utils.formatdate(
     #    time.time() + max_age, usegmt=True)
-	cache_control = []
+    cache_control = []
     if self.PUBLIC:
       cache_control.append('public')
     cache_control.append('max-age=%d' % max_age)
