@@ -23,15 +23,16 @@ LOCAL_STATIC_LIBRARIES := \
 	libpng \
 	libETC1
 
-LOCAL_LDLIBS := -lz
-
 ifeq ($(HOST_OS),linux)
-LOCAL_LDLIBS += -lrt
+LOCAL_LDLIBS := -lz -lrt
 endif
 
 ifeq ($(HOST_OS),windows)
-ifeq ($(strip $(USE_CYGWIN),),)
-LOCAL_LDLIBS += -lws2_32
+ifeq ($(strip $(USE_CYGWIN)),)
+LOCAL_LDLIBS := -lz -lws2_32
+endif
+ifneq ($(strip $(USE_MINGW)),)
+LOCAL_STATIC_LIBRARIES += libz
 endif
 endif
 
