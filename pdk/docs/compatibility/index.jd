@@ -3,15 +3,15 @@ doc.type=compatibility
 @jd:body
 <p>Android is an open source product, and anyone can use the source code to build
 devices. The purpose of the Android compatibility program is to help Android
-device implementations remain compatible with all apps.</p>
+device implementations remain compatible with apps.</p>
 <p>A device is considered compatible if existing and new third-party
 applications run correctly on it. Poor device implementations that change APIs
 or alter behaviors will break these apps and so are not compatible. The
-Android compatibility program's aim is to ensure that these APIs are
-consistently implemented across devices.</p>
+Android Compatibility Program provides information and tools that device
+implementers use to ensure that their devices are Android-compatible.</p>
 <p>The latest version of the Android source code and compatibility program is
-1.6, which roughly corresponded to the Donut branch.  The compatibility
-program for Android 2.x (corresponding to Eclair) is coming soon.</p>
+2.1, which roughly corresponded to the Eclair branch.</p>
+
 <h2>Why build compatible Android devices?</h2>
 <h3>Users want a customizable device.</h3>
 <p>A mobile phone is a highly personal, always-on, always-present gateway to
@@ -20,7 +20,7 @@ extending its functionality. That's why Android was designed as a robust
 platform for running after-market applications.</p>
 
 <h3>Developers outnumber us all.</h3>
-<p>No device manufacturer can hope to write all the software that anyone could
+<p>No device manufacturer can hope to write all the software that a person could
 conceivably need. We need third-party developers to write the apps users want,
 so the Android Open Source Project aims to make it as easy and open as
 possible for developers to build apps.</p>
@@ -40,28 +40,21 @@ Android compatibility program in general, see <a
 href="{@docRoot}compatibility/overview.html">the program overview</a>.</p>
 <p>Building a compatible device is a four-step process:</p>
 <ol>
-  <li><b>Obtain the Android software stack source code</b><p>This is the
+  <li><b>Obtain the Android software source code</b><p>This is the
   <a href="{@docRoot}source/index.html">source code for the Android
   platform</a>, that you port to your hardware.</p></li>
-  <li><b>Comply with Android Compatibility Definition Document</b><p>
-  This document enumerates the software and the hardware features of
+  <li><b>Comply with Android Compatibility Definition Document (CDD)</b><p>
+  The CDD enumerates the software and hardware requirements of
   a compatible Android device.</p></li>
   <li><b>Pass the Compatibility Test Suite (CTS)</b><p>You can use the CTS
   (included in the Android source code) as an ongoing aid to compatibility
   during the development process.</p></li>
-  <li><b>Submit CTS report</b><p>[Optional] You can also submit your CTS report,
-  so that it can be validated and recorded.</p><p><i>Note:
-  the submission system is currently under construciton, and is not currently
-  available.</i></p></li>
 </ol>
 
-<h2>Benefits of compatibility</h2>
-<p>By submitting a validated CTS report, you receive public recognition of
-your device's compatibility. This also opens up additional options you can
-pursue such as use of the Android branding, access to Android Market, and
-more.</p>
-<p>As a consequence of some legal quirks, we aren't able to offer automatic
-licensing of either the Android Market or branding. To actually obtain access
-to these programs, you will need to <a
-href="{@docRoot}compatibility/contact-us.html">contact us</a> to obtain a
-license.</p>
+<h2>Joining the Ecosystem</h2>
+<p>Once you've built a compatible device, you may wish to include Android
+Market to provide your users access to the third-party app ecosystem.
+Unfortunately, for a variety of legal and business reasons, we aren't able to
+automatically license Android Market to any compatible device. To inquire
+about access about Android Market, you can <a
+href="{@docRoot}compatibility/contact-us.html">contact us</a></p>

@@ -1,7 +1,7 @@
-page.title=Community
+page.title=Android Community
 doc.type=community
+doc.hidenav=true
 @jd:body
-<h1>Android Community</h1>
 <p>Welcome to the Android community!</p>
 <p>The key to any community is, obviously, communication. Like most projects,
 Android communicates via mailing lists. Because Android is an extremely large
@@ -37,6 +37,14 @@ href="http://developer.android.com/community/index.html">http://developer.androi
 
 <h2>Open Source Project discussions</h2>
 <ul>
+<li><b>android-platform</b><br/>
+This list is for general discussion about the Android open-source project or
+the platform technologies.<br/><br/>
+Subscribe using Google Groups: <a
+href="http://groups.google.com/group/android-platform">android-platform</a><br/>
+Subscribe via email: <a href="mailto:android-platform+subscribe@googlegroups.com">android-platform+subscribe@googlegroups.com</a>
+</li>
+
 <li><b>android-building</b><br/>
 Subscribe to this list for discussion and help on building the Android source
 code, and on the build system. If you've just checked out the source code and
@@ -58,14 +66,14 @@ href="http://groups.google.com/group/android-porting">android-porting</a><br/>
 Subscribe via email: <a href="mailto:android-porting+subscribe@googlegroups.com">android-porting+subscribe@googlegroups.com</a>
 </li>
 
-<li><b>android-platform</b><br/>
-This list is for developers who want to contribute code to the Android
-user-space projects, such as the core system libraries, the Android
-services, the public APIs, or the built-in applications. Note: contributors
+<li><b>android-contrib</b><br/>
+This list is for developers who want to contribute code to Android. This is a
+working list, and is not appropriate for general discussion. We ask that
+general discussion go to android-platform.  Note: contributors
 to the Android kernel should go to the android-kernel list, below.<br/><br/>
 Subscribe using Google Groups: <a
-href="http://groups.google.com/group/android-platform">android-platform</a><br/>
-Subscribe via email: <a href="mailto:android-platform+subscribe@googlegroups.com">android-platform+subscribe@googlegroups.com</a>
+href="http://groups.google.com/group/android-contrib">android-contrib</a><br/>
+Subscribe via email: <a href="mailto:android-contrib+subscribe@googlegroups.com">android-contrib+subscribe@googlegroups.com</a>
 </li>
 
 <li><b>android-kernel</b><br/>
@@ -88,9 +96,8 @@ site, you can use your email client of choice to participate in the mailing list
 under "subscribe via email" in the lists above.</p>
 <p>To set up how you receive mailing list postings by email:</p>
 <ol>
-<li>Sign into the group via the Google Groups site. For example, for the android-framework group you would
-visit <a
-href="http://groups.google.com/group/android-framework">http://groups.google.com/group/android-framework</a>.</li>
+<li>Sign into the group via the Google Groups site. For example, for the android-platform group you would
+visit <a href="http://groups.google.com/group/android-platform">http://groups.google.com/group/android-platform</a>.</li>
 <li>Click "Edit my membership" on the right side.</li>
 <li>Under "How do you want to read this group?" select one of the email options.</li>
 </ol>
@@ -106,9 +113,9 @@ channels on irc.freenode.net:</p>
 community is using, but are not official. These aren't official or officially
 moderated/managed, so you use the channels below at your own risk. The Open
 Handset Alliance doesn't endorse these channels, there's no warranty express
-or implied, and so on. There may be more.</p>
+or implied, and so on. There may be more channels than just these listed.</p>
 <ul>
 <li><b>#android-offtopic</b> - for, well, off-topic discussions</li>
 <li><b>#android-root</b> - for discussion related to off-label uses of hardware</li>
-<li><b>#androidfra</b> - pour discuter d'Android en français</li>
+<li><b>#android-fr</b> - pour discuter d'Android en français</li>
 </ul>

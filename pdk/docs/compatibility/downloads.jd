@@ -1,0 +1,38 @@
+page.title=Android Compatibility Downloads
+doc.type=compatibility
+@jd:body
+<p>Thanks for your interest in Android Compatibility! The links below allow
+you to access the key documents and information.</p>
+
+<h2>Android 2.1</h2>
+<p>Android 2.1 is the release of the development milestone code-named
+Eclair. Android 2.1 is the current version of Android. Source code for Android
+2.1 is found in the 'eclair' branch in the open-source tree. Note that for
+technical reasons, there is no compatibility program for Android 2.0 or 2.0.1,
+and new devices must use Android 2.1.
+</p>
+<ul>
+  <li><a href="{@docRoot}compatibility/android-2.1-cdd.pdf">Android 2.1 Compatibility Definition Document (CDD)</a></li>
+</ul>
+
+<h2>Android 1.6</h2>
+<p>Android 1.6 was the release of the development milestone code-named Donut.
+Android 1.6 was obsoleted by Android 2.1. Source code for Android 1.6 is found
+in the 'donut' branch in the open-source tree.
+<ul>
+  <li><a href="{@docRoot}compatibility/android-1.6-cdd.pdf">Android 1.6 Compatibility Definition Document (CDD)</a></li>
+</ul>
+
+<h2>Compatibility Test Suite</h2>
+<p>The Compatibility Test Suite (CTS) is found in the open-source tree. Specific
+snapshots of the CTS are found in the same branches as for the system. (For
+instance, the Android 2.1 CTS can be found in the 'eclair' branch.) The CTS user
+manual is not specific to given versions.
+<ul>
+  <li><a href="{@docRoot}compatibility/android-cts-manual-r4.pdf">Compatibility Test Suite (CTS) User Manual</a></li>
+</ul>
+
+<h2>Older Android Versions</h2>
+<p>There is no Compatibility Program for older versions of Android, such as Android
+1.5 (known in development as Cupcake). New devices intended to be Android
+compatible must ship with Android 1.6 or later.</p>

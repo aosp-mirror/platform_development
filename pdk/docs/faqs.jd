@@ -74,8 +74,8 @@ benefit.</p>
 <p>Finally, Google works on the next version of the Android platform in tandem
   with developing a flagship device. This branch pulls in changes from the
   experimental and stable branches as appropriate.</p>
-<p>You can find more information on this topic at our Branches Releases
-  page.</p>
+<p>You can find more information on this topic at our <a
+href="{@docRoot}source/code-lines.html">Branches and Releases</a> page.</p>
 
 <h3>Why are parts of Android developed in private?</h3>
 <p>It typically takes over a year to bring a device to market, but of course
@@ -143,8 +143,7 @@ benefit.</p>
   "Android compatible devices" from devices that merely run derivatives of the
   source code. We welcome all uses of the Android source code, but only
   Android compatible devices -- as defined and tested by the Android
-  Compatibility Program -- may call themselves "Android" and participate in
-  the Android ecosystem.</p>
+  Compatibility Program -- may participate in the Android ecosystem.</p>
 
 <h3>How can I contribute to Android?</h3>
 <p>There are a number of ways you can contribute to Android. You can report
@@ -170,8 +169,9 @@ benefit.</p>
 <p>Once submitted, changes need to be accepted by a designated Approver.
   Approvers are typically Google employees, but the same approvers are
   responsible for all submissions, regardless of origin.</p>
-<p>You can find more information on this topic at the Submitting Patches
-  page.</p>
+<p>You can find more information on this topic at the <a
+   href="{@docRoot}source/submit-patches.html">Submitting Patches</a>
+   page.</p>
 
 <a name="compatibility"></a><h2>Compatibility</h2>
 <h3>What does "compatibility" mean?</h3>
@@ -185,7 +185,7 @@ benefit.</p>
 <p>In other words, compatibility is a prerequisite to participate in the
   Android apps ecosystem. Anyone is welcome to use the Android source code,
   but if the device isn't compatible, it's not considered part of the Android
-  ecosystem, and irrelevant to developers.</p>
+  ecosystem.</p>
 
 <h3>What is the role of Android Market in compatibility?</h3>
 <p>Devices that are Android compatible may seek to license the Android Market
@@ -200,11 +200,11 @@ benefit.</p>
   Compatibility Definition Document (CDD) spells out the specific device
   configurations that will be considered compatible.</p>
 <p>For example, though the Android source code could be ported to run on a
-  device that doesn't have a camera, the CDD requires that in order to be
-  compatible, all devices must have a camera. This allows developers to rely
-  on a consistent set of device capabilities when writing their apps.</p>
+  phone that doesn't have a camera, the CDD requires that in order to be
+  compatible, all phones must have a camera. This allows developers to rely
+  on a consistent set of capabilities when writing their apps.</p>
 <p>The CDD will evolve over time to reflect market realities. For instance,
-  the 1.6 CDD only allows cell phones, but the 2.x CDD allows devices to omit
+  the 1.6 CDD only allows cell phones, but the 2.1 CDD allows devices to omit
   telephony hardware, allowing for non-phone devices such as tablet-style
   music players to be compatible. As we make these changes, we will also
   augment Android Market to allow developers to retain control over where
@@ -271,12 +271,15 @@ benefit.</p>
   generally have much effect on third-party apps. As such, device builders are
   free to customize the user interface as much as they like. The Compatibility
   Definition Document does restrict the degree to which OEMs may alter the
-  system user interface for the few areas that do impact third-party apps.</p>
+  system user interface for areas that do impact third-party apps.</p>
 
 <h3>When are compatibility definitions released for new Android versions?</h3>
 <p>Our goal is to release new versions of Android Compatibility Definition
   Documents (CDDs) once the corresponding Android platform version has
-  converged enough to permit it. Since the CDDs</p>
+  converged enough to permit it. While we can't release a final draft of a CDD
+  for an Android software version before the first flagship device ships with
+  that software, final CDDs will always be released after the first device.
+  However, wherever practical we will make draft versions of CDDs available.</p>
 
 <h3>How are device manufacturers' compatibility claims validated?</h3>
 <p>There is no validation process for Android device compatibility. However,

@@ -7,13 +7,13 @@ this site, you can reach us in one of a few different ways. To get the most
 out of any of these options, please first read "Getting the Most from Our
 Lists" on the <a href="{@docRoot}community/index.html">Community page.</a></p>
 
-<h3>Discussion Group</h3>
+<h3>For General Discussion</h3>
 <p>The preferred way to reach us is via the <a
 href="http://groups.google.com/group/android-compatibility">android-compatibility
 mailing list</a>. Use this list for all your compatibility-related questions.
 Please be aware that this is a public forum.</p>
 
-<h3>CTS Technical Questions</h3>
+<h3>For CTS Technical Questions</h3>
 <p>If you have specific issues with the Compatibility Test Suite that require
 you to disclose information you'd prefer not to be public, you can contact an
 email address we've set up specifically this purpose: <a
@@ -23,9 +23,9 @@ questions will be directed back to the public android-compatibility
 list. Note also that this list is for specific technical questions; general
 inquiries will also be directed back to the android-compatibility list.</p>
 
-<h3>Private Inquiries</h3>
+<h3>For Business Inquiries</h3>
 <p>Finally, business inquiries about the compatibility program, including
 requests to use branding elements and so on, can be sent to the address <a
-href="mailto:compatibility@android.com">compatibility@android.com</a>. Like
+href="mailto:android-partnerships@google.com">android-partnerships@google.com</a>. Like
 the CTS address, this address is for specific, private inquiries; general
 questions will be directed back to the android-compatibility list.</p>

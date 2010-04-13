@@ -3,10 +3,10 @@ doc.type=source
 @jd:body
 <p><i>The information on this page is a bit out of date. We'll update this
 page as soon as we can.</i></p>
-<div>The basic manifest for cupcake (and above) defines which projects are
+<div>The basic manifest for 1.6 defines which projects are
 needed to do a generic build for the emulator or for unlocked Dream devices
 (e.g. the Android Dev Phone 1). You need to have an appropriate device running
-a matching official image.<br><br>To build donut or master for dream (your
+a matching official image.<br><br>To build donut for dream (your
 device needs to be an ADP1 running an official 1.6 system):<br><ol><li>Follow
 the <a href="{@docRoot}source/download.html">normal steps</a>
 to setup repo and check out the sources.
@@ -22,17 +22,6 @@ to setup repo and check out the sources.
 </li>
 <li>from this point, the fastboot tool (which is put automatically in your path) can be used to flash a device: boot the device into the bootloader by holding the back key while pressing the power key, and run "fastboot -w flashall".<br></li>
 </ol>
-To build cupcake for dream (your device needs to be an ADP1 running an official 1.5 system):<br><ol><li>Follow the <a href="{@docRoot}source/download.html">normal steps</a>
-to setup repo and check out the sources.
-</li>
-<li>At the root of your source tree, run ". build/envsetup.sh" like you normally would for an emulator build.
-</li>
-<li>Run "make adb" if you don't already have adb in your path.<br></li>
-<li>in vendor/htc/dream-open/ there is a script called "extract-files.sh" that must be run (from that directory) to extract some proprietary binaries from your device (*). You only need to do this once.<br></li>
-<li>run "lunch htc_dream-eng" to specifically configure the build system for dream (the default is the equivalent of "lunch generic-eng", which doesn't contain dream-specific files).<br></li>
-<li>run make from the top of the source tree.
-</li>
-<li>from this point, the fastboot tool (which is put automatically in your path) can be used to flash a device: boot the device into the bootloader by holding the back key while pressing the power key, and run "fastboot -w flashall".<br></li>
-</ol>
-* The Dream device software contains some proprietary binaries.For contractual reasons, these cannot be redistributed to be used directly with the Android Open-Source Project, but the provided script may be used to extract these binaries from your development device so that they can be correctly included in your build.These libraries include the openGL|ES library, the Qualcomm camera library, the HTC Radio Interface Library, etc.
+<p>Note: these instructions work for the sapphire (ADP2) build target, as
+well. Simply replace "dream" with "sapphire" above.</p>
 </div>

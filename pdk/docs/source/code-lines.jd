@@ -62,9 +62,9 @@ deal with more extant platform versions than strictly necessary.  Meanwhile,
 Google retains responsibility for the strategic direction of Android as a
 platform and a product. Our approach is based on focusing on a small number of
 flagship devices to drive features, and secure protections of Android-related
-intellectual property through patents and the like.</p>
+intellectual property.</p>
 <p>As a result, Google frequently has possession of confidential
-information of third parties, and we must refrain from revealing patentable
+information of third parties, and we must refrain from revealing sensitive
 features until we've secured the appropriate protections. Meanwhile, there are
 real risks to the platform arising from having too many platform versions
 extant at once. For these reasons, we have structured the open-source project
