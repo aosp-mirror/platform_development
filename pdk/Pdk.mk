@@ -77,7 +77,7 @@ doxygen_version = doxygen
 #   descriptions for the new headers and point to the new doxygen created html.
 pdk_headers := \
     $(pdk_legacy_hardware_dir)/AudioHardwareInterface.h \
-    $(pdk_legacy_hardware_dir)/gps.h \
+    $(pdk_hardware_dir)/gps.h \
     $(pdk_legacy_hardware_dir)/wifi.h \
     $(pdk_camera_dir)/CameraHardwareInterface.h \
     $(pdk_hardware_dir)/sensors.h \
