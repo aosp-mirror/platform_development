@@ -71,8 +71,25 @@ public class Gallery1 extends Activity {
     }
 
     public class ImageAdapter extends BaseAdapter {
-        int mGalleryItemBackground;
-        
+        private static final int ITEM_WIDTH = 136;
+        private static final int ITEM_HEIGHT = 88;
+
+        private final int mGalleryItemBackground;
+        private final Context mContext;
+
+        private final Integer[] mImageIds = {
+                R.drawable.gallery_photo_1,
+                R.drawable.gallery_photo_2,
+                R.drawable.gallery_photo_3,
+                R.drawable.gallery_photo_4,
+                R.drawable.gallery_photo_5,
+                R.drawable.gallery_photo_6,
+                R.drawable.gallery_photo_7,
+                R.drawable.gallery_photo_8
+        };
+
+        private final float mDensity;
+
         public ImageAdapter(Context c) {
             mContext = c;
             // See res/values/attrs.xml for the <declare-styleable> that defines
@@ -81,6 +98,8 @@ public class Gallery1 extends Activity {
             mGalleryItemBackground = a.getResourceId(
                     R.styleable.Gallery1_android_galleryItemBackground, 0);
             a.recycle();
+
+            mDensity = c.getResources().getDisplayMetrics().density;
         }
 
         public int getCount() {
@@ -96,30 +115,25 @@ public class Gallery1 extends Activity {
         }
 
         public View getView(int position, View convertView, ViewGroup parent) {
-            ImageView i = new ImageView(mContext);
+            ImageView imageView;
+            if (convertView == null) {
+                convertView = new ImageView(mContext);
 
-            i.setImageResource(mImageIds[position]);
-            i.setScaleType(ImageView.ScaleType.FIT_XY);
-            i.setLayoutParams(new Gallery.LayoutParams(136, 88));
+                imageView = (ImageView) convertView;
+                imageView.setScaleType(ImageView.ScaleType.FIT_XY);
+                imageView.setLayoutParams(new Gallery.LayoutParams(
+                        (int) (ITEM_WIDTH * mDensity + 0.5f),
+                        (int) (ITEM_HEIGHT * mDensity + 0.5f)));
             
-            // The preferred Gallery item background
-            i.setBackgroundResource(mGalleryItemBackground);
-            
-            return i;
+                // The preferred Gallery item background
+                imageView.setBackgroundResource(mGalleryItemBackground);
+            } else {
+                imageView = (ImageView) convertView;
+            }
+
+            imageView.setImageResource(mImageIds[position]);
+
+            return imageView;
         }
-
-        private Context mContext;
-
-        private Integer[] mImageIds = {
-                R.drawable.gallery_photo_1,
-                R.drawable.gallery_photo_2,
-                R.drawable.gallery_photo_3,
-                R.drawable.gallery_photo_4,
-                R.drawable.gallery_photo_5,
-                R.drawable.gallery_photo_6,
-                R.drawable.gallery_photo_7,
-                R.drawable.gallery_photo_8
-        };
     }
-
 }
