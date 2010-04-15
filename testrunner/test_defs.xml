@@ -484,8 +484,8 @@ See test_defs.xsd for more information.
 <test-native name="libjingle"
     build_path="vendor/google/libraries/libjingle"
     description="Libjingle."
+    full_make="true"
     extra_build_args="LIBJINGLE_TESTS=1" />
-
 
 <!-- host java tests -->
 <test-host name="cts-appsecurity"

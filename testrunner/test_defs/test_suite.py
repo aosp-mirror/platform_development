@@ -32,6 +32,7 @@ class AbstractTestSuite(object):
     self._suite = None
     self._description = ''
     self._extra_build_args = ''
+    self._is_full_make = False
 
   def GetName(self):
     return self._name
@@ -86,6 +87,13 @@ class AbstractTestSuite(object):
 
   def SetExtraBuildArgs(self, build_args):
     self._extra_build_args = build_args
+    return self
+
+  def IsFullMake(self):
+    return self._is_full_make
+
+  def SetIsFullMake(self, full_make):
+    self._is_full_make = full_make
     return self
 
   def Run(self, options, adb):
