@@ -355,13 +355,44 @@ class AdbInterface:
           "in test_defs.xml?" % instrumentation_path)
       raise errors.WaitForResponseTimedOutError()
 
-  def Sync(self, retry_count=3):
+  def WaitForBootComplete(self, wait_time=120):
+    """Waits for targeted device's bootcomplete flag to be set.
+
+    Args:
+      wait_time: time in seconds to wait
+
+    Raises:
+      WaitForResponseTimedOutError if wait_time elapses and pm still does not
+      respond.
+    """
+    logger.Log("Waiting for boot complete...")
+    self.SendCommand("wait-for-device")
+    # Now the device is there, but may not be running.
+    # Query the package manager with a basic command
+    boot_complete = False
+    attempts = 0
+    wait_period = 5
+    while not boot_complete and (attempts*wait_period) < wait_time:
+      output = self.SendShellCommand("getprop dev.bootcomplete", retry_count=1)
+      output = output.strip()
+      if output == "1":
+        boot_complete = True
+      else:
+        time.sleep(wait_period)
+        attempts += 1
+    if not boot_complete:
+      raise errors.WaitForResponseTimedOutError(
+          "dev.bootcomplete flag was not set after %s seconds" % wait_time)
+
+  def Sync(self, retry_count=3, runtime_restart=False):
     """Perform a adb sync.
 
     Blocks until device package manager is responding.
 
     Args:
       retry_count: number of times to retry sync before failing
+      runtime_restart: stop runtime during sync and restart afterwards, useful
+        for syncing system libraries (core, framework etc)
 
     Raises:
       WaitForResponseTimedOutError if package manager does not respond
@@ -369,6 +400,13 @@ class AdbInterface:
     """
     output = ""
     error = None
+    if runtime_restart:
+      self.SendShellCommand("setprop ro.monkey 1", retry_count=retry_count)
+      # manual rest bootcomplete flag
+      self.SendShellCommand("setprop dev.bootcomplete 0",
+                            retry_count=retry_count)
+      self.SendShellCommand("stop", retry_count=retry_count)
+
     try:
       output = self.SendCommand("sync", retry_count=retry_count)
     except errors.AbortError, e:
@@ -389,10 +427,17 @@ class AdbInterface:
       # exception occurred that cannot be recovered from
       raise error
     logger.SilentLog(output)
-    self.WaitForDevicePm()
+    if runtime_restart:
+      # start runtime and wait till boot complete flag is set
+      self.SendShellCommand("start", retry_count=retry_count)
+      self.WaitForBootComplete()
+      # press the MENU key, this will disable key guard if runtime is started
+      # with ro.monkey set to 1
+      self.SendShellCommand("input keyevent 82", retry_count=retry_count)
+    else:
+      self.WaitForDevicePm()
     return output
 
   def GetSerialNumber(self):
     """Returns the serial number of the targeted device."""
     return self.SendCommand("get-serialno").strip()
-
