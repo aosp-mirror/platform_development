@@ -62,28 +62,6 @@ class CoverageGenerator(object):
     self._adb = adb_interface
     self._targets_manifest = self._ReadTargets()
 
-  def TestDeviceCoverageSupport(self):
-    """Check if device has support for generating code coverage metrics.
-
-    Currently this will check if the emma.jar file is on the device's boot
-    classpath.
-
-    Returns:
-      True if device can support code coverage. False otherwise.
-    """
-    try:
-      output = self._adb.SendShellCommand("cat init.rc | grep BOOTCLASSPATH | "
-                                          "grep emma.jar")
-      if len(output) > 0:
-        return True
-    except errors.AbortError:
-      pass
-    logger.Log("Error: Targeted device does not have emma.jar on its "
-               "BOOTCLASSPATH.")
-    logger.Log("Modify the BOOTCLASSPATH entry in system/core/rootdir/init.rc"
-               " to add emma.jar")
-    return False
-
   def ExtractReport(self, test_suite,
                     device_coverage_path,
                     output_path=None,
@@ -309,6 +287,25 @@ class CoverageGenerator(object):
 def EnableCoverageBuild():
   """Enable building an Android target with code coverage instrumentation."""
   os.environ["EMMA_INSTRUMENT"] = "true"
+
+
+def TestDeviceCoverageSupport(adb):
+  """Check if device has support for generating code coverage metrics.
+
+  This tries to dump emma help information on device, a response containing
+  help information will indicate that emma is already on system class path.
+
+  Returns:
+    True if device can support code coverage. False otherwise.
+  """
+  try:
+    output = adb.SendShellCommand("exec app_process / emma -h")
+
+    if output.find('emma usage:') == 0:
+      return True
+  except errors.AbortError:
+    pass
+  return False
 
 
 def Run():
