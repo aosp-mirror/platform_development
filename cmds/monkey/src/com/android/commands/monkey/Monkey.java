@@ -28,6 +28,7 @@ import android.os.Debug;
 import android.os.Process;
 import android.os.RemoteException;
 import android.os.ServiceManager;
+import android.os.SystemClock;
 import android.os.SystemProperties;
 import android.view.IWindowManager;
 
@@ -894,6 +895,10 @@ public class Monkey {
             }
 
             if ((mVerbose > 0) && (eventCounter % 100) == 0 && eventCounter != 0) {
+                String calendarTime = MonkeyUtils.toCalendarTime(System.currentTimeMillis());
+                long systemUpTime = SystemClock.elapsedRealtime();
+                System.out.println("    //[calendar_time:" + calendarTime + " system_uptime:"
+                                   + systemUpTime + "]");
                 System.out.println("    // Sending event #" + eventCounter);
             }
 
