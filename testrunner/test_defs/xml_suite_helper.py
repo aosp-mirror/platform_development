@@ -39,6 +39,7 @@ class XmlSuiteParser(object):
   _SUITE_ATTR = 'suite'
   _DESCRIPTION_ATTR = 'description'
   _EXTRA_BUILD_ARGS_ATTR = 'extra_build_args'
+  _FULL_MAKE_ATTR = 'full_make'
 
   def Parse(self, element):
     """Populates common suite attributes from given suite xml element.
@@ -79,6 +80,9 @@ class XmlSuiteParser(object):
                                                    default_value=''))
     test_suite.SetExtraBuildArgs(self._ParseAttribute(
         suite_element, self._EXTRA_BUILD_ARGS_ATTR, False, default_value=''))
+    test_suite.SetIsFullMake(self._ParseAttribute(
+        suite_element, self._FULL_MAKE_ATTR, False, default_value=False))
+
 
   def _ParseAttribute(self, suite_element, attribute_name, mandatory,
                       default_value=None):

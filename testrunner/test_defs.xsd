@@ -41,7 +41,7 @@
         <xs:attribute name="name" type="xs:string" use="required" />
 
         <!-- File system path, relative to Android build root, to this
-        package's Android.mk file. -->
+        package's Android.mk file.-->
         <xs:attribute name="build_path" type="xs:string" use="required" />
 
         <!-- Include test in continuous test system. -->
@@ -55,10 +55,17 @@
         test. -->
         <xs:attribute name="description" type="xs:string" use="optional" />
 
+        <!-- Specifies that a full 'make', as opposed to 'mmm' command, is
+        needed to build this test. The build command used will be
+        'make extra_build_args' -->
+        <xs:attribute name="full_make" type="xs:boolean"
+                    use="optional" />
+
         <!--  Extra arguments to append to build command when building this
         test. -->
         <xs:attribute name="extra_build_args" type="xs:string"
                     use="optional" />
+
     </xs:complexType>
 
     <!-- Java on device instrumentation test.
