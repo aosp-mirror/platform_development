@@ -65,6 +65,7 @@ Then once you have all the source, simply build the SDK using:
 
   $ cd ~/my-android-git
   $ . build/envsetup.sh
+  $ lunch sdk-eng
   $ make sdk
 
 This will take a while, maybe between 20 minutes and several hours depending on
