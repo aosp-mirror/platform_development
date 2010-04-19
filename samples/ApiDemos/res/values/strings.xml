@@ -83,6 +83,9 @@
     <string name="redirect_getter">Enter the text that will be used by the main activity.  Press back to cancel.</string>
     <string name="apply">Apply</string>
 
+    <string name="simple_fragment">App/Fragment/Simple</string>
+    <string name="next">Next</string>
+
     <string name="activity_menu">App/Activity/Menu</string>
     <string name="open_menu">Open menu</string>
     <string name="close_menu">Close menu</string>
