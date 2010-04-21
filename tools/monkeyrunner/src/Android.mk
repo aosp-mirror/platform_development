@@ -22,7 +22,8 @@ LOCAL_JAR_MANIFEST := ../etc/manifest.txt
 LOCAL_JAVA_LIBRARIES := \
 	ddmlib \
 	jython \
-	xmlwriter
+	xmlwriter \
+	guavalib
 
 
 LOCAL_MODULE := monkeyrunner
@@ -48,4 +49,3 @@ LOCAL_NO_STANDARD_LIBRARIES := true
 LOCAL_MODULE := xmlwriter
 
 include $(BUILD_HOST_JAVA_LIBRARY)
-
