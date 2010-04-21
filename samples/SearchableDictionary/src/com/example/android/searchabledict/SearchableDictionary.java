@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 The Android Open Source Project
+ * Copyright (C) 2010 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,138 +18,114 @@ package com.example.android.searchabledict;
 
 import android.app.Activity;
 import android.app.SearchManager;
-import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
-import android.text.TextUtils;
-import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.AdapterView;
-import android.widget.BaseAdapter;
 import android.widget.ListView;
+import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
-import android.widget.TwoLineListItem;
-
-import java.util.List;
+import android.widget.AdapterView.OnItemClickListener;
 
 /**
- * The main activity for the dictionary.  Also displays search results triggered by the search
- * dialog.
+ * The main activity for the dictionary.
+ * Displays search results triggered by the search dialog and handles
+ * actions from search suggestions.
  */
 public class SearchableDictionary extends Activity {
 
-    private static final int MENU_SEARCH = 1;
-
     private TextView mTextView;
-    private ListView mList;
+    private ListView mListView;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.main);
+
+        mTextView = (TextView) findViewById(R.id.text);
+        mListView = (ListView) findViewById(R.id.list);
 
         Intent intent = getIntent();
 
-        setContentView(R.layout.main);
-        mTextView = (TextView) findViewById(R.id.textField);
-        mList = (ListView) findViewById(R.id.list);
-
         if (Intent.ACTION_VIEW.equals(intent.getAction())) {
-            // from click on search results
-            Dictionary.getInstance().ensureLoaded(getResources());
-            String word = intent.getDataString();
-            Dictionary.Word theWord = Dictionary.getInstance().getMatches(word).get(0);
-            launchWord(theWord);
+            // handles a click on a search suggestion; launches activity to show word
+            Intent wordIntent = new Intent(this, WordActivity.class);
+            wordIntent.setData(intent.getData());
+            startActivity(wordIntent);
             finish();
         } else if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
+            // handles a search query
             String query = intent.getStringExtra(SearchManager.QUERY);
-            mTextView.setText(getString(R.string.search_results, query));
-            WordAdapter wordAdapter = new WordAdapter(Dictionary.getInstance().getMatches(query));
-            mList.setAdapter(wordAdapter);
-            mList.setOnItemClickListener(wordAdapter);
+            showResults(query);
         }
+    }
 
-        Log.d("dict", intent.toString());
-        if (intent.getExtras() != null) {
-            Log.d("dict", intent.getExtras().keySet().toString());
+    /**
+     * Searches the dictionary and displays results for the given query.
+     * @param query The search query
+     */
+    private void showResults(String query) {
+
+        Cursor cursor = managedQuery(DictionaryProvider.CONTENT_URI, null, null,
+                                new String[] {query}, null);
+
+        if (cursor == null) {
+            // There are no results
+            mTextView.setText(getString(R.string.no_results, new Object[] {query}));
+        } else {
+            // Display the number of results
+            int count = cursor.getCount();
+            String countString = getResources().getQuantityString(R.plurals.search_results,
+                                    count, new Object[] {count, query});
+            mTextView.setText(countString);
+
+            // Specify the columns we want to display in the result
+            String[] from = new String[] { DictionaryDatabase.KEY_WORD,
+                                           DictionaryDatabase.KEY_DEFINITION };
+
+            // Specify the corresponding layout elements where we want the columns to go
+            int[] to = new int[] { R.id.word,
+                                   R.id.definition };
+
+            // Create a simple cursor adapter for the definitions and apply them to the ListView
+            SimpleCursorAdapter words = new SimpleCursorAdapter(this,
+                                          R.layout.result, cursor, from, to);
+            mListView.setAdapter(words);
+
+            // Define the on-click listener for the list items
+            mListView.setOnItemClickListener(new OnItemClickListener() {
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                    // Build the Intent used to open WordActivity with a specific word Uri
+                    Intent wordIntent = new Intent(getApplicationContext(), WordActivity.class);
+                    Uri data = Uri.withAppendedPath(DictionaryProvider.CONTENT_URI,
+                                                    String.valueOf(id));
+                    wordIntent.setData(data);
+                    startActivity(wordIntent);
+                }
+            });
         }
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        menu.add(0, MENU_SEARCH, 0, R.string.menu_search)
-                .setIcon(android.R.drawable.ic_search_category_default)
-                .setAlphabeticShortcut(SearchManager.MENU_KEY);
-
-        return super.onCreateOptionsMenu(menu);
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.options_menu, menu);
+        return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case MENU_SEARCH:
+            case R.id.search:
                 onSearchRequested();
                 return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
-
-    private void launchWord(Dictionary.Word theWord) {
-        Intent next = new Intent();
-        next.setClass(this, WordActivity.class);
-        next.putExtra("word", theWord.word);
-        next.putExtra("definition", theWord.definition);
-        startActivity(next);
-    }
-
-    class WordAdapter extends BaseAdapter implements AdapterView.OnItemClickListener {
-
-        private final List<Dictionary.Word> mWords;
-        private final LayoutInflater mInflater;
-
-        public WordAdapter(List<Dictionary.Word> words) {
-            mWords = words;
-            mInflater = (LayoutInflater) SearchableDictionary.this.getSystemService(
-                    Context.LAYOUT_INFLATER_SERVICE);
-        }
-
-        public int getCount() {
-            return mWords.size();
-        }
-
-        public Object getItem(int position) {
-            return position;
-        }
-
-        public long getItemId(int position) {
-            return position;
-        }
-
-        public View getView(int position, View convertView, ViewGroup parent) {
-            TwoLineListItem view = (convertView != null) ? (TwoLineListItem) convertView :
-                    createView(parent);
-            bindView(view, mWords.get(position));
-            return view;
-        }
-
-        private TwoLineListItem createView(ViewGroup parent) {
-            TwoLineListItem item = (TwoLineListItem) mInflater.inflate(
-                    android.R.layout.simple_list_item_2, parent, false);
-            item.getText2().setSingleLine();
-            item.getText2().setEllipsize(TextUtils.TruncateAt.END);
-            return item;
-        }
-
-        private void bindView(TwoLineListItem view, Dictionary.Word word) {
-            view.getText1().setText(word.word);
-            view.getText2().setText(word.definition);
-        }
-
-        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-            launchWord(mWords.get(position));
+            default:
+                return false;
         }
     }
 }

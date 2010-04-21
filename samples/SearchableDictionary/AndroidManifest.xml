@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
 /*
-** Copyright 2009, The Android Open Source Project
+** Copyright 2010, The Android Open Source Project
 **
 ** Licensed under the Apache License, Version 2.0 (the "License");
 ** you may not use this file except in compliance with the License.
@@ -22,12 +22,11 @@
     <uses-sdk android:minSdkVersion="4" />
 
     <application android:label="@string/app_name"
-            android:icon="@drawable/ic_dictionary">
+                 android:icon="@drawable/ic_dictionary">
 
-        <!-- The default activity of the app.  Can also display search results. -->
+        <!-- The default activity of the app; displays search results. -->
         <activity android:name=".SearchableDictionary"
-                android:label="@string/app_name"
-                android:theme="@android:style/Theme.NoTitleBar">
+                  android:theme="@android:style/Theme.NoTitleBar">
 
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -37,22 +36,26 @@
             <!-- Receives the search request. -->
             <intent-filter>
                 <action android:name="android.intent.action.SEARCH" />
-                <category android:name="android.intent.category.DEFAULT" />
+                <!-- No category needed, because the Intent will specify this class component-->
             </intent-filter>
 
             <!-- Points to searchable meta data. -->
             <meta-data android:name="android.app.searchable"
-                    android:resource="@xml/searchable"/>
+                       android:resource="@xml/searchable" />
+
         </activity>
 
         <!-- Displays the definition of a word. -->
         <activity android:name=".WordActivity"
-                android:theme="@android:style/Theme.NoTitleBar"/>
+                  android:theme="@android:style/Theme.NoTitleBar" />
 
         <!-- Provides search suggestions for words and their definitions. -->
-        <provider android:name="DictionaryProvider"
-                android:authorities="dictionary"
-                android:syncable="false" />
+        <provider android:name=".DictionaryProvider"
+                  android:authorities="com.example.android.searchabledict.DictionaryProvider" />
+
+        <!-- Points to searchable activity so the whole app can invoke search. -->
+        <meta-data android:name="android.app.default_searchable"
+                   android:value=".SearchableDictionary" />
 
     </application>
 </manifest>
