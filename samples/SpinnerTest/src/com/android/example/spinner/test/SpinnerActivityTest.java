@@ -26,15 +26,13 @@ import android.widget.Spinner;
 import android.widget.SpinnerAdapter;
 import android.widget.TextView;
 
-/**
+/*
  * Tests the example application Spinner. Uses the instrumentation test class
- * {@link ActivityInstrumentationTestCase2} as its base class. The tests include
- * <ol>
- *  <li>test initial conditions</li>
- *  <li>test the UI</li>
- *  <li>state management - preserving state after the app is shut down and restarted, preserving
- *    state after the app is hidden (paused) and re-displayed (resumed)</li>
- * </ol>
+ * ActivityInstrumentationTestCase2 as its base class. The tests include
+ *   - test initial conditions
+ *   - test the UI
+ *   - state management - preserving state after the app is shut down and restarted, preserving
+ *     state after the app is hidden (paused) and re-displayed (resumed)
  *
  * Demonstrates the use of JUnit setUp() and assert() methods.
  */
@@ -91,7 +89,7 @@ public class SpinnerActivityTest extends ActivityInstrumentationTestCase2<Spinne
 
     private SpinnerAdapter mPlanetData;
 
-    /**
+    /*
      * Constructor for the test class. Required by Android test classes. The constructor
      * must call the super constructor, providing the Android package name of the app under test
      * and the Java class name of the activity in that application that handles the MAIN intent.
@@ -101,7 +99,7 @@ public class SpinnerActivityTest extends ActivityInstrumentationTestCase2<Spinne
         super("com.android.example.spinner", SpinnerActivity.class);
     }
 
-    /**
+    /*
      * Sets up the test environment before each test.
      * @see android.test.ActivityInstrumentationTestCase2#setUp()
      */
@@ -140,7 +138,7 @@ public class SpinnerActivityTest extends ActivityInstrumentationTestCase2<Spinne
 
     }
 
-    /**
+    /*
      * Tests the initial values of key objects in the app under test, to ensure the initial
      * conditions make sense. If one of these is not initialized correctly, then subsequent
      * tests are suspect and should be ignored.
