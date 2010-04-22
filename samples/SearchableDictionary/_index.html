@@ -4,28 +4,30 @@
 app (via the device search button or Menu > Search), you can perform a search
 across the dictionary. As you type, suggestions will appear, which you can select
 to view the complete definition. You can also execute the search to view all word definitions
-that match the entered text.</p>
-
-<p>The application also grants content provider privileges to 
-Quick Search Box, Android's system-wide search tool. This means that the
-dictionary definitions can be offered as search suggestions outside of the application,
-when text is entered into Quick Search Box.</p>
+that match the entered text. The application also allows Quick Search Box (Android's system-wide
+search) to provide dictionary suggestions.</p>
 
 <p>The code in this application demonstrates how to:</p>
 <ul>
   <li>Implement a search interface using Android's search framework</li>
   <li>Provide custom search suggestions and offer them in Quick Search Box</li>
-  <li>Create an FTS3 table in SQLite and perform full-text search</li>
-  <li>Create a content provider to perform all searches and queries to the dictionary</li>
-  <li>Use <a
-href="../../../reference/android/widget/SimpleCursorAdapter.html">SimpleCursorAdapter</a> to bind
-data from a Cursor to a ListView.</li>
+  <li>Create an SQLite database and an FTS3 table for full-text searches</li>
+  <li>Create a <a href="../../../guide/topics/providers/content-provider.html">content
+provider</a> to perform all search and suggestion queries</li>
+  <li>Use <code><a
+href="../../../reference/android/widget/SimpleCursorAdapter.html">SimpleCursorAdapter</a></code> to
+bind data from a Cursor to a ListView.</li>
 </ul>
 
 <p>See also:</p>
 <ul>
   <li><a href="../../../guide/topics/search/index.html">Search Developer Guide</a></li>
 </ul>
+
+<p class="note"><strong>Note:</strong> For the original version of Searchable Dictionary, which
+reads words from a file instead of a database and uses a custom <code><a
+href="../../../reference/android/widget/BaseAdapter.html">BaseAdapter</a></code>, see the SDK
+samples included with the platforms for API Level 4-6.</p>
 
 
 <img src="../images/SearchableDictionary1.png" />
