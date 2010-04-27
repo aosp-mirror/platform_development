@@ -17,7 +17,14 @@ package com.android.monkeyrunner;
 
 import com.android.ddmlib.RawImage;
 
+import java.awt.Point;
 import java.awt.image.BufferedImage;
+import java.awt.image.DataBuffer;
+import java.awt.image.DataBufferByte;
+import java.awt.image.PixelInterleavedSampleModel;
+import java.awt.image.Raster;
+import java.awt.image.WritableRaster;
+import java.util.Hashtable;
 /**
  * Useful image related functions.
  */
@@ -25,30 +32,38 @@ public class ImageUtils {
     // Utility class
     private ImageUtils() { }
 
-    public static BufferedImage convertImage(RawImage rawImage, BufferedImage image) {
-        if (image == null || rawImage.width != image.getWidth() ||
-                rawImage.height != image.getHeight()) {
-            image = new BufferedImage(rawImage.width, rawImage.height,
-                    BufferedImage.TYPE_INT_ARGB);
-        }
+    private static Hashtable<?,?> EMPTY_HASH = new Hashtable();
+    private static int[] BAND_OFFSETS_32 = { 0, 1, 2, 3 };
+    private static int[] BAND_OFFSETS_16 = { 0, 1 };
 
+    /**
+     * Convert a raw image into a buffered image.
+     *
+     * @param rawImage the raw image to convert
+     * @param image the old image to (possibly) recycle
+     * @return the converted image
+     */
+    public static BufferedImage convertImage(RawImage rawImage, BufferedImage image) {
         switch (rawImage.bpp) {
             case 16:
-                rawImage16toARGB(image, rawImage);
-                break;
+                return rawImage16toARGB(image, rawImage);
             case 32:
-                rawImage32toARGB(image, rawImage);
-                break;
+                return rawImage32toARGB(rawImage);
         }
-
-        return image;
+        return null;
     }
 
+    /**
+     * Convert a raw image into a buffered image.
+     *
+     * @param rawImage the image to convert.
+     * @return the converted image.
+     */
     public static BufferedImage convertImage(RawImage rawImage) {
         return convertImage(rawImage, null);
     }
 
-    private static int getMask(int length) {
+    static int getMask(int length) {
         int res = 0;
         for (int i = 0 ; i < length ; i++) {
             res = (res << 1) + 1;
@@ -57,67 +72,29 @@ public class ImageUtils {
         return res;
     }
 
-    private static void rawImage32toARGB(BufferedImage image, RawImage rawImage) {
-        int[] scanline = new int[rawImage.width];
-        byte[] buffer = rawImage.data;
-        int index = 0;
+    private static BufferedImage rawImage32toARGB(RawImage rawImage) {
+        // Do as much as we can to not make an extra copy of the data.  This is just a bunch of
+        // classes that wrap's the raw byte array of the image data.
+        DataBufferByte dataBuffer = new DataBufferByte(rawImage.data, rawImage.size);
 
-        final int redOffset = rawImage.red_offset;
-        final int redLength = rawImage.red_length;
-        final int redMask = getMask(redLength);
-        final int greenOffset = rawImage.green_offset;
-        final int greenLength = rawImage.green_length;
-        final int greenMask = getMask(greenLength);
-        final int blueOffset = rawImage.blue_offset;
-        final int blueLength = rawImage.blue_length;
-        final int blueMask = getMask(blueLength);
-        final int alphaLength = rawImage.alpha_length;
-        final int alphaOffset = rawImage.alpha_offset;
-        final int alphaMask = getMask(alphaLength);
-
-        for (int y = 0 ; y < rawImage.height ; y++) {
-            for (int x = 0 ; x < rawImage.width ; x++) {
-                int value = buffer[index++] & 0x00FF;
-                value |= (buffer[index++] & 0x00FF) << 8;
-                value |= (buffer[index++] & 0x00FF) << 16;
-                value |= (buffer[index++] & 0x00FF) << 24;
-
-                int r = ((value >>> redOffset) & redMask) << (8 - redLength);
-                int g = ((value >>> greenOffset) & greenMask) << (8 - greenLength);
-                int b = ((value >>> blueOffset) & blueMask) << (8 - blueLength);
-                int a = 0xFF;
-
-                if (alphaLength != 0) {
-                    a = ((value >>> alphaOffset) & alphaMask) << (8 - alphaLength);
-                }
-
-                scanline[x] = a << 24 | r << 16 | g << 8 | b;
-            }
-
-            image.setRGB(0, y, rawImage.width, 1, scanline,
-                    0, rawImage.width);
-        }
+        PixelInterleavedSampleModel sampleModel =
+            new PixelInterleavedSampleModel(DataBuffer.TYPE_BYTE, rawImage.width, rawImage.height,
+                    4, rawImage.width * 4, BAND_OFFSETS_32);
+        WritableRaster raster = Raster.createWritableRaster(sampleModel, dataBuffer,
+                new Point(0, 0));
+        return new BufferedImage(new ThirtyTwoBitColorModel(rawImage), raster, false, EMPTY_HASH);
     }
 
-    private static void rawImage16toARGB(BufferedImage image, RawImage rawImage) {
-        int[] scanline = new int[rawImage.width];
-        byte[] buffer = rawImage.data;
-        int index = 0;
+    private static BufferedImage rawImage16toARGB(BufferedImage image, RawImage rawImage) {
+        // Do as much as we can to not make an extra copy of the data.  This is just a bunch of
+        // classes that wrap's the raw byte array of the image data.
+        DataBufferByte dataBuffer = new DataBufferByte(rawImage.data, rawImage.size);
 
-        for (int y = 0 ; y < rawImage.height ; y++) {
-            for (int x = 0 ; x < rawImage.width ; x++) {
-                int value = buffer[index++] & 0x00FF;
-                value |= (buffer[index++] << 8) & 0x0FF00;
-
-                int r = ((value >> 11) & 0x01F) << 3;
-                int g = ((value >> 5) & 0x03F) << 2;
-                int b = ((value     ) & 0x01F) << 3;
-
-                scanline[x] = 0xFF << 24 | r << 16 | g << 8 | b;
-            }
-
-            image.setRGB(0, y, rawImage.width, 1, scanline,
-                    0, rawImage.width);
-        }
+        PixelInterleavedSampleModel sampleModel =
+            new PixelInterleavedSampleModel(DataBuffer.TYPE_BYTE, rawImage.width, rawImage.height,
+                    2, rawImage.width * 2, BAND_OFFSETS_16);
+        WritableRaster raster = Raster.createWritableRaster(sampleModel, dataBuffer,
+                new Point(0, 0));
+        return new BufferedImage(new SixteenBitColorModel(rawImage), raster, false, EMPTY_HASH);
     }
 }

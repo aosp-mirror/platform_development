@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2009 The Android Open Source Project
+# Copyright (C) 2010 The Android Open Source Project
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,7 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-MONKEYRUNNER_LOCAL_DIR := $(call my-dir)
-include $(MONKEYRUNNER_LOCAL_DIR)/etc/Android.mk
-include $(MONKEYRUNNER_LOCAL_DIR)/src/Android.mk
-include $(MONKEYRUNNER_LOCAL_DIR)/test/Android.mk
+LOCAL_PATH := $(call my-dir)
+include $(CLEAR_VARS)
+
+LOCAL_SRC_FILES := $(call all-subdir-java-files)
+LOCAL_MODULE := MonkeyRunnerTest
+LOCAL_JAVA_LIBRARIES :=  junit monkeyrunner ddmlib
+
+include $(BUILD_HOST_JAVA_LIBRARY)
