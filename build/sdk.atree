@@ -97,7 +97,7 @@ development/samples/SkeletonApp              samples/${PLATFORM_NAME}/SkeletonAp
 development/samples/Snake                    samples/${PLATFORM_NAME}/Snake
 development/samples/SoftKeyboard             samples/${PLATFORM_NAME}/SoftKeyboard
 development/samples/JetBoy                   samples/${PLATFORM_NAME}/JetBoy
-development/samples/SearchableDictionary     samples/${PLATFORM_NAME}/SearchableDictionary
+development/samples/SearchableDictionary     samples/${PLATFORM_NAME}/SearchableDictionaryV2
 development/samples/ContactManager           samples/${PLATFORM_NAME}/ContactManager
 development/samples/MultiResolution          samples/${PLATFORM_NAME}/MultiResolution
 development/samples/Wiktionary               samples/${PLATFORM_NAME}/Wiktionary
