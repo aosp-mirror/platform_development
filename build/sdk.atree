@@ -71,6 +71,9 @@ sdk/files/sdk.properties         platforms/${PLATFORM_NAME}/sdk.properties
 sdk/files/ant_rules_r1.xml       platforms/${PLATFORM_NAME}/templates/android_rules.xml
 sdk/files/ant_test_rules_r1.xml  platforms/${PLATFORM_NAME}/templates/android_test_rules.xml
 # newer Ant rules.
+sdk/files/ant_rules_r3.xml       platforms/${PLATFORM_NAME}/ant/ant_rules_r3.xml
+sdk/files/ant_test_rules_r3.xml  platforms/${PLATFORM_NAME}/ant/ant_test_rules_r3.xml
+sdk/files/ant_lib_rules_r3.xml   platforms/${PLATFORM_NAME}/ant/ant_lib_rules_r3.xml
 sdk/files/ant_rules_r2.xml       platforms/${PLATFORM_NAME}/ant/ant_rules_r2.xml
 sdk/files/ant_test_rules_r2.xml  platforms/${PLATFORM_NAME}/ant/ant_test_rules_r2.xml
 sdk/files/ant_lib_rules_r2.xml   platforms/${PLATFORM_NAME}/ant/ant_lib_rules_r2.xml
