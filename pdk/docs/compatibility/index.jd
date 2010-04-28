@@ -1,16 +1,20 @@
 page.title=Android Compatibility
 doc.type=compatibility
 @jd:body
-<p>Android is an open source product, and anyone can use the source code to build
-devices. The purpose of the Android compatibility program is to help Android
-device implementations remain compatible with apps.</p>
-<p>A device is considered compatible if existing and new third-party
-applications run correctly on it. Poor device implementations that change APIs
-or alter behaviors will break these apps and so are not compatible. The
-Android Compatibility Program provides information and tools that device
-implementers use to ensure that their devices are Android-compatible.</p>
-<p>The latest version of the Android source code and compatibility program is
-2.1, which roughly corresponded to the Eclair branch.</p>
+<p>Android's purpose is to establish an open platform for developers to build
+innovative mobile apps. Three key components work together to realize this
+platform.</p>
+<p>The Android Compatibility Program defines the technical details of Android
+platform and provides tools used by OEMs to ensure that developers’ apps run
+on a variety of devices. The Android SDK provides built-in tools that
+Developers use to clearly state the device features their apps require. And
+Android Market shows apps only to those devices that can properly run
+them.</p>
+<p>These pages describe the Android Compatibility Program and how to get
+access to compatibility information and tools. The latest version of the
+Android source code and compatibility program is 2.1, which roughly
+corresponded to the Eclair branch.</p>
+
 
 <h2>Why build compatible Android devices?</h2>
 <h3>Users want a customizable device.</h3>
@@ -38,7 +42,7 @@ increasing the incentive for developers to build more of those apps.</p>
 sure your device is compatible with Android. For more details about the
 Android compatibility program in general, see <a
 href="{@docRoot}compatibility/overview.html">the program overview</a>.</p>
-<p>Building a compatible device is a four-step process:</p>
+<p>Building a compatible device is a three-step process:</p>
 <ol>
   <li><b>Obtain the Android software source code</b><p>This is the
   <a href="{@docRoot}source/index.html">source code for the Android
@@ -55,6 +59,6 @@ href="{@docRoot}compatibility/overview.html">the program overview</a>.</p>
 <p>Once you've built a compatible device, you may wish to include Android
 Market to provide your users access to the third-party app ecosystem.
 Unfortunately, for a variety of legal and business reasons, we aren't able to
-automatically license Android Market to any compatible device. To inquire
+automatically license Android Market to all compatible devices. To inquire
 about access about Android Market, you can <a
 href="{@docRoot}compatibility/contact-us.html">contact us</a></p>

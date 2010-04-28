@@ -2,7 +2,7 @@ page.title=Philosophy and Goals
 doc.type=about
 doc.hidenav=true
 @jd:body
-<p>Android is an open-source software stack for mobile phones and similar
+<p>Android is an open-source software stack for mobile phones and other
 devices.</p>
 <h2>Origin and Goal</h2>
 <p>Android was originated by a group of companies known as the Open Handset
@@ -16,9 +16,8 @@ available for carriers, OEMs, and developers to use to make their innovative
 ideas a reality. We wanted to make sure that there was no central point of
 failure, where one industry player could restrict or control the innovations
 of any other. The solution we chose was an open and open-source platform.</p>
-<p>But the ultimate goal, of course, is to improve the mobile experience for
-real users by facilitating innovation. Accordingly, the primary goal of the
-AOSP is to make sure Android is a success as an end user product.</p>
+<p>The goal of the Android Open Source Project is to create a successful
+real-world product that improves the mobile experience for end users.</p>
 <h2>Governance Philosophy</h2>
 <p>The companies that have invested in Android have done so on its merits,
 because we believe that an open platform is necessary. Android is
@@ -34,7 +33,7 @@ compatible", and what is required of device builders to achieve that status.
 Anyone can (and will!) use the Android source code for any purpose, and we
 welcome all such uses. However, in order to take part in the shared
 ecosystem of applications that we are building around Android, device builders
-can take advantage of the Compatibility Program.</p>
+must participate in the Compatibility Program.</p>
 <p>Though Android consists of multiple sub-projects, this is strictly a
 project-management technique. We view and manage Android as a single,
 holistic software product, not a "distribution", specification, or collection
