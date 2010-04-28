@@ -26,7 +26,9 @@ compatible Android devices, using the SDK.</p>
 
 <h2>Contribute to the Code</h2>
 <p>Code is King. We'd love to review any changes you submit, so please check
-out the source, pick a bug or feature, and get coding.</p>
+out the source, pick a bug or feature, and get coding. Note that the smaller
+and more targetted your patch submissions, the easier it will be for us to
+review them.</p>
 <p>You can get started with Android by learning about the <a
 href="{@docRoot}source/life-of-a-patch.html">Life of a Patch</a>, and by
 learning about <code>git</code>, <code>repo</code>, and other tools using the
