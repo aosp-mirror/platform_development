@@ -214,13 +214,10 @@ href="{@docRoot}source/code-lines.html">Branches and Releases</a> page.</p>
   devices.</p>
 
 <h3>If my device is compatible, does it automatically have access to Android Market and branding?</h3>
-<p>Android Market is a service operated by Google. For legal and business
-  reasons, Google isn't able to make that service available in all parts of
-  the world. Similarly, Google is unable to license the Android trademark for
-  use in all cases.</p>
-<p>As a result, achieving compatibility does not automatically entitle a
-  device to include Android Market or use the Android name. Device
-  manufacturers should contact Google to obtain access to those tools.</p>
+<p>Android Market is a service operated by Google. Achieving compatibility is
+   a prerequisite for obtaining access to the Android Market software and branding.
+   Device manufacturers should contact Google to obtain access to Android
+   Market.</p>
 
 <h3>If I am not a manufacturer, how can I get Android Market?</h3>
 <p>Android Market is only licensed to handset manufacturers shipping devices.
