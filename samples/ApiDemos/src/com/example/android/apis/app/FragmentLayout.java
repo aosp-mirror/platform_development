@@ -29,45 +29,33 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.TextView;
 
-public class SimpleFragment extends Activity {
-    int mWhichFragment;
-    Fragment mCurFragment;
+public class FragmentLayout extends Activity {
+    View mFirstFragmentView;
+    View mSecondFragmentView;
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.simple_fragment);
-        switchToFragment(0);
-        
-        // Watch for button clicks.
-        Button button = (Button)findViewById(R.id.next);
-        button.setOnClickListener(new OnClickListener() {
-            public void onClick(View v) {
-                switchToFragment(mWhichFragment == 0 ? 1 : 0);
-            }
-        });
+        setContentView(R.layout.fragment_layout);
+        mFirstFragmentView = findViewById(R.id.fragment1);
+        mSecondFragmentView = findViewById(R.id.fragment2);
     }
     
-    void switchToFragment(int which) {
-        mWhichFragment = which;
-        Fragment newFragment = which == 0
-                ? new FirstFragment() : new SecondFragment();
-        FragmentTransaction ft = openFragmentTransaction();
-        if (mCurFragment != null) {
-            ft.remove(mCurFragment);
+    static class FirstFragment extends Fragment {
+        // Explicit constructor needed for inflation.
+        public FirstFragment() {
         }
-        ft.add(newFragment, R.id.simple_fragment);
-        mCurFragment = newFragment;
-        ft.commit();
-    }
-    
-    class FirstFragment extends Fragment {
+        
         public View onCreateView(LayoutInflater inflater, ViewGroup container) {
             return inflater.inflate(R.layout.hello_world, container, false);
         }
     }
     
-    class SecondFragment extends Fragment {
+    static class SecondFragment extends Fragment {
+        // Explicit constructor needed for inflation.
+        public SecondFragment() {
+        }
+        
         public View onCreateView(LayoutInflater inflater, ViewGroup container) {
             View v = inflater.inflate(R.layout.hello_world, container, false);
             View tv = v.findViewById(R.id.text);

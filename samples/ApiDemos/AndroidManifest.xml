@@ -209,7 +209,14 @@
 
         <!-- Fragment Samples -->
 
-        <activity android:name=".app.SimpleFragment" android:label="@string/simple_fragment">
+        <activity android:name=".app.FragmentStack" android:label="@string/simple_fragment">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".app.FragmentLayout" android:label="@string/layout_fragment">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
