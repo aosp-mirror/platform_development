@@ -1,9 +1,52 @@
 <p>
-This sample is the test application for the 
-<a href="../../../resources/tutorials/testing/activity_test.html">Activity
-  Testing Tutorial</a>. Refer to the tutorial text for a full explanation
-of this sample code.
+    This sample is the test application for the
+    <a href="../../../resources/tutorials/testing/activity_test.html">Activity
+    Testing</a> tutorial. It tests the <a href="../Spinner/index.html">Spinner</a> example
+    application.
 </p>
 <p>
-  This application does not have an Android GUI.
+    The test application uses the
+<a href="../../../reference/android/test/ActivityInstrumentationTestCase2.html"><code>ActivityInstrumentationTestCase2</code></a>
+    test case class,
+    which extends both <a href="../../../reference/android/app/Instrumentation">Android instrumentation</a> and the JUnit
+<a href="../../../reference/junit/framework/TestCase.html"><code>TestCase</code></a>
+    class. The test runner is <a href="../../../reference/android/test/InstrumentationTestRunner.html"><code>InstrumentationTestRunner</code></a>.
 </p>
+<p>
+    The application shows how to set up a test application project,
+    how to create the <a href="AndroidManifest.html"><code>AndroidManifest.xml</code></a>
+    file for a test application, and how to set up a test case class for a test fixture. The
+    test case class, <a href="src/com/android/example/spinner/test/SpinnerActivityTest.html"><code>SpinnerActivityTest</code></a>,
+    contains tests that demonstrate the following Android test patterns:
+</p>
+    <ul>
+        <li>
+            Test setup: The <code>setUp()</code> method re-initializes the state of the application under test
+            before each test is run.
+        </li>
+        <li>
+            Initial conditions: The <code>testPreconditions()</code> method demonstrates how to
+            test that the application under test is properly initialized prior to running the
+            test fixture.
+        </li>
+        <li>
+            UI interaction: The <code>testSpinnerUI()</code> method demonstrates how to send keystrokes
+            to the activity under test and then test the result.
+        </li>
+        <li>
+            Application control using instrumentation: The <code>testStateDestroy()</code> and <code>testStatePause()</code>
+            methods demonstrate how to use instrumentation to trigger stages in the lifecycle of the activity under test.
+        </li>
+    </ul>
+<p>
+    The <a href="AndroidManifest.html">manifest</a> declares an <code>&lt;instrumentation&gt;</code> element
+    that links the test application with the application under test. Specifically, the
+    element's <code>android:name</code> attribute specifies <code>InstrumentationTestRunner</code> as the
+    instrumentation to use. The <code>android:targetPackage</code> attribute specifies
+    <code>com.android.example.spinner</code> as the name of the Android package that contains the
+    application under test.
+</p>
+<img alt="The initial user interface for the Spinner sample application" style="height:230px;"
+     src="../images/SpinnerTest1.png"/>
+<img alt="The JUnit view in Eclipse with ADT, showing a successful test run of SpinnerTest" style="height:230px;"
+     src="../images/SpinnerTest2.png"/>
