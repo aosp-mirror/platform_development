@@ -103,6 +103,8 @@ development/samples/Wiktionary               samples/${PLATFORM_NAME}/Wiktionary
 development/samples/WiktionarySimple         samples/${PLATFORM_NAME}/WiktionarySimple
 development/samples/CubeLiveWallpaper        samples/${PLATFORM_NAME}/CubeLiveWallpaper
 development/samples/VoiceRecognitionService  samples/${PLATFORM_NAME}/VoiceRecognitionService
+development/samples/TicTacToeLib             samples/${PLATFORM_NAME}/TicTacToeLib
+development/samples/TicTacToeMain            samples/${PLATFORM_NAME}/TicTacToeMain
 
 # dx
 bin/dx platforms/${PLATFORM_NAME}/tools/dx
