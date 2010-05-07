@@ -36,7 +36,7 @@ the main project and the result is used to generate the APK. This means that
 the main project can either use or redefine behavior from the libraries.
 
 
-To use the main vs livrary project:
+To use the main vs library project:
 - In ADT, just open import both projects and launch the main project.
 - In Ant, use 'android update project' to create the build files and set the SDK location,
   and then run 'ant debug' on the main project.
@@ -44,5 +44,5 @@ To use the main vs livrary project:
 
 For more details on the purpose of this feature, its limitations and detailed usage,
 please read the SDK guide at
-  <STOPSHIP insert URL here to library-project on developers.android.com>
+  http://developer.android.com/guide/developing/eclipse-adt.html
 
