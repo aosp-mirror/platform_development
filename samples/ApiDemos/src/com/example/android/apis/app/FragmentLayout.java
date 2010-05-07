@@ -20,18 +20,18 @@ import com.example.android.apis.R;
 
 import android.app.Activity;
 import android.app.Fragment;
-import android.app.FragmentTransaction;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.View.OnClickListener;
-import android.widget.Button;
 import android.widget.TextView;
 
 public class FragmentLayout extends Activity {
     View mFirstFragmentView;
     View mSecondFragmentView;
+    
+    Fragment mFirstFragment;
+    Fragment mSecondFragment;
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,6 +39,8 @@ public class FragmentLayout extends Activity {
         setContentView(R.layout.fragment_layout);
         mFirstFragmentView = findViewById(R.id.fragment1);
         mSecondFragmentView = findViewById(R.id.fragment2);
+        mFirstFragment = findFragmentById(R.id.fragment1);
+        mSecondFragment = findFragmentById(R.id.fragment2);
     }
     
     static class FirstFragment extends Fragment {

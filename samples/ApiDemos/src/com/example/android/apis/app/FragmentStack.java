@@ -30,14 +30,17 @@ import android.widget.Button;
 import android.widget.TextView;
 
 public class FragmentStack extends Activity {
-    int mStackLevel;
-    Fragment mLastFragment;
+    int mStackLevel = 1;
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.fragment_stack);
-        addFragmentToStack();
+        
+        // Add initial fragment.
+        Fragment newFragment = new CountingFragment(mStackLevel);
+        FragmentTransaction ft = openFragmentTransaction();
+        ft.add(newFragment, R.id.simple_fragment).commit();
         
         // Watch for button clicks.
         Button button = (Button)findViewById(R.id.next);
@@ -52,12 +55,9 @@ public class FragmentStack extends Activity {
         mStackLevel++;
         Fragment newFragment = new CountingFragment(mStackLevel);
         FragmentTransaction ft = openFragmentTransaction();
-        if (mLastFragment != null) {
-            ft.remove(mLastFragment);
-        }
-        ft.add(newFragment, R.id.simple_fragment);
-        mLastFragment = newFragment;
-        ft.addToBackStack();
+        ft.replace(newFragment, R.id.simple_fragment);
+        ft.setTransition(FragmentTransaction.TRANSIT_ACTIVITY_OPEN);
+        ft.addToBackStack(null);
         ft.commit();
     }
     
