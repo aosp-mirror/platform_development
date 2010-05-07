@@ -34,6 +34,6 @@
 
 
     </application>
-    <uses-sdk android:minSdkVersion="Froyo" />
+    <uses-sdk android:minSdkVersion="8" />
 
 </manifest>
