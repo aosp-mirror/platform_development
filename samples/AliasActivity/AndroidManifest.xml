@@ -21,8 +21,8 @@
      to come from a domain that you own or have control over. -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.android.aliasactivity">
-    <application android:hasCode="false">
-        <activity android:name="android.app.AliasActivity" android:label="@string/app_label">
+    <application android:hasCode="false" android:label="@string/app_label">
+        <activity android:name="android.app.AliasActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
