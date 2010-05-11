@@ -1,0 +1,63 @@
+<p>This sample demonstrates how an application can make use of shared code and
+resources stored in an Android library project.</p>
+
+<p>In this case, the TicTacToeMain application project includes a reference to
+the TicTacToeLib library project. When you build the TicTacToeMain application,
+the build tools look for the library project and compile it's code and resources
+as part of the main application's <code>.apk</code> file. The main application
+is designed with a launcher activity called <code>MainActivity</code>, shown at
+left, below. When the user presses a button in the View,
+<code>MainActivity</code> starts a second activity, <code>GameActivity</code>,
+which is declared in the library project. </p>
+
+<ul>
+<li>The main application's <a
+href="AndroidManifest.html">AndroidManifest.xml</a> file contains declarations
+of both <code>MainActivity</code>, which is implemented locally in main project,
+and <code>GameActivity</code>, which is implemented in the library project.
+Currently, an application must declare in its manifest any components or
+resources that it is using from a library project.</li>
+<li><a
+href="src/com/example/android/tictactoe/MainActivity.html">MainActivity.java</a>
+shows how a class in the main application imports and uses
+classes from the library project. The Activity sets listeners on the buttons in
+the main View and, when one of them is clicked, creates an explicit Intent
+targeted at the <code>GameActivity</code> component declared in the TicTacToeLib
+library project. </li>
+</ul>
+
+<p>The TicTacToeLib library project includes a single Activity,
+<code>GameActivity</code>, that handles most of the application lifecycle.</p>
+
+<ul>
+<li>The library project includes an <a
+href="../TicTacToeLib/AndroidManifest.html">AndroidManifest.xml</a> file that
+declares <code>GameActivity</code>.</li>
+<li><a
+href="../TicTacToeLib/src/com/example/android/tictactoe/library/GameActivity.html">GameActivity.java</a>
+handles most of the application lifecycle and manages general game play.</li>
+<li><a
+href="../TicTacToeLib/src/com/example/android/tictactoe/library/GameView.html">GameView.java</a>
+renders the UI of the game and manages interaction events during game play.</li>
+</ul>
+
+<p>If you want to build the TicTacToeMain application, you can obtain it by
+downloading the "Samples for SDK API 8" component (or higher version) into your
+SDK, using the <em>Android SDK and AVD Manager</em>. Note that the application
+project depends on code and resources found in the TicTacToeLib library project
+&mdash; in order to build TicTacToeMain, you need to add both projects to your
+development environment. </p>
+
+<p>To build an application that uses a library project, you also need to update
+to the latest version of the SDK tools (r6 or higher) and Android platforms, as
+well as the latest version of ADT (0.9.7 or higher), if you are developing in
+Eclipse. </p>
+
+<p>For information about how to set up Android library projects, refer to
+<a href="../../../guide/developing/eclipse-adt.html#libraryProject">Developing
+in Eclipse with ADT</a> or <a
+href="../../../guide/developing/other-ide.html#libraryProject">Developing in
+Other IDEs</a>, depending on your environment.</p>
+
+<img alt="Screenshot of the main application" src="../images/TicTacToeMain.png" />
+<img alt="Screenshot of an Activity declared in a library project" src="../images/TicTacToeLib.png" />
