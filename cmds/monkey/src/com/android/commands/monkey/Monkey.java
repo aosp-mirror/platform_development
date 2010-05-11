@@ -562,6 +562,9 @@ public class Monkey {
                 } else if (opt.equals("--pct-trackball")) {
                     int i = MonkeySourceRandom.FACTOR_TRACKBALL;
                     mFactors[i] = -nextOptionLong("trackball events percentage");
+                } else if (opt.equals("--pct-syskeys")) {
+                    int i = MonkeySourceRandom.FACTOR_SYSOPS;
+                    mFactors[i] = -nextOptionLong("system (key) operations percentage");
                 } else if (opt.equals("--pct-nav")) {
                     int i = MonkeySourceRandom.FACTOR_NAV;
                     mFactors[i] = -nextOptionLong("nav events percentage");
