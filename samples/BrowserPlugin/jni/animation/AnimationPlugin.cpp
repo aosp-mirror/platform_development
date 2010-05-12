@@ -35,12 +35,12 @@ extern ANPPaintInterfaceV0     gPaintI;
 extern ANPPathInterfaceV0      gPathI;
 extern ANPWindowInterfaceV0    gWindowI;
 
-static uint16 rnd16(float x, int inset) {
+static uint16_t rnd16(float x, int inset) {
     int ix = (int)roundf(x) + inset;
     if (ix < 0) {
         ix = 0;
     }
-    return static_cast<uint16>(ix);
+    return static_cast<uint16_t>(ix);
 }
 
 static void inval(NPP instance, const ANPRectF& r, bool doAA) {
@@ -173,7 +173,7 @@ void BallAnimation::showEntirePluginOnScreen() {
     gWindowI.clearVisibleRects(instance);
 }
 
-int16 BallAnimation::handleEvent(const ANPEvent* evt) {
+int16_t BallAnimation::handleEvent(const ANPEvent* evt) {
     NPP instance = this->inst();
 
     switch (evt->eventType) {

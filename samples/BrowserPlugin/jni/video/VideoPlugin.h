@@ -32,7 +32,7 @@ class VideoPlugin : public SurfaceSubPlugin {
 public:
     VideoPlugin(NPP inst);
     virtual ~VideoPlugin();
-    virtual int16 handleEvent(const ANPEvent* evt);
+    virtual int16_t handleEvent(const ANPEvent* evt);
     virtual jobject getSurface();
 
 private:

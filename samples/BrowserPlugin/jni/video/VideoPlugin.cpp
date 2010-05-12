@@ -103,7 +103,7 @@ void VideoPlugin::destroySurface() {
     }
 }
 
-int16 VideoPlugin::handleEvent(const ANPEvent* evt) {
+int16_t VideoPlugin::handleEvent(const ANPEvent* evt) {
     switch (evt->eventType) {
         case kLifecycle_ANPEventType: {
             switch (evt->data.lifecycle.action) {

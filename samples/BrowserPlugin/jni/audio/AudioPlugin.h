@@ -42,7 +42,7 @@ public:
     AudioPlugin(NPP inst);
     virtual ~AudioPlugin();
     virtual bool supportsDrawingModel(ANPDrawingModel);
-    virtual int16 handleEvent(const ANPEvent* evt);
+    virtual int16_t handleEvent(const ANPEvent* evt);
 private:
     void draw(ANPCanvas*);
     void drawPlugin(const ANPBitmap& bitmap, const ANPRectI& clip);

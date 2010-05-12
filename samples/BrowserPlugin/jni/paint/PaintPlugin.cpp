@@ -273,7 +273,7 @@ void PaintPlugin::destroySurface() {
     }
 }
 
-int16 PaintPlugin::handleEvent(const ANPEvent* evt) {
+int16_t PaintPlugin::handleEvent(const ANPEvent* evt) {
     switch (evt->eventType) {
         case kTouch_ANPEventType: {
             float x = (float) evt->data.touch.x;

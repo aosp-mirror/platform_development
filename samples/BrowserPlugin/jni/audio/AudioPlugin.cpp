@@ -44,12 +44,12 @@ static void inval(NPP instance) {
     browser->invalidaterect(instance, NULL);
 }
 
-static uint16 rnd16(float x, int inset) {
+static uint16_t rnd16(float x, int inset) {
     int ix = (int)roundf(x) + inset;
     if (ix < 0) {
         ix = 0;
     }
-    return static_cast<uint16>(ix);
+    return static_cast<uint16_t>(ix);
 }
 
 static void inval(NPP instance, const ANPRectF& r, bool doAA) {
@@ -272,7 +272,7 @@ ANPPaint* AudioPlugin::getPaint(ANPRectF* input) {
     return (input == m_activeRect) ? m_paintActiveRect : m_paintRect;
 }
 
-int16 AudioPlugin::handleEvent(const ANPEvent* evt) {
+int16_t AudioPlugin::handleEvent(const ANPEvent* evt) {
     NPP instance = this->inst();
 
     switch (evt->eventType) {

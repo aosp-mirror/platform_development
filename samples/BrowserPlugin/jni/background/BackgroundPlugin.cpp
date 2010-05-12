@@ -179,7 +179,7 @@ void BackgroundPlugin::drawPlugin(int surfaceWidth, int surfaceHeight) {
     gSurfaceI.unlock(env, m_surface);
 }
 
-int16 BackgroundPlugin::handleEvent(const ANPEvent* evt) {
+int16_t BackgroundPlugin::handleEvent(const ANPEvent* evt) {
     switch (evt->eventType) {
         case kDraw_ANPEventType:
             gLogI.log(kError_ANPLogType, " ------ %p the plugin did not request draw events", inst());
@@ -233,10 +233,10 @@ void BackgroundPlugin::test_logging() {
 ///////////////////////////////////////////////////////////////////////////////
 
 #define TIMER_INTERVAL     50
-static void timer_oneshot(NPP instance, uint32 timerID);
-static void timer_repeat(NPP instance, uint32 timerID);
-static void timer_neverfires(NPP instance, uint32 timerID);
-static void timer_latency(NPP instance, uint32 timerID);
+static void timer_oneshot(NPP instance, uint32_t timerID);
+static void timer_repeat(NPP instance, uint32_t timerID);
+static void timer_neverfires(NPP instance, uint32_t timerID);
+static void timer_latency(NPP instance, uint32_t timerID);
 
 void BackgroundPlugin::test_timers() {
     NPP instance = this->inst();
@@ -255,18 +255,18 @@ void BackgroundPlugin::test_timers() {
     browser->scheduletimer(instance, TIMER_INTERVAL, true, timer_latency);
     mStartTime = mPrevTime = getMSecs();
     // test unschedule immediately
-    uint32 id = browser->scheduletimer(instance, 100, false, timer_neverfires);
+    uint32_t id = browser->scheduletimer(instance, 100, false, timer_neverfires);
     browser->unscheduletimer(instance, id);
     // test double unschedule (should be no-op)
     browser->unscheduletimer(instance, id);
 
 }
 
-static void timer_oneshot(NPP instance, uint32 timerID) {
+static void timer_oneshot(NPP instance, uint32_t timerID) {
     gLogI.log(kDebug_ANPLogType, "-------- oneshot timer\n");
 }
 
-static void timer_repeat(NPP instance, uint32 timerID) {
+static void timer_repeat(NPP instance, uint32_t timerID) {
     BackgroundPlugin *obj = ((BackgroundPlugin*) ((PluginObject*) instance->pdata)->activePlugin);
 
     gLogI.log(kDebug_ANPLogType, "-------- repeat timer %d\n",
@@ -276,11 +276,11 @@ static void timer_repeat(NPP instance, uint32 timerID) {
     }
 }
 
-static void timer_neverfires(NPP instance, uint32 timerID) {
+static void timer_neverfires(NPP instance, uint32_t timerID) {
     gLogI.log(kError_ANPLogType, "-------- timer_neverfires!!!\n");
 }
 
-static void timer_latency(NPP instance, uint32 timerID) {
+static void timer_latency(NPP instance, uint32_t timerID) {
     BackgroundPlugin *obj = ((BackgroundPlugin*) ((PluginObject*) instance->pdata)->activePlugin);
 
     obj->mTimerLatencyCurrentCount += 1;

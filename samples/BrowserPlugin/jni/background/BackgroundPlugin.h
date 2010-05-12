@@ -32,7 +32,7 @@ class BackgroundPlugin : public SurfaceSubPlugin {
 public:
     BackgroundPlugin(NPP inst);
     virtual ~BackgroundPlugin();
-    virtual int16 handleEvent(const ANPEvent* evt);
+    virtual int16_t handleEvent(const ANPEvent* evt);
     virtual jobject getSurface();
 
     // Timer Testing Variables

@@ -33,7 +33,7 @@ class PaintPlugin : public SurfaceSubPlugin {
 public:
     PaintPlugin(NPP inst);
     virtual ~PaintPlugin();
-    virtual int16 handleEvent(const ANPEvent* evt);
+    virtual int16_t handleEvent(const ANPEvent* evt);
     virtual jobject getSurface();
 
 private:

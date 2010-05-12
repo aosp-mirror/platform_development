@@ -33,7 +33,7 @@ public:
     BallAnimation(NPP inst);
     virtual ~BallAnimation();
     virtual bool supportsDrawingModel(ANPDrawingModel);
-    virtual int16 handleEvent(const ANPEvent* evt);
+    virtual int16_t handleEvent(const ANPEvent* evt);
 private:
     void drawPlugin(const ANPBitmap& bitmap, const ANPRectI& clip);
     void showEntirePluginOnScreen();
