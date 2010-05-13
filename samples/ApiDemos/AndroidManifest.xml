@@ -209,14 +209,21 @@
 
         <!-- Fragment Samples -->
 
-        <activity android:name=".app.FragmentStack" android:label="@string/simple_fragment">
+        <activity android:name=".app.FragmentStack" android:label="@string/fragment_simple">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
             </intent-filter>
         </activity>
 
-        <activity android:name=".app.FragmentLayout" android:label="@string/layout_fragment">
+        <activity android:name=".app.FragmentLayout" android:label="@string/fragment_layout">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".app.FragmentRetainInstance" android:label="@string/fragment_retain_instance">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />

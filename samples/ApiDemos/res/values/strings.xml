@@ -83,11 +83,16 @@
     <string name="redirect_getter">Enter the text that will be used by the main activity.  Press back to cancel.</string>
     <string name="apply">Apply</string>
 
-    <string name="simple_fragment">App/Fragment/Stack</string>
+    <string name="fragment_simple">App/Fragment/Stack</string>
     <string name="next">Next</string>
 
-    <string name="layout_fragment">App/Fragment/Layout</string>
+    <string name="fragment_layout">App/Fragment/Layout</string>
     
+    <string name="fragment_retain_instance">App/Fragment/Retain Instance</string>
+    <string name="fragment_retain_instance_msg">Current progress of retained fragment;
+    restarts if fragment is re-created.</string>
+    <string name="restart">Restart</string>
+
     <string name="activity_menu">App/Activity/Menu</string>
     <string name="open_menu">Open menu</string>
     <string name="close_menu">Close menu</string>

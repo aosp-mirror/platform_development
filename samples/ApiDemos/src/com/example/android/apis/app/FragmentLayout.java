@@ -44,12 +44,32 @@ public class FragmentLayout extends Activity {
     }
     
     static class FirstFragment extends Fragment {
+        TextView mTextView;
+        
         // Explicit constructor needed for inflation.
         public FirstFragment() {
         }
         
-        public View onCreateView(LayoutInflater inflater, ViewGroup container) {
-            return inflater.inflate(R.layout.hello_world, container, false);
+        public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                Bundle savedInstanceState) {
+            View v = inflater.inflate(R.layout.labeled_text_edit, container, false);
+            View tv = v.findViewById(R.id.msg);
+            ((TextView)tv).setText("The fragment saves and restores this text.");
+            
+            // Retrieve the text editor, and restore the last saved state if needed.
+            mTextView = (TextView)v.findViewById(R.id.saved);
+            if (savedInstanceState != null) {
+                mTextView.setText(savedInstanceState.getCharSequence("text"));
+            }
+            return v;
+        }
+
+        @Override
+        public void onSaveInstanceState(Bundle outState) {
+            super.onSaveInstanceState(outState);
+            
+            // Remember the current text, to restore if we later restart.
+            outState.putCharSequence("text", mTextView.getText());
         }
     }
     
@@ -58,10 +78,17 @@ public class FragmentLayout extends Activity {
         public SecondFragment() {
         }
         
-        public View onCreateView(LayoutInflater inflater, ViewGroup container) {
-            View v = inflater.inflate(R.layout.hello_world, container, false);
-            View tv = v.findViewById(R.id.text);
-            ((TextView)tv).setText("Second Hello World!");
+        public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                Bundle savedInstanceState) {
+            View v = inflater.inflate(R.layout.labeled_text_edit, container, false);
+            View tv = v.findViewById(R.id.msg);
+            ((TextView)tv).setText("The TextView saves and restores this text.");
+            
+            // Retrieve the text editor and tell it to save and restore its state.
+            // Note that you will often set this in the layout XML, but since
+            // we are sharing our layout with the other fragment we will customize
+            // it here.
+            ((TextView)v.findViewById(R.id.saved)).setSaveEnabled(true);
             return v;
         }
     }

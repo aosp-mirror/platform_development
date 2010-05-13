@@ -37,11 +37,6 @@ public class FragmentStack extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.fragment_stack);
         
-        // Add initial fragment.
-        Fragment newFragment = new CountingFragment(mStackLevel);
-        FragmentTransaction ft = openFragmentTransaction();
-        ft.add(newFragment, R.id.simple_fragment).commit();
-        
         // Watch for button clicks.
         Button button = (Button)findViewById(R.id.next);
         button.setOnClickListener(new OnClickListener() {
@@ -49,8 +44,23 @@ public class FragmentStack extends Activity {
                 addFragmentToStack();
             }
         });
+        
+        if (savedInstanceState == null) {
+            // Do first time initialization -- add initial fragment. 
+            Fragment newFragment = new CountingFragment(mStackLevel);
+            FragmentTransaction ft = openFragmentTransaction();
+            ft.add(newFragment, R.id.simple_fragment).commit();
+        } else {
+            mStackLevel = savedInstanceState.getInt("level");
+        }
     }
     
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt("level", mStackLevel);
+    }
+
     void addFragmentToStack() {
         mStackLevel++;
         Fragment newFragment = new CountingFragment(mStackLevel);
@@ -61,14 +71,33 @@ public class FragmentStack extends Activity {
         ft.commit();
     }
     
-    class CountingFragment extends Fragment {
-        final int mNum;
+    static class CountingFragment extends Fragment {
+        int mNum;
+        
+        public CountingFragment() {
+            mNum = 0;
+        }
         
         public CountingFragment(int num) {
             mNum = num;
         }
         
-        public View onCreateView(LayoutInflater inflater, ViewGroup container) {
+        @Override
+        public void onCreate(Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+            if (savedInstanceState != null) {
+                mNum = savedInstanceState.getInt("num");
+            }
+        }
+
+        @Override
+        public void onSaveInstanceState(Bundle outState) {
+            super.onSaveInstanceState(outState);
+            outState.putInt("num", mNum);
+        }
+
+        public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                Bundle savedInstanceState) {
             View v = inflater.inflate(R.layout.hello_world, container, false);
             View tv = v.findViewById(R.id.text);
             ((TextView)tv).setText("Fragment #" + mNum);
