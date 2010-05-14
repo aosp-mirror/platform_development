@@ -93,6 +93,8 @@
     restarts if fragment is re-created.</string>
     <string name="restart">Restart</string>
 
+    <string name="fragment_receive_result">App/Fragment/Receive Result</string>
+    
     <string name="activity_menu">App/Activity/Menu</string>
     <string name="open_menu">Open menu</string>
     <string name="close_menu">Close menu</string>
