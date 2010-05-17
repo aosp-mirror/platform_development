@@ -86,16 +86,16 @@ href="{@docRoot}source/code-lines.html">Branches and Releases</a> page.</p>
 <p>To address this, some parts of the next version of Android including the
   core platform APIs are developed in a private branch. These APIs constitute
   the next version of Android. Our aim is to focus attention on the current
-  stable version of the Android source code, while we refine the next version
-  of the platform using the flagship Android devices. This allows developers
+  stable version of the Android source code, while we create the next version
+  of the platform as driven by flagship Android devices. This allows developers
   and OEMs to focus on a single version without having to track unfinished
-  future work just to keep up.Other parts of the Android system that aren't
+  future work just to keep up. Other parts of the Android system that aren't
   related to application compatibility are developed in the open, however.
   It's our intention to move more of these parts to open development over
   time.</p>
 
 <h3>When are source code releases made?</h3>
-<p>When they are ready. Some parts of Android are developed in the open, and
+<p>When they are ready. Some parts of Android are developed in the open,
   so that source code is always available. Other parts are developed first in
   a private tree, and that source code is released when the next platform
   version is ready.</p>
@@ -226,9 +226,9 @@ href="{@docRoot}source/code-lines.html">Branches and Releases</a> page.</p>
 
 <h3>How can I get access to the Google apps for Android, such as Maps?</h3>
 <p>The Google apps for Android, such as YouTube, Google Maps and Navigation,
-  Gmail, and so on are not part of Android, and are licensed separately.
-  Contact android-partnerships@google.com for inquiries related to those
-  apps.</p>
+  Gmail, and so on are Google properties that are not part of Android, and
+  are licensed separately.  Contact android-partnerships@google.com for
+  inquiries related to those apps.</p>
 
 <h3>Is compatibility mandatory?</h3>
 <p>No. The Android Compatibility Program is optional. Since the Android source
@@ -243,7 +243,7 @@ href="{@docRoot}source/code-lines.html">Branches and Releases</a> page.</p>
   test a device.</p>
 
 <h3>How long does compatibility take?</h3>
-<p>The process is automatic. The Compatibility Test Suite generates a report
+<p>The process is automated. The Compatibility Test Suite generates a report
   that can be provided to Google to verify compatibility. Eventually we intend
   to provide self-service tools to upload these reports to a public database.</p>
 

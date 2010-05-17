@@ -1,93 +1,36 @@
-page.title=Android 1.6 Platform Overview
+page.title=Android 2.1 Platform
 doc.type=source
 @jd:body
-<p>This page provides a high-level overview of the new features added to
-Android 1.6. To see the code itself, you can either use the <a
-href="http://android.git.kernel.org/">GitWeb</a>
-interface to view snapshots of the files, or you can <a
-href="{@docRoot}source/download.html">download</a>
-the source code onto your local machine. You can use <code>repo init -u
-git://android.git.kernel.org/platform/manifest.git -b android-1.6</code>
-to download the source code for Android 1.6.</p>
-<p><i>Note: platform overview information for Android 2.x has not yet been
-published, since the <a
-href="{@docRoot}compatibility/index.html">Compatibility Program</a> for
-Android 2.x has not yet launched. When the Compatibilty Definition Document
-for 2.x is released, this page will be updated to match.</i></p>
-<p>Information about older Android releases is also available:<ul>
-<li><a href="{@docRoot}source/overview-1.5.html">Android 1.5 Platform Overview</a></li>
-<li><a href="{@docRoot}source/overview-1.0.html">Android 1.0 Platform Overview</a></li>
-</ul></p>
-<h2>User interface refinements</h2>
-<h3>Quick Search Box for Android </h3>
-<p>Android 1.6 includes a redesigned search framework that provides a quick, effective, and consistent way for users to search across multiple sources—such as browser bookmarks history, contacts, and the web—directly from the home screen.
-</p>
-<p><br></p>
-<p>The system constantly learns which search results are more relevant based on what is clicked. So popular contacts or apps that have previously been picked will bubble up to the top when a user types the first few letters of a relevant query.
-</p>
-<p><br></p>
-<p>The search framework also provides developers a way to easily expose relevant content from their applications in Quick Search Box.
-</p>
-<h3>Camera, Camcorder, and Gallery </h3>
-<p>An updated user interface provides an integrated camera, camcorder, and gallery experience. Users can quickly toggle between still and video capture modes. Additionally, the gallery enables users to select multiple photos for deletion.<br></p>
-<p><br></p>
-<p>Android 1.6 also provides a much faster camera experience. Compared to the previous release, launching the camera is now 39% faster, and there is a 28% improvement in the time from completing one shot to the next.
-</p>
-<h3>VPN, 802.1x </h3>
-<p>A new Virtual Private Network (VPN) control panel in Settings allows users to configure and connect to the following types of VPNs:
-</p>
-<ul><li>L2TP/IPSEC pre-shared key based VPN
-  </li>
-<li>L2TP/IPsec certificate based VPN
-  </li>
-<li>L2TP only VPN
-  </li>
-<li>PPTP only VPN
-  </li>
-</ul>
-<h3>Battery usage indicator </h3>
-<p>A new battery usage screen lets users see which apps and services are consuming battery power. If the user determines that a particular service or application is using too much power, they can take action to save the battery by adjusting settings, stopping the application, or uninstalling the application.
-</p>
-<h3>Accessibility </h3>
-<p>Users will be able to download new accessibility services built on the new accessibility framework and enable them in Settings.
-</p>
-<h2>New Platform Technologies </h2>
-<h3>Expanded Search Framework </h3>
-<p>The Android search framework has been redesigned and expanded to provide third-party applications the opportunity to surface content from their applications in Quick Search Box, the global search tool. To do this, developers will need to make their app "searchable" and provide suggestions in response to user queries. To enable application search suggestions, users simply select each application from which they'd like to receive suggestions, under Searchable items in the Search settings.
-</p>
-<h3>Text-to-speech engine</h3>
-<p>Android 1.6 features a multi-lingual speech synthesis engine called Pico. It allows any Android application to "speak" a string of text with an accent that matches the language. The engine supports the following languages: English (American and British accents), French, Italian, German and Spanish. If you're using a T-Mobile G1 or Dream device, you'll need to download the SpeechSynthesis Data Installer from Android Market, which includes the "voices" needed by the text-to-speech engine.
-</p>
-<h3>Gestures </h3>
-<p>A new gestures framework provides application developers with a framework for creating, storing, loading, and recognizing gestures and associating them with specific actions.
-</p>
-<p>Developers can use the new GestureBuilder tool included in the Android 1.6 SDK to generate libraries of gestures to include with their application.
-</p>
-<h3>Accessibility </h3>
-<p>Android 1.6 provides a new accessibility framework. With this framework, developers can create accessibility plugins that respond to user input, such as making a sound when a new window is shown, vibrating when navigating to the top of a list, and providing spoken feedback.
-</p>
-<h3>Expanded support for screen densities and resolutions </h3>
-<p>Android 1.6 adds screen support that enables applications to be rendered properly on different display resolutions and densities. Developers can also specify the types of screens supported by their application.
-</p>
-<h3>Telephony support for CDMA </h3>
-<p>Android 1.6 includes support for CDMA in the telephony stack.
-</p>
-<h3>New version of OpenCore </h3>
-<p>Android 1.6 includes the updated OpenCore 2 media engine, which has:
-</p>
-<ul><li>Support for OpenMAX encoders
-  </li>
-<li>Support for additional audio codecs in AuthorEngine
-  </li>
-<li>Improved buffering model supports shared buffers allocated in the decoder
-  </li>
-</ul>
-<h3>2.6.29 Linux kernel </h3>
-<p>Android 1.6 upgrades the Linux kernel from 2.6.27 to 2.6.29.
-</p>
-<h2>New Framework APIs</h2>
-<p>For a detailed overview of new APIs, see the <a
-href="http://developer.android.com/sdk/android-1.6.html#api-changes">Version
-Notes</a>. For a complete report of all API changes, see the <a
-href="http://developer.android.com/sdk/api_diff/4/changes.html">API
-Differences Report</a>.</p>
+<p>Our sister site, <a
+href="http://developer.android.com/">http://developer.android.com/</a>, 
+includes feature overviews of the various Android platform versions.
+The links below will take you to developer.android.com where you can view this
+information.</p>
+<p>The links below will navigate you away from this site.</p>
+<p><i>Note: this page will be updated to cover Android 2.2 when the
+formal compatibility program for Android 2.2 is launched, which will occur in
+the near future.</i></p>
+<h3><a href="http://developer.android.com/sdk/android-2.0-highlights.html">Android
+2.1</a></h3>
+<p>Android 2.1 corresponded to the "Eclair" milestone branch, and has an API level of
+7.</p>
+<p>The Eclair branch was also used for 2.0 and 2.0.1; however, both of those
+releases were quickly obsoleted by the version 2.1 Eclair release. As Android
+2.1 includes key bug fixes and improvements not present in 2.0/2.0.1, only
+Android 2.1 should be used for new devices. As there is no compatibility
+program for 2.0 or 2.0.1, the officially compatible Eclair-based release is Android
+2.1. (The linked document refers to Android 2.0, because there were
+no new platform features added in 2.1.)</p>
+<h3><a href="http://developer.android.com/sdk/android-1.6-highlights.html">Android 1.6</a></h3>
+<p>Android 1.6 corresponded to the "Donut" milestone branch, and has an API level of
+4.</p>
+<h3><a href="http://developer.android.com/sdk/android-1.5-highlights.html">Android 1.5</a></h3>
+<p>Android 1.5 corresponded to the "Cupcake" milestone branch, and has an API
+level of 3.</p>
+<h3><a href="http://developer.android.com/sdk/android-1.1.html">Android 1.1</a></h3>
+<p>Android 1.1 has an API level of 2. Android 1.1 was known as
+"Petit Four" internally, though this name was not used officially.</p>
+<h3>Android 1.0</h3>
+<p>was the first release of Android, and has an API
+level of 1. Since it was the first released version of Android, no platform
+highlights were prepared for this release.</p>

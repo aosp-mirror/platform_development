@@ -15,7 +15,7 @@ moment.</p>
 <h3>Notes and Explanations</h3>
 <ul>
 <li>A <i>release</i> corresponds to a formal version of the Android platform, such
-as 1.5, 2.0, and so on. Generally speaking, a release of the platform
+as 1.5, 2.1, and so on. Generally speaking, a release of the platform
 corresponds to a version of the <code>SdkVersion</code> field used in
 AndroidManifest.xml files, and defined in <code>frameworks/base/api</code> in
 the source tree.</li>
@@ -25,32 +25,32 @@ and WebKit, but over time we are migrating some of the semi-autonomous
 Android projects (such as Dalvik, the Android SDK tools, Bionic, and so on) to
 work as "upstream" projects. These will be developed entirely in the public
 tree, and snapshots will be periodically pulled into releases.</li>
-<li>The diagram refers to "Eclair" and "Flan"; however, they are simply
+<li>The diagram refers to "Eclair" and "FroYo"; however, they are simply
 placeholders, and the diagram actually reflects the overall release and
 branching strategy.</li>
-<li>At all times, the Release code-line (which may actually consist of
+<li>At all times, a release code-line (which may actually consist of
 more than one actual branch in git) is considered the sole canonical source
-code for a given Android platform. OEMs and other groups building devices
-should pull only from a Release branch.</li>
-<li>We will be setting up an "Experimental" code-line to capture changes from
+code for a given Android platform version. OEMs and other groups building devices
+should pull only from a release branch.</li>
+<li>We will set up "experimental" code-lines to capture changes from
 the community, so that they can be iterated on, with an eye toward stability.</li>
-<li>Changes that prove stable will eventually be pulled into a Release
+<li>Changes that prove stable will eventually be pulled into a release
 branch. Note that this will only apply to bug fixes, app improvements, and
 other things that do not affect the APIs of the platform.</li>
-<li>Changes will be pulled into Release branches from upstream projects
-(include the Android "upstream" projects) as necessary.</li>
+<li>Changes will be pulled into release branches from upstream projects
+(including the Android "upstream" projects) as necessary.</li>
 <li>The "n+1"th version (that is, next major version of the framework and
-platform APIs) will be developed by Google internally. (See below for
-details.)</li>
-<li>Changes will be pulled from upstream, Release, and Experimental branches
+platform APIs) will be developed by Google internally. See below for
+details.</li>
+<li>Changes will be pulled from upstream, release, and experimental branches
 into Google's private branch as necessary.</li>
 <li>When the platform APIs for the next version have stabilized and been fully
 tested, Google will cut a release of the next platform version. (This
 specifically refers to a new <code>SdkVersion</code>.) This will also
-correspond to the internal code-line being made a public Release branch, and the
+correspond to the internal code-line being made a public release branch, and the
 new current platform code-line.</li>
-<li>When a new platform version is cut, a corresponding Experimental
-code-line.</li>
+<li>When a new platform version is cut, a corresponding experimental
+code-line will be created at the same time.</li>
 </ul>
 <h3>About Private Code-Lines</h3>
 <p>The source management strategy above includes a code-line that Google will
