@@ -45,7 +45,6 @@
 	<classpathentry kind="src" path="frameworks/base/telephony/java"/>
 	<classpathentry kind="src" path="frameworks/base/test-runner"/>
 	<classpathentry kind="src" path="frameworks/base/tts/java"/>
-	<classpathentry kind="src" path="frameworks/base/vpn/java"/>
 	<classpathentry kind="src" path="frameworks/base/wifi/java"/>
 	<classpathentry kind="src" path="frameworks/base/vpn/java"/>
 	<classpathentry kind="src" path="frameworks/policies/base/phone"/>
@@ -100,7 +99,6 @@
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src/location/java"/>
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src/media/java"/>
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src/telephony/java"/>
-	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src/vpn/java"/>
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src/wifi/java"/>
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src/vpn/java"/>
 	<classpathentry kind="src" path="out/target/common/R"/>
