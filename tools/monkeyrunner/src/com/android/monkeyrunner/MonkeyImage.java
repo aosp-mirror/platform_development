@@ -15,7 +15,12 @@
  */
 package com.android.monkeyrunner;
 
-import com.android.ddmlib.RawImage;
+import com.google.common.base.Preconditions;
+
+import com.android.monkeyrunner.doc.MonkeyRunnerExported;
+
+import org.python.core.ArgParser;
+import org.python.core.PyObject;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -29,26 +34,25 @@ import javax.imageio.stream.ImageOutputStream;
 /**
  * Jython object to encapsulate images that have been taken.
  */
-public class MonkeyImage {
-    private final RawImage screenshot;
+public abstract class MonkeyImage {
+    public abstract BufferedImage createBufferedImage();
 
-    /**
-     * Create a new monkey image.
-     *
-     * @param screenshot the screenshot to wrap.
-     */
-    MonkeyImage(RawImage screenshot) {
-        this.screenshot = screenshot;
-    }
+    @MonkeyRunnerExported(doc = "Write out the file to the specified location.  If no " +
+            "format is specified, this function tries to guess at the output format " +
+            "depending on the file extension given.  If unable to determine, it uses PNG.",
+            args = {"path", "format"},
+            argDocs = {"Where to write out the file"},
+            returns = "True if writing succeeded.")
+    public boolean writeToFile(PyObject[] args, String[] kws) {
+        ArgParser ap = JythonUtils.createArgParser(args, kws);
+        Preconditions.checkNotNull(ap);
 
-    /**
-     * Write out the file to the specified location.  This function tries to guess at the output
-     * format depending on the file extension given.  If unable to determine, it uses PNG.
-     *
-     * @param path where to write the file
-     * @return success.
-     */
-    public boolean writeToFile(String path) {
+        String path = ap.getString(0);
+        String format = ap.getString(1, null);
+
+        if (format != null) {
+            return writeToFile(path, format);
+        }
         int offset = path.lastIndexOf('.');
         if (offset < 0) {
             return writeToFile(path, "png");
@@ -59,7 +63,7 @@ public class MonkeyImage {
             return writeToFile(path, "png");
         }
         ImageWriter writer = writers.next();
-        BufferedImage image = ImageUtils.convertImage(screenshot);
+        BufferedImage image = createBufferedImage();
         try {
             File f = new File(path);
             f.delete();
@@ -79,15 +83,8 @@ public class MonkeyImage {
         return true;
     }
 
-    /**
-     * Write out the file to the specified location.
-     *
-     * @param path where to write the file
-     * @param format the ImageIO format to use.
-     * @return success.
-     */
     public boolean writeToFile(String path, String format) {
-        BufferedImage image = ImageUtils.convertImage(screenshot);
+        BufferedImage image = createBufferedImage();
         try {
             ImageIO.write(image, format, new File(path));
         } catch (IOException e) {

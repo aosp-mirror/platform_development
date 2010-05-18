@@ -13,26 +13,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.monkeyrunner;
+package com.android.monkeyrunner.adb;
 
 import com.android.ddmlib.IShellOutputReceiver;
 
-import java.util.logging.Logger;
-
-public class LoggingOutputReceiver implements IShellOutputReceiver {
-    private final Logger log;
-
-    public LoggingOutputReceiver(Logger log) {
-        this.log = log;
-    }
-
-    public void addOutput(byte[] data, int offset, int length) {
-        log.info(new String(data, offset, length));
-    }
+/**
+ * Shell Output Receiver that captures shell output into a String for
+ * later retrieval.
+ */
+public class CommandOutputCapture implements IShellOutputReceiver {
+    private final StringBuilder builder = new StringBuilder();
 
     public void flush() { }
 
     public boolean isCancelled() {
         return false;
+    }
+
+    public void addOutput(byte[] data, int offset, int length) {
+        String message = new String(data, offset, length);
+        builder.append(message);
+    }
+
+    @Override
+    public String toString() {
+        return builder.toString();
     }
 }

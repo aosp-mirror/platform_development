@@ -13,19 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.monkeyrunner;
+package com.android.monkeyrunner.adb.image;
 
-import com.android.ddmlib.IDevice;
 import com.android.ddmlib.RawImage;
+import com.android.monkeyrunner.MonkeyDevice;
+import com.android.monkeyrunner.adb.AdbBackend;
+import com.android.monkeyrunner.adb.AdbMonkeyImage;
 
-import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
-
-import javax.imageio.ImageIO;
 
 /**
  * Utility program to capture raw and converted images from a device and write them to a file.
@@ -90,21 +88,13 @@ public class CaptureRawAndConvertedImage {
     }
 
     public static void main(String[] args) throws IOException {
-        DebugBridge adb = DebugBridge.createDebugBridge();
-
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-
-        IDevice device = adb.getPreferredDevice();
-        RawImage screenshot = device.getScreenshot();
-        BufferedImage convertImage = ImageUtils.convertImage(screenshot);
+        AdbBackend backend = new AdbBackend();
+        MonkeyDevice device = backend.waitForConnection();
+        AdbMonkeyImage snapshot = (AdbMonkeyImage) device.takeSnapshot();
 
         // write out to a file
-        ImageIO.write(convertImage, "png", new File("output.png"));
-        writeOutImage(screenshot, "output.raw");
+        snapshot.writeToFile("output.png", "png");
+        writeOutImage(snapshot.getRawImage(), "output.raw");
     }
 
     private static void writeOutImage(RawImage screenshot, String name) throws IOException {

@@ -13,8 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.monkeyrunner;
+package com.android.monkeyrunner.controller;
 
+import com.android.monkeyrunner.MonkeyDevice;
+import com.android.monkeyrunner.adb.AdbBackend;
+
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.logging.Logger;
 
 import javax.swing.JFrame;
@@ -32,16 +37,16 @@ public class MonkeyController extends JFrame {
     public static void main(String[] args) {
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    LOG.severe("Unable to sleep");
-                    throw new RuntimeException(e);
-                }
-
-                DebugBridge adb = DebugBridge.createDebugBridge();
-                MonkeyControllerFrame mf = new MonkeyControllerFrame(adb);
+                AdbBackend adb = new AdbBackend();
+                final MonkeyDevice device = adb.waitForConnection();
+                MonkeyControllerFrame mf = new MonkeyControllerFrame(device);
                 mf.setVisible(true);
+                mf.addWindowListener(new WindowAdapter() {
+                    @Override
+                    public void windowClosed(WindowEvent e) {
+                        device.dispose();
+                    }
+                });
             }
         });
     }

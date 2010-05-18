@@ -16,14 +16,17 @@
 package com.android.monkeyrunner;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Maps;
 
 import com.android.monkeyrunner.doc.MonkeyRunnerExported;
 
 import junit.framework.TestCase;
 
 import org.python.core.ArgParser;
+import org.python.core.PyDictionary;
 import org.python.core.PyException;
 import org.python.core.PyObject;
+import org.python.core.PyString;
 
 import java.util.List;
 import java.util.Map;
@@ -67,19 +70,31 @@ public class JythonUtilsTest extends TestCase {
         mapValue = JythonUtils.getMap(ap, 0);
     }
 
+    @MonkeyRunnerExported(doc = "")
+    public static PyDictionary convertMapTest(PyObject[] args, String[] kws) {
+        Map<String, Object> map = Maps.newHashMap();
+        map.put("string", "value");
+        map.put("integer", 1);
+        map.put("double", 3.14);
+        return JythonUtils.convertMapToDict(map);
+    }
+
     @Override
     protected void setUp() throws Exception {
         called = false;
         floatValue = 0.0;
     }
 
-    private static void call(String method) {
-        call(method, "");
+    private static PyObject call(String method) {
+        return call(method, new String[]{ });
     }
-    private static void call(String method, String... args) {
+    private static PyObject call(String method, String... args) {
         StringBuilder sb = new StringBuilder();
         sb.append("from ").append(PACKAGE_NAME);
         sb.append(" import ").append(CLASS_NAME).append("\n");
+
+        // Exec line
+        sb.append("result = ");
         sb.append(CLASS_NAME).append(".").append(method);
         sb.append("(");
         for (String arg : args) {
@@ -87,7 +102,7 @@ public class JythonUtilsTest extends TestCase {
         }
         sb.append(")");
 
-        ScriptRunner.runString(sb.toString());
+        return ScriptRunner.runStringAndGet(sb.toString(), "result");
     }
 
     public void testSimpleCall() {
@@ -152,6 +167,12 @@ public class JythonUtilsTest extends TestCase {
         assertEquals(new Double(3.14), listValue.get(2));
     }
 
+    public void testParseOptionalList() {
+        call("listTest");
+        assertTrue(called);
+        assertEquals(0, listValue.size());
+    }
+
     public void testParsingNotAList() {
         try {
             call("listTest", "1.0");
@@ -178,5 +199,26 @@ public class JythonUtilsTest extends TestCase {
             return;
         }
         fail("Should have thrown an exception");
+    }
+
+    public void testParseOptionalMap() {
+        call("mapTest");
+        assertTrue(called);
+        assertEquals(0, mapValue.size());
+    }
+
+    public void testConvertMap() {
+        PyDictionary result = (PyDictionary) call("convertMapTest");
+        PyObject stringPyObject = result.__getitem__(new PyString("string"));
+        String string = (String) stringPyObject.__tojava__(String.class);
+        assertEquals("value", string);
+
+        PyObject intPyObject = result.__getitem__(new PyString("integer"));
+        int i = (Integer) intPyObject.__tojava__(Integer.class);
+        assertEquals(i, 1);
+
+        PyObject doublePyObject = result.__getitem__(new PyString("double"));
+        double d = (Double) doublePyObject.__tojava__(Double.class);
+        assertEquals(3.14, d);
     }
 }

@@ -16,7 +16,9 @@
 package com.android.monkeyrunner;
 
 import com.android.ddmlib.RawImage;
-import com.android.monkeyrunner.CaptureRawAndConvertedImage.MonkeyRunnerRawImage;
+import com.android.monkeyrunner.adb.image.CaptureRawAndConvertedImage;
+import com.android.monkeyrunner.adb.image.ImageUtils;
+import com.android.monkeyrunner.adb.image.CaptureRawAndConvertedImage.MonkeyRunnerRawImage;
 
 import junit.framework.TestCase;
 

@@ -13,9 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.monkeyrunner;
+package com.android.monkeyrunner.controller;
 
 import com.google.common.collect.Sets;
+
+import com.android.monkeyrunner.MonkeyManager;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -102,6 +104,9 @@ public class VariableFrame extends JFrame {
                             LOG.log(Level.SEVERE,
                                     "Error getting variable value for " + variable, e);
                             return;
+                        }
+                        if (value == null) {
+                            value = "";
                         }
                         synchronized (set) {
                             set.add(new VariableHolder(variable, value));

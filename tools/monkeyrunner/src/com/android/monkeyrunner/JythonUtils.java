@@ -28,13 +28,16 @@ import org.python.core.PyDictionary;
 import org.python.core.PyFloat;
 import org.python.core.PyInteger;
 import org.python.core.PyList;
+import org.python.core.PyNone;
 import org.python.core.PyObject;
 import org.python.core.PyString;
 import org.python.core.PyTuple;
 
 import java.lang.reflect.Method;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -129,9 +132,13 @@ public final class JythonUtils {
      */
     @SuppressWarnings("unchecked")
     public static List<Object> getList(ArgParser ap, int position) {
+        PyObject arg = ap.getPyObject(position, Py.None);
+        if (Py.isInstance(arg, PyNone.TYPE)) {
+            return Collections.emptyList();
+        }
+
         List<Object> ret = Lists.newArrayList();
-        // cast is safe as getPyObjectbyType ensures it
-        PyList array = (PyList) ap.getPyObjectByType(position, PyList.TYPE);
+        PyList array = (PyList) arg;
         for (int x = 0; x < array.__len__(); x++) {
             PyObject item = array.__getitem__(x);
 
@@ -152,9 +159,14 @@ public final class JythonUtils {
      * @return a Map mapping the String key to the value
      */
     public static Map<String, Object> getMap(ArgParser ap, int position) {
+        PyObject arg = ap.getPyObject(position, Py.None);
+        if (Py.isInstance(arg, PyNone.TYPE)) {
+            return Collections.emptyMap();
+        }
+
         Map<String, Object> ret = Maps.newHashMap();
         // cast is safe as getPyObjectbyType ensures it
-        PyDictionary dict = (PyDictionary) ap.getPyObjectByType(position, PyDictionary.TYPE);
+        PyDictionary dict = (PyDictionary) arg;
         PyList items = dict.items();
         for (int x = 0; x < items.__len__(); x++) {
             // It's a list of tuples
@@ -170,5 +182,35 @@ public final class JythonUtils {
             }
         }
         return ret;
+    }
+
+    private static PyObject convertObject(Object o) {
+        if (o instanceof String) {
+            return new PyString((String) o);
+        } else if (o instanceof Double) {
+            return new PyFloat((Double) o);
+        } else if (o instanceof Integer) {
+            return new PyInteger((Integer) o);
+        } else if (o instanceof Float) {
+            float f = (Float) o;
+            return new PyFloat(f);
+        }
+        return Py.None;
+    }
+
+    /**
+     * Convert the given Java Map into a PyDictionary.
+     *
+     * @param map the map to convert
+     * @return the python dictionary
+     */
+    public static PyDictionary convertMapToDict(Map<String, Object> map) {
+        Map<PyObject, PyObject> resultMap = Maps.newHashMap();
+
+        for (Entry<String, Object> entry : map.entrySet()) {
+            resultMap.put(new PyString(entry.getKey()),
+                    convertObject(entry.getValue()));
+        }
+        return new PyDictionary(resultMap);
     }
 }

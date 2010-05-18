@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.monkeyrunner;
+package com.android.monkeyrunner.adb.image;
 
 import com.android.ddmlib.RawImage;
 
@@ -24,42 +24,17 @@ import java.awt.image.DataBuffer;
 import java.awt.image.Raster;
 
 /**
- * Internal color model used to do conversion of 32bpp RawImages.
+ * Internal color model used to do conversion of 16bpp RawImages.
  */
-class ThirtyTwoBitColorModel extends ColorModel {
+class SixteenBitColorModel extends ColorModel {
     private static final int[] BITS = {
-        8, 8, 8, 8,
+        8, 8, 8, 8
     };
-    private final int alphaLength;
-    private final int alphaMask;
-    private final int alphaOffset;
-    private final int blueMask;
-    private final int blueLength;
-    private final int blueOffset;
-    private final int greenMask;
-    private final int greenLength;
-    private final int greenOffset;
-    private final int redMask;
-    private final int redLength;
-    private final int redOffset;
-
-    public ThirtyTwoBitColorModel(RawImage rawImage) {
-        super(32, BITS, ColorSpace.getInstance(ColorSpace.CS_sRGB),
+    public SixteenBitColorModel(RawImage rawImage) {
+        super(32
+                , BITS, ColorSpace.getInstance(ColorSpace.CS_sRGB),
                 true, false, Transparency.TRANSLUCENT,
                 DataBuffer.TYPE_BYTE);
-
-        redOffset = rawImage.red_offset;
-        redLength = rawImage.red_length;
-        redMask = ImageUtils.getMask(redLength);
-        greenOffset = rawImage.green_offset;
-        greenLength = rawImage.green_length;
-        greenMask = ImageUtils.getMask(greenLength);
-        blueOffset = rawImage.blue_offset;
-        blueLength = rawImage.blue_length;
-        blueMask = ImageUtils.getMask(blueLength);
-        alphaLength = rawImage.alpha_length;
-        alphaOffset = rawImage.alpha_offset;
-        alphaMask = ImageUtils.getMask(alphaLength);
     }
 
     @Override
@@ -70,38 +45,32 @@ class ThirtyTwoBitColorModel extends ColorModel {
     private int getPixel(Object inData) {
         byte[] data = (byte[]) inData;
         int value = data[0] & 0x00FF;
-        value |= (data[1] & 0x00FF) << 8;
-        value |= (data[2] & 0x00FF) << 16;
-        value |= (data[3] & 0x00FF) << 24;
+        value |= (data[1] << 8) & 0x0FF00;
 
         return value;
     }
 
     @Override
     public int getAlpha(Object inData) {
-        int pixel = getPixel(inData);
-        if(alphaLength == 0) {
-            return 0xff;
-        }
-        return ((pixel >>> alphaOffset) & alphaMask) << (8 - alphaLength);
+        return 0xff;
     }
 
     @Override
     public int getBlue(Object inData) {
         int pixel = getPixel(inData);
-        return ((pixel >>> blueOffset) & blueMask) << (8 - blueLength);
+        return ((pixel >> 0) & 0x01F) << 3;
     }
 
     @Override
     public int getGreen(Object inData) {
         int pixel = getPixel(inData);
-        return ((pixel >>> greenOffset) & greenMask) << (8 - greenLength);
+        return ((pixel >> 5) & 0x03F) << 2;
     }
 
     @Override
     public int getRed(Object inData) {
         int pixel = getPixel(inData);
-        return ((pixel >>> redOffset) & redMask) << (8 - redLength);
+        return ((pixel >> 11) & 0x01F) << 3;
     }
 
     @Override

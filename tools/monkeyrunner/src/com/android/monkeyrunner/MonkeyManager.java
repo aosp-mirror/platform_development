@@ -17,16 +17,12 @@ package com.android.monkeyrunner;
 
 import com.google.common.collect.Lists;
 
-import com.android.ddmlib.IDevice;
-
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-import java.net.InetAddress;
 import java.net.Socket;
-import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.StringTokenizer;
@@ -40,52 +36,25 @@ import java.util.logging.Logger;
  * This class is thread-safe and can handle being called from multiple threads.
  */
 public class MonkeyManager {
-    private static String DEFAULT_MONKEY_SERVER_ADDRESS = "127.0.0.1";
-    private static int DEFAULT_MONKEY_PORT = 12345;
-
     private static Logger LOG = Logger.getLogger(MonkeyManager.class.getName());
 
     private Socket monkeySocket;
     private BufferedWriter monkeyWriter;
     private BufferedReader monkeyReader;
-    private final IDevice device;
 
     /**
      * Create a new MonkeyMananger to talk to the specified device.
      *
-     * @param device the device to talk to
-     * @param address the address on which to talk to the device
-     * @param port the port on which to talk to the device
+     * @param monkeySocket the already connected socket on which to send protocol messages.
      */
-    public MonkeyManager(IDevice device, String address, int port) {
-        this.device = device;
-        device.createForward(port, port);
-        String command = "monkey --port " + port + "&";
+    public MonkeyManager(Socket monkeySocket) {
         try {
-            device.executeShellCommand(command, new LoggingOutputReceiver(LOG));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        try {
-            InetAddress addr = InetAddress.getByName(address);
-            monkeySocket = new Socket(addr, port);
+            this.monkeySocket = monkeySocket;
             monkeyWriter = new BufferedWriter(new OutputStreamWriter(monkeySocket.getOutputStream()));
             monkeyReader = new BufferedReader(new InputStreamReader(monkeySocket.getInputStream()));
-        } catch (UnknownHostException e) {
-            throw new RuntimeException(e);
         } catch(IOException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    /**
-     * Create a new MonkeyMananger to talk to the specified device.
-     *
-     * @param device the device to talk to
-     */
-    public MonkeyManager(IDevice device) {
-        this(device, DEFAULT_MONKEY_SERVER_ADDRESS, DEFAULT_MONKEY_PORT);
     }
 
     /**
@@ -133,6 +102,28 @@ public class MonkeyManager {
      */
     public boolean press(String name) throws IOException {
         return sendMonkeyEvent("press " + name);
+    }
+
+    /**
+     * Send a Key Down event for the specified button.
+     *
+     * @param name the name of the button (As specified in the protocol)
+     * @return success or not
+     * @throws IOException on error communicating with the device
+     */
+    public boolean keyDown(String name) throws IOException {
+        return sendMonkeyEvent("key down " + name);
+    }
+
+    /**
+     * Send a Key Up event for the specified button.
+     *
+     * @param name the name of the button (As specified in the protocol)
+     * @return success or not
+     * @throws IOException on error communicating with the device
+     */
+    public boolean keyUp(String name) throws IOException {
+        return sendMonkeyEvent("key up " + name);
     }
 
     /**
@@ -235,23 +226,23 @@ public class MonkeyManager {
     }
 
     /**
-     * Function to get a static variable from the device
+     * Function to get a static variable from the device.
      *
      * @param name name of static variable to get
-     * @return the value of the variable, or empty string if there was an error
+     * @return the value of the variable, or null if there was an error
      */
     public String getVariable(String name) throws IOException {
         synchronized (this) {
             String response = sendMonkeyEventAndGetResponse("getvar " + name);
             if (!parseResponseForSuccess(response)) {
-                return "";
+                return null;
             }
             return parseResponseForExtra(response);
         }
     }
 
     /**
-     * Function to get the list of static variables from the device
+     * Function to get the list of static variables from the device.
      */
     public Collection<String> listVariable() throws IOException {
         synchronized (this) {
@@ -272,6 +263,17 @@ public class MonkeyManager {
         // this command just drops the connection, so handle it here
         synchronized (this) {
             sendMonkeyEventAndGetResponse("done");
+        }
+    }
+
+    /**
+     * Tells the monkey that we are done forever.
+     * @throws IOException
+     */
+    public void quit() throws IOException {
+        // this command drops the connection, so handle it here
+        synchronized (this) {
+            sendMonkeyEventAndGetResponse("quit");
         }
     }
 
@@ -328,22 +330,10 @@ public class MonkeyManager {
     }
 
     /**
-     * Gets the underlying device so low-level commands can be executed.
-     *
-     * NOTE: using this method doesn't provide any thread safety.  If needed, the MonkeyMananger
-     * itself should be used as the lock for synchronization.  For Example:
-     *
-     * <code>
-     * MonkeyMananger mgr;
-     * IDevice device = mgr.getDevice();
-     * synchronized (mgr) {
-     *   /// Do stuff with the device
-     * }
-     * </code>
-     *
-     * @return the device.
+     * Wake the device up from sleep.
+     * @throws IOException
      */
-    public IDevice getDevice() {
-        return device;
+    public void wake() throws IOException {
+        sendMonkeyEvent("wake");
     }
 }

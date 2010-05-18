@@ -13,10 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.monkeyrunner;
+package com.android.monkeyrunner.controller;
 
-import com.android.ddmlib.IDevice;
-import com.android.ddmlib.RawImage;
+import com.android.monkeyrunner.MonkeyDevice;
+import com.android.monkeyrunner.MonkeyImage;
+import com.android.monkeyrunner.MonkeyManager;
+import com.android.monkeyrunner.PhysicalButton;
 
 import java.awt.KeyEventDispatcher;
 import java.awt.KeyboardFocusManager;
@@ -27,7 +29,6 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.swing.AbstractAction;
@@ -46,14 +47,11 @@ import javax.swing.Timer;
 public class MonkeyControllerFrame extends JFrame {
     private static final Logger LOG = Logger.getLogger(MonkeyControllerFrame.class.getName());
 
-    private final DebugBridge adb;
-
     private final JButton refreshButton = new JButton("Refresh");
     private final JButton variablesButton = new JButton("Variable");
     private final JLabel imageLabel = new JLabel();
     private final VariableFrame variableFrame;
 
-    private IDevice preferredDevice;
     private MonkeyManager monkeyManager;
     private BufferedImage currentImage;
 
@@ -62,6 +60,8 @@ public class MonkeyControllerFrame extends JFrame {
             updateScreen();
         }
     });
+
+    private final MonkeyDevice device;
 
     private class PressAction extends AbstractAction {
         private final PhysicalButton button;
@@ -85,10 +85,9 @@ public class MonkeyControllerFrame extends JFrame {
         return button;
     }
 
-    public MonkeyControllerFrame(DebugBridge adb) {
+    public MonkeyControllerFrame(MonkeyDevice device) {
         super("MonkeyController");
-
-        this.adb = adb;
+        this.device = device;
 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
@@ -156,23 +155,18 @@ public class MonkeyControllerFrame extends JFrame {
     }
 
     private void updateScreen() {
-        RawImage screenshot;
-        try {
-            screenshot = preferredDevice.getScreenshot();
-        } catch (IOException e) {
-            LOG.log(Level.SEVERE, "Error getting screenshot", e);
-            throw new RuntimeException(e);
-        }
-
-        currentImage = ImageUtils.convertImage(screenshot, currentImage);
+        MonkeyImage snapshot = device.takeSnapshot();
+        currentImage = snapshot.createBufferedImage();
         imageLabel.setIcon(new ImageIcon(currentImage));
 
         pack();
     }
 
     private void init() {
-        preferredDevice = adb.getPreferredDevice();
-        monkeyManager = new MonkeyManager(preferredDevice);
+        monkeyManager = device.getManager();
+        if (monkeyManager == null) {
+            throw new RuntimeException("Unable to create monkey manager");
+        }
         updateScreen();
         timer.start();
     }

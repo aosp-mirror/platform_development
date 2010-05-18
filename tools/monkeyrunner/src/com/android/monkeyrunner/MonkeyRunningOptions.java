@@ -27,11 +27,13 @@ public class MonkeyRunningOptions {
     private final int port;
     private final String hostname;
     private final File scriptFile;
+    private final String backend;
 
-    private MonkeyRunningOptions(String hostname, int port, File scriptFile) {
+    private MonkeyRunningOptions(String hostname, int port, File scriptFile, String backend) {
         this.hostname = hostname;
         this.port = port;
         this.scriptFile = scriptFile;
+        this.backend = backend;
     }
 
     public int getPort() {
@@ -44,6 +46,10 @@ public class MonkeyRunningOptions {
 
     public File getScriptFile() {
         return scriptFile;
+    }
+
+    public String getBackendName() {
+        return backend;
     }
 
     private static void printUsage(String message) {
@@ -69,6 +75,7 @@ public class MonkeyRunningOptions {
         String hostname = DEFAULT_MONKEY_SERVER_ADDRESS;
         File scriptFile = null;
         int port = DEFAULT_MONKEY_PORT;
+        String backend = "adb";
 
         do {
             String argument = args[index++];
@@ -100,7 +107,13 @@ public class MonkeyRunningOptions {
                 level = LOG.getLevel();
                 System.out.println("Log level set to: " + level + "(" + level.intValue() + ").");
                 System.out.println("Warning: Log levels below INFO(800) not working currently... parent issues");
-
+            } else if ("-be".equals(argument)) {
+                // quick check on the next argument.
+                if (index == args.length) {
+                    printUsage("Missing backend name after -be");
+                    return null;
+                }
+                backend = args[index++];
             } else if (argument.startsWith("-")) {
                 // we have an unrecognized argument.
                 printUsage("Unrecognized argument: " + argument + ".");
@@ -120,6 +133,6 @@ public class MonkeyRunningOptions {
             return null;
         }
 
-        return new MonkeyRunningOptions(hostname, port, scriptFile);
+        return new MonkeyRunningOptions(hostname, port, scriptFile, backend);
     }
 }
