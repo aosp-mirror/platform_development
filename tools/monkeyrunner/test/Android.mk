@@ -18,6 +18,6 @@ include $(CLEAR_VARS)
 
 LOCAL_SRC_FILES := $(call all-subdir-java-files)
 LOCAL_MODULE := MonkeyRunnerTest
-LOCAL_JAVA_LIBRARIES :=  junit monkeyrunner ddmlib
+LOCAL_JAVA_LIBRARIES :=  junit monkeyrunner ddmlib guavalib jython
 
 include $(BUILD_HOST_JAVA_LIBRARY)
