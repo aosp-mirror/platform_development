@@ -1605,6 +1605,14 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".graphics.WindowSurface"
+                android:label="Graphics/Surface Window">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
         <activity android:name=".graphics.TextAlign" android:label="Graphics/Text Align">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
