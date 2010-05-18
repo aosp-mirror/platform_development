@@ -15,11 +15,16 @@
  */
 package com.android.monkeyrunner;
 
+import com.google.common.collect.Lists;
+
 import org.python.core.PyObject;
 import org.python.util.InteractiveConsole;
 import org.python.util.PythonInterpreter;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
 import java.util.Properties;
 
 
@@ -49,7 +54,11 @@ public class ScriptRunner {
      */
     public static void run(String scriptfilename) {
         try {
-            initPython();
+            // Add the current directory of the script to the python.path search path.
+            File f = new File(scriptfilename);
+            initPython(Lists.newArrayList(f.getParent()),
+                    new String[] { f.getCanonicalPath() });
+
             PythonInterpreter python = new PythonInterpreter();
 
             python.execfile(scriptfilename);
@@ -58,15 +67,35 @@ public class ScriptRunner {
         }
     }
 
+    public static void runString(String script) {
+        initPython();
+        PythonInterpreter python = new PythonInterpreter();
+        python.exec(script);
+    }
 
-    /** Initialize the python interpreter. */
     private static void initPython() {
+        List<String> arg = Collections.emptyList();
+        initPython(arg, new String[] {""});
+    }
+
+    private static void initPython(List<String> pythonPath,
+            String[] argv) {
         Properties props = new Properties();
+
+        // Build up the python.path
+        StringBuilder sb = new StringBuilder();
+        sb.append(System.getProperty("java.class.path"));
+        for (String p : pythonPath) {
+            sb.append(":").append(p);
+        }
+        props.setProperty("python.path", sb.toString());
+
+        /** Initialize the python interpreter. */
         // Default is 'message' which displays sys-package-mgr bloat
         // Choose one of error,warning,message,comment,debug
         props.setProperty("python.verbose", "error");
-        props.setProperty("python.path", System.getProperty("java.class.path"));
-        PythonInterpreter.initialize(System.getProperties(), props, new String[] {""});
+
+        PythonInterpreter.initialize(System.getProperties(), props, argv);
     }
 
     /**
