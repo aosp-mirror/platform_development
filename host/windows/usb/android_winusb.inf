@@ -45,7 +45,24 @@ HKR,,Icon,,-1
 %CompositeAdbInterface%     = USB_Install, USB\VID_18D1&PID_4E22&MI_01
 ;
 ; Dell's Mini5
+%SingleAdbInterface%        = USB_Install, USB\VID_413C&PID_B007
 %CompositeAdbInterface%     = USB_Install, USB\VID_413C&PID_B007&MI_01
+;
+; Samsung SPH-M900, GT-I5700, SCH-R880
+%SingleAdbInterface%        = USB_Install, USB\VID_04E8&PID_681C
+%CompositeAdbInterface%     = USB_Install, USB\VID_04E8&PID_681C&MI_01
+; Samsung GT-I7500
+%SingleAdbInterface%        = USB_Install, USB\VID_04E8&PID_6601
+%CompositeAdbInterface%     = USB_Install, USB\VID_04E8&PID_6601&MI_01
+; Samsung GT-I5500
+%SingleAdbInterface%        = USB_Install, USB\VID_04E8&PID_6882
+%CompositeAdbInterface%     = USB_Install, USB\VID_04E8&PID_6882&MI_01
+; Samsung SHW-M100S
+%SingleAdbInterface%        = USB_Install, USB\VID_04E8&PID_6850
+%CompositeAdbInterface%     = USB_Install, USB\VID_04E8&PID_6850&MI_01
+; Samsung SHW-M110S
+%SingleAdbInterface%        = USB_Install, USB\VID_04E8&PID_681D
+%CompositeAdbInterface%     = USB_Install, USB\VID_04E8&PID_681D&MI_01
 
 [Google.NTamd64]
 ; HTC Dream
@@ -67,7 +84,24 @@ HKR,,Icon,,-1
 %CompositeAdbInterface%     = USB_Install, USB\VID_18D1&PID_4E22&MI_01
 ;
 ; Dell's Mini5
+%SingleAdbInterface%        = USB_Install, USB\VID_413C&PID_B007
 %CompositeAdbInterface%     = USB_Install, USB\VID_413C&PID_B007&MI_01
+;
+; Samsung SPH-M900, GT-I5700, SCH-R880
+%SingleAdbInterface%        = USB_Install, USB\VID_04E8&PID_681C
+%CompositeAdbInterface%     = USB_Install, USB\VID_04E8&PID_681C&MI_01
+; Samsung GT-I7500
+%SingleAdbInterface%        = USB_Install, USB\VID_04E8&PID_6601
+%CompositeAdbInterface%     = USB_Install, USB\VID_04E8&PID_6601&MI_01
+; Samsung GT-I5500
+%SingleAdbInterface%        = USB_Install, USB\VID_04E8&PID_6882
+%CompositeAdbInterface%     = USB_Install, USB\VID_04E8&PID_6882&MI_01
+; Samsung SHW-M100S
+%SingleAdbInterface%        = USB_Install, USB\VID_04E8&PID_6850
+%CompositeAdbInterface%     = USB_Install, USB\VID_04E8&PID_6850&MI_01
+; Samsung SHW-M110S
+%SingleAdbInterface%        = USB_Install, USB\VID_04E8&PID_681D
+%CompositeAdbInterface%     = USB_Install, USB\VID_04E8&PID_681D&MI_01
 
 [USB_Install]
 Include = winusb.inf
