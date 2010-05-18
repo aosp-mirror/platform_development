@@ -20,9 +20,10 @@ import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
 import android.view.View;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.hardware.SensorListener;
-import android.util.Log;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -47,13 +48,10 @@ OS / Sensors
  * </table> 
  */
 public class Sensors extends Activity {
-    /** Tag string for our debug logs */
-    private static final String TAG = "Sensors";
-
     private SensorManager mSensorManager;
     private GraphView mGraphView;
 
-    private class GraphView extends View implements SensorListener
+    private class GraphView extends View implements SensorEventListener
     {
         private Bitmap  mBitmap;
         private Paint   mPaint = new Paint();
@@ -172,29 +170,29 @@ public class Sensors extends Activity {
             }
         }
 
-        public void onSensorChanged(int sensor, float[] values) {
+        public void onSensorChanged(SensorEvent event) {
             //Log.d(TAG, "sensor: " + sensor + ", x: " + values[0] + ", y: " + values[1] + ", z: " + values[2]);
             synchronized (this) {
                 if (mBitmap != null) {
                     final Canvas canvas = mCanvas;
                     final Paint paint = mPaint;
-                    if (sensor == SensorManager.SENSOR_ORIENTATION) {
+                    if (event.sensor.getType() == Sensor.TYPE_ORIENTATION) {
                         for (int i=0 ; i<3 ; i++) {
-                            mOrientationValues[i] = values[i];
+                            mOrientationValues[i] = event.values[i];
                         }
                     } else {
                         float deltaX = mSpeed;
                         float newX = mLastX + deltaX;
 
-                        int j = (sensor == SensorManager.SENSOR_MAGNETIC_FIELD) ? 1 : 0;
+                        int j = (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) ? 1 : 0;
                         for (int i=0 ; i<3 ; i++) {
                             int k = i+j*3;
-                            final float v = mYOffset + values[i] * mScale[j];
+                            final float v = mYOffset + event.values[i] * mScale[j];
                             paint.setColor(mColors[k]);
                             canvas.drawLine(mLastX, mLastValues[k], newX, v, paint);
                             mLastValues[k] = v;
                         }
-                        if (sensor == SensorManager.SENSOR_MAGNETIC_FIELD)
+                        if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD)
                             mLastX += mSpeed;
                     }
                     invalidate();
@@ -202,9 +200,7 @@ public class Sensors extends Activity {
             }
         }
 
-        public void onAccuracyChanged(int sensor, int accuracy) {
-            // TODO Auto-generated method stub
-            
+        public void onAccuracyChanged(Sensor sensor, int accuracy) {
         }
     }
     
@@ -226,10 +222,14 @@ public class Sensors extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
+        mSensorManager.registerListener(mGraphView,
+                mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
+                SensorManager.SENSOR_DELAY_FASTEST);
+        mSensorManager.registerListener(mGraphView,
+                mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD),
+                SensorManager.SENSOR_DELAY_FASTEST);
         mSensorManager.registerListener(mGraphView, 
-                SensorManager.SENSOR_ACCELEROMETER | 
-                SensorManager.SENSOR_MAGNETIC_FIELD | 
-                SensorManager.SENSOR_ORIENTATION,
+                mSensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION),
                 SensorManager.SENSOR_DELAY_FASTEST);
     }
     
