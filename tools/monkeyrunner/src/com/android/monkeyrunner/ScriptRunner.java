@@ -73,6 +73,13 @@ public class ScriptRunner {
         python.exec(script);
     }
 
+    public static PyObject runStringAndGet(String script, String name) {
+        initPython();
+        PythonInterpreter python = new PythonInterpreter();
+        python.exec(script);
+        return python.get(name);
+    }
+
     private static void initPython() {
         List<String> arg = Collections.emptyList();
         initPython(arg, new String[] {""});
