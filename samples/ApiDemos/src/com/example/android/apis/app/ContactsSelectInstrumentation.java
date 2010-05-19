@@ -20,13 +20,10 @@ import android.app.Activity;
 import android.app.Instrumentation;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.os.IBinder;
 import android.view.KeyEvent;
-import android.provider.Contacts;
+import android.provider.ContactsContract;
 import android.os.Bundle;
 import android.util.Log;
-
-import java.util.Map;
 
 /**
  * This is an example implementation of the {@link android.app.Instrumentation}
@@ -61,7 +58,7 @@ public class ContactsSelectInstrumentation extends Instrumentation {
 
         // Monitor for the expected start activity call.
         ActivityMonitor am = addMonitor(IntentFilter.create(
-            Intent.ACTION_VIEW, Contacts.People.CONTENT_ITEM_TYPE), null, true);
+            Intent.ACTION_VIEW, ContactsContract.Contacts.CONTENT_ITEM_TYPE), null, true);
 
         // We are going to enqueue a couple key events to simulate the user
         // selecting an item in the list.
