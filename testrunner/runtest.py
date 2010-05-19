@@ -157,7 +157,6 @@ class TestRunner(object):
     group.add_option("-s", "--serial", dest="serial",
                      help="use specific serial")
     parser.add_option_group(group)
-
     self._options, self._test_args = parser.parse_args()
 
     if (not self._options.only_list_tests
@@ -228,9 +227,23 @@ class TestRunner(object):
     for test_suite in tests:
       self._AddBuildTarget(test_suite, target_set, extra_args_set)
 
+    rebuild_libcore = False
     if target_set:
       if self._options.coverage:
         coverage.EnableCoverageBuild()
+        # hack to remove core library intermediates
+        # hack is needed because:
+        # 1. EMMA_INSTRUMENT changes what source files to include in libcore
+        #    but it does not trigger a rebuild
+        # 2. there's no target (like "clear-intermediates") to remove the files
+        #    decently
+        rebuild_libcore = not coverage.TestDeviceCoverageSupport(self._adb)
+        if rebuild_libcore:
+          cmd = "rm -rf %s" % os.path.join(
+              self._root_path,
+              "out/target/common/obj/JAVA_LIBRARIES/core_intermediates/")
+          logger.Log(cmd)
+          run_command.RunCommand(cmd, return_output=False)
 
       # hack to build cts dependencies
       # TODO: remove this when build dependency support added to runtest or
@@ -259,9 +272,11 @@ class TestRunner(object):
         # run
         logger.Log("adb sync")
       else:
-        run_command.RunCommand(cmd, return_output=False)
+        # set timeout for build to 10 minutes, since libcore may need to
+        # be rebuilt
+        run_command.RunCommand(cmd, return_output=False, timeout_time=600)
         logger.Log("Syncing to device...")
-        self._adb.Sync()
+        self._adb.Sync(runtime_restart=rebuild_libcore)
 
   def _AddBuildTarget(self, test_suite, target_set, extra_args_set):
     build_dir = test_suite.GetBuildPath()

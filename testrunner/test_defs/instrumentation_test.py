@@ -32,8 +32,8 @@ class InstrumentationTestSuite(test_suite.AbstractTestSuite):
 
   DEFAULT_RUNNER = "android.test.InstrumentationTestRunner"
 
-    # build path to Emma target Makefile
-  _EMMA_BUILD_PATH = os.path.join("external", "emma")
+  # dependency on libcore (used for Emma)
+  _LIBCORE_BUILD_PATH = "libcore"
 
   def __init__(self):
     test_suite.AbstractTestSuite.__init__(self)
@@ -87,7 +87,7 @@ class InstrumentationTestSuite(test_suite.AbstractTestSuite):
 
   def GetBuildDependencies(self, options):
     if options.coverage:
-      return [self._EMMA_BUILD_PATH]
+      return [self._LIBCORE_BUILD_PATH]
     return []
 
   def Run(self, options, adb):
@@ -144,8 +144,6 @@ class InstrumentationTestSuite(test_suite.AbstractTestSuite):
       logger.Log(adb_cmd)
     elif options.coverage:
       coverage_gen = coverage.CoverageGenerator(adb)
-      if not coverage_gen.TestDeviceCoverageSupport():
-        raise errors.AbortError
       adb.WaitForInstrumentation(self.GetPackageName(),
                                  self.GetRunnerName())
       # need to parse test output to determine path to coverage file
