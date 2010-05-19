@@ -174,7 +174,7 @@ public class StatusBarNotifications extends Activity {
 
         // Send the notification.
         // We use a layout id because it is a unique number.  We use it later to cancel.
-        mNotificationManager.notify(R.layout.status_bar_notifications, notification);
+        mNotificationManager.notify(MOOD_NOTIFICATIONS, notification);
     }
 
     private void setMoodView(int moodId, int textId) {
@@ -202,7 +202,7 @@ public class StatusBarNotifications extends Activity {
 
         // we use a string id because is a unique number.  we use it later to cancel the
         // notification
-        mNotificationManager.notify(R.layout.status_bar_notifications, notif);
+        mNotificationManager.notify(MOOD_NOTIFICATIONS, notif);
     }
     
     private void setDefault(int defaults) {
@@ -231,8 +231,8 @@ public class StatusBarNotifications extends Activity {
         notification.defaults = defaults;
         
         mNotificationManager.notify(
-                   R.layout.status_bar_notifications, // we use a string id because it is a unique
-                                                      // number.  we use it later to cancel the
-                   notification);                     // notification
+                MOOD_NOTIFICATIONS, // we use a string id because it is a unique
+                                    // number.  we use it later to cancel the notification
+                notification);
     }    
 }
