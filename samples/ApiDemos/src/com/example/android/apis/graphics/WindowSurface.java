@@ -115,10 +115,14 @@ public class WindowSurface extends Activity implements SurfaceHolder.Callback {
         void step(int width, int height, float minStep, float maxStep) {
             x += dx;
             if (x <= 0 || x >= (width-1)) {
+                if (x <= 0) x = 0;
+                else if (x >= (width-1)) x = width-1;
                 dx = adjDelta(-dx, minStep, maxStep);
             }
             y += dy;
             if (y <= 0 || y >= (height-1)) {
+                if (y <= 0) y = 0;
+                else if (y >= (height-1)) y = height-1;
                 dy = adjDelta(-dy, minStep, maxStep);
             }
         }
