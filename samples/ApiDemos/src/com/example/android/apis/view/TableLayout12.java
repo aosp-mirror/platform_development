@@ -25,8 +25,6 @@ import android.os.Bundle;
  * <p>This example shows how to use cell spanning in a table layout.</p>
  */
 public class TableLayout12 extends Activity {
-    private boolean mShrink;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

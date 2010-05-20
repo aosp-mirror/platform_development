@@ -20,11 +20,9 @@ import com.example.android.apis.R;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.view.View;
 import android.webkit.WebView;
 import android.widget.ListView;
 import android.widget.ArrayAdapter;
-
 
 /**
  * Demonstrates the use of non-focusable views.

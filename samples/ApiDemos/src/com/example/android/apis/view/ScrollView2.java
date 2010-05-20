@@ -20,11 +20,9 @@ import com.example.android.apis.R;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Button;
-
 
 /**
  * Demonstrates wrapping a layout in a ScrollView.
