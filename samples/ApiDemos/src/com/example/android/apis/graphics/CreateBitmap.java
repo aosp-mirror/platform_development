@@ -16,13 +16,9 @@
 
 package com.example.android.apis.graphics;
 
-import com.example.android.apis.R;
-
-import android.app.Activity;
 import android.content.Context;
 import android.graphics.*;
 import android.os.Bundle;
-import android.view.KeyEvent;
 import android.view.*;
 
 import java.io.ByteArrayOutputStream;
@@ -34,11 +30,11 @@ public class CreateBitmap extends GraphicsActivity {
         super.onCreate(savedInstanceState);
         setContentView(new SampleView(this));
     }
-    
+
     private static final int WIDTH = 50;
     private static final int HEIGHT = 50;
     private static final int STRIDE = 64;   // must be >= WIDTH
-    
+
     private static int[] createColors() {
         int[] colors = new int[STRIDE * HEIGHT];
         for (int y = 0; y < HEIGHT; y++) {
@@ -52,18 +48,18 @@ public class CreateBitmap extends GraphicsActivity {
         }
         return colors;
     }
-        
+
     private static class SampleView extends View {
         private Bitmap[] mBitmaps;
         private Bitmap[] mJPEG;
         private Bitmap[] mPNG;
         private int[]    mColors;
         private Paint    mPaint;
-        
+
         private static Bitmap codec(Bitmap src, Bitmap.CompressFormat format,
                                     int quality) {
             ByteArrayOutputStream os = new ByteArrayOutputStream();
-            src.compress(format, quality, os);            
+            src.compress(format, quality, os);
 
             byte[] array = os.toByteArray();
             return BitmapFactory.decodeByteArray(array, 0, array.length);
@@ -72,7 +68,7 @@ public class CreateBitmap extends GraphicsActivity {
         public SampleView(Context context) {
             super(context);
             setFocusable(true);
-            
+
             mColors = createColors();
             int[] colors = mColors;
 
@@ -84,7 +80,7 @@ public class CreateBitmap extends GraphicsActivity {
                                               Bitmap.Config.RGB_565);
             mBitmaps[2] = Bitmap.createBitmap(colors, 0, STRIDE, WIDTH, HEIGHT,
                                               Bitmap.Config.ARGB_4444);
-            
+
             // these three will have their colors set later
             mBitmaps[3] = Bitmap.createBitmap(WIDTH, HEIGHT,
                                               Bitmap.Config.ARGB_8888);
@@ -95,10 +91,10 @@ public class CreateBitmap extends GraphicsActivity {
             for (int i = 3; i <= 5; i++) {
                 mBitmaps[i].setPixels(colors, 0, STRIDE, 0, 0, WIDTH, HEIGHT);
             }
-            
+
             mPaint = new Paint();
             mPaint.setDither(true);
-            
+
             // now encode/decode using JPEG and PNG
             mJPEG = new Bitmap[mBitmaps.length];
             mPNG = new Bitmap[mBitmaps.length];
@@ -107,7 +103,7 @@ public class CreateBitmap extends GraphicsActivity {
                 mPNG[i] = codec(mBitmaps[i], Bitmap.CompressFormat.PNG, 0);
             }
         }
-        
+
         @Override protected void onDraw(Canvas canvas) {
             canvas.drawColor(Color.WHITE);
 
@@ -117,7 +113,7 @@ public class CreateBitmap extends GraphicsActivity {
                 canvas.drawBitmap(mPNG[i], 160, 0, null);
                 canvas.translate(0, mBitmaps[i].getHeight());
             }
-            
+
             // draw the color array directly, w/o craeting a bitmap object
             canvas.drawBitmap(mColors, 0, STRIDE, 0, 0, WIDTH, HEIGHT,
                               true, null);

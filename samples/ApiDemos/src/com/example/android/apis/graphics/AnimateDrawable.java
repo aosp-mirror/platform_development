@@ -23,23 +23,23 @@ import android.view.animation.AnimationUtils;
 import android.view.animation.Transformation;
 
 public class AnimateDrawable extends ProxyDrawable {
-    
+
     private Animation mAnimation;
     private Transformation mTransformation = new Transformation();
 
     public AnimateDrawable(Drawable target) {
         super(target);
     }
-    
+
     public AnimateDrawable(Drawable target, Animation animation) {
         super(target);
         mAnimation = animation;
     }
-    
+
     public Animation getAnimation() {
         return mAnimation;
     }
-    
+
     public void setAnimation(Animation anim) {
         mAnimation = anim;
     }
@@ -47,11 +47,11 @@ public class AnimateDrawable extends ProxyDrawable {
     public boolean hasStarted() {
         return mAnimation != null && mAnimation.hasStarted();
     }
-    
+
     public boolean hasEnded() {
         return mAnimation == null || mAnimation.hasEnded();
     }
-    
+
     @Override
     public void draw(Canvas canvas) {
         Drawable dr = getProxy();
@@ -69,4 +69,4 @@ public class AnimateDrawable extends ProxyDrawable {
         }
     }
 }
-    
+
