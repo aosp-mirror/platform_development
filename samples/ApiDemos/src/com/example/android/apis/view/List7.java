@@ -16,12 +16,15 @@
 
 package com.example.android.apis.view;
 
+// Need the following import to get access to the app resources, since this
+// class is in a sub-package.
 import com.example.android.apis.R;
+
 
 import android.app.ListActivity;
 import android.database.Cursor;
+import android.provider.ContactsContract.CommonDataKinds.Phone;
 import android.os.Bundle;
-import android.provider.ContactsContract;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemSelectedListener;
@@ -33,69 +36,64 @@ import android.widget.TextView;
  * A list view example where the data comes from a cursor.
  */
 public class List7 extends ListActivity implements OnItemSelectedListener {
-    private static final String[] PROJECTION = new String[] {
-            ContactsContract.Contacts._ID,
-            ContactsContract.Contacts.DISPLAY_NAME,
-            ContactsContract.Contacts.HAS_PHONE_NUMBER,
-            ContactsContract.Contacts.LOOKUP_KEY
-    };
-
-    private int mIdColumnIndex;
-    private int mHasPhoneColumnIndex;
 
     private TextView mPhone;
+
+    private static final String[] PHONE_PROJECTION = new String[] {
+        Phone._ID,
+        Phone.TYPE,
+        Phone.LABEL,
+        Phone.NUMBER,
+        Phone.DISPLAY_NAME
+    };
+
+    private static final int COLUMN_PHONE_TYPE = 1;
+    private static final int COLUMN_PHONE_LABEL = 2;
+    private static final int COLUMN_PHONE_NUMBER = 3;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         setContentView(R.layout.list_7);
-
         mPhone = (TextView) findViewById(R.id.phone);
         getListView().setOnItemSelectedListener(this);
 
-        // Get a cursor with all people
-        Cursor c = managedQuery(ContactsContract.Contacts.CONTENT_URI,
-                PROJECTION, null, null, null);
-        mIdColumnIndex = c.getColumnIndex(ContactsContract.Contacts._ID);
-        mHasPhoneColumnIndex = c.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER);
+        // Get a cursor with all numbers.
+        // This query will only return contacts with phone numbers
+        Cursor c = getContentResolver().query(Phone.CONTENT_URI,
+                PHONE_PROJECTION, Phone.NUMBER + " NOT NULL", null, null);
+        startManagingCursor(c);
 
         ListAdapter adapter = new SimpleCursorAdapter(this,
-                android.R.layout.simple_list_item_1, // Use a template
-                                                     // that displays a
-                                                     // text view
-                c, // Give the cursor to the list adapter
-                new String[] { ContactsContract.Contacts.DISPLAY_NAME }, // Map the NAME column in the
-                                                                         // people database to...
-                new int[] { android.R.id.text1 }); // The "text1" view defined in
-                                                   // the XML template
+                // Use a template that displays a text view
+                android.R.layout.simple_list_item_1,
+                // Give the cursor to the list adapter
+                c,
+                // Map the DISPLAY_NAME column to...
+                new String[] {Phone.DISPLAY_NAME},
+                // The "text1" view defined in the XML template
+                new int[] {android.R.id.text1});
         setListAdapter(adapter);
     }
 
-    public void onItemSelected(AdapterView parent, View v, int position, long id) {
+    public void onItemSelected(AdapterView<?> parent, View v, int position, long id) {
         if (position >= 0) {
-            final Cursor c = (Cursor) parent.getItemAtPosition(position);
-            if (c.getInt(mHasPhoneColumnIndex) > 0) {
-                final long contactId = c.getLong(mIdColumnIndex);
-                final Cursor phones = getContentResolver().query(
-                        ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-                        new String[] { ContactsContract.CommonDataKinds.Phone.NUMBER },
-                        ContactsContract.CommonDataKinds.Phone.CONTACT_ID + "=" + contactId, null,
-                        ContactsContract.CommonDataKinds.Phone.IS_SUPER_PRIMARY + " DESC");
-
-                try {
-                    phones.moveToFirst();
-                    mPhone.setText(phones.getString(0));
-                } finally {
-                    phones.close();
-                }
-            } else {
-                mPhone.setText(R.string.list_7_nothing);                
+            //Get current cursor
+            Cursor c = (Cursor) parent.getItemAtPosition(position);
+            int type = c.getInt(COLUMN_PHONE_TYPE);
+            String phone = c.getString(COLUMN_PHONE_NUMBER);
+            String label = null;
+            //Custom type? Then get the custom label
+            if (type == Phone.TYPE_CUSTOM) {
+                label = c.getString(COLUMN_PHONE_LABEL);
             }
+            //Get the readable string
+            String numberType = (String) Phone.getTypeLabel(getResources(), type, label);
+            String text = numberType + ": " + phone;
+            mPhone.setText(text);
         }
     }
 
-    public void onNothingSelected(AdapterView parent) {
-        mPhone.setText(R.string.list_7_nothing);
+    public void onNothingSelected(AdapterView<?> parent) {
     }
 }
