@@ -101,7 +101,7 @@ public class Transition3d extends Activity implements
         mContainer.startAnimation(rotation);
     }
 
-    public void onItemClick(AdapterView parent, View v, int position, long id) {
+    public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
         // Pre-load the image then start the animation
         mImageView.setImageResource(PHOTOS_RESOURCES[position]);
         applyRotation(position, 0, 90);
