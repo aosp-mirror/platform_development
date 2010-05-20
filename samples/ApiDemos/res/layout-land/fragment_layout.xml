@@ -15,12 +15,18 @@
 -->
 
 <!-- Top-level content view for the layout fragment sample.  This version is
-     for display when not in landscape: we can only fit the list of titles. -->
+     for display when in landscape: we can fit both titles and dialog. -->
 
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="horizontal"
     android:layout_width="match_parent" android:layout_height="match_parent">
-    <fragment xmlns:android="http://schemas.android.com/apk/res/android"
-            android:name="com.example.android.apis.app.FragmentLayout$TitlesFragment"
-            android:id="@+id/titles"
-            android:layout_width="match_parent" android:layout_height="match_parent" />
-</FrameLayout>
+
+    <fragment android:name="com.example.android.apis.app.FragmentLayout$TitlesFragment"
+            android:id="@+id/titles" android:layout_weight="1"
+            android:layout_width="0px" android:layout_height="match_parent" />
+
+    <fragment android:name="com.example.android.apis.app.FragmentLayout$DialogFragment"
+            android:id="@+id/dialog" android:layout_weight="1"
+            android:layout_width="0px" android:layout_height="match_parent" />
+    
+</LinearLayout>

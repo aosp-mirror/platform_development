@@ -32,11 +32,11 @@ public class FragmentReceiveResult extends Activity {
             // Do first time initialization -- add fragment. 
             Fragment newFragment = new ReceiveResultFragment();
             FragmentTransaction ft = openFragmentTransaction();
-            ft.add(newFragment, R.id.simple_fragment).commit();
+            ft.add(R.id.simple_fragment, newFragment).commit();
         }
     }
     
-    static class ReceiveResultFragment extends Fragment {
+    public static class ReceiveResultFragment extends Fragment {
         // Definition of the one requestCode we use for receiving resuls.
         static final private int GET_CODE = 0;
         
@@ -51,9 +51,6 @@ public class FragmentReceiveResult extends Activity {
             }
         };
 
-        public ReceiveResultFragment() {
-        }
-        
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);

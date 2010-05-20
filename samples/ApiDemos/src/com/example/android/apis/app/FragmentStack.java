@@ -49,7 +49,7 @@ public class FragmentStack extends Activity {
             // Do first time initialization -- add initial fragment. 
             Fragment newFragment = new CountingFragment(mStackLevel);
             FragmentTransaction ft = openFragmentTransaction();
-            ft.add(newFragment, R.id.simple_fragment).commit();
+            ft.add(R.id.simple_fragment, newFragment).commit();
         } else {
             mStackLevel = savedInstanceState.getInt("level");
         }
@@ -65,17 +65,17 @@ public class FragmentStack extends Activity {
         mStackLevel++;
         Fragment newFragment = new CountingFragment(mStackLevel);
         FragmentTransaction ft = openFragmentTransaction();
-        ft.replace(newFragment, R.id.simple_fragment);
-        ft.setTransition(FragmentTransaction.TRANSIT_ACTIVITY_OPEN);
+        ft.replace(R.id.simple_fragment, newFragment);
+        ft.setTransition(FragmentTransaction.TRANSIT_WALLPAPER_INTRA_OPEN);
         ft.addToBackStack(null);
         ft.commit();
     }
     
-    static class CountingFragment extends Fragment {
+    public static class CountingFragment extends Fragment {
         int mNum;
         
         public CountingFragment() {
-            mNum = 0;
+            mNum = -1;
         }
         
         public CountingFragment(int num) {

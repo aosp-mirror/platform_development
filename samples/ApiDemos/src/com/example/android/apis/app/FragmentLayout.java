@@ -17,79 +17,115 @@
 package com.example.android.apis.app;
 
 import com.example.android.apis.R;
+import com.example.android.apis.Shakespeare;
 
 import android.app.Activity;
 import android.app.Fragment;
+import android.app.FragmentTransaction;
+import android.content.Intent;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.View.OnClickListener;
+import android.view.animation.AnimationUtils;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.ListView;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
+/**
+ * Demonstration of using fragments to implement different activity layouts.
+ * This sample provides a different layout (and activity flow) when run in
+ * landscape.
+ */
 public class FragmentLayout extends Activity {
-    View mFirstFragmentView;
-    View mSecondFragmentView;
-    
-    Fragment mFirstFragment;
-    Fragment mSecondFragment;
-    
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.fragment_layout);
-        mFirstFragmentView = findViewById(R.id.fragment1);
-        mSecondFragmentView = findViewById(R.id.fragment2);
-        mFirstFragment = findFragmentById(R.id.fragment1);
-        mSecondFragment = findFragmentById(R.id.fragment2);
     }
     
-    static class FirstFragment extends Fragment {
-        TextView mTextView;
-        
-        // Explicit constructor needed for inflation.
-        public FirstFragment() {
+    public static class DialogActivity extends Activity {
+        @Override
+        protected void onCreate(Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+            
+            if (getResources().getConfiguration().orientation
+                    == Configuration.ORIENTATION_LANDSCAPE) {
+                // If the screen is now in landscape mode, we can show the
+                // dialog in-line with the list so we don't need this activity.
+                finish();
+                return;
+            }
+            
+            DialogFragment dialog = new DialogFragment();
+            this.openFragmentTransaction().add(android.R.id.content, dialog).commit();
+            dialog.setText(getIntent().getIntExtra("text", -1));
         }
-        
+    }
+    
+    public static class TitlesFragment extends Fragment
+            implements AdapterView.OnItemClickListener {
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                 Bundle savedInstanceState) {
-            View v = inflater.inflate(R.layout.labeled_text_edit, container, false);
-            View tv = v.findViewById(R.id.msg);
-            ((TextView)tv).setText("The fragment saves and restores this text.");
-            
-            // Retrieve the text editor, and restore the last saved state if needed.
-            mTextView = (TextView)v.findViewById(R.id.saved);
-            if (savedInstanceState != null) {
-                mTextView.setText(savedInstanceState.getCharSequence("text"));
+            ListView list = new ListView(getActivity());
+            list.setDrawSelectorOnTop(false);
+            list.setAdapter(new ArrayAdapter<String>(getActivity(),
+                    android.R.layout.simple_list_item_1, Shakespeare.TITLES));
+            list.setOnItemClickListener(this);
+            list.setId(android.R.id.list);  // set id to allow state save/restore.
+            return list;
+        }
+
+        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            DialogFragment frag = (DialogFragment)getActivity().findFragmentById(R.id.dialog);
+            if (frag != null && frag.isVisible()) {
+                frag.setText((int)id);
+            } else {
+                Intent intent = new Intent();
+                intent.setClass(getActivity(), DialogActivity.class);
+                intent.putExtra("text", (int)id);
+                startActivity(intent);
             }
-            return v;
+        }
+    }
+    
+    public static class DialogFragment extends Fragment {
+        int mDisplayedText = -1;
+        TextView mText;
+        
+        public void setText(int id) {
+            mDisplayedText = id;
+            if (mText != null && id >= 0) {
+                mText.setText(Shakespeare.DIALOGUE[id]);
+            }
+        }
+        
+        @Override
+        public void onCreate(Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+            if (savedInstanceState != null) {
+                mDisplayedText = savedInstanceState.getInt("text", -1);
+            }
         }
 
         @Override
         public void onSaveInstanceState(Bundle outState) {
             super.onSaveInstanceState(outState);
-            
-            // Remember the current text, to restore if we later restart.
-            outState.putCharSequence("text", mTextView.getText());
+            outState.putInt("text", mDisplayedText);
         }
-    }
-    
-    static class SecondFragment extends Fragment {
-        // Explicit constructor needed for inflation.
-        public SecondFragment() {
-        }
-        
+
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                 Bundle savedInstanceState) {
-            View v = inflater.inflate(R.layout.labeled_text_edit, container, false);
-            View tv = v.findViewById(R.id.msg);
-            ((TextView)tv).setText("The TextView saves and restores this text.");
-            
-            // Retrieve the text editor and tell it to save and restore its state.
-            // Note that you will often set this in the layout XML, but since
-            // we are sharing our layout with the other fragment we will customize
-            // it here.
-            ((TextView)v.findViewById(R.id.saved)).setSaveEnabled(true);
-            return v;
+            ScrollView scroller = new ScrollView(getActivity());
+            mText = new TextView(getActivity());
+            scroller.addView(mText);
+            setText(mDisplayedText);
+            return scroller;
         }
     }
 }

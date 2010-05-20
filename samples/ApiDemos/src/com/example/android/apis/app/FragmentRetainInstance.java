@@ -67,7 +67,7 @@ public class FragmentRetainInstance extends Activity {
      * activity instances.  It represents some ongoing work, here a thread
      * we have that sits around incrementing a progress indicator.
      */
-    static class RetainedFragment extends Fragment {
+    public static class RetainedFragment extends Fragment {
         ProgressBar mProgressBar;
         int mPosition;
         boolean mReady = false;
