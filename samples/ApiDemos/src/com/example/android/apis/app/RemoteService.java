@@ -29,8 +29,6 @@ import android.os.Process;
 import android.os.RemoteCallbackList;
 import android.widget.Toast;
 
-import java.util.HashMap;
-
 // Need the following import to get access to the app resources, since this
 // class is in a sub-package.
 import com.example.android.apis.R;

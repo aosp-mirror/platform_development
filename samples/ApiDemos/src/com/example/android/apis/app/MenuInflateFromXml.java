@@ -19,14 +19,11 @@ package com.example.android.apis.app;
 import com.example.android.apis.R;
 
 import android.app.Activity;
-import android.app.NotificationManager;
-import android.content.Context;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.ArrayAdapter;
-import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;

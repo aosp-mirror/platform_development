@@ -23,8 +23,6 @@ import android.view.KeyEvent;
 import android.os.Bundle;
 import android.util.Log;
 
-import java.util.Map;
-
 /**
  * This is an example implementation of the {@link android.app.Instrumentation}
  * class, allowing you to run tests against application code.  The

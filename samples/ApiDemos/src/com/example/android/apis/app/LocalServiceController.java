@@ -21,13 +21,11 @@ package com.example.android.apis.app;
 import com.example.android.apis.R;
 
 import android.app.Activity;
-import android.content.ComponentName;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
-
 
 /**
  * <p>Example of explicitly starting and stopping the {@link LocalService}.
