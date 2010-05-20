@@ -62,11 +62,23 @@
 
     </LinearLayout>
 
-    <Button android:id="@+id/set_password"
-        android:layout_width="wrap_content" android:layout_height="wrap_content"
-        android_layout_gravity="east|center_vertical"
-        android:text="@string/set_password">
-    </Button>
+    <LinearLayout android:orientation="horizontal" android:gravity="center"
+        android:layout_width="match_parent" android:layout_height="wrap_content">
+
+        <EditText android:id="@+id/password_history_length"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:hint="@string/password_history_length_hint"
+            android:inputType="number">
+        </EditText>
+
+        <Button android:id="@+id/set_password"
+            android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android_layout_gravity="east|center_vertical"
+            android:text="@string/set_password">
+        </Button>
+
+    </LinearLayout>
 
     <LinearLayout android:orientation="horizontal" android:gravity="center"
         android:layout_width="match_parent" android:layout_height="wrap_content">
