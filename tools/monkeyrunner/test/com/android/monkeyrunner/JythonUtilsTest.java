@@ -102,7 +102,7 @@ public class JythonUtilsTest extends TestCase {
         }
         sb.append(")");
 
-        return ScriptRunner.runStringAndGet(sb.toString(), "result");
+        return ScriptRunner.runStringAndGet(sb.toString(), "result").get("result");
     }
 
     public void testSimpleCall() {
