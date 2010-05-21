@@ -763,8 +763,8 @@ static int getSimConfig(void)
                     goto bail;
             }
         } else if (msg.mType == kTypeConfig) {
-            const char *name;
-            const char *val;
+            const char* name = NULL;
+            const char* val = NULL;
             getConfig(&msg, &name, &val);
             if(strcmp(name, "keycharmap") == 0) {
                 free((void*)gWrapSim.keyMap);
