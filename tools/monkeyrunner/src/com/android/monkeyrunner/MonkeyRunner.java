@@ -91,9 +91,8 @@ public class MonkeyRunner {
     @MonkeyRunnerExported(doc = "Simple help command to dump the MonkeyRunner supported " +
             "commands",
             returns = "The help text")
-            public static String help(PyObject[] args, String[] kws) {
-      // TODO: implement
-      return "";
+    public static String help(PyObject[] args, String[] kws) {
+      return MonkeyRunnerHelp.helpString();
     }
 
     @MonkeyRunnerExported(doc = "Put up an alert dialog to inform the user of something that " +
