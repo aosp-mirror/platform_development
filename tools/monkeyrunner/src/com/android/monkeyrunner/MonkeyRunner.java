@@ -91,7 +91,7 @@ public class MonkeyRunner {
     @MonkeyRunnerExported(doc = "Simple help command to dump the MonkeyRunner supported " +
             "commands",
             returns = "The help text")
-            public static String help(PyObject[] args, String[] kws) {
+    public static String help(PyObject[] args, String[] kws) {
         ArgParser ap = JythonUtils.createArgParser(args, kws);
         Preconditions.checkNotNull(ap);
 

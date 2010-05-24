@@ -87,6 +87,12 @@ public class CaptureRawAndConvertedImage {
         }
     }
 
+    private static void writeOutImage(RawImage screenshot, String name) throws IOException {
+        ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(name));
+        out.writeObject(new MonkeyRunnerRawImage(screenshot));
+        out.close();
+    }
+
     public static void main(String[] args) throws IOException {
         AdbBackend backend = new AdbBackend();
         MonkeyDevice device = backend.waitForConnection();
@@ -95,11 +101,6 @@ public class CaptureRawAndConvertedImage {
         // write out to a file
         snapshot.writeToFile("output.png", "png");
         writeOutImage(snapshot.getRawImage(), "output.raw");
-    }
-
-    private static void writeOutImage(RawImage screenshot, String name) throws IOException {
-        ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(name));
-        out.writeObject(new MonkeyRunnerRawImage(screenshot));
-        out.close();
+        System.exit(0);
     }
 }

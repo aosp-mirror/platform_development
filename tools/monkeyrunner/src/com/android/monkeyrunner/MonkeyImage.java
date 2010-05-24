@@ -22,6 +22,7 @@ import com.android.monkeyrunner.doc.MonkeyRunnerExported;
 import org.python.core.ArgParser;
 import org.python.core.PyObject;
 
+import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -85,8 +86,16 @@ public abstract class MonkeyImage {
 
     public boolean writeToFile(String path, String format) {
         BufferedImage image = createBufferedImage();
+
+        // Convert the image to ARGB so ImageIO writes it out nicely
+        BufferedImage argb = new BufferedImage(image.getWidth(), image.getHeight(),
+                BufferedImage.TYPE_INT_ARGB);
+        Graphics g = argb.createGraphics();
+        g.drawImage(image, 0, 0, null);
+        g.dispose();
+
         try {
-            ImageIO.write(image, format, new File(path));
+            ImageIO.write(argb, format, new File(path));
         } catch (IOException e) {
             return false;
         }
