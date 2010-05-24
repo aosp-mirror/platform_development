@@ -15,7 +15,10 @@
  */
 package com.android.monkeyrunner;
 
+import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import com.google.common.collect.ImmutableMap.Builder;
 
 import org.python.core.PyObject;
 import org.python.util.InteractiveConsole;
@@ -23,15 +26,21 @@ import org.python.util.PythonInterpreter;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 /**
  * Runs Jython based scripts.
  */
 public class ScriptRunner {
+    private static final Logger LOG = Logger.getLogger(MonkeyRunnerOptions.class.getName());
 
     /** The "this" scope object for scripts. */
     private final Object scope;
@@ -51,20 +60,46 @@ public class ScriptRunner {
     /**
      * Runs the specified Jython script. First runs the initialization script to
      * preload the appropriate client library version.
+     *
+     * @param scriptfilename the name of the file to run.
+     * @param args the arguments passed in (excluding the filename).
+     * @param plugins a list of plugins to load.
      */
-    public static void run(String scriptfilename) {
-        try {
-            // Add the current directory of the script to the python.path search path.
-            File f = new File(scriptfilename);
-            initPython(Lists.newArrayList(f.getParent()),
-                    new String[] { f.getCanonicalPath() });
+    public static void run(String scriptfilename, Collection<String> args,
+            Map<String, Predicate<PythonInterpreter>> plugins) {
+        // Add the current directory of the script to the python.path search path.
+        File f = new File(scriptfilename);
 
-            PythonInterpreter python = new PythonInterpreter();
+        // Adjust the classpath so jython can access the classes in the specified classpath.
+        Collection<String> classpath = Lists.newArrayList(f.getParent());
+        classpath.addAll(plugins.keySet());
 
-            python.execfile(scriptfilename);
-        } catch(Exception e) {
-            e.printStackTrace();
+        String[] argv = new String[args.size() + 1];
+        argv[0] = f.getAbsolutePath();
+        int x = 1;
+        for (String arg : args) {
+            argv[x++] = arg;
         }
+
+        initPython(classpath, argv);
+
+        PythonInterpreter python = new PythonInterpreter();
+
+        // Now let the mains run.
+        for (Map.Entry<String, Predicate<PythonInterpreter>> entry : plugins.entrySet()) {
+            boolean success;
+            try {
+                success = entry.getValue().apply(python);
+            } catch (Exception e) {
+                LOG.log(Level.SEVERE, "Plugin Main through an exception.", e);
+                continue;
+            }
+            if (!success) {
+                LOG.severe("Plugin Main returned error for: " + entry.getKey());
+            }
+        }
+
+        python.execfile(scriptfilename);
     }
 
     public static void runString(String script) {
@@ -73,11 +108,20 @@ public class ScriptRunner {
         python.exec(script);
     }
 
-    public static PyObject runStringAndGet(String script, String name) {
+    public static Map<String, PyObject> runStringAndGet(String script, String... names) {
+        return runStringAndGet(script, Arrays.asList(names));
+    }
+
+    public static Map<String, PyObject> runStringAndGet(String script, Collection<String> names) {
         initPython();
-        PythonInterpreter python = new PythonInterpreter();
+        final PythonInterpreter python = new PythonInterpreter();
         python.exec(script);
-        return python.get(name);
+
+        Builder<String, PyObject> builder = ImmutableMap.builder();
+        for (String name : names) {
+            builder.put(name, python.get(name));
+        }
+        return builder.build();
     }
 
     private static void initPython() {
@@ -85,7 +129,7 @@ public class ScriptRunner {
         initPython(arg, new String[] {""});
     }
 
-    private static void initPython(List<String> pythonPath,
+    private static void initPython(Collection<String> pythonPath,
             String[] argv) {
         Properties props = new Properties();
 

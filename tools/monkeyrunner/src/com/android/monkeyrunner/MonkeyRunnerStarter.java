@@ -15,10 +15,25 @@
  */
 package com.android.monkeyrunner;
 
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
+import com.google.common.collect.ImmutableMap;
+
 import com.android.monkeyrunner.adb.AdbBackend;
+import com.android.monkeyrunner.stub.StubBackend;
+
+import org.python.util.PythonInterpreter;
 
 import java.io.File;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.Enumeration;
+import java.util.Map;
+import java.util.jar.Attributes;
+import java.util.jar.JarFile;
+import java.util.jar.Manifest;
 import java.util.logging.Formatter;
 import java.util.logging.Handler;
 import java.util.logging.Level;
@@ -33,9 +48,19 @@ import java.util.logging.Logger;
  */
 public class MonkeyRunnerStarter {
     private static final Logger LOG = Logger.getLogger(MonkeyRunnerStarter.class.getName());
+    private static final String MONKEY_RUNNER_MAIN_MANIFEST_NAME = "MonkeyRunnerStartupRunner";
 
     private final MonkeyRunnerBackend backend;
-    private final File scriptFile;
+    private final MonkeyRunnerOptions options;
+
+    public MonkeyRunnerStarter(MonkeyRunnerOptions options) {
+        this.options = options;
+        this.backend = MonkeyRunnerStarter.createBackendByName(options.getBackendName());
+        if (this.backend == null) {
+           throw new RuntimeException("Unknown backend");
+        }
+    }
+
 
     /**
      * Creates a specific backend by name.
@@ -43,29 +68,102 @@ public class MonkeyRunnerStarter {
      * @param backendName the name of the backend to create
      * @return the new backend, or null if none were found.
      */
-    public MonkeyRunnerBackend createBackendByName(String backendName) {
+    public static MonkeyRunnerBackend createBackendByName(String backendName) {
         if ("adb".equals(backendName)) {
             return new AdbBackend();
+        } else if ("stub".equals(backendName)) {
+            return new StubBackend();
         } else {
             return null;
         }
     }
 
-    public MonkeyRunnerStarter(String backendName,
-            File scriptFile) {
-        this.backend = createBackendByName(backendName);
-        if (this.backend == null) {
-            throw new RuntimeException("Unknown backend");
-        }
-        this.scriptFile = scriptFile;
-    }
-
     private void run() {
         MonkeyRunner.setBackend(backend);
-        ScriptRunner.run(scriptFile.getAbsolutePath());
+        Map<String, Predicate<PythonInterpreter>> plugins = handlePlugins();
+        ScriptRunner.run(options.getScriptFile().getAbsolutePath(),
+                         options.getArguments(), plugins);
         backend.shutdown();
         MonkeyRunner.setBackend(null);
     }
+
+    private Predicate<PythonInterpreter> handlePlugin(File f) {
+        JarFile jarFile;
+        try {
+            jarFile = new JarFile(f);
+        } catch (IOException e) {
+            LOG.log(Level.SEVERE, "Unable to open plugin file.  Is it a jar file? " +
+                    f.getAbsolutePath(), e);
+            return Predicates.alwaysFalse();
+        }
+        Manifest manifest;
+        try {
+            manifest = jarFile.getManifest();
+        } catch (IOException e) {
+            LOG.log(Level.SEVERE, "Unable to get manifest file from jar: " +
+                    f.getAbsolutePath(), e);
+            return Predicates.alwaysFalse();
+        }
+        Attributes mainAttributes = manifest.getMainAttributes();
+        String pluginClass = mainAttributes.getValue(MONKEY_RUNNER_MAIN_MANIFEST_NAME);
+        if (pluginClass == null) {
+            // No main in this plugin, so it always succeeds.
+            return Predicates.alwaysTrue();
+        }
+        URL url;
+        try {
+            url =  f.toURI().toURL();
+        } catch (MalformedURLException e) {
+            LOG.log(Level.SEVERE, "Unable to convert file to url " + f.getAbsolutePath(),
+                    e);
+            return Predicates.alwaysFalse();
+        }
+        URLClassLoader classLoader = new URLClassLoader(new URL[] { url },
+                ClassLoader.getSystemClassLoader());
+        Class<?> clz;
+        try {
+            clz = Class.forName(pluginClass, true, classLoader);
+        } catch (ClassNotFoundException e) {
+            LOG.log(Level.SEVERE, "Unable to load the specified plugin: " + pluginClass, e);
+            return Predicates.alwaysFalse();
+        }
+        Object loadedObject;
+        try {
+            loadedObject = clz.newInstance();
+        } catch (InstantiationException e) {
+            LOG.log(Level.SEVERE, "Unable to load the specified plugin: " + pluginClass, e);
+            return Predicates.alwaysFalse();
+        } catch (IllegalAccessException e) {
+            LOG.log(Level.SEVERE, "Unable to load the specified plugin " +
+                    "(did you make it public?): " + pluginClass, e);
+            return Predicates.alwaysFalse();
+        }
+        // Cast it to the right type
+        if (loadedObject instanceof Runnable) {
+            final Runnable run = (Runnable) loadedObject;
+            return new Predicate<PythonInterpreter>() {
+                public boolean apply(PythonInterpreter i) {
+                    run.run();
+                    return true;
+                }
+            };
+        } else if (loadedObject instanceof Predicate<?>) {
+            return (Predicate<PythonInterpreter>) loadedObject;
+        } else {
+            LOG.severe("Unable to coerce object into correct type: " + pluginClass);
+            return Predicates.alwaysFalse();
+        }
+    }
+
+    private Map<String, Predicate<PythonInterpreter>> handlePlugins() {
+        ImmutableMap.Builder<String, Predicate<PythonInterpreter>> builder = ImmutableMap.builder();
+        for (File f : options.getPlugins()) {
+            builder.put(f.getAbsolutePath(), handlePlugin(f));
+        }
+        return builder.build();
+    }
+
+
 
     private static final void replaceAllLogFormatters(Formatter form) {
         LogManager mgr = LogManager.getLogManager();
@@ -81,7 +179,7 @@ public class MonkeyRunnerStarter {
     }
 
     public static void main(String[] args) {
-        MonkeyRunningOptions options = MonkeyRunningOptions.processOptions(args);
+        MonkeyRunnerOptions options = MonkeyRunnerOptions.processOptions(args);
 
         // logging property files are difficult
         replaceAllLogFormatters(MonkeyFormatter.DEFAULT_INSTANCE);
@@ -90,8 +188,7 @@ public class MonkeyRunnerStarter {
             return;
         }
 
-        MonkeyRunnerStarter runner = new MonkeyRunnerStarter(options.getBackendName(),
-                options.getScriptFile());
+        MonkeyRunnerStarter runner = new MonkeyRunnerStarter(options);
         runner.run();
 
         // This will kill any background threads as well.

@@ -15,12 +15,15 @@
  */
 package com.android.monkeyrunner;
 
+import com.google.common.collect.ImmutableList;
+
 import java.io.File;
+import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class MonkeyRunningOptions {
-    private static final Logger LOG = Logger.getLogger(MonkeyRunningOptions.class.getName());
+public class MonkeyRunnerOptions {
+    private static final Logger LOG = Logger.getLogger(MonkeyRunnerOptions.class.getName());
     private static String DEFAULT_MONKEY_SERVER_ADDRESS = "127.0.0.1";
     private static int DEFAULT_MONKEY_PORT = 12345;
 
@@ -28,12 +31,17 @@ public class MonkeyRunningOptions {
     private final String hostname;
     private final File scriptFile;
     private final String backend;
+    private final Collection<File> plugins;
+    private final Collection<String> arguments;
 
-    private MonkeyRunningOptions(String hostname, int port, File scriptFile, String backend) {
+    private MonkeyRunnerOptions(String hostname, int port, File scriptFile, String backend,
+            Collection<File> plugins, Collection<String> arguments) {
         this.hostname = hostname;
         this.port = port;
         this.scriptFile = scriptFile;
         this.backend = backend;
+        this.plugins = plugins;
+        this.arguments = arguments;
     }
 
     public int getPort() {
@@ -52,6 +60,14 @@ public class MonkeyRunningOptions {
         return backend;
     }
 
+    public Collection<File> getPlugins() {
+        return plugins;
+    }
+
+    public Collection<String> getArguments() {
+        return arguments;
+    }
+
     private static void printUsage(String message) {
         System.out.println(message);
         System.out.println("Usage: monkeyrunner [options] SCRIPT_FILE");
@@ -68,7 +84,7 @@ public class MonkeyRunningOptions {
      *
      * @return the parsed options, or null if there was an error.
      */
-    public static MonkeyRunningOptions processOptions(String[] args) {
+    public static MonkeyRunnerOptions processOptions(String[] args) {
         // parse command line parameters.
         int index = 0;
 
@@ -77,6 +93,8 @@ public class MonkeyRunningOptions {
         int port = DEFAULT_MONKEY_PORT;
         String backend = "adb";
 
+        ImmutableList.Builder<File> pluginListBuilder = ImmutableList.builder();
+        ImmutableList.Builder<String> argumentBuilder = ImmutableList.builder();
         do {
             String argument = args[index++];
 
@@ -114,16 +132,42 @@ public class MonkeyRunningOptions {
                     return null;
                 }
                 backend = args[index++];
+            } else if ("-plugin".equals(argument)) {
+                // quick check on the next argument.
+                if (index == args.length) {
+                    printUsage("Missing plugin path after -plugin");
+                    return null;
+                }
+                File plugin = new File(args[index++]);
+                if (!plugin.exists()) {
+                    printUsage("Plugin file doesn't exist");
+                    return null;
+                }
+
+                if (!plugin.canRead()) {
+                    printUsage("Can't read plugin file");
+                    return null;
+                }
+
+                pluginListBuilder.add(plugin);
             } else if (argument.startsWith("-")) {
                 // we have an unrecognized argument.
                 printUsage("Unrecognized argument: " + argument + ".");
                 return null;
             } else {
-                // get the filepath of the script to run.  This will be the last undashed argument.
-                scriptFile = new File(argument);
-                if (!scriptFile.exists()) {
-                    printUsage("Can't open specified script file");
-                    return null;
+                if (scriptFile == null) {
+                    // get the filepath of the script to run.  This will be the last undashed argument.
+                    scriptFile = new File(argument);
+                    if (!scriptFile.exists()) {
+                        printUsage("Can't open specified script file");
+                        return null;
+                    }
+                    if (!scriptFile.canRead()) {
+                        printUsage("Can't open specified script file");
+                        return null;
+                    }
+                } else {
+                    argumentBuilder.add(argument);
                 }
             }
         } while (index < args.length);
@@ -133,6 +177,7 @@ public class MonkeyRunningOptions {
             return null;
         }
 
-        return new MonkeyRunningOptions(hostname, port, scriptFile, backend);
+        return new MonkeyRunnerOptions(hostname, port, scriptFile, backend,
+                pluginListBuilder.build(), argumentBuilder.build());
     }
 }

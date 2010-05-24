@@ -91,8 +91,11 @@ public class MonkeyRunner {
     @MonkeyRunnerExported(doc = "Simple help command to dump the MonkeyRunner supported " +
             "commands",
             returns = "The help text")
-    public static String help(PyObject[] args, String[] kws) {
-      return MonkeyRunnerHelp.helpString();
+            public static String help(PyObject[] args, String[] kws) {
+        ArgParser ap = JythonUtils.createArgParser(args, kws);
+        Preconditions.checkNotNull(ap);
+
+        return MonkeyRunnerHelp.helpString();
     }
 
     @MonkeyRunnerExported(doc = "Put up an alert dialog to inform the user of something that " +
