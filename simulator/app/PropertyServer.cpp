@@ -90,6 +90,9 @@ void PropertyServer::SetDefaultProperties(void)
         { "ro.build.date", "Wed Nov 28 07:44:14 PST 2007" },
         { "ro.build.date.utc", "1196264654" },
         { "ro.build.type", "eng" },
+        { "ro.build.version.sdk", "8" },
+        { "ro.build.version.codename", "Gingerbread" },
+        { "ro.build.version.release", "Gingerbread" },
         { "ro.product.device", "simulator" /*"sooner"*/ },
         { "ro.product.brand", "generic" },
         { "ro.build.user", "fadden" },
@@ -141,6 +144,7 @@ void PropertyServer::SetDefaultProperties(void)
         { "log.redirect-stdio", "false" },          // -Xlog-stdio
 
         /* SurfaceFlinger options */
+        { "ro.sf.lcd_density", "160" },
         { "debug.sf.nobootanimation", "1" },
         { "debug.sf.showupdates", "0" },
         { "debug.sf.showcpu", "0" },
