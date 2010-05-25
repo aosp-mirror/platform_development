@@ -78,13 +78,14 @@ public class MonkeyRunnerStarter {
         }
     }
 
-    private void run() {
+    private int run() {
         MonkeyRunner.setBackend(backend);
         Map<String, Predicate<PythonInterpreter>> plugins = handlePlugins();
-        ScriptRunner.run(options.getScriptFile().getAbsolutePath(),
-                         options.getArguments(), plugins);
+        int error = ScriptRunner.run(options.getScriptFile().getAbsolutePath(),
+            options.getArguments(), plugins);
         backend.shutdown();
         MonkeyRunner.setBackend(null);
+        return error;
     }
 
     private Predicate<PythonInterpreter> handlePlugin(File f) {
@@ -189,9 +190,9 @@ public class MonkeyRunnerStarter {
         }
 
         MonkeyRunnerStarter runner = new MonkeyRunnerStarter(options);
-        runner.run();
+        int error = runner.run();
 
         // This will kill any background threads as well.
-        System.exit(0);
+        System.exit(error);
     }
 }

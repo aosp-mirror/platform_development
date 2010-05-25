@@ -150,7 +150,9 @@ public class MonkeyRunnerOptions {
                 }
 
                 pluginListBuilder.add(plugin);
-            } else if (argument.startsWith("-")) {
+            } else if (argument.startsWith("-") &&
+                // Once we have the scriptfile, the rest of the arguments go to jython.
+                scriptFile == null) {
                 // we have an unrecognized argument.
                 printUsage("Unrecognized argument: " + argument + ".");
                 return null;

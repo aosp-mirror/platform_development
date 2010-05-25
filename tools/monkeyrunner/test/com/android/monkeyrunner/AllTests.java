@@ -35,7 +35,8 @@ public class AllTests {
 
     public static void main(String args[]) {
         TestRunner tr = new TestRunner();
-        TestResult result = tr.doRun(AllTests.suite(ImageUtilsTest.class, JythonUtilsTest.class));
+        TestResult result = tr.doRun(AllTests.suite(ImageUtilsTest.class, JythonUtilsTest.class,
+            MonkeyRunnerOptionsTest.class));
         if (result.wasSuccessful()) {
             System.exit(0);
         } else {

@@ -170,24 +170,26 @@ public abstract class MonkeyDevice {
 
     @MonkeyRunnerExported(doc = "Install the specified apk onto the device.",
             args = { "path" },
-            argDocs = { "The path on the host filesystem to the APK to install." })
-    public void installPackage(PyObject[] args, String[] kws) {
+            argDocs = { "The path on the host filesystem to the APK to install." },
+            returns = "True if install succeeded")
+    public boolean installPackage(PyObject[] args, String[] kws) {
         ArgParser ap = JythonUtils.createArgParser(args, kws);
         Preconditions.checkNotNull(ap);
 
         String path = ap.getString(0);
-        installPackage(path);
+        return installPackage(path);
     }
 
     @MonkeyRunnerExported(doc = "Remove the specified package from the device.",
             args = { "package"},
-            argDocs = { "The name of the package to uninstall"})
-    public void removePackage(PyObject[] args, String[] kws) {
+            argDocs = { "The name of the package to uninstall"},
+            returns = "'True if remove succeeded")
+    public boolean removePackage(PyObject[] args, String[] kws) {
         ArgParser ap = JythonUtils.createArgParser(args, kws);
         Preconditions.checkNotNull(ap);
 
         String packageName = ap.getString(0);
-        removePackage(packageName);
+        return removePackage(packageName);
     }
 
     @MonkeyRunnerExported(doc = "Start the Activity specified by the intent.",

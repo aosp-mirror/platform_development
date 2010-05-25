@@ -20,6 +20,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.ImmutableMap.Builder;
 
+import org.python.core.Py;
+import org.python.core.PyException;
 import org.python.core.PyObject;
 import org.python.util.InteractiveConsole;
 import org.python.util.PythonInterpreter;
@@ -64,8 +66,9 @@ public class ScriptRunner {
      * @param scriptfilename the name of the file to run.
      * @param args the arguments passed in (excluding the filename).
      * @param plugins a list of plugins to load.
+     * @return the error code from running the script.
      */
-    public static void run(String scriptfilename, Collection<String> args,
+    public static int run(String scriptfilename, Collection<String> args,
             Map<String, Predicate<PythonInterpreter>> plugins) {
         // Add the current directory of the script to the python.path search path.
         File f = new File(scriptfilename);
@@ -99,7 +102,21 @@ public class ScriptRunner {
             }
         }
 
-        python.execfile(scriptfilename);
+        // Bind __name__ to __main__ so mains will run
+        python.set("__name__", "__main__");
+
+        try {
+          python.execfile(scriptfilename);
+        } catch (PyException e) {
+          if (Py.SystemExit.equals(e.type)) {
+            // Then recover the error code so we can pass it on
+            return (Integer) e.value.__tojava__(Integer.class);
+          }
+          // Then some other kind of exception was thrown.  Log it and return error;
+          LOG.log(Level.SEVERE, "Script terminated due to an exception", e);
+          return 1;
+        }
+        return 0;
     }
 
     public static void runString(String script) {
