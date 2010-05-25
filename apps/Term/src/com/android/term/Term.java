@@ -2626,7 +2626,7 @@ class EmulatorView extends View implements GestureDetector.OnGestureListener {
 
     public EmulatorView(Context context) {
         super(context);
-        commonConstructor();
+        commonConstructor(context);
     }
 
     public void register(TermKeyListener listener) {
@@ -2796,17 +2796,17 @@ class EmulatorView extends View implements GestureDetector.OnGestureListener {
                 context.obtainStyledAttributes(android.R.styleable.View);
         initializeScrollbars(a);
         a.recycle();
-        commonConstructor();
+        commonConstructor(context);
     }
 
-    private void commonConstructor() {
+    private void commonConstructor(Context context) {
         mTextRenderer = null;
         mCursorPaint = new Paint();
         mCursorPaint.setARGB(255,128,128,128);
         mBackgroundPaint = new Paint();
         mTopRow = 0;
         mLeftColumn = 0;
-        mGestureDetector = new GestureDetector(this);
+        mGestureDetector = new GestureDetector(context, this, null);
         mGestureDetector.setIsLongpressEnabled(false);
         setVerticalScrollBarEnabled(true);
     }
