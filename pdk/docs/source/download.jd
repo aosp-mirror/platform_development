@@ -13,7 +13,7 @@ What's in the source?</h2>
 <div>To see snapshots and histories of the files available in the public Android repositories, visit the <a href="http://android.git.kernel.org/">GitWeb</a>
 web interface.</div>
 <div></div>
-<div>The source is approximentely 2.1GB in size.You will need 6GB free to complete the build.<br><br></div>
+<div>The source is approximately 2.1GB in size. You will need 6GB free to complete the build.<br><br></div>
 <h2>
 Setting up your machine</h2>
 <div>To build the Android source files, you will need to use Linux or Mac OS. Building under Windows is not currently supported.</div>
