@@ -92,6 +92,7 @@
         <item>Numeric</item>
         <item>Alphabetic</item>
         <item>Alphanumeric</item>
+        <item>Complex</item>
     </string-array>
 
 </resources>

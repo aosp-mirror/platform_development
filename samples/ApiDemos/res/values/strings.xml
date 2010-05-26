@@ -485,6 +485,12 @@
     <string name="disable_admin">Disable Admin</string>
     <string name="password_quality">Password Quality</string>
     <string name="password_length_hint">Minimum Length</string>
+    <string name="password_minimum_letters_hint">Minimum Letters</string>
+    <string name="password_minimum_uppercase_hint">Minimum Uppercase</string>
+    <string name="password_minimum_lowercase_hint">Minimum Lowercase</string>
+    <string name="password_minimum_symbols_hint">Minimum Symbols</string>
+    <string name="password_minimum_numeric_hint">Minimum Numeric</string>
+    <string name="password_minimum_nonletter_hint">Minimum Non-Letter</string>
     <string name="password_history_length_hint">Password History Length</string>
     <string name="set_password">Set Password</string>
     <string name="password_hint">Password</string>

@@ -54,6 +54,12 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
 
     static String PREF_PASSWORD_QUALITY = "password_quality";
     static String PREF_PASSWORD_LENGTH = "password_length";
+    static String PREF_PASSWORD_MINIMUM_LETTERS = "password_minimum_letters";
+    static String PREF_PASSWORD_MINIMUM_UPPERCASE = "password_minimum_uppercase";
+    static String PREF_PASSWORD_MINIMUM_LOWERCASE = "password_minimum_lowercase";
+    static String PREF_PASSWORD_MINIMUM_NUMERIC = "password_minimum_numeric";
+    static String PREF_PASSWORD_MINIMUM_SYMBOLS = "password_minimum_symbols";
+    static String PREF_PASSWORD_MINIMUM_NONLETTER = "password_minimum_nonletter";
     static String PREF_PASSWORD_HISTORY_LENGTH = "password_history_length";
     static String PREF_MAX_FAILED_PW = "max_failed_pw";
 
@@ -116,10 +122,17 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
             DevicePolicyManager.PASSWORD_QUALITY_SOMETHING,
             DevicePolicyManager.PASSWORD_QUALITY_NUMERIC,
             DevicePolicyManager.PASSWORD_QUALITY_ALPHABETIC,
-            DevicePolicyManager.PASSWORD_QUALITY_ALPHANUMERIC
+            DevicePolicyManager.PASSWORD_QUALITY_ALPHANUMERIC,
+            DevicePolicyManager.PASSWORD_QUALITY_COMPLEX
         };
         Spinner mPasswordQuality;
         EditText mPasswordLength;
+        EditText mPasswordMinimumLetters;
+        EditText mPasswordMinimumUppercase;
+        EditText mPasswordMinimumLowercase;
+        EditText mPasswordMinimumNumeric;
+        EditText mPasswordMinimumSymbols;
+        EditText mPasswordMinimumNonLetter;
         EditText mPasswordHistoryLength;
         Button mSetPasswordButton;
 
@@ -180,6 +193,84 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
                     }
                 }
             });
+            mPasswordMinimumLetters = (EditText)findViewById(R.id.password_minimum_letters);
+            mPasswordMinimumLetters.addTextChangedListener(new TextWatcher() {
+                public void afterTextChanged(Editable s) {
+                }
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                }
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    try {
+                        setPasswordMinimumLetters(Integer.parseInt(s.toString()));
+                    } catch (NumberFormatException e) {
+                    }
+                }
+            });
+            mPasswordMinimumUppercase = (EditText)findViewById(R.id.password_minimum_uppercase);
+            mPasswordMinimumUppercase.addTextChangedListener(new TextWatcher() {
+                public void afterTextChanged(Editable s) {
+                }
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                }
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    try {
+                        setPasswordMinimumUppercase(Integer.parseInt(s.toString()));
+                    } catch (NumberFormatException e) {
+                    }
+                }
+            });
+            mPasswordMinimumLowercase = (EditText)findViewById(R.id.password_minimum_lowercase);
+            mPasswordMinimumLowercase.addTextChangedListener(new TextWatcher() {
+                public void afterTextChanged(Editable s) {
+                }
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                }
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    try {
+                        setPasswordMinimumLowercase(Integer.parseInt(s.toString()));
+                    } catch (NumberFormatException e) {
+                    }
+                }
+            });
+            mPasswordMinimumNumeric = (EditText)findViewById(R.id.password_minimum_numeric);
+            mPasswordMinimumNumeric.addTextChangedListener(new TextWatcher() {
+                public void afterTextChanged(Editable s) {
+                }
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                }
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    try {
+                        setPasswordMinimumNumeric(Integer.parseInt(s.toString()));
+                    } catch (NumberFormatException e) {
+                    }
+                }
+            });
+            mPasswordMinimumSymbols = (EditText)findViewById(R.id.password_minimum_symbols);
+            mPasswordMinimumSymbols.addTextChangedListener(new TextWatcher() {
+                public void afterTextChanged(Editable s) {
+                }
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                }
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    try {
+                        setPasswordMinimumSymbols(Integer.parseInt(s.toString()));
+                    } catch (NumberFormatException e) {
+                    }
+                }
+            });
+            mPasswordMinimumNonLetter = (EditText)findViewById(R.id.password_minimum_nonletter);
+            mPasswordMinimumNonLetter.addTextChangedListener(new TextWatcher() {
+                public void afterTextChanged(Editable s) {
+                }
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                }
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    try {
+                        setPasswordMinimumNonLetter(Integer.parseInt(s.toString()));
+                    } catch (NumberFormatException e) {
+                    }
+                }
+            });
             mPasswordHistoryLength = (EditText)findViewById(R.id.password_history_length);
             mPasswordHistoryLength.addTextChangedListener(new TextWatcher() {
                 public void afterTextChanged(Editable s) {
@@ -236,6 +327,12 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
                 mDisableButton.setEnabled(true);
                 mPasswordQuality.setEnabled(true);
                 mPasswordLength.setEnabled(true);
+                mPasswordMinimumLetters.setEnabled(true);
+                mPasswordMinimumUppercase.setEnabled(true);
+                mPasswordMinimumLowercase.setEnabled(true);
+                mPasswordMinimumSymbols.setEnabled(true);
+                mPasswordMinimumNumeric.setEnabled(true);
+                mPasswordMinimumNonLetter.setEnabled(true);
                 mPasswordHistoryLength.setEnabled(true);
                 mSetPasswordButton.setEnabled(true);
                 mPassword.setEnabled(true);
@@ -247,6 +344,12 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
                 mDisableButton.setEnabled(false);
                 mPasswordQuality.setEnabled(false);
                 mPasswordLength.setEnabled(false);
+                mPasswordMinimumLetters.setEnabled(false);
+                mPasswordMinimumUppercase.setEnabled(false);
+                mPasswordMinimumLowercase.setEnabled(false);
+                mPasswordMinimumSymbols.setEnabled(false);
+                mPasswordMinimumNumeric.setEnabled(false);
+                mPasswordMinimumNonLetter.setEnabled(false);
                 mPasswordHistoryLength.setEnabled(false);
                 mSetPasswordButton.setEnabled(false);
                 mPassword.setEnabled(false);
@@ -261,6 +364,12 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
             final int pwQuality = prefs.getInt(PREF_PASSWORD_QUALITY,
                     DevicePolicyManager.PASSWORD_QUALITY_UNSPECIFIED);
             final int pwLength = prefs.getInt(PREF_PASSWORD_LENGTH, 0);
+            final int pwMinLetters = prefs.getInt(PREF_PASSWORD_MINIMUM_LETTERS, 0);
+            final int pwMinUppercase = prefs.getInt(PREF_PASSWORD_MINIMUM_UPPERCASE, 0);
+            final int pwMinLowercase = prefs.getInt(PREF_PASSWORD_MINIMUM_LOWERCASE, 0);
+            final int pwMinNumeric = prefs.getInt(PREF_PASSWORD_MINIMUM_NUMERIC, 0);
+            final int pwMinSymbols = prefs.getInt(PREF_PASSWORD_MINIMUM_SYMBOLS, 0);
+            final int pwMinNonLetter = prefs.getInt(PREF_PASSWORD_MINIMUM_NONLETTER, 0);
             final int pwHistoryLength = prefs.getInt(PREF_PASSWORD_HISTORY_LENGTH, 0);
             final int maxFailedPw = prefs.getInt(PREF_MAX_FAILED_PW, 0);
 
@@ -270,6 +379,12 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
                 }
             }
             mPasswordLength.setText(Integer.toString(pwLength));
+            mPasswordMinimumLetters.setText(Integer.toString(pwMinLetters));
+            mPasswordMinimumUppercase.setText(Integer.toString(pwMinUppercase));
+            mPasswordMinimumLowercase.setText(Integer.toString(pwMinLowercase));
+            mPasswordMinimumSymbols.setText(Integer.toString(pwMinSymbols));
+            mPasswordMinimumNumeric.setText(Integer.toString(pwMinNumeric));
+            mPasswordMinimumNonLetter.setText(Integer.toString(pwMinNonLetter));
             mPasswordHistoryLength.setText(Integer.toString(pwHistoryLength));
             mMaxFailedPw.setText(Integer.toString(maxFailedPw));
         }
@@ -279,6 +394,12 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
             final int pwQuality = prefs.getInt(PREF_PASSWORD_QUALITY,
                     DevicePolicyManager.PASSWORD_QUALITY_UNSPECIFIED);
             final int pwLength = prefs.getInt(PREF_PASSWORD_LENGTH, 0);
+            final int pwMinLetters = prefs.getInt(PREF_PASSWORD_MINIMUM_LETTERS, 0);
+            final int pwMinUppercase = prefs.getInt(PREF_PASSWORD_MINIMUM_UPPERCASE, 0);
+            final int pwMinLowercase = prefs.getInt(PREF_PASSWORD_MINIMUM_LOWERCASE, 0);
+            final int pwMinNumeric = prefs.getInt(PREF_PASSWORD_MINIMUM_NUMERIC, 0);
+            final int pwMinSymbols = prefs.getInt(PREF_PASSWORD_MINIMUM_SYMBOLS, 0);
+            final int pwMinNonLetter = prefs.getInt(PREF_PASSWORD_MINIMUM_NONLETTER, 0);
             final int pwHistoryLength = prefs.getInt(PREF_PASSWORD_HISTORY_LENGTH, 0);
             final int maxFailedPw = prefs.getInt(PREF_MAX_FAILED_PW, 0);
 
@@ -286,6 +407,12 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
             if (active) {
                 mDPM.setPasswordQuality(mDeviceAdminSample, pwQuality);
                 mDPM.setPasswordMinimumLength(mDeviceAdminSample, pwLength);
+                mDPM.setPasswordMinimumLetters(mDeviceAdminSample, pwMinLetters);
+                mDPM.setPasswordMinimumUpperCase(mDeviceAdminSample, pwMinUppercase);
+                mDPM.setPasswordMinimumLowerCase(mDeviceAdminSample, pwMinLowercase);
+                mDPM.setPasswordMinimumNumeric(mDeviceAdminSample, pwMinNumeric);
+                mDPM.setPasswordMinimumSymbols(mDeviceAdminSample, pwMinSymbols);
+                mDPM.setPasswordMinimumNonLetter(mDeviceAdminSample, pwMinNonLetter);
                 mDPM.setPasswordHistoryLength(mDeviceAdminSample, pwHistoryLength);
                 mDPM.setMaximumFailedPasswordsForWipe(mDeviceAdminSample, maxFailedPw);
             }
@@ -300,6 +427,42 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
         void setPasswordLength(int length) {
             SharedPreferences prefs = getSamplePreferences(this);
             prefs.edit().putInt(PREF_PASSWORD_LENGTH, length).commit();
+            updatePolicies();
+        }
+
+        void setPasswordMinimumLetters(int length) {
+            SharedPreferences prefs = getSamplePreferences(this);
+            prefs.edit().putInt(PREF_PASSWORD_MINIMUM_LETTERS, length).commit();
+            updatePolicies();
+        }
+
+        void setPasswordMinimumUppercase(int length) {
+            SharedPreferences prefs = getSamplePreferences(this);
+            prefs.edit().putInt(PREF_PASSWORD_MINIMUM_UPPERCASE, length).commit();
+            updatePolicies();
+        }
+
+        void setPasswordMinimumLowercase(int length) {
+            SharedPreferences prefs = getSamplePreferences(this);
+            prefs.edit().putInt(PREF_PASSWORD_MINIMUM_LOWERCASE, length).commit();
+            updatePolicies();
+        }
+
+        void setPasswordMinimumNumeric(int length) {
+            SharedPreferences prefs = getSamplePreferences(this);
+            prefs.edit().putInt(PREF_PASSWORD_MINIMUM_NUMERIC, length).commit();
+            updatePolicies();
+        }
+
+        void setPasswordMinimumSymbols(int length) {
+            SharedPreferences prefs = getSamplePreferences(this);
+            prefs.edit().putInt(PREF_PASSWORD_MINIMUM_SYMBOLS, length).commit();
+            updatePolicies();
+        }
+
+        void setPasswordMinimumNonLetter(int length) {
+            SharedPreferences prefs = getSamplePreferences(this);
+            prefs.edit().putInt(PREF_PASSWORD_MINIMUM_NONLETTER, length).commit();
             updatePolicies();
         }
 
