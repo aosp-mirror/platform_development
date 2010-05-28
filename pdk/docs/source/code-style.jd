@@ -1,7 +1,6 @@
 page.title=Code Style Guidelines for Contributors
 doc.type=source
 @jd:body
-<div>
 <p>The rules below are not guidelines or recommendations, but strict rules.
 Contributions to Android generally <b>will not be accepted if they do not
 adhere to these rules.</b>
@@ -11,425 +10,615 @@ adhere to these rules.</b>
 </h1>
 <p>We follow standard Java coding conventions. We add a few rules:
 </p>
-<ol><li><a href="#exceptionsIgnore">Exceptions</a>
-: Never catch and ignore them without explanation.
-</li>
-<li><a href="#exceptionsAll">Exceptions</a>
-: do not catch generic Exception, except in library code at the root of the stack.
-</li>
-<li><a href="#finalizers">Finalizers</a>
-: generally don't use them.
-</li>
-<li><a href="#imports">Imports</a>
-: Fully qualify imports
-</li>
+<ol><li><a href="#exceptionsIgnore">Exceptions</a>: Never catch and ignore them without explanation.</li>
+<li><a href="#exceptionsAll">Exceptions</a>: do not catch generic Exception, except in library code at the root of the stack.</li>
+<li><a href="#finalizers">Finalizers</a>: generally don't use them.</li>
+<li><a href="#imports">Imports</a>: Fully qualify imports</li>
 </ol>
-<h1><a>Java Library Rules</a>
-</h1>
-<p>There are conventions for using Android's Java libraries and tools. In some cases, the convention has changed in important ways and older code might use a deprecated pattern or library. When working with such code, it's okay to continue the existing style (see <a href="#consistency">Consistency</a>
-). When creating new components never use deprecated libraries.
-</p>
-<h1><a>Java Style Rules</a>
-</h1>
-<p>Programs are much easier to maintain when all files have a consistent style. We follow the standard Java coding style, as defined by Sun in their <a href="http://java.sun.com/docs/codeconv/html/CodeConvTOC.doc.html">Code Conventions for the Java Programming Language</a>
-, with a few exceptions and additions. This style guide is comprehensive and detailed and is in common usage in the Java community.
-</p>
-<p>In addition, we enforce the following style rules:
-</p>
-<ol><li><a href="#javadoc">Comments/Javadoc</a>
-: write it; use standard style
-</li>
-<li><a href="#shortmethods">Short methods</a>
-: don't write giant methods
-</li>
-<li>Fields: should either be at the top of the file, or immediately before the methods that use them
-</li>
-<li><a href="#localvariables">Local variables</a>
-: limit the scope
-</li>
-<li><a href="#import_style">Imports</a>
-: android; third party alphabetical; java(x)
-</li>
-<li><a href="#indentation">Indentation</a>
-: 4 spaces, no tabs.
-</li>
-<li><a href="#linelen">Line length</a>
-: 100 columns
-</li>
-<li><a href="#field_names">Field names</a>
-: Non-public, non-static fields start with m. Static fields start s.
-</li>
-<li><a href="#braces">Braces</a>
-: Opening braces don't go on their own line.
-</li>
-<li><a href="#annotations">Annotations</a>
-: Use the standard annotations.
-</li>
-<li><a href="#acronyms">Acronyms are words</a>
-: Treat acronyms as words in names, yielding XmlHttpRequest, getUrl(), etc.
-</li>
-<li><a href="#todo">TODO style</a>
-: "TODO: write this description"
-</li>
-<li><a href="#consistency">Consistency</a>
-: Look at what's around you!
-</li>
-<li><a href="#logging">Logging</a>
-: Be careful with logging. It's expensive.
-</li>
+<h1>Java Library Rules</h1>
+<p>There are conventions for using Android's Java libraries and tools. In some
+cases, the convention has changed in important ways and older code might use a
+deprecated pattern or library. When working with such code, it's okay to
+continue the existing style (see <a href="#consistency">Consistency</a>). When
+creating new components never use deprecated libraries.</p>
+<h1>Java Style Rules</h1>
+<p>Programs are much easier to maintain when all files have a consistent
+style. We follow the standard Java coding style, as defined by Sun in their <a
+href="http://java.sun.com/docs/codeconv/html/CodeConvTOC.doc.html">Code
+Conventions for the Java Programming Language</a>, with a few exceptions and
+additions. This style guide is comprehensive and detailed and is in common
+usage in the Java community.</p>
+<p>In addition, we enforce the following style rules:</p>
+<ol><li><a href="#javadoc">Comments/Javadoc</a>: write it; use standard style</li>
+<li><a href="#shortmethods">Short methods</a>: don't write giant methods</li>
+<li>Fields: should either be at the top of the file, or immediately before the methods that use them</li>
+<li><a href="#localvariables">Local variables</a>: limit the scope</li>
+<li><a href="#import_style">Imports</a>: android; third party alphabetical; java(x)</li>
+<li><a href="#indentation">Indentation</a>: 4 spaces, no tabs.</li>
+<li><a href="#linelen">Line length</a>: 100 columns</li>
+<li><a href="#field_names">Field names</a>: Non-public, non-static fields start with m.</li>
+<li><a href="#braces">Braces</a>: Opening braces don't go on their own line.</li>
+<li><a href="#annotations">Annotations</a>: Use the standard annotations.</li>
+<li><a href="#acronyms">Acronyms are words</a>: Treat acronyms as words in names, yielding XmlHttpRequest, getUrl(), etc.</li>
+<li><a href="#todo">TODO style</a>: "TODO: write this description"</li>
+<li><a href="#consistency">Consistency</a>: Look at what's around you!</li>
+<li><a href="#logging">Logging</a>: Be careful with logging. It's expensive.</li>
 </ol>
-<h1><a>Javatests Style Rules</a>
-</h1>
-<ol><li><a href="#testmethodnames">Naming test methods</a>
-: testMethod_specificCase is ok
-</li>
+<h1>Javatests Style Rules</h1>
+<ol>
+<li><a href="#testmethodnames">Naming test methods</a>: testMethod_specificCase is ok</li>
 </ol>
-<hr><h2>
-Java Language Rules
-</h2>
-<h2><a>Exceptions: do not ignore</a>
-</h2>
-Sometimes it is tempting to write code that completely ignores an exception like this:
-<pre>void setServerPort(String value) {<br>try {<br>serverPort = Integer.parseInt(value);<br>} catch (NumberFormatException e) {<br>}<br>}<br><br></pre>
-<p>You must never do this. While you may think that your code will never encounter this error condition or that it is not important to handle it, ignoring exceptions like above creates mines in your code for someone else to trip over some day. You must handle every Exception in your code in some principled way. The specific handling varies depending on the case.
-</p>
-<blockquote>Anytime somebody has an empty catch clause they should have a creepy feeling. There are definitely times when it is actually the correct thing to do, but at least you have to think about it. In Java you can't escape the creepy feeling.<br><div>-<a href="http://www.artima.com/intv/solid4.html">James Gosling</a>
-</div>
-</blockquote>
-<p>Acceptable alternatives (in order of preference) are:
-</p>
-<ul><li>Throw the exception up to the caller of your method.
-<pre>void setServerPort(String value) throws NumberFormatException {<br>serverPort = Integer.parseInt(value);<br>}<br><br></pre>
-</li>
+<h2>Java Language Rules</h2>
+<h2><a name="exceptionsIgnore"></a>Exceptions: do not ignore</h2>
+<p>Sometimes it is tempting to write code that completely ignores an exception
+like this:</p>
+<pre>void setServerPort(String value) {
+    try {
+        serverPort = Integer.parseInt(value);
+    } catch (NumberFormatException e) { }
+}</pre>
+<p>You must never do this. While you may think that your code will never
+encounter this error condition or that it is not important to handle it,
+ignoring exceptions like above creates mines in your code for someone else to
+trip over some day. You must handle every Exception in your code in some
+principled way. The specific handling varies depending on the case.</p>
+<blockquote>Anytime somebody has an empty catch clause they should have a
+creepy feeling. There are definitely times when it is actually the correct
+thing to do, but at least you have to think about it. In Java you can't escape
+the creepy feeling.
+-<a href="http://www.artima.com/intv/solid4.html">James
+Gosling</a></blockquote>
+<p>Acceptable alternatives (in order of preference) are:</p>
+<ul>
+<li>Throw the exception up to the caller of your method.
+<pre>void setServerPort(String value) throws NumberFormatException {
+    serverPort = Integer.parseInt(value);
+}</pre></li>
 <li>Throw a new exception that's appropriate to your level of abstraction.
-<pre>void setServerPort(String value) throws ConfigurationException {<br>try {<br>serverPort = Integer.parseInt(value);<br>} catch (NumberFormatException e) {<br>throw new ConfigurationException("Port " + value + " is not valid.");<br>}<br><br></pre>
-</li>
-<li>Handle the error gracefully and substitute an appropriate value in the catch {} block.
-<pre>/** Set port. If value is not a valid number, 80 is substituted. */<br>void setServerPort(String value) {<br>try {<br>serverPort = Integer.parseInt(value);<br>} catch (NumberFormatException e) {<br>serverPort = 80;  // default port for server <br>}<br></pre>
-</li>
-<li>Catch the Exception and throw a new RuntimeException. This is dangerous: only do it if you are positive that if this error occurs, the appropriate thing to do is crash.
-<pre>/** Set port. If value is not a valid number, die. */<br>void setServerPort(String value) {<br>try {<br>serverPort = Integer.parseInt(value);<br>} catch (NumberFormatException e) {<br>throw new RuntimeException("port " + value " is invalid, ", e);<br>}<br></pre>
-Note that the original exception is passed to the constructor for RuntimeException. This wrapped exception paradigm is very useful but only works in Java 1.4. If your code must compile under Java 1.3, you will need to omit the exception that is the cause.<br><br></li>
-<li>Last resort: if you are confident that actually ignoring the exception is appropriate then you may ignore it, but you must also comment why with a good reason:
-<pre>/** If value is not a valid number, original port number is used. */<br>void setServerPort(String value) {<br>try {<br>serverPort = Integer.parseInt(value);<br>} catch (NumberFormatException e) {<br>// Method is documented to just ignore invalid user input.<br>// serverPort will just be unchanged.<br>}<br>}<br></pre>
-</li>
+<pre>void setServerPort(String value) throws ConfigurationException {
+    try {
+        serverPort = Integer.parseInt(value);
+    } catch (NumberFormatException e) {
+        throw new ConfigurationException("Port " + value + " is not valid.");
+    }
+}</pre></li>
+<li>Handle the error gracefully and substitute an appropriate value in the
+catch {} block.
+<pre>/** Set port. If value is not a valid number, 80 is substituted. */
+void setServerPort(String value) {
+    try {
+        serverPort = Integer.parseInt(value);
+    } catch (NumberFormatException e) {
+        serverPort = 80;  // default port for server 
+    }
+}</pre></li>
+<li>Catch the Exception and throw a new RuntimeException. This is dangerous:
+only do it if you are positive that if this error occurs, the appropriate
+thing to do is crash.
+<pre>/** Set port. If value is not a valid number, die. */
+void setServerPort(String value) {
+    try {
+        serverPort = Integer.parseInt(value);
+    } catch (NumberFormatException e) {
+        throw new RuntimeException("port " + value " is invalid, ", e);
+    }
+}</pre>
+Note that the original exception is passed to the constructor for
+RuntimeException.  If your code must compile under Java 1.3, you will need to
+omit the exception that is the cause.</li>
+<li>Last resort: if you are confident that actually ignoring the exception is
+appropriate then you may ignore it, but you must also comment why with a good
+reason:
+<pre>/** If value is not a valid number, original port number is used. */
+void setServerPort(String value) {
+    try {
+        serverPort = Integer.parseInt(value);
+    } catch (NumberFormatException e) {
+        // Method is documented to just ignore invalid user input.
+        // serverPort will just be unchanged.
+    }
+}</pre></li>
 </ul>
-<h2><a>Exceptions: do not catch generic Exception</a>
-</h2>
-Sometimes it is tempting to be lazy when catching exceptions and do something like this:
-<pre>try {<br>someComplicatedIOFunction();        // may throw IOException <br>someComplicatedParsingFunction();   // may throw ParsingException <br>someComplicatedSecurityFunction();  // may throw SecurityException <br>// phew, made it all the way <br>} catch (Exception e) {               // I'll just catch all exceptions <br>handleError();                      // with one generic handler!<br>}<br><br></pre>
-You should not do this. In almost all cases it is inappropriate to catch generic Exception or Throwable, preferably not Throwable, because it includes Error exceptions as well. It is very dangerous. It means that Exceptions you never expected (including RuntimeExceptions like ClassCastException) end up getting caught in application-level error handling. It obscures the failure handling properties of your code. It means if someone adds a new type of Exception in the code you're calling, the compiler won't help you realize you need to handle that error differently. And in most cases you shouldn't be handling different types of exception the same way, anyway.
-<p>There are rare exceptions to this rule: certain test code and top-level code where you want to catch all kinds of errors (to prevent them from showing up in a UI, or to keep a batch job running). In that case you may catch generic Exception (or Throwable) and handle the error appropriately. You should think very carefully before doing this, though, and put in comments explaining why it is safe in this place.
-</p>
-<p>Alternatives to catching generic Exception:
-</p>
-<ul><li>Catch each exception separately as separate catch blocks after a single try. This can be awkward but is still preferable to catching all Exceptions. Beware repeating too much code in the catch blocks.
-</li>
-<li>Refactor your code to have more fine-grained error handling, with multiple try blocks. Split up the IO from the parsing, handle errors separately in each case.
-</li>
-<li>Rethrow the exception. Many times you don't need to catch the exception at this level anyway, just let the method throw it.
-</li>
+<h2><a name="exceptionsAll"></a>Exceptions: do not catch generic Exception</h2>
+<p>Sometimes it is tempting to be lazy when catching exceptions and do
+something like this:</p>
+<pre>try {
+    someComplicatedIOFunction();        // may throw IOException 
+    someComplicatedParsingFunction();   // may throw ParsingException 
+    someComplicatedSecurityFunction();  // may throw SecurityException 
+    // phew, made it all the way 
+} catch (Exception e) {               // I'll just catch all exceptions 
+    handleError();                      // with one generic handler!
+}</pre>
+<p>You should not do this. In almost all cases it is inappropriate to catch
+generic Exception or Throwable, preferably not Throwable, because it includes
+Error exceptions as well. It is very dangerous. It means that Exceptions you
+never expected (including RuntimeExceptions like ClassCastException) end up
+getting caught in application-level error handling. It obscures the failure
+handling properties of your code. It means if someone adds a new type of
+Exception in the code you're calling, the compiler won't help you realize you
+need to handle that error differently. And in most cases you shouldn't be
+handling different types of exception the same way, anyway.</p>
+<p>There are rare exceptions to this rule: certain test code and top-level
+code where you want to catch all kinds of errors (to prevent them from showing
+up in a UI, or to keep a batch job running). In that case you may catch
+generic Exception (or Throwable) and handle the error appropriately. You
+should think very carefully before doing this, though, and put in comments
+explaining why it is safe in this place.</p>
+<p>Alternatives to catching generic Exception:</p>
+<ul>
+<li>Catch each exception separately as separate catch blocks after a single
+try. This can be awkward but is still preferable to catching all Exceptions.
+Beware repeating too much code in the catch blocks.</li>
+<li>Refactor your code to have more fine-grained error handling, with multiple
+try blocks. Split up the IO from the parsing, handle errors separately in each
+case.</li>
+<li>Rethrow the exception. Many times you don't need to catch the exception at
+this level anyway, just let the method throw it.</li>
 </ul>
-Remember: exceptions are your friend! When the compiler complains you're not catching an exception, don't scowl. Smile: the compiler just made it easier for you to catch runtime problems in your code.
-<h2><a>Finalizers</a>
-</h2>
-<p><b>What it is</b>
-: Finalizers are a way to have a chunk of code executed when an object is garbage collected.
-</p>
-<p><b>Pros</b>
-: can be handy for doing cleanup, particularly of external resources.
-</p>
-<p><b>Cons</b>
-: there are no guarantees as to when a finalizer will be called, or even that it will be called at all.
-</p>
-<p><b>Decision</b>
-: we don't use finalizers. In most cases, you can do what you need from a finalizer with good exception handling. If you absolutely need it, define a close() method (or the like) and document exactly when that method needs to be called. See InputStream for an example. In this case it is appropriate but not required to print a short log message from the finalizer, as long as it is not expected to flood the logs.
-</p>
-<p>The one exception is it is OK to write a finalizer if all it does is make calls to X.assertTrue().
-</p>
-<h2><a>Imports</a>
-</h2>
-<h3>
-Wildcards in imports
-</h3>
-<p><b>What it is</b>
-: When you want to use class Bar from package foo,there are two possible ways to import it:
-</p>
-<ol><li>import foo.*;
-</li>
-<li>import foo.Bar;
-</li>
+<p>Remember: exceptions are your friend! When the compiler complains you're
+not catching an exception, don't scowl. Smile: the compiler just made it
+easier for you to catch runtime problems in your code.</p>
+<h2><a name="finalizers"></a>Finalizers</h2>
+<p><b>What it is</b>: Finalizers are a way to have a chunk of code executed
+when an object is garbage collected.</p>
+<p><b>Pros</b>: can be handy for doing cleanup, particularly of external
+resources.</p>
+<p><b>Cons</b>: there are no guarantees as to when a finalizer will be called,
+or even that it will be called at all.</p>
+<p><b>Decision</b>: we don't use finalizers. In most cases, you can do what
+you need from a finalizer with good exception handling. If you absolutely need
+it, define a close() method (or the like) and document exactly when that
+method needs to be called. See InputStream for an example. In this case it is
+appropriate but not required to print a short log message from the finalizer,
+as long as it is not expected to flood the logs.</p>
+<h2><a name="imports"></a>Imports</h2>
+<h3>Wildcards in imports</h3>
+<p><b>What it is</b>: When you want to use class Bar from package foo,there
+are two possible ways to import it:</p>
+<ol>
+<li><code>import foo.*;</code></li>
+<li><code>import foo.Bar;</code></li>
 </ol>
-<p><b>Pros of #1</b>
-: Potentially reduces the number of import statements.
+<p><b>Pros of #1</b>: Potentially reduces the number of import statements.
 </p>
-<p><b>Pros of #2</b>
-: Makes it obvious what classes are actually used. Makes code more readable for maintainers.
-</p>
-<p><b>Decision</b>
-:Use style #2 for importing all Android code. An explicit exception is made for java standard libraries (java.util.*, java.io.*, etc.) and unit test code (junit.framework.*).
-</p>
-<h2><a>Comments/Javadoc</a>
-</h2>
-<p>Every file should have a copyright statement at the top. Then a package statement and import statements should follow, each block separated by a blank line. And then there is the class or interface declaration. In the Javadoc comments, describe what the class or interface does.
-</p>
-<pre>/*<br>* Copyright (C) 2007 The Android Open Source Project <br>*<br>* Licensed under the Apache License, Version 2.0 (the "License");<br>* you may not use this file except in compliance with the License.<br>* You may obtain a copy of the License at <br>*<br>*      http://www.apache.org/licenses/LICENSE-2.0<br>*<br>* Unless required by applicable law or agreed to in writing, software <br>* distributed under the License is distributed on an "AS IS" BASIS,<br>* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.<br>* See the License for the specific language governing permissions and <br>* limitations under the License.<br>*/<br><br>package com.android.internal.foo;<br><br>import android.os.Blah;<br>import android.view.Yada;<br><br>import java.sql.ResultSet;<br>import java.sql.SQLException;<br><br>/**<br>* Does X and Y and provides an abstraction for Z.<br>*/<br>public class Foo {<br>...<br>}<br></pre>
-<p>Every class and nontrivial public method you write <b>must</b>
-contain a Javadoc comment with at least one sentence describing what the class or method does. This sentence should start with a 3rd person descriptive verb. Examples:
-</p>
-<pre>/** Returns the correctly rounded positive square root of a double value. */<br>static double sqrt(double a) {<br>}<br><br>/**<br>* Constructs a new String by converting the specified array of <br>* bytes using the platform's default character encoding.<br>*/<br>public String(byte[] bytes) {<br>}<br></pre>
-<p>You do not need to write Javadoc for trivial get and set methods such as setFoo() if all your Javadoc would say is "sets Foo". If the method does something more complex (such as enforcing a constraint or having an important side effect), then you must document it. And if it's not obvious what the property "Foo" means, you should document it.
-</p>
-<p>Every method you write, whether public or otherwise, would benefit from Javadoc. Public methods are part of an API and therefore require Javadoc.
-</p>
-Android does not currently enforce a specific style for writing Javadoc comments, but you <b>should</b>
-follow the <a href="http://java.sun.com/j2se/javadoc/writingdoccomments/">Sun Javadoc conventions</a>
-.
-<h2><a>Short methods</a>
-</h2>
-To the extent that it is feasible, methods should be kept small and focused. It is, however, recognized that long methods are sometimes appropriate, so no hard limit is placed on method length. If a method exceeds 40 lines or so, think about whether it can be broken up without harming the structure of the program.
-<h2><a>Local variables</a>
-</h2>
-The scope of local variables should be kept to a minimum (<i>Effective Java</i>
-Item 29). By doing so, you increase the readability and maintainability of your code and reduce the likelihood of error. Each variable should be declared in the innermost block that encloses all uses of the variable.
-<p>Local variables should be declared at the point they are first used. Nearly every local variable declaration should contain an initializer. If you don't yet have enough information to initialize a variable sensibly, you should postpone the declaration until you do.
-</p>
-<p>One exception to this rule concerns try-catch statements. If a variable is initialized with the return value of a method that throws a checked exception, it must be initialized inside a try block. If the value must be used outside of the try block, then it must be declared before the try block, where it cannot yet be sensibly initialized:
-</p>
-<pre>// Instantiate class cl, which represents some sort of Set <br>Set s = null;<br>try {<br>s = (Set) cl.newInstance();<br>} catch(IllegalAccessException e) {<br>throw new IllegalArgumentException(cl + " not accessible");<br>} catch(InstantiationException e) {<br>throw new IllegalArgumentException(cl + " not instantiable");<br>}<br><br>// Exercise the set <br>s.addAll(Arrays.asList(args));<br></pre>
-<p>But even this case can be avoided by encapsulating the try-catch block in a method:
-</p>
-<pre>Set createSet(Class cl) {<br>// Instantiate class cl, which represents some sort of Set <br>try {<br>return (Set) cl.newInstance();<br>} catch(IllegalAccessException e) {<br>throw new IllegalArgumentException(cl + " not accessible");<br>} catch(InstantiationException e) {<br>throw new IllegalArgumentException(cl + " not instantiable");<br>}<br>}<br>...<br>// Exercise the set <br>Set s = createSet(cl);<br>s.addAll(Arrays.asList(args));<br></pre>
-Loop variables should be declared in the for statement itself unless there is a compelling reason to do otherwise:
-<pre>for (int i = 0; i n; i++) {<br>doSomething(i);<br>}<br><br>for (Iterator i = c.iterator(); i.hasNext(); ) {<br>doSomethingElse(i.next());<br>}<br><br><br></pre>
-<h2><a>Imports</a>
-</h2>
-The ordering of import statements is:Android importsImports from third parties (com, junit, net, org)<br>java and javax
-<p>To exactly match the IDE settings, the imports should be:
-</p>
-Alphabetical within each grouping.<br>Capital letters are considered to come before lower case letter (e.g. Z before a).There should be a blank line between each major grouping (android, com, junit, net, org, java, javax).
-<h4>
-Why?
-</h4>
-<p>Originally there was no style requirement on the ordering. This meant that the IDE's were either always changing the ordering, or IDE developers had to disable the automatic import management features and maintain the imports by hand. This was deemed bad. When java-style was asked, the preferred styles were all over the map. It pretty much came down to our needing to "pick an ordering and be consistent." So we chose a style, updated the javaguide and made the IDE's obey it. We expect that as IDE users work on the code, the imports in all of the packages will end up matching this pattern without any extra engineering effort.
-</p>
-<p>The style chosen such that:
-</p>
-The imports people want to look at first tend to be at the top (android)The imports people want to look at least tend to be at the bottom (java)Humans can easily follow the styleThe IDE's can follow the style
-<h3>
-What about static imports?
-</h3>
-The use and location of static imports have been mildly controversial issues. Some people would prefer static imports to be interspersed with the remaining imports, some would prefer them reside above or below all other imports. Additinally, we have not yet come up with a way to make all IDEs use the same ordering.
-<p>Since most people consider this a low priority issue, just use your judgement and please be consistent.
-</p>
+<p><b>Pros of #2</b>: Makes it obvious what classes are actually used. Makes
+code more readable for maintainers. </p>
+<p><b>Decision</b>: Use style #2 for importing all Android code. An explicit
+exception is made for java standard libraries (java.util.*, java.io.*, etc.)
+and unit test code (junit.framework.*).</p>
+<h2><a name="javadoc"></a>Comments/Javadoc</h2>
+<p>Every file should have a copyright statement at the top. Then a package
+statement and import statements should follow, each block separated by a blank
+line. And then there is the class or interface declaration. In the Javadoc
+comments, describe what the class or interface does.</p>
+<pre>/*
+ * Copyright (C) 2010 The Android Open Source Project 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at 
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software 
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and 
+ * limitations under the License.
+ */
 
-<h2><a>Indentation</a>
-</h2>
-<p>We use 4 space indents for blocks. We never use tabs. When in doubt, be consistent with code around you.
-</p>
-<p>We use 8 space indents for line wraps, including function calls and assignments. For example, this is correct:
-</p>
-<pre>Instrument i <br>= someLongExpression(that, wouldNotFit, on, one, line);</pre>
-and this is not correct:
-<pre>Instrument i <br>= someLongExpression(that, wouldNotFit, on, one, line);</pre>
-<h2><a>Field Names</a>
-</h2>
-<ul><li>Non-public, non-static field names start with m.
-</li>
-<li>Static field names start with s.
-</li>
-<li>Other fields start with a lower case letter.
-</li>
-<li>Public static final fields (constants) are ALL_CAPS_WITH_UNDERSCORES.
-</li>
+package com.android.internal.foo;
+
+import android.os.Blah;
+import android.view.Yada;
+
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+/**
+ * Does X and Y and provides an abstraction for Z.
+ */
+public class Foo {
+    ...
+}</pre>
+<p>Every class and nontrivial public method you write <b>must</b> contain a
+Javadoc comment with at least one sentence describing what the class or method
+does. This sentence should start with a 3rd person descriptive verb.
+Examples:</p>
+<pre>/** Returns the correctly rounded positive square root of a double value. */
+static double sqrt(double a) {
+}
+
+/**
+ * Constructs a new String by converting the specified array of 
+ * bytes using the platform's default character encoding.
+ */
+public String(byte[] bytes) {
+}</pre>
+<p>You do not need to write Javadoc for trivial get and set methods such as
+setFoo() if all your Javadoc would say is "sets Foo". If the method does
+something more complex (such as enforcing a constraint or having an important
+side effect), then you must document it. And if it's not obvious what the
+property "Foo" means, you should document it.</p>
+<p>Every method you write, whether public or otherwise, would benefit from
+Javadoc. Public methods are part of an API and therefore require Javadoc.</p>
+<p>Android does not currently enforce a specific style for writing Javadoc
+comments, but you <b>should</b> follow the <a
+href="http://java.sun.com/j2se/javadoc/writingdoccomments/">Sun Javadoc
+conventions</a>.</p>
+<h2><a name="shortmethods"></a>Short methods</h2>
+<p>To the extent that it is feasible, methods should be kept small and
+focused. It is, however, recognized that long methods are sometimes
+appropriate, so no hard limit is placed on method length. If a method exceeds
+40 lines or so, think about whether it can be broken up without harming the
+structure of the program.</p>
+<h2><a name="localvariables"></a>Local variables</h2>
+<p>The scope of local variables should be kept to a minimum (<i>Effective
+Java</i> Item 29). By doing so, you increase the readability and
+maintainability of your code and reduce the likelihood of error. Each variable
+should be declared in the innermost block that encloses all uses of the
+variable.</p>
+<p>Local variables should be declared at the point they are first used. Nearly
+every local variable declaration should contain an initializer. If you don't
+yet have enough information to initialize a variable sensibly, you should
+postpone the declaration until you do.</p>
+<p>One exception to this rule concerns try-catch statements. If a variable is
+initialized with the return value of a method that throws a checked exception,
+it must be initialized inside a try block. If the value must be used outside
+of the try block, then it must be declared before the try block, where it
+cannot yet be sensibly initialized:</p>
+<pre>// Instantiate class cl, which represents some sort of Set 
+Set s = null;
+try {
+    s = (Set) cl.newInstance();
+} catch(IllegalAccessException e) {
+    throw new IllegalArgumentException(cl + " not accessible");
+} catch(InstantiationException e) {
+    throw new IllegalArgumentException(cl + " not instantiable");
+}
+
+// Exercise the set 
+s.addAll(Arrays.asList(args));</pre>
+<p>But even this case can be avoided by encapsulating the try-catch block in a method:</p>
+<pre>Set createSet(Class cl) {
+    // Instantiate class cl, which represents some sort of Set 
+    try {
+        return (Set) cl.newInstance();
+    } catch(IllegalAccessException e) {
+        throw new IllegalArgumentException(cl + " not accessible");
+    } catch(InstantiationException e) {
+        throw new IllegalArgumentException(cl + " not instantiable");
+    }
+}
+
+...
+
+// Exercise the set 
+Set s = createSet(cl);
+s.addAll(Arrays.asList(args));</pre>
+<p>Loop variables should be declared in the for statement itself unless there
+is a compelling reason to do otherwise:</p>
+<pre>for (int i = 0; i n; i++) {
+    doSomething(i);
+}
+
+for (Iterator i = c.iterator(); i.hasNext(); ) {
+    doSomethingElse(i.next());
+}</pre>
+<h2><a name="import_style"></a>Imports</h2>
+<p>The ordering of import statements is:</p>
+<ol>
+<li>Android imports</li>
+<li>Imports from third parties (com, junit, net, org)</li>
+<li>java and javax</li>
+</ol>
+<p>To exactly match the IDE settings, the imports should be:</p>
+<ul>
+<li>Alphabetical within each grouping.</li>
+<li>Capital letters are considered to come before lower case letter (e.g. Z before a).</li>
+<li>There should be a blank line between each major grouping (android, com, junit, net, org, java, javax).</li>
 </ul>
-<p>For example:
-</p>
-<pre>public class MyClass {<br>public static final int SOME_CONSTANT = 42;<br>public int publicField;<br>private static MyClass sSingleton;<br>int mPackagePrivate;<br>private int mPrivate;<br>protected int mProtected;<br>}</pre>
-<h2><a>Braces</a>
-</h2>
-<p>Braces do not go on their own line; they go on the same line as the code before them. So:
-</p>
-<pre>class MyClass {<br>int func() {<br>if (something) {<br>// ...<br>} else if (somethingElse) {<br>// ...<br>} else {<br>// ...<br>}<br>}<br>}<br></pre>
-<p>We require braces around the statements for a conditional. Except, if the entire conditional (the condition and the body) fit on one line, you may (but are not obligated to) put it all on one line. That is, this is legal:
-</p>
-<pre>if (condition) {<br>body; // ok <br>}<br>if (condition) body; // ok</pre>
-<p>but this is still illegal:
-</p>
-<pre>if (condition)<br>body; // bad <br></pre>
-<h2><a>Line length</a>
-</h2>
-<p>Each line of text in your code should be at most 100 characters long.
-</p>
-<p>There has been lots of discussion about this rule and the decision remains that 100 characters is the maximum.
-</p>
-<p>Exception: if a comment line contains an example command or a literal URL longer than 100 characters, that line may be longer than 100 characters for ease of cut and paste.
-</p>
-<p>Exception: import lines can go over the limit because humans rarely see them. This also simplifies tool writing.
-</p>
-<h2>
-Java 1.5 Annotations
-</h2>
-<p>Annotations should precede other modifiers for the same language element. Simple marker annotations (e.g. @Override) can be listed on the same line with the language element. If there are multiple annotations, or parameterized annotations, they should each be listed one-per-line in alphabetical order.
-</p>
-<p>Android -standard practices for the three predefined annotations in Java 1.5's are:
-</p>
-@DeprecatedThe @Deprecated annotation must be used whenever the use of the annotated element is discouraged. If you use the @Deprecated annotation, you must also have a @deprecated Javadoc tag and it should name an alternate implementation. In addition, remember that a @Deprecated method is <b>still</b>
-supposed to work.
-<p>If you see old code that has a @deprecated Javadoc tag, please add the @Deprecated annotation.
-</p>
-@OverrideThe @Override annotation must be used whenever a method overrides the declaration or implementation from a super-class.
-<p>For example, if you use the {@inheritdocs} Javadoc tag, and derive from a class (not an interface), you must also annotate that the method @Overrides the parent class's method.
-</p>
-@SuppressWarningsThe @SuppressWarnings annotation should only be used under circumstances where it is impossible to eliminate a warning. If a warning passes this "impossible to eliminate" test, the@SuppressWarnings annotation <b>must</b>
-be used, so as to ensure that all warnings reflect actual problems in the code.
-<p>When a @SuppressWarnings annotation is necessary, it must be prefixed with a TODO comment that explains the "impossible to eliminate" condition. This will normally identify an offending class that has an awkward interface. For example:
-</p>
-<pre>// TODO: The third-party class com.third.useful.Utility.rotate() needs generics <br>@SuppressWarnings({"generic-cast"})<br>ListStringblix = Utility.rotate(blax);<br></pre>
-When a @SuppressWarnings annotation is required, the code should be refactored to isolate the software elements where the annotation applies.
-<h2><a>Acronyms in names</a>
-</h2>
-<p>Treat acronyms and abbreviations as words. The names are much more readable:
-</p>
+<h4>Why?</h4>
+<p>Originally there was no style requirement on the ordering. This meant that
+the IDE's were either always changing the ordering, or IDE developers had to
+disable the automatic import management features and maintain the imports by
+hand. This was deemed bad. When java-style was asked, the preferred styles
+were all over the map. It pretty much came down to our needing to "pick an
+ordering and be consistent." So we chose a style, updated the style guide, and
+made the IDEs obey it. We expect that as IDE users work on the code, the
+imports in all of the packages will end up matching this pattern without any
+extra engineering effort.</p>
+<p>The style chosen such that:</p>
+<ul>
+<li>The imports people want to look at first tend to be at the top (android)</li>
+<li>The imports people want to look at least tend to be at the bottom (java)</li>
+<li>Humans can easily follow the style</li>
+<li>The IDE's can follow the style</li>
+</ul>
+<h3>What about static imports?</h3>
+<p>The use and location of static imports have been mildly controversial
+issues. Some people would prefer static imports to be interspersed with the
+remaining imports, some would prefer them reside above or below all other
+imports. Additinally, we have not yet come up with a way to make all IDEs use
+the same ordering.</p>
+<p>Since most people consider this a low priority issue, just use your
+judgement and please be consistent.</p>
 
-<table><tbody><tr><td>Good
-</td>
-<td>Bad
-</td>
-</tr>
-<tr><td>XmlHttpRequest</td>
-<td>XMLHTTPRequest
-</td>
-</tr>
-<tr><td>getCustomerId</td>
-<td>getCustomerID
-</td>
-</tr>
-</tbody>
-</table>
-
-<p>This style rule also applies when an acronym or abbreviation is the entire name:
-</p>
-
-<table><tbody><tr><td>Good
-</td>
-<td>Bad
-</td>
-</tr>
-<tr><td>class Html</td>
-<td>class HTML
-</td>
-</tr>
-<tr><td>String url;</td>
-<td>String URL;
-</td>
-</tr>
-<tr><td>long id;</td>
-<td>long ID;
-</td>
-</tr>
-</tbody>
-</table>
-
-<p>Both the JDK and the Android code bases are very inconsistent with regards to acronyms, therefore, it is virtually impossible to be consistent with the code around you. Bite the bullet, and treat acronyms as words.
-</p>
+<h2><a name="indentation"></a>Indentation</h2>
+<p>We use 4 space indents for blocks. We never use tabs. When in doubt, be
+consistent with code around you.</p>
+<p>We use 8 space indents for line wraps, including function calls and
+assignments. For example, this is correct:</p>
+<pre>Instrument i =
+        someLongExpression(that, wouldNotFit, on, one, line);</pre>
+<p>and this is not correct:</p>
+<pre>Instrument i =
+    someLongExpression(that, wouldNotFit, on, one, line);</pre>
+<h2><a name="field_names"></a>Field Names</h2>
+<ul>
+<li>Non-public, non-static field names start with m.</li>
+<li>Static field names start with s.</li>
+<li>Other fields start with a lower case letter.</li>
+<li>Public static final fields (constants) are ALL_CAPS_WITH_UNDERSCORES.</li>
+</ul>
+<p>For example:</p>
+<pre>public class MyClass {
+    public static final int SOME_CONSTANT = 42;
+    public int publicField;
+    private static MyClass sSingleton;
+    int mPackagePrivate;
+    private int mPrivate;
+    protected int mProtected;
+}</pre>
+<h2><a name="braces"></a>Braces</h2>
+<p>Braces do not go on their own line; they go on the same line as the code
+before them. So:</p>
+<pre>class MyClass {
+    int func() {
+        if (something) {
+            // ...
+        } else if (somethingElse) {
+            // ...
+        } else {
+            // ...
+        }
+    }
+}</pre>
+<p>We require braces around the statements for a conditional. Except, if the
+entire conditional (the condition and the body) fit on one line, you may (but
+are not obligated to) put it all on one line. That is, this is legal:</p>
+<pre>if (condition) {
+    body(); // ok 
+}
+if (condition) body(); // ok</pre>
+<p>but this is still illegal:</p>
+<pre>if (condition)
+    body(); // bad</pre>
+<h2><a name="linelen"></a>Line length</h2>
+<p>Each line of text in your code should be at most 100 characters long.</p>
+<p>There has been lots of discussion about this rule and the decision remains
+that 100 characters is the maximum.</p>
+<p>Exception: if a comment line contains an example command or a literal URL
+longer than 100 characters, that line may be longer than 100 characters for
+ease of cut and paste.</p>
+<p>Exception: import lines can go over the limit because humans rarely see
+them. This also simplifies tool writing.</p>
+<h2><a name="annotations"></a>Java 1.5 Annotations</h2>
+<p>Annotations should precede other modifiers for the same language element.
+Simple marker annotations (e.g. &#64;Override) can be listed on the same line with
+the language element. If there are multiple annotations, or parameterized
+annotations, they should each be listed one-per-line in alphabetical
+order.</p>
+<p>Android -standard practices for the three predefined annotations in Java
+1.5's are:</p>
+<h3>&#64;Deprecated</h3>
+<p>The &#64;Deprecated annotation must be used whenever the use of the annotated
+element is discouraged. If you use the &#64;Deprecated annotation, you must also
+have a &#64;deprecated Javadoc tag and it should name an alternate implementation.
+In addition, remember that a &#64;Deprecated method is <b>still</b> supposed to
+work.</p>
+<p>If you see old code that has a &#64;deprecated Javadoc tag, please add the &#64;Deprecated annotation.</p>
+<h3>&#64;Override</h3>
+<p>The &#64;Override annotation must be used whenever a method overrides the
+declaration or implementation from a super-class.</p>
+<p>For example, if you use the &#64;inheritdocs Javadoc tag, and derive from a
+class (not an interface), you must also annotate that the method &#64;Overrides
+the parent class's method.</p>
+<h3>&#64;SuppressWarnings</h3>
+<p>The &#64;SuppressWarnings annotation should only be used under circumstances
+where it is impossible to eliminate a warning. If a warning passes this
+"impossible to eliminate" test, the &#64;SuppressWarnings annotation <b>must</b> be
+used, so as to ensure that all warnings reflect actual problems in the
+code.</p>
+<p>When a &#64;SuppressWarnings annotation is necessary, it must be prefixed with
+a TODO comment that explains the "impossible to eliminate" condition. This
+will normally identify an offending class that has an awkward interface. For
+example:</p>
+<pre>// TODO: The third-party class com.third.useful.Utility.rotate() needs generics 
+&#64;SuppressWarnings("generic-cast")
+List&lt;String&gt; blix = Utility.rotate(blax);</pre>
+<p>When a &#64;SuppressWarnings annotation is required, the code should be
+refactored to isolate the software elements where the annotation applies.</p>
+<h2><a name="acronyms"></a>Acronyms in names</h2>
+<p>Treat acronyms and abbreviations as words. The names are much more readable:</p>
+<table><tbody>
+<tr><td>Good</td> <td>Bad</td></tr>
+<tr><td>XmlHttpRequest</td> <td>XMLHTTPRequest</td></tr>
+<tr><td>getCustomerId</td> <td>getCustomerID</td></tr>
+</tbody></table>
+<p>This style rule also applies when an acronym or abbreviation is the entire
+name:</p>
+<table><tbody>
+<tr><td>Good</td> <td>Bad</td></tr>
+<tr><td>class Html</td> <td>class HTML</td></tr>
+<tr><td>String url;</td> <td>String URL;</td></tr>
+<tr><td>long id;</td> <td>long ID;</td></tr>
+</tbody></table>
+<p>Both the JDK and the Android code bases are very inconsistent with regards
+to acronyms, therefore, it is virtually impossible to be consistent with the
+code around you. Bite the bullet, and treat acronyms as words.</p>
 <p>For further justifications of this style rule, see <i>Effective Java</i>
-Item 38 and <i>Java Puzzlers</i>
-Number 68.
-</p>
-<h2><a>TODO style</a>
-</h2>
-<p>Use TODO comments for code that is temporary, a short-term solution, or good-enough but not perfect.
-</p>
-<p>TODOs should include the string TODO in all caps, followed by a colon:
-</p>
-<pre>// TODO: Remove this code after the UrlTable2 has been checked in.<br><br>// TODO: Change this to use a flag instead of a constant.</pre>
-<p>If your TODO is of the form "At a future date do something" make sure that you either include a very specific date ("Fix by November 2005") or a very specific event ("Remove this code after all production mixers understand protocol V7.").
-</p>
-<h2>
-Consistency
-</h2>
-<p>Our parting thought: BE CONSISTENT. If you're editing code, take a few minutes to look at the code around you and determine its style. If they use spaces around their if clauses, you should too. If their comments have little boxes of stars around them, make your comments have little boxes of stars around them too.
-</p>
-<p>The point of having style guidelines is to have a common vocabulary of coding, so people can concentrate on what you're saying, rather than on how you're saying it. We present global style rules here so people know the vocabulary. But local style is also important. If code you add to a a file looks drastically different from the existing code around it, it throws readers out of their rhythm when they go to read it. Try to avoid this.
-</p>
-<h2><a>Logging</a>
-</h2>
-<p>While logging is necessary it has a significantly negative impact on performance and quickly loses its usefulness if it's not kept reasonably terse. The logging facilities provides five different levels of logging. Below are the different levels and when and how they should be used.
-</p>
+Item 38 and <i>Java Puzzlers</i> Number 68.</p>
 
-<ul><li><b>ERROR:</b>
-This level of logging should be used when something fatal has happened, i.e. something that will have user-visible consequences and won't be recoverable without explicitly deleting some data, uninstalling applications, wiping the data partitions or reflashing the entire phone (or worse). This level is always logged. Issues that justify some logging at the ERROR level are typically good candidates to be reported to a statistics-gathering server.
-</li>
+<h2><a name="todo"></a>TODO style</h2>
+<p>Use TODO comments for code that is temporary, a short-term solution, or
+good-enough but not perfect.</p>
+<p>TODOs should include the string TODO in all caps, followed by a colon:</p>
+<pre>// TODO: Remove this code after the UrlTable2 has been checked in.
+
+// TODO: Change this to use a flag instead of a constant.</pre>
+<p>If your TODO is of the form "At a future date do something" make sure that
+you either include a very specific date ("Fix by November 2005") or a very
+specific event ("Remove this code after all production mixers understand
+protocol V7.").</p>
+
+<h2><a name="consistency"></a>Consistency</h2>
+<p>Our parting thought: BE CONSISTENT. If you're editing code, take a few
+minutes to look at the code around you and determine its style. If they use
+spaces around their if clauses, you should too. If their comments have little
+boxes of stars around them, make your comments have little boxes of stars
+around them too.</p>
+<p>The point of having style guidelines is to have a common vocabulary of
+coding, so people can concentrate on what you're saying, rather than on how
+you're saying it. We present global style rules here so people know the
+vocabulary. But local style is also important. If code you add to a a file
+looks drastically different from the existing code around it, it throws
+readers out of their rhythm when they go to read it. Try to avoid this.</p>
+
+<h2><a name="logging"></a>Logging</h2>
+<p>While logging is necessary it has a significantly negative impact on
+performance and quickly loses its usefulness if it's not kept reasonably
+terse. The logging facilities provides five different levels of logging. Below
+are the different levels and when and how they should be used.</p>
+
+<ul>
+<li><b>ERROR:</b>
+This level of logging should be used when something fatal has happened,
+i.e. something that will have user-visible consequences and won't be
+recoverable without explicitly deleting some data, uninstalling applications,
+wiping the data partitions or reflashing the entire phone (or worse). This
+level is always logged. Issues that justify some logging at the ERROR level
+are typically good candidates to be reported to a statistics-gathering
+server.</li>
 <li><b>WARNING:</b>
-This level of logging should used when something serious and unexpected happened, i.e. something that will have user-visible consequences but is likely to be recoverable without data loss by performing some explicit action, ranging from waiting or restarting an app all the way to re-downloading a new version of an application or rebooting the device. This level is always logged. Issues that justify some logging at the WARNING level might also be considered for reporting to a statistics-gathering server.
-</li>
+This level of logging should used when something serious and unexpected
+happened, i.e. something that will have user-visible consequences but is
+likely to be recoverable without data loss by performing some explicit action,
+ranging from waiting or restarting an app all the way to re-downloading a new
+version of an application or rebooting the device. This level is always
+logged. Issues that justify some logging at the WARNING level might also be
+considered for reporting to a statistics-gathering server.</li>
 <li><b>INFORMATIVE:</b>
-This level of logging should used be to note that something interesting to most people happened, i.e. when a situation is detected that is likely to have widespread impact, though isn't necessarily an error. Such a condition should only be logged by a module that reasonably believes that it is the most authoritative in that domain (to avoid duplicate logging by non-authoritative components). This level is always logged.
-</li>
+This level of logging should used be to note that something interesting to
+most people happened, i.e. when a situation is detected that is likely to have
+widespread impact, though isn't necessarily an error. Such a condition should
+only be logged by a module that reasonably believes that it is the most
+authoritative in that domain (to avoid duplicate logging by non-authoritative
+components). This level is always logged.</li>
 <li><b>DEBUG:</b>
-This level of logging should be used to further note what is happening on the device that could be relevant to investigate and debug unexpected behaviors. You should log only what is needed to gather enough information about what is going on about your component. If your debug logs are dominating the log then you probably should be using verbose logging. This level will be logged, even on release builds, and is required to be surrounded by an if (LOCAL_LOG) or if (LOCAL_LOGD) block, where LOCAL_LOG[D] is defined in your class or subcomponent, so that there can exist a possibility to disable all such logging. There must therefore be no active logic in an if (LOCAL_LOG) block. All the string building for the log also needs to be placed inside the if (LOCAL_LOG) block. The logging call should not be re-factored out into a method call if it is going to cause the string building to take place outside of the if (LOCAL_LOG) block. There is some code that still says if (localLOGV). This is considered acceptable as well, although the name is nonstandard.
-</li>
+This level of logging should be used to further note what is happening on the
+device that could be relevant to investigate and debug unexpected behaviors.
+You should log only what is needed to gather enough information about what is
+going on about your component. If your debug logs are dominating the log then
+you probably should be using verbose logging. This level will be logged, even
+on release builds, and is required to be surrounded by an if (LOCAL_LOG) or if
+(LOCAL_LOGD) block, where LOCAL_LOG[D] is defined in your class or
+subcomponent, so that there can exist a possibility to disable all such
+logging. There must therefore be no active logic in an if (LOCAL_LOG) block.
+All the string building for the log also needs to be placed inside the if
+(LOCAL_LOG) block. The logging call should not be re-factored out into a
+method call if it is going to cause the string building to take place outside
+of the if (LOCAL_LOG) block. There is some code that still says if
+(localLOGV). This is considered acceptable as well, although the name is
+nonstandard.</li>
 <li><b>VERBOSE:</b>
-This level of logging should be used for everything else. This level will only be logged on debug builds and should be surrounded by if (LOCAL_LOGV) block (or equivalent) so that it can be compiled out by default. Any string building will be stripped out of release builds and needs to appear inside the if (LOCAL_LOGV) block.
-</li>
+This level of logging should be used for everything else. This level will only
+be logged on debug builds and should be surrounded by if (LOCAL_LOGV) block
+(or equivalent) so that it can be compiled out by default. Any string building
+will be stripped out of release builds and needs to appear inside the if
+(LOCAL_LOGV) block.</li>
 </ul>
-<p><i>Note:</i>
-Within a given module, other than at the VERBOSE level, an error should only be reported once if possible: within a single chain of function calls within a module, only the innermost function should return the error, and callers in the same module should only add some logging if that significantly helps to isolate the issue.
-</p>
-<p><i>Note:</i>
-In a chain of modules, other than at the VERBOSE level, when a lower-level module detects invalid data coming from a higher-level module, the lower-level module should only log this situation to the DEBUG log, and only if logging provides information that is not otherwise available to the caller. Specifically, there is no need to log situations where an exception is thrown (the exception should contain all the relevant information), or where the only information being logged is contained in an error code. This is especially important in the interaction between the framework and applications, and conditions caused by third-party applications that are properly handled by the framework should not trigger logging higher than the DEBUG level. The only situations that should trigger logging at the INFORMATIVE level or higher is when a module or application detects an error at its own level or coming from a lower level.
-</p>
-<p><i>Note:</i>
-When a condition that would normally justify some logging is likely to occur many times, it can be a good idea to implement some rate-limiting mechanism to prevent overflowing the logs with many duplicate copies of the same (or very similar) information.
-</p>
-<p><i>Note:</i>
-Losses of network connectivity are considered common and fully expected and should not be logged gratuitously. A loss of network connectivity that has consequences within an app should be logged at the DEBUG or VERBOSE level (depending on whether the consequences are serious enough and unexpected enough to be logged in a release build).
-</p>
-<p><i>Note:</i>
-A full filesystem on a filesystem that is acceessible to or on behalf of third-party applications should not be logged at a level higher than INFORMATIVE.
-</p>
-<p><i>Note:</i>
-Invalid data coming from any untrusted source (including any file on shared storage, or data coming through just about any network connections) is considered expected and should not trigger any logging at a level higher then DEBUG when it's detected to be invalid (and even then logging should be as limited as possible).
-</p>
-<p><i>Note:</i>
-Keep in mind that the '+' operator, when used on Strings, implicitly creates a StringBuilder with the default buffer size (16 characters) and potentially quite a few other temporary String objects, i.e. that explicitly creating StringBuilders isn't more expensive than relying on the default '+' operator (and can be a lot more efficient in fact). Also keep in mind that code that calls Log.v() is compiled and executed on release builds, including building the strings, even if the logs aren't being read.
-</p>
-<p><i>Note:</i>
-Any logging that is meant to be read by other people and to be available in release builds should be terse without being cryptic, and should be reasonably understandable. This includes all logging up to the DEBUG level.
-</p>
-<p><i>Note:</i>
-When possible, logging should be kept on a single line if it makes sense. Line lengths up to 80 or 100 characters are perfectly acceptable, while lengths longer than about 130 or 160 characters (including the length of the tag) should be avoided if possible.
-</p>
-<p><i>Note:</i>
-Logging that reports successes should never be used at levels higher than VERBOSE.
-</p>
-<p><i>Note:</i>
-Temporary logging that is used to diagnose an issue that's hard to reproduce should be kept at the DEBUG or VERBOSE level, and should be enclosed by if blocks that allow to disable it entirely at compile-time.
-</p>
-<p><i>Note:</i>
-Be careful about security leaks through the log. Private information should be avoided. Information about protected content must definitely be avoided. This is especially important when writing framework code as it's not easy to know in advance what will and will not be private information or protected content.
-</p>
-<p><i>Note:</i>
-System.out.println() (or printf() for native code) should never be used. System.out and System.err get redirected to /dev/null, so your print statements will have no visible effects. However, all the string building that happens for these calls still gets executed.
-</p>
-<p><i>Note:</i>
-<b>The golden rule of logging is that your logs may not unnecessarily push other logs out of the buffer, just as others may not push out yours.</b>
-</p>
-<h2>
-Javatests Style Rules
-</h2>
+<p><i>Note:</i> Within a given module, other than at the VERBOSE level, an
+error should only be reported once if possible: within a single chain of
+function calls within a module, only the innermost function should return the
+error, and callers in the same module should only add some logging if that
+significantly helps to isolate the issue.</p>
+<p><i>Note:</i> In a chain of modules, other than at the VERBOSE level, when a
+lower-level module detects invalid data coming from a higher-level module, the
+lower-level module should only log this situation to the DEBUG log, and only
+if logging provides information that is not otherwise available to the caller.
+Specifically, there is no need to log situations where an exception is thrown
+(the exception should contain all the relevant information), or where the only
+information being logged is contained in an error code. This is especially
+important in the interaction between the framework and applications, and
+conditions caused by third-party applications that are properly handled by the
+framework should not trigger logging higher than the DEBUG level. The only
+situations that should trigger logging at the INFORMATIVE level or higher is
+when a module or application detects an error at its own level or coming from
+a lower level.</p>
+<p><i>Note:</i> When a condition that would normally justify some logging is
+likely to occur many times, it can be a good idea to implement some
+rate-limiting mechanism to prevent overflowing the logs with many duplicate
+copies of the same (or very similar) information.</p>
+<p><i>Note:</i> Losses of network connectivity are considered common and fully
+expected and should not be logged gratuitously. A loss of network connectivity
+that has consequences within an app should be logged at the DEBUG or VERBOSE
+level (depending on whether the consequences are serious enough and unexpected
+enough to be logged in a release build).</p>
+<p><i>Note:</i> A full filesystem on a filesystem that is acceessible to or on
+behalf of third-party applications should not be logged at a level higher than
+INFORMATIVE.</p>
+<p><i>Note:</i> Invalid data coming from any untrusted source (including any
+file on shared storage, or data coming through just about any network
+connections) is considered expected and should not trigger any logging at a
+level higher then DEBUG when it's detected to be invalid (and even then
+logging should be as limited as possible).</p>
+<p><i>Note:</i> Keep in mind that the '+' operator, when used on Strings,
+implicitly creates a StringBuilder with the default buffer size (16
+characters) and potentially quite a few other temporary String objects, i.e.
+that explicitly creating StringBuilders isn't more expensive than relying on
+the default '+' operator (and can be a lot more efficient in fact). Also keep
+in mind that code that calls Log.v() is compiled and executed on release
+builds, including building the strings, even if the logs aren't being
+read.</p>
+<p><i>Note:</i> Any logging that is meant to be read by other people and to be
+available in release builds should be terse without being cryptic, and should
+be reasonably understandable. This includes all logging up to the DEBUG
+level.</p>
+<p><i>Note:</i> When possible, logging should be kept on a single line if it
+makes sense. Line lengths up to 80 or 100 characters are perfectly acceptable,
+while lengths longer than about 130 or 160 characters (including the length of
+the tag) should be avoided if possible.</p>
+<p><i>Note:</i> Logging that reports successes should never be used at levels
+higher than VERBOSE.</p>
+<p><i>Note:</i> Temporary logging that is used to diagnose an issue that's
+hard to reproduce should be kept at the DEBUG or VERBOSE level, and should be
+enclosed by if blocks that allow to disable it entirely at compile-time.</p>
+<p><i>Note:</i> Be careful about security leaks through the log. Private
+information should be avoided. Information about protected content must
+definitely be avoided. This is especially important when writing framework
+code as it's not easy to know in advance what will and will not be private
+information or protected content.</p>
+<p><i>Note:</i> System.out.println() (or printf() for native code) should
+never be used. System.out and System.err get redirected to /dev/null, so your
+print statements will have no visible effects. However, all the string
+building that happens for these calls still gets executed.</p>
+<p><i>Note:</i> <b>The golden rule of logging is that your logs may not
+unnecessarily push other logs out of the buffer, just as others may not push
+out yours.</b></p>
 
-<h2><a>Naming test methods</a>
-</h2>
-<a>When naming test methods, you can use an underscore to seperate what is being tested from the specific case being tested. This style makes it easier to see exactly what cases are being tested.</a>
-<p><a>Example:</a>
-</p>
-<pre><a>testMethod_specificCase1 <br>testMethod_specificCase2</a>
-</pre>
+<h2>Javatests Style Rules</h2>
+<h2><a name="testmethodnames"></a>Naming test methods</h2>
+<p>When naming test methods, you can use an underscore to seperate what is
+being tested from the specific case being tested. This style makes it easier
+to see exactly what cases are being tested.</p>
+<p><a>For example:</a></p>
+<pre>testMethod_specificCase1 testMethod_specificCase2</pre>
 
-<pre><a>void testIsDistinguishable_protanopia() {<br>ColorMatcher colorMatcher = new ColorMatcher(PROTANOPIA)<br>assertFalse(colorMatcher.isDistinguishable(Color.RED, Color.BLACK))<br>assertTrue(colorMatcher.isDistinguishable(Color.X, Color.Y))<br>}</a>
+<pre>void testIsDistinguishable_protanopia() {
+    ColorMatcher colorMatcher = new ColorMatcher(PROTANOPIA)
+    assertFalse(colorMatcher.isDistinguishable(Color.RED, Color.BLACK))
+    assertTrue(colorMatcher.isDistinguishable(Color.X, Color.Y))
+}
 </pre>
-</div>
-</div>
-</div>
