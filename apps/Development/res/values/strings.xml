@@ -190,7 +190,7 @@
     <string name="status_sync_succeeded_format">Sync succeeded: %s</string>
     <string name="status_already_bound">Already bound to sync adapter</string>
     <string name="status_sync_adapter_not_selected">No selected sync adapter</string>
-    <string name="binding_connected_format">Connected to Sync Adapter\n\tauthority: %s\n\taccount type: %s</string>
+    <string name="binding_connected_format">Connected to Sync Adapter\n\tauthority: %1$s\n\taccount type: %2$s</string>
     <string name="binding_not_connected">Not connected to a sync adapter</string>
     <string name="binding_bind_failed">Bind failed</string>
     <string name="binding_waiting_for_connection">Waiting for service to be connected...</string>

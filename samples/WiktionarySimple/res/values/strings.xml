@@ -17,9 +17,9 @@
 <resources>
     <string name="app_name">Wiktionary simple example</string>
 
-    <string name="template_user_agent">"%s/%s (Linux; Android)"</string>
-    <string name="template_wotd_title">"Wiktionary:Word of the day/%s %s"</string>
-    <string name="template_define_url">"http://en.wiktionary.org/wiki/%s"</string>
+    <string name="template_user_agent" translatable="false">"%1$s/%2$s (Linux; Android)"</string>
+    <string name="template_wotd_title">"Wiktionary:Word of the day/%1$s %2$s"</string>
+    <string name="template_define_url" translatable="false">"http://en.wiktionary.org/wiki/%s"</string>
 
     <string name="widget_name">Wiktionary simple</string>
 
