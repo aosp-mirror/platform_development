@@ -91,9 +91,15 @@ public class MonkeySourceScript implements MonkeyEventSource {
 
     private static final String EVENT_KEYWORD_ACTIVITY = "LaunchActivity";
 
+    private static final String EVENT_KEYWORD_INSTRUMENTATION = "LaunchInstrumentation";
+
     private static final String EVENT_KEYWORD_WAIT = "UserWait";
 
     private static final String EVENT_KEYWORD_LONGPRESS = "LongPress";
+
+    private static final String EVENT_KEYWORD_POWERLOG = "PowerLog";
+
+    private static final String EVENT_KEYWORD_WRITEPOWERLOG = "WriteLog";
 
     // a line at the end of the header
     private static final String STARTING_DATA_LINE = "start data >>";
@@ -101,8 +107,6 @@ public class MonkeySourceScript implements MonkeyEventSource {
     private boolean mFileOpened = false;
 
     private static int LONGPRESS_WAIT_TIME = 2000; // wait time for the long
-
-    // press
 
     FileInputStream mFStream;
 
@@ -195,6 +199,9 @@ public class MonkeySourceScript implements MonkeyEventSource {
         return MAX_ONE_TIME_READS;
     }
 
+
+
+
     /**
      * Creates an event and adds it to the event queue. If the parameters are
      * not understood, they are ignored and no events are added.
@@ -273,6 +280,15 @@ public class MonkeySourceScript implements MonkeyEventSource {
             return;
         }
 
+       // Handle launch instrumentation events
+        if (s.indexOf(EVENT_KEYWORD_INSTRUMENTATION) >= 0 && args.length == 2) {
+            String test_name = args[0];
+            String runner_name = args[1];
+            MonkeyInstrumentationEvent e = new MonkeyInstrumentationEvent(test_name, runner_name);
+            mQ.addLast(e);
+            return;
+        }
+
         // Handle wait events
         if (s.indexOf(EVENT_KEYWORD_WAIT) >= 0 && args.length == 1) {
             try {
@@ -303,6 +319,27 @@ public class MonkeySourceScript implements MonkeyEventSource {
             MonkeyWaitEvent we = new MonkeyWaitEvent(LONGPRESS_WAIT_TIME);
             mQ.addLast(we);
             e = new MonkeyKeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_DPAD_CENTER);
+            mQ.addLast(e);
+        }
+
+        //The power log event is mainly for the automated power framework
+        if (s.indexOf(EVENT_KEYWORD_POWERLOG) >= 0 && args.length > 0) {
+            String power_log_type = args[0];
+            String test_case_status;
+
+            if (args.length == 1){
+                MonkeyPowerEvent e = new MonkeyPowerEvent(power_log_type);
+                mQ.addLast(e);
+            } else if (args.length == 2){
+                test_case_status = args[1];
+                MonkeyPowerEvent e = new MonkeyPowerEvent(power_log_type, test_case_status);
+                mQ.addLast(e);
+            }
+        }
+
+        //Write power log to sdcard
+        if (s.indexOf(EVENT_KEYWORD_WRITEPOWERLOG) >= 0) {
+            MonkeyPowerEvent e = new MonkeyPowerEvent();
             mQ.addLast(e);
         }
     }

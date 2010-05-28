@@ -16,10 +16,7 @@
 
 package com.android.commands.monkey;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.text.SimpleDateFormat;
-import java.util.Date;
 
 /**
  * Misc utilities.
@@ -28,7 +25,7 @@ public abstract class MonkeyUtils {
 
     private static final java.util.Date DATE = new java.util.Date();
     private static final SimpleDateFormat DATE_FORMATTER = new SimpleDateFormat(
-        "yyyy/MM/dd HH:mm:ss.SSS");
+        "yyyy-MM-dd HH:mm:ss.SSS ");
 
     private MonkeyUtils() {
     }
