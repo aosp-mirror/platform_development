@@ -94,6 +94,8 @@
 	<classpathentry kind="src" path="libcore/xml/src/main/java"/>
 	<classpathentry kind="src" path="out/target/common/obj/APPS/ApiDemos_intermediates/src/src"/>
 	<classpathentry kind="src" path="out/target/common/obj/APPS/Browser_intermediates/src/src"/>
+	<classpathentry kind="src" path="out/target/common/obj/APPS/CalendarProvider_intermediates/src/src"/>
+	<classpathentry kind="src" path="out/target/common/obj/APPS/ContactsProvider_intermediates/src/src"/>
 	<classpathentry kind="src" path="out/target/common/obj/APPS/Email_intermediates/src/src"/>
 	<classpathentry kind="src" path="out/target/common/obj/APPS/Music_intermediates/src/src"/>
 	<classpathentry kind="src" path="out/target/common/obj/APPS/Phone_intermediates/src/src"/>
