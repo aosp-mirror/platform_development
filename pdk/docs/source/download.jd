@@ -94,7 +94,7 @@ sudo apt-get install git-core gnupg flex bison gperf build-essential zip curl</s
 sun-java5-jdk <span><span>zlib1g-dev</span>
 </span>
 gcc-multilib g++-multilib libc6-dev-i386 lib32ncurses5-dev ia32-libs x11proto-core-dev libx11-dev lib32readline5-dev lib32z-dev</blockquote>
-<ul><li>Set the system to use the right version of java by default:<br><br>$sudo update-java-alternatives -sjava-1.5.0-sun <br></li>
+<ul><li>Set the system to use the right version of java by default:<br><br>$ sudo update-java-alternatives -s java-1.5.0-sun <br></li>
 </ul>
 <ul><li>X11: Ubuntu doesn't have packages for the X11 libraries, but that can be worked around with the following command:<br><br>$ sudo ln -s /usr/lib32/libX11.so.6 /usr/lib32/libX11.so <br><br></li>
 </ul>
@@ -184,7 +184,7 @@ To install, initialize, and configure Repo, follow these steps:<br><br></div>
 </span>
 </li>
 <li><span>Download thereposcript and make sure it is executable:</span>
-<br>$ curl http://android.git.kernel.org/repo~/bin/repo <div>$ chmod a+x ~/bin/repo</div>
+<br>$ curl http://android.git.kernel.org/repo &gt;~/bin/repo <div>$ chmod a+x ~/bin/repo</div>
 </li>
 </ol>
 </div>
