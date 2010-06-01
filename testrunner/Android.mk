@@ -16,4 +16,10 @@ LOCAL_MODULE_CLASS := ETC
 LOCAL_MODULE_PATH := $(local_target_dir)
 LOCAL_SRC_FILES := $(LOCAL_MODULE)
 
+LOCAL_MODULE := coverage_targets.xml
+LOCAL_MODULE_TAGS := tests
+LOCAL_MODULE_CLASS := ETC
+LOCAL_MODULE_PATH := $(local_target_dir)
+LOCAL_SRC_FILES := $(LOCAL_MODULE)
+
 include $(BUILD_PREBUILT)
