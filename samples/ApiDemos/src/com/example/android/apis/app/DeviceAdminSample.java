@@ -54,6 +54,7 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
 
     static String PREF_PASSWORD_QUALITY = "password_quality";
     static String PREF_PASSWORD_LENGTH = "password_length";
+    static String PREF_PASSWORD_HISTORY_LENGTH = "password_history_length";
     static String PREF_MAX_FAILED_PW = "max_failed_pw";
 
     void showToast(Context context, CharSequence msg) {
@@ -119,6 +120,7 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
         };
         Spinner mPasswordQuality;
         EditText mPasswordLength;
+        EditText mPasswordHistoryLength;
         Button mSetPasswordButton;
 
         EditText mPassword;
@@ -178,6 +180,19 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
                     }
                 }
             });
+            mPasswordHistoryLength = (EditText)findViewById(R.id.password_history_length);
+            mPasswordHistoryLength.addTextChangedListener(new TextWatcher() {
+                public void afterTextChanged(Editable s) {
+                }
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                }
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    try {
+                        setPasswordHistoryLength(Integer.parseInt(s.toString()));
+                    } catch (NumberFormatException e) {
+                    }
+                }
+            });
             mSetPasswordButton = (Button)findViewById(R.id.set_password);
             mSetPasswordButton.setOnClickListener(mSetPasswordListener);
 
@@ -221,6 +236,7 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
                 mDisableButton.setEnabled(true);
                 mPasswordQuality.setEnabled(true);
                 mPasswordLength.setEnabled(true);
+                mPasswordHistoryLength.setEnabled(true);
                 mSetPasswordButton.setEnabled(true);
                 mPassword.setEnabled(true);
                 mResetPasswordButton.setEnabled(true);
@@ -231,6 +247,7 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
                 mDisableButton.setEnabled(false);
                 mPasswordQuality.setEnabled(false);
                 mPasswordLength.setEnabled(false);
+                mPasswordHistoryLength.setEnabled(false);
                 mSetPasswordButton.setEnabled(false);
                 mPassword.setEnabled(false);
                 mResetPasswordButton.setEnabled(false);
@@ -244,6 +261,7 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
             final int pwQuality = prefs.getInt(PREF_PASSWORD_QUALITY,
                     DevicePolicyManager.PASSWORD_QUALITY_UNSPECIFIED);
             final int pwLength = prefs.getInt(PREF_PASSWORD_LENGTH, 0);
+            final int pwHistoryLength = prefs.getInt(PREF_PASSWORD_HISTORY_LENGTH, 0);
             final int maxFailedPw = prefs.getInt(PREF_MAX_FAILED_PW, 0);
 
             for (int i=0; i<mPasswordQualityValues.length; i++) {
@@ -252,6 +270,7 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
                 }
             }
             mPasswordLength.setText(Integer.toString(pwLength));
+            mPasswordHistoryLength.setText(Integer.toString(pwHistoryLength));
             mMaxFailedPw.setText(Integer.toString(maxFailedPw));
         }
 
@@ -260,12 +279,14 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
             final int pwQuality = prefs.getInt(PREF_PASSWORD_QUALITY,
                     DevicePolicyManager.PASSWORD_QUALITY_UNSPECIFIED);
             final int pwLength = prefs.getInt(PREF_PASSWORD_LENGTH, 0);
+            final int pwHistoryLength = prefs.getInt(PREF_PASSWORD_HISTORY_LENGTH, 0);
             final int maxFailedPw = prefs.getInt(PREF_MAX_FAILED_PW, 0);
 
             boolean active = mDPM.isAdminActive(mDeviceAdminSample);
             if (active) {
                 mDPM.setPasswordQuality(mDeviceAdminSample, pwQuality);
                 mDPM.setPasswordMinimumLength(mDeviceAdminSample, pwLength);
+                mDPM.setPasswordHistoryLength(mDeviceAdminSample, pwHistoryLength);
                 mDPM.setMaximumFailedPasswordsForWipe(mDeviceAdminSample, maxFailedPw);
             }
         }
@@ -279,6 +300,12 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
         void setPasswordLength(int length) {
             SharedPreferences prefs = getSamplePreferences(this);
             prefs.edit().putInt(PREF_PASSWORD_LENGTH, length).commit();
+            updatePolicies();
+        }
+
+        void setPasswordHistoryLength(int length) {
+            SharedPreferences prefs = getSamplePreferences(this);
+            prefs.edit().putInt(PREF_PASSWORD_HISTORY_LENGTH, length).commit();
             updatePolicies();
         }
 
