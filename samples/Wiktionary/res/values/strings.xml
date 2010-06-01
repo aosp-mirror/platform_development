@@ -19,9 +19,9 @@
     <string name="app_descrip">Example of a fast Wiktionary browser and Word-of-day widget</string>
     <string name="app_credits">"All dictionary content provided by Wiktionary under a GFDL license.  http://en.wiktionary.org\n\nIcon derived from Tango Desktop Project under a public domain license.  http://tango.freedesktop.org"</string>
 
-    <string name="template_user_agent">"%s/%s (Linux; Android)"</string>
-    <string name="template_wotd_title">"Wiktionary:Word of the day/%s %s"</string>
-    <string name="template_define_url">"http://en.wiktionary.org/wiki/%s"</string>
+    <string name="template_user_agent" translatable="false">"%1$s/%2$s (Linux; Android)"</string>
+    <string name="template_wotd_title">"Wiktionary:Word of the day/%1$s %2$s"</string>
+    <string name="template_define_url" translatable="false">"http://en.wiktionary.org/wiki/%s"</string>
 
     <string name="widget_name">Wiktionary</string>
 
