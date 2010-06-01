@@ -95,58 +95,6 @@ Adding apps to the build path
 <p>When you're done, the "source folder" path in the list should look like android/packages/apps/<i>YourAppName</i>
 /src. Depending on which app(s) you include, you may also need to include othersrc/main/java directories under android/dalvik/libcore. Do this if you find you cannot build with the default set.
 </p>
-<h4>
-Eclipse setup to work on developer tools
-</h4>
-<p>To work on Java developer tools, the principle is the same, except you specify /path/to/tool when using the option "Create project from existing source."
-</p>
-<p>Once the project is created, you need to set up the Java Build Path:
-</p>
-<ol><li>Select the project you just created.
-</li>
-<li>Project Properties
-</li>
-<li>Select "Java Build Path" from the left-hand menu.
-</li>
-<li>Choose the "Source" tab.
-</li>
-<li>Expand the single <i>toolname</i>
-/src entry.
-</li>
-<li>Double click the "Excluded: (none)" item.
-</li>
-<li>Add to the excluded (bottom) list: "MakeFile" and "resources/".
-</li>
-<li>Close the dialog.
-</li>
-<li>Back in the "Source" tab, click "Add Folder...", and add <i>toolname</i>
-/src/resources.
-</li>
-<li>Click OK.
-</li>
-</ol>
-<h4>
-Eclipse setup to work on DDMS <br></h4>
-<p>For DDMS, you will need to make a project for
-</p>
-<ol><li>development/tools/ddms/libs/ddmlib
-</li>
-<li>development/tools/ddms/libs/ddmuilib
-</li>
-<li>development/tools/ddms/app
-</li>
-</ol>
-<p>Each project will need to reference the ones before it ("ddmuilib" references "ddmlib", and "app" references both of those). To do this:
-</p>
-<ol><li>Make sure you have all 3 projects defined.
-</li>
-<li>Right click on a project, "Build Path" "Configure Build Path..."
-</li>
-<li>Choose the "Project" tab.
-</li>
-<li>Click "Add..." and check the required projects.
-</li>
-</ol>
 <h2><a>Eclipse formatting</a>
 </h2>
 <p>You can import files in development/ide/eclipse to make Eclipse
