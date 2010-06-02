@@ -16,15 +16,13 @@
 
 package com.example.android.apis.graphics;
 
-import android.app.Activity;
 import android.content.Context;
 import android.graphics.*;
-import android.hardware.SensorListener;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
-import android.os.SystemClock;
 import android.util.Config;
 import android.util.Log;
 import android.view.View;
@@ -33,23 +31,22 @@ public class Compass extends GraphicsActivity {
 
     private static final String TAG = "Compass";
 
-	private SensorManager mSensorManager;
+    private SensorManager mSensorManager;
+    private Sensor mSensor;
     private SampleView mView;
     private float[] mValues;
     
-    private final SensorListener mListener = new SensorListener() {
-    
-        public void onSensorChanged(int sensor, float[] values) {
-            if (Config.LOGD) Log.d(TAG, "sensorChanged (" + values[0] + ", " + values[1] + ", " + values[2] + ")");
-            mValues = values;
+    private final SensorEventListener mListener = new SensorEventListener() {
+        public void onSensorChanged(SensorEvent event) {
+            if (Config.LOGD) Log.d(TAG,
+                    "sensorChanged (" + event.values[0] + ", " + event.values[1] + ", " + event.values[2] + ")");
+            mValues = event.values;
             if (mView != null) {
                 mView.invalidate();
             }
         }
 
-        public void onAccuracyChanged(int sensor, int accuracy) {
-            // TODO Auto-generated method stub
-            
+        public void onAccuracyChanged(Sensor sensor, int accuracy) {
         }
     };
 
@@ -57,6 +54,7 @@ public class Compass extends GraphicsActivity {
     protected void onCreate(Bundle icicle) {
         super.onCreate(icicle);
         mSensorManager = (SensorManager)getSystemService(Context.SENSOR_SERVICE);
+        mSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION);
         mView = new SampleView(this);
         setContentView(mView);
     }
@@ -66,9 +64,9 @@ public class Compass extends GraphicsActivity {
     {
         if (Config.LOGD) Log.d(TAG, "onResume");
         super.onResume();
-        mSensorManager.registerListener(mListener, 
-        		SensorManager.SENSOR_ORIENTATION,
-        		SensorManager.SENSOR_DELAY_GAME);
+
+        mSensorManager.registerListener(mListener, mSensor,
+                SensorManager.SENSOR_DELAY_GAME);
     }
     
     @Override
