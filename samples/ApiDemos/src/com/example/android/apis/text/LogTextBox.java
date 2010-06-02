@@ -20,12 +20,8 @@ import android.widget.TextView;
 import android.content.Context;
 import android.text.method.ScrollingMovementMethod;
 import android.text.method.MovementMethod;
-import android.text.method.KeyListener;
-import android.text.method.TransformationMethod;
 import android.text.Editable;
 import android.util.AttributeSet;
-
-import java.util.Map;
 
 /**
  * This is a TextView that is Editable and by default scrollable,
