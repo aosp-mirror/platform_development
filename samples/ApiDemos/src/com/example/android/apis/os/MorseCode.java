@@ -49,13 +49,8 @@ OS / Morse Code Vibrator
  */
 public class MorseCode extends Activity
 {
-    /** Tag string for our debug logs */
-    private static final String TAG = "MorseCode";
-
     /** Our text view */
     private TextView mTextView;
-
-    ;
 
     /**
      * Initialization of the Activity after it is first created.  Must at least
