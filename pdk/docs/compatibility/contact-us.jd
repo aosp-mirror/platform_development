@@ -9,9 +9,8 @@ Lists" on the <a href="{@docRoot}community/index.html">Community page.</a></p>
 
 <h3>For General Discussion</h3>
 <p>The preferred way to reach us is via the <a
-href="http://groups.google.com/group/android-compatibility">android-compatibility
-mailing list</a>. Use this list for all your compatibility-related questions.
-Please be aware that this is a public forum.</p>
+href="mailto:compatibility@android.com">compatibility@android.com
+address</a>.</p>
 
 <h3>For CTS Technical Questions</h3>
 <p>If you have specific issues with the Compatibility Test Suite that require
