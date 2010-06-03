@@ -30,7 +30,11 @@
     <application android:label="Backup/Restore"
         android:backupAgent="ExampleAgent">
 
-      <activity android:name="BackupRestoreActivity">
+        <!-- Some backup transports may require API keys or other metadata -->
+        <meta-data android:name="com.google.android.backup.api_key"
+            android:value="INSERT YOUR API KEY HERE" />
+
+        <activity android:name="BackupRestoreActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
