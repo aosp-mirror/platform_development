@@ -13,6 +13,7 @@ and new devices must use Android 2.1.
 </p>
 <ul>
   <li><a href="{@docRoot}compatibility/android-2.1-cdd.pdf">Android 2.1 Compatibility Definition Document (CDD)</a></li>
+  <li><a href="http://dl.google.com/dl/android/cts/android-cts-2.1_r2-x86.zip">Android 2.1 R2 Compatibility Test Suite (CTS)</a></li>
 </ul>
 
 <h2>Android 1.6</h2>
@@ -23,11 +24,11 @@ in the 'donut' branch in the open-source tree.
   <li><a href="{@docRoot}compatibility/android-1.6-cdd.pdf">Android 1.6 Compatibility Definition Document (CDD)</a></li>
 </ul>
 
-<h2>Compatibility Test Suite</h2>
-<p>The Compatibility Test Suite (CTS) is found in the open-source tree. Specific
-snapshots of the CTS are found in the same branches as for the system. (For
-instance, the Android 2.1 CTS can be found in the 'eclair' branch.) The CTS user
-manual is not specific to given versions.
+<h2>Compatibility Test Suite Manual</h2>
+<p>The CTS user manual is applicable to any CTS version, but CTS 2.1 R2 and
+beyond require
+<a href="{@docRoot}compatibility/cts-intro.html">additional steps</a>
+to run the accessibility tests.
 <ul>
   <li><a href="{@docRoot}compatibility/android-cts-manual-r4.pdf">Compatibility Test Suite (CTS) User Manual</a></li>
 </ul>
