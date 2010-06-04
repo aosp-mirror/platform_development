@@ -135,7 +135,7 @@ Mac OS <br></h3>
 <li>volume format: case sensitive, journaled</li>
 </ul>
 </li>
-<li>This will create a .dmg file which, once mounted, acts as a drive with the required formatting for Android development. For a disk image named "android.dmg" stored in your home directory, you can add the following to your ~/.bash_profile to mount the image when you execute "mountAndroid":<br><br><div># command to mount the android file image <br>function mountAndroid{ hdiutil attach ~/android.dmg-mountpoint /Volumes/android; }<br></div>
+<li>This will create a .dmg file which, once mounted, acts as a drive with the required formatting for Android development. For a disk image named "android.dmg" stored in your home directory, you can add the following to your ~/.bash_profile to mount the image when you execute "mountAndroid":<br><br><div># command to mount the android file image <br>function mountAndroid { hdiutil attach ~/android.dmg -mountpoint /Volumes/android; }<br></div>
 <br>Once mounted, you'll do all your work in the "android" volume. You can eject it (unmount it) just like you would with an external drive.</li>
 </ul>
 </ul>
@@ -159,14 +159,15 @@ echo $PATH <span>again</span>
 <span>sudo port selfupdate</span>
 <br></li>
 </ol>
-<li>Get the following packages from port:<br>$<span>POSIXLY_CORRECT=1</span>
-sudo port install gmake libsdl git-core gnupg <br><span>If using Mac OS 10.4, also install:<br>$<span>POSIXLY_CORRECT=1</span>
+<li>Get the following packages from port:<br>$ <span>POSIXLY_CORRECT=1</span>
+sudo port install gmake libsdl git-core gnupg <br><span>If using Mac OS 10.4, also install:<br>$ <span>POSIXLY_CORRECT=1</span>
 sudo port install bison <br></span>
 </li>
-<li>Upgrade GNU make to 3.81 or later by running.Mac OS doesn't come with a recent enough version.<br>$ sudo ln -s gmake /opt/local/bin/make <br></li>
+<li>Upgrade GNU make to 3.81 or later by running the following command. (Mac OS doesn't come with a recent enough version.)<br>$ sudo ln -s gmake /opt/local/bin/make <br></li>
 <li>Set an appropriate per-process file descriptor limit. To do this, add the following lines to your <i><span>.bash_profile</span>
 </i>
-file:<br># set the number of open files to be 1024<br>ulimit -S -n 1024</li>
+file:<br># set the number of open files to be 1024<br>$ <span>ulimit -S -n 1024</span><br>
+Note that this may not be necessary; on some systems, the output of "ulimit -S" will show "unlimited". In this case, there is no need to set the limit to 1024.</li>
 </ol>
 </div>
 </div>
@@ -180,7 +181,7 @@ href="{@docRoot}source/git-repo.html">Using Repo and Git</a>
 .<br></p>
 To install, initialize, and configure Repo, follow these steps:<br><br></div>
 <ol><li><span>Make sure you have a~/bindirectory in your home directory, and check to be sure that this bin directory is in your path:</span>
-<br>$ cd~<br><span><span>$ mkdir bin <br>$ echo $PATH <br></span>
+<br>$ cd ~<br><span><span>$ mkdir bin <br>$ echo $PATH <br></span>
 </span>
 </li>
 <li><span>Download thereposcript and make sure it is executable:</span>
@@ -197,7 +198,7 @@ Initializing a Repo client <br></h2>
 <span>$ mkdir mydroid</span>
 <br><span>$ cd mydroid</span>
 <br></li>
-<li><span>Runrepo initto bring down the latest version of Repo with all its most recent bug fixes. You must specify a URL for the manifest:</span>
+<li><span>Run "repo init" to bring down the latest version of Repo with all its most recent bug fixes. You must specify a URL for the manifest:</span>
 <br><span>$ repo init</span>
 -u git://android.git.kernel.org/platform/manifest.git</li>
 <ul><li><span>If you would like to check out a branch other than "master", specify it with -b, like:</span>
@@ -238,7 +239,7 @@ initialized in /mydroid</span>
 Getting the files</h2>
 <div><span><span>To pull down files to your working directory from the repositories as specified in the default manifest, run</span>
 <br><br>$ repo sync <i><br></i>
-<br><span>For more aboutrepo syncand other Repo commands, see</span>
+<br><span>For more about "repo sync" and other Repo commands, see</span>
 <a href="{@docRoot}source/git-repo.html">Using Repo and Git</a>
 <span>.</span>
 <br><br><span>The Android source files will be located in your working
