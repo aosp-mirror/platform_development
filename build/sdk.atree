@@ -91,6 +91,7 @@ development/samples/LunarLander              samples/${PLATFORM_NAME}/LunarLande
 development/samples/NotePad                  samples/${PLATFORM_NAME}/NotePad
 development/samples/ApiDemos                 samples/${PLATFORM_NAME}/ApiDemos
 development/samples/BackupRestore            samples/${PLATFORM_NAME}/BackupRestore
+development/samples/NotePad                  samples/${PLATFORM_NAME}/HeavyWeight
 development/samples/SampleSyncAdapter        samples/${PLATFORM_NAME}/SampleSyncAdapter
 development/samples/SkeletonApp              samples/${PLATFORM_NAME}/SkeletonApp
 development/samples/Snake                    samples/${PLATFORM_NAME}/Snake

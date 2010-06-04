@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007 The Android Open Source Project
+ * Copyright (C) 2010 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,26 +14,32 @@
  * limitations under the License.
  */
 
-package com.example.android.helloactivity;
+package com.example.android.heavyweight;
 
 import android.app.Activity;
 import android.os.Bundle;
-
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.Button;
 
 /**
- * A minimal "Hello, World!" application.
+ * Basic "heavy-weight" application, which will not be killed by Android
+ * while it is in the background.
  */
-public class HelloActivity extends Activity {
-    /**
-     * Called with the activity is first created.
-     */
+public class HeavyWeight extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        // Set the layout for this activity.  You can find it
-        // in res/layout/hello_activity.xml
-        setContentView(R.layout.hello_activity);
+        setContentView(R.layout.heavy_weight);
+        
+        Button button = (Button)findViewById(R.id.stop);
+        button.setOnClickListener(mStopListener);
     }
+    
+    private OnClickListener mStopListener = new OnClickListener() {
+        public void onClick(View v) {
+            finish();
+        }
+    };
 }
 
