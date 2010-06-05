@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright (C) 2010 The Android Open Source Project
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
+
+<!--
+    Declare the contents of this Android test package. The xmlns:android
+    attribute brings in the Android platform namespace, and the
+    "package" attribute provides a unique name for the package.
+    If you use this file as a template in your own test package, you must change
+    the package name from "com.example.android" to one that you own or have
+    control over.
+ -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.android.newalarm.test"
+    android:versionCode="1"
+    android:versionName="1.0">
+    <!--
+        Must use the application element to include the uses-library element.
+     -->
+    <application>
+        <!--
+            Tells Android to include this library in the test package's class loader.
+            The test runner is not included by default in a manifest file.
+        -->
+        <uses-library android:name="android.test.runner" />
+    </application>
+    <!--
+        Specifies that the test package requires API platform level 3 (Android 1.5) or above.
+        The installer will not install this package onto a device or emulator that is running an
+        older platform version.
+     -->
+    <uses-sdk android:minSdkVersion="3" />
+    <!--
+        Declares the instrumentation for this application. The instrumentation class is
+        specified by the "name" attribute, and must name a subclass of
+        android.app.Instrumentation. The application that is run by the instrumentation object is
+        specified by the "targetPackage" attribute.
+     -->
+    <instrumentation
+        android:targetPackage="com.example.android.newalarm"
+        android:name="android.test.InstrumentationTestRunner" />
+</manifest>

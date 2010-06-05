@@ -1,0 +1,29 @@
+<p>
+    This sample is a revised version of the AlarmService functionality included in the
+    ApiDemos sample application. It is used as the application under test
+    for the <a href="../AlarmServiceTest/index.html">Alarm Service Test</a>
+    sample test application.
+</p>
+<p>
+    This application demonstrates a simple Android service that is started when needed by
+    <code>Context.startService(Intent)</code> and stops itself when its work is done. You can
+    use this type of service to move long-running or periodic tasks into the background. For
+    example, you could use this type of service to perform data synchronization.
+</p>
+<p>
+    In the sample, the service simply runs for 15 seconds and then stops itself. The wait is
+    implemented in a separate thread that uses a thread-safe object. This illustrates how to
+    set up a service that runs multiple threads that depend on one or more objects that must be
+    made thread-safe.
+</p>
+<p>
+    The application also contains the <code>AlarmActivity</code> activity that is a client of the
+    service. You use the activity to control when the service starts and stops. By default, the
+    activity fires off the service every thirty seconds. In effect, the service starts after
+    thirty seconds, runs for 15 seconds, stops, and then runs again automatically in another
+    15 seconds. You also use the client to stop this cycle.
+</p>
+<p>
+    The test application <a href="tests/index.html">AlarmServiceTest</a>
+    shows you how to set up a test of this service.
+</p>
