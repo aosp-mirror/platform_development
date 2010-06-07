@@ -19,18 +19,22 @@ package com.example.android.notepad;
 import android.test.ActivityInstrumentationTestCase2;
 
 import com.example.android.notepad.NotesList;
-
 /**
  * Make sure that the main launcher activity opens up properly, which will be
  * verified by {@link #testActivityTestCaseSetUpProperly}.
+ *
+ * To learn how to run an entire test package or one of its classes, please see
+ * "Testing in Eclipse, with ADT" or "Testing in Other IDEs" in the Developer Guide.
  */
-public class NotePadTest extends ActivityInstrumentationTestCase2<NotesList> {
+public class NotePadActivityTest extends ActivityInstrumentationTestCase2<NotesList> {
 
     /**
      * Creates an {@link ActivityInstrumentationTestCase2} for the {@link NotesList} activity.
      */
-    public NotePadTest() {
-        super(NotesList.class);
+    public NotePadActivityTest() {
+        // This constructor was deprecated in API level 8 (SDK 2.2) but is
+        // used here so that the package remains compatible with API level 3 (SDK 1.5)
+        super("com.example.android.notepad", NotesList.class);
     }
 
     /**

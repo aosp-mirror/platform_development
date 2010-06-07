@@ -20,25 +20,92 @@ import android.net.Uri;
 import android.provider.BaseColumns;
 
 /**
- * Convenience definitions for NotePadProvider
+ * Defines a contract between the Note Pad content provider and its clients. A contract defines the
+ * information that a client needs to access the provider as one or more data tables. A contract
+ * is a public, non-extendable (final) class that contains constants defining column names and
+ * URIs. A well-written client depends only on the constants in the contract.
  */
 public final class NotePad {
     public static final String AUTHORITY = "com.google.provider.NotePad";
 
     // This class cannot be instantiated
-    private NotePad() {}
-    
+    private NotePad() {
+    }
+
     /**
-     * Notes table
+     * Notes table contract
      */
     public static final class Notes implements BaseColumns {
+
         // This class cannot be instantiated
         private Notes() {}
 
         /**
+         * The table name offered by this provider
+         */
+        public static final String TABLE_NAME = "notes";
+
+        /*
+         * URI definitions
+         */
+
+        /**
+         * The scheme part for this provider's URI
+         */
+        private static final String SCHEME = "content://";
+
+        /**
+         * Path parts for the URIs
+         */
+
+        /**
+         * Path part for the Notes URI
+         */
+        private static final String PATH_NOTES = "/notes";
+
+        /**
+         * Path part for the Note ID URI
+         */
+        private static final String PATH_NOTE_ID = "/notes/";
+
+        /**
+         * 0-relative position of a note ID segment in the path part of a note ID URI
+         */
+        public static final int NOTE_ID_PATH_POSITION = 1;
+
+        /**
+         * Path part for the Live Folder URI
+         */
+        private static final String PATH_LIVE_FOLDER = "/live_folders/notes";
+
+        /**
          * The content:// style URL for this table
          */
-        public static final Uri CONTENT_URI = Uri.parse("content://" + AUTHORITY + "/notes");
+        public static final Uri CONTENT_URI =  Uri.parse(SCHEME + AUTHORITY + PATH_NOTES);
+
+        /**
+         * The content URI base for a single note. Callers must
+         * append a numeric note id to this Uri to retrieve a note
+         */
+        public static final Uri CONTENT_ID_URI_BASE
+            = Uri.parse(SCHEME + AUTHORITY + PATH_NOTE_ID);
+
+        /**
+         * The content URI match pattern for a single note, specified by its ID. Use this to match
+         * incoming URIs or to construct an Intent.
+         */
+        public static final Uri CONTENT_ID_URI_PATTERN
+            = Uri.parse(SCHEME + AUTHORITY + PATH_NOTE_ID + "/#");
+
+        /**
+         * The content Uri pattern for a notes listing for live folders
+         */
+        public static final Uri LIVE_FOLDER_URI
+            = Uri.parse(SCHEME + AUTHORITY + PATH_LIVE_FOLDER);
+
+        /*
+         * MIME type definitions
+         */
 
         /**
          * The MIME type of {@link #CONTENT_URI} providing a directory of notes.
@@ -46,7 +113,8 @@ public final class NotePad {
         public static final String CONTENT_TYPE = "vnd.android.cursor.dir/vnd.google.note";
 
         /**
-         * The MIME type of a {@link #CONTENT_URI} sub-directory of a single note.
+         * The MIME type of a {@link #CONTENT_URI} sub-directory of a single
+         * note.
          */
         public static final String CONTENT_ITEM_TYPE = "vnd.android.cursor.item/vnd.google.note";
 
@@ -55,28 +123,32 @@ public final class NotePad {
          */
         public static final String DEFAULT_SORT_ORDER = "modified DESC";
 
+        /*
+         * Column definitions
+         */
+
         /**
-         * The title of the note
+         * Column name for the title of the note
          * <P>Type: TEXT</P>
          */
-        public static final String TITLE = "title";
+        public static final String COLUMN_NAME_TITLE = "title";
 
         /**
-         * The note itself
+         * Column name of the note content
          * <P>Type: TEXT</P>
          */
-        public static final String NOTE = "note";
+        public static final String COLUMN_NAME_NOTE = "note";
 
         /**
-         * The timestamp for when the note was created
+         * Column name for the creation timestamp
          * <P>Type: INTEGER (long from System.curentTimeMillis())</P>
          */
-        public static final String CREATED_DATE = "created";
+        public static final String COLUMN_NAME_CREATE_DATE = "created";
 
         /**
-         * The timestamp for when the note was last modified
+         * Column name for the modification timestamp
          * <P>Type: INTEGER (long from System.curentTimeMillis())</P>
          */
-        public static final String MODIFIED_DATE = "modified";
+        public static final String COLUMN_NAME_MODIFICATION_DATE = "modified";
     }
 }

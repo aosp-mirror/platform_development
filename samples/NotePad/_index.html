@@ -1,20 +1,62 @@
-<p>A simple note pad application.
-It demonstrates:</p>
-<ul> 
-<li>Using views</li>
-<li>Accessing a database</li>
-<li>Using an intent to open a new window</li>
-<li>Managing activity lifecycle</li>
-<li>Creating <a href="../../../reference/android/provider/LiveFolders.html">Live Folders</a></li>
-<li>And more...</li>
+<h2>NotePad Documentation</h2>
+<p>
+    NotePad is a simple application for entering and saving character-only notes.
+    It demonstrates the following Android concepts:
+</p>
+<ul>
+    <li>ListView objects with Cursor-based adapters.</li>
+    <li>Data storage and access with a ContentProvider.</li>
+    <li>Intent filters that handle multiple actions.</li>
+    <li>Activity objects that handle more than one Intent.</li>
+    <li>Sending an Intent by selecting an item from a ListView.</li>
+    <li>Sending data in an Intent.</li>
+    <li>Dynamic construction of menus.</li>
+    <li>Context menus.</li>
+    <li>Providing other applications as alternative actions for a data item.</li>
+    <li>Creating <a href="../../../reference/android/provider/LiveFolders.html">
+    Live Folders</a></li>
+    <li>Setting up an application that does not use "save" or "exit". The application
+    saves the user's work whenever focus moves to another task. It remains available until
+    the system destroys it.</li>
 </ul>
-
-<p class="note">Please notice that this is not the same
-notepad code that's used for the <a href="../../../guide/tutorials/notepad/index.html">Notepad Tutorial</a>. 
-They are similar in nature, but there are several differences in implementation &mdash; the tutorial
-is slightly more simple. If you're new to 
-Android development, we suggest you start with the tutorial, then visit this
-code later to see more sample code.</p>
-
+<h4>Functions</h4>
+<p>
+    By default, NotePad displays a list of existing notes,
+    and provides a menu that allows you to insert a new note. If you click an existing note, you
+    can edit it, or select the menu to delete it or edit its title. If you context-click an
+    existing note, you can also delete it. If you navigate away from a new note once you've entered
+    text, NotePad automatically saves what you've entered.
+</p>
+<h4>Limitations</h4>
+<p>
+    NotePad has limited functionality. It does not provide search/replace. It does not support
+    HTML or any other type of markup. However, it does have copy/paste if it is running on a
+    version of the Android platform that supports that functionality.
+</p>
+<h4>Provider</h4>
+<p>
+    Other applications can use NotePad's content provider to store notes. The "contract" for
+    the NotePad provider is documented in the Appendix.
+</p>
+<h4>Alternative actions</h4>
+<p>
+    Other applications can also register themselves to handle NotePad notes. To do this, they must
+    provide the necessary specifications in their manifest file. The specifications are listed in
+    the Appendix.
+</p>
+<h4>Test package</h4>
+<p>
+    This sample also contains a test package that demonstrates how to test a ContentProvider and
+    an Activity. To learn more about this test package, please read
+    <a href="tests/index.html">NotePadTest Documentation</a>
+</p>
+<p class="note">
+    Please notice that this is not the same code that's used for the
+    <a href="../../../guide/tutorials/notepad/index.html">Notepad Tutorial</a>. This code has been
+    updated more recently, and the tutorial is a more simple implementation. If you're new to
+    Android development, you should start with the tutorial, then return to this code.
+</p>
+<h4>Appendix A: Provider contract</h4>
+<h4>Appendix B: Registering an application</h4>
 <img alt="" src="../images/sample_notepad.png" />
 <img alt="" src="../images/sample_note.png" />

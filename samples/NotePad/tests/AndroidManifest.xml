@@ -4,29 +4,51 @@
      Licensed under the Apache License, Version 2.0 (the "License");
      you may not use this file except in compliance with the License.
      You may obtain a copy of the License at
-  
+
           http://www.apache.org/licenses/LICENSE-2.0
-  
+
      Unless required by applicable law or agreed to in writing, software
      distributed under the License is distributed on an "AS IS" BASIS,
      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
      See the License for the specific language governing permissions and
      limitations under the License.
 -->
+<!--
+    If you use this file as a template in your own test package, you must change
+    the package name from "com.android.example.notepad.test" to one that you own or have
+    control over.
+    Notice that the package name is not necessarily related to any of the Java package
+    identifiers used in this application.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.android.notepad.test"
+    android:versionCode="2"
+    android:versionName="2.0">
 
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" 
-      package="com.example.android.notepad.tests">
-    
-    <!-- We add an application tag here just so that we can indicate that
-         this package needs to link against the android.test library,
-         which is needed when building test cases. -->    
+    <!--
+        Defines an application element. The XML DTD for Android requires
+        the &lt;uses-library&gt; element to appear within an &lt;application&gt; element.
+        In all other respects, this manifest declares a test package rather than a
+        regular Android application.
+    -->
     <application>
+        <!--
+            Specifies a code library that Android must load along with this package.
+            The library contains the instrumented test runner.
+         -->
         <uses-library android:name="android.test.runner" />
     </application>
 
-  <instrumentation android:name="android.test.InstrumentationTestRunner"
-      android:targetPackage="com.example.android.notepad"
-      android:label="NotePad sample tests">
-  </instrumentation>  
-  
+    <!--
+        Specifies the test runner that will run the test cases in this package.
+        The android:name attribute specifies the test runner. The android:targetPackage specifies
+        the Android package name of the application under test.
+        In general, Android handles an instrumentation element by loading the class in the
+        android:name attribute as an Instrumentation object before loading the package in which the
+        instrumentation element occurs and before the package specified in android:targetPackage.
+     -->
+    <instrumentation
+        android:name="android.test.InstrumentationTestRunner"
+        android:targetPackage="com.example.android.notepad">
+    </instrumentation>
 </manifest>
