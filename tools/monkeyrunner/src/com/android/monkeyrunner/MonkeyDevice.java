@@ -22,9 +22,11 @@ import com.google.common.collect.Collections2;
 import com.android.monkeyrunner.doc.MonkeyRunnerExported;
 
 import org.python.core.ArgParser;
+import org.python.core.Py;
 import org.python.core.PyDictionary;
 import org.python.core.PyException;
 import org.python.core.PyObject;
+import org.python.core.PyTuple;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -110,6 +112,41 @@ public abstract class MonkeyDevice {
             type = MonkeyDevice.TouchPressType.DOWN_AND_UP;
         }
         touch(x, y, type);
+    }
+
+    @MonkeyRunnerExported(doc = "Simulate a drag on the screen.",
+            args = { "start", "end", "duration", "steps"},
+            argDocs = { "The starting point for the drag (a tuple of x,y)",
+            "The end point for the drag (a tuple of x,y)",
+            "How long (in seconds) should the drag take (default is 1.0 seconds)",
+            "The number of steps to take when interpolating points. (default is 10)"})
+    public void drag(PyObject[] args, String[] kws) {
+        ArgParser ap = JythonUtils.createArgParser(args, kws);
+        Preconditions.checkNotNull(ap);
+
+        PyObject startObject = ap.getPyObject(0);
+        if (!(startObject instanceof PyTuple)) {
+            throw Py.TypeError("Agrument 0 is not a tuple");
+        }
+        PyObject endObject = ap.getPyObject(1);
+        if (!(endObject instanceof PyTuple)) {
+            throw Py.TypeError("Agrument 1 is not a tuple");
+        }
+
+        PyTuple start = (PyTuple) startObject;
+        PyTuple end = (PyTuple) endObject;
+
+        int startx = (Integer) start.__getitem__(0).__tojava__(Integer.class);
+        int starty = (Integer) start.__getitem__(1).__tojava__(Integer.class);
+        int endx = (Integer) end.__getitem__(0).__tojava__(Integer.class);
+        int endy = (Integer) end.__getitem__(1).__tojava__(Integer.class);
+
+        double seconds = JythonUtils.getFloat(ap, 2, 1.0);
+        long ms = (long) (seconds * 1000.0);
+
+        int steps = ap.getInt(3, 10);
+
+        drag(startx, starty, endx, endy, steps, ms);
     }
 
     @MonkeyRunnerExported(doc = "Send a key press event to the specified button",
@@ -270,6 +307,7 @@ public abstract class MonkeyDevice {
         return JythonUtils.convertMapToDict(result);
     }
 
+    @MonkeyRunnerExported(doc = "Wake up the screen on the device")
     public void wake(PyObject[] args, String[] kws) {
         ArgParser ap = JythonUtils.createArgParser(args, kws);
         Preconditions.checkNotNull(ap);
@@ -288,6 +326,7 @@ public abstract class MonkeyDevice {
     protected abstract String getSystemProperty(String key);
     protected abstract void touch(int x, int y, TouchPressType type);
     protected abstract void press(String keyName, TouchPressType type);
+    protected abstract void drag(int startx, int starty, int endx, int endy, int steps, long ms);
     protected abstract void type(String string);
     protected abstract String shell(String cmd);
     protected abstract boolean installPackage(String path);

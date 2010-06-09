@@ -97,7 +97,9 @@ public final class MonkeyRunnerHelp {
 
                 // Containing classes
                 for (Class<?> toAdd : clz.getClasses()) {
-                    newClasses.add(toAdd);
+                    if (haventSeen.apply(toAdd)) {
+                        newClasses.add(toAdd);
+                    }
                 }
             }
 

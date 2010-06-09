@@ -95,7 +95,7 @@ public class MonkeyRunnerOptions {
 
         ImmutableList.Builder<File> pluginListBuilder = ImmutableList.builder();
         ImmutableList.Builder<String> argumentBuilder = ImmutableList.builder();
-        do {
+        while (index < args.length) {
             String argument = args[index++];
 
             if ("-s".equals(argument)) {
@@ -172,12 +172,7 @@ public class MonkeyRunnerOptions {
                     argumentBuilder.add(argument);
                 }
             }
-        } while (index < args.length);
-
-        if (scriptFile == null) {
-            printUsage("Missing required parameter");
-            return null;
-        }
+        };
 
         return new MonkeyRunnerOptions(hostname, port, scriptFile, backend,
                 pluginListBuilder.build(), argumentBuilder.build());

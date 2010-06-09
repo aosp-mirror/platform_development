@@ -27,7 +27,6 @@ import org.python.util.InteractiveConsole;
 import org.python.util.PythonInterpreter;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -167,38 +166,11 @@ public class ScriptRunner {
     }
 
     /**
-     * Create and run a console using a new python interpreter for the test
-     * associated with this instance.
+     * Start an interactive python interpreter.
      */
-    public void console() throws IOException {
+    public static void console() {
         initPython();
         InteractiveConsole python = new InteractiveConsole();
-        initInterpreter(python, scope, variable);
         python.interact();
-    }
-
-    /**
-     * Start an interactive python interpreter using the specified set of local
-     * variables. Use this to interrupt a running test script with a prompt:
-     *
-     * @param locals
-     */
-    public static void console(PyObject locals) {
-        initPython();
-        InteractiveConsole python = new InteractiveConsole(locals);
-        python.interact();
-    }
-
-    /**
-     * Initialize a python interpreter.
-     *
-     * @param python
-     * @param scope
-     * @throws IOException
-     */
-    public static void initInterpreter(PythonInterpreter python, Object scope, String variable)
-    throws IOException {
-        // Store the current test case as the this variable
-        python.set(variable, scope);
     }
 }

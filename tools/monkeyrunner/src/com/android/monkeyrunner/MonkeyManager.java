@@ -82,6 +82,18 @@ public class MonkeyManager {
     }
 
     /**
+     * Send a touch move event at the specified location.
+     *
+     * @param x the x coordinate of where to click
+     * @param y the y coordinate of where to click
+     * @return success or not
+     * @throws IOException on error communicating with the device
+     */
+    public boolean touchMove(int x, int y) throws IOException {
+        return sendMonkeyEvent("touch move " + x + " " + y);
+    }
+
+    /**
      * Send a touch (down and then up) event at the specified location.
      *
      * @param x the x coordinate of where to click

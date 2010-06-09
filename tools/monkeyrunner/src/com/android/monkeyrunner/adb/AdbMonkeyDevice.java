@@ -23,6 +23,7 @@ import com.android.ddmlib.IDevice;
 import com.android.monkeyrunner.MonkeyDevice;
 import com.android.monkeyrunner.MonkeyImage;
 import com.android.monkeyrunner.MonkeyManager;
+import com.android.monkeyrunner.adb.LinearInterpolator.Point;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -37,7 +38,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
 
@@ -420,5 +420,54 @@ public class AdbMonkeyDevice extends MonkeyDevice {
             }
         }
         return map;
+    }
+
+    @Override
+    protected void drag(int startx, int starty, int endx, int endy, int steps, long ms) {
+        final long iterationTime = ms / steps;
+
+        LinearInterpolator lerp = new LinearInterpolator(steps);
+        LinearInterpolator.Point start = new LinearInterpolator.Point(startx, starty);
+        LinearInterpolator.Point end = new LinearInterpolator.Point(endx, endy);
+        lerp.interpolate(start, end, new LinearInterpolator.Callback() {
+            @Override
+            public void step(Point point) {
+                try {
+                    manager.touchMove(point.getX(), point.getY());
+                } catch (IOException e) {
+                    LOG.log(Level.SEVERE, "Error sending drag start event", e);
+                }
+
+                try {
+                    Thread.sleep(iterationTime);
+                } catch (InterruptedException e) {
+                    LOG.log(Level.SEVERE, "Error sleeping", e);
+                }
+            }
+
+            @Override
+            public void start(Point point) {
+                try {
+                    manager.touchDown(point.getX(), point.getY());
+                } catch (IOException e) {
+                    LOG.log(Level.SEVERE, "Error sending drag start event", e);
+                }
+
+                try {
+                    Thread.sleep(iterationTime);
+                } catch (InterruptedException e) {
+                    LOG.log(Level.SEVERE, "Error sleeping", e);
+                }
+            }
+
+            @Override
+            public void end(Point point) {
+                try {
+                    manager.touchUp(point.getX(), point.getY());
+                } catch (IOException e) {
+                    LOG.log(Level.SEVERE, "Error sending drag end event", e);
+                }
+            }
+        });
     }
 }
