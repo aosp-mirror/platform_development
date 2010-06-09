@@ -24,22 +24,22 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:text="@string/fragment_retain_instance_msg" />
+        android:text="@string/fragment_menu_msg" />
 
-    <ProgressBar android:id="@+id/progress_horizontal"
-        style="?android:attr/progressBarStyleHorizontal"
-        android:layout_width="200dip"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:padding="6dp"
-        android:max="500" />
-
-    <Button android:id="@+id/restart"
+    <CheckBox android:id="@+id/menu1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:text="@string/restart">
-        <requestFocus />
-    </Button>
+        android:checked="true"
+        android:text="@string/fragment1menu">
+    </CheckBox>
+    
+    <CheckBox android:id="@+id/menu2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:checked="true"
+        android:text="@string/fragment2menu">
+    </CheckBox>
     
 </LinearLayout>

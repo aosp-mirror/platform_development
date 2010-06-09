@@ -246,6 +246,13 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".app.FragmentMenu" android:label="@string/fragment_menu">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
         <!-- Intent Samples -->
 
         <activity android:name=".app.Intents" android:label="@string/activity_intents">

@@ -97,6 +97,12 @@
 
     <string name="fragment_receive_result">App/Fragment/Receive Result</string>
     
+    <string name="fragment_menu">App/Fragment/Menu</string>
+    <string name="fragment_menu_msg">Build menus from two fragments, allowing
+        you to hide them to remove them..</string>
+    <string name="fragment1menu">Show fragment 1 menu</string>
+    <string name="fragment2menu">Show fragment 2 menu</string>
+    
     <string name="activity_menu">App/Activity/Menu</string>
     <string name="open_menu">Open menu</string>
     <string name="close_menu">Close menu</string>
