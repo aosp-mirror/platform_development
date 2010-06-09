@@ -17,10 +17,14 @@
 package com.android.sdksetup;
 
 import android.app.Activity;
+import android.app.backup.IBackupManager;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.os.RemoteException;
+import android.os.ServiceManager;
 import android.provider.Settings;
 
 /**
@@ -42,6 +46,16 @@ public class DefaultActivity extends Activity {
         
         // enable install from non market
         Settings.Secure.putInt(getContentResolver(), Settings.Secure.INSTALL_NON_MARKET_APPS, 1);
+
+        // provision the backup manager.
+        IBackupManager bm = IBackupManager.Stub.asInterface(
+                ServiceManager.getService(Context.BACKUP_SERVICE));
+        if (bm != null) {
+            try {
+                bm.setBackupProvisioned(true);
+            } catch (RemoteException e) {
+            }
+        }
 
         // remove this activity from the package manager.
         PackageManager pm = getPackageManager();
