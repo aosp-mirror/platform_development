@@ -103,11 +103,15 @@ visit <a href="http://groups.google.com/group/android-platform">http://groups.go
 </ol>
 
 <h2>Android on IRC</h2>
-<p>We also have a presence on IRC via Freenode. We maintain two official IRC
-channels on irc.freenode.net:</p>
+<p>We also have a presence on IRC via <a href="http://freenode.net/">freenode</a>.
+We maintain two official IRC channels on
+<a href="irc://irc.freenode.net/">irc.freenode.net</a> (access via the web
+at <a href="http://webchat.freenode.net/">freenode webchat</a>):</p>
 <ul>
-<li><b>#android</b> - dedicated to general Android discussion and porting concerns</li>
-<li><b>#android-dev</b> - dedicated to discussion about writing Android applications</li>
+<li><b><a href="irc://irc.freenode.net/android">#android</a></b>
+    &mdash; dedicated to general Android discussion and porting concerns</li>
+<li><b><a href="irc://irc.freenode.net/android-dev">#android-dev</a></b>
+    &mdash; dedicated to discussion about writing Android applications</li>
 </ul>
 <p>The channels above are official. There are a few other channels the
 community is using, but are not official. These aren't official or officially
@@ -115,7 +119,12 @@ moderated/managed, so you use the channels below at your own risk. The Open
 Handset Alliance doesn't endorse these channels, there's no warranty express
 or implied, and so on. There may be more channels than just these listed.</p>
 <ul>
-<li><b>#android-offtopic</b> - for, well, off-topic discussions</li>
-<li><b>#android-root</b> - for discussion related to off-label uses of hardware</li>
-<li><b>#android-fr</b> - pour discuter d'Android en français</li>
+<li><b><a href="irc://irc.freenode.net/android-firehose">#android-firehose</a></b>
+    &mdash; displays in real-time the commits to the Android Open Source Project</li>
+<li><b><a href="irc://irc.freenode.net/android-fr">#android-fr</a></b>
+    &mdash; pour discuter d'Android en français</li>
+<li><b><a href="irc://irc.freenode.net/android-offtopic">#android-offtopic</a></b>
+    &mdash; for, well, off-topic discussions</li>
+<li><b><a href="irc://irc.freenode.net/android-root">#android-root</a></b>
+    &mdash; for discussion related to off-label uses of hardware</li>
 </ul>
