@@ -430,7 +430,6 @@ public class AdbMonkeyDevice extends MonkeyDevice {
         LinearInterpolator.Point start = new LinearInterpolator.Point(startx, starty);
         LinearInterpolator.Point end = new LinearInterpolator.Point(endx, endy);
         lerp.interpolate(start, end, new LinearInterpolator.Callback() {
-            @Override
             public void step(Point point) {
                 try {
                     manager.touchMove(point.getX(), point.getY());
@@ -445,7 +444,6 @@ public class AdbMonkeyDevice extends MonkeyDevice {
                 }
             }
 
-            @Override
             public void start(Point point) {
                 try {
                     manager.touchDown(point.getX(), point.getY());
@@ -460,7 +458,6 @@ public class AdbMonkeyDevice extends MonkeyDevice {
                 }
             }
 
-            @Override
             public void end(Point point) {
                 try {
                     manager.touchUp(point.getX(), point.getY());
