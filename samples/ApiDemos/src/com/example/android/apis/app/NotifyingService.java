@@ -30,7 +30,6 @@ import android.os.ConditionVariable;
 import android.os.IBinder;
 import android.os.Parcel;
 import android.os.RemoteException;
-import android.widget.RemoteViews;
 
 /**
  * This is an example of service that will update its status bar balloon 

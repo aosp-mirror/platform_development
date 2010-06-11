@@ -30,7 +30,6 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.Toast;
 
-
 /**
  * <p>Example of binding and unbinding to the {@link LocalService}.
  * This demonstrates the implementation of a service which the client will
@@ -61,7 +60,7 @@ public class LocalServiceBinding extends Activity {
             // service that we know is running in our own process, we can
             // cast its IBinder to a concrete class and directly access it.
             mBoundService = ((LocalService.LocalBinder)service).getService();
-            
+
             // Tell the user about this for our demo.
             Toast.makeText(LocalServiceBinding.this, R.string.local_service_connected,
                     Toast.LENGTH_SHORT).show();

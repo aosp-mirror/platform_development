@@ -75,8 +75,6 @@ public class QuickContactsDemo extends ListActivity {
         @Override
         public void bindView(View view, Context context, Cursor cursor) {
             final ContactListItemCache cache = (ContactListItemCache) view.getTag();
-            TextView nameView = cache.nameView;
-            QuickContactBadge photoView = cache.photoView;
             // Set the name
             cursor.copyStringToBuffer(SUMMARY_NAME_COLUMN_INDEX, cache.nameBuffer);
             int size = cache.nameBuffer.sizeCopied;
