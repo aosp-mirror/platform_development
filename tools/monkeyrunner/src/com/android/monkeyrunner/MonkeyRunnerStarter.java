@@ -81,11 +81,16 @@ public class MonkeyRunnerStarter {
     private int run() {
         MonkeyRunner.setBackend(backend);
         Map<String, Predicate<PythonInterpreter>> plugins = handlePlugins();
-        int error = ScriptRunner.run(options.getScriptFile().getAbsolutePath(),
-            options.getArguments(), plugins);
-        backend.shutdown();
-        MonkeyRunner.setBackend(null);
-        return error;
+        if (options.getScriptFile() == null) {
+            ScriptRunner.console();
+            return 0;
+        } else {
+            int error = ScriptRunner.run(options.getScriptFile().getAbsolutePath(),
+                    options.getArguments(), plugins);
+            backend.shutdown();
+            MonkeyRunner.setBackend(null);
+            return error;
+        }
     }
 
     private Predicate<PythonInterpreter> handlePlugin(File f) {

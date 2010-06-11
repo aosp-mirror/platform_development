@@ -15,6 +15,8 @@
  */
 package com.android.monkeyrunner;
 
+import com.android.monkeyrunner.adb.LinearInterpolatorTest;
+
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestResult;
@@ -36,7 +38,7 @@ public class AllTests {
     public static void main(String args[]) {
         TestRunner tr = new TestRunner();
         TestResult result = tr.doRun(AllTests.suite(ImageUtilsTest.class, JythonUtilsTest.class,
-            MonkeyRunnerOptionsTest.class));
+            MonkeyRunnerOptionsTest.class, LinearInterpolatorTest.class));
         if (result.wasSuccessful()) {
             System.exit(0);
         } else {

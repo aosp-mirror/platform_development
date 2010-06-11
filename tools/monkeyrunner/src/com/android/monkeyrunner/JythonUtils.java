@@ -124,6 +124,26 @@ public final class JythonUtils {
     }
 
     /**
+     * Get a python floating point value from an ArgParser.
+     *
+     * @param ap the ArgParser to get the value from.
+     * @param position the position in the parser
+     * @param defaultValue the default value to return if the arg isn't specified.
+     * @return the double value
+     */
+    public static double getFloat(ArgParser ap, int position, double defaultValue) {
+        PyObject arg = ap.getPyObject(position, new PyFloat(defaultValue));
+
+        if (Py.isInstance(arg, PyFloat.TYPE)) {
+            return ((PyFloat) arg).asDouble();
+        }
+        if (Py.isInstance(arg, PyInteger.TYPE)) {
+            return ((PyInteger) arg).asDouble();
+        }
+        throw Py.TypeError("Unable to parse argument: " + position);
+    }
+
+    /**
      * Get a list of arguments from an ArgParser.
      *
      * @param ap the ArgParser
