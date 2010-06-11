@@ -1,0 +1,6 @@
+samples/*/libs/
+samples/*/obj/
+samples/*/bin/
+samples/*/gen/
+local.properties
+build.xml
