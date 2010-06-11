@@ -34,17 +34,14 @@ public class LinearInterpolatorTest extends TestCase {
             return points;
         }
 
-        @Override
         public void end(Point input) {
             points.add(input);
         }
 
-        @Override
         public void start(Point input) {
             points.add(input);
         }
 
-        @Override
         public void step(Point input) {
             points.add(input);
         }
