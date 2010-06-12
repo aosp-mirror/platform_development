@@ -41,7 +41,7 @@ public class FragmentMenu extends Activity {
         FragmentTransaction ft = openFragmentTransaction();
         mFragment1 = findFragmentByTag("f1");
         if (mFragment1 == null) {
-            mFragment1 = new Menu1Fragment();
+            mFragment1 = new MenuFragment();
             ft.add(mFragment1, "f1");
         }
         mFragment2 = findFragmentByTag("f2");
@@ -83,7 +83,7 @@ public class FragmentMenu extends Activity {
      * have a UI (it does not implement onCreateView), but it could also
      * have one if it wanted.
      */
-    public static class Menu1Fragment extends Fragment {
+    public static class MenuFragment extends Fragment {
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);

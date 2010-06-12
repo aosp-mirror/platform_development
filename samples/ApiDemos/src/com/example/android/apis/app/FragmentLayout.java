@@ -46,9 +46,15 @@ public class FragmentLayout extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        
+        // This layout varies depending on the screen size.
         setContentView(R.layout.fragment_layout);
     }
     
+    /**
+     * This is a secondary activity, to show what the user has selected
+     * when the screen is not large enough to show it all in one activity.
+     */
     public static class DialogActivity extends Activity {
         @Override
         protected void onCreate(Bundle savedInstanceState) {
@@ -63,7 +69,7 @@ public class FragmentLayout extends Activity {
             }
             
             DialogFragment dialog = new DialogFragment();
-            this.openFragmentTransaction().add(android.R.id.content, dialog).commit();
+            openFragmentTransaction().add(android.R.id.content, dialog).commit();
             dialog.setText(getIntent().getIntExtra("text", -1));
         }
     }

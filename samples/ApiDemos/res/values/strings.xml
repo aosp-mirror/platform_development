@@ -83,12 +83,22 @@
     <string name="redirect_getter">Enter the text that will be used by the main activity.  Press back to cancel.</string>
     <string name="apply">Apply</string>
 
-    <string name="fragment_stack">App/Fragment/Stack</string>
-    <string name="next">Next</string>
-
+    <string name="fragment_anim">App/Fragment/Anim</string>
+    
+    <string name="fragment_context_menu">App/Fragment/Context Menu</string>
+    <string name="fragment_context_menu_msg">Fragment populating a context
+            menu; long press the button to see.</string>
+    <string name="long_press">Long press me</string>
+    
     <string name="fragment_layout">App/Fragment/Layout</string>
     
-    <string name="fragment_anim">App/Fragment/Anim</string>
+    <string name="fragment_list">App/Fragment/List</string>
+    
+    <string name="fragment_menu">App/Fragment/Menu</string>
+    <string name="fragment_menu_msg">Build menus from two fragments, allowing
+        you to hide them to remove them..</string>
+    <string name="fragment1menu">Show fragment 1 menu</string>
+    <string name="fragment2menu">Show fragment 2 menu</string>
     
     <string name="fragment_retain_instance">App/Fragment/Retain Instance</string>
     <string name="fragment_retain_instance_msg">Current progress of retained fragment;
@@ -97,12 +107,9 @@
 
     <string name="fragment_receive_result">App/Fragment/Receive Result</string>
     
-    <string name="fragment_menu">App/Fragment/Menu</string>
-    <string name="fragment_menu_msg">Build menus from two fragments, allowing
-        you to hide them to remove them..</string>
-    <string name="fragment1menu">Show fragment 1 menu</string>
-    <string name="fragment2menu">Show fragment 2 menu</string>
-    
+    <string name="fragment_stack">App/Fragment/Stack</string>
+    <string name="next">Next</string>
+
     <string name="activity_menu">App/Activity/Menu</string>
     <string name="open_menu">Open menu</string>
     <string name="close_menu">Close menu</string>

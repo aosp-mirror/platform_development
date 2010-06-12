@@ -209,7 +209,15 @@
 
         <!-- Fragment Samples -->
 
-        <activity android:name=".app.FragmentStack" android:label="@string/fragment_stack">
+        <activity android:name=".app.FragmentAnim" android:label="@string/fragment_anim">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".app.FragmentContextMenu"
+                android:label="@string/fragment_context_menu">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -225,7 +233,14 @@
 
         <activity android:name=".app.FragmentLayout$DialogActivity" />
 
-        <activity android:name=".app.FragmentAnim" android:label="@string/fragment_anim">
+        <activity android:name=".app.FragmentList" android:label="@string/fragment_list">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".app.FragmentMenu" android:label="@string/fragment_menu">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -246,7 +261,7 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".app.FragmentMenu" android:label="@string/fragment_menu">
+        <activity android:name=".app.FragmentStack" android:label="@string/fragment_stack">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
