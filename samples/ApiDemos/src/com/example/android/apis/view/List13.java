@@ -52,7 +52,6 @@ public class List13 extends ListActivity implements ListView.OnScrollListener {
         private LayoutInflater mInflater;
         
         public SlowAdapter(Context context) {
-            mContext = context;
             mInflater = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         }
 
@@ -114,11 +113,6 @@ public class List13 extends ListActivity implements ListView.OnScrollListener {
 
             return text;
         }
-
-        /**
-         * Remember our context so we can use it when constructing views.
-         */
-        private Context mContext;
     }
     
     @Override
