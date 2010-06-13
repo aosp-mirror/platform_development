@@ -17,9 +17,6 @@
 
 """TestSuite definition for Android instrumentation tests."""
 
-# python imports
-import os
-
 # local imports
 import coverage
 import errors
@@ -33,7 +30,7 @@ class InstrumentationTestSuite(test_suite.AbstractTestSuite):
   DEFAULT_RUNNER = "android.test.InstrumentationTestRunner"
 
   # dependency on libcore (used for Emma)
-  _LIBCORE_BUILD_PATH = os.path.join("dalvik", "libcore")
+  _LIBCORE_BUILD_PATH = "libcore"
 
   def __init__(self):
     test_suite.AbstractTestSuite.__init__(self)
