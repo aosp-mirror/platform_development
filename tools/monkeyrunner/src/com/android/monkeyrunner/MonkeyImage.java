@@ -198,8 +198,10 @@ public abstract class MonkeyImage {
     }
 
     @MonkeyRunnerExported(doc = "Compare this image to the other image.",
-            args = {"other"},
-            argDocs = {"The other image."},
+            args = {"other", "percent"},
+            argDocs = {"The other image.",
+                       "A float from 0.0 to 1.0 indicating the percentage " +
+                           "of pixels that need to be the same.  Defaults to 1.0"},
             returns = "True if they are the same image.")
     public boolean sameAs(PyObject[] args, String[] kws) {
         ArgParser ap = JythonUtils.createArgParser(args, kws);
@@ -207,6 +209,8 @@ public abstract class MonkeyImage {
 
         PyObject otherObject = ap.getPyObject(0);
         MonkeyImage other = (MonkeyImage) otherObject.__tojava__(MonkeyImage.class);
+
+        double percent = JythonUtils.getFloat(ap, 1, 1.0);
 
         BufferedImage otherImage = other.getBufferedImage();
         BufferedImage myImage = getBufferedImage();
@@ -222,15 +226,21 @@ public abstract class MonkeyImage {
         int[] otherPixel = new int[1];
         int[] myPixel = new int[1];
 
+        int width = myImage.getWidth();
+        int height = myImage.getHeight();
+
+        int numDiffPixels = 0;
         // Now, go through pixel-by-pixel and check that the images are the same;
-        for (int y = 0; y < myImage.getHeight(); y++) {
-            for (int x = 0; x < myImage.getWidth(); x++) {
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
                 if (myImage.getRGB(x, y) != otherImage.getRGB(x, y)) {
-                    return false;
+                    numDiffPixels++;
                 }
             }
         }
-        return true;
+        double numberPixels = (height * width);
+        double diffPercent = numDiffPixels / numberPixels;
+        return percent <= 1.0 - diffPercent;
     }
 
     private static class BufferedImageMonkeyImage extends MonkeyImage {
