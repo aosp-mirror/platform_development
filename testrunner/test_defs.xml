@@ -110,6 +110,14 @@ See test_defs.xsd for more information.
     coverage_target="framework"
     continuous="true" />
 
+<test-native name="libui"
+    build_path="frameworks/base/libs/ui/tests"
+    description="Framework libui unit tests." />
+
+<test-native name="libutils"
+    build_path="frameworks/base/libs/utils/tests"
+    description="Framework libutils unit tests." />
+
 <!--  end of framework tests -->
 
 <!-- media framework tests -->
