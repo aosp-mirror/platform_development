@@ -50,7 +50,7 @@ public class Animation3 extends Activity implements AdapterView.OnItemSelectedLi
         s.setOnItemSelectedListener(this);
     }
 
-    public void onItemSelected(AdapterView parent, View v, int position, long id) {
+    public void onItemSelected(AdapterView<?> parent, View v, int position, long id) {
         final View target = findViewById(R.id.target);
         final View targetParent = (View) target.getParent();
 
@@ -96,6 +96,6 @@ public class Animation3 extends Activity implements AdapterView.OnItemSelectedLi
         target.startAnimation(a);
     }
 
-    public void onNothingSelected(AdapterView parent) {
+    public void onNothingSelected(AdapterView<?> parent) {
     }
 }

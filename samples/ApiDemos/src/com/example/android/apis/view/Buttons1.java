@@ -22,9 +22,6 @@ import com.example.android.apis.R;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.widget.Spinner;
-import android.widget.ArrayAdapter;
-
 
 /**
  * A gallery of the different styles of buttons.

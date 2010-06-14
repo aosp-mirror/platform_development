@@ -25,8 +25,6 @@ import android.os.Bundle;
  * <p>This example shows how to use horizontal gravity in a table layout.</p>
  */
 public class TableLayout11 extends Activity {
-    private boolean mShrink;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

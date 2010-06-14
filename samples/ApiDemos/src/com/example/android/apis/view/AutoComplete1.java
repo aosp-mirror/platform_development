@@ -19,12 +19,9 @@ package com.example.android.apis.view;
 import com.example.android.apis.R;
 
 import android.app.Activity;
-import android.widget.Spinner;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.os.Bundle;
-import android.view.View;
-
 
 public class AutoComplete1 extends Activity {
 

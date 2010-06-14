@@ -49,7 +49,7 @@ public class Animation2 extends Activity implements
         s.setOnItemSelectedListener(this);
     }
 
-    public void onItemSelected(AdapterView parent, View v, int position, long id) {
+    public void onItemSelected(AdapterView<?> parent, View v, int position, long id) {
         switch (position) {
 
         case 0:
@@ -79,7 +79,7 @@ public class Animation2 extends Activity implements
         }
     }
 
-    public void onNothingSelected(AdapterView parent) {
+    public void onNothingSelected(AdapterView<?> parent) {
     }
 
     private String[] mStrings = {
