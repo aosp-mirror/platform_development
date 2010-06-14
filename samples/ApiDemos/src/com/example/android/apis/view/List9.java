@@ -111,8 +111,8 @@ public class List9 extends ListActivity implements ListView.OnScrollListener {
     
    
     
-    public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
-        int lastItem = firstVisibleItem + visibleItemCount - 1;
+    public void onScroll(AbsListView view, int firstVisibleItem,
+            int visibleItemCount, int totalItemCount) {
         if (mReady) {
             char firstLetter = mStrings[firstVisibleItem].charAt(0);
             
@@ -120,8 +120,6 @@ public class List9 extends ListActivity implements ListView.OnScrollListener {
 
                 mShowing = true;
                 mDialogText.setVisibility(View.VISIBLE);
-               
-
             }
             mDialogText.setText(((Character)firstLetter).toString());
             mHandler.removeCallbacks(mRemoveWindow);
@@ -316,5 +314,4 @@ public class List9 extends ListActivity implements ListView.OnScrollListener {
             "Woodside Cabecou", "Xanadu", "Xynotyro", "Yarg Cornish",
             "Yarra Valley Pyramid", "Yorkshire Blue", "Zamorano",
             "Zanetti Grana Padano", "Zanetti Parmigiano Reggiano"};
-
 }

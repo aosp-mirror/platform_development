@@ -20,7 +20,6 @@ package com.example.android.apis.graphics;
 // class is in a sub-package.
 import com.example.android.apis.R;
 
-import android.app.Activity;
 import android.os.Bundle;
 
 public class GradientDrawable1 extends GraphicsActivity {

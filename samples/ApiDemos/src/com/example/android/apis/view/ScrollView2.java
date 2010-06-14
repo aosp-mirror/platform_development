@@ -24,7 +24,6 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Button;
 
-
 /**
  * Demonstrates wrapping a layout in a ScrollView.
  *

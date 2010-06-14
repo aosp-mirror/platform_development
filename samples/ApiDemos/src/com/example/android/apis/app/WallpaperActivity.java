@@ -22,7 +22,6 @@ import com.example.android.apis.R;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.view.WindowManager;
 
 /**
  * <h3>Wallpaper Activity</h3>

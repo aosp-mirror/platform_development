@@ -21,7 +21,6 @@ import android.os.Bundle;
 import android.widget.TabHost;
 import android.widget.TabHost.TabSpec;
 import android.view.LayoutInflater;
-import android.view.View;
 
 import com.example.android.apis.R;
 

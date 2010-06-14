@@ -20,11 +20,9 @@ package com.example.android.apis.graphics;
 // class is in a sub-package.
 //import com.example.android.apis.R;
 
-import android.app.Activity;
 import android.content.Context;
 import android.graphics.*;
 import android.os.Bundle;
-import android.view.KeyEvent;
 import android.view.View;
 
 public class PathFillTypes extends GraphicsActivity {
@@ -34,7 +32,7 @@ public class PathFillTypes extends GraphicsActivity {
         super.onCreate(savedInstanceState);
         setContentView(new SampleView(this));
     }
-    
+
     private static class SampleView extends View {
         private Paint mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         private Path mPath;
@@ -48,7 +46,7 @@ public class PathFillTypes extends GraphicsActivity {
             mPath.addCircle(40, 40, 45, Path.Direction.CCW);
             mPath.addCircle(80, 80, 45, Path.Direction.CCW);
         }
-        
+
         private void showPath(Canvas canvas, int x, int y, Path.FillType ft,
                               Paint paint) {
             canvas.save();
@@ -59,14 +57,14 @@ public class PathFillTypes extends GraphicsActivity {
             canvas.drawPath(mPath, paint);
             canvas.restore();
         }
-        
+
         @Override protected void onDraw(Canvas canvas) {
             Paint paint = mPaint;
 
             canvas.drawColor(0xFFCCCCCC);
-            
+
             canvas.translate(20, 20);
-            
+
             paint.setAntiAlias(true);
 
             showPath(canvas, 0, 0, Path.FillType.WINDING, paint);

@@ -20,7 +20,6 @@ package com.example.android.apis.graphics;
 // class is in a sub-package.
 //import com.example.android.apis.R;
 
-import android.app.Activity;
 import android.content.Context;
 import android.graphics.*;
 import android.os.Bundle;
@@ -33,7 +32,7 @@ public class PolyToPoly extends GraphicsActivity {
         super.onCreate(savedInstanceState);
         setContentView(new SampleView(this));
     }
-    
+
     private static class SampleView extends View {
         private Paint   mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         private Matrix  mMatrix = new Matrix();
@@ -43,13 +42,13 @@ public class PolyToPoly extends GraphicsActivity {
             canvas.save();
             mMatrix.setPolyToPoly(src, 0, dst, 0, src.length >> 1);
             canvas.concat(mMatrix);
-            
+
             mPaint.setColor(Color.GRAY);
             mPaint.setStyle(Paint.Style.STROKE);
             canvas.drawRect(0, 0, 64, 64, mPaint);
             canvas.drawLine(0, 0, 64, 64, mPaint);
             canvas.drawLine(0, 64, 64, 0, mPaint);
-            
+
             mPaint.setColor(Color.RED);
             mPaint.setStyle(Paint.Style.FILL);
             // how to draw the text center on our square
@@ -58,7 +57,7 @@ public class PolyToPoly extends GraphicsActivity {
             // centering in Y, we need to measure ascent/descent first
             float y = 64/2 - (mFontMetrics.ascent + mFontMetrics.descent)/2;
             canvas.drawText(src.length/2 + "", x, y, mPaint);
-            
+
             canvas.restore();
         }
 
@@ -72,10 +71,9 @@ public class PolyToPoly extends GraphicsActivity {
             mPaint.setTextAlign(Paint.Align.CENTER);
             mFontMetrics = mPaint.getFontMetrics();
         }
-        
-        @Override protected void onDraw(Canvas canvas) {
-            Paint paint = mPaint;
 
+        @Override
+        protected void onDraw(Canvas canvas) {
             canvas.drawColor(Color.WHITE);
 
             canvas.save();
@@ -83,7 +81,7 @@ public class PolyToPoly extends GraphicsActivity {
             // translate (1 point)
             doDraw(canvas, new float[] { 0, 0 }, new float[] { 5, 5 });
             canvas.restore();
-            
+
             canvas.save();
             canvas.translate(160, 10);
             // rotate/uniform-scale (2 points)
@@ -107,4 +105,3 @@ public class PolyToPoly extends GraphicsActivity {
         }
     }
 }
-

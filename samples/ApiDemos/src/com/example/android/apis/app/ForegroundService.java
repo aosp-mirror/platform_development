@@ -49,9 +49,9 @@ public class ForegroundService extends Service {
     static final String ACTION_BACKGROUND = "com.example.android.apis.BACKGROUND";
     
  // BEGIN_INCLUDE(foreground_compatibility)
-    private static final Class[] mStartForegroundSignature = new Class[] {
+    private static final Class<?>[] mStartForegroundSignature = new Class[] {
         int.class, Notification.class};
-    private static final Class[] mStopForegroundSignature = new Class[] {
+    private static final Class<?>[] mStopForegroundSignature = new Class[] {
         boolean.class};
     
     private NotificationManager mNM;

@@ -16,7 +16,6 @@
 
 package com.example.android.apis.graphics;
 
-import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -41,34 +40,34 @@ import android.view.View;
 public class TouchPaint extends GraphicsActivity {
     /** Used as a pulse to gradually fade the contents of the window. */
     private static final int FADE_MSG = 1;
-    
+
     /** Menu ID for the command to clear the window. */
     private static final int CLEAR_ID = Menu.FIRST;
     /** Menu ID for the command to toggle fading. */
     private static final int FADE_ID = Menu.FIRST+1;
-    
+
     /** How often to fade the contents of the window (in ms). */
     private static final int FADE_DELAY = 100;
-    
+
     /** The view responsible for drawing the window. */
     MyView mView;
     /** Is fading mode enabled? */
     boolean mFading;
-    
+
     @Override protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        
+
         // Create and attach the view that is responsible for painting.
         mView = new MyView(this);
         setContentView(mView);
         mView.requestFocus();
-        
+
         // Restore the fading option if we are being thawed from a
         // previously saved state.  Note that we are not currently remembering
         // the contents of the bitmap.
         mFading = savedInstanceState != null ? savedInstanceState.getBoolean("fading", true) : true;
     }
-    
+
     @Override public boolean onCreateOptionsMenu(Menu menu) {
         menu.add(0, CLEAR_ID, 0, "Clear");
         menu.add(0, FADE_ID, 0, "Fade").setCheckable(true);
@@ -130,14 +129,14 @@ public class TouchPaint extends GraphicsActivity {
         mHandler.sendMessageDelayed(
                 mHandler.obtainMessage(FADE_MSG), FADE_DELAY);
     }
-    
+
     /**
      * Stop the pulse to fade the screen.
      */
     void stopFading() {
         mHandler.removeMessages(FADE_MSG);
     }
-    
+
     private Handler mHandler = new Handler() {
         @Override public void handleMessage(Message msg) {
             switch (msg.what) {
@@ -155,7 +154,7 @@ public class TouchPaint extends GraphicsActivity {
             }
         }
     };
-    
+
     public class MyView extends View {
         private static final int FADE_ALPHA = 0x06;
         private static final int MAX_FADE_STEPS = 256/FADE_ALPHA + 4;
@@ -171,7 +170,7 @@ public class TouchPaint extends GraphicsActivity {
         private float mCurSize;
         private int mCurWidth;
         private int mFadeSteps = MAX_FADE_STEPS;
-        
+
         public MyView(Context c) {
             super(c);
             mPaint = new Paint();
@@ -190,7 +189,7 @@ public class TouchPaint extends GraphicsActivity {
                 mFadeSteps = MAX_FADE_STEPS;
             }
         }
-        
+
         public void fade() {
             if (mCanvas != null && mFadeSteps < MAX_FADE_STEPS) {
                 mCanvas.drawPaint(mFadePaint);
@@ -198,7 +197,7 @@ public class TouchPaint extends GraphicsActivity {
                 mFadeSteps++;
             }
         }
-        
+
         @Override protected void onSizeChanged(int w, int h, int oldw,
                 int oldh) {
             int curW = mBitmap != null ? mBitmap.getWidth() : 0;
@@ -206,10 +205,10 @@ public class TouchPaint extends GraphicsActivity {
             if (curW >= w && curH >= h) {
                 return;
             }
-            
+
             if (curW < w) curW = w;
             if (curH < h) curH = h;
-            
+
             Bitmap newBitmap = Bitmap.createBitmap(curW, curH,
                                                    Bitmap.Config.RGB_565);
             Canvas newCanvas = new Canvas();
@@ -221,7 +220,7 @@ public class TouchPaint extends GraphicsActivity {
             mCanvas = newCanvas;
             mFadeSteps = MAX_FADE_STEPS;
         }
-        
+
         @Override protected void onDraw(Canvas canvas) {
             if (mBitmap != null) {
                 canvas.drawBitmap(mBitmap, 0, 0, null);
@@ -252,7 +251,7 @@ public class TouchPaint extends GraphicsActivity {
             mCurDown = oldDown;
             return true;
         }
-        
+
         @Override public boolean onTouchEvent(MotionEvent event) {
             int action = event.getAction();
             mCurDown = action == MotionEvent.ACTION_DOWN
@@ -268,7 +267,7 @@ public class TouchPaint extends GraphicsActivity {
                     event.getSize());
             return true;
         }
-        
+
         private void drawPoint(float x, float y, float pressure, float size) {
             //Log.i("TouchPaint", "Drawing: " + x + "x" + y + " p="
             //        + pressure + " s=" + size);
