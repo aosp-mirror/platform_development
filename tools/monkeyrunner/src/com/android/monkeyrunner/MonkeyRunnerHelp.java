@@ -19,15 +19,20 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.google.common.io.Resources;
 
 import com.android.monkeyrunner.doc.MonkeyRunnerExported;
 
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
+import org.clearsilver.CS;
+import org.clearsilver.CSFileLoader;
+import org.clearsilver.HDF;
+
+import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
+import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
@@ -38,6 +43,18 @@ import java.util.Set;
  */
 public final class MonkeyRunnerHelp {
     private MonkeyRunnerHelp() { }
+
+    private static final String HELP = "help";
+    private static final String NAME = "name";
+    private static final String DOC = "doc";
+    private static final String ARGUMENT = "argument";
+    private static final String RETURNS = "returns";
+    private static final String TYPE = "type";
+
+    // Enum used to describe documented types.
+    private enum Type {
+        ENUM, FIELD, METHOD
+    }
 
     private static void getAllExportedClasses(Set<Field> fields,
             Set<Method> methods,
@@ -120,13 +137,35 @@ public final class MonkeyRunnerHelp {
         }
     };
 
-    public static String helpString() {
-        ByteArrayOutputStream os = new ByteArrayOutputStream();
-        help(new PrintStream(os, true));
-        return os.toString();
+    public static String helpString(String format) {
+        // Quick check for support formats
+        if ("html".equals(format) || "text".equals(format)) {
+            HDF hdf = buildHelpHdf();
+            CS clearsilver = new CS(hdf);
+            // Set a custom file loader to load requested files from resources relative to this class.
+            clearsilver.setFileLoader(new CSFileLoader() {
+                public String load(HDF hdf, String filename) throws IOException {
+                    return Resources.toString(Resources.getResource(MonkeyRunnerHelp.class, filename),
+                            Charset.defaultCharset());
+                }
+            });
+
+            // Load up the CS template file
+            clearsilver.parseFile(format.toLowerCase() + ".cs");
+            // And render the output
+            return clearsilver.render();
+        } else if ("hdf".equals(format)) {
+            HDF hdf = buildHelpHdf();
+            return hdf.writeString();
+        }
+        return "";
     }
 
-    private static void help(PrintStream out) {
+    private static HDF buildHelpHdf() {
+        HDF hdf = new HDF();
+
+        int outputItemCount = 0;
+
         Set<Field> fields = Sets.newTreeSet(MEMBER_SORTER);
         Set<Method> methods = Sets.newTreeSet(MEMBER_SORTER);
         Set<Constructor<?>> constructors = Sets.newTreeSet(MEMBER_SORTER);
@@ -134,51 +173,54 @@ public final class MonkeyRunnerHelp {
         getAllExportedClasses(fields, methods, constructors, classes);
 
         for (Class<?> clz : classes) {
-            out.println(clz.getCanonicalName() + ":");
+            String prefix = HELP + "." + outputItemCount + ".";
+
+            hdf.setValue(prefix + NAME, clz.getCanonicalName());
             MonkeyRunnerExported annotation = clz.getAnnotation(MonkeyRunnerExported.class);
-            out.println("  " + annotation.doc());
+            hdf.setValue(prefix + DOC, annotation.doc());
+            hdf.setValue(prefix + TYPE, Type.ENUM.name());
+
+            // Now go through the enumeration constants
             Object[] constants = clz.getEnumConstants();
             String[] argDocs = annotation.argDocs();
             if (constants.length > 0) {
-                out.println("  Values:");
                 for (int x = 0; x < constants.length; x++) {
-                    Object constant = constants[x];
-                    StringBuilder sb = new StringBuilder();
-                    sb.append("    ").append(constant);
+                    String argPrefix = prefix + ARGUMENT + "." + x + ".";
+                    hdf.setValue(argPrefix + NAME, constants[x].toString());
                     if (argDocs.length > x) {
-                        sb.append(" - ").append(argDocs[x]);
+                        hdf.setValue(argPrefix + DOC, argDocs[x]);
                     }
-
-                    out.println(sb.toString());
                 }
             }
-            out.println();
+            outputItemCount++;
         }
 
         for (Method m : methods) {
+            String prefix = HELP + "." + outputItemCount + ".";
+
             MonkeyRunnerExported annotation = m.getAnnotation(MonkeyRunnerExported.class);
             String className = m.getDeclaringClass().getCanonicalName();
             String methodName = className + "." + m.getName();
-            out.println(methodName + ":");
-            out.println("  " + annotation.doc());
+            hdf.setValue(prefix + NAME, methodName);
+            hdf.setValue(prefix + DOC, annotation.doc());
             if (annotation.args().length > 0) {
-                out.println("  Args:");
                 String[] argDocs = annotation.argDocs();
                 String[] aargs = annotation.args();
                 for (int x = 0; x < aargs.length; x++) {
-                    StringBuilder sb = new StringBuilder();
-                    sb.append("      ").append(aargs[x]);
+                    String argPrefix = prefix + ARGUMENT + "." + x + ".";
+
+                    hdf.setValue(argPrefix + NAME, aargs[x]);
                     if (argDocs.length > x) {
-                        sb.append(" - ").append(argDocs[x]);
+                        hdf.setValue(argPrefix + DOC, argDocs[x]);
                     }
-                    out.println(sb.toString());
                 }
             }
             if (!"".equals(annotation.returns())) {
-                out.println("  Returns:");
-                out.println("      " + annotation.returns());
+                hdf.setValue(prefix + RETURNS, annotation.returns());
             }
-            out.println();
+            outputItemCount++;
         }
+
+        return hdf;
     }
 }

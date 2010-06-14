@@ -24,6 +24,7 @@ import org.python.core.Py;
 import org.python.core.PyException;
 import org.python.core.PyObject;
 import org.python.util.InteractiveConsole;
+import org.python.util.JLineConsole;
 import org.python.util.PythonInterpreter;
 
 import java.io.File;
@@ -170,7 +171,7 @@ public class ScriptRunner {
      */
     public static void console() {
         initPython();
-        InteractiveConsole python = new InteractiveConsole();
+        InteractiveConsole python = new JLineConsole();
         python.interact();
     }
 }
