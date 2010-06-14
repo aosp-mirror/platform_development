@@ -89,8 +89,9 @@
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src/wifi/java"/>
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/services_intermediates/src"/>
 	<classpathentry kind="src" path="out/target/common/R"/>
-	<classpathentry kind="src" path="external/tagsoup/src"/>
 	<classpathentry kind="src" path="external/apache-http/src"/>
+	<classpathentry kind="src" path="external/libphonenumber/java/src"/>
+	<classpathentry kind="src" path="external/tagsoup/src"/>
 	<classpathentry kind="lib" path="out/target/common/obj/JAVA_LIBRARIES/google-common_intermediates/javalib.jar"/>
 	<classpathentry kind="lib" path="out/target/common/obj/JAVA_LIBRARIES/gsf-client_intermediates/javalib.jar"/>
 	<classpathentry kind="lib" path="out/target/common/obj/JAVA_LIBRARIES/guava_intermediates/javalib.jar"/>
