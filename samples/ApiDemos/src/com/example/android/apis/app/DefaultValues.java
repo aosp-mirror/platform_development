@@ -19,7 +19,6 @@ package com.example.android.apis.app;
 import com.example.android.apis.ApiDemosApplication;
 import com.example.android.apis.R;
 
-import android.app.Application;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceActivity;
