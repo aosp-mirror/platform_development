@@ -23,18 +23,17 @@ import android.content.Context;
 import android.graphics.*;
 import android.graphics.drawable.*;
 import android.os.Bundle;
-import android.view.KeyEvent;
 import android.view.*;
 
 public class ColorFilters extends GraphicsActivity {
-    
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(new SampleView(this));
-        
+
     }
-    
+
     private static class SampleView extends View {
         private Activity mActivity;
         private Drawable mDrawable;
@@ -52,7 +51,7 @@ public class ColorFilters extends GraphicsActivity {
             int center = (r.top + r.bottom) >> 1;
             int h = curr.getIntrinsicHeight();
             int y = center - (h >> 1);
-            
+
             curr.setBounds(x, y, x + curr.getIntrinsicWidth(), y + h);
         }
 
@@ -61,7 +60,7 @@ public class ColorFilters extends GraphicsActivity {
             mActivity = activity;
             Context context = activity;
             setFocusable(true);
-            
+
             mDrawable = context.getResources().getDrawable(R.drawable.btn_default_normal);
             mDrawable.setBounds(0, 0, 150, 48);
             mDrawable.setDither(true);
@@ -84,13 +83,13 @@ public class ColorFilters extends GraphicsActivity {
             mPaint.setAntiAlias(true);
             mPaint.setTextSize(16);
             mPaint.setTextAlign(Paint.Align.CENTER);
-            
+
             mPaint2 = new Paint(mPaint);
             mPaint2.setAlpha(64);
-            
+
             Paint.FontMetrics fm = mPaint.getFontMetrics();
             mPaintTextOffset = (fm.descent + fm.ascent) * 0.5f;
-            
+
             mColors = new int[] {
                 0,
                 0xCC0000FF,
@@ -106,10 +105,10 @@ public class ColorFilters extends GraphicsActivity {
                 PorterDuff.Mode.MULTIPLY,
             };
             mModeIndex = 0;
-            
+
             updateTitle();
         }
-        
+
         private void swapPaintColors() {
             if (mPaint.getColor() == 0xFF000000) {
                 mPaint.setColor(0xFFFFFFFF);
@@ -120,11 +119,11 @@ public class ColorFilters extends GraphicsActivity {
             }
             mPaint2.setAlpha(64);
         }
-        
+
         private void updateTitle() {
             mActivity.setTitle(mModes[mModeIndex].toString());
         }
-        
+
         private void drawSample(Canvas canvas, ColorFilter filter) {
             Rect r = mDrawable.getBounds();
             float x = (r.left + r.right) * 0.5f;
@@ -134,15 +133,15 @@ public class ColorFilters extends GraphicsActivity {
             mDrawable.draw(canvas);
             canvas.drawText("Label", x+1, y+1, mPaint2);
             canvas.drawText("Label", x, y, mPaint);
-            
+
             for (Drawable dr : mDrawables) {
                 dr.setColorFilter(filter);
                 dr.draw(canvas);
             }
         }
-        
+
         @Override protected void onDraw(Canvas canvas) {
-            canvas.drawColor(0xFFCCCCCC);            
+            canvas.drawColor(0xFFCCCCCC);
 
             canvas.translate(8, 12);
             for (int color : mColors) {
@@ -160,8 +159,6 @@ public class ColorFilters extends GraphicsActivity {
 
         @Override
         public boolean onTouchEvent(MotionEvent event) {
-            float x = event.getX();
-            float y = event.getY();
             switch (event.getAction()) {
                 case MotionEvent.ACTION_DOWN:
                     break;
@@ -181,4 +178,3 @@ public class ColorFilters extends GraphicsActivity {
         }
     }
 }
-

@@ -16,11 +16,6 @@
 
 package com.example.android.apis.graphics;
 
-// Need the following import to get access to the app resources, since this
-// class is in a sub-package.
-//import com.example.android.apis.R;
-
-import android.app.Activity;
 import android.content.Context;
 import android.graphics.*;
 import android.os.Bundle;
@@ -34,7 +29,7 @@ public class Sweep extends GraphicsActivity {
         super.onCreate(savedInstanceState);
         setContentView(new SampleView(this));
     }
-    
+
     private static class SampleView extends View {
         private Paint mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         private float mRotate;
@@ -55,7 +50,7 @@ public class Sweep extends GraphicsActivity {
                                                   Color.GREEN }, null);
             mPaint.setShader(mShader);
         }
-        
+
         @Override protected void onDraw(Canvas canvas) {
             Paint paint = mPaint;
             float x = 160;

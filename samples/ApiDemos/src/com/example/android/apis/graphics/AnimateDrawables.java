@@ -18,14 +18,14 @@ package com.example.android.apis.graphics;
 
 import com.example.android.apis.R;
 
-import android.app.Activity;
 import android.content.Context;
-import android.graphics.*;
-import android.graphics.drawable.*;
-import android.view.animation.*;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.view.KeyEvent;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.TranslateAnimation;
 
 public class AnimateDrawables extends GraphicsActivity {
 
@@ -34,7 +34,7 @@ public class AnimateDrawables extends GraphicsActivity {
         super.onCreate(savedInstanceState);
         setContentView(new SampleView(this));
     }
-    
+
     private static class SampleView extends View {
         private AnimateDrawable mDrawable;
 
@@ -45,17 +45,18 @@ public class AnimateDrawables extends GraphicsActivity {
 
             Drawable dr = context.getResources().getDrawable(R.drawable.beach);
             dr.setBounds(0, 0, dr.getIntrinsicWidth(), dr.getIntrinsicHeight());
-            
+
             Animation an = new TranslateAnimation(0, 100, 0, 200);
             an.setDuration(2000);
             an.setRepeatCount(-1);
             an.initialize(10, 10, 10, 10);
-            
+
             mDrawable = new AnimateDrawable(dr, an);
             an.startNow();
         }
-        
-        @Override protected void onDraw(Canvas canvas) {
+
+        @Override
+        protected void onDraw(Canvas canvas) {
             canvas.drawColor(Color.WHITE);
 
             mDrawable.draw(canvas);

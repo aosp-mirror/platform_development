@@ -32,8 +32,11 @@ import android.widget.TextView;
  */
 public class RedirectGetter extends Activity
 {
+    private String mTextPref;
+    private TextView mText;
+
     @Override
-	protected void onCreate(Bundle savedInstanceState)
+    protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
 
@@ -45,9 +48,12 @@ public class RedirectGetter extends Activity
 
         // The text being set.
         mText = (TextView)findViewById(R.id.text);
+
+        // Display the stored values, or if not stored initialize with an empty String
+        loadPrefs();
     }
 
-    private final boolean loadPrefs()
+    private final void loadPrefs()
     {
         // Retrieve the current redirect values.
         // NOTE: because this preference is shared between multiple
@@ -58,10 +64,9 @@ public class RedirectGetter extends Activity
         mTextPref = preferences.getString("text", null);
         if (mTextPref != null) {
             mText.setText(mTextPref);
-            return true;
+        } else {
+            mText.setText("");
         }
-
-        return false;
     }
 
     private OnClickListener mApplyListener = new OnClickListener()
@@ -79,8 +84,4 @@ public class RedirectGetter extends Activity
             finish();
         }
     };
-
-    private String mTextPref;
-    TextView mText;
 }
-

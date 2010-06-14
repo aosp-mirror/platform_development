@@ -18,16 +18,10 @@ package com.example.android.apis.graphics;
 
 import com.example.android.apis.R;
 
-import android.app.Activity;
 import android.content.Context;
 import android.graphics.*;
-import android.graphics.drawable.*;
 import android.os.Bundle;
-import android.view.KeyEvent;
 import android.view.*;
-
-import java.io.IOException;
-import java.io.InputStream;
 
 public class Vertices extends GraphicsActivity {
 
@@ -36,14 +30,13 @@ public class Vertices extends GraphicsActivity {
         super.onCreate(savedInstanceState);
         setContentView(new SampleView(this));
     }
-    
+
     private static class SampleView extends View {
         private final Paint mPaint = new Paint();
         private final float[] mVerts = new float[10];
         private final float[] mTexs = new float[10];
-        private final int[] mColors = new int[10];
         private final short[] mIndices = { 0, 1, 2, 3, 4, 1 };
-        
+
         private final Matrix mMatrix = new Matrix();
         private final Matrix mInverse = new Matrix();
 
@@ -61,7 +54,7 @@ public class Vertices extends GraphicsActivity {
             Shader s = new BitmapShader(bm, Shader.TileMode.CLAMP,
                                         Shader.TileMode.CLAMP);
             mPaint.setShader(s);
-            
+
             float w = bm.getWidth();
             float h = bm.getHeight();
             // construct our mesh
@@ -70,18 +63,18 @@ public class Vertices extends GraphicsActivity {
             setXY(mTexs, 2, w, 0);
             setXY(mTexs, 3, w, h);
             setXY(mTexs, 4, 0, h);
-            
+
             setXY(mVerts, 0, w/2, h/2);
             setXY(mVerts, 1, 0, 0);
             setXY(mVerts, 2, w, 0);
             setXY(mVerts, 3, w, h);
             setXY(mVerts, 4, 0, h);
-            
+
             mMatrix.setScale(0.8f, 0.8f);
             mMatrix.preTranslate(20, 20);
             mMatrix.invert(mInverse);
         }
-        
+
         @Override protected void onDraw(Canvas canvas) {
             canvas.drawColor(0xFFCCCCCC);
             canvas.save();
@@ -104,7 +97,7 @@ public class Vertices extends GraphicsActivity {
             invalidate();
             return true;
         }
-        
+
     }
 }
 

@@ -20,15 +20,12 @@ package com.example.android.apis.app;
 // class is in a sub-package.
 import android.app.Activity;
 import android.content.ComponentName;
-import android.content.Context;
-import android.os.RemoteException;
 import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 
 import com.example.android.apis.R;
-
 
 /**
  * Front-end for launching {@link LocalSampleInstrumentation} example

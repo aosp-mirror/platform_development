@@ -49,7 +49,7 @@ public class Gallery1 extends Activity {
         
         // Set a item click listener, and just Toast the clicked position
         g.setOnItemClickListener(new OnItemClickListener() {
-            public void onItemClick(AdapterView parent, View v, int position, long id) {
+            public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
                 Toast.makeText(Gallery1.this, "" + position, Toast.LENGTH_SHORT).show();
             }
         });

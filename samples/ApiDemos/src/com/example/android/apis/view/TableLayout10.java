@@ -19,15 +19,9 @@ package com.example.android.apis.view;
 import com.example.android.apis.R;
 
 import android.app.Activity;
-import android.widget.TableLayout;
-import android.widget.Button;
 import android.os.Bundle;
-import android.view.View;
-
 
 public class TableLayout10 extends Activity {
-    private boolean mShrink;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
