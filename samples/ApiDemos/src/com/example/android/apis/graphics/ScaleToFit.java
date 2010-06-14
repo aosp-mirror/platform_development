@@ -16,7 +16,6 @@
 
 package com.example.android.apis.graphics;
 
-import android.app.Activity;
 import android.content.Context;
 import android.graphics.*;
 import android.os.Bundle;
@@ -29,14 +28,14 @@ public class ScaleToFit extends GraphicsActivity {
         super.onCreate(savedInstanceState);
         setContentView(new SampleView(this));
     }
-    
+
     private static class SampleView extends View {
         private final Paint   mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         private final Paint   mHairPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         private final Paint   mLabelPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         private final Matrix  mMatrix = new Matrix();
         private final RectF   mSrcR = new RectF();
-        
+
         private static final Matrix.ScaleToFit[] sFits =
                 new Matrix.ScaleToFit[] {
             Matrix.ScaleToFit.FILL,
@@ -44,11 +43,11 @@ public class ScaleToFit extends GraphicsActivity {
             Matrix.ScaleToFit.CENTER,
             Matrix.ScaleToFit.END
         };
-        
+
         private static final String[] sFitLabels = new String[] {
             "FILL", "START", "CENTER", "END"
         };
-        
+
         private static final int[] sSrcData = new int[] {
             80, 40, Color.RED,
             40, 80, Color.GREEN,
@@ -56,7 +55,7 @@ public class ScaleToFit extends GraphicsActivity {
             80, 80, Color.BLACK
         };
         private static final int N = 4;
-        
+
         private static final int WIDTH = 52;
         private static final int HEIGHT = 52;
         private final RectF mDstR = new RectF(0, 0, WIDTH, HEIGHT);
@@ -67,34 +66,33 @@ public class ScaleToFit extends GraphicsActivity {
             mHairPaint.setStyle(Paint.Style.STROKE);
             mLabelPaint.setTextSize(16);
         }
-        
+
         private void setSrcR(int index) {
             int w = sSrcData[index*3 + 0];
             int h = sSrcData[index*3 + 1];
             mSrcR.set(0, 0, w, h);
         }
-        
+
         private void drawSrcR(Canvas canvas, int index) {
             mPaint.setColor(sSrcData[index*3 + 2]);
             canvas.drawOval(mSrcR, mPaint);
         }
-        
+
         private void drawFit(Canvas canvas, int index, Matrix.ScaleToFit stf) {
             canvas.save();
-            
+
             setSrcR(index);
             mMatrix.setRectToRect(mSrcR, mDstR, stf);
             canvas.concat(mMatrix);
             drawSrcR(canvas, index);
-            
+
             canvas.restore();
-            
+
             canvas.drawRect(mDstR, mHairPaint);
         }
 
-        @Override protected void onDraw(Canvas canvas) {
-            Paint paint = mPaint;
-
+        @Override
+        protected void onDraw(Canvas canvas) {
             canvas.drawColor(Color.WHITE);
 
             canvas.translate(10, 10);
@@ -106,7 +104,7 @@ public class ScaleToFit extends GraphicsActivity {
                 canvas.translate(mSrcR.width() + 15, 0);
             }
             canvas.restore();
-            
+
             canvas.translate(0, 100);
             for (int j = 0; j < sFits.length; j++) {
                 canvas.save();
@@ -121,4 +119,3 @@ public class ScaleToFit extends GraphicsActivity {
         }
     }
 }
-

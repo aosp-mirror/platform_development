@@ -16,7 +16,6 @@
 
 package com.example.android.apis.graphics;
 
-import android.app.Activity;
 import android.content.Context;
 import android.graphics.*;
 import android.os.Bundle;
@@ -26,7 +25,7 @@ import android.view.MotionEvent;
 import android.view.View;
 
 public class FingerPaint extends GraphicsActivity
-        implements ColorPickerDialog.OnColorChangedListener {    
+        implements ColorPickerDialog.OnColorChangedListener {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,34 +40,34 @@ public class FingerPaint extends GraphicsActivity
         mPaint.setStrokeJoin(Paint.Join.ROUND);
         mPaint.setStrokeCap(Paint.Cap.ROUND);
         mPaint.setStrokeWidth(12);
-        
+
         mEmboss = new EmbossMaskFilter(new float[] { 1, 1, 1 },
                                        0.4f, 6, 3.5f);
 
         mBlur = new BlurMaskFilter(8, BlurMaskFilter.Blur.NORMAL);
     }
-    
+
     private Paint       mPaint;
     private MaskFilter  mEmboss;
     private MaskFilter  mBlur;
-    
+
     public void colorChanged(int color) {
         mPaint.setColor(color);
     }
 
     public class MyView extends View {
-        
+
         private static final float MINP = 0.25f;
         private static final float MAXP = 0.75f;
-        
+
         private Bitmap  mBitmap;
         private Canvas  mCanvas;
         private Path    mPath;
         private Paint   mBitmapPaint;
-        
+
         public MyView(Context c) {
             super(c);
-            
+
             mBitmap = Bitmap.createBitmap(320, 480, Bitmap.Config.ARGB_8888);
             mCanvas = new Canvas(mBitmap);
             mPath = new Path();
@@ -79,19 +78,19 @@ public class FingerPaint extends GraphicsActivity
         protected void onSizeChanged(int w, int h, int oldw, int oldh) {
             super.onSizeChanged(w, h, oldw, oldh);
         }
-        
+
         @Override
         protected void onDraw(Canvas canvas) {
             canvas.drawColor(0xFFAAAAAA);
-            
+
             canvas.drawBitmap(mBitmap, 0, 0, mBitmapPaint);
-            
+
             canvas.drawPath(mPath, mPaint);
         }
-        
+
         private float mX, mY;
         private static final float TOUCH_TOLERANCE = 4;
-        
+
         private void touch_start(float x, float y) {
             mPath.reset();
             mPath.moveTo(x, y);
@@ -114,12 +113,12 @@ public class FingerPaint extends GraphicsActivity
             // kill this so we don't double draw
             mPath.reset();
         }
-        
+
         @Override
         public boolean onTouchEvent(MotionEvent event) {
             float x = event.getX();
             float y = event.getY();
-            
+
             switch (event.getAction()) {
                 case MotionEvent.ACTION_DOWN:
                     touch_start(x, y);
@@ -137,7 +136,7 @@ public class FingerPaint extends GraphicsActivity
             return true;
         }
     }
-    
+
     private static final int COLOR_MENU_ID = Menu.FIRST;
     private static final int EMBOSS_MENU_ID = Menu.FIRST + 1;
     private static final int BLUR_MENU_ID = Menu.FIRST + 2;
@@ -147,7 +146,7 @@ public class FingerPaint extends GraphicsActivity
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
-        
+
         menu.add(0, COLOR_MENU_ID, 0, "Color").setShortcut('3', 'c');
         menu.add(0, EMBOSS_MENU_ID, 0, "Emboss").setShortcut('4', 's');
         menu.add(0, BLUR_MENU_ID, 0, "Blur").setShortcut('5', 'z');
@@ -164,13 +163,13 @@ public class FingerPaint extends GraphicsActivity
         *****/
         return true;
     }
-    
+
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         super.onPrepareOptionsMenu(menu);
         return true;
     }
-    
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         mPaint.setXfermode(null);

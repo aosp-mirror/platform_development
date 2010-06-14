@@ -16,7 +16,6 @@
 
 package com.example.android.apis.graphics;
 
-import android.app.Activity;
 import android.content.Context;
 import android.graphics.*;
 import android.os.Bundle;
@@ -29,7 +28,7 @@ public class Layers extends GraphicsActivity {
         super.onCreate(savedInstanceState);
         setContentView(new SampleView(this));
     }
-    
+
     private static class SampleView extends View {
         private static final int LAYER_FLAGS = Canvas.MATRIX_SAVE_FLAG |
                                             Canvas.CLIP_SAVE_FLAG |
@@ -42,23 +41,23 @@ public class Layers extends GraphicsActivity {
         public SampleView(Context context) {
             super(context);
             setFocusable(true);
-            
+
             mPaint = new Paint();
             mPaint.setAntiAlias(true);
         }
-        
+
         @Override protected void onDraw(Canvas canvas) {
-            canvas.drawColor(Color.WHITE);            
-            
+            canvas.drawColor(Color.WHITE);
+
             canvas.translate(10, 10);
-            
+
             canvas.saveLayerAlpha(0, 0, 200, 200, 0x88, LAYER_FLAGS);
-            
+
             mPaint.setColor(Color.RED);
             canvas.drawCircle(75, 75, 75, mPaint);
             mPaint.setColor(Color.BLUE);
             canvas.drawCircle(125, 125, 75, mPaint);
-            
+
             canvas.restore();
         }
     }

@@ -27,16 +27,16 @@ import java.io.IOException;
 
 // ----------------------------------------------------------------------
 
-public class CameraPreview extends Activity {    
+public class CameraPreview extends Activity {
     private Preview mPreview;
-    
+
     @Override
 	protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        
+
         // Hide the window title.
         requestWindowFeature(Window.FEATURE_NO_TITLE);
-    
+
         // Create our Preview view and set it as the content of our activity.
         mPreview = new Preview(this);
         setContentView(mPreview);
@@ -49,10 +49,10 @@ public class CameraPreview extends Activity {
 class Preview extends SurfaceView implements SurfaceHolder.Callback {
     SurfaceHolder mHolder;
     Camera mCamera;
-    
+
     Preview(Context context) {
         super(context);
-        
+
         // Install a SurfaceHolder.Callback so we get notified when the
         // underlying surface is created and destroyed.
         mHolder = getHolder();

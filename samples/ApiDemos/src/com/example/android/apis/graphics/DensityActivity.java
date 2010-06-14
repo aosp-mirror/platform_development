@@ -21,7 +21,6 @@ package com.example.android.apis.graphics;
 import com.example.android.apis.R;
 
 import android.app.Activity;
-import android.app.Application;
 import android.os.Bundle;
 import android.graphics.BitmapFactory;
 import android.graphics.Bitmap;
@@ -34,8 +33,6 @@ import android.widget.ScrollView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.content.Context;
-import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageManager;
 import android.util.DisplayMetrics;
 import android.util.Log;
 
@@ -50,7 +47,7 @@ public class DensityActivity extends Activity {
 
         final LayoutInflater li = (LayoutInflater)getSystemService(
                 LAYOUT_INFLATER_SERVICE);
-        
+
         this.setTitle(R.string.density_title);
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
@@ -79,11 +76,11 @@ public class DensityActivity extends Activity {
         layout = (LinearLayout)li.inflate(R.layout.density_image_views, null);
         addLabelToRoot(root, "Inflated layout");
         addChildToRoot(root, layout);
-        
+
         layout = (LinearLayout)li.inflate(R.layout.density_styled_image_views, null);
         addLabelToRoot(root, "Inflated styled layout");
         addChildToRoot(root, layout);
-        
+
         layout = new LinearLayout(this);
         addCanvasBitmap(layout, R.drawable.logo120dpi, true);
         addCanvasBitmap(layout, R.drawable.logo160dpi, true);

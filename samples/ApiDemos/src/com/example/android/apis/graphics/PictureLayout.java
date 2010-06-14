@@ -26,7 +26,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewParent;
 
-
 public class PictureLayout extends ViewGroup {
     private final Picture mPicture = new Picture();
 
@@ -36,7 +35,7 @@ public class PictureLayout extends ViewGroup {
 
     public PictureLayout(Context context, AttributeSet attrs) {
         super(context, attrs);
-    }    
+    }
 
     @Override
     public void addView(View child) {
@@ -105,7 +104,7 @@ public class PictureLayout extends ViewGroup {
         setMeasuredDimension(resolveSize(maxWidth, widthMeasureSpec),
                 resolveSize(maxHeight, heightMeasureSpec));
     }
-    
+
     private void drawPict(Canvas canvas, int x, int y, int w, int h,
                           float sx, float sy) {
         canvas.save();
@@ -121,10 +120,10 @@ public class PictureLayout extends ViewGroup {
     protected void dispatchDraw(Canvas canvas) {
         super.dispatchDraw(mPicture.beginRecording(getWidth(), getHeight()));
         mPicture.endRecording();
-        
+
         int x = getWidth()/2;
         int y = getHeight()/2;
-        
+
         if (false) {
             canvas.drawPicture(mPicture);
         } else {

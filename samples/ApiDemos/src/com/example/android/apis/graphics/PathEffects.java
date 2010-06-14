@@ -16,7 +16,6 @@
 
 package com.example.android.apis.graphics;
 
-import android.app.Activity;
 import android.content.Context;
 import android.graphics.*;
 import android.os.Bundle;
@@ -30,7 +29,7 @@ public class PathEffects extends GraphicsActivity {
         super.onCreate(savedInstanceState);
         setContentView(new SampleView(this));
     }
-    
+
     private static class SampleView extends View {
         private Paint mPaint;
         private Path mPath;
@@ -41,7 +40,7 @@ public class PathEffects extends GraphicsActivity {
         private static PathEffect makeDash(float phase) {
             return new DashPathEffect(new float[] { 15, 5, 8, 5 }, phase);
         }
-        
+
         private static void makeEffects(PathEffect[] e, float phase) {
             e[0] = null;     // no effect
             e[1] = new CornerPathEffect(10);
@@ -51,7 +50,7 @@ public class PathEffects extends GraphicsActivity {
             e[4] = new ComposePathEffect(e[2], e[1]);
             e[5] = new ComposePathEffect(e[3], e[1]);
         }
-        
+
         public SampleView(Context context) {
             super(context);
             setFocusable(true);
@@ -60,23 +59,23 @@ public class PathEffects extends GraphicsActivity {
             mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
             mPaint.setStyle(Paint.Style.STROKE);
             mPaint.setStrokeWidth(6);
-            
+
             mPath = makeFollowPath();
-            
+
             mEffects = new PathEffect[6];
-            
+
             mColors = new int[] { Color.BLACK, Color.RED, Color.BLUE,
                                   Color.GREEN, Color.MAGENTA, Color.BLACK
                                 };
         }
-        
+
         @Override protected void onDraw(Canvas canvas) {
             canvas.drawColor(Color.WHITE);
-            
+
             RectF bounds = new RectF();
             mPath.computeBounds(bounds, false);
             canvas.translate(10 - bounds.left, 10 - bounds.top);
-            
+
             makeEffects(mEffects, mPhase);
             mPhase += 1;
             invalidate();
@@ -88,7 +87,7 @@ public class PathEffects extends GraphicsActivity {
                 canvas.translate(0, 28);
             }
         }
-        
+
         @Override public boolean onKeyDown(int keyCode, KeyEvent event) {
             switch (keyCode) {
                 case KeyEvent.KEYCODE_DPAD_CENTER:
@@ -106,7 +105,7 @@ public class PathEffects extends GraphicsActivity {
             }
             return p;
         }
-        
+
         private static Path makePathDash() {
             Path p = new Path();
             p.moveTo(4, 0);

@@ -16,7 +16,6 @@
 
 package com.example.android.apis.graphics;
 
-import android.app.Activity;
 import android.content.Context;
 import android.graphics.*;
 import android.os.Bundle;
@@ -29,20 +28,20 @@ public class Typefaces extends GraphicsActivity {
         super.onCreate(savedInstanceState);
         setContentView(new SampleView(this));
     }
-    
+
     private static class SampleView extends View {
         private Paint    mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         private Typeface mFace;
-        
+
         public SampleView(Context context) {
             super(context);
 
             mFace = Typeface.createFromAsset(getContext().getAssets(),
                                              "fonts/samplefont.ttf");
-            
+
             mPaint.setTextSize(64);
         }
-        
+
         @Override protected void onDraw(Canvas canvas) {
             canvas.drawColor(Color.WHITE);
 
