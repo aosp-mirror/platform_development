@@ -38,7 +38,10 @@ WIN_SDK_NAME  := $(subst $(HOST_OS)-$(HOST_ARCH),windows,$(LINUX_SDK_NAME))
 WIN_SDK_DIR   := $(subst $(HOST_OS)-$(HOST_ARCH),windows,$(LINUX_SDK_DIR))
 WIN_SDK_ZIP   := $(WIN_SDK_DIR)/$(WIN_SDK_NAME).zip
 
-$(call dist-for-goals, win_sdk, $(WIN_SDK_ZIP))
+# Also dist $(INTERNAL_SDK_TARGET), which is the original linux sdk package.
+# INTERNAL_SDK_TARGET is defined in build/core/Makefile.
+$(call dist-for-goals, win_sdk, $(WIN_SDK_ZIP) \
+    $(INTERNAL_SDK_TARGET))
 
 .PHONY: win_sdk winsdk-tools
 
