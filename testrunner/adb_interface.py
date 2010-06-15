@@ -148,6 +148,19 @@ class AdbInterface:
       return False
     return True
 
+  def EnableAdbRoot(self):
+    """Enable adb root on device."""
+    output = self.SendCommand("root")
+    if "adbd is already running as root" in output:
+      return True
+    elif "restarting adbd as root" in output:
+      # device will disappear from adb, wait for it to come back
+      self.SendCommand("wait-for-device")
+      return True
+    else:
+      logger.Log("Unrecognized output from adb root: %s" % output)
+      return False
+
   def StartInstrumentationForPackage(
       self, package_name, runner_name, timeout_time=60*10,
       no_window_animation=False, instrumentation_args={}):
