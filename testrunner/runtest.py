@@ -70,6 +70,8 @@ class TestRunner(object):
   # default value for make -jX
   _DEFAULT_JOBS = 4
 
+  _DALVIK_VERIFIER_OFF_PROP = "dalvik.vm.dexopt-flags = v=n"
+
   def __init__(self):
     # disable logging of timestamp
     self._root_path = android_build.GetTop()
@@ -223,6 +225,8 @@ class TestRunner(object):
     logger.SilentLog("Building tests...")
 
     tests = self._GetTestsToRun()
+    # turn off dalvik verifier if necessary
+    self._TurnOffVerifier(tests)
     self._DoFullBuild(tests)
 
     target_set = Set()
@@ -230,6 +234,10 @@ class TestRunner(object):
     for test_suite in tests:
       self._AddBuildTarget(test_suite, target_set, extra_args_set)
 
+    if not self._options.preview:
+      self._adb.EnableAdbRoot()
+    else:
+      logger.Log("adb root")
     rebuild_libcore = False
     if target_set:
       if self._options.coverage:
@@ -248,8 +256,9 @@ class TestRunner(object):
           logger.Log(cmd)
           run_command.RunCommand(cmd, return_output=False)
 
-      target_build_string = ' '.join(list(target_set))
-      extra_args_string = ' '.join(list(extra_args_set))
+      target_build_string = " ".join(list(target_set))
+      extra_args_string = " ".join(list(extra_args_set))
+
       # mmm cannot be used from python, so perform a similar operation using
       # ONE_SHOT_MAKEFILE
       cmd = 'ONE_SHOT_MAKEFILE="%s" make -j%s -C "%s" files %s' % (
@@ -348,6 +357,37 @@ class TestRunner(object):
       if test.GetSuite() == 'cts':
         return True
     return False
+
+  def _TurnOffVerifier(self, test_list):
+    """Turn off the dalvik verifier if needed by given tests.
+
+    If one or more tests needs dalvik verifier off, and it is not already off,
+    turns off verifier and reboots device to allow change to take effect.
+    """
+    # hack to check if these are framework/base tests. If so, turn off verifier
+    # to allow framework tests to access package-private framework api
+    framework_test = False
+    for test in test_list:
+      if os.path.commonprefix([test.GetBuildPath(), "frameworks/base"]):
+        framework_test = True
+    if framework_test:
+      # check if verifier is off already - to avoid the reboot if not
+      # necessary
+      output = self._adb.SendShellCommand("cat /data/local.prop")
+      if not self._DALVIK_VERIFIER_OFF_PROP in output:
+        if self._options.preview:
+          logger.Log("adb shell \"echo %s >> /data/local.prop\""
+                     % self._DALVIK_VERIFIER_OFF_PROP)
+          logger.Log("adb reboot")
+          logger.Log("adb wait-for-device")
+        else:
+          logger.Log("Turning off dalvik verifier and rebooting")
+          self._adb.SendShellCommand("\"echo %s >> /data/local.prop\""
+                                     % self._DALVIK_VERIFIER_OFF_PROP)
+          self._adb.SendCommand("reboot")
+          self._adb.SendCommand("wait-for-device", timeout_time=60,
+                                retry_count=3)
+          self._adb.EnableAdbRoot()
 
   def RunTests(self):
     """Main entry method - executes the tests according to command line args."""
