@@ -60,6 +60,7 @@ sdk/templates/java_tests_file.template platforms/${PLATFORM_NAME}/templates/java
 sdk/templates/layout.template platforms/${PLATFORM_NAME}/templates/layout.template
 sdk/templates/strings.template platforms/${PLATFORM_NAME}/templates/strings.template
 sdk/templates/build.template tools/lib/build.template
+sdk/templates/build.export.template tools/lib/build.export.template
 sdk/templates/icon_ldpi.png platforms/${PLATFORM_NAME}/templates/icon_ldpi.png
 sdk/templates/icon_mdpi.png platforms/${PLATFORM_NAME}/templates/icon_mdpi.png
 sdk/templates/icon_hdpi.png platforms/${PLATFORM_NAME}/templates/icon_hdpi.png
@@ -116,9 +117,6 @@ framework/dx.jar platforms/${PLATFORM_NAME}/tools/lib/dx.jar
 
 #androidprefs
 framework/androidprefs.jar tools/lib/androidprefs.jar
-
-#jarutils
-framework/jarutils.jar tools/lib/jarutils.jar
 
 #apkbuilder
 bin/apkbuilder tools/apkbuilder
