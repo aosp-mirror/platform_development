@@ -112,8 +112,7 @@ framework/dx.jar platforms/${PLATFORM_NAME}/tools/lib/dx.jar
 framework/androidprefs.jar tools/lib/androidprefs.jar
 
 #apkbuilder
-bin/apkbuilder tools/apkbuilder
-framework/apkbuilder.jar tools/lib/apkbuilder.jar
+sdk/apkbuilder/etc/apkbuilder tools/apkbuilder
 
 # sdkstats service
 framework/sdkstats.jar tools/lib/sdkstats.jar
