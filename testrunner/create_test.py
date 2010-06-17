@@ -98,7 +98,7 @@ def _GenerateTestManifest(manifest, module_name, mapping=None):
     IOError: tests/AndroidManifest.xml cannot be opened for writing
   """
   # skip if file already exists
-  tests_path = "%s/%s" % (manifest.app_path, TestsConsts.TESTS_FOLDER)
+  tests_path = "%s/%s" % (manifest.GetAppPath(), TestsConsts.TESTS_FOLDER)
   tests_manifest_path = "%s/%s" % (tests_path, manifest.FILENAME)
   if os.path.exists(tests_manifest_path):
     _PrintMessage("%s already exists, not overwritten" % tests_manifest_path)
