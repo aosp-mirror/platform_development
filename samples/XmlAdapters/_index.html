@@ -1,0 +1,31 @@
+<p>This sample demonstrates the use of XML adapters.</p>
+
+<p>An XML Adapter is an XML file which defines the bindings between the data
+retrieved from a
+<a href="../../../reference/android/content/ContentProvider.html"><code>ContentProvider</code></a>
+and the different views of a layout. They are provided by the
+<a href="../../../reference/android/widget/Adapters.html"><code>Adapters</code></a>
+class.</p>
+
+Three list activities are provided which illustrate this:
+<ul>
+  <li><a href="src/com/example/android/xmladapters/ContactsListActivity.html"><strong>
+  ContactsListActivity</strong></a> uses the device's Contacts provider as its input source.
+  Contacts with a phone number are displayed, their photo being retrieved by a dedicated
+  <a href="src/com/example/android/xmladapters/ContactPhotoBinder.html"><code>ContactPhotoBinder
+  </code></a>.</li>
+
+  <li><a href="src/com/example/android/xmladapters/PhotosListActivity.html"><strong>
+  PhotosListActivity</strong></a> retrieves an RSS photo feed and displays the images and their
+  titles. The images are downloaded from the URL found in the feed using the
+  <a href="src/com/example/android/xmladapters/ImageDownloader.html"><code>ImageDownloader</code>
+  </a> helper class.</li>
+
+  <li><a href="src/com/example/android/xmladapters/RssReaderActivity.html"><strong>
+  RssReaderActivity</strong></a> also displays items extracted from an RSS feed. An additional
+  <a href="src/com/example/android/xmladapters/UrlIntentListener.html"><code>UrlIntentListener
+  </code></a> is used to open a browser when one of the news item is tapped.</li>
+</ul>
+
+<img alt="XmlPhotosAdapter" src="../images/XmlPhotosAdapter.png" />
+<img alt="XmlRssReader" src="../images/XmlRssReader.png" />

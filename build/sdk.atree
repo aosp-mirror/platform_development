@@ -109,6 +109,7 @@ development/samples/CubeLiveWallpaper        samples/${PLATFORM_NAME}/CubeLiveWa
 development/samples/VoiceRecognitionService  samples/${PLATFORM_NAME}/VoiceRecognitionService
 development/samples/TicTacToeLib             samples/${PLATFORM_NAME}/TicTacToeLib
 development/samples/TicTacToeMain            samples/${PLATFORM_NAME}/TicTacToeMain
+development/samples/XmlAdapters              samples/${PLATFORM_NAME}/XmlAdapters
 
 # dx
 bin/dx platforms/${PLATFORM_NAME}/tools/dx

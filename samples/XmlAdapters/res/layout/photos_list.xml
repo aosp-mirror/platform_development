@@ -8,19 +8,24 @@
           http://www.apache.org/licenses/LICENSE-2.0
   
      Unless required by applicable law or agreed to in writing, software
-     distributed under the License is distributed on an "AS IS" BASI
+     distributed under the License is distributed on an "AS IS" BASIS,
      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
      See the License for the specific language governing permissions and
      limitations under the License.
 -->
 
-<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
-    <string name="app_name">Xml Adapters</string>
-    <string name="contacts_list_activity">Xml Contacts Adapter</string>
-    <string name="photos_list_activity">Xml Photos Adapter</string>
-    <string name="rss_reader_activity">Xml RSS Reader</string>
-    <string name="no_contacts">No contacts available</string>
-    <string name="no_photos">Loading photos...</string>
-    <string name="no_rss_feed">Loading RSS feed...</string>
+<merge xmlns:android="http://schemas.android.com/apk/res/android">
 
-</resources>
+    <ListView
+        android:id="@android:id/list"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <TextView android:id="@android:id/empty"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:text="@string/no_photos"
+        android:visibility="gone" />
+
+</merge>

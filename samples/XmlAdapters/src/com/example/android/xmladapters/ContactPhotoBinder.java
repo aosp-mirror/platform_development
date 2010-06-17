@@ -35,7 +35,7 @@ import java.util.HashMap;
 
 /**
  * This custom cursor binder is used by the adapter defined in res/xml to
- * bin contacts photos to their respective list item. This binder simply
+ * bind contacts photos to their respective list item. This binder simply
  * queries a contact's photo based on the contact's id and sets the
  * photo as a compound drawable on the TextView used to display the contact's
  * name.
@@ -54,7 +54,7 @@ public class ContactPhotoBinder extends Adapters.CursorBinder {
         mResources = mContext.getResources();
         // Default picture used when a contact does not provide one
         mDefault = mResources.getDrawable(R.drawable.ic_contact_picture);
-        // Cache used to avoid requerying contacts photos every time
+        // Cache used to avoid re-querying contacts photos every time
         mCache = new HashMap<Long, Drawable>();
         // Compute the size of the photo based on the display's density
         mPhotoSize = (int) (PHOTO_SIZE_DIP * mResources.getDisplayMetrics().density + 0.5f);
@@ -76,6 +76,7 @@ public class ContactPhotoBinder extends Adapters.CursorBinder {
     
             // Creates the drawable for the contact's photo or use our fallback drawable
             if (stream != null) {
+                // decoding the bitmap could be done in a worker thread too.
                 Bitmap bitmap = BitmapFactory.decodeStream(stream);
                 d = new BitmapDrawable(mResources, bitmap);
             } else {

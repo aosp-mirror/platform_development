@@ -15,16 +15,16 @@
 -->
 
 <cursor-adapter xmlns:android="http://schemas.android.com/apk/res/android"
-  android:uri="content://com.android.contacts/contacts"
-  android:selection="has_phone_number=1"
-  android:layout="@layout/contact_item">
+    android:selection="/rss/channel/item"
+    android:layout="@layout/rss_feed_item">
 
-  <bind android:from="display_name" android:to="@id/name" android:as="string" />
-    <bind android:from="starred" android:to="@id/star" android:as="drawable">
-        <map android:fromValue="0" android:toValue="@android:drawable/star_big_off" />
-        <map android:fromValue="1" android:toValue="@android:drawable/star_big_on" />
+    <bind android:from="/title" android:to="@id/title" android:as="string" />
+    <bind android:from="/media:content@url" android:to="@id/image"
+      android:as="com.example.android.xmladapters.UrlImageBinder"/>
+    <bind android:from="/media:description" android:to="@id/description" android:as="string" />
+    <bind android:from="/guid" android:to="@id/item_layout" android:as="tag" />
+    <bind android:from="/pubDate" android:to="@id/date" android:as="string">
+       <transform android:withExpression="Published on {/pubDate}." />
     </bind>
-    <bind android:from="_id" android:to="@id/name"
-          android:as="com.example.android.xmladapters.ContactPhotoBinder" />
 
 </cursor-adapter>
