@@ -43,7 +43,7 @@
 	<classpathentry kind="src" path="frameworks/base/obex"/>
 	<classpathentry kind="src" path="frameworks/base/opengl/java"/>
 	<classpathentry kind="src" path="frameworks/base/packages/SettingsProvider/src"/>
-	<classpathentry kind="src" path="frameworks/base/policy"/>
+        <classpathentry kind="src" path="frameworks/base/policy/src"/>
 	<classpathentry kind="src" path="frameworks/base/sax/java"/>
 	<classpathentry kind="src" path="frameworks/base/services/java"/>
 	<classpathentry kind="src" path="frameworks/base/telephony/java"/>
