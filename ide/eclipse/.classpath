@@ -32,7 +32,6 @@
 	<classpathentry kind="src" path="frameworks/base/cmds/input/src"/>
 	<classpathentry kind="src" path="frameworks/base/cmds/pm/src"/>
 	<classpathentry kind="src" path="frameworks/base/cmds/svc/src"/>
-	<classpathentry kind="src" path="frameworks/base/common/java"/>
 	<classpathentry kind="src" path="frameworks/base/core/java"/>
 	<classpathentry kind="src" path="frameworks/base/core/config/sdk"/>
 	<classpathentry kind="src" path="frameworks/base/graphics/java"/>
@@ -43,7 +42,7 @@
 	<classpathentry kind="src" path="frameworks/base/obex"/>
 	<classpathentry kind="src" path="frameworks/base/opengl/java"/>
 	<classpathentry kind="src" path="frameworks/base/packages/SettingsProvider/src"/>
-        <classpathentry kind="src" path="frameworks/base/policy/src"/>
+	<classpathentry kind="src" path="frameworks/base/policy/src"/>
 	<classpathentry kind="src" path="frameworks/base/sax/java"/>
 	<classpathentry kind="src" path="frameworks/base/services/java"/>
 	<classpathentry kind="src" path="frameworks/base/telephony/java"/>
@@ -90,6 +89,7 @@
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/services_intermediates/src"/>
 	<classpathentry kind="src" path="out/target/common/R"/>
 	<classpathentry kind="src" path="external/apache-http/src"/>
+	<classpathentry kind="src" path="external/bouncycastle/src/main/java"/>
 	<classpathentry kind="src" path="external/libphonenumber/java/src"/>
 	<classpathentry kind="src" path="external/tagsoup/src"/>
 	<classpathentry kind="lib" path="out/target/common/obj/JAVA_LIBRARIES/google-common_intermediates/javalib.jar"/>
