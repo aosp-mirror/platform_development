@@ -391,6 +391,11 @@ See test_defs.xsd for more information.
     coverage_target="Browser"
     continuous="true" />
 
+<test name="calculator"
+    build_path="packages/apps/Calculator"
+    package="com.android.calculator2.tests"
+    coverage_target="Calculator" />
+
 <test name="calendar"
     build_path="packages/apps/Calendar"
     package="com.android.calendar.tests"
