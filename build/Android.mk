@@ -42,6 +42,7 @@ $(full_target): $(OUT_DOCS)/api-stubs-timestamp $(framework_res_package)
 	$(hide) (cd $(PRIVATE_CLASS_INTERMEDIATES_DIR) && rm -rf classes.dex META-INF)
 	$(hide) mkdir -p $(dir $@)
 	$(hide) jar -cf $@ -C $(PRIVATE_CLASS_INTERMEDIATES_DIR) .
+	$(hide) jar -u0f $@ -C $(PRIVATE_CLASS_INTERMEDIATES_DIR) resources.arsc
 
 .PHONY: android_stubs
 android_stubs: $(full_target)
