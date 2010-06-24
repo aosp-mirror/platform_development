@@ -251,7 +251,7 @@ public class PackageSummary extends Activity {
     private final static void setItemText(Button item, PackageInfo pi,
                                           String className)
     {
-        item.setText(className.substring(pi.packageName.length()+1));
+        item.setText(className.substring(className.lastIndexOf('.')+1));
     }
 
     private final class ActivityOnClick implements View.OnClickListener
