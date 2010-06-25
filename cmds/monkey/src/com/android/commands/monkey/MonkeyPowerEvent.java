@@ -37,12 +37,16 @@ public class MonkeyPowerEvent extends MonkeyEvent {
     private static ArrayList<ContentValues> mLogEvents = new ArrayList<ContentValues>();
     private static final String TEST_SEQ_BEGIN = "AUTOTEST_SEQUENCE_BEGIN";
     private static final String TEST_STARTED = "AUTOTEST_TEST_BEGIN";
+    private static final String TEST_DELAY_STARTED = "AUTOTEST_TEST_BEGIN_DELAY";
     private static final String TEST_ENDED = "AUTOTEST_TEST_SUCCESS";
     private static final String TEST_IDLE_ENDED = "AUTOTEST_IDLE_SUCCESS";
     private static long mTestStartTime;
 
     private String mPowerLogTag;
     private String mTestResult;
+
+    //10 secs for the screen to trun off after the usb notification
+    private static final long USB_DELAY_TIME = 10000;
 
     public MonkeyPowerEvent(String powerLogTag, String powerTestResult) {
         super(EVENT_TYPE_ACTIVITY);
@@ -74,6 +78,10 @@ public class MonkeyPowerEvent extends MonkeyEvent {
             long lagTime = Long.parseLong(value);
             tagTime = mTestStartTime + lagTime;
             tag = TEST_ENDED;
+        } else if (tag.compareTo(TEST_DELAY_STARTED) == 0) {
+            mTestStartTime = tagTime + USB_DELAY_TIME;
+            tagTime = mTestStartTime;
+            tag = TEST_STARTED;
         }
 
         ContentValues event = new ContentValues();
