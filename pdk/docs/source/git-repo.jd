@@ -288,14 +288,13 @@ Google I/O videos:
  
 Getting started with the Android source code:
 <ul>
-  <li><a href="http://source.android.com/download">Get source</a></li> 
-  <li><a href="http://source.android.com/submit-patches/code-style-guide">Code Style Guide</a></li> 
+  <li><a href="http://source.android.com/source/download.html">Get source</a></li> 
+  <li><a href="http://source.android.com/source/code-style.html">Code Style Guide</a></li> 
 </ul> 
  
 Repo and Git resources:
 <ul>
-  <li><a href="http://source.android.com/download/using-repo#TOC-Git-and-Repo-cheatsheet">Git and Repo cheat sheet</a></li> 
-  <li><a href="http://source.android.com/download/using-repo">Using Repo and Git</a></li> 
+  <li><a href="http://source.android.com/source/git-repo.html">Using Repo and Git</a></li> 
   <li>The <a href="http://book.git-scm.com/">Git Community Book</a> maintained by Scott Chacon</li> 
   <li><a href="http://git.or.cz/gitwiki/FrontPage">GitWiki</a></li> 
   <li><a href="http://www.kernel.org/pub/software/scm/git/docs/">Git Manual Page</a></li> 
@@ -304,7 +303,7 @@ Repo and Git resources:
  
 Documentation on specific tasks:
 <ul>
-  <li><a href="http://source.android.com/documentation/building-for-dream">Building for an Android Developer Phone</a></li> 
+  <li><a href="http://source.android.com/source/building-dream.html">Building for an Android Developer Phone</a></li> 
 </ul> 
 -->
 
