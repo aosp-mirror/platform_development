@@ -216,6 +216,13 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".app.FragmentComplexList" android:label="@string/fragment_complex_list">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
         <activity android:name=".app.FragmentContextMenu"
                 android:label="@string/fragment_context_menu">
             <intent-filter>

@@ -85,6 +85,8 @@
 
     <string name="fragment_anim">App/Fragment/Anim</string>
     
+    <string name="fragment_complex_list">App/Fragment/Complex List</string>
+    
     <string name="fragment_context_menu">App/Fragment/Context Menu</string>
     <string name="fragment_context_menu_msg">Fragment populating a context
             menu; long press the button to see.</string>

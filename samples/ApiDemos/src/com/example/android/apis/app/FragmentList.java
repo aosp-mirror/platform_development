@@ -16,7 +16,6 @@
 
 package com.example.android.apis.app;
 
-import com.example.android.apis.R;
 import com.example.android.apis.Shakespeare;
 
 import android.app.Activity;
@@ -36,8 +35,10 @@ public class FragmentList extends Activity {
         super.onCreate(savedInstanceState);
         
         // Create the list fragment and add it as our sole content.
-        ExampleListFragment list = new ExampleListFragment();
-        openFragmentTransaction().add(android.R.id.content, list).commit();
+        if (findFragmentById(android.R.id.content) == null) {
+            ExampleListFragment list = new ExampleListFragment();
+            openFragmentTransaction().add(android.R.id.content, list).commit();
+        }
     }
     
     public static class ExampleListFragment extends ListFragment {
