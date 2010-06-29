@@ -1,0 +1,66 @@
+page.title=Android User's Guide Sources
+doc.type=porting
+@jd:body
+
+<div id="qv-wrapper">
+<div id="qv">
+<h2>Android User's Guide Sources</h2>
+<ul>
+<li><a href="http://dl.google.com/android/porting/userdocs/android-users-guide-220cc-100.zip">Android 2.2 <em>User's Guide</em></a></li>
+</ul>
+</div>
+</div>
+
+<p><a href="http://dl.google.com/android/porting/userdocs/android-users-guide-220cc-100.zip">This archive</a> contains Framemaker 9 source files, a PDF
+example, and some related files for the "Android User's Guide," version
+AUG-CC-220-100, which Google is releasing under the Creative Commons Attribution
+3.0 License:</p>
+
+<p>"Except as otherwise noted at <a
+href="http://code.google.com/policies.html#restrictions">http://code.google.com/
+policies.html#restrictions</a>, the contents of this manual is licensed under
+the Creative Commons Attribution 3.0 License, which is available at <a
+href="http://creativecommons.org/licenses/by/3.0/">http://creativecommons.org/
+licenses/by/3.0/</a>. When using this work in whole or in part, please attribute
+the work to Google Inc. No Google or third-party trademarks or brand features
+are included in this license."</p>
+
+<p>This book documents Android 2.2 as implemented for the Google Nexus
+One phone. By releasing the sources to this book under the Creative
+Commons Attibution 3.0 License, we hope that a wide variety of OEMs
+and developers will find some or all of these chapters helpful when
+documenting their own implementations of Android 2.2. You should be
+able to remove irrelevant chapters, add your own chapters, and rewrite
+some or all of the chapters you keep, as a quicker way to document
+your Android implementation than by starting from scratch.</p>
+
+<p>Keep these points in mind when working with these files:</p>
+
+<ul>
+<li>These source files were created in Adobe Framemaker 9: you will need
+Frame and know how to use it to make use of these files. If Frame is
+not convenient for you, you can copy text from the PDF document or
+explore a utility for converting these files into other formats.</li>
+
+<li>This book uses three fonts: GeneralGG, Droid Sans, and Expert Dingbats.</li>
+
+<li>GeneralGG is available for purchase from Hoefler &amp; Frere-Jones
+(<a
+href="http://www.typography.com/home/index.php">http://www.typography.com/home/index.php</a>).
+Helveticta is a good substitute if you don't want to buy or use 
+GeneralGG, which is Google's standard sans-serif font.</li>
+
+<li>Droid Sans and Expert Dingbats are included in the fonts directory:
+they are open source fonts. Droid Sans is used for screen text. Expert
+Dingbats is used for bullets.</li>
+
+<li>All variables for the book are set in the frontmatter.fm file.</li>
+
+<li>The hidden, conditional text "HTML" is used as part of Google's
+process for converting this book into Google Help Center doc format --
+you can safely ignore it.</li>
+
+<li>For more information, please contact <a
+href="mailto:userdocs@android.com">userdocs@android.com</a></li>
+
+</ul>
