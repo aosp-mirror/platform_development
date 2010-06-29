@@ -22,6 +22,7 @@ function nothing() {}
 <li> <h2>Customization</h2>
   <ul>
     <li><a href="<?cs var:toroot ?>porting/customization.html">Customization</a></li>
+    <li><a href="<?cs var:toroot ?>porting/usersguide.html">Android User's Guide</a></li>
   </ul>
 </li>
 
