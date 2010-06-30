@@ -36,6 +36,13 @@ See test_defs.xsd for more information.
     coverage_target="framework"
     continuous="true" />
 
+<!-- will not run in the continuous test as it needs both Wifi & 3G -->
+<test name="frameworks-connectivity"
+    build_path="frameworks/base/core/tests/ConnectivityManagerTest/"
+    package="com.android.connectivitymanagertest"
+    runner=".ConnectivityManagerUnitTestRunner"
+    coverage_target="framework" />
+
 <test name="frameworks-graphics"
     build_path="frameworks/base/graphics/tests/graphicstests"
     package="com.android.frameworks.graphicstests"
