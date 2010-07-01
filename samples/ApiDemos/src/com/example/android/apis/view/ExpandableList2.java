@@ -17,59 +17,68 @@
 package com.example.android.apis.view;
 
 import android.app.ExpandableListActivity;
+import android.content.AsyncQueryHandler;
 import android.content.ContentUris;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.Contacts.People;
-import android.widget.ExpandableListAdapter;
+import android.provider.ContactsContract.CommonDataKinds.Phone;
+import android.provider.ContactsContract.Contacts;
+import android.widget.CursorTreeAdapter;
 import android.widget.SimpleCursorTreeAdapter;
-
 
 /**
  * Demonstrates expandable lists backed by Cursors
  */
 public class ExpandableList2 extends ExpandableListActivity {
-    private int mGroupIdColumnIndex; 
-    
-    private String mPhoneNumberProjection[] = new String[] {
-            People.Phones._ID, People.Phones.NUMBER
+
+    private static final String[] CONTACTS_PROJECTION = new String[] {
+        Contacts._ID,
+        Contacts.DISPLAY_NAME
+    };
+    private static final int GROUP_ID_COLUMN_INDEX = 0;
+
+    private static final String[] PHONE_NUMBER_PROJECTION = new String[] {
+            Phone._ID,
+            Phone.NUMBER
     };
 
-    
-    private ExpandableListAdapter mAdapter;
-    
+    private static final int TOKEN_GROUP = 0;
+    private static final int TOKEN_CHILD = 1;
 
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    private static final class QueryHandler extends AsyncQueryHandler {
+        private CursorTreeAdapter mAdapter;
 
-        // Query for people
-        Cursor groupCursor = managedQuery(People.CONTENT_URI,
-                new String[] {People._ID, People.NAME}, null, null, null);
+        public QueryHandler(Context context, CursorTreeAdapter adapter) {
+            super(context.getContentResolver());
+            this.mAdapter = adapter;
+        }
 
-        // Cache the ID column index
-        mGroupIdColumnIndex = groupCursor.getColumnIndexOrThrow(People._ID);
+        @Override
+        protected void onQueryComplete(int token, Object cookie, Cursor cursor) {
+            switch (token) {
+            case TOKEN_GROUP:
+                mAdapter.setGroupCursor(cursor);
+                break;
 
-        // Set up our adapter
-        mAdapter = new MyExpandableListAdapter(groupCursor,
-                this,
-                android.R.layout.simple_expandable_list_item_1,
-                android.R.layout.simple_expandable_list_item_1,
-                new String[] {People.NAME}, // Name for group layouts
-                new int[] {android.R.id.text1},
-                new String[] {People.NUMBER}, // Number for child layouts
-                new int[] {android.R.id.text1});
-        setListAdapter(mAdapter);
+            case TOKEN_CHILD:
+                int groupPosition = (Integer) cookie;
+                mAdapter.setChildrenCursor(groupPosition, cursor);
+                break;
+            }
+        }
     }
 
     public class MyExpandableListAdapter extends SimpleCursorTreeAdapter {
 
-        public MyExpandableListAdapter(Cursor cursor, Context context, int groupLayout,
+        // Note that the constructor does not take a Cursor. This is done to avoid querying the 
+        // database on the main thread.
+        public MyExpandableListAdapter(Context context, int groupLayout,
                 int childLayout, String[] groupFrom, int[] groupTo, String[] childrenFrom,
                 int[] childrenTo) {
-            super(context, cursor, groupLayout, groupFrom, groupTo, childLayout, childrenFrom,
+
+            super(context, null, groupLayout, groupFrom, groupTo, childLayout, childrenFrom,
                     childrenTo);
         }
 
@@ -78,15 +87,52 @@ public class ExpandableList2 extends ExpandableListActivity {
             // Given the group, we return a cursor for all the children within that group 
 
             // Return a cursor that points to this contact's phone numbers
-            Uri.Builder builder = People.CONTENT_URI.buildUpon();
-            ContentUris.appendId(builder, groupCursor.getLong(mGroupIdColumnIndex));
-            builder.appendEncodedPath(People.Phones.CONTENT_DIRECTORY);
+            Uri.Builder builder = Contacts.CONTENT_URI.buildUpon();
+            ContentUris.appendId(builder, groupCursor.getLong(GROUP_ID_COLUMN_INDEX));
+            builder.appendEncodedPath(Contacts.Data.CONTENT_DIRECTORY);
             Uri phoneNumbersUri = builder.build();
 
-            // The returned Cursor MUST be managed by us, so we use Activity's helper
-            // functionality to manage it for us.
-            return managedQuery(phoneNumbersUri, mPhoneNumberProjection, null, null, null);
-        }
+            mQueryHandler.startQuery(TOKEN_CHILD, groupCursor.getPosition(), phoneNumbersUri, 
+                    PHONE_NUMBER_PROJECTION, Phone.MIMETYPE + "=?", 
+                    new String[] { Phone.CONTENT_ITEM_TYPE }, null);
 
+            return null;
+        }
+    }
+
+    private QueryHandler mQueryHandler;
+    private CursorTreeAdapter mAdapter;
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        // Set up our adapter
+        mAdapter = new MyExpandableListAdapter(
+                this,
+                android.R.layout.simple_expandable_list_item_1,
+                android.R.layout.simple_expandable_list_item_1,
+                new String[] { Contacts.DISPLAY_NAME }, // Name for group layouts
+                new int[] { android.R.id.text1 },
+                new String[] { Phone.NUMBER }, // Number for child layouts
+                new int[] { android.R.id.text1 });
+
+        setListAdapter(mAdapter);
+
+        mQueryHandler = new QueryHandler(this, mAdapter);
+
+        // Query for people
+        mQueryHandler.startQuery(TOKEN_GROUP, null, Contacts.CONTENT_URI, CONTACTS_PROJECTION, 
+                Contacts.HAS_PHONE_NUMBER + "=1", null, null);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        // Null out the group cursor. This will cause the group cursor and all of the child cursors
+        // to be closed.
+        mAdapter.changeCursor(null);
+        mAdapter = null;
     }
 }
