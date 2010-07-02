@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.NoSuchElementException;
 import java.util.Random;
+import android.util.Log;
 
 /**
  * monkey event queue. It takes a script to produce events sample script format:
@@ -271,12 +272,24 @@ public class MonkeySourceScript implements MonkeyEventSource {
         }
 
         // Handle launch events
-        if (s.indexOf(EVENT_KEYWORD_ACTIVITY) >= 0 && args.length == 2) {
+        if (s.indexOf(EVENT_KEYWORD_ACTIVITY) >= 0 && args.length >= 2) {
             String pkg_name = args[0];
             String cl_name = args[1];
+            String alarmTime = null;
+
             ComponentName mApp = new ComponentName(pkg_name, cl_name);
-            MonkeyActivityEvent e = new MonkeyActivityEvent(mApp);
-            mQ.addLast(e);
+
+            if (args.length > 2) {
+                alarmTime = args[2];
+            }
+
+            if (args.length == 2) {
+                MonkeyActivityEvent e = new MonkeyActivityEvent(mApp);
+                mQ.addLast(e);
+            } else {
+                MonkeyActivityEvent e = new MonkeyActivityEvent(mApp, alarmTime);
+                mQ.addLast(e);
+            }
             return;
         }
 
