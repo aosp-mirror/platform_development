@@ -21,7 +21,6 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.Window;
 import android.widget.TextView;
 
 import com.example.android.lunarlander.LunarView.LunarThread;
@@ -58,7 +57,7 @@ public class LunarLander extends Activity {
 
     /**
      * Invoked during init to give the Activity a chance to set up its Menu.
-     * 
+     *
      * @param menu the Menu to which entries may be added
      * @return true
      */
@@ -79,7 +78,7 @@ public class LunarLander extends Activity {
 
     /**
      * Invoked when the user selects an item from the Menu.
-     * 
+     *
      * @param item the Menu entry which was selected
      * @return true if the Menu item was legit (and we consumed it), false
      *         otherwise
@@ -116,7 +115,7 @@ public class LunarLander extends Activity {
 
     /**
      * Invoked when the Activity is created.
-     * 
+     *
      * @param savedInstanceState a Bundle containing state saved from a previous
      *        execution, or null if this is a new execution
      */
@@ -157,7 +156,7 @@ public class LunarLander extends Activity {
     /**
      * Notification that something is about to happen, to give the Activity a
      * chance to save state.
-     * 
+     *
      * @param outState a Bundle into which this Activity should save its state
      */
     @Override
