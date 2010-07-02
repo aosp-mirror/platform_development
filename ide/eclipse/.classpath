@@ -70,7 +70,6 @@
 	<classpathentry kind="src" path="libcore/json/src/main/java"/>
 	<classpathentry kind="src" path="libcore/junit/src/main/java"/>
 	<classpathentry kind="src" path="libcore/luni/src/main/java"/>
-	<classpathentry kind="src" path="libcore/openssl/src/main/java"/>
 	<classpathentry kind="src" path="libcore/xml/src/main/java"/>
 	<classpathentry kind="src" path="out/target/common/obj/APPS/ApiDemos_intermediates/src/src"/>
 	<classpathentry kind="src" path="out/target/common/obj/APPS/Browser_intermediates/src/src"/>
