@@ -1,0 +1,53 @@
+Overview:
+
+The labpretest.sh script is designed to emulate a typical automated test lab
+session.  It puts a device into bootloader mode, reboots into bootloader mode,
+determines device type, erases user cache, flashes a generic userdata image,
+updates the bootloader image, updates the radio image, updates the system image
+and reboots, sets up for a monkey run and finally runs a random monkey test.
+It will repeat this based on an optional parameter(-i) or default to 100 times.
+It will detect if it is in a low battery situation and wait for it to charge
+again.
+
+The goal is to see if a device is ready for deployment to automated lab testing
+and can also be used to verify that lab infrastructure is ready for devices.
+The idea is to run this script at the same time for multiple devices, typically
+I would connect 8 devices to a host and run this script in 8 separate shell
+sessions and watch for failures.
+
+Running the script:
+
+If there is only one device attached to the host you can simply just run the
+script, it will detect the device and go through 100 cycles, running the monkey
+for 200 events each cycle.  The script ignores normal monkey failures. If you
+have multiple devices attached use the -d <device_id> parameter to target a
+specific devices.  Additional parameters are -i for how many cycles and -m for
+how many monkey events and finally -x to make it skip the monkey run portion
+altogether.
+
+Adding support for new devices or from scratch:
+
+The script uses included copies of adb and fastboot which are in in the tools/
+sub directory. If you are setting this up with only the script, create a tools
+sub directory and put adb and fastboot in it and make sure they are executable.
+Currently we use userdebug builds.
+
+Here are the steps to add a new device:
+
+  1) Create a new sub directory using the result of "fastboot getvar product".
+  2) Copy a build image to the new sub directory in our format.
+     (i.e. passion-img-24827.zip)
+  3) Copy a boot image to the new sub directory in our format.
+     (i.e. hboot.0.33.2012.img)
+  4) Copy a radio image to the new sub directory in our format.
+     (i.e. radio.4.04.00.03_2.img)
+  5) Copy a userdata.img file, possibly from one of the other directories.
+
+Customizations to the flashing process are handled by adding a custom_flash.sh
+file that is read in before the main loop starts. It allows you to add any non
+generic functions or details to the flashing process. You must use it to define
+the variable "bootpart" which is not defined by default. Also, use this file to
+rewrite the flash_device function and any others, etc...
+
+The script should handle the rest, unless there are radical changes to file
+names or the process.
