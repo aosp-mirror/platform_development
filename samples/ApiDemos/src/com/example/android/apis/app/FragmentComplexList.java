@@ -16,22 +16,16 @@
 
 package com.example.android.apis.app;
 
-import com.example.android.apis.Shakespeare;
-
 import android.app.Activity;
-import android.app.Fragment;
 import android.app.ListFragment;
-import android.app.LoaderManagingFragment;
-import android.content.Context;
+import android.app.LoaderManager;
 import android.content.CursorLoader;
 import android.content.Loader;
 import android.database.Cursor;
-import android.net.Uri;
 import android.os.Bundle;
 import android.provider.Contacts.Phones;
 import android.util.Log;
 import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
@@ -52,30 +46,8 @@ public class FragmentComplexList extends Activity {
         }
     }
     
-    public static class ContactsLoader extends LoaderManagingFragment<Cursor> {
-        ExampleComplexListFragment mListFragment;
-        
-        void setListFragment(ExampleComplexListFragment fragment) {
-            mListFragment = fragment;
-        }
-        
-        @Override
-        protected Loader<Cursor> onCreateLoader(int id, Bundle args) {
-            return new CursorLoader(getActivity(), Phones.CONTENT_URI, null, null, null, null);
-        }
-
-        @Override
-        protected void onInitializeLoaders() {
-        }
-
-        @Override
-        protected void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-            mListFragment.loadFinished(loader, data);
-        }
-    }
-    
-    public static class ExampleComplexListFragment extends ListFragment {
-        ContactsLoader mLoader;
+    public static class ExampleComplexListFragment extends ListFragment
+            implements LoaderManager.LoaderCallbacks<Cursor> {
         boolean mInitializing;
 
         @Override
@@ -83,21 +55,11 @@ public class FragmentComplexList extends Activity {
             super.onCreate(savedInstanceState);
             
             mInitializing = true;
-            
-            // Make sure we have the loader for our content.
-            mLoader = (ContactsLoader)getActivity().findFragmentByTag(
-                    ContactsLoader.class.getName());
-            if (mLoader == null) {
-                mLoader = new ContactsLoader();
-                getActivity().openFragmentTransaction().add(mLoader,
-                        ContactsLoader.class.getName()).commit();
-            }
-            mLoader.setListFragment(this);
         }
 
         @Override
-        public void onReady(Bundle savedInstanceState) {
-            super.onReady(savedInstanceState);
+        public void onActivityCreated(Bundle savedInstanceState) {
+            super.onActivityCreated(savedInstanceState);
             
             // Assume we don't yet have data to display.
             setListShown(false, false);
@@ -107,10 +69,10 @@ public class FragmentComplexList extends Activity {
             setEmptyText("No phone numbers");
             
             // Check if we already have content for the list.
-            Loader<Cursor> ld = mLoader.getLoader(0);
+            Loader<Cursor> ld = getLoaderManager().getLoader(0);
             if (ld == null) {
                 // No loader started yet...  do it now.
-                ld = mLoader.startLoading(0, null);
+                ld = getLoaderManager().startLoading(0, null, this);
             } else {
                 // Already have a loader -- poke it to report its cursor
                 // if it already has one.  This will immediately call back
@@ -120,15 +82,6 @@ public class FragmentComplexList extends Activity {
             mInitializing = false;
         }
         
-        void loadFinished(Loader<Cursor> loader, Cursor data) {
-            ListAdapter adapter = new SimpleCursorAdapter(getActivity(),
-                    android.R.layout.simple_list_item_2, data, 
-                            new String[] { Phones.NAME, Phones.NUMBER }, 
-                            new int[] { android.R.id.text1, android.R.id.text2 });
-            setListAdapter(adapter);
-            setListShown(true, !mInitializing);
-        }
-        
         @Override
         public void onListItemClick(ListView l, View v, int position, long id) {
             Log.i("FragmentComplexList", "Item clicked: " + id);
@@ -136,8 +89,22 @@ public class FragmentComplexList extends Activity {
         
         @Override
         public void onDestroy() {
-            mLoader.setListFragment(this);
             super.onDestroy();
+        }
+
+        @Override
+        public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+            return new CursorLoader(getActivity(), Phones.CONTENT_URI, null, null, null, null);
+        }
+
+        @Override
+        public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+            ListAdapter adapter = new SimpleCursorAdapter(getActivity(),
+                    android.R.layout.simple_list_item_2, data, 
+                            new String[] { Phones.NAME, Phones.NUMBER }, 
+                            new int[] { android.R.id.text1, android.R.id.text2 });
+            setListAdapter(adapter);
+            setListShown(true, !mInitializing);
         }
     }
 }

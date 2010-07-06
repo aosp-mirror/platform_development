@@ -143,8 +143,8 @@ public class FragmentRetainInstance extends Activity {
          * to a new activity.
          */
         @Override
-        public void onReady(Bundle savedInstanceState) {
-            super.onReady(savedInstanceState);
+        public void onActivityCreated(Bundle savedInstanceState) {
+            super.onActivityCreated(savedInstanceState);
             
             // Retrieve the progress bar from the current activity.
             mProgressBar = (ProgressBar)getActivity().findViewById(

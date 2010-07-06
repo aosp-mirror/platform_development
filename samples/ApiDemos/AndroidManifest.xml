@@ -34,9 +34,11 @@
 
     <!-- We will request access to the camera, saying we require a camera
          of some sort but not one with autofocus capability. -->
+    <!--
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-feature android:name="android.hardware.camera" />
     <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
+    -->
 
     <application android:name="ApiDemosApplication"
             android:label="@string/activity_sample_code"

@@ -43,8 +43,8 @@ public class FragmentList extends Activity {
     
     public static class ExampleListFragment extends ListFragment {
         @Override
-        public void onReady(Bundle savedInstanceState) {
-            super.onReady(savedInstanceState);
+        public void onActivityCreated(Bundle savedInstanceState) {
+            super.onActivityCreated(savedInstanceState);
             setListAdapter(new ArrayAdapter<String>(getActivity(),
                     android.R.layout.simple_list_item_1, Shakespeare.TITLES));
         }
