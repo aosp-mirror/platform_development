@@ -31,14 +31,23 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
 /**
- * Compresses a list of words and frequencies into a tree structured binary dictionary.
+ * Compresses a list of words, frequencies, and bigram data
+ * into a tree structured binary dictionary.
+ * Dictionary Version: 200 (may contain bigrams)
+ *  Version number started from 200 rather than 1 because we wanted to prevent number of roots in
+ *  any old dictionaries being mistaken as the version number. There is not a chance that there
+ *  will be more than 200 roots. Version number should be increased when there is structural change
+ *  in the data. There is no need to increase the version when only the words in the data changes.
  */
 public class MakeBinaryDictionary {
+
+    private static final int VERSION_NUM = 200;
 
     public static final int ALPHA_SIZE = 256;
 
@@ -48,13 +57,15 @@ public class MakeBinaryDictionary {
     private static final int FLAG_ADDRESS_MASK  = 0x400000;
     private static final int FLAG_TERMINAL_MASK = 0x800000;
     private static final int ADDRESS_MASK = 0x3FFFFF;
-    
+
     public static final CharNode EMPTY_NODE = new CharNode();
 
     List<CharNode> roots;
     Map<String, Integer> mDictionary;
     int mWordCount;
-    
+
+    BigramDictionary bigramDict;
+
     static class CharNode {
         char data;
         int freq;
@@ -68,29 +79,46 @@ public class MakeBinaryDictionary {
     }
 
     public static void usage() {
-        System.err.println("Usage: makedict <src.xml> <dest.dict>");
+        System.err.println("Usage: makedict -s <src_dict.xml> [-b <src_bigram.xml>] "
+                + "-d <dest.dict>");
         System.exit(-1);
     }
     
     public static void main(String[] args) {
-        if (args.length < 2) {
-            usage();
+        int checkSource = -1;
+        int checkBigram = -1;
+        int checkDest = -1;
+        for (int i = 0; i < args.length; i+=2) {
+            if (args[i].equals("-s")) checkSource = (i + 1);
+            if (args[i].equals("-b")) checkBigram = (i + 1);
+            if (args[i].equals("-d")) checkDest = (i + 1);
+        }
+        if (checkSource >= 0 && checkBigram >= 0 && checkDest >= 0 && args.length == 6) {
+            new MakeBinaryDictionary(args[checkSource], args[checkBigram], args[checkDest]);
+        } else if (checkSource >= 0 && checkDest >= 0 && args.length == 4) {
+            new MakeBinaryDictionary(args[checkSource], null, args[checkDest]);
         } else {
-            new MakeBinaryDictionary(args[0], args[1]);
+            usage();
         }
     }
 
-    public MakeBinaryDictionary(String srcFilename, String destFilename) {
+    public MakeBinaryDictionary(String srcFilename, String bigramSrcFilename, String destFilename){
+        System.out.println("Generating dictionary version " + VERSION_NUM);
+        bigramDict = new BigramDictionary(bigramSrcFilename, (bigramSrcFilename != null));
         populateDictionary(srcFilename);
         writeToDict(destFilename);
-        // Enable the code below to verify that the generated tree is traversable.
+
+        // Enable the code below to verify that the generated tree is traversable
+        // and bigram data is stored correctly.
         if (false) {
-            traverseDict(0, new char[32], 0);
+            bigramDict.reverseLookupAll(mDictionary, dict);
+            traverseDict(2, new char[32], 0);
         }
     }
-    
+
     private void populateDictionary(String filename) {
         roots = new ArrayList<CharNode>();
+        mDictionary = new HashMap<String, Integer>();
         try {
             SAXParser parser = SAXParserFactory.newInstance().newSAXParser();
             parser.parse(new File(filename), new DefaultHandler() {
@@ -205,8 +233,11 @@ public class MakeBinaryDictionary {
     private void addCount(int count) {
         dict[dictSize++] = (byte) (0xFF & count);
     }
-    
-    private void addNode(CharNode node) {
+
+    private void addNode(CharNode node, String word1) {
+        if (node.terminal) { // store address of each word1
+            mDictionary.put(word1, dictSize);
+        }
         int charData = 0xFFFF & node.data;
         if (charData > 254) {
             dict[dictSize++] = (byte) 255;
@@ -226,6 +257,15 @@ public class MakeBinaryDictionary {
         if (node.terminal) {
             byte freq = (byte) (0xFF & node.freq);
             dict[dictSize++] = freq;
+            // bigram
+            if (bigramDict.mBi.containsKey(word1)) {
+                int count = bigramDict.mBi.get(word1).count;
+                bigramDict.mBigramToFill.add(word1);
+                bigramDict.mBigramToFillAddress.add(dictSize);
+                dictSize += (4 * count);
+            } else {
+                dict[dictSize++] = (byte) (0x00);
+            }
         }
     }
 
@@ -255,24 +295,27 @@ public class MakeBinaryDictionary {
         }
     }
 
-    void writeWordsRec(List<CharNode> children) {
+    void writeWordsRec(List<CharNode> children, StringBuilder word) {
         if (children == null || children.size() == 0) {
             return;
         }
         final int childCount = children.size();
         addCount(childCount);
-        //int childrenStart = dictSize;
         int[] childrenAddresses = new int[childCount];
         for (int j = 0; j < childCount; j++) {
             CharNode node = children.get(j);
             childrenAddresses[j] = dictSize;
-            addNode(node);
+            word.append(children.get(j).data);
+            addNode(node, word.toString());
+            word.deleteCharAt(word.length()-1);
         }
         for (int j = 0; j < childCount; j++) {
             CharNode node = children.get(j);
             int nodeAddress = childrenAddresses[j];
             int cacheDictSize = dictSize;
-            writeWordsRec(node.children);
+            word.append(children.get(j).data);
+            writeWordsRec(node.children, word);
+            word.deleteCharAt(word.length()-1);
             updateNodeAddress(nodeAddress, node, node.children != null
                     ? cacheDictSize : 0);
         }
@@ -284,7 +327,13 @@ public class MakeBinaryDictionary {
                                           // < 1MB in most cases, as there is a limit in the
                                           // resource size in apks.
         dictSize = 0;
-        writeWordsRec(roots);
+
+        dict[dictSize++] = (byte) (0xFF & VERSION_NUM); // version info
+        dict[dictSize++] = (byte) (0xFF & (bigramDict.mHasBigram ? 1 : 0));
+
+        StringBuilder word = new StringBuilder(48);
+        writeWordsRec(roots, word);
+        dict = bigramDict.writeBigrams(dict, mDictionary);
         System.out.println("Dict Size = " + dictSize);
         try {
             FileOutputStream fos = new FileOutputStream(dictFilename);
@@ -299,24 +348,36 @@ public class MakeBinaryDictionary {
         int count = dict[pos++] & 0xFF;
         for (int i = 0; i < count; i++) {
             char c = (char) (dict[pos++] & 0xFF);
-            if (c == 0xFF) {
+            if (c == 0xFF) { // two byte character
                 c = (char) (((dict[pos] & 0xFF) << 8) | (dict[pos+1] & 0xFF));
                 pos += 2;
             }
             word[depth] = c;
-            boolean terminal = (dict[pos] & 0x80) > 0;
+            boolean terminal = getFirstBitOfByte(pos, dict);
             int address = 0;
-            if ((dict[pos] & (FLAG_ADDRESS_MASK >> 16)) > 0) {
-                address = 
-                    ((dict[pos + 0] & (FLAG_ADDRESS_MASK >> 16)) << 16)
-                    | ((dict[pos + 1] & 0xFF) << 8)
-                    | ((dict[pos + 2] & 0xFF));
-                pos += 2;
+            if ((dict[pos] & (FLAG_ADDRESS_MASK >> 16)) > 0) { // address check
+                address = get22BitAddress(pos, dict);
+                pos += 3;
+            } else {
+                pos += 1;
             }
-            pos++;
             if (terminal) {
                 showWord(word, depth + 1, dict[pos] & 0xFF);
                 pos++;
+
+                int bigramExist = (dict[pos] & bigramDict.FLAG_BIGRAM_READ);
+                if (bigramExist > 0) {
+                    int nextBigramExist = 1;
+                    while (nextBigramExist > 0) {
+                        int bigramAddress = get22BitAddress(pos, dict);
+                        pos += 3;
+                        int frequency = (bigramDict.FLAG_BIGRAM_FREQ & dict[pos]);
+                        bigramDict.searchForTerminalNode(bigramAddress, frequency, dict);
+                        nextBigramExist = (dict[pos++] & bigramDict.FLAG_BIGRAM_CONTINUED);
+                    }
+                } else {
+                    pos++;
+                }
             }
             if (address != 0) {
                 traverseDict(address, word, depth + 1);
@@ -326,5 +387,19 @@ public class MakeBinaryDictionary {
 
     void showWord(char[] word, int size, int freq) {
         System.out.print(new String(word, 0, size) + " " + freq + "\n");
+    }
+
+    static int get22BitAddress(int pos, byte[] dict) {
+        return ((dict[pos + 0] & 0x3F) << 16)
+                | ((dict[pos + 1] & 0xFF) << 8)
+                | ((dict[pos + 2] & 0xFF));
+    }
+
+    static boolean getFirstBitOfByte(int pos, byte[] dict) {
+        return (dict[pos] & 0x80) > 0;
+    }
+
+    static boolean getSecondBitOfByte(int pos, byte[] dict) {
+        return (dict[pos] & 0x40) > 0;
     }
 }
