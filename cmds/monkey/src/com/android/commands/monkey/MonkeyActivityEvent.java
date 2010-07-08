@@ -19,23 +19,32 @@ package com.android.commands.monkey;
 import android.app.IActivityManager;
 import android.content.ComponentName;
 import android.content.Intent;
+import android.os.Bundle;
 import android.os.RemoteException;
 import android.view.IWindowManager;
+import android.util.Log;
 
 /**
  * monkey activity event
  */
 public class MonkeyActivityEvent extends MonkeyEvent {    
     private ComponentName mApp; 
+    String mAlarmTime;
     
     public MonkeyActivityEvent(ComponentName app) {
         super(EVENT_TYPE_ACTIVITY);
         mApp = app;
     }
-     
-    /** 
+
+    public MonkeyActivityEvent(ComponentName app, String arg) {
+        super(EVENT_TYPE_ACTIVITY);
+        mApp = app;
+        mAlarmTime = arg;
+    }
+
+    /**
      * @return Intent for the new activity
-     */        
+     */
     private Intent getEvent() {        
         Intent intent = new Intent(Intent.ACTION_MAIN);
         intent.addCategory(Intent.CATEGORY_LAUNCHER);
@@ -50,6 +59,13 @@ public class MonkeyActivityEvent extends MonkeyEvent {
         if (verbose > 0) {
             System.out.println(":Switch: " + intent.toURI());
         }
+
+        if (mAlarmTime != null){
+            Bundle args = new Bundle();
+            args.putString("alarmTime", mAlarmTime);
+            intent.putExtras(args);
+        }
+
         try {
             iam.startActivity(null, intent, null, null, 0, null, null, 0,
                     false, false);
