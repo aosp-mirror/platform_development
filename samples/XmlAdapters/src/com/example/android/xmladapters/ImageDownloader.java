@@ -21,6 +21,7 @@ import org.apache.http.client.methods.HttpGet;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.http.AndroidHttpClient;
@@ -250,17 +251,23 @@ public class ImageDownloader {
 
             try {
                 HttpResponse response = client.execute(getRequest);
-                if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
-                    final HttpEntity entity = response.getEntity();
-                    if (entity != null) {
-                        final InputStream inputStream = entity.getContent();
+                final int statusCode = response.getStatusLine().getStatusCode();
+                if (statusCode != HttpStatus.SC_OK) {
+                    Log.w("ImageDownloader", "Error " + statusCode +
+                            " while retrieving bitmap from " + url);
+                    return null;
+                }
+
+                final HttpEntity entity = response.getEntity();
+                if (entity != null) {
+                    InputStream inputStream = null;
+                    OutputStream outputStream = null;
+                    try {
+                        inputStream = entity.getContent();
                         final ByteArrayOutputStream dataStream = new ByteArrayOutputStream();
-                        final OutputStream out =
-                            new BufferedOutputStream(dataStream, IO_BUFFER_SIZE);
-                        copy(inputStream, out);
-                        out.flush();
-                        out.close();
-                        inputStream.close();
+                        outputStream = new BufferedOutputStream(dataStream, IO_BUFFER_SIZE);
+                        copy(inputStream, outputStream);
+                        outputStream.flush();
 
                         final byte[] data = dataStream.toByteArray();
                         final Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
@@ -269,6 +276,15 @@ public class ImageDownloader {
                         //final Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
 
                         return bitmap;
+
+                    } finally {
+                        if (inputStream != null) {
+                            inputStream.close();
+                        }
+                        if (outputStream != null) {
+                            outputStream.close();
+                        }
+                        entity.consumeContent();
                     }
                 }
             } catch (IOException e) {
@@ -334,7 +350,7 @@ public class ImageDownloader {
         private final WeakReference<BitmapDownloaderTask> bitmapDownloaderTaskReference;
 
         public DownloadedDrawable(BitmapDownloaderTask bitmapDownloaderTask) {
-            super(0);
+            super(Color.BLACK);
             bitmapDownloaderTaskReference =
                 new WeakReference<BitmapDownloaderTask>(bitmapDownloaderTask);
         }
