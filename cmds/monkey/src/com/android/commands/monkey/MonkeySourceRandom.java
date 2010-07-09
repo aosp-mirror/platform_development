@@ -144,6 +144,10 @@ public class MonkeySourceRandom implements MonkeyEventSource {
         "KEYCODE_REWIND",
         "KEYCODE_FORWARD",
         "KEYCODE_MUTE",
+        "KEYCODE_PAGE_UP",
+        "KEYCODE_PAGE_DOWN",
+        "KEYCODE_PICTSYMBOLS",
+        "KEYCODE_SWITCH_CHARSET",
 
         "TAG_LAST_KEYCODE"      // EOL.  used to keep the lists in sync
     };
