@@ -24,6 +24,7 @@ import android.content.Loader;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.provider.Contacts.Phones;
+import android.provider.ContactsContract.Contacts;
 import android.util.Log;
 import android.view.View;
 import android.widget.ListAdapter;
@@ -34,29 +35,20 @@ import android.widget.SimpleCursorAdapter;
  * Demonstration of more complex use if a ListFragment, including showing
  * an empty view and loading progress.
  */
-public class FragmentComplexList extends Activity {
+public class FragmentListCursorLoader extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         
         // Create the list fragment and add it as our sole content.
         if (findFragmentById(android.R.id.content) == null) {
-            ExampleComplexListFragment list = new ExampleComplexListFragment();
+            CursorLoaderListFragment list = new CursorLoaderListFragment();
             openFragmentTransaction().add(android.R.id.content, list).commit();
         }
     }
     
-    public static class ExampleComplexListFragment extends ListFragment
+    public static class CursorLoaderListFragment extends ListFragment
             implements LoaderManager.LoaderCallbacks<Cursor> {
-        boolean mInitializing;
-
-        @Override
-        public void onCreate(Bundle savedInstanceState) {
-            super.onCreate(savedInstanceState);
-            
-            mInitializing = true;
-        }
-
         @Override
         public void onActivityCreated(Bundle savedInstanceState) {
             super.onActivityCreated(savedInstanceState);
@@ -68,18 +60,9 @@ public class FragmentComplexList extends Activity {
             // application this would come from a resource.
             setEmptyText("No phone numbers");
             
-            // Check if we already have content for the list.
-            Loader<Cursor> ld = getLoaderManager().getLoader(0);
-            if (ld == null) {
-                // No loader started yet...  do it now.
-                ld = getLoaderManager().startLoading(0, null, this);
-            } else {
-                // Already have a loader -- poke it to report its cursor
-                // if it already has one.  This will immediately call back
-                // to us for us to update the list right now.
-                ld.startLoading();
-            }
-            mInitializing = false;
+            // Prepare the loader.  Either re-connect with an existing one,
+            // or start a new one.
+            getLoaderManager().initLoader(0, null, this);
         }
         
         @Override
@@ -92,19 +75,33 @@ public class FragmentComplexList extends Activity {
             super.onDestroy();
         }
 
+        static final String[] CONTACTS_SUMMARY_PROJECTION = new String[] {
+            Contacts._ID,
+            Contacts.DISPLAY_NAME,
+            Contacts.CONTACT_STATUS,
+            Contacts.CONTACT_PRESENCE,
+            Contacts.PHOTO_ID,
+            Contacts.LOOKUP_KEY,
+        };
+    
         @Override
         public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-            return new CursorLoader(getActivity(), Phones.CONTENT_URI, null, null, null, null);
+            String select = "((" + Contacts.DISPLAY_NAME + " NOTNULL) AND ("
+                    + Contacts.HAS_PHONE_NUMBER + "=1) AND ("
+                    + Contacts.DISPLAY_NAME + " != '' ))";
+            return new CursorLoader(getActivity(), Contacts.CONTENT_URI,
+                    CONTACTS_SUMMARY_PROJECTION, select, null,
+                    Contacts.DISPLAY_NAME + " COLLATE LOCALIZED ASC");
         }
 
         @Override
         public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
             ListAdapter adapter = new SimpleCursorAdapter(getActivity(),
                     android.R.layout.simple_list_item_2, data, 
-                            new String[] { Phones.NAME, Phones.NUMBER }, 
+                            new String[] { Contacts.DISPLAY_NAME, Contacts.CONTACT_STATUS }, 
                             new int[] { android.R.id.text1, android.R.id.text2 });
             setListAdapter(adapter);
-            setListShown(true, !mInitializing);
+            setListShown(true, isResumed());
         }
     }
 }

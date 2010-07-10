@@ -218,13 +218,6 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".app.FragmentComplexList" android:label="@string/fragment_complex_list">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.SAMPLE_CODE" />
-            </intent-filter>
-        </activity>
-
         <activity android:name=".app.FragmentContextMenu"
                 android:label="@string/fragment_context_menu">
             <intent-filter>
@@ -242,7 +235,14 @@
 
         <activity android:name=".app.FragmentLayout$DialogActivity" />
 
-        <activity android:name=".app.FragmentList" android:label="@string/fragment_list">
+        <activity android:name=".app.FragmentListCursorLoader" android:label="@string/fragment_list_cursor_loader">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".app.FragmentListArray" android:label="@string/fragment_list_array">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />

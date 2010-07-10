@@ -27,21 +27,22 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
 /**
- * Demonstration of using ListFragment to show a list of items.
+ * Demonstration of using ListFragment to show a list of items
+ * from a canned array.
  */
-public class FragmentList extends Activity {
+public class FragmentListArray extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         
         // Create the list fragment and add it as our sole content.
         if (findFragmentById(android.R.id.content) == null) {
-            ExampleListFragment list = new ExampleListFragment();
+            ArrayListFragment list = new ArrayListFragment();
             openFragmentTransaction().add(android.R.id.content, list).commit();
         }
     }
     
-    public static class ExampleListFragment extends ListFragment {
+    public static class ArrayListFragment extends ListFragment {
         @Override
         public void onActivityCreated(Bundle savedInstanceState) {
             super.onActivityCreated(savedInstanceState);
