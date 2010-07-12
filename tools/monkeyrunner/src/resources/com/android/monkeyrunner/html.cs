@@ -17,6 +17,8 @@
         <li><?cs var:arg.name ?> - <?cs var:arg.doc ?></li>
       <?cs /each ?>
 </ul>
+<h3>Returns</h3>
+<p><?cs var:item.returns ?></p>
 <?cs /if ?>
 <?cs /each ?>
 </body>
