@@ -137,15 +137,6 @@ and "Organize Imports &rsaquo; Import" to import android.importorder.
 
 <pre>Ctrl-Shift-o = Organize imports <br>Ctrl-Shift-t = load class by name <br>Ctrl-Shift-r = load non-class resource by name <br>Ctrl-1 = quick fix <br>Ctrl-e = Recently viewed files <br>Ctrl-space = auto complete <br>Shift-Alt-r = refactor:rename <br>Shift-Alt-v = refactor:move <br></pre>
 
-<h2><a>Useful Plugins</a>
-</h2>
-<p>Eclipse has a plugin architecture that enables third parties to extend the IDE. Here are some plugins that make Eclipse easier to use for writing Android software:
-</p>
-
-<ul><li><a href="http://andrei.gmxhome.de/anyedit/">AnyEdit</a>
-- automatically fix whitespace issues when saving files. Can convert tabs to spaces, strip blanks at end-of-line, and ensure the last line of the file has an end-of-line character.
-</li>
-</ul>
 <h2><a>"Eclipse is not working correctly, what should I do?"</a>
 </h2>
 <p>Make sure:
