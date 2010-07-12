@@ -141,23 +141,16 @@ Mac OS <br></h3>
 </ul>
 </ul>
 <ul></ul>
-To set up your Mac OS development environment, follow these steps:<br><ol><li>Install the XCode version 2.4 or later from <a href="http://developer.apple.com/">http://developer.apple.com</a>. We recommend version 3.0 or newer.<br></li>
+To set up your Mac OS development environment, follow these steps:<br>
+<ol><li>Install the XCode version 2.4 or later from <a href="http://developer.apple.com/">http://developer.apple.com</a>. We recommend version 3.0 or newer.<br></li>
 <li>Install MacPorts. To do this:</li>
-<ol><li>Download the tar file from <a href="http://www.macports.org/">http://www.macports.org/</a> and untar the files.</li>
-<li>Run the following:<span><br>$ ./configure <br></span>
-<span>$</span>
-<span>make <br></span>
-<span>$</span>
-<span>sudo make install</span>
-</li>
-<li>Make sure that /opt/local/bin is in your path before /usr/bin. by running <br>$ echo $PATH <br>If you don't see /opt/local/bin, edit $HOME/.bash_profile and add the line <br>export PATH=/opt/local/bin:$PATH <br>(or the equivalent for other shells) after any other PATH-related lines.<span>To verify that your path is now correct, o</span>
-pen a new terminal and <span>run</span>
-echo $PATH <span>again</span>
-.</li>
-<li>Ask MacPorts to update itself:<br><span></span>
-<span>$</span>
-<span>sudo port selfupdate</span>
-<br></li>
+<ol>
+    <li>Download and run the installer from <a href="http://www.macports.org/install.php">http://www.macports.org/install.php</a></li>
+    <li>Make sure that <code>/opt/local/bin</code> is in your path before <code>/usr/bin</code> by running
+        <div><code>$ echo $PATH</code></div>
+        <div> If you don't see /opt/local/bin, edit <code>$HOME/.bash_profile</code> and add the line <code>export PATH=/opt/local/bin:$PATH</code>
+        after any other PATH-related lines. To verify that your path is now correct, open a new terminal and run <code>echo $PATH</code> again.</div>
+    </li>
 </ol>
 <li>Get the following packages from port:<br>$ <span>POSIXLY_CORRECT=1</span>
 sudo port install gmake libsdl git-core gnupg <br><span>If using Mac OS 10.4, also install:<br>$ <span>POSIXLY_CORRECT=1</span>
