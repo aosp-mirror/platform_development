@@ -27,7 +27,7 @@ bool PhoneButton::Create(const char* label)
     assert(!mHasImage);     // quick check for re-use
 
     mKeyCode = LookupKeyCode(label);
-    if (mKeyCode == kKeyCodeUnknown) {
+    if (mKeyCode == AKEYCODE_UNKNOWN) {
         fprintf(stderr, "WARNING: key code '%s' not recognized\n", label);
         // keep going
     }
@@ -129,9 +129,9 @@ bool PhoneButton::CheckCollision(int x, int y) const
 /*
  * Look up a key code based on a string.
  *
- * Returns kKeyCodeUnknown if the label doesn't match anything.
+ * Returns AKEYCODE_UNKNOWN if the label doesn't match anything.
  */
-KeyCode PhoneButton::LookupKeyCode(const char* label) const
+int32_t PhoneButton::LookupKeyCode(const char* label) const
 {
     static const struct {
         const char* label;
@@ -172,9 +172,9 @@ KeyCode PhoneButton::LookupKeyCode(const char* label) const
 
     for (int i = 0; i < numCodes; i++) {
         if (strcmp(label, codeList[i].label) == 0)
-            return (KeyCode) codeList[i].keyCode;
+            return codeList[i].keyCode;
     }
 
-    return kKeyCodeUnknown;
+    return AKEYCODE_UNKNOWN;
 };
 

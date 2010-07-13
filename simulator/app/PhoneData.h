@@ -178,7 +178,7 @@ public:
     PhoneButton* FindButtonHit(int x, int y);
 
     // find the first button with a matching key code
-    PhoneButton* FindButtonByKey(KeyCode keyCode);
+    PhoneButton* FindButtonByKey(int32_t keyCode);
 
     bool ProcessAndValidate(TiXmlNode* pNode, const char* directory);
     bool ProcessImage(TiXmlNode* pNode, const char* directory);

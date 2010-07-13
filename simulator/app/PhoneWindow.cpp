@@ -54,7 +54,7 @@ PhoneWindow::PhoneWindow(wxWindow* parent, const wxPoint& posn)
         wxDEFAULT_DIALOG_STYLE),
       mpMOHViewIndex(-1),
       mpMOHButton(NULL),
-      mMouseKeySent(kKeyCodeUnknown),
+      mMouseKeySent(AKEYCODE_UNKNOWN),
       mpViewInfo(NULL),
       mNumViewInfo(0),
       mpDeviceWindow(NULL),
@@ -113,7 +113,7 @@ void PhoneWindow::OnActivate(wxActivateEvent& event)
     if (!event.GetActive()) {
         ListIter iter;
         for (iter = mPressedKeys.begin(); iter != mPressedKeys.end(); ) {
-            KeyCode keyCode = (*iter).GetKeyCode();
+            int32_t keyCode = (*iter).GetKeyCode();
             GetDeviceManager()->SendKeyEvent(keyCode, false);
             iter = mPressedKeys.erase(iter);
         }
@@ -474,27 +474,27 @@ int PhoneWindow::ConvertKeyCode(int wxKeyCode) const
     case WXK_NUMPAD_NEXT:
     case WXK_NUMPAD9:
     case '9':                   return KEY_9;
-    case WXK_NUMPAD_MULTIPLY:   return KEY_SWITCHVIDEOMODE; //kKeyCodeStar;
+    case WXK_NUMPAD_MULTIPLY:   return KEY_SWITCHVIDEOMODE; //AKEYCODE_STAR;
     case WXK_LEFT:              return KEY_LEFT;
     case WXK_RIGHT:             return KEY_RIGHT;
     case WXK_UP:                return KEY_UP;
     case WXK_DOWN:              return KEY_DOWN;
-    case WXK_NUMPAD_ENTER:      return KEY_REPLY; //kKeyCodeDpadCenter;
+    case WXK_NUMPAD_ENTER:      return KEY_REPLY; //AKEYCODE_DPAD_CENTER;
     case WXK_HOME:              return KEY_HOME;
     case WXK_PRIOR:
-    case WXK_PAGEUP:            return KEY_MENU; //kKeyCodeSoftLeft;
+    case WXK_PAGEUP:            return KEY_MENU; //AKEYCODE_SOFT_LEFT;
     case WXK_NEXT:
-    case WXK_PAGEDOWN:          return KEY_KBDILLUMUP; //kKeyCodeSoftRight;
+    case WXK_PAGEDOWN:          return KEY_KBDILLUMUP; //AKEYCODE_SOFT_RIGHT;
     case WXK_DELETE:            
-    case WXK_BACK:              return KEY_BACKSPACE; //kKeyCodeDel;
+    case WXK_BACK:              return KEY_BACKSPACE; //AKEYCODE_DEL;
     case WXK_ESCAPE:
-    case WXK_END:               return KEY_BACK; //kKeyCodeBack;
+    case WXK_END:               return KEY_BACK; //AKEYCODE_BACK;
     case WXK_NUMPAD_DELETE:
-    case WXK_NUMPAD_DECIMAL:    return KEY_KBDILLUMTOGGLE; //kKeyCodePound;
-    case WXK_SPACE:             return KEY_SPACE; //kKeyCodeSpace;
-    case WXK_RETURN:            return KEY_ENTER; //kKeyCodeNewline;
-    case WXK_F3:                return KEY_F3; //kKeyCodeCall;
-    case WXK_F4:                return KEY_F4; //kKeyCodeEndCall;
+    case WXK_NUMPAD_DECIMAL:    return KEY_KBDILLUMTOGGLE; //AKEYCODE_POUND;
+    case WXK_SPACE:             return KEY_SPACE; //AKEYCODE_SPACE;
+    case WXK_RETURN:            return KEY_ENTER; //AKEYCODE_ENTER;
+    case WXK_F3:                return KEY_F3; //AKEYCODE_CALL;
+    case WXK_F4:                return KEY_F4; //AKEYCODE_END_CALL;
     case WXK_NUMPAD_ADD:
     case WXK_F5:                return KEY_VOLUMEUP;
     case WXK_NUMPAD_SUBTRACT:
@@ -552,7 +552,7 @@ int PhoneWindow::ConvertKeyCode(int wxKeyCode) const
         break;
     }
 
-    return kKeyCodeUnknown;
+    return AKEYCODE_UNKNOWN;
 }
 
 
@@ -566,10 +566,10 @@ int PhoneWindow::ConvertKeyCode(int wxKeyCode) const
  */
 void PhoneWindow::OnKeyDown(wxKeyEvent& event)
 {
-    KeyCode keyCode;
+    int32_t keyCode;
 
-    keyCode = (KeyCode) ConvertKeyCode(event.GetKeyCode());
-    if (keyCode != kKeyCodeUnknown) {
+    keyCode = ConvertKeyCode(event.GetKeyCode());
+    if (keyCode != AKEYCODE_UNKNOWN) {
         if (!IsKeyPressed(keyCode)) {
             //printf("PW: down: key %d\n", keyCode);
             GetDeviceManager()->SendKeyEvent(keyCode, true);
@@ -586,10 +586,10 @@ void PhoneWindow::OnKeyDown(wxKeyEvent& event)
  */
 void PhoneWindow::OnKeyUp(wxKeyEvent& event)
 {
-    KeyCode keyCode;
+    int32_t keyCode;
 
-    keyCode = (KeyCode) ConvertKeyCode(event.GetKeyCode());
-    if (keyCode != kKeyCodeUnknown) {
+    keyCode = ConvertKeyCode(event.GetKeyCode());
+    if (keyCode != AKEYCODE_UNKNOWN) {
         // Send the key event if we already have this key pressed.
         if (IsKeyPressed(keyCode)) {
             //printf("PW:   up: key %d\n", keyCode);
@@ -617,7 +617,7 @@ void PhoneWindow::OnMouseLeftDown(wxMouseEvent& event)
 {
     if (mpMOHButton != NULL) {
         //printf("PW: left down\n");
-        KeyCode keyCode = mpMOHButton->GetKeyCode();
+        int32_t keyCode = mpMOHButton->GetKeyCode();
         GetDeviceManager()->SendKeyEvent(keyCode, true);
         mMouseKeySent = keyCode;
         AddPressedKey(keyCode);
@@ -644,7 +644,7 @@ void PhoneWindow::OnMouseLeftDown(wxMouseEvent& event)
  */
 void PhoneWindow::OnMouseLeftUp(wxMouseEvent& WXUNUSED(event))
 {
-    if (mMouseKeySent != kKeyCodeUnknown) {
+    if (mMouseKeySent != AKEYCODE_UNKNOWN) {
         //printf("PW: left up\n");
         GetDeviceManager()->SendKeyEvent(mMouseKeySent, false);
         RemovePressedKey(mMouseKeySent);
@@ -658,7 +658,7 @@ void PhoneWindow::OnMouseLeftUp(wxMouseEvent& WXUNUSED(event))
             //printf("(ignoring left-up)\n");
         }
     }
-    mMouseKeySent = kKeyCodeUnknown;
+    mMouseKeySent = AKEYCODE_UNKNOWN;
 }
 
 void PhoneWindow::OnMouseRightDown(wxMouseEvent& event)
@@ -909,7 +909,7 @@ void PhoneWindow::OnPaint(wxPaintEvent& WXUNUSED(event))
 
         ListIter iter;
         for (iter = mPressedKeys.begin(); iter != mPressedKeys.end(); ++iter) {
-            KeyCode keyCode;
+            int32_t keyCode;
             PhoneButton* pButton;
 
             keyCode = (*iter).GetKeyCode();
@@ -933,7 +933,7 @@ void PhoneWindow::OnPaint(wxPaintEvent& WXUNUSED(event))
  *
  * Schedules a screen refresh if the set of held-down keys changes.
  */
-void PhoneWindow::AddPressedKey(KeyCode keyCode)
+void PhoneWindow::AddPressedKey(int32_t keyCode)
 {
     /*
      * See if the key is already down.  This usually means that the key
@@ -943,8 +943,8 @@ void PhoneWindow::AddPressedKey(KeyCode keyCode)
      * a second time.  This way, if we did lose a key-up somehow, they
      * can "clear" the stuck key by hitting it again.
      */
-    if (keyCode == kKeyCodeUnknown) {
-        //printf("--- not adding kKeyCodeUnknown!\n");
+    if (keyCode == AKEYCODE_UNKNOWN) {
+        //printf("--- not adding AKEYCODE_UNKNOWN!\n");
         return;
     }
 
@@ -969,7 +969,7 @@ void PhoneWindow::AddPressedKey(KeyCode keyCode)
  *
  * Schedules a screen refresh if the set of held-down keys changes.
  */
-void PhoneWindow::RemovePressedKey(KeyCode keyCode)
+void PhoneWindow::RemovePressedKey(int32_t keyCode)
 {
     /*
      * Release the key.  If it's not in the list, we either missed a
@@ -1000,7 +1000,7 @@ void PhoneWindow::ClearPressedKeys(void)
     if (!mPressedKeys.empty()) {
         ListIter iter = mPressedKeys.begin();
         while (iter != mPressedKeys.end()) {
-            KeyCode keyCode = (*iter).GetKeyCode();
+            int32_t keyCode = (*iter).GetKeyCode();
             GetDeviceManager()->SendKeyEvent(keyCode, false);
             iter = mPressedKeys.erase(iter);
         }
@@ -1011,7 +1011,7 @@ void PhoneWindow::ClearPressedKeys(void)
 /*
  * Returns "true" if the specified key is currently pressed.
  */
-bool PhoneWindow::IsKeyPressed(KeyCode keyCode)
+bool PhoneWindow::IsKeyPressed(int32_t keyCode)
 {
     ListIter iter;
     for (iter = mPressedKeys.begin(); iter != mPressedKeys.end(); ++iter) {
