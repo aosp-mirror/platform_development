@@ -53,9 +53,6 @@ public class FragmentListCursorLoader extends Activity {
         public void onActivityCreated(Bundle savedInstanceState) {
             super.onActivityCreated(savedInstanceState);
             
-            // Assume we don't yet have data to display.
-            setListShown(false, false);
-            
             // Give some text to display if there is no data.  In a real
             // application this would come from a resource.
             setEmptyText("No phone numbers");
@@ -70,11 +67,6 @@ public class FragmentListCursorLoader extends Activity {
             Log.i("FragmentComplexList", "Item clicked: " + id);
         }
         
-        @Override
-        public void onDestroy() {
-            super.onDestroy();
-        }
-
         static final String[] CONTACTS_SUMMARY_PROJECTION = new String[] {
             Contacts._ID,
             Contacts.DISPLAY_NAME,
@@ -101,7 +93,6 @@ public class FragmentListCursorLoader extends Activity {
                             new String[] { Contacts.DISPLAY_NAME, Contacts.CONTACT_STATUS }, 
                             new int[] { android.R.id.text1, android.R.id.text2 });
             setListAdapter(adapter);
-            setListShown(true, isResumed());
         }
     }
 }
