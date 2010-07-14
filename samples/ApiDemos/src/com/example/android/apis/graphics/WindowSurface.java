@@ -13,7 +13,7 @@ import android.view.SurfaceHolder;
  * Demonstrates how to take over the Surface from a window to do direct
  * drawing to it (without going through the view hierarchy).
  */
-public class WindowSurface extends Activity implements SurfaceHolder.Callback {
+public class WindowSurface extends Activity implements SurfaceHolder.Callback2 {
     DrawingThread mDrawingThread;
     
     @Override
@@ -74,6 +74,9 @@ public class WindowSurface extends Activity implements SurfaceHolder.Callback {
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
         // Don't need to do anything here; the drawing thread will pick up
         // new sizes from the canvas.
+    }
+
+    public void surfaceRedrawNeeded(SurfaceHolder holder) {
     }
 
     public void surfaceDestroyed(SurfaceHolder holder) {
