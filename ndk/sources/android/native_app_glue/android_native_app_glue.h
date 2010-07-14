@@ -15,12 +15,69 @@
  *
  */
 
+#ifndef _ANDROID_NATIVE_APP_GLUE_H
+#define _ANDROID_NATIVE_APP_GLUE_H
+
 #include <poll.h>
 #include <pthread.h>
 #include <sched.h>
 
 #include <android/native_activity.h>
 #include <android/looper.h>
+
+#ifdef __cplusplus
+extern "C"
+#endif
+
+/**
+ * The native activity interface provided by <android/native_activity.h>
+ * is based on a set of application-provided callbacks that will be called
+ * by the Activity's main thread when certain events occur.
+ *
+ * This means that each one of this callbacks _should_ _not_ block, or they
+ * risk having the system force-close the application. This programming
+ * model is direct, lightweight, but constraining.
+ *
+ * The 'threaded_native_app' static library is used to provide a different
+ * execution model where the application can implement its own main event
+ * loop in a different thread instead. Here's how it works:
+ *
+ * 1/ The application must provide a function named "android_main()" that
+ *    will be called when the activity is created, in a new thread that is
+ *    distinct from the activity's main thread.
+ *
+ * 2/ android_main() receives a pointer to a valid "android_app" structure
+ *    that contains references to other important objects, e.g. the
+ *    ANativeActivity obejct instance the application is running in.
+ *
+ * 3/ the "android_app" object holds an ALooper instance that already
+ *    listens to two important things:
+ *
+ *      - activity lifecycle events (e.g. "pause", "resume"). See APP_CMD_XXX
+ *        declarations below.
+ *
+ *      - input events coming from the AInputQueue attached to the activity.
+ *
+ *    Each of these correspond to an ALooper callback that returns a "data"
+ *    value of LOOPER_ID_MAIN and LOOPER_ID_EVENT, respectively.
+ *
+ *    Your application can use the same ALooper to listen to additionnal
+ *    file-descriptors.
+ *
+ * 4/ Whenever you receive a LOOPER_ID_MAIN event from the ALooper, your
+ *    code should call the function android_app_read_cmd() to read the
+ *    command value and act upon it. This is normally done by calling
+ *    android_app_exec_cmd() directly.
+ *
+ *    XXX: MAKE THIS STUFF MORE CLEAR !!
+ *
+ * 5/ Whenever you receive a LOOPER_ID_EVENT event from the ALooper, you
+ *    should read one event from the AInputQueue with AInputQueue_getEvent().
+ *
+ * See the sample named "native-activity" that comes with the NDK with a
+ * full usage example.
+ *
+ */
 
 /**
  * This is the interface for the standard glue code of a threaded
@@ -195,3 +252,9 @@ int32_t android_app_exec_cmd(struct android_app* android_app, int8_t cmd);
  * the main entry to the app.
  */
 extern void android_main(struct android_app* app);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* _ANDROID_NATIVE_APP_GLUE_H */
