@@ -413,7 +413,7 @@ PhoneButton* PhoneView::FindButtonHit(int x, int y)
 /*
  * Find the first button with a matching key code.
  */
-PhoneButton* PhoneView::FindButtonByKey(KeyCode keyCode)
+PhoneButton* PhoneView::FindButtonByKey(int32_t keyCode)
 {
     typedef List<PhoneButton>::iterator Iter;
 

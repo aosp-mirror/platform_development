@@ -278,7 +278,7 @@ void DeviceManager::UserCancelledRefresh(void)
  *
  * The events are defined in display_device.h.
  */
-void DeviceManager::SendKeyEvent(KeyCode keyCode, bool down)
+void DeviceManager::SendKeyEvent(int32_t keyCode, bool down)
 {
     android::MessageStream* pStream = GetStream();
     if (pStream == NULL)
