@@ -31,7 +31,7 @@ href="{@docRoot}source/download.html">Get source</a>
 .
 <h3>
 Installing Repo <br></h3>
-$ curl http://android.git.kernel.org/repo ~/bin/repo <div>$ chmod a+x ~/bin/repo</div>
+$ curl http://android.git.kernel.org/repo &gt; ~/bin/repo <div>$ chmod a+x ~/bin/repo</div>
 $ mkdir <i>working-directory-name</i>
 <br>$ cd <i>working-directory-name <br></i>
 $ repo init-u git://android.git.kernel.org/platform/manifest.git <br><br><h3>
