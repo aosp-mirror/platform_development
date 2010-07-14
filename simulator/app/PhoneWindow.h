@@ -89,7 +89,7 @@ private:
      */
     class KeyInfo {
     public:
-        KeyInfo(void) : mKeyCode(kKeyCodeUnknown) {}
+        KeyInfo(void) : mKeyCode(AKEYCODE_UNKNOWN) {}
         KeyInfo(const KeyInfo& src) {
             mKeyCode = src.mKeyCode;
         }
@@ -102,14 +102,14 @@ private:
             return *this;
         }
 
-        KeyCode GetKeyCode(void) const { return mKeyCode; }
-        void SetKeyCode(KeyCode keyCode) { mKeyCode = keyCode; }
+        int32_t GetKeyCode(void) const { return mKeyCode; }
+        void SetKeyCode(int32_t keyCode) { mKeyCode = keyCode; }
 
         //PhoneButton* GetPhoneButton(void) const { return mpButton; }
         //void SetPhoneButton(PhoneButton* pButton) { mpButton = pButton; }
 
     private:
-        KeyCode    mKeyCode;
+        int32_t mKeyCode;
         //PhoneButton*        mpButton;
     };
 
@@ -135,13 +135,13 @@ private:
     int ConvertKeyCode(int wxKeyCode) const;
 
     /* press a key on the device */
-    void AddPressedKey(KeyCode keyCode);
+    void AddPressedKey(int32_t keyCode);
     /* release a key on the device */
-    void RemovePressedKey(KeyCode keyCode);
+    void RemovePressedKey(int32_t keyCode);
     /* "raise" all keys */
     void ClearPressedKeys(void);
     /* determine whether a key is down */
-    bool IsKeyPressed(KeyCode keyCode);
+    bool IsKeyPressed(int32_t keyCode);
 
     /* manage the device runtime */
     DeviceManager   mDeviceManager;
@@ -149,7 +149,7 @@ private:
     /* button mouse-over highlight handling */
     int             mpMOHViewIndex;     // mouse is in this view
     PhoneButton*    mpMOHButton;        //   over this button
-    KeyCode         mMouseKeySent;     // to handle "key up" for mouse button
+    int32_t         mMouseKeySent;     // to handle "key up" for mouse button
 
     /* handle multiple simultaneous key presses */
     android::List<KeyInfo>  mPressedKeys;

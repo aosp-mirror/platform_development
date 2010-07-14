@@ -107,7 +107,7 @@ public:
 #endif
 
     // send a key-up or key-down event to the runtime
-    void SendKeyEvent(KeyCode keyCode, bool down);
+    void SendKeyEvent(int32_t keyCode, bool down);
     // send touch-screen events
     void SendTouchEvent(android::Simulator::TouchMode mode, int x, int y);
 

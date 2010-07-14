@@ -21,11 +21,11 @@
 class PhoneButton {
 public:
     PhoneButton(void)
-        : mHasImage(false), mKeyCode(kKeyCodeUnknown)
+        : mHasImage(false), mKeyCode(AKEYCODE_UNKNOWN)
         {}
     virtual ~PhoneButton(void) {}
     PhoneButton(const PhoneButton& src)
-        : mHasImage(false), mKeyCode(kKeyCodeUnknown)
+        : mHasImage(false), mKeyCode(AKEYCODE_UNKNOWN)
     {
         CopyMembers(src);
     }
@@ -60,7 +60,7 @@ public:
     }
 
     bool CheckCollision(int x, int y) const;
-    KeyCode GetKeyCode(void) const { return mKeyCode; }
+    int32_t GetKeyCode(void) const { return mKeyCode; }
 
     // load or unload the image bitmap, if any
     bool LoadResources(void);
@@ -68,13 +68,13 @@ public:
 
 private:
     void CreateHighlightedBitmap(void);
-    KeyCode LookupKeyCode(const char* label) const;
+    int32_t LookupKeyCode(const char* label) const;
 
     LoadableImage       mSelectedImage;
     wxBitmap            mHighlightedBitmap;
     bool                mHasImage;          // both exist or neither exist
 
-    KeyCode    mKeyCode;
+    int32_t mKeyCode;
 };
 
 #endif // _SIM_PHONE_BUTTON_H
