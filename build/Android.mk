@@ -15,7 +15,7 @@ intermediates := $(TARGET_OUT_COMMON_INTERMEDIATES)/JAVA_LIBRARIES/android_stubs
 full_target := $(intermediates)/classes.jar
 src_dir := $(intermediates)/src
 classes_dir := $(intermediates)/classes
-framework_res_package := $(call intermediates-dir-for,APPS,framework-res)/package.apk
+framework_res_package := $(call intermediates-dir-for,APPS,framework-res,,COMMON)/package-export.apk
 
 $(full_target): PRIVATE_SRC_DIR := $(src_dir)
 $(full_target): PRIVATE_INTERMEDIATES_DIR := $(intermediates)
