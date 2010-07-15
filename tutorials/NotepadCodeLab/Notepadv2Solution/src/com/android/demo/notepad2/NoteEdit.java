@@ -33,6 +33,7 @@ public class NoteEdit extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.note_edit);
+        setTitle(R.string.edit_note);
 
         mTitleText = (EditText) findViewById(R.id.title);
         mBodyText = (EditText) findViewById(R.id.body);
