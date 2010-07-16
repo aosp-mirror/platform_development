@@ -20,6 +20,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import com.android.ddmlib.IDevice;
+import com.android.ddmlib.TimeoutException;
+import com.android.ddmlib.AdbCommandRejectedException;
 import com.android.monkeyrunner.MonkeyDevice;
 import com.android.monkeyrunner.MonkeyImage;
 import com.android.monkeyrunner.MonkeyManager;
@@ -89,7 +91,19 @@ public class AdbMonkeyDevice extends MonkeyDevice {
     }
 
     private MonkeyManager createManager(String address, int port) {
-        device.createForward(port, port);
+        try {
+            device.createForward(port, port);
+        } catch (TimeoutException e) {
+            LOG.log(Level.SEVERE, "Timeout creating adb port forwarding", e);
+            return null;
+        } catch (AdbCommandRejectedException e) {
+            LOG.log(Level.SEVERE, "Adb rejected adb port forwarding command: " + e.getMessage(), e);
+            return null;
+        } catch (IOException e) {
+            LOG.log(Level.SEVERE, "Unable to create adb port forwarding: " + e.getMessage(), e);
+            return null;
+        }
+
         String command = "monkey --port " + port;
         executeAsyncCommand(command, new LoggingOutputReceiver(LOG, Level.FINE));
 
