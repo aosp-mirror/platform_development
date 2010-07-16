@@ -73,7 +73,7 @@ typedef struct ANativeActivity {
      * Path to this application's external (removable/mountable) data directory.
      */
     const char* externalDataPath;
-
+    
     /**
      * The platform's SDK version code.
      */
