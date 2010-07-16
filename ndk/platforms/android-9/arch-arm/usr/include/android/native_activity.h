@@ -23,6 +23,7 @@
 
 #include <jni.h>
 
+#include <android/asset_manager.h>
 #include <android/input.h>
 #include <android/native_window.h>
 
@@ -72,7 +73,7 @@ typedef struct ANativeActivity {
      * Path to this application's external (removable/mountable) data directory.
      */
     const char* externalDataPath;
-    
+
     /**
      * The platform's SDK version code.
      */
@@ -84,6 +85,12 @@ typedef struct ANativeActivity {
      * state.
      */
     void* instance;
+
+    /**
+     * Pointer to the Asset Manager instance for the application.  The application
+     * uses this to access binary assets bundled inside its own .apk file.
+     */
+    AAssetManager* assetManager;
 } ANativeActivity;
 
 /**
