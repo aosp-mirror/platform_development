@@ -78,6 +78,17 @@ mkdir -p `dirname $MYLOG`
 rm -f $MYLOG
 echo "NDK automated tests log file" > $MYLOG
 
+if [ "$VERBOSE" = "yes" ] ; then
+run ()
+{
+    $NDK/ndk-build -B $JOBS 2>&1
+}
+else
+run ()
+{
+    $NDK/ndk-build -B $JOBS >> $MYLOG 2>&1
+}
+fi
 
 #
 # Rebuild all samples first
@@ -86,9 +97,9 @@ build_sample ()
 {
     echo "Building NDK sample: $1"
     cd $PROGDIR/../samples/$1
-    $NDK/ndk-build -B $JOBS >> $MYLOG 2>&1
+    run $NDK/ndk-build -B $JOBS
     if [ $? != 0 ] ; then
-        echo "!!! BUILD FAILURE !!!"
+        echo "!!! BUILD FAILURE !!! See $MYLOG for details or use --verbose option!"
         exit 1
     fi
 }
