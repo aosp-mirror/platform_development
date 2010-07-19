@@ -1,0 +1,15 @@
+INSTRUMENTATION_STATUS: id=InstrumentationTestRunner
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: class=com.example.android.notepad.NotePadTest
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: numtests=1
+INSTRUMENTATION_STATUS: test=testActivityTestCaseSetUpProperly
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: stream=
+Test results for InstrumentationTestRunner=.
+Time: 2.242
+
+OK (1 test)
+
+
+INSTRUMENTATION_CODE: -1

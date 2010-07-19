@@ -15,6 +15,7 @@
  */
 package com.android.monkeyrunner.adb;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -34,7 +35,6 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -42,6 +42,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
 
@@ -445,23 +447,37 @@ public class AdbMonkeyDevice extends MonkeyDevice {
      * @param result the result string
      * @return the new map
      */
-    private Map<String, Object> convertInstrumentResult(String result) {
+    @VisibleForTesting
+    /* package */ static Map<String, Object> convertInstrumentResult(String result) {
         Map<String, Object> map = Maps.newHashMap();
-        for (String line : result.split("\r\n")) {
-            if (line.startsWith("INSTRUMENTATION_RESULT")) {
-                int colonOffset = line.indexOf(':');
-                int equalsOffset = line.indexOf('=');
+        Pattern pattern = Pattern.compile("^INSTRUMENTATION_(\\w+): ", Pattern.MULTILINE);
+        Matcher matcher = pattern.matcher(result);
 
-                if (colonOffset == -1 || equalsOffset == -1) {
-                    LOG.severe("Unable to parse instrumentaton result: " + line);
-                    return Collections.emptyMap();
-                }
+        int previousEnd = 0;
+        String previousWhich = null;
 
-                // +2 eats of up space after the : too
-                String key = line.substring(colonOffset + 2, equalsOffset);
-                String value = line.substring(equalsOffset + 1);
+        while (matcher.find()) {
+            if ("RESULT".equals(previousWhich)) {
+                String resultLine = result.substring(previousEnd, matcher.start()).trim();
+                // Look for the = in the value, and split there
+                int splitIndex = resultLine.indexOf("=");
+                String key = resultLine.substring(0, splitIndex);
+                String value = resultLine.substring(splitIndex + 1);
+
                 map.put(key, value);
             }
+
+            previousEnd = matcher.end();
+            previousWhich = matcher.group(1);
+        }
+        if ("RESULT".equals(previousWhich)) {
+            String resultLine = result.substring(previousEnd, matcher.start()).trim();
+            // Look for the = in the value, and split there
+            int splitIndex = resultLine.indexOf("=");
+            String key = resultLine.substring(0, splitIndex);
+            String value = resultLine.substring(splitIndex + 1);
+
+            map.put(key, value);
         }
         return map;
     }
