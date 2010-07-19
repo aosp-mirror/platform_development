@@ -4,12 +4,20 @@ doc.type=compatibility
 <p>Thanks for your interest in Android Compatibility! The links below allow
 you to access the key documents and information.</p>
 
+<h2>Android 2.2</h2>
+<p>Android 2.2 is the release of the development milestone code-named
+Froyo. Android 2.2 is the current version of Android. Source code for Android
+2.2 is found in the 'froyo' branch in the open-source tree.
+</p>
+<ul>
+  <li><a href="http://dl.google.com/dl/android/cts/android-cts-2.2_r1-x86.zip">Android 2.2 R1 Compatibility Test Suite (CTS)</a></li>
+</ul>
+
 <h2>Android 2.1</h2>
 <p>Android 2.1 is the release of the development milestone code-named
-Eclair. Android 2.1 is the current version of Android. Source code for Android
-2.1 is found in the 'eclair' branch in the open-source tree. Note that for
-technical reasons, there is no compatibility program for Android 2.0 or 2.0.1,
-and new devices must use Android 2.1.
+Eclair. Source code for Android 2.1 is found in the 'eclair' branch in the
+open-source tree. Note that for technical reasons, there is no compatibility
+program for Android 2.0 or 2.0.1, and new devices must use Android 2.1.
 </p>
 <ul>
   <li><a href="{@docRoot}compatibility/android-2.1-cdd.pdf">Android 2.1 Compatibility Definition Document (CDD)</a></li>
