@@ -83,6 +83,8 @@
     <string name="redirect_getter">Enter the text that will be used by the main activity.  Press back to cancel.</string>
     <string name="apply">Apply</string>
 
+    <string name="fragment_alert_dialog">App/Fragment/Alert Dialog</string>
+
     <string name="fragment_anim">App/Fragment/Anim</string>
     
     <string name="fragment_context_menu">App/Fragment/Context Menu</string>
@@ -90,6 +92,9 @@
             menu; long press the button to see.</string>
     <string name="long_press">Long press me</string>
     
+    <string name="fragment_dialog">App/Fragment/Dialog</string>
+    <string name="show">Show</string>
+
     <string name="fragment_layout">App/Fragment/Layout</string>
     
     <string name="fragment_list_array">App/Fragment/List Array</string>
