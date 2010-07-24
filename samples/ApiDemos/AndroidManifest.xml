@@ -211,6 +211,13 @@
 
         <!-- Fragment Samples -->
 
+        <activity android:name=".app.FragmentAlertDialog" android:label="@string/fragment_alert_dialog">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
         <activity android:name=".app.FragmentAnim" android:label="@string/fragment_anim">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -220,6 +227,13 @@
 
         <activity android:name=".app.FragmentContextMenu"
                 android:label="@string/fragment_context_menu">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".app.FragmentDialog" android:label="@string/fragment_dialog">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
