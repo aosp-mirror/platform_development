@@ -49,6 +49,7 @@
 	<classpathentry kind="src" path="frameworks/base/test-runner/src"/>
 	<classpathentry kind="src" path="frameworks/base/vpn/java"/>
 	<classpathentry kind="src" path="frameworks/base/wifi/java"/>
+	<classpathentry kind="src" path="frameworks/ex/common/java"/>
 	<classpathentry kind="src" path="frameworks/opt/vcard/java"/>
 	<classpathentry kind="src" path="development/samples/ApiDemos/src"/>
 	<classpathentry kind="src" path="development/samples/ApiDemos/tests/src"/>
