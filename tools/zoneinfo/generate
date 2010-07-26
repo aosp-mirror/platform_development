@@ -1,6 +1,6 @@
 #!/bin/sh
 
-version=tzdata2009s
+version=tzdata2010k
 
 mkdir data
 
