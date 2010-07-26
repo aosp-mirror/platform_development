@@ -20,6 +20,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import com.android.ddmlib.IDevice;
+import com.android.ddmlib.InstallException;
+import com.android.ddmlib.ShellCommandUnresponsiveException;
 import com.android.ddmlib.TimeoutException;
 import com.android.ddmlib.AdbCommandRejectedException;
 import com.android.monkeyrunner.MonkeyDevice;
@@ -82,6 +84,15 @@ public class AdbMonkeyDevice extends MonkeyDevice {
             public void run() {
                 try {
                     device.executeShellCommand(command, logger);
+                } catch (TimeoutException e) {
+                    LOG.log(Level.SEVERE, "Error starting command: " + command, e);
+                    throw new RuntimeException(e);
+                } catch (AdbCommandRejectedException e) {
+                    LOG.log(Level.SEVERE, "Error starting command: " + command, e);
+                    throw new RuntimeException(e);
+                } catch (ShellCommandUnresponsiveException e) {
+                    LOG.log(Level.SEVERE, "Error starting command: " + command, e);
+                    throw new RuntimeException(e);
                 } catch (IOException e) {
                     LOG.log(Level.SEVERE, "Error starting command: " + command, e);
                     throw new RuntimeException(e);
@@ -166,6 +177,12 @@ public class AdbMonkeyDevice extends MonkeyDevice {
     public MonkeyImage takeSnapshot() {
         try {
             return new AdbMonkeyImage(device.getScreenshot());
+        } catch (TimeoutException e) {
+            LOG.log(Level.SEVERE, "Unable to take snapshot", e);
+            return null;
+        } catch (AdbCommandRejectedException e) {
+            LOG.log(Level.SEVERE, "Unable to take snapshot", e);
+            return null;
         } catch (IOException e) {
             LOG.log(Level.SEVERE, "Unable to take snapshot", e);
             return null;
@@ -209,6 +226,15 @@ public class AdbMonkeyDevice extends MonkeyDevice {
         CommandOutputCapture capture = new CommandOutputCapture();
         try {
             device.executeShellCommand(cmd, capture);
+        } catch (TimeoutException e) {
+            LOG.log(Level.SEVERE, "Error executing command: " + cmd, e);
+            return null;
+        } catch (ShellCommandUnresponsiveException e) {
+            LOG.log(Level.SEVERE, "Error executing command: " + cmd, e);
+            return null;
+        } catch (AdbCommandRejectedException e) {
+            LOG.log(Level.SEVERE, "Error executing command: " + cmd, e);
+            return null;
         } catch (IOException e) {
             LOG.log(Level.SEVERE, "Error executing command: " + cmd, e);
             return null;
@@ -225,7 +251,7 @@ public class AdbMonkeyDevice extends MonkeyDevice {
                 return false;
             }
             return true;
-        } catch (IOException e) {
+        } catch (InstallException e) {
             LOG.log(Level.SEVERE, "Error installing package: " + path, e);
             return false;
         }
@@ -241,7 +267,7 @@ public class AdbMonkeyDevice extends MonkeyDevice {
                 return false;
             }
             return true;
-        } catch (IOException e) {
+        } catch (InstallException e) {
             LOG.log(Level.SEVERE, "Error installing package: " + packageName, e);
             return false;
         }
@@ -298,6 +324,10 @@ public class AdbMonkeyDevice extends MonkeyDevice {
     protected void reboot(String into) {
         try {
             device.reboot(into);
+        } catch (TimeoutException e) {
+            LOG.log(Level.SEVERE, "Unable to reboot device", e);
+        } catch (AdbCommandRejectedException e) {
+            LOG.log(Level.SEVERE, "Unable to reboot device", e);
         } catch (IOException e) {
             LOG.log(Level.SEVERE, "Unable to reboot device", e);
         }
