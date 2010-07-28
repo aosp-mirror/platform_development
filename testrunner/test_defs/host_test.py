@@ -31,15 +31,12 @@ class HostTestSuite(test_suite.AbstractTestSuite):
 
   _JUNIT_JAR_NAME = "junit.jar"
   _HOSTTESTLIB_NAME = "hosttestlib.jar"
-  _DDMLIB_NAME = "ddmlib.jar"
+  _DDMLIB_NAME = "ddmlib-prebuilt.jar"
   _lib_names = [_JUNIT_JAR_NAME, _HOSTTESTLIB_NAME, _DDMLIB_NAME]
 
   _JUNIT_BUILD_PATH = os.path.join("external", "junit")
   _HOSTTESTLIB_BUILD_PATH = os.path.join("development", "tools", "hosttestlib")
-  _DDMLIB_BUILD_PATH = os.path.join("development", "tools", "ddms", "libs",
-                                    "ddmlib")
-  _LIB_BUILD_PATHS = [_JUNIT_BUILD_PATH, _HOSTTESTLIB_BUILD_PATH,
-                      _DDMLIB_BUILD_PATH]
+  _LIB_BUILD_PATHS = [_JUNIT_BUILD_PATH, _HOSTTESTLIB_BUILD_PATH ]
 
   # main class for running host tests
   # TODO: should other runners be supported, and make runner an attribute of
