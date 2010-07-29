@@ -116,7 +116,8 @@ class TestWalker(object):
     Args:
       path: absolute file system path to check
       tests: current list of found tests
-      build_path: the parent directory where Android.mk was found
+      build_path: the parent directory where Android.mk that builds sub-folders
+        was found
 
     Returns:
       updated list of tests
@@ -124,17 +125,31 @@ class TestWalker(object):
     if not os.path.isdir(path):
       return tests
     filenames = os.listdir(path)
-    # Try to build as much of original path as possible, so
-    # keep track of upper-most parent directory where Android.mk was found
-    # this is also necessary in case of overlapping tests
-    # ie if a test exists at 'foo' directory  and 'foo/sub', attempting to
-    # build both 'foo' and 'foo/sub' will fail.
-    if not build_path and filenames.count(android_mk.AndroidMK.FILENAME):
-      build_path = self._MakePathRelativeToBuild(path)
     if filenames.count(android_manifest.AndroidManifest.FILENAME):
       # found a manifest! now parse it to find the test definition(s)
       manifest = android_manifest.AndroidManifest(app_path=path)
-      tests.extend(self._CreateSuitesFromManifest(manifest, build_path))
+      if not build_path:
+        # haven't found a parent makefile which builds this dir. Use current
+        # dir as build path
+        tests.extend(self._CreateSuitesFromManifest(
+            manifest, self._MakePathRelativeToBuild(path)))
+      else:
+        tests.extend(self._CreateSuitesFromManifest(manifest, build_path))
+    # Try to build as much of original path as possible, so
+    # keep track of upper-most parent directory where Android.mk was found that
+    # has rule to build sub-directory makefiles
+    # this is also necessary in case of overlapping tests
+    # ie if a test exists at 'foo' directory  and 'foo/sub', attempting to
+    # build both 'foo' and 'foo/sub' will fail.
+    if filenames.count(android_mk.AndroidMK.FILENAME):
+      android_mk_parser = android_mk.AndroidMK(app_path=path)
+      if android_mk_parser.HasInclude('call all-makefiles-under,$(LOCAL_PATH)'):
+        # found rule to build sub-directories. The parent path can be used, 
+        # or if not set, use current path
+        if not build_path:
+          build_path = self._MakePathRelativeToBuild(path)
+      else:
+        build_path = None
     for filename in filenames:
       self._FindSubTests(os.path.join(path, filename), tests, build_path)
     return tests
