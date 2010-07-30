@@ -1228,6 +1228,14 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".view.List15" android:label="Views/Lists/15. Selection Mode"
+                  android:theme="@android:style/Theme.WithActionBar">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
         <activity android:name=".view.ExpandableList1" android:label="Views/Expandable Lists/1. Custom Adapter">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
