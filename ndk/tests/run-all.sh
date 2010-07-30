@@ -2,6 +2,11 @@
 
 PROGDIR=`dirname $0`
 PROGDIR=`cd $PROGDIR && pwd`
+
+# Assume that we are under tests/
+# and that the samples will be under samples/ and platforms/android-N/samples/
+#
+ROOTDIR=`dirname $PROGDIR`
 #
 # Sanity checks:
 #
@@ -17,6 +22,12 @@ fi
 
 if [ ! -f "$NDK/ndk-build" -o ! -f "$NDK/build/core/ndk-common.sh" ] ; then
     echo "ERROR: Your NDK variable does not point to a valid NDK directory: $NDK"
+    exit 3
+fi
+
+if [ ! -d "$NDK/platforms" -o ! -d "$NDK/samples" ] ; then
+    echo "ERROR: Your NDK directory does not have 'platforms' or 'samples' directories."
+    echo "Please run $NDK/build/tools/build-platforms.sh first !"
     exit 3
 fi
 
@@ -90,20 +101,26 @@ run ()
 }
 fi
 
+# Find sample directories
+SAMPLE_DIRS=`cd $ROOTDIR && ls -d samples/*`
+SAMPLE_DIRS="$SAMPLE_DIRS "`cd $ROOTDIR && ls -d platforms/android-*/samples/*`
+
 #
 # Rebuild all samples first
+# $1: sample name
 #
 build_sample ()
 {
-    echo "Building NDK sample: $1"
-    cd $PROGDIR/../samples/$1
+    echo "Building NDK sample: `basename $1`"
+    SAMPLEDIR=$ROOTDIR/$1
+    cd $SAMPLEDIR
     run $NDK/ndk-build -B $JOBS
     if [ $? != 0 ] ; then
-        echo "!!! BUILD FAILURE !!! See $MYLOG for details or use --verbose option!"
+        echo "!!! BUILD FAILURE [$1]!!! See $MYLOG for details or use --verbose option!"
         exit 1
     fi
 }
 
-for SAMPLE in `ls $PROGDIR/../samples`; do
-    build_sample `basename $SAMPLE`
+for DIR in $SAMPLE_DIRS; do
+    build_sample $DIR
 done
