@@ -3,14 +3,17 @@ home=true
 @jd:body
 <div style="float: right; width: 35%;">
 <h3 style="padding-top: 0px;">News</h3>
+<p><b>Compatibility Tools for Android 2.2</b><br/>
+The compatibility tools for Android 2.2 have been published. This includes the
+Compatibility Definition Document for Android 2.2, and the Compatibility Test
+Suite version 2.2 r1. With these tools, device manufacturers can finalize
+builds of Android 2.2 for new and existing devices. For more information,
+<a href="{@docRoot}compatibility/index.html">visit the Compatibility page.</a>
+</p>
 <p><b>Introducing the Compatibility Program</b><br/>
 We're pleased to introduce the Android Compatibility Program. We've released
 two tools -- the Compatibility Definition Document and the Compatibility Test
 Suite -- to help device manufacturers build compatible devices.</p>
-<p><b>Site redesign</b><br/>
-You're looking at the new and improved source.android.com! We've updated
-the layout and site design, and also added new information. We hope you find
-these improvements helpful.</p>
 </div>
 <img style="float: right; padding-right: 1.5em;" src="{@docRoot}images/home-bugdroid.png" alt="Android Mascot"/>
 <div style="font-size: 1.3em;">

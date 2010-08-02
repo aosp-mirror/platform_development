@@ -6,10 +6,11 @@ you to access the key documents and information.</p>
 
 <h2>Android 2.2</h2>
 <p>Android 2.2 is the release of the development milestone code-named
-Froyo. Android 2.2 is the current version of Android. Source code for Android
+FroYo. Android 2.2 is the current version of Android. Source code for Android
 2.2 is found in the 'froyo' branch in the open-source tree.
 </p>
 <ul>
+  <li><a href="{@docRoot}compatibility/android-2.2-cdd.pdf">Android 2.2 Compatibility Definition Document (CDD)</a></li>
   <li><a href="http://dl.google.com/dl/android/cts/android-cts-2.2_r1-x86.zip">Android 2.2 R1 Compatibility Test Suite (CTS)</a></li>
 </ul>
 
