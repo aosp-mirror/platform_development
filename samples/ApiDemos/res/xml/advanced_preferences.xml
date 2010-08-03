@@ -23,7 +23,7 @@
          portion of the preference, if the whole preference wanted to be
          replaced we would use the layout attribute instead of the widgetLayout
          attribute. -->
-    <com.example.android.apis.app.MyPreference
+    <com.example.android.apis.preference.MyPreference
             android:key="my_preference"
             android:title="@string/title_my_preference"
             android:summary="@string/summary_my_preference"

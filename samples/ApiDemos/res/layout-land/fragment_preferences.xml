@@ -20,7 +20,7 @@
     android:orientation="horizontal"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
-    <fragment android:name="com.example.android.apis.app.FragmentPreferences$CategoriesFragment"
+    <fragment android:name="com.example.android.apis.preference.FragmentPreferences$CategoriesFragment"
             android:id="@+id/categories"
             android:layout_width="0px"
             android:layout_height="match_parent"

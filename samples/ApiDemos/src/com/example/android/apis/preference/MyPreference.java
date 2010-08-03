@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.example.android.apis.app;
+package com.example.android.apis.preference;
 
 import com.example.android.apis.R;
 
@@ -33,18 +33,18 @@ import android.widget.TextView;
  */
 public class MyPreference extends Preference {
     private int mClickCounter;
-    
+
     // This is the constructor called by the inflater
     public MyPreference(Context context, AttributeSet attrs) {
         super(context, attrs);
-        
-        setWidgetLayoutResource(R.layout.preference_widget_mypreference);        
+
+        setWidgetLayoutResource(R.layout.preference_widget_mypreference);
     }
 
     @Override
     protected void onBindView(View view) {
         super.onBindView(view);
-        
+
         // Set our custom views inside the layout
         final TextView myTextView = (TextView) view.findViewById(R.id.mypreference_widget);
         if (myTextView != null) {
@@ -61,14 +61,14 @@ public class MyPreference extends Preference {
             // They don't want the value to be set
             return;
         }
-        
+
         // Increment counter
         mClickCounter = newValue;
-        
+
         // Save to persistent storage (this method will make sure this
         // preference should be persistent, along with other useful checks)
         persistInt(mClickCounter);
-        
+
         // Data has changed, notify so UI can be refreshed!
         notifyChanged();
     }
@@ -100,7 +100,7 @@ public class MyPreference extends Preference {
          * must save the instance state so it is able to, for example, survive
          * orientation changes.
          */
-        
+
         final Parcelable superState = super.onSaveInstanceState();
         if (isPersistent()) {
             // No need to save instance state since it's persistent
@@ -120,14 +120,14 @@ public class MyPreference extends Preference {
             super.onRestoreInstanceState(state);
             return;
         }
-     
+
         // Restore the instance state
         SavedState myState = (SavedState) state;
         super.onRestoreInstanceState(myState.getSuperState());
         mClickCounter = myState.clickCounter;
         notifyChanged();
     }
-    
+
     /**
      * SavedState, a subclass of {@link BaseSavedState}, will store the state
      * of MyPreference, a subclass of Preference.
@@ -136,10 +136,10 @@ public class MyPreference extends Preference {
      */
     private static class SavedState extends BaseSavedState {
         int clickCounter;
-        
+
         public SavedState(Parcel source) {
             super(source);
-            
+
             // Restore the click counter
             clickCounter = source.readInt();
         }
@@ -147,7 +147,7 @@ public class MyPreference extends Preference {
         @Override
         public void writeToParcel(Parcel dest, int flags) {
             super.writeToParcel(dest, flags);
-            
+
             // Save the click counter
             dest.writeInt(clickCounter);
         }
@@ -167,5 +167,5 @@ public class MyPreference extends Preference {
             }
         };
     }
-    
+
 }
