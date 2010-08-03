@@ -14,26 +14,15 @@
  * limitations under the License.
  */
 
-package com.example.android.apis.app;
+package com.example.android.apis.preference;
 
 import com.example.android.apis.R;
-import com.example.android.apis.Shakespeare;
 
 import android.app.Activity;
 import android.app.Fragment;
 import android.app.ListFragment;
-import android.content.Context;
-import android.content.Intent;
-import android.content.res.TypedArray;
-import android.net.Uri;
 import android.os.Bundle;
-import android.preference.CheckBoxPreference;
-import android.preference.EditTextPreference;
-import android.preference.ListPreference;
-import android.preference.PreferenceCategory;
 import android.preference.PreferenceFragment;
-import android.preference.PreferenceScreen;
-import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
@@ -81,6 +70,7 @@ public class FragmentPreferences extends Activity {
         }
     }
 
+//BEGIN_INCLUDE(fragment)
     public static class Prefs1Fragment extends PreferenceFragment {
         @Override
         public void onCreate(Bundle savedInstanceState) {
@@ -90,6 +80,7 @@ public class FragmentPreferences extends Activity {
             addPreferencesFromResource(R.xml.preferences);
         }
     }
+//END_INCLUDE(fragment)
 
     public static class Prefs2Fragment extends PreferenceFragment {
         @Override

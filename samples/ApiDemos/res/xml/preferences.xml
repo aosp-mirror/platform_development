@@ -15,6 +15,7 @@
 -->
 
 <!-- This is a primitive example showing the different types of preferences available. -->
+<!-- BEGIN_INCLUDE(preferences) -->
 <PreferenceScreen
         xmlns:android="http://schemas.android.com/apk/res/android">
 
@@ -97,3 +98,4 @@
     </PreferenceCategory>
     
 </PreferenceScreen>
+<!-- END_INCLUDE(preferences) -->

@@ -67,7 +67,7 @@ public class FragmentDialog extends Activity {
         mStackLevel++;
         DialogFragment newFragment = new MyDialogFragment(mStackLevel);
         FragmentTransaction ft = openFragmentTransaction();
-        Fragment prev = this.findFragmentByTag("dialog");
+        Fragment prev = findFragmentByTag("dialog");
         if (prev != null) {
             ft.remove(prev);
         }

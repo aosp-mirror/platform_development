@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.example.android.apis.app;
+package com.example.android.apis.preference;
 
 import com.example.android.apis.ApiDemosApplication;
 import com.example.android.apis.R;
@@ -46,7 +46,7 @@ public class DefaultValues extends PreferenceActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        
+
         addPreferencesFromResource(R.xml.default_values);
     }
 

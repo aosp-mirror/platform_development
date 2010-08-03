@@ -107,8 +107,6 @@
     <string name="fragment1menu">Show fragment 1 menu</string>
     <string name="fragment2menu">Show fragment 2 menu</string>
     
-    <string name="fragment_preferences">App/Fragment/Preferences</string>
-
     <string name="fragment_retain_instance">App/Fragment/Retain Instance</string>
     <string name="fragment_retain_instance_msg">Current progress of retained fragment;
     restarts if fragment is re-created.</string>
@@ -384,12 +382,14 @@
     <!--  app/menu examples strings     -->
     <!-- ============================== -->
 
-    <string name="preferences_from_xml">App/Preferences/1. Preferences from XML</string>
-    <string name="launching_preferences">App/Preferences/2. Launching preferences</string>
-    <string name="preference_dependencies">App/Preferences/3. Preference dependencies</string>
-    <string name="default_values">App/Preferences/4. Default values</string>
-    <string name="preferences_from_code">App/Preferences/5. Preferences from code</string>
-    <string name="advanced_preferences">App/Preferences/6. Advanced preferences</string>
+    <string name="preferences_from_xml">Preference/1. Preferences from XML</string>
+    <string name="launching_preferences">Preference/2. Launching preferences</string>
+    <string name="preference_dependencies">Preference/3. Preference dependencies</string>
+    <string name="default_values">Preference/4. Default values</string>
+    <string name="preferences_from_code">Preference/5. Preferences from code</string>
+    <string name="advanced_preferences">Preference/6. Advanced preferences</string>
+    <string name="fragment_preferences">Preference/7. Fragment</string>
+    <string name="preference_with_headers">Preference/8. Headers</string>
 
     <string name="launch_preference_activity">Launch PreferenceActivity</string>
     <string name="counter_value_is">The counter value is</string>

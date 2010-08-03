@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.example.android.apis.app;
+package com.example.android.apis.preference;
 
 import com.example.android.apis.R;
 
@@ -26,7 +26,7 @@ public class PreferencesFromXml extends PreferenceActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        
+
         // Load the preferences from an XML resource
         addPreferencesFromResource(R.xml.preferences);
     }

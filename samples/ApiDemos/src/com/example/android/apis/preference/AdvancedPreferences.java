@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.example.android.apis.app;
+package com.example.android.apis.preference;
 
 import com.example.android.apis.R;
 
@@ -35,7 +35,7 @@ public class AdvancedPreferences extends PreferenceActivity implements OnSharedP
 
     private CheckBoxPreference mCheckBoxPreference;
     private Handler mHandler = new Handler();
-    
+
     /**
      * This is a simple example of controlling a preference from code.
      */
@@ -44,19 +44,19 @@ public class AdvancedPreferences extends PreferenceActivity implements OnSharedP
             if (mCheckBoxPreference != null) {
                 mCheckBoxPreference.setChecked(!mCheckBoxPreference.isChecked());
             }
-            
+
             // Force toggle again in a second
             mHandler.postDelayed(this, 1000);
         }
     };
-    
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         // Load the XML preferences file
         addPreferencesFromResource(R.xml.advanced_preferences);
-        
+
         // Get a reference to the checkbox preference
         mCheckBoxPreference = (CheckBoxPreference)getPreferenceScreen().findPreference(
                 KEY_ADVANCED_CHECKBOX_PREFERENCE);
@@ -68,7 +68,7 @@ public class AdvancedPreferences extends PreferenceActivity implements OnSharedP
 
         // Start the force toggle
         mForceCheckBoxRunnable.run();
-        
+
         // Set up a listener whenever a key changes
         getPreferenceScreen().getSharedPreferences().registerOnSharedPreferenceChangeListener(this);
     }
@@ -79,7 +79,7 @@ public class AdvancedPreferences extends PreferenceActivity implements OnSharedP
 
         // Unregister the listener whenever a key changes
         getPreferenceScreen().getSharedPreferences().unregisterOnSharedPreferenceChangeListener(this);
-        
+
         mHandler.removeCallbacks(mForceCheckBoxRunnable);
     }
 
@@ -90,5 +90,5 @@ public class AdvancedPreferences extends PreferenceActivity implements OnSharedP
                     + sharedPreferences.getInt(key, 0), Toast.LENGTH_SHORT).show();
         }
     }
-    
+
 }

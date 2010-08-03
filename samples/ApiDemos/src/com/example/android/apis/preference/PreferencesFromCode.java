@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.example.android.apis.app;
+package com.example.android.apis.preference;
 
 import android.content.Intent;
 import android.content.res.TypedArray;
@@ -34,26 +34,26 @@ public class PreferencesFromCode extends PreferenceActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        
+
         setPreferenceScreen(createPreferenceHierarchy());
     }
 
     private PreferenceScreen createPreferenceHierarchy() {
         // Root
         PreferenceScreen root = getPreferenceManager().createPreferenceScreen(this);
-        
-        // Inline preferences 
+
+        // Inline preferences
         PreferenceCategory inlinePrefCat = new PreferenceCategory(this);
         inlinePrefCat.setTitle(R.string.inline_preferences);
         root.addPreference(inlinePrefCat);
-        
+
         // Toggle preference
         CheckBoxPreference togglePref = new CheckBoxPreference(this);
         togglePref.setKey("toggle_preference");
         togglePref.setTitle(R.string.title_toggle_preference);
         togglePref.setSummary(R.string.summary_toggle_preference);
         inlinePrefCat.addPreference(togglePref);
-                
+
         // Dialog based preferences
         PreferenceCategory dialogBasedPrefCat = new PreferenceCategory(this);
         dialogBasedPrefCat.setTitle(R.string.dialog_based_preferences);
@@ -66,7 +66,7 @@ public class PreferencesFromCode extends PreferenceActivity {
         editTextPref.setTitle(R.string.title_edittext_preference);
         editTextPref.setSummary(R.string.summary_edittext_preference);
         dialogBasedPrefCat.addPreference(editTextPref);
-        
+
         // List preference
         ListPreference listPref = new ListPreference(this);
         listPref.setEntries(R.array.entries_list_preference);
@@ -76,7 +76,7 @@ public class PreferencesFromCode extends PreferenceActivity {
         listPref.setTitle(R.string.title_list_preference);
         listPref.setSummary(R.string.summary_list_preference);
         dialogBasedPrefCat.addPreference(listPref);
-        
+
         // Launch preferences
         PreferenceCategory launchPrefCat = new PreferenceCategory(this);
         launchPrefCat.setTitle(R.string.launch_preferences);
@@ -93,19 +93,19 @@ public class PreferencesFromCode extends PreferenceActivity {
         screenPref.setTitle(R.string.title_screen_preference);
         screenPref.setSummary(R.string.summary_screen_preference);
         launchPrefCat.addPreference(screenPref);
-        
+
         /*
          * You can add more preferences to screenPref that will be shown on the
          * next screen.
          */
-        
+
         // Example of next screen toggle preference
         CheckBoxPreference nextScreenCheckBoxPref = new CheckBoxPreference(this);
         nextScreenCheckBoxPref.setKey("next_screen_toggle_preference");
         nextScreenCheckBoxPref.setTitle(R.string.title_next_screen_toggle_preference);
         nextScreenCheckBoxPref.setSummary(R.string.summary_next_screen_toggle_preference);
         screenPref.addPreference(nextScreenCheckBoxPref);
-        
+
         // Intent preference
         PreferenceScreen intentPref = getPreferenceManager().createPreferenceScreen(this);
         intentPref.setIntent(new Intent().setAction(Intent.ACTION_VIEW)
@@ -113,18 +113,18 @@ public class PreferencesFromCode extends PreferenceActivity {
         intentPref.setTitle(R.string.title_intent_preference);
         intentPref.setSummary(R.string.summary_intent_preference);
         launchPrefCat.addPreference(intentPref);
-        
+
         // Preference attributes
         PreferenceCategory prefAttrsCat = new PreferenceCategory(this);
         prefAttrsCat.setTitle(R.string.preference_attributes);
         root.addPreference(prefAttrsCat);
-        
+
         // Visual parent toggle preference
         CheckBoxPreference parentCheckBoxPref = new CheckBoxPreference(this);
         parentCheckBoxPref.setTitle(R.string.title_parent_preference);
         parentCheckBoxPref.setSummary(R.string.summary_parent_preference);
         prefAttrsCat.addPreference(parentCheckBoxPref);
-        
+
         // Visual child toggle preference
         // See res/values/attrs.xml for the <declare-styleable> that defines
         // TogglePrefAttrs.
@@ -137,7 +137,7 @@ public class PreferencesFromCode extends PreferenceActivity {
                         0));
         prefAttrsCat.addPreference(childCheckBoxPref);
         a.recycle();
-        
+
         return root;
     }
 }

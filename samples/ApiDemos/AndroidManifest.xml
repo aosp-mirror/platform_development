@@ -48,7 +48,7 @@
              to be installed if it doesn't exist. -->
         <uses-library android:name="com.example.will.never.exist" android:required="false" />
 
-        <activity android:name="ApiDemos">
+        <activity android:name="ApiDemos" android:screenOrientation="landscape">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -271,14 +271,6 @@
 
         <activity android:name=".app.FragmentMenu"
                 android:label="@string/fragment_menu">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.SAMPLE_CODE" />
-            </intent-filter>
-        </activity>
-
-        <activity android:name=".app.FragmentPreferences"
-                android:label="@string/fragment_preferences">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -617,50 +609,6 @@
             </intent-filter>
         </activity>
 
-        <!-- Preferences Samples -->
-
-        <activity android:name=".app.PreferencesFromXml" android:label="@string/preferences_from_xml">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.SAMPLE_CODE" />
-            </intent-filter>
-        </activity>
-
-        <activity android:name=".app.PreferencesFromCode" android:label="@string/preferences_from_code">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.SAMPLE_CODE" />
-            </intent-filter>
-        </activity>
-
-        <activity android:name=".app.AdvancedPreferences" android:label="@string/advanced_preferences">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.SAMPLE_CODE" />
-            </intent-filter>
-        </activity>
-
-        <activity android:name=".app.LaunchingPreferences" android:label="@string/launching_preferences">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.SAMPLE_CODE" />
-            </intent-filter>
-        </activity>
-
-        <activity android:name=".app.PreferenceDependencies" android:label="@string/preference_dependencies">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.SAMPLE_CODE" />
-            </intent-filter>
-        </activity>
-
-        <activity android:name=".app.DefaultValues" android:label="@string/default_values">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.SAMPLE_CODE" />
-            </intent-filter>
-        </activity>
-
         <!-- Device Admin Samples -->
 
         <activity android:name=".app.DeviceAdminSample$Controller"
@@ -696,6 +644,73 @@
         <!-- Text-To-Speech Samples -->
 
         <activity android:name=".app.TextToSpeechActivity" android:label="@string/text_to_speech">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <!-- ************************************* -->
+        <!--       PREFERENCE PACKAGE SAMPLES      -->
+        <!-- ************************************* -->
+
+        <activity android:name=".preference.FragmentPreferences"
+                android:label="@string/fragment_preferences">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".preference.PreferenceWithHeaders"
+                android:label="@string/preference_with_headers">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".preference.PreferencesFromXml"
+                android:label="@string/preferences_from_xml">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".preference.PreferencesFromCode"
+                android:label="@string/preferences_from_code">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".preference.AdvancedPreferences"
+                android:label="@string/advanced_preferences">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".preference.LaunchingPreferences"
+                android:label="@string/launching_preferences">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".preference.PreferenceDependencies"
+                android:label="@string/preference_dependencies">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".preference.DefaultValues" android:label="@string/default_values">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
