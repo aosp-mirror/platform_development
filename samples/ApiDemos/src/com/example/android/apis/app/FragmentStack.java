@@ -38,15 +38,15 @@ public class FragmentStack extends Activity {
         setContentView(R.layout.fragment_stack);
         
         // Watch for button clicks.
-        Button button = (Button)findViewById(R.id.next);
+        Button button = (Button)findViewById(R.id.new_fragment);
         button.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
                 addFragmentToStack();
             }
         });
-        
+
         if (savedInstanceState == null) {
-            // Do first time initialization -- add initial fragment. 
+            // Do first time initialization -- add initial fragment.
             Fragment newFragment = new CountingFragment(mStackLevel);
             FragmentTransaction ft = openFragmentTransaction();
             ft.add(R.id.simple_fragment, newFragment).commit();

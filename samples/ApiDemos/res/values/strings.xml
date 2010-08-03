@@ -115,7 +115,7 @@
     <string name="fragment_receive_result">App/Fragment/Receive Result</string>
     
     <string name="fragment_stack">App/Fragment/Stack</string>
-    <string name="next">Next</string>
+    <string name="new_fragment">New fragment</string>
 
     <string name="activity_menu">App/Activity/Menu</string>
     <string name="open_menu">Open menu</string>
