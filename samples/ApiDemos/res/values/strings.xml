@@ -512,6 +512,9 @@
     <string name="wipe_data">Wipe Data</string>
     <string name="timeout_hint">Max screen timeout</string>
     <string name="set_timeout_label">Set Timeout</string>
+    <string name="proxyhost_hint">Global proxyhost:port</string>
+    <string name="proxylist_hint">No proxy for domain1,domain2</string>
+    <string name="set_proxy_label">Set Global Proxy</string>
 
     <!-- ============================== -->
     <!--  app/voice recognition examples strings  -->

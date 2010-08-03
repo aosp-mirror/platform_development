@@ -42,6 +42,11 @@ import android.widget.Spinner;
 import android.widget.Toast;
 import android.widget.AdapterView.OnItemSelectedListener;
 
+import java.net.InetSocketAddress;
+import java.net.Proxy;
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * Example of a do-nothing admin class.  When enabled, it lets you control
  * some of its policy and reports when there is interesting activity.
@@ -147,6 +152,10 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
         private Button mTimeoutButton;
 
         private EditText mTimeout;
+
+        EditText mProxyHost;
+        EditText mProxyList;
+        Button mProxyButton;
 
         @Override
         protected void onCreate(Bundle savedInstanceState) {
@@ -318,6 +327,11 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
             mTimeout = (EditText) findViewById(R.id.timeout);
             mTimeoutButton = (Button) findViewById(R.id.set_timeout);
             mTimeoutButton.setOnClickListener(mSetTimeoutListener);
+
+            mProxyHost = (EditText) findViewById(R.id.proxyhost);
+            mProxyList = (EditText) findViewById(R.id.proxylist);
+            mProxyButton = (Button) findViewById(R.id.set_proxy);
+            mProxyButton.setOnClickListener(mSetProxyListener);
         }
 
         void updateButtonStates() {
@@ -614,5 +628,49 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
                 }
             }
         };
+
+        private OnClickListener mSetProxyListener = new OnClickListener() {
+
+            public void onClick(View v) {
+                boolean active = mDPM.isAdminActive(mDeviceAdminSample);
+                String proxySpec = mProxyHost.getText().toString();
+                String proxyList = mProxyList.getText().toString();
+                Proxy instProxy;
+                List<String> exclList;
+
+                if ((proxySpec.length() == 0) || (proxySpec == null)) {
+                    instProxy = Proxy.NO_PROXY;
+                } else {
+                    String[] proxyComponents = proxySpec.split(":");
+                    if (proxyComponents.length != 2) {
+                        Toast.makeText(Controller.this, "Wrong proxy specification.",
+                                Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    instProxy = new Proxy(Proxy.Type.HTTP,
+                            new InetSocketAddress(proxyComponents[0],
+                                    Integer.parseInt(proxyComponents[1])));
+                }
+                if ((proxyList == null) || (proxyList.length() == 0)) {
+                    exclList = null;
+                } else {
+                    String[] listDoms = proxyList.split(",");
+                    if (listDoms.length == 0) {
+                        Toast.makeText(Controller.this, "Wrong exclusion list format.",
+                                Toast.LENGTH_SHORT).show();
+                    }
+                    exclList =  Arrays.asList(listDoms);
+                }
+                if (active) {
+                    mDPM.setGlobalProxy(mDeviceAdminSample, instProxy, exclList);
+                    ComponentName proxyAdmin = mDPM.getGlobalProxyAdmin();
+                    if ((proxyAdmin != null) && (proxyAdmin.equals(mDeviceAdminSample))) {
+                        Toast.makeText(Controller.this, "Global Proxy set by device admin.",
+                                Toast.LENGTH_SHORT).show();
+                    }
+                }
+            }
+        };
+
     }
 }

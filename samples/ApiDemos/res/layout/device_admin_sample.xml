@@ -208,6 +208,31 @@
 
         </LinearLayout>
 
+        <LinearLayout android:orientation="vertical" android:gravity="center_horizontal"
+            android:layout_width="match_parent" android:layout_height="wrap_content">
+
+            <EditText android:id="@+id/proxyhost"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="@string/proxyhost_hint">
+            </EditText>
+
+            <EditText android:id="@+id/proxylist"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="@string/proxylist_hint">
+            </EditText>
+
+            <Button android:id="@+id/set_proxy"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:layout_weight="0"
+                android:text="@string/set_proxy_label">
+            </Button>
+
+        </LinearLayout>
+
     </LinearLayout>
 
 </ScrollView>

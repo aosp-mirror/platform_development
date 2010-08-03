@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright (C) 2010 The Android Open Source Project
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+  
+          http://www.apache.org/licenses/LICENSE-2.0
+  
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
+
+<resources>
+
+    <string name="corp_app_title_text">Corporate Demo App</string>
+    <string name="corp_app_set_button_text">Set Corp Global Proxy</string>
+    <string name="corp_app_status_success_text">Global Proxy successfully set</string>
+    <string name="corp_app_status_failed_text">Global Proxy could not be set.</string>
+    <string name="corp_app_status_waiting_text">Waiting to set Global Proxy...</string>
+    <string name="corp_app_proxy_name">proxy.corpapp.com:8080</string>
+    <string name="corp_app_proxy_excl_list">google.com,youtube.com</string>
+    <string name="corp_app_activity">Sample Corp App Activity</string>
+    <string name="corp_app_admin">Sample Corp App Device Admin</string>
+    <string name="corp_device_admin_description">Corporate device admin sample demo</string>
+
+</resources>
