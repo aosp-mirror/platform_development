@@ -34,16 +34,18 @@ import android.view.ContextMenu.ContextMenuInfo;
  * Demonstration of displaying a context menu from a fragment.
  */
 public class FragmentContextMenu extends Activity {
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        
+
         // Create the list fragment and add it as our sole content.
         ContextMenuFragment content = new ContextMenuFragment();
         openFragmentTransaction().add(android.R.id.content, content).commit();
     }
-    
+
     public static class ContextMenuFragment extends Fragment {
+
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                 Bundle savedInstanceState) {
@@ -58,7 +60,7 @@ public class FragmentContextMenu extends Activity {
             menu.add(Menu.NONE, R.id.a_item, Menu.NONE, "Menu A");
             menu.add(Menu.NONE, R.id.b_item, Menu.NONE, "Menu B");
         }
-        
+
         @Override
         public boolean onContextItemSelected(MenuItem item) {
             switch (item.getItemId()) {

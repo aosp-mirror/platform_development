@@ -6,15 +6,11 @@ import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentTransaction;
 import android.os.Bundle;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.View.OnClickListener;
-import android.widget.Button;
 import android.widget.CheckBox;
-import android.widget.TextView;
 
 /**
  * Demonstrates how fragments can participate in the options menu.
@@ -24,14 +20,14 @@ public class FragmentMenu extends Activity {
     Fragment mFragment2;
     CheckBox mCheckBox1;
     CheckBox mCheckBox2;
-    
+
     // Update fragment visibility when check boxes are changed.
     final OnClickListener mClickListener = new OnClickListener() {
         public void onClick(View v) {
             updateFragmentVisibility();
         }
     };
-    
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -60,7 +56,7 @@ public class FragmentMenu extends Activity {
         // Make sure fragments start out with correct visibility.
         updateFragmentVisibility();
     }
-    
+
     @Override
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
@@ -77,13 +73,14 @@ public class FragmentMenu extends Activity {
         else ft.hide(mFragment2);
         ft.commit();
     }
-    
+
     /**
      * A fragment that displays a menu.  This fragment happens to not
      * have a UI (it does not implement onCreateView), but it could also
      * have one if it wanted.
      */
     public static class MenuFragment extends Fragment {
+
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
@@ -101,6 +98,7 @@ public class FragmentMenu extends Activity {
      * Second fragment with a menu.
      */
     public static class Menu2Fragment extends Fragment {
+
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);

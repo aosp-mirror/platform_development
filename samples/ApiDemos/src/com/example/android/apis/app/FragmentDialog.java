@@ -132,6 +132,7 @@ public class FragmentDialog extends Activity {
             outState.putInt("num", mNum);
         }
 
+        @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                 Bundle savedInstanceState) {
             View v = inflater.inflate(R.layout.fragment_dialog, container, false);

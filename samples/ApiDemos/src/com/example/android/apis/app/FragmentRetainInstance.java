@@ -20,15 +20,11 @@ import com.example.android.apis.R;
 
 import android.app.Activity;
 import android.app.Fragment;
-import android.app.FragmentTransaction;
 import android.os.Bundle;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.ProgressBar;
-import android.widget.TextView;
 
 /**
  * This example shows how you can use a Fragment to easily propagate state
@@ -38,12 +34,12 @@ import android.widget.TextView;
  */
 public class FragmentRetainInstance extends Activity {
     RetainedFragment mRetainedFragment;
-    
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.fragment_retain_instance);
-        
+
         // Watch for button clicks.
         Button button = (Button)findViewById(R.id.restart);
         button.setOnClickListener(new OnClickListener() {
@@ -51,17 +47,17 @@ public class FragmentRetainInstance extends Activity {
                 mRetainedFragment.restart();
             }
         });
-        
+
         // Check to see if we retained the fragment.
         mRetainedFragment = (RetainedFragment)findFragmentByTag("retained");
-        
+
         // If not retained (or first time running), we need to re-create it.
         if (mRetainedFragment == null) {
             mRetainedFragment = new RetainedFragment();
             openFragmentTransaction().add(mRetainedFragment, "retained").commit();
         }
     }
-    
+
     /**
      * This is the Fragment implementation that will be retained across
      * activity instances.  It represents some ongoing work, here a thread
@@ -72,7 +68,7 @@ public class FragmentRetainInstance extends Activity {
         int mPosition;
         boolean mReady = false;
         boolean mQuiting = false;
-        
+
         /**
          * This is the thread that will do our work.  It sits in a loop running
          * the progress up until it has reached the top, then stops and waits.
@@ -82,10 +78,10 @@ public class FragmentRetainInstance extends Activity {
             public void run() {
                 // We'll figure the real value out later.
                 int max = 10000;
-                
+
                 // This thread runs almost forever.
                 while (true) {
-                    
+
                     // Update our shared state with the UI.
                     synchronized (this) {
                         // Our thread is stopped if the UI is not ready
@@ -99,7 +95,7 @@ public class FragmentRetainInstance extends Activity {
                             } catch (InterruptedException e) {
                             }
                         }
-                        
+
                         // Now update the progress.  Note it is important that
                         // we touch the progress bar with the lock held, so it
                         // doesn't disappear on us.
@@ -107,7 +103,7 @@ public class FragmentRetainInstance extends Activity {
                         max = mProgressBar.getMax();
                         mProgressBar.setProgress(mPosition);
                     }
-                    
+
                     // Normally we would be doing some work, but put a kludge
                     // here to pretend like we are.
                     synchronized (this) {
@@ -119,7 +115,7 @@ public class FragmentRetainInstance extends Activity {
                 }
             }
         };
-        
+
         /**
          * Fragment initialization.  We way we want to be retained and
          * start our thread.
@@ -190,7 +186,7 @@ public class FragmentRetainInstance extends Activity {
             
             super.onDetach();
         }
-        
+
         /**
          * API for our UI to restart the progress thread.
          */

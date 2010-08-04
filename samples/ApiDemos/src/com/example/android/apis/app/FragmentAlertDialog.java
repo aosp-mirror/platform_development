@@ -30,6 +30,7 @@ import android.widget.Button;
 import android.widget.TextView;
 
 public class FragmentAlertDialog extends Activity {
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -53,21 +54,26 @@ public class FragmentAlertDialog extends Activity {
     }
 
     public static class MyAlertDialogFragment extends DialogFragment {
+
         @Override
         public Dialog onCreateDialog(Bundle savedInstanceState) {
             return new AlertDialog.Builder(getActivity())
                     .setIcon(R.drawable.alert_dialog_icon)
                     .setTitle(R.string.alert_dialog_two_buttons_title)
-                    .setPositiveButton(R.string.alert_dialog_ok, new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int whichButton) {
-                            /* User clicked OK so do some stuff */
+                    .setPositiveButton(R.string.alert_dialog_ok,
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int whichButton) {
+                                /* User clicked OK so do some stuff */
+                            }
                         }
-                    })
-                    .setNegativeButton(R.string.alert_dialog_cancel, new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int whichButton) {
-                            /* User clicked Cancel so do some stuff */
+                    )
+                    .setNegativeButton(R.string.alert_dialog_cancel,
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int whichButton) {
+                                /* User clicked Cancel so do some stuff */
+                            }
                         }
-                    })
+                    )
                     .create();
         }
     }

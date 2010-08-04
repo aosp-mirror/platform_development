@@ -21,18 +21,14 @@ import com.example.android.apis.Shakespeare;
 
 import android.app.Activity;
 import android.app.Fragment;
-import android.app.FragmentTransaction;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.View.OnClickListener;
-import android.view.animation.AnimationUtils;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.ListView;
 import android.widget.ScrollView;
 import android.widget.TextView;
@@ -43,6 +39,7 @@ import android.widget.TextView;
  * landscape.
  */
 public class FragmentLayout extends Activity {
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -50,16 +47,17 @@ public class FragmentLayout extends Activity {
         // This layout varies depending on the screen size.
         setContentView(R.layout.fragment_layout);
     }
-    
+
     /**
      * This is a secondary activity, to show what the user has selected
      * when the screen is not large enough to show it all in one activity.
      */
     public static class DialogActivity extends Activity {
+
         @Override
         protected void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
-            
+
             if (getResources().getConfiguration().orientation
                     == Configuration.ORIENTATION_LANDSCAPE) {
                 // If the screen is now in landscape mode, we can show the
@@ -67,15 +65,16 @@ public class FragmentLayout extends Activity {
                 finish();
                 return;
             }
-            
+
             DialogFragment dialog = new DialogFragment();
             openFragmentTransaction().add(android.R.id.content, dialog).commit();
             dialog.setText(getIntent().getIntExtra("text", -1));
         }
     }
-    
+
     public static class TitlesFragment extends Fragment
             implements AdapterView.OnItemClickListener {
+        @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                 Bundle savedInstanceState) {
             ListView list = new ListView(getActivity());
@@ -99,18 +98,18 @@ public class FragmentLayout extends Activity {
             }
         }
     }
-    
+
     public static class DialogFragment extends Fragment {
         int mDisplayedText = -1;
         TextView mText;
-        
+
         public void setText(int id) {
             mDisplayedText = id;
             if (mText != null && id >= 0) {
                 mText.setText(Shakespeare.DIALOGUE[id]);
             }
         }
-        
+
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
@@ -125,6 +124,7 @@ public class FragmentLayout extends Activity {
             outState.putInt("text", mDisplayedText);
         }
 
+        @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                 Bundle savedInstanceState) {
             ScrollView scroller = new ScrollView(getActivity());

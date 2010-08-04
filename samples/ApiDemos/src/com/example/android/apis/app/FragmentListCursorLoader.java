@@ -23,7 +23,6 @@ import android.content.CursorLoader;
 import android.content.Loader;
 import android.database.Cursor;
 import android.os.Bundle;
-import android.provider.Contacts.Phones;
 import android.provider.ContactsContract.Contacts;
 import android.util.Log;
 import android.view.View;
@@ -36,6 +35,7 @@ import android.widget.SimpleCursorAdapter;
  * an empty view and loading progress.
  */
 public class FragmentListCursorLoader extends Activity {
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -46,7 +46,7 @@ public class FragmentListCursorLoader extends Activity {
             openFragmentTransaction().add(android.R.id.content, list).commit();
         }
     }
-    
+
     public static class CursorLoaderListFragment extends ListFragment
             implements LoaderManager.LoaderCallbacks<Cursor> {
         @Override
@@ -61,12 +61,12 @@ public class FragmentListCursorLoader extends Activity {
             // or start a new one.
             getLoaderManager().initLoader(0, null, this);
         }
-        
+
         @Override
         public void onListItemClick(ListView l, View v, int position, long id) {
             Log.i("FragmentComplexList", "Item clicked: " + id);
         }
-        
+
         static final String[] CONTACTS_SUMMARY_PROJECTION = new String[] {
             Contacts._ID,
             Contacts.DISPLAY_NAME,
@@ -75,7 +75,7 @@ public class FragmentListCursorLoader extends Activity {
             Contacts.PHOTO_ID,
             Contacts.LOOKUP_KEY,
         };
-    
+
         @Override
         public Loader<Cursor> onCreateLoader(int id, Bundle args) {
             String select = "((" + Contacts.DISPLAY_NAME + " NOTNULL) AND ("

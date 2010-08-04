@@ -31,7 +31,7 @@ import android.widget.TextView;
 
 public class FragmentStack extends Activity {
     int mStackLevel = 1;
-    
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -54,7 +54,7 @@ public class FragmentStack extends Activity {
             mStackLevel = savedInstanceState.getInt("level");
         }
     }
-    
+
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
@@ -70,18 +70,18 @@ public class FragmentStack extends Activity {
         ft.addToBackStack(null);
         ft.commit();
     }
-    
+
     public static class CountingFragment extends Fragment {
         int mNum;
-        
+
         public CountingFragment() {
             mNum = -1;
         }
-        
+
         public CountingFragment(int num) {
             mNum = num;
         }
-        
+
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
@@ -96,6 +96,7 @@ public class FragmentStack extends Activity {
             outState.putInt("num", mNum);
         }
 
+        @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                 Bundle savedInstanceState) {
             View v = inflater.inflate(R.layout.hello_world, container, false);

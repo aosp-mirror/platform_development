@@ -1,7 +1,6 @@
 package com.example.android.apis.app;
 
 import com.example.android.apis.R;
-import com.example.android.apis.app.FragmentStack.CountingFragment;
 
 import android.app.Activity;
 import android.app.Fragment;
@@ -11,13 +10,14 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.View.OnClickListener;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 
 public class FragmentReceiveResult extends Activity {
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -35,13 +35,13 @@ public class FragmentReceiveResult extends Activity {
             ft.add(R.id.simple_fragment, newFragment).commit();
         }
     }
-    
+
     public static class ReceiveResultFragment extends Fragment {
         // Definition of the one requestCode we use for receiving resuls.
         static final private int GET_CODE = 0;
-        
+
         private TextView mResults;
-        
+
         private OnClickListener mGetListener = new OnClickListener() {
             public void onClick(View v) {
                 // Start the activity whose result we want to retrieve.  The
@@ -61,6 +61,7 @@ public class FragmentReceiveResult extends Activity {
             super.onSaveInstanceState(outState);
         }
 
+        @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                 Bundle savedInstanceState) {
             View v = inflater.inflate(R.layout.receive_result, container, false);
@@ -77,7 +78,7 @@ public class FragmentReceiveResult extends Activity {
             
             return v;
         }
-        
+
         /**
          * This method is called when the sending activity has finished, with the
          * result it supplied.
@@ -112,6 +113,5 @@ public class FragmentReceiveResult extends Activity {
                 text.append("\n");
             }
         }
-
     }
 }

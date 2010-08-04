@@ -34,15 +34,16 @@ import android.widget.TextView;
  * Demonstration of animations when changing fragment states.
  */
 public class FragmentAnim extends Activity {
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.fragment_anim);
-        
+
         addShowHideListener(R.id.frag1hide, findFragmentById(R.id.fragment1));
         addShowHideListener(R.id.frag2hide, findFragmentById(R.id.fragment2));
     }
-    
+
     void addShowHideListener(int buttonId, final Fragment fragment) {
         final Button button = (Button)findViewById(buttonId);
         button.setOnClickListener(new OnClickListener() {
@@ -62,16 +63,17 @@ public class FragmentAnim extends Activity {
             }
         });
     }
-    
+
     public static class FirstFragment extends Fragment {
         TextView mTextView;
-        
+
+        @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                 Bundle savedInstanceState) {
             View v = inflater.inflate(R.layout.labeled_text_edit, container, false);
             View tv = v.findViewById(R.id.msg);
             ((TextView)tv).setText("The fragment saves and restores this text.");
-            
+
             // Retrieve the text editor, and restore the last saved state if needed.
             mTextView = (TextView)v.findViewById(R.id.saved);
             if (savedInstanceState != null) {
@@ -83,19 +85,21 @@ public class FragmentAnim extends Activity {
         @Override
         public void onSaveInstanceState(Bundle outState) {
             super.onSaveInstanceState(outState);
-            
+
             // Remember the current text, to restore if we later restart.
             outState.putCharSequence("text", mTextView.getText());
         }
     }
-    
+
     public static class SecondFragment extends Fragment {
+
+        @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                 Bundle savedInstanceState) {
             View v = inflater.inflate(R.layout.labeled_text_edit, container, false);
             View tv = v.findViewById(R.id.msg);
             ((TextView)tv).setText("The TextView saves and restores this text.");
-            
+
             // Retrieve the text editor and tell it to save and restore its state.
             // Note that you will often set this in the layout XML, but since
             // we are sharing our layout with the other fragment we will customize

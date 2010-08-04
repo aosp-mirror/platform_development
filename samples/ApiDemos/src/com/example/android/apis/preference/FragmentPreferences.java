@@ -33,6 +33,7 @@ import android.widget.ListView;
  */
 //BEGIN_INCLUDE(activity)
 public class FragmentPreferences extends Activity {
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -47,6 +48,7 @@ public class FragmentPreferences extends Activity {
      * pick one, the corresponding preferences fragment is created and shown.
      */
     public static class CategoriesFragment extends ListFragment {
+
         @Override
         public void onActivityCreated(Bundle savedInstanceState) {
             super.onActivityCreated(savedInstanceState);
@@ -72,6 +74,7 @@ public class FragmentPreferences extends Activity {
 
 //BEGIN_INCLUDE(fragment)
     public static class Prefs1Fragment extends PreferenceFragment {
+
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
@@ -83,6 +86,7 @@ public class FragmentPreferences extends Activity {
 //END_INCLUDE(fragment)
 
     public static class Prefs2Fragment extends PreferenceFragment {
+
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);

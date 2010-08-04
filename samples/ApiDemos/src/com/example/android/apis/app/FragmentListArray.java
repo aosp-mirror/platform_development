@@ -31,25 +31,27 @@ import android.widget.ListView;
  * from a canned array.
  */
 public class FragmentListArray extends Activity {
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        
+
         // Create the list fragment and add it as our sole content.
         if (findFragmentById(android.R.id.content) == null) {
             ArrayListFragment list = new ArrayListFragment();
             openFragmentTransaction().add(android.R.id.content, list).commit();
         }
     }
-    
+
     public static class ArrayListFragment extends ListFragment {
+
         @Override
         public void onActivityCreated(Bundle savedInstanceState) {
             super.onActivityCreated(savedInstanceState);
             setListAdapter(new ArrayAdapter<String>(getActivity(),
                     android.R.layout.simple_list_item_1, Shakespeare.TITLES));
         }
-        
+
         @Override
         public void onListItemClick(ListView l, View v, int position, long id) {
             Log.i("FragmentList", "Item clicked: " + id);
