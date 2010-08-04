@@ -22,8 +22,9 @@
 #include <pthread.h>
 #include <sched.h>
 
-#include <android/native_activity.h>
+#include <android/configuration.h>
 #include <android/looper.h>
+#include <android/native_activity.h>
 
 #ifdef __cplusplus
 extern "C"
@@ -59,7 +60,7 @@ extern "C"
  *      - input events coming from the AInputQueue attached to the activity.
  *
  *    Each of these correspond to an ALooper callback that returns a "data"
- *    value of LOOPER_ID_MAIN and LOOPER_ID_EVENT, respectively.
+ *    value of LOOPER_ID_MAIN and LOOPER_ID_INPUT, respectively.
  *
  *    Your application can use the same ALooper to listen to additionnal
  *    file-descriptors.
@@ -71,13 +72,32 @@ extern "C"
  *
  *    XXX: MAKE THIS STUFF MORE CLEAR !!
  *
- * 5/ Whenever you receive a LOOPER_ID_EVENT event from the ALooper, you
+ * 5/ Whenever you receive a LOOPER_ID_INPUT event from the ALooper, you
  *    should read one event from the AInputQueue with AInputQueue_getEvent().
  *
  * See the sample named "native-activity" that comes with the NDK with a
  * full usage example.
  *
  */
+
+struct android_app;
+
+/**
+ * Data associated with an ALooper fd that will be returned as the "outData"
+ * when that source has data ready.
+ */
+struct android_poll_source {
+    // The identifier of this source.  May be LOOPER_ID_MAIN or
+    // LOOPER_ID_INPUT.
+    int32_t id;
+
+    // The android_app this fd is associated with.
+    struct android_app* app;
+
+    // Function to call to perform the standard processing of data from
+    // this source.
+    void (*process)(struct android_app* app);
+};
 
 /**
  * This is the interface for the standard glue code of a threaded
@@ -92,8 +112,31 @@ struct android_app {
     // here if it likes.
     void* userData;
 
+    // Fill this in with the function to process main app commands (APP_CMD_*)
+    void (*onAppCmd)(struct android_app* app, int32_t cmd);
+
+    // Fill this in with the function to process input events.  At this point
+    // the event has already been pre-dispatched, and it will be finished upon
+    // return.  Return 1 if you have handled the event, 0 for any default
+    // dispatching.
+    int32_t (*onInputEvent)(struct android_app* app, AInputEvent* event);
+
     // The ANativeActivity object instance that this app is running in.
     ANativeActivity* activity;
+
+    // The current configuration the app is running in.
+    AConfiguration* config;
+
+    // This is the last instance's saved state, as provided at creation time.
+    // It is NULL if there was no state.  You can use this as you need; the
+    // memory will remain around until you call android_app_exec_cmd() for
+    // APP_CMD_RESUME, at which point it will be freed and savedState set to NULL.
+    // These variables should only be changed when processing a APP_CMD_SAVE_STATE,
+    // at which point they will be initialized to NULL and you can malloc your
+    // state and place the information here.  In that case the memory will be
+    // freed for you later.
+    void* savedState;
+    size_t savedStateSize;
 
     // The ALooper associated with the app's thread.
     ALooper* looper;
@@ -113,6 +156,10 @@ struct android_app {
     // APP_CMD_RESUME, APP_CMD_PAUSE, or APP_CMD_STOP; see below.
     int activityState;
 
+    // This is non-zero when the application's NativeActivity is being
+    // destroyed and waiting for the app thread to complete.
+    int destroyRequested;
+
     // -------------------------------------------------
     // Below are "private" implementation of the glue code.
 
@@ -124,11 +171,11 @@ struct android_app {
 
     pthread_t thread;
 
-    // This is non-zero when the application's NativeActivity is being
-    // destroyed and waiting for the app thread to complete.
-    int destroyRequested;
+    struct android_poll_source cmdPollSource;
+    struct android_poll_source inputPollSource;
 
     int running;
+    int stateSaved;
     int destroyed;
     int redrawNeeded;
     AInputQueue* pendingInputQueue;
@@ -149,7 +196,7 @@ enum {
      * application's window.  These can be read via the inputQueue
      * object of android_app.
      */
-    LOOPER_ID_EVENT = 2
+    LOOPER_ID_INPUT = 2
 };
 
 enum {
@@ -161,11 +208,19 @@ enum {
     APP_CMD_INPUT_CHANGED,
 
     /**
-     * Command from main thread: the ANativeWindow has changed.  Upon processing
-     * this command, android_app->window will be updated to the new window surface
-     * (or NULL).
+     * Command from main thread: a new ANativeWindow is ready for use.  Upon
+     * receiving this command, android_app->window will contain the new window
+     * surface.
      */
-    APP_CMD_WINDOW_CHANGED,
+    APP_CMD_INIT_WINDOW,
+
+    /**
+     * Command from main thread: the existing ANativeWindow needs to be
+     * terminated.  Upon receiving this command, android_app->window still
+     * contains the existing window; after calling android_app_exec_cmd
+     * it will be set to NULL.
+     */
+    APP_CMD_TERM_WINDOW,
 
     /**
      * Command from main thread: the current ANativeWindow has been resized.
@@ -200,6 +255,11 @@ enum {
     APP_CMD_LOST_FOCUS,
 
     /**
+     * Command from main thread: the current device configuration has changed.
+     */
+    APP_CMD_CONFIG_CHANGED,
+
+    /**
      * Command from main thread: the system is running low on memory.
      * Try to reduce your memory use.
      */
@@ -214,6 +274,15 @@ enum {
      * Command from main thread: the app's activity has been resumed.
      */
     APP_CMD_RESUME,
+
+    /**
+     * Command from main thread: the app should generate a new saved state
+     * for itself, to restore from later if needed.  If you have saved state,
+     * allocate it with malloc and place it in android_app.savedState with
+     * the size in android_app.savedStateSize.  The will be freed for you
+     * later.
+     */
+    APP_CMD_SAVE_STATE,
 
     /**
      * Command from main thread: the app's activity has been paused.
@@ -240,12 +309,22 @@ int8_t android_app_read_cmd(struct android_app* android_app);
 
 /**
  * Call with the command returned by android_app_read_cmd() to do the
- * default processing of the given command.
- *
- * Important: returns 0 if the app should exit.  You must ALWAYS check for
- * a zero return and, if found, exit your android_main() function.
+ * initial pre-processing of the given command.  You can perform your own
+ * actions for the command after calling this function.
  */
-int32_t android_app_exec_cmd(struct android_app* android_app, int8_t cmd);
+void android_app_pre_exec_cmd(struct android_app* android_app, int8_t cmd);
+
+/**
+ * Call with the command returned by android_app_read_cmd() to do the
+ * final post-processing of the given command.  You must have done your own
+ * actions for the command before calling this function.
+ */
+void android_app_post_exec_cmd(struct android_app* android_app, int8_t cmd);
+
+/**
+ * Dummy function you can call to ensure glue code isn't stripped.
+ */
+void app_dummy();
 
 /**
  * This is the function that application code must implement, representing
