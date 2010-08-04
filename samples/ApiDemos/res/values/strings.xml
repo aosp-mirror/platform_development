@@ -567,6 +567,12 @@
 
     <string name="ratingbar_rating">Rating:</string>
 
+    <string name="popup_menu_search">Search</string>
+    <string name="popup_menu_add">Add</string>
+    <string name="popup_menu_edit">Edit</string>
+    <string name="popup_menu_share">Share</string>
+    <string name="popup_menu_button">Make a Popup!</string>
+
     <!-- ============================== -->
     <!--  GoogleLogin examples strings  -->
     <!-- ============================== -->
