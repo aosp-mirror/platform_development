@@ -788,6 +788,17 @@
         </receiver>
 
         <!-- ************************************* -->
+        <!--     ANDROID.ANIMATION PACKAGE SAMPLES         -->
+        <!-- ************************************* -->
+
+        <activity android:name=".animation.AnimationSeeking" android:label="Animation/Seeking">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <!-- ************************************* -->
         <!--     ANIMATION PACKAGE SAMPLES         -->
         <!-- ************************************* -->
 
