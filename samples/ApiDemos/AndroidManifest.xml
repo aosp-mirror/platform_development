@@ -721,6 +721,13 @@
         <!--        CONTENT PACKAGE SAMPLES        -->
         <!-- ************************************* -->
 
+        <activity android:name=".content.ClipboardSample" android:label="@string/activity_clipboard">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
         <activity android:name=".content.ExternalStorage" android:label="@string/activity_external_storage">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

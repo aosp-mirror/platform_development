@@ -38,6 +38,14 @@
         <item>Pluto</item>
     </string-array>
 
+    <!-- Used in content/ClipboardSample.java -->
+    <string-array name="clip_data_types">
+        <item>No data in clipboard</item>
+        <item>Text clip</item>
+        <item>Intent clip</item>
+        <item>Uri clip</item>
+    </string-array>
+
     <!-- Used in App/SearchInvoke.java -->
     <string-array name="search_menuModes">
         <item>Search Key</item>

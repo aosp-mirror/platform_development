@@ -38,11 +38,9 @@ import android.widget.TextView;
  * @see StyledText for more depth about using styled text, both with getString()
  *                 and in the layout xml files.
  */
-public class ResourcesSample extends Activity
-{
+public class ResourcesSample extends Activity {
     @Override
-	protected void onCreate(Bundle savedInstanceState)
-    {
+	protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         // See res/any/layout/resources.xml for this view layout definition.
@@ -54,8 +52,8 @@ public class ResourcesSample extends Activity
 
         // ====== Using the Context.getString() convenience method ===========
 
-        // Using the getString() conevenience method, retrieve a string
-        // resource that hapepns to have style information.  Note the use of
+        // Using the getString() convenience method, retrieve a string
+        // resource that happens to have style information.  Note the use of
         // CharSequence instead of String so we don't lose the style info.
         cs = getText(R.string.styled_text);
         tv = (TextView)findViewById(R.id.styled_text);

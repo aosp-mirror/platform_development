@@ -266,6 +266,12 @@
     <!--  app/content examples strings  -->
     <!-- ============================== -->
 
+    <string name="activity_clipboard">Content/Clipboard/Data Types</string>
+    <string name="copy_text">Copy Text</string>
+    <string name="copy_intent">Copy Intent</string>
+    <string name="copy_uri">Copy URI</string>
+    <string name="clip_type_prompt">Clip Type</string>
+
     <string name="activity_external_storage">Content/Storage/External Storage</string>
     <string name="create">Create</string>
     <string name="delete">Delete</string>
