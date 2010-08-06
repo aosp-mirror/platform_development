@@ -47,6 +47,7 @@
 	<classpathentry kind="src" path="frameworks/base/services/java"/>
 	<classpathentry kind="src" path="frameworks/base/telephony/java"/>
 	<classpathentry kind="src" path="frameworks/base/test-runner/src"/>
+	<classpathentry kind="src" path="frameworks/base/voip/java"/>
 	<classpathentry kind="src" path="frameworks/base/vpn/java"/>
 	<classpathentry kind="src" path="frameworks/base/wifi/java"/>
 	<classpathentry kind="src" path="frameworks/ex/common/java"/>
@@ -86,6 +87,7 @@
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src/location/java"/>
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src/media/java"/>
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src/telephony/java"/>
+	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src/voip/java"/>
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src/vpn/java"/>
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src/wifi/java"/>
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/services_intermediates/src"/>
@@ -93,6 +95,7 @@
 	<classpathentry kind="src" path="external/apache-http/src"/>
 	<classpathentry kind="src" path="external/bouncycastle/src/main/java"/>
 	<classpathentry kind="src" path="external/libphonenumber/java/src"/>
+	<classpathentry kind="src" path="external/nist-sip/java"/>
 	<classpathentry kind="src" path="external/tagsoup/src"/>
 	<classpathentry kind="lib" path="out/target/common/obj/JAVA_LIBRARIES/google-common_intermediates/javalib.jar"/>
 	<classpathentry kind="lib" path="out/target/common/obj/JAVA_LIBRARIES/gsf-client_intermediates/javalib.jar"/>
