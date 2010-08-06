@@ -824,6 +824,13 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".animation.ListFlipper" android:label="Animation/View Flip">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
         <!-- ************************************* -->
         <!--     ANIMATION PACKAGE SAMPLES         -->
         <!-- ************************************* -->
@@ -1606,6 +1613,13 @@
         </activity>
 
         <activity android:name=".view.PopupMenu1" android:label="Views/Popup Menu">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".view.RotatingButton" android:label="View/Rotating Button">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
