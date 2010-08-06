@@ -530,6 +530,20 @@
     <string name="speak_button">Speak!</string>
     <string name="voice_recognition_results">Results:</string>
 
+    <!-- ================================= -->
+    <!--  app/action bar examples strings  -->
+    <!-- ================================= -->
+
+    <string name="action_bar_mechanics">App/Action Bar/Action Bar Mechanics</string>
+    <string name="action_bar_usage">App/Action Bar/Action Bar Usage</string>
+
+    <string name="action_bar_search">Search</string>
+    <string name="action_bar_add">Add</string>
+    <string name="action_bar_edit">Edit</string>
+    <string name="action_bar_share">Share</string>
+    <string name="action_bar_zoom">Zoom</string>
+    <string name="action_bar_save">Save</string>
+
     <!-- ============================ -->
     <!--  graphics examples strings  -->
     <!-- ============================ -->

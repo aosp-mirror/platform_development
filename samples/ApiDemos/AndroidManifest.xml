@@ -652,6 +652,23 @@
             </intent-filter>
         </activity>
 
+        <!-- Action Bar Samples -->
+        <activity android:name=".app.ActionBarMechanics"
+                  android:label="@string/action_bar_mechanics">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".app.ActionBarUsage" android:label="@string/action_bar_usage"
+                  android:theme="@android:style/Theme.WithActionBar">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
         <!-- ************************************* -->
         <!--       PREFERENCE PACKAGE SAMPLES      -->
         <!-- ************************************* -->
