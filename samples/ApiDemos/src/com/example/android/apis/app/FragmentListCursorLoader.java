@@ -16,16 +16,23 @@
 
 package com.example.android.apis.app;
 
+import com.example.android.apis.R;
+
 import android.app.Activity;
 import android.app.ListFragment;
 import android.app.LoaderManager;
+import android.content.Context;
 import android.content.CursorLoader;
 import android.content.Loader;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.provider.ContactsContract.Contacts;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
@@ -49,6 +56,8 @@ public class FragmentListCursorLoader extends Activity {
 
     public static class CursorLoaderListFragment extends ListFragment
             implements LoaderManager.LoaderCallbacks<Cursor> {
+        MenuItem mSearchMenu;
+        
         @Override
         public void onActivityCreated(Bundle savedInstanceState) {
             super.onActivityCreated(savedInstanceState);
@@ -57,9 +66,31 @@ public class FragmentListCursorLoader extends Activity {
             // application this would come from a resource.
             setEmptyText("No phone numbers");
             
+            // We have a menu item to show in action bar.
+            setHasOptionsMenu(true);
+            
             // Prepare the loader.  Either re-connect with an existing one,
             // or start a new one.
             getLoaderManager().initLoader(0, null, this);
+        }
+
+        @Override
+        public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+            mSearchMenu = menu.add("Search");
+            mSearchMenu.setIcon(R.drawable.magnifying_glass);
+            mSearchMenu.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
+        }
+
+        @Override
+        public boolean onOptionsItemSelected(MenuItem item) {
+            if (item == mSearchMenu) {
+                InputMethodManager imm = (InputMethodManager)getActivity()
+                        .getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.showSoftInput(getActivity().getCurrentFocus(), 0);
+                return true;
+            } else {
+                return super.onOptionsItemSelected(item);
+            }
         }
 
         @Override

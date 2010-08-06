@@ -254,6 +254,7 @@
         <activity android:name=".app.FragmentLayout$DialogActivity" />
 
         <activity android:name=".app.FragmentListCursorLoader"
+                android:theme="@android:style/Theme.WithActionBar"
                 android:label="@string/fragment_list_cursor_loader">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -270,6 +271,7 @@
         </activity>
 
         <activity android:name=".app.FragmentMenu"
+                android:theme="@android:style/Theme.WithActionBar"
                 android:label="@string/fragment_menu">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

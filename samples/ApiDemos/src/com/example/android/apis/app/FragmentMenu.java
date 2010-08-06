@@ -8,6 +8,7 @@ import android.app.FragmentTransaction;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.CheckBox;
@@ -89,8 +90,8 @@ public class FragmentMenu extends Activity {
 
         @Override
         public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-            menu.add("Menu 1a");
-            menu.add("Menu 1b");
+            menu.add("Menu 1a").setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
+            menu.add("Menu 1b").setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
         }
     }
 
@@ -107,7 +108,7 @@ public class FragmentMenu extends Activity {
 
         @Override
         public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-            menu.add("Menu 2");
+            menu.add("Menu 2").setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
         }
     }
 }
