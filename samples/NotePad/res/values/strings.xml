@@ -15,8 +15,10 @@
 -->
 
 <resources>
+    <string name="menu_copy">Copy</string>
     <string name="menu_delete">Delete</string>
     <string name="menu_insert">Add note</string>
+    <string name="menu_paste">Paste</string>
     <string name="menu_revert">Revert</string>
     <string name="menu_discard">Discard</string>
 

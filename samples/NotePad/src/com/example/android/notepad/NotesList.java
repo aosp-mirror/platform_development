@@ -19,8 +19,11 @@ package com.example.android.notepad;
 import com.example.android.notepad.NotePad.Notes;
 
 import android.app.ListActivity;
+import android.content.ClipboardManager;
+import android.content.ClippedData;
 import android.content.ComponentName;
 import android.content.ContentUris;
+import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
@@ -45,7 +48,9 @@ public class NotesList extends ListActivity {
 
     // Menu item ids
     public static final int MENU_ITEM_DELETE = Menu.FIRST;
-    public static final int MENU_ITEM_INSERT = Menu.FIRST + 1;
+    public static final int MENU_ITEM_COPY = Menu.FIRST + 1;
+    public static final int MENU_ITEM_INSERT = Menu.FIRST + 2;
+    public static final int MENU_ITEM_PASTE = Menu.FIRST + 3;
 
     /**
      * The columns we are interested in from the database
@@ -58,6 +63,8 @@ public class NotesList extends ListActivity {
     /** The index of the title column */
     private static final int COLUMN_INDEX_TITLE = 1;
     
+    private MenuItem mPasteItem;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -95,6 +102,11 @@ public class NotesList extends ListActivity {
                 .setShortcut('3', 'a')
                 .setIcon(android.R.drawable.ic_menu_add);
 
+        // If there is currently data in the clipboard, we can paste it
+        // as a new note.
+        mPasteItem = menu.add(0, MENU_ITEM_PASTE, 0, R.string.menu_paste)
+                .setShortcut('4', 'p');
+
         // Generate any additional actions that can be performed on the
         // overall list.  In a normal install, there are no additional
         // actions found here, but this allows other applications to extend
@@ -110,6 +122,16 @@ public class NotesList extends ListActivity {
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         super.onPrepareOptionsMenu(menu);
+
+        // The paste menu item is enabled if there is data on the clipboard.
+        ClipboardManager clipboard = (ClipboardManager)
+                getSystemService(Context.CLIPBOARD_SERVICE);
+        if (clipboard.hasPrimaryClip()) {
+            mPasteItem.setEnabled(true);
+        } else {
+            mPasteItem.setEnabled(false);
+        }
+
         final boolean haveItems = getListAdapter().getCount() > 0;
 
         // If there are any notes in the list (which implies that one of
@@ -150,6 +172,10 @@ public class NotesList extends ListActivity {
             // Launch activity to insert a new item
             startActivity(new Intent(Intent.ACTION_INSERT, getIntent().getData()));
             return true;
+        case MENU_ITEM_PASTE:
+            // Launch activity to insert a new item
+            startActivity(new Intent(Intent.ACTION_PASTE, getIntent().getData()));
+            return true;
         }
         return super.onOptionsItemSelected(item);
     }
@@ -173,6 +199,9 @@ public class NotesList extends ListActivity {
         // Setup the menu header
         menu.setHeaderTitle(cursor.getString(COLUMN_INDEX_TITLE));
 
+        // Add a menu item to copy the note
+        menu.add(0, MENU_ITEM_COPY, 0, R.string.menu_copy);
+
         // Add a menu item to delete the note
         menu.add(0, MENU_ITEM_DELETE, 0, R.string.menu_delete);
     }
@@ -194,6 +223,17 @@ public class NotesList extends ListActivity {
                 getContentResolver().delete(noteUri, null, null);
                 return true;
             }
+//BEGIN_INCLUDE(copy)
+            case MENU_ITEM_COPY: {
+                // Copy the note that the context menu is for on to the clipboard
+                ClipboardManager clipboard = (ClipboardManager)
+                        getSystemService(Context.CLIPBOARD_SERVICE);
+                Uri noteUri = ContentUris.withAppendedId(getIntent().getData(), info.id);
+                clipboard.setPrimaryClip(new ClippedData(null, null, new ClippedData.Item(
+                        noteUri)));
+                return true;
+            }
+//END_INCLUDE(copy)
         }
         return false;
     }

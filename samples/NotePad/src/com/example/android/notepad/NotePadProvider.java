@@ -23,6 +23,8 @@ import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.UriMatcher;
+import android.content.ContentProvider.PipeDataWriter;
+import android.content.res.AssetFileDescriptor;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.database.SQLException;
@@ -30,17 +32,25 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
+import android.os.Bundle;
+import android.os.ParcelFileDescriptor;
 import android.provider.LiveFolders;
 import android.text.TextUtils;
 import android.util.Log;
 
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 
 /**
  * Provides access to a database of notes. Each note has a title, the note
  * itself, a creation date and a modified data.
  */
-public class NotePadProvider extends ContentProvider {
+public class NotePadProvider extends ContentProvider implements PipeDataWriter<Cursor> {
 
     private static final String TAG = "NotePadProvider";
 
@@ -149,6 +159,102 @@ public class NotePadProvider extends ContentProvider {
             throw new IllegalArgumentException("Unknown URI " + uri);
         }
     }
+
+//BEGIN_INCLUDE(stream)
+    /**
+     * Return the types of data streams we can return.  Currently we only
+     * support URIs to specific notes, and can convert such a note to a
+     * plain text stream.
+     */
+    @Override
+    public String[] getStreamTypes(Uri uri, String mimeTypeFilter) {
+        switch (sUriMatcher.match(uri)) {
+            case NOTES:
+            case LIVE_FOLDER_NOTES:
+                return null;
+
+            case NOTE_ID:
+                if (compareMimeTypes("text/plain", mimeTypeFilter)) {
+                    return new String[] { "text/plain" };
+                }
+                return null;
+
+            default:
+                throw new IllegalArgumentException("Unknown URI " + uri);
+            }
+    }
+
+    /**
+     * Standard projection for the interesting columns of a normal note.
+     */
+    private static final String[] READ_NOTE_PROJECTION = new String[] {
+            Notes._ID, // 0
+            Notes.NOTE, // 1
+            NotePad.Notes.TITLE, // 2
+    };
+    private static final int READ_NOTE_NOTE_INDEX = 1;
+    private static final int READ_NOTE_TITLE_INDEX = 2;
+
+    /**
+     * Implement the other side of getStreamTypes: for each stream time we
+     * report to support, we need to actually be able to return a stream of
+     * data.  This function simply retrieves a cursor for the URI of interest,
+     * and uses ContentProvider's openPipeHelper() to start the work of
+     * convering the data off into another thread.
+     */
+    @Override
+    public AssetFileDescriptor openTypedAssetFile(Uri uri, String mimeTypeFilter, Bundle opts)
+            throws FileNotFoundException {
+        // Check if we support a stream MIME type for this URI.
+        String[] mimeTypes = getStreamTypes(uri, mimeTypeFilter);
+        if (mimeTypes != null) {
+            // Retrieve the note for this URI.
+            Cursor c = query(uri, READ_NOTE_PROJECTION, null, null, null);
+            if (c == null || !c.moveToFirst()) {
+                if (c != null) {
+                    c.close();
+                }
+                throw new FileNotFoundException("Unable to query " + uri);
+            }
+            // Start a thread to pipe the data back to the client.
+            return new AssetFileDescriptor(
+                    openPipeHelper(uri, mimeTypes[0], opts, c, this), 0,
+                    AssetFileDescriptor.UNKNOWN_LENGTH);
+        }
+        return super.openTypedAssetFile(uri, mimeTypeFilter, opts);
+    }
+
+    /**
+     * Implementation of {@link android.content.ContentProvider.PipeDataWriter}
+     * to perform the actual work of converting the data in one of cursors to a
+     * stream of data for the client to read.
+     */
+    @Override
+    public void writeDataToPipe(ParcelFileDescriptor output, Uri uri, String mimeType,
+            Bundle opts, Cursor c) {
+        // We currently only support conversion-to-text from a single note entry,
+        // so no need for cursor data type checking here.
+        FileOutputStream fout = new FileOutputStream(output.getFileDescriptor());
+        PrintWriter pw = null;
+        try {
+            pw = new PrintWriter(new OutputStreamWriter(fout, "UTF-8"));
+            pw.println(c.getString(READ_NOTE_TITLE_INDEX));
+            pw.println("");
+            pw.println(c.getString(READ_NOTE_NOTE_INDEX));
+        } catch (UnsupportedEncodingException e) {
+            Log.w(TAG, "Ooops", e);
+        } finally {
+            c.close();
+            if (pw != null) {
+                pw.flush();
+            }
+            try {
+                fout.close();
+            } catch (IOException e) {
+            }
+        }
+    }
+//END_INCLUDE(stream)
 
     @Override
     public Uri insert(Uri uri, ContentValues initialValues) {

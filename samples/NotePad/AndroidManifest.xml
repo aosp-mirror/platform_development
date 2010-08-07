@@ -65,9 +65,12 @@
             </intent-filter>
 
             <!-- This filter says that we can create a new note inside
-                 of a directory of notes. -->
+                 of a directory of notes.  The INSERT action creates an
+                 empty note; the PASTE action initializes a new note from
+                 the current contents of the clipboard. -->
             <intent-filter>
                 <action android:name="android.intent.action.INSERT" />
+                <action android:name="android.intent.action.PASTE" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="vnd.android.cursor.dir/vnd.google.note" />
             </intent-filter>

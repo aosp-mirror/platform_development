@@ -19,7 +19,10 @@ package com.example.android.notepad;
 import com.example.android.notepad.NotePad.Notes;
 
 import android.app.Activity;
+import android.content.ClipboardManager;
+import android.content.ClippedData;
 import android.content.ComponentName;
+import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
@@ -38,7 +41,9 @@ import android.widget.EditText;
 /**
  * A generic activity for editing a note in a database.  This can be used
  * either to simply view a note {@link Intent#ACTION_VIEW}, view and edit a note
- * {@link Intent#ACTION_EDIT}, or create a new note {@link Intent#ACTION_INSERT}.  
+ * {@link Intent#ACTION_EDIT}, or create a new empty note
+ * {@link Intent#ACTION_INSERT}, or create a new note from the current contents
+ * of the clipboard {@link Intent#ACTION_PASTE}.
  */
 public class NoteEditor extends Activity {
     private static final String TAG = "Notes";
@@ -49,9 +54,12 @@ public class NoteEditor extends Activity {
     private static final String[] PROJECTION = new String[] {
             Notes._ID, // 0
             Notes.NOTE, // 1
+            Notes.TITLE, // 2
     };
     /** The index of the note column */
     private static final int COLUMN_INDEX_NOTE = 1;
+    /** The index of the title column */
+    private static final int COLUMN_INDEX_TITLE = 2;
     
     // This is our state data that is stored when freezing.
     private static final String ORIGINAL_CONTENT = "origContent";
@@ -64,6 +72,7 @@ public class NoteEditor extends Activity {
     // The different distinct states the activity can be run in.
     private static final int STATE_EDIT = 0;
     private static final int STATE_INSERT = 1;
+    private static final int STATE_PASTE = 2;
 
     private int mState;
     private boolean mNoteOnly = false;
@@ -118,7 +127,8 @@ public class NoteEditor extends Activity {
             // Requested to edit: set that state, and the data being edited.
             mState = STATE_EDIT;
             mUri = intent.getData();
-        } else if (Intent.ACTION_INSERT.equals(action)) {
+        } else if (Intent.ACTION_INSERT.equals(action)
+                || Intent.ACTION_PASTE.equals(action)) {
             // Requested to insert: set that state, and create a new entry
             // in the container.
             mState = STATE_INSERT;
@@ -136,6 +146,13 @@ public class NoteEditor extends Activity {
             // The new entry was created, so assume all will end well and
             // set the result to be returned.
             setResult(RESULT_OK, (new Intent()).setAction(mUri.toString()));
+
+            // If pasting, initialize data from clipboard.
+            if (Intent.ACTION_PASTE.equals(action)) {
+                performPaste();
+                // Switch to paste mode; can no longer modify title.
+                mState = STATE_PASTE;
+            }
 
         } else {
             // Whoops, unknown action!  Bail.
@@ -173,7 +190,7 @@ public class NoteEditor extends Activity {
             // Modify our overall title depending on the mode we are running in.
             if (mState == STATE_EDIT) {
                 setTitle(getText(R.string.title_edit));
-            } else if (mState == STATE_INSERT) {
+            } else if (mState == STATE_INSERT || mState == STATE_PASTE) {
                 setTitle(getText(R.string.title_create));
             }
 
@@ -224,34 +241,7 @@ public class NoteEditor extends Activity {
 
             // Get out updates into the provider.
             } else {
-                ContentValues values = new ContentValues();
-
-                // This stuff is only done when working with a full-fledged note.
-                if (!mNoteOnly) {
-                    // Bump the modification time to now.
-                    values.put(Notes.MODIFIED_DATE, System.currentTimeMillis());
-
-                    // If we are creating a new note, then we want to also create
-                    // an initial title for it.
-                    if (mState == STATE_INSERT) {
-                        String title = text.substring(0, Math.min(30, length));
-                        if (length > 30) {
-                            int lastSpace = title.lastIndexOf(' ');
-                            if (lastSpace > 0) {
-                                title = title.substring(0, lastSpace);
-                            }
-                        }
-                        values.put(Notes.TITLE, title);
-                    }
-                }
-
-                // Write our text back into the provider.
-                values.put(Notes.NOTE, text);
-
-                // Commit all of our changes to persistent storage. When the update completes
-                // the content provider will notify the cursor of the change, which will
-                // cause the UI to be updated.
-                getContentResolver().update(mUri, values, null, null);
+                updateNote(text, null, !mNoteOnly);
             }
         }
     }
@@ -309,6 +299,82 @@ public class NoteEditor extends Activity {
             break;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+//BEGIN_INCLUDE(paste)
+    /**
+     * Replace the note's data with the current contents of the clipboard.
+     */
+    private final void performPaste() {
+        ClipboardManager clipboard = (ClipboardManager)
+                getSystemService(Context.CLIPBOARD_SERVICE);
+        ContentResolver cr = getContentResolver();
+
+        ClippedData clip = clipboard.getPrimaryClip();
+        if (clip != null) {
+            String text=null, title=null;
+
+            ClippedData.Item item = clip.getItem(0);
+            Uri uri = item.getUri();
+            if (uri != null && NotePad.Notes.CONTENT_ITEM_TYPE.equals(cr.getType(uri))) {
+                // The clipboard holds a reference to a note.  Copy it.
+                Cursor orig = cr.query(uri, PROJECTION, null, null, null);
+                if (orig != null) {
+                    if (orig.moveToFirst()) {
+                        text = orig.getString(COLUMN_INDEX_NOTE);
+                        title = orig.getString(COLUMN_INDEX_TITLE);
+                    }
+                    orig.close();
+                }
+            }
+
+            // If we weren't able to load the clipped data as a note, then
+            // convert whatever it is to text.
+            if (text == null) {
+                text = item.coerceToText(this).toString();
+            }
+
+            updateNote(text, title, true);
+        }
+    }
+//END_INCLUDE(paste)
+
+    /**
+     * Replace the current note contents with the given data.
+     */
+    private final void updateNote(String text, String title, boolean updateTitle) {
+        ContentValues values = new ContentValues();
+
+        // This stuff is only done when working with a full-fledged note.
+        if (updateTitle) {
+            // Bump the modification time to now.
+            values.put(Notes.MODIFIED_DATE, System.currentTimeMillis());
+
+            // If we are creating a new note, then we want to also create
+            // an initial title for it.
+            if (mState == STATE_INSERT) {
+                if (title == null) {
+                    int length = text.length();
+                    title = text.substring(0, Math.min(30, length));
+                    if (length > 30) {
+                        int lastSpace = title.lastIndexOf(' ');
+                        if (lastSpace > 0) {
+                            title = title.substring(0, lastSpace);
+                        }
+                    }
+                }
+                values.put(Notes.TITLE, title);
+            }
+        }
+
+        // Write our text back into the provider.
+        values.put(Notes.NOTE, text);
+
+        // Commit all of our changes to persistent storage. When the update completes
+        // the content provider will notify the cursor of the change, which will
+        // cause the UI to be updated.
+        getContentResolver().update(mUri, values, null, null);
+
     }
 
     /**
