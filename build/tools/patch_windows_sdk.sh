@@ -15,8 +15,6 @@ if [[ ${#PLATFORMS[@]} != 1 ]]; then
     echo "Instead, found: ${PLATFORMS[@]}"
     exit 1
 fi
-THE_PLATFORM=${PLATFORMS[0]}
-PLATFORM_TOOLS=$THE_PLATFORM/tools
 
 # Package USB Driver
 if [[ -n "$USB_DRIVER_HOOK" ]]; then
@@ -25,6 +23,7 @@ fi
 
 # Remove obsolete stuff from tools & platform
 TOOLS=$TEMP_SDK_DIR/tools
+PLATFORM_TOOLS=$TEMP_SDK_DIR/platform-tools
 LIB=$TEMP_SDK_DIR/tools/lib
 rm $V $TOOLS/{adb,android,apkbuilder,ddms,dmtracedump,draw9patch,emulator,etc1tool}
 rm $V $TOOLS/{hierarchyviewer,hprof-conv,layoutopt,mksdcard,sqlite3,traceview,zipalign}
