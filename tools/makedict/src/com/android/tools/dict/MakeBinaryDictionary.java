@@ -19,19 +19,14 @@ package com.android.tools.dict;
 import org.xml.sax.Attributes;
 import org.xml.sax.helpers.DefaultHandler;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
@@ -58,6 +53,14 @@ public class MakeBinaryDictionary {
     private static final int FLAG_TERMINAL_MASK = 0x800000;
     private static final int ADDRESS_MASK = 0x3FFFFF;
 
+    /**
+     * Unit for this variable is in bytes
+     * If destination file name is main.dict and file limit causes dictionary to be separated into
+     * multiple file, it will generate main0.dict, main1.dict, and so forth.
+     */
+    private static int sOutputFileSize;
+    private static boolean sSplitOutput;
+
     public static final CharNode EMPTY_NODE = new CharNode();
 
     List<CharNode> roots;
@@ -80,7 +83,7 @@ public class MakeBinaryDictionary {
 
     public static void usage() {
         System.err.println("Usage: makedict -s <src_dict.xml> [-b <src_bigram.xml>] "
-                + "-d <dest.dict>");
+                + "-d <dest.dict> [--size filesize]");
         System.exit(-1);
     }
     
@@ -88,14 +91,27 @@ public class MakeBinaryDictionary {
         int checkSource = -1;
         int checkBigram = -1;
         int checkDest = -1;
+        int checkFileSize = -1;
         for (int i = 0; i < args.length; i+=2) {
             if (args[i].equals("-s")) checkSource = (i + 1);
             if (args[i].equals("-b")) checkBigram = (i + 1);
             if (args[i].equals("-d")) checkDest = (i + 1);
+            if (args[i].equals("--size")) checkFileSize = (i + 1);
         }
-        if (checkSource >= 0 && checkBigram >= 0 && checkDest >= 0 && args.length == 6) {
+        if (checkFileSize >= 0) {
+            sSplitOutput = true;
+            sOutputFileSize = Integer.parseInt(args[checkFileSize]);
+        } else {
+            sSplitOutput = false;
+        }
+        if (checkDest >= 0 && !args[checkDest].endsWith(".dict")) {
+            System.err.println("Error: Dictionary output file extension should be \".dict\"");
+            usage();
+        } else if (checkSource >= 0 && checkBigram >= 0 && checkDest >= 0 &&
+                ((!sSplitOutput && args.length == 6) || (sSplitOutput && args.length == 8))) {
             new MakeBinaryDictionary(args[checkSource], args[checkBigram], args[checkDest]);
-        } else if (checkSource >= 0 && checkDest >= 0 && args.length == 4) {
+        } else if (checkSource >= 0 && checkDest >= 0 &&
+                ((!sSplitOutput && args.length == 4) || (sSplitOutput && args.length == 6))) {
             new MakeBinaryDictionary(args[checkSource], null, args[checkDest]);
         } else {
             usage();
@@ -335,10 +351,32 @@ public class MakeBinaryDictionary {
         writeWordsRec(roots, word);
         dict = bigramDict.writeBigrams(dict, mDictionary);
         System.out.println("Dict Size = " + dictSize);
+        if (!sSplitOutput) {
+            sOutputFileSize = dictSize;
+        }
         try {
-            FileOutputStream fos = new FileOutputStream(dictFilename);
-            fos.write(dict, 0, dictSize);
-            fos.close();
+            int currentLoc = 0;
+            int i = 0;
+            int extension = dictFilename.indexOf(".dict");
+            String filename = dictFilename.substring(0, extension);
+            while (dictSize > 0) {
+                FileOutputStream fos;
+                if (sSplitOutput) {
+                    fos = new FileOutputStream(filename + i + ".dict");
+                } else {
+                    fos = new FileOutputStream(filename + ".dict");
+                }
+                if (dictSize > sOutputFileSize) {
+                    fos.write(dict, currentLoc, sOutputFileSize);
+                    dictSize -= sOutputFileSize;
+                    currentLoc += sOutputFileSize;
+                } else {
+                    fos.write(dict, currentLoc, dictSize);
+                    dictSize = 0;
+                }
+                fos.close();
+                i++;
+            }
         } catch (IOException ioe) {
             System.err.println("Error writing dict file:" + ioe);
         }
