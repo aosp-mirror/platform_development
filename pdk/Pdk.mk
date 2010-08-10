@@ -182,7 +182,6 @@ include $(CLEAR_VARS)
 
 LOCAL_SRC_FILES := pdk-timestamp samples/samplejni/src/com/example/jniexample/JNIExample.java  
 LOCAL_MODULE_CLASS := development/pdk/pndk/samples/samplejni/src/com/example/jniexample
-LOCAL_DROIDDOC_SOURCE_PATH := $(framework_docs_LOCAL_DROIDDOC_SOURCE_PATH)
 LOCAL_DROIDDOC_HTML_DIR := ../../../$(pdk_app_eng_root)
 
 LOCAL_MODULE := online-pdk
