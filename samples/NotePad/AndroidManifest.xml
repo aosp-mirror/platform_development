@@ -1,82 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Copyright (C) 2010 The Android Open Source Project
+<!-- Copyright (C) 2007 The Android Open Source Project
 
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
 
-        http://www.apache.org/licenses/LICENSE-2.0
+          http://www.apache.org/licenses/LICENSE-2.0
 
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
 -->
 
-<!--
-     The manifest declares information about this Android application that is of
-     interest to the system and to other applications.
-     The namespace  attribute brings in the Android platform namespace. The package name is
-     an Android identifier for the application. It uses names in the Java package id format,
-     but is not dependent on or linked to any of the Java package names in the application.
-     It must be unique. If you use this manifest as part of your own application, you must
-     change the name prefix from "com.example." to a domain that you own or control.
+<!-- Declare the contents of this Android application.  The namespace
+     attribute brings in the Android platform namespace, and the package
+     supplies a unique name for the application.  When writing your
+     own application, the package name must be changed from "com.example.*"
+     to come from a domain that you own or have control over. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.android.notepad"
+>
+    <application android:icon="@drawable/app_notes"
+        android:label="@string/app_name"
+    >
+        <provider android:name="NotePadProvider"
+            android:authorities="com.google.provider.NotePad"
+        />
 
--->
-    <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-        package="com.example.android.notepad"
-        android:versionCode="1"
-        android:versionName="1.0">
-
-    <!--
-        Declares the attributes of the application.
-        The icon and label are displayed in the Launcher and in
-        other utilities that list applications.
-    -->
-    <application
-        android:icon="@drawable/app_notes"
-        android:label="@string/app_name" >
-
-    <!--
-        Declares the content provider offered by this application. The name is an
-        identifier. The authorities attribute is stored by the Android system in a global
-        table, along with a handle to the current instance of the provider.
-        Clients can then link to the provider through the global map by providing
-        the authority string to Android.
-    -->
-
-        <provider
-            android:name="NotePadProvider"
-            android:authorities="com.example.android.notepad.NotePad" />
-
-        <!--
-            Declares the NotesList activity, and gives it a name and a label.
-            The intent filters determine the types of intents that this activity will see.
-            The NotesList activity displays notes and returns single notes instances to
-            other activities.
-          -->
-        <activity
-            android:name="NotesList"
-            android:label="@string/title_notes_list">
-            <!--
-                Defines the main entry point into NotePad (MAIN), which doesn't
-                require any additional information. LAUNCHER tells launchers to display this
-                Activity.
-             -->
+        <activity android:name="NotesList" android:label="@string/title_notes_list">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-            <!--
-                Defines actions the Activity can do on a directory of notes.
-                It allows the user to view a list of notes, edit a list of notes, or pick one
-                of the notes. The intent's MIME type must match the MIME type specified by the
-                <data> element. That element specifies a cursor of data containing
-                vnd.google.note objects (defined in this app).
-                Notice that all intent filters that don't specify MAIN must specify
-                DEFAULT as a category
-             -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <action android:name="android.intent.action.EDIT" />
@@ -84,11 +41,6 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="vnd.android.cursor.dir/vnd.google.note" />
             </intent-filter>
-            <!--
-                Defines an action the Activity can do for a single note. If the action is
-                GET_CONTENT, then the Activity can return a cursor containing at most 1
-                note object (an item) identified as a vnd.google.note item.
-             -->
             <intent-filter>
                 <action android:name="android.intent.action.GET_CONTENT" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -96,26 +48,14 @@
             </intent-filter>
         </activity>
 
-        <!--
-             Defines the NoteEditor activity. This activity edits or displays a single note.
-             The screen orientation displayed by this activity depends on the device orientation
-             (screenOrientation).
-             The activity uses a light theme (android:theme)
-             When the keyboard is closed (or hidden) or the device orientation changes, the
-             Activity will handle it. The Activity does not restart, but onConfigurationChanged() is
-             called (This has been deprecated; developers should let Android call onDestroy() and
-             then restore the app state in onCreate()
-         -->
-        <activity
-            android:name="NoteEditor"
+        <activity android:name="NoteEditor"
             android:theme="@android:style/Theme.Light"
             android:label="@string/title_note"
             android:screenOrientation="sensor"
-            android:configChanges="keyboardHidden|orientation" >
-            <!--
-                Allows viewing or editing data, including the application-created EDIT_NOTE
-                intent, for a single note of type vnd.google.note
-            -->
+            android:configChanges="keyboardHidden|orientation"
+        >
+            <!-- This filter says that we can view or edit the data of
+                 a single note -->
             <intent-filter android:label="@string/resolve_edit">
                 <action android:name="android.intent.action.VIEW" />
                 <action android:name="android.intent.action.EDIT" />
@@ -124,9 +64,10 @@
                 <data android:mimeType="vnd.android.cursor.item/vnd.google.note" />
             </intent-filter>
 
-            <!--
-                Allows inserting a note into a list of notes of type vnd.google.note
-             -->
+            <!-- This filter says that we can create a new note inside
+                 of a directory of notes.  The INSERT action creates an
+                 empty note; the PASTE action initializes a new note from
+                 the current contents of the clipboard. -->
             <intent-filter>
                 <action android:name="android.intent.action.INSERT" />
                 <action android:name="android.intent.action.PASTE" />
@@ -136,53 +77,42 @@
 
         </activity>
 
-        <!--
-            Defines the title editor Activity. This Activity uses a dialog view, which
-            looks like a regular dialog but is reachable by an Intent and uses
-            intent filters. The soft keyboard is made visible when input is expected.
-         -->
-        <activity
-            android:name="TitleEditor"
+        <activity android:name="TitleEditor"
             android:label="@string/title_edit_title"
             android:theme="@android:style/Theme.Dialog"
             android:windowSoftInputMode="stateVisible">
-            <!--
-                This intent-filter accepts the application-specific EDIT_TITLE intent. It
-                also accepts DEFAULT (required by non-MAIN activities). Because it is specified
-                with ALTERNATIVE and SELECTED_ALTERNATIVE, the activity will appear as an
-                alternative in a list of activities that work on the data type listed.
-                This activity can only work on a single notes object.
-             -->
+            <!-- This activity implements an alternative action that can be
+                 performed on notes: editing their title.  It can be used as
+                 a default operation if the user invokes this action, and is
+                 available as an alternative action for any note data. -->
             <intent-filter android:label="@string/resolve_title">
+                <!-- This is the action we perform.  It is a custom action we
+                     define for our application, not a generic VIEW or EDIT
+                     action since we are not a general note viewer/editor. -->
                 <action android:name="com.android.notepad.action.EDIT_TITLE" />
+                <!-- DEFAULT: execute if being directly invoked. -->
                 <category android:name="android.intent.category.DEFAULT" />
+                <!-- ALTERNATIVE: show as an alternative action when the user is
+                     working with this type of data. -->
                 <category android:name="android.intent.category.ALTERNATIVE" />
+                <!-- SELECTED_ALTERNATIVE: show as an alternative action the user
+                     can perform when selecting this type of data. -->
                 <category android:name="android.intent.category.SELECTED_ALTERNATIVE" />
+                <!-- This is the data type we operate on. -->
                 <data android:mimeType="vnd.android.cursor.item/vnd.google.note" />
             </intent-filter>
         </activity>
-        <!--
-            This activity handles live folder views of notes. The CREATE_LIVE_FOLDER filter
-            tells the Launcher that this activity can handle live folders.
-        -->
-        <activity
-            android:name="NotesLiveFolder"
-            android:label="@string/live_folder_name"
+
+        <activity android:name="NotesLiveFolder" android:label="@string/live_folder_name"
             android:icon="@drawable/live_folder_notes">
             <intent-filter>
                 <action android:name="android.intent.action.CREATE_LIVE_FOLDER" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
-        <!--
-            This declares version information for the application:
-            targetSdkVersion: Indicates that the application was tested with API level 4.
-            Android will turn off compatibility features for APIs greater than 4, since the
-            application does not require them. Also, if the application were to be uploaded to
-            Android Market, then it would not be visible to devices running an API level below 4.
-            minSdkVersion: Indicates that Android will not install this application to a
-            device that is running an API level less than 4.
-        -->
-        <uses-sdk android:targetSdkVersion="3" android:minSdkVersion="3"/>
+
     </application>
+
+    <uses-sdk android:targetSdkVersion="4" android:minSdkVersion="3"/>
 </manifest>
+

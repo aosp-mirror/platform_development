@@ -5,7 +5,7 @@ LOCAL_SRC_FILES := $(call all-subdir-java-files)
 
 LOCAL_JAVA_LIBRARIES := android.test.runner
 
-LOCAL_PACKAGE_NAME := NotePadTest
+LOCAL_PACKAGE_NAME := NotePadTests
 
 LOCAL_MODULE_TAGS := tests
 
