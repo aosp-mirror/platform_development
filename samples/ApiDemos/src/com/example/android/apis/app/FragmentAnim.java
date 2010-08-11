@@ -49,7 +49,8 @@ public class FragmentAnim extends Activity {
         button.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
                 FragmentTransaction ft = openFragmentTransaction();
-                ft.setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out);
+                ft.setCustomAnimations(android.R.anim.animator_fade_in,
+                        android.R.anim.animator_fade_out);
                 if (fragment.isHidden()) {
                     button.setAnimation(AnimationUtils.loadAnimation(
                             FragmentAnim.this, android.R.anim.slide_in_left));
