@@ -11,7 +11,7 @@ FroYo. Android 2.2 is the current version of Android. Source code for Android
 </p>
 <ul>
   <li><a href="{@docRoot}compatibility/android-2.2-cdd.pdf">Android 2.2 Compatibility Definition Document (CDD)</a></li>
-  <li><a href="http://dl.google.com/dl/android/cts/android-cts-2.2_r1-x86.zip">Android 2.2 R1 Compatibility Test Suite (CTS)</a></li>
+  <li><a href="http://dl.google.com/dl/android/cts/android-cts-2.2_r2-x86.zip">Android 2.2 R2 Compatibility Test Suite (CTS)</a></li>
 </ul>
 
 <h2>Android 2.1</h2>
