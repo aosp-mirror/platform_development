@@ -1,0 +1,120 @@
+<p>
+  This is an example of an accessibility service that provides custom feedback for the Clock application which comes by default with Android devices. It demonstrates the following key features of the Android accessibility APIs:
+</p>
+<ol>
+  <li>
+    Simple demonstration of how to use the accessibility APIs.
+  </li>
+  <li>
+    Hands-on example of various ways to utilize the accessibility API for providing alternative and complementary feedback.
+  </li>
+  <li>
+    Providing application specific feedback &mdash; the service handles only accessibility events from the Clock application.
+  </li>
+  <li>
+    Providing dynamic, context-dependent feedback &mdash; feedback type changes depending on the ringer mode.
+  </li>
+  <li>
+    Application specific UI enhancement &mdash; application domain knowledge is utilized to enhance the provided feedback.
+  </li>
+</ol>
+<p>
+  <strong>
+    Note: This code sample will work only on devices shipped with the default Clock application. If you are
+    running Android 1.6 of Android 2.0 you should enable first ClockBack and then TalkBack since in these
+    releases accessibility services are notified in the order of registration.
+  </strong>
+</p>
+<p>
+  Steps to exercise the ClockBack example:
+</p>
+<ol>
+  <li>
+    <ul>
+      <li>
+        <strong>Action:</strong> Enable accessibility and all default accessibility services:<br/>
+        Settings &rarr; Accessibility &rarr; select the Accessibility, TalkBack, KickBack, and SoundBack checkboxes
+      </li>
+      <li>
+        <strong>Result:</strong> The system provides spoken, audible, and haptic feedback.
+      </li>
+    </ul>
+  </li>
+  <li>
+    <ul>
+      <li>
+        <strong>Action:</strong> Explore the feedback provided by the system:<br/>
+        Poke around with the trackball.
+      </li>
+      <li>
+        <strong>Result:</strong> You are somehow familiar with the type of the provided feedback.
+      </li>
+    </ul>
+  </li>
+  <li>
+    <ul>
+      <li>
+        <strong>Action:</strong> Go to the Clock application and try to change the time of an alarm:<br/>
+        All applications &rarr; Clock &rarr; Alarms (left corner) &rarr; Select an alarm &rarr; Time &mdash; explore the plus, minus buttons, hour and minute edit boxes.
+      </li>
+      <li>
+        <strong>Result:</strong> The hour and minute edit boxes are announced without any clue which is the hour and which is the minute one (you can guess from the arrangement).
+      </li>
+    </ul>
+  </li>
+  <li>
+    <ul>
+      <li>
+        <strong>Action:</strong> Enable ClockBack:<br>
+        Settings &rarr; Accessibility &rarr; ClockBack &mdash; select the checkbox (assuming you have installed the APK).
+      </li>
+      <li>
+        <strong>Result:</strong> We have active accessibility service for providing application specific feedback for the Clock application.
+      </li>
+    </ul>
+  </li>
+  <li>
+    <ul>
+      <li>
+        <strong>Action:</strong> Go to the Clock application and try to change the time of an alarm:<br/>
+        All applications &rarr; Clock &rarr; Alarms (left corner) &rarr; Select an alarm &rarr; Time &mdash; explore the hour and minute edit boxes.
+      </li>
+      <li>
+        <strong>Result:</strong> The hour and minute edit boxes are now spoken. This is an example of application specific feedback that utilizes domain information to enhance the user experience.
+      </li>
+    </ul>
+  </li>
+  <li>
+    <ul>
+      <li>
+        <strong>Action:</strong> Set the ringer to vibration mode and explore the provided feedback:<br/>
+        Use the device button for reducing the ringer volume until it is in vibration mode. Move around the Clock application and outside of that application.
+      </li>
+      <li>
+        <strong>Result:</strong> The Clock application provides custom audible and default haptic feedback. The rest of the system provides the default feedback.
+      </li>
+    </ul>
+  </li>
+  <li>
+    <ul>
+      <li>
+        <strong>Action:</strong> Set the ringer to muted mode and explore the provided feedback:<br/>
+        Use the device button for reducing the ringer volume until it is in muted mode. Move around the Clock application and outside of that application.
+      </li>
+      <li>
+        <strong>Result:</strong> The Clock application provides only custom haptic feedback. The rest of the system provides the default feedback. Now we are providing custom context dependent feedback based on the device state (ringer mode).
+      </li>
+    </ul>
+  </li>
+  <li>
+    <ul>
+      <li>
+        <strong>Action:</strong> Write an accessibility service:<br/>
+        The <a href="http://code.google.com/p/eyes-free/">Eyes-Free open source project</a> has more accessibility-related resources. To contribute, visit the project page or post to the <a href="http://groups.google.com/group/eyes-free">mailing list</a>.
+      </li>
+      <li>
+        <strong>Result:</strong> One more cool application has been written.
+      </li>
+    </ul>
+  </li>
+</ol>
