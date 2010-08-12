@@ -42,7 +42,7 @@
 
     <application android:name="ApiDemosApplication"
             android:label="@string/activity_sample_code"
-            android:icon="@drawable/app_sample_code" >
+            android:icon="@drawable/app_sample_code">
 
         <!-- This is how we can request a library but still allow the app
              to be installed if it doesn't exist. -->
@@ -1619,7 +1619,7 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".view.RotatingButton" android:label="View/Rotating Button">
+        <activity android:name=".view.RotatingButton" android:label="Views/Rotating Button">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
