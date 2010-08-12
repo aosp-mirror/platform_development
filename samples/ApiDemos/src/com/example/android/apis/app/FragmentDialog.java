@@ -65,33 +65,20 @@ public class FragmentDialog extends Activity {
 
     void showDialog() {
         mStackLevel++;
-        DialogFragment newFragment = new MyDialogFragment(mStackLevel);
+
+        // DialogFragment.show() will take care of adding the fragment
+        // in a transaction.  We also want to remove any currently showing
+        // dialog, so make our own transaction and take care of that here.
         FragmentTransaction ft = openFragmentTransaction();
         Fragment prev = findFragmentByTag("dialog");
         if (prev != null) {
             ft.remove(prev);
         }
         ft.addToBackStack(null);
+
+        // Create and show the dialog.
+        DialogFragment newFragment = MyDialogFragment.newInstance(mStackLevel);
         newFragment.show(this, ft, "dialog");
-    }
-
-    static int getStyleForNum(int num) {
-        switch ((num-1)%6) {
-            case 1: return DialogFragment.STYLE_NO_TITLE;
-            case 2: return DialogFragment.STYLE_NO_FRAME;
-            case 3: return DialogFragment.STYLE_NO_INPUT;
-            case 4: return DialogFragment.STYLE_NORMAL;
-            case 5: return DialogFragment.STYLE_NORMAL;
-        }
-        return DialogFragment.STYLE_NORMAL;
-    }
-
-    static int getThemeForNum(int num) {
-        switch ((num-1)%6) {
-            case 4: return android.R.style.Theme_Light;
-            case 5: return android.R.style.Theme;
-        }
-        return 0;
     }
 
     static String getNameForNum(int num) {
@@ -109,27 +96,40 @@ public class FragmentDialog extends Activity {
     public static class MyDialogFragment extends DialogFragment {
         int mNum;
 
-        public MyDialogFragment() {
-            mNum = -1;
-        }
+        /**
+         * Create a new instance of MyDialogFragment, providing "num"
+         * as an argument.
+         */
+        static MyDialogFragment newInstance(int num) {
+            MyDialogFragment f = new MyDialogFragment();
 
-        public MyDialogFragment(int num) {
-            super(getStyleForNum(num), getThemeForNum(num));
-            mNum = num;
-        }
+            // Supply num input as an argument.
+            Bundle args = new Bundle();
+            args.putInt("num", num);
+            f.setArguments(args);
 
+            return f;
+        }
+        
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
-            if (savedInstanceState != null) {
-                mNum = savedInstanceState.getInt("num");
-            }
-        }
+            mNum = getArguments().getInt("num");
 
-        @Override
-        public void onSaveInstanceState(Bundle outState) {
-            super.onSaveInstanceState(outState);
-            outState.putInt("num", mNum);
+            // Pick a style based on the num.
+            int style = DialogFragment.STYLE_NORMAL, theme = 0;
+            switch ((mNum-1)%6) {
+                case 1: style = DialogFragment.STYLE_NO_TITLE; break;
+                case 2: style = DialogFragment.STYLE_NO_FRAME; break;
+                case 3: style = DialogFragment.STYLE_NO_INPUT; break;
+                case 4: style = DialogFragment.STYLE_NORMAL; break;
+                case 5: style = DialogFragment.STYLE_NORMAL; break;
+            }
+            switch ((mNum-1)%6) {
+                case 4: theme = android.R.style.Theme_Light; break;
+                case 5: theme = android.R.style.Theme; break;
+            }
+            setStyle(style, theme);
         }
 
         @Override

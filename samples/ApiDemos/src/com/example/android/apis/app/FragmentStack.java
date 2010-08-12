@@ -47,7 +47,7 @@ public class FragmentStack extends Activity {
 
         if (savedInstanceState == null) {
             // Do first time initialization -- add initial fragment.
-            Fragment newFragment = new CountingFragment(mStackLevel);
+            Fragment newFragment = CountingFragment.newInstance(mStackLevel);
             FragmentTransaction ft = openFragmentTransaction();
             ft.add(R.id.simple_fragment, newFragment).commit();
         } else {
@@ -63,7 +63,12 @@ public class FragmentStack extends Activity {
 
     void addFragmentToStack() {
         mStackLevel++;
-        Fragment newFragment = new CountingFragment(mStackLevel);
+
+        // Instantiate a new fragment.
+        Fragment newFragment = CountingFragment.newInstance(mStackLevel);
+
+        // Add the fragment to the activity, pushing this transaction
+        // on to the back stack.
         FragmentTransaction ft = openFragmentTransaction();
         ft.replace(R.id.simple_fragment, newFragment);
         ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
@@ -74,26 +79,25 @@ public class FragmentStack extends Activity {
     public static class CountingFragment extends Fragment {
         int mNum;
 
-        public CountingFragment() {
-            mNum = -1;
-        }
+        /**
+         * Create a new instance of CountingFragment, providing "num"
+         * as an argument.
+         */
+        static CountingFragment newInstance(int num) {
+            CountingFragment f = new CountingFragment();
 
-        public CountingFragment(int num) {
-            mNum = num;
+            // Supply num input as an argument.
+            Bundle args = new Bundle();
+            args.putInt("num", num);
+            f.setArguments(args);
+
+            return f;
         }
 
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
-            if (savedInstanceState != null) {
-                mNum = savedInstanceState.getInt("num");
-            }
-        }
-
-        @Override
-        public void onSaveInstanceState(Bundle outState) {
-            super.onSaveInstanceState(outState);
-            outState.putInt("num", mNum);
+            mNum = getArguments().getInt("num");
         }
 
         @Override
