@@ -66,7 +66,7 @@ public class FragmentStack extends Activity {
         Fragment newFragment = new CountingFragment(mStackLevel);
         FragmentTransaction ft = openFragmentTransaction();
         ft.replace(R.id.simple_fragment, newFragment);
-        ft.setTransition(FragmentTransaction.TRANSIT_WALLPAPER_INTRA_OPEN);
+        ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
         ft.addToBackStack(null);
         ft.commit();
     }
