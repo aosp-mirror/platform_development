@@ -13,7 +13,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package com.example.android.samplesync.syncadapter;
 
 import android.app.Service;
@@ -26,12 +25,11 @@ import android.os.IBinder;
  * IBinder.
  */
 public class SyncService extends Service {
+
     private static final Object sSyncAdapterLock = new Object();
+
     private static SyncAdapter sSyncAdapter = null;
 
-    /*
-     * {@inheritDoc}
-     */
     @Override
     public void onCreate() {
         synchronized (sSyncAdapterLock) {
@@ -41,9 +39,6 @@ public class SyncService extends Service {
         }
     }
 
-    /*
-     * {@inheritDoc}
-     */
     @Override
     public IBinder onBind(Intent intent) {
         return sSyncAdapter.getSyncAdapterBinder();
