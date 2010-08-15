@@ -16,16 +16,22 @@
 
 <!-- This is a primitive example showing the different types of preferences available. -->
 <!-- BEGIN_INCLUDE(headers) -->
-<PreferenceHeaders
+<preference-headers
         xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <Header android:fragment="com.example.android.apis.preference.PreferenceWithHeaders$Prefs1Fragment"
+    <header android:fragment="com.example.android.apis.preference.PreferenceWithHeaders$Prefs1Fragment"
             android:icon="@drawable/ic_settings_applications"
             android:title="Prefs 1"
             android:summary="An example of some preferences." />
-    <Header android:fragment="com.example.android.apis.preference.PreferenceWithHeaders$Prefs2Fragment"
+            
+    <header android:fragment="com.example.android.apis.preference.PreferenceWithHeaders$Prefs2Fragment"
             android:icon="@drawable/ic_settings_display"
             android:title="Prefs 2"
-            android:summary="Some other preferences you can see." />
-</PreferenceHeaders>
+            android:summary="Some other preferences you can see.">
+        <!-- Arbitrary key/value pairs can be included with a header as
+             arguments to its fragment. -->
+        <extra android:name="someKey" android:value="someHeaderValue" />
+    </header>
+    
+</preference-headers>
 <!-- END_INCLUDE(headers) -->

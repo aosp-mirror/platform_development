@@ -24,6 +24,7 @@ import android.app.Dialog;
 import android.app.DialogFragment;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
@@ -49,28 +50,49 @@ public class FragmentAlertDialog extends Activity {
     }
 
     void showDialog() {
-        DialogFragment newFragment = new MyAlertDialogFragment();
+        DialogFragment newFragment = MyAlertDialogFragment.newInstance(
+                R.string.alert_dialog_two_buttons_title);
         newFragment.show(this, "dialog");
     }
 
+    public void doPositiveClick() {
+        // Do stuff here.
+        Log.i("FragmentAlertDialog", "Positive click!");
+    }
+    
+    public void doNegativeClick() {
+        // Do stuff here.
+        Log.i("FragmentAlertDialog", "Negative click!");
+    }
+    
     public static class MyAlertDialogFragment extends DialogFragment {
 
+        public static MyAlertDialogFragment newInstance(int title) {
+            MyAlertDialogFragment frag = new MyAlertDialogFragment();
+            Bundle args = new Bundle();
+            args.putInt("title", title);
+            frag.setArguments(args);
+            return frag;
+        }
+        
         @Override
         public Dialog onCreateDialog(Bundle savedInstanceState) {
+            int title = getArguments().getInt("title");
+            
             return new AlertDialog.Builder(getActivity())
                     .setIcon(R.drawable.alert_dialog_icon)
-                    .setTitle(R.string.alert_dialog_two_buttons_title)
+                    .setTitle(title)
                     .setPositiveButton(R.string.alert_dialog_ok,
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int whichButton) {
-                                /* User clicked OK so do some stuff */
+                                ((FragmentAlertDialog)getActivity()).doPositiveClick();
                             }
                         }
                     )
                     .setNegativeButton(R.string.alert_dialog_cancel,
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int whichButton) {
-                                /* User clicked Cancel so do some stuff */
+                                ((FragmentAlertDialog)getActivity()).doNegativeClick();
                             }
                         }
                     )

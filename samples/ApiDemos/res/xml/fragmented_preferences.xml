@@ -58,6 +58,8 @@
                 android:fragment="com.example.android.apis.preference.PreferenceWithHeaders$Prefs1FragmentInner"
                 android:title="@string/title_fragment_preference"
                 android:summary="@string/summary_fragment_preference">
+            <!-- Arbitrary key/value pairs can be included for fragment arguments -->
+            <extra android:name="someKey" android:value="somePrefValue" />
         </PreferenceScreen>
 
         <!-- This PreferenceScreen tag sends the user to a completely different

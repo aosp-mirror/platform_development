@@ -69,8 +69,8 @@ public class FragmentDialog extends Activity {
         // DialogFragment.show() will take care of adding the fragment
         // in a transaction.  We also want to remove any currently showing
         // dialog, so make our own transaction and take care of that here.
-        FragmentTransaction ft = openFragmentTransaction();
-        Fragment prev = findFragmentByTag("dialog");
+        FragmentTransaction ft = getFragmentManager().openTransaction();
+        Fragment prev = getFragmentManager().findFragmentByTag("dialog");
         if (prev != null) {
             ft.remove(prev);
         }

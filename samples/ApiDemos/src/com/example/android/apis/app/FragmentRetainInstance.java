@@ -20,6 +20,7 @@ import com.example.android.apis.R;
 
 import android.app.Activity;
 import android.app.Fragment;
+import android.app.FragmentManager;
 import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -48,13 +49,15 @@ public class FragmentRetainInstance extends Activity {
             }
         });
 
+        FragmentManager fm = getFragmentManager();
+        
         // Check to see if we retained the fragment.
-        mRetainedFragment = (RetainedFragment)findFragmentByTag("retained");
+        mRetainedFragment = (RetainedFragment)fm.findFragmentByTag("retained");
 
         // If not retained (or first time running), we need to re-create it.
         if (mRetainedFragment == null) {
             mRetainedFragment = new RetainedFragment();
-            openFragmentTransaction().add(mRetainedFragment, "retained").commit();
+            fm.openTransaction().add(mRetainedFragment, "retained").commit();
         }
     }
 

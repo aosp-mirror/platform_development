@@ -21,7 +21,7 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
-    <fragment android:name="com.example.android.apis.preference.FragmentPreferences$CategoriesFragment"
+    <fragment class="com.example.android.apis.preference.FragmentPreferences$CategoriesFragment"
             android:id="@+id/categories"
             android:layout_width="match_parent"
             android:layout_height="0px"

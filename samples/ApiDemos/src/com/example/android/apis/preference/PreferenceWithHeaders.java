@@ -21,6 +21,7 @@ import com.example.android.apis.R;
 import android.os.Bundle;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceFragment;
+import android.util.Log;
 
 import java.util.List;
 
@@ -60,6 +61,9 @@ public class PreferenceWithHeaders extends PreferenceActivity {
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
 
+            // Can retrieve arguments from preference XML.
+            Log.i("args", "Arguments: " + getArguments());
+            
             // Load the preferences from an XML resource
             addPreferencesFromResource(R.xml.fragmented_preferences_inner);
         }
@@ -73,6 +77,9 @@ public class PreferenceWithHeaders extends PreferenceActivity {
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
 
+            // Can retrieve arguments from headers XML.
+            Log.i("args", "Arguments: " + getArguments());
+            
             // Load the preferences from an XML resource
             addPreferencesFromResource(R.xml.preference_dependencies);
         }

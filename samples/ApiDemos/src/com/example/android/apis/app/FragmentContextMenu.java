@@ -41,7 +41,7 @@ public class FragmentContextMenu extends Activity {
 
         // Create the list fragment and add it as our sole content.
         ContextMenuFragment content = new ContextMenuFragment();
-        openFragmentTransaction().add(android.R.id.content, content).commit();
+        getFragmentManager().openTransaction().add(android.R.id.content, content).commit();
     }
 
     public static class ContextMenuFragment extends Fragment {

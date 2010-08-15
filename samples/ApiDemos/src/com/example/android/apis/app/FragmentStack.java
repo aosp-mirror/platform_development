@@ -48,7 +48,7 @@ public class FragmentStack extends Activity {
         if (savedInstanceState == null) {
             // Do first time initialization -- add initial fragment.
             Fragment newFragment = CountingFragment.newInstance(mStackLevel);
-            FragmentTransaction ft = openFragmentTransaction();
+            FragmentTransaction ft = getFragmentManager().openTransaction();
             ft.add(R.id.simple_fragment, newFragment).commit();
         } else {
             mStackLevel = savedInstanceState.getInt("level");
@@ -69,7 +69,7 @@ public class FragmentStack extends Activity {
 
         // Add the fragment to the activity, pushing this transaction
         // on to the back stack.
-        FragmentTransaction ft = openFragmentTransaction();
+        FragmentTransaction ft = getFragmentManager().openTransaction();
         ft.replace(R.id.simple_fragment, newFragment);
         ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
         ft.addToBackStack(null);

@@ -4,6 +4,7 @@ import com.example.android.apis.R;
 
 import android.app.Activity;
 import android.app.Fragment;
+import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.os.Bundle;
 import android.view.Menu;
@@ -35,13 +36,14 @@ public class FragmentMenu extends Activity {
         setContentView(R.layout.fragment_menu);
         
         // Make sure the two menu fragments are created.
-        FragmentTransaction ft = openFragmentTransaction();
-        mFragment1 = findFragmentByTag("f1");
+        FragmentManager fm = getFragmentManager();
+        FragmentTransaction ft = fm.openTransaction();
+        mFragment1 = fm.findFragmentByTag("f1");
         if (mFragment1 == null) {
             mFragment1 = new MenuFragment();
             ft.add(mFragment1, "f1");
         }
-        mFragment2 = findFragmentByTag("f2");
+        mFragment2 = fm.findFragmentByTag("f2");
         if (mFragment2 == null) {
             mFragment2 = new Menu2Fragment();
             ft.add(mFragment2, "f2");
@@ -67,7 +69,7 @@ public class FragmentMenu extends Activity {
 
     // Update fragment visibility based on current check box state.
     void updateFragmentVisibility() {
-        FragmentTransaction ft = openFragmentTransaction();
+        FragmentTransaction ft = getFragmentManager().openTransaction();
         if (mCheckBox1.isChecked()) ft.show(mFragment1);
         else ft.hide(mFragment1);
         if (mCheckBox2.isChecked()) ft.show(mFragment2);
@@ -90,8 +92,8 @@ public class FragmentMenu extends Activity {
 
         @Override
         public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-            menu.add("Menu 1a").setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
-            menu.add("Menu 1b").setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
+            menu.add("Menu 1a").setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
+            menu.add("Menu 1b").setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
         }
     }
 
@@ -108,7 +110,7 @@ public class FragmentMenu extends Activity {
 
         @Override
         public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-            menu.add("Menu 2").setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
+            menu.add("Menu 2").setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
         }
     }
 }

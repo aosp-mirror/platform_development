@@ -21,11 +21,11 @@
     android:orientation="horizontal"
     android:layout_width="match_parent" android:layout_height="match_parent">
 
-    <fragment android:name="com.example.android.apis.app.FragmentLayout$TitlesFragment"
+    <fragment class="com.example.android.apis.app.FragmentLayout$TitlesFragment"
             android:id="@+id/titles" android:layout_weight="1"
             android:layout_width="0px" android:layout_height="match_parent" />
 
-    <fragment android:name="com.example.android.apis.app.FragmentLayout$DialogFragment"
+    <fragment class="com.example.android.apis.app.FragmentLayout$DialogFragment"
             android:id="@+id/dialog" android:layout_weight="1"
             android:layout_width="0px" android:layout_height="match_parent" />
     

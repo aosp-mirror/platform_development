@@ -48,7 +48,7 @@
              to be installed if it doesn't exist. -->
         <uses-library android:name="com.example.will.never.exist" android:required="false" />
 
-        <activity android:name="ApiDemos" android:screenOrientation="landscape">
+        <activity android:name="ApiDemos">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.DEFAULT" />
