@@ -357,6 +357,8 @@ public class Monkey {
         // Set ro.monkey if it's not set yet.
         SystemProperties.set("ro.monkey", "true");
 
+        Process.setArgV0("com.android.commands.monkey");
+
         int resultCode = (new Monkey()).run(args);
         System.exit(resultCode);
     }
