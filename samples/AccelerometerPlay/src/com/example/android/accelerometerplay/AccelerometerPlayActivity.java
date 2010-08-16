@@ -30,7 +30,10 @@ import android.os.Bundle;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
 import android.util.DisplayMetrics;
+import android.view.Display;
+import android.view.Surface;
 import android.view.View;
+import android.view.WindowManager;
 
 /**
  * This is an example of using the accelerometer to integrate the device's
@@ -49,6 +52,8 @@ public class AccelerometerPlayActivity extends Activity {
 	private SimulationView mSimulationView;
 	private SensorManager mSensorManager;
 	private PowerManager mPowerManager;
+	private WindowManager mWindowManager;
+	private Display mDisplay;
 	private WakeLock mWakeLock;
 
 	/** Called when the activity is first created. */
@@ -61,6 +66,10 @@ public class AccelerometerPlayActivity extends Activity {
 
 		// Get an instance of the PowerManager
 		mPowerManager = (PowerManager) getSystemService(POWER_SERVICE);
+
+		// Get an instance of the WindowManager
+		mWindowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
+		mDisplay = mWindowManager.getDefaultDisplay();
 
 		// Create a bright wake lock
 		mWakeLock = mPowerManager.newWakeLock(
@@ -392,9 +401,33 @@ public class AccelerometerPlayActivity extends Activity {
 			 * record the accelerometer data, the event's timestamp as well as
 			 * the current time. The latter is needed so we can calculate the
 			 * "present" time during rendering.
+			 *
+			 * In this application, we need to take into account how the
+			 * screen is rotated with respect to the sensors (which always
+			 * return data in a coordinate space aligned to with the screen
+			 * in its native orientation).
+			 *
 			 */
-			mSensorX = event.values[0];
-			mSensorY = event.values[1];
+
+			switch (mDisplay.getRotation()) {
+				case Surface.ROTATION_0:
+					mSensorX = event.values[0];
+					mSensorY = event.values[1];
+					break;
+				case Surface.ROTATION_90:
+					mSensorX = -event.values[1];
+					mSensorY =  event.values[0];
+					break;
+				case Surface.ROTATION_180:
+					mSensorX = -event.values[0];
+					mSensorY = -event.values[1];
+					break;
+				case Surface.ROTATION_270:
+					mSensorX =  event.values[1];
+					mSensorY = -event.values[0];
+					break;
+			}
+
 			mSensorTimeStamp = event.timestamp;
 			mCpuTimeStamp = System.nanoTime();
 		}
