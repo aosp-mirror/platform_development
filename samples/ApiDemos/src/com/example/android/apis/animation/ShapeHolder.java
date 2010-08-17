@@ -78,11 +78,9 @@ public class ShapeHolder {
     }
 
     public float getWidth() {
-        //return shape.getIntrinsicWidth();
         return shape.getShape().getWidth();
     }
     public void setWidth(float width) {
-        //shape.setIntrinsicWidth(width);
         Shape s = shape.getShape();
         s.resize(width, s.getHeight());
     }
@@ -93,7 +91,6 @@ public class ShapeHolder {
     public void setHeight(float height) {
         Shape s = shape.getShape();
         s.resize(s.getWidth(), height);
-        //shape.setIntrinsicHeight(height);
     }
 
     public ShapeHolder(ShapeDrawable s) {

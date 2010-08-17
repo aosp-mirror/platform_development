@@ -122,20 +122,26 @@ public class AnimatorEvents extends Activity {
             if (animation == null) {
                 PropertyAnimator yAnim = new PropertyAnimator(1500, ball, "y",
                         ball.getY(), getHeight() - 50f);
-                yAnim.setRepeatCount(1);
+                yAnim.setRepeatCount(0);
                 yAnim.setRepeatMode(Animator.REVERSE);
                 yAnim.setInterpolator(new AccelerateInterpolator(2f));
                 yAnim.addUpdateListener(this);
                 yAnim.addListener(this);
 
-                PropertyAnimator xAnim = new PropertyAnimator(1500, ball, "x",
+                PropertyAnimator xAnim = new PropertyAnimator(1000, ball, "x",
                         ball.getX(), ball.getX() + 300);
-                xAnim.setRepeatCount(1);
+                xAnim.setStartDelay(0);
+                xAnim.setRepeatCount(0);
                 xAnim.setRepeatMode(Animator.REVERSE);
                 xAnim.setInterpolator(new AccelerateInterpolator(2f));
 
+                PropertyAnimator alphaAnim = new PropertyAnimator(1000, ball, "alpha", 1f, .5f);
+                Sequencer alphaSeq = new Sequencer();
+                alphaSeq.play(alphaAnim);
+
                 animation = new Sequencer();
                 ((Sequencer) animation).playTogether(yAnim, xAnim);
+                //((Sequencer) animation).play(alphaSeq).after(500);
                 animation.addListener(this);
             }
         }

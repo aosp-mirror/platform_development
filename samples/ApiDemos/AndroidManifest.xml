@@ -839,6 +839,14 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".animation.AnimationCloning"
+                  android:label="Animation/Cloning">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
         <activity android:name=".animation.AnimationSeeking" android:label="Animation/Seeking">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -885,6 +893,14 @@
 
         <activity android:name=".animation.MultiPropertyAnimation"
                   android:label="Animation/Multiple Properties">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".animation.LayoutAnimations"
+                  android:label="Animation/Layout Animations">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />

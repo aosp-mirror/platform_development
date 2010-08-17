@@ -52,7 +52,7 @@ public class MultiPropertyAnimation extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.animation_seeking);
+        setContentView(R.layout.animation_multi_property);
         LinearLayout container = (LinearLayout) findViewById(R.id.container);
         final MyAnimationView animView = new MyAnimationView(this);
         container.addView(animView);
