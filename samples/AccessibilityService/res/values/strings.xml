@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- VALUES -->
+
+    <!-- Setting up the user interface vibration feedback service -->
+    <string name="clockback_setup_title">ClockBack</string>
+
+    <!-- String value for announcing the increase hours buttons -->
+    <string name="value_increase_hours">Increase hours</string>
+
+    <!-- String value for announcing the increase minutes buttons -->
+    <string name="value_increase_minutes">Increase minutes</string>
+
+    <!-- String value for announcing the decrease hours buttons -->
+    <string name="value_decrease_hours">Decrease hours</string>
+
+    <!-- String value for announcing the decrease minutes buttons -->
+    <string name="value_decrease_minutes">Decrease minutes</string>
+
+    <!-- String value for announcing one hour input -->
+    <string name="value_hour">hour</string>
+
+    <!-- String value for announcing the hours input -->
+    <string name="value_hours">hours</string>
+
+    <!-- String value for announcing one minute input -->
+    <string name="value_minute">minute</string>
+
+    <!-- String value for announcing the minutes input -->
+    <string name="value_minutes">minutes</string>
+
+    <!-- String value for announcing audible ringer mode -->
+    <string name="value_ringer_audible">Ringer audible</string>
+
+    <!-- String value for announcing vibrating ringer mode -->
+    <string name="value_ringer_vibrate">Ringer vibrate</string>
+
+    <!-- String value for announcing silent ringer mode-->
+    <string name="value_ringer_silent">Ringer silent</string>
+
+    <!-- TEMPLATES -->
+
+    <!-- String template for announcing the screen on -->
+    <string name="template_screen_on">Screen on. Volume %1$s percent.</string>
+
+    <!-- String template for announcing the screen off -->
+    <string name="template_screen_off">Screen off. Volume %1$s percent.</string>
+
+</resources>
