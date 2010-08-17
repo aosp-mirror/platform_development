@@ -220,6 +220,7 @@ frameworks/base/docs/docs-samples-redirect.html docs/samples/index.html
 # (see web_docs_sample_code_flags in frameworks/base/Android.mk)
 development/samples/source.properties        samples/${PLATFORM_NAME}/source.properties
 development/apps/GestureBuilder              samples/${PLATFORM_NAME}/GestureBuilder
+development/samples/AccessibilityService     samples/${PLATFORM_NAME}/AccessibilityService
 development/samples/BluetoothChat            samples/${PLATFORM_NAME}/BluetoothChat
 development/samples/Home                     samples/${PLATFORM_NAME}/Home
 development/samples/LunarLander              samples/${PLATFORM_NAME}/LunarLander
