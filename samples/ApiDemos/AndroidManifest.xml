@@ -831,6 +831,13 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".animation.ReversingAnimation" android:label="Animation/Reversing">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
         <!-- ************************************* -->
         <!--     ANIMATION PACKAGE SAMPLES         -->
         <!-- ************************************* -->
