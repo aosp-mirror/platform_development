@@ -1,0 +1,20 @@
+<p>This sample demonstrates how to design an application that is compatible across different Android versions. Applications
+should degrade gracefully on older platform versions, dropping features or providing
+when the platform support needed by features or functionality isn't available.</p>
+
+<p>In this case, the CrossCompatibility application shows how to use APIs that are not available in all Android versions and 
+still create a single <code>.apk</code> that runs on all Android versions.</p>
+
+<ul>
+<li>The main application's <a
+href="AndroidManifest.html">AndroidManifest.xml</a> file declares that it is backwards compatible with API level 3 devices with attribute <code>minSdkVersion</code> in the <code>uses-sdk</code> tag.
+ </li>
+<li>
+<a
+href="src/com/example/android/touchexample/VersionedGestureDetector.html">VersionedGestureDetector.java</a>
+is a version independent abstract class which factors out multitouch APIs that differ between platform versions. </li>
+
+</ul>
+
+<p> For more information on how to make your applications cross-compatible, please check out the original
+blogpost <a href="http://android-developers.blogspot.com/2010/07/how-to-have-your-cupcake-and-eat-it-too.html">here</a>.</p>
