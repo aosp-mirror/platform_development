@@ -825,6 +825,13 @@
         <!--     ANDROID.ANIMATION PACKAGE SAMPLES         -->
         <!-- ************************************* -->
 
+        <activity android:name=".animation.AnimationLoading" android:label="Animation/Loading">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
         <activity android:name=".animation.AnimationSeeking" android:label="Animation/Seeking">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -834,6 +841,14 @@
 
         <activity android:name=".animation.BouncingBalls"
                   android:label="Animation/Bouncing Balls">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".animation.CustomEvaluator"
+                  android:label="Animation/Custom Evaluator">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
