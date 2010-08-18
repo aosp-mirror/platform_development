@@ -17,6 +17,7 @@
 <!-- Top-level content view for the layout fragment sample.  This version is
      for display when in landscape: we can fit both titles and dialog. -->
 
+<!-- BEGIN_INCLUDE(layout) -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="horizontal"
     android:layout_width="match_parent" android:layout_height="match_parent">
@@ -30,3 +31,4 @@
             android:layout_width="0px" android:layout_height="match_parent" />
     
 </LinearLayout>
+<!-- END_INCLUDE(layout) -->

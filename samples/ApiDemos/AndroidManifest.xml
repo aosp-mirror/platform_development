@@ -251,7 +251,7 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".app.FragmentLayout$DialogActivity" />
+        <activity android:name=".app.FragmentLayout$DetailsActivity" />
 
         <activity android:name=".app.FragmentListCursorLoader"
                 android:theme="@android:style/Theme.WithActionBar"

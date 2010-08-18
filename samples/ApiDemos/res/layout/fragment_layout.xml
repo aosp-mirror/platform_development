@@ -17,6 +17,7 @@
 <!-- Top-level content view for the layout fragment sample.  This version is
      for display when not in landscape: we can only fit the list of titles. -->
 
+<!-- BEGIN_INCLUDE(layout) -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent" android:layout_height="match_parent">
     <fragment
@@ -24,3 +25,4 @@
             android:id="@+id/titles"
             android:layout_width="match_parent" android:layout_height="match_parent" />
 </FrameLayout>
+<!-- END_INCLUDE(layout) -->

@@ -61,6 +61,7 @@ public class FragmentStack extends Activity {
         outState.putInt("level", mStackLevel);
     }
 
+//BEGIN_INCLUDE(add_stack)
     void addFragmentToStack() {
         mStackLevel++;
 
@@ -75,7 +76,9 @@ public class FragmentStack extends Activity {
         ft.addToBackStack(null);
         ft.commit();
     }
+//END_INCLUDE(add_stack)
 
+//BEGIN_INCLUDE(fragment)
     public static class CountingFragment extends Fragment {
         int mNum;
 
@@ -94,12 +97,19 @@ public class FragmentStack extends Activity {
             return f;
         }
 
+        /**
+         * When creating, retrieve this instance's number from its arguments.
+         */
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
             mNum = getArguments().getInt("num");
         }
 
+        /**
+         * The Fragment's UI is just a simple text view showing its
+         * instance number.
+         */
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                 Bundle savedInstanceState) {
@@ -109,4 +119,5 @@ public class FragmentStack extends Activity {
             return v;
         }
     }
+//END_INCLUDE(fragment)
 }

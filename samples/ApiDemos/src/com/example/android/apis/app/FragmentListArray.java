@@ -37,9 +37,9 @@ public class FragmentListArray extends Activity {
         super.onCreate(savedInstanceState);
 
         // Create the list fragment and add it as our sole content.
-        if (findFragmentById(android.R.id.content) == null) {
+        if (getFragmentManager().findFragmentById(android.R.id.content) == null) {
             ArrayListFragment list = new ArrayListFragment();
-            openFragmentTransaction().add(android.R.id.content, list).commit();
+            getFragmentManager().openTransaction().add(android.R.id.content, list).commit();
         }
     }
 

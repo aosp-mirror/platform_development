@@ -21,9 +21,11 @@ import com.example.android.apis.Shakespeare;
 
 import android.app.Activity;
 import android.app.Fragment;
+import android.app.ListFragment;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -40,19 +42,21 @@ import android.widget.TextView;
  */
 public class FragmentLayout extends Activity {
 
+//BEGIN_INCLUDE(main)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         
-        // This layout varies depending on the screen size.
         setContentView(R.layout.fragment_layout);
     }
+//END_INCLUDE(main)
 
     /**
      * This is a secondary activity, to show what the user has selected
      * when the screen is not large enough to show it all in one activity.
      */
-    public static class DialogActivity extends Activity {
+//BEGIN_INCLUDE(details_activity)
+    public static class DetailsActivity extends Activity {
 
         @Override
         protected void onCreate(Bundle savedInstanceState) {
@@ -66,40 +70,49 @@ public class FragmentLayout extends Activity {
                 return;
             }
 
-            DialogFragment dialog = new DialogFragment();
-            openFragmentTransaction().add(android.R.id.content, dialog).commit();
-            dialog.setText(getIntent().getIntExtra("text", -1));
+            if (savedInstanceState == null) {
+                // During initial setup, plug in the details fragment.
+                DetailsFragment details = new DetailsFragment();
+                getFragmentManager().openTransaction().add(android.R.id.content, details).commit();
+                details.setText(getIntent().getIntExtra("text", -1));
+            }
         }
     }
+//END_INCLUDE(details_activity)
 
-    public static class TitlesFragment extends Fragment
-            implements AdapterView.OnItemClickListener {
+//BEGIN_INCLUDE(titles)
+    public static class TitlesFragment extends ListFragment {
         @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                Bundle savedInstanceState) {
-            ListView list = new ListView(getActivity());
-            list.setDrawSelectorOnTop(false);
-            list.setAdapter(new ArrayAdapter<String>(getActivity(),
+        public void onActivityCreated(Bundle savedInstanceState) {
+            super.onActivityCreated(savedInstanceState);
+
+            // Populate list with our static array of titles.
+            setListAdapter(new ArrayAdapter<String>(getActivity(),
                     android.R.layout.simple_list_item_1, Shakespeare.TITLES));
-            list.setOnItemClickListener(this);
-            list.setId(android.R.id.list);  // set id to allow state save/restore.
-            return list;
         }
 
-        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-            DialogFragment frag = (DialogFragment)getActivity().findFragmentById(R.id.dialog);
+        @Override
+        public void onListItemClick(ListView l, View v, int position, long id) {
+            DetailsFragment frag = (DetailsFragment)
+                    getFragmentManager().findFragmentById(R.id.dialog);
             if (frag != null && frag.isVisible()) {
+                // If the activity has a fragment to display the dialog,
+                // point it to what the user has selected.
                 frag.setText((int)id);
             } else {
+                // Otherwise we need to launch a new activity to display
+                // the dialog fragment with selected text.
                 Intent intent = new Intent();
-                intent.setClass(getActivity(), DialogActivity.class);
+                intent.setClass(getActivity(), DetailsActivity.class);
                 intent.putExtra("text", (int)id);
                 startActivity(intent);
             }
         }
     }
+//END_INCLUDE(titles)
 
-    public static class DialogFragment extends Fragment {
+//BEGIN_INCLUDE(details)
+    public static class DetailsFragment extends Fragment {
         int mDisplayedText = -1;
         TextView mText;
 
@@ -134,4 +147,5 @@ public class FragmentLayout extends Activity {
             return scroller;
         }
     }
+//END_INCLUDE(details)
 }
