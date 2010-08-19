@@ -102,6 +102,8 @@ public class MonkeySourceScript implements MonkeyEventSource {
 
     private static final String EVENT_KEYWORD_WRITEPOWERLOG = "WriteLog";
 
+    private static final String EVENT_KEYWORD_RUNCMD = "RunCmd";
+
     // a line at the end of the header
     private static final String STARTING_DATA_LINE = "start data >>";
 
@@ -353,6 +355,13 @@ public class MonkeySourceScript implements MonkeyEventSource {
         //Write power log to sdcard
         if (s.indexOf(EVENT_KEYWORD_WRITEPOWERLOG) >= 0) {
             MonkeyPowerEvent e = new MonkeyPowerEvent();
+            mQ.addLast(e);
+        }
+
+      //Run the shell command
+        if (s.indexOf(EVENT_KEYWORD_RUNCMD) >= 0 && args.length == 1) {
+            String cmd = args[0];
+            MonkeyCommandEvent e = new MonkeyCommandEvent(cmd);
             mQ.addLast(e);
         }
     }
