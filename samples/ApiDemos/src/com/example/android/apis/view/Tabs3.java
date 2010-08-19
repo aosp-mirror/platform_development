@@ -44,7 +44,7 @@ public class Tabs3 extends TabActivity {
         // the tab is clicked.
         tabHost.addTab(tabHost.newTabSpec("tab3")
                 .setIndicator("destroy")
-                .setContent(new Intent(this, Controls2.class)
+                .setContent(new Intent(this, Controls1.class)
                         .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)));
     }
 }

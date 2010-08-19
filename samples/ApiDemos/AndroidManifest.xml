@@ -1220,63 +1220,63 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".view.List1" android:label="Views/Lists/1. Array">
+        <activity android:name=".view.List1" android:label="Views/Lists/01. Array">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
             </intent-filter>
         </activity>
 
-        <activity android:name=".view.List2" android:label="Views/Lists/2. Cursor (People)">
+        <activity android:name=".view.List2" android:label="Views/Lists/02. Cursor (People)">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
             </intent-filter>
         </activity>
 
-        <activity android:name=".view.List3" android:label="Views/Lists/3. Cursor (Phones)">
+        <activity android:name=".view.List3" android:label="Views/Lists/03. Cursor (Phones)">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
             </intent-filter>
         </activity>
 
-        <activity android:name=".view.List4" android:label="Views/Lists/4. ListAdapter">
+        <activity android:name=".view.List4" android:label="Views/Lists/04. ListAdapter">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
             </intent-filter>
         </activity>
 
-        <activity android:name=".view.List5" android:label="Views/Lists/5. Separators">
+        <activity android:name=".view.List5" android:label="Views/Lists/05. Separators">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
             </intent-filter>
         </activity>
 
-        <activity android:name=".view.List6" android:label="Views/Lists/6. ListAdapter Collapsed">
+        <activity android:name=".view.List6" android:label="Views/Lists/06. ListAdapter Collapsed">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
             </intent-filter>
         </activity>
 
-        <activity android:name=".view.List7" android:label="Views/Lists/7. Cursor (Phones)">
+        <activity android:name=".view.List7" android:label="Views/Lists/07. Cursor (Phones)">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
             </intent-filter>
         </activity>
 
-        <activity android:name=".view.List8" android:label="Views/Lists/8. Photos">
+        <activity android:name=".view.List8" android:label="Views/Lists/08. Photos">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
             </intent-filter>
         </activity>
 
-        <activity android:name=".view.List9" android:label="Views/Lists/9. Array (Overlay)">
+        <activity android:name=".view.List9" android:label="Views/Lists/09. Array (Overlay)">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -1503,15 +1503,35 @@
         </activity>
 
         <activity android:name=".view.Controls1"
-                android:label="Views/Controls/1. Light Theme"
-                android:theme="@android:style/Theme.Light">
+                  android:label="Views/Controls/1. Light Theme"
+                  android:theme="@android:style/Theme.Light">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
             </intent-filter>
         </activity>
 
-        <activity android:name=".view.Controls2" android:label="Views/Controls/2. Default Theme">
+        <activity android:name=".view.Controls2"
+                  android:label="Views/Controls/2. Default Theme"
+                  android:theme="@android:style/Theme">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".view.Controls3"
+                  android:label="Views/Controls/3. Holo Light Theme"
+                  android:theme="@android:style/Theme.Light.Holo">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".view.Controls4"
+                  android:label="Views/Controls/4. Holo Dark Theme"
+                  android:theme="@android:style/Theme.Holo">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
