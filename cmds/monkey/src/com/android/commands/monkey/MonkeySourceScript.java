@@ -104,6 +104,8 @@ public class MonkeySourceScript implements MonkeyEventSource {
 
     private static final String EVENT_KEYWORD_RUNCMD = "RunCmd";
 
+    private static final String EVENT_KEYWORD_TAP = "Tap";
+
     // a line at the end of the header
     private static final String STARTING_DATA_LINE = "start data >>";
 
@@ -253,7 +255,6 @@ public class MonkeySourceScript implements MonkeyEventSource {
                 float yPrecision = Float.parseFloat(args[9]);
                 int device = Integer.parseInt(args[10]);
                 int edgeFlags = Integer.parseInt(args[11]);
-
                 int type = MonkeyEvent.EVENT_TYPE_TRACKBALL;
                 if (s.indexOf("Pointer") > 0) {
                     type = MonkeyEvent.EVENT_TYPE_POINTER;
@@ -262,6 +263,40 @@ public class MonkeySourceScript implements MonkeyEventSource {
                         y, pressure, size, metaState, xPrecision, yPrecision, device, edgeFlags);
                 mQ.addLast(e);
             } catch (NumberFormatException e) {
+            }
+            return;
+        }
+
+        // Handle tap event
+        if ((s.indexOf(EVENT_KEYWORD_TAP) >= 0) && args.length == 2) {
+            try {
+                float x = Float.parseFloat(args[0]);
+                float y = Float.parseFloat(args[1]);
+
+                // Set the default parameters
+                long downTime = SystemClock.uptimeMillis();
+                float pressure = 1;
+                float xPrecision = 1;
+                float yPrecision = 1;
+                int edgeFlags = 0;
+                float size = 5;
+                int device = 0;
+                int metaState = 0;
+                int type = MonkeyEvent.EVENT_TYPE_POINTER;
+
+                MonkeyMotionEvent e1 =
+                        new MonkeyMotionEvent(type, downTime, downTime, KeyEvent.ACTION_DOWN, x,
+                                y, pressure, size, metaState, xPrecision, yPrecision, device,
+                                edgeFlags);
+                MonkeyMotionEvent e2 =
+                        new MonkeyMotionEvent(type, downTime, downTime, KeyEvent.ACTION_UP, x,
+                                y, pressure, size, metaState, xPrecision, yPrecision, device,
+                                edgeFlags);
+                mQ.addLast(e1);
+                mQ.addLast(e2);
+
+            } catch (NumberFormatException e) {
+                System.err.println("// " + e.toString());
             }
             return;
         }
