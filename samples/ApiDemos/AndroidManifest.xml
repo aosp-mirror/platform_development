@@ -243,6 +243,14 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".app.FragmentDialogOrActivity"
+                android:label="@string/fragment_dialog_or_activity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
         <activity android:name=".app.FragmentLayout"
                 android:label="@string/fragment_layout">
             <intent-filter>

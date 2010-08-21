@@ -95,6 +95,12 @@
     <string name="fragment_dialog">App/Fragment/Dialog</string>
     <string name="show">Show</string>
 
+    <string name="fragment_dialog_or_activity">App/Fragment/Dialog or Activity</string>
+    <string name="fragment_dialog_or_activity_msg">Demonstrates the same fragment
+            being shown as a dialog and embedded inside of an activity.</string>
+    <string name="fragment_dialog_or_activity_inline">Fragment embedded inside
+            of the activity:</string>
+
     <string name="fragment_layout">App/Fragment/Layout</string>
     
     <string name="fragment_list_array">App/Fragment/List Array</string>

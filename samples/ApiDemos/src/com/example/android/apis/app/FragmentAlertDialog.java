@@ -49,10 +49,11 @@ public class FragmentAlertDialog extends Activity {
         });
     }
 
+//BEGIN_INCLUDE(activity)
     void showDialog() {
         DialogFragment newFragment = MyAlertDialogFragment.newInstance(
                 R.string.alert_dialog_two_buttons_title);
-        newFragment.show(this, "dialog");
+        newFragment.show(getFragmentManager(), "dialog");
     }
 
     public void doPositiveClick() {
@@ -64,7 +65,9 @@ public class FragmentAlertDialog extends Activity {
         // Do stuff here.
         Log.i("FragmentAlertDialog", "Negative click!");
     }
+//END_INCLUDE(activity)
     
+//BEGIN_INCLUDE(dialog)
     public static class MyAlertDialogFragment extends DialogFragment {
 
         public static MyAlertDialogFragment newInstance(int title) {
@@ -99,4 +102,5 @@ public class FragmentAlertDialog extends Activity {
                     .create();
         }
     }
+//END_INCLUDE(dialog)
 }
