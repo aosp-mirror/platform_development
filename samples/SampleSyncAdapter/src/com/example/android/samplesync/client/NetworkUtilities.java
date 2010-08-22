@@ -88,7 +88,7 @@ final public class NetworkUtilities {
         if (mHttpClient == null) {
             mHttpClient = new DefaultHttpClient();
             final HttpParams params = mHttpClient.getParams();
-            HttpConnectionParams.setConnectionTimeout(params, REGISTRATION_TIMEOUT_M);
+            HttpConnectionParams.setConnectionTimeout(params, REGISTRATION_TIMEOUT_MS);
             HttpConnectionParams.setSoTimeout(params, REGISTRATION_TIMEOUT_MS);
             ConnManagerParams.setTimeout(params, REGISTRATION_TIMEOUT_MS);
         }
