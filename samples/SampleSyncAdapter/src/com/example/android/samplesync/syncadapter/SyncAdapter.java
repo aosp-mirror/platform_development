@@ -13,7 +13,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package com.example.android.samplesync.syncadapter;
 
 import android.accounts.Account;
@@ -46,9 +45,11 @@ import java.util.List;
  * platform ContactOperations provider.
  */
 public class SyncAdapter extends AbstractThreadedSyncAdapter {
+
     private static final String TAG = "SyncAdapter";
 
     private final AccountManager mAccountManager;
+
     private final Context mContext;
 
     private Date mLastUpdated;
@@ -62,18 +63,17 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
     @Override
     public void onPerformSync(Account account, Bundle extras, String authority,
         ContentProviderClient provider, SyncResult syncResult) {
+
         List<User> users;
         List<Status> statuses;
         String authtoken = null;
-         try {
-             // use the account manager to request the credentials
-             authtoken =
-                mAccountManager.blockingGetAuthToken(account,
-                    Constants.AUTHTOKEN_TYPE, true /* notifyAuthFailure */);
-             // fetch updates from the sample service over the cloud
-             users =
-                NetworkUtilities.fetchFriendUpdates(account, authtoken,
-                    mLastUpdated);
+        try {
+            // use the account manager to request the credentials
+            authtoken =
+                mAccountManager
+                    .blockingGetAuthToken(account, Constants.AUTHTOKEN_TYPE, true /* notifyAuthFailure */);
+            // fetch updates from the sample service over the cloud
+            users = NetworkUtilities.fetchFriendUpdates(account, authtoken, mLastUpdated);
             // update the last synced date.
             mLastUpdated = new Date();
             // update platform contacts.
@@ -91,8 +91,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
             Log.e(TAG, "IOException", e);
             syncResult.stats.numIoExceptions++;
         } catch (final AuthenticationException e) {
-            mAccountManager.invalidateAuthToken(Constants.ACCOUNT_TYPE,
-                authtoken);
+            mAccountManager.invalidateAuthToken(Constants.ACCOUNT_TYPE, authtoken);
             syncResult.stats.numAuthExceptions++;
             Log.e(TAG, "AuthenticationException", e);
         } catch (final ParseException e) {

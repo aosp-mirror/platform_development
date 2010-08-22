@@ -13,7 +13,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package com.example.android.samplesync.platform;
 
 import android.content.ContentProviderOperation;
@@ -29,12 +28,14 @@ import java.util.ArrayList;
 /**
  * This class handles execution of batch mOperations on Contacts provider.
  */
-public class BatchOperation {
+final public class BatchOperation {
+
     private final String TAG = "BatchOperation";
 
     private final ContentResolver mResolver;
+
     // List for storing the batch mOperations
-    ArrayList<ContentProviderOperation> mOperations;
+    private final ArrayList<ContentProviderOperation> mOperations;
 
     public BatchOperation(Context context, ContentResolver resolver) {
         mResolver = resolver;
@@ -50,6 +51,7 @@ public class BatchOperation {
     }
 
     public void execute() {
+
         if (mOperations.size() == 0) {
             return;
         }
@@ -63,5 +65,4 @@ public class BatchOperation {
         }
         mOperations.clear();
     }
-
 }

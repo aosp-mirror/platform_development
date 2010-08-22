@@ -13,7 +13,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package com.example.android.samplesync.client;
 
 import android.util.Log;
@@ -23,16 +22,24 @@ import org.json.JSONObject;
 /**
  * Represents a sample SyncAdapter user
  */
-public class User {
+final public class User {
 
     private final String mUserName;
+
     private final String mFirstName;
+
     private final String mLastName;
+
     private final String mCellPhone;
+
     private final String mOfficePhone;
+
     private final String mHomePhone;
+
     private final String mEmail;
+
     private final boolean mDeleted;
+
     private final int mUserId;
 
     public int getUserId() {
@@ -71,9 +78,9 @@ public class User {
         return mDeleted;
     }
 
-    public User(String name, String firstName, String lastName,
-        String cellPhone, String officePhone, String homePhone, String email,
-        Boolean deleted, Integer userId) {
+    private User(String name, String firstName, String lastName, String cellPhone,
+        String officePhone, String homePhone, String email, Boolean deleted, Integer userId) {
+
         mUserName = name;
         mFirstName = firstName;
         mLastName = lastName;
@@ -92,34 +99,33 @@ public class User {
      * @return user The new instance of Voiper user created from the JSON data.
      */
     public static User valueOf(JSONObject user) {
+
         try {
             final String userName = user.getString("u");
             final String firstName = user.has("f") ? user.getString("f") : null;
             final String lastName = user.has("l") ? user.getString("l") : null;
             final String cellPhone = user.has("m") ? user.getString("m") : null;
-            final String officePhone =
-                user.has("o") ? user.getString("o") : null;
+            final String officePhone = user.has("o") ? user.getString("o") : null;
             final String homePhone = user.has("h") ? user.getString("h") : null;
             final String email = user.has("e") ? user.getString("e") : null;
-            final boolean deleted =
-                user.has("d") ? user.getBoolean("d") : false;
+            final boolean deleted = user.has("d") ? user.getBoolean("d") : false;
             final int userId = user.getInt("i");
-            return new User(userName, firstName, lastName, cellPhone,
-                officePhone, homePhone, email, deleted, userId);
+            return new User(userName, firstName, lastName, cellPhone, officePhone, homePhone,
+                email, deleted, userId);
         } catch (final Exception ex) {
             Log.i("User", "Error parsing JSON user object" + ex.toString());
-
         }
         return null;
-
     }
 
     /**
      * Represents the User's status messages
      * 
      */
-    public static class Status {
+    final public static class Status {
+
         private final Integer mUserId;
+
         private final String mStatus;
 
         public int getUserId() {
@@ -146,5 +152,4 @@ public class User {
             return null;
         }
     }
-
 }

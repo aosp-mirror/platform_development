@@ -13,7 +13,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package com.example.android.samplesync.platform;
 
 import android.content.ContentProviderOperation;
@@ -38,12 +37,19 @@ import com.example.android.samplesync.R;
 public class ContactOperations {
 
     private final ContentValues mValues;
+
     private ContentProviderOperation.Builder mBuilder;
+
     private final BatchOperation mBatchOperation;
+
     private final Context mContext;
+
     private boolean mYield;
+
     private long mRawContactId;
+
     private int mBackReference;
+
     private boolean mIsNewContact;
 
     /**
@@ -55,10 +61,10 @@ public class ContactOperations {
      * @param accountName the username of the current login
      * @return instance of ContactOperations
      */
-    public static ContactOperations createNewContact(Context context,
-        int userId, String accountName, BatchOperation batchOperation) {
-        return new ContactOperations(context, userId, accountName,
-            batchOperation);
+    public static ContactOperations createNewContact(Context context, int userId,
+        String accountName, BatchOperation batchOperation) {
+
+        return new ContactOperations(context, userId, accountName, batchOperation);
     }
 
     /**
@@ -69,8 +75,9 @@ public class ContactOperations {
      * @param rawContactId the unique Id of the existing rawContact
      * @return instance of ContactOperations
      */
-    public static ContactOperations updateExistingContact(Context context,
-        long rawContactId, BatchOperation batchOperation) {
+    public static ContactOperations updateExistingContact(Context context, long rawContactId,
+        BatchOperation batchOperation) {
+
         return new ContactOperations(context, rawContactId, batchOperation);
     }
 
@@ -83,19 +90,18 @@ public class ContactOperations {
 
     public ContactOperations(Context context, int userId, String accountName,
         BatchOperation batchOperation) {
+
         this(context, batchOperation);
         mBackReference = mBatchOperation.size();
         mIsNewContact = true;
         mValues.put(RawContacts.SOURCE_ID, userId);
         mValues.put(RawContacts.ACCOUNT_TYPE, Constants.ACCOUNT_TYPE);
         mValues.put(RawContacts.ACCOUNT_NAME, accountName);
-        mBuilder =
-            newInsertCpo(RawContacts.CONTENT_URI, true).withValues(mValues);
+        mBuilder = newInsertCpo(RawContacts.CONTENT_URI, true).withValues(mValues);
         mBatchOperation.add(mBuilder.build());
     }
 
-    public ContactOperations(Context context, long rawContactId,
-        BatchOperation batchOperation) {
+    public ContactOperations(Context context, long rawContactId, BatchOperation batchOperation) {
         this(context, batchOperation);
         mIsNewContact = false;
         mRawContactId = rawContactId;
@@ -109,16 +115,15 @@ public class ContactOperations {
      * @return instance of ContactOperations
      */
     public ContactOperations addName(String firstName, String lastName) {
+
         mValues.clear();
         if (!TextUtils.isEmpty(firstName)) {
             mValues.put(StructuredName.GIVEN_NAME, firstName);
-            mValues.put(StructuredName.MIMETYPE,
-                StructuredName.CONTENT_ITEM_TYPE);
+            mValues.put(StructuredName.MIMETYPE, StructuredName.CONTENT_ITEM_TYPE);
         }
         if (!TextUtils.isEmpty(lastName)) {
             mValues.put(StructuredName.FAMILY_NAME, lastName);
-            mValues.put(StructuredName.MIMETYPE,
-                StructuredName.CONTENT_ITEM_TYPE);
+            mValues.put(StructuredName.MIMETYPE, StructuredName.CONTENT_ITEM_TYPE);
         }
         if (mValues.size() > 0) {
             addInsertOp();
@@ -188,8 +193,7 @@ public class ContactOperations {
      * @param uri Uri for the existing raw contact to be updated
      * @return instance of ContactOperations
      */
-    public ContactOperations updateEmail(String email, String existingEmail,
-        Uri uri) {
+    public ContactOperations updateEmail(String email, String existingEmail, Uri uri) {
         if (!TextUtils.equals(existingEmail, email)) {
             mValues.clear();
             mValues.put(Email.DATA, email);
@@ -207,10 +211,11 @@ public class ContactOperations {
      * @param uri Uri for the existing raw contact to be updated
      * @return instance of ContactOperations
      */
-    public ContactOperations updateName(Uri uri, String existingFirstName,
-        String existingLastName, String firstName, String lastName) {
-        Log.i("ContactOperations", "ef=" + existingFirstName + "el="
-            + existingLastName + "f=" + firstName + "l=" + lastName);
+    public ContactOperations updateName(Uri uri, String existingFirstName, String existingLastName,
+        String firstName, String lastName) {
+
+        Log.i("ContactOperations", "ef=" + existingFirstName + "el=" + existingLastName + "f="
+            + firstName + "l=" + lastName);
         mValues.clear();
         if (!TextUtils.equals(existingFirstName, firstName)) {
             mValues.put(StructuredName.GIVEN_NAME, firstName);
@@ -232,8 +237,7 @@ public class ContactOperations {
      * @param uri Uri for the existing raw contact to be updated
      * @return instance of ContactOperations
      */
-    public ContactOperations updatePhone(String existingNumber, String phone,
-        Uri uri) {
+    public ContactOperations updatePhone(String existingNumber, String phone, Uri uri) {
         if (!TextUtils.equals(phone, existingNumber)) {
             mValues.clear();
             mValues.put(Phone.NUMBER, phone);
@@ -260,16 +264,14 @@ public class ContactOperations {
      * Adds an insert operation into the batch
      */
     private void addInsertOp() {
+
         if (!mIsNewContact) {
             mValues.put(Phone.RAW_CONTACT_ID, mRawContactId);
         }
-        mBuilder =
-            newInsertCpo(addCallerIsSyncAdapterParameter(Data.CONTENT_URI),
-                mYield);
+        mBuilder = newInsertCpo(addCallerIsSyncAdapterParameter(Data.CONTENT_URI), mYield);
         mBuilder.withValues(mValues);
         if (mIsNewContact) {
-            mBuilder
-                .withValueBackReference(Data.RAW_CONTACT_ID, mBackReference);
+            mBuilder.withValueBackReference(Data.RAW_CONTACT_ID, mBackReference);
         }
         mYield = false;
         mBatchOperation.add(mBuilder.build());
@@ -284,28 +286,23 @@ public class ContactOperations {
         mBatchOperation.add(mBuilder.build());
     }
 
-    public static ContentProviderOperation.Builder newInsertCpo(Uri uri,
-        boolean yield) {
-        return ContentProviderOperation.newInsert(
-            addCallerIsSyncAdapterParameter(uri)).withYieldAllowed(yield);
+    public static ContentProviderOperation.Builder newInsertCpo(Uri uri, boolean yield) {
+        return ContentProviderOperation.newInsert(addCallerIsSyncAdapterParameter(uri))
+            .withYieldAllowed(yield);
     }
 
-    public static ContentProviderOperation.Builder newUpdateCpo(Uri uri,
-        boolean yield) {
-        return ContentProviderOperation.newUpdate(
-            addCallerIsSyncAdapterParameter(uri)).withYieldAllowed(yield);
+    public static ContentProviderOperation.Builder newUpdateCpo(Uri uri, boolean yield) {
+        return ContentProviderOperation.newUpdate(addCallerIsSyncAdapterParameter(uri))
+            .withYieldAllowed(yield);
     }
 
-    public static ContentProviderOperation.Builder newDeleteCpo(Uri uri,
-        boolean yield) {
-        return ContentProviderOperation.newDelete(
-            addCallerIsSyncAdapterParameter(uri)).withYieldAllowed(yield);
-
+    public static ContentProviderOperation.Builder newDeleteCpo(Uri uri, boolean yield) {
+        return ContentProviderOperation.newDelete(addCallerIsSyncAdapterParameter(uri))
+            .withYieldAllowed(yield);
     }
 
     private static Uri addCallerIsSyncAdapterParameter(Uri uri) {
-        return uri.buildUpon().appendQueryParameter(
-            ContactsContract.CALLER_IS_SYNCADAPTER, "true").build();
+        return uri.buildUpon().appendQueryParameter(ContactsContract.CALLER_IS_SYNCADAPTER, "true")
+            .build();
     }
-
 }

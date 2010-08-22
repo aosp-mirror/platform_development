@@ -13,7 +13,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package com.example.android.samplesync.client;
 
 import android.accounts.Account;
@@ -52,20 +51,35 @@ import java.util.TimeZone;
 /**
  * Provides utility methods for communicating with the server.
  */
-public class NetworkUtilities {
+final public class NetworkUtilities {
+
+    /** The tag used to log to adb console. **/
     private static final String TAG = "NetworkUtilities";
-    public static final String PARAM_USERNAME = "username";
+
+    /** The Intent extra to store password. **/
     public static final String PARAM_PASSWORD = "password";
+
+    /** The Intent extra to store username. **/
+    public static final String PARAM_USERNAME = "username";
+
     public static final String PARAM_UPDATED = "timestamp";
+
     public static final String USER_AGENT = "AuthenticationService/1.0";
-    public static final int REGISTRATION_TIMEOUT = 30 * 1000; // ms
-    public static final String BASE_URL =
-        "https://samplesyncadapter.appspot.com";
+
+    public static final int REGISTRATION_TIMEOUT_MS = 30 * 1000; // ms
+
+    public static final String BASE_URL = "https://samplesyncadapter.appspot.com";
+
     public static final String AUTH_URI = BASE_URL + "/auth";
-    public static final String FETCH_FRIEND_UPDATES_URI =
-        BASE_URL + "/fetch_friend_updates";
+
+    public static final String FETCH_FRIEND_UPDATES_URI = BASE_URL + "/fetch_friend_updates";
+
     public static final String FETCH_STATUS_URI = BASE_URL + "/fetch_status";
+
     private static HttpClient mHttpClient;
+
+    private NetworkUtilities() {
+    }
 
     /**
      * Configures the httpClient to connect to the URL provided.
@@ -74,10 +88,9 @@ public class NetworkUtilities {
         if (mHttpClient == null) {
             mHttpClient = new DefaultHttpClient();
             final HttpParams params = mHttpClient.getParams();
-            HttpConnectionParams.setConnectionTimeout(params,
-                REGISTRATION_TIMEOUT);
-            HttpConnectionParams.setSoTimeout(params, REGISTRATION_TIMEOUT);
-            ConnManagerParams.setTimeout(params, REGISTRATION_TIMEOUT);
+            HttpConnectionParams.setConnectionTimeout(params, REGISTRATION_TIMEOUT_M);
+            HttpConnectionParams.setSoTimeout(params, REGISTRATION_TIMEOUT_MS);
+            ConnManagerParams.setTimeout(params, REGISTRATION_TIMEOUT_MS);
         }
     }
 
@@ -94,7 +107,6 @@ public class NetworkUtilities {
                 try {
                     runnable.run();
                 } finally {
-
                 }
             }
         };
@@ -113,10 +125,10 @@ public class NetworkUtilities {
      * @return boolean The boolean result indicating whether the user was
      *         successfully authenticated.
      */
-    public static boolean authenticate(String username, String password,
-        Handler handler, final Context context) {
-        final HttpResponse resp;
+    public static boolean authenticate(String username, String password, Handler handler,
+        final Context context) {
 
+        final HttpResponse resp;
         final ArrayList<NameValuePair> params = new ArrayList<NameValuePair>();
         params.add(new BasicNameValuePair(PARAM_USERNAME, username));
         params.add(new BasicNameValuePair(PARAM_PASSWORD, password));
@@ -131,7 +143,6 @@ public class NetworkUtilities {
         post.addHeader(entity.getContentType());
         post.setEntity(entity);
         maybeCreateHttpClient();
-
         try {
             resp = mHttpClient.execute(post);
             if (resp.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
@@ -189,8 +200,9 @@ public class NetworkUtilities {
      * @param context The caller Activity's context
      * @return Thread The thread on which the network mOperations are executed.
      */
-    public static Thread attemptAuth(final String username,
-        final String password, final Handler handler, final Context context) {
+    public static Thread attemptAuth(final String username, final String password,
+        final Handler handler, final Context context) {
+
         final Runnable runnable = new Runnable() {
             public void run() {
                 authenticate(username, password, handler, context);
@@ -208,32 +220,27 @@ public class NetworkUtilities {
      * @param lastUpdated The last time that sync was performed
      * @return list The list of updates received from the server.
      */
-    public static List<User> fetchFriendUpdates(Account account,
-        String authtoken, Date lastUpdated) throws JSONException,
-        ParseException, IOException, AuthenticationException {
+    public static List<User> fetchFriendUpdates(Account account, String authtoken, Date lastUpdated)
+        throws JSONException, ParseException, IOException, AuthenticationException {
+
         final ArrayList<User> friendList = new ArrayList<User>();
         final ArrayList<NameValuePair> params = new ArrayList<NameValuePair>();
         params.add(new BasicNameValuePair(PARAM_USERNAME, account.name));
         params.add(new BasicNameValuePair(PARAM_PASSWORD, authtoken));
         if (lastUpdated != null) {
-            final SimpleDateFormat formatter =
-                new SimpleDateFormat("yyyy/MM/dd HH:mm");
+            final SimpleDateFormat formatter = new SimpleDateFormat("yyyy/MM/dd HH:mm");
             formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
-            params.add(new BasicNameValuePair(PARAM_UPDATED, formatter
-                .format(lastUpdated)));
+            params.add(new BasicNameValuePair(PARAM_UPDATED, formatter.format(lastUpdated)));
         }
         Log.i(TAG, params.toString());
-
         HttpEntity entity = null;
         entity = new UrlEncodedFormEntity(params);
         final HttpPost post = new HttpPost(FETCH_FRIEND_UPDATES_URI);
         post.addHeader(entity.getContentType());
         post.setEntity(entity);
         maybeCreateHttpClient();
-
         final HttpResponse resp = mHttpClient.execute(post);
         final String response = EntityUtils.toString(resp.getEntity());
-
         if (resp.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
             // Succesfully connected to the samplesyncadapter server and
             // authenticated.
@@ -245,12 +252,10 @@ public class NetworkUtilities {
             }
         } else {
             if (resp.getStatusLine().getStatusCode() == HttpStatus.SC_UNAUTHORIZED) {
-                Log.e(TAG,
-                    "Authentication exception in fetching remote contacts");
+                Log.e(TAG, "Authentication exception in fetching remote contacts");
                 throw new AuthenticationException();
             } else {
-                Log.e(TAG, "Server error in fetching remote contacts: "
-                    + resp.getStatusLine());
+                Log.e(TAG, "Server error in fetching remote contacts: " + resp.getStatusLine());
                 throw new IOException();
             }
         }
@@ -265,24 +270,21 @@ public class NetworkUtilities {
      *        account
      * @return list The list of status messages received from the server.
      */
-    public static List<User.Status> fetchFriendStatuses(Account account,
-        String authtoken) throws JSONException, ParseException, IOException,
-        AuthenticationException {
+    public static List<User.Status> fetchFriendStatuses(Account account, String authtoken)
+        throws JSONException, ParseException, IOException, AuthenticationException {
+
         final ArrayList<User.Status> statusList = new ArrayList<User.Status>();
         final ArrayList<NameValuePair> params = new ArrayList<NameValuePair>();
         params.add(new BasicNameValuePair(PARAM_USERNAME, account.name));
         params.add(new BasicNameValuePair(PARAM_PASSWORD, authtoken));
-
         HttpEntity entity = null;
         entity = new UrlEncodedFormEntity(params);
         final HttpPost post = new HttpPost(FETCH_STATUS_URI);
         post.addHeader(entity.getContentType());
         post.setEntity(entity);
         maybeCreateHttpClient();
-
         final HttpResponse resp = mHttpClient.execute(post);
         final String response = EntityUtils.toString(resp.getEntity());
-
         if (resp.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
             // Succesfully connected to the samplesyncadapter server and
             // authenticated.
@@ -293,8 +295,7 @@ public class NetworkUtilities {
             }
         } else {
             if (resp.getStatusLine().getStatusCode() == HttpStatus.SC_UNAUTHORIZED) {
-                Log.e(TAG,
-                    "Authentication exception in fetching friend status list");
+                Log.e(TAG, "Authentication exception in fetching friend status list");
                 throw new AuthenticationException();
             } else {
                 Log.e(TAG, "Server error in fetching friend status list");
@@ -303,5 +304,4 @@ public class NetworkUtilities {
         }
         return statusList;
     }
-
 }

@@ -13,7 +13,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package com.example.android.samplesync.authenticator;
 
 import android.accounts.Account;
@@ -42,16 +41,28 @@ import com.example.android.samplesync.client.NetworkUtilities;
  * Activity which displays login screen to the user.
  */
 public class AuthenticatorActivity extends AccountAuthenticatorActivity {
-    public static final String PARAM_CONFIRMCREDENTIALS = "confirmCredentials";
+
+    /** The Intent flag to confirm credentials. **/
+    public static final String PARAM_CONFIRM_CREDENTIALS = "confirmCredentials";
+
+    /** The Intent extra to store password. **/
     public static final String PARAM_PASSWORD = "password";
+
+    /** The Intent extra to store username. **/
     public static final String PARAM_USERNAME = "username";
+
+    /** The Intent extra to store authtoken type. **/
     public static final String PARAM_AUTHTOKEN_TYPE = "authtokenType";
 
+    /** The tag used to log to adb console. **/
     private static final String TAG = "AuthenticatorActivity";
 
     private AccountManager mAccountManager;
+
     private Thread mAuthThread;
+
     private String mAuthtoken;
+
     private String mAuthtokenType;
 
     /**
@@ -62,14 +73,18 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 
     /** for posting authentication attempts back to UI thread */
     private final Handler mHandler = new Handler();
+
     private TextView mMessage;
+
     private String mPassword;
+
     private EditText mPasswordEdit;
 
     /** Was the original caller asking for an entirely new account? */
     protected boolean mRequestNewAccount = false;
 
     private String mUsername;
+
     private EditText mUsernameEdit;
 
     /**
@@ -77,6 +92,7 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
      */
     @Override
     public void onCreate(Bundle icicle) {
+
         Log.i(TAG, "onCreate(" + icicle + ")");
         super.onCreate(icicle);
         mAccountManager = AccountManager.get(this);
@@ -85,19 +101,15 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
         mUsername = intent.getStringExtra(PARAM_USERNAME);
         mAuthtokenType = intent.getStringExtra(PARAM_AUTHTOKEN_TYPE);
         mRequestNewAccount = mUsername == null;
-        mConfirmCredentials =
-            intent.getBooleanExtra(PARAM_CONFIRMCREDENTIALS, false);
-
+        mConfirmCredentials = intent.getBooleanExtra(PARAM_CONFIRM_CREDENTIALS, false);
         Log.i(TAG, "    request new: " + mRequestNewAccount);
         requestWindowFeature(Window.FEATURE_LEFT_ICON);
         setContentView(R.layout.login_activity);
         getWindow().setFeatureDrawableResource(Window.FEATURE_LEFT_ICON,
             android.R.drawable.ic_dialog_alert);
-
         mMessage = (TextView) findViewById(R.id.message);
         mUsernameEdit = (EditText) findViewById(R.id.username_edit);
         mPasswordEdit = (EditText) findViewById(R.id.password_edit);
-
         mUsernameEdit.setText(mUsername);
         mMessage.setText(getMessage());
     }
@@ -152,7 +164,7 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
      * 
      * @param the confirmCredentials result.
      */
-    protected void finishConfirmCredentials(boolean result) {
+    private void finishConfirmCredentials(boolean result) {
         Log.i(TAG, "finishConfirmCredentials()");
         final Account account = new Account(mUsername, Constants.ACCOUNT_TYPE);
         mAccountManager.setPassword(account, mPassword);
@@ -164,7 +176,6 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
     }
 
     /**
-     * 
      * Called when response is received from the server for authentication
      * request. See onAuthenticationResult(). Sets the
      * AccountAuthenticatorResult which is sent back to the caller. Also sets
@@ -172,26 +183,22 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
      * 
      * @param the confirmCredentials result.
      */
+    private void finishLogin() {
 
-    protected void finishLogin() {
         Log.i(TAG, "finishLogin()");
         final Account account = new Account(mUsername, Constants.ACCOUNT_TYPE);
-
         if (mRequestNewAccount) {
             mAccountManager.addAccountExplicitly(account, mPassword, null);
             // Set contacts sync for this account.
-            ContentResolver.setSyncAutomatically(account,
-                ContactsContract.AUTHORITY, true);
+            ContentResolver.setSyncAutomatically(account, ContactsContract.AUTHORITY, true);
         } else {
             mAccountManager.setPassword(account, mPassword);
         }
         final Intent intent = new Intent();
         mAuthtoken = mPassword;
         intent.putExtra(AccountManager.KEY_ACCOUNT_NAME, mUsername);
-        intent
-            .putExtra(AccountManager.KEY_ACCOUNT_TYPE, Constants.ACCOUNT_TYPE);
-        if (mAuthtokenType != null
-            && mAuthtokenType.equals(Constants.AUTHTOKEN_TYPE)) {
+        intent.putExtra(AccountManager.KEY_ACCOUNT_TYPE, Constants.ACCOUNT_TYPE);
+        if (mAuthtokenType != null && mAuthtokenType.equals(Constants.AUTHTOKEN_TYPE)) {
             intent.putExtra(AccountManager.KEY_AUTHTOKEN, mAuthtoken);
         }
         setAccountAuthenticatorResult(intent.getExtras());
@@ -202,7 +209,7 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
     /**
      * Hides the progress UI for a lengthy operation.
      */
-    protected void hideProgress() {
+    private void hideProgress() {
         dismissDialog(0);
     }
 
@@ -210,6 +217,7 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
      * Called when the authentication process completes (see attemptLogin()).
      */
     public void onAuthenticationResult(boolean result) {
+
         Log.i(TAG, "onAuthenticationResult(" + result + ")");
         // Hide the progress dialog
         hideProgress();
@@ -223,14 +231,12 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
             Log.e(TAG, "onAuthenticationResult: failed to authenticate");
             if (mRequestNewAccount) {
                 // "Please enter a valid username/password.
-                mMessage
-                    .setText(getText(R.string.login_activity_loginfail_text_both));
+                mMessage.setText(getText(R.string.login_activity_loginfail_text_both));
             } else {
                 // "Please enter a valid password." (Used when the
                 // account is already in the database but the password
                 // doesn't work.)
-                mMessage
-                    .setText(getText(R.string.login_activity_loginfail_text_pwonly));
+                mMessage.setText(getText(R.string.login_activity_loginfail_text_pwonly));
             }
         }
     }
@@ -243,8 +249,7 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
         if (TextUtils.isEmpty(mUsername)) {
             // If no username, then we ask the user to log in using an
             // appropriate service.
-            final CharSequence msg =
-                getText(R.string.login_activity_newaccount_text);
+            final CharSequence msg = getText(R.string.login_activity_newaccount_text);
             return msg;
         }
         if (TextUtils.isEmpty(mPassword)) {
@@ -257,7 +262,7 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
     /**
      * Shows the progress UI for a lengthy operation.
      */
-    protected void showProgress() {
+    private void showProgress() {
         showDialog(0);
     }
 }

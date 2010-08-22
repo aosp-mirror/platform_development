@@ -13,7 +13,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package com.example.android.samplesync.authenticator;
 
 import android.app.Service;
@@ -26,7 +25,9 @@ import android.util.Log;
  * and returns its IBinder.
  */
 public class AuthenticationService extends Service {
+
     private static final String TAG = "AuthenticationService";
+
     private Authenticator mAuthenticator;
 
     @Override
@@ -47,9 +48,8 @@ public class AuthenticationService extends Service {
     @Override
     public IBinder onBind(Intent intent) {
         if (Log.isLoggable(TAG, Log.VERBOSE)) {
-            Log.v(TAG,
-                "getBinder()...  returning the AccountAuthenticator binder for intent "
-                    + intent);
+            Log.v(TAG, "getBinder()...  returning the AccountAuthenticator binder for intent "
+                + intent);
         }
         return mAuthenticator.getIBinder();
     }
