@@ -17,5 +17,8 @@
  */
 -->
 <resources>
+    <!-- The SDK builds do not talk to a remote backend, and enabling by
+         default makes for the best developer experience. -->
+    <bool name="def_backup_enabled">true</bool>
     <string name="def_backup_transport">android/com.android.internal.backup.LocalTransport</string>
 </resources>
