@@ -17,8 +17,8 @@
 package com.android.commands.monkey;
 
 import android.app.ActivityManagerNative;
-import android.app.IActivityManager;
 import android.app.IActivityController;
+import android.app.IActivityManager;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.pm.IPackageManager;
@@ -28,6 +28,7 @@ import android.os.Debug;
 import android.os.Process;
 import android.os.RemoteException;
 import android.os.ServiceManager;
+import android.os.StrictMode;
 import android.os.SystemClock;
 import android.os.SystemProperties;
 import android.view.IWindowManager;
@@ -225,8 +226,16 @@ public class Monkey {
         public boolean activityStarting(Intent intent, String pkg) {
             boolean allow = checkEnteringPackage(pkg) || (DEBUG_ALLOW_ANY_STARTS != 0);
             if (mVerbose > 0) {
+                // StrictMode's disk checks end up catching this on
+                // userdebug/eng builds due to PrintStream going to a
+                // FileOutputStream in the end (perhaps only when
+                // redirected to a file?)  So we allow disk writes
+                // around this region for the monkey to minimize
+                // harmless dropbox uploads from monkeys.
+                int savedPolicy = StrictMode.allowThreadDiskWrites();
                 System.out.println("    // " + (allow ? "Allowing" : "Rejecting") + " start of "
                         + intent + " in package " + pkg);
+                StrictMode.setThreadPolicy(savedPolicy);
             }
             currentPackage = pkg;
             currentIntent = intent;
@@ -234,6 +243,7 @@ public class Monkey {
         }
 
         public boolean activityResuming(String pkg) {
+            int savedPolicy = StrictMode.allowThreadDiskWrites();
             System.out.println("    // activityResuming(" + pkg + ")");
             boolean allow = checkEnteringPackage(pkg) || (DEBUG_ALLOW_ANY_RESTARTS != 0);
             if (!allow) {
@@ -243,12 +253,14 @@ public class Monkey {
                 }
             }
             currentPackage = pkg;
+            StrictMode.setThreadPolicy(savedPolicy);
             return allow;
         }
 
         public boolean appCrashed(String processName, int pid,
                 String shortMsg, String longMsg,
                 long timeMillis, String stackTrace) {
+            int savedPolicy = StrictMode.allowThreadDiskWrites();
             System.err.println("// CRASH: " + processName + " (pid " + pid + ")");
             System.err.println("// Short Msg: " + shortMsg);
             System.err.println("// Long Msg: " + longMsg);
@@ -256,6 +268,7 @@ public class Monkey {
             System.err.println("// Build Changelist: " + Build.VERSION.INCREMENTAL);
             System.err.println("// Build Time: " + Build.TIME);
             System.err.println("// " + stackTrace.replace("\n", "\n// "));
+            StrictMode.setThreadPolicy(savedPolicy);
 
             if (!mIgnoreCrashes) {
                 synchronized (Monkey.this) {
@@ -268,8 +281,10 @@ public class Monkey {
         }
 
         public int appNotResponding(String processName, int pid, String processStats) {
+            int savedPolicy = StrictMode.allowThreadDiskWrites();
             System.err.println("// NOT RESPONDING: " + processName + " (pid " + pid + ")");
             System.err.println(processStats);
+            StrictMode.setThreadPolicy(savedPolicy);
             synchronized (Monkey.this) {
                 mRequestAnrTraces = true;
                 mRequestDumpsysMemInfo = true;
