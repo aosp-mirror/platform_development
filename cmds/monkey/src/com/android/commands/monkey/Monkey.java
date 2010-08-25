@@ -172,6 +172,9 @@ public class Monkey {
 
     long mDroppedFlipEvents = 0;
 
+    /** The delay between user actions. This is for the scripted monkey. **/
+    long mProfileWaitTime = 5000;
+
     /** a filename to the setup script (if any) */
     private String mSetupFileName = null;
 
@@ -446,18 +449,18 @@ public class Monkey {
         if (mScriptFileNames != null && mScriptFileNames.size() == 1) {
             // script mode, ignore other options
             mEventSource = new MonkeySourceScript(mRandom, mScriptFileNames.get(0), mThrottle,
-                    mRandomizeThrottle);
+                    mRandomizeThrottle, mProfileWaitTime);
             mEventSource.setVerbose(mVerbose);
 
             mCountEvents = false;
         } else if (mScriptFileNames != null && mScriptFileNames.size() > 1) {
             if (mSetupFileName != null) {
                 mEventSource = new MonkeySourceRandomScript(mSetupFileName, mScriptFileNames,
-                        mThrottle, mRandomizeThrottle, mRandom);
+                        mThrottle, mRandomizeThrottle, mRandom, mProfileWaitTime);
                 mCount++;
             } else {
                 mEventSource = new MonkeySourceRandomScript(mScriptFileNames, mThrottle,
-                        mRandomizeThrottle, mRandom);
+                        mRandomizeThrottle, mRandom, mProfileWaitTime);
             }
             mEventSource.setVerbose(mVerbose);
             mCountEvents = false;
@@ -640,6 +643,9 @@ public class Monkey {
                     mSetupFileName = nextOptionData();
                 } else if (opt.equals("-f")) {
                     mScriptFileNames.add(nextOptionData());
+                } else if (opt.equals("--profile-wait")) {
+                    mProfileWaitTime = nextOptionLong("Profile delay" +
+                                " (in milliseconds) to wait between user action");
                 } else if (opt.equals("-h")) {
                     showUsage();
                     return false;
@@ -1130,7 +1136,8 @@ public class Monkey {
         usage.append("              [--port port]\n");
         usage.append("              [-s SEED] [-v [-v] ...]\n");
         usage.append("              [--throttle MILLISEC] [--randomize-throttle]\n");
-        usage.append("              COUNT");
+        usage.append("              [--profile-wait MILLISEC]\n");
+        usage.append("              COUNT\n");
         System.err.println(usage.toString());
     }
 }
