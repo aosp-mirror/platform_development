@@ -48,16 +48,16 @@ public class MonkeySourceRandomScript implements MonkeyEventSource {
      * @param random The random number generator.
      */
     public MonkeySourceRandomScript(String setupFileName, ArrayList<String> scriptFileNames,
-            long throttle, boolean randomizeThrottle, Random random) {
+            long throttle, boolean randomizeThrottle, Random random, long profileWaitTime) {
         if (setupFileName != null) {
             mSetupSource = new MonkeySourceScript(random, setupFileName, throttle,
-                    randomizeThrottle);
+                    randomizeThrottle, profileWaitTime);
             mCurrentSource = mSetupSource;
         }
 
         for (String fileName: scriptFileNames) {
             mScriptSources.add(new MonkeySourceScript(random, fileName, throttle,
-                      randomizeThrottle));
+                      randomizeThrottle, profileWaitTime));
         }
 
         mRandom = random;
@@ -72,8 +72,8 @@ public class MonkeySourceRandomScript implements MonkeyEventSource {
      * @param random The random number generator.
      */
     public MonkeySourceRandomScript(ArrayList<String> scriptFileNames, long throttle,
-            boolean randomizeThrottle, Random random) {
-        this(null, scriptFileNames, throttle, randomizeThrottle, random);
+            boolean randomizeThrottle, Random random, long profileWaitTime) {
+        this(null, scriptFileNames, throttle, randomizeThrottle, random, profileWaitTime);
     }
 
     /**

@@ -106,12 +106,16 @@ public class MonkeySourceScript implements MonkeyEventSource {
 
     private static final String EVENT_KEYWORD_TAP = "Tap";
 
+    private static final String EVENT_KEYWORD_PROFILE_WAIT = "ProfileWait";
+
     // a line at the end of the header
     private static final String STARTING_DATA_LINE = "start data >>";
 
     private boolean mFileOpened = false;
 
     private static int LONGPRESS_WAIT_TIME = 2000; // wait time for the long
+
+    private long mProfileWaitTime = 5000; //Wait time for each user profile
 
     FileInputStream mFStream;
 
@@ -126,9 +130,10 @@ public class MonkeySourceScript implements MonkeyEventSource {
      * @param throttle The amount of time in ms to sleep between events.
      */
     public MonkeySourceScript(Random random, String filename, long throttle,
-            boolean randomizeThrottle) {
+            boolean randomizeThrottle, long profileWaitTime) {
         mScriptFileName = filename;
         mQ = new MonkeyEventQueue(random, throttle, randomizeThrottle);
+        mProfileWaitTime = profileWaitTime;
     }
 
     /**
@@ -347,6 +352,14 @@ public class MonkeySourceScript implements MonkeyEventSource {
                 mQ.addLast(e);
             } catch (NumberFormatException e) {
             }
+            return;
+        }
+
+
+        // Handle the profile wait time
+        if (s.indexOf(EVENT_KEYWORD_PROFILE_WAIT) >= 0) {
+            MonkeyWaitEvent e = new MonkeyWaitEvent(mProfileWaitTime);
+            mQ.addLast(e);
             return;
         }
 
