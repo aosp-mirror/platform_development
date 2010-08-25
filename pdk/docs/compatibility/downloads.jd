@@ -22,7 +22,7 @@ program for Android 2.0 or 2.0.1, and new devices must use Android 2.1.
 </p>
 <ul>
   <li><a href="{@docRoot}compatibility/android-2.1-cdd.pdf">Android 2.1 Compatibility Definition Document (CDD)</a></li>
-  <li><a href="http://dl.google.com/dl/android/cts/android-cts-2.1_r3-x86.zip">Android 2.1 R3 Compatibility Test Suite (CTS)</a></li>
+  <li><a href="http://dl.google.com/dl/android/cts/android-cts-2.1_r4-x86.zip">Android 2.1 R4 Compatibility Test Suite (CTS)</a></li>
 </ul>
 
 <h2>Android 1.6</h2>
