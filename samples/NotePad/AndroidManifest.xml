@@ -113,6 +113,6 @@
 
     </application>
 
-    <uses-sdk android:targetSdkVersion="4" android:minSdkVersion="3"/>
+    <uses-sdk android:targetSdkVersion="8" android:minSdkVersion="8"/>
 </manifest>
 
