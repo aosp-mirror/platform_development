@@ -119,6 +119,10 @@ void PropertyServer::SetDefaultProperties(void)
         { "ro.HOME_APP_MEM", "4096" },
         { "ro.BACKUP_APP_ADJ", "2" },
         { "ro.BACKUP_APP_MEM", "4096" },
+        { "ro.PERCEPTIBLE_APP_ADJ", "2" },
+        { "ro.PERCEPTIBLE_APP_MEM", "4096" },
+        { "ro.HEAVY_WEIGHT_APP_ADJ", "3" },
+        { "ro.HEAVY_WEIGHT_APP_MEM", "4096" },
         //{ "init.svc.adbd", "running" },       // causes ADB-JDWP
         { "init.svc.usbd", "running" },
         { "init.svc.debuggerd", "running" },
