@@ -176,6 +176,9 @@ public class Monkey {
     /** The delay between user actions. This is for the scripted monkey. **/
     long mProfileWaitTime = 5000;
 
+    /** Device idle time. This is for the scripted monkey. **/
+    long mDeviceSleepTime = 30000;
+
     /** a filename to the setup script (if any) */
     private String mSetupFileName = null;
 
@@ -462,18 +465,18 @@ public class Monkey {
         if (mScriptFileNames != null && mScriptFileNames.size() == 1) {
             // script mode, ignore other options
             mEventSource = new MonkeySourceScript(mRandom, mScriptFileNames.get(0), mThrottle,
-                    mRandomizeThrottle, mProfileWaitTime);
+                    mRandomizeThrottle, mProfileWaitTime, mDeviceSleepTime);
             mEventSource.setVerbose(mVerbose);
 
             mCountEvents = false;
         } else if (mScriptFileNames != null && mScriptFileNames.size() > 1) {
             if (mSetupFileName != null) {
                 mEventSource = new MonkeySourceRandomScript(mSetupFileName, mScriptFileNames,
-                        mThrottle, mRandomizeThrottle, mRandom, mProfileWaitTime);
+                        mThrottle, mRandomizeThrottle, mRandom, mProfileWaitTime, mDeviceSleepTime);
                 mCount++;
             } else {
                 mEventSource = new MonkeySourceRandomScript(mScriptFileNames, mThrottle,
-                        mRandomizeThrottle, mRandom, mProfileWaitTime);
+                        mRandomizeThrottle, mRandom, mProfileWaitTime, mDeviceSleepTime);
             }
             mEventSource.setVerbose(mVerbose);
             mCountEvents = false;
@@ -659,6 +662,9 @@ public class Monkey {
                 } else if (opt.equals("--profile-wait")) {
                     mProfileWaitTime = nextOptionLong("Profile delay" +
                                 " (in milliseconds) to wait between user action");
+                } else if (opt.equals("--device-sleep-time")) {
+                    mDeviceSleepTime = nextOptionLong("Device sleep time" +
+                                                      "(in milliseconds)");
                 } else if (opt.equals("-h")) {
                     showUsage();
                     return false;
@@ -1130,6 +1136,7 @@ public class Monkey {
         usage.append("              [-s SEED] [-v [-v] ...]\n");
         usage.append("              [--throttle MILLISEC] [--randomize-throttle]\n");
         usage.append("              [--profile-wait MILLISEC]\n");
+        usage.append("              [--device-sleep-time MILLISEC]\n");
         usage.append("              COUNT\n");
         System.err.println(usage.toString());
     }
