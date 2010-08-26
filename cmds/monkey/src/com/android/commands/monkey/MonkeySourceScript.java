@@ -108,6 +108,8 @@ public class MonkeySourceScript implements MonkeyEventSource {
 
     private static final String EVENT_KEYWORD_PROFILE_WAIT = "ProfileWait";
 
+    private static final String EVENT_KEYWORD_DEVICE_WAKEUP = "DeviceWakeUp";
+
     // a line at the end of the header
     private static final String STARTING_DATA_LINE = "start data >>";
 
@@ -116,6 +118,8 @@ public class MonkeySourceScript implements MonkeyEventSource {
     private static int LONGPRESS_WAIT_TIME = 2000; // wait time for the long
 
     private long mProfileWaitTime = 5000; //Wait time for each user profile
+
+    private long mDeviceSleepTime = 30000; //Device sleep time
 
     FileInputStream mFStream;
 
@@ -130,10 +134,11 @@ public class MonkeySourceScript implements MonkeyEventSource {
      * @param throttle The amount of time in ms to sleep between events.
      */
     public MonkeySourceScript(Random random, String filename, long throttle,
-            boolean randomizeThrottle, long profileWaitTime) {
+            boolean randomizeThrottle, long profileWaitTime, long deviceSleepTime) {
         mScriptFileName = filename;
         mQ = new MonkeyEventQueue(random, throttle, randomizeThrottle);
         mProfileWaitTime = profileWaitTime;
+        mDeviceSleepTime = deviceSleepTime;
     }
 
     /**
@@ -317,12 +322,17 @@ public class MonkeySourceScript implements MonkeyEventSource {
         if (s.indexOf(EVENT_KEYWORD_ACTIVITY) >= 0 && args.length >= 2) {
             String pkg_name = args[0];
             String cl_name = args[1];
-            String alarmTime = null;
+            long alarmTime = 0;
 
             ComponentName mApp = new ComponentName(pkg_name, cl_name);
 
             if (args.length > 2) {
-                alarmTime = args[2];
+                try {
+                    alarmTime = Long.parseLong(args[2]);
+                } catch (NumberFormatException e) {
+                    System.err.println("// " + e.toString());
+                    return;
+                }
             }
 
             if (args.length == 2) {
@@ -332,6 +342,23 @@ public class MonkeySourceScript implements MonkeyEventSource {
                 MonkeyActivityEvent e = new MonkeyActivityEvent(mApp, alarmTime);
                 mQ.addLast(e);
             }
+            return;
+        }
+
+        //Handle the device wake up event
+        if (s.indexOf(EVENT_KEYWORD_DEVICE_WAKEUP) >= 0){
+            String pkg_name = "com.google.android.powerutil";
+            String cl_name = "com.google.android.powerutil.WakeUpScreen";
+            long deviceSleepTime = mDeviceSleepTime;
+
+            ComponentName mApp = new ComponentName(pkg_name, cl_name);
+            MonkeyActivityEvent e1 = new MonkeyActivityEvent(mApp, deviceSleepTime);
+            mQ.addLast(e1);
+
+            //Add the wait event after the device sleep event so that the monkey
+            //can continue after the device wake up.
+            MonkeyWaitEvent e2 = new MonkeyWaitEvent(deviceSleepTime + 3000);
+            mQ.addLast(e2);
             return;
         }
 
