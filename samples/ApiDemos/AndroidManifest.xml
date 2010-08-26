@@ -839,6 +839,13 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".animation.AnimatorEvents" android:label="Animation/Events">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
         <activity android:name=".animation.BouncingBalls"
                   android:label="Animation/Bouncing Balls">
             <intent-filter>
