@@ -21,7 +21,7 @@
      to come from a domain that you own or have control over. -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.android.heavyweight">
-    <application android:label="Heavy Weight" android:heavyWeight="true">
+    <application android:label="Heavy Weight" android:cantSaveState="true">
         <activity android:name="HeavyWeight">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
