@@ -29,14 +29,14 @@ import android.util.Log;
  */
 public class MonkeyActivityEvent extends MonkeyEvent {    
     private ComponentName mApp; 
-    String mAlarmTime;
+    long mAlarmTime = 0;
     
     public MonkeyActivityEvent(ComponentName app) {
         super(EVENT_TYPE_ACTIVITY);
         mApp = app;
     }
 
-    public MonkeyActivityEvent(ComponentName app, String arg) {
+    public MonkeyActivityEvent(ComponentName app, long arg) {
         super(EVENT_TYPE_ACTIVITY);
         mApp = app;
         mAlarmTime = arg;
@@ -60,9 +60,9 @@ public class MonkeyActivityEvent extends MonkeyEvent {
             System.out.println(":Switch: " + intent.toURI());
         }
 
-        if (mAlarmTime != null){
+        if (mAlarmTime != 0){
             Bundle args = new Bundle();
-            args.putString("alarmTime", mAlarmTime);
+            args.putLong("alarmTime", mAlarmTime);
             intent.putExtras(args);
         }
 
