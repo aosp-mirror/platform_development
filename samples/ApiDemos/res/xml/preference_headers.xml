@@ -32,6 +32,13 @@
              arguments to its fragment. -->
         <extra android:name="someKey" android:value="someHeaderValue" />
     </header>
+
+    <header android:icon="@drawable/ic_settings_display"
+            android:title="Intent"
+            android:summary="Launches an Intent.">
+        <intent android:action="android.intent.action.VIEW"
+                android:data="http://www.android.com" />
+    </header>
     
 </preference-headers>
 <!-- END_INCLUDE(headers) -->

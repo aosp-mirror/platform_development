@@ -22,6 +22,7 @@ import android.os.Bundle;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceFragment;
 import android.util.Log;
+import android.widget.Button;
 
 import java.util.List;
 
@@ -31,6 +32,18 @@ import java.util.List;
  */
 //BEGIN_INCLUDE(activity)
 public class PreferenceWithHeaders extends PreferenceActivity {
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        
+        // Add a button to the header list.
+        if (hasHeaders()) {
+            Button button = new Button(this);
+            button.setText("Some action");
+            setListFooter(button);
+        }
+    }
+    
     /**
      * Populate the activity with the top-level headers.
      */

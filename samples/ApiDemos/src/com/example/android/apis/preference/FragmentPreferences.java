@@ -19,61 +19,26 @@ package com.example.android.apis.preference;
 import com.example.android.apis.R;
 
 import android.app.Activity;
-import android.app.Fragment;
-import android.app.ListFragment;
 import android.os.Bundle;
 import android.preference.PreferenceFragment;
-import android.view.View;
-import android.widget.ArrayAdapter;
-import android.widget.ListView;
 
 /**
- * Demonstration of PreferenceFragment, splitting the activity into a
- * list categories and preferences.
+ * Demonstration of PreferenceFragment, showing a single fragment in an
+ * activity.
  */
-//BEGIN_INCLUDE(activity)
 public class FragmentPreferences extends Activity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // The content for this activity places CategoriesFragment to one
-        // side, and leaves the rest to dynamically add the prefs fragment.
-        setContentView(R.layout.fragment_preferences);
-    }
-
-    /**
-     * This fragment shows a list of categories the user can pick.  When they
-     * pick one, the corresponding preferences fragment is created and shown.
-     */
-    public static class CategoriesFragment extends ListFragment {
-
-        @Override
-        public void onActivityCreated(Bundle savedInstanceState) {
-            super.onActivityCreated(savedInstanceState);
-            setListAdapter(new ArrayAdapter<String>(getActivity(),
-                    android.R.layout.simple_list_item_1,
-                    new String[] { "Prefs 1", "Prefs 2" }));
-            switchPreferences(0);
-        }
-
-        @Override
-        public void onListItemClick(ListView l, View v, int position, long id) {
-            switchPreferences(position);
-        }
-
-        /**
-         * Show the given preferences, replacing whatever was last shown.
-         */
-        void switchPreferences(int which) {
-            Fragment f = which == 0 ? new Prefs1Fragment() : new Prefs2Fragment();
-            getActivity().openFragmentTransaction().replace(R.id.prefs, f).commit();
-        }
+        // Display the fragment as the main content.
+        getFragmentManager().openTransaction().replace(android.R.id.content,
+                new PrefsFragment()).commit();
     }
 
 //BEGIN_INCLUDE(fragment)
-    public static class Prefs1Fragment extends PreferenceFragment {
+    public static class PrefsFragment extends PreferenceFragment {
 
         @Override
         public void onCreate(Bundle savedInstanceState) {
@@ -84,16 +49,4 @@ public class FragmentPreferences extends Activity {
         }
     }
 //END_INCLUDE(fragment)
-
-    public static class Prefs2Fragment extends PreferenceFragment {
-
-        @Override
-        public void onCreate(Bundle savedInstanceState) {
-            super.onCreate(savedInstanceState);
-
-            // Load the preferences from an XML resource
-            addPreferencesFromResource(R.xml.preference_dependencies);
-        }
-    }
 }
-//END_INCLUDE(activity)
