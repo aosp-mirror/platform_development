@@ -88,6 +88,14 @@
         android:prompt="@string/clip_type_prompt"
     />
 
+    <TextView
+        android:id="@+id/clip_mime_types"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="0"
+        android:textStyle="normal"
+        />
+
     <EditText
         android:id="@+id/clip_text"
         android:layout_width="match_parent"

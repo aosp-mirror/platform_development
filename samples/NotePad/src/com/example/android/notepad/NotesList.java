@@ -20,7 +20,7 @@ import com.example.android.notepad.NotePad;
 
 import android.app.ListActivity;
 import android.content.ClipboardManager;
-import android.content.ClippedData;
+import android.content.ClipData;
 import android.content.ComponentName;
 import android.content.ContentUris;
 import android.content.Context;
@@ -485,7 +485,6 @@ public class NotesList extends ListActivity {
             }
 
 //BEGIN_INCLUDE(copy)
-
             // Copies the selected note to the clipboard
             case MENU_ITEM_COPY: {
 
@@ -497,12 +496,11 @@ public class NotesList extends ListActivity {
                 Uri noteUri = ContentUris.withAppendedId(getIntent().getData(), info.id);
 
                 // Copies the notes URI to the clipboard. In effect, this copies the note itself
-                clipboard.setPrimaryClip(
-                        new ClippedData(                       // creates a new clipboard item
-                                null,                          // no visible label
-                                null,                          // no visible icon
-                                new ClippedData.Item(noteUri)  // A clipboard Item that is a URI.
-                        )
+                clipboard.setPrimaryClip(ClipData.newUri(   // new clipboard item holding a URI
+                        getContentResolver(),               // resolver to retrieve URI info
+                        "Note",                             // label for the clip
+                        null,                               // icon for the clip
+                        noteUri)                            // the URI
                 );
 
                 // Returns to the caller and skips further processing.

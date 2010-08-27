@@ -20,7 +20,7 @@ import com.example.android.notepad.NotePad;
 
 import android.app.Activity;
 import android.content.ClipboardManager;
-import android.content.ClippedData;
+import android.content.ClipData;
 import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.ContentValues;
@@ -510,14 +510,14 @@ public class NoteEditor extends Activity {
         ContentResolver cr = getContentResolver();
 
         // Gets the clipboard data from the clipboard
-        ClippedData clip = clipboard.getPrimaryClip();
+        ClipData clip = clipboard.getPrimaryClip();
         if (clip != null) {
 
             String text=null;
             String title=null;
 
             // Gets the first item from the clipboard data
-            ClippedData.Item item = clip.getItem(0);
+            ClipData.Item item = clip.getItem(0);
 
             // Tries to get the item's contents as a URI pointing to a note
             Uri uri = item.getUri();

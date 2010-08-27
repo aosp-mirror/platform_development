@@ -18,6 +18,7 @@ package com.example.android.notepad;
 
 import com.example.android.notepad.NotePad;
 
+import android.content.ClipDescription;
 import android.content.ContentProvider;
 import android.content.ContentUris;
 import android.content.ContentValues;
@@ -349,9 +350,16 @@ public class NotePadProvider extends ContentProvider implements PipeDataWriter<C
            default:
                throw new IllegalArgumentException("Unknown URI " + uri);
        }
-   }
+    }
 
 //BEGIN_INCLUDE(stream)
+    /**
+     * This describes the MIME types that are supported for opening a note
+     * URI as a stream.
+     */
+    static ClipDescription NOTE_STREAM_TYPES = new ClipDescription(null,
+            new String[] { ClipDescription.MIMETYPE_TEXT_PLAIN });
+
     /**
      * Returns the types of available data streams.  URIs to specific notes are supported.
      * The application can convert such a note to a plain text stream.
@@ -378,12 +386,7 @@ public class NotePadProvider extends ContentProvider implements PipeDataWriter<C
             // If the pattern is for note IDs and the MIME filter is text/plain, then return
             // text/plain
             case NOTE_ID:
-                if (compareMimeTypes("text/plain", mimeTypeFilter)) {
-                    return new String[] { "text/plain" };
-                }
-
-                // If the URI is for a note id, but the MIME filter isn't text/plain, return null.
-                return null;
+                return NOTE_STREAM_TYPES.filterMimeTypes(mimeTypeFilter);
 
                 // If the URI pattern doesn't match any permitted patterns, throws an exception.
             default:
@@ -394,16 +397,15 @@ public class NotePadProvider extends ContentProvider implements PipeDataWriter<C
 
     /**
      * Returns a stream of data for each supported stream type. This method does a query on the
-     * incomding URI, then uses
+     * incoming URI, then uses
      * {@link android.content.ContentProvider#openPipeHelper(Uri, String, Bundle, Object,
      * PipeDataWriter)} to start another thread in which to convert the data into a stream.
      *
      * @param uri The URI pattern that points to the data stream
      * @param mimeTypeFilter A String containing a MIME type. This method tries to get a stream of
      * data with this MIME type.
-     * @param opts The access mode for the data stream. This may be "r" for read-only, "w" for write
-     * with overwrite, "wa" for write with append, "rw" for read and write access for existing data,
-     * and "rwt" that truncates the existing file if the new data is smaller.
+     * @param opts Additional options supplied by the caller.  Can be interpreted as
+     * desired by the content provider.
      * @return AssetFileDescriptor A handle to the file.
      * @throws FileNotFoundException if there is no file associated with the incoming URI.
      */
