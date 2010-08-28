@@ -50,15 +50,15 @@ cp $V ${TOPDIR}external/qemu/NOTICE $TOOLS/emulator_NOTICE.txt
 [[ -n $NEED_MGWZ ]] && cp $V $CYG_MGWZ_PATH $TOOLS/
 
 # Update a bunch of bat files
-cp $V ${TOPDIR}sdk/files/post_tools_install.bat            $LIB/
-cp $V ${TOPDIR}sdk/files/find_java.bat                     $LIB/
-cp $V ${TOPDIR}sdk/apkbuilder/etc/apkbuilder.bat           $TOOLS/
-cp $V ${TOPDIR}sdk/ddms/app/etc/ddms.bat                   $TOOLS/
-cp $V ${TOPDIR}sdk/traceview/etc/traceview.bat             $TOOLS/
-cp $V ${TOPDIR}sdk/hierarchyviewer/etc/hierarchyviewer.bat $TOOLS/
-cp $V ${TOPDIR}sdk/layoutopt/app/etc/layoutopt.bat         $TOOLS/
-cp $V ${TOPDIR}sdk/draw9patch/etc/draw9patch.bat           $TOOLS/
-cp $V ${TOPDIR}sdk/sdkmanager/app/etc/android.bat          $TOOLS/
+cp $V ${TOPDIR}sdk/files/post_tools_install.bat                 $LIB/
+cp $V ${TOPDIR}sdk/files/find_java.bat                          $LIB/
+cp $V ${TOPDIR}sdk/apkbuilder/etc/apkbuilder.bat                $TOOLS/
+cp $V ${TOPDIR}sdk/ddms/app/etc/ddms.bat                        $TOOLS/
+cp $V ${TOPDIR}sdk/traceview/etc/traceview.bat                  $TOOLS/
+cp $V ${TOPDIR}sdk/hierarchyviewer2/app/etc/hierarchyviewer.bat $TOOLS/
+cp $V ${TOPDIR}sdk/layoutopt/app/etc/layoutopt.bat              $TOOLS/
+cp $V ${TOPDIR}sdk/draw9patch/etc/draw9patch.bat                $TOOLS/
+cp $V ${TOPDIR}sdk/sdkmanager/app/etc/android.bat               $TOOLS/
 
 # Put the JetCreator tools, content and docs (not available in the linux SDK)
 JET=$TOOLS/Jet
