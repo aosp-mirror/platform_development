@@ -25,6 +25,7 @@ import android.content.pm.IPackageManager;
 import android.content.pm.ResolveInfo;
 import android.os.Build;
 import android.os.Debug;
+import android.os.Environment;
 import android.os.Process;
 import android.os.RemoteException;
 import android.os.ServiceManager;
@@ -34,13 +35,16 @@ import android.os.SystemProperties;
 import android.view.IWindowManager;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.Writer;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -178,6 +182,10 @@ public class Monkey {
 
     /** Device idle time. This is for the scripted monkey. **/
     long mDeviceSleepTime = 30000;
+
+    boolean mRandomizeScript = false;
+
+    boolean mScriptLog = false;
 
     /** a filename to the setup script (if any) */
     private String mSetupFileName = null;
@@ -369,6 +377,20 @@ public class Monkey {
         }
     }
 
+    // Write the numbe of iteration to the log
+    private void writeScriptLog(int count) {
+        // TO DO: Add the script file name to the log.
+        try {
+            Writer output = new BufferedWriter(new FileWriter(new File(
+                    Environment.getExternalStorageDirectory(), "scriptlog.txt"), true));
+            output.write("iteration: " + count + " time: "
+                    + MonkeyUtils.toCalendarTime(System.currentTimeMillis()) + "\n");
+            output.close();
+        } catch (IOException e) {
+            System.err.println(e.toString());
+        }
+    }
+
     /**
      * Command-line entry point.
      *
@@ -473,12 +495,14 @@ public class Monkey {
             mCountEvents = false;
         } else if (mScriptFileNames != null && mScriptFileNames.size() > 1) {
             if (mSetupFileName != null) {
-                mEventSource = new MonkeySourceRandomScript(mSetupFileName, mScriptFileNames,
-                        mThrottle, mRandomizeThrottle, mRandom, mProfileWaitTime, mDeviceSleepTime);
+                mEventSource = new MonkeySourceRandomScript(mSetupFileName, 
+                        mScriptFileNames, mThrottle, mRandomizeThrottle, mRandom,
+                        mProfileWaitTime, mDeviceSleepTime, mRandomizeScript);
                 mCount++;
             } else {
-                mEventSource = new MonkeySourceRandomScript(mScriptFileNames, mThrottle,
-                        mRandomizeThrottle, mRandom, mProfileWaitTime, mDeviceSleepTime);
+                mEventSource = new MonkeySourceRandomScript(mScriptFileNames,
+                        mThrottle, mRandomizeThrottle, mRandom, 
+                        mProfileWaitTime, mDeviceSleepTime, mRandomizeScript);
             }
             mEventSource.setVerbose(mVerbose);
             mCountEvents = false;
@@ -667,6 +691,10 @@ public class Monkey {
                 } else if (opt.equals("--device-sleep-time")) {
                     mDeviceSleepTime = nextOptionLong("Device sleep time" +
                                                       "(in milliseconds)");
+                } else if (opt.equals("--randomize-script")) {
+                     mRandomizeScript = true;
+                } else if (opt.equals("--script-log")) {
+                    mScriptLog = true;
                 } else if (opt.equals("-h")) {
                     showUsage();
                     return false;
@@ -891,6 +919,7 @@ public class Monkey {
         boolean shouldAbort = false;
         boolean systemCrashed = false;
 
+        // TO DO : The count should apply to each of the script file.
         while (!systemCrashed && cycleCounter < mCount) {
             synchronized (this) {
                 if (mRequestProcRank) {
@@ -980,11 +1009,13 @@ public class Monkey {
                     eventCounter++;
                     if (mCountEvents) {
                         cycleCounter++;
+                        writeScriptLog(cycleCounter);
                     }
                 }
             } else {
                 if (!mCountEvents) {
                     cycleCounter++;
+                    writeScriptLog(cycleCounter);
                 } else {
                     // Event Source has signaled that we have no more events to process
                     break;
@@ -1159,7 +1190,10 @@ public class Monkey {
         usage.append("              [--throttle MILLISEC] [--randomize-throttle]\n");
         usage.append("              [--profile-wait MILLISEC]\n");
         usage.append("              [--device-sleep-time MILLISEC]\n");
+        usage.append("              [--randomize-script]\n");
+        usage.append("              [--script-log]\n");
         usage.append("              COUNT\n");
         System.err.println(usage.toString());
     }
 }
+
