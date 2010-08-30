@@ -22,7 +22,7 @@ import android.app.Activity;
 import android.content.ContentResolver;
 import android.database.Cursor;
 import android.os.Bundle;
-import android.provider.Contacts;
+import android.provider.ContactsContract.Contacts;
 import android.widget.AutoCompleteTextView;
 
 public class AutoComplete5 extends Activity {
@@ -32,8 +32,8 @@ public class AutoComplete5 extends Activity {
         setContentView(R.layout.autocomplete_5);
 
         ContentResolver content = getContentResolver();
-        Cursor cursor = content.query(Contacts.People.CONTENT_URI,
-                PEOPLE_PROJECTION, null, null, Contacts.People.DEFAULT_SORT_ORDER);
+        Cursor cursor = content.query(Contacts.CONTENT_URI,
+                AutoComplete4.CONTACT_PROJECTION, null, null, null);
         AutoComplete4.ContactListAdapter adapter =
                 new AutoComplete4.ContactListAdapter(this, cursor);
 
@@ -41,13 +41,4 @@ public class AutoComplete5 extends Activity {
                 findViewById(R.id.edit);
         textView.setAdapter(adapter);
     }
-
-    private static final String[] PEOPLE_PROJECTION = new String[] {
-        Contacts.People._ID,
-        Contacts.People.PRIMARY_PHONE_ID,
-        Contacts.People.TYPE,
-        Contacts.People.NUMBER,
-        Contacts.People.LABEL,
-        Contacts.People.NAME
-    };
 }
