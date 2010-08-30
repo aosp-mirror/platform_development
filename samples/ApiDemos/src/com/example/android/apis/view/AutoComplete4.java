@@ -22,13 +22,15 @@ import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
-import android.provider.Contacts;
+import android.provider.ContactsContract.Contacts;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AutoCompleteTextView;
 import android.widget.CursorAdapter;
+import android.widget.FilterQueryProvider;
 import android.widget.Filterable;
 import android.widget.TextView;
 
@@ -39,8 +41,9 @@ public class AutoComplete4 extends Activity {
         setContentView(R.layout.autocomplete_4);
 
         ContentResolver content = getContentResolver();
-        Cursor cursor = content.query(Contacts.People.CONTENT_URI,
-                PEOPLE_PROJECTION, null, null, Contacts.People.DEFAULT_SORT_ORDER);
+        Cursor cursor = content.query(Contacts.CONTENT_URI,
+                CONTACT_PROJECTION, null, null, null);
+
         ContactListAdapter adapter = new ContactListAdapter(this, cursor);
 
         AutoCompleteTextView textView = (AutoCompleteTextView)
@@ -61,50 +64,40 @@ public class AutoComplete4 extends Activity {
             final LayoutInflater inflater = LayoutInflater.from(context);
             final TextView view = (TextView) inflater.inflate(
                     android.R.layout.simple_dropdown_item_1line, parent, false);
-            view.setText(cursor.getString(5));
+            view.setText(cursor.getString(COLUMN_DISPLAY_NAME));
             return view;
         }
 
         @Override
         public void bindView(View view, Context context, Cursor cursor) {
-            ((TextView) view).setText(cursor.getString(5));
+            ((TextView) view).setText(cursor.getString(COLUMN_DISPLAY_NAME));
         }
 
         @Override
         public String convertToString(Cursor cursor) {
-            return cursor.getString(5);
+            return cursor.getString(COLUMN_DISPLAY_NAME);
         }
 
         @Override
         public Cursor runQueryOnBackgroundThread(CharSequence constraint) {
-            if (getFilterQueryProvider() != null) {
-                return getFilterQueryProvider().runQuery(constraint);
+            FilterQueryProvider filter = getFilterQueryProvider();
+            if (filter != null) {
+                return filter.runQuery(constraint);
             }
 
-            StringBuilder buffer = null;
-            String[] args = null;
-            if (constraint != null) {
-                buffer = new StringBuilder();
-                buffer.append("UPPER(");
-                buffer.append(Contacts.ContactMethods.NAME);
-                buffer.append(") GLOB ?");
-                args = new String[] { constraint.toString().toUpperCase() + "*" };
-            }
-
-            return mContent.query(Contacts.People.CONTENT_URI, PEOPLE_PROJECTION,
-                    buffer == null ? null : buffer.toString(), args,
-                    Contacts.People.DEFAULT_SORT_ORDER);
+            Uri uri = Uri.withAppendedPath(
+                    Contacts.CONTENT_FILTER_URI,
+                    Uri.encode(constraint.toString()));
+            return mContent.query(uri, CONTACT_PROJECTION, null, null, null);
         }
 
-        private ContentResolver mContent;        
+        private ContentResolver mContent;
     }
 
-    private static final String[] PEOPLE_PROJECTION = new String[] {
-        Contacts.People._ID,
-        Contacts.People.PRIMARY_PHONE_ID,
-        Contacts.People.TYPE,
-        Contacts.People.NUMBER,
-        Contacts.People.LABEL,
-        Contacts.People.NAME,
+    public static final String[] CONTACT_PROJECTION = new String[] {
+        Contacts._ID,
+        Contacts.DISPLAY_NAME
     };
+
+    private static final int COLUMN_DISPLAY_NAME = 1;
 }
