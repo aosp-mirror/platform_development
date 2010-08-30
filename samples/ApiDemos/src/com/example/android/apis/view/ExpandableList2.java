@@ -17,49 +17,49 @@
 package com.example.android.apis.view;
 
 import android.app.ExpandableListActivity;
-import android.content.ContentUris;
 import android.content.Context;
 import android.database.Cursor;
-import android.net.Uri;
 import android.os.Bundle;
-import android.provider.Contacts.People;
+import android.provider.ContactsContract.Contacts;
+import android.provider.ContactsContract.CommonDataKinds.Phone;
 import android.widget.ExpandableListAdapter;
 import android.widget.SimpleCursorTreeAdapter;
-
 
 /**
  * Demonstrates expandable lists backed by Cursors
  */
 public class ExpandableList2 extends ExpandableListActivity {
-    private int mGroupIdColumnIndex; 
-    
-    private String mPhoneNumberProjection[] = new String[] {
-            People.Phones._ID, People.Phones.NUMBER
+    private static final int COLUMN_CONTACT_ID = 0;
+
+    private static final String[] CONTACT_PROJECTION = new String[] {
+        Contacts._ID,
+        Contacts.DISPLAY_NAME
     };
 
-    
+    private static final String[] PHONE_PROJECTION = new String[] {
+        Phone._ID,
+        Phone.CONTACT_ID,
+        Phone.NUMBER
+    };
+
     private ExpandableListAdapter mAdapter;
-    
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         // Query for people
-        Cursor groupCursor = managedQuery(People.CONTENT_URI,
-                new String[] {People._ID, People.NAME}, null, null, null);
-
-        // Cache the ID column index
-        mGroupIdColumnIndex = groupCursor.getColumnIndexOrThrow(People._ID);
+        Cursor groupCursor = managedQuery(Contacts.CONTENT_URI,
+                CONTACT_PROJECTION, null, null, null);
 
         // Set up our adapter
         mAdapter = new MyExpandableListAdapter(groupCursor,
                 this,
                 android.R.layout.simple_expandable_list_item_1,
                 android.R.layout.simple_expandable_list_item_1,
-                new String[] {People.NAME}, // Name for group layouts
+                new String[] {Contacts.DISPLAY_NAME}, // Name for group layouts
                 new int[] {android.R.id.text1},
-                new String[] {People.NUMBER}, // Number for child layouts
+                new String[] {Phone.NUMBER}, // Number for child layouts
                 new int[] {android.R.id.text1});
         setListAdapter(mAdapter);
     }
@@ -75,18 +75,13 @@ public class ExpandableList2 extends ExpandableListActivity {
 
         @Override
         protected Cursor getChildrenCursor(Cursor groupCursor) {
-            // Given the group, we return a cursor for all the children within that group 
-
-            // Return a cursor that points to this contact's phone numbers
-            Uri.Builder builder = People.CONTENT_URI.buildUpon();
-            ContentUris.appendId(builder, groupCursor.getLong(mGroupIdColumnIndex));
-            builder.appendEncodedPath(People.Phones.CONTENT_DIRECTORY);
-            Uri phoneNumbersUri = builder.build();
-
+            int contactId = groupCursor.getInt(COLUMN_CONTACT_ID);
             // The returned Cursor MUST be managed by us, so we use Activity's helper
             // functionality to manage it for us.
-            return managedQuery(phoneNumbersUri, mPhoneNumberProjection, null, null, null);
+            return managedQuery(Phone.CONTENT_URI,
+                    PHONE_PROJECTION,
+                    Phone.CONTACT_ID + " = " + contactId,
+                    null, null);
         }
-
     }
 }

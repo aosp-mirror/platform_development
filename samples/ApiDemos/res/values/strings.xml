@@ -506,7 +506,6 @@
     <string name="linear_layout_8_right">Right</string>
     <string name="linear_layout_10_from">From:</string>
     <string name="linear_layout_10_to">To:</string>
-    <string name="list_7_nothing">Nothing\u2026</string>
     <string name="radio_group_snack">Snack</string>
     <string name="radio_group_selection">"You have selected: "</string>
     <string name="radio_group_none">(none)</string>
@@ -887,8 +886,8 @@
     <!-- ============================ -->
 
     <string name="sms_warning">
-      WARNING: this demo can send actual text messages (one at a time), so be sure to
-      test with the Android emulator or have a text messaging plan with your carrier.
+        WARNING: this demo can send actual text messages (one at a time), so be sure to
+        test with the Android emulator or have a text messaging plan with your carrier.
     </string>
     <string name="sms_enable_receiver">Enable SMS broadcast receiver</string>
     <string name="sms_recipient_label">Recipient #</string>
@@ -898,4 +897,3 @@
     <string name="reply">Reply</string>
     <string name="dismiss">Dismiss</string>
 </resources>
-
