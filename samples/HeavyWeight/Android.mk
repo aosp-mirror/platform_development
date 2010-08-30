@@ -10,7 +10,8 @@ LOCAL_PACKAGE_NAME := HeavyWeight
 
 LOCAL_SDK_VERSION := current
 
-include $(BUILD_PACKAGE)
+# Currently doesn't build
+#include $(BUILD_PACKAGE)
 
 # Use the following include to make our test apk.
-include $(call all-makefiles-under,$(LOCAL_PATH))
+#include $(call all-makefiles-under,$(LOCAL_PATH))

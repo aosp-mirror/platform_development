@@ -24,6 +24,8 @@ LOCAL_MODULE_TAGS := tests
 
 LOCAL_SRC_FILES := $(call all-subdir-java-files)
 
+LOCAL_PROGUARD_ENABLED := disabled
+
 LOCAL_PACKAGE_NAME := SampleBrowserPlugin
 
 LOCAL_JNI_SHARED_LIBRARIES := libsampleplugin
