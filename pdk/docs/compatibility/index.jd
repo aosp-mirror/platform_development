@@ -12,8 +12,8 @@ Android Market shows apps only to those devices that can properly run
 them.</p>
 <p>These pages describe the Android Compatibility Program and how to get
 access to compatibility information and tools. The latest version of the
-Android source code and compatibility program is 2.1, which roughly
-corresponded to the Eclair branch.</p>
+Android source code and compatibility program is 2.2, which roughly
+corresponded to the FroYo branch.</p>
 
 
 <h2>Why build compatible Android devices?</h2>

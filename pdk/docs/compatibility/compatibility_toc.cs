@@ -7,7 +7,7 @@ function nothing() {}
 <ul>
   <li><h2>Getting Started</h2><ul>
     <li><a href="<?cs var:toroot ?>compatibility/overview.html">Compatibility Overview</a></li>
-    <li><a href="<?cs var:toroot ?>compatibility/android-2.1-cdd.pdf">Current CDD</a></li>
+    <li><a href="<?cs var:toroot ?>compatibility/android-2.2-cdd.pdf">Current CDD</a></li>
     <li><a href="<?cs var:toroot ?>compatibility/cts-intro.html">CTS Introduction</a></li>
   </ul></li>
 
