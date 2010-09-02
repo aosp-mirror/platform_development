@@ -246,6 +246,15 @@
     <string name="activity_themes">Content/Resources/Themes</string>
     <string name="activity_resources">Content/Resources/Resources</string>
 
+    <string name="activity_pick_contact">Content/Provider/Pick Contact</string>
+    <string name="pick_contact_msg">Invoke Contacts to pick varius kinds of
+        contact data.  None of these require that the caller hold the
+        READ_CONTACTS permission.</string>
+    <string name="pick_contact">Pick a Contact</string>
+    <string name="pick_person">Pick a Person</string>
+    <string name="pick_phone">Pick a Phone</string>
+    <string name="pick_address">Pick an Address</string>
+    
     <!-- ============================== -->
     <!--  app/intents examples strings     -->
     <!-- ============================== -->
