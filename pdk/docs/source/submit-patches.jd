@@ -14,6 +14,9 @@ href="{@docRoot}source/life-of-a-patch.html">Life of a Patch</a>.</li>
 Open Source community, see <a href="{@docRoot}source/roles.html">Project roles</a>.</li>
 <li>If you plan to contribute code to the Android platform, be sure to read
 the <a href="{@docRoot}source/licenses.html">AOSP's licensing information</a>.</li>
+<li>Note that changes to some of the upstream projects used by Android should be
+made directly to that project, as described in
+<a href="#upstream-projects">Upstream Projects</a>.
 </ul>
 <h2>
 Working with the code</h2>
@@ -142,6 +145,24 @@ who plays them, see <a href="{@docRoot}source/roles.html">Project roles</a>
 .<br><br><h2>
 Using GitWeb to track patch histories</h2>
 To view snapshots of the files that are in the public Android repositories and view file histories, use the <a href="http://android.git.kernel.org/">Android instance of GitWeb</a>
-.<br></div>
+.<br>
+<h2><a name="upstream-projects"></a>Upstream Projects</h2>
+Android makes use of a number of other open-source projects, such as the Linux
+kernel and WebKit, as described in
+<a href="{@docRoot}source/code-lines.html">Branches &amp Releases</a>. For the
+upstream projects detailed below, changes should be made directly upstream. Such
+changes will be incorporated into the Android tree as part of the usual process
+of pulling these projects.
+<h3>WebKit</h3>
+All changes to the WebKit project at <code>external/webkit</code> should be made
+upstream at <a href="http://www.webkit.org">http://www.webkit.org</a>. The
+process begins by filing a WebKit bug. This bug should use <code>Android</code>
+for the <code>Platform</code> and <code>OS</code> fields only if the bug is
+specific to Android. Bugs are far more likely to receive the reviewers'
+attention once a proposed fix is added and tests are included. See
+<a href="http://webkit.org/coding/contributing.html">Contributing Code to
+WebKit</a> for details.
+<br>
+</div>
 </div>
 </div>

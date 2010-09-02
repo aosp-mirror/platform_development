@@ -23,8 +23,11 @@ the source tree.</li>
 stack is pulling code. These include obvious projects such as the Linux kernel
 and WebKit, but over time we are migrating some of the semi-autonomous
 Android projects (such as Dalvik, the Android SDK tools, Bionic, and so on) to
-work as "upstream" projects. These will be developed entirely in the public
-tree, and snapshots will be periodically pulled into releases.</li>
+work as "upstream" projects. Generally, these projects are developed entirely in
+the public tree. For some upstream projects, development is done by contributing
+directly to the upstream project itself. See
+<a href="{@docRoot}source/submit-patches.html#upstream-projects">Upstream Projects</a>
+for details. In both cases, snapshots will be periodically pulled into releases.</li>
 <li>The diagram refers to "Eclair" and "FroYo"; however, they are simply
 placeholders, and the diagram actually reflects the overall release and
 branching strategy.</li>
