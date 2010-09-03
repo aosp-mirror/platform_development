@@ -163,4 +163,10 @@ specific to Android. Bugs are far more likely to receive the reviewers'
 attention once a proposed fix is added and tests are included. See
 <a href="http://webkit.org/coding/contributing.html">Contributing Code to
 WebKit</a> for details.
+<h3>V8</h3>
+All changes to the V8 project at <code>external/v8</code> should be submitted
+upstream at
+<a href="http://code.google.com/p/v8">http://code.google.com/p/v8</a>. See
+<a href="http://code.google.com/p/v8/wiki/Contributing">Contributing to V8</a>
+for details.
 </div>
