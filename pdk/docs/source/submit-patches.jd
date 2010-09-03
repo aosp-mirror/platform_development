@@ -1,6 +1,7 @@
 page.title=Android Contributors' Workflow
 doc.type=source
 @jd:body
+<div>
 <br>This page describes how to record changes to the Android files on your local client, upload those changes to the code-review server, and use Gerrit to track changes.<br><h2>
 Prerequisites</h2>
 Before you follow the instructions on this page, you will need to set up your
@@ -132,8 +133,8 @@ If you are assigned to be the Verifier for a change, you need to do the followin
 </ul>
 <h3>
 Viewing diffs and comments</h3>
-To open the details of the change within Gerrit, click on the "Id number" or "Subject" of a change. To compare the established code with the updated code, click the file name under "Side-by-side diffs."<br></div>
-<div><h3>
+To open the details of the change within Gerrit, click on the "Id number" or "Subject" of a change. To compare the established code with the updated code, click the file name under "Side-by-side diffs."<br>
+<h3>
 Adding comments</h3>
 Anyone in the community can use Gerrit to add inline comments to code submissions. A good comment will be relevant to the line or section of code to which it is attached in Gerrit. It might be a short and constructive suggestion about how a line of code could be improved, or it might be an explanation from the author about why the code makes sense the way it is.<br><br>To add an inline comment, double-click the relevant line of the code and write your comment in the text box that opens. When you click Save, only you can see your comment.<br><br>To publish your comments so that others using Gerrit will be able to see them, click the Publish Comments button. Your comments will be emailed to all relevant parties for this change, including the change owner, the patch set uploader (if different from the owner), and all current reviewers.<br><br><h3>
 After a submission is approved</h3>
@@ -162,7 +163,4 @@ specific to Android. Bugs are far more likely to receive the reviewers'
 attention once a proposed fix is added and tests are included. See
 <a href="http://webkit.org/coding/contributing.html">Contributing Code to
 WebKit</a> for details.
-<br>
-</div>
-</div>
 </div>
