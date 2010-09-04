@@ -1,6 +1,7 @@
 page.title=Using Repo and Git
 doc.type=source
 @jd:body
+<div>
 <p>To work with the Android code, you will need to use both Git and Repo.<br></p>
 <ul><li><i>Git</i>
 is an open-source version-control system designed to handle very large projects that are distributed over multiple repositories. In the context of Android, we use Git for local operations such as local branching, commits, diffs, and edits.<br><br></li>
@@ -22,8 +23,8 @@ Already a Git user?
 In most situations, you can use Git instead of Repo, or mix Repo and Git
 commands to form complex commands. Using Repo for basic across-network
 operations will make your work much simpler, however.
-<br></div>
-<div><div><h2>
+<br>
+<div><h2>
 Task reference <br></h2>
 The task list below shows a summary of how to do common Repo and Git tasks.
 For complete quick-start information and examples, see <a
@@ -315,5 +316,4 @@ Documentation on specific tasks:
 <br>Changes marked by git add for inclusion in the next commit's snapshot.<br><br><i>Commit <br></i>
 At intervals, you use git commit to save a snapshot of the staged files and a log message that describes the change.<br><br><i>Manifest</i>
 <br>A manifest file that contains a list of repositories and a mapping of where the files from these repositories will be located within your working directory. When you synchronize your files, the files contained in the repositories that are listed in the manifest will be pulled into your working directory.</div>
-</div>
 </div>

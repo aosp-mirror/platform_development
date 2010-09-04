@@ -1,6 +1,7 @@
 page.title=Get Android Source Code
 doc.type=source
 @jd:body
+<div>
 <div><br>This document describes how to set up your local work environment, how to use Repo to get the Android files, and how to build the files on your machine.<br><br>Related reading:<br></div>
 <ul><li>For an overview of the entire code-review and code-update process, see
 <a href="{@docRoot}source/life-of-a-patch.html">Life of a Patch</a>
@@ -23,29 +24,20 @@ Linux</h3>
 The Android build is routinely tested on recent versions of Ubuntu (6.06 and later), but reports of successes or failures on other distributions are welcome.<br><h4>
 Ubuntu Linux (32-bit x86)</h4>
 <div>To set up your Linux development environment, make sure you have the following:</div>
-<div><div><div><ul><li>Required Packages:</li>
+<div><ul><li>Required Packages:</li>
 <ul><li>Git 1.5.4 or newer <span>and the GNU Privacy Guard.<br></span>
 </li>
 </ul>
 </ul>
 </div>
-</div>
-</div>
-</div>
-<div><div><div><div><ul><ul><li>JDK 5.0, update 12 or higher.Java 6 is not supported, because of incompatibilities with @Override.<br></li>
+<div><ul><ul><li>JDK 5.0, update 12 or higher.Java 6 is not supported, because of incompatibilities with @Override.<br></li>
 </ul>
 </ul>
 </div>
-</div>
-</div>
-</div>
-<div><div><div><div><ul><ul><li><span>flex, bison, gperf, libsdl-dev, libesd0-dev, libwxgtk2.6-dev (optional), build-essential, zip, curl.</span>
+<div><ul><ul><li><span>flex, bison, gperf, libsdl-dev, libesd0-dev, libwxgtk2.6-dev (optional), build-essential, zip, curl.</span>
 </li>
 </ul>
 </ul>
-</div>
-</div>
-</div>
 </div>
 <blockquote><span>$ sudo apt-get install</span>
 <span>git-core gnupg</span>
@@ -54,13 +46,10 @@ Ubuntu Linux (32-bit x86)</h4>
 libwxgtk2.6-dev build-essential zip <span>curl libncurses5-dev zlib1g-dev <br></span>
 </span>
 </blockquote>
-<div><div><div><div><ul><li><span><span>You might also want Valgrind, a tool that will help you find memory leaks, stack corruption, array bounds overflows, etc.</span>
+<div><ul><li><span><span>You might also want Valgrind, a tool that will help you find memory leaks, stack corruption, array bounds overflows, etc.</span>
 </span>
 </li>
 </ul>
-</div>
-</div>
-</div>
 </div>
 <blockquote><div><span>$ sudo apt-get install valgrind <br></span>
 </div>
@@ -70,8 +59,7 @@ libwxgtk2.6-dev build-essential zip <span>curl libncurses5-dev zlib1g-dev <br></
 8.10) users may need a newer version of libreadline:</li>
 </ul>
 <div>$ sudo apt-get install lib32readline5-dev <br></div>
-</div>
-<div><div><div><div><div><div><h4>
+<div><h4>
 Ubuntu Linux (64-bit x86)</h4>
 This has not been as well tested. Please send success or failure reports to <a href="mailto:android-porting@googlegroups.com">android-porting@googlegroups.com</a>
 .</div>
@@ -86,9 +74,6 @@ This has not been as well tested. Please send success or failure reports to <a h
 </ul>
 </ul>
 </div>
-</div>
-</div>
-</div>
 <blockquote><span><span>$</span>
 sudo apt-get install git-core gnupg flex bison gperf build-essential zip curl</span>
 sun-java5-jdk <span><span>zlib1g-dev</span>
@@ -98,7 +83,7 @@ gcc-multilib g++-multilib libc6-dev-i386 lib32ncurses5-dev ia32-libs x11proto-co
 </ul>
 <ul><li>X11: Ubuntu doesn't have packages for the X11 libraries, but that can be worked around with the following command:<br><br>$ sudo ln -s /usr/lib32/libX11.so.6 /usr/lib32/libX11.so <br><br></li>
 </ul>
-<div><div><div><div><div><h4>
+<div><h4>
 Running Linux in a virtual machine</h4>
 If you are running Linux in a virtual machine, you will need at least 1.5GB of RAM and 10GB or more of disk space in order to build the Android tree.<br><h4>
 Other Linux</h4>
@@ -163,8 +148,6 @@ file:<br># set the number of open files to be 1024<br>$ <span>ulimit -S -n 1024<
 Note that this may not be necessary; on some systems, the output of "ulimit -S" will show "unlimited". In this case, there is no need to set the limit to 1024.</li>
 </ol>
 </div>
-</div>
-</div>
 <div><br></div>
 <h2>
 Installing Repo <br></h2>
@@ -181,7 +164,6 @@ To install, initialize, and configure Repo, follow these steps:<br><br></div>
 <br>$ curl http://android.git.kernel.org/repo &gt;~/bin/repo <div>$ chmod a+x ~/bin/repo</div>
 </li>
 </ol>
-</div>
 <div><p><br></p>
 <h2>
 Initializing a Repo client <br></h2>
@@ -239,8 +221,6 @@ Getting the files</h2>
 directory under their project names.</span>
 </span>
 <br></div>
-<span><h2>
-<br></h2>
 <h2>
 Verifying Git Tags</h2>
 <span>Load the following public key into your GnuPG key database.The key is used to sign annotated tags that represent releases.</span>
@@ -291,7 +271,4 @@ What's next?</h2>
 <span>For information about editing the files and uploading changes to the
 code-review server, see <a href="{@docRoot}source/submit-patches.html">Contribute</a>
 .</span>
-</div>
-</div>
-</div>
 </div>
