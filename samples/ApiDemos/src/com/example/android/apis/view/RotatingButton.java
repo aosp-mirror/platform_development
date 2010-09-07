@@ -23,11 +23,10 @@ import com.example.android.apis.R;
 import android.app.Activity;
 import android.os.Bundle;
 import android.widget.Button;
-import android.widget.LinearLayout;
 import android.widget.SeekBar;
 
 /**
- * This application demonstrates the seeking capability of Animator. The SeekBar in the
+ * This application demonstrates the seeking capability of ValueAnimator. The SeekBar in the
  * UI allows you to set the position of the animation. Pressing the Run button will play from
  * the current position of the animation.
  */

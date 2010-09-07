@@ -18,15 +18,14 @@ package com.example.android.apis.animation;
 
 // Need the following import to get access to the app resources, since this
 // class is in a sub-package.
+import android.animation.Animator;
 import com.example.android.apis.R;
 
 import java.util.ArrayList;
 
-import android.animation.Animatable;
-import android.animation.Animator;
-import android.animation.PropertyAnimator;
-import android.animation.Sequencer;
-import android.animation.Animatable.AnimatableListener;
+import android.animation.ValueAnimator;
+import android.animation.ObjectAnimator;
+import android.animation.AnimatorSet;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Canvas;
@@ -43,7 +42,7 @@ import android.widget.LinearLayout;
 import android.widget.SeekBar;
 
 /**
- * This application demonstrates the seeking capability of Animator. The SeekBar in the
+ * This application demonstrates the seeking capability of ValueAnimator. The SeekBar in the
  * UI allows you to set the position of the animation. Pressing the Run button will play from
  * the current position of the animation.
  */
@@ -93,7 +92,7 @@ public class AnimationSeeking extends Activity {
         });
     }
 
-    public class MyAnimationView extends View implements Animator.AnimatorUpdateListener, AnimatableListener {
+    public class MyAnimationView extends View implements ValueAnimator.AnimatorUpdateListener, Animator.AnimatorListener {
 
         private static final int RED = 0xffFF8080;
         private static final int BLUE = 0xff8080FF;
@@ -102,8 +101,8 @@ public class AnimationSeeking extends Activity {
         private static final float BALL_SIZE = 100f;
 
         public final ArrayList<ShapeHolder> balls = new ArrayList<ShapeHolder>();
-        Sequencer animation = null;
-        Animator bounceAnim = null;
+        AnimatorSet animation = null;
+        ValueAnimator bounceAnim = null;
         ShapeHolder ball = null;
 
         public MyAnimationView(Context context) {
@@ -113,7 +112,7 @@ public class AnimationSeeking extends Activity {
 
         private void createAnimation() {
             if (bounceAnim == null) {
-                bounceAnim = new PropertyAnimator(1500, ball, "y",
+                bounceAnim = new ObjectAnimator(1500, ball, "y",
                         ball.getY(), getHeight() - BALL_SIZE);
                 bounceAnim.setInterpolator(new BounceInterpolator());
                 bounceAnim.addUpdateListener(this);
@@ -157,28 +156,28 @@ public class AnimationSeeking extends Activity {
             ball.getShape().draw(canvas);
         }
 
-        public void onAnimationUpdate(Animator animation) {
+        public void onAnimationUpdate(ValueAnimator animation) {
             invalidate();
             long playtime = bounceAnim.getCurrentPlayTime();
             //mSeekBar.setProgress((int)playtime);
         }
 
         @Override
-        public void onAnimationCancel(Animatable animation) {
+        public void onAnimationCancel(Animator animation) {
         }
 
         @Override
-        public void onAnimationEnd(Animatable animation) {
-            balls.remove(((PropertyAnimator)animation).getTarget());
+        public void onAnimationEnd(Animator animation) {
+            balls.remove(((ObjectAnimator)animation).getTarget());
 
         }
 
         @Override
-        public void onAnimationRepeat(Animatable animation) {
+        public void onAnimationRepeat(Animator animation) {
         }
 
         @Override
-        public void onAnimationStart(Animatable animation) {
+        public void onAnimationStart(Animator animation) {
         }
     }
 }

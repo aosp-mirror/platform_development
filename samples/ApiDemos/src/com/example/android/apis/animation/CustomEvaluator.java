@@ -18,16 +18,13 @@ package com.example.android.apis.animation;
 
 // Need the following import to get access to the app resources, since this
 // class is in a sub-package.
+import android.animation.ObjectAnimator;
 import android.animation.TypeEvaluator;
+import android.animation.ValueAnimator;
 import com.example.android.apis.R;
 
 import java.util.ArrayList;
 
-import android.animation.Animatable;
-import android.animation.Animator;
-import android.animation.PropertyAnimator;
-import android.animation.Sequencer;
-import android.animation.Animatable.AnimatableListener;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Canvas;
@@ -38,7 +35,6 @@ import android.graphics.drawable.ShapeDrawable;
 import android.graphics.drawable.shapes.OvalShape;
 import android.os.Bundle;
 import android.view.View;
-import android.view.animation.AccelerateInterpolator;
 import android.widget.Button;
 import android.widget.LinearLayout;
 
@@ -117,10 +113,10 @@ public class CustomEvaluator extends Activity {
         }
     }
 
-    public class MyAnimationView extends View implements Animator.AnimatorUpdateListener {
+    public class MyAnimationView extends View implements ValueAnimator.AnimatorUpdateListener {
 
         public final ArrayList<ShapeHolder> balls = new ArrayList<ShapeHolder>();
-        Animator bounceAnim = null;
+        ValueAnimator bounceAnim = null;
         ShapeHolder ball = null;
         BallXYHolder ballHolder = null;
 
@@ -134,7 +130,7 @@ public class CustomEvaluator extends Activity {
             if (bounceAnim == null) {
                 XYHolder startXY = new XYHolder(0f, 0f);
                 XYHolder endXY = new XYHolder(300f, 500f);
-                bounceAnim = new PropertyAnimator(1500, ballHolder, "xY",
+                bounceAnim = new ObjectAnimator(1500, ballHolder, "xY",
                         endXY);
                 bounceAnim.setEvaluator(new XYEvaluator());
                 bounceAnim.addUpdateListener(this);
@@ -174,7 +170,7 @@ public class CustomEvaluator extends Activity {
             canvas.restore();
         }
 
-        public void onAnimationUpdate(Animator animation) {
+        public void onAnimationUpdate(ValueAnimator animation) {
             invalidate();
         }
 

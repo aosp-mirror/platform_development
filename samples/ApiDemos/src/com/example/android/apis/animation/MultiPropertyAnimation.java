@@ -24,7 +24,6 @@ import com.example.android.apis.R;
 
 import java.util.ArrayList;
 
-import android.animation.Animatable.AnimatableListener;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Canvas;
@@ -38,10 +37,9 @@ import android.view.View;
 import android.view.animation.BounceInterpolator;
 import android.widget.Button;
 import android.widget.LinearLayout;
-import android.widget.SeekBar;
 
 /**
- * This application demonstrates the seeking capability of Animator. The SeekBar in the
+ * This application demonstrates the seeking capability of ValueAnimator. The SeekBar in the
  * UI allows you to set the position of the animation. Pressing the Run button will play from
  * the current position of the animation.
  */
@@ -60,7 +58,6 @@ public class MultiPropertyAnimation extends Activity {
         Button starter = (Button) findViewById(R.id.startButton);
         starter.setOnClickListener(new View.OnClickListener() {
 
-            @Override
             public void onClick(View v) {
                 animView.startAnimation();
             }
@@ -68,13 +65,13 @@ public class MultiPropertyAnimation extends Activity {
 
     }
 
-    public class MyAnimationView extends View implements Animator.AnimatorUpdateListener {
+    public class MyAnimationView extends View implements ValueAnimator.AnimatorUpdateListener {
 
         private static final float BALL_SIZE = 100f;
 
         public final ArrayList<ShapeHolder> balls = new ArrayList<ShapeHolder>();
-        Sequencer animation = null;
-        Animatable bounceAnim = null;
+        AnimatorSet animation = null;
+        Animator bounceAnim = null;
         ShapeHolder ball = null;
 
         public MyAnimationView(Context context) {
@@ -89,7 +86,7 @@ public class MultiPropertyAnimation extends Activity {
             if (bounceAnim == null) {
                 ShapeHolder ball;
                 ball = balls.get(0);
-                PropertyAnimator yBouncer = new PropertyAnimator(DURATION, ball, "y",
+                ObjectAnimator yBouncer = new ObjectAnimator(DURATION, ball, "y",
                         ball.getY(), getHeight() - BALL_SIZE);
                 yBouncer.setInterpolator(new BounceInterpolator());
                 yBouncer.addUpdateListener(this);
@@ -99,10 +96,10 @@ public class MultiPropertyAnimation extends Activity {
                         getHeight() - BALL_SIZE);
                 PropertyValuesHolder pvhAlpha = new PropertyValuesHolder("alpha", 1.0f,
                         0f);
-                PropertyAnimator yAlphaBouncer = new PropertyAnimator(DURATION/2, ball, pvhY, pvhAlpha);
+                ObjectAnimator yAlphaBouncer = new ObjectAnimator(DURATION/2, ball, pvhY, pvhAlpha);
                 yAlphaBouncer.setInterpolator(new AccelerateInterpolator());
                 yAlphaBouncer.setRepeatCount(1);
-                yAlphaBouncer.setRepeatMode(Animator.REVERSE);
+                yAlphaBouncer.setRepeatMode(ValueAnimator.REVERSE);
 
 
                 ball = balls.get(2);
@@ -112,10 +109,10 @@ public class MultiPropertyAnimation extends Activity {
                         ball.getHeight() * 2);
                 PropertyValuesHolder pvTX = new PropertyValuesHolder("x", ball.getX(), ball.getX() - BALL_SIZE/2f);
                 PropertyValuesHolder pvTY = new PropertyValuesHolder("y", 0f, ball.getY(), ball.getY() - BALL_SIZE/2f);
-                PropertyAnimator whxyBouncer = new PropertyAnimator(DURATION/2, ball, pvhW, pvhH,
+                ObjectAnimator whxyBouncer = new ObjectAnimator(DURATION/2, ball, pvhW, pvhH,
                         pvTX, pvTY);
                 whxyBouncer.setRepeatCount(1);
-                whxyBouncer.setRepeatMode(Animator.REVERSE);
+                whxyBouncer.setRepeatMode(ValueAnimator.REVERSE);
 
                 ball = balls.get(3);
                 pvhY = new PropertyValuesHolder("y", ball.getY(),
@@ -125,13 +122,13 @@ public class MultiPropertyAnimation extends Activity {
                 Keyframe kf1 = new Keyframe(.5f, ballX + 100f);
                 Keyframe kf2 = new Keyframe(1f, ballX + 50f);
                 PropertyValuesHolder pvhX = new PropertyValuesHolder("x", kf0, kf1, kf2);
-                PropertyAnimator yxBouncer = new PropertyAnimator(DURATION/2, ball, pvhY, pvhX);
+                ObjectAnimator yxBouncer = new ObjectAnimator(DURATION/2, ball, pvhY, pvhX);
                 yxBouncer.setRepeatCount(1);
-                yxBouncer.setRepeatMode(Animator.REVERSE);
+                yxBouncer.setRepeatMode(ValueAnimator.REVERSE);
 
 
-                bounceAnim = new Sequencer();
-                ((Sequencer)bounceAnim).playTogether(yBouncer, yAlphaBouncer, whxyBouncer, yxBouncer);
+                bounceAnim = new AnimatorSet();
+                ((AnimatorSet)bounceAnim).playTogether(yBouncer, yAlphaBouncer, whxyBouncer, yxBouncer);
             }
         }
 
@@ -170,7 +167,7 @@ public class MultiPropertyAnimation extends Activity {
             }
         }
 
-        public void onAnimationUpdate(Animator animation) {
+        public void onAnimationUpdate(ValueAnimator animation) {
             invalidate();
         }
 

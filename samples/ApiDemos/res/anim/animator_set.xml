@@ -14,15 +14,15 @@
      limitations under the License.
 -->
 
-<sequencer>
-    <property xmlns:android="http://schemas.android.com/apk/res/android"
+<set>
+    <objectAnimator xmlns:android="http://schemas.android.com/apk/res/android"
         android:duration="1000"
         android:valueTo="200"
         android:valueType="floatType"
         android:propertyName="x"
         android:repeatCount="1"
         android:repeatMode="reverse"/>
-    <property xmlns:android="http://schemas.android.com/apk/res/android"
+    <objectAnimator xmlns:android="http://schemas.android.com/apk/res/android"
         android:duration="1000"
         android:valueFrom="0"
         android:valueTo="400"
@@ -30,4 +30,4 @@
         android:propertyName="y"
         android:repeatCount="1"
         android:repeatMode="reverse"/>
-</sequencer>
+</set>

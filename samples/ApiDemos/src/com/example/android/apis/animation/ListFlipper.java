@@ -18,39 +18,24 @@ package com.example.android.apis.animation;
 
 // Need the following import to get access to the app resources, since this
 // class is in a sub-package.
-import android.animation.AnimatableListenerAdapter;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.Animator;
+import android.animation.ObjectAnimator;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.Interpolator;
 import android.widget.ArrayAdapter;
-import android.widget.FrameLayout;
 import android.widget.ListView;
 import com.example.android.apis.R;
 
-import java.util.ArrayList;
-
-import android.animation.Animatable;
-import android.animation.Animator;
-import android.animation.PropertyAnimator;
-import android.animation.Sequencer;
-import android.animation.Animatable.AnimatableListener;
 import android.app.Activity;
-import android.content.Context;
-import android.graphics.Canvas;
-import android.graphics.Paint;
-import android.graphics.RadialGradient;
-import android.graphics.Shader;
-import android.graphics.drawable.ShapeDrawable;
-import android.graphics.drawable.shapes.OvalShape;
 import android.os.Bundle;
 import android.view.View;
-import android.view.animation.BounceInterpolator;
 import android.widget.Button;
-import android.widget.LinearLayout;
 import android.widget.SeekBar;
 
 /**
- * This application demonstrates the seeking capability of Animator. The SeekBar in the
+ * This application demonstrates the seeking capability of ValueAnimator. The SeekBar in the
  * UI allows you to set the position of the animation. Pressing the Run button will play from
  * the current position of the animation.
  */
@@ -121,13 +106,13 @@ public class ListFlipper extends Activity {
             invisibleList = mFrenchList;
             visibleList = mEnglishList;
         }
-        PropertyAnimator visToInvis = new PropertyAnimator(500, visibleList, "rotationY", 0f, 90f);
+        ObjectAnimator visToInvis = new ObjectAnimator(500, visibleList, "rotationY", 0f, 90f);
         visToInvis.setInterpolator(accelerator);
-        final PropertyAnimator invisToVis = new PropertyAnimator(500, invisibleList, "rotationY", -90f, 0f);
+        final ObjectAnimator invisToVis = new ObjectAnimator(500, invisibleList, "rotationY", -90f, 0f);
         invisToVis.setInterpolator(decelerator);
-        visToInvis.addListener(new AnimatableListenerAdapter() {
+        visToInvis.addListener(new AnimatorListenerAdapter() {
             @Override
-            public void onAnimationEnd(Animatable anim) {
+            public void onAnimationEnd(Animator anim) {
                 visibleList.setVisibility(View.GONE);
                 invisToVis.start();
                 invisibleList.setVisibility(View.VISIBLE);

@@ -18,15 +18,15 @@ package com.example.android.apis.animation;
 
 // Need the following import to get access to the app resources, since this
 // class is in a sub-package.
-import android.animation.AnimatableInflater;
+import android.animation.AnimatorInflater;
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
 import com.example.android.apis.R;
 
 import java.util.ArrayList;
 
-import android.animation.Animatable;
 import android.animation.Animator;
-import android.animation.PropertyAnimator;
-import android.animation.Sequencer;
+import android.animation.ValueAnimator;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Canvas;
@@ -41,7 +41,7 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 
 /**
- * This application demonstrates loading Animatable objects from XML resources.
+ * This application demonstrates loading Animator objects from XML resources.
  */
 public class AnimationLoading extends Activity {
 
@@ -67,12 +67,12 @@ public class AnimationLoading extends Activity {
 
     }
 
-    public class MyAnimationView extends View implements Animator.AnimatorUpdateListener {
+    public class MyAnimationView extends View implements ValueAnimator.AnimatorUpdateListener {
 
         private static final float BALL_SIZE = 100f;
 
         public final ArrayList<ShapeHolder> balls = new ArrayList<ShapeHolder>();
-        Animatable animation = null;
+        Animator animation = null;
 
         public MyAnimationView(Context context) {
             super(context);
@@ -83,28 +83,28 @@ public class AnimationLoading extends Activity {
 
         private void createAnimation() {
             if (animation == null) {
-                PropertyAnimator anim =
-                        (PropertyAnimator) AnimatableInflater.
-                                loadAnimatable(getApplicationContext(), R.anim.property_animator);
+                ObjectAnimator anim =
+                        (ObjectAnimator) AnimatorInflater.
+                                loadAnimator(getApplicationContext(), R.anim.property_animator);
                 anim.addUpdateListener(this);
                 anim.setTarget(balls.get(0));
 
-                Animator fader =
-                        (Animator) AnimatableInflater.loadAnimatable(getApplicationContext(),
+                ValueAnimator fader =
+                        (ValueAnimator) AnimatorInflater.loadAnimator(getApplicationContext(),
                         R.anim.animator);
-                fader.addUpdateListener(new Animator.AnimatorUpdateListener() {
-                    public void onAnimationUpdate(Animator animation) {
+                fader.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                    public void onAnimationUpdate(ValueAnimator animation) {
                         balls.get(1).setAlpha((Float) animation.getAnimatedValue());
                     }
                 });
 
-                Sequencer seq =
-                        (Sequencer) AnimatableInflater.loadAnimatable(getApplicationContext(),
-                        R.anim.sequencer);
+                AnimatorSet seq =
+                        (AnimatorSet) AnimatorInflater.loadAnimator(getApplicationContext(),
+                        R.anim.animator_set);
                 seq.setTarget(balls.get(2));
 
-                animation = new Sequencer();
-                ((Sequencer) animation).playTogether(anim, fader, seq);
+                animation = new AnimatorSet();
+                ((AnimatorSet) animation).playTogether(anim, fader, seq);
             }
         }
 
@@ -143,7 +143,7 @@ public class AnimationLoading extends Activity {
             }
         }
 
-        public void onAnimationUpdate(Animator animation) {
+        public void onAnimationUpdate(ValueAnimator animation) {
 
             invalidate();
             ShapeHolder ball = balls.get(0);

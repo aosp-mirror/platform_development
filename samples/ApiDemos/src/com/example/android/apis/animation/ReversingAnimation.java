@@ -18,15 +18,12 @@ package com.example.android.apis.animation;
 
 // Need the following import to get access to the app resources, since this
 // class is in a sub-package.
+import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
 import com.example.android.apis.R;
 
 import java.util.ArrayList;
 
-import android.animation.Animatable;
-import android.animation.Animator;
-import android.animation.PropertyAnimator;
-import android.animation.Sequencer;
-import android.animation.Animatable.AnimatableListener;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Canvas;
@@ -71,10 +68,10 @@ public class ReversingAnimation extends Activity {
 
     }
 
-    public class MyAnimationView extends View implements Animator.AnimatorUpdateListener {
+    public class MyAnimationView extends View implements ValueAnimator.AnimatorUpdateListener {
 
         public final ArrayList<ShapeHolder> balls = new ArrayList<ShapeHolder>();
-        Animator bounceAnim = null;
+        ValueAnimator bounceAnim = null;
         ShapeHolder ball = null;
 
         public MyAnimationView(Context context) {
@@ -84,7 +81,7 @@ public class ReversingAnimation extends Activity {
 
         private void createAnimation() {
             if (bounceAnim == null) {
-                bounceAnim = new PropertyAnimator(1500, ball, "y",
+                bounceAnim = new ObjectAnimator(1500, ball, "y",
                         ball.getY(), getHeight() - 50f);
                 bounceAnim.setInterpolator(new AccelerateInterpolator(2f));
                 bounceAnim.addUpdateListener(this);
@@ -134,7 +131,7 @@ public class ReversingAnimation extends Activity {
             canvas.restore();
         }
 
-        public void onAnimationUpdate(Animator animation) {
+        public void onAnimationUpdate(ValueAnimator animation) {
             invalidate();
         }
 

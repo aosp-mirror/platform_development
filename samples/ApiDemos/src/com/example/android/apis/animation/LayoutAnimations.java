@@ -18,13 +18,13 @@ package com.example.android.apis.animation;
 
 // Need the following import to get access to the app resources, since this
 // class is in a sub-package.
+import android.animation.Animator;
+import android.animation.ObjectAnimator;
 import com.example.android.apis.R;
 
-import android.animation.Animatable;
-import android.animation.AnimatableListenerAdapter;
+import android.animation.AnimatorListenerAdapter;
 import android.animation.Keyframe;
 import android.animation.LayoutTransition;
-import android.animation.PropertyAnimator;
 import android.animation.PropertyValuesHolder;
 import android.view.View;
 import android.view.ViewGroup;
@@ -36,7 +36,7 @@ import android.os.Bundle;
 import android.widget.Button;
 
 /**
- * This application demonstrates the seeking capability of Animator. The SeekBar in the
+ * This application demonstrates the seeking capability of ValueAnimator. The SeekBar in the
  * UI allows you to set the position of the animation. Pressing the Run button will play from
  * the current position of the animation.
  */
@@ -85,10 +85,10 @@ public class LayoutAnimations extends Activity {
                 } else {
                     transitioner.setStagger(LayoutTransition.CHANGE_APPEARING, 0);
                     transitioner.setStagger(LayoutTransition.CHANGE_DISAPPEARING, 0);
-                    transitioner.setAnimatable(LayoutTransition.APPEARING, null);
-                    transitioner.setAnimatable(LayoutTransition.DISAPPEARING, null);
-                    transitioner.setAnimatable(LayoutTransition.CHANGE_APPEARING, null);
-                    transitioner.setAnimatable(LayoutTransition.CHANGE_DISAPPEARING, null);
+                    transitioner.setAnimator(LayoutTransition.APPEARING, null);
+                    transitioner.setAnimator(LayoutTransition.DISAPPEARING, null);
+                    transitioner.setAnimator(LayoutTransition.CHANGE_APPEARING, null);
+                    transitioner.setAnimator(LayoutTransition.CHANGE_DISAPPEARING, null);
                     duration = 300;
                 }
                 transitioner.setDuration(duration);
@@ -110,13 +110,13 @@ public class LayoutAnimations extends Activity {
                 new PropertyValuesHolder<Float>("scaleX", 1f, 0f, 1f);
         PropertyValuesHolder<Float> pvhScaleY =
                 new PropertyValuesHolder<Float>("scaleY", 1f, 0f, 1f);
-        final PropertyAnimator changeIn =
-                new PropertyAnimator(transition.getDuration(LayoutTransition.CHANGE_APPEARING),
+        final ObjectAnimator changeIn =
+                new ObjectAnimator(transition.getDuration(LayoutTransition.CHANGE_APPEARING),
                         this, pvhLeft, pvhTop, pvhRight, pvhBottom, pvhScaleX, pvhScaleY);
-        transition.setAnimatable(LayoutTransition.CHANGE_APPEARING, changeIn);
-        changeIn.addListener(new AnimatableListenerAdapter() {
-            public void onAnimationEnd(Animatable anim) {
-                View view = (View) ((PropertyAnimator) anim).getTarget();
+        transition.setAnimator(LayoutTransition.CHANGE_APPEARING, changeIn);
+        changeIn.addListener(new AnimatorListenerAdapter() {
+            public void onAnimationEnd(Animator anim) {
+                View view = (View) ((ObjectAnimator) anim).getTarget();
                 view.setScaleX(1f);
                 view.setScaleY(1f);
             }
@@ -128,37 +128,37 @@ public class LayoutAnimations extends Activity {
         Keyframe kf2 = new Keyframe(1f, 0f);
         PropertyValuesHolder<Keyframe> pvhRotation =
                 new PropertyValuesHolder<Keyframe>("rotation", kf0, kf1, kf2);
-        final PropertyAnimator changeOut =
-                new PropertyAnimator(transition.getDuration(LayoutTransition.CHANGE_DISAPPEARING),
+        final ObjectAnimator changeOut =
+                new ObjectAnimator(transition.getDuration(LayoutTransition.CHANGE_DISAPPEARING),
                         this, pvhLeft, pvhTop, pvhRight, pvhBottom, pvhRotation);
-        transition.setAnimatable(LayoutTransition.CHANGE_DISAPPEARING, changeOut);
-        changeOut.addListener(new AnimatableListenerAdapter() {
-            public void onAnimationEnd(Animatable anim) {
-                View view = (View) ((PropertyAnimator) anim).getTarget();
+        transition.setAnimator(LayoutTransition.CHANGE_DISAPPEARING, changeOut);
+        changeOut.addListener(new AnimatorListenerAdapter() {
+            public void onAnimationEnd(Animator anim) {
+                View view = (View) ((ObjectAnimator) anim).getTarget();
                 view.setRotation(0f);
             }
         });
 
         // Adding
-        PropertyAnimator<Float> animIn =
-                new PropertyAnimator<Float>(transition.getDuration(LayoutTransition.APPEARING),
+        ObjectAnimator<Float> animIn =
+                new ObjectAnimator<Float>(transition.getDuration(LayoutTransition.APPEARING),
                         null, "rotationY", 90f, 0f);
-        transition.setAnimatable(LayoutTransition.APPEARING, animIn);
-        animIn.addListener(new AnimatableListenerAdapter() {
-            public void onAnimationEnd(Animatable anim) {
-                View view = (View) ((PropertyAnimator) anim).getTarget();
+        transition.setAnimator(LayoutTransition.APPEARING, animIn);
+        animIn.addListener(new AnimatorListenerAdapter() {
+            public void onAnimationEnd(Animator anim) {
+                View view = (View) ((ObjectAnimator) anim).getTarget();
                 view.setRotationY(0f);
             }
         });
 
         // Removing
-        PropertyAnimator<Float> animOut =
-                new PropertyAnimator<Float>(transition.getDuration(LayoutTransition.DISAPPEARING),
+        ObjectAnimator<Float> animOut =
+                new ObjectAnimator<Float>(transition.getDuration(LayoutTransition.DISAPPEARING),
                         null, "rotationX", 0f, 90f);
-        transition.setAnimatable(LayoutTransition.DISAPPEARING, animOut);
-        animIn.addListener(new AnimatableListenerAdapter() {
-            public void onAnimationEnd(Animatable anim) {
-                View view = (View) ((PropertyAnimator) anim).getTarget();
+        transition.setAnimator(LayoutTransition.DISAPPEARING, animOut);
+        animIn.addListener(new AnimatorListenerAdapter() {
+            public void onAnimationEnd(Animator anim) {
+                View view = (View) ((ObjectAnimator) anim).getTarget();
                 view.setRotationX(0f);
             }
         });

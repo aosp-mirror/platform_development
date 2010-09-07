@@ -18,16 +18,16 @@ package com.example.android.apis.animation;
 
 // Need the following import to get access to the app resources, since this
 // class is in a sub-package.
+import android.animation.Animator;
+import android.animation.ObjectAnimator;
 import android.widget.CheckBox;
 import android.widget.TextView;
 import com.example.android.apis.R;
 
 import java.util.ArrayList;
 
-import android.animation.Animatable;
-import android.animation.Animator;
-import android.animation.PropertyAnimator;
-import android.animation.Sequencer;
+import android.animation.ValueAnimator;
+import android.animation.AnimatorSet;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Canvas;
@@ -43,7 +43,7 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 
 /**
- * This demo shows how the AnimatableListener events work.
+ * This demo shows how the AnimatorListener events work.
  */
 public class AnimatorEvents extends Activity {
 
@@ -79,7 +79,6 @@ public class AnimatorEvents extends Activity {
         Button starter = (Button) findViewById(R.id.startButton);
         starter.setOnClickListener(new View.OnClickListener() {
 
-            @Override
             public void onClick(View v) {
                 animView.startAnimation(endCB.isChecked());
             }
@@ -88,7 +87,6 @@ public class AnimatorEvents extends Activity {
         Button canceler = (Button) findViewById(R.id.cancelButton);
         canceler.setOnClickListener(new View.OnClickListener() {
 
-            @Override
             public void onClick(View v) {
                 animView.cancelAnimation();
             }
@@ -97,7 +95,6 @@ public class AnimatorEvents extends Activity {
         Button ender = (Button) findViewById(R.id.endButton);
         ender.setOnClickListener(new View.OnClickListener() {
 
-            @Override
             public void onClick(View v) {
                 animView.endAnimation();
             }
@@ -105,11 +102,11 @@ public class AnimatorEvents extends Activity {
 
     }
 
-    public class MyAnimationView extends View implements Animatable.AnimatableListener,
-    Animator.AnimatorUpdateListener {
+    public class MyAnimationView extends View implements Animator.AnimatorListener,
+    ValueAnimator.AnimatorUpdateListener {
 
         public final ArrayList<ShapeHolder> balls = new ArrayList<ShapeHolder>();
-        Animatable animation;
+        Animator animation;
         ShapeHolder ball = null;
         boolean endImmediately = false;
 
@@ -120,28 +117,28 @@ public class AnimatorEvents extends Activity {
 
         private void createAnimation() {
             if (animation == null) {
-                PropertyAnimator yAnim = new PropertyAnimator(1500, ball, "y",
+                ObjectAnimator yAnim = new ObjectAnimator(1500, ball, "y",
                         ball.getY(), getHeight() - 50f);
                 yAnim.setRepeatCount(0);
-                yAnim.setRepeatMode(Animator.REVERSE);
+                yAnim.setRepeatMode(ValueAnimator.REVERSE);
                 yAnim.setInterpolator(new AccelerateInterpolator(2f));
                 yAnim.addUpdateListener(this);
                 yAnim.addListener(this);
 
-                PropertyAnimator xAnim = new PropertyAnimator(1000, ball, "x",
+                ObjectAnimator xAnim = new ObjectAnimator(1000, ball, "x",
                         ball.getX(), ball.getX() + 300);
                 xAnim.setStartDelay(0);
                 xAnim.setRepeatCount(0);
-                xAnim.setRepeatMode(Animator.REVERSE);
+                xAnim.setRepeatMode(ValueAnimator.REVERSE);
                 xAnim.setInterpolator(new AccelerateInterpolator(2f));
 
-                PropertyAnimator alphaAnim = new PropertyAnimator(1000, ball, "alpha", 1f, .5f);
-                Sequencer alphaSeq = new Sequencer();
+                ObjectAnimator alphaAnim = new ObjectAnimator(1000, ball, "alpha", 1f, .5f);
+                AnimatorSet alphaSeq = new AnimatorSet();
                 alphaSeq.play(alphaAnim);
 
-                animation = new Sequencer();
-                ((Sequencer) animation).playTogether(yAnim, xAnim);
-                //((Sequencer) animation).play(alphaSeq).after(500);
+                animation = new AnimatorSet();
+                ((AnimatorSet) animation).playTogether(yAnim, xAnim);
+                //((AnimatorSet) animation).play(alphaSeq).after(500);
                 animation.addListener(this);
             }
         }
@@ -198,12 +195,12 @@ public class AnimatorEvents extends Activity {
             canvas.restore();
         }
 
-        public void onAnimationUpdate(Animator animation) {
+        public void onAnimationUpdate(ValueAnimator animation) {
             invalidate();
         }
 
-        public void onAnimationStart(Animatable animation) {
-            if (animation instanceof Sequencer) {
+        public void onAnimationStart(Animator animation) {
+            if (animation instanceof AnimatorSet) {
                 startText.setAlpha(1f);
             } else {
                 startTextAnimator.setAlpha(1f);
@@ -213,24 +210,24 @@ public class AnimatorEvents extends Activity {
             }
         }
 
-        public void onAnimationEnd(Animatable animation) {
-            if (animation instanceof Sequencer) {
+        public void onAnimationEnd(Animator animation) {
+            if (animation instanceof AnimatorSet) {
                 endText.setAlpha(1f);
             } else {
                 endTextAnimator.setAlpha(1f);
             }
         }
 
-        public void onAnimationCancel(Animatable animation) {
-            if (animation instanceof Sequencer) {
+        public void onAnimationCancel(Animator animation) {
+            if (animation instanceof AnimatorSet) {
                 cancelText.setAlpha(1f);
             } else {
                 cancelTextAnimator.setAlpha(1f);
             }
         }
 
-        public void onAnimationRepeat(Animatable animation) {
-            if (animation instanceof Sequencer) {
+        public void onAnimationRepeat(Animator animation) {
+            if (animation instanceof AnimatorSet) {
                 repeatText.setAlpha(1f);
             } else {
                 repeatTextAnimator.setAlpha(1f);

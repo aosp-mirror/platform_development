@@ -50,7 +50,7 @@ public class BouncingBalls extends Activity {
         container.addView(new MyAnimationView(this));
     }
 
-    public class MyAnimationView extends View implements Animator.AnimatorUpdateListener, Animatable.AnimatableListener {
+    public class MyAnimationView extends View implements ValueAnimator.AnimatorUpdateListener, Animator.AnimatorListener {
 
         private static final int RED = 0xffFF8080;
         private static final int BLUE = 0xff8080FF;
@@ -58,7 +58,7 @@ public class BouncingBalls extends Activity {
         private static final int GREEN = 0xff80ff80;
 
         public final ArrayList<ShapeHolder> balls = new ArrayList<ShapeHolder>();
-        Sequencer animation = null;
+        AnimatorSet animation = null;
 
         public MyAnimationView(Context context) {
             super(context);
@@ -70,10 +70,10 @@ public class BouncingBalls extends Activity {
             paint.setColor(RED);
 
             // Animate background color
-            Animator colorAnim = new PropertyAnimator(3000, paint, "color", BLUE);
+            ValueAnimator colorAnim = new ObjectAnimator(3000, paint, "color", BLUE);
             colorAnim.setEvaluator(new RGBEvaluator());
-            colorAnim.setRepeatCount(Animator.INFINITE);
-            colorAnim.setRepeatMode(Animator.REVERSE);
+            colorAnim.setRepeatCount(ValueAnimator.INFINITE);
+            colorAnim.setRepeatMode(ValueAnimator.REVERSE);
             colorAnim.addUpdateListener(this); // forces invalidation to get the redraw
             colorAnim.start();
         }
@@ -92,33 +92,33 @@ public class BouncingBalls extends Activity {
             float h = (float)getHeight();
             float eventY = event.getY();
             int duration = (int)(500 * ((h - eventY)/h));
-            Animator bounceAnim = new PropertyAnimator(duration, newBall, "y", startY, endY);
+            ValueAnimator bounceAnim = new ObjectAnimator(duration, newBall, "y", startY, endY);
             bounceAnim.setInterpolator(new AccelerateInterpolator());
-            Animator squashAnim1 = new PropertyAnimator(duration/4, newBall, "x", newBall.getX(),
+            ValueAnimator squashAnim1 = new ObjectAnimator(duration/4, newBall, "x", newBall.getX(),
                     newBall.getX() - 25f);
             squashAnim1.setRepeatCount(1);
-            squashAnim1.setRepeatMode(Animator.REVERSE);
+            squashAnim1.setRepeatMode(ValueAnimator.REVERSE);
             squashAnim1.setInterpolator(new DecelerateInterpolator());
-            Animator squashAnim2 = new PropertyAnimator(duration/4, newBall, "width", newBall.getWidth(),
+            ValueAnimator squashAnim2 = new ObjectAnimator(duration/4, newBall, "width", newBall.getWidth(),
                     newBall.getWidth() + 50);
             squashAnim2.setRepeatCount(1);
-            squashAnim2.setRepeatMode(Animator.REVERSE);
+            squashAnim2.setRepeatMode(ValueAnimator.REVERSE);
             squashAnim2.setInterpolator(new DecelerateInterpolator());
-            Animator stretchAnim1 = new PropertyAnimator(duration/4, newBall, "y", endY,
+            ValueAnimator stretchAnim1 = new ObjectAnimator(duration/4, newBall, "y", endY,
                     endY + 25f);
             stretchAnim1.setRepeatCount(1);
             stretchAnim1.setInterpolator(new DecelerateInterpolator());
-            stretchAnim1.setRepeatMode(Animator.REVERSE);
-            Animator stretchAnim2 = new PropertyAnimator(duration/4, newBall, "height",
+            stretchAnim1.setRepeatMode(ValueAnimator.REVERSE);
+            ValueAnimator stretchAnim2 = new ObjectAnimator(duration/4, newBall, "height",
                     newBall.getHeight(), newBall.getHeight() - 25);
             stretchAnim2.setRepeatCount(1);
             stretchAnim2.setInterpolator(new DecelerateInterpolator());
-            stretchAnim2.setRepeatMode(Animator.REVERSE);
-            Animator bounceBackAnim = new PropertyAnimator(duration, newBall, "y", endY,
+            stretchAnim2.setRepeatMode(ValueAnimator.REVERSE);
+            ValueAnimator bounceBackAnim = new ObjectAnimator(duration, newBall, "y", endY,
                     startY);
             bounceBackAnim.setInterpolator(new DecelerateInterpolator());
             // Sequence the down/squash&stretch/up animations
-            Sequencer bouncer = new Sequencer();
+            AnimatorSet bouncer = new AnimatorSet();
             bouncer.play(bounceAnim).before(squashAnim1);
             bouncer.play(squashAnim1).with(squashAnim2);
             bouncer.play(squashAnim1).with(stretchAnim1);
@@ -126,15 +126,15 @@ public class BouncingBalls extends Activity {
             bouncer.play(bounceBackAnim).after(stretchAnim2);
 
             // Fading animation - remove the ball when the animation is done
-            Animator fadeAnim = new PropertyAnimator(250, newBall, "alpha", 1f, 0f);
+            ValueAnimator fadeAnim = new ObjectAnimator(250, newBall, "alpha", 1f, 0f);
             fadeAnim.addListener(this);
 
             // Sequence the two animations to play one after the other
-            Sequencer sequencer = new Sequencer();
-            sequencer.play(bouncer).before(fadeAnim);
+            AnimatorSet animatorSet = new AnimatorSet();
+            animatorSet.play(bouncer).before(fadeAnim);
 
             // Start the animation
-            sequencer.start();
+            animatorSet.start();
 
             return true;
         }
@@ -171,26 +171,26 @@ public class BouncingBalls extends Activity {
             }
         }
 
-        public void onAnimationUpdate(Animator animation) {
+        public void onAnimationUpdate(ValueAnimator animation) {
             invalidate();
         }
 
         @Override
-        public void onAnimationCancel(Animatable animation) {
+        public void onAnimationCancel(Animator animation) {
         }
 
         @Override
-        public void onAnimationEnd(Animatable animation) {
-            balls.remove(((PropertyAnimator)animation).getTarget());
+        public void onAnimationEnd(Animator animation) {
+            balls.remove(((ObjectAnimator)animation).getTarget());
 
         }
 
         @Override
-        public void onAnimationRepeat(Animatable animation) {
+        public void onAnimationRepeat(Animator animation) {
         }
 
         @Override
-        public void onAnimationStart(Animatable animation) {
+        public void onAnimationStart(Animator animation) {
         }
     }
 }

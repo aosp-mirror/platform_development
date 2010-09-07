@@ -30,9 +30,7 @@ import android.graphics.RadialGradient;
 import android.graphics.Shader;
 import android.graphics.drawable.ShapeDrawable;
 import android.graphics.drawable.shapes.OvalShape;
-import android.graphics.drawable.shapes.RectShape;
 import android.os.Bundle;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.DecelerateInterpolator;
@@ -60,10 +58,10 @@ public class AnimationCloning extends Activity {
         });
     }
 
-    public class MyAnimationView extends View implements Animator.AnimatorUpdateListener {
+    public class MyAnimationView extends View implements ValueAnimator.AnimatorUpdateListener {
 
         public final ArrayList<ShapeHolder> balls = new ArrayList<ShapeHolder>();
-        Sequencer animation = null;
+        AnimatorSet animation = null;
         private float mDensity;
 
         public MyAnimationView(Context context) {
@@ -81,27 +79,27 @@ public class AnimationCloning extends Activity {
 
         private void createAnimation() {
             if (animation == null) {
-                PropertyAnimator anim1 = new PropertyAnimator(500, balls.get(0), "y",
+                ObjectAnimator anim1 = new ObjectAnimator(500, balls.get(0), "y",
                         0f, getHeight() - balls.get(0).getHeight());
-                PropertyAnimator anim2 = anim1.clone();
+                ObjectAnimator anim2 = anim1.clone();
                 anim2.setTarget(balls.get(1));
                 anim1.addUpdateListener(this);
 
                 ShapeHolder ball2 = balls.get(2);
-                PropertyAnimator animDown = new PropertyAnimator(500, ball2, "y",
+                ObjectAnimator animDown = new ObjectAnimator(500, ball2, "y",
                         0f, getHeight() - ball2.getHeight());
                 animDown.setInterpolator(new AccelerateInterpolator());
-                PropertyAnimator animUp = new PropertyAnimator(500, ball2, "y",
+                ObjectAnimator animUp = new ObjectAnimator(500, ball2, "y",
                         getHeight() - ball2.getHeight(), 0f);
                 animDown.setInterpolator(new DecelerateInterpolator());
-                Sequencer s1 = new Sequencer();
+                AnimatorSet s1 = new AnimatorSet();
                 s1.playSequentially(animDown, animUp);
                 animDown.addUpdateListener(this);
                 animUp.addUpdateListener(this);
-                Sequencer s2 = (Sequencer) s1.clone();
+                AnimatorSet s2 = (AnimatorSet) s1.clone();
                 s2.setTarget(balls.get(3));
 
-                animation = new Sequencer();
+                animation = new AnimatorSet();
                 animation.playTogether(anim1, anim2, s1);
                 animation.playSequentially(s1, s2);
             }
@@ -144,7 +142,7 @@ public class AnimationCloning extends Activity {
             animation.start();
         }
 
-        public void onAnimationUpdate(Animator animation) {
+        public void onAnimationUpdate(ValueAnimator animation) {
             invalidate();
         }
 

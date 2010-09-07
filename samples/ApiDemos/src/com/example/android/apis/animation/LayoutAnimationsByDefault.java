@@ -20,23 +20,15 @@ package com.example.android.apis.animation;
 // class is in a sub-package.
 import com.example.android.apis.R;
 
-import android.animation.Animatable;
-import android.animation.AnimatableListenerAdapter;
-import android.animation.Keyframe;
-import android.animation.LayoutTransition;
-import android.animation.PropertyAnimator;
-import android.animation.PropertyValuesHolder;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.CheckBox;
-import android.widget.CompoundButton;
 
 import android.app.Activity;
 import android.os.Bundle;
 import android.widget.Button;
 
 /**
- * This application demonstrates the seeking capability of Animator. The SeekBar in the
+ * This application demonstrates the seeking capability of ValueAnimator. The SeekBar in the
  * UI allows you to set the position of the animation. Pressing the Run button will play from
  * the current position of the animation.
  */
