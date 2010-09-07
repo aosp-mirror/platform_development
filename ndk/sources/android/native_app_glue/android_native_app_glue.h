@@ -59,25 +59,26 @@ extern "C"
  *
  *      - input events coming from the AInputQueue attached to the activity.
  *
- *    Each of these correspond to an ALooper callback that returns a "data"
- *    value of LOOPER_ID_MAIN and LOOPER_ID_INPUT, respectively.
+ *    Each of these correspond to an ALooper identifier returned by
+ *    ALooper_pollOnce with values of LOOPER_ID_MAIN and LOOPER_ID_INPUT,
+ *    respectively.
  *
- *    Your application can use the same ALooper to listen to additionnal
- *    file-descriptors.
+ *    Your application can use the same ALooper to listen to additional
+ *    file-descriptors.  They can either be callback based, or with return
+ *    identifiers starting with LOOPER_ID_USER.
  *
- * 4/ Whenever you receive a LOOPER_ID_MAIN event from the ALooper, your
- *    code should call the function android_app_read_cmd() to read the
- *    command value and act upon it. This is normally done by calling
- *    android_app_exec_cmd() directly.
+ * 4/ Whenever you receive a LOOPER_ID_MAIN or LOOPER_ID_INPUT event,
+ *    the returned data will point to an android_poll_source structure.  You
+ *    can call the process() function on it, and fill in android_app->onAppCmd
+ *    and android_app->onInputEvent to be called for your own processing
+ *    of the event.
  *
- *    XXX: MAKE THIS STUFF MORE CLEAR !!
- *
- * 5/ Whenever you receive a LOOPER_ID_INPUT event from the ALooper, you
- *    should read one event from the AInputQueue with AInputQueue_getEvent().
+ *    Alternatively, you can call the low-level functions to read and process
+ *    the data directly...  look at the process_cmd() and process_input()
+ *    implementations in the glue to see how to do this.
  *
  * See the sample named "native-activity" that comes with the NDK with a
- * full usage example.
- *
+ * full usage example.  Also look at the JavaDoc of NativeActivity.
  */
 
 struct android_app;
@@ -91,12 +92,12 @@ struct android_poll_source {
     // LOOPER_ID_INPUT.
     int32_t id;
 
-    // The android_app this fd is associated with.
+    // The android_app this ident is associated with.
     struct android_app* app;
 
     // Function to call to perform the standard processing of data from
     // this source.
-    void (*process)(struct android_app* app);
+    void (*process)(struct android_app* app, struct android_poll_source* source);
 };
 
 /**
@@ -185,7 +186,9 @@ struct android_app {
 
 enum {
     /**
-     * Looper data ID of commands coming from the app's main thread.
+     * Looper data ID of commands coming from the app's main thread, which
+     * is returned as an identifier from ALooper_pollOnce().  The data for this
+     * identifier is a pointer to an android_poll_source structure.
      * These can be retrieved and processed with android_app_read_cmd()
      * and android_app_exec_cmd().
      */
@@ -193,10 +196,17 @@ enum {
 
     /**
      * Looper data ID of events coming from the AInputQueue of the
-     * application's window.  These can be read via the inputQueue
+     * application's window, which is returned as an identifier from
+     * ALooper_pollOnce().  The data for this identifier is a pointer to an
+     * android_poll_source structure.  These can be read via the inputQueue
      * object of android_app.
      */
-    LOOPER_ID_INPUT = 2
+    LOOPER_ID_INPUT = 2,
+
+    /**
+     * Start of user-defined ALooper identifiers.
+     */
+    LOOPER_ID_USER = 3,
 };
 
 enum {

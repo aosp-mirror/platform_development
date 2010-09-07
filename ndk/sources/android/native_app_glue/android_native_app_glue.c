@@ -89,7 +89,8 @@ void android_app_pre_exec_cmd(struct android_app* android_app, int8_t cmd) {
             if (android_app->inputQueue != NULL) {
                 LOGI("Attaching input queue to looper");
                 AInputQueue_attachLooper(android_app->inputQueue,
-                        android_app->looper, NULL, &android_app->inputPollSource);
+                        android_app->looper, LOOPER_ID_INPUT, NULL,
+                        &android_app->inputPollSource);
             }
             pthread_cond_broadcast(&android_app->cond);
             pthread_mutex_unlock(&android_app->mutex);
@@ -178,7 +179,7 @@ static void android_app_destroy(struct android_app* android_app) {
     // Can't touch android_app object after this.
 }
 
-static void process_input(struct android_app* app) {
+static void process_input(struct android_app* app, struct android_poll_source* source) {
     AInputEvent* event = NULL;
     if (AInputQueue_getEvent(app->inputQueue, &event) >= 0) {
         LOGI("New input event: type=%d\n", AInputEvent_getType(event));
@@ -193,7 +194,7 @@ static void process_input(struct android_app* app) {
     }
 }
 
-static void process_cmd(struct android_app* app) {
+static void process_cmd(struct android_app* app, struct android_poll_source* source) {
     int8_t cmd = android_app_read_cmd(app);
     android_app_pre_exec_cmd(app, cmd);
     if (app->onAppCmd != NULL) app->onAppCmd(app, cmd);
@@ -216,7 +217,8 @@ static void* android_app_entry(void* param) {
     android_app->inputPollSource.process = process_input;
 
     ALooper* looper = ALooper_prepare(ALOOPER_PREPARE_ALLOW_NON_CALLBACKS);
-    ALooper_addFd(looper, android_app->msgread, POLLIN, NULL, &android_app->cmdPollSource);
+    ALooper_addFd(looper, android_app->msgread, LOOPER_ID_MAIN, POLLIN, NULL,
+            &android_app->cmdPollSource);
     android_app->looper = looper;
 
     pthread_mutex_lock(&android_app->mutex);
