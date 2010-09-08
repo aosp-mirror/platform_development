@@ -1581,7 +1581,7 @@
         </activity>
 
         <activity android:name=".view.Controls2"
-                  android:label="Views/Controls/2. Default Theme"
+                  android:label="Views/Controls/2. Dark Theme"
                   android:theme="@android:style/Theme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

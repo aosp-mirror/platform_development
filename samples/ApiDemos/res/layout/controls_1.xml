@@ -23,23 +23,46 @@
         android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
-    
+
+       <LinearLayout
+           android:orientation="horizontal"
+           android:layout_width="match_parent"
+           android:layout_height="wrap_content">
+
         <Button android:id="@+id/button"
             android:text="@string/controls_1_save"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
-    
+
+        <Button android:id="@+id/button_disabled"
+            android:text="@string/controls_1_save"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+      </LinearLayout>
+
+      <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
         <EditText android:id="@+id/edit"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
-            
+
+        <EditText android:id="@+id/edit2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
+      </LinearLayout>
+
         <CheckBox android:id="@+id/check1"
             android:paddingBottom="24sp"
 	        android:paddingTop="24sp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/controls_1_checkbox_1" />
-    
+
         <CheckBox android:id="@+id/check2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
