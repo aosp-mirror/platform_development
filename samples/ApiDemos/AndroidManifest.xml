@@ -262,7 +262,6 @@
         <activity android:name=".app.FragmentLayout$DetailsActivity" />
 
         <activity android:name=".app.FragmentListCursorLoader"
-                android:theme="@android:style/Theme.WithActionBar"
                 android:label="@string/fragment_list_cursor_loader">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -279,7 +278,6 @@
         </activity>
 
         <activity android:name=".app.FragmentMenu"
-                android:theme="@android:style/Theme.WithActionBar"
                 android:label="@string/fragment_menu">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -669,8 +667,7 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".app.ActionBarUsage" android:label="@string/action_bar_usage"
-                  android:theme="@android:style/Theme.WithActionBar">
+        <activity android:name=".app.ActionBarUsage" android:label="@string/action_bar_usage">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -1387,8 +1384,14 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".view.List15" android:label="Views/Lists/15. Selection Mode"
-                  android:theme="@android:style/Theme.WithActionBar">
+        <activity android:name=".view.List15" android:label="Views/Lists/15. Selection Mode">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".view.List16" android:label="Views/Lists/16. Border selection mode">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -1461,8 +1464,7 @@
         </activity>
 
         <activity android:name=".view.Grid3"
-                  android:label="Views/Grid/3. Selection Mode"
-                  android:theme="@android:style/Theme.WithActionBar">
+                  android:label="Views/Grid/3. Selection Mode">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
