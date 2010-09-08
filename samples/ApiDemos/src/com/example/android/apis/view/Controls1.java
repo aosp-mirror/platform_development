@@ -22,8 +22,9 @@ import com.example.android.apis.R;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.widget.Spinner;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.Spinner;
 
 
 /**
@@ -36,6 +37,9 @@ public class Controls1 extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.controls_1);
+
+        Button disabledButton = (Button) findViewById(R.id.button_disabled);
+        disabledButton.setEnabled(false);
 
         Spinner s1 = (Spinner) findViewById(R.id.spinner1);
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
