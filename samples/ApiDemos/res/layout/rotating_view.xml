@@ -31,13 +31,29 @@
             android:paddingLeft="5dip"
             android:paddingRight="5dip"
             android:textStyle="bold"
-            android:text="X"
+            android:text="TX"
             />
         <SeekBar
             android:orientation="horizontal"
+            android:layout_weight="1"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/rotationX"
+            android:id="@+id/translationX"
+        />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingLeft="15dip"
+            android:paddingRight="5dip"
+            android:textStyle="bold"
+            android:text="TY"
+            />
+        <SeekBar
+            android:orientation="horizontal"
+            android:layout_weight="1"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/translationY"
         />
     </LinearLayout>
     <LinearLayout
@@ -50,33 +66,80 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:paddingLeft="5dip"
+            android:paddingRight="5dip"
+            android:textStyle="bold"
+            android:text="SX"
+            />
+        <SeekBar
+            android:orientation="horizontal"
+            android:layout_weight="1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/scaleX"
+        />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingLeft="15dip"
+            android:paddingRight="5dip"
+            android:textStyle="bold"
+            android:text="SY"
+            />
+        <SeekBar
+            android:orientation="horizontal"
+            android:layout_weight="1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/scaleY"
+        />
+    </LinearLayout>
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dip"
+        >
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingLeft="5dip"
+            android:paddingRight="5dip"
+            android:textStyle="bold"
+            android:text="X"
+            />
+        <SeekBar
+            android:orientation="horizontal"
+            android:layout_weight="1"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/rotationX"
+        />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingLeft="15dip"
             android:paddingRight="5dip"
             android:textStyle="bold"
             android:text="Y"
             />
         <SeekBar
             android:orientation="horizontal"
+            android:layout_weight="1"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:id="@+id/rotationY"
         />
-    </LinearLayout>
-    <LinearLayout
-        android:orientation="horizontal"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dip"
-        >
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:paddingLeft="5dip"
+            android:paddingLeft="15dip"
             android:paddingRight="5dip"
             android:textStyle="bold"
             android:text="Z"
             />
         <SeekBar
             android:orientation="horizontal"
+            android:layout_weight="1"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:id="@+id/rotationZ"
