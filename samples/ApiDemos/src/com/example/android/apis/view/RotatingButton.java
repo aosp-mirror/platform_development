@@ -26,9 +26,9 @@ import android.widget.Button;
 import android.widget.SeekBar;
 
 /**
- * This application demonstrates the seeking capability of ValueAnimator. The SeekBar in the
- * UI allows you to set the position of the animation. Pressing the Run button will play from
- * the current position of the animation.
+ * This application demonstrates the ability to transform views in 2D and 3D, scaling them,
+ * translating them, and rotating them (in 2D and 3D). Use the seek bars to set the various
+ * transform properties of the button.
  */
 public class RotatingButton extends Activity {
 
@@ -39,6 +39,80 @@ public class RotatingButton extends Activity {
         setContentView(R.layout.rotating_view);
         final Button rotatingButton = (Button) findViewById(R.id.rotatingButton);
         SeekBar seekBar;
+        seekBar = (SeekBar) findViewById(R.id.translationX);
+        seekBar.setMax(400);
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+            }
+
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress,
+                    boolean fromUser) {
+                rotatingButton.setTranslationX((float)progress);
+            }
+        });
+        seekBar = (SeekBar) findViewById(R.id.translationY);
+        seekBar.setMax(800);
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+            }
+
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress,
+                    boolean fromUser) {
+                rotatingButton.setTranslationY((float)progress);
+            }
+        });
+        seekBar = (SeekBar) findViewById(R.id.scaleX);
+        seekBar.setMax(50);
+        seekBar.setProgress(10);
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+            }
+
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress,
+                    boolean fromUser) {
+                rotatingButton.setScaleX((float)progress/10f);
+            }
+        });
+        seekBar = (SeekBar) findViewById(R.id.scaleY);
+        seekBar.setMax(50);
+        seekBar.setProgress(10);
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+            }
+
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress,
+                    boolean fromUser) {
+                rotatingButton.setScaleY((float)progress/10f);
+            }
+        });
         seekBar = (SeekBar) findViewById(R.id.rotationX);
         seekBar.setMax(360);
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
