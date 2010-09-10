@@ -4,6 +4,10 @@ runtime: python
 api_version: 1
 
 handlers:
+- url: /remote_api
+  script: $PYTHON_LIB/google/appengine/ext/remote_api/handler.py
+  login: admin
+
 - url: /gae_shell/static
   static_dir: gae_shell/static
   expiration: 1d
