@@ -20,8 +20,7 @@
 <!-- BEGIN_INCLUDE(layout) -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent" android:layout_height="match_parent">
-    <fragment
-            class="com.example.android.apis.app.FragmentLayout$TitlesFragment"
+    <fragment class="com.example.android.apis.app.FragmentLayout$TitlesFragment"
             android:id="@+id/titles"
             android:layout_width="match_parent" android:layout_height="match_parent" />
 </FrameLayout>

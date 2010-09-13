@@ -63,9 +63,7 @@ public class FragmentRetainInstance extends Activity {
             Button button = (Button)v.findViewById(R.id.restart);
             button.setOnClickListener(new OnClickListener() {
                 public void onClick(View v) {
-                    if (mWorkFragment != null) {
-                        mWorkFragment.restart();
-                    }
+                    mWorkFragment.restart();
                 }
             });
 

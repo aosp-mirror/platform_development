@@ -26,10 +26,10 @@ import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.ScrollView;
@@ -82,29 +82,52 @@ public class FragmentLayout extends Activity {
 
 //BEGIN_INCLUDE(titles)
     public static class TitlesFragment extends ListFragment {
+        DetailsFragment mDetails;
+        int mCurCheckPosition = 0;
+
         @Override
         public void onActivityCreated(Bundle savedInstanceState) {
             super.onActivityCreated(savedInstanceState);
 
             // Populate list with our static array of titles.
             setListAdapter(new ArrayAdapter<String>(getActivity(),
-                    android.R.layout.simple_list_item_1, Shakespeare.TITLES));
+                    android.R.layout.simple_list_item_activated_1, Shakespeare.TITLES));
+
+            // Restore last state for checked position.
+            if (savedInstanceState != null) {
+                mCurCheckPosition = savedInstanceState.getInt("curChoice", 0);
+            }
+
+            // If we are showing details in the screen, set up the list to highlight.
+            mDetails = (DetailsFragment)getFragmentManager().findFragmentById(R.id.details);
+            if (mDetails != null && mDetails.isInLayout()) {
+                getListView().setChoiceMode(ListView.CHOICE_MODE_SINGLE);
+                getListView().setItemChecked(mCurCheckPosition, true);
+                mDetails.setText(mCurCheckPosition);
+            }
+        }
+
+        @Override
+        public void onSaveInstanceState(Bundle outState) {
+            super.onSaveInstanceState(outState);
+            outState.putInt("curChoice", mCurCheckPosition);
         }
 
         @Override
         public void onListItemClick(ListView l, View v, int position, long id) {
-            DetailsFragment frag = (DetailsFragment)
-                    getFragmentManager().findFragmentById(R.id.dialog);
-            if (frag != null && frag.isVisible()) {
+            mCurCheckPosition = position;
+
+            if (mDetails != null && mDetails.isVisible()) {
                 // If the activity has a fragment to display the dialog,
                 // point it to what the user has selected.
-                frag.setText((int)id);
+                mDetails.setText(position);
+                getListView().setItemChecked(position, true);
             } else {
                 // Otherwise we need to launch a new activity to display
                 // the dialog fragment with selected text.
                 Intent intent = new Intent();
                 intent.setClass(getActivity(), DetailsActivity.class);
-                intent.putExtra("text", (int)id);
+                intent.putExtra("text", position);
                 startActivity(intent);
             }
         }
@@ -142,8 +165,13 @@ public class FragmentLayout extends Activity {
                 Bundle savedInstanceState) {
             ScrollView scroller = new ScrollView(getActivity());
             mText = new TextView(getActivity());
+            int padding = (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
+                    4, getActivity().getResources().getDisplayMetrics());
+            mText.setPadding(padding, padding, padding, padding);
             scroller.addView(mText);
-            setText(mDisplayedText);
+            if (mDisplayedText >= 0) {
+                mText.setText(Shakespeare.DIALOGUE[mDisplayedText]);
+            }
             return scroller;
         }
     }

@@ -29,7 +29,8 @@ import android.widget.Toast;
 
 /**
  * This demo illustrates the use of CHOICE_MODE_MULTIPLE_MODAL, a.k.a. selection mode on ListView
- * couple with the new simple_selectable_list_item which uses a highligted border for selected items.
+ * couple with the new simple_list_item_activated_1 which uses a highlighted border for selected
+ * items.
  */
 public class List16 extends ListActivity {
     @Override
@@ -39,7 +40,7 @@ public class List16 extends ListActivity {
         lv.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE_MODAL);
         lv.setMultiChoiceModeListener(new ModeCallback());
         setListAdapter(new ArrayAdapter<String>(this,
-                android.R.layout.simple_selectable_list_item, mStrings));
+                android.R.layout.simple_list_item_activated_1, mStrings));
     }
     
     @Override
