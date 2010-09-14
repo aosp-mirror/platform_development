@@ -244,6 +244,7 @@ development/samples/CubeLiveWallpaper        samples/${PLATFORM_NAME}/CubeLiveWa
 development/samples/VoiceRecognitionService  samples/${PLATFORM_NAME}/VoiceRecognitionService
 development/samples/TicTacToeLib             samples/${PLATFORM_NAME}/TicTacToeLib
 development/samples/TicTacToeMain            samples/${PLATFORM_NAME}/TicTacToeMain
+development/samples/CrossCompatibility       samples/${PLATFORM_NAME}/CrossCompatibility
 
 # NOTICE files are copied by build/core/Makefile from sdk.git
 sdk/files/sdk_files_NOTICE.txt samples/${PLATFORM_NAME}/NOTICE.txt
