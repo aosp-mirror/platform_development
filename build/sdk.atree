@@ -245,6 +245,7 @@ development/samples/VoiceRecognitionService  samples/${PLATFORM_NAME}/VoiceRecog
 development/samples/TicTacToeLib             samples/${PLATFORM_NAME}/TicTacToeLib
 development/samples/TicTacToeMain            samples/${PLATFORM_NAME}/TicTacToeMain
 development/samples/XmlAdapters              samples/${PLATFORM_NAME}/XmlAdapters
+development/samples/CrossCompatibility       samples/${PLATFORM_NAME}/CrossCompatibility
 
 # NOTICE files are copied by build/core/Makefile from sdk.git
 sdk/files/sdk_files_NOTICE.txt samples/${PLATFORM_NAME}/NOTICE.txt
