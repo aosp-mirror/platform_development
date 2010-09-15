@@ -111,6 +111,18 @@ framework/org.eclipse.equinox.common_3.4.0.v20080421-2006.jar tools/lib/org.ecli
 framework/org.eclipse.jface_3.4.2.M20090107-0800.jar          tools/lib/org.eclipse.jface_3.4.2.M20090107-0800.jar
 framework/osgi.jar                                            tools/lib/osgi.jar
 
+# Proguard
+external/proguard/docs/license.html                           tools/proguard/license.html
+external/proguard/docs/GPL.html                               tools/proguard/GPL.html
+external/proguard/docs/GPL_exception.html                     tools/proguard/GPL_exception.html
+external/proguard/lib/proguard.jar                            tools/proguard/lib/proguard.jar
+external/proguard/lib/proguardgui.jar                         tools/proguard/lib/proguardgui.jar
+external/proguard/lib/retrace.jar                             tools/proguard/lib/retrace.jar
+external/proguard/bin/proguard.sh                             tools/proguard/bin/proguard.sh
+external/proguard/bin/proguardgui.sh                          tools/proguard/bin/proguardgui.sh
+external/proguard/bin/retrace.sh                              tools/proguard/bin/retrace.sh
+external/proguard/src/proguard/ant/task.properties            tools/proguard/ant/task.properties
+
 ##############################################################################
 # Platform Tools Component
 ##############################################################################
