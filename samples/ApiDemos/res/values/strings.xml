@@ -86,12 +86,12 @@
     <string name="fragment_alert_dialog">App/Fragment/Alert Dialog</string>
 
     <string name="fragment_anim">App/Fragment/Anim</string>
-    
+
     <string name="fragment_context_menu">App/Fragment/Context Menu</string>
     <string name="fragment_context_menu_msg">Fragment populating a context
             menu; long press the button to see.</string>
     <string name="long_press">Long press me</string>
-    
+
     <string name="fragment_dialog">App/Fragment/Dialog</string>
     <string name="show">Show</string>
 
@@ -102,24 +102,24 @@
             of the activity:</string>
 
     <string name="fragment_layout">App/Fragment/Layout</string>
-    
+
     <string name="fragment_list_array">App/Fragment/List Array</string>
-    
+
     <string name="fragment_list_cursor_loader">App/Fragment/List Cursor Loader</string>
-    
+
     <string name="fragment_menu">App/Fragment/Menu</string>
     <string name="fragment_menu_msg">Build menus from two fragments, allowing
         you to hide them to remove them..</string>
     <string name="fragment1menu">Show fragment 1 menu</string>
     <string name="fragment2menu">Show fragment 2 menu</string>
-    
+
     <string name="fragment_retain_instance">App/Fragment/Retain Instance</string>
     <string name="fragment_retain_instance_msg">Current progress of retained fragment;
     restarts if fragment is re-created.</string>
     <string name="restart">Restart</string>
 
     <string name="fragment_receive_result">App/Fragment/Receive Result</string>
-    
+
     <string name="fragment_stack">App/Fragment/Stack</string>
     <string name="new_fragment">New fragment</string>
 
@@ -300,7 +300,7 @@
     <string name="pick_person">Pick a Person</string>
     <string name="pick_phone">Pick a Phone</string>
     <string name="pick_address">Pick an Address</string>
-    
+
     <!-- ============================== -->
     <!--  app/intents examples strings     -->
     <!-- ============================== -->
@@ -653,6 +653,10 @@
     <string name="secure_view_overlay_button2">Clicky?</string>
     <string name="secure_view_overlay_button3">Think of the penguins!</string>
 
+    <string name="searchview_hint">Find something</string>
+    <string name="cheese_hunt_hint">Cheese hunt</string>
+    <string name="open_search">Expand</string>
+    <string name="close_search">Iconify</string>
     <!-- ============================== -->
     <!--  GoogleLogin examples strings  -->
     <!-- ============================== -->

@@ -1750,6 +1750,24 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".view.SearchViewActionBar" android:label="Views/Search View/Action Bar"
+                android:theme="@android:style/Theme.Holo">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+            <meta-data android:name="android.app.default_searchable"
+                       android:value=".app.SearchQueryResults" />
+        </activity>
+
+        <activity android:name=".view.SearchViewFilterMode" android:label="Views/Search View/Filter"
+                android:theme="@android:style/Theme.Holo">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
         <activity android:name=".view.RotatingButton" android:label="Views/Rotating Button">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
