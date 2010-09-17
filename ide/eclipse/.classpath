@@ -41,11 +41,12 @@
 	<classpathentry kind="src" path="frameworks/base/obex"/>
 	<classpathentry kind="src" path="frameworks/base/opengl/java"/>
 	<classpathentry kind="src" path="frameworks/base/packages/SettingsProvider/src"/>
-	<classpathentry kind="src" path="frameworks/base/policy"/>
+	<classpathentry kind="src" path="frameworks/base/policy/src"/>
 	<classpathentry kind="src" path="frameworks/base/sax/java"/>
 	<classpathentry kind="src" path="frameworks/base/services/java"/>
 	<classpathentry kind="src" path="frameworks/base/telephony/java"/>
 	<classpathentry kind="src" path="frameworks/base/test-runner/src"/>
+	<classpathentry kind="src" path="frameworks/base/voip/java"/>
 	<classpathentry kind="src" path="frameworks/base/vpn/java"/>
 	<classpathentry kind="src" path="frameworks/base/wifi/java"/>
 	<classpathentry kind="src" path="development/samples/ApiDemos/src"/>
@@ -92,6 +93,8 @@
 	<classpathentry kind="src" path="libcore/xml/src/main/java"/>
 	<classpathentry kind="src" path="out/target/common/obj/APPS/ApiDemos_intermediates/src/src"/>
 	<classpathentry kind="src" path="out/target/common/obj/APPS/Browser_intermediates/src/src"/>
+	<classpathentry kind="src" path="out/target/common/obj/APPS/CalendarProvider_intermediates/src/src"/>
+	<classpathentry kind="src" path="out/target/common/obj/APPS/ContactsProvider_intermediates/src/src"/>
 	<classpathentry kind="src" path="out/target/common/obj/APPS/Email_intermediates/src/src"/>
 	<classpathentry kind="src" path="out/target/common/obj/APPS/Music_intermediates/src/src"/>
 	<classpathentry kind="src" path="out/target/common/obj/APPS/Phone_intermediates/src/src"/>
@@ -100,12 +103,15 @@
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src/location/java"/>
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src/media/java"/>
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src/telephony/java"/>
+	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src/voip/java"/>
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src/vpn/java"/>
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src/wifi/java"/>
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/services_intermediates/src"/>
 	<classpathentry kind="src" path="out/target/common/R"/>
 	<classpathentry kind="src" path="external/tagsoup/src"/>
 	<classpathentry kind="src" path="external/apache-http/src"/>
+	<classpathentry kind="src" path="external/bouncycastle/src/main/java"/>
+	<classpathentry kind="src" path="external/nist-sip/java"/>
 	<classpathentry kind="lib" path="out/target/common/obj/JAVA_LIBRARIES/google-common_intermediates/javalib.jar"/>
 	<classpathentry kind="lib" path="out/target/common/obj/JAVA_LIBRARIES/gsf-client_intermediates/javalib.jar"/>
 	<classpathentry kind="lib" path="out/target/common/obj/JAVA_LIBRARIES/guava_intermediates/javalib.jar"/>
