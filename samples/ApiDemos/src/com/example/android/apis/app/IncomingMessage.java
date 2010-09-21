@@ -24,12 +24,13 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
 
 public class IncomingMessage extends Activity {
     @Override
@@ -41,29 +42,9 @@ public class IncomingMessage extends Activity {
         Button button = (Button) findViewById(R.id.notify);
         button.setOnClickListener(new Button.OnClickListener() {
                 public void onClick(View v) {
-                    showToast();
                     showNotification();
                 }
             });
-    }
-
-    /**
-     * The toast pops up a quick message to the user showing what could be
-     * the text of an incoming message.  It uses a custom view to do so.
-     */
-    protected void showToast() {
-        // create the view
-        View view = inflateView(R.layout.incoming_message_panel);
-
-        // set the text in the view
-        TextView tv = (TextView)view.findViewById(R.id.message);
-        tv.setText("khtx. meet u for dinner. cul8r");
-
-        // show the toast
-        Toast toast = new Toast(this);
-        toast.setView(view);
-        toast.setDuration(Toast.LENGTH_LONG);
-        toast.show();
     }
 
     private View inflateView(int resource) {
@@ -97,9 +78,18 @@ public class IncomingMessage extends Activity {
         // Set the info for the views that show in the notification panel.
         notif.setLatestEventInfo(this, from, message, contentIntent);
 
-        // after a 100ms delay, vibrate for 250ms, pause for 100 ms and
+        // On tablets, the ticker shows the sender, the first line of the message,
+        // the photo of the person and the app icon.  For our sample, we just show
+        // the same icon twice.  If there is no sender, just pass an array of 1 Bitmap.
+        notif.tickerTitle = from;
+        notif.tickerSubtitle = message;
+        notif.tickerIcons = new Bitmap[2];
+        notif.tickerIcons[0] = getIconBitmap();;
+        notif.tickerIcons[1] = getIconBitmap();;
+
+        // after a 0ms delay, vibrate for 250ms, pause for 100 ms and
         // then vibrate for 500ms.
-        notif.vibrate = new long[] { 100, 250, 100, 500};
+        notif.vibrate = new long[] { 0, 250, 100, 500};
 
         // Note that we use R.layout.incoming_message_panel as the ID for
         // the notification.  It could be any integer you want, but we use
@@ -108,4 +98,10 @@ public class IncomingMessage extends Activity {
         // application.
         nm.notify(R.string.imcoming_message_ticker_text, notif);
     }
+
+    private Bitmap getIconBitmap() {
+        BitmapFactory f = new BitmapFactory();
+        return f.decodeResource(getResources(), R.drawable.app_sample_code);
+    }
 }
+
