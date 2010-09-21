@@ -20,6 +20,7 @@ package com.example.android.apis.animation;
 // class is in a sub-package.
 import android.animation.Animator;
 import android.animation.ObjectAnimator;
+import android.widget.LinearLayout;
 import com.example.android.apis.R;
 
 import android.animation.AnimatorListenerAdapter;
@@ -37,9 +38,9 @@ import android.widget.Button;
 
 /**
  * This application demonstrates how to use LayoutTransition to automate transition animations
- * as items are removed from or added to a container.
+ * as items are hidden or shown in a container.
  */
-public class LayoutAnimations extends Activity {
+public class LayoutAnimationsHideShow extends Activity {
 
     private int numButtons = 1;
     ViewGroup container = null;
@@ -48,27 +49,40 @@ public class LayoutAnimations extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.layout_animations);
+        setContentView(R.layout.layout_animations_hideshow);
 
-        container = new FixedGridLayout(this.getApplicationContext());
+        final CheckBox hideGoneCB = (CheckBox) findViewById(R.id.hideGoneCB);
+
+        container = new FixedGridLayout(this);
         ((FixedGridLayout)container).setCellHeight(50);
         ((FixedGridLayout)container).setCellWidth(100);
+        container = new LinearLayout(this);
+
+        // Add a slew of buttons to the container. We won't add any more buttons at runtime, but
+        // will just show/hide the buttons we've already created
+        for (int i = 0; i < 6; ++i) {
+            Button newButton = new Button(this);
+            newButton.setText("Click to Hide " + i);
+            container.addView(newButton);
+            newButton.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    v.setVisibility(hideGoneCB.isChecked() ? View.GONE : View.INVISIBLE);
+                }
+            });
+        }
         final LayoutTransition transitioner = new LayoutTransition();
         container.setLayoutTransition(transitioner);
 
         ViewGroup parent = (ViewGroup) findViewById(R.id.parent);
         parent.addView(container);
+
         Button addButton = (Button) findViewById(R.id.addNewButton);
         addButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                Button newButton = new Button(getApplicationContext());
-                newButton.setText("Click To Remove " + (numButtons++));
-                newButton.setOnClickListener(new View.OnClickListener() {
-                    public void onClick(View v) {
-                        container.removeView(v);
-                    }
-                });
-                container.addView(newButton, Math.min(1, container.getChildCount()));
+                for (int i = 0; i < container.getChildCount(); ++i) {
+                    View view = (View) container.getChildAt(i);
+                    view.setVisibility(View.VISIBLE);
+                }
             }
         });
 

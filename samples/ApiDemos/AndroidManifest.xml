@@ -912,8 +912,8 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".animation.LayoutAnimations"
-                  android:label="Animation/Layout Animations">
+        <activity android:name=".animation.LayoutAnimationsHideShow"
+                  android:label="Animation/Hide-Show Animations">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />

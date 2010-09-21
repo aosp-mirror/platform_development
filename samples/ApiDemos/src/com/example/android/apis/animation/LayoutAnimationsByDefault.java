@@ -28,9 +28,8 @@ import android.os.Bundle;
 import android.widget.Button;
 
 /**
- * This application demonstrates the seeking capability of ValueAnimator. The SeekBar in the
- * UI allows you to set the position of the animation. Pressing the Run button will play from
- * the current position of the animation.
+ * This application demonstrates how to use the animateLayoutChanges tag in XML to automate
+ * transition animations as items are removed from or added to a container.
  */
 public class LayoutAnimationsByDefault extends Activity {
 
