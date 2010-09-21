@@ -67,31 +67,11 @@
 	<classpathentry kind="src" path="development/samples/Snake/src"/>
 	<classpathentry kind="src" path="development/samples/Snake/tests/src"/>
 	<classpathentry kind="src" path="development/apps/Term/src"/>
-	<classpathentry kind="src" path="libcore/annotation/src/main/java"/>
-	<classpathentry kind="src" path="libcore/archive/src/main/java"/>
-	<classpathentry kind="src" path="libcore/auth/src/main/java"/>
-	<classpathentry kind="src" path="libcore/awt-kernel/src/main/java"/>
-	<classpathentry kind="src" path="libcore/concurrent/src/main/java"/>
-	<classpathentry kind="src" path="libcore/crypto/src/main/java"/>
 	<classpathentry kind="src" path="libcore/dalvik/src/main/java"/>
 	<classpathentry kind="src" path="libcore/icu/src/main/java"/>
 	<classpathentry kind="src" path="libcore/json/src/main/java"/>
 	<classpathentry kind="src" path="libcore/junit/src/main/java"/>
-	<classpathentry kind="src" path="libcore/logging/src/main/java"/>
-	<classpathentry kind="src" path="libcore/luni-kernel/src/main/java"/>
 	<classpathentry kind="src" path="libcore/luni/src/main/java"/>
-	<classpathentry kind="src" path="libcore/math/src/main/java"/>
-	<classpathentry kind="src" path="libcore/nio_char/src/main/java"/>
-	<classpathentry kind="src" path="libcore/nio/src/main/java"/>
-	<classpathentry kind="src" path="libcore/openssl/src/main/java"/>
-	<classpathentry kind="src" path="libcore/prefs/src/main/java"/>
-	<classpathentry kind="src" path="libcore/regex/src/main/java"/>
-	<classpathentry kind="src" path="libcore/security-kernel/src/main/java"/>
-	<classpathentry kind="src" path="libcore/security/src/main/java"/>
-	<classpathentry kind="src" path="libcore/sql/src/main/java"/>
-	<classpathentry kind="src" path="libcore/suncompat/src/main/java"/>
-	<classpathentry kind="src" path="libcore/text/src/main/java"/>
-	<classpathentry kind="src" path="libcore/x-net/src/main/java"/>
 	<classpathentry kind="src" path="libcore/xml/src/main/java"/>
 	<classpathentry kind="src" path="out/target/common/obj/APPS/ApiDemos_intermediates/src/src"/>
 	<classpathentry kind="src" path="out/target/common/obj/APPS/Browser_intermediates/src/src"/>
