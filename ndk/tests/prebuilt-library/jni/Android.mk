@@ -18,14 +18,14 @@ else # not build libfoo.so, trying to use PREBUILT_SHARED_LIBRARY instead.
 #
 include $(CLEAR_VARS)
 LOCAL_MODULE := foo-prebuilt
-LOCAL_SRC_FILES := $(LOCAL_PATH)/libfoo.so
+LOCAL_SRC_FILES := libfoo.so
 LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH)/foo
 include $(PREBUILT_SHARED_LIBRARY)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := foo-user
 LOCAL_SRC_FILES := foo-user.c
-LOCAL_PREBUILTS := foo-prebuilt
+LOCAL_SHARED_LIBRARIES := foo-prebuilt
 include $(BUILD_SHARED_LIBRARY)
 
 endif
