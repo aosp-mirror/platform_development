@@ -84,6 +84,7 @@ public class TitleEditor extends Activity implements View.OnClickListener {
          * the block will be momentary, but in a real app you should use
          * android.content.AsyncQueryHandler or android.os.AsyncTask.
          */
+
         mCursor = managedQuery(
             mUri,        // The URI for the note that is to be retrieved.
             PROJECTION,  // The columns to retrieve
@@ -141,6 +142,7 @@ public class TitleEditor extends Activity implements View.OnClickListener {
 
         // Verifies that the query made in onCreate() actually worked. If it worked, then the
         // Cursor object is not null. If it is *empty*, then mCursor.getCount() == 0.
+
         if (mCursor != null) {
 
             // Creates a values map for updating the provider.
@@ -163,6 +165,7 @@ public class TitleEditor extends Activity implements View.OnClickListener {
                 null,    // No selection criteria is used, so no "where" columns are needed.
                 null     // No "where" columns are used, so no "where" values are needed.
             );
+
         }
     }
 

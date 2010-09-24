@@ -584,6 +584,7 @@ public class NotePadProvider extends ContentProvider implements PipeDataWriter<C
 
         // Opens the database object in "write" mode.
         SQLiteDatabase db = mOpenHelper.getWritableDatabase();
+        String finalWhere;
 
         int count;
 
@@ -604,34 +605,27 @@ public class NotePadProvider extends ContentProvider implements PipeDataWriter<C
                 // incoming data, but modifies the where clause to restrict it to the
                 // particular note ID.
             case NOTE_ID:
-                // From the incoming URI, get the note ID
-                String noteId = uri.getPathSegments().get(NotePad.Notes.NOTE_ID_PATH_POSITION);
+                /*
+                 * Starts a final WHERE clause by restricting it to the
+                 * desired note ID.
+                 */
+                finalWhere =
+                        NotePad.Notes._ID +                              // The ID column name
+                        " = " +                                          // test for equality
+                        uri.getPathSegments().                           // the incoming note ID
+                            get(NotePad.Notes.NOTE_ID_PATH_POSITION)
+                ;
 
-                // If no where clause was passed in, uses the note ID column name
-                // for a column and the note ID for a value.
-                if (TextUtils.isEmpty(where)) {
-                    where = NotePad.Notes._ID + " = ?";
-                    whereArgs[0] = noteId;
-
-                } else {
-
-                    /*
-                     * If where clause columns were passed in, appends the note ID column name to
-                     * the list of columns using a replaceable parameter. This works even if the
-                     * other columns have actual values.
-                     */
-                    // Appends the note ID column name as an AND condition using a replaceable
-                    // parameter.
-                    where = where + " AND " + NotePad.Notes._ID + " = ?";
-
-                    // Appends the note ID value to the end of the where clause values.
-                    whereArgs[whereArgs.length] = noteId;
+                // If there were additional selection criteria, append them to the final
+                // WHERE clause
+                if (where != null) {
+                    finalWhere = finalWhere + " AND " + where;
                 }
 
                 // Performs the delete.
                 count = db.delete(
                     NotePad.Notes.TABLE_NAME,  // The database table name.
-                    where,                     // The incoming where clause column names.
+                    finalWhere,                // The final WHERE clause
                     whereArgs                  // The incoming where clause values.
                 );
                 break;
@@ -677,6 +671,7 @@ public class NotePadProvider extends ContentProvider implements PipeDataWriter<C
         // Opens the database object in "write" mode.
         SQLiteDatabase db = mOpenHelper.getWritableDatabase();
         int count;
+        String finalWhere;
 
         // Does the update based on the incoming URI pattern
         switch (sUriMatcher.match(uri)) {
@@ -700,29 +695,29 @@ public class NotePadProvider extends ContentProvider implements PipeDataWriter<C
                 // From the incoming URI, get the note ID
                 String noteId = uri.getPathSegments().get(NotePad.Notes.NOTE_ID_PATH_POSITION);
 
-                // If no where clause was passed in, uses the note ID column name
-                // for a column and the note ID for a value.
-                if (TextUtils.isEmpty(where)) {
-                    where = NotePad.Notes._ID + " = " + noteId;
+                /*
+                 * Starts creating the final WHERE clause by restricting it to the incoming
+                 * note ID.
+                 */
+                finalWhere =
+                        NotePad.Notes._ID +                              // The ID column name
+                        " = " +                                          // test for equality
+                        uri.getPathSegments().                           // the incoming note ID
+                            get(NotePad.Notes.NOTE_ID_PATH_POSITION)
+                ;
 
-                    // If where clause columns were passed in, appends the note ID to the where
-                    // clause
-                } else {
-
-                    /*
-                     * Prepends the note ID column name to the search criteria. This handles two
-                     * cases: a) whereArgs contains values b) whereArgs is null.
-                     *
-                     */
-                    where = NotePad.Notes._ID + " = " + noteId +  " AND " + where;
-
+                // If there were additional selection criteria, append them to the final WHERE
+                // clause
+                if (where !=null) {
+                    finalWhere = finalWhere + " AND " + where;
                 }
+
 
                 // Does the update and returns the number of rows updated.
                 count = db.update(
                     NotePad.Notes.TABLE_NAME, // The database table name.
                     values,                   // A map of column names and new values to use.
-                    where,                    // The where clause column names. May contain
+                    finalWhere,               // The final WHERE clause to use
                                               // placeholders for whereArgs
                     whereArgs                 // The where clause column values to select on, or
                                               // null if the values are in the where argument.

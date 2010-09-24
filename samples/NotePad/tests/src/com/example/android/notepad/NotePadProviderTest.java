@@ -18,12 +18,19 @@ package com.example.android.notepad;
 
 import android.content.ContentUris;
 import android.content.ContentValues;
+import android.content.res.AssetFileDescriptor;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
+import android.os.ParcelFileDescriptor;
 import android.test.ProviderTestCase2;
 import android.test.mock.MockContentResolver;
 
+import java.io.BufferedReader;
+import java.io.FileDescriptor;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 
@@ -73,6 +80,18 @@ public class NotePadProviderTest extends ProviderTestCase2<NotePadProvider> {
     // Stores a timestamp value, set to an arbitrary starting point
     private final static long START_DATE = TEST_CALENDAR.getTimeInMillis();
 
+    // Sets a MIME type filter, used to test provider methods that return more than one MIME type
+    // for a particular note. The filter will retrieve any MIME types supported for the content URI.
+    private final static String MIME_TYPES_ALL = "*/*";
+
+    // Sets a MIME type filter, used to test provider methods that return more than one MIME type
+    // for a particular note. The filter is nonsense, so it will not retrieve any MIME types.
+    private final static String MIME_TYPES_NONE = "qwer/qwer";
+
+    // Sets a MIME type filter for plain text, used to the provider's methods that only handle
+    // plain text
+    private final static String MIME_TYPE_TEXT = "text/plain";
+
     /*
      * Constructor for the test case class.
      * Calls the super constructor with the class name of the provider under test and the
@@ -81,7 +100,6 @@ public class NotePadProviderTest extends ProviderTestCase2<NotePadProvider> {
     public NotePadProviderTest() {
         super(NotePadProvider.class, NotePad.AUTHORITY);
     }
-
 
     /*
      * Sets up the test environment before each test method. Creates a mock content resolver,
@@ -160,6 +178,241 @@ public class NotePadProviderTest extends ProviderTestCase2<NotePadProvider> {
 
         // Tests an invalid URI. This should throw an IllegalArgumentException.
         mimeType = mMockResolver.getType(INVALID_URI);
+    }
+
+    /*
+     * Tests the provider's stream MIME types returned by getStreamTypes(). If the provider supports
+     * stream data for the URI, the MIME type is returned. Otherwise, the provider returns null.
+     */
+    public void testGetStreamTypes() {
+
+        // Tests the notes table URI. This should return null, since the content provider does
+        // not provide a stream MIME type for multiple notes.
+        assertNull(mMockResolver.getStreamTypes(NotePad.Notes.CONTENT_URI, MIME_TYPES_ALL));
+
+        // Tests the live folders URI. This should return null, since the content provider does not
+        // provide a stream MIME type for multiple notes.
+        assertNull(mMockResolver.getStreamTypes(NotePad.Notes.LIVE_FOLDER_URI, MIME_TYPES_ALL));
+
+        /*
+         * Tests the note id URI for a single note, using _ID value "1" which is a valid ID. Uses a
+         * valid MIME type filter that will return all the supported MIME types for a content URI.
+         * The result should be "text/plain".
+         */
+
+        // Constructs the note id URI
+        Uri testUri = Uri.withAppendedPath(NotePad.Notes.CONTENT_ID_URI_BASE, "1");
+
+        // Gets the MIME types for the URI, with the filter that selects all MIME types.
+        String mimeType[] = mMockResolver.getStreamTypes(testUri, MIME_TYPES_ALL);
+
+        // Tests that the result is not null and is equal to the expected value. Also tests that
+        // only one MIME type is returned.
+        assertNotNull(mimeType);
+        assertEquals(mimeType[0],"text/plain");
+        assertEquals(mimeType.length,1);
+
+        /*
+         * Tests with the same URI but with a filter that should not return any URIs.
+         */
+        mimeType = mMockResolver.getStreamTypes(testUri, MIME_TYPES_NONE);
+        assertNull(mimeType);
+
+        /*
+         * Tests with a URI that should not have any associated stream MIME types, but with a
+         * filter that returns all types. The result should still be null.
+         */
+        mimeType = mMockResolver.getStreamTypes(NotePad.Notes.CONTENT_URI, MIME_TYPES_ALL);
+        assertNull(mimeType);
+
+    }
+
+    /*
+     * Tests the provider's public API for opening a read-only pipe of data for a note ID URI
+     * and MIME type filter matching "text/plain".
+     * This method throws a FileNotFoundException if the URI isn't for a note ID or the MIME type
+     * filter isn't "text/plain". It throws an IOException if it can't close a file descriptor.
+     */
+    public void testOpenTypedAssetFile() throws FileNotFoundException, IOException {
+
+        // A URI to contain a note ID content URI.
+        Uri testNoteIdUri;
+
+        // A handle for the file descriptor returned by openTypedAssetFile().
+        AssetFileDescriptor testAssetDescriptor;
+
+        // Inserts data into the provider, so that the note ID URI will be recognized.
+        insertData();
+
+        // Constructs a URI with a note ID of 1. This matches the note ID URI pattern that
+        // openTypedAssetFile can handle.
+        testNoteIdUri = ContentUris.withAppendedId(NotePad.Notes.CONTENT_ID_URI_BASE, 1);
+
+        // Opens the pipe. The opts argument is for passing options from a caller to the provider,
+        // but the NotePadProvider does not use it.
+        testAssetDescriptor = mMockResolver.openTypedAssetFileDescriptor(
+                testNoteIdUri,         // the URI for a single note. The pipe points to this
+                                       // note's data
+                MIME_TYPE_TEXT,        // a MIME type of "text/plain"
+                null                   // the "opts" argument
+        );
+
+        // Gets the parcel file handle from the asset file handle.
+        ParcelFileDescriptor testParcelDescriptor = testAssetDescriptor.getParcelFileDescriptor();
+
+        // Gets the file handle from the asset file handle.
+        FileDescriptor testDescriptor = testAssetDescriptor.getFileDescriptor();
+
+        // Tests that the asset file handle is not null.
+        assertNotNull(testAssetDescriptor);
+
+        // Tests that the parcel file handle is not null.
+        assertNotNull(testParcelDescriptor);
+
+        // Tests that the file handle is not null.
+        assertNotNull(testDescriptor);
+
+        // Tests that the file handle is valid.
+        assertTrue(testDescriptor.valid());
+
+        // Closes the file handles.
+        testParcelDescriptor.close();
+        testAssetDescriptor.close();
+
+        /*
+         * Changes the URI to a notes URI for multiple notes, and re-test. This should fail, since
+         * the provider does not support this type of URI. A FileNotFound exception is expected,
+         * so call fail() if it does *not* occur.
+         */
+        try {
+            testAssetDescriptor = mMockResolver.openTypedAssetFileDescriptor(
+                    NotePad.Notes.CONTENT_URI,
+                    MIME_TYPE_TEXT,
+                    null
+            );
+            fail();
+        } catch (FileNotFoundException e) {
+            // continue
+        }
+
+        /*
+         * Changes back to the note ID URI, but changes the MIME type filter to one that is not
+         * supported by the provider. This should also fail, since the provider will only open a
+         * pipe for MIME type "text/plain". A FileNotFound exception is expected, so calls
+         * fail() if it does *not* occur.
+         */
+
+        try {
+            testAssetDescriptor = mMockResolver.openTypedAssetFileDescriptor(
+                    testNoteIdUri,
+                    MIME_TYPES_NONE,
+                    null
+            );
+            fail();
+        } catch (FileNotFoundException e) {
+            // continue
+        }
+
+    }
+
+    /*
+     * Tests the provider's method for actually returning writing data into a pipe. The method is
+     * writeDataToPipe, but this method is not called directly. Instead, a caller invokes
+     * openTypedAssetFile(). That method uses ContentProvider.openPipeHelper(), which has as one of
+     * its arguments a ContentProvider.PipeDataWriter object that must actually put the data into
+     * the pipe. PipeDataWriter is an interface, not a class, so it must be implemented.
+     *
+     * The NotePadProvider class itself implements the "ContentProvider.PipeDataWriter, which means
+     * that it supplies the interface's only method, writeDataToPipe(). In effect, a call to
+     * openTypedAssetFile() calls writeDataToPipe().
+     *
+     *  The test of writeDataToPipe() is separate from other tests of openTypedAssetFile() for the
+     *  sake of clarity.
+     */
+    public void testWriteDataToPipe() throws FileNotFoundException {
+
+        // A string array to hold the incoming data
+        String[] inputData = {"","",""};
+
+        // A URI for a note ID.
+        Uri noteIdUri;
+
+        // A Cursor to contain the retrieved note.
+        Cursor noteIdCursor;
+
+        // An AssetFileDescriptor for the pipe.
+        AssetFileDescriptor noteIdAssetDescriptor;
+
+        // The ParcelFileDescriptor in the AssetFileDescriptor
+        ParcelFileDescriptor noteIdParcelDescriptor;
+
+        // Inserts test data into the provider.
+        insertData();
+
+        // Creates note ID URI for a note that should now be in the provider.
+        noteIdUri = ContentUris.withAppendedId(
+                NotePad.Notes.CONTENT_ID_URI_BASE,  // The base pattern for a note ID URI
+                1                                   // Sets the URI to point to record ID 1 in the
+                                                    // provider
+        );
+
+        // Gets a Cursor for the note.
+        noteIdCursor = mMockResolver.query(
+                noteIdUri,  // the URI for the note ID we want to retrieve
+                null,       // no projection, retrieve all the columns
+                null,       // no WHERE clause
+                null,       // no WHERE arguments
+                null        // default sort order
+        );
+
+        // Checks that the call worked.
+        // a) Checks that the cursor is not null
+        // b) Checks that it contains a single record
+        assertNotNull(noteIdCursor);
+        assertEquals(1,noteIdCursor.getCount());
+
+        // Opens the pipe that will contain the data.
+        noteIdAssetDescriptor = mMockResolver.openTypedAssetFileDescriptor(
+                noteIdUri,        // the URI of the note that will provide the data
+                MIME_TYPE_TEXT,   // the "text/plain" MIME type
+                null              // no other options
+        );
+
+        // Checks that the call worked.
+        // a) checks that the AssetFileDescriptor is not null
+        // b) gets its ParcelFileDescriptor
+        // c) checks that the ParcelFileDescriptor is not null
+        assertNotNull(noteIdAssetDescriptor);
+        noteIdParcelDescriptor = noteIdAssetDescriptor.getParcelFileDescriptor();
+        assertNotNull(noteIdParcelDescriptor);
+
+        // Gets a File Reader that can read the pipe.
+        FileReader fIn = new FileReader(noteIdParcelDescriptor.getFileDescriptor());
+
+        // Gets a buffered reader wrapper for the File Reader. This allows reading line by line.
+        BufferedReader bIn = new BufferedReader(fIn);
+
+        /*
+         * The pipe should contain three lines: The note's title, an empty line, and the note's
+         * contents. The following code reads and stores these three lines.
+         */
+        for (int index = 0; index < inputData.length; index++) {
+            try {
+                inputData[index] = bIn.readLine();
+            } catch (IOException e) {
+
+                e.printStackTrace();
+                fail();
+            }
+        }
+
+        // Asserts that the first record in the provider (written from TEST_NOTES[0]) has the same
+        // note title as the first line retrieved from the pipe.
+        assertEquals(TEST_NOTES[0].title, inputData[0]);
+
+        // Asserts that the first record in the provider (written from TEST_NOTES[0]) has the same
+        // note contents as the third line retrieved from the pipe.
+        assertEquals(TEST_NOTES[0].note, inputData[2]);
     }
 
     /*
@@ -534,6 +787,7 @@ public class NotePadProviderTest extends ProviderTestCase2<NotePadProvider> {
         // Asserts that only one row was updated. The selection criteria evaluated to
         // "title = Note1", and the test data should only contain one row that matches that.
         assertEquals(1, rowsUpdated);
+
     }
 
     // A utility for converting note data to a ContentValues map.
