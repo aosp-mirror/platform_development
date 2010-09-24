@@ -100,6 +100,10 @@ public class BadBehaviorActivity extends Activity {
             return true;
         }
 
+        public int appEarlyNotResponding(String processName, int pid, String annotation) {
+            return 0;
+        }
+
         public int appNotResponding(String proc, int pid, String st) {
             return 0;
         }
