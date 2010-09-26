@@ -291,6 +291,10 @@ public class Monkey {
             return false;
         }
 
+        public int appEarlyNotResponding(String processName, int pid, String annotation) {
+            return 0;
+        }
+
         public int appNotResponding(String processName, int pid, String processStats) {
             int savedPolicy = StrictMode.allowThreadDiskWrites();
             System.err.println("// NOT RESPONDING: " + processName + " (pid " + pid + ")");
