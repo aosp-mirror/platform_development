@@ -39,7 +39,6 @@ sdk/files/tools_source.properties tools/source.properties
 sdk/files/plugin.prop tools/lib/plugin.prop
 
 # native host tools from out/host/$(HOST_OS)-$(HOST_ARCH)/
-bin/adb          tools/adb
 bin/sqlite3      tools/sqlite3
 bin/dmtracedump  tools/dmtracedump
 bin/etc1tool     tools/etc1tool
@@ -51,12 +50,12 @@ bin/zipalign     tools/zipalign
 bin/emulator     tools/emulator
 
 # Java-Based SDK Tools
-bin/ddms tools/ddms
+bin/ddms            tools/ddms
 bin/hierarchyviewer tools/hierarchyviewer
-bin/draw9patch tools/draw9patch
-bin/layoutopt tools/layoutopt
-bin/traceview tools/traceview
-bin/android tools/android
+bin/draw9patch      tools/draw9patch
+bin/layoutopt       tools/layoutopt
+bin/traceview       tools/traceview
+bin/android         tools/android
 
 
 # sdk.git Ant templates for project build files
@@ -77,22 +76,23 @@ external/qemu/android/avd/hardware-properties.ini tools/lib/hardware-properties.
 sdk/files/android.el tools/lib/android.el
 
 # Java Libraries for the tools
-framework/androidprefs.jar     tools/lib/androidprefs.jar
-sdk/apkbuilder/etc/apkbuilder  tools/apkbuilder
-framework/sdkstats.jar         tools/lib/sdkstats.jar
-framework/archquery.jar        tools/lib/archquery.jar
-framework/ddms.jar             tools/lib/ddms.jar
-framework/ddmlib.jar           tools/lib/ddmlib.jar
-framework/ddmuilib.jar         tools/lib/ddmuilib.jar
-framework/hierarchyviewer.jar  tools/lib/hierarchyviewer.jar
-framework/draw9patch.jar       tools/lib/draw9patch.jar
-framework/layoutopt.jar        tools/lib/layoutopt.jar
-framework/uix.jar              tools/lib/uix.jar
-framework/traceview.jar        tools/lib/traceview.jar
-framework/anttasks.jar         tools/lib/anttasks.jar
-framework/sdklib.jar           tools/lib/sdklib.jar
-framework/sdkuilib.jar         tools/lib/sdkuilib.jar
-framework/sdkmanager.jar       tools/lib/sdkmanager.jar
+framework/androidprefs.jar       tools/lib/androidprefs.jar
+sdk/apkbuilder/etc/apkbuilder    tools/apkbuilder
+framework/sdkstats.jar           tools/lib/sdkstats.jar
+framework/archquery.jar          tools/lib/archquery.jar
+framework/ddms.jar               tools/lib/ddms.jar
+framework/ddmlib.jar             tools/lib/ddmlib.jar
+framework/ddmuilib.jar           tools/lib/ddmuilib.jar
+framework/hierarchyviewer2.jar   tools/lib/hierarchyviewer2.jar
+framework/hierarchyviewerlib.jar tools/lib/hierarchyviewerlib.jar
+framework/draw9patch.jar         tools/lib/draw9patch.jar
+framework/layoutopt.jar          tools/lib/layoutopt.jar
+framework/uix.jar                tools/lib/uix.jar
+framework/traceview.jar          tools/lib/traceview.jar
+framework/anttasks.jar           tools/lib/anttasks.jar
+framework/sdklib.jar             tools/lib/sdklib.jar
+framework/sdkuilib.jar           tools/lib/sdkuilib.jar
+framework/sdkmanager.jar         tools/lib/sdkmanager.jar
 
 # 3rd Party java libraries
 framework/swing-worker-1.1.jar                                tools/lib/swing-worker-1.1.jar
@@ -128,6 +128,7 @@ external/proguard/src/proguard/ant/task.properties            tools/proguard/ant
 ##############################################################################
 
 # host tools from out/host/$(HOST_OS)-$(HOST_ARCH)/
+bin/adb                                       platform-tools/adb
 bin/aapt                                      platform-tools/aapt
 bin/aidl                                      platform-tools/aidl
 # dx
@@ -224,7 +225,6 @@ frameworks/base/docs/docs-samples-redirect.html docs/samples/index.html
 ##############################################################################
 # Samples Component
 ##############################################################################
-
 
 # samples to include in the sdk samples package
 #
