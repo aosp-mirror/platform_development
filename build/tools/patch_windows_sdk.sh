@@ -25,10 +25,10 @@ fi
 TOOLS=$TEMP_SDK_DIR/tools
 PLATFORM_TOOLS=$TEMP_SDK_DIR/platform-tools
 LIB=$TEMP_SDK_DIR/tools/lib
-rm $V $TOOLS/{adb,android,apkbuilder,ddms,dmtracedump,draw9patch,emulator,etc1tool}
+rm $V $TOOLS/{android,apkbuilder,ddms,dmtracedump,draw9patch,emulator,etc1tool}
 rm $V $TOOLS/{hierarchyviewer,hprof-conv,layoutopt,mksdcard,sqlite3,traceview,zipalign}
 rm $V $LIB/*/swt.jar
-rm $V $PLATFORM_TOOLS/{aapt,aidl,dx,dexdump}
+rm $V $PLATFORM_TOOLS/{adb,aapt,aidl,dx,dexdump}
 
 # Copy all the new stuff in tools
 # Note: some tools are first copied here and then moved in platforms/<name>/tools/
@@ -79,7 +79,7 @@ cp -r $V ${TOPDIR}external/sonivox/jet_tools/JetCreator         $JETCREATOR/
 cp -r $V ${TOPDIR}external/sonivox/jet_tools/JetCreator_content $JETDEMOCONTENT/
 cp -r $V ${TOPDIR}external/sonivox/jet_tools/logic_templates    $JETLOGICTEMPLATES/
 chmod $V -R u+w $JETCREATOR  # fixes an issue where Cygwin might copy the above as u+rx only
-cp $V ${TOPDIR}prebuilt/windows/jetcreator/EASDLL.dll         $JETCREATOR/
+cp $V ${TOPDIR}prebuilt/windows/jetcreator/EASDLL.dll           $JETCREATOR/
 
 cp    $V ${TOPDIR}external/sonivox/docs/JET_Authoring_Guidelines.html  $JETDOC/
 cp -r $V ${TOPDIR}external/sonivox/docs/JET_Authoring_Guidelines_files $JETDOC/
@@ -88,7 +88,7 @@ cp -r $V ${TOPDIR}external/sonivox/docs/JET_Creator_User_Manual_files  $JETDOC/
 
 # Copy or move platform specific tools to the default platform.
 cp $V ${TOPDIR}dalvik/dx/etc/dx.bat $PLATFORM_TOOLS/
-mv $V $TOOLS/{aapt.exe,aidl.exe,dexdump.exe} $PLATFORM_TOOLS/
+mv $V $TOOLS/{adb.exe,aapt.exe,aidl.exe,dexdump.exe} $TOOLS/Adb*.dll $PLATFORM_TOOLS/
 
 # When building under cygwin, mgwz.dll must be both in SDK/tools for zipalign
 # and in SDK/platform/XYZ/tools/ for aapt
