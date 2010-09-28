@@ -703,33 +703,29 @@ public class NotePadProvider extends ContentProvider implements PipeDataWriter<C
                 // If no where clause was passed in, uses the note ID column name
                 // for a column and the note ID for a value.
                 if (TextUtils.isEmpty(where)) {
-                    where = NotePad.Notes._ID + " = ?";
-                    whereArgs[0] = noteId;
+                    where = NotePad.Notes._ID + " = " + noteId;
 
                     // If where clause columns were passed in, appends the note ID to the where
                     // clause
                 } else {
 
                     /*
-                     * Appends the note ID column name to the list of columns, with a replaceable
-                     * parameter. This will work even if the rest of the columns have been set with
-                     * actual values.
+                     * Prepends the note ID column name to the search criteria. This handles two
+                     * cases: a) whereArgs contains values b) whereArgs is null.
+                     *
                      */
-                    // Appends the note ID column name as an AND condition with a replaceable
-                    // parameter.
-                    where = where + " AND " + NotePad.Notes._ID + " = ?";
+                    where = NotePad.Notes._ID + " = " + noteId +  " AND " + where;
 
-                    // Appends the note ID value to the end of the where clause values.
-                    whereArgs[whereArgs.length] = noteId;
                 }
 
-                // Does the update.
                 // Does the update and returns the number of rows updated.
                 count = db.update(
                     NotePad.Notes.TABLE_NAME, // The database table name.
                     values,                   // A map of column names and new values to use.
-                    where,                    // The where clause column names.
-                    whereArgs                 // The where clause column values to select on.
+                    where,                    // The where clause column names. May contain
+                                              // placeholders for whereArgs
+                    whereArgs                 // The where clause column values to select on, or
+                                              // null if the values are in the where argument.
                 );
                 break;
             // If the incoming pattern is invalid, throws an exception.

@@ -92,10 +92,8 @@ public class TitleEditor extends Activity implements View.OnClickListener {
             null         // No sort order is needed.
         );
 
-        // Sets up a listener for the EditText. Gets the EditText by its ID, then sets its
-        // onClickListener to this Activity.
+        // Gets the View ID for the EditText box
         mText = (EditText) this.findViewById(R.id.title);
-        mText.setOnClickListener(this);
 
         // Sets up a listener for the OK button. Gets the Button by its ID, then sets its
         // onClickListener to this Activity.
