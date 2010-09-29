@@ -64,6 +64,6 @@
     <string name="gestures_rename_title">Rename gesture</string>
     <!-- Label of gesture name field in Rename gesture dialog box -->
     <string name="gestures_rename_label">Gesture name</string>
-    <!-- Message, displayed when the sdcard cannot be found, 1st parameter is the name of the file that stores the gestures -->
-    <string name="gestures_error_loading">Could not load %s. Make sure you have a mounted SD card.</string>
+    <!-- Message, displayed when the sdcard cannot be found, 1st parameter is the name of the file that stores the gestures.  CHAR LIMIT=80 -->
+    <string name="gestures_error_loading">Could not load %s. Make sure you have storage available.</string>
 </resources>
