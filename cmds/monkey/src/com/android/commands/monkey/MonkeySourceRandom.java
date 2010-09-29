@@ -19,6 +19,7 @@ package com.android.commands.monkey;
 import android.content.ComponentName;
 import android.os.SystemClock;
 import android.view.Display;
+import android.view.KeyCharacterMap;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.WindowManagerImpl;
@@ -50,6 +51,18 @@ public class MonkeySourceRandom implements MonkeyEventSource {
         KeyEvent.KEYCODE_VOLUME_UP, KeyEvent.KEYCODE_VOLUME_DOWN,
         KeyEvent.KEYCODE_MUTE,
     };
+    /** If a physical key exists? */
+    private static final boolean[] PHYSICAL_KEY_EXISTS = new boolean[KeyEvent.getMaxKeyCode() + 1];
+    static {
+        for (int i = 0; i < PHYSICAL_KEY_EXISTS.length; ++i) {
+            PHYSICAL_KEY_EXISTS[i] = true;
+        }
+        // Only examine SYS_KEYS
+        for (int i = 0; i < SYS_KEYS.length; ++i) {
+            PHYSICAL_KEY_EXISTS[SYS_KEYS[i]] = KeyCharacterMap.deviceHasKey(SYS_KEYS[i]);
+        }
+    }
+
     /** Nice names for all key events. */
     private static final String[] KEY_NAMES = {
         "KEYCODE_UNKNOWN",
@@ -282,12 +295,15 @@ public class MonkeySourceRandom implements MonkeyEventSource {
         }
 
         // if verbose, show factors
-
         if (mVerbose > 0) {
             System.out.println("// Event percentages:");
             for (int i = 0; i < FACTORZ_COUNT; ++i) {
                 System.out.println("//   " + i + ": " + mFactors[i] + "%");
             }
+        }
+
+        if (!validateKeys()) {
+            return false;
         }
 
         // finally, normalize and convert to running sum
@@ -297,6 +313,28 @@ public class MonkeySourceRandom implements MonkeyEventSource {
             mFactors[i] = sum;
         }
         return true;
+    }
+
+    private static boolean validateKeyCategory(String catName, int[] keys, float factor) {
+        if (factor < 0.1f) {
+            return true;
+        }
+        for (int i = 0; i < keys.length; ++i) {
+            if (PHYSICAL_KEY_EXISTS[keys[i]]) {
+                return true;
+            }
+        }
+        System.err.println("** " + catName + " has no physical keys but with factor " + factor + "%.");
+        return false;
+    }
+
+    /**
+     * See if any key exists for non-zero factors.
+     */
+    private boolean validateKeys() {
+        return validateKeyCategory("NAV_KEYS", NAV_KEYS, mFactors[FACTOR_NAV])
+            && validateKeyCategory("MAJOR_NAV_KEYS", MAJOR_NAV_KEYS, mFactors[FACTOR_MAJORNAV])
+            && validateKeyCategory("SYS_KEYS", SYS_KEYS, mFactors[FACTOR_SYSOPS]);
     }
 
     /**
@@ -441,25 +479,27 @@ public class MonkeySourceRandom implements MonkeyEventSource {
         }
 
         // The remaining event categories are injected as key events
-        if (cls < mFactors[FACTOR_NAV]) {
-            lastKey = NAV_KEYS[mRandom.nextInt(NAV_KEYS.length)];
-        } else if (cls < mFactors[FACTOR_MAJORNAV]) {
-            lastKey = MAJOR_NAV_KEYS[mRandom.nextInt(MAJOR_NAV_KEYS.length)];
-        } else if (cls < mFactors[FACTOR_SYSOPS]) {
-            lastKey = SYS_KEYS[mRandom.nextInt(SYS_KEYS.length)];
-        } else if (cls < mFactors[FACTOR_APPSWITCH]) {
-            MonkeyActivityEvent e = new MonkeyActivityEvent(mMainApps.get(
-                    mRandom.nextInt(mMainApps.size())));
-            mQ.addLast(e);
-            return;
-        } else if (cls < mFactors[FACTOR_FLIP]) {
-            MonkeyFlipEvent e = new MonkeyFlipEvent(mKeyboardOpen);
-            mKeyboardOpen = !mKeyboardOpen;
-            mQ.addLast(e);
-            return;
-        } else {
-            lastKey = 1 + mRandom.nextInt(KeyEvent.getMaxKeyCode() - 1);
-        }
+        do {
+            if (cls < mFactors[FACTOR_NAV]) {
+                lastKey = NAV_KEYS[mRandom.nextInt(NAV_KEYS.length)];
+            } else if (cls < mFactors[FACTOR_MAJORNAV]) {
+                lastKey = MAJOR_NAV_KEYS[mRandom.nextInt(MAJOR_NAV_KEYS.length)];
+            } else if (cls < mFactors[FACTOR_SYSOPS]) {
+                lastKey = SYS_KEYS[mRandom.nextInt(SYS_KEYS.length)];
+            } else if (cls < mFactors[FACTOR_APPSWITCH]) {
+                MonkeyActivityEvent e = new MonkeyActivityEvent(mMainApps.get(
+                        mRandom.nextInt(mMainApps.size())));
+                mQ.addLast(e);
+                return;
+            } else if (cls < mFactors[FACTOR_FLIP]) {
+                MonkeyFlipEvent e = new MonkeyFlipEvent(mKeyboardOpen);
+                mKeyboardOpen = !mKeyboardOpen;
+                mQ.addLast(e);
+                return;
+            } else {
+                lastKey = 1 + mRandom.nextInt(KeyEvent.getMaxKeyCode() - 1);
+            }
+        } while (!PHYSICAL_KEY_EXISTS[lastKey]);
 
         MonkeyKeyEvent e = new MonkeyKeyEvent(KeyEvent.ACTION_DOWN, lastKey);
         mQ.addLast(e);
