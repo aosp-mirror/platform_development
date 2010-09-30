@@ -15,7 +15,12 @@
 #
 
 #
-# These are the files that comprise that SDK
+# These are the files that comprise that SDK.
+#
+# The files that will go in the tools folder are setup through
+#    sdk/build/tools.atree
+# This is to help when the sdk.git project is branched differently from
+# the other projects.
 #
 
 ##############################################################################
@@ -27,101 +32,6 @@ development/docs/SDK_RELEASE_NOTES RELEASE_NOTES.html
 
 # doc redirect
 frameworks/base/docs/docs-redirect.html documentation.html
-
-##############################################################################
-# Tools Component
-##############################################################################
-
-# version files for the SDK updater, from sdk.git
-sdk/files/tools_source.properties tools/source.properties
-
-# copy plugin.prop from sdk.git
-sdk/files/plugin.prop tools/lib/plugin.prop
-
-# native host tools from out/host/$(HOST_OS)-$(HOST_ARCH)/
-bin/sqlite3      tools/sqlite3
-bin/dmtracedump  tools/dmtracedump
-bin/etc1tool     tools/etc1tool
-bin/hprof-conv   tools/hprof-conv
-bin/mksdcard     tools/mksdcard
-bin/zipalign     tools/zipalign
-
-# emulator
-bin/emulator     tools/emulator
-
-# Java-Based SDK Tools
-bin/ddms            tools/ddms
-bin/hierarchyviewer tools/hierarchyviewer
-bin/draw9patch      tools/draw9patch
-bin/layoutopt       tools/layoutopt
-bin/traceview       tools/traceview
-bin/android         tools/android
-
-
-# sdk.git Ant templates for project build files
-sdk/templates/build.template        tools/lib/build.template
-sdk/templates/build.export.template tools/lib/build.export.template
-
-# Ant Build Rules
-sdk/files/ant                       tools/ant
-sdk/files/sdk_files_NOTICE.txt      tools/ant/NOTICE.txt
-
-# layout device definition
-sdk/files/devices.xml               tools/lib/devices.xml
-
-# AVD Hardware property list
-external/qemu/android/avd/hardware-properties.ini tools/lib/hardware-properties.ini
-
-# emacs support from sdk.git
-sdk/files/android.el tools/lib/android.el
-
-# Java Libraries for the tools
-framework/androidprefs.jar       tools/lib/androidprefs.jar
-sdk/apkbuilder/etc/apkbuilder    tools/apkbuilder
-framework/sdkstats.jar           tools/lib/sdkstats.jar
-framework/archquery.jar          tools/lib/archquery.jar
-framework/ddms.jar               tools/lib/ddms.jar
-framework/ddmlib.jar             tools/lib/ddmlib.jar
-framework/ddmuilib.jar           tools/lib/ddmuilib.jar
-framework/hierarchyviewer2.jar   tools/lib/hierarchyviewer2.jar
-framework/hierarchyviewerlib.jar tools/lib/hierarchyviewerlib.jar
-framework/draw9patch.jar         tools/lib/draw9patch.jar
-framework/layoutopt.jar          tools/lib/layoutopt.jar
-framework/uix.jar                tools/lib/uix.jar
-framework/traceview.jar          tools/lib/traceview.jar
-framework/anttasks.jar           tools/lib/anttasks.jar
-framework/sdklib.jar             tools/lib/sdklib.jar
-framework/sdkuilib.jar           tools/lib/sdkuilib.jar
-framework/sdkmanager.jar         tools/lib/sdkmanager.jar
-
-# 3rd Party java libraries
-framework/swing-worker-1.1.jar                                tools/lib/swing-worker-1.1.jar
-framework/groovy-all-1.7.0.jar                                tools/lib/groovy-all-1.7.0.jar
-framework/commons-compress-1.0.jar                            tools/lib/commons-compress-1.0.jar
-framework/emmalib.jar                                         tools/lib/emma_device.jar
-external/emma/lib/emma.jar                                    tools/lib/emma.jar
-external/emma/lib/emma_ant.jar                                tools/lib/emma_ant.jar
-framework/org-netbeans-api-visual.jar                         tools/lib/org-netbeans-api-visual.jar
-framework/org-openide-util.jar                                tools/lib/org-openide-util.jar
-framework/jcommon-1.0.12.jar                                  tools/lib/jcommon-1.0.12.jar
-framework/jfreechart-1.0.9.jar                                tools/lib/jfreechart-1.0.9.jar
-framework/jfreechart-1.0.9-swt.jar                            tools/lib/jfreechart-1.0.9-swt.jar
-framework/org.eclipse.core.commands_3.4.0.I20080509-2000.jar  tools/lib/org.eclipse.core.commands_3.4.0.I20080509-2000.jar
-framework/org.eclipse.equinox.common_3.4.0.v20080421-2006.jar tools/lib/org.eclipse.equinox.common_3.4.0.v20080421-2006.jar
-framework/org.eclipse.jface_3.4.2.M20090107-0800.jar          tools/lib/org.eclipse.jface_3.4.2.M20090107-0800.jar
-framework/osgi.jar                                            tools/lib/osgi.jar
-
-# Proguard
-external/proguard/docs/license.html                           tools/proguard/license.html
-external/proguard/docs/GPL.html                               tools/proguard/GPL.html
-external/proguard/docs/GPL_exception.html                     tools/proguard/GPL_exception.html
-external/proguard/lib/proguard.jar                            tools/proguard/lib/proguard.jar
-external/proguard/lib/proguardgui.jar                         tools/proguard/lib/proguardgui.jar
-external/proguard/lib/retrace.jar                             tools/proguard/lib/retrace.jar
-external/proguard/bin/proguard.sh                             tools/proguard/bin/proguard.sh
-external/proguard/bin/proguardgui.sh                          tools/proguard/bin/proguardgui.sh
-external/proguard/bin/retrace.sh                              tools/proguard/bin/retrace.sh
-external/proguard/src/proguard/ant/task.properties            tools/proguard/ant/task.properties
 
 ##############################################################################
 # Platform Tools Component
