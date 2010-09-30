@@ -1782,6 +1782,13 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".view.SplitTouchView" android:label="Views/Splitting Touches across Views">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
         <!-- ************************************* -->
         <!--           GRAPHICS SAMPLES            -->
         <!-- ************************************* -->

@@ -653,6 +653,14 @@
     <string name="secure_view_overlay_button2">Clicky?</string>
     <string name="secure_view_overlay_button3">Think of the penguins!</string>
 
+    <string name="split_touch_view_description">
+        This activity demonstrates splitting touch events across multiple views
+        within a view group.  Here we have two ListViews within a LinearLayout
+        that has the attribute android:splitMotionEvents set to "true".
+        Try scrolling both lists simultaneously using multiple fingers.
+    </string>
+    <string name="split_touch_view_cheese_toast">Do you have any %1$s?\n%2$s</string>
+
     <string name="searchview_hint">Find something</string>
     <string name="cheese_hunt_hint">Cheese hunt</string>
     <string name="open_search">Expand</string>
