@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright (C) 2007 The Android Open Source Project
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
+
+<!-- This file describes the layout of the main SkeletonApp activity
+     user interface.
+ -->
+
+<!-- The top view is a layout manager that places its child views into
+     a row, here set to be vertical (so the first is at the top) -->
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent">
+
+    <Button android:id="@+id/mount"
+        android:layout_width="wrap_content" android:layout_height="wrap_content" 
+        android:text="@string/mount" />
+
+    <Button android:id="@+id/unmount"
+        android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:layout_toRightOf="@+id/mount"
+        android:text="@string/unmount" />
+
+    <TextView android:id="@+id/status_label" android:layout_below="@+id/mount"
+        android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:text="@string/status_label" />
+
+    <TextView android:id="@+id/status" android:layout_below="@+id/mount"
+        android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:layout_toRightOf="@+id/status_label" />
+
+    <TextView android:id="@+id/path_label" android:layout_below="@+id/status_label"
+        android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:text="@string/path_label" />
+
+    <TextView android:id="@+id/path" android:layout_below="@+id/status_label"
+        android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:layout_toRightOf="@+id/path_label" />
+
+</RelativeLayout>
