@@ -243,7 +243,7 @@ public class Monkey {
                 // redirected to a file?)  So we allow disk writes
                 // around this region for the monkey to minimize
                 // harmless dropbox uploads from monkeys.
-                int savedPolicy = StrictMode.allowThreadDiskWrites();
+                StrictMode.ThreadPolicy savedPolicy = StrictMode.allowThreadDiskWrites();
                 System.out.println("    // " + (allow ? "Allowing" : "Rejecting") + " start of "
                         + intent + " in package " + pkg);
                 StrictMode.setThreadPolicy(savedPolicy);
@@ -254,7 +254,7 @@ public class Monkey {
         }
 
         public boolean activityResuming(String pkg) {
-            int savedPolicy = StrictMode.allowThreadDiskWrites();
+            StrictMode.ThreadPolicy savedPolicy = StrictMode.allowThreadDiskWrites();
             System.out.println("    // activityResuming(" + pkg + ")");
             boolean allow = checkEnteringPackage(pkg) || (DEBUG_ALLOW_ANY_RESTARTS != 0);
             if (!allow) {
@@ -271,7 +271,7 @@ public class Monkey {
         public boolean appCrashed(String processName, int pid,
                 String shortMsg, String longMsg,
                 long timeMillis, String stackTrace) {
-            int savedPolicy = StrictMode.allowThreadDiskWrites();
+            StrictMode.ThreadPolicy savedPolicy = StrictMode.allowThreadDiskWrites();
             System.err.println("// CRASH: " + processName + " (pid " + pid + ")");
             System.err.println("// Short Msg: " + shortMsg);
             System.err.println("// Long Msg: " + longMsg);
@@ -296,7 +296,7 @@ public class Monkey {
         }
 
         public int appNotResponding(String processName, int pid, String processStats) {
-            int savedPolicy = StrictMode.allowThreadDiskWrites();
+            StrictMode.ThreadPolicy savedPolicy = StrictMode.allowThreadDiskWrites();
             System.err.println("// NOT RESPONDING: " + processName + " (pid " + pid + ")");
             System.err.println(processStats);
             StrictMode.setThreadPolicy(savedPolicy);
@@ -1200,4 +1200,3 @@ public class Monkey {
         System.err.println(usage.toString());
     }
 }
-
