@@ -159,21 +159,20 @@ public class TouchPaint extends GraphicsActivity {
     public class MyView extends View {
         private static final int FADE_ALPHA = 0x06;
         private static final int MAX_FADE_STEPS = 256/FADE_ALPHA + 4;
+        private static final int TRACKBALL_SCALE = 10;
+
         private Bitmap mBitmap;
         private Canvas mCanvas;
         private final Rect mRect = new Rect();
         private final Paint mPaint;
         private final Paint mFadePaint;
-        private boolean mCurDown;
-        private int mCurX;
-        private int mCurY;
-        private float mCurPressure;
-        private float mCurSize;
-        private int mCurWidth;
+        private float mCurX;
+        private float mCurY;
         private int mFadeSteps = MAX_FADE_STEPS;
         
         public MyView(Context c) {
             super(c);
+            setFocusable(true);
             mPaint = new Paint();
             mPaint.setAntiAlias(true);
             mPaint.setARGB(255, 255, 255, 255);
@@ -229,61 +228,59 @@ public class TouchPaint extends GraphicsActivity {
         }
 
         @Override public boolean onTrackballEvent(MotionEvent event) {
-            boolean oldDown = mCurDown;
-            mCurDown = true;
             int N = event.getHistorySize();
-            int baseX = mCurX;
-            int baseY = mCurY;
-            final float scaleX = event.getXPrecision();
-            final float scaleY = event.getYPrecision();
+            final float scaleX = event.getXPrecision() * TRACKBALL_SCALE;
+            final float scaleY = event.getYPrecision() * TRACKBALL_SCALE;
             for (int i=0; i<N; i++) {
                 //Log.i("TouchPaint", "Intermediate trackball #" + i
                 //        + ": x=" + event.getHistoricalX(i)
                 //        + ", y=" + event.getHistoricalY(i));
-                drawPoint(baseX+event.getHistoricalX(i)*scaleX,
-                        baseY+event.getHistoricalY(i)*scaleY,
-                        event.getHistoricalPressure(i),
-                        event.getHistoricalSize(i));
+                mCurX += event.getHistoricalX(i) * scaleX;
+                mCurY += event.getHistoricalY(i) * scaleY;
+                drawPoint(mCurX, mCurY, 1.0f, 16.0f);
             }
             //Log.i("TouchPaint", "Trackball: x=" + event.getX()
             //        + ", y=" + event.getY());
-            drawPoint(baseX+event.getX()*scaleX, baseY+event.getY()*scaleY,
-                    event.getPressure(), event.getSize());
-            mCurDown = oldDown;
+            mCurX += event.getX() * scaleX;
+            mCurY += event.getY() * scaleY;
+            drawPoint(mCurX, mCurY, 1.0f, 16.0f);
             return true;
         }
         
         @Override public boolean onTouchEvent(MotionEvent event) {
-            int action = event.getAction();
-            mCurDown = action == MotionEvent.ACTION_DOWN
-                    || action == MotionEvent.ACTION_MOVE;
-            int N = event.getHistorySize();
-            for (int i=0; i<N; i++) {
-                //Log.i("TouchPaint", "Intermediate pointer #" + i);
-                drawPoint(event.getHistoricalX(i), event.getHistoricalY(i),
-                        event.getHistoricalPressure(i),
-                        event.getHistoricalSize(i));
+            int action = event.getActionMasked();
+            if (action != MotionEvent.ACTION_UP && action != MotionEvent.ACTION_CANCEL) {
+                int N = event.getHistorySize();
+                int P = event.getPointerCount();
+                for (int i = 0; i < N; i++) {
+                    for (int j = 0; j < P; j++) {
+                        mCurX = event.getHistoricalX(j, i);
+                        mCurY = event.getHistoricalY(j, i);
+                        drawPoint(mCurX, mCurY,
+                                event.getHistoricalPressure(j, i),
+                                event.getHistoricalTouchMajor(j, i));
+                    }
+                }
+                for (int j = 0; j < P; j++) {
+                    mCurX = event.getX(j);
+                    mCurY = event.getY(j);
+                    drawPoint(mCurX, mCurY, event.getPressure(j), event.getTouchMajor(j));
+                }
             }
-            drawPoint(event.getX(), event.getY(), event.getPressure(),
-                    event.getSize());
             return true;
         }
         
-        private void drawPoint(float x, float y, float pressure, float size) {
+        private void drawPoint(float x, float y, float pressure, float width) {
             //Log.i("TouchPaint", "Drawing: " + x + "x" + y + " p="
-            //        + pressure + " s=" + size);
-            mCurX = (int)x;
-            mCurY = (int)y;
-            mCurPressure = pressure;
-            mCurSize = size;
-            mCurWidth = (int)(mCurSize*(getWidth()/3));
-            if (mCurWidth < 1) mCurWidth = 1;
-            if (mCurDown && mBitmap != null) {
-                int pressureLevel = (int)(mCurPressure*255);
+            //        + pressure + " width=" + width);
+            if (width < 1) width = 1;
+            if (mBitmap != null) {
+                float radius = width / 2;
+                int pressureLevel = (int)(pressure * 255);
                 mPaint.setARGB(pressureLevel, 255, 255, 255);
-                mCanvas.drawCircle(mCurX, mCurY, mCurWidth, mPaint);
-                mRect.set(mCurX-mCurWidth-2, mCurY-mCurWidth-2,
-                        mCurX+mCurWidth+2, mCurY+mCurWidth+2);
+                mCanvas.drawCircle(x, y, radius, mPaint);
+                mRect.set((int) (x - radius - 2), (int) (y - radius - 2),
+                        (int) (x + radius + 2), (int) (y + radius + 2));
                 invalidate(mRect);
             }
             mFadeSteps = 0;
