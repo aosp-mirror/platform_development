@@ -15,7 +15,7 @@
 -->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-      package="com.android.apps.tag">
+      package="com.android.apps.tag.tests">
 
     <!-- We add an application tag here just so that we can indicate that
          this package needs to link against the android.test library,
@@ -25,8 +25,8 @@
     </application>
 
   <instrumentation android:name="android.test.InstrumentationTestRunner"
-      android:targetPackage="com.example.android.helloactivity"
-      android:label="HelloActivity sample tests">
+      android:targetPackage="com.android.apps.tag"
+      android:label="Tag tests">
   </instrumentation>
 
 </manifest>
