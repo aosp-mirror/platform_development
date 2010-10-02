@@ -27,18 +27,17 @@ import android.view.Menu;
 import android.view.View;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
-import com.trustedlogic.trustednfc.android.NfcManager;
+import android.widget.Toast;
 
 /**
  * @author nnk@google.com (Nick Kralevich)
  */
 public class TagList extends ListActivity implements DialogInterface.OnClickListener {
 
-    private NfcManager mManager;
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Toast.makeText(getBaseContext(), "entered method", Toast.LENGTH_SHORT).show();
 
         SQLiteDatabase db = new TagDBHelper(this.getBaseContext()).getReadableDatabase();
         Cursor c = db.query("Tags", new String[] { "_id", "description" }, null, null, null, null, null);
@@ -51,6 +50,9 @@ public class TagList extends ListActivity implements DialogInterface.OnClickList
 
         setListAdapter(sca);
         registerForContextMenu(getListView());
+        c.close();
+        db.close();
+        Toast.makeText(getBaseContext(), "exit method", Toast.LENGTH_SHORT).show();
     }
 
     @Override
