@@ -31,6 +31,7 @@
 
         <activity android:name="TagSelector"></activity>
         <activity android:name="TagList"></activity>
+        <activity android:name="SaveTag"></activity>
         <receiver android:name=".TagBroadcastReceiver">
             <intent-filter>
                 <action android:name= "com.trustedlogic.trustednfc.android.action.NDEF_TAG_DISCOVERED"/>
