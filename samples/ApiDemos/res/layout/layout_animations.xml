@@ -37,4 +37,38 @@
             android:id="@+id/customAnimCB"
             />
     </LinearLayout>
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        >
+        <CheckBox
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checked="true"
+            android:text="Appearing Animation"
+            android:id="@+id/appearingCB"
+            />
+        <CheckBox
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checked="true"
+            android:text="Disappearing Animation"
+            android:id="@+id/disappearingCB"
+            />
+        <CheckBox
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checked="true"
+            android:text="Changing/Appearing Animation"
+            android:id="@+id/changingAppearingCB"
+            />
+        <CheckBox
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checked="true"
+            android:text="Changing/Disappearing Animation"
+            android:id="@+id/changingDisappearingCB"
+            />
+    </LinearLayout>
 </LinearLayout>

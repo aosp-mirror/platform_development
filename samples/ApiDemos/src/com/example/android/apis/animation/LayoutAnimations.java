@@ -20,6 +20,7 @@ package com.example.android.apis.animation;
 // class is in a sub-package.
 import android.animation.Animator;
 import android.animation.ObjectAnimator;
+import android.widget.LinearLayout;
 import com.example.android.apis.R;
 
 import android.animation.AnimatorListenerAdapter;
@@ -43,6 +44,12 @@ public class LayoutAnimations extends Activity {
 
     private int numButtons = 1;
     ViewGroup container = null;
+    Animator defaultAppearingAnim, defaultDisappearingAnim;
+    Animator defaultChangingAppearingAnim, defaultChangingDisappearingAnim;
+    Animator customAppearingAnim, customDisappearingAnim;
+    Animator customChangingAppearingAnim, customChangingDisappearingAnim;
+    Animator currentAppearingAnim, currentDisappearingAnim;
+    Animator currentChangingAppearingAnim, currentChangingDisappearingAnim;
 
     /** Called when the activity is first created. */
     @Override
@@ -50,19 +57,31 @@ public class LayoutAnimations extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.layout_animations);
 
-        container = new FixedGridLayout(this.getApplicationContext());
+        container = new FixedGridLayout(this);
         ((FixedGridLayout)container).setCellHeight(50);
-        ((FixedGridLayout)container).setCellWidth(100);
+        ((FixedGridLayout)container).setCellWidth(200);
         final LayoutTransition transitioner = new LayoutTransition();
         container.setLayoutTransition(transitioner);
+        defaultAppearingAnim = transitioner.getAnimator(LayoutTransition.APPEARING);
+        defaultDisappearingAnim =
+                transitioner.getAnimator(LayoutTransition.DISAPPEARING);
+        defaultChangingAppearingAnim =
+                transitioner.getAnimator(LayoutTransition.CHANGE_APPEARING);
+        defaultChangingDisappearingAnim =
+                transitioner.getAnimator(LayoutTransition.CHANGE_DISAPPEARING);
+        createCustomAnimations(transitioner);
+        currentAppearingAnim = defaultAppearingAnim;
+        currentDisappearingAnim = defaultDisappearingAnim;
+        currentChangingAppearingAnim = defaultChangingAppearingAnim;
+        currentChangingDisappearingAnim = defaultChangingDisappearingAnim;
 
         ViewGroup parent = (ViewGroup) findViewById(R.id.parent);
         parent.addView(container);
         Button addButton = (Button) findViewById(R.id.addNewButton);
         addButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                Button newButton = new Button(getApplicationContext());
-                newButton.setText("Click To Remove " + (numButtons++));
+                Button newButton = new Button(LayoutAnimations.this);
+                newButton.setText("Click to Delete " + (numButtons++));
                 newButton.setOnClickListener(new View.OnClickListener() {
                     public void onClick(View v) {
                         container.removeView(v);
@@ -75,27 +94,57 @@ public class LayoutAnimations extends Activity {
         CheckBox customAnimCB = (CheckBox) findViewById(R.id.customAnimCB);
         customAnimCB.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                long duration;
-                if (isChecked) {
-                    transitioner.setStagger(LayoutTransition.CHANGE_APPEARING, 30);
-                    transitioner.setStagger(LayoutTransition.CHANGE_DISAPPEARING, 30);
-                    setupAnimations(transitioner);
-                    duration = 500;
-                } else {
-                    transitioner.setStagger(LayoutTransition.CHANGE_APPEARING, 0);
-                    transitioner.setStagger(LayoutTransition.CHANGE_DISAPPEARING, 0);
-                    transitioner.setAnimator(LayoutTransition.APPEARING, null);
-                    transitioner.setAnimator(LayoutTransition.DISAPPEARING, null);
-                    transitioner.setAnimator(LayoutTransition.CHANGE_APPEARING, null);
-                    transitioner.setAnimator(LayoutTransition.CHANGE_DISAPPEARING, null);
-                    duration = 300;
-                }
-                transitioner.setDuration(duration);
+                setupTransition(transitioner);
+            }
+        });
+
+        // Check for disabled animations
+        CheckBox appearingCB = (CheckBox) findViewById(R.id.appearingCB);
+        appearingCB.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                setupTransition(transitioner);
+            }
+        });
+        CheckBox disappearingCB = (CheckBox) findViewById(R.id.disappearingCB);
+        disappearingCB.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                setupTransition(transitioner);
+            }
+        });
+        CheckBox changingAppearingCB = (CheckBox) findViewById(R.id.changingAppearingCB);
+        changingAppearingCB.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                setupTransition(transitioner);
+            }
+        });
+        CheckBox changingDisappearingCB = (CheckBox) findViewById(R.id.changingDisappearingCB);
+        changingDisappearingCB.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                setupTransition(transitioner);
             }
         });
     }
 
-    private void setupAnimations(LayoutTransition transition) {
+    private void setupTransition(LayoutTransition transition) {
+        CheckBox customAnimCB = (CheckBox) findViewById(R.id.customAnimCB);
+        CheckBox appearingCB = (CheckBox) findViewById(R.id.appearingCB);
+        CheckBox disappearingCB = (CheckBox) findViewById(R.id.disappearingCB);
+        CheckBox changingAppearingCB = (CheckBox) findViewById(R.id.changingAppearingCB);
+        CheckBox changingDisappearingCB = (CheckBox) findViewById(R.id.changingDisappearingCB);
+        transition.setAnimator(LayoutTransition.APPEARING, appearingCB.isChecked() ?
+                (customAnimCB.isChecked() ? customAppearingAnim : defaultAppearingAnim) : null);
+        transition.setAnimator(LayoutTransition.DISAPPEARING, disappearingCB.isChecked() ?
+                (customAnimCB.isChecked() ? customDisappearingAnim : defaultDisappearingAnim) : null);
+        transition.setAnimator(LayoutTransition.CHANGE_APPEARING, changingAppearingCB.isChecked() ?
+                (customAnimCB.isChecked() ? customChangingAppearingAnim :
+                        defaultChangingAppearingAnim) : null);
+        transition.setAnimator(LayoutTransition.CHANGE_DISAPPEARING,
+                changingDisappearingCB.isChecked() ?
+                (customAnimCB.isChecked() ? customChangingDisappearingAnim :
+                        defaultChangingDisappearingAnim) : null);
+    }
+
+    private void createCustomAnimations(LayoutTransition transition) {
         // Changing while Adding
         PropertyValuesHolder<Integer> pvhLeft =
                 new PropertyValuesHolder<Integer>("left", 0, 1);
@@ -109,11 +158,10 @@ public class LayoutAnimations extends Activity {
                 new PropertyValuesHolder<Float>("scaleX", 1f, 0f, 1f);
         PropertyValuesHolder<Float> pvhScaleY =
                 new PropertyValuesHolder<Float>("scaleY", 1f, 0f, 1f);
-        final ObjectAnimator changeIn =
+        customChangingAppearingAnim =
                 new ObjectAnimator(transition.getDuration(LayoutTransition.CHANGE_APPEARING),
                         this, pvhLeft, pvhTop, pvhRight, pvhBottom, pvhScaleX, pvhScaleY);
-        transition.setAnimator(LayoutTransition.CHANGE_APPEARING, changeIn);
-        changeIn.addListener(new AnimatorListenerAdapter() {
+        customChangingAppearingAnim.addListener(new AnimatorListenerAdapter() {
             public void onAnimationEnd(Animator anim) {
                 View view = (View) ((ObjectAnimator) anim).getTarget();
                 view.setScaleX(1f);
@@ -127,11 +175,10 @@ public class LayoutAnimations extends Activity {
         Keyframe kf2 = new Keyframe(1f, 0f);
         PropertyValuesHolder<Keyframe> pvhRotation =
                 new PropertyValuesHolder<Keyframe>("rotation", kf0, kf1, kf2);
-        final ObjectAnimator changeOut =
+        customChangingDisappearingAnim =
                 new ObjectAnimator(transition.getDuration(LayoutTransition.CHANGE_DISAPPEARING),
                         this, pvhLeft, pvhTop, pvhRight, pvhBottom, pvhRotation);
-        transition.setAnimator(LayoutTransition.CHANGE_DISAPPEARING, changeOut);
-        changeOut.addListener(new AnimatorListenerAdapter() {
+        customChangingDisappearingAnim.addListener(new AnimatorListenerAdapter() {
             public void onAnimationEnd(Animator anim) {
                 View view = (View) ((ObjectAnimator) anim).getTarget();
                 view.setRotation(0f);
@@ -139,11 +186,10 @@ public class LayoutAnimations extends Activity {
         });
 
         // Adding
-        ObjectAnimator<Float> animIn =
+        customAppearingAnim =
                 new ObjectAnimator<Float>(transition.getDuration(LayoutTransition.APPEARING),
                         null, "rotationY", 90f, 0f);
-        transition.setAnimator(LayoutTransition.APPEARING, animIn);
-        animIn.addListener(new AnimatorListenerAdapter() {
+        customAppearingAnim.addListener(new AnimatorListenerAdapter() {
             public void onAnimationEnd(Animator anim) {
                 View view = (View) ((ObjectAnimator) anim).getTarget();
                 view.setRotationY(0f);
@@ -151,11 +197,10 @@ public class LayoutAnimations extends Activity {
         });
 
         // Removing
-        ObjectAnimator<Float> animOut =
+        customDisappearingAnim =
                 new ObjectAnimator<Float>(transition.getDuration(LayoutTransition.DISAPPEARING),
                         null, "rotationX", 0f, 90f);
-        transition.setAnimator(LayoutTransition.DISAPPEARING, animOut);
-        animIn.addListener(new AnimatorListenerAdapter() {
+        customDisappearingAnim.addListener(new AnimatorListenerAdapter() {
             public void onAnimationEnd(Animator anim) {
                 View view = (View) ((ObjectAnimator) anim).getTarget();
                 view.setRotationX(0f);
