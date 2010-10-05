@@ -44,6 +44,12 @@
     <string name="set_wallpaper">Set Wallpaper</string>
     <string name="randomize">Randomize</string>
 
+    <string name="activity_screen_orientation">App/Activity/Screen Orientation</string>
+    <string name="screen_orientation_summary">Demonstrates the available screen
+        orientation modes.  Often you want to set the desired mode in your manifest
+        instead of programmatically.</string>
+    <string name="screen_orientation">Screen Orientation</string>
+    
     <string name="activity_translucent">App/Activity/Translucent</string>
     <string name="translucent_background">Example of how you can make an
             activity have a translucent background, compositing over

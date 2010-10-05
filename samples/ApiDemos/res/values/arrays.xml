@@ -103,6 +103,22 @@
         <item>Complex</item>
     </string-array>
 
+    <!-- Used in app/Screen Orientation -->
+    <string-array name="screen_orientations">
+        <item>UNSPECIFIED</item>
+        <item>LANDSCAPE</item>
+        <item>PORTRAIT</item>
+        <item>USER</item>
+        <item>BEHIND</item>
+        <item>SENSOR</item>
+        <item>NOSENSOR</item>
+        <item>SENSOR_LANDSCAPE</item>
+        <item>SENSOR_PORTRAIT</item>
+        <item>REVERSE_LANDSCAPE</item>
+        <item>REVERSE_PORTRAIT</item>
+        <item>FULL_SENSOR</item>
+    </string-array>
+
     <!-- Used in view/Secure View examples -->
     <string-array name="secure_view_clicked">
         <item>*bzzt*\nTransferred $1,000,000 to J. Phisher.  Thank you!</item>

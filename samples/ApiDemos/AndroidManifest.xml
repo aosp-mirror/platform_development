@@ -209,6 +209,14 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".app.ScreenOrientation"
+                  android:label="@string/activity_screen_orientation">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+        
         <!-- Fragment Samples -->
 
         <activity android:name=".app.FragmentAlertDialog"
