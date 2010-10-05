@@ -23,6 +23,7 @@ import android.database.sqlite.SQLiteStatement;
 import com.google.common.annotations.VisibleForTesting;
 import com.trustedlogic.trustednfc.android.NdefMessage;
 import com.trustedlogic.trustednfc.android.NdefRecord;
+import com.trustedlogic.trustednfc.android.NfcException;
 
 import java.net.URI;
 import java.util.Date;
@@ -44,6 +45,56 @@ public class TagDBHelper extends SQLiteOpenHelper {
     private static final String INSERT =
             "INSERT INTO NdefMessage (bytes, date) values (?, ?)";
 
+    private static final byte[] REAL_NFC_MSG = new byte[] {
+            (byte) 0xd1,
+            (byte) 0x02,
+            (byte) 0x2b,
+            (byte) 0x53,
+            (byte) 0x70,
+            (byte) 0x91,
+            (byte) 0x01,
+            (byte) 0x17,
+            (byte) 0x54,
+            (byte) 0x02,
+            (byte) 0x65,
+            (byte) 0x6e,
+            (byte) 0x4e,
+            (byte) 0x46,
+            (byte) 0x43,
+            (byte) 0x20,
+            (byte) 0x46,
+            (byte) 0x6f,
+            (byte) 0x72,
+            (byte) 0x75,
+            (byte) 0x6d,
+            (byte) 0x20,
+            (byte) 0x54,
+            (byte) 0x79,
+            (byte) 0x70,
+            (byte) 0x65,
+            (byte) 0x20,
+            (byte) 0x34,
+            (byte) 0x20,
+            (byte) 0x54,
+            (byte) 0x61,
+            (byte) 0x67,
+            (byte) 0x51,
+            (byte) 0x01,
+            (byte) 0x0c,
+            (byte) 0x55,
+            (byte) 0x01,
+            (byte) 0x6e,
+            (byte) 0x78,
+            (byte) 0x70,
+            (byte) 0x2e,
+            (byte) 0x63,
+            (byte) 0x6f,
+            (byte) 0x6d,
+            (byte) 0x2f,
+            (byte) 0x6e,
+            (byte) 0x66,
+            (byte) 0x63
+    };
 
     public TagDBHelper(Context context) {
         this(context, "Tags.db");
@@ -71,6 +122,14 @@ public class TagDBHelper extends SQLiteOpenHelper {
 
         insert(db, msg1);
         insert(db, msg2);
+
+        try {
+            // A real message obtained from an NFC Forum Type 4 tag.
+            NdefMessage msg3 = new NdefMessage(REAL_NFC_MSG);
+            insert(db, msg3);
+        } catch (NfcException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void insert(SQLiteDatabase db, NdefMessage msg) {
