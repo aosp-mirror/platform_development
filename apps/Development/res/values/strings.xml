@@ -36,6 +36,14 @@
     <string name="start_hipri">Start HiPri</string>
     <string name="stop_hipri">Stop HiPri</string>
     <string name="crash">CRASH</string>
+    <string name="add_default_route">Add Default Route</string>
+    <string name="remove_default_route">Remove Default Route</string>
+    <string name="default_request">Make a http request</string>
+    <string name="default_socket">Make a raw request</string>
+    <string name="bound_http_request">Make bound http request</string>
+    <string name="bound_socket_request">Make bound socket request</string>
+    <string name="routed_http_request">Make routed http request</string>
+    <string name="routed_socket_request">Make routed socket request</string>
 
 
         <string name="device_info_default">unknown</string>

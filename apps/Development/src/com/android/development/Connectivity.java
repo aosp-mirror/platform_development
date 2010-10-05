@@ -28,6 +28,7 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.net.ConnectivityManager;
+import android.net.NetworkUtils;
 import android.net.wifi.WifiManager;
 import android.os.RemoteException;
 import android.os.Handler;
@@ -58,19 +59,27 @@ import com.android.internal.telephony.Phone;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.PrintWriter;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.Socket;
+import java.util.Enumeration;
 import java.util.Map;
 
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.conn.params.ConnRouteParams;
+import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.HttpParams;
+import org.apache.http.HttpResponse;
+import org.apache.http.impl.client.DefaultHttpClient;
+
 public class Connectivity extends Activity {
-    private static final String TAG = "Connectivity";
+    private static final String TAG = "DevTools - Connectivity";
 
     private static final int EVENT_TOGGLE_WIFI = 1;
     private static final int EVENT_TOGGLE_SCREEN = 2;
 
-    private Button mEnableWifiButton;
-    private Button mDisableWifiButton;
-
-    private Button mStartDelayedCycleButton;
-    private Button mStopDelayedCycleButton;
     private EditText mDCOnDurationEdit;
     private EditText mDCOffDurationEdit;
     private TextView mDCCycleCountView;
@@ -78,20 +87,12 @@ public class Connectivity extends Activity {
     private long mDCOffDuration = 120000;
     private int mDCCycleCount = 0;
 
-    private Button mStartScreenCycleButton;
-    private Button mStopScreenCycleButton;
     private EditText mSCOnDurationEdit;
     private EditText mSCOffDurationEdit;
     private TextView mSCCycleCountView;
     private long mSCOnDuration = 120000;
     private long mSCOffDuration = 12000;
     private int mSCCycleCount = 0;
-
-    private Button mStartMmsButton;
-    private Button mStopMmsButton;
-    private Button mStartHiPriButton;
-    private Button mStopHiPriButton;
-    private Button mCrashButton;
 
     private boolean mDelayedCycleStarted = false;
 
@@ -191,15 +192,11 @@ public class Connectivity extends Activity {
         mPm = (PowerManager)getSystemService(Context.POWER_SERVICE);
         mCm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
 
-        mEnableWifiButton = (Button)findViewById(R.id.enableWifi);
-        mEnableWifiButton.setOnClickListener(mEnableWifiClicked);
-        mDisableWifiButton = (Button)findViewById(R.id.disableWifi);
-        mDisableWifiButton.setOnClickListener(mDisableWifiClicked);
+        findViewById(R.id.enableWifi).setOnClickListener(mClickListener);
+        findViewById(R.id.disableWifi).setOnClickListener(mClickListener);
 
-        mStartDelayedCycleButton = (Button)findViewById(R.id.startDelayedCycle);
-        mStartDelayedCycleButton.setOnClickListener(mStartDelayedCycleClicked);
-        mStopDelayedCycleButton = (Button)findViewById(R.id.stopDelayedCycle);
-        mStopDelayedCycleButton.setOnClickListener(mStopDelayedCycleClicked);
+        findViewById(R.id.startDelayedCycle).setOnClickListener(mClickListener);
+        findViewById(R.id.stopDelayedCycle).setOnClickListener(mClickListener);
         mDCOnDurationEdit = (EditText)findViewById(R.id.dc_wifi_on_duration);
         mDCOnDurationEdit.setText(Long.toString(mDCOnDuration));
         mDCOffDurationEdit = (EditText)findViewById(R.id.dc_wifi_off_duration);
@@ -207,10 +204,8 @@ public class Connectivity extends Activity {
         mDCCycleCountView = (TextView)findViewById(R.id.dc_wifi_cycles_done);
         mDCCycleCountView.setText(Integer.toString(mDCCycleCount));
 
-        mStartScreenCycleButton = (Button)findViewById(R.id.startScreenCycle);
-        mStartScreenCycleButton.setOnClickListener(mStartScreenCycleClicked);
-        mStopScreenCycleButton = (Button)findViewById(R.id.stopScreenCycle);
-        mStopScreenCycleButton.setOnClickListener(mStopScreenCycleClicked);
+        findViewById(R.id.startScreenCycle).setOnClickListener(mClickListener);
+        findViewById(R.id.stopScreenCycle).setOnClickListener(mClickListener);
         mSCOnDurationEdit = (EditText)findViewById(R.id.sc_wifi_on_duration);
         mSCOnDurationEdit.setText(Long.toString(mSCOnDuration));
         mSCOffDurationEdit = (EditText)findViewById(R.id.sc_wifi_off_duration);
@@ -218,16 +213,20 @@ public class Connectivity extends Activity {
         mSCCycleCountView = (TextView)findViewById(R.id.sc_wifi_cycles_done);
         mSCCycleCountView.setText(Integer.toString(mSCCycleCount));
 
-        mStartMmsButton = (Button)findViewById(R.id.start_mms);
-        mStartMmsButton.setOnClickListener(mStartMmsClicked);
-        mStopMmsButton = (Button)findViewById(R.id.stop_mms);
-        mStopMmsButton.setOnClickListener(mStopMmsClicked);
-        mStartHiPriButton = (Button)findViewById(R.id.start_hipri);
-        mStartHiPriButton.setOnClickListener(mStartHiPriClicked);
-        mStopHiPriButton = (Button)findViewById(R.id.stop_hipri);
-        mStopHiPriButton.setOnClickListener(mStopHiPriClicked);
-        mCrashButton = (Button)findViewById(R.id.crash);
-        mCrashButton.setOnClickListener(mCrashClicked);
+        findViewById(R.id.start_mms).setOnClickListener(mClickListener);
+        findViewById(R.id.stop_mms).setOnClickListener(mClickListener);
+        findViewById(R.id.start_hipri).setOnClickListener(mClickListener);
+        findViewById(R.id.stop_hipri).setOnClickListener(mClickListener);
+        findViewById(R.id.crash).setOnClickListener(mClickListener);
+
+        findViewById(R.id.add_default_route).setOnClickListener(mClickListener);
+        findViewById(R.id.remove_default_route).setOnClickListener(mClickListener);
+        findViewById(R.id.bound_http_request).setOnClickListener(mClickListener);
+        findViewById(R.id.bound_socket_request).setOnClickListener(mClickListener);
+        findViewById(R.id.routed_http_request).setOnClickListener(mClickListener);
+        findViewById(R.id.routed_socket_request).setOnClickListener(mClickListener);
+        findViewById(R.id.default_request).setOnClickListener(mClickListener);
+        findViewById(R.id.default_socket).setOnClickListener(mClickListener);
 
         registerReceiver(mReceiver, new IntentFilter(CONNECTIVITY_TEST_ALARM));
     }
@@ -239,62 +238,114 @@ public class Connectivity extends Activity {
         super.onResume();
     }
 
-    private View.OnClickListener mStartDelayedCycleClicked = new View.OnClickListener() {
+    private View.OnClickListener mClickListener = new View.OnClickListener() {
         public void onClick(View v) {
-            if (!mDelayedCycleStarted) {
-                mDelayedCycleStarted = true;
-                try {
-                    mDCOnDuration = Long.parseLong(mDCOnDurationEdit.getText().toString());
-                    mDCOffDuration = Long.parseLong(mDCOffDurationEdit.getText().toString());
-                } catch (Exception e) { };
-                mDCCycleCount = 0;
-
-                mWakeLock = mPm.newWakeLock(PowerManager.FULL_WAKE_LOCK, "ConnectivityTest");
-                mWakeLock.acquire();
-                mHandler2.sendMessage(mHandler2.obtainMessage(EVENT_TOGGLE_WIFI));
+            switch (v.getId()) {
+                case R.id.enableWifi:
+                    mWm.setWifiEnabled(true);
+                    break;
+                case R.id.disableWifi:
+                    mWm.setWifiEnabled(false);
+                    break;
+                case R.id.startDelayedCycle:
+                    onStartDelayedCycle();
+                    break;
+                case R.id.stopDelayedCycle:
+                    onStopDelayedCycle();
+                    break;
+                case R.id.startScreenCycle:
+                    onStartScreenCycle();
+                    break;
+                case R.id.stopScreenCycle:
+                    onStopScreenCycle();
+                    break;
+                case R.id.start_mms:
+                    mCm.startUsingNetworkFeature(ConnectivityManager.TYPE_MOBILE,
+                            Phone.FEATURE_ENABLE_MMS);
+                    break;
+                case R.id.stop_mms:
+                    mCm.stopUsingNetworkFeature(ConnectivityManager.TYPE_MOBILE,
+                            Phone.FEATURE_ENABLE_MMS);
+                    break;
+                case R.id.default_socket:
+                    onDefaultSocket();
+                    break;
+                case R.id.default_request:
+                    onDefaultRequest();
+                    break;
+                case R.id.routed_socket_request:
+                    onRoutedSocketRequest();
+                    break;
+                case R.id.routed_http_request:
+                    onRoutedHttpRequest();
+                    break;
+                case R.id.bound_socket_request:
+                    onBoundSocketRequest();
+                    break;
+                case R.id.bound_http_request:
+                    onBoundHttpRequest();
+                    break;
+                case R.id.remove_default_route:
+                    onRemoveDefaultRoute();
+                    break;
+                case R.id.add_default_route:
+                    onAddDefaultRoute();
+                    break;
+                case R.id.crash:
+                    onCrash();
+                    break;
+                case R.id.start_hipri:
+                    mCm.startUsingNetworkFeature(ConnectivityManager.TYPE_MOBILE,
+                            Phone.FEATURE_ENABLE_HIPRI);
+                    break;
+                case R.id.stop_hipri:
+                    mCm.stopUsingNetworkFeature(ConnectivityManager.TYPE_MOBILE,
+                            Phone.FEATURE_ENABLE_HIPRI);
+                    break;
             }
         }
     };
-    private View.OnClickListener mStopDelayedCycleClicked = new View.OnClickListener() {
-        public void onClick(View v) {
-            if (mDelayedCycleStarted) {
-                mDelayedCycleStarted = false;
-                mWakeLock.release();
-                mWakeLock = null;
-                if(mHandler2.hasMessages(EVENT_TOGGLE_WIFI)) {
-                    mHandler2.removeMessages(EVENT_TOGGLE_WIFI);
-                }
-            }
-        }
-    };
 
-    private View.OnClickListener mEnableWifiClicked = new View.OnClickListener() {
-        public void onClick(View v) {
-            mWm.setWifiEnabled(true);
-        }
-    };
-    private View.OnClickListener mDisableWifiClicked = new View.OnClickListener() {
-        public void onClick(View v) {
-            mWm.setWifiEnabled(false);
-        }
-    };
 
-    private View.OnClickListener mStartScreenCycleClicked = new View.OnClickListener() {
-        public void onClick(View v) {
-
+    private void onStartDelayedCycle() {
+        if (!mDelayedCycleStarted) {
+            mDelayedCycleStarted = true;
             try {
-                mSCOnDuration = Long.parseLong(mSCOnDurationEdit.getText().toString());
-                mSCOffDuration = Long.parseLong(mSCOffDurationEdit.getText().toString());
+                mDCOnDuration = Long.parseLong(mDCOnDurationEdit.getText().toString());
+                mDCOffDuration = Long.parseLong(mDCOffDurationEdit.getText().toString());
             } catch (Exception e) { };
-            mSCCycleCount = 0;
+            mDCCycleCount = 0;
 
-            mScreenonWakeLock = mPm.newWakeLock(PowerManager.FULL_WAKE_LOCK,
-                    "ConnectivityTest");
-            mScreenonWakeLock.acquire();
-
-            scheduleAlarm(10, SCREEN_OFF);
+            mWakeLock = mPm.newWakeLock(PowerManager.FULL_WAKE_LOCK, "ConnectivityTest");
+            mWakeLock.acquire();
+            mHandler2.sendMessage(mHandler2.obtainMessage(EVENT_TOGGLE_WIFI));
         }
-    };
+    }
+
+    private void onStopDelayedCycle() {
+        if (mDelayedCycleStarted) {
+            mDelayedCycleStarted = false;
+            mWakeLock.release();
+            mWakeLock = null;
+            if(mHandler2.hasMessages(EVENT_TOGGLE_WIFI)) {
+                mHandler2.removeMessages(EVENT_TOGGLE_WIFI);
+            }
+        }
+    }
+
+    private void onStartScreenCycle() {
+        try {
+            mSCOnDuration = Long.parseLong(mSCOnDurationEdit.getText().toString());
+            mSCOffDuration = Long.parseLong(mSCOffDurationEdit.getText().toString());
+        } catch (Exception e) { };
+        mSCCycleCount = 0;
+
+        mScreenonWakeLock = mPm.newWakeLock(PowerManager.FULL_WAKE_LOCK,
+                "ConnectivityTest");
+        mScreenonWakeLock.acquire();
+
+        scheduleAlarm(10, SCREEN_OFF);
+    }
 
     private void scheduleAlarm(long delayMs, String eventType) {
         AlarmManager am = (AlarmManager)getSystemService(Context.ALARM_SERVICE);
@@ -310,42 +361,189 @@ public class Connectivity extends Activity {
         am.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime() + delayMs, p);
     }
 
-    private View.OnClickListener mStopScreenCycleClicked = new View.OnClickListener() {
-        public void onClick(View v) {
-        }
-    };
+    private void onStopScreenCycle() {
+    }
 
-    private View.OnClickListener mStartMmsClicked = new View.OnClickListener() {
-        public void onClick(View v) {
-            mCm.startUsingNetworkFeature(ConnectivityManager.TYPE_MOBILE, Phone.FEATURE_ENABLE_MMS);
-        }
-    };
+    private void onCrash() {
+        ConnectivityManager foo = null;
+        foo.startUsingNetworkFeature(ConnectivityManager.TYPE_MOBILE,
+                Phone.FEATURE_ENABLE_MMS);
+    }
 
-    private View.OnClickListener mStopMmsClicked = new View.OnClickListener() {
-        public void onClick(View v) {
-            mCm.stopUsingNetworkFeature(ConnectivityManager.TYPE_MOBILE, Phone.FEATURE_ENABLE_MMS);
-        }
-    };
+    private void onAddDefaultRoute() {
+        try {
+            NetworkUtils.addRoute("eth0", "0.0.0.0", 0, "8.8.8.8");
+        } catch (Exception e) { }
+    }
 
-    private View.OnClickListener mStartHiPriClicked = new View.OnClickListener() {
-        public void onClick(View v) {
-            mCm.startUsingNetworkFeature(ConnectivityManager.TYPE_MOBILE,
-                    Phone.FEATURE_ENABLE_HIPRI);
-        }
-    };
+    private void onRemoveDefaultRoute() {
+        Log.e(TAG, "removeDefaultRoute returned "+NetworkUtils.removeDefaultRoute("eth0"));
+    }
 
-    private View.OnClickListener mStopHiPriClicked = new View.OnClickListener() {
-        public void onClick(View v) {
-            mCm.stopUsingNetworkFeature(ConnectivityManager.TYPE_MOBILE,
-                    Phone.FEATURE_ENABLE_HIPRI);
-        }
-    };
+    private void onRoutedHttpRequest() {
+        onRoutedRequest(HTTP);
+    }
 
-    private View.OnClickListener mCrashClicked = new View.OnClickListener() {
-        public void onClick(View v) {
-            ConnectivityManager foo = null;
-            foo.startUsingNetworkFeature(ConnectivityManager.TYPE_MOBILE,
-                    Phone.FEATURE_ENABLE_MMS);
+    private void onRoutedSocketRequest() {
+        onRoutedRequest(SOCKET);
+    }
+
+    private final static int SOCKET = 1;
+    private final static int HTTP   = 2;
+
+    private void onRoutedRequest(int type) {
+        String url = "www.google.com";
+
+        InetAddress inetAddress = null;
+        try {
+            inetAddress = InetAddress.getByName(url);
+        } catch (Exception e) {
+            Log.e(TAG, "error fetching address for " + url);
+            return;
         }
-    };
+
+        mCm.requestRouteToHostAddress(ConnectivityManager.TYPE_MOBILE_HIPRI, inetAddress);
+
+        switch (type) {
+            case SOCKET:
+                onBoundSocketRequest();
+                break;
+            case HTTP:
+                HttpGet get = new HttpGet("http://" + url);
+                HttpClient client = new DefaultHttpClient();
+                try {
+                    HttpResponse httpResponse = client.execute(get);
+                    Log.d(TAG, "routed http request gives " + httpResponse.getStatusLine());
+                } catch (Exception e) {
+                    Log.e(TAG, "routed http request exception = " + e);
+                }
+        }
+
+    }
+
+    private void onBoundHttpRequest() {
+        NetworkInterface networkInterface = null;
+        try {
+            networkInterface = NetworkInterface.getByName("rmnet0");
+            Log.d(TAG, "networkInterface is " + networkInterface);
+        } catch (Exception e) {
+            Log.e(TAG, " exception getByName: " + e);
+            return;
+        }
+        if (networkInterface != null) {
+            Enumeration inetAddressess = networkInterface.getInetAddresses();
+            while(inetAddressess.hasMoreElements()) {
+                Log.d(TAG, " inetAddress:" + ((InetAddress)inetAddressess.nextElement()));
+            }
+        }
+
+        HttpParams httpParams = new BasicHttpParams();
+        if (networkInterface != null) {
+            ConnRouteParams.setLocalAddress(httpParams,
+                    networkInterface.getInetAddresses().nextElement());
+        }
+        HttpGet get = new HttpGet("http://www.bbc.com");
+        HttpClient client = new DefaultHttpClient(httpParams);
+        try {
+            HttpResponse response = client.execute(get);
+            Log.d(TAG, "response code = " + response.getStatusLine());
+        } catch (Exception e) {
+            Log.e(TAG, "Exception = "+ e );
+        }
+    }
+
+    private void onBoundSocketRequest() {
+        NetworkInterface networkInterface = null;
+        try {
+            networkInterface = NetworkInterface.getByName("rmnet0");
+        } catch (Exception e) {
+            Log.e(TAG, "exception getByName: " + e);
+            return;
+        }
+        if (networkInterface == null) {
+            try {
+                Log.d(TAG, "getting any networkInterface");
+                networkInterface = NetworkInterface.getNetworkInterfaces().nextElement();
+            } catch (Exception e) {
+                Log.e(TAG, "exception getting any networkInterface: " + e);
+                return;
+            }
+        }
+        if (networkInterface == null) {
+            Log.e(TAG, "couldn't find a local interface");
+            return;
+        }
+        Enumeration inetAddressess = networkInterface.getInetAddresses();
+        while(inetAddressess.hasMoreElements()) {
+            Log.d(TAG, " addr:" + ((InetAddress)inetAddressess.nextElement()));
+        }
+        InetAddress local = null;
+        InetAddress remote = null;
+        try {
+            local = networkInterface.getInetAddresses().nextElement();
+        } catch (Exception e) {
+            Log.e(TAG, "exception getting local InetAddress: " + e);
+            return;
+        }
+        try {
+            remote = InetAddress.getByName("www.flickr.com");
+        } catch (Exception e) {
+            Log.e(TAG, "exception getting remote InetAddress: " + e);
+            return;
+        }
+        Log.d(TAG, "remote addr ="+remote);
+        Log.d(TAG, "local addr ="+local);
+        Socket socket = null;
+        try {
+            socket = new Socket(remote, 80, local, 6000);
+        } catch (Exception e) {
+            Log.e(TAG, "Exception creating socket: " + e);
+            return;
+        }
+        try {
+            PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+            out.println("Hi flickr");
+        } catch (Exception e) {
+            Log.e(TAG, "Exception writing to socket: " + e);
+            return;
+        }
+    }
+
+    private void onDefaultRequest() {
+        HttpParams params = new BasicHttpParams();
+        HttpGet get = new HttpGet("http://www.cnn.com");
+        HttpClient client = new DefaultHttpClient(params);
+        try {
+            HttpResponse response = client.execute(get);
+            Log.e(TAG, "response code = " + response.getStatusLine());
+        } catch (Exception e) {
+            Log.e(TAG, "Exception = " + e);
+        }
+    }
+
+    private void onDefaultSocket() {
+        InetAddress remote = null;
+        try {
+            remote = InetAddress.getByName("www.flickr.com");
+        } catch (Exception e) {
+            Log.e(TAG, "exception getting remote InetAddress: " + e);
+            return;
+        }
+        Log.e(TAG, "remote addr =" + remote);
+        Socket socket = null;
+        try {
+            socket = new Socket(remote, 80);
+        } catch (Exception e) {
+            Log.e(TAG, "Exception creating socket: " + e);
+            return;
+        }
+        try {
+            PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+            out.println("Hi flickr");
+            Log.e(TAG, "written");
+        } catch (Exception e) {
+            Log.e(TAG, "Exception writing to socket: " + e);
+            return;
+        }
+    }
 }
