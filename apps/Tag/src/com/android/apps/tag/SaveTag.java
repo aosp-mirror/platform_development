@@ -49,4 +49,9 @@ public class SaveTag extends Activity implements DialogInterface.OnClickListener
     public void onClick(DialogInterface dialog, int which) {
         finish();
     }
+
+    protected void onStop() {
+        super.onStop();
+        dismissDialog(1);
+    }
 }
