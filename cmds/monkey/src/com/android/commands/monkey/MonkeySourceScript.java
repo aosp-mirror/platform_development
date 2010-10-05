@@ -19,6 +19,7 @@ package com.android.commands.monkey;
 import android.content.ComponentName;
 import android.os.SystemClock;
 import android.view.KeyEvent;
+import android.view.MotionEvent;
 
 import java.io.BufferedReader;
 import java.io.DataInputStream;
@@ -267,12 +268,21 @@ public class MonkeySourceScript implements MonkeyEventSource {
                 float yPrecision = Float.parseFloat(args[9]);
                 int device = Integer.parseInt(args[10]);
                 int edgeFlags = Integer.parseInt(args[11]);
-                int type = MonkeyEvent.EVENT_TYPE_TRACKBALL;
+
+                MonkeyMotionEvent e;
                 if (s.indexOf("Pointer") > 0) {
-                    type = MonkeyEvent.EVENT_TYPE_POINTER;
+                    e = new MonkeyTouchEvent(action);
+                } else {
+                    e = new MonkeyTrackballEvent(action);
                 }
-                MonkeyMotionEvent e = new MonkeyMotionEvent(type, downTime, eventTime, action, x,
-                        y, pressure, size, metaState, xPrecision, yPrecision, device, edgeFlags);
+
+                e.setDownTime(downTime)
+                        .setEventTime(eventTime)
+                        .setMetaState(metaState)
+                        .setPrecision(xPrecision, yPrecision)
+                        .setDeviceId(device)
+                        .setEdgeFlags(edgeFlags)
+                        .addPointer(0, x, y, pressure, size);
                 mQ.addLast(e);
             } catch (NumberFormatException e) {
             }
@@ -287,23 +297,15 @@ public class MonkeySourceScript implements MonkeyEventSource {
 
                 // Set the default parameters
                 long downTime = SystemClock.uptimeMillis();
-                float pressure = 1;
-                float xPrecision = 1;
-                float yPrecision = 1;
-                int edgeFlags = 0;
-                float size = 5;
-                int device = 0;
-                int metaState = 0;
-                int type = MonkeyEvent.EVENT_TYPE_POINTER;
 
-                MonkeyMotionEvent e1 =
-                        new MonkeyMotionEvent(type, downTime, downTime, KeyEvent.ACTION_DOWN, x,
-                                y, pressure, size, metaState, xPrecision, yPrecision, device,
-                                edgeFlags);
-                MonkeyMotionEvent e2 =
-                        new MonkeyMotionEvent(type, downTime, downTime, KeyEvent.ACTION_UP, x,
-                                y, pressure, size, metaState, xPrecision, yPrecision, device,
-                                edgeFlags);
+                MonkeyMotionEvent e1 = new MonkeyTouchEvent(MotionEvent.ACTION_DOWN)
+                        .setDownTime(downTime)
+                        .setEventTime(downTime)
+                        .addPointer(0, x, y, 1, 5);
+                MonkeyMotionEvent e2 = new MonkeyTouchEvent(MotionEvent.ACTION_UP)
+                        .setDownTime(downTime)
+                        .setEventTime(downTime)
+                        .addPointer(0, x, y, 1, 5);
                 mQ.addLast(e1);
                 mQ.addLast(e2);
 
@@ -643,7 +645,7 @@ public class MonkeySourceScript implements MonkeyEventSource {
 
         if (ev.getEventType() == MonkeyEvent.EVENT_TYPE_KEY) {
             adjustKeyEventTime((MonkeyKeyEvent) ev);
-        } else if (ev.getEventType() == MonkeyEvent.EVENT_TYPE_POINTER
+        } else if (ev.getEventType() == MonkeyEvent.EVENT_TYPE_TOUCH
                 || ev.getEventType() == MonkeyEvent.EVENT_TYPE_TRACKBALL) {
             adjustMotionEventTime((MonkeyMotionEvent) ev);
         }

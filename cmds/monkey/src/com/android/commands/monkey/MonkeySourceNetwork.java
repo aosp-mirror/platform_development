@@ -159,8 +159,8 @@ public class MonkeySourceNetwork implements MonkeyEventSource {
                     return EARG;
                 }
 
-                queue.enqueueEvent(new MonkeyMotionEvent(MonkeyEvent.EVENT_TYPE_POINTER,
-                                                         -1, action, x, y, 0));
+                queue.enqueueEvent(new MonkeyTouchEvent(action)
+                        .addPointer(0, x, y));
                 return OK;
             }
             return EARG;
@@ -187,8 +187,8 @@ public class MonkeySourceNetwork implements MonkeyEventSource {
                     Log.e(TAG, "Got something that wasn't a number", e);
                     return EARG;
                 }
-                queue.enqueueEvent(new MonkeyMotionEvent(MonkeyEvent.EVENT_TYPE_TRACKBALL, -1,
-                                                         MotionEvent.ACTION_MOVE, dx, dy, 0));
+                queue.enqueueEvent(new MonkeyTrackballEvent(MotionEvent.ACTION_MOVE)
+                        .addPointer(0, dx, dy));
                 return OK;
 
             }
@@ -341,12 +341,10 @@ public class MonkeySourceNetwork implements MonkeyEventSource {
                     return EARG;
                 }
 
-                queue.enqueueEvent(new MonkeyMotionEvent(MonkeyEvent.EVENT_TYPE_POINTER,
-                                                         -1, MotionEvent.ACTION_DOWN,
-                                                         x, y, 0));
-                queue.enqueueEvent(new MonkeyMotionEvent(MonkeyEvent.EVENT_TYPE_POINTER,
-                                                         -1, MotionEvent.ACTION_UP,
-                                                         x, y, 0));
+                queue.enqueueEvent(new MonkeyTouchEvent(MotionEvent.ACTION_DOWN)
+                        .addPointer(0, x, y));
+                queue.enqueueEvent(new MonkeyTouchEvent(MotionEvent.ACTION_UP)
+                        .addPointer(0, x, y));
                 return OK;
             }
             return EARG;

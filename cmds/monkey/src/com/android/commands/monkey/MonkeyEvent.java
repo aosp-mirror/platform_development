@@ -25,7 +25,7 @@ import android.view.IWindowManager;
 public abstract class MonkeyEvent {
     protected int eventType;
     public static final int EVENT_TYPE_KEY = 0;
-    public static final int EVENT_TYPE_POINTER = 1;
+    public static final int EVENT_TYPE_TOUCH = 1;
     public static final int EVENT_TYPE_TRACKBALL = 2;
     public static final int EVENT_TYPE_ACTIVITY = 3;
     public static final int EVENT_TYPE_FLIP = 4; // Keyboard flip
