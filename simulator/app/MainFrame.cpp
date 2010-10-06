@@ -198,7 +198,7 @@ void MainFrame::ConstructMenu(void)
 
     menuFile->Append(IDM_FILE_PREFERENCES, wxT("&Preferences..."),
         wxT("Edit simulator preferences"));
-    menuFile->AppendSeparator();
+    //menuFile->AppendSeparator();
     menuFile->Append(IDM_FILE_EXIT, wxT("E&xit\tCtrl-Q"),
         wxT("Stop simulator and exit"));
 
@@ -210,7 +210,7 @@ void MainFrame::ConstructMenu(void)
         wxT("Start the device"));
 //    menuRuntime->Append(IDM_RUNTIME_STOP, wxT("Power &Off"),
 //        wxT("Stop the device"));
-    menuRuntime->AppendSeparator();
+//    menuRuntime->AppendSeparator();
 //    menuRuntime->Append(IDM_RUNTIME_RESTART, wxT("&Restart"),
 //        wxT("Restart the device"));
     menuRuntime->Append(IDM_RUNTIME_KILL, wxT("&Kill\tCtrl-K"),
