@@ -27,7 +27,9 @@
     >
         <provider android:name="NotePadProvider"
             android:authorities="com.google.provider.NotePad"
-        />
+            android:exported="false">
+            <grant-uri-permission android:pathPattern=".*" />
+        </provider>
 
         <activity android:name="NotesList" android:label="@string/title_notes_list">
             <intent-filter>
