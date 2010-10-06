@@ -22,9 +22,10 @@ import android.app.Dialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.WindowManager;
 import android.widget.Toast;
-import com.trustedlogic.trustednfc.android.NfcManager;
 import com.trustedlogic.trustednfc.android.NdefMessage;
+import com.trustedlogic.trustednfc.android.NfcManager;
 
 
 /**
@@ -35,6 +36,15 @@ public class SaveTag extends Activity implements DialogInterface.OnClickListener
     @Override
     protected void onStart() {
         super.onStart();
+
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED
+                | WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD
+                | WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
+                | WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
+                | WindowManager.LayoutParams.FLAG_ALLOW_LOCK_WHILE_SCREEN_ON
+                | WindowManager.LayoutParams.FLAG_DIM_BEHIND
+        );
+
         showDialog(1);
         NdefMessage msg = getIntent().getParcelableExtra(NfcManager.NDEF_MESSAGE_EXTRA);
 
@@ -57,6 +67,7 @@ public class SaveTag extends Activity implements DialogInterface.OnClickListener
         finish();
     }
 
+    @Override
     protected void onStop() {
         super.onStop();
         dismissDialog(1);
