@@ -172,7 +172,7 @@ void DeviceWindow::OnUserEvent(UserEvent& event)
             if (fileNameExists && *onionSkinFileName) {
                 wxImage onionSkinImage(wxString::FromAscii(onionSkinFileName));
                 onionSkinImage.SetAlpha(NULL);
-                bool hasAlpha = onionSkinImage.HasAlpha();
+                bool hasAlpha = false; // onionSkinImage.HasAlpha();
                 int width = onionSkinImage.GetWidth();
                 int height = onionSkinImage.GetHeight();
                 if (hasAlpha) {
