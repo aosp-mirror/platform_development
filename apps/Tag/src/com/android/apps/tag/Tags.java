@@ -32,6 +32,10 @@ public class Tags extends TabActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // While we're doing development, delete the database every time we start.
+        getBaseContext().getDatabasePath("Tags.db").delete();
+
         setContentView(R.layout.main);
 
         Resources res = getResources();

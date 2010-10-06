@@ -19,14 +19,12 @@ package com.android.apps.tag;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.widget.Toast;
 import com.trustedlogic.trustednfc.android.NdefMessage;
-import com.trustedlogic.trustednfc.android.NdefRecord;
 import com.trustedlogic.trustednfc.android.NfcManager;
 
 /**
- * This class doesn't work.  Sorry.  Think of this class as pseudo
- * code for now.
+ * When we receive a new NDEF tag, start the activity to
+ * process the tag.
  */
 public class TagBroadcastReceiver extends BroadcastReceiver {
 
@@ -34,19 +32,10 @@ public class TagBroadcastReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         if (intent.getAction().equals(NfcManager.NDEF_TAG_DISCOVERED_ACTION)) {
             NdefMessage msg = intent.getParcelableExtra(NfcManager.NDEF_MESSAGE_EXTRA);
-            Toast.makeText(context, "got a new message", Toast.LENGTH_SHORT).show();
-            insertIntoDb(msg);
+            Intent i = new Intent(context, SaveTag.class)
+                    .putExtra(NfcManager.NDEF_MESSAGE_EXTRA, msg)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.startActivity(i);
         }
     }
-
-    private void insertIntoDb(NdefMessage msg) {
-        for (NdefRecord record : msg.getRecords()) {
-            insertIntoRecordDb(record.getType(), record.getPayload());
-        }
-    }
-
-    private void insertIntoRecordDb(byte[] type, byte[] payload) {
-        // do something...
-    }
-
 }
