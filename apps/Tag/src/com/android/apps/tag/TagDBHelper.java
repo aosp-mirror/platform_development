@@ -19,6 +19,13 @@ package com.android.apps.tag;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.database.sqlite.SQLiteStatement;
+import com.google.common.annotations.VisibleForTesting;
+import com.trustedlogic.trustednfc.android.NdefMessage;
+import com.trustedlogic.trustednfc.android.NdefRecord;
+
+import java.net.URI;
+import java.util.Date;
 
 /**
  * @author nnk@google.com (Nick Kralevich)
@@ -26,28 +33,51 @@ import android.database.sqlite.SQLiteOpenHelper;
 public class TagDBHelper extends SQLiteOpenHelper {
 
     private static final int DATABASE_VERSION = 1;
-    private static final String TABLE_CREATE = "create table Tags ("
-            + "_id INTEGER PRIMARY KEY ASC, "
-            + "description TEXT, "
-            + "date TEXT"
+
+    private static final String NDEF_MSG = "create table NdefMessage ("
+            + "_id INTEGER NOT NULL, "
+            + "bytes TEXT NOT NULL, "  // TODO: This should be a blob
+            + "date TEXT NOT NULL, "
+            + "PRIMARY KEY(_id)"
             + ")";
 
-    private static final String FAKE_DATA =
-            "INSERT INTO Tags (description) values ('hello world')";
-
-    private static final String FAKE_DATA2 =
-            "INSERT INTO Tags (description) values ('hi world')";
+    private static final String INSERT =
+            "INSERT INTO NdefMessage (bytes, date) values (?, ?)";
 
 
     public TagDBHelper(Context context) {
-        super(context, "Tags.db", null, DATABASE_VERSION);
+        this(context, "Tags.db");
+    }
+
+    @VisibleForTesting
+    public TagDBHelper(Context context, String dbFile) {
+        super(context, dbFile, null, DATABASE_VERSION);
     }
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        db.execSQL(TABLE_CREATE);
-        db.execSQL(FAKE_DATA);
-        db.execSQL(FAKE_DATA2);
+        db.execSQL(NDEF_MSG);
+
+        // A fake message containing 1 URL
+        NdefMessage msg1 = new NdefMessage(new NdefRecord[] {
+                NdefUtil.toUriRecord(URI.create("http://www.google.com"))
+        });
+
+        // A fake message containing 2 URLs
+        NdefMessage msg2 = new NdefMessage(new NdefRecord[] {
+                NdefUtil.toUriRecord(URI.create("http://www.youtube.com")),
+                NdefUtil.toUriRecord(URI.create("http://www.android.com"))
+        });
+
+        insert(db, msg1);
+        insert(db, msg2);
+    }
+
+    private void insert(SQLiteDatabase db, NdefMessage msg) {
+        SQLiteStatement stmt = db.compileStatement(INSERT);
+        stmt.bindString(1, new String(msg.toByteArray())); // TODO: This should be a blob
+        stmt.bindString(2, new Date().toString());
+        stmt.executeInsert();
     }
 
     @Override

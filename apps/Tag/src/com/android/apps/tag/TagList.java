@@ -34,24 +34,24 @@ import android.widget.Toast;
  */
 public class TagList extends ListActivity implements DialogInterface.OnClickListener {
 
+    private SQLiteDatabase db;
+    private Cursor cursor;
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Toast.makeText(getBaseContext(), "entered method", Toast.LENGTH_SHORT).show();
 
-        SQLiteDatabase db = new TagDBHelper(this.getBaseContext()).getReadableDatabase();
-        Cursor c = db.query("Tags", new String[] { "_id", "description" }, null, null, null, null, null);
+        db = new TagDBHelper(getBaseContext()).getReadableDatabase();
+        cursor = db.query("NdefMessage", new String[] { "_id", "bytes" }, null, null, null, null, null);
         SimpleCursorAdapter sca =
                 new SimpleCursorAdapter(this,
                         android.R.layout.two_line_list_item,
-                        c,
-                        new String[] { "description" },
+                        cursor,
+                        new String[] { "bytes" },
                         new int[] { android.R.id.text1 });
 
         setListAdapter(sca);
         registerForContextMenu(getListView());
-        c.close();
-        db.close();
         Toast.makeText(getBaseContext(), "exit method", Toast.LENGTH_SHORT).show();
     }
 
@@ -71,6 +71,17 @@ public class TagList extends ListActivity implements DialogInterface.OnClickList
                 .setPositiveButton("Delete", null)
                 .setNegativeButton("Cancel", null)
                 .create();
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (cursor != null) {
+            cursor.close();
+        }
+        if (db != null) {
+            db.close();
+        }
+        super.onDestroy();
     }
 
     @Override
