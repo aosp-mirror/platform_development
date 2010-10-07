@@ -21,7 +21,11 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Toast;
+import com.trustedlogic.trustednfc.android.NfcManager;
+import com.trustedlogic.trustednfc.android.NdefMessage;
+
 
 /**
  * @author nnk@google.com (Nick Kralevich)
@@ -32,7 +36,10 @@ public class SaveTag extends Activity implements DialogInterface.OnClickListener
     protected void onStart() {
         super.onStart();
         showDialog(1);
-        String s = getIntent().getExtras().toString();
+        NdefMessage msg = getIntent().getParcelableExtra(NfcManager.NDEF_MESSAGE_EXTRA);
+
+        String s = toHexString(msg.toByteArray());
+        Log.d("SaveTag", s);
         Toast.makeText(this.getBaseContext(), "SaveTag: " + s, Toast.LENGTH_SHORT).show();
     }
 
@@ -53,5 +60,15 @@ public class SaveTag extends Activity implements DialogInterface.OnClickListener
     protected void onStop() {
         super.onStop();
         dismissDialog(1);
+    }
+
+    private static final char[] hexDigits = "0123456789abcdef".toCharArray();
+
+    private static String toHexString(byte[] bytes) {
+        StringBuilder sb = new StringBuilder(3 * bytes.length);
+        for (byte b : bytes) {
+            sb.append("(byte) 0x").append(hexDigits[(b >> 4) & 0xf]).append(hexDigits[b & 0xf]).append(", ");
+        }
+        return sb.toString();
     }
 }
