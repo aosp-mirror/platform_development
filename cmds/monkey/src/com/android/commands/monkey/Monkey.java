@@ -404,6 +404,9 @@ public class Monkey {
         // Set ro.monkey if it's not set yet.
         SystemProperties.set("ro.monkey", "true");
 
+        // Set the process name showing in "ps" or "top"
+        Process.setArgV0("com.android.commands.monkey");
+
         int resultCode = (new Monkey()).run(args);
         System.exit(resultCode);
     }
