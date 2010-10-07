@@ -13,12 +13,22 @@
      See the License for the specific language governing permissions and
      limitations under the License.
 -->
-
-<property xmlns:android="http://schemas.android.com/apk/res/android"
-    android:duration="1000"
-    android:valueFrom="0"
-    android:valueTo="200"
-    android:valueType="floatType"
-    android:propertyName="y"
-    android:repeatCount="1"
-    android:repeatMode="reverse"/>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:id="@+id/container"
+    >
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        >
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Play"
+            android:id="@+id/startButton"
+            />
+    </LinearLayout>
+</LinearLayout>

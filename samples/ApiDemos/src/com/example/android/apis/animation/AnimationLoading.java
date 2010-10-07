@@ -85,7 +85,7 @@ public class AnimationLoading extends Activity {
             if (animation == null) {
                 ObjectAnimator anim =
                         (ObjectAnimator) AnimatorInflater.
-                                loadAnimator(getApplicationContext(), R.anim.property_animator);
+                                loadAnimator(getApplicationContext(), R.anim.object_animator);
                 anim.addUpdateListener(this);
                 anim.setTarget(balls.get(0));
 
