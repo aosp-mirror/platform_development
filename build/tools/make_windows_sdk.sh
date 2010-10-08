@@ -172,10 +172,10 @@ function package() {
     mkdir -pv "$LIB"/x86_64
     cp -v prebuilt/windows-x86_64/swt/swt.jar  "$LIB"/x86_64/
 
-    # Copy the SDK Setup (aka sdklauncher) to the root of the SDK (it was copied in tools above)
+    # Copy the SDK Manager (aka sdklauncher) to the root of the SDK (it was copied in tools above)
     # and move it also in SDK/tools/lib (so that tools updates can update the root one too)
-    cp "$TOOLS/sdklauncher.exe" "$TEMP_SDK_DIR/SDK Setup.exe"
-    mv "$TOOLS/sdklauncher.exe" "$LIB/SDK Setup.exe"
+    cp "$TOOLS/sdklauncher.exe" "$TEMP_SDK_DIR/SDK Manager.exe"
+    mv "$TOOLS/sdklauncher.exe" "$LIB/SDK Manager.exe"
 
     # If you want the emulator NOTICE in the tools dir, uncomment the following line:
     # cp -v external/qemu/NOTICE "$TOOLS"/emulator_NOTICE.txt
@@ -184,15 +184,15 @@ function package() {
     [[ -n $NEED_MGWZ ]] && cp -v $CYG_MGWZ_PATH "$TOOLS"/
 
     # Update a bunch of bat files
-    cp -v sdk/files/post_tools_install.bat            "$LIB"/
-    cp -v sdk/files/find_java.bat                     "$LIB"/
-    cp -v sdk/apkbuilder/etc/apkbuilder.bat           "$TOOLS"/
-    cp -v sdk/ddms/app/etc/ddms.bat                   "$TOOLS"/
-    cp -v sdk/traceview/etc/traceview.bat             "$TOOLS"/
-    cp -v sdk/hierarchyviewer/etc/hierarchyviewer.bat "$TOOLS"/
-    cp -v sdk/layoutopt/app/etc/layoutopt.bat         "$TOOLS"/
-    cp -v sdk/draw9patch/etc/draw9patch.bat           "$TOOLS"/
-    cp -v sdk/sdkmanager/app/etc/android.bat          "$TOOLS"/
+    cp -v sdk/files/post_tools_install.bat                 "$LIB"/
+    cp -v sdk/files/find_java.bat                          "$LIB"/
+    cp -v sdk/apkbuilder/etc/apkbuilder.bat                "$TOOLS"/
+    cp -v sdk/ddms/app/etc/ddms.bat                        "$TOOLS"/
+    cp -v sdk/traceview/etc/traceview.bat                  "$TOOLS"/
+    cp -v sdk/hierarchyviewer2/app/etc/hierarchyviewer.bat "$TOOLS"/
+    cp -v sdk/layoutopt/app/etc/layoutopt.bat              "$TOOLS"/
+    cp -v sdk/draw9patch/etc/draw9patch.bat                "$TOOLS"/
+    cp -v sdk/sdkmanager/app/etc/android.bat               "$TOOLS"/
 
     # Put the JetCreator tools, content and docs (not available in the linux SDK)
     JET="$TOOLS/Jet"
