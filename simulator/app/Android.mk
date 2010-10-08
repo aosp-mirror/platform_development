@@ -70,7 +70,7 @@ ifeq ($(HOST_OS),linux)
 	# without us explicitly setting the LD_LIBRARY_PATH environment variable
 	LOCAL_LDLIBS += -Wl,-z,origin
 	LOCAL_CFLAGS += -DGTK_NO_CHECK_CASTS -D__WXGTK__ -D_FILE_OFFSET_BITS=64 \
-   					-D_LARGE_FILES -D_LARGEFILE_SOURCE=1 
+   					-D_LARGE_FILES -D_LARGEFILE_SOURCE=1 -DNO_GCC_PRAGMA
 	LOCAL_LDLIBS += -lrt
 endif
 ifeq ($(HOST_OS),darwin)
