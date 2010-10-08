@@ -300,12 +300,14 @@ __END_DECLS
 #define L_cuserid	9	/* size for cuserid(); UT_NAMESIZE + 1 */
 
 __BEGIN_DECLS
+#if 0 /* MISSING FROM BIONIC */
 char	*ctermid(char *);
 char	*cuserid(char *);
+#endif /* MISSING */
 FILE	*fdopen(int, const char *);
 int	 fileno(FILE *);
 
-#if (__POSIX_VISIBLE >= 199209) || 1 /* ANDROID: Bionic does include this */
+#if (__POSIX_VISIBLE >= 199209)
 int	 pclose(FILE *);
 FILE	*popen(const char *, const char *);
 #endif

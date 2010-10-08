@@ -31,7 +31,7 @@
 #include <sys/cdefs.h>
 #include <sys/types.h>
 
-// ANDROID: needed for flock()
+/* ANDROID: needed for flock() */
 #include <unistd.h>
 #include <fcntl.h>
 

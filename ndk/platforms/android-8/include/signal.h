@@ -120,6 +120,7 @@ extern int siginterrupt(int  sig, int  flag);
 extern int raise(int);
 extern int kill(pid_t, int);
 extern int killpg(int pgrp, int sig);
+extern int sigaltstack(const stack_t *ss, stack_t *oss);
 
 
 __END_DECLS

@@ -92,7 +92,10 @@ extern int mount(const char *, const char *,
 		   const void *);
 extern int umount(const char *);
 extern int umount2(const char *, int);
+
+#if 0 /* MISSING FROM BIONIC */
 extern int pivot_root(const char *, const char *);
+#endif /* MISSING */
 
 __END_DECLS
 

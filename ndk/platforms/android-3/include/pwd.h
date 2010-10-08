@@ -113,12 +113,14 @@ __BEGIN_DECLS
 struct passwd* getpwnam(const char*);
 struct passwd* getpwuid(uid_t);
 
+void endpwent(void);
+
+#if 0 /* MISSING FROM BIONIC */
 int getpwnam_r(const char*, struct passwd*, char*, size_t, struct passwd**);
 int getpwuid_r(uid_t, struct passwd*, char*, size_t, struct passwd**);
-
-void endpwent(void);
 struct passwd* getpwent(void);
 int setpwent(void);
+#endif /* MISSING */
 
 __END_DECLS
 
