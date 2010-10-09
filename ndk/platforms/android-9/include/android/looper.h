@@ -135,6 +135,15 @@ enum {
      * to specify this event flag in the requested event set.
      */
     ALOOPER_EVENT_HANGUP = 1 << 3,
+
+    /**
+     * The file descriptor is invalid.
+     * For example, the file descriptor was closed prematurely.
+     *
+     * The looper always sends notifications about invalid file descriptors; it is not necessary
+     * to specify this event flag in the requested event set.
+     */
+    ALOOPER_EVENT_INVALID = 1 << 4,
 };
 
 /**
@@ -217,7 +226,7 @@ void ALooper_wake(ALooper* looper);
  * This method can be called on any thread.
  * This method may block briefly if it needs to wake the poll.
  */
-void ALooper_addFd(ALooper* looper, int fd, int ident, int events,
+int ALooper_addFd(ALooper* looper, int fd, int ident, int events,
         ALooper_callbackFunc callback, void* data);
 
 /**
