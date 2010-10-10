@@ -26,7 +26,7 @@ TOOLS=$TEMP_SDK_DIR/tools
 PLATFORM_TOOLS=$TEMP_SDK_DIR/platform-tools
 LIB=$TEMP_SDK_DIR/tools/lib
 rm $V $TOOLS/{android,apkbuilder,ddms,dmtracedump,draw9patch,emulator,etc1tool}
-rm $V $TOOLS/{hierarchyviewer,hprof-conv,layoutopt,mksdcard,sqlite3,traceview,zipalign}
+rm $V $TOOLS/{hierarchyviewer,hprof-conv,layoutopt,mksdcard,sqlite3,traceview,zipalign,monkeyrunner}
 rm $V $LIB/*/swt.jar
 rm $V $PLATFORM_TOOLS/{adb,aapt,aidl,dx,dexdump}
 
@@ -59,6 +59,7 @@ cp $V ${TOPDIR}sdk/hierarchyviewer2/app/etc/hierarchyviewer.bat $TOOLS/
 cp $V ${TOPDIR}sdk/layoutopt/app/etc/layoutopt.bat              $TOOLS/
 cp $V ${TOPDIR}sdk/draw9patch/etc/draw9patch.bat                $TOOLS/
 cp $V ${TOPDIR}sdk/sdkmanager/app/etc/android.bat               $TOOLS/
+cp $V ${TOPDIR}sdk/monkeyrunner/etc/monkeyrunner.bat            $TOOLS/
 
 # Put the JetCreator tools, content and docs (not available in the linux SDK)
 JET=$TOOLS/Jet
