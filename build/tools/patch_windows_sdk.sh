@@ -15,8 +15,6 @@ if [[ ${#PLATFORMS[@]} != 1 ]]; then
     echo "Instead, found: ${PLATFORMS[@]}"
     exit 1
 fi
-THE_PLATFORM=${PLATFORMS[0]}
-PLATFORM_TOOLS=$THE_PLATFORM/tools
 
 # Package USB Driver
 if [[ -n "$USB_DRIVER_HOOK" ]]; then
@@ -25,6 +23,7 @@ fi
 
 # Remove obsolete stuff from tools & platform
 TOOLS=$TEMP_SDK_DIR/tools
+PLATFORM_TOOLS=$TEMP_SDK_DIR/platform-tools
 LIB=$TEMP_SDK_DIR/tools/lib
 rm $V $TOOLS/{android,apkbuilder,ddms,dmtracedump,draw9patch,emulator,etc1tool}
 rm $V $TOOLS/{hierarchyviewer,hprof-conv,layoutopt,mksdcard,sqlite3,traceview,zipalign}
@@ -39,10 +38,10 @@ cp $V ${TOPDIR}prebuilt/windows/swt/swt.jar         $LIB/x86/
 mkdir -pv $LIB/x86_64
 cp $V ${TOPDIR}prebuilt/windows-x86_64/swt/swt.jar  $LIB/x86_64/
 
-# Copy the SDK Setup (aka sdklauncher) to the root of the SDK (it was copied in tools above)
+# Copy the SDK Manager (aka sdklauncher) to the root of the SDK (it was copied in tools above)
 # and move it also in SDK/tools/lib (so that tools updates can update the root one too)
-cp $TOOLS/sdklauncher.exe $TEMP_SDK_DIR/"SDK Setup.exe"
-mv $TOOLS/sdklauncher.exe $LIB/"SDK Setup.exe"
+cp $TOOLS/sdklauncher.exe $TEMP_SDK_DIR/"SDK Manager.exe"
+mv $TOOLS/sdklauncher.exe $LIB/"SDK Manager.exe"
 
 # Copy the emulator NOTICE in the tools dir
 cp $V ${TOPDIR}external/qemu/NOTICE $TOOLS/emulator_NOTICE.txt
@@ -51,15 +50,15 @@ cp $V ${TOPDIR}external/qemu/NOTICE $TOOLS/emulator_NOTICE.txt
 [[ -n $NEED_MGWZ ]] && cp $V $CYG_MGWZ_PATH $TOOLS/
 
 # Update a bunch of bat files
-cp $V ${TOPDIR}sdk/files/post_tools_install.bat            $LIB/
-cp $V ${TOPDIR}sdk/files/find_java.bat                     $LIB/
-cp $V ${TOPDIR}sdk/apkbuilder/etc/apkbuilder.bat           $TOOLS/
-cp $V ${TOPDIR}sdk/ddms/app/etc/ddms.bat                   $TOOLS/
-cp $V ${TOPDIR}sdk/traceview/etc/traceview.bat             $TOOLS/
-cp $V ${TOPDIR}sdk/hierarchyviewer/etc/hierarchyviewer.bat $TOOLS/
-cp $V ${TOPDIR}sdk/layoutopt/app/etc/layoutopt.bat         $TOOLS/
-cp $V ${TOPDIR}sdk/draw9patch/etc/draw9patch.bat           $TOOLS/
-cp $V ${TOPDIR}sdk/sdkmanager/app/etc/android.bat          $TOOLS/
+cp $V ${TOPDIR}sdk/files/post_tools_install.bat                 $LIB/
+cp $V ${TOPDIR}sdk/files/find_java.bat                          $LIB/
+cp $V ${TOPDIR}sdk/apkbuilder/etc/apkbuilder.bat                $TOOLS/
+cp $V ${TOPDIR}sdk/ddms/app/etc/ddms.bat                        $TOOLS/
+cp $V ${TOPDIR}sdk/traceview/etc/traceview.bat                  $TOOLS/
+cp $V ${TOPDIR}sdk/hierarchyviewer2/app/etc/hierarchyviewer.bat $TOOLS/
+cp $V ${TOPDIR}sdk/layoutopt/app/etc/layoutopt.bat              $TOOLS/
+cp $V ${TOPDIR}sdk/draw9patch/etc/draw9patch.bat                $TOOLS/
+cp $V ${TOPDIR}sdk/sdkmanager/app/etc/android.bat               $TOOLS/
 
 # Put the JetCreator tools, content and docs (not available in the linux SDK)
 JET=$TOOLS/Jet
