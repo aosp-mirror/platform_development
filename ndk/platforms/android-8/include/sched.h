@@ -69,7 +69,9 @@ extern int sched_rr_get_interval(pid_t pid, struct timespec *tp);
 #define CLONE_CHILD_SETTID   0x01000000
 #define CLONE_STOPPED        0x02000000
 
+#ifdef _GNU_SOURCE
 extern int    clone(int (*fn)(void*), void *child_stack, int flags, void *arg);
+#endif
 
 __END_DECLS
 

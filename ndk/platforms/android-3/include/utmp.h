@@ -87,4 +87,4 @@ struct utmp* getutent();
 
 __END_DECLS
 
-#endif // _UTMP_H_
+#endif /* _UTMP_H_ */

@@ -53,7 +53,9 @@ extern char *setlocale(int category, const char *locale);
 
 /* Make libstdc++-v3 happy.  */
 struct lconv { };
+#if 0 /* MISSING FROM BIONIC */
 struct lconv *localeconv(void);
+#endif /* MISSING */
 
 __END_DECLS
 

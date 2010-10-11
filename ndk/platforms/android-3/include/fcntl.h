@@ -39,6 +39,10 @@ __BEGIN_DECLS
 #define O_ASYNC  FASYNC
 #endif
 
+#ifndef O_CLOEXEC
+#define O_CLOEXEC  02000000
+#endif
+
 extern int  open(const char*  path, int  mode, ...);
 extern int  openat(int fd, const char*  path, int  mode, ...);
 extern int  unlinkat(int dirfd, const char *pathname, int flags);

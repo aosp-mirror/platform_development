@@ -39,8 +39,8 @@
 #ifndef _SYS_IOCTL_COMPAT_H_
 #define	_SYS_IOCTL_COMPAT_H_
 
-//#include <sys/ttychars.h>
-//#include <sys/ttydev.h>
+/*#include <sys/ttychars.h>*/
+/*#include <sys/ttydev.h>*/
 
 struct tchars {
 	char	t_intrc;	/* interrupt */
