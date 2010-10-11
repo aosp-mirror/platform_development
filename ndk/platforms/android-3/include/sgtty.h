@@ -41,8 +41,10 @@
 #include <sys/cdefs.h>
 
 __BEGIN_DECLS
+#if 0 /* MISSING FROM BIONIC */
 int gtty(int, struct sgttyb *);
 int stty(int, struct sgttyb *);
+#endif /* MISSING */
 __END_DECLS
 
 #endif /* _SGTTY_H_ */

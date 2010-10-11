@@ -86,10 +86,8 @@ extern void  tzset(void);
 
 /* global includes */
 extern char*     tzname[];
-#if 0 /* MISSING FROM BIONIC */
 extern int       daylight;
 extern long int  timezone;
-#endif /* MISSING */
 
 #define CLOCKS_PER_SEC     1000000
 

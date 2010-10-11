@@ -30,7 +30,7 @@
 
 #include <sys/cdefs.h>
 #include <sys/types.h>
-// For all of the defines
+/* For all of the defines */
 #include <linux/ptrace.h>
 
 __BEGIN_DECLS

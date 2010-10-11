@@ -33,7 +33,9 @@
 
 __BEGIN_DECLS
 
+#if 0 /* MISSING FROM BIONIC */
 extern int sysinfo (struct sysinfo *info);
+#endif /* MISSING */
 
 __END_DECLS
 

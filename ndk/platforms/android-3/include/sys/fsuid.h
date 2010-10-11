@@ -33,8 +33,10 @@
 
 __BEGIN_DECLS
 
+#if 0 /* MISSING FROM BIONIC */
 extern int setfsuid(uid_t);
 extern int setfsgid(gid_t);
+#endif /* MISSING */
 
 __END_DECLS
 
