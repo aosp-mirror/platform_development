@@ -55,6 +55,7 @@ extern char *getenv(const char *);
 extern int putenv(const char *);
 extern int setenv(const char *, const char *, int);
 extern int unsetenv(const char *);
+extern int clearenv(void);
 
 extern char *mktemp (char *);
 extern int mkstemp (char *);
@@ -177,7 +178,6 @@ extern size_t	wcstombs(char *, const wchar_t *, size_t);
 
 #if 0 /* MISSING FROM BIONIC */
 extern int on_exit(void (*)(int, void *), void *);
-extern int clearenv(void);
 #endif /* MISSING */
 
 __END_DECLS

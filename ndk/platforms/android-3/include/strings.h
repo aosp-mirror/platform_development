@@ -43,14 +43,16 @@
 #include <sys/cdefs.h>
 
 __BEGIN_DECLS
-int	 bcmp(const void *, const void *, size_t);
 void	 bcopy(const void *, void *, size_t);
 void	 bzero(void *, size_t);
 int	 ffs(int);
 char	*index(const char *, int);
-char	*rindex(const char *, int);
 int	 strcasecmp(const char *, const char *);
 int	 strncasecmp(const char *, const char *, size_t);
+#if 0 /* MISSING FROM BIONIC */
+int      bcmp(const void *, const void *, size_t);
+char    *rindex(const char *, int);
+#endif /* MISSING */
 __END_DECLS
 
 #endif /* !defined(_STRINGS_H_) */

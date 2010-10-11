@@ -86,7 +86,7 @@
 #include <sys/limits.h>
 
 #if __POSIX_VISIBLE
-#include <arch/syslimits.h>
+#include <sys/syslimits.h>
 #endif
 
 #ifndef PAGESIZE

@@ -62,11 +62,6 @@
 #define	__GNUC_PREREQ__(x, y)	0
 #endif
 
-//XXX #include <machine/cdefs.h>
-
-/* BIONIC: simpler definition */
-#define __BSD_VISIBLE   1
-
 #include <sys/cdefs_elf.h>
 
 #if defined(__cplusplus)
@@ -370,6 +365,142 @@
 	for (pvar = __link_set_start(set); pvar < __link_set_end(set); pvar++)
 
 #define	__link_set_entry(set, idx)	(__link_set_begin(set)[idx])
+
+/*
+ * Some of the recend FreeBSD sources used in Bionic need this.
+ * Originally, this is used to embed the rcs versions of each source file
+ * in the generated binary. We certainly don't want this in Bionic.
+ */
+#define	__FBSDID(s)	struct __hack
+
+/*-
+ * The following definitions are an extension of the behavior originally
+ * implemented in <sys/_posix.h>, but with a different level of granularity.
+ * POSIX.1 requires that the macros we test be defined before any standard
+ * header file is included.
+ *
+ * Here's a quick run-down of the versions:
+ *  defined(_POSIX_SOURCE)		1003.1-1988
+ *  _POSIX_C_SOURCE == 1		1003.1-1990
+ *  _POSIX_C_SOURCE == 2		1003.2-1992 C Language Binding Option
+ *  _POSIX_C_SOURCE == 199309		1003.1b-1993
+ *  _POSIX_C_SOURCE == 199506		1003.1c-1995, 1003.1i-1995,
+ *					and the omnibus ISO/IEC 9945-1: 1996
+ *  _POSIX_C_SOURCE == 200112		1003.1-2001
+ *  _POSIX_C_SOURCE == 200809		1003.1-2008
+ *
+ * In addition, the X/Open Portability Guide, which is now the Single UNIX
+ * Specification, defines a feature-test macro which indicates the version of
+ * that specification, and which subsumes _POSIX_C_SOURCE.
+ *
+ * Our macros begin with two underscores to avoid namespace screwage.
+ */
+
+/* Deal with IEEE Std. 1003.1-1990, in which _POSIX_C_SOURCE == 1. */
+#if defined(_POSIX_C_SOURCE) && _POSIX_C_SOURCE == 1
+#undef _POSIX_C_SOURCE		/* Probably illegal, but beyond caring now. */
+#define	_POSIX_C_SOURCE		199009
+#endif
+
+/* Deal with IEEE Std. 1003.2-1992, in which _POSIX_C_SOURCE == 2. */
+#if defined(_POSIX_C_SOURCE) && _POSIX_C_SOURCE == 2
+#undef _POSIX_C_SOURCE
+#define	_POSIX_C_SOURCE		199209
+#endif
+
+/* Deal with various X/Open Portability Guides and Single UNIX Spec. */
+#ifdef _XOPEN_SOURCE
+#if _XOPEN_SOURCE - 0 >= 700
+#define	__XSI_VISIBLE		700
+#undef _POSIX_C_SOURCE
+#define	_POSIX_C_SOURCE		200809
+#elif _XOPEN_SOURCE - 0 >= 600
+#define	__XSI_VISIBLE		600
+#undef _POSIX_C_SOURCE
+#define	_POSIX_C_SOURCE		200112
+#elif _XOPEN_SOURCE - 0 >= 500
+#define	__XSI_VISIBLE		500
+#undef _POSIX_C_SOURCE
+#define	_POSIX_C_SOURCE		199506
+#endif
+#endif
+
+/*
+ * Deal with all versions of POSIX.  The ordering relative to the tests above is
+ * important.
+ */
+#if defined(_POSIX_SOURCE) && !defined(_POSIX_C_SOURCE)
+#define	_POSIX_C_SOURCE		198808
+#endif
+#ifdef _POSIX_C_SOURCE
+#if _POSIX_C_SOURCE >= 200809
+#define	__POSIX_VISIBLE		200809
+#define	__ISO_C_VISIBLE		1999
+#elif _POSIX_C_SOURCE >= 200112
+#define	__POSIX_VISIBLE		200112
+#define	__ISO_C_VISIBLE		1999
+#elif _POSIX_C_SOURCE >= 199506
+#define	__POSIX_VISIBLE		199506
+#define	__ISO_C_VISIBLE		1990
+#elif _POSIX_C_SOURCE >= 199309
+#define	__POSIX_VISIBLE		199309
+#define	__ISO_C_VISIBLE		1990
+#elif _POSIX_C_SOURCE >= 199209
+#define	__POSIX_VISIBLE		199209
+#define	__ISO_C_VISIBLE		1990
+#elif _POSIX_C_SOURCE >= 199009
+#define	__POSIX_VISIBLE		199009
+#define	__ISO_C_VISIBLE		1990
+#else
+#define	__POSIX_VISIBLE		198808
+#define	__ISO_C_VISIBLE		0
+#endif /* _POSIX_C_SOURCE */
+#else
+/*-
+ * Deal with _ANSI_SOURCE:
+ * If it is defined, and no other compilation environment is explicitly
+ * requested, then define our internal feature-test macros to zero.  This
+ * makes no difference to the preprocessor (undefined symbols in preprocessing
+ * expressions are defined to have value zero), but makes it more convenient for
+ * a test program to print out the values.
+ *
+ * If a program mistakenly defines _ANSI_SOURCE and some other macro such as
+ * _POSIX_C_SOURCE, we will assume that it wants the broader compilation
+ * environment (and in fact we will never get here).
+ */
+#if defined(_ANSI_SOURCE)	/* Hide almost everything. */
+#define	__POSIX_VISIBLE		0
+#define	__XSI_VISIBLE		0
+#define	__BSD_VISIBLE		0
+#define	__ISO_C_VISIBLE		1990
+#elif defined(_C99_SOURCE)	/* Localism to specify strict C99 env. */
+#define	__POSIX_VISIBLE		0
+#define	__XSI_VISIBLE		0
+#define	__BSD_VISIBLE		0
+#define	__ISO_C_VISIBLE		1999
+#else				/* Default environment: show everything. */
+#define	__POSIX_VISIBLE		200809
+#define	__XSI_VISIBLE		700
+#define	__BSD_VISIBLE		1
+#define	__ISO_C_VISIBLE		1999
+#endif
+#endif
+
+/*
+ * Default values.
+ */
+#ifndef __XPG_VISIBLE
+# define __XPG_VISIBLE          700
+#endif
+#ifndef __POSIX_VISIBLE
+# define __POSIX_VISIBLE        200809
+#endif
+#ifndef __ISO_C_VISIBLE
+# define __ISO_C_VISIBLE        1999
+#endif
+#ifndef __BSD_VISIBLE
+# define __BSD_VISIBLE          1
+#endif
 
 #define  __BIONIC__   1
 
