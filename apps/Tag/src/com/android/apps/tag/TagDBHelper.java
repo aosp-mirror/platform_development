@@ -137,6 +137,7 @@ public class TagDBHelper extends SQLiteOpenHelper {
         stmt.bindString(1, new String(msg.toByteArray())); // TODO: This should be a blob
         stmt.bindString(2, new Date().toString());
         stmt.executeInsert();
+        stmt.close();
     }
 
     @Override
