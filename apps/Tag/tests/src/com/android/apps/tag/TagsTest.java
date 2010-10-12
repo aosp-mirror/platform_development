@@ -22,13 +22,14 @@ import android.test.ActivityInstrumentationTestCase2;
  * Make sure that the main launcher activity opens up properly, which will be
  * verified by {@link #testActivityTestCaseSetUpProperly}.
  */
-public class TagsTest extends ActivityInstrumentationTestCase2<Tags> {
+public class TagsTest extends ActivityInstrumentationTestCase2<TagBrowserActivity> {
 
     /**
-     * Creates an {@link ActivityInstrumentationTestCase2} for the {@link Tags} activity.
+     * Creates an {@link ActivityInstrumentationTestCase2} for the
+     * {@link TagBrowserActivity} activity.
      */
     public TagsTest() {
-        super(Tags.class);
+        super(TagBrowserActivity.class);
     }
 
     /**
