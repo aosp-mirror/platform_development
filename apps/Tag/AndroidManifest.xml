@@ -29,7 +29,6 @@
             </intent-filter>
         </activity>
 
-        <activity android:name="TagSelector"></activity>
         <activity android:name="TagList"></activity>
         <activity android:name="SaveTag"></activity>
         <receiver android:name=".TagBroadcastReceiver">
