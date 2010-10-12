@@ -37,7 +37,7 @@ public class TagDBHelper extends SQLiteOpenHelper {
 
     private static final String NDEF_MSG = "create table NdefMessage ("
             + "_id INTEGER NOT NULL, "
-            + "bytes TEXT NOT NULL, "  // TODO: This should be a blob
+            + "bytes BLOB NOT NULL, "
             + "date TEXT NOT NULL, "
             + "PRIMARY KEY(_id)"
             + ")";
@@ -137,6 +137,7 @@ public class TagDBHelper extends SQLiteOpenHelper {
         stmt.bindString(1, new String(msg.toByteArray())); // TODO: This should be a blob
         stmt.bindString(2, new Date().toString());
         stmt.executeInsert();
+        stmt.close();
     }
 
     @Override
