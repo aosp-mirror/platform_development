@@ -42,9 +42,8 @@ public class Tags extends TabActivity {
         TabHost tabHost = getTabHost();
         Intent i = new Intent().setClass(this, TagList.class);
 
-        Intent iSavedList = new Intent().setClass(this, TagList.class);
+        Intent iSavedList = new Intent().setClass(this, TagList.class).putExtra(TagList.SHOW_SAVED_ONLY, true);
         Intent iRecentList = new Intent().setClass(this, TagList.class);
-        Intent iMyTagList = new Intent().setClass(this, TagList.class);
 
 
         TabHost.TabSpec spec1 = tabHost.newTabSpec("1")
@@ -56,12 +55,6 @@ public class Tags extends TabActivity {
                 .setIndicator("Recent", res.getDrawable(R.drawable.ic_tab_artists))
                 .setContent(iRecentList);
         tabHost.addTab(spec2);
-
-        TabHost.TabSpec spec3 = tabHost.newTabSpec("3")
-                .setIndicator("My Tag", res.getDrawable(R.drawable.ic_tab_artists))
-                .setContent(iMyTagList);
-        tabHost.addTab(spec3);
-
     }
 }
 

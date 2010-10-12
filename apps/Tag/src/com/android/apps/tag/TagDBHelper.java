@@ -39,11 +39,12 @@ public class TagDBHelper extends SQLiteOpenHelper {
             + "_id INTEGER NOT NULL, "
             + "bytes BLOB NOT NULL, "
             + "date TEXT NOT NULL, "
+            + "saved TEXT NOT NULL default 0,"  // boolean
             + "PRIMARY KEY(_id)"
             + ")";
 
     private static final String INSERT =
-            "INSERT INTO NdefMessage (bytes, date) values (?, ?)";
+            "INSERT INTO NdefMessage (bytes, date, saved) values (?, ?, ?)";
 
     private static final byte[] REAL_NFC_MSG = new byte[] {
             (byte) 0xd1,
@@ -120,22 +121,24 @@ public class TagDBHelper extends SQLiteOpenHelper {
                 NdefUtil.toUriRecord(URI.create("http://www.android.com"))
         });
 
-        insert(db, msg1);
-        insert(db, msg2);
+        insert(db, msg1, false);
+        insert(db, msg2, true);
 
         try {
             // A real message obtained from an NFC Forum Type 4 tag.
             NdefMessage msg3 = new NdefMessage(REAL_NFC_MSG);
-            insert(db, msg3);
+            insert(db, msg3, false);
         } catch (NfcException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private void insert(SQLiteDatabase db, NdefMessage msg) {
+    private void insert(SQLiteDatabase db, NdefMessage msg, boolean isSaved) {
         SQLiteStatement stmt = db.compileStatement(INSERT);
         stmt.bindString(1, new String(msg.toByteArray())); // TODO: This should be a blob
         stmt.bindString(2, new Date().toString());
+        String isSavedStr = isSaved ? "1" : "0";
+        stmt.bindString(3, isSavedStr);
         stmt.executeInsert();
         stmt.close();
     }
