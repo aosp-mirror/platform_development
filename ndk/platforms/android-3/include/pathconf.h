@@ -28,6 +28,10 @@
 #ifndef _PATHCONF_H_
 #define _PATHCONF_H_
 
+#include <sys/cdefs.h>
+
+__BEGIN_DECLS
+
 /* constants to be used for the 'name' paremeter of pathconf/fpathconf */
 
 #define  _PC_FILESIZEBITS       0x0000
@@ -53,6 +57,8 @@
 
 extern long fpathconf(int fildes, int name);
 extern long pathconf(const char *path, int name);
+
+__END_DECLS
 
 #endif /* _PATHCONF_H_ */
 

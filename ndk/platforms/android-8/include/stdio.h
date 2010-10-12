@@ -300,8 +300,10 @@ __END_DECLS
 #define L_cuserid	9	/* size for cuserid(); UT_NAMESIZE + 1 */
 
 __BEGIN_DECLS
+#if 0 /* MISSING FROM BIONIC */
 char	*ctermid(char *);
 char	*cuserid(char *);
+#endif /* MISSING */
 FILE	*fdopen(int, const char *);
 int	 fileno(FILE *);
 

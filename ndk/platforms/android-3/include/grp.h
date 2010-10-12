@@ -56,6 +56,8 @@ struct group {
 
 __BEGIN_DECLS
 struct group	*getgrgid(gid_t);
+
+#if 0 /* MISSING FROM BIONIC */
 struct group	*getgrnam(const char *);
 #if __BSD_VISIBLE || __POSIX_VISIBLE >= 200112 || __XPG_VISIBLE
 struct group	*getgrent(void);
@@ -71,6 +73,7 @@ void		 setgrfile(const char *);
 int		 setgroupent(int);
 char		*group_from_gid(gid_t, int);
 #endif
+#endif /* MISSING */
 
 int   getgrouplist (const char *user, gid_t group,
                   gid_t *groups, int *ngroups);
