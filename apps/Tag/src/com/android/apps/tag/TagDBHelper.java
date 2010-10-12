@@ -52,7 +52,7 @@ public class TagDBHelper extends SQLiteOpenHelper {
      * consists of the text "NFC Forum Type 4 Tag" in english combined with
      * the URL "http://www.nxp.com/nfc"
      */
-    private static final byte[] REAL_NFC_MSG = new byte[] {
+    public static final byte[] REAL_NFC_MSG = new byte[] {
             (byte) 0xd1,                   // MB=1 ME=1 CF=0 SR=1 IL=0 TNF=001
             (byte) 0x02,                   // Type Length = 2
             (byte) 0x2b,                   // Payload Length = 43

@@ -16,17 +16,22 @@
 
 package com.android.apps.tag;
 
+import android.util.Log;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
+import com.google.common.collect.Iterables;
 import com.google.common.primitives.Bytes;
+import com.trustedlogic.trustednfc.android.NdefMessage;
 import com.trustedlogic.trustednfc.android.NdefRecord;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charsets;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * Utilities for dealing with conversions to and from NdefRecords.
@@ -133,7 +138,7 @@ public class NdefUtil {
         String prefix = URI_PREFIX_MAP.get(payload[0]);
         byte[] fullUri = Bytes.concat(
                 prefix.getBytes(Charsets.UTF_8),
-                Arrays.copyOfRange(payload, 1, payload.length - 1));
+                Arrays.copyOfRange(payload, 1, payload.length));
 
         return new URI(new String(fullUri, Charsets.UTF_8));
     }
@@ -185,7 +190,50 @@ public class NdefUtil {
                     textEncoding);
         } catch (UnsupportedEncodingException e) {
             // should never happen unless we get a malformed tag.
-            throw new RuntimeException(e);
+            throw new IllegalArgumentException(e);
+        }
+    }
+
+    public static boolean isText(NdefRecord record) {
+        try {
+            toText(record);
+            return true;
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
+    }
+
+    public static Iterable<String> getTextFields(NdefMessage message) {
+        return Iterables.filter(getObjects(message), String.class);
+    }
+
+    public static Iterable<URI> getURIs(NdefMessage message) {
+        return Iterables.filter(getObjects(message), URI.class);
+    }
+
+    /**
+     * Parse the provided {@code NdefMessage}, extracting all known
+     * objects from the message.  Typically this list will consist of
+     * {@link String}s corresponding to NDEF text records, or {@link URI}s
+     * corresponding to NDEF URI records.
+     * <p>
+     * TODO: Is this API too generic?  Should we keep it?
+     */
+    private static Iterable<Object> getObjects(NdefMessage message) {
+        try {
+            List<Object> retval = new ArrayList<Object>();
+            for (NdefRecord record : message.getRecords()) {
+                if (isURI(record)) {
+                    retval.add(toURI(record));
+                } else if (isText(record)) {
+                    retval.add(toText(record));
+                } else if (SmartPoster.isPoster(record)) {
+                    retval.add(SmartPoster.from(record));
+                }
+            }
+            return retval;
+        } catch (URISyntaxException e) {
+            throw new IllegalArgumentException(e);
         }
     }
 }
