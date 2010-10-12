@@ -47,12 +47,12 @@ public class Tags extends TabActivity {
 
 
         TabHost.TabSpec spec1 = tabHost.newTabSpec("1")
-                .setIndicator("Saved", res.getDrawable(R.drawable.ic_tab_artists))
+                .setIndicator("Saved", res.getDrawable(R.drawable.ic_launcher_nfc))
                 .setContent(iSavedList);
         tabHost.addTab(spec1);
 
         TabHost.TabSpec spec2 = tabHost.newTabSpec("2")
-                .setIndicator("Recent", res.getDrawable(R.drawable.ic_tab_artists))
+                .setIndicator("Recent", res.getDrawable(R.drawable.desk_clock))
                 .setContent(iRecentList);
         tabHost.addTab(spec2);
     }
