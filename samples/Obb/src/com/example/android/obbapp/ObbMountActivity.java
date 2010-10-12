@@ -77,10 +77,10 @@ public class ObbMountActivity extends Activity {
 
     OnObbStateChangeListener mEventListener = new OnObbStateChangeListener() {
         @Override
-        public void onObbStateChange(String path, String state) {
+        public void onObbStateChange(String path, int state) {
             Log.d(TAG, "path=" + path + "; state=" + state);
-            mStatus.setText(state);
-            if (state.equals(Environment.MEDIA_MOUNTED)) {
+            mStatus.setText(String.valueOf(state));
+            if (state == OnObbStateChangeListener.MOUNTED) {
                 mPath.setText(mSM.getMountedObbPath(mObbPath));
             } else {
                 mPath.setText("");
