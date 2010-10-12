@@ -17,9 +17,9 @@
 package com.android.apps.tag;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.trustedlogic.trustednfc.android.NdefMessage;
-import com.trustedlogic.trustednfc.android.NdefRecord;
-import com.trustedlogic.trustednfc.android.NfcException;
+import android.nfc.NdefMessage;
+import android.nfc.NdefRecord;
+import android.nfc.FormatException;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
@@ -146,7 +146,7 @@ public class TagDBHelper extends SQLiteOpenHelper {
             // A real message obtained from an NFC Forum Type 4 tag.
             NdefMessage msg3 = new NdefMessage(REAL_NFC_MSG);
             insert(db, msg3, false);
-        } catch (NfcException e) {
+        } catch (FormatException e) {
             throw new RuntimeException(e);
         }
     }
