@@ -30,7 +30,6 @@ import android.widget.SimpleCursorAdapter;
 
 /**
  * An {@code Activity} that displays a flat list of tags that can be "opened".
- * @author nnk@google.com (Nick Kralevich)
  */
 public class TagList extends ListActivity implements DialogInterface.OnClickListener {
     private SQLiteDatabase db;
