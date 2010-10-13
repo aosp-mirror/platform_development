@@ -29,10 +29,10 @@ import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 
 /**
+ * An {@code Activity} that displays a flat list of tags that can be "opened".
  * @author nnk@google.com (Nick Kralevich)
  */
 public class TagList extends ListActivity implements DialogInterface.OnClickListener {
-
     private SQLiteDatabase db;
     private Cursor cursor;
     static final String SHOW_SAVED_ONLY = "show_saved_only";
@@ -44,7 +44,11 @@ public class TagList extends ListActivity implements DialogInterface.OnClickList
         boolean showSavedOnly = getIntent().getBooleanExtra(SHOW_SAVED_ONLY, false);
         db = new TagDBHelper(getBaseContext()).getReadableDatabase();
         String selection = showSavedOnly ? "saved=1" : null;
-        cursor = db.query("NdefMessage", new String[] { "_id", "bytes", "date" }, selection, null, null, null, null);
+        cursor = db.query(
+                "NdefMessage",
+                new String[] { "_id", "bytes", "date" },
+                selection,
+                null, null, null, null);
         SimpleCursorAdapter sca =
                 new SimpleCursorAdapter(this,
                         android.R.layout.two_line_list_item,
@@ -92,6 +96,6 @@ public class TagList extends ListActivity implements DialogInterface.OnClickList
     }
 
     @Override
-    public void onClick(DialogInterface dialog, int which) { }
-
+    public void onClick(DialogInterface dialog, int which) {
+    }
 }

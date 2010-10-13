@@ -16,6 +16,9 @@
 
 package com.android.apps.tag;
 
+import com.trustedlogic.trustednfc.android.NdefMessage;
+import com.trustedlogic.trustednfc.android.NfcManager;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -24,11 +27,9 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.WindowManager;
 import android.widget.Toast;
-import com.trustedlogic.trustednfc.android.NdefMessage;
-import com.trustedlogic.trustednfc.android.NfcManager;
-
 
 /**
+ * An {@code Activity} which handles a broadcast of a new tag that the device just discovered.
  * @author nnk@google.com (Nick Kralevich)
  */
 public class SaveTag extends Activity implements DialogInterface.OnClickListener {
@@ -78,7 +79,9 @@ public class SaveTag extends Activity implements DialogInterface.OnClickListener
     private static String toHexString(byte[] bytes) {
         StringBuilder sb = new StringBuilder(3 * bytes.length);
         for (byte b : bytes) {
-            sb.append("(byte) 0x").append(hexDigits[(b >> 4) & 0xf]).append(hexDigits[b & 0xf]).append(", ");
+            sb.append("(byte) 0x")
+                .append(hexDigits[(b >> 4) & 0xf])
+                .append(hexDigits[b & 0xf]).append(", ");
         }
         return sb.toString();
     }
