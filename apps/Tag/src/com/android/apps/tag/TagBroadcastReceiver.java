@@ -19,8 +19,10 @@ package com.android.apps.tag;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import com.trustedlogic.trustednfc.android.NdefMessage;
-import com.trustedlogic.trustednfc.android.NfcManager;
+import android.nfc.NdefTag;
+
+import android.nfc.NdefMessage;
+import android.nfc.NfcAdapter;
 
 /**
  * When we receive a new NDEF tag, start the activity to
@@ -30,10 +32,10 @@ public class TagBroadcastReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        if (intent.getAction().equals(NfcManager.NDEF_TAG_DISCOVERED_ACTION)) {
-            NdefMessage msg = intent.getParcelableExtra(NfcManager.NDEF_MESSAGE_EXTRA);
+        if (intent.getAction().equals(NfcAdapter.ACTION_NDEF_TAG_DISCOVERED)) {
+            NdefTag tag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
             Intent i = new Intent(context, SaveTag.class)
-                    .putExtra(NfcManager.NDEF_MESSAGE_EXTRA, msg)
+                    .putExtra(NfcAdapter.EXTRA_TAG, tag)
                     .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             context.startActivity(i);
         }
