@@ -18,9 +18,9 @@ package com.android.apps.tag;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
-import com.trustedlogic.trustednfc.android.NdefMessage;
-import com.trustedlogic.trustednfc.android.NdefRecord;
-import com.trustedlogic.trustednfc.android.NfcException;
+import android.nfc.NdefMessage;
+import android.nfc.NdefRecord;
+import android.nfc.FormatException;
 
 import javax.annotation.Nullable;
 import java.net.URI;
@@ -67,8 +67,8 @@ public class SmartPoster {
     }
 
     public static SmartPoster from(NdefRecord record) {
-        Preconditions.checkArgument(record.getTnf() == NdefRecord.TNF_WELL_KNOWN_TYPE);
-        Preconditions.checkArgument(Arrays.equals(record.getType(), NdefRecord.TYPE_SMART_POSTER));
+        Preconditions.checkArgument(record.getTnf() == NdefRecord.TNF_WELL_KNOWN);
+        Preconditions.checkArgument(Arrays.equals(record.getType(), NdefRecord.RTD_SMART_POSTER));
         try {
             NdefMessage subRecords = new NdefMessage(record.getPayload());
             URI uri = Iterables.getOnlyElement(NdefUtil.getURIs(subRecords));
@@ -79,7 +79,7 @@ public class SmartPoster {
             }
 
             return new SmartPoster(uri, title);
-        } catch (NfcException e) {
+        } catch (FormatException e) {
             throw new IllegalArgumentException(e);
         }
     }
