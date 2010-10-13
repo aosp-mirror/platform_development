@@ -17,14 +17,14 @@
 package com.android.apps.tag;
 
 import com.google.common.annotations.VisibleForTesting;
-import android.nfc.NdefMessage;
-import android.nfc.NdefRecord;
-import android.nfc.FormatException;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteStatement;
+import android.nfc.FormatException;
+import android.nfc.NdefMessage;
+import android.nfc.NdefRecord;
 
 import java.net.URI;
 import java.util.Date;
@@ -39,7 +39,7 @@ public class TagDBHelper extends SQLiteOpenHelper {
     private static final String NDEF_MSG = "create table NdefMessage ("
             + "_id INTEGER NOT NULL, "
             + "bytes BLOB NOT NULL, "
-            + "date TEXT NOT NULL, "
+            + "date INTEGER NOT NULL, "
             + "saved TEXT NOT NULL default 0,"  // boolean
             + "PRIMARY KEY(_id)"
             + ")";
@@ -154,7 +154,7 @@ public class TagDBHelper extends SQLiteOpenHelper {
     private void insert(SQLiteDatabase db, NdefMessage msg, boolean isSaved) {
         SQLiteStatement stmt = db.compileStatement(INSERT);
         stmt.bindString(1, new String(msg.toByteArray())); // TODO: This should be a blob
-        stmt.bindString(2, new Date().toString());
+        stmt.bindLong(2, System.currentTimeMillis());
         String isSavedStr = isSaved ? "1" : "0";
         stmt.bindString(3, isSavedStr);
         stmt.executeInsert();
