@@ -63,123 +63,6 @@ public class MonkeySourceRandom implements MonkeyEventSource {
         }
     }
 
-    /** Nice names for all key events. */
-    private static final String[] KEY_NAMES = {
-        "KEYCODE_UNKNOWN",
-        "KEYCODE_SOFT_LEFT",
-        "KEYCODE_SOFT_RIGHT",
-        "KEYCODE_HOME",
-        "KEYCODE_BACK",
-        "KEYCODE_CALL",
-        "KEYCODE_ENDCALL",
-        "KEYCODE_0",
-        "KEYCODE_1",
-        "KEYCODE_2",
-        "KEYCODE_3",
-        "KEYCODE_4",
-        "KEYCODE_5",
-        "KEYCODE_6",
-        "KEYCODE_7",
-        "KEYCODE_8",
-        "KEYCODE_9",
-        "KEYCODE_STAR",
-        "KEYCODE_POUND",
-        "KEYCODE_DPAD_UP",
-        "KEYCODE_DPAD_DOWN",
-        "KEYCODE_DPAD_LEFT",
-        "KEYCODE_DPAD_RIGHT",
-        "KEYCODE_DPAD_CENTER",
-        "KEYCODE_VOLUME_UP",
-        "KEYCODE_VOLUME_DOWN",
-        "KEYCODE_POWER",
-        "KEYCODE_CAMERA",
-        "KEYCODE_CLEAR",
-        "KEYCODE_A",
-        "KEYCODE_B",
-        "KEYCODE_C",
-        "KEYCODE_D",
-        "KEYCODE_E",
-        "KEYCODE_F",
-        "KEYCODE_G",
-        "KEYCODE_H",
-        "KEYCODE_I",
-        "KEYCODE_J",
-        "KEYCODE_K",
-        "KEYCODE_L",
-        "KEYCODE_M",
-        "KEYCODE_N",
-        "KEYCODE_O",
-        "KEYCODE_P",
-        "KEYCODE_Q",
-        "KEYCODE_R",
-        "KEYCODE_S",
-        "KEYCODE_T",
-        "KEYCODE_U",
-        "KEYCODE_V",
-        "KEYCODE_W",
-        "KEYCODE_X",
-        "KEYCODE_Y",
-        "KEYCODE_Z",
-        "KEYCODE_COMMA",
-        "KEYCODE_PERIOD",
-        "KEYCODE_ALT_LEFT",
-        "KEYCODE_ALT_RIGHT",
-        "KEYCODE_SHIFT_LEFT",
-        "KEYCODE_SHIFT_RIGHT",
-        "KEYCODE_TAB",
-        "KEYCODE_SPACE",
-        "KEYCODE_SYM",
-        "KEYCODE_EXPLORER",
-        "KEYCODE_ENVELOPE",
-        "KEYCODE_ENTER",
-        "KEYCODE_DEL",
-        "KEYCODE_GRAVE",
-        "KEYCODE_MINUS",
-        "KEYCODE_EQUALS",
-        "KEYCODE_LEFT_BRACKET",
-        "KEYCODE_RIGHT_BRACKET",
-        "KEYCODE_BACKSLASH",
-        "KEYCODE_SEMICOLON",
-        "KEYCODE_APOSTROPHE",
-        "KEYCODE_SLASH",
-        "KEYCODE_AT",
-        "KEYCODE_NUM",
-        "KEYCODE_HEADSETHOOK",
-        "KEYCODE_FOCUS",
-        "KEYCODE_PLUS",
-        "KEYCODE_MENU",
-        "KEYCODE_NOTIFICATION",
-        "KEYCODE_SEARCH",
-        "KEYCODE_PLAYPAUSE",
-        "KEYCODE_STOP",
-        "KEYCODE_NEXTSONG",
-        "KEYCODE_PREVIOUSSONG",
-        "KEYCODE_REWIND",
-        "KEYCODE_FORWARD",
-        "KEYCODE_MUTE",
-        "KEYCODE_PAGE_UP",
-        "KEYCODE_PAGE_DOWN",
-        "KEYCODE_PICTSYMBOLS",
-        "KEYCODE_SWITCH_CHARSET",
-        "KEYCODE_BUTTON_A",
-        "KEYCODE_BUTTON_B",
-        "KEYCODE_BUTTON_C",
-        "KEYCODE_BUTTON_X",
-        "KEYCODE_BUTTON_Y",
-        "KEYCODE_BUTTON_Z",
-        "KEYCODE_BUTTON_L1",
-        "KEYCODE_BUTTON_R1",
-        "KEYCODE_BUTTON_L2",
-        "KEYCODE_BUTTON_R2",
-        "KEYCODE_BUTTON_THUMBL",
-        "KEYCODE_BUTTON_THUMBR",
-        "KEYCODE_BUTTON_START",
-        "KEYCODE_BUTTON_SELECT",
-        "KEYCODE_BUTTON_MODE",
-
-        "TAG_LAST_KEYCODE"      // EOL.  used to keep the lists in sync
-    };
-
     public static final int FACTOR_TOUCH        = 0;
     public static final int FACTOR_MOTION       = 1;
     public static final int FACTOR_TRACKBALL    = 2;
@@ -205,15 +88,8 @@ public class MonkeySourceRandom implements MonkeyEventSource {
 
     private boolean mKeyboardOpen = false;
 
-    /**
-     * @return the last name in the key list
-     */
-    public static String getLastKeyName() {
-        return KEY_NAMES[KeyEvent.getMaxKeyCode() + 1];
-    }
-
     public static String getKeyName(int keycode) {
-        return KEY_NAMES[keycode];
+        return KeyEvent.keyCodeToString(keycode);
     }
 
     /**
@@ -224,12 +100,7 @@ public class MonkeySourceRandom implements MonkeyEventSource {
      * @returns the intenger keyCode value, or -1 if not found
      */
     public static int getKeyCode(String keyName) {
-        for (int x = 0; x < KEY_NAMES.length; x++) {
-            if (KEY_NAMES[x].equals(keyName)) {
-                return x;
-            }
-        }
-        return -1;
+        return KeyEvent.keyCodeFromString(keyName);
     }
 
     public MonkeySourceRandom(Random random, ArrayList<ComponentName> MainApps,
