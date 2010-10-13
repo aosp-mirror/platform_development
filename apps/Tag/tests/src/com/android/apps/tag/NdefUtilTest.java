@@ -18,7 +18,7 @@ package com.android.apps.tag;
 
 import android.test.AndroidTestCase;
 import com.google.common.primitives.Bytes;
-import com.trustedlogic.trustednfc.android.NdefRecord;
+import android.nfc.NdefRecord;
 
 import java.io.UnsupportedEncodingException;
 
@@ -45,7 +45,7 @@ public class NdefUtilTest extends AndroidTestCase {
            text
         );
 
-        NdefRecord record = new NdefRecord(NdefRecord.TNF_WELL_KNOWN_TYPE, NdefRecord.TYPE_TEXT, new byte[0], data);
+        NdefRecord record = new NdefRecord(NdefRecord.TNF_WELL_KNOWN, NdefRecord.RTD_TEXT, new byte[0], data);
         assertEquals(word, NdefUtil.toText(record));
     }
 }

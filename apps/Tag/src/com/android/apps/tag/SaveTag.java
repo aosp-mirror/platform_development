@@ -16,9 +16,6 @@
 
 package com.android.apps.tag;
 
-import com.trustedlogic.trustednfc.android.NdefMessage;
-import com.trustedlogic.trustednfc.android.NfcManager;
-
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
