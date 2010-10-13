@@ -16,16 +16,22 @@
 
 package com.android.apps.tag;
 
+import android.util.Log;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
+import com.google.common.collect.Iterables;
 import com.google.common.primitives.Bytes;
+import com.trustedlogic.trustednfc.android.NdefMessage;
 import com.trustedlogic.trustednfc.android.NdefRecord;
 
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charsets;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * Utilities for dealing with conversions to and from NdefRecords.
@@ -132,7 +138,7 @@ public class NdefUtil {
         String prefix = URI_PREFIX_MAP.get(payload[0]);
         byte[] fullUri = Bytes.concat(
                 prefix.getBytes(Charsets.UTF_8),
-                Arrays.copyOfRange(payload, 1, payload.length - 1));
+                Arrays.copyOfRange(payload, 1, payload.length));
 
         return new URI(new String(fullUri, Charsets.UTF_8));
     }
@@ -145,6 +151,89 @@ public class NdefUtil {
             return false;
         } catch (URISyntaxException e) {
             return false;
+        }
+    }
+
+    /**
+     * Extracts payload text from Text type ndef record.
+     *
+     * @param record A ndef record. Must be {@link NdefRecord#TYPE_TEXT}.
+     * @return text payload.
+     */
+    public static String toText(NdefRecord record) {
+        Preconditions.checkArgument(record.getTnf() == NdefRecord.TNF_WELL_KNOWN_TYPE);
+        Preconditions.checkArgument(Arrays.equals(record.getType(), NdefRecord.TYPE_TEXT));
+        try {
+
+            byte[] payload = record.getPayload();
+
+            /*
+             * payload[0] contains the "Status Byte Encodings" field, per
+             * the NFC Forum "Text Record Type Definition" section 3.2.1.
+             *
+             * bit7 is the Text Encoding Field.
+             *
+             * if (Bit_7 == 0): The text is encoded in UTF-8
+             * if (Bit_7 == 1): The text is encoded in UTF16
+             *
+             * Bit_6 is reserved for future use and must be set to zero.
+             *
+             * Bits 5 to 0 are the length of the IANA language code.
+             */
+
+            String textEncoding = ((payload[0] & 0200) == 0) ? "UTF-8" : "UTF-16";
+            int languageCodeLength = payload[0] & 0077;
+
+            return new String(payload,
+                    languageCodeLength + 1,
+                    payload.length - languageCodeLength - 1,
+                    textEncoding);
+        } catch (UnsupportedEncodingException e) {
+            // should never happen unless we get a malformed tag.
+            throw new IllegalArgumentException(e);
+        }
+    }
+
+    public static boolean isText(NdefRecord record) {
+        try {
+            toText(record);
+            return true;
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
+    }
+
+    public static Iterable<String> getTextFields(NdefMessage message) {
+        return Iterables.filter(getObjects(message), String.class);
+    }
+
+    public static Iterable<URI> getURIs(NdefMessage message) {
+        return Iterables.filter(getObjects(message), URI.class);
+    }
+
+    /**
+     * Parse the provided {@code NdefMessage}, extracting all known
+     * objects from the message.  Typically this list will consist of
+     * {@link String}s corresponding to NDEF text records, or {@link URI}s
+     * corresponding to NDEF URI records.
+     * <p>
+     * TODO: Is this API too generic?  Should we keep it?
+     */
+    private static Iterable<Object> getObjects(NdefMessage message) {
+        try {
+            List<Object> retval = new ArrayList<Object>();
+            for (NdefRecord record : message.getRecords()) {
+                if (isURI(record)) {
+                    retval.add(toURI(record));
+                } else if (isText(record)) {
+                    retval.add(toText(record));
+                } else if (SmartPoster.isPoster(record)) {
+                    retval.add(SmartPoster.from(record));
+                }
+            }
+            return retval;
+        } catch (URISyntaxException e) {
+            throw new IllegalArgumentException(e);
         }
     }
 }

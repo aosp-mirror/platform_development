@@ -22,14 +22,15 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.android.apps.tag">
     <application android:label="Tags">
-        <activity android:name="Tags" android:icon="@drawable/ic_launcher_nfc">
+      <activity android:name="TagBrowserActivity"
+              android:icon="@drawable/ic_launcher_nfc"
+              android:theme="@style/Tags.TagBrowserTheme" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
 
-        <activity android:name="TagSelector"></activity>
         <activity android:name="TagList"></activity>
         <activity android:name="SaveTag"></activity>
         <receiver android:name=".TagBroadcastReceiver">

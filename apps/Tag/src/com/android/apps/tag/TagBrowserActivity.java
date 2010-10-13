@@ -23,12 +23,9 @@ import android.os.Bundle;
 import android.widget.TabHost;
 
 /**
- * A minimal "Hello, World!" application.
+ * A browsing {@code Activity} that displays the saved tags in categories under tabs.
  */
-public class Tags extends TabActivity {
-    /**
-     * Called with the activity is first created.
-     */
+public class TagBrowserActivity extends TabActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -42,26 +39,19 @@ public class Tags extends TabActivity {
         TabHost tabHost = getTabHost();
         Intent i = new Intent().setClass(this, TagList.class);
 
-        Intent iSavedList = new Intent().setClass(this, TagList.class);
+        Intent iSavedList = new Intent().setClass(this, TagList.class)
+                .putExtra(TagList.SHOW_SAVED_ONLY, true);
         Intent iRecentList = new Intent().setClass(this, TagList.class);
-        Intent iMyTagList = new Intent().setClass(this, TagList.class);
-
 
         TabHost.TabSpec spec1 = tabHost.newTabSpec("1")
-                .setIndicator("Saved", res.getDrawable(R.drawable.ic_tab_artists))
+                .setIndicator("Saved", res.getDrawable(R.drawable.ic_menu_tag))
                 .setContent(iSavedList);
         tabHost.addTab(spec1);
 
         TabHost.TabSpec spec2 = tabHost.newTabSpec("2")
-                .setIndicator("Recent", res.getDrawable(R.drawable.ic_tab_artists))
+                .setIndicator("Recent", res.getDrawable(R.drawable.ic_menu_desk_clock))
                 .setContent(iRecentList);
         tabHost.addTab(spec2);
-
-        TabHost.TabSpec spec3 = tabHost.newTabSpec("3")
-                .setIndicator("My Tag", res.getDrawable(R.drawable.ic_tab_artists))
-                .setContent(iMyTagList);
-        tabHost.addTab(spec3);
-
     }
 }
 

@@ -27,32 +27,36 @@ import android.view.Menu;
 import android.view.View;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
-import android.widget.Toast;
 
 /**
- * @author nnk@google.com (Nick Kralevich)
+ * An {@code Activity} that displays a flat list of tags that can be "opened".
  */
 public class TagList extends ListActivity implements DialogInterface.OnClickListener {
-
     private SQLiteDatabase db;
     private Cursor cursor;
+    static final String SHOW_SAVED_ONLY = "show_saved_only";
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Toast.makeText(getBaseContext(), "entered method", Toast.LENGTH_SHORT).show();
 
+        boolean showSavedOnly = getIntent().getBooleanExtra(SHOW_SAVED_ONLY, false);
         db = new TagDBHelper(getBaseContext()).getReadableDatabase();
-        cursor = db.query("NdefMessage", new String[] { "_id", "bytes" }, null, null, null, null, null);
+        String selection = showSavedOnly ? "saved=1" : null;
+        cursor = db.query(
+                "NdefMessage",
+                new String[] { "_id", "bytes", "date" },
+                selection,
+                null, null, null, null);
         SimpleCursorAdapter sca =
                 new SimpleCursorAdapter(this,
                         android.R.layout.two_line_list_item,
                         cursor,
-                        new String[] { "bytes" },
-                        new int[] { android.R.id.text1 });
+                        new String[] { "bytes", "date" },
+                        new int[] { android.R.id.text1, android.R.id.text2 });
 
         setListAdapter(sca);
         registerForContextMenu(getListView());
-        Toast.makeText(getBaseContext(), "exit method", Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -91,6 +95,6 @@ public class TagList extends ListActivity implements DialogInterface.OnClickList
     }
 
     @Override
-    public void onClick(DialogInterface dialog, int which) { }
-
+    public void onClick(DialogInterface dialog, int which) {
+    }
 }

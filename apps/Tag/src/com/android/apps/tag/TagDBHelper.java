@@ -16,20 +16,21 @@
 
 package com.android.apps.tag;
 
-import android.content.Context;
-import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteOpenHelper;
-import android.database.sqlite.SQLiteStatement;
 import com.google.common.annotations.VisibleForTesting;
 import com.trustedlogic.trustednfc.android.NdefMessage;
 import com.trustedlogic.trustednfc.android.NdefRecord;
 import com.trustedlogic.trustednfc.android.NfcException;
 
+import android.content.Context;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
+import android.database.sqlite.SQLiteStatement;
+
 import java.net.URI;
 import java.util.Date;
 
 /**
- * @author nnk@google.com (Nick Kralevich)
+ * Database utilities for the saved tags.
  */
 public class TagDBHelper extends SQLiteOpenHelper {
 
@@ -39,61 +40,79 @@ public class TagDBHelper extends SQLiteOpenHelper {
             + "_id INTEGER NOT NULL, "
             + "bytes BLOB NOT NULL, "
             + "date TEXT NOT NULL, "
+            + "saved TEXT NOT NULL default 0,"  // boolean
             + "PRIMARY KEY(_id)"
             + ")";
 
     private static final String INSERT =
-            "INSERT INTO NdefMessage (bytes, date) values (?, ?)";
+            "INSERT INTO NdefMessage (bytes, date, saved) values (?, ?, ?)";
 
-    private static final byte[] REAL_NFC_MSG = new byte[] {
-            (byte) 0xd1,
-            (byte) 0x02,
-            (byte) 0x2b,
-            (byte) 0x53,
-            (byte) 0x70,
-            (byte) 0x91,
-            (byte) 0x01,
-            (byte) 0x17,
-            (byte) 0x54,
-            (byte) 0x02,
-            (byte) 0x65,
-            (byte) 0x6e,
-            (byte) 0x4e,
-            (byte) 0x46,
-            (byte) 0x43,
-            (byte) 0x20,
-            (byte) 0x46,
-            (byte) 0x6f,
-            (byte) 0x72,
-            (byte) 0x75,
-            (byte) 0x6d,
-            (byte) 0x20,
-            (byte) 0x54,
-            (byte) 0x79,
-            (byte) 0x70,
-            (byte) 0x65,
-            (byte) 0x20,
-            (byte) 0x34,
-            (byte) 0x20,
-            (byte) 0x54,
-            (byte) 0x61,
-            (byte) 0x67,
-            (byte) 0x51,
-            (byte) 0x01,
-            (byte) 0x0c,
-            (byte) 0x55,
-            (byte) 0x01,
-            (byte) 0x6e,
-            (byte) 0x78,
-            (byte) 0x70,
-            (byte) 0x2e,
-            (byte) 0x63,
-            (byte) 0x6f,
-            (byte) 0x6d,
-            (byte) 0x2f,
-            (byte) 0x6e,
-            (byte) 0x66,
-            (byte) 0x63
+    /**
+     * A real NFC tag containing an NFC "smart poster".  This smart poster
+     * consists of the text "NFC Forum Type 4 Tag" in english combined with
+     * the URL "http://www.nxp.com/nfc"
+     */
+    public static final byte[] REAL_NFC_MSG = new byte[] {
+            (byte) 0xd1,                   // MB=1 ME=1 CF=0 SR=1 IL=0 TNF=001
+            (byte) 0x02,                   // Type Length = 2
+            (byte) 0x2b,                   // Payload Length = 43
+            (byte) 0x53, (byte) 0x70,      // Type = {'S', 'p'} (smart poster)
+
+            // begin smart poster payload
+            // begin smart poster record #1
+            (byte) 0x91,                   // MB=1 ME=0 CF=0 SR=1 IL=0 TNF=001
+            (byte) 0x01,                   // Type Length = 1
+            (byte) 0x17,                   // Payload Length = 23
+            (byte) 0x54,                   // Type = {'T'} (Text data)
+            (byte) 0x02,                   // UTF-8 encoding, language code length = 2
+            (byte) 0x65, (byte) 0x6e,      // language = {'e', 'n'} (english)
+
+            // Begin text data within smart poster record #1
+            (byte) 0x4e,                   // 'N'
+            (byte) 0x46,                   // 'F'
+            (byte) 0x43,                   // 'C'
+            (byte) 0x20,                   // ' '
+            (byte) 0x46,                   // 'F'
+            (byte) 0x6f,                   // 'o'
+            (byte) 0x72,                   // 'r'
+            (byte) 0x75,                   // 'u'
+            (byte) 0x6d,                   // 'm'
+            (byte) 0x20,                   // ' '
+            (byte) 0x54,                   // 'T'
+            (byte) 0x79,                   // 'y'
+            (byte) 0x70,                   // 'p'
+            (byte) 0x65,                   // 'e'
+            (byte) 0x20,                   // ' '
+            (byte) 0x34,                   // '4'
+            (byte) 0x20,                   // ' '
+            (byte) 0x54,                   // 'T'
+            (byte) 0x61,                   // 'a'
+            (byte) 0x67,                   // 'g'
+            // end Text data within smart poster record #1
+            // end smart poster record #1
+
+            // begin smart poster record #2
+            (byte) 0x51,                   // MB=0 ME=1 CF=0 SR=1 IL=0 TNF=001
+            (byte) 0x01,                   // Type Length = 1
+            (byte) 0x0c,                   // Payload Length = 12
+            (byte) 0x55,                   // Type = { 'U' } (URI)
+
+            // begin URI data within smart poster record #2
+            (byte) 0x01,                   // URI Prefix = 1 ("http://www.")
+            (byte) 0x6e,                   // 'n'
+            (byte) 0x78,                   // 'x'
+            (byte) 0x70,                   // 'p'
+            (byte) 0x2e,                   // '.'
+            (byte) 0x63,                   // 'c'
+            (byte) 0x6f,                   // 'o'
+            (byte) 0x6d,                   // 'm'
+            (byte) 0x2f,                   // '/'
+            (byte) 0x6e,                   // 'n'
+            (byte) 0x66,                   // 'f'
+            (byte) 0x63                    // 'c'
+            // end URI data within smart poster record #2
+            // end smart poster record #2
+            // end smart poster payload
     };
 
     public TagDBHelper(Context context) {
@@ -120,22 +139,24 @@ public class TagDBHelper extends SQLiteOpenHelper {
                 NdefUtil.toUriRecord(URI.create("http://www.android.com"))
         });
 
-        insert(db, msg1);
-        insert(db, msg2);
+        insert(db, msg1, false);
+        insert(db, msg2, true);
 
         try {
             // A real message obtained from an NFC Forum Type 4 tag.
             NdefMessage msg3 = new NdefMessage(REAL_NFC_MSG);
-            insert(db, msg3);
+            insert(db, msg3, false);
         } catch (NfcException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private void insert(SQLiteDatabase db, NdefMessage msg) {
+    private void insert(SQLiteDatabase db, NdefMessage msg, boolean isSaved) {
         SQLiteStatement stmt = db.compileStatement(INSERT);
         stmt.bindString(1, new String(msg.toByteArray())); // TODO: This should be a blob
         stmt.bindString(2, new Date().toString());
+        String isSavedStr = isSaved ? "1" : "0";
+        stmt.bindString(3, isSavedStr);
         stmt.executeInsert();
         stmt.close();
     }
