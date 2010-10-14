@@ -18,13 +18,15 @@ package com.android.apps.tag;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
+
+import android.net.Uri;
+import android.nfc.FormatException;
 import android.nfc.NdefMessage;
 import android.nfc.NdefRecord;
-import android.nfc.FormatException;
+
+import java.util.Arrays;
 
 import javax.annotation.Nullable;
-import java.net.URI;
-import java.util.Arrays;
 
 /**
  * A representation of an NFC Forum "Smart Poster".
@@ -39,7 +41,7 @@ public class SmartPoster {
      * This record is optional."
 
      */
-    private final String titleRecord;
+    private final String mTitleRecord;
 
     /**
      * NFC Forum Smart Poster Record Type Definition section 3.2.1.
@@ -48,22 +50,22 @@ public class SmartPoster {
      * records are just metadata about this record. There MUST be one URI
      * record and there MUST NOT be more than one."
      */
-    private final URI uriRecord;
+    private final Uri mUriRecord;
 
-    private SmartPoster(URI uri, @Nullable String title) {
-        uriRecord = Preconditions.checkNotNull(uri);
-        titleRecord = title;
+    private SmartPoster(Uri uri, @Nullable String title) {
+        mUriRecord = Preconditions.checkNotNull(uri);
+        mTitleRecord = title;
     }
 
-    public URI getURI() {
-        return uriRecord;
+    public Uri getUri() {
+        return mUriRecord;
     }
 
     /**
-     * Returns the title of the smartposter.  This may be {@code null}.
+     * Returns the title of the smart poster.  This may be {@code null}.
      */
     public String getTitle() {
-        return titleRecord;
+        return mTitleRecord;
     }
 
     public static SmartPoster from(NdefRecord record) {
@@ -71,7 +73,7 @@ public class SmartPoster {
         Preconditions.checkArgument(Arrays.equals(record.getType(), NdefRecord.RTD_SMART_POSTER));
         try {
             NdefMessage subRecords = new NdefMessage(record.getPayload());
-            URI uri = Iterables.getOnlyElement(NdefUtil.getURIs(subRecords));
+            Uri uri = Iterables.getOnlyElement(NdefUtil.getUris(subRecords));
             Iterable<String> textFields = NdefUtil.getTextFields(subRecords);
             String title = null;
             if (!Iterables.isEmpty(textFields)) {

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Copyright (C) 2010 The Android Open Source Project
+<!--
+     Copyright (C) 2010 The Android Open Source Project
 
      Licensed under the Apache License, Version 2.0 (the "License");
      you may not use this file except in compliance with the License.
@@ -14,16 +15,12 @@
      limitations under the License.
 -->
 
-<resources>
-
-    <string name="hello_activity_text_text">Hello, World!</string>
-    <string name="help_and_info">help and info</string>
-    <string name="saved">Saved</string>
-
-    <!-- The title of the tab that displays all recently scanned NFC tags -->
-    <string name="tab_recent">Recent</string>
-
-    <!-- The title of the tab that displays all saved NFC tags -->
-    <string name="tab_saved">Saved</string>
-
-</resources>
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/text"
+    android:padding="4dip"
+    android:textAppearance="?android:attr/textAppearanceMedium"
+    android:layout_width="match_parent"
+    android:layout_height="?android:attr/listPreferredItemHeight"
+    android:singleLine="true"
+    android:gravity="center_vertical"
+/>
