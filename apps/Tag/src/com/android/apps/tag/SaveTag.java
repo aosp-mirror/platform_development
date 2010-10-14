@@ -30,7 +30,6 @@ import android.widget.Toast;
 
 /**
  * An {@code Activity} which handles a broadcast of a new tag that the device just discovered.
- * @author nnk@google.com (Nick Kralevich)
  */
 public class SaveTag extends Activity implements DialogInterface.OnClickListener {
 

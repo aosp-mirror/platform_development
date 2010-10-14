@@ -16,20 +16,21 @@
 
 package com.android.apps.tag;
 
-import android.content.Context;
-import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteOpenHelper;
-import android.database.sqlite.SQLiteStatement;
 import com.google.common.annotations.VisibleForTesting;
 import com.trustedlogic.trustednfc.android.NdefMessage;
 import com.trustedlogic.trustednfc.android.NdefRecord;
 import com.trustedlogic.trustednfc.android.NfcException;
 
+import android.content.Context;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
+import android.database.sqlite.SQLiteStatement;
+
 import java.net.URI;
 import java.util.Date;
 
 /**
- * @author nnk@google.com (Nick Kralevich)
+ * Database utilities for the saved tags.
  */
 public class TagDBHelper extends SQLiteOpenHelper {
 
