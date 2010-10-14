@@ -43,14 +43,13 @@ public class TagBrowserActivity extends TabActivity {
                 .putExtra(TagList.SHOW_SAVED_ONLY, true);
         Intent iRecentList = new Intent().setClass(this, TagList.class);
 
-
         TabHost.TabSpec spec1 = tabHost.newTabSpec("1")
-                .setIndicator("Saved", res.getDrawable(R.drawable.ic_launcher_nfc))
+                .setIndicator("Saved", res.getDrawable(R.drawable.ic_menu_tag))
                 .setContent(iSavedList);
         tabHost.addTab(spec1);
 
         TabHost.TabSpec spec2 = tabHost.newTabSpec("2")
-                .setIndicator("Recent", res.getDrawable(R.drawable.desk_clock))
+                .setIndicator("Recent", res.getDrawable(R.drawable.ic_menu_desk_clock))
                 .setContent(iRecentList);
         tabHost.addTab(spec2);
     }
