@@ -20,7 +20,6 @@ import android.app.Activity;
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
-import android.net.Uri;
 import android.nfc.NdefMessage;
 import android.nfc.NdefTag;
 import android.nfc.NfcAdapter;
@@ -31,6 +30,10 @@ import android.view.LayoutInflater;
 import android.view.WindowManager;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import com.android.apps.tag.record.ParsedNdefRecord;
+import com.android.apps.tag.record.SmartPoster;
+import com.android.apps.tag.record.TextRecord;
+import com.android.apps.tag.record.UriRecord;
 
 /**
  * An {@link Activity} which handles a broadcast of a new tag that the device just discovered.
@@ -92,25 +95,30 @@ public class TagViewer extends Activity {
         // Build the views from the logical records in the messages
         boolean first = true;
         for (NdefMessage msg : msgs) {
-            Iterable<Object> objects = NdefUtil.getObjects(msg);
-            for (Object object : objects) {
+            Iterable<ParsedNdefRecord> objects = NdefUtil.getObjects(msg);
+            for (ParsedNdefRecord object : objects) {
                 if (!first) {
                     list.addView(inflater.inflate(R.layout.tag_divider, list, false));
                     first = false;
                 }
 
-                if (object instanceof String) {
+                if (object instanceof TextRecord) {
+                    TextRecord textRecord = (TextRecord) object;
                     TextView text = (TextView) inflater.inflate(R.layout.tag_text, list, false);
-                    text.setText((CharSequence) object);
+                    text.setText(textRecord.getText());
                     list.addView(text);
-                } else if (object instanceof Uri) {
+                } else if (object instanceof UriRecord) {
+                    UriRecord uriRecord = (UriRecord) object;
                     TextView text = (TextView) inflater.inflate(R.layout.tag_text, list, false);
-                    text.setText(object.toString());
+                    text.setText(uriRecord.getUri().toString());
                     list.addView(text);
                 } else if (object instanceof SmartPoster) {
                     TextView text = (TextView) inflater.inflate(R.layout.tag_text, list, false);
                     SmartPoster poster = (SmartPoster) object;
-                    text.setText(poster.getTitle());
+                    TextRecord title = poster.getTitle();
+                    if (title != null) {
+                        text.setText(title.getText());
+                    }
                     list.addView(text);
                 }
             }
