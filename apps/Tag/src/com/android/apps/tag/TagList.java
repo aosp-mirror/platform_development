@@ -42,13 +42,13 @@ public class TagList extends ListActivity implements DialogInterface.OnClickList
         Toast.makeText(getBaseContext(), "entered method", Toast.LENGTH_SHORT).show();
 
         db = new TagDBHelper(getBaseContext()).getReadableDatabase();
-        cursor = db.query("NdefMessage", new String[] { "_id", "bytes" }, null, null, null, null, null);
+        cursor = db.query("NdefMessage", new String[] { "_id", "bytes", "date" }, null, null, null, null, null);
         SimpleCursorAdapter sca =
                 new SimpleCursorAdapter(this,
                         android.R.layout.two_line_list_item,
                         cursor,
-                        new String[] { "bytes" },
-                        new int[] { android.R.id.text1 });
+                        new String[] { "bytes", "date" },
+                        new int[] { android.R.id.text1, android.R.id.text2 });
 
         setListAdapter(sca);
         registerForContextMenu(getListView());
