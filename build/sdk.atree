@@ -140,33 +140,36 @@ frameworks/base/docs/docs-samples-redirect.html docs/samples/index.html
 #
 # the list here should match the list of samples that we generate docs for, 
 # (see web_docs_sample_code_flags in frameworks/base/Android.mk)
-development/samples/source.properties        samples/${PLATFORM_NAME}/source.properties
 development/apps/GestureBuilder              samples/${PLATFORM_NAME}/GestureBuilder
+development/samples/source.properties        samples/${PLATFORM_NAME}/source.properties
+#
+# PLEASE KEEP THE SAMPLES IN ALPHABETICAL ORDER.
+#
 development/samples/AccessibilityService     samples/${PLATFORM_NAME}/AccessibilityService
-development/samples/BluetoothChat            samples/${PLATFORM_NAME}/BluetoothChat
-development/samples/Home                     samples/${PLATFORM_NAME}/Home
-development/samples/LunarLander              samples/${PLATFORM_NAME}/LunarLander
-development/samples/NotePad                  samples/${PLATFORM_NAME}/NotePad
 development/samples/ApiDemos                 samples/${PLATFORM_NAME}/ApiDemos
 development/samples/BackupRestore            samples/${PLATFORM_NAME}/BackupRestore
+development/samples/BluetoothChat            samples/${PLATFORM_NAME}/BluetoothChat
+development/samples/ContactManager           samples/${PLATFORM_NAME}/ContactManager
+development/samples/CrossCompatibility       samples/${PLATFORM_NAME}/CrossCompatibility
+development/samples/CubeLiveWallpaper        samples/${PLATFORM_NAME}/CubeLiveWallpaper
 development/samples/HeavyWeight              samples/${PLATFORM_NAME}/HeavyWeight
+development/samples/Home                     samples/${PLATFORM_NAME}/Home
+development/samples/JetBoy                   samples/${PLATFORM_NAME}/JetBoy
+development/samples/LunarLander              samples/${PLATFORM_NAME}/LunarLander
+development/samples/MultiResolution          samples/${PLATFORM_NAME}/MultiResolution
+development/samples/NotePad                  samples/${PLATFORM_NAME}/NotePad
 development/samples/SampleSyncAdapter        samples/${PLATFORM_NAME}/SampleSyncAdapter
+development/samples/SearchableDictionary     samples/${PLATFORM_NAME}/SearchableDictionary
 development/samples/SkeletonApp              samples/${PLATFORM_NAME}/SkeletonApp
 development/samples/Snake                    samples/${PLATFORM_NAME}/Snake
 development/samples/SoftKeyboard             samples/${PLATFORM_NAME}/SoftKeyboard
-development/samples/JetBoy                   samples/${PLATFORM_NAME}/JetBoy
-development/samples/SearchableDictionary     samples/${PLATFORM_NAME}/SearchableDictionary
 development/samples/Spinner                  samples/${PLATFORM_NAME}/Spinner
 development/samples/SpinnerTest              samples/${PLATFORM_NAME}/SpinnerTest
-development/samples/ContactManager           samples/${PLATFORM_NAME}/ContactManager
-development/samples/MultiResolution          samples/${PLATFORM_NAME}/MultiResolution
-development/samples/Wiktionary               samples/${PLATFORM_NAME}/Wiktionary
-development/samples/WiktionarySimple         samples/${PLATFORM_NAME}/WiktionarySimple
-development/samples/CubeLiveWallpaper        samples/${PLATFORM_NAME}/CubeLiveWallpaper
-development/samples/VoiceRecognitionService  samples/${PLATFORM_NAME}/VoiceRecognitionService
 development/samples/TicTacToeLib             samples/${PLATFORM_NAME}/TicTacToeLib
 development/samples/TicTacToeMain            samples/${PLATFORM_NAME}/TicTacToeMain
-development/samples/CrossCompatibility       samples/${PLATFORM_NAME}/CrossCompatibility
+development/samples/VoiceRecognitionService  samples/${PLATFORM_NAME}/VoiceRecognitionService
+development/samples/Wiktionary               samples/${PLATFORM_NAME}/Wiktionary
+development/samples/WiktionarySimple         samples/${PLATFORM_NAME}/WiktionarySimple
 
 # NOTICE files are copied by build/core/Makefile from sdk.git
 sdk/files/sdk_files_NOTICE.txt samples/${PLATFORM_NAME}/NOTICE.txt

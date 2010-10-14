@@ -22,8 +22,8 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.Iterables;
 import com.google.common.primitives.Bytes;
-import com.trustedlogic.trustednfc.android.NdefMessage;
-import com.trustedlogic.trustednfc.android.NdefRecord;
+import android.nfc.NdefMessage;
+import android.nfc.NdefRecord;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
@@ -105,8 +105,8 @@ public class NdefUtil {
          */
         byte[] payload = Bytes.concat(new byte[] { 0x00 }, uriBytes);
 
-        return new NdefRecord(NdefRecord.TNF_WELL_KNOWN_TYPE,
-                NdefRecord.TYPE_URI, EMPTY, payload);
+        return new NdefRecord(NdefRecord.TNF_WELL_KNOWN,
+                NdefRecord.RTD_URI, EMPTY, payload);
     }
 
     /**
@@ -122,8 +122,8 @@ public class NdefUtil {
      *     record containing a URI.
      */
     public static URI toURI(NdefRecord record) throws URISyntaxException {
-        Preconditions.checkArgument(record.getTnf() == NdefRecord.TNF_WELL_KNOWN_TYPE);
-        Preconditions.checkArgument(Arrays.equals(record.getType(), NdefRecord.TYPE_URI));
+        Preconditions.checkArgument(record.getTnf() == NdefRecord.TNF_WELL_KNOWN);
+        Preconditions.checkArgument(Arrays.equals(record.getType(), NdefRecord.RTD_URI));
 
         byte[] payload = record.getPayload();
 
@@ -161,8 +161,8 @@ public class NdefUtil {
      * @return text payload.
      */
     public static String toText(NdefRecord record) {
-        Preconditions.checkArgument(record.getTnf() == NdefRecord.TNF_WELL_KNOWN_TYPE);
-        Preconditions.checkArgument(Arrays.equals(record.getType(), NdefRecord.TYPE_TEXT));
+        Preconditions.checkArgument(record.getTnf() == NdefRecord.TNF_WELL_KNOWN);
+        Preconditions.checkArgument(Arrays.equals(record.getType(), NdefRecord.RTD_TEXT));
         try {
 
             byte[] payload = record.getPayload();

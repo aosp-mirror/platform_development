@@ -16,13 +16,13 @@
 
 package com.android.apps.tag;
 
-import com.trustedlogic.trustednfc.android.NdefMessage;
-import com.trustedlogic.trustednfc.android.NfcManager;
-
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
+import android.nfc.NdefMessage;
+import android.nfc.NdefTag;
+import android.nfc.NfcAdapter;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.WindowManager;
@@ -32,6 +32,7 @@ import android.widget.Toast;
  * An {@code Activity} which handles a broadcast of a new tag that the device just discovered.
  */
 public class SaveTag extends Activity implements DialogInterface.OnClickListener {
+    private static final String TAG = "SaveTag";
 
     @Override
     protected void onStart() {
@@ -46,9 +47,17 @@ public class SaveTag extends Activity implements DialogInterface.OnClickListener
         );
 
         showDialog(1);
-        NdefMessage msg = getIntent().getParcelableExtra(NfcManager.NDEF_MESSAGE_EXTRA);
+        NdefTag tag = getIntent().getParcelableExtra(NfcAdapter.EXTRA_TAG);
+        NdefMessage[] msgs = tag.getNdefMessages();
 
-        String s = toHexString(msg.toByteArray());
+        if (msgs.length == 0) {
+            Log.d(TAG, "No NDEF messages");
+            return;
+        }
+        if (msgs.length > 1) {
+            Log.d(TAG, "Multiple NDEF messages, only saving first");
+        }
+        String s = toHexString(msgs[0].toByteArray());
         Log.d("SaveTag", s);
         Toast.makeText(this.getBaseContext(), "SaveTag: " + s, Toast.LENGTH_SHORT).show();
     }
