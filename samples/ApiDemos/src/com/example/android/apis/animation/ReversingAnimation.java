@@ -81,8 +81,8 @@ public class ReversingAnimation extends Activity {
 
         private void createAnimation() {
             if (bounceAnim == null) {
-                bounceAnim = new ObjectAnimator(1500, ball, "y",
-                        ball.getY(), getHeight() - 50f);
+                bounceAnim = ObjectAnimator.ofFloat(ball, "y", ball.getY(), getHeight() - 50f).
+                        setDuration(1500);
                 bounceAnim.setInterpolator(new AccelerateInterpolator(2f));
                 bounceAnim.addUpdateListener(this);
             }

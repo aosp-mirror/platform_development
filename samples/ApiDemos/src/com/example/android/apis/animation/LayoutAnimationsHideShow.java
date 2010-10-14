@@ -111,21 +111,21 @@ public class LayoutAnimationsHideShow extends Activity {
 
     private void setupAnimations(LayoutTransition transition) {
         // Changing while Adding
-        PropertyValuesHolder<Integer> pvhLeft =
-                new PropertyValuesHolder<Integer>("left", 0, 1);
-        PropertyValuesHolder<Integer> pvhTop =
-                new PropertyValuesHolder<Integer>("top", 0, 1);
-        PropertyValuesHolder<Integer> pvhRight =
-                new PropertyValuesHolder<Integer>("right", 0, 1);
-        PropertyValuesHolder<Integer> pvhBottom =
-                new PropertyValuesHolder<Integer>("bottom", 0, 1);
-        PropertyValuesHolder<Float> pvhScaleX =
-                new PropertyValuesHolder<Float>("scaleX", 1f, 0f, 1f);
-        PropertyValuesHolder<Float> pvhScaleY =
-                new PropertyValuesHolder<Float>("scaleY", 1f, 0f, 1f);
-        final ObjectAnimator changeIn =
-                new ObjectAnimator(transition.getDuration(LayoutTransition.CHANGE_APPEARING),
-                        this, pvhLeft, pvhTop, pvhRight, pvhBottom, pvhScaleX, pvhScaleY);
+        PropertyValuesHolder pvhLeft =
+                PropertyValuesHolder.ofInt("left", 0, 1);
+        PropertyValuesHolder pvhTop =
+                PropertyValuesHolder.ofInt("top", 0, 1);
+        PropertyValuesHolder pvhRight =
+                PropertyValuesHolder.ofInt("right", 0, 1);
+        PropertyValuesHolder pvhBottom =
+                PropertyValuesHolder.ofInt("bottom", 0, 1);
+        PropertyValuesHolder pvhScaleX =
+                PropertyValuesHolder.ofFloat("scaleX", 1f, 0f, 1f);
+        PropertyValuesHolder pvhScaleY =
+                PropertyValuesHolder.ofFloat("scaleY", 1f, 0f, 1f);
+        final ObjectAnimator changeIn = ObjectAnimator.ofPropertyValuesHolder(
+                        this, pvhLeft, pvhTop, pvhRight, pvhBottom, pvhScaleX, pvhScaleY).
+                setDuration(transition.getDuration(LayoutTransition.CHANGE_APPEARING));
         transition.setAnimator(LayoutTransition.CHANGE_APPEARING, changeIn);
         changeIn.addListener(new AnimatorListenerAdapter() {
             public void onAnimationEnd(Animator anim) {
@@ -139,11 +139,11 @@ public class LayoutAnimationsHideShow extends Activity {
         Keyframe kf0 = new Keyframe(0f, 0f);
         Keyframe kf1 = new Keyframe(.9999f, 360f);
         Keyframe kf2 = new Keyframe(1f, 0f);
-        PropertyValuesHolder<Keyframe> pvhRotation =
-                new PropertyValuesHolder<Keyframe>("rotation", kf0, kf1, kf2);
-        final ObjectAnimator changeOut =
-                new ObjectAnimator(transition.getDuration(LayoutTransition.CHANGE_DISAPPEARING),
-                        this, pvhLeft, pvhTop, pvhRight, pvhBottom, pvhRotation);
+        PropertyValuesHolder pvhRotation =
+                PropertyValuesHolder.ofKeyframe("rotation", kf0, kf1, kf2);
+        final ObjectAnimator changeOut = ObjectAnimator.ofPropertyValuesHolder(
+                        this, pvhLeft, pvhTop, pvhRight, pvhBottom, pvhRotation).
+                setDuration(transition.getDuration(LayoutTransition.CHANGE_DISAPPEARING));
         transition.setAnimator(LayoutTransition.CHANGE_DISAPPEARING, changeOut);
         changeOut.addListener(new AnimatorListenerAdapter() {
             public void onAnimationEnd(Animator anim) {
@@ -153,9 +153,8 @@ public class LayoutAnimationsHideShow extends Activity {
         });
 
         // Adding
-        ObjectAnimator<Float> animIn =
-                new ObjectAnimator<Float>(transition.getDuration(LayoutTransition.APPEARING),
-                        null, "rotationY", 90f, 0f);
+        ObjectAnimator animIn = ObjectAnimator.ofFloat(null, "rotationY", 90f, 0f).
+                setDuration(transition.getDuration(LayoutTransition.APPEARING));
         transition.setAnimator(LayoutTransition.APPEARING, animIn);
         animIn.addListener(new AnimatorListenerAdapter() {
             public void onAnimationEnd(Animator anim) {
@@ -165,9 +164,8 @@ public class LayoutAnimationsHideShow extends Activity {
         });
 
         // Removing
-        ObjectAnimator<Float> animOut =
-                new ObjectAnimator<Float>(transition.getDuration(LayoutTransition.DISAPPEARING),
-                        null, "rotationX", 0f, 90f);
+        ObjectAnimator animOut = ObjectAnimator.ofFloat(null, "rotationX", 0f, 90f).
+                setDuration(transition.getDuration(LayoutTransition.DISAPPEARING));
         transition.setAnimator(LayoutTransition.DISAPPEARING, animOut);
         animIn.addListener(new AnimatorListenerAdapter() {
             public void onAnimationEnd(Animator anim) {

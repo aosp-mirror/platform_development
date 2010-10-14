@@ -50,7 +50,8 @@ public class BouncingBalls extends Activity {
         container.addView(new MyAnimationView(this));
     }
 
-    public class MyAnimationView extends View implements ValueAnimator.AnimatorUpdateListener, Animator.AnimatorListener {
+    public class MyAnimationView extends View implements ValueAnimator.AnimatorUpdateListener,
+            Animator.AnimatorListener {
 
         private static final int RED = 0xffFF8080;
         private static final int BLUE = 0xff8080FF;
@@ -70,7 +71,8 @@ public class BouncingBalls extends Activity {
             paint.setColor(RED);
 
             // Animate background color
-            ValueAnimator colorAnim = new ObjectAnimator(3000, paint, "color", BLUE);
+            ValueAnimator colorAnim = ObjectAnimator.ofInt(paint, "color", BLUE);
+            colorAnim.setDuration(3000);
             colorAnim.setEvaluator(new RGBEvaluator());
             colorAnim.setRepeatCount(ValueAnimator.INFINITE);
             colorAnim.setRepeatMode(ValueAnimator.REVERSE);
@@ -92,30 +94,36 @@ public class BouncingBalls extends Activity {
             float h = (float)getHeight();
             float eventY = event.getY();
             int duration = (int)(500 * ((h - eventY)/h));
-            ValueAnimator bounceAnim = new ObjectAnimator(duration, newBall, "y", startY, endY);
+            ValueAnimator bounceAnim = ObjectAnimator.ofFloat(newBall, "y", startY, endY);
+            bounceAnim.setDuration(duration);
             bounceAnim.setInterpolator(new AccelerateInterpolator());
-            ValueAnimator squashAnim1 = new ObjectAnimator(duration/4, newBall, "x", newBall.getX(),
+            ValueAnimator squashAnim1 = ObjectAnimator.ofFloat(newBall, "x", newBall.getX(),
                     newBall.getX() - 25f);
+            squashAnim1.setDuration(duration/4);
             squashAnim1.setRepeatCount(1);
             squashAnim1.setRepeatMode(ValueAnimator.REVERSE);
             squashAnim1.setInterpolator(new DecelerateInterpolator());
-            ValueAnimator squashAnim2 = new ObjectAnimator(duration/4, newBall, "width", newBall.getWidth(),
+            ValueAnimator squashAnim2 = ObjectAnimator.ofFloat(newBall, "width", newBall.getWidth(),
                     newBall.getWidth() + 50);
+            squashAnim2.setDuration(duration/4);
             squashAnim2.setRepeatCount(1);
             squashAnim2.setRepeatMode(ValueAnimator.REVERSE);
             squashAnim2.setInterpolator(new DecelerateInterpolator());
-            ValueAnimator stretchAnim1 = new ObjectAnimator(duration/4, newBall, "y", endY,
+            ValueAnimator stretchAnim1 = ObjectAnimator.ofFloat(newBall, "y", endY,
                     endY + 25f);
+            stretchAnim1.setDuration(duration/4);
             stretchAnim1.setRepeatCount(1);
             stretchAnim1.setInterpolator(new DecelerateInterpolator());
             stretchAnim1.setRepeatMode(ValueAnimator.REVERSE);
-            ValueAnimator stretchAnim2 = new ObjectAnimator(duration/4, newBall, "height",
+            ValueAnimator stretchAnim2 = ObjectAnimator.ofFloat(newBall, "height",
                     newBall.getHeight(), newBall.getHeight() - 25);
+            stretchAnim2.setDuration(duration/4);
             stretchAnim2.setRepeatCount(1);
             stretchAnim2.setInterpolator(new DecelerateInterpolator());
             stretchAnim2.setRepeatMode(ValueAnimator.REVERSE);
-            ValueAnimator bounceBackAnim = new ObjectAnimator(duration, newBall, "y", endY,
+            ValueAnimator bounceBackAnim = ObjectAnimator.ofFloat(newBall, "y", endY,
                     startY);
+            bounceBackAnim.setDuration(duration);
             bounceBackAnim.setInterpolator(new DecelerateInterpolator());
             // Sequence the down/squash&stretch/up animations
             AnimatorSet bouncer = new AnimatorSet();
@@ -126,7 +134,8 @@ public class BouncingBalls extends Activity {
             bouncer.play(bounceBackAnim).after(stretchAnim2);
 
             // Fading animation - remove the ball when the animation is done
-            ValueAnimator fadeAnim = new ObjectAnimator(250, newBall, "alpha", 1f, 0f);
+            ValueAnimator fadeAnim = ObjectAnimator.ofFloat(newBall, "alpha", 1f, 0f);
+            fadeAnim.setDuration(250);
             fadeAnim.addListener(this);
 
             // Sequence the two animations to play one after the other

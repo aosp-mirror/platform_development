@@ -112,8 +112,8 @@ public class AnimationSeeking extends Activity {
 
         private void createAnimation() {
             if (bounceAnim == null) {
-                bounceAnim = new ObjectAnimator(1500, ball, "y",
-                        ball.getY(), getHeight() - BALL_SIZE);
+                bounceAnim = ObjectAnimator.ofFloat(ball, "y",
+                        ball.getY(), getHeight() - BALL_SIZE).setDuration(1500);
                 bounceAnim.setInterpolator(new BounceInterpolator());
                 bounceAnim.addUpdateListener(this);
             }

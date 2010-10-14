@@ -130,9 +130,9 @@ public class CustomEvaluator extends Activity {
             if (bounceAnim == null) {
                 XYHolder startXY = new XYHolder(0f, 0f);
                 XYHolder endXY = new XYHolder(300f, 500f);
-                bounceAnim = new ObjectAnimator(1500, ballHolder, "xY",
-                        endXY);
-                bounceAnim.setEvaluator(new XYEvaluator());
+                bounceAnim = ObjectAnimator.ofObject(ballHolder, "xY",
+                        new XYEvaluator(), endXY);
+                bounceAnim.setDuration(1500);
                 bounceAnim.addUpdateListener(this);
             }
         }

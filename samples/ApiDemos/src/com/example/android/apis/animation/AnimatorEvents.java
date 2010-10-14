@@ -117,28 +117,28 @@ public class AnimatorEvents extends Activity {
 
         private void createAnimation() {
             if (animation == null) {
-                ObjectAnimator yAnim = new ObjectAnimator(1500, ball, "y",
-                        ball.getY(), getHeight() - 50f);
+                ObjectAnimator yAnim = ObjectAnimator.ofFloat(ball, "y",
+                        ball.getY(), getHeight() - 50f).setDuration(1500);
                 yAnim.setRepeatCount(0);
                 yAnim.setRepeatMode(ValueAnimator.REVERSE);
                 yAnim.setInterpolator(new AccelerateInterpolator(2f));
                 yAnim.addUpdateListener(this);
                 yAnim.addListener(this);
 
-                ObjectAnimator xAnim = new ObjectAnimator(1000, ball, "x",
-                        ball.getX(), ball.getX() + 300);
+                ObjectAnimator xAnim = ObjectAnimator.ofFloat(ball, "x",
+                        ball.getX(), ball.getX() + 300).setDuration(1000);
                 xAnim.setStartDelay(0);
                 xAnim.setRepeatCount(0);
                 xAnim.setRepeatMode(ValueAnimator.REVERSE);
                 xAnim.setInterpolator(new AccelerateInterpolator(2f));
 
-                ObjectAnimator alphaAnim = new ObjectAnimator(1000, ball, "alpha", 1f, .5f);
+                ObjectAnimator alphaAnim = ObjectAnimator.ofFloat(ball, "alpha", 1f, .5f).
+                        setDuration(1000);
                 AnimatorSet alphaSeq = new AnimatorSet();
                 alphaSeq.play(alphaAnim);
 
                 animation = new AnimatorSet();
                 ((AnimatorSet) animation).playTogether(yAnim, xAnim);
-                //((AnimatorSet) animation).play(alphaSeq).after(500);
                 animation.addListener(this);
             }
         }

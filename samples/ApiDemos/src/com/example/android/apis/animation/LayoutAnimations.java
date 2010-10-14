@@ -146,21 +146,21 @@ public class LayoutAnimations extends Activity {
 
     private void createCustomAnimations(LayoutTransition transition) {
         // Changing while Adding
-        PropertyValuesHolder<Integer> pvhLeft =
-                new PropertyValuesHolder<Integer>("left", 0, 1);
-        PropertyValuesHolder<Integer> pvhTop =
-                new PropertyValuesHolder<Integer>("top", 0, 1);
-        PropertyValuesHolder<Integer> pvhRight =
-                new PropertyValuesHolder<Integer>("right", 0, 1);
-        PropertyValuesHolder<Integer> pvhBottom =
-                new PropertyValuesHolder<Integer>("bottom", 0, 1);
-        PropertyValuesHolder<Float> pvhScaleX =
-                new PropertyValuesHolder<Float>("scaleX", 1f, 0f, 1f);
-        PropertyValuesHolder<Float> pvhScaleY =
-                new PropertyValuesHolder<Float>("scaleY", 1f, 0f, 1f);
-        customChangingAppearingAnim =
-                new ObjectAnimator(transition.getDuration(LayoutTransition.CHANGE_APPEARING),
-                        this, pvhLeft, pvhTop, pvhRight, pvhBottom, pvhScaleX, pvhScaleY);
+        PropertyValuesHolder pvhLeft =
+                PropertyValuesHolder.ofInt("left", 0, 1);
+        PropertyValuesHolder pvhTop =
+                PropertyValuesHolder.ofInt("top", 0, 1);
+        PropertyValuesHolder pvhRight =
+                PropertyValuesHolder.ofInt("right", 0, 1);
+        PropertyValuesHolder pvhBottom =
+                PropertyValuesHolder.ofInt("bottom", 0, 1);
+        PropertyValuesHolder pvhScaleX =
+                PropertyValuesHolder.ofFloat("scaleX", 1f, 0f, 1f);
+        PropertyValuesHolder pvhScaleY =
+                PropertyValuesHolder.ofFloat("scaleY", 1f, 0f, 1f);
+        customChangingAppearingAnim = ObjectAnimator.ofPropertyValuesHolder(
+                        this, pvhLeft, pvhTop, pvhRight, pvhBottom, pvhScaleX, pvhScaleY).
+                setDuration(transition.getDuration(LayoutTransition.CHANGE_APPEARING));
         customChangingAppearingAnim.addListener(new AnimatorListenerAdapter() {
             public void onAnimationEnd(Animator anim) {
                 View view = (View) ((ObjectAnimator) anim).getTarget();
@@ -173,11 +173,11 @@ public class LayoutAnimations extends Activity {
         Keyframe kf0 = new Keyframe(0f, 0f);
         Keyframe kf1 = new Keyframe(.9999f, 360f);
         Keyframe kf2 = new Keyframe(1f, 0f);
-        PropertyValuesHolder<Keyframe> pvhRotation =
-                new PropertyValuesHolder<Keyframe>("rotation", kf0, kf1, kf2);
-        customChangingDisappearingAnim =
-                new ObjectAnimator(transition.getDuration(LayoutTransition.CHANGE_DISAPPEARING),
-                        this, pvhLeft, pvhTop, pvhRight, pvhBottom, pvhRotation);
+        PropertyValuesHolder pvhRotation =
+                PropertyValuesHolder.ofKeyframe("rotation", kf0, kf1, kf2);
+        customChangingDisappearingAnim = ObjectAnimator.ofPropertyValuesHolder(
+                        this, pvhLeft, pvhTop, pvhRight, pvhBottom, pvhRotation).
+                setDuration(transition.getDuration(LayoutTransition.CHANGE_DISAPPEARING));
         customChangingDisappearingAnim.addListener(new AnimatorListenerAdapter() {
             public void onAnimationEnd(Animator anim) {
                 View view = (View) ((ObjectAnimator) anim).getTarget();
@@ -186,9 +186,8 @@ public class LayoutAnimations extends Activity {
         });
 
         // Adding
-        customAppearingAnim =
-                new ObjectAnimator<Float>(transition.getDuration(LayoutTransition.APPEARING),
-                        null, "rotationY", 90f, 0f);
+        customAppearingAnim = ObjectAnimator.ofFloat(null, "rotationY", 90f, 0f).
+                setDuration(transition.getDuration(LayoutTransition.APPEARING));
         customAppearingAnim.addListener(new AnimatorListenerAdapter() {
             public void onAnimationEnd(Animator anim) {
                 View view = (View) ((ObjectAnimator) anim).getTarget();
@@ -197,9 +196,8 @@ public class LayoutAnimations extends Activity {
         });
 
         // Removing
-        customDisappearingAnim =
-                new ObjectAnimator<Float>(transition.getDuration(LayoutTransition.DISAPPEARING),
-                        null, "rotationX", 0f, 90f);
+        customDisappearingAnim = ObjectAnimator.ofFloat(null, "rotationX", 0f, 90f).
+                setDuration(transition.getDuration(LayoutTransition.DISAPPEARING));
         customDisappearingAnim.addListener(new AnimatorListenerAdapter() {
             public void onAnimationEnd(Animator anim) {
                 View view = (View) ((ObjectAnimator) anim).getTarget();

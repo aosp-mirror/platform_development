@@ -86,43 +86,45 @@ public class MultiPropertyAnimation extends Activity {
             if (bounceAnim == null) {
                 ShapeHolder ball;
                 ball = balls.get(0);
-                ObjectAnimator yBouncer = new ObjectAnimator(DURATION, ball, "y",
-                        ball.getY(), getHeight() - BALL_SIZE);
+                ObjectAnimator yBouncer = ObjectAnimator.ofFloat(ball, "y",
+                        ball.getY(), getHeight() - BALL_SIZE).setDuration(DURATION);
                 yBouncer.setInterpolator(new BounceInterpolator());
                 yBouncer.addUpdateListener(this);
 
                 ball = balls.get(1);
-                PropertyValuesHolder pvhY = new PropertyValuesHolder("y", ball.getY(),
+                PropertyValuesHolder pvhY = PropertyValuesHolder.ofFloat("y", ball.getY(),
                         getHeight() - BALL_SIZE);
-                PropertyValuesHolder pvhAlpha = new PropertyValuesHolder("alpha", 1.0f,
-                        0f);
-                ObjectAnimator yAlphaBouncer = new ObjectAnimator(DURATION/2, ball, pvhY, pvhAlpha);
+                PropertyValuesHolder pvhAlpha = PropertyValuesHolder.ofFloat("alpha", 1.0f, 0f);
+                ObjectAnimator yAlphaBouncer = ObjectAnimator.ofPropertyValuesHolder(ball,
+                        pvhY, pvhAlpha).setDuration(DURATION/2);
                 yAlphaBouncer.setInterpolator(new AccelerateInterpolator());
                 yAlphaBouncer.setRepeatCount(1);
                 yAlphaBouncer.setRepeatMode(ValueAnimator.REVERSE);
 
 
                 ball = balls.get(2);
-                PropertyValuesHolder pvhW = new PropertyValuesHolder("width", ball.getWidth(),
+                PropertyValuesHolder pvhW = PropertyValuesHolder.ofFloat("width", ball.getWidth(),
                         ball.getWidth() * 2);
-                PropertyValuesHolder pvhH = new PropertyValuesHolder("height", ball.getHeight(),
+                PropertyValuesHolder pvhH = PropertyValuesHolder.ofFloat("height", ball.getHeight(),
                         ball.getHeight() * 2);
-                PropertyValuesHolder pvTX = new PropertyValuesHolder("x", ball.getX(), ball.getX() - BALL_SIZE/2f);
-                PropertyValuesHolder pvTY = new PropertyValuesHolder("y", 0f, ball.getY(), ball.getY() - BALL_SIZE/2f);
-                ObjectAnimator whxyBouncer = new ObjectAnimator(DURATION/2, ball, pvhW, pvhH,
-                        pvTX, pvTY);
+                PropertyValuesHolder pvTX = PropertyValuesHolder.ofFloat("x", ball.getX(),
+                        ball.getX() - BALL_SIZE/2f);
+                PropertyValuesHolder pvTY = PropertyValuesHolder.ofFloat("y", 0f, ball.getY(),
+                        ball.getY() - BALL_SIZE/2f);
+                ObjectAnimator whxyBouncer = ObjectAnimator.ofPropertyValuesHolder(ball, pvhW, pvhH,
+                        pvTX, pvTY).setDuration(DURATION/2);
                 whxyBouncer.setRepeatCount(1);
                 whxyBouncer.setRepeatMode(ValueAnimator.REVERSE);
 
                 ball = balls.get(3);
-                pvhY = new PropertyValuesHolder("y", ball.getY(),
-                        getHeight() - BALL_SIZE);
+                pvhY = PropertyValuesHolder.ofFloat("y", ball.getY(), getHeight() - BALL_SIZE);
                 float ballX = ball.getX();
                 Keyframe kf0 = new Keyframe(0f, ballX);
                 Keyframe kf1 = new Keyframe(.5f, ballX + 100f);
                 Keyframe kf2 = new Keyframe(1f, ballX + 50f);
-                PropertyValuesHolder pvhX = new PropertyValuesHolder("x", kf0, kf1, kf2);
-                ObjectAnimator yxBouncer = new ObjectAnimator(DURATION/2, ball, pvhY, pvhX);
+                PropertyValuesHolder pvhX = PropertyValuesHolder.ofKeyframe("x", kf0, kf1, kf2);
+                ObjectAnimator yxBouncer = ObjectAnimator.ofPropertyValuesHolder(ball, pvhY,
+                        pvhX).setDuration(DURATION/2);
                 yxBouncer.setRepeatCount(1);
                 yxBouncer.setRepeatMode(ValueAnimator.REVERSE);
 

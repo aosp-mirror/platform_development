@@ -79,18 +79,18 @@ public class AnimationCloning extends Activity {
 
         private void createAnimation() {
             if (animation == null) {
-                ObjectAnimator anim1 = new ObjectAnimator(500, balls.get(0), "y",
-                        0f, getHeight() - balls.get(0).getHeight());
+                ObjectAnimator anim1 = ObjectAnimator.ofFloat(balls.get(0), "y",
+                        0f, getHeight() - balls.get(0).getHeight()).setDuration(500);
                 ObjectAnimator anim2 = anim1.clone();
                 anim2.setTarget(balls.get(1));
                 anim1.addUpdateListener(this);
 
                 ShapeHolder ball2 = balls.get(2);
-                ObjectAnimator animDown = new ObjectAnimator(500, ball2, "y",
-                        0f, getHeight() - ball2.getHeight());
+                ObjectAnimator animDown = ObjectAnimator.ofFloat(ball2, "y",
+                        0f, getHeight() - ball2.getHeight()).setDuration(500);
                 animDown.setInterpolator(new AccelerateInterpolator());
-                ObjectAnimator animUp = new ObjectAnimator(500, ball2, "y",
-                        getHeight() - ball2.getHeight(), 0f);
+                ObjectAnimator animUp = ObjectAnimator.ofFloat(ball2, "y",
+                        getHeight() - ball2.getHeight(), 0f).setDuration(500);
                 animDown.setInterpolator(new DecelerateInterpolator());
                 AnimatorSet s1 = new AnimatorSet();
                 s1.playSequentially(animDown, animUp);

@@ -106,9 +106,12 @@ public class ListFlipper extends Activity {
             invisibleList = mFrenchList;
             visibleList = mEnglishList;
         }
-        ObjectAnimator visToInvis = new ObjectAnimator(500, visibleList, "rotationY", 0f, 90f);
+        ObjectAnimator visToInvis = ObjectAnimator.ofFloat(visibleList, "rotationY", 0f, 90f);
+        visToInvis.setDuration(500);
         visToInvis.setInterpolator(accelerator);
-        final ObjectAnimator invisToVis = new ObjectAnimator(500, invisibleList, "rotationY", -90f, 0f);
+        final ObjectAnimator invisToVis = ObjectAnimator.ofFloat(invisibleList, "rotationY",
+                -90f, 0f);
+        invisToVis.setDuration(500);
         invisToVis.setInterpolator(decelerator);
         visToInvis.addListener(new AnimatorListenerAdapter() {
             @Override
