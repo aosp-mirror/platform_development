@@ -14,21 +14,13 @@
  * limitations under the License.
  */
 
-package com.android.apps.tag;
-
-import android.test.AndroidTestCase;
-import android.nfc.NdefMessage;
-import com.android.apps.tag.record.SmartPoster;
+package com.android.apps.tag.record;
 
 /**
- * Tests for {@link SmartPoster}.
+ * TODO: come up with a better name.
  */
-public class SmartPosterTest extends AndroidTestCase {
-    public void testSmartPoster() throws Exception {
-        NdefMessage msg = new NdefMessage(MockNdefMessages.REAL_NFC_MSG);
+public interface ParsedNdefRecord {
 
-        SmartPoster poster = SmartPoster.parse(msg.getRecords()[0]);
-        assertEquals("NFC Forum Type 4 Tag", poster.getTitle().getText());
-        assertEquals("http://www.nxp.com/nfc", poster.getUriRecord().getUri().toString());
-    }
+    // Just a placeholder for now.  Probably not needed nor desired.
+    public String getRecordType();
 }
