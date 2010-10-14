@@ -32,6 +32,9 @@ import android.view.ViewGroup;
 import android.widget.Adapter;
 import android.widget.CursorAdapter;
 import android.widget.TextView;
+import com.android.apps.tag.record.SmartPoster;
+import com.android.apps.tag.record.TextRecord;
+import com.android.apps.tag.record.UriRecord;
 
 /**
  * A custom {@link Adapter} that renders tag entries for a list.
@@ -61,14 +64,17 @@ public class TagAdapter extends CursorAdapter {
             mainLine.setText("Invalid tag");
         } else {
             try {
-                SmartPoster poster = SmartPoster.from(msg.getRecords()[0]);
-                mainLine.setText(poster.getTitle());
+                SmartPoster poster = SmartPoster.parse(msg.getRecords()[0]);
+                TextRecord title = poster.getTitle();
+                if (title != null) {
+                    mainLine.setText(title.getText());
+                }
             } catch (IllegalArgumentException e) {
                 // Not a smart poster
                 NdefRecord record = msg.getRecords()[0];
                 Uri uri = null;
                 try {
-                    uri = NdefUtil.toUri(record);
+                    uri = UriRecord.parse(record).getUri();
                     mainLine.setText(uri.toString());
                 } catch (IllegalArgumentException e2) {
                     mainLine.setText("Not a smart poster or URL");

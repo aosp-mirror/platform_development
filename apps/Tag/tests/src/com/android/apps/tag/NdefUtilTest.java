@@ -17,6 +17,7 @@
 package com.android.apps.tag;
 
 import android.test.AndroidTestCase;
+import com.android.apps.tag.record.TextRecord;
 import com.google.common.primitives.Bytes;
 import android.nfc.NdefRecord;
 
@@ -46,6 +47,6 @@ public class NdefUtilTest extends AndroidTestCase {
         );
 
         NdefRecord record = new NdefRecord(NdefRecord.TNF_WELL_KNOWN, NdefRecord.RTD_TEXT, new byte[0], data);
-        assertEquals(word, NdefUtil.toText(record));
+        assertEquals(word, TextRecord.parse(record).getText());
     }
 }
