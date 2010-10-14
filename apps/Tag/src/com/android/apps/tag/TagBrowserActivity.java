@@ -16,6 +16,7 @@
 
 package com.android.apps.tag;
 
+import android.app.Activity;
 import android.app.TabActivity;
 import android.content.Intent;
 import android.content.res.Resources;
@@ -23,34 +24,27 @@ import android.os.Bundle;
 import android.widget.TabHost;
 
 /**
- * A browsing {@code Activity} that displays the saved tags in categories under tabs.
+ * A browsing {@link Activity} that displays the saved tags in categories under tabs.
  */
 public class TagBrowserActivity extends TabActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // While we're doing development, delete the database every time we start.
-        getBaseContext().getDatabasePath("Tags.db").delete();
-
         setContentView(R.layout.main);
 
         Resources res = getResources();
         TabHost tabHost = getTabHost();
-        Intent i = new Intent().setClass(this, TagList.class);
 
-        Intent iSavedList = new Intent().setClass(this, TagList.class)
-                .putExtra(TagList.SHOW_SAVED_ONLY, true);
-        Intent iRecentList = new Intent().setClass(this, TagList.class);
-
-        TabHost.TabSpec spec1 = tabHost.newTabSpec("1")
-                .setIndicator("Saved", res.getDrawable(R.drawable.ic_menu_tag))
-                .setContent(iSavedList);
+        TabHost.TabSpec spec1 = tabHost.newTabSpec("saved")
+                .setIndicator(getText(R.string.tab_saved), res.getDrawable(R.drawable.ic_menu_tag))
+                .setContent(new Intent().setClass(this, TagList.class)
+                        .putExtra(TagList.EXTRA_SHOW_SAVED_ONLY, true));
         tabHost.addTab(spec1);
 
-        TabHost.TabSpec spec2 = tabHost.newTabSpec("2")
-                .setIndicator("Recent", res.getDrawable(R.drawable.ic_menu_desk_clock))
-                .setContent(iRecentList);
+        TabHost.TabSpec spec2 = tabHost.newTabSpec("recent")
+                .setIndicator(getText(R.string.tab_recent), res.getDrawable(R.drawable.ic_menu_desk_clock))
+                .setContent(new Intent().setClass(this, TagList.class));
         tabHost.addTab(spec2);
     }
 }
