@@ -28,6 +28,6 @@ public class SmartPosterTest extends AndroidTestCase {
 
         SmartPoster poster = SmartPoster.from(msg.getRecords()[0]);
         assertEquals("NFC Forum Type 4 Tag", poster.getTitle());
-        assertEquals("http://www.nxp.com/nfc", poster.getURI().toString());
+        assertEquals("http://www.nxp.com/nfc", poster.getUri().toString());
     }
 }
