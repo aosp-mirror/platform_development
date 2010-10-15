@@ -1,0 +1,5 @@
+Adding a new folder in development/samples is not enough to have it
+be packaged with the SDK.
+
+Make sure to edit development/build/sdk.atree to add the sample to the SDK
+build.
