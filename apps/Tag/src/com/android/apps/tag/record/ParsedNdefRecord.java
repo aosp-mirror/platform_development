@@ -16,6 +16,11 @@
 
 package com.android.apps.tag.record;
 
+import android.app.Activity;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+
 /**
  * TODO: come up with a better name.
  */
@@ -23,4 +28,9 @@ public interface ParsedNdefRecord {
 
     // Just a placeholder for now.  Probably not needed nor desired.
     public String getRecordType();
+
+    /**
+     * Returns a view to display this record.
+     */
+    public View getView(Activity activity, LayoutInflater inflater, ViewGroup parent);
 }

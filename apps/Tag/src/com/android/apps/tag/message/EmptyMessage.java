@@ -16,18 +16,26 @@
 
 package com.android.apps.tag.message;
 
+import com.android.apps.tag.R;
+import com.android.apps.tag.record.ParsedNdefRecord;
+
+import android.content.Context;
+
+import java.util.ArrayList;
 import java.util.Locale;
 
 /**
  * A parsed message containing no elements.
  */
-class EmptyMessage implements ParsedNdefMessage {
+class EmptyMessage extends ParsedNdefMessage {
 
-    /* package private */ EmptyMessage() { }
+    /* package private */ EmptyMessage() {
+        super(new ArrayList<ParsedNdefRecord>());
+    }
 
     @Override
-    public String getSnippet(Locale locale) {
-        return "Empty Tag";  // TODO: localize
+    public String getSnippet(Context context, Locale locale) {
+        return context.getString(R.string.tag_empty);
     }
 
     @Override

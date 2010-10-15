@@ -16,16 +16,25 @@
 
 package com.android.apps.tag.record;
 
-import android.nfc.FormatException;
-import android.nfc.NdefMessage;
-import android.nfc.NdefRecord;
-
+import com.android.apps.tag.R;
 import com.android.apps.tag.message.NdefMessageParser;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
 
+import android.app.Activity;
+import android.nfc.FormatException;
+import android.nfc.NdefMessage;
+import android.nfc.NdefRecord;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.ViewGroup.LayoutParams;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+
 import java.util.Arrays;
 import java.util.NoSuchElementException;
+
 import javax.annotation.Nullable;
 
 /**
@@ -104,5 +113,24 @@ public class SmartPoster implements ParsedNdefRecord {
     @Override
     public String getRecordType() {
         return "SmartPoster";
+    }
+
+    @Override
+    public View getView(Activity activity, LayoutInflater inflater, ViewGroup parent) {
+        if (mTitleRecord != null) {
+            // Build a container to hold the title and the URI
+            LinearLayout container = new LinearLayout(activity);
+            container.setOrientation(LinearLayout.VERTICAL);
+            container.setLayoutParams(new LayoutParams(
+                    LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
+
+            container.addView(mTitleRecord.getView(activity, inflater, container));
+            inflater.inflate(R.layout.tag_divider, container);
+            container.addView(mUriRecord.getView(activity, inflater, container));
+            return container;
+        } else {
+            // Just a URI, return a view for it directly
+            return mUriRecord.getView(activity, inflater, parent);
+        }
     }
 }

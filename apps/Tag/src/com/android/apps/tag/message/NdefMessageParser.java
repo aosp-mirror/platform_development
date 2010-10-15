@@ -47,13 +47,13 @@ public class NdefMessageParser {
 
         if (elements.size() == 1) {
             if (first instanceof SmartPoster) {
-                return new SmartPosterMessage((SmartPoster) first);
+                return new SmartPosterMessage((SmartPoster) first, elements);
             }
             if (first instanceof TextRecord) {
-                return new TextMessage((TextRecord) first);
+                return new TextMessage((TextRecord) first, elements);
             }
             if (first instanceof UriRecord) {
-                return new UriMessage((UriRecord) first);
+                return new UriMessage((UriRecord) first, elements);
             }
         }
 

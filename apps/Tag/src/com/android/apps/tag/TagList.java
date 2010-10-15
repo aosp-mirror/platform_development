@@ -41,7 +41,7 @@ import com.android.apps.tag.TagDBHelper.NdefMessagesTable;
 public class TagList extends ListActivity implements DialogInterface.OnClickListener {
     static final String TAG = "TagList";
 
-    static final String EXTRA_SHOW_SAVED_ONLY = "show_saved_only";
+    static final String EXTRA_SHOW_STARRED_ONLY = "show_starred_only";
 
     SQLiteDatabase mDatabase;
     TagAdapter mAdapter;
@@ -50,9 +50,9 @@ public class TagList extends ListActivity implements DialogInterface.OnClickList
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        boolean showSavedOnly = getIntent().getBooleanExtra(EXTRA_SHOW_SAVED_ONLY, false);
+        boolean showStarredOnly = getIntent().getBooleanExtra(EXTRA_SHOW_STARRED_ONLY, false);
         mDatabase = TagDBHelper.getInstance(this).getReadableDatabase();
-        String selection = showSavedOnly ? NdefMessagesTable.SAVED + "=1" : null;
+        String selection = showStarredOnly ? NdefMessagesTable.STARRED + "=1" : null;
 
         new TagLoaderTask().execute(selection);
         mAdapter = new TagAdapter(this);
@@ -119,7 +119,7 @@ public class TagList extends ListActivity implements DialogInterface.OnClickList
                             NdefMessagesTable.DATE,
                             NdefMessagesTable.TITLE },
                     selection,
-                    null, null, null, null);
+                    null, null, null, NdefMessagesTable.DATE + " DESC");
             cursor.getCount();
             return cursor;
         }
