@@ -14,22 +14,24 @@
  * limitations under the License.
  */
 
-package com.android.apps.tag;
+package com.android.apps.tag.record;
 
+import com.android.apps.tag.NdefUtil;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
+
+import android.nfc.FormatException;
 import android.nfc.NdefMessage;
 import android.nfc.NdefRecord;
-import android.nfc.FormatException;
+
+import java.util.Arrays;
 
 import javax.annotation.Nullable;
-import java.net.URI;
-import java.util.Arrays;
 
 /**
  * A representation of an NFC Forum "Smart Poster".
  */
-public class SmartPoster {
+public class SmartPoster implements ParsedNdefRecord {
 
     /**
      * NFC Forum Smart Poster Record Type Definition section 3.2.1.
@@ -39,7 +41,7 @@ public class SmartPoster {
      * This record is optional."
 
      */
-    private final String titleRecord;
+    private final TextRecord mTitleRecord;
 
     /**
      * NFC Forum Smart Poster Record Type Definition section 3.2.1.
@@ -48,32 +50,32 @@ public class SmartPoster {
      * records are just metadata about this record. There MUST be one URI
      * record and there MUST NOT be more than one."
      */
-    private final URI uriRecord;
+    private final UriRecord mUriRecord;
 
-    private SmartPoster(URI uri, @Nullable String title) {
-        uriRecord = Preconditions.checkNotNull(uri);
-        titleRecord = title;
+    private SmartPoster(UriRecord uri, @Nullable TextRecord title) {
+        mUriRecord = Preconditions.checkNotNull(uri);
+        mTitleRecord = title;
     }
 
-    public URI getURI() {
-        return uriRecord;
+    public UriRecord getUriRecord() {
+        return mUriRecord;
     }
 
     /**
-     * Returns the title of the smartposter.  This may be {@code null}.
+     * Returns the title of the smart poster.  This may be {@code null}.
      */
-    public String getTitle() {
-        return titleRecord;
+    public TextRecord getTitle() {
+        return mTitleRecord;
     }
 
-    public static SmartPoster from(NdefRecord record) {
+    public static SmartPoster parse(NdefRecord record) {
         Preconditions.checkArgument(record.getTnf() == NdefRecord.TNF_WELL_KNOWN);
         Preconditions.checkArgument(Arrays.equals(record.getType(), NdefRecord.RTD_SMART_POSTER));
         try {
             NdefMessage subRecords = new NdefMessage(record.getPayload());
-            URI uri = Iterables.getOnlyElement(NdefUtil.getURIs(subRecords));
-            Iterable<String> textFields = NdefUtil.getTextFields(subRecords);
-            String title = null;
+            UriRecord uri = Iterables.getOnlyElement(NdefUtil.getUris(subRecords));
+            Iterable<TextRecord> textFields = NdefUtil.getTextFields(subRecords);
+            TextRecord title = null;
             if (!Iterables.isEmpty(textFields)) {
                 title = Iterables.get(textFields, 0);
             }
@@ -86,10 +88,15 @@ public class SmartPoster {
 
     public static boolean isPoster(NdefRecord record) {
         try {
-            from(record);
+            parse(record);
             return true;
         } catch (IllegalArgumentException e) {
             return false;
         }
+    }
+
+    @Override
+    public String getRecordType() {
+        return "SmartPoster";
     }
 }

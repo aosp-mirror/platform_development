@@ -16,21 +16,19 @@
 
 package com.android.apps.tag;
 
-import android.util.Log;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.BiMap;
-import com.google.common.collect.ImmutableBiMap;
+import com.android.apps.tag.record.ParsedNdefRecord;
+import com.android.apps.tag.record.SmartPoster;
+import com.android.apps.tag.record.TextRecord;
+import com.android.apps.tag.record.UriRecord;
 import com.google.common.collect.Iterables;
 import com.google.common.primitives.Bytes;
+
+import android.net.Uri;
 import android.nfc.NdefMessage;
 import android.nfc.NdefRecord;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.charset.Charsets;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -42,55 +40,9 @@ public class NdefUtil {
     private static final byte[] EMPTY = new byte[0];
 
     /**
-     * NFC Forum "URI Record Type Definition"
-     *
-     * This is a mapping of "URI Identifier Codes" to URI string prefixes,
-     * per section 3.2.2 of the NFC Forum URI Record Type Definition document.
+     * Create a new {@link NdefRecord} containing the supplied {@link Uri}.
      */
-    private static final
-    BiMap<Byte, String> URI_PREFIX_MAP = ImmutableBiMap.<Byte, String>builder()
-            .put((byte) 0x00, "")
-            .put((byte) 0x01, "http://www.")
-            .put((byte) 0x02, "https://www.")
-            .put((byte) 0x03, "http://")
-            .put((byte) 0x04, "https://")
-            .put((byte) 0x05, "tel:")
-            .put((byte) 0x06, "mailto:")
-            .put((byte) 0x07, "ftp://anonymous:anonymous@")
-            .put((byte) 0x08, "ftp://ftp.")
-            .put((byte) 0x09, "ftps://")
-            .put((byte) 0x0A, "sftp://")
-            .put((byte) 0x0B, "smb://")
-            .put((byte) 0x0C, "nfs://")
-            .put((byte) 0x0D, "ftp://")
-            .put((byte) 0x0E, "dav://")
-            .put((byte) 0x0F, "news:")
-            .put((byte) 0x10, "telnet://")
-            .put((byte) 0x11, "imap:")
-            .put((byte) 0x12, "rtsp://")
-            .put((byte) 0x13, "urn:")
-            .put((byte) 0x14, "pop:")
-            .put((byte) 0x15, "sip:")
-            .put((byte) 0x16, "sips:")
-            .put((byte) 0x17, "tftp:")
-            .put((byte) 0x18, "btspp://")
-            .put((byte) 0x19, "btl2cap://")
-            .put((byte) 0x1A, "btgoep://")
-            .put((byte) 0x1B, "tcpobex://")
-            .put((byte) 0x1C, "irdaobex://")
-            .put((byte) 0x1D, "file://")
-            .put((byte) 0x1E, "urn:epc:id:")
-            .put((byte) 0x1F, "urn:epc:tag:")
-            .put((byte) 0x20, "urn:epc:pat:")
-            .put((byte) 0x21, "urn:epc:raw:")
-            .put((byte) 0x22, "urn:epc:")
-            .put((byte) 0x23, "urn:nfc:")
-            .build();
-
-    /**
-     * Create a new {@link NdefRecord} containing the supplied {@link URI}.
-     */
-    public static NdefRecord toUriRecord(URI uri) {
+    public static NdefRecord toUriRecord(Uri uri) {
         byte[] uriBytes = uri.toString().getBytes(Charsets.UTF_8);
 
         /*
@@ -109,131 +61,33 @@ public class NdefUtil {
                 NdefRecord.RTD_URI, EMPTY, payload);
     }
 
-    /**
-     * Convert {@link NdefRecord} into a {@link URI}.
-     *
-     * TODO: This class does not handle NdefRecords where the TNF
-     * (Type Name Format) of the class is {@link NdefRecord#TNF_ABSOLUTE_URI}.
-     * This should be fixed.
-     *
-     * @throws URISyntaxException if the {@code NdefRecord} contains an
-     *     invalid URI.
-     * @throws IllegalArgumentException if the NdefRecord is not a
-     *     record containing a URI.
-     */
-    public static URI toURI(NdefRecord record) throws URISyntaxException {
-        Preconditions.checkArgument(record.getTnf() == NdefRecord.TNF_WELL_KNOWN);
-        Preconditions.checkArgument(Arrays.equals(record.getType(), NdefRecord.RTD_URI));
-
-        byte[] payload = record.getPayload();
-
-        /*
-         * payload[0] contains the URI Identifier Code, per the
-         * NFC Forum "URI Record Type Definition" section 3.2.2.
-         *
-         * payload[1]...payload[payload.length - 1] contains the rest of
-         * the URI.
-         */
-
-        String prefix = URI_PREFIX_MAP.get(payload[0]);
-        byte[] fullUri = Bytes.concat(
-                prefix.getBytes(Charsets.UTF_8),
-                Arrays.copyOfRange(payload, 1, payload.length));
-
-        return new URI(new String(fullUri, Charsets.UTF_8));
+    public static Iterable<TextRecord> getTextFields(NdefMessage message) {
+        return Iterables.filter(getObjects(message), TextRecord.class);
     }
 
-    public static boolean isURI(NdefRecord record) {
-        try {
-            toURI(record);
-            return true;
-        } catch (IllegalArgumentException e) {
-            return false;
-        } catch (URISyntaxException e) {
-            return false;
-        }
-    }
-
-    /**
-     * Extracts payload text from Text type ndef record.
-     *
-     * @param record A ndef record. Must be {@link NdefRecord#TYPE_TEXT}.
-     * @return text payload.
-     */
-    public static String toText(NdefRecord record) {
-        Preconditions.checkArgument(record.getTnf() == NdefRecord.TNF_WELL_KNOWN);
-        Preconditions.checkArgument(Arrays.equals(record.getType(), NdefRecord.RTD_TEXT));
-        try {
-
-            byte[] payload = record.getPayload();
-
-            /*
-             * payload[0] contains the "Status Byte Encodings" field, per
-             * the NFC Forum "Text Record Type Definition" section 3.2.1.
-             *
-             * bit7 is the Text Encoding Field.
-             *
-             * if (Bit_7 == 0): The text is encoded in UTF-8
-             * if (Bit_7 == 1): The text is encoded in UTF16
-             *
-             * Bit_6 is reserved for future use and must be set to zero.
-             *
-             * Bits 5 to 0 are the length of the IANA language code.
-             */
-
-            String textEncoding = ((payload[0] & 0200) == 0) ? "UTF-8" : "UTF-16";
-            int languageCodeLength = payload[0] & 0077;
-
-            return new String(payload,
-                    languageCodeLength + 1,
-                    payload.length - languageCodeLength - 1,
-                    textEncoding);
-        } catch (UnsupportedEncodingException e) {
-            // should never happen unless we get a malformed tag.
-            throw new IllegalArgumentException(e);
-        }
-    }
-
-    public static boolean isText(NdefRecord record) {
-        try {
-            toText(record);
-            return true;
-        } catch (IllegalArgumentException e) {
-            return false;
-        }
-    }
-
-    public static Iterable<String> getTextFields(NdefMessage message) {
-        return Iterables.filter(getObjects(message), String.class);
-    }
-
-    public static Iterable<URI> getURIs(NdefMessage message) {
-        return Iterables.filter(getObjects(message), URI.class);
+    public static Iterable<UriRecord> getUris(NdefMessage message) {
+        return Iterables.filter(getObjects(message), UriRecord.class);
     }
 
     /**
      * Parse the provided {@code NdefMessage}, extracting all known
      * objects from the message.  Typically this list will consist of
-     * {@link String}s corresponding to NDEF text records, or {@link URI}s
+     * {@link String}s corresponding to NDEF text records, or {@link Uri}s
      * corresponding to NDEF URI records.
      * <p>
      * TODO: Is this API too generic?  Should we keep it?
      */
-    private static Iterable<Object> getObjects(NdefMessage message) {
-        try {
-            List<Object> retval = new ArrayList<Object>();
-            for (NdefRecord record : message.getRecords()) {
-                if (isURI(record)) {
-                    retval.add(toURI(record));
-                } else if (isText(record)) {
-                    retval.add(toText(record));
-                } else if (SmartPoster.isPoster(record)) {
-                    retval.add(SmartPoster.from(record));
-                }
+    public static Iterable<ParsedNdefRecord> getObjects(NdefMessage message) {
+        List<ParsedNdefRecord> retval = new ArrayList<ParsedNdefRecord>();
+        for (NdefRecord record : message.getRecords()) {
+            if (UriRecord.isUri(record)) {
+                retval.add(UriRecord.parse(record));
+            } else if (TextRecord.isText(record)) {
+                retval.add(TextRecord.parse(record));
+            } else if (SmartPoster.isPoster(record)) {
+                retval.add(SmartPoster.parse(record));
             }
-            return retval;
-        } catch (URISyntaxException e) {
-            throw new IllegalArgumentException(e);
         }
+        return retval;
     }
 }
