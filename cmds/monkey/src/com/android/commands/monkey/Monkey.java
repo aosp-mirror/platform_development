@@ -799,18 +799,6 @@ public class Monkey {
      * @return Returns true if ready to rock.
      */
     private boolean checkInternalConfiguration() {
-        // Check KEYCODE name array, make sure it's up to date.
-
-        String lastKeyName = null;
-        try {
-            lastKeyName = MonkeySourceRandom.getLastKeyName();
-        } catch (RuntimeException e) {
-        }
-        if (!"TAG_LAST_KEYCODE".equals(lastKeyName)) {
-            System.err.println("** Error: Key names array malformed (internal error).");
-            return false;
-        }
-
         return true;
     }
 
