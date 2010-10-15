@@ -24,7 +24,7 @@ import android.nfc.NdefMessage;
  */
 public class SmartPosterTest extends AndroidTestCase {
     public void testSmartPoster() throws Exception {
-        NdefMessage msg = new NdefMessage(TagDBHelper.REAL_NFC_MSG);
+        NdefMessage msg = new NdefMessage(MockNdefMessages.REAL_NFC_MSG);
 
         SmartPoster poster = SmartPoster.from(msg.getRecords()[0]);
         assertEquals("NFC Forum Type 4 Tag", poster.getTitle());
