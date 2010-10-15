@@ -98,7 +98,7 @@ function build() {
     # you will generally need to edit build/core/main.mk and add directories
     # where Android.mk makefiles are to be found to the SDK_ONLY==true section.
 
-    echo 
+    echo
     echo "Building..."
     [ -n "$MAKE_OPT" ] && echo "Make options: $MAKE_OPT"
 
@@ -140,7 +140,7 @@ function package() {
     [ -e "$UNZIPPED" ] && rm -rfv "$UNZIPPED"  # cleanup unzip dir (if exists)
     unzip "$SDK_ZIP" -d "$TEMP_DIR"
     mv -v "$UNZIPPED" "$TEMP_SDK_DIR"
-    
+
     # Assert that the package contains only one platform
     PLATFORMS="$TEMP_SDK_DIR/platforms"
     THE_PLATFORM=`echo $PLATFORMS/*`
@@ -160,7 +160,7 @@ function package() {
     TOOLS="$TEMP_SDK_DIR/tools"
     LIB="$TEMP_SDK_DIR/tools/lib"
     rm -v "$TOOLS"/{adb,android,apkbuilder,ddms,dmtracedump,draw9patch,emulator,etc1tool}
-    rm -v "$TOOLS"/{hierarchyviewer,hprof-conv,layoutopt,mksdcard,sqlite3,traceview,zipalign}
+    rm -v "$TOOLS"/{hierarchyviewer,hprof-conv,layoutopt,mksdcard,sqlite3,traceview,zipalign,monkeyrunner}
     rm -v "$LIB"/*/swt.jar
     rm -v "$PLATFORM_TOOLS"/{aapt,aidl,dx,dexdump}
 
@@ -193,6 +193,7 @@ function package() {
     cp -v sdk/layoutopt/app/etc/layoutopt.bat              "$TOOLS"/
     cp -v sdk/draw9patch/etc/draw9patch.bat                "$TOOLS"/
     cp -v sdk/sdkmanager/app/etc/android.bat               "$TOOLS"/
+    cp -v sdk/monkeyrunner/etc/monkeyrunner.bat            "$TOOLS"/
 
     # Put the JetCreator tools, content and docs (not available in the linux SDK)
     JET="$TOOLS/Jet"
@@ -214,7 +215,7 @@ function package() {
     cp -rv external/sonivox/jet_tools/logic_templates    "$JETLOGICTEMPLATES"/
     chmod -vR u+w "$JETCREATOR"  # fixes an issue where Cygwin might copy the above as u+rx only
     cp -v prebuilt/windows/jetcreator/EASDLL.dll         "$JETCREATOR"/
-    
+
     cp -v  external/sonivox/docs/JET_Authoring_Guidelines.html  "$JETDOC"/
     cp -rv external/sonivox/docs/JET_Authoring_Guidelines_files "$JETDOC"/
     cp  -v external/sonivox/docs/JET_Creator_User_Manual.html   "$JETDOC"/
